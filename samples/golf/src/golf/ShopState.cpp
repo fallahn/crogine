@@ -32,12 +32,10 @@ source distribution.
 #include "ShopState.hpp"
 #include "SharedStateData.hpp"
 #include "MenuConsts.hpp"
-#include "Inventory.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
-#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
@@ -195,6 +193,35 @@ void ShopState::render()
 //private
 void ShopState::loadAssets()
 {
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/shop_badges.spt", m_resources.textures);
+
+    m_smallLogos[0] = spriteSheet.getSprite("small_01");
+    m_smallLogos[1] = spriteSheet.getSprite("small_02");
+    m_smallLogos[2] = spriteSheet.getSprite("small_03");
+    m_smallLogos[3] = spriteSheet.getSprite("small_04");
+    m_smallLogos[4] = spriteSheet.getSprite("small_05");
+    m_smallLogos[5] = spriteSheet.getSprite("small_06");
+    m_smallLogos[6] = spriteSheet.getSprite("small_07");
+    m_smallLogos[7] = spriteSheet.getSprite("small_08");
+    m_smallLogos[8] = spriteSheet.getSprite("small_09");
+    m_smallLogos[9] = spriteSheet.getSprite("small_10");
+    m_smallLogos[10] = spriteSheet.getSprite("small_11");
+    m_smallLogos[11] = spriteSheet.getSprite("small_12");
+
+    m_largeLogos[0] = spriteSheet.getSprite("large_01");
+    m_largeLogos[1] = spriteSheet.getSprite("large_02");
+    m_largeLogos[2] = spriteSheet.getSprite("large_03");
+    m_largeLogos[3] = spriteSheet.getSprite("large_04");
+    m_largeLogos[4] = spriteSheet.getSprite("large_05");
+    m_largeLogos[5] = spriteSheet.getSprite("large_06");
+    m_largeLogos[6] = spriteSheet.getSprite("large_07");
+    m_largeLogos[7] = spriteSheet.getSprite("large_08");
+    m_largeLogos[8] = spriteSheet.getSprite("large_09");
+    m_largeLogos[9] = spriteSheet.getSprite("large_10");
+    m_largeLogos[10] = spriteSheet.getSprite("large_11");
+    m_largeLogos[11] = spriteSheet.getSprite("large_12");
+
     //load up the three-patch data for the button textures
     //TODO if we use this excessively then create a cfg format
 
@@ -579,14 +606,8 @@ void ShopState::buildScene()
             //TODO replace this with a sprite
             ent = m_uiScene.createEntity();
             ent.addComponent<cro::Transform>().setPosition(glm::vec3(4.f, 4.f, 0.1f));
-            ent.addComponent<cro::Drawable2D>().setVertexData(
-                {
-                    cro::Vertex2D(glm::vec2(0.f, SmallIconSize), cro::Colour::Magenta),
-                    cro::Vertex2D(glm::vec2(0.f), cro::Colour::Magenta),
-
-                    cro::Vertex2D(glm::vec2(SmallIconSize), cro::Colour::Magenta),
-                    cro::Vertex2D(glm::vec2(SmallIconSize, 0.f), cro::Colour::Magenta),
-                });
+            ent.addComponent<cro::Drawable2D>();
+            ent.addComponent<cro::Sprite>() = m_smallLogos[item.manufacturer];
             itemEntry.buttonBackground.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
 
@@ -729,13 +750,14 @@ void ShopState::createStatDisplay()
     //manufacturer icon - TODO replace this with a Sprite
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>().setVertexData(
+    entity.addComponent<cro::Drawable2D>();/*.setVertexData(
         {
             cro::Vertex2D(glm::vec2(0.f, LargeIconSize), cro::Colour::Magenta),
             cro::Vertex2D(glm::vec2(0.f), cro::Colour::Magenta),
             cro::Vertex2D(glm::vec2(LargeIconSize), cro::Colour::Magenta),
             cro::Vertex2D(glm::vec2(LargeIconSize, 0.f), cro::Colour::Magenta),
-        });
+        });*/
+    entity.addComponent<cro::Sprite>() = m_largeLogos[0];
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).absolutePosition = { BorderPadding * 3.f, -(LargeIconSize + BorderPadding)};
     entity.getComponent<cro::UIElement>().depth = SpriteDepth;
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -919,5 +941,7 @@ void ShopState::updateStatDisplay(std::int32_t itemIndex)
     }
     text2.getComponent<cro::Text>().setString(inv::StatLabels[m_selectedCategory].stat1 + valStr);
 
-    //TODO update manufacturer icon
+    //update manufacturer icon
+    m_statItems.manufacturerIcon.getComponent<cro::Sprite>().setTextureRect(m_largeLogos[item.manufacturer].getTextureRect());
+
 }

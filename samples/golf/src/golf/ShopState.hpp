@@ -30,14 +30,18 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "Inventory.hpp"
 
 #include <crogine/core/State.hpp>
 
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+
+#include <array>
 
 struct ThreePatch final
 {
@@ -71,6 +75,9 @@ private:
     SharedStateData& m_sharedData;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
+
+    std::array<cro::Sprite, inv::Manufacturers.size() - 1> m_smallLogos = {};
+    std::array<cro::Sprite, inv::Manufacturers.size() - 1> m_largeLogos = {};
 
     std::array<ThreePatch, ThreePatch::Count> m_threePatches = {};
     cro::Texture m_threePatchTexture;
