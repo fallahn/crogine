@@ -143,12 +143,21 @@ namespace
         verts[7].UV.x = patch.rightNorm.left + patch.rightNorm.width;
         verts[7].UV.y = patch.rightNorm.bottom + offset;
     }
+
+    struct ScrollData final
+    {
+        static constexpr float Stride = ItemButtonSize.y + BorderPadding;
+        float target = 0.f;
+        std::int32_t targetIndex = 0;
+        std::int32_t itemCount = 0;
+    };
 }
 
 ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStateData& sd)
     : cro::State        (stack, ctx),
     m_sharedData        (sd),
     m_uiScene           (ctx.appInstance.getMessageBus(), 512),
+    m_viewScale         (1.f),
     m_selectedCategory  (Category::Driver)
 {
     CRO_ASSERT(!isCached(), "");
@@ -164,6 +173,21 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
 //public
 bool ShopState::handleEvent(const cro::Event& evt)
 {
+    switch (evt.type)
+    {
+    default: break;
+    case SDL_MOUSEWHEEL:
+        if (evt.wheel.y > 0)
+        {
+            scroll(true);
+        }
+        else if (evt.wheel.y < 0)
+        {
+            scroll(false);
+        }
+        break;
+    }
+
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
     m_uiScene.forwardEvent(evt);
 
@@ -173,6 +197,22 @@ bool ShopState::handleEvent(const cro::Event& evt)
 void ShopState::handleMessage(const cro::Message& msg)
 {
     m_uiScene.forwardMessage(msg);
+
+    //we need to update cropping, doing so here is the only
+    //way to ensure it happens after all UI elements were updated
+    if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            auto node = m_scrollNodes[m_selectedCategory].scrollNode;
+            node.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = 0;
+            node.getComponent<cro::Callback>().getUserData<ScrollData>().target = 0.f;
+            node.getComponent<cro::Callback>().active = true;
+
+            m_viewScale = cro::UIElementSystem::getViewScale();
+        }
+    }
 }
 
 bool ShopState::simulate(float dt)
@@ -423,6 +463,12 @@ void ShopState::buildScene()
                             m_scrollNodes[m_selectedCategory].buttonText.getComponent<cro::Text>().setFillColour(ButtonTextColour);
                             applyButtonTexture(ButtonTexID::Unselected, m_scrollNodes[m_selectedCategory].buttonBackground, m_threePatches[ThreePatch::ButtonTop]);
 
+                            //disable all the inputs so we can navigate to them using dpad/cursor input
+                            for (auto& item : m_scrollNodes[m_selectedCategory].items)
+                            {
+                                item.buttonBackground.getComponent<cro::UIInput>().enabled = false;
+                            }
+
                             m_selectedCategory = index;
 
                             m_scrollNodes[m_selectedCategory].scrollNode.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
@@ -431,6 +477,8 @@ void ShopState::buildScene()
 
                             auto activeItem = m_scrollNodes[index].items[m_scrollNodes[index].selectedItem].itemIndex;
                             updateStatDisplay(activeItem);
+
+                            m_scrollNodes[index].cropItems(); //this also enables visible buttons
                         }
                     });
             applyButtonTexture(m_selectedCategory == index ? ButtonTexID::Selected : ButtonTexID::Unselected, ent, m_threePatches[ThreePatch::ButtonTop]);
@@ -476,7 +524,7 @@ void ShopState::buildScene()
     }
 
 
-    //screen divider - TODO add the scrollbar to this
+    //screen divider - TODO add the scrollbar display to this
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::UIElement>(cro::UIElement::Position, true);
@@ -609,7 +657,7 @@ void ShopState::buildScene()
             ent.addComponent<cro::Drawable2D>();
             ent.addComponent<cro::Sprite>() = m_smallLogos[item.manufacturer];
             itemEntry.buttonBackground.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-
+            itemEntry.badge = ent;
 
             auto text = inv::Manufacturers[item.manufacturer] + "\n" + inv::ItemStrings[item.type];
 
@@ -655,12 +703,21 @@ void ShopState::buildScene()
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&](cro::Entity e)
         {
-            auto size = cro::App::getWindow().getSize().y / cro::UIElementSystem::getViewScale();
-            size = std::round(size);
-            size -= ((BorderPadding * 4.f) + TopButtonSize.y);
+            const auto scale = cro::UIElementSystem::getViewScale();
 
-            e.getComponent<cro::UIElement>().absolutePosition = { BorderPadding, size };
+            auto size = glm::vec2(cro::App::getWindow().getSize()) / scale;
+            size.x = std::round(size.x);
+            size.y = std::round(size.y);
+            size.y -= ((BorderPadding * 4.f) + TopButtonSize.y);
+
+            e.getComponent<cro::UIElement>().absolutePosition = { BorderPadding, size.y };
+
+            //this is the area we want to crop scroll nodes to - although really it's
+            //the same for all nodes so we should only do this once, not every node
+            m_catergoryCroppingArea = { 0.f, BorderPadding, size.x, size.y };
+            m_catergoryCroppingArea *= scale;
         };
+
     auto scrollRoot = entity;
 
     //for each category
@@ -692,14 +749,70 @@ void ShopState::buildScene()
                 {
                     ent.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 }
-                m_scrollNodes[catIndex++].scrollNode = ent;
 
                 scrollNode = ent;
                 prevCat = item.type;
                 currentPos = glm::vec2(0.f, -(ItemButtonSize.y));
                 itemIndex = 0;
 
-                //TODO attach the scroll bar logic to the node
+                //attach the scroll bar logic to the node
+                ent.addComponent<cro::Callback>().setUserData<ScrollData>();
+                ent.getComponent<cro::Callback>().function =
+                    [&, catIndex](cro::Entity e, float dt)
+                    {
+                        const auto target = e.getComponent<cro::Callback>().getUserData<ScrollData>().target;
+
+                        static constexpr float Speed = 15.f;
+                        auto& tx = e.getComponent<cro::Transform>();
+                        const float move = (target - tx.getPosition().y) * dt * Speed;
+
+                        if (std::abs(move) > 0.1f)
+                        {
+                            tx.move(glm::vec2(0.f, move));
+
+                            m_scrollNodes[catIndex].cropItems();
+                        }
+                        else
+                        {
+                            auto pos = tx.getPosition();
+                            pos.y = target;
+                            tx.setPosition(pos);
+                            e.getComponent<cro::Callback>().active = false;
+                        }
+                    };
+
+                m_scrollNodes[catIndex].cropItems =
+                    [&, catIndex]()
+                    {
+                        //only iterate over as many as we can assume are at least visible
+                        const auto start = std::max(0, m_scrollNodes[catIndex].scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex - 1);
+                        const auto end = std::min(static_cast<std::int32_t>(m_scrollNodes[catIndex].items.size() - 1), 
+                            start + static_cast<std::int32_t>(std::ceil(m_catergoryCroppingArea.height / ScrollData::Stride)) + 1);
+
+                        for(auto i = start; i < end; ++i)
+                        {
+                            auto& item = m_scrollNodes[catIndex].items[i];
+                            auto bounds = item.buttonBackground.getComponent<cro::Drawable2D>().getLocalBounds();
+                            bounds.transform(item.buttonBackground.getComponent<cro::Transform>().getWorldTransform());
+
+                            if (!m_catergoryCroppingArea.contains(bounds))
+                            {
+                                item.buttonBackground.getComponent<cro::Drawable2D>().setCroppingArea(m_catergoryCroppingArea, true);
+                                item.buttonText.getComponent<cro::Drawable2D>().setCroppingArea(m_catergoryCroppingArea, true);
+                                item.priceText.getComponent<cro::Drawable2D>().setCroppingArea(m_catergoryCroppingArea, true);
+                                item.badge.getComponent<cro::Drawable2D>().setCroppingArea(m_catergoryCroppingArea, true);
+
+                                item.visible = true;
+                            }
+                            else
+                            {
+                                item.visible = m_catergoryCroppingArea.intersects(bounds);
+                            }
+
+                            item.buttonBackground.getComponent<cro::UIInput>().enabled = item.visible;
+                        }
+                    };
+                m_scrollNodes[catIndex++].scrollNode = ent;
             }
                 break;
             }
@@ -707,10 +820,11 @@ void ShopState::buildScene()
 
         //add item to current scroll node
         createItem(scrollNode, currentPos, item, itemIndex, catIndex-1);
+        scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount++;
         m_scrollNodes[catIndex - 1].items[itemIndex].itemIndex = itemID++;
         
         itemIndex++;
-        currentPos.y -= (ItemButtonSize.y + BorderPadding);
+        currentPos.y -= ScrollData::Stride;
     }
 
     CRO_ASSERT(m_scrollNodes.size() == Category::Count, "");
@@ -747,16 +861,10 @@ void ShopState::createStatDisplay()
     auto root = entity;
 
 
-    //manufacturer icon - TODO replace this with a Sprite
+    //manufacturer icon
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();/*.setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(0.f, LargeIconSize), cro::Colour::Magenta),
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Magenta),
-            cro::Vertex2D(glm::vec2(LargeIconSize), cro::Colour::Magenta),
-            cro::Vertex2D(glm::vec2(LargeIconSize, 0.f), cro::Colour::Magenta),
-        });*/
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_largeLogos[0];
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).absolutePosition = { BorderPadding * 3.f, -(LargeIconSize + BorderPadding)};
     entity.getComponent<cro::UIElement>().depth = SpriteDepth;
@@ -944,4 +1052,23 @@ void ShopState::updateStatDisplay(std::int32_t itemIndex)
     //update manufacturer icon
     m_statItems.manufacturerIcon.getComponent<cro::Sprite>().setTextureRect(m_largeLogos[item.manufacturer].getTextureRect());
 
+}
+
+void ShopState::scroll(bool up)
+{
+    auto node = m_scrollNodes[m_selectedCategory].scrollNode;
+    auto& currentTarget = node.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex;
+    const auto itemCount = node.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount;
+
+    if (up)
+    {
+        currentTarget = std::max(0, currentTarget - 1);
+    }
+    else
+    {
+        currentTarget = std::min(itemCount - 1, currentTarget + 1);
+    }
+
+    node.getComponent<cro::Callback>().getUserData<ScrollData>().target = currentTarget * ScrollData::Stride * m_viewScale;
+    node.getComponent<cro::Callback>().active = true;
 }

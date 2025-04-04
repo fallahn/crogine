@@ -95,7 +95,7 @@ namespace
         }
     }
 
-    constexpr std::int32_t SkillRoof = 10; //after this many increments the skills stop getting better - just shift around
+    constexpr std::int32_t SkillRoof = 5; //after this many increments the skills stop getting better - just shift around
     constexpr float BaseQuality = 0.87f;
     constexpr float MinQuality = BaseQuality - 0.07f; //0.01 * PlayerCount/2
 
@@ -314,7 +314,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
             m_increaseCount++;
         }
         else if (/*m_currentSeason > 1
-            &&*/ m_currentBest > 3) //if we played a couple of seasons and still not won, make it easier
+            &&*/ m_currentBest > 2) //if we played a couple of seasons and still not won, make it easier
         {
             decreaseDifficulty();
         }
@@ -538,10 +538,10 @@ void League::rollPlayers(bool resetScores)
         maxIncrease = 2;
         break;
     case LeagueRoundID::RoundFour:
-        maxIncrease = 3;
+        maxIncrease = 2;
         break;
     case LeagueRoundID::RoundFive:
-        maxIncrease = 4;
+        maxIncrease = 3;
         break;
     case LeagueRoundID::RoundSix:
         maxIncrease = 4;

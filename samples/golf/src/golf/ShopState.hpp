@@ -42,6 +42,7 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 
 #include <array>
+#include <functional>
 
 struct ThreePatch final
 {
@@ -75,6 +76,7 @@ private:
     SharedStateData& m_sharedData;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
+    float m_viewScale;
 
     std::array<cro::Sprite, inv::Manufacturers.size() - 1> m_smallLogos = {};
     std::array<cro::Sprite, inv::Manufacturers.size() - 1> m_largeLogos = {};
@@ -87,8 +89,10 @@ private:
         cro::Entity buttonBackground;
         cro::Entity buttonText;
         cro::Entity priceText;
+        cro::Entity badge;
 
         std::int32_t itemIndex = 0; //index to inv::Items
+        bool visible = true; //set to false if cropped or partially cropped
     };
 
     struct CategoryItem final
@@ -99,9 +103,12 @@ private:
 
         std::int32_t selectedItem = 0; //selected item
         std::vector<ItemEntry> items;
+
+        std::function<void()> cropItems;
     };
     std::vector<CategoryItem> m_scrollNodes;
     std::int32_t m_selectedCategory;
+    cro::FloatRect m_catergoryCroppingArea;
 
     void loadAssets();
     void addSystems();
@@ -120,4 +127,6 @@ private:
 
     void createStatDisplay();
     void updateStatDisplay(std::int32_t uid);
+
+    void scroll(bool up);
 };
