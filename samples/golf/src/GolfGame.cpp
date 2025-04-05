@@ -1574,6 +1574,10 @@ void GolfGame::loadPreferences()
                         m_sharedData.fixedPuttingRange = prop.getValue<bool>();
                     }
                     
+                    else if (name == "log_csv")
+                    {
+                        m_sharedData.logCSV = prop.getValue<bool>();
+                    }
                     else if (name == "web_chat")
                     {
                         m_sharedData.blockChat = prop.getValue<bool>();
@@ -1742,6 +1746,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("show_roster").setValue(m_sharedData.showRosterTip);
     cfg.addProperty("group_mode").setValue(m_sharedData.groupMode);
     cfg.addProperty("fixed_putting").setValue(m_sharedData.fixedPuttingRange);
+    cfg.addProperty("log_csv").setValue(m_sharedData.logCSV);
     cfg.addProperty("web_chat").setValue(m_sharedData.blockChat);
     cfg.addProperty("log_chat").setValue(m_sharedData.logChat);
     cfg.addProperty("remote_content").setValue(m_sharedData.remoteContent);

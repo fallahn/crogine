@@ -1399,7 +1399,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = (power > PowerShot && club < ClubID::NineIron) ? GolfEvent::PowerShot : GolfEvent::NiceShot;
                     msg3->position = m_currentPlayer.position;
-
+                    msg3->club = club;
                     /*if (msg3->type == GolfEvent::PowerShot)
                     {
                         m_activeAvatar->ballModel.getComponent<cro::ParticleEmitter>().start();
@@ -1420,6 +1420,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = GolfEvent::PowerShot;
                     msg3->position = m_currentPlayer.position;
+                    msg3->club = club;
 
                     //m_activeAvatar->ballModel.getComponent<cro::ParticleEmitter>().start();
                 }

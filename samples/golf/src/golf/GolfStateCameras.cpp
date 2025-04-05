@@ -973,8 +973,8 @@ void GolfState::updateSkybox(float dt)
     const auto baseFov = m_sharedData.fov * cro::Util::Const::degToRad;
     const auto ratio = srcCam.getFOV() / baseFov;
     float diff = 1.f - ratio;
-    diff -= (diff / 8.f);
-    //diff -= (diff / 32.f);
+    //diff -= (diff / 8.f);
+    diff -= (diff / 32.f);
 
     dstCam.viewport = srcCam.viewport;
     dstCam.setPerspective(baseFov * (1.f - diff), srcCam.getAspectRatio(), 0.5f, 14.f);
