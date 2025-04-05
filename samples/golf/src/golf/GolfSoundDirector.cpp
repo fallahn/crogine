@@ -425,7 +425,8 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 default:
                     playSoundDelayed(cro::Util::Random::value(AudioID::NiceSwing01, AudioID::NiceSwing03), data.position, 0.8f, 1.f, MixerChannel::Voice);
                     
-                    if (data.club < ClubID::NineIron)
+                    if (data.club < ClubID::NineIron
+                        && cro::Util::Random::value(0, 4) == 0)
                     {
                         playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 1.2f, 0.8f, MixerChannel::Effects);
                         applaud();
@@ -444,12 +445,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 {
                     playSound(AudioID::PowerBall, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
 
-                    if (data.club < ClubID::NineIron)
+                    if (data.club < ClubID::NineIron
+                        && cro::Util::Random::value(0, 2) == 0)
                     {
                         playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 1.2f, 0.8f, MixerChannel::Effects);
                         applaud();
-                    }
-
+                    }                    
+                    
                     if (cro::Util::Random::value(0, 2) == 0)
                     {
                         switch (Club::getModifierIndex())
@@ -564,7 +566,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 }
 
                 if (data.score <= ScoreID::Par
-                    && m_soundTimers[AudioID::Applause].elapsed() > ApplauseSoundTime)
+                    && m_soundTimers[AudioID::Applause].elapsed() > (ApplauseSoundTime / 3.f))
                 {
                     playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f, MixerChannel::Effects);
                     applaud();
@@ -586,7 +588,6 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                         if (cro::Util::Random::value(0, 4) == 0)
                         {
                             playSoundDelayed(AudioID::Enthusiast, data.position, 4.f, 1.1f, MixerChannel::Effects);
-                            //playSoundDelayed(AudioID::Tee01, data.position, 1.8f, 0.8f, MixerChannel::Effects);
                         }
                     }
                 }
