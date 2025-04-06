@@ -75,7 +75,7 @@ namespace
     static constexpr float MinRollVelocity = -0.25f;
     static constexpr float MaxStoneSlope = 0.95f; //dot prod with vertical - ball is OOB if less than this
 
-    static constexpr float MaxRestitutionIncrease = 0.05f; //depending on the angle of the bounce up to this much is added to restitution multiplier
+    static constexpr float MaxRestitutionIncrease = 0.3f;// 0.05f; //depending on the angle of the bounce up to this much is added to restitution multiplier
 
     float getRestitution(glm::vec3 vel, glm::vec3 norm)
     {
@@ -88,9 +88,15 @@ namespace
 
         const float d = glm::dot(-(vel / l), norm);
         //LogI << "Vel: " << l << ", dot: " << d << std::endl;
-        const float amt = 0.1f + (0.9f * glm::smoothstep(0.001f, StartAngle, d));
+        const float amt = std::clamp(0.1f + (0.9f * glm::smoothstep(0.001f, StartAngle, d)), 0.f, 1.f);
         //LogI << amt << std::endl;
-        return (1.f - amt) * MaxRestitutionIncrease;
+
+        /*
+        When punching we get ~0 - 0.3
+        Flops and drives are almost exclusively 0
+        */
+
+        return std::min((1.f - amt)/* * MaxRestitutionIncrease*/, 1.f - Restitution[TerrainID::Stone]);
     }
 
     static constexpr std::array<float, TerrainID::Count> Friction =
