@@ -30,14 +30,19 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "Inventory.hpp"
 
 #include <crogine/core/State.hpp>
 
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+
+#include <array>
+#include <functional>
 
 struct ThreePatch final
 {
@@ -71,17 +76,23 @@ private:
     SharedStateData& m_sharedData;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
+    float m_viewScale;
+
+    std::array<cro::Sprite, inv::Manufacturers.size() - 1> m_smallLogos = {};
+    std::array<cro::Sprite, inv::Manufacturers.size() - 1> m_largeLogos = {};
 
     std::array<ThreePatch, ThreePatch::Count> m_threePatches = {};
-    cro::Texture m_threePatchTexture;
+    cro::Texture* m_threePatchTexture;
 
     struct ItemEntry final
     {
         cro::Entity buttonBackground;
         cro::Entity buttonText;
         cro::Entity priceText;
+        cro::Entity badge;
 
         std::int32_t itemIndex = 0; //index to inv::Items
+        bool visible = true; //set to false if cropped or partially cropped
     };
 
     struct CategoryItem final
@@ -92,9 +103,12 @@ private:
 
         std::int32_t selectedItem = 0; //selected item
         std::vector<ItemEntry> items;
+
+        std::function<void()> cropItems;
     };
     std::vector<CategoryItem> m_scrollNodes;
     std::int32_t m_selectedCategory;
+    cro::FloatRect m_catergoryCroppingArea;
 
     void loadAssets();
     void addSystems();
@@ -113,4 +127,6 @@ private:
 
     void createStatDisplay();
     void updateStatDisplay(std::int32_t uid);
+
+    void scroll(bool up);
 };
