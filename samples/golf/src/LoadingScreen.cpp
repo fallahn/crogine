@@ -197,11 +197,11 @@ void LoadingScreen::launch()
         m_tipText->setCharacterSize(InfoTextSize);
         m_tipText->setFillColour(TextNormalColour);
 
-        m_tipText->setPosition({ std::round(cro::App::getWindow().getSize().x / 2.f), 86.f });
     }
 
     stringIndex = (stringIndex + 1) % TipStrings.size();
     m_tipText->setString(TipStrings[stringIndex]);
+    m_tipText->setPosition({ std::round(cro::App::getWindow().getSize().x / 2.f), 86.f });
 }
 
 void LoadingScreen::update()

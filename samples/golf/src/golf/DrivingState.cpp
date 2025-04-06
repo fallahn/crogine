@@ -3487,6 +3487,7 @@ void DrivingState::hitBall()
     {
         auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
         msg2->type = GolfEvent::NiceShot;
+        msg->club = club;
     }
 
     //hide the power bar

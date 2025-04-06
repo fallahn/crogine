@@ -110,6 +110,8 @@ public:
             Applause,
             ApplausePlus,
             Enthusiast,
+            Tee01,
+            Tee02,
 
             TerrainBunker01,
             TerrainBunker02,
