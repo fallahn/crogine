@@ -379,12 +379,13 @@ void UISystem::process(float)
             }
 
             //only fire these events if the selection actually changed.
+            const bool wasMouseEvent = glm::length2(m_movementDelta) != 0;
             if (m_selectedIndex != currentIndex
-                && glm::length2(m_movementDelta) != 0) //stops the hovering cursor modifying the selection
+                && wasMouseEvent) //stops the hovering cursor modifying the selection
             {
-                unselect(m_selectedIndex);
+                unselect(m_selectedIndex, wasMouseEvent);
                 m_selectedIndex = currentIndex;
-                select(m_selectedIndex);
+                select(m_selectedIndex, wasMouseEvent);
             }
 
             for (const auto& m : m_motionEvents)
@@ -779,21 +780,31 @@ void UISystem::selectPrev(std::size_t stride, std::int32_t direction)
     }
 }
 
-void UISystem::unselect(std::size_t entIdx)
+void UISystem::unselect(std::size_t entIdx, bool wasMouseEvent)
 {
     auto& entities = m_groups[m_activeGroup];
     if (entIdx < entities.size())
     {
-        auto idx = entities[entIdx].getComponent<UIInput>().callbacks[UIInput::Unselected];
+        auto& input = entities[entIdx].getComponent<UIInput>();
+        input.m_wasMouseEvent = wasMouseEvent;
+
+        auto idx = input.callbacks[UIInput::Unselected];
         m_selectionCallbacks[idx](entities[entIdx]);
+
+        input.m_wasMouseEvent = false;
     }
 }
 
-void UISystem::select(std::size_t entIdx)
+void UISystem::select(std::size_t entIdx, bool wasMouseEvent)
 {
     auto& entities = m_groups[m_activeGroup];
-    auto idx = entities[entIdx].getComponent<UIInput>().callbacks[UIInput::Selected];
+    auto& input = entities[entIdx].getComponent<UIInput>();
+    input.m_wasMouseEvent = wasMouseEvent;
+    
+    auto idx = input.callbacks[UIInput::Selected];
     m_selectionCallbacks[idx](entities[entIdx]);
+
+    input.m_wasMouseEvent = false;
 
 #ifdef DEBUG_UI
     const auto& ui = entities[entIdx].getComponent<UIInput>();

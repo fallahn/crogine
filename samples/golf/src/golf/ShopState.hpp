@@ -93,6 +93,12 @@ private:
 
         std::int32_t itemIndex = 0; //index to inv::Items
         bool visible = true; //set to false if cropped or partially cropped
+        
+        enum
+        {
+            Top, Bottom, None
+        };
+        std::int32_t cropping = None; //only valid if not visible / partially cropped, dictates if we're off the top or bottom
     };
 
     struct CategoryItem final
@@ -129,4 +135,5 @@ private:
     void updateStatDisplay(std::int32_t uid);
 
     void scroll(bool up);
+    void scrollTo(std::int32_t);
 };

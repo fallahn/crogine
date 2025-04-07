@@ -92,7 +92,7 @@ namespace cro
         */
         std::size_t getGroup() const { return m_group; }
 
-        /*
+        /*!
         \brief Add this input to one or more groups in the UIInputSystem.
         This input will become active when UIInputSystem::setActiveGroup()
         is called with one of the grou IDs to which this input is assigned.
@@ -105,7 +105,7 @@ namespace cro
             m_updateGroup = true;
         }
 
-        /*
+        /*!
         \brief Removes this input from a group with the given ID, if it is
         assigned, else does nothing.
         \see addToGroup()
@@ -173,12 +173,20 @@ namespace cro
             return { m_neighbourIndices[0], m_neighbourIndices[2] };
         }
 
+        /*!
+        \breif If called during a Select or Unselect event returns true if
+        the event was triggered by a mouse enter or exit event
+        */
+        bool wasMouseEvent() const { return m_wasMouseEvent; }
+
     private:
         static constexpr auto DefaultGroup = (1 << 0);
         std::uint32_t m_previousGroup = DefaultGroup;
         std::uint32_t m_group = DefaultGroup;
         std::size_t m_selectionIndex = 0;
         bool m_updateGroup = true; //do order sorting by default
+
+        bool m_wasMouseEvent = false;
 
         struct Index final
         {

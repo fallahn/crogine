@@ -270,8 +270,8 @@ namespace cro
         void selectNext(std::size_t, std::int32_t = UIInput::Index::Right);
         void selectPrev(std::size_t, std::int32_t = UIInput::Index::Left);
 
-        void unselect(std::size_t);
-        void select(std::size_t);
+        void unselect(std::size_t, bool wasMouseEvent = false);
+        void select(std::size_t, bool wasMouseEvent = false);
 
 
         std::unordered_map<std::size_t, std::vector<Entity>> m_groups;

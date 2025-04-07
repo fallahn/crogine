@@ -147,7 +147,7 @@ namespace
     struct ScrollData final
     {
         static constexpr float Stride = ItemButtonSize.y + BorderPadding;
-        float target = 0.f;
+
         std::int32_t targetIndex = 0;
         std::int32_t itemCount = 0;
     };
@@ -208,7 +208,6 @@ void ShopState::handleMessage(const cro::Message& msg)
         {
             auto node = m_scrollNodes[m_selectedCategory].scrollNode;
             node.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = 0;
-            node.getComponent<cro::Callback>().getUserData<ScrollData>().target = 0.f;
             node.getComponent<cro::Callback>().active = true;
 
             m_viewScale = cro::UIElementSystem::getViewScale();
@@ -468,12 +467,6 @@ void ShopState::buildScene()
                             m_scrollNodes[m_selectedCategory].buttonText.getComponent<cro::Text>().setFillColour(ButtonTextColour);
                             applyButtonTexture(ButtonTexID::Unselected, m_scrollNodes[m_selectedCategory].buttonBackground, m_threePatches[ThreePatch::ButtonTop]);
 
-                            //disable all the inputs so we can navigate to them using dpad/cursor input
-                            for (auto& item : m_scrollNodes[m_selectedCategory].items)
-                            {
-                                item.buttonBackground.getComponent<cro::UIInput>().enabled = false;
-                            }
-
                             m_selectedCategory = index;
 
                             m_scrollNodes[m_selectedCategory].scrollNode.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
@@ -639,10 +632,16 @@ void ShopState::buildScene()
     const auto& patch = m_threePatches[ThreePatch::ButtonItem];
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
-    const auto selectedIDItem = uiSystem.addCallback([&](cro::Entity e)
-        {
-            applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::ButtonItem]);
-        });
+    //const auto selectedIDItem = uiSystem.addCallback([&](cro::Entity e)
+    //    {
+    //        applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::ButtonItem]);
+
+    //        const auto& item = e.getComponent<ItemEntry>();
+    //        if (!item.visible)
+    //        {
+    //            scrollTo(item.itemIndex);
+    //        }
+    //    });
 
     //category list - index is item index within category, NOT into inv::Items array
     //TODO we don't really need to pass the parent ent when we can just capture it
@@ -696,7 +695,35 @@ void ShopState::buildScene()
                 };
             
             ent.addComponent<cro::UIInput>().area = { 0.f, 0.f, ItemButtonSize.x, ItemButtonSize.y };
-            ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedIDItem;
+            ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+                uiSystem.addCallback([&, index, category](cro::Entity e)
+                    {
+                        applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::ButtonItem]);
+
+                        const auto& item = m_scrollNodes[category].items[index];
+                        if (!item.visible
+                            && !e.getComponent<cro::UIInput>().wasMouseEvent())
+                        {
+                            auto target = index;
+
+                            switch (item.cropping)
+                            {
+                            default:
+                            case ItemEntry::None:
+                                //do nothing
+                                break;
+                            case ItemEntry::Bottom:
+                            {
+                                const auto itemCount = static_cast<std::int32_t>(std::floor((m_catergoryCroppingArea.height / m_viewScale) / ScrollData::Stride)) - 1;
+                                target -= itemCount;
+                            }
+                                [[fallthrough]];
+                            case ItemEntry::Top:
+                                scrollTo(target);
+                                break;
+                            }
+                        }
+                    });
             ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
                 uiSystem.addCallback([&, index, category](cro::Entity e)
                     {
@@ -843,7 +870,7 @@ void ShopState::buildScene()
                 ent.getComponent<cro::Callback>().function =
                     [&, catIndex](cro::Entity e, float dt)
                     {
-                        const auto target = e.getComponent<cro::Callback>().getUserData<ScrollData>().target;
+                        const auto target = e.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex * ScrollData::Stride * m_viewScale;
 
                         static constexpr float Speed = 15.f;
                         auto& tx = e.getComponent<cro::Transform>();
@@ -869,14 +896,14 @@ void ShopState::buildScene()
                     {
                         //only iterate over as many as we can assume are at least visible
                         const auto start = std::max(0, m_scrollNodes[catIndex].scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex - 1);
-                        const auto end = std::min(static_cast<std::int32_t>(m_scrollNodes[catIndex].items.size() - 1), 
-                            start + static_cast<std::int32_t>(std::ceil(m_catergoryCroppingArea.height / ScrollData::Stride)) + 1);
+                        const auto end = std::min(static_cast<std::int32_t>(m_scrollNodes[catIndex].items.size()/* - 1*/), 
+                            start + static_cast<std::int32_t>(std::ceil((m_catergoryCroppingArea.height / m_viewScale) / ScrollData::Stride)) + 1);
 
                         for(auto i = start; i < end; ++i)
                         {
                             auto& item = m_scrollNodes[catIndex].items[i];
                             auto bounds = item.buttonBackground.getComponent<cro::Drawable2D>().getLocalBounds();
-                            bounds.transform(item.buttonBackground.getComponent<cro::Transform>().getWorldTransform());
+                            bounds = bounds.transform(item.buttonBackground.getComponent<cro::Transform>().getWorldTransform());
 
                             if (!m_catergoryCroppingArea.contains(bounds))
                             {
@@ -885,14 +912,14 @@ void ShopState::buildScene()
                                 item.priceText.getComponent<cro::Drawable2D>().setCroppingArea(m_catergoryCroppingArea, true);
                                 item.badge.getComponent<cro::Drawable2D>().setCroppingArea(m_catergoryCroppingArea, true);
 
-                                item.visible = true;
+                                item.visible = false;
+                                item.cropping = (bounds.bottom < m_catergoryCroppingArea.bottom) ? ItemEntry::Bottom : ItemEntry::Top;
                             }
                             else
                             {
-                                item.visible = m_catergoryCroppingArea.intersects(bounds);
+                                item.visible = true;
+                                item.cropping = ItemEntry::None;
                             }
-
-                            item.buttonBackground.getComponent<cro::UIInput>().enabled = item.visible;
                         }
                     };
                 m_scrollNodes[catIndex++].scrollNode = ent;
@@ -1153,6 +1180,15 @@ void ShopState::scroll(bool up)
         currentTarget = std::min(itemCount - 1, currentTarget + 1);
     }
 
-    node.getComponent<cro::Callback>().getUserData<ScrollData>().target = currentTarget * ScrollData::Stride * m_viewScale;
+    node.getComponent<cro::Callback>().active = true;
+}
+
+void ShopState::scrollTo(std::int32_t targetIndex)
+{
+    auto node = m_scrollNodes[m_selectedCategory].scrollNode;
+    auto& currentTarget = node.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex;
+    const auto itemCount = node.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount;
+
+    currentTarget = std::clamp(targetIndex, 0, itemCount - 1);
     node.getComponent<cro::Callback>().active = true;
 }
