@@ -70,11 +70,12 @@ namespace cro
         advantageous to activate smaller groups of components
         at a time. Use UISystem::setActiveGroup() to control
         which group of UIInputs currently receive input.
-        \see UISystem::setActiveGroup()
-        Deprecated: prefer addToGroup(), this is maintained
-        for backwards compatibility and will overwrite all
-        group assignments other than the given one.
 
+        Use this when adding the component to a single group,
+        or setting the first group of many, as it overwrites
+        any existing groups. Further group assignments should be done
+        with addToGroup()
+        \see UISystem::setActiveGroup()
         */
         void setGroup(std::size_t group)
         {

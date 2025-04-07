@@ -151,6 +151,17 @@ namespace
         std::int32_t targetIndex = 0;
         std::int32_t itemCount = 0;
     };
+
+    //hmm this is technically the same as Category - but maybe they'll diverge at some point?
+    struct MenuID final
+    {
+        enum
+        {
+            Driver, Wood, Iron, Wedge, Balls,
+
+            Count
+        };
+    };
 }
 
 ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStateData& sd)
@@ -476,7 +487,9 @@ void ShopState::buildScene()
                             auto activeItem = m_scrollNodes[index].items[m_scrollNodes[index].selectedItem].itemIndex;
                             updateStatDisplay(activeItem);
 
-                            m_scrollNodes[index].cropItems(); //this also enables visible buttons
+                            m_scrollNodes[index].cropItems();
+
+                            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(index);
                         }
                     });
             applyButtonTexture(m_selectedCategory == index ? ButtonTexID::Selected : ButtonTexID::Unselected, ent, m_threePatches[ThreePatch::ButtonTop]);
@@ -520,6 +533,33 @@ void ShopState::buildScene()
     {
         createTopButton({ (TopButtonSize.x + BorderPadding) * i, -(TopButtonSize.y)}, ButtonText[i], i);
     }
+
+    //update the selection indices - note that these aren't added to their *own* groups as this is superfluous
+    m_scrollNodes[Category::Driver].buttonBackground.getComponent<cro::UIInput>().setGroup(MenuID::Wood);
+    m_scrollNodes[Category::Driver].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Iron);
+    m_scrollNodes[Category::Driver].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Wedge);
+    m_scrollNodes[Category::Driver].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Balls);
+
+    m_scrollNodes[Category::Wood].buttonBackground.getComponent<cro::UIInput>().setGroup(MenuID::Driver);
+    m_scrollNodes[Category::Wood].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Iron);
+    m_scrollNodes[Category::Wood].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Wedge);
+    m_scrollNodes[Category::Wood].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Balls);
+
+    m_scrollNodes[Category::Iron].buttonBackground.getComponent<cro::UIInput>().setGroup(MenuID::Driver);
+    m_scrollNodes[Category::Iron].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Wood);
+    m_scrollNodes[Category::Iron].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Wedge);
+    m_scrollNodes[Category::Iron].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Balls);
+
+    m_scrollNodes[Category::Wedge].buttonBackground.getComponent<cro::UIInput>().setGroup(MenuID::Driver);
+    m_scrollNodes[Category::Wedge].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Wood);
+    m_scrollNodes[Category::Wedge].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Iron);
+    m_scrollNodes[Category::Wedge].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Balls);
+
+    m_scrollNodes[Category::Ball].buttonBackground.getComponent<cro::UIInput>().setGroup(MenuID::Driver);
+    m_scrollNodes[Category::Ball].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Wood);
+    m_scrollNodes[Category::Ball].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Iron);
+    m_scrollNodes[Category::Ball].buttonBackground.getComponent<cro::UIInput>().addToGroup(MenuID::Wedge);
+
 
 
     //screen divider
@@ -632,16 +672,6 @@ void ShopState::buildScene()
     const auto& patch = m_threePatches[ThreePatch::ButtonItem];
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
-    //const auto selectedIDItem = uiSystem.addCallback([&](cro::Entity e)
-    //    {
-    //        applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::ButtonItem]);
-
-    //        const auto& item = e.getComponent<ItemEntry>();
-    //        if (!item.visible)
-    //        {
-    //            scrollTo(item.itemIndex);
-    //        }
-    //    });
 
     //category list - index is item index within category, NOT into inv::Items array
     //TODO we don't really need to pass the parent ent when we can just capture it
@@ -695,6 +725,7 @@ void ShopState::buildScene()
                 };
             
             ent.addComponent<cro::UIInput>().area = { 0.f, 0.f, ItemButtonSize.x, ItemButtonSize.y };
+            //ent.getComponent<cro::UIInput>().setGroup(category); //TODO re-enable this once we debug multiple groups
             ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
                 uiSystem.addCallback([&, index, category](cro::Entity e)
                     {
@@ -750,8 +781,27 @@ void ShopState::buildScene()
 
                             updateStatDisplay(newItem.itemIndex);
 
-                            //LogI << "Item index: " << index << ", Category: " << category << std::endl;
-                            //LogI << "Global index: " << newItem.itemIndex << std::endl;
+                            if (!newItem.visible)
+                            {
+                                auto target = index;
+
+                                switch (newItem.cropping)
+                                {
+                                default:
+                                case ItemEntry::None:
+                                    //do nothing
+                                    break;
+                                case ItemEntry::Bottom:
+                                {
+                                    const auto itemCount = static_cast<std::int32_t>(std::floor((m_catergoryCroppingArea.height / m_viewScale) / ScrollData::Stride)) - 1;
+                                    target -= itemCount;
+                                }
+                                [[fallthrough]];
+                                case ItemEntry::Top:
+                                    scrollTo(target);
+                                    break;
+                                }
+                            }
                         }
                     });
 
