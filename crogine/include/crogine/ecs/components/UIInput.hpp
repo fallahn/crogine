@@ -101,7 +101,14 @@ namespace cro
         void addToGroup(std::size_t group)
         {
             CRO_ASSERT(group < 32, "");
-            m_previousGroup = m_group;
+            
+            //only do this ifwe're not already expecting an update
+            //from, say, setGroup() otherwise we're flagging groups
+            //as assigned when they aren't yet.
+            if (!m_updateGroup)
+            {
+                m_previousGroup = m_group;
+            }
             m_group |= (1 << group);
             m_updateGroup = true;
         }
@@ -114,7 +121,10 @@ namespace cro
         void removeFromGroup(std::size_t group)
         {
             CRO_ASSERT(group < 32, "");
-            m_previousGroup = m_group;
+            if (!m_updateGroup)
+            {
+                m_previousGroup = m_group;
+            }
             m_group &= ~(1 << group);
             m_updateGroup = true;
         }

@@ -638,6 +638,12 @@ void ShopState::buildScene()
                     scroll(true);
                 }
             });
+    
+    buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Driver);
+    buttonEnt.getComponent<cro::UIInput>().addToGroup(MenuID::Wood);
+    buttonEnt.getComponent<cro::UIInput>().addToGroup(MenuID::Iron);
+    buttonEnt.getComponent<cro::UIInput>().addToGroup(MenuID::Wedge);
+    buttonEnt.getComponent<cro::UIInput>().addToGroup(MenuID::Balls);
     entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
@@ -666,6 +672,11 @@ void ShopState::buildScene()
                     scroll(false);
                 }
             });
+    buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Driver);
+    buttonEnt.getComponent<cro::UIInput>().addToGroup(MenuID::Wood);
+    buttonEnt.getComponent<cro::UIInput>().addToGroup(MenuID::Iron);
+    buttonEnt.getComponent<cro::UIInput>().addToGroup(MenuID::Wedge);
+    buttonEnt.getComponent<cro::UIInput>().addToGroup(MenuID::Balls);
     entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
@@ -725,7 +736,7 @@ void ShopState::buildScene()
                 };
             
             ent.addComponent<cro::UIInput>().area = { 0.f, 0.f, ItemButtonSize.x, ItemButtonSize.y };
-            //ent.getComponent<cro::UIInput>().setGroup(category); //TODO re-enable this once we debug multiple groups
+            ent.getComponent<cro::UIInput>().setGroup(category);
             ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
                 uiSystem.addCallback([&, index, category](cro::Entity e)
                     {
