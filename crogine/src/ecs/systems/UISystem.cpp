@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -810,6 +810,10 @@ void UISystem::select(std::size_t entIdx)
 
 void UISystem::updateGroupAssignments()
 {
+    //track which groups where updated so we only
+    //sort the ones needed, and sort only once.
+    std::int32_t updatedGroups = 0;
+
     auto& entities = getEntities();
     for (auto& e : entities)
     {
@@ -827,39 +831,62 @@ void UISystem::updateGroupAssignments()
                     m_selectedIndex = 0;
                 }
 
-                //remove from old group first
-                m_groups[input.m_previousGroup].erase(std::remove_if(m_groups[input.m_previousGroup].begin(),
-                    m_groups[input.m_previousGroup].end(),
-                    [e](Entity entity)
+                //for each possible group...
+                for (auto i = 0u; i < 32u; ++i)
+                {
+                    //remove from old group first
+                    if (((input.m_previousGroup & (1 << i)) != 0)
+                        && ((input.m_group & (1 << i)) == 0))
                     {
-                        return e == entity;
-                    }), m_groups[input.m_previousGroup].end());
+                        m_groups[i].erase(std::remove_if(m_groups[i].begin(),
+                            m_groups[i].end(),
+                            [e](Entity entity)
+                            {
+                                return e == entity;
+                            }), m_groups[i].end());
+                    }
 
-                //create new group if needed
-                if (m_groups.count(input.m_group) == 0)
-                {
-                    m_groups.insert(std::make_pair(input.m_group, std::vector<Entity>()));
-                }
+                    if ((input.m_group & (1 << i)) != 0)
+                    {
+                        //create new group if needed
+                        if (m_groups.count(i) == 0)
+                        {
+                            m_groups.insert(std::make_pair(i, std::vector<Entity>()));
+                        }
 
-                //add to group
-                if (input.m_selectionIndex == 0)
-                {
-                    //set a default order
-                    input.m_selectionIndex = m_groups[input.m_group].size();
+                        //only add if we weren't previously in this group else 
+                        //we'll get added more than once
+                        if ((input.m_previousGroup & (1 << i)) == 0)
+                        {
+                            //add to group
+                            if (input.m_selectionIndex == 0)
+                            {
+                                //set a default order
+                                input.m_selectionIndex = m_groups[i].size();
+                            }
+
+                            m_groups[i].push_back(e);
+                            updatedGroups |= i; //mark this for sorting
+                        }
+                    }
                 }
-                m_groups[input.m_group].push_back(e);
             }
 
+            input.m_updateGroup = false;
+        }
+    }
 
-            //sort the group by selection index
-            std::sort(m_groups[input.m_group].begin(), m_groups[input.m_group].end(),
+    //finally sort each updated group
+    for (auto i = 0u; i < 32u; ++i)
+    {
+        if ((updatedGroups & (1 << i)) != 0)
+        {
+            //TODO worth using parallel exec?
+            std::sort(m_groups[i].begin(), m_groups[i].end(),
                 [](Entity a, Entity b)
                 {
                     return a.getComponent<UIInput>().m_selectionIndex < b.getComponent<UIInput>().m_selectionIndex;
                 });
-
-
-            input.m_updateGroup = false;
         }
     }
 }
@@ -872,7 +899,7 @@ void UISystem::onEntityAdded(Entity entity)
     //add a default sort order to items without a specific
     //position if they're left in the main group.
     auto& input = entity.getComponent<UIInput>();
-    if (input.m_group == 0
+    if (input.m_group == UIInput::DefaultGroup //this *says* 1, but is (1<<0), therefore Group 0.
         && input.m_selectionIndex == 0)
     {
         input.m_selectionIndex = m_groups[0].size();

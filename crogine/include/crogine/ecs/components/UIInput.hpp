@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/detail/Assert.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
@@ -70,19 +71,53 @@ namespace cro
         at a time. Use UISystem::setActiveGroup() to control
         which group of UIInputs currently receive input.
         \see UISystem::setActiveGroup()
+        Deprecated: prefer addToGroup(), this is maintained
+        for backwards compatibility and will overwrite all
+        group assignments other than the given one.
+
         */
         void setGroup(std::size_t group)
         {
+            CRO_ASSERT(group < 32, "");
             m_previousGroup = m_group;
-            m_group = group;
+            m_group = (1 << group);
             m_updateGroup = true;
         }
 
         /*!
         \brief Returns the ID of the group to which the input is currently assigned
         \see setGroup()
+        Note: since the addition of addToGroup() this will return the group ID flags
+        OR'd together. Test for a specific bit to find out which groups are assigned.
         */
         std::size_t getGroup() const { return m_group; }
+
+        /*
+        \brief Add this input to one or more groups in the UIInputSystem.
+        This input will become active when UIInputSystem::setActiveGroup()
+        is called with one of the grou IDs to which this input is assigned.
+        */
+        void addToGroup(std::size_t group)
+        {
+            CRO_ASSERT(group < 32, "");
+            m_previousGroup = m_group;
+            m_group |= (1 << group);
+            m_updateGroup = true;
+        }
+
+        /*
+        \brief Removes this input from a group with the given ID, if it is
+        assigned, else does nothing.
+        \see addToGroup()
+        */
+        void removeFromGroup(std::size_t group)
+        {
+            CRO_ASSERT(group < 32, "");
+            m_previousGroup = m_group;
+            m_group &= ~(1 << group);
+            m_updateGroup = true;
+        }
+
 
         /*!
         \brief Defines the order in which components in a group are selected.
@@ -139,8 +174,9 @@ namespace cro
         }
 
     private:
-        std::size_t m_previousGroup = 0;
-        std::size_t m_group = 0;
+        static constexpr auto DefaultGroup = (1 << 0);
+        std::uint32_t m_previousGroup = DefaultGroup;
+        std::uint32_t m_group = DefaultGroup;
         std::size_t m_selectionIndex = 0;
         bool m_updateGroup = true; //do order sorting by default
 
