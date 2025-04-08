@@ -64,6 +64,7 @@ namespace
     constexpr glm::vec2 TopButtonSize = glm::vec2(68.f, 12.f);
     constexpr glm::vec2 TitleSize = glm::vec2(160.f, 50.f);
     constexpr glm::vec2 ItemButtonSize = glm::vec2(200.f, 32.f);
+    constexpr glm::vec2 BuyButtonSize = glm::vec2(200.f, TitleSize.y - (TopButtonSize.y + (BorderPadding * 2.f)));
 
     constexpr float DividerOffset = 0.4f;
     constexpr float StatBarHeight = 24.f;
@@ -317,6 +318,24 @@ void ShopState::loadAssets()
         itemPatch.leftNorm = normaliseRect(itemPatch.left);
         itemPatch.centreNorm = normaliseRect(itemPatch.centre);
         itemPatch.rightNorm = normaliseRect(itemPatch.right);
+
+        auto& buyPatch = m_threePatches[ThreePatch::BuyButton];
+        buyPatch.left = { 66.f, 0.f, 14.f, 30.f };
+        buyPatch.centre = { 80., 0.f, 16.f, 30.f };
+        buyPatch.right = { 96.f, 0.f, 14.f, 30.f };
+
+        buyPatch.leftNorm = normaliseRect(buyPatch.left);
+        buyPatch.centreNorm = normaliseRect(buyPatch.centre);
+        buyPatch.rightNorm = normaliseRect(buyPatch.right);
+
+        auto& exitPatch = m_threePatches[ThreePatch::ExitButton];
+        exitPatch.left = { 114.f, 0.f, 14.f, 30.f };
+        exitPatch.centre = { 128., 0.f, 16.f, 30.f };
+        exitPatch.right = { 144.f, 0.f, 14.f, 30.f };
+
+        exitPatch.leftNorm = normaliseRect(exitPatch.left);
+        exitPatch.centreNorm = normaliseRect(exitPatch.centre);
+        exitPatch.rightNorm = normaliseRect(exitPatch.right);
     }
 }
 
@@ -391,10 +410,6 @@ void ShopState::buildScene()
     titleRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto& uiSystem = *m_uiScene.getSystem<cro::UISystem>();
-    const auto selectedID = uiSystem.addCallback([&](cro::Entity e) 
-        {
-            applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::ButtonTop]);
-        });
 
     //Top bar - position node
     // |
@@ -405,6 +420,11 @@ void ShopState::buildScene()
     entity.getComponent<cro::UIElement>().relativePosition = { 0.f, 1.f };
     entity.getComponent<cro::UIElement>().absolutePosition = { BorderPadding, -BorderPadding };
     auto topBarRoot = entity;
+
+    const auto selectedID = uiSystem.addCallback([&](cro::Entity e)
+        {
+            applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::ButtonTop]);
+        });
 
     //and top bar buttons
     const auto createTopButton = [&](glm::vec2 position, const std::string& text, std::int32_t index)
@@ -447,7 +467,7 @@ void ShopState::buildScene()
             ent.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).depth = SpriteDepth;
             ent.getComponent<cro::UIElement>().absolutePosition = position;
             ent.getComponent<cro::UIElement>().resizeCallback =
-                [&, index, calcBackgroundSize, patch](cro::Entity e)
+                [index, calcBackgroundSize, patch](cro::Entity e)
                 {
                     const auto [buttonSpacing, buttonWidth] = calcBackgroundSize();
 
@@ -511,7 +531,7 @@ void ShopState::buildScene()
             ent.getComponent<cro::UIElement>().absolutePosition = position + glm::vec2({ TopButtonSize.x / 2.f, 10.f });
             ent.getComponent<cro::UIElement>().characterSize = UITextSize;
             ent.getComponent<cro::UIElement>().resizeCallback =
-                [&, index, calcBackgroundSize](cro::Entity e)
+                [index, calcBackgroundSize](cro::Entity e)
                 {
                     const auto [buttonSpacing, buttonWidth] = calcBackgroundSize();
                     e.getComponent<cro::UIElement>().absolutePosition.x = (buttonSpacing * index) + std::round(buttonWidth / 2.f);
@@ -1000,11 +1020,221 @@ void ShopState::buildScene()
 
     CRO_ASSERT(m_scrollNodes.size() == Category::Count, "");
 
-    //TODO scroll up and scroll down buttons
-    //TODO add BUY button between divider and title icon
-    //TODO add player balance bottom right
-    //TODO add Exit button bottom right
 
+
+
+    //buy button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::UIElement>(cro::UIElement::Position, true);
+    entity.getComponent<cro::UIElement>().relativePosition = { DividerOffset, 0.f };
+    entity.getComponent<cro::UIElement>().absolutePosition = { BorderPadding * 4.f, BorderPadding };
+    auto buyNode = entity;
+
+    const auto calcBuyWidth = [&]()
+        {
+            const auto scale = cro::UIElementSystem::getViewScale();
+            const auto screenWidth = std::round(cro::App::getWindow().getSize().x / scale);
+
+            return std::round(((screenWidth - (screenWidth * DividerOffset)) - BorderPadding * 8.f) / 2.f) - BorderPadding;
+        };
+
+    const auto& buyPatch = m_threePatches[ThreePatch::BuyButton];
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, BuyButtonSize.y)),
+            cro::Vertex2D(glm::vec2(0.f)),
+
+            cro::Vertex2D(glm::vec2(buyPatch.left.width, BuyButtonSize.y)),
+            cro::Vertex2D(glm::vec2(buyPatch.left.width, 0.f)),
+
+            cro::Vertex2D(glm::vec2(buyPatch.left.width + buyPatch.centre.width, BuyButtonSize.y)),
+            cro::Vertex2D(glm::vec2(buyPatch.left.width + buyPatch.centre.width, 0.f)),
+
+            cro::Vertex2D(BuyButtonSize),
+            cro::Vertex2D(glm::vec2(BuyButtonSize.x, 0.f)),
+        });
+    entity.getComponent<cro::Drawable2D>().setTexture(m_threePatchTexture);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).depth = SpriteDepth;
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [buyPatch, calcBuyWidth](cro::Entity e)
+        {
+            const auto buttonWidth = calcBuyWidth();
+
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            verts[4].position.x = buttonWidth - buyPatch.right.width;
+            verts[5].position.x = buttonWidth - buyPatch.right.width;
+
+            verts[6].position.x = buttonWidth;
+            verts[7].position.x = buttonWidth;
+
+            e.getComponent<cro::UIInput>().area.width = buttonWidth;
+        };
+
+    entity.addComponent<cro::UIInput>().area = { glm::vec2(0.f), BuyButtonSize };
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+        uiSystem.addCallback([&](cro::Entity e)
+            {
+                applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::BuyButton]);
+            });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
+        uiSystem.addCallback([&](cro::Entity e)
+            {
+                applyButtonTexture(ButtonTexID::Unselected, e, m_threePatches[ThreePatch::BuyButton]);
+            });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    applyButtonTexture(ButtonTexID::Selected, e, m_threePatches[ThreePatch::BuyButton]);
+
+                    //TODO display ARE YOU SURE
+                }
+            });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::BuyButton]);
+            });
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Driver);
+    entity.getComponent<cro::UIInput>().addToGroup(MenuID::Wood);
+    entity.getComponent<cro::UIInput>().addToGroup(MenuID::Iron);
+    entity.getComponent<cro::UIInput>().addToGroup(MenuID::Wedge);
+    entity.getComponent<cro::UIInput>().addToGroup(MenuID::Balls);
+    applyButtonTexture(ButtonTexID::Unselected, entity, m_threePatches[ThreePatch::BuyButton]);
+    buyNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("BUY");
+    entity.getComponent<cro::Text>().setFillColour(ButtonTextColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
+    entity.getComponent<cro::UIElement>().absolutePosition = glm::vec2({ BuyButtonSize.x / 2.f, 22.f });
+    entity.getComponent<cro::UIElement>().characterSize = UITextSize * 2;
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [calcBuyWidth](cro::Entity e)
+        {
+            const auto buttonWidth = calcBuyWidth();
+            e.getComponent<cro::UIElement>().absolutePosition.x = std::round(buttonWidth / 2.f);
+        };
+    buyNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //exit button
+    auto& exitPatch = m_threePatches[ThreePatch::ExitButton];
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, BuyButtonSize.y)),
+            cro::Vertex2D(glm::vec2(0.f)),
+
+            cro::Vertex2D(glm::vec2(buyPatch.left.width, BuyButtonSize.y)),
+            cro::Vertex2D(glm::vec2(buyPatch.left.width, 0.f)),
+
+            cro::Vertex2D(glm::vec2(buyPatch.left.width + buyPatch.centre.width, BuyButtonSize.y)),
+            cro::Vertex2D(glm::vec2(buyPatch.left.width + buyPatch.centre.width, 0.f)),
+
+            cro::Vertex2D(BuyButtonSize),
+            cro::Vertex2D(glm::vec2(BuyButtonSize.x, 0.f)),
+        });
+    entity.getComponent<cro::Drawable2D>().setTexture(m_threePatchTexture);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).depth = SpriteDepth;
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [exitPatch, calcBuyWidth](cro::Entity e)
+        {
+            const auto buttonWidth = calcBuyWidth();
+
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            verts[4].position.x = buttonWidth - exitPatch.right.width;
+            verts[5].position.x = buttonWidth - exitPatch.right.width;
+
+            verts[6].position.x = buttonWidth;
+            verts[7].position.x = buttonWidth;
+
+            e.getComponent<cro::UIElement>().absolutePosition.x = buttonWidth + (BorderPadding * 2.f);
+            e.getComponent<cro::UIInput>().area.width = buttonWidth;
+        };
+
+    entity.addComponent<cro::UIInput>().area = { glm::vec2(0.f), BuyButtonSize };
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+        uiSystem.addCallback([&](cro::Entity e)
+            {
+                applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::ExitButton]);
+            });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
+        uiSystem.addCallback([&](cro::Entity e)
+            {
+                applyButtonTexture(ButtonTexID::Unselected, e, m_threePatches[ThreePatch::ExitButton]);
+            });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    applyButtonTexture(ButtonTexID::Selected, e, m_threePatches[ThreePatch::ExitButton]);
+                    requestStackClear();
+                    requestStackPush(StateID::Clubhouse);
+                }
+            });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::ExitButton]);
+            });
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Driver);
+    entity.getComponent<cro::UIInput>().addToGroup(MenuID::Wood);
+    entity.getComponent<cro::UIInput>().addToGroup(MenuID::Iron);
+    entity.getComponent<cro::UIInput>().addToGroup(MenuID::Wedge);
+    entity.getComponent<cro::UIInput>().addToGroup(MenuID::Balls);
+
+    applyButtonTexture(ButtonTexID::Unselected, entity, m_threePatches[ThreePatch::ExitButton]);
+    buyNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Exit");
+    entity.getComponent<cro::Text>().setFillColour(ButtonTextColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
+    entity.getComponent<cro::UIElement>().absolutePosition = glm::vec2({ BuyButtonSize.x / 2.f, 22.f });
+    entity.getComponent<cro::UIElement>().characterSize = UITextSize * 2;
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [calcBuyWidth](cro::Entity e)
+        {
+            const auto buttonWidth = calcBuyWidth();
+            e.getComponent<cro::UIElement>().absolutePosition.x = (buttonWidth + (BorderPadding * 2.f)) + std::round(buttonWidth / 2.f);
+        };
+    buyNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    //player balance
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::UIElement>(cro::UIElement::Position, true);
+    entity.getComponent<cro::UIElement>().relativePosition = { DividerOffset, 1.f };
+    entity.getComponent<cro::UIElement>().absolutePosition = { BorderPadding * 4.f, -(TitleSize.y + BorderPadding) };
+    auto balanceRoot = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Balance: " + std::to_string(m_sharedData.inventory.balance) + " Cr");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
+    entity.getComponent<cro::UIElement>().characterSize = InfoTextSize * 2.f;
+    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, 22.f };
+    balanceRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    
     createStatDisplay();
 
     //camera resize callback
@@ -1079,7 +1309,7 @@ void ShopState::createStatDisplay()
             return std::round((screenWidth - (screenWidth * DividerOffset)) - BorderPadding * 8.f);
         };
 
-    const auto createStatDisplay = [&](glm::vec2 pos)
+    const auto createDisplay = [&](glm::vec2 pos)
         {
             auto& [background, text] = m_statItems.statBars.emplace_back();
 
@@ -1148,15 +1378,15 @@ void ShopState::createStatDisplay()
     };
     
     glm::vec2 pos = { BorderPadding * 3.f, -((UITextSize * 8) + (BorderPadding * 2.f)) };
-    createStatDisplay(pos);
+    createDisplay(pos);
 
     pos = { BorderPadding * 3.f, -((UITextSize * 8) + StatBarHeight + (BorderPadding * 4.f)) };
-    createStatDisplay(pos);
+    createDisplay(pos);
 
 
 
     //item thumbnail
-    pos.y -= BorderPadding * 4.f;
+    pos.y -= BorderPadding * 2.f;
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
@@ -1170,7 +1400,7 @@ void ShopState::createStatDisplay()
             
             const auto basePos = -(TitleSize.y + (BorderPadding * 2.f)) + pos.y;
             const auto windowHeight = std::round(cro::App::getWindow().getSize().y / cro::UIElementSystem::getViewScale());
-            const auto height = (windowHeight + basePos) -32.f; //TODO height of button + padding
+            const auto height = (windowHeight + basePos) - (BuyButtonSize.y + (BorderPadding * 3.f));
 
             m_itemPreviewTexture.create(width, static_cast<std::uint32_t>(height), false);
             e.getComponent<cro::Sprite>().setTexture(m_itemPreviewTexture.getTexture());

@@ -29,6 +29,10 @@ source distribution.
 
 #pragma once
 
+#include <Content.hpp>
+
+#include <crogine/detail/Types.hpp>
+
 #include <cstdint>
 #include <array>
 #include <string>
@@ -90,7 +94,7 @@ namespace inv
         static constexpr std::uint32_t MaxCharBytes = 32;
 
         std::array<std::int32_t, ItemType::Count> items = {};
-        std::array<std::uint8_t, MaxCharBytes> name = {};
+        std::array<std::uint8_t, MaxCharBytes + 1> name = {}; //utf8 string
 
         Loadout()
         {
@@ -111,14 +115,54 @@ namespace inv
 
         std::int32_t balance = 5000;
 
+        //in case of expansion in the future.
+        /*const */std::array<std::int32_t, 33> Reserved = {};
+
         Inventory()
         {
             std::fill(inventory.begin(), inventory.end(), -1);
         }
-
-        bool read() { return false; }
-        bool write() { return false; }
     };
+
+    static inline bool read(Inventory& dst)
+    {
+        const std::string fileName("equip.inv");
+        const std::string filePath = Content::getBaseContentPath() + fileName;
+
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(filePath.c_str(), "rb");
+        if (file.file)
+        {
+            if (SDL_RWread(file.file, &dst, sizeof(Inventory), 1) == 0)
+            {
+                LogE << "Failed reading " << filePath << ", " << SDL_GetError() << std::endl;
+                return false;
+            }
+            return true;
+        }
+
+        return false;
+    }
+    static inline bool write(const Inventory& src)
+    {
+        const std::string fileName("equip.inv");
+        const std::string filePath = Content::getBaseContentPath() + fileName;
+
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(filePath.c_str(), "wb");
+        if (file.file)
+        {
+            if (SDL_RWwrite(file.file, &src, sizeof(Inventory), 1) < 1)
+            {
+                LogE << "Failed writing " << filePath << ", " << SDL_GetError() << std::endl;
+                return false;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
 
     static inline const std::array<std::string, 13u> Manufacturers =
     {

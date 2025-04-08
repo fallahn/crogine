@@ -51,7 +51,7 @@ struct ThreePatch final
 
     enum ID
     {
-        ButtonTop, ButtonItem,
+        ButtonTop, ButtonItem, BuyButton, ExitButton,
 
         Count
     };

@@ -1687,7 +1687,10 @@ void GolfGame::loadPreferences()
     }
     loadMusic();
 
-    m_sharedData.inventory.read();
+    if (!inv::read(m_sharedData.inventory))
+    {
+        m_sharedData.inventory = {};
+    }
 
     //do this last so we're saving any settings which were loaded successfully too
     savePreferences();
@@ -1772,7 +1775,7 @@ void GolfGame::savePreferences()
         SDL_RWwrite(file.file, &m_sharedData.inputBinding, sizeof(InputBinding), 1);
     }
 
-    m_sharedData.inventory.write();
+    inv::write(m_sharedData.inventory);
 }
 
 void GolfGame::loadAvatars()
