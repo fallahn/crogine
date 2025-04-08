@@ -116,6 +116,16 @@ private:
     std::int32_t m_selectedCategory;
     cro::FloatRect m_catergoryCroppingArea;
 
+    struct ButtonID final
+    {
+        enum
+        {
+            ScrollUp, ScrollDown, Buy, Exit,
+            Count
+        };
+    };
+    std::array<cro::Entity, ButtonID::Count> m_buttonEnts = {};
+
     void loadAssets();
     void addSystems();
     void buildScene();
@@ -133,6 +143,8 @@ private:
 
     void createStatDisplay();
     void updateStatDisplay(std::int32_t uid);
+
+    void updateCatIndices();
 
     void scroll(bool up);
     void scrollTo(std::int32_t);

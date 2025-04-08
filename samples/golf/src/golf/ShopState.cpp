@@ -54,6 +54,8 @@ source distribution.
 
 namespace
 {
+#include "ShopEnum.inl"
+
     //from edge of window, scaled with getViewScale()
     constexpr float BorderPadding = 4.f;
 
@@ -483,6 +485,8 @@ void ShopState::buildScene()
                 };
             
             ent.addComponent<cro::UIInput>().area = { glm::vec2(0.f), TopButtonSize };
+            ent.getComponent<cro::UIInput>().setSelectionIndex(CatButtonDriver + index);
+
             ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
             ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
                 uiSystem.addCallback([&,index](cro::Entity e)
@@ -510,6 +514,7 @@ void ShopState::buildScene()
                             m_scrollNodes[index].cropItems();
 
                             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(index);
+                            updateCatIndices();
                         }
                     });
             applyButtonTexture(m_selectedCategory == index ? ButtonTexID::Selected : ButtonTexID::Unselected, ent, m_threePatches[ThreePatch::ButtonTop]);
@@ -549,6 +554,7 @@ void ShopState::buildScene()
         "Balls",
     };
 
+    
     for (auto i = 0u; i < ButtonText.size(); ++i)
     {
         createTopButton({ (TopButtonSize.x + BorderPadding) * i, -(TopButtonSize.y)}, ButtonText[i], i);
@@ -647,6 +653,9 @@ void ShopState::buildScene()
     buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("highlight_up");
     buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     buttonEnt.addComponent<cro::UIInput>().area = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(CatScrollUp);
+    buttonEnt.getComponent<cro::UIInput>().setNextIndex(CatScrollDown, CatScrollDown);
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(CatScrollDown, CatButtonIron); //TODO set this with active category
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelect;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselect;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -665,7 +674,7 @@ void ShopState::buildScene()
     buttonEnt.getComponent<cro::UIInput>().addToGroup(MenuID::Wedge);
     buttonEnt.getComponent<cro::UIInput>().addToGroup(MenuID::Balls);
     entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
-
+    m_buttonEnts[ButtonID::ScrollUp] = buttonEnt;
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -681,6 +690,9 @@ void ShopState::buildScene()
     buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("highlight_down");
     buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     buttonEnt.addComponent<cro::UIInput>().area = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(CatScrollDown);
+    buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonBuy, CatButtonIron);
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonExit, CatScrollUp); //TODO update this when updating active category
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelect;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselect;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -698,7 +710,7 @@ void ShopState::buildScene()
     buttonEnt.getComponent<cro::UIInput>().addToGroup(MenuID::Wedge);
     buttonEnt.getComponent<cro::UIInput>().addToGroup(MenuID::Balls);
     entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
-
+    m_buttonEnts[ButtonID::ScrollDown] = buttonEnt;
 
     const auto& patch = m_threePatches[ThreePatch::ButtonItem];
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
@@ -755,8 +767,13 @@ void ShopState::buildScene()
                     e.getComponent<cro::UIInput>().area.width = width;
                 };
             
+            const auto selectionIndex = ((category + 1) * 100) + index;
+
             ent.addComponent<cro::UIInput>().area = { 0.f, 0.f, ItemButtonSize.x, ItemButtonSize.y };
             ent.getComponent<cro::UIInput>().setGroup(category);
+            ent.getComponent<cro::UIInput>().setSelectionIndex(selectionIndex);
+            ent.getComponent<cro::UIInput>().setNextIndex(CatScrollUp, selectionIndex + 1);
+            ent.getComponent<cro::UIInput>().setPrevIndex(ButtonExit, selectionIndex - 1);
             ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
                 uiSystem.addCallback([&, index, category](cro::Entity e)
                     {
@@ -1021,6 +1038,22 @@ void ShopState::buildScene()
     CRO_ASSERT(m_scrollNodes.size() == Category::Count, "");
 
 
+    //correct the up/down indices for the first and last item in each cat
+    m_scrollNodes[Category::Driver].items.front().buttonBackground.getComponent<cro::UIInput>().setPrevIndex(ButtonExit, CatButtonWood);
+    m_scrollNodes[Category::Driver].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollUp, CatButtonWood);
+
+    m_scrollNodes[Category::Wood].items.front().buttonBackground.getComponent<cro::UIInput>().setPrevIndex(ButtonExit, CatButtonDriver);
+    m_scrollNodes[Category::Wood].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollUp, CatButtonDriver);
+
+    m_scrollNodes[Category::Iron].items.front().buttonBackground.getComponent<cro::UIInput>().setPrevIndex(ButtonExit, CatButtonDriver);
+    m_scrollNodes[Category::Iron].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollUp, CatButtonDriver);
+
+    m_scrollNodes[Category::Wedge].items.front().buttonBackground.getComponent<cro::UIInput>().setPrevIndex(ButtonExit, CatButtonDriver);
+    m_scrollNodes[Category::Wedge].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollUp, CatButtonDriver);
+
+    m_scrollNodes[Category::Ball].items.front().buttonBackground.getComponent<cro::UIInput>().setPrevIndex(ButtonExit, CatButtonDriver);
+    m_scrollNodes[Category::Ball].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollUp, CatButtonDriver);
+
 
 
     //buy button
@@ -1074,6 +1107,9 @@ void ShopState::buildScene()
         };
 
     entity.addComponent<cro::UIInput>().area = { glm::vec2(0.f), BuyButtonSize };
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonBuy);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonExit, CatButtonWedge);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CatScrollDown, CatButtonWedge);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
         uiSystem.addCallback([&](cro::Entity e)
             {
@@ -1106,7 +1142,7 @@ void ShopState::buildScene()
     entity.getComponent<cro::UIInput>().addToGroup(MenuID::Balls);
     applyButtonTexture(ButtonTexID::Unselected, entity, m_threePatches[ThreePatch::BuyButton]);
     buyNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    m_buttonEnts[ButtonID::Buy] = entity;
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1164,6 +1200,9 @@ void ShopState::buildScene()
         };
 
     entity.addComponent<cro::UIInput>().area = { glm::vec2(0.f), BuyButtonSize };
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonExit);
+    entity.getComponent<cro::UIInput>().setNextIndex(CatScrollDown, CatButtonBall); //TODO this needs to be updated with active item list
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonBuy, CatButtonBall);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
         uiSystem.addCallback([&](cro::Entity e)
             {
@@ -1197,6 +1236,7 @@ void ShopState::buildScene()
 
     applyButtonTexture(ButtonTexID::Unselected, entity, m_threePatches[ThreePatch::ExitButton]);
     buyNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_buttonEnts[ButtonID::Exit] = entity;
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1236,6 +1276,8 @@ void ShopState::buildScene()
     balanceRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
     createStatDisplay();
+
+    updateCatIndices();
 
     //camera resize callback
     auto camCallback = [&](cro::Camera& cam)
@@ -1454,6 +1496,202 @@ void ShopState::updateStatDisplay(std::int32_t itemIndex)
     //update manufacturer icon
     m_statItems.manufacturerIcon.getComponent<cro::Sprite>().setTextureRect(m_largeLogos[item.manufacturer].getTextureRect());
 
+}
+
+void ShopState::updateCatIndices()
+{
+    //called when switching categories to set the correct
+    //prev/next indices for the top row buttons
+    switch (m_selectedCategory)
+    {
+    default: break;
+    case Category::Driver:
+        //no need to set the active cat as the button is disabled
+    {
+        auto& ip1 = m_scrollNodes[Category::Wood].buttonBackground.getComponent<cro::UIInput>();
+        ip1.setNextIndex(CatButtonIron, CatItemDriver);
+        ip1.setPrevIndex(CatButtonBall, CatItemDriver + (m_scrollNodes[m_selectedCategory].items.size() - 1));
+
+        auto& ip2 = m_scrollNodes[Category::Iron].buttonBackground.getComponent<cro::UIInput>();
+        ip2.setNextIndex(CatButtonWedge, CatScrollUp); //down scroll, up other scroll
+        ip2.setPrevIndex(CatButtonWood, CatScrollDown);
+
+        auto& ip3 = m_scrollNodes[Category::Wedge].buttonBackground.getComponent<cro::UIInput>();
+        ip3.setNextIndex(CatButtonBall, ButtonBuy); //up/down buy button
+        ip3.setPrevIndex(CatButtonWood, ButtonBuy);
+
+        auto& ip4 = m_scrollNodes[Category::Ball].buttonBackground.getComponent<cro::UIInput>();
+        ip4.setNextIndex(CatButtonWood, ButtonExit); //up/down exit button
+        ip4.setPrevIndex(CatButtonWedge, ButtonExit);
+
+
+        auto& ip5 = m_buttonEnts[ButtonID::ScrollUp].getComponent<cro::UIInput>();
+        ip5.setNextIndex(CatItemDriver, CatScrollDown);
+        ip5.setPrevIndex(CatItemDriver, CatButtonIron);
+
+        auto& ip6 = m_buttonEnts[ButtonID::ScrollDown].getComponent<cro::UIInput>();
+        ip6.setNextIndex(ButtonBuy, CatButtonIron);
+        ip6.setPrevIndex(CatItemDriver + (m_scrollNodes[m_selectedCategory].items.size() - 1), CatScrollUp);
+
+        auto& ip7 = m_buttonEnts[ButtonID::Buy].getComponent<cro::UIInput>();
+        ip7.setNextIndex(ButtonExit, CatButtonWedge);
+        ip7.setPrevIndex(CatScrollDown, CatButtonWedge);
+
+        auto& ip8 = m_buttonEnts[ButtonID::Exit].getComponent<cro::UIInput>();
+        ip8.setNextIndex(CatItemDriver + (m_scrollNodes[m_selectedCategory].items.size() - 1));
+        ip8.setPrevIndex(ButtonBuy);
+    }
+
+        break;
+    case Category::Wood:
+    {
+        auto& ip1 = m_scrollNodes[Category::Driver].buttonBackground.getComponent<cro::UIInput>();
+        ip1.setNextIndex(CatButtonIron, CatItemWood);
+        ip1.setPrevIndex(CatButtonBall, CatItemWood + (m_scrollNodes[m_selectedCategory].items.size() - 1));
+
+        auto& ip2 = m_scrollNodes[Category::Iron].buttonBackground.getComponent<cro::UIInput>();
+        ip2.setNextIndex(CatButtonWedge, CatScrollUp);
+        ip2.setPrevIndex(CatButtonDriver, CatScrollDown);
+
+        auto& ip3 = m_scrollNodes[Category::Wedge].buttonBackground.getComponent<cro::UIInput>();
+        ip3.setNextIndex(CatButtonBall, ButtonBuy);
+        ip3.setPrevIndex(CatButtonIron, ButtonBuy);
+
+        auto& ip4 = m_scrollNodes[Category::Ball].buttonBackground.getComponent<cro::UIInput>();
+        ip4.setNextIndex(CatButtonDriver, ButtonExit);
+        ip4.setPrevIndex(CatButtonWedge, ButtonExit);
+
+
+
+        auto& ip5 = m_buttonEnts[ButtonID::ScrollUp].getComponent<cro::UIInput>();
+        ip5.setNextIndex(CatItemWood, CatScrollDown);
+        ip5.setPrevIndex(CatItemWood, CatButtonIron);
+
+        auto& ip6 = m_buttonEnts[ButtonID::ScrollDown].getComponent<cro::UIInput>();
+        ip6.setNextIndex(ButtonBuy, CatButtonIron);
+        ip6.setPrevIndex(CatItemWood + (m_scrollNodes[m_selectedCategory].items.size() - 1), CatScrollUp);
+
+        auto& ip7 = m_buttonEnts[ButtonID::Buy].getComponent<cro::UIInput>();
+        ip7.setNextIndex(ButtonExit, CatButtonWedge);
+        ip7.setPrevIndex(CatScrollDown, CatButtonWedge);
+
+        auto& ip8 = m_buttonEnts[ButtonID::Exit].getComponent<cro::UIInput>();
+        ip8.setNextIndex(CatItemWood + (m_scrollNodes[m_selectedCategory].items.size() - 1), CatButtonBall);
+        ip8.setPrevIndex(ButtonBuy, CatButtonBall);
+    }
+        break;
+    case Category::Iron:
+    {
+        auto& ip1 = m_scrollNodes[Category::Driver].buttonBackground.getComponent<cro::UIInput>();
+        ip1.setNextIndex(CatButtonWood, CatItemIron);
+        ip1.setPrevIndex(CatButtonBall, CatItemIron + (m_scrollNodes[m_selectedCategory].items.size() - 1));
+
+        auto& ip2 = m_scrollNodes[Category::Wood].buttonBackground.getComponent<cro::UIInput>();
+        ip2.setNextIndex(CatButtonWedge, CatScrollUp);
+        ip2.setPrevIndex(CatButtonDriver, CatScrollDown);
+
+        auto& ip3 = m_scrollNodes[Category::Wedge].buttonBackground.getComponent<cro::UIInput>();
+        ip3.setNextIndex(CatButtonBall,ButtonBuy);
+        ip3.setPrevIndex(CatButtonWood, ButtonBuy);
+
+        auto& ip4 = m_scrollNodes[Category::Ball].buttonBackground.getComponent<cro::UIInput>();
+        ip4.setNextIndex(CatButtonDriver, ButtonExit);
+        ip4.setPrevIndex(CatButtonWedge, ButtonExit);
+
+
+
+        auto& ip5 = m_buttonEnts[ButtonID::ScrollUp].getComponent<cro::UIInput>();
+        ip5.setNextIndex(CatItemIron, CatScrollDown);
+        ip5.setPrevIndex(CatItemIron, CatButtonWedge);
+
+        auto& ip6 = m_buttonEnts[ButtonID::ScrollDown].getComponent<cro::UIInput>();
+        ip6.setNextIndex(ButtonBuy, CatButtonWedge);
+        ip6.setPrevIndex(CatItemIron + (m_scrollNodes[m_selectedCategory].items.size() - 1), CatScrollUp);
+
+        auto& ip7 = m_buttonEnts[ButtonID::Buy].getComponent<cro::UIInput>();
+        ip7.setNextIndex(ButtonExit, CatButtonWedge);
+        ip7.setPrevIndex(CatScrollDown, CatButtonWedge);
+
+        auto& ip8 = m_buttonEnts[ButtonID::Exit].getComponent<cro::UIInput>();
+        ip8.setNextIndex(CatItemIron + (m_scrollNodes[m_selectedCategory].items.size() - 1), CatButtonBall);
+        ip8.setPrevIndex(ButtonBuy, CatButtonBall);
+    }
+        break;
+    case Category::Wedge:
+    {
+        auto& ip1 = m_scrollNodes[Category::Driver].buttonBackground.getComponent<cro::UIInput>();
+        ip1.setNextIndex(CatButtonWood, CatItemWedge);
+        ip1.setPrevIndex(CatButtonBall, CatItemWedge + (m_scrollNodes[m_selectedCategory].items.size() - 1));
+
+        auto& ip2 = m_scrollNodes[Category::Wood].buttonBackground.getComponent<cro::UIInput>();
+        ip2.setNextIndex(CatButtonIron, CatItemWedge);
+        ip2.setPrevIndex(CatButtonDriver, CatItemWedge + (m_scrollNodes[m_selectedCategory].items.size() - 1));
+
+        auto& ip3 = m_scrollNodes[Category::Iron].buttonBackground.getComponent<cro::UIInput>();
+        ip3.setNextIndex(CatButtonBall, CatScrollUp);
+        ip3.setPrevIndex(CatButtonWood, CatScrollDown);
+
+        auto& ip4 = m_scrollNodes[Category::Ball].buttonBackground.getComponent<cro::UIInput>();
+        ip4.setNextIndex(CatButtonDriver, ButtonExit);
+        ip4.setPrevIndex(CatButtonIron, ButtonExit);
+
+
+
+        auto& ip5 = m_buttonEnts[ButtonID::ScrollUp].getComponent<cro::UIInput>();
+        ip5.setNextIndex(CatItemWedge, CatScrollDown);
+        ip5.setPrevIndex(CatItemWedge, CatButtonIron);
+
+        auto& ip6 = m_buttonEnts[ButtonID::ScrollDown].getComponent<cro::UIInput>();
+        ip6.setNextIndex(ButtonBuy, CatScrollUp);
+        ip6.setPrevIndex(CatItemWedge - (m_scrollNodes[m_selectedCategory].items.size() - 1), CatButtonIron);
+
+        auto& ip7 = m_buttonEnts[ButtonID::Buy].getComponent<cro::UIInput>();
+        ip7.setNextIndex(ButtonExit, CatButtonBall);
+        ip7.setPrevIndex(CatScrollDown, CatButtonBall);
+
+        auto& ip8 = m_buttonEnts[ButtonID::Exit].getComponent<cro::UIInput>();
+        ip8.setNextIndex(CatItemWedge - (m_scrollNodes[m_selectedCategory].items.size() - 1), CatButtonBall);
+        ip8.setPrevIndex(ButtonBuy, CatButtonBall);
+    }
+        break;
+    case Category::Ball:
+    {
+        auto& ip1 = m_scrollNodes[Category::Driver].buttonBackground.getComponent<cro::UIInput>();
+        ip1.setNextIndex(CatButtonWood, CatItemBall);
+        ip1.setPrevIndex(CatButtonWedge, CatItemBall + (m_scrollNodes[m_selectedCategory].items.size() - 1));
+
+        auto& ip2 = m_scrollNodes[Category::Wood].buttonBackground.getComponent<cro::UIInput>();
+        ip2.setNextIndex(CatButtonIron, CatItemBall);
+        ip2.setPrevIndex(CatButtonDriver, CatItemBall + (m_scrollNodes[m_selectedCategory].items.size() - 1));
+
+        auto& ip3 = m_scrollNodes[Category::Iron].buttonBackground.getComponent<cro::UIInput>();
+        ip3.setNextIndex(CatButtonWedge, CatScrollUp);
+        ip3.setPrevIndex(CatButtonWood, CatScrollDown);
+
+        auto& ip4 = m_scrollNodes[Category::Wedge].buttonBackground.getComponent<cro::UIInput>();
+        ip4.setNextIndex(CatButtonDriver, ButtonBuy);
+        ip4.setPrevIndex(CatButtonIron, ButtonBuy);
+
+
+
+        auto& ip5 = m_buttonEnts[ButtonID::ScrollUp].getComponent<cro::UIInput>();
+        ip5.setNextIndex(CatItemBall, CatScrollDown);
+        ip5.setPrevIndex(CatItemBall, CatButtonIron);
+
+        auto& ip6 = m_buttonEnts[ButtonID::ScrollDown].getComponent<cro::UIInput>();
+        ip6.setNextIndex(ButtonBuy, CatButtonIron);
+        ip6.setPrevIndex(CatItemBall + (m_scrollNodes[m_selectedCategory].items.size() - 1), CatScrollUp);
+
+        auto& ip7 = m_buttonEnts[ButtonID::Buy].getComponent<cro::UIInput>();
+        ip7.setNextIndex(ButtonExit, CatButtonWedge);
+        ip7.setPrevIndex(CatScrollDown, CatButtonWedge);
+
+        auto& ip8 = m_buttonEnts[ButtonID::Exit].getComponent<cro::UIInput>();
+        ip8.setNextIndex(CatItemBall + (m_scrollNodes[m_selectedCategory].items.size() - 1), CatButtonWedge);
+        ip8.setPrevIndex(ButtonBuy, CatButtonWedge);
+    }
+        break;
+    }
 }
 
 void ShopState::scroll(bool up)

@@ -1049,6 +1049,7 @@
     <None Include="src\golf\shaders\WaterShader.inl" />
     <None Include="src\golf\shaders\Weather.inl" />
     <None Include="src\golf\shaders\WireframeShader.inl" />
+    <None Include="src\golf\ShopEnum.inl" />
     <None Include="src\scrub\Shaders.inl" />
   </ItemGroup>
   <ItemGroup>
