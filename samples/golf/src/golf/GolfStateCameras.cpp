@@ -976,7 +976,7 @@ void GolfState::updateSkybox(float dt)
     diff -= (diff / 32.f);
 
     dstCam.viewport = srcCam.viewport;
-    dstCam.setPerspective(baseFov * (1.f - diff), srcCam.getAspectRatio(), 0.5f, 14.f);
+    dstCam.setPerspective(baseFov * (1.f - diff), srcCam.getAspectRatio(), 0.01f, 14.f);
 
     static constexpr float HeightScale = 128.f;
 
