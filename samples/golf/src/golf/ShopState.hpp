@@ -92,13 +92,13 @@ private:
         cro::Entity badge;
 
         std::int32_t itemIndex = 0; //index to inv::Items
-        bool visible = true; //set to false if cropped or partially cropped
+        bool visible = false; //set to false if cropped or partially cropped
         
         enum
         {
             Top, Bottom, None
         };
-        std::int32_t cropping = None; //only valid if not visible / partially cropped, dictates if we're off the top or bottom
+        std::int32_t cropping = Bottom; //only valid if not visible / partially cropped, dictates if we're off the top or bottom
     };
 
     struct CategoryItem final

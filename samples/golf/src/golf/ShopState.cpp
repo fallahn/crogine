@@ -32,6 +32,8 @@ source distribution.
 #include "ShopState.hpp"
 #include "SharedStateData.hpp"
 #include "MenuConsts.hpp"
+#include "Clubs.hpp"
+#include "Social.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -188,6 +190,11 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
 //public
 bool ShopState::handleEvent(const cro::Event& evt)
 {
+    if (ImGui::GetIO().WantCaptureMouse)
+    {
+        return false;
+    }
+
     switch (evt.type)
     {
     default: break;
@@ -404,7 +411,7 @@ void ShopState::buildScene()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Shop\nor\nLoadout");
+    entity.addComponent<cro::Text>(font).setString("Equipment\nCounter");
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Black]);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).absolutePosition = { TitleSize.x / 2.f, TitleSize.y - BorderPadding };
@@ -715,6 +722,25 @@ void ShopState::buildScene()
     const auto& patch = m_threePatches[ThreePatch::ButtonItem];
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
+    //checks if this particular club is unlocked
+    const auto itemAvailable = [](const inv::Item& i)
+        {
+            switch (i.type)
+            {
+            default: return true;
+            case inv::FiveW:
+                return Social::getLevel() >= ClubID::getUnlockLevel(ClubID::FiveWood);
+            case inv::FourI:
+                return Social::getLevel() >= ClubID::getUnlockLevel(ClubID::FourIron);
+            case inv::SixI:
+                return Social::getLevel() >= ClubID::getUnlockLevel(ClubID::SixIron);
+            case inv::SevenI:
+                return Social::getLevel() >= ClubID::getUnlockLevel(ClubID::SevenIron);
+            case inv::NineI:
+                return Social::getLevel() >= ClubID::getUnlockLevel(ClubID::NineIron);
+            }
+            return true;
+        };
 
     //category list - index is item index within category, NOT into inv::Items array
     //TODO we don't really need to pass the parent ent when we can just capture it
@@ -993,11 +1019,17 @@ void ShopState::buildScene()
                     [&, catIndex]()
                     {
                         //only iterate over as many as we can assume are at least visible
-                        const auto start = std::max(0, m_scrollNodes[catIndex].scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex - 1);
-                        const auto end = std::min(static_cast<std::int32_t>(m_scrollNodes[catIndex].items.size()/* - 1*/), 
-                            start + static_cast<std::int32_t>(std::ceil((m_catergoryCroppingArea.height / m_viewScale) / ScrollData::Stride)) + 1);
+                        //const auto start = std::max(0, m_scrollNodes[catIndex].scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex - 1);
+                        //const auto end = std::min(static_cast<std::int32_t>(m_scrollNodes[catIndex].items.size()/* - 1*/), 
+                        //    start + static_cast<std::int32_t>(std::ceil((m_catergoryCroppingArea.height / m_viewScale) / ScrollData::Stride)) + 1);
 
-                        for(auto i = start; i < end; ++i)
+                        //for(auto i = start; i < end; ++i)
+
+                        //HMMM this would be a nice optimisation, but we need to update
+                        //all items to each end of the list as it's possible to navigated to
+                        //them using controller / cursor keys :(
+
+                        for(auto i = 0u; i < m_scrollNodes[catIndex].items.size(); ++i)
                         {
                             auto& item = m_scrollNodes[catIndex].items[i];
                             auto bounds = item.buttonBackground.getComponent<cro::Drawable2D>().getLocalBounds();
@@ -1027,12 +1059,15 @@ void ShopState::buildScene()
         }
 
         //add item to current scroll node
-        createItem(scrollNode, currentPos, item, itemIndex, catIndex-1);
-        scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount++;
-        m_scrollNodes[catIndex - 1].items[itemIndex].itemIndex = itemID++;
-        
-        itemIndex++;
-        currentPos.y -= ScrollData::Stride;
+        if (itemAvailable(item))
+        {
+            createItem(scrollNode, currentPos, item, itemIndex, catIndex - 1);
+            scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount++;
+            m_scrollNodes[catIndex - 1].items[itemIndex].itemIndex = itemID++;
+
+            itemIndex++;
+            currentPos.y -= ScrollData::Stride;
+        }
     }
 
     CRO_ASSERT(m_scrollNodes.size() == Category::Count, "");
@@ -1040,19 +1075,19 @@ void ShopState::buildScene()
 
     //correct the up/down indices for the first and last item in each cat
     m_scrollNodes[Category::Driver].items.front().buttonBackground.getComponent<cro::UIInput>().setPrevIndex(ButtonExit, CatButtonWood);
-    m_scrollNodes[Category::Driver].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollUp, CatButtonWood);
+    m_scrollNodes[Category::Driver].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollDown, CatButtonWood);
 
     m_scrollNodes[Category::Wood].items.front().buttonBackground.getComponent<cro::UIInput>().setPrevIndex(ButtonExit, CatButtonDriver);
-    m_scrollNodes[Category::Wood].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollUp, CatButtonDriver);
+    m_scrollNodes[Category::Wood].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollDown, CatButtonDriver);
 
     m_scrollNodes[Category::Iron].items.front().buttonBackground.getComponent<cro::UIInput>().setPrevIndex(ButtonExit, CatButtonDriver);
-    m_scrollNodes[Category::Iron].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollUp, CatButtonDriver);
+    m_scrollNodes[Category::Iron].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollDown, CatButtonDriver);
 
     m_scrollNodes[Category::Wedge].items.front().buttonBackground.getComponent<cro::UIInput>().setPrevIndex(ButtonExit, CatButtonDriver);
-    m_scrollNodes[Category::Wedge].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollUp, CatButtonDriver);
+    m_scrollNodes[Category::Wedge].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollDown, CatButtonDriver);
 
     m_scrollNodes[Category::Ball].items.front().buttonBackground.getComponent<cro::UIInput>().setPrevIndex(ButtonExit, CatButtonDriver);
-    m_scrollNodes[Category::Ball].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollUp, CatButtonDriver);
+    m_scrollNodes[Category::Ball].items.back().buttonBackground.getComponent<cro::UIInput>().setNextIndex(CatScrollDown, CatButtonDriver);
 
 
 
@@ -1642,8 +1677,8 @@ void ShopState::updateCatIndices()
         ip5.setPrevIndex(CatItemWedge, CatButtonIron);
 
         auto& ip6 = m_buttonEnts[ButtonID::ScrollDown].getComponent<cro::UIInput>();
-        ip6.setNextIndex(ButtonBuy, CatScrollUp);
-        ip6.setPrevIndex(CatItemWedge - (m_scrollNodes[m_selectedCategory].items.size() - 1), CatButtonIron);
+        ip6.setNextIndex(ButtonBuy, CatButtonIron);
+        ip6.setPrevIndex(CatItemWedge + (m_scrollNodes[m_selectedCategory].items.size() - 1), CatScrollUp);
 
         auto& ip7 = m_buttonEnts[ButtonID::Buy].getComponent<cro::UIInput>();
         ip7.setNextIndex(ButtonExit, CatButtonBall);
