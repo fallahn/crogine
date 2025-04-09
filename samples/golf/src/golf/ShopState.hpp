@@ -145,6 +145,7 @@ private:
     void createStatDisplay();
     void updateStatDisplay(std::int32_t uid);
 
+    void setCategory(std::int32_t);
     void updateCatIndices();
 
     void scroll(bool up);

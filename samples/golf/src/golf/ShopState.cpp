@@ -96,6 +96,42 @@ namespace
     constexpr cro::Colour StatBarColourBack = CD32::Colours[CD32::TanDark];
     constexpr cro::Colour StatTextColour = CD32::Colours[CD32::BeigeLight];
 
+    struct TextFlashData final
+    {
+        std::int32_t count = 8;
+        float currTime = 0.f;
+
+        cro::Colour c1 = TextNormalColour;
+        cro::Colour c2 = TextHighlightColour;
+
+        void operator()(cro::Entity e, float dt)
+        {
+            constexpr float FlashTime = 0.125f;
+
+            currTime += dt;
+
+            if (currTime > FlashTime)
+            {
+                currTime -= FlashTime;
+                count--;
+
+                if (count == 0)
+                {
+                    count = 8;
+                    currTime = 0.f;
+                    e.getComponent<cro::Callback>().active = false;
+
+                    e.getComponent<cro::Text>().setFillColour(c1);
+                }
+                else
+                {
+                    const auto c = count % 2 == 0 ? c1 : c2;
+                    e.getComponent<cro::Text>().setFillColour(c);
+                }
+            }
+        }
+    };
+
     struct StatBarData final
     {
         float currentSize = 40.f;
@@ -195,6 +231,19 @@ bool ShopState::handleEvent(const cro::Event& evt)
         return false;
     }
 
+    const auto nextCat = 
+        [&]()
+        {
+            const auto idx = (m_selectedCategory + 1) % Category::Count;
+            setCategory(idx);
+        };
+    const auto prevCat = 
+        [&]()
+        {
+            const auto idx = (m_selectedCategory + (Category::Count - 1)) % Category::Count;
+            setCategory(idx);
+        };
+
     switch (evt.type)
     {
     default: break;
@@ -206,6 +255,37 @@ bool ShopState::handleEvent(const cro::Event& evt)
         else if (evt.wheel.y < 0)
         {
             scroll(false);
+        }
+        break;
+    case SDL_KEYDOWN:
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        {
+            prevCat();
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        {
+            nextCat();
+        }
+        else if (evt.key.keysym.sym == SDLK_ESCAPE)
+        {
+            requestStackClear();
+            requestStackPush(StateID::Clubhouse);
+        }
+        break;
+    case SDL_CONTROLLERBUTTONDOWN:
+        switch (evt.cbutton.button)
+        {
+        default: break;
+        case cro::GameController::ButtonLeftShoulder:
+            prevCat();
+            break;
+        case cro::GameController::ButtonRightShoulder:
+            nextCat();
+            break;
+        case cro::GameController::ButtonB:
+            requestStackClear();
+            requestStackPush(StateID::Clubhouse);
+            break;
         }
         break;
     }
@@ -419,6 +499,7 @@ void ShopState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Equipment\nCounter");
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setVerticalSpacing(5.f);
     entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Black]);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).absolutePosition = { TitleSize.x / 2.f, TitleSize.y - BorderPadding };
     entity.getComponent<cro::UIElement>().characterSize = UITextSize * 2;
@@ -511,23 +592,7 @@ void ShopState::buildScene()
                     {
                         if (activated(evt))
                         {
-                            m_scrollNodes[m_selectedCategory].scrollNode.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                            m_scrollNodes[m_selectedCategory].buttonText.getComponent<cro::Text>().setFillColour(ButtonTextColour);
-                            applyButtonTexture(ButtonTexID::Unselected, m_scrollNodes[m_selectedCategory].buttonBackground, m_threePatches[ThreePatch::ButtonTop]);
-
-                            m_selectedCategory = index;
-
-                            m_scrollNodes[m_selectedCategory].scrollNode.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                            m_scrollNodes[m_selectedCategory].buttonText.getComponent<cro::Text>().setFillColour(ButtonTextSelectedColour);
-                            applyButtonTexture(ButtonTexID::Selected, e, m_threePatches[ThreePatch::ButtonTop]);
-
-                            auto activeItem = m_scrollNodes[index].items[m_scrollNodes[index].selectedItem].itemIndex;
-                            updateStatDisplay(activeItem);
-
-                            m_scrollNodes[index].cropItems();
-
-                            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(index);
-                            updateCatIndices();
+                            setCategory(index);
                         }
                     });
             applyButtonTexture(m_selectedCategory == index ? ButtonTexID::Selected : ButtonTexID::Unselected, ent, m_threePatches[ThreePatch::ButtonTop]);
@@ -930,6 +995,9 @@ void ShopState::buildScene()
                     const auto textHeight = InfoTextSize + BorderPadding;
                     e.getComponent<cro::UIElement>().absolutePosition = { width - BorderPadding, position.y + textHeight };
                 };
+            TextFlashData td;
+            td.c1 = ButtonTextSelectedColour;
+            ent.addComponent<cro::Callback>().function = td;
             parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
             itemEntry.priceText = ent;
@@ -1174,15 +1242,23 @@ void ShopState::buildScene()
             {
                 if (activated(evt))
                 {
-                    const auto& item = m_scrollNodes[m_selectedCategory].items[m_scrollNodes[m_selectedCategory].selectedItem];
+                    auto& item = m_scrollNodes[m_selectedCategory].items[m_scrollNodes[m_selectedCategory].selectedItem];
                     const auto& invItem = inv::Items[item.itemIndex];
 
-                    if(invItem.price > m_sharedData.inventory.balance
-                        || m_sharedData.inventory.inventory[item.itemIndex] != -1)
+                    if (m_sharedData.inventory.inventory[item.itemIndex] != -1)
                     {
                         //TODO make denied sound
-                        LogI << "Can't afford or already owned" << std::endl;
+                        LogI << "Already owned" << std::endl;
+
+                        item.priceText.getComponent<cro::Callback>().active = true;
                     }
+                    else if (invItem.price > m_sharedData.inventory.balance)
+                    {
+                        //TODO make denied sound
+                        
+                        //play flash anim
+                        m_statItems.balanceText.getComponent<cro::Callback>().active = true;
+                    }                     
                     else
                     {
                         applyButtonTexture(ButtonTexID::Selected, e, m_threePatches[ThreePatch::BuyButton]);
@@ -1369,8 +1445,12 @@ void ShopState::buildScene()
     entity.addComponent<cro::Text>(smallFont).setString("Balance: " + std::to_string(m_sharedData.inventory.balance) + " Cr");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
-    entity.getComponent<cro::UIElement>().characterSize = InfoTextSize * 2.f;
+    entity.getComponent<cro::UIElement>().characterSize = InfoTextSize * 2;
     entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, 22.f };
+
+    
+    entity.addComponent<cro::Callback>().function = TextFlashData();
+
     balanceRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_statItems.balanceText = entity;
     
@@ -1595,6 +1675,29 @@ void ShopState::updateStatDisplay(std::int32_t itemIndex)
     //update manufacturer icon
     m_statItems.manufacturerIcon.getComponent<cro::Sprite>().setTextureRect(m_largeLogos[item.manufacturer].getTextureRect());
 
+}
+
+void ShopState::setCategory(std::int32_t index)
+{
+    m_scrollNodes[m_selectedCategory].scrollNode.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_scrollNodes[m_selectedCategory].buttonText.getComponent<cro::Text>().setFillColour(ButtonTextColour);
+    applyButtonTexture(ButtonTexID::Unselected, m_scrollNodes[m_selectedCategory].buttonBackground, m_threePatches[ThreePatch::ButtonTop]);
+
+    m_selectedCategory = index;
+
+    m_scrollNodes[m_selectedCategory].scrollNode.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    m_scrollNodes[m_selectedCategory].buttonText.getComponent<cro::Text>().setFillColour(ButtonTextSelectedColour);
+    applyButtonTexture(ButtonTexID::Selected, m_scrollNodes[m_selectedCategory].buttonBackground, m_threePatches[ThreePatch::ButtonTop]);
+
+    auto activeItem = m_scrollNodes[index].items[m_scrollNodes[index].selectedItem].itemIndex;
+    updateStatDisplay(activeItem);
+
+    m_scrollNodes[index].cropItems();
+
+    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(index);
+    updateCatIndices();
+
+    //TODO play button sound
 }
 
 void ShopState::updateCatIndices()
