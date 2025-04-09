@@ -238,6 +238,12 @@ void ShopState::handleMessage(const cro::Message& msg)
 
 bool ShopState::simulate(float dt)
 {
+    if (m_buyCounter.update(dt))
+    {
+        //current item was purchased
+        purchaseItem();
+    }
+
     m_uiScene.simulate(dt);
 
     return true;
@@ -908,7 +914,7 @@ void ShopState::buildScene()
 
             itemEntry.buttonText = ent;
 
-            //add the price here - TODO check if owned and set text accordingly, maybe red
+            //add the price here
             ent = m_uiScene.createEntity();
             ent.addComponent<cro::Transform>();
             ent.addComponent<cro::Drawable2D>();
@@ -1063,11 +1069,18 @@ void ShopState::buildScene()
         {
             createItem(scrollNode, currentPos, item, itemIndex, catIndex - 1);
             scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount++;
-            m_scrollNodes[catIndex - 1].items[itemIndex].itemIndex = itemID++;
+            m_scrollNodes[catIndex - 1].items[itemIndex].itemIndex = itemID;
+
+            //as we don't know the inventory index until we're here, we update the string now
+            if (m_sharedData.inventory.inventory[itemID] != -1)
+            {
+                m_scrollNodes[catIndex - 1].items[itemIndex].priceText.getComponent<cro::Text>().setString("Owned");
+            }
 
             itemIndex++;
             currentPos.y -= ScrollData::Stride;
         }
+        itemID++; //make sure to always increment this!!
     }
 
     CRO_ASSERT(m_scrollNodes.size() == Category::Count, "");
@@ -1154,21 +1167,34 @@ void ShopState::buildScene()
         uiSystem.addCallback([&](cro::Entity e)
             {
                 applyButtonTexture(ButtonTexID::Unselected, e, m_threePatches[ThreePatch::BuyButton]);
+                m_buyCounter.active = false;
             });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    applyButtonTexture(ButtonTexID::Selected, e, m_threePatches[ThreePatch::BuyButton]);
+                    const auto& item = m_scrollNodes[m_selectedCategory].items[m_scrollNodes[m_selectedCategory].selectedItem];
+                    const auto& invItem = inv::Items[item.itemIndex];
 
-                    //TODO display ARE YOU SURE
+                    if(invItem.price > m_sharedData.inventory.balance
+                        || m_sharedData.inventory.inventory[item.itemIndex] != -1)
+                    {
+                        //TODO make denied sound
+                        LogI << "Can't afford or already owned" << std::endl;
+                    }
+                    else
+                    {
+                        applyButtonTexture(ButtonTexID::Selected, e, m_threePatches[ThreePatch::BuyButton]);
+                        m_buyCounter.active = true;
+                    }
                 }
             });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::BuyButton]);
+                m_buyCounter.active = false;
             });
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Driver);
     entity.getComponent<cro::UIInput>().addToGroup(MenuID::Wood);
@@ -1182,7 +1208,7 @@ void ShopState::buildScene()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("BUY");
+    entity.addComponent<cro::Text>(font).setString("BUY (Hold)");
     entity.getComponent<cro::Text>().setFillColour(ButtonTextColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
@@ -1194,6 +1220,43 @@ void ShopState::buildScene()
             const auto buttonWidth = calcBuyWidth();
             e.getComponent<cro::UIElement>().absolutePosition.x = std::round(buttonWidth / 2.f);
         };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            const float progress = m_buyCounter.currentTime / m_buyCounter.MaxTime;
+            auto bounds = cro::Text::getLocalBounds(e);
+            bounds.left += (progress * bounds.width);
+            e.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+        };
+    
+    buyNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //red text for progress effect
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("BUY (Hold)");
+    entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
+    entity.getComponent<cro::UIElement>().absolutePosition = glm::vec2({ BuyButtonSize.x / 2.f, 22.f });
+    entity.getComponent<cro::UIElement>().characterSize = UITextSize * 2;
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [calcBuyWidth](cro::Entity e)
+        {
+            const auto buttonWidth = calcBuyWidth();
+            e.getComponent<cro::UIElement>().absolutePosition.x = std::round(buttonWidth / 2.f);
+        };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            const float progress = m_buyCounter.currentTime / m_buyCounter.MaxTime;
+            auto bounds = cro::Text::getLocalBounds(e);
+            bounds.width *= progress;
+            e.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+        };
+
     buyNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -1309,6 +1372,7 @@ void ShopState::buildScene()
     entity.getComponent<cro::UIElement>().characterSize = InfoTextSize * 2.f;
     entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, 22.f };
     balanceRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_statItems.balanceText = entity;
     
     createStatDisplay();
 
@@ -1755,4 +1819,20 @@ void ShopState::scrollTo(std::int32_t targetIndex)
 
     currentTarget = std::clamp(targetIndex, 0, itemCount - 1);
     node.getComponent<cro::Callback>().active = true;
+}
+
+void ShopState::purchaseItem()
+{
+    auto& item = m_scrollNodes[m_selectedCategory].items[m_scrollNodes[m_selectedCategory].selectedItem];
+    const auto& invItem = inv::Items[item.itemIndex];
+
+    m_sharedData.inventory.inventory[item.itemIndex] = 1; //hmmmm I was going to store the actual indices here, but surely a bool will do?
+    m_sharedData.inventory.balance -= invItem.price;
+    inv::write(m_sharedData.inventory);
+
+    item.priceText.getComponent<cro::Text>().setString("Owned");
+
+    m_statItems.balanceText.getComponent<cro::Text>().setString("Balance: " + std::to_string(m_sharedData.inventory.balance) + " Cr");
+
+    //TODO play success sound
 }

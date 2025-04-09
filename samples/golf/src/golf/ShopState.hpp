@@ -135,6 +135,7 @@ private:
         cro::Entity manufacturerIcon;
         cro::Entity manufacturerName;
         cro::Entity itemName;
+        cro::Entity balanceText;
 
         std::vector<std::pair<cro::Entity, cro::Entity>> statBars = {};
     }m_statItems;
@@ -148,4 +149,31 @@ private:
 
     void scroll(bool up);
     void scrollTo(std::int32_t);
+
+    struct BuyCounter final
+    {
+        static constexpr float MaxTime = 1.f;
+        float currentTime = 0.f;
+        bool active = false;
+
+        bool [[nodiscard]] update(float dt)
+        {
+            if (active)
+            {
+                currentTime = std::min(MaxTime, currentTime + dt);
+                if (currentTime == MaxTime)
+                {
+                    active = false;
+                    return true;
+                }
+            }
+            else
+            {
+                currentTime = 0.f;
+            }
+            return false;
+        }
+    }m_buyCounter;
+
+    void purchaseItem();
 };
