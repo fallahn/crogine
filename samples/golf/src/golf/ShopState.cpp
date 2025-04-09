@@ -1248,8 +1248,6 @@ void ShopState::buildScene()
                     if (m_sharedData.inventory.inventory[item.itemIndex] != -1)
                     {
                         //TODO make denied sound
-                        LogI << "Already owned" << std::endl;
-
                         item.priceText.getComponent<cro::Callback>().active = true;
                     }
                     else if (invItem.price > m_sharedData.inventory.balance)
@@ -1624,7 +1622,8 @@ void ShopState::createStatDisplay()
             const auto height = (windowHeight + basePos) - (BuyButtonSize.y + (BorderPadding * 3.f));
 
             m_itemPreviewTexture.create(width, static_cast<std::uint32_t>(height), false);
-            e.getComponent<cro::Sprite>().setTexture(m_itemPreviewTexture.getTexture());
+            //e.getComponent<cro::Sprite>().setTexture(m_itemPreviewTexture.getTexture());
+            e.getComponent<cro::Sprite>().setTextureRect({ glm::vec2(0.f), glm::vec2(static_cast<float>(width), height) });
 
             auto p = pos;
             p.y -= height;

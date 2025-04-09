@@ -3733,7 +3733,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                     selectionEnt.getComponent<cro::SpriteAnimation>().play(1);
 
                     ent.getComponent<cro::Transform>().setPosition(glm::vec2(-1.f));
-                    ent.getComponent<cro::UIInput>().setNextIndex(CtrlLookL, CtrlLookL);
+                    ent.getComponent<cro::UIInput>().setNextIndex(CtrlThreshL, CtrlThreshL);
 
                     infoEnt.getComponent<cro::Text>().setString(" ");
 
