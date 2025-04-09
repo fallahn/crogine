@@ -1016,6 +1016,8 @@ struct SkyboxMaterials final
     std::int32_t skinned = -1;
     std::int32_t glass = -1;
     
+    bool showWater = true;
+
     //if loading the skybox finds a 
     //sun position this is set to true
     //it's then up to the current game
@@ -1023,6 +1025,7 @@ struct SkyboxMaterials final
     bool requestLensFlare = false;
     glm::vec3 sunPos = glm::vec3(0.f);
     cro::Colour sunColour = cro::Colour::White;
+
 };
 
 //returns the entity with the cloud ring (so we can apply material)
@@ -1078,6 +1081,10 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
                 else if (name == "clouds")
                 {
                     loadClouds = p.getValue<bool>();
+                }
+                else if (name == "water")
+                {
+                    materials.showWater = p.getValue<bool>();
                 }
             }
         }

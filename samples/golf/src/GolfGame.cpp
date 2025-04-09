@@ -1776,6 +1776,13 @@ void GolfGame::savePreferences()
     }
 
     inv::write(m_sharedData.inventory);
+
+    //std::int32_t total = 0;
+    //for (const auto& i : inv::Items)
+    //{
+    //    total += i.price;
+    //}
+    //LogI << "Total: " << total << ", half: " << (total / 2) << std::endl;
 }
 
 void GolfGame::loadAvatars()

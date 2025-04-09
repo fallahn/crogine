@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -75,7 +75,7 @@ namespace ConstVal
     static constexpr std::uint16_t GamePort = 16002;
 #endif
     static constexpr std::uint16_t VoicePort = GamePort + 5;
-    static constexpr std::uint8_t MaxClients = 8;
+    static constexpr std::uint8_t MaxClients = 16;
     static constexpr std::uint8_t MaxPlayers = 8;
     static constexpr std::uint8_t NullValue = 255;
     static constexpr std::uint8_t NetChannelReliable = 1;

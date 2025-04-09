@@ -440,7 +440,21 @@ void GolfState::loadMap()
         cloudRing.getComponent<cro::Model>().setMaterial(0, material);
     }
 
+    
+    if (!materials.showWater)
+    {
+        //the water isn't loaded yet, so we have to send via callback to delay until the scene is updated
+        auto e = m_gameScene.createEntity();
+        e.addComponent<cro::Callback>().active = true;
+        e.getComponent<cro::Callback>().function =
+            [&](cro::Entity f, float)
+            {
+                m_waterEnt.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+                f.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(f);
+            };
 
+    }
     if (!m_sharedData.nightTime)
     {
         m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(materials.sunColour);
