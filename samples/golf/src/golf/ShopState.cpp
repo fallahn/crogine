@@ -53,6 +53,8 @@ source distribution.
 
 #include <crogine/graphics/SpriteSheet.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
+
 namespace
 {
 #include "ShopEnum.inl"
@@ -368,7 +370,7 @@ bool ShopState::simulate(float dt)
 
 void ShopState::render()
 {
-    m_itemPreviewTexture.clear(cro::Colour::Magenta);
+    m_itemPreviewTexture.clear(CD32::Colours[CD32::TanDarkest]);
     m_itemPreviewTexture.display();
 
     m_uiScene.render();
@@ -492,7 +494,7 @@ void ShopState::buildScene()
     m_rootNode.addComponent<cro::Callback>(); //this is updated on quit / cachedPush
 
     //black background
-    constexpr auto BgColour = cro::Colour(0.f, 0.f, 0.f, 0.7f);
+    constexpr auto BgColour = cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha);
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -504,7 +506,7 @@ void ShopState::buildScene()
             cro::Vertex2D(glm::vec2(1.f, 0.f), BgColour),
         });
     entity.addComponent<cro::UIElement>(cro::UIElement::Position, false);
-    entity.getComponent<cro::UIElement>().depth = SpriteDepth - 1.f;
+    entity.getComponent<cro::UIElement>().depth = SpriteDepth - 2.f;
     entity.getComponent<cro::UIElement>().resizeCallback =
         [](cro::Entity e)
         {
@@ -1485,10 +1487,17 @@ void ShopState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("Balance: " + std::to_string(m_sharedData.inventory.balance) + " Cr");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
     entity.getComponent<cro::UIElement>().characterSize = InfoTextSize * 2;
     entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, 22.f };
-
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [&](cro::Entity e)
+        {
+            const auto scale = cro::UIElementSystem::getViewScale() * 2.f;
+            e.getComponent<cro::Text>().setShadowOffset({ scale, -scale });
+        };
     
     entity.addComponent<cro::Callback>().function = TextFlashData();
 
@@ -1530,7 +1539,7 @@ void ShopState::createStatDisplay()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_largeLogos[0];
-    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).absolutePosition = { BorderPadding * 3.f, -(LargeIconSize + BorderPadding)};
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).absolutePosition = { BorderPadding * 3.f, -(LargeIconSize + (BorderPadding * 2.f))};
     entity.getComponent<cro::UIElement>().depth = SpriteDepth;
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_statItems.manufacturerIcon = entity;
@@ -1542,7 +1551,7 @@ void ShopState::createStatDisplay()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Stockley & Brilton");
     entity.getComponent<cro::Text>().setFillColour(StatTextColour);
-    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).absolutePosition = { (BorderPadding * 5.f) + LargeIconSize, -BorderPadding };
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).absolutePosition = { (BorderPadding * 5.f) + LargeIconSize, -(BorderPadding * 2.f) };
     entity.getComponent<cro::UIElement>().characterSize = UITextSize * 2;
     entity.getComponent<cro::UIElement>().depth = TextDepth;
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1555,7 +1564,7 @@ void ShopState::createStatDisplay()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("Pack of 25 Balls - 2500Cr");
     entity.getComponent<cro::Text>().setFillColour(StatTextColour);
-    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).absolutePosition = { (BorderPadding * 5.f) + LargeIconSize, -((UITextSize * 2) + (BorderPadding * 2.f)) };
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).absolutePosition = { (BorderPadding * 5.f) + LargeIconSize, -((UITextSize * 2) + (BorderPadding * 3.f)) };
     entity.getComponent<cro::UIElement>().characterSize = InfoTextSize * 2;
     entity.getComponent<cro::UIElement>().depth = TextDepth;
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1662,7 +1671,7 @@ void ShopState::createStatDisplay()
             
             const auto basePos = -(TitleSize.y + (BorderPadding * 2.f)) + pos.y;
             const auto windowHeight = std::round(cro::App::getWindow().getSize().y / cro::UIElementSystem::getViewScale());
-            const auto height = (windowHeight + basePos) - (BuyButtonSize.y + (BorderPadding * 3.f));
+            const auto height = (windowHeight + basePos) - (BuyButtonSize.y + (BorderPadding * 4.f));
 
             m_itemPreviewTexture.create(width, static_cast<std::uint32_t>(height), false);
             //e.getComponent<cro::Sprite>().setTexture(m_itemPreviewTexture.getTexture());
@@ -1673,6 +1682,89 @@ void ShopState::createStatDisplay()
             e.getComponent<cro::UIElement>().absolutePosition = p;
         };
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //stat background
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Brown]),
+            cro::Vertex2D(glm::vec2(0.f, -400.f), CD32::Colours[CD32::Brown]),
+            cro::Vertex2D(glm::vec2(200.f, 0.f), CD32::Colours[CD32::Brown]),
+            cro::Vertex2D(glm::vec2(200.f, -400.f), CD32::Colours[CD32::Brown])
+        });
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).depth = SpriteDepth - 1.f;
+    entity.getComponent<cro::UIElement>().absolutePosition = { BorderPadding, 0.f };
+    entity.getComponent<cro::UIElement>().resizeCallback = 
+        [calcBackgroundWidth](cro::Entity e)
+        {
+            const auto width = calcBackgroundWidth() + (BorderPadding * 4.f);
+            const auto basePos = -(TitleSize.y + (BorderPadding * 2.f));
+            const auto windowHeight = std::round(cro::App::getWindow().getSize().y / cro::UIElementSystem::getViewScale());
+            const auto height = (windowHeight + basePos) - (BuyButtonSize.y + (BorderPadding * 3.f));
+
+            constexpr auto Light = CD32::Colours[CD32::Olive];
+            constexpr auto Mid = CD32::Colours[CD32::Brown];
+            constexpr auto Dark = CD32::Colours[CD32::TanDarkest];
+
+            /*auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            verts[1].position.y = -height;
+            verts[2].position.x = width;
+            verts[3].position.x = width;
+            verts[3].position.y = -height;*/
+
+            e.getComponent<cro::Drawable2D>().setVertexData(
+                {
+                    //Top
+                    cro::Vertex2D(glm::vec2(1.f, 0.f), Light),
+                    cro::Vertex2D(glm::vec2(1.f, -1.f), Light),
+                    cro::Vertex2D(glm::vec2(width - 1.f, 0.f), Light),
+                    
+                    cro::Vertex2D(glm::vec2(width - 1.f, 0.f), Light),
+                    cro::Vertex2D(glm::vec2(1.f, -1.f), Light),
+                    cro::Vertex2D(glm::vec2(width - 1.f, -1.f), Light),
+
+                    //Body
+                    cro::Vertex2D(glm::vec2(1.f, -1.f), Mid),
+                    cro::Vertex2D(glm::vec2(1.f, -(height - 1.f)), Mid),
+                    cro::Vertex2D(glm::vec2(width - 1.f, -1.f), Mid),
+                    
+                    cro::Vertex2D(glm::vec2(width - 1.f, -1.f), Mid),
+                    cro::Vertex2D(glm::vec2(1.f, -(height - 1.f)), Mid),
+                    cro::Vertex2D(glm::vec2(width - 1.f, -(height - 1.f)), Mid),
+
+                    //Bottom
+                    cro::Vertex2D(glm::vec2(1.f, -(height - 1.f)), Dark),
+                    cro::Vertex2D(glm::vec2(1.f, -height), Dark),
+                    cro::Vertex2D(glm::vec2(width - 1.f, -(height - 1.f)), Dark),
+                    
+                    cro::Vertex2D(glm::vec2(width - 1.f, -(height - 1.f)), Dark),
+                    cro::Vertex2D(glm::vec2(1.f, -height), Dark),
+                    cro::Vertex2D(glm::vec2(width - 1.f, -height), Dark),
+
+                    //Left
+                    cro::Vertex2D(glm::vec2(0.f, -1.f), Light),
+                    cro::Vertex2D(glm::vec2(0.f, -(height-1.f)), Light),
+                    cro::Vertex2D(glm::vec2(1.f, -1.f), Light),
+                    
+                    cro::Vertex2D(glm::vec2(1.f, -1.f), Light),
+                    cro::Vertex2D(glm::vec2(0.f, -(height - 1.f)), Light),
+                    cro::Vertex2D(glm::vec2(1.f, -(height - 1.f)), Light),
+
+                    //Right
+                    cro::Vertex2D(glm::vec2(width - 1.f, -1.f), Dark),
+                    cro::Vertex2D(glm::vec2(width - 1.f, -(height - 1.f)), Dark),
+                    cro::Vertex2D(glm::vec2(width, -1.f), Dark),
+                    
+                    cro::Vertex2D(glm::vec2(width, -1.f), Dark),
+                    cro::Vertex2D(glm::vec2(width - 1.f, -(height - 1.f)), Dark),
+                    cro::Vertex2D(glm::vec2(width, -(height - 1.f)), Dark),
+                });
+        };
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     updateStatDisplay(0);
 }
