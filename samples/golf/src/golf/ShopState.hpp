@@ -33,9 +33,12 @@ source distribution.
 #include "Inventory.hpp"
 
 #include <crogine/core/State.hpp>
+#include <crogine/core/ConsoleClient.hpp>
 
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Text.hpp>
 
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Texture.hpp>
@@ -59,6 +62,9 @@ struct ThreePatch final
 
 struct SharedStateData;
 class ShopState final : public cro::State
+#ifdef CRO_DEBUG_
+    , public cro::ConsoleClient
+#endif
 {
 public:
     ShopState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -151,14 +157,29 @@ private:
     void scroll(bool up);
     void scrollTo(std::int32_t);
 
+    const cro::String m_buyString;
+    const cro::String m_sellString;
+
     struct BuyCounter final
     {
+        cro::Entity str0;
+        cro::Entity str1;
+
         static constexpr float MaxTime = 1.f;
         float currentTime = 0.f;
         bool active = false;
 
         bool [[nodiscard]] update(float dt)
         {
+            const float progress = currentTime / MaxTime;
+            auto bounds = cro::Text::getLocalBounds(str0);
+            bounds.left += (progress * bounds.width);
+            str0.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+
+            bounds = cro::Text::getLocalBounds(str1);
+            bounds.width *= progress;
+            str1.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+
             if (active)
             {
                 currentTime = std::min(MaxTime, currentTime + dt);
@@ -177,4 +198,5 @@ private:
     }m_buyCounter;
 
     void purchaseItem();
+    void sellItem();
 };

@@ -1,4 +1,4 @@
-/*-----------------------------------------------------------------------
+﻿/*-----------------------------------------------------------------------
 
 Matt Marchant 2025
 http://trederia.blogspot.com
@@ -37,8 +37,6 @@ source distribution.
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
-#include <crogine/ecs/components/Drawable2D.hpp>
-#include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/UIElement.hpp>
@@ -95,6 +93,14 @@ namespace
     constexpr cro::Colour StatBarColourFront = CD32::Colours[CD32::GreenMid];
     constexpr cro::Colour StatBarColourBack = CD32::Colours[CD32::TanDark];
     constexpr cro::Colour StatTextColour = CD32::Colours[CD32::BeigeLight];
+
+    std::int32_t discountPrice(std::int32_t price)
+    {
+        return static_cast<std::int32_t>(static_cast<float>(price) * 0.55f);
+    }
+
+    const std::string BuyStr = u8"Buy ↓";
+    const std::string SellStr = u8"Sell ↓";
 
     struct TextFlashData final
     {
@@ -211,9 +217,27 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
     m_uiScene           (ctx.appInstance.getMessageBus(), 512),
     m_viewScale         (1.f),
     m_threePatchTexture (nullptr),
-    m_selectedCategory  (Category::Driver)
+    m_selectedCategory  (Category::Driver),
+    m_buyString         (cro::String::fromUtf8(BuyStr.begin(), BuyStr.end())),
+    m_sellString        (cro::String::fromUtf8(SellStr.begin(), SellStr.end()))
 {
     CRO_ASSERT(!isCached(), "");
+
+#ifdef CRO_DEBUG_
+    registerCommand("add_balance", 
+        [&](const std::string val)
+        {
+            try
+            {
+                const auto v = std::stoi(val);
+                m_sharedData.inventory.balance = std::clamp(m_sharedData.inventory.balance + v, 0, 10000);
+            }
+            catch (...)
+            {
+                cro::Console::print("Usage: add_balance <value>");
+            }
+        });
+#endif
 
     ctx.mainWindow.loadResources([&]()
         {
@@ -320,8 +344,17 @@ bool ShopState::simulate(float dt)
 {
     if (m_buyCounter.update(dt))
     {
-        //current item was purchased
-        purchaseItem();
+        const auto& item = m_scrollNodes[m_selectedCategory].items[m_scrollNodes[m_selectedCategory].selectedItem];
+        if (m_sharedData.inventory.inventory[item.itemIndex] != -1)
+        {
+            //sell item
+            sellItem();
+        }
+        else
+        {
+            //current item was purchased
+            purchaseItem();
+        }
     }
 
     m_uiScene.simulate(dt);
@@ -947,6 +980,18 @@ void ShopState::buildScene()
                                     break;
                                 }
                             }
+
+                            //update the buy button
+                            if (m_sharedData.inventory.inventory[newItem.itemIndex] == -1)
+                            {
+                                m_buyCounter.str0.getComponent<cro::Text>().setString(m_buyString);
+                                m_buyCounter.str1.getComponent<cro::Text>().setString(m_buyString);
+                            }
+                            else
+                            {
+                                m_buyCounter.str0.getComponent<cro::Text>().setString(m_sellString);
+                                m_buyCounter.str1.getComponent<cro::Text>().setString(m_sellString);
+                            }
                         }
                     });
 
@@ -992,12 +1037,10 @@ void ShopState::buildScene()
                 [position, calcBackgroundSize](cro::Entity e)
                 {
                     const auto width = calcBackgroundSize();
-                    const auto textHeight = InfoTextSize + BorderPadding;
+                    const auto textHeight = (InfoTextSize * 2) + std::round(BorderPadding * 1.5f);
                     e.getComponent<cro::UIElement>().absolutePosition = { width - BorderPadding, position.y + textHeight };
                 };
-            TextFlashData td;
-            td.c1 = ButtonTextSelectedColour;
-            ent.addComponent<cro::Callback>().function = td;
+
             parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
             itemEntry.priceText = ent;
@@ -1142,7 +1185,8 @@ void ShopState::buildScene()
             //as we don't know the inventory index until we're here, we update the string now
             if (m_sharedData.inventory.inventory[itemID] != -1)
             {
-                m_scrollNodes[catIndex - 1].items[itemIndex].priceText.getComponent<cro::Text>().setString("Owned");
+                auto str = std::to_string(discountPrice(inv::Items[itemID].price)) + " Cr\nOwned";
+                m_scrollNodes[catIndex - 1].items[itemIndex].priceText.getComponent<cro::Text>().setString(str);
             }
 
             itemIndex++;
@@ -1245,12 +1289,9 @@ void ShopState::buildScene()
                     auto& item = m_scrollNodes[m_selectedCategory].items[m_scrollNodes[m_selectedCategory].selectedItem];
                     const auto& invItem = inv::Items[item.itemIndex];
 
-                    if (m_sharedData.inventory.inventory[item.itemIndex] != -1)
-                    {
-                        //TODO make denied sound
-                        item.priceText.getComponent<cro::Callback>().active = true;
-                    }
-                    else if (invItem.price > m_sharedData.inventory.balance)
+                    //can't afford
+                    if (m_sharedData.inventory.inventory[item.itemIndex] == -1
+                        && invItem.price > m_sharedData.inventory.balance)
                     {
                         //TODO make denied sound
                         
@@ -1259,6 +1300,7 @@ void ShopState::buildScene()
                     }                     
                     else
                     {
+                        //we're selling or buying
                         applyButtonTexture(ButtonTexID::Selected, e, m_threePatches[ThreePatch::BuyButton]);
                         m_buyCounter.active = true;
                     }
@@ -1282,7 +1324,7 @@ void ShopState::buildScene()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("BUY (Hold)");
+    entity.addComponent<cro::Text>(font).setString(m_buyString);
     entity.getComponent<cro::Text>().setFillColour(ButtonTextColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
@@ -1294,22 +1336,14 @@ void ShopState::buildScene()
             const auto buttonWidth = calcBuyWidth();
             e.getComponent<cro::UIElement>().absolutePosition.x = std::round(buttonWidth / 2.f);
         };
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-        {
-            const float progress = m_buyCounter.currentTime / m_buyCounter.MaxTime;
-            auto bounds = cro::Text::getLocalBounds(e);
-            bounds.left += (progress * bounds.width);
-            e.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
-        };
-    
+    m_buyCounter.str0 = entity;
     buyNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     //red text for progress effect
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("BUY (Hold)");
+    entity.addComponent<cro::Text>(font).setString(m_buyString);
     entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
@@ -1321,16 +1355,7 @@ void ShopState::buildScene()
             const auto buttonWidth = calcBuyWidth();
             e.getComponent<cro::UIElement>().absolutePosition.x = std::round(buttonWidth / 2.f);
         };
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-        {
-            const float progress = m_buyCounter.currentTime / m_buyCounter.MaxTime;
-            auto bounds = cro::Text::getLocalBounds(e);
-            bounds.width *= progress;
-            e.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
-        };
-
+    m_buyCounter.str1 = entity;
     buyNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -1691,10 +1716,21 @@ void ShopState::setCategory(std::int32_t index)
     auto activeItem = m_scrollNodes[index].items[m_scrollNodes[index].selectedItem].itemIndex;
     updateStatDisplay(activeItem);
 
+    if (m_sharedData.inventory.inventory[activeItem] == -1)
+    {
+        m_buyCounter.str0.getComponent<cro::Text>().setString(m_buyString);
+        m_buyCounter.str1.getComponent<cro::Text>().setString(m_buyString);
+    }
+    else
+    {
+        m_buyCounter.str0.getComponent<cro::Text>().setString(m_sellString);
+        m_buyCounter.str1.getComponent<cro::Text>().setString(m_sellString);
+    }
+
     m_scrollNodes[index].cropItems();
 
     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(index);
-    updateCatIndices();
+    updateCatIndices(); //updates the navigation indices for UI
 
     //TODO play button sound
 }
@@ -1932,9 +1968,33 @@ void ShopState::purchaseItem()
     m_sharedData.inventory.balance -= invItem.price;
     inv::write(m_sharedData.inventory);
 
-    item.priceText.getComponent<cro::Text>().setString("Owned");
+    auto str = std::to_string(discountPrice(invItem.price)) + " Cr\nOwned";
+    item.priceText.getComponent<cro::Text>().setString(str);
 
     m_statItems.balanceText.getComponent<cro::Text>().setString("Balance: " + std::to_string(m_sharedData.inventory.balance) + " Cr");
+
+    m_buyCounter.str0.getComponent<cro::Text>().setString(m_sellString);
+    m_buyCounter.str1.getComponent<cro::Text>().setString(m_sellString);
+
+    //TODO play success sound
+}
+
+void ShopState::sellItem()
+{
+    auto& item = m_scrollNodes[m_selectedCategory].items[m_scrollNodes[m_selectedCategory].selectedItem];
+    const auto& invItem = inv::Items[item.itemIndex];
+
+    m_sharedData.inventory.inventory[item.itemIndex] = -1;
+    m_sharedData.inventory.balance += discountPrice(invItem.price);
+    inv::write(m_sharedData.inventory);
+
+    auto str = std::to_string(invItem.price) + " Cr";
+    item.priceText.getComponent<cro::Text>().setString(str);
+
+    m_statItems.balanceText.getComponent<cro::Text>().setString("Balance: " + std::to_string(m_sharedData.inventory.balance) + " Cr");
+
+    m_buyCounter.str0.getComponent<cro::Text>().setString(m_buyString);
+    m_buyCounter.str1.getComponent<cro::Text>().setString(m_buyString);
 
     //TODO play success sound
 }
