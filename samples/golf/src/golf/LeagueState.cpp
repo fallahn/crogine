@@ -557,7 +557,7 @@ void LeagueState::buildScene()
 
                 if (m_sharedData.baseState == StateID::Clubhouse)
                 {
-                    Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
+                    Social::setStatus(Social::InfoID::Menu, { "In the Clubhouse" });
                 }
             }
             break;

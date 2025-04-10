@@ -55,6 +55,7 @@ enum MenuIndex
     PlayerReset,
     PlayerClubStats,
     PlayerClubs,
+    PlayerShop,
     PlayerCreate,
     PlayerEdit,
     PlayerDelete,

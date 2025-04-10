@@ -170,6 +170,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         cacheState(StateID::Leaderboard);
         cacheState(StateID::Stats);
         cacheState(StateID::League);
+        cacheState(StateID::Shop);
         });
     Timeline::setGameMode(Timeline::GameMode::Menu);
     Timeline::setTimelineDesc("In the Clubhouse");
@@ -305,7 +306,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_sharedData.lobbyID = 0;
 
     Achievements::setActive(true);
-    Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
+    Social::setStatus(Social::InfoID::Menu, { "In the Clubhouse" });
     Social::setGroup(0);
     Social::getRandomBest();
 
@@ -543,10 +544,20 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::StateMessage)
     {
         const auto& data = msg.getData<cro::Message::StateEvent>();
-        if (data.action == cro::Message::StateEvent::Popped
-            && data.id == StateID::Keyboard)
+        if (data.action == cro::Message::StateEvent::Popped)
         {
-            applyTextEdit();
+            switch (data.id)
+            {
+            default: break;
+            case StateID::Shop:
+                Timeline::setTimelineDesc("In the Clubhouse");
+                Social::setStatus(Social::InfoID::Menu, { "In the Clubhouse" });
+                break;
+            case StateID::Keyboard:
+                applyTextEdit();
+                break;
+            }
+
         }
     }
     else if (msg.id == MatchMaking::MessageID)

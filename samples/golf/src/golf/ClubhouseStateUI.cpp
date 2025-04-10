@@ -480,7 +480,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
             {
                 if (activated(evt))
                 {
-                    requestStackClear();
+                    //requestStackClear();
                     requestStackPush(StateID::Shop);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
@@ -3089,7 +3089,7 @@ void ClubhouseState::quitLobby()
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
+    Social::setStatus(Social::InfoID::Menu, { "In the Clubhouse" });
     Social::setGroup(0);
 }
 

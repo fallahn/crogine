@@ -84,6 +84,8 @@ private:
     cro::ResourceCollection m_resources;
     float m_viewScale;
 
+    cro::Entity m_rootNode;// transition animation
+
     std::array<cro::Sprite, inv::Manufacturers.size() - 1> m_smallLogos = {};
     std::array<cro::Sprite, inv::Manufacturers.size() - 1> m_largeLogos = {};
 
@@ -199,4 +201,8 @@ private:
 
     void purchaseItem();
     void sellItem();
+
+    void quitState();
+
+    void onCachedPush() override;
 };

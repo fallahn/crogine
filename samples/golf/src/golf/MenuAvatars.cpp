@@ -928,6 +928,46 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         m_clubsetButtons.roster = buttonEnt;
     }
 
+    const auto expandBounds = 
+        [](cro::FloatRect& b)
+        {
+            b.left += 2.f;
+            b.bottom += 2.f;
+            b.width -= 4.f;
+            b.height -= 4.f;
+        };
+
+    //open shop
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 275.f, 59.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_edit_select");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    expandBounds(bounds);
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerShop);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerEdit, PlayerCreate);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerClubStats, PlayerRemove);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                requestStackPush(StateID::Shop);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
+    avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //create profile
     entity = m_uiScene.createEntity();
@@ -938,15 +978,12 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    bounds.left += 2.f;
-    bounds.bottom += 2.f;
-    bounds.width -= 4.f;
-    bounds.height -= 4.f;
+    expandBounds(bounds);
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerCreate);
     entity.getComponent<cro::UIInput>().setNextIndex(PlayerEdit, PlayerEdit);
-    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerReset, PlayerRemove);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerReset, PlayerShop);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
@@ -1025,10 +1062,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    bounds.left += 2.f;
-    bounds.bottom += 2.f;
-    bounds.width -= 4.f;
-    bounds.height -= 4.f;
+    expandBounds(bounds);
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerEdit);
@@ -1061,10 +1095,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    bounds.left += 2.f;
-    bounds.bottom += 2.f;
-    bounds.width -= 4.f;
-    bounds.height -= 4.f;
+    expandBounds(bounds);
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerDelete);
@@ -1258,7 +1289,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerRemove);
-    entity.getComponent<cro::UIInput>().setNextIndex(PlayerNextMenu, PlayerCreate);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerNextMenu, PlayerShop);
     entity.getComponent<cro::UIInput>().setPrevIndex(PlayerAdd, PlayerDelete);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =

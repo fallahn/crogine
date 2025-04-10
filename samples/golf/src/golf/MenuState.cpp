@@ -258,6 +258,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::News);
         cacheState(StateID::Stats);
         cacheState(StateID::PlayerManagement);
+        cacheState(StateID::Shop);
 
         context.mainWindow.setMouseCaptured(false);
 
@@ -1357,6 +1358,10 @@ void MenuState::handleMessage(const cro::Message& msg)
                 {
                     m_textChat.initLog();
                 }
+                break;
+            case StateID::Shop:
+                Timeline::setTimelineDesc("Main Menu");
+                Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
                 break;
             }
         }

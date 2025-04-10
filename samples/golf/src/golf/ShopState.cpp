@@ -34,6 +34,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "Clubs.hpp"
 #include "Social.hpp"
+#include "Timeline.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -206,6 +207,7 @@ namespace
         {
             Driver, Wood, Iron, Wedge, Balls,
 
+            Dummy,
             Count
         };
     };
@@ -221,7 +223,6 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
     m_buyString         (cro::String::fromUtf8(BuyStr.begin(), BuyStr.end())),
     m_sellString        (cro::String::fromUtf8(SellStr.begin(), SellStr.end()))
 {
-    CRO_ASSERT(!isCached(), "");
 
 #ifdef CRO_DEBUG_
     registerCommand("add_balance", 
@@ -239,12 +240,9 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
         });
 #endif
 
-    ctx.mainWindow.loadResources([&]()
-        {
-            loadAssets();
-            addSystems();
-            buildScene();
-        });
+        loadAssets();
+        addSystems();
+        buildScene();
 }
 
 //public
@@ -271,6 +269,13 @@ bool ShopState::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
+    case SDL_MOUSEBUTTONUP:
+        if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            quitState();
+            return false;
+        }
+        break;
     case SDL_MOUSEWHEEL:
         if (evt.wheel.y > 0)
         {
@@ -281,7 +286,7 @@ bool ShopState::handleEvent(const cro::Event& evt)
             scroll(false);
         }
         break;
-    case SDL_KEYDOWN:
+    case SDL_KEYUP:
         if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
         {
             prevCat();
@@ -292,11 +297,11 @@ bool ShopState::handleEvent(const cro::Event& evt)
         }
         else if (evt.key.keysym.sym == SDLK_ESCAPE)
         {
-            requestStackClear();
-            requestStackPush(StateID::Clubhouse);
+            quitState();
+            return false;
         }
         break;
-    case SDL_CONTROLLERBUTTONDOWN:
+    case SDL_CONTROLLERBUTTONUP:
         switch (evt.cbutton.button)
         {
         default: break;
@@ -307,9 +312,8 @@ bool ShopState::handleEvent(const cro::Event& evt)
             nextCat();
             break;
         case cro::GameController::ButtonB:
-            requestStackClear();
-            requestStackPush(StateID::Clubhouse);
-            break;
+            quitState();
+            return false;
         }
         break;
     }
@@ -483,8 +487,12 @@ void ShopState::addSystems()
 
 void ShopState::buildScene()
 {
+    m_rootNode = m_uiScene.createEntity();
+    m_rootNode.addComponent<cro::Transform>();
+    m_rootNode.addComponent<cro::Callback>(); //this is updated on quit / cachedPush
+
     //black background
-    constexpr auto BgColour = cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha);
+    constexpr auto BgColour = cro::Colour(0.f, 0.f, 0.f, 0.7f);
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -503,7 +511,7 @@ void ShopState::buildScene()
             glm::vec2 size(cro::App::getWindow().getSize());
             e.getComponent<cro::Transform>().setScale(size);
         };
-
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
@@ -514,6 +522,7 @@ void ShopState::buildScene()
     entity.getComponent<cro::UIElement>().relativePosition = { 1.f, 1.f };
     entity.getComponent<cro::UIElement>().absolutePosition = -(TitleSize + glm::vec2(BorderPadding));
     auto titleRoot = entity;
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -540,6 +549,11 @@ void ShopState::buildScene()
 
     auto& uiSystem = *m_uiScene.getSystem<cro::UISystem>();
 
+    //dummy input to handle events when playing exit transition
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::Dummy);
+
     //Top bar - position node
     // |
     // -s/t s/t s/t s/t s/t s/t
@@ -549,6 +563,7 @@ void ShopState::buildScene()
     entity.getComponent<cro::UIElement>().relativePosition = { 0.f, 1.f };
     entity.getComponent<cro::UIElement>().absolutePosition = { BorderPadding, -BorderPadding };
     auto topBarRoot = entity;
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     const auto selectedID = uiSystem.addCallback([&](cro::Entity e)
         {
@@ -706,6 +721,7 @@ void ShopState::buildScene()
     entity.getComponent<cro::UIElement>().relativePosition = { DividerOffset, 0.f };
     entity.getComponent<cro::UIElement>().absolutePosition = { -1.f, BorderPadding };
     auto dividerRoot = entity;
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1070,6 +1086,7 @@ void ShopState::buildScene()
         };
 
     auto scrollRoot = entity;
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //for each category
     std::int32_t prevCat = -1;
@@ -1223,6 +1240,7 @@ void ShopState::buildScene()
     entity.getComponent<cro::UIElement>().relativePosition = { DividerOffset, 0.f };
     entity.getComponent<cro::UIElement>().absolutePosition = { BorderPadding * 4.f, BorderPadding };
     auto buyNode = entity;
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     const auto calcBuyWidth = [&]()
         {
@@ -1416,8 +1434,7 @@ void ShopState::buildScene()
                 if (activated(evt))
                 {
                     applyButtonTexture(ButtonTexID::Selected, e, m_threePatches[ThreePatch::ExitButton]);
-                    requestStackClear();
-                    requestStackPush(StateID::Clubhouse);
+                    quitState();
                 }
             });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -1461,6 +1478,7 @@ void ShopState::buildScene()
     entity.getComponent<cro::UIElement>().relativePosition = { DividerOffset, 1.f };
     entity.getComponent<cro::UIElement>().absolutePosition = { BorderPadding * 4.f, -(TitleSize.y + BorderPadding) };
     auto balanceRoot = entity;
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1505,7 +1523,7 @@ void ShopState::createStatDisplay()
     entity.getComponent<cro::UIElement>().relativePosition = { DividerOffset, 1.f };
     entity.getComponent<cro::UIElement>().absolutePosition = { BorderPadding, -(TitleSize.y + (BorderPadding * 2.f)) };
     auto root = entity;
-
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //manufacturer icon
     entity = m_uiScene.createEntity();
@@ -1598,7 +1616,7 @@ void ShopState::createStatDisplay()
                     const float targetPos = (segSize * (SegmentCount / 2.f)) + (value * segSize);
 
                     auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-                    const auto movement = (targetPos - verts[2].position.x) * dt * 3.f;
+                    const auto movement = (targetPos - verts[2].position.x) * dt * 6.f;
 
                     verts[2].position.x += movement;
                     verts[3].position.x += movement;
@@ -1693,6 +1711,11 @@ void ShopState::updateStatDisplay(std::int32_t itemIndex)
             valStr += "+";
         }
         valStr += std::to_string(item.stat02);
+        bg2.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+    }
+    else
+    {
+        bg2.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     }
     text2.getComponent<cro::Text>().setString(inv::StatLabels[m_selectedCategory].stat1 + valStr);
 
@@ -1997,4 +2020,47 @@ void ShopState::sellItem()
     m_buyCounter.str1.getComponent<cro::Text>().setString(m_buyString);
 
     //TODO play success sound
+}
+
+void ShopState::quitState()
+{
+    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+    m_rootNode.getComponent<cro::Callback>().active = true;
+    m_rootNode.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            const float width = static_cast<float>(cro::App::getWindow().getSize().x);
+            e.getComponent<cro::Transform>().move({ -width * 6.f * dt, 0.f });
+            const auto pos = e.getComponent<cro::Transform>().getPosition().x;
+
+            if (pos < -width)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                requestStackPop();
+            }
+        };
+}
+
+void ShopState::onCachedPush()
+{
+    Timeline::setTimelineDesc("In the Shop");
+    Social::setStatus(Social::InfoID::Menu, { "At the equipment counter" });
+
+    const float width = static_cast<float>(cro::App::getWindow().getSize().x);
+    m_rootNode.getComponent<cro::Transform>().setPosition(glm::vec2(width, 0.f));
+
+    m_rootNode.getComponent<cro::Callback>().active = true;
+    m_rootNode.getComponent<cro::Callback>().function =
+        [&, width](cro::Entity e, float dt)
+        {
+            e.getComponent<cro::Transform>().move({ -width * 6.f * dt, 0.f });
+            const auto pos = e.getComponent<cro::Transform>().getPosition().x;
+
+            if (pos < 0.f)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_rootNode.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(m_selectedCategory);
+            }
+        };
 }
