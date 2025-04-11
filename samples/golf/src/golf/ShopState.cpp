@@ -422,6 +422,7 @@ void ShopState::loadAssets()
     //if for some reason we failed to load don't try to div0
     if (texSize.x * texSize.y != 0.f)
     {
+        //if we were smort we could make all of this constexpr
         const auto normaliseRect =
             [&](cro::FloatRect r)
             {
@@ -470,6 +471,15 @@ void ShopState::loadAssets()
         exitPatch.leftNorm = normaliseRect(exitPatch.left);
         exitPatch.centreNorm = normaliseRect(exitPatch.centre);
         exitPatch.rightNorm = normaliseRect(exitPatch.right);
+
+        auto& statPatch = m_threePatches[ThreePatch::StatBar];
+        statPatch.left = { 72.f, 100.f, 12.f, 24.f };
+        statPatch.centre = { 84.f, 100.f, 24.f, 24.f };
+        statPatch.right = { 106.f, 100.f, 13.f, 24.f }; //again, weird we need this extra pixel
+
+        statPatch.leftNorm = normaliseRect(statPatch.left);
+        statPatch.centreNorm = normaliseRect(statPatch.centre);
+        statPatch.rightNorm = normaliseRect(statPatch.right);
     }
 }
 
@@ -1574,32 +1584,47 @@ void ShopState::createStatDisplay()
     const auto createDisplay = [&](glm::vec2 pos)
         {
             auto& [background, text] = m_statItems.statBars.emplace_back();
+            const auto& patch = m_threePatches[ThreePatch::StatBar];
+            const float StatWidth = patch.left.width + patch.centre.width + patch.right.width;
+            const float StatHeight = patch.left.height;
 
             //stat bar
             auto ent = m_uiScene.createEntity();
             ent.addComponent<cro::Transform>();
             ent.addComponent<cro::Drawable2D>().setVertexData(
                 {
-                    cro::Vertex2D(glm::vec2(0.f, StatBarHeight), StatBarColourFront),
-                    cro::Vertex2D(glm::vec2(0.f), StatBarColourFront),
-                    cro::Vertex2D(glm::vec2(20.f, StatBarHeight), StatBarColourFront),
-                    cro::Vertex2D(glm::vec2(20.f, 0.f), StatBarColourFront),
+                    cro::Vertex2D(glm::vec2(0.f, StatHeight), glm::vec2(patch.leftNorm.left, patch.leftNorm.bottom + patch.leftNorm.height)),
+                    cro::Vertex2D(glm::vec2(0.f)            , glm::vec2(patch.leftNorm.left, patch.leftNorm.bottom)),
 
-                    cro::Vertex2D(glm::vec2(20.f, StatBarHeight), StatBarColourBack),
-                    cro::Vertex2D(glm::vec2(20.f, 0.f), StatBarColourBack),
-                    cro::Vertex2D(glm::vec2(40.f, StatBarHeight), StatBarColourBack),
-                    cro::Vertex2D(glm::vec2(40.f, 0.f), StatBarColourBack)
+                    cro::Vertex2D(glm::vec2(patch.left.width, StatHeight), glm::vec2(patch.leftNorm.left + patch.leftNorm.width, patch.leftNorm.bottom + patch.leftNorm.height)),
+                    cro::Vertex2D(glm::vec2(patch.left.width, 0.f),        glm::vec2(patch.leftNorm.left + patch.leftNorm.width, patch.leftNorm.bottom)),
+
+                    cro::Vertex2D(glm::vec2(patch.centre.left + (patch.centre.width / 2.f), StatHeight), glm::vec2(patch.centreNorm.left + (patch.centreNorm.width / 2.f), patch.centreNorm.bottom + patch.centreNorm.height)),
+                    cro::Vertex2D(glm::vec2(patch.centre.left + (patch.centre.width / 2.f), 0.f),        glm::vec2(patch.centreNorm.left + (patch.centreNorm.width / 2.f), patch.centreNorm.bottom)),
+
+                    cro::Vertex2D(glm::vec2(patch.left.width + patch.centre.width, StatHeight), glm::vec2(patch.rightNorm.left, patch.rightNorm.bottom + patch.rightNorm.height)),
+                    cro::Vertex2D(glm::vec2(patch.left.width + patch.centre.width, 0.f),        glm::vec2(patch.rightNorm.left, patch.rightNorm.bottom)),
+
+                    cro::Vertex2D(glm::vec2(StatWidth, StatHeight), glm::vec2(patch.rightNorm.left + patch.rightNorm.width, patch.rightNorm.bottom + patch.rightNorm.height)),
+                    cro::Vertex2D(glm::vec2(StatWidth, 0.f),        glm::vec2(patch.rightNorm.left + patch.rightNorm.width, patch.rightNorm.bottom))
                 });
+            ent.getComponent<cro::Drawable2D>().setTexture(m_threePatchTexture);
             ent.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).absolutePosition = pos;
             ent.getComponent<cro::UIElement>().depth = SpriteDepth;
             ent.getComponent<cro::UIElement>().resizeCallback =
-                [calcBackgroundWidth](cro::Entity e)
+                [patch,calcBackgroundWidth](cro::Entity e)
                 {
                     const float newSize = calcBackgroundWidth();
 
                     auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-                    verts[6].position.x = newSize;
-                    verts[7].position.x = newSize;
+                    verts[4].position.x = std::round(newSize / 2.f);
+                    verts[5].position.x = std::round(newSize / 2.f);
+                    
+                    verts[6].position.x = newSize - patch.right.width;
+                    verts[7].position.x = newSize - patch.right.width;
+
+                    verts[8].position.x = newSize;
+                    verts[9].position.x = newSize;
 
                     e.getComponent<cro::Callback>().getUserData<StatBarData>().currentSize = newSize;
                 };
@@ -1616,12 +1641,10 @@ void ShopState::createStatDisplay()
                     const float targetPos = (segSize * (SegmentCount / 2.f)) + (value * segSize);
 
                     auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-                    const auto movement = (targetPos - verts[2].position.x) * dt * 6.f;
+                    const auto movement = (targetPos - verts[4].position.x) * dt * 6.f;
 
-                    verts[2].position.x += movement;
-                    verts[3].position.x += movement;
-                    verts[4].position.x += movement;
-                    verts[5].position.x += movement;
+                    verts[4].position.x = std::round(verts[4].position.x + movement);
+                    verts[5].position.x = std::roundf(verts[5].position.x + movement);
                 };
             background = ent;
             root.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
@@ -1634,7 +1657,7 @@ void ShopState::createStatDisplay()
             ent.getComponent<cro::Text>().setFillColour(StatTextColour);
             ent.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
             ent.getComponent<cro::UIElement>().characterSize = InfoTextSize;
-            ent.getComponent<cro::UIElement>().absolutePosition = pos + glm::vec2(2.f, InfoTextSize + 2.f);
+            ent.getComponent<cro::UIElement>().absolutePosition = pos + glm::vec2(6.f, InfoTextSize + 5.f);
             text = ent;
             root.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
     };
@@ -1662,7 +1685,7 @@ void ShopState::createStatDisplay()
             
             const auto basePos = -(TitleSize.y + (BorderPadding * 2.f)) + pos.y;
             const auto windowHeight = std::round(cro::App::getWindow().getSize().y / cro::UIElementSystem::getViewScale());
-            const auto height = (windowHeight + basePos) - (BuyButtonSize.y + (BorderPadding * 4.f));
+            const auto height = (windowHeight + basePos) - (BuyButtonSize.y + (BorderPadding * 5.f));
 
             m_itemPreviewTexture.create(width, static_cast<std::uint32_t>(height), false);
             //e.getComponent<cro::Sprite>().setTexture(m_itemPreviewTexture.getTexture());
