@@ -125,9 +125,10 @@ public:
             MonthlyProgress,
             LeagueProgress,
             LobbyUpdated,
-            PlayerNameChanged
+            PlayerNameChanged,
+            CreditsAwarded
         }type = LevelUp;
-        std::int32_t level = 0; //if monthly progress then current value
+        std::int32_t level = 0; //if monthly progress then current value, if credits then value
         std::int32_t reason = -1; //if monthly progress then target value
         union
         {

@@ -125,6 +125,78 @@ ProgressIcon::ProgressIcon(const cro::Font& font)
 }
 
 //public
+void ProgressIcon::queueMessage(const ProgressMessage& msg)
+{
+    m_messageQueue.push_back(msg);
+}
+
+void ProgressIcon::update(float dt)
+{
+    static const float Speed = 240.f;
+    if (m_active)
+    {
+        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+        if (m_state == ScrollIn)
+        {
+            move({ 0.f, -Speed * dt });
+            if (getPosition().y < windowSize.y - IconSize.y)
+            {
+                setPosition({ windowSize.x - IconSize.x, windowSize.y - IconSize.y });
+                m_state = Paused;
+            }
+        }
+        else if (m_state == Paused)
+        {
+            m_pauseTime -= dt;
+            if (m_pauseTime < 0)
+            {
+                m_state = ScrollOut;
+            }
+        }
+        else
+        {
+            move({ 0.f, Speed * dt });
+            if (getPosition().y > windowSize.y)
+            {
+                m_active = false;
+            }
+        }
+    }
+    else if (!m_messageQueue.empty())
+    {
+        const auto& msg = m_messageQueue.front();
+        switch (msg.type)
+        {
+        default: break;
+        case ProgressMessage::Message:
+            showMessage(msg.title, msg.message);
+            break;
+        case ProgressMessage::Challenge:
+            showChallenge(msg.index, msg.progress, msg.total);
+            break;
+        case ProgressMessage::League:
+            showLeague(msg.index, msg.progress, msg.total);
+            break;
+        }
+
+        m_messageQueue.pop_front();
+    }
+}
+
+void ProgressIcon::draw()
+{
+    if (m_active)
+    {
+        auto tx = getTransform();
+
+        m_background.draw(tx);
+
+        m_text.draw(tx);
+        m_titleText.draw(tx);
+    }
+}
+
+//private
 void ProgressIcon::showChallenge(std::int32_t index, std::int32_t progress, std::int32_t total)
 {
     //rare, but we don't want, say, a league notification clobbering an active challenge
@@ -241,52 +313,5 @@ void ProgressIcon::showMessage(const std::string& title, const std::string& msg)
 
         const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
         setPosition({ windowSize.x - IconSize.x, windowSize.y });
-    }
-}
-
-void ProgressIcon::update(float dt)
-{
-    static const float Speed = 240.f;
-    if (m_active)
-    {
-        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
-        if (m_state == ScrollIn)
-        {
-            move({ 0.f, -Speed * dt });
-            if (getPosition().y < windowSize.y - IconSize.y)
-            {
-                setPosition({ windowSize.x - IconSize.x, windowSize.y - IconSize.y });
-                m_state = Paused;
-            }
-        }
-        else if (m_state == Paused)
-        {
-            m_pauseTime -= dt;
-            if (m_pauseTime < 0)
-            {
-                m_state = ScrollOut;
-            }
-        }
-        else
-        {
-            move({ 0.f, Speed * dt });
-            if (getPosition().y > windowSize.y)
-            {
-                m_active = false;
-            }
-        }
-    }
-}
-
-void ProgressIcon::draw()
-{
-    if (m_active)
-    {
-        auto tx = getTransform();
-
-        m_background.draw(tx);
-
-        m_text.draw(tx);
-        m_titleText.draw(tx);
     }
 }

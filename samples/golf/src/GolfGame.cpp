@@ -432,7 +432,12 @@ void GolfGame::handleMessage(const cro::Message& msg)
         }
         else if (data.type == Social::SocialEvent::MonthlyProgress)
         {
-            m_progressIcon->showChallenge(data.challengeID, data.level, data.reason);
+            ProgressMessage m;
+            m.index = data.challengeID;
+            m.progress = data.level;
+            m.total = data.reason;
+            m.type = ProgressMessage::Challenge;
+            m_progressIcon->queueMessage(m);
 
             if (data.challengeID > -1 &&
                 data.level == data.reason)
@@ -443,8 +448,25 @@ void GolfGame::handleMessage(const cro::Message& msg)
         }
         else if (data.type == Social::SocialEvent::LeagueProgress)
         {
-            m_progressIcon->showLeague(data.challengeID, data.level, data.reason);
+            ProgressMessage m;
+            m.index = data.challengeID;
+            m.progress = data.level;
+            m.total = data.reason;
+            m.type = ProgressMessage::League;
+            m_progressIcon->queueMessage(m);
+
             //achievement is awarded by League class on completion
+        }
+        else if (data.type == Social::SocialEvent::CreditsAwarded)
+        {
+            m_sharedData.inventory.balance += data.level;
+            inv::write(m_sharedData.inventory);
+
+            ProgressMessage m;
+            m.title = "Credits Awarded";
+            m.message = std::to_string(data.level) + "Cr";
+            m.type = ProgressMessage::Message;
+            m_progressIcon->queueMessage(m);
         }
     }
     else if (msg.id == cro::Message::SystemMessage)
@@ -452,7 +474,11 @@ void GolfGame::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::SystemEvent>();
         if (data.type == cro::Message::SystemEvent::ScreenshotTaken)
         {
-            m_progressIcon->showMessage(" ", "Screenshot Saved.");
+            ProgressMessage m;
+            m.title = " ";
+            m.message = "Screenshot Saved.";
+            m.type = ProgressMessage::Message;
+            m_progressIcon->queueMessage(m);
         }
     }
 

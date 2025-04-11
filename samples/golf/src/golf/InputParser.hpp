@@ -92,6 +92,8 @@ public:
     glm::vec2 getSpin() const { return m_spin; }
     bool isSpinputActive() const { return (m_inputFlags & InputFlag::SpinMenu) != 0; }
 
+    void setAllowPunch(bool b) { m_allowPunch = b; }
+
     const InputBinding getInputBinding() const { return m_inputBinding; }
 
     struct StrokeResult final
@@ -147,6 +149,7 @@ private:
 
     bool m_active;
     bool m_suspended;
+    bool m_allowPunch;
 
     enum class State
     {

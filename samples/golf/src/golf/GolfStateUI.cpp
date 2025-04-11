@@ -946,8 +946,12 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
+            const auto allowPunch = glm::length2(m_currentPlayer.position - m_holeData[m_currentHole].tee) > 1.f;
+            m_inputParser.setAllowPunch(allowPunch);
+
             const float scale =
-                (ClubShot[getClub()] & ShotType::Punch) ? 1.f : 0.f;
+                ((ClubShot[getClub()] & ShotType::Punch) 
+                    && allowPunch) ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
     spinEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -4898,7 +4902,8 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             auto xp = XPValues[XPID::HIO];
             if (m_holeData[m_currentHole].puttFromTee)
             {
-                xp /= 5;
+                //xp /= 5;
+                xp = 200;
             }
 
             if (m_sharedData.showPuttingPower)

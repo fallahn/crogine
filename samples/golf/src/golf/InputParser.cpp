@@ -102,6 +102,7 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_spin              (0.f),
     m_active            (false),
     m_suspended         (false),
+    m_allowPunch        (true),
     m_state             (State::Aim),
     m_currentClub       (ClubID::Driver),
     m_firstClub         (ClubID::Driver),
@@ -1334,7 +1335,8 @@ void InputParser::updateSpin(float dt)
         && ((m_prevFlags & InputFlag::PrevClub) == 0))
     {
         //we pressed punch shot
-        if ((ClubShot[m_currentClub] & ShotType::Punch)
+        if (m_allowPunch
+            && (ClubShot[m_currentClub] & ShotType::Punch)
             && m_terrain != TerrainID::Stone)
         {
             Club::setModifierIndex(Club::getModifierIndex() == 1 ? 0 : 1);

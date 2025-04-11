@@ -34,14 +34,29 @@ source distribution.
 #include <crogine/graphics/SimpleText.hpp>
 #include <crogine/graphics/Transformable2D.hpp>
 
+#include <deque>
+
+struct ProgressMessage final
+{
+    enum
+    {
+        Challenge, League, Message
+    }type = Message;
+
+    std::int32_t index = 0;
+    std::int32_t progress = 0;
+    std::int32_t total = 0;
+
+    std::string title;
+    std::string message;
+};
+
 class ProgressIcon final : public cro::Transformable2D
 {
 public:
     explicit ProgressIcon(const cro::Font&);
 
-    void showChallenge(std::int32_t index, std::int32_t progress, std::int32_t total);
-    void showLeague(std::int32_t index, std::int32_t progress, std::int32_t total);
-    void showMessage(const std::string& title, const std::string& msg);
+    void queueMessage(const ProgressMessage&);
     void update(float);
     void draw();
 
@@ -53,9 +68,15 @@ private:
     cro::SimpleText m_text;
     cro::SimpleText m_titleText;
 
+    std::deque<ProgressMessage> m_messageQueue;
+
     enum
     {
         ScrollIn, Paused, ScrollOut
     }m_state;
     float m_pauseTime;
+
+    void showChallenge(std::int32_t index, std::int32_t progress, std::int32_t total);
+    void showLeague(std::int32_t index, std::int32_t progress, std::int32_t total);
+    void showMessage(const std::string& title, const std::string& msg);
 };
