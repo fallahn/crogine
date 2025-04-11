@@ -160,7 +160,7 @@ namespace
     {
         enum
         {
-            Unselected, Highlighted, Selected
+            Unselected, Highlighted, Selected, Owned
         };
     };
 
@@ -515,7 +515,8 @@ void ShopState::buildScene()
         };
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/shop_buttons.spt", m_resources.textures);
 
     //title box in top right corner
     entity = m_uiScene.createEntity();
@@ -528,25 +529,9 @@ void ShopState::buildScene()
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>().setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(0.f, TitleSize.y), TextNormalColour),
-            cro::Vertex2D(glm::vec2(0.f), TextNormalColour),
-            cro::Vertex2D(TitleSize, TextNormalColour),
-            cro::Vertex2D(glm::vec2(TitleSize.x, 0.f), TextNormalColour)
-        });
-    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).depth = SpriteDepth;
-    titleRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Equipment\nCounter");
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.getComponent<cro::Text>().setVerticalSpacing(5.f);
-    entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Black]);
-    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).absolutePosition = { TitleSize.x / 2.f, TitleSize.y - BorderPadding };
-    entity.getComponent<cro::UIElement>().characterSize = UITextSize * 2;
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).depth = SpriteDepth;
     titleRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto& uiSystem = *m_uiScene.getSystem<cro::UISystem>();
@@ -571,6 +556,8 @@ void ShopState::buildScene()
         {
             applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::ButtonTop]);
         });
+
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     //and top bar buttons
     const auto createTopButton = [&](glm::vec2 position, const std::string& text, std::int32_t index)
@@ -746,9 +733,7 @@ void ShopState::buildScene()
         };
     dividerRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/shop_buttons.spt", m_resources.textures);
-
+    
     auto arrowSelect = uiSystem.addCallback([](cro::Entity e) 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
@@ -955,7 +940,9 @@ void ShopState::buildScene()
                 uiSystem.addCallback([&, index, category](cro::Entity e)
                     {
                         const auto texID = m_scrollNodes[category].selectedItem == index ?
-                            ButtonTexID::Selected : ButtonTexID::Unselected;
+                            ButtonTexID::Selected :
+                            m_scrollNodes[category].items[index].owned ?
+                            ButtonTexID::Owned : ButtonTexID::Unselected;
                         applyButtonTexture(texID, e, m_threePatches[ThreePatch::ButtonItem]);
                     });
             ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -966,7 +953,7 @@ void ShopState::buildScene()
                             auto& item = m_scrollNodes[category].items[m_scrollNodes[category].selectedItem];
                             item.buttonText.getComponent<cro::Text>().setFillColour(ButtonTextColour);
                             item.priceText.getComponent<cro::Text>().setFillColour(ButtonPriceColour);
-                            applyButtonTexture(ButtonTexID::Unselected, item.buttonBackground, m_threePatches[ThreePatch::ButtonItem]);
+                            applyButtonTexture(item.owned ? ButtonTexID::Owned : ButtonTexID::Unselected, item.buttonBackground, m_threePatches[ThreePatch::ButtonItem]);
 
                             m_scrollNodes[category].selectedItem = index;
 
@@ -1204,8 +1191,12 @@ void ShopState::buildScene()
             //as we don't know the inventory index until we're here, we update the string now
             if (m_sharedData.inventory.inventory[itemID] != -1)
             {
+                auto& ownedItem = m_scrollNodes[catIndex - 1].items[itemIndex];
+
                 auto str = std::to_string(discountPrice(inv::Items[itemID].price)) + " Cr\nOwned";
-                m_scrollNodes[catIndex - 1].items[itemIndex].priceText.getComponent<cro::Text>().setString(str);
+                ownedItem.priceText.getComponent<cro::Text>().setString(str);
+                ownedItem.owned = true;
+                applyButtonTexture(ButtonTexID::Owned, ownedItem.buttonBackground, m_threePatches[ThreePatch::ButtonItem]);
             }
 
             itemIndex++;
@@ -2085,6 +2076,8 @@ void ShopState::purchaseItem()
 
     auto str = std::to_string(discountPrice(invItem.price)) + " Cr\nOwned";
     item.priceText.getComponent<cro::Text>().setString(str);
+    applyButtonTexture(ButtonTexID::Owned, item.buttonBackground, m_threePatches[ThreePatch::ButtonItem]);
+    item.owned = true;
 
     m_statItems.balanceText.getComponent<cro::Text>().setString("Balance: " + std::to_string(m_sharedData.inventory.balance) + " Cr");
 
@@ -2105,6 +2098,8 @@ void ShopState::sellItem()
 
     auto str = std::to_string(invItem.price) + " Cr";
     item.priceText.getComponent<cro::Text>().setString(str);
+    applyButtonTexture(ButtonTexID::Selected, item.buttonBackground, m_threePatches[ThreePatch::ButtonItem]);
+    item.owned = false;
 
     m_statItems.balanceText.getComponent<cro::Text>().setString("Balance: " + std::to_string(m_sharedData.inventory.balance) + " Cr");
 

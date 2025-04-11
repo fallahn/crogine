@@ -107,6 +107,8 @@ private:
             Top, Bottom, None
         };
         std::int32_t cropping = Bottom; //only valid if not visible / partially cropped, dictates if we're off the top or bottom
+
+        bool owned = false; //used to set correct texture
     };
 
     struct CategoryItem final

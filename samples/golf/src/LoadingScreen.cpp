@@ -52,7 +52,7 @@ source distribution.
 
 namespace
 {
-    const std::array<std::string, 8u> TipStrings =
+    const std::array<std::string, 10u> TipStrings =
     {
         std::string("Tip: Click on an opponent's name in the League Browser to change it"),
         "Did You Know: Before golf tees players would shape mounds of sand and place the golf ball on top",
@@ -61,9 +61,11 @@ namespace
         "Tip: The clubset you choose affects the CPU opponent's difficulty",
         "Did You Know: An estimated 600 million golf balls are lost or discarded every year\nmore than 100,000 of which are at the bottom of Loch Ness!",
         "Tip: Make sure to spend some time on the Driving Range, to really learn your clubs",
-        "Did You Know: There are playable arcade games waiting to be discovered in the Clubhouse"
+        "Did You Know: There are playable arcade games waiting to be discovered in the Clubhouse",
+        "Tip: Upgrade your gear at the shop's Equipment Counter",
+        "Did You Know: You can assign your gear upgrades in the Profile Editor"
     };
-    std::size_t stringIndex = cro::Util::Random::value(0, 7);
+    std::size_t stringIndex = cro::Util::Random::value(0u, TipStrings.size() - 1);
 
     constexpr std::uint32_t vertexSize = 2 * sizeof(float);
     constexpr float timestep = 1.f / 60.f;
