@@ -962,7 +962,7 @@ void ShopState::buildScene()
                             newItem.priceText.getComponent<cro::Text>().setFillColour(ButtonTextSelectedColour);
                             applyButtonTexture(ButtonTexID::Selected, e, m_threePatches[ThreePatch::ButtonItem]);
 
-                            updateStatDisplay(newItem.itemIndex);
+                            updateStatDisplay(newItem);
 
                             if (!newItem.visible)
                             {
@@ -987,7 +987,7 @@ void ShopState::buildScene()
                             }
 
                             //update the buy button
-                            if (m_sharedData.inventory.inventory[newItem.itemIndex] == -1)
+                            if (!newItem.owned)
                             {
                                 m_buyCounter.str0.getComponent<cro::Text>().setString(m_buyString);
                                 m_buyCounter.str1.getComponent<cro::Text>().setString(m_buyString);
@@ -1043,7 +1043,7 @@ void ShopState::buildScene()
                 {
                     const auto width = calcBackgroundSize();
                     const auto textHeight = (InfoTextSize * 2) + std::round(BorderPadding * 1.5f);
-                    e.getComponent<cro::UIElement>().absolutePosition = { width - BorderPadding, position.y + textHeight };
+                    e.getComponent<cro::UIElement>().absolutePosition = { width - BorderPadding - 2.f, position.y + textHeight };
                 };
 
             parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
@@ -1757,16 +1757,23 @@ void ShopState::createStatDisplay()
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    updateStatDisplay(0);
+    updateStatDisplay(m_scrollNodes[0].items[0]);
 }
 
-void ShopState::updateStatDisplay(std::int32_t itemIndex)
+void ShopState::updateStatDisplay(const ItemEntry& itemEntry)
 {
+    const auto itemIndex = itemEntry.itemIndex;
+
     CRO_ASSERT(itemIndex < inv::Items.size(), "");
     
     const auto& item = inv::Items[itemIndex];
+    auto typeStr = inv::ItemStrings[item.type];
+    if (itemEntry.owned)
+    {
+        typeStr += " (Owned)";
+    }
     m_statItems.manufacturerName.getComponent<cro::Text>().setString(inv::Manufacturers[item.manufacturer]);
-    m_statItems.itemName.getComponent<cro::Text>().setString(inv::ItemStrings[item.type]);
+    m_statItems.itemName.getComponent<cro::Text>().setString(typeStr);
 
     //ugh nice consistency in the index naming here...
     auto& [bg1, text1] = m_statItems.statBars[0];
@@ -1819,10 +1826,10 @@ void ShopState::setCategory(std::int32_t index)
     m_scrollNodes[m_selectedCategory].buttonText.getComponent<cro::Text>().setFillColour(ButtonTextSelectedColour);
     applyButtonTexture(ButtonTexID::Selected, m_scrollNodes[m_selectedCategory].buttonBackground, m_threePatches[ThreePatch::ButtonTop]);
 
-    auto activeItem = m_scrollNodes[index].items[m_scrollNodes[index].selectedItem].itemIndex;
+    const auto& activeItem = m_scrollNodes[index].items[m_scrollNodes[index].selectedItem];
     updateStatDisplay(activeItem);
 
-    if (m_sharedData.inventory.inventory[activeItem] == -1)
+    if (!activeItem.owned)
     {
         m_buyCounter.str0.getComponent<cro::Text>().setString(m_buyString);
         m_buyCounter.str1.getComponent<cro::Text>().setString(m_buyString);
@@ -2076,7 +2083,7 @@ void ShopState::purchaseItem()
 
     auto str = std::to_string(discountPrice(invItem.price)) + " Cr\nOwned";
     item.priceText.getComponent<cro::Text>().setString(str);
-    applyButtonTexture(ButtonTexID::Owned, item.buttonBackground, m_threePatches[ThreePatch::ButtonItem]);
+    //applyButtonTexture(ButtonTexID::Owned, item.buttonBackground, m_threePatches[ThreePatch::ButtonItem]);
     item.owned = true;
 
     m_statItems.balanceText.getComponent<cro::Text>().setString("Balance: " + std::to_string(m_sharedData.inventory.balance) + " Cr");
@@ -2098,7 +2105,7 @@ void ShopState::sellItem()
 
     auto str = std::to_string(invItem.price) + " Cr";
     item.priceText.getComponent<cro::Text>().setString(str);
-    applyButtonTexture(ButtonTexID::Selected, item.buttonBackground, m_threePatches[ThreePatch::ButtonItem]);
+    //applyButtonTexture(ButtonTexID::Selected, item.buttonBackground, m_threePatches[ThreePatch::ButtonItem]);
     item.owned = false;
 
     m_statItems.balanceText.getComponent<cro::Text>().setString("Balance: " + std::to_string(m_sharedData.inventory.balance) + " Cr");

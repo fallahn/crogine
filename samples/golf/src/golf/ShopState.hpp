@@ -153,9 +153,9 @@ private:
     cro::RenderTexture m_itemPreviewTexture;
 
     void createStatDisplay();
-    void updateStatDisplay(std::int32_t uid);
+    void updateStatDisplay(const ItemEntry&);
 
-    void setCategory(std::int32_t);
+    void setCategory(std::int32_t index);
     void updateCatIndices();
 
     void scroll(bool up);

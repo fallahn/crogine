@@ -167,7 +167,7 @@ namespace inv
     static inline const std::array<std::string, 13u> Manufacturers =
     {
         "Gallawent", "Dong", "FellowCraft", "Akrun", "Dannis", "Clix",
-        "BeyTree", "Tunnelrock", "Flaxen", "Headings", "Woodgear",
+        "BeyTree", "Tunnelrock", "Flaxen", "Hardings", "Woodgear",
         "Brilton & Stockley",
 
         "Default"
