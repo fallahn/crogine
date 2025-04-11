@@ -2608,6 +2608,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     float multiplier = std::min(1.f, static_cast<float>(m_statBoardScores.size()) / 4.f);
                     float xp = 0.f;
                     std::int32_t xpReason = -1;
+                    std::int32_t credits = 0;
                     switch (i)
                     {
                     default: break;
@@ -2615,18 +2616,26 @@ void GolfState::showCountdown(std::uint8_t seconds)
                         xp = static_cast<float>(XPValues[XPID::First]) * multiplier;
                         xpReason = XPStringID::FirstPlace;
                         firstPlace = true;
+                        credits = m_sharedData.holeCount == 0 ? CreditID::FreePlayFirst : CreditID::FreePlayFirst / 2;
                         break;
                     case 1:
                         xp = static_cast<float>(XPValues[XPID::Second]) * multiplier;
                         xpReason = XPStringID::SecondPlace;
+                        credits = m_sharedData.holeCount == 0 ? CreditID::FreePlaySecond : CreditID::FreePlaySecond / 2;
                         break;
                     case 2:
                         xp = static_cast<float>(XPValues[XPID::Third]) * multiplier;
                         xpReason = XPStringID::ThirdPlace;
+                        credits = m_sharedData.holeCount == 0 ? CreditID::FreePlayThird : CreditID::FreePlayThird / 2;
                         break;
                     }
                     Social::awardXP(static_cast<std::int32_t>(xp), xpReason);
                     updateTournament(i == 0);
+
+                    if (m_allowAchievements)
+                    {
+                        awardCredits(credits);
+                    }
                 }
             }
 

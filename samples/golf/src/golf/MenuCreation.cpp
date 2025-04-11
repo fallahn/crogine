@@ -5218,7 +5218,7 @@ void MenuState::updateUnlockedItems()
             {
                 if ((leagueFlags & flag) == 0)
                 {
-                    auto position = Leagues[i].getCurrentBest();
+                    const auto position = Leagues[i].getCurrentBest();
                     switch (position)
                     {
                     default: break;
@@ -5236,6 +5236,8 @@ void MenuState::updateUnlockedItems()
                             //this was the last league so show the credits
                             m_sharedData.showCredits = true;
                         }
+
+                        awardCredits(CreditID::LeagueWinFirst - ((position - 1) * 50));
                     }
                         [[fallthrough]];
                     case 4:
@@ -5281,6 +5283,8 @@ void MenuState::updateUnlockedItems()
                 item.id = ul::UnlockID::CareerSilver;
                 item.xp = 750;
                 Social::awardXP(item.xp);
+
+                awardCredits(CreditID::TournySecond);
             }
 
             //unlock ball if first place
@@ -5297,6 +5301,7 @@ void MenuState::updateUnlockedItems()
                         m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Tournament01 + i;
                     }
                 }
+                awardCredits(CreditID::TournyFinal);
             }
 
             //store that this was awarded so we don't award it more than once...
@@ -5328,6 +5333,8 @@ void MenuState::updateUnlockedItems()
             item.id = ul::UnlockID::TournLadder;
             item.xp = 250 * t.round;
             Social::awardXP(item.xp);
+
+            awardCredits(CreditID::TournyRound);
         }
         else
         {

@@ -373,6 +373,35 @@ struct Avatar final
     std::uint32_t clubModelID = 0;
 };
 
+struct CreditID final
+{
+    enum
+    {
+        TournyRound = 300,
+        TournyFinal = 2000,
+        TournySecond = 1500,
+
+        FreePlayFirst = 100,
+        FreePlaySecond = 80,
+        FreePlayThird = 60,
+
+        LeagueRoundFirst = 250,
+        LeagueRoundSecond = 200,
+        LeagueRoundThird = 150,
+
+        LeagueWinFirst = 1500,
+        LeagueWinSecond = 1250,
+        LeagueWinThird = 1000,
+    };
+};
+
+static inline void awardCredits(std::int32_t value)
+{
+    auto* msg = cro::App::getInstance().getMessageBus().post<Social::SocialEvent>(Social::MessageID::SocialMessage);
+    msg->type = Social::SocialEvent::CreditsAwarded;
+    msg->level = value;
+}
+
 static inline std::int32_t courseOfTheMonth()
 {
     //return 9 + (cro::SysTime::now().months() % 3);
