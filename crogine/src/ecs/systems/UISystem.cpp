@@ -930,32 +930,37 @@ void UISystem::onEntityAdded(Entity entity)
 void UISystem::onEntityRemoved(Entity entity)
 {
     //remove the entity from its group
-    auto group = entity.getComponent<UIInput>().m_group;
+    const auto groups = entity.getComponent<UIInput>().m_group;
     
-    //remove from group
-    m_groups[group].erase(std::remove_if(m_groups[group].begin(), m_groups[group].end(),
-        [entity](Entity e)
+    //remove from groups
+    for (auto i = 0; i < 32; ++i)
+    {
+        if ((groups & (1 << i)) != 0)
         {
-            return e == entity;
-        }), m_groups[group].end());
-
+            m_groups[i].erase(std::remove_if(m_groups[i].begin(), m_groups[i].end(),
+                [entity](Entity e)
+                {
+                    return e == entity;
+                }), m_groups[i].end());
+        }
+    }
 
     //update selected index if this group is active
-    if (m_activeGroup == group)
+    if ((groups & (1 << m_activeGroup)) != 0)
     {
-        if (!m_groups[group].empty())
+        if (!m_groups[m_activeGroup].empty())
         {
-            if (m_groups[group][m_selectedIndex] == entity)
+            if (m_groups[m_activeGroup][m_selectedIndex] == entity)
             {
                 //we don't need to call the unselect callback so set the index directly
-                m_selectedIndex = std::min(m_selectedIndex - 1, m_groups[group].size() - 1);
+                m_selectedIndex = std::min(m_selectedIndex - 1, m_groups[m_activeGroup].size() - 1);
 
                 LogI << "Updated selected index to " << m_selectedIndex << std::endl;
             }
             else
             {
                 //clamp to new size
-                m_selectedIndex = std::min(m_selectedIndex, m_groups[group].size() - 1);
+                m_selectedIndex = std::min(m_selectedIndex, m_groups[m_activeGroup].size() - 1);
             }
         }
         else

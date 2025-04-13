@@ -1049,7 +1049,7 @@ bool GolfGame::initialise()
     //m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
     m_stateStack.pushState(StateID::Shop);
-    //m_stateStack.pushState(StateID::EndlessRunner);
+    //m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::EndlessAttract);
     //m_stateStack.pushState(StateID::Workshop);
 #else
