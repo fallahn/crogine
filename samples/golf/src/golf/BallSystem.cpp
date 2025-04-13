@@ -57,10 +57,11 @@ namespace
     static constexpr float MinWindStrength = 0.1f;
 
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
-    static constexpr float FallRadius = Ball::Radius * 0.25f;
+    static constexpr float FallRadius = Ball::Radius * 0.05f;// 0.25f;
     static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
-    static constexpr float AttractRadius = HoleRadius * 1.24f; //1.2f;
+    static constexpr float AttractRadius = HoleRadius * 1.5f;// 1.24f; //1.2f;
     static constexpr float MinAttractRadius = AttractRadius * AttractRadius;
+    static constexpr float AttractStrength = 50.f;
     static constexpr float Margin = 1.02f;
     static constexpr float BallHoleDistance = (HoleRadius * Margin) * (HoleRadius * Margin);
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
@@ -70,7 +71,7 @@ namespace
     static constexpr float BallRollTimeout = -10.f;
     static constexpr float BallTimeoutVelocity = 0.04f;
     static constexpr float MinSpinPower = 0.05f; //min velocity to stop doesn't kick in if there's more than this much top/back spin to apply
-    static constexpr float MinRollSlope = 0.98f; //ball won't stop rolling if the ground is steeper that this (smaller == stickier)
+    static constexpr float MinRollSlope = 0.99f; //ball won't stop rolling if the ground is steeper that this (smaller == stickier)
 
     static constexpr float MinRollVelocity = -0.25f;
     static constexpr float MaxStoneSlope = 0.95f; //dot prod with vertical - ball is OOB if less than this
@@ -607,6 +608,10 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             {
                 auto attraction = pinDir; //* 0.5f
                 attraction.y = 0.f;
+
+                const float attractMultiplier = 0.05f + std::min(glm::length2(ball.velocity), 0.95f);
+                attraction *= (AttractStrength * attractMultiplier);
+                //LogI << glm::length(attraction) << std::endl;
                 ball.velocity += attraction * dt;
             }
 
@@ -615,7 +620,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //over hole or in the air
 
                 //apply more gravity/push the closer we are to the pin
-                float forceAffect = 1.f - smoothstep(MinFallDistance, MinBallDistance, len2);
+                const float forceAffect = 1.f - smoothstep(MinFallDistance, MinBallDistance, len2);
 
 
                 //gravity
@@ -630,8 +635,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                 //this draws the ball to the pin a little bit to make sure the ball
                 //falls entirely within the radius
-                pinDir.y = 0.f;
-                ball.velocity += pinDir * forceAffect;// dt;
+                pinDir.y = -0.05f;
+                ball.velocity += pinDir * (AttractStrength * 0.15f) * forceAffect;// dt;
 
                 ball.hadAir = true;
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
