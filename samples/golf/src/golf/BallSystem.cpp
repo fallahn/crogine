@@ -793,7 +793,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 && glm::dot(cro::Transform::Y_AXIS, terrainContact.normal) > MinRollSlope) //and we don't want to stop on a slope                
                 
                 || (terrainContact.penetration > (Ball::Radius * 2.5f)) 
-                || ((ball.delay < BallRollTimeout) && (vel2 < BallTimeoutVelocity))
+                || ((ball.delay < BallRollTimeout * 1.5f) && (vel2 < BallTimeoutVelocity))
                 || (ball.delay < (BallRollTimeout * 2.f)))
             {
                 ball.velocity = glm::vec3(0.f);
