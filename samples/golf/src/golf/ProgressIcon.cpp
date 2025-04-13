@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,9 +29,11 @@ source distribution.
 
 #include "ProgressIcon.hpp"
 #include "League.hpp"
+#include "CommonConsts.hpp"
 
 #include <MonthlyChallenge.hpp>
 
+#include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/util/String.hpp>
@@ -122,6 +124,9 @@ ProgressIcon::ProgressIcon(const cro::Font& font)
     m_titleText.setAlignment(cro::SimpleText::Alignment::Centre);
 
     setPosition({ 0.f, -IconSize.y });
+
+    m_rewardEffect.loadFromFile("assets/golf/sound/menu/reward.wav");
+    m_rewardEffect.setVolume(0.5f);
 }
 
 //public
@@ -170,6 +175,12 @@ void ProgressIcon::update(float dt)
         default: break;
         case ProgressMessage::Message:
             showMessage(msg.title, msg.message);
+
+            if (msg.audioID == ProgressMessage::Reward)
+            {
+                m_rewardEffect.setVolume(0.25f * cro::AudioMixer::getVolume(MixerChannel::Menu));
+                m_rewardEffect.play();
+            }
             break;
         case ProgressMessage::Challenge:
             showChallenge(msg.index, msg.progress, msg.total);

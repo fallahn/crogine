@@ -250,6 +250,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             ent.getComponent<cro::AudioEmitter>().setRolloff(0.f);
         }
             break;
+
         case cro::Message::SystemMessage:
         {
             const auto& data = msg.getData<cro::Message::SystemEvent>();

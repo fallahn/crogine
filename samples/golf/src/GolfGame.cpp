@@ -291,7 +291,16 @@ void GolfGame::handleEvent(const cro::Event& evt)
             togglePixelScale(m_sharedData, true);
             break;
         case SDLK_KP_MULTIPLY:
-            m_sharedData.sharedResources->fonts.get(FontID::Label).setSmooth(true);
+            //hmm what was this for???
+            //m_sharedData.sharedResources->fonts.get(FontID::Label).setSmooth(true);
+        {
+            /*ProgressMessage m;
+            m.title = "Credits Awarded";
+            m.message = "Prize Reward: " + std::to_string(2000) + "Cr\nCurrent Balance : " + std::to_string(m_sharedData.inventory.balance) + "Cr";
+            m.type = ProgressMessage::Message;
+            m.audioID = ProgressMessage::Reward;
+            m_progressIcon->queueMessage(m);*/
+        }
             break;
         }
         break;
@@ -464,8 +473,9 @@ void GolfGame::handleMessage(const cro::Message& msg)
 
             ProgressMessage m;
             m.title = "Credits Awarded";
-            m.message = std::to_string(data.level) + "Cr";
+            m.message = "Prize Reward: " + std::to_string(data.level) + "Cr\nCurrent Balance : " + std::to_string(m_sharedData.inventory.balance) + "Cr";
             m.type = ProgressMessage::Message;
+            m.audioID = ProgressMessage::Reward;
             m_progressIcon->queueMessage(m);
         }
     }
@@ -478,6 +488,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
             m.title = " ";
             m.message = "Screenshot Saved.";
             m.type = ProgressMessage::Message;
+            m.audioID = ProgressMessage::ScreenShot;
             m_progressIcon->queueMessage(m);
         }
     }

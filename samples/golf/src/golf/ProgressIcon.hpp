@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <crogine/audio/sound_system/MusicPlayer.hpp>
+
 #include <crogine/graphics/SimpleDrawable.hpp>
 #include <crogine/graphics/SimpleVertexArray.hpp>
 #include <crogine/graphics/SimpleText.hpp>
@@ -49,6 +51,12 @@ struct ProgressMessage final
 
     std::string title;
     std::string message;
+
+    enum
+    {
+        None,
+        ScreenShot, Reward
+    }audioID = None;
 };
 
 class ProgressIcon final : public cro::Transformable2D
@@ -69,6 +77,8 @@ private:
     cro::SimpleText m_titleText;
 
     std::deque<ProgressMessage> m_messageQueue;
+
+    cro::MusicPlayer m_rewardEffect;
 
     enum
     {

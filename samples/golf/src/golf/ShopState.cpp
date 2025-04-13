@@ -245,6 +245,8 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
         loadAssets();
         addSystems();
         buildScene();
+
+        m_viewScale = cro::UIElementSystem::getViewScale();
 }
 
 //public
@@ -1361,7 +1363,7 @@ void ShopState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                //m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::BuyButton]);
                 m_buyCounter.active = false;
             });
@@ -2191,6 +2193,8 @@ void ShopState::quitState()
 
 void ShopState::onCachedPush()
 {
+    m_viewScale = cro::UIElementSystem::getViewScale();
+    
     Timeline::setTimelineDesc("In the Shop");
     Social::setStatus(Social::InfoID::Menu, { "At the equipment counter" });
 
