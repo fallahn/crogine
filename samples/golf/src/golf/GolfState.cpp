@@ -432,13 +432,13 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             }
             m_hotSeat = true;
         }
-//#ifdef USE_GNS
         //show the monthly rival if opted in
         else if (sd.showRival)
         {
             if (sd.gameMode == GameMode::FreePlay
                 && sd.scoreType == ScoreType::Stroke
-                && sd.quickplayOpponents == 0)
+                && sd.quickplayOpponents == 0
+                && playerCount < 8)
             {
                 cro::String rivalName;
                 auto scores = Social::getMonthlyHoleScores(sd.mapDirectory, sd.holeCount, rivalName);
@@ -466,7 +466,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 }
             }
         }
-//#endif
     }
 
     Social::setGroup(m_sharedData.clientConnection.hostID, playerCount);

@@ -207,6 +207,7 @@ public:
     std::int32_t getPlayerIndex(std::size_t i) const { return m_players[i].first.nameIndex; }
 
     std::size_t getPlayerCount() const { return m_players.size(); }
+    bool hasRival() const { return !m_rivalScores.empty(); }
 
 private:
 

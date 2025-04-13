@@ -2632,6 +2632,13 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     Social::awardXP(static_cast<std::int32_t>(xp), xpReason);
                     updateTournament(i == 0);
 
+                    if (m_friendlyPlayers
+                        && m_friendlyPlayers->hasRival())
+                    {
+                        //we're actually playing solo
+                        credits = m_sharedData.holeCount == 0 ? CreditID::FreePlayThird / 2 : CreditID::FreePlayThird / 4;
+                    }
+
                     if (m_allowAchievements
                         && credits
                         && m_sharedData.gameMode == GameMode::FreePlay)
