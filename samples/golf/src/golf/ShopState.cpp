@@ -350,8 +350,11 @@ bool ShopState::simulate(float dt)
 {
     if (m_buyCounter.update(dt))
     {
+        m_audioEnts[AudioID::Purchase].getComponent<cro::AudioEmitter>().play();
+
         const auto& item = m_scrollNodes[m_selectedCategory].items[m_scrollNodes[m_selectedCategory].selectedItem];
-        if (m_sharedData.inventory.inventory[item.itemIndex] != -1)
+        //if (m_sharedData.inventory.inventory[item.itemIndex] != -1)
+        if (item.owned)
         {
             //sell item
             sellItem();
@@ -379,6 +382,19 @@ void ShopState::render()
 //private
 void ShopState::loadAssets()
 {
+    m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
+    m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
+    m_audioEnts[AudioID::Back] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+    m_audioEnts[AudioID::Select] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Select].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    m_audioEnts[AudioID::Nope] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Nope].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("nope");
+    m_audioEnts[AudioID::Purchase] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Purchase].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("purchase");
+
+
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/shop_badges.spt", m_resources.textures);
 
@@ -565,6 +581,7 @@ void ShopState::buildScene()
     const auto selectedID = uiSystem.addCallback([&](cro::Entity e)
         {
             applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::ButtonTop]);
+            e.getComponent<cro::AudioEmitter>().play();
         });
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -592,6 +609,7 @@ void ShopState::buildScene()
             //relative to the parent
             auto ent = m_uiScene.createEntity();
             ent.addComponent<cro::Transform>().setPosition(position);
+            ent.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
             ent.addComponent<cro::Drawable2D>().setVertexData(
                 {
                     cro::Vertex2D(glm::vec2(0.f, TopButtonSize.y)),
@@ -747,6 +765,7 @@ void ShopState::buildScene()
     auto arrowSelect = uiSystem.addCallback([](cro::Entity e) 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
         });
     auto arrowUnselect = uiSystem.addCallback([](cro::Entity e)
         {
@@ -773,13 +792,14 @@ void ShopState::buildScene()
 
     auto buttonEnt = m_uiScene.createEntity();
     buttonEnt.addComponent<cro::Transform>().setPosition({ -1.f, -1.f, 1.f });
+    buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     buttonEnt.addComponent<cro::Drawable2D>();
     buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("highlight_up");
     buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     buttonEnt.addComponent<cro::UIInput>().area = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(CatScrollUp);
     buttonEnt.getComponent<cro::UIInput>().setNextIndex(CatScrollDown, CatScrollDown);
-    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(CatScrollDown, CatButtonIron); //TODO set this with active category
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(CatScrollDown, CatButtonIron);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelect;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselect;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -789,6 +809,7 @@ void ShopState::buildScene()
                 if (activated(evt))
                 {
                     scroll(true);
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     
@@ -810,13 +831,14 @@ void ShopState::buildScene()
 
     buttonEnt = m_uiScene.createEntity();
     buttonEnt.addComponent<cro::Transform>().setPosition({ -1.f, -1.f, 1.f });
+    buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     buttonEnt.addComponent<cro::Drawable2D>();
     buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("highlight_down");
     buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     buttonEnt.addComponent<cro::UIInput>().area = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(CatScrollDown);
     buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonBuy, CatButtonIron);
-    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonExit, CatScrollUp); //TODO update this when updating active category
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonExit, CatScrollUp);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelect;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselect;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -826,6 +848,7 @@ void ShopState::buildScene()
                 if (activated(evt))
                 {
                     scroll(false);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Driver);
@@ -878,6 +901,7 @@ void ShopState::buildScene()
 
             auto ent = m_uiScene.createEntity();
             ent.addComponent<cro::Transform>().setPosition(position);
+            ent.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
             ent.addComponent<cro::Drawable2D>().setVertexData(
                 {
                     cro::Vertex2D(glm::vec2(0.f, ItemButtonSize.y)),
@@ -921,6 +945,7 @@ void ShopState::buildScene()
                 uiSystem.addCallback([&, index, category](cro::Entity e)
                     {
                         applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::ButtonItem]);
+                        e.getComponent<cro::AudioEmitter>().play();
 
                         const auto& item = m_scrollNodes[category].items[index];
                         if (!item.visible
@@ -960,6 +985,8 @@ void ShopState::buildScene()
                     {
                         if (activated(evt))
                         {
+                            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
                             auto& item = m_scrollNodes[category].items[m_scrollNodes[category].selectedItem];
                             item.buttonText.getComponent<cro::Text>().setFillColour(ButtonTextColour);
                             item.priceText.getComponent<cro::Text>().setFillColour(ButtonPriceColour);
@@ -1256,6 +1283,7 @@ void ShopState::buildScene()
     const auto& buyPatch = m_threePatches[ThreePatch::BuyButton];
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
             cro::Vertex2D(glm::vec2(0.f, BuyButtonSize.y)),
@@ -1295,6 +1323,7 @@ void ShopState::buildScene()
         uiSystem.addCallback([&](cro::Entity e)
             {
                 applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::BuyButton]);
+                e.getComponent<cro::AudioEmitter>().play();
             });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
         uiSystem.addCallback([&](cro::Entity e)
@@ -1314,13 +1343,15 @@ void ShopState::buildScene()
                     if (m_sharedData.inventory.inventory[item.itemIndex] == -1
                         && invItem.price > m_sharedData.inventory.balance)
                     {
-                        //TODO make denied sound
+                        m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
                         
                         //play flash anim
                         m_statItems.balanceText.getComponent<cro::Callback>().active = true;
                     }                     
                     else
                     {
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                        
                         //we're selling or buying
                         applyButtonTexture(ButtonTexID::Selected, e, m_threePatches[ThreePatch::BuyButton]);
                         m_buyCounter.active = true;
@@ -1330,6 +1361,7 @@ void ShopState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::BuyButton]);
                 m_buyCounter.active = false;
             });
@@ -1385,6 +1417,7 @@ void ShopState::buildScene()
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
             cro::Vertex2D(glm::vec2(0.f, BuyButtonSize.y)),
@@ -1419,12 +1452,13 @@ void ShopState::buildScene()
 
     entity.addComponent<cro::UIInput>().area = { glm::vec2(0.f), BuyButtonSize };
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonExit);
-    entity.getComponent<cro::UIInput>().setNextIndex(CatScrollDown, CatButtonBall); //TODO this needs to be updated with active item list
+    entity.getComponent<cro::UIInput>().setNextIndex(CatScrollDown, CatButtonBall);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonBuy, CatButtonBall);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
         uiSystem.addCallback([&](cro::Entity e)
             {
                 applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::ExitButton]);
+                e.getComponent<cro::AudioEmitter>().play();
             });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
         uiSystem.addCallback([&](cro::Entity e)
@@ -1436,6 +1470,7 @@ void ShopState::buildScene()
             {
                 if (activated(evt))
                 {
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                     applyButtonTexture(ButtonTexID::Selected, e, m_threePatches[ThreePatch::ExitButton]);
                     quitState();
                 }
@@ -1868,7 +1903,7 @@ void ShopState::setCategory(std::int32_t index)
     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(index);
     updateCatIndices(); //updates the navigation indices for UI
 
-    //TODO play button sound
+    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 }
 
 void ShopState::updateCatIndices()
@@ -2113,8 +2148,6 @@ void ShopState::purchaseItem()
 
     m_buyCounter.str0.getComponent<cro::Text>().setString(m_sellString);
     m_buyCounter.str1.getComponent<cro::Text>().setString(m_sellString);
-
-    //TODO play success sound
 }
 
 void ShopState::sellItem()
@@ -2135,8 +2168,6 @@ void ShopState::sellItem()
 
     m_buyCounter.str0.getComponent<cro::Text>().setString(m_buyString);
     m_buyCounter.str1.getComponent<cro::Text>().setString(m_buyString);
-
-    //TODO play success sound
 }
 
 void ShopState::quitState()

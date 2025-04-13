@@ -32,6 +32,8 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "Inventory.hpp"
 
+#include <crogine/audio/AudioScape.hpp>
+
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConsoleClient.hpp>
 
@@ -92,6 +94,19 @@ private:
 
     std::array<ThreePatch, ThreePatch::Count> m_threePatches = {};
     cro::Texture* m_threePatchTexture;
+
+    struct AudioID final
+    {
+        enum
+        {
+            Accept, Back, Select,
+            Nope, Purchase,
+
+            Count
+        };
+    };
+    cro::AudioScape m_menuSounds;
+    std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
     struct ItemEntry final
     {
