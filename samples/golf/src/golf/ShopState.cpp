@@ -224,6 +224,7 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
     m_previewScene      (ctx.appInstance.getMessageBus()),
     m_threePatchTexture (nullptr),
     m_selectedCategory  (Category::Driver),
+    m_currentModelIndex (0),
     m_buyString         (cro::String::fromUtf8(BuyStr.begin(), BuyStr.end())),
     m_sellString        (cro::String::fromUtf8(SellStr.begin(), SellStr.end()))
 {
@@ -246,8 +247,8 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
 
         loadAssets();
         addSystems();
+        buildPreviewScene(); //do this first so we know what the model indices will be
         buildScene();
-        buildPreviewScene();
 
         m_viewScale = cro::UIElementSystem::getViewScale();
 }
@@ -1002,7 +1003,7 @@ void ShopState::buildScene()
                                 break;
                             case ItemEntry::Bottom:
                             {
-                                const auto itemCount = static_cast<std::int32_t>(std::floor((m_catergoryCroppingArea.height / m_viewScale) / ScrollData::Stride)) - 1;
+                                const auto itemCount = static_cast<std::int32_t>(std::floor((m_categoryCroppingArea.height / m_viewScale) / ScrollData::Stride)) - 1;
                                 target -= itemCount;
                             }
                                 [[fallthrough]];
@@ -1054,7 +1055,7 @@ void ShopState::buildScene()
                                     break;
                                 case ItemEntry::Bottom:
                                 {
-                                    const auto itemCount = static_cast<std::int32_t>(std::floor((m_catergoryCroppingArea.height / m_viewScale) / ScrollData::Stride)) - 1;
+                                    const auto itemCount = static_cast<std::int32_t>(std::floor((m_categoryCroppingArea.height / m_viewScale) / ScrollData::Stride)) - 1;
                                     target -= itemCount;
                                 }
                                 [[fallthrough]];
@@ -1127,6 +1128,34 @@ void ShopState::buildScene()
             parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
             itemEntry.priceText = ent;
+
+            //look up the index of the preview model for this item
+            switch (category)
+            {
+            default: break;
+            case Category::Driver:
+            case Category::Wood:
+                itemEntry.modelIndex = m_modelMaps[item.manufacturer].indices[ModelMap::Driver];
+
+                if (item.type == inv::ItemType::FiveW)
+                {
+                    itemEntry.modelScale = 0.8f;
+                }
+                else if (item.type == inv::ItemType::ThreeW)
+                {
+                    itemEntry.modelScale = 0.9f;
+                }
+                break;
+            case Category::Iron:
+                itemEntry.modelIndex = m_modelMaps[item.manufacturer].indices[ModelMap::Iron];
+                break;
+            case Category::Wedge:
+                itemEntry.modelIndex = m_modelMaps[item.manufacturer].indices[ModelMap::Wedge];
+                break;
+            case Category::Ball:
+                itemEntry.modelIndex = m_modelMaps[item.manufacturer].indices[ModelMap::Ball];
+                break;
+            }
         };
 
     //root node for position
@@ -1148,8 +1177,8 @@ void ShopState::buildScene()
 
             //this is the area we want to crop scroll nodes to - although really it's
             //the same for all nodes so we should only do this once, not every node
-            m_catergoryCroppingArea = { 0.f, BorderPadding, size.x, size.y };
-            m_catergoryCroppingArea *= scale;
+            m_categoryCroppingArea = { 0.f, BorderPadding, size.x, size.y };
+            m_categoryCroppingArea *= scale;
         };
 
     auto scrollRoot = entity;
@@ -1236,15 +1265,15 @@ void ShopState::buildScene()
                             auto bounds = item.buttonBackground.getComponent<cro::Drawable2D>().getLocalBounds();
                             bounds = bounds.transform(item.buttonBackground.getComponent<cro::Transform>().getWorldTransform());
 
-                            if (!m_catergoryCroppingArea.contains(bounds))
+                            if (!m_categoryCroppingArea.contains(bounds))
                             {
-                                item.buttonBackground.getComponent<cro::Drawable2D>().setCroppingArea(m_catergoryCroppingArea, true);
-                                item.buttonText.getComponent<cro::Drawable2D>().setCroppingArea(m_catergoryCroppingArea, true);
-                                item.priceText.getComponent<cro::Drawable2D>().setCroppingArea(m_catergoryCroppingArea, true);
-                                item.badge.getComponent<cro::Drawable2D>().setCroppingArea(m_catergoryCroppingArea, true);
+                                item.buttonBackground.getComponent<cro::Drawable2D>().setCroppingArea(m_categoryCroppingArea, true);
+                                item.buttonText.getComponent<cro::Drawable2D>().setCroppingArea(m_categoryCroppingArea, true);
+                                item.priceText.getComponent<cro::Drawable2D>().setCroppingArea(m_categoryCroppingArea, true);
+                                item.badge.getComponent<cro::Drawable2D>().setCroppingArea(m_categoryCroppingArea, true);
 
                                 item.visible = false;
-                                item.cropping = (bounds.bottom < m_catergoryCroppingArea.bottom) ? ItemEntry::Bottom : ItemEntry::Top;
+                                item.cropping = (bounds.bottom < m_categoryCroppingArea.bottom) ? ItemEntry::Bottom : ItemEntry::Top;
                             }
                             else
                             {
@@ -1600,17 +1629,84 @@ void ShopState::buildScene()
 void ShopState::buildPreviewScene()
 {
     cro::ModelDefinition md(m_resources, &m_envMap);
-    md.loadFromFile("assets/golf/models/shop/ball_hardings.cmt");
 
-    cro::Entity entity = m_previewScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    md.createModel(entity);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+    struct ModelPaths final
+    {
+        std::string driver;
+        std::string iron;
+        std::string wedge;
+        std::string ball;
+
+        ModelPaths(const std::string& d, const std::string i, const std::string& w, const std::string b)
+            : driver(d), iron(i), wedge(w), ball(b) {}
+    };
+
+    const std::array<ModelPaths, inv::Manufacturers.size()> FilePaths =
+    {
+        ModelPaths("driver_gallawent.cmt",   "iron_gallawent.cmt",   "wedge_gallawent.cmt",   ""),
+        ModelPaths("driver_dong.cmt",        "iron_dong.cmt",        "wedge_dong.cmt",        ""),
+        ModelPaths("driver_fellowcraft.cmt", "iron_fellowcraft.cmt", "wedge_fellowcraft.cmt", ""),
+        ModelPaths("driver_akrun.cmt",       "iron_akrun.cmt",       "wedge_akrun.cmt",       ""),
+        ModelPaths("driver_dannis.cmt",      "iron_dannis.cmt",      "wedge_dannis.cmt",      ""),
+        ModelPaths("driver_clix.cmt",        "iron_clix.cmt",        "wedge_clix.cmt",        ""),
+        ModelPaths("driver_beytree.cmt",     "iron_beytree.cmt",     "wedge_beytree.cmt",     ""),
+        ModelPaths("", "", "", "ball_tunnelrock.cmt"),
+        ModelPaths("", "", "", "ball_flaxen.cmt"),
+        ModelPaths("", "", "", "ball_hardings.cmt"),
+        ModelPaths("", "", "", "ball_woodgear.cmt"),
+        ModelPaths("", "", "", "ball_bns.cmt"),
+        ModelPaths("", "", "", "")        
+    };
+
+    const auto createEnt = 
+        [&](cro::ModelDefinition& md)
         {
-            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+            cro::Entity entity = m_previewScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            md.createModel(entity);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+                {
+                    e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+                };
+            entity.getComponent<cro::Model>().setHidden(true);
+
+            return entity;
         };
+
+    std::int32_t index = 0;
+    for (auto i = 0u; i < FilePaths.size(); ++i)
+    {
+        if (!FilePaths[i].driver.empty()
+            && md.loadFromFile("assets/golf/models/shop/" + FilePaths[i].driver))
+        {
+            m_previewModels.push_back(createEnt(md));
+            m_modelMaps[i].indices[ModelMap::Driver] = index++;
+        }
+
+        if (!FilePaths[i].iron.empty()
+            && md.loadFromFile("assets/golf/models/shop/" + FilePaths[i].iron))
+        {
+            m_previewModels.push_back(createEnt(md));
+            m_modelMaps[i].indices[ModelMap::Iron] = index++;
+        }
+
+        if (!FilePaths[i].wedge.empty()
+            && md.loadFromFile("assets/golf/models/shop/" + FilePaths[i].wedge))
+        {
+            m_previewModels.push_back(createEnt(md));
+            m_modelMaps[i].indices[ModelMap::Wedge] = index++;
+        }
+
+        if (!FilePaths[i].ball.empty()
+            && md.loadFromFile("assets/golf/models/shop/" + FilePaths[i].ball))
+        {
+            m_previewModels.push_back(createEnt(md));
+            m_modelMaps[i].indices[ModelMap::Ball] = index++;
+        }
+    }
+
 
 
     const auto resizeCallback = 
@@ -1627,8 +1723,6 @@ void ShopState::buildPreviewScene()
 
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = resizeCallback;
-
-    //resizeCallback(cam);
 }
 
 void ShopState::createStatDisplay()
@@ -1904,6 +1998,13 @@ void ShopState::createStatDisplay()
 
 void ShopState::updateStatDisplay(const ItemEntry& itemEntry)
 {
+    m_previewModels[m_currentModelIndex].getComponent<cro::Model>().setHidden(true);
+    m_previewModels[itemEntry.modelIndex].getComponent<cro::Model>().setHidden(false);
+    m_currentModelIndex = itemEntry.modelIndex;
+
+    m_previewModels[itemEntry.modelIndex].getComponent<cro::Transform>().setScale({ 1.f, 1.f, itemEntry.modelScale });
+
+
     const auto itemIndex = itemEntry.itemIndex;
 
     CRO_ASSERT(itemIndex < inv::Items.size(), "");

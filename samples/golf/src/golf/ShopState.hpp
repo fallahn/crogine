@@ -130,6 +130,8 @@ private:
         std::int32_t cropping = Bottom; //only valid if not visible / partially cropped, dictates if we're off the top or bottom
 
         bool owned = false; //used to set correct texture
+        std::int32_t modelIndex = 0; //index into model array for preview
+        float modelScale = 1.f; //fudge the scale slightly to make the driver model look like a wood
     };
 
     struct CategoryItem final
@@ -145,7 +147,7 @@ private:
     };
     std::vector<CategoryItem> m_scrollNodes;
     std::int32_t m_selectedCategory;
-    cro::FloatRect m_catergoryCroppingArea;
+    cro::FloatRect m_categoryCroppingArea;
 
     struct ButtonID final
     {
@@ -173,6 +175,23 @@ private:
     }m_statItems;
 
     cro::RenderTexture m_itemPreviewTexture;
+    std::vector<cro::Entity> m_previewModels;
+    std::int32_t m_currentModelIndex;
+
+    struct ModelMap final
+    {
+        enum
+        {
+            Driver, Iron, Wedge, Ball,
+            Count
+        };
+        std::array<std::int32_t, Count> indices = {};
+        ModelMap()
+        {
+            std::fill(indices.begin(), indices.end(), 0);
+        }
+    };
+    std::array<ModelMap, inv::Manufacturers.size()> m_modelMaps = {};
 
     void createStatDisplay();
     void updateStatDisplay(const ItemEntry&);
