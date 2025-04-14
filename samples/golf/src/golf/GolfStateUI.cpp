@@ -2632,11 +2632,22 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     Social::awardXP(static_cast<std::int32_t>(xp), xpReason);
                     updateTournament(i == 0);
 
+
                     if (m_friendlyPlayers
                         && m_friendlyPlayers->hasRival())
                     {
                         //we're actually playing solo
                         credits = m_sharedData.holeCount == 0 ? CreditID::FreePlayThird / 2 : CreditID::FreePlayThird / 4;
+                    }
+
+                    //this is irrelevant in anything but free play, but credits aren't awarded outside freeplay *anyway*
+                    const auto parScore = m_sharedData.connectionData[m_statBoardScores[i].client].playerData[m_statBoardScores[i].player].parScore;
+                    if (parScore < 1)
+                    {
+                        //10 for par, then 5 for every stroke under
+                        //TODO if we do this every hole we get a bigger reward...
+                        credits += 10;
+                        credits += 5 * (parScore * -1);
                     }
 
                     if (m_allowAchievements
@@ -2652,7 +2663,17 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     if (m_allowAchievements
                         && m_sharedData.gameMode == GameMode::FreePlay)
                     {
-                        awardCredits(m_sharedData.holeCount == 0 ? CreditID::FreePlayThird / 2: CreditID::FreePlayThird / 4);
+                        auto credits = m_sharedData.holeCount == 0 ? CreditID::FreePlayThird / 2 : CreditID::FreePlayThird / 4;
+                    
+                        const auto parScore = m_sharedData.connectionData[m_statBoardScores[i].client].playerData[m_statBoardScores[i].player].parScore;
+                        if (parScore < 1)
+                        {
+                            //10 for par, then 5 for every stroke under
+                            credits += 10;
+                            credits += 5 * (parScore * -1);
+                        }
+
+                        awardCredits(credits);
                     }
                 }
             }
@@ -2693,6 +2714,28 @@ void GolfState::showCountdown(std::uint8_t seconds)
     }
     else
     {
+        //check which position we came in and award prize credits
+        const auto count = std::min(std::size_t(3), m_statBoardScores.size());
+        for (auto i = 0u; i < count; ++i)
+        {
+            if (m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID) //virtual players are NullValue
+            {
+                switch (i)
+                {
+                default: break;
+                case 0:
+                    awardCredits(CreditID::LeagueRoundFirst);
+                    break;
+                case 1:
+                    awardCredits(CreditID::LeagueRoundSecond);
+                    break;
+                case 2:
+                    awardCredits(CreditID::LeagueRoundThird);
+                    break;
+                }
+            }
+        }
+
         for (auto fw : m_fireworks)
         {
             fw.getComponent<cro::Callback>().active = true;
