@@ -45,6 +45,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
 
 #include <array>
 #include <functional>
@@ -86,6 +87,10 @@ private:
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
     float m_viewScale;
+
+    cro::Scene m_previewScene;
+    cro::EnvironmentMap m_envMap;
+
 
     cro::Entity m_rootNode;// transition animation
 
@@ -155,6 +160,7 @@ private:
     void loadAssets();
     void addSystems();
     void buildScene();
+    void buildPreviewScene();
 
     struct StatItems final
     {

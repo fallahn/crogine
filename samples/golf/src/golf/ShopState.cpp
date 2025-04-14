@@ -48,6 +48,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/UIElementSystem.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
@@ -220,6 +221,7 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
     m_sharedData        (sd),
     m_uiScene           (ctx.appInstance.getMessageBus(), 512),
     m_viewScale         (1.f),
+    m_previewScene      (ctx.appInstance.getMessageBus()),
     m_threePatchTexture (nullptr),
     m_selectedCategory  (Category::Driver),
     m_buyString         (cro::String::fromUtf8(BuyStr.begin(), BuyStr.end())),
@@ -245,6 +247,7 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
         loadAssets();
         addSystems();
         buildScene();
+        buildPreviewScene();
 
         m_viewScale = cro::UIElementSystem::getViewScale();
 }
@@ -331,6 +334,7 @@ bool ShopState::handleEvent(const cro::Event& evt)
 void ShopState::handleMessage(const cro::Message& msg)
 {
     m_uiScene.forwardMessage(msg);
+    m_previewScene.forwardMessage(msg); //do this second so we know the render target is already resized
 
     //we need to update cropping, doing so here is the only
     //way to ensure it happens after all UI elements were updated
@@ -368,6 +372,7 @@ bool ShopState::simulate(float dt)
         }
     }
 
+    m_previewScene.simulate(dt);
     m_uiScene.simulate(dt);
 
     return true;
@@ -376,6 +381,7 @@ bool ShopState::simulate(float dt)
 void ShopState::render()
 {
     m_itemPreviewTexture.clear(CD32::Colours[CD32::TanDarkest]);
+    m_previewScene.render();
     m_itemPreviewTexture.display();
 
     m_uiScene.render();
@@ -427,7 +433,7 @@ void ShopState::loadAssets()
     m_largeLogos[11] = spriteSheet.getSprite("large_12");
 
 
-
+    m_envMap.loadFromFile("assets/images/hills.hdr");
 
 
     //load up the three-patch data for the button textures
@@ -532,6 +538,10 @@ void ShopState::addSystems()
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::AudioPlayerSystem>(mb);
+
+    m_previewScene.addSystem<cro::CallbackSystem>(mb);
+    m_previewScene.addSystem<cro::CameraSystem>(mb);
+    m_previewScene.addSystem<cro::ModelRenderer>(mb);
 }
 
 void ShopState::buildScene()
@@ -1587,6 +1597,40 @@ void ShopState::buildScene()
     camCallback(m_uiScene.getActiveCamera().getComponent<cro::Camera>());
 }
 
+void ShopState::buildPreviewScene()
+{
+    cro::ModelDefinition md(m_resources, &m_envMap);
+    md.loadFromFile("assets/golf/models/shop/ball_hardings.cmt");
+
+    cro::Entity entity = m_previewScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    md.createModel(entity);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+        };
+
+
+    const auto resizeCallback = 
+        [&](cro::Camera& cam)
+        {
+            const auto size = glm::vec2(m_itemPreviewTexture.getSize());
+
+            cam.setPerspective(cam.getFOV(), size.x / size.y, 0.01f, 1.f);
+            cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+        };
+
+    auto camEnt = m_previewScene.getDefaultCamera();
+    camEnt.getComponent<cro::Transform>().move({ 0.f, 0.f, 0.24f });
+
+    auto& cam = camEnt.getComponent<cro::Camera>();
+    cam.resizeCallback = resizeCallback;
+
+    //resizeCallback(cam);
+}
+
 void ShopState::createStatDisplay()
 {
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -1742,24 +1786,33 @@ void ShopState::createStatDisplay()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_itemPreviewTexture.getTexture());
-    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).depth = SpriteDepth;
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, false).depth = SpriteDepth;
     entity.getComponent<cro::UIElement>().absolutePosition = pos;
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&, pos, calcBackgroundWidth](cro::Entity e)
         {
-            const auto width = static_cast<std::uint32_t>(calcBackgroundWidth());
+            const auto viewScale = cro::UIElementSystem::getViewScale();
+
+            const auto width = static_cast<std::uint32_t>(calcBackgroundWidth() * viewScale);
             
             const auto basePos = -(TitleSize.y + (BorderPadding * 2.f)) + pos.y;
-            const auto windowHeight = std::round(cro::App::getWindow().getSize().y / cro::UIElementSystem::getViewScale());
-            const auto height = (windowHeight + basePos) - (BuyButtonSize.y + (BorderPadding * 5.f));
+            const auto windowHeight = std::round(cro::App::getWindow().getSize().y / viewScale);
+            const auto height = ((windowHeight + basePos) - (BuyButtonSize.y + (BorderPadding * 5.f)));
 
-            m_itemPreviewTexture.create(width, static_cast<std::uint32_t>(height), false);
-            //e.getComponent<cro::Sprite>().setTexture(m_itemPreviewTexture.getTexture());
-            e.getComponent<cro::Sprite>().setTextureRect({ glm::vec2(0.f), glm::vec2(static_cast<float>(width), height) });
+            m_itemPreviewTexture.create(width, static_cast<std::uint32_t>(height * viewScale), true, false, 2);
+            e.getComponent<cro::Sprite>().setTexture(m_itemPreviewTexture.getTexture());
+            //e.getComponent<cro::Sprite>().setTextureRect({ glm::vec2(0.f), glm::vec2(static_cast<float>(width), height) });
+            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f / viewScale));
 
-            auto p = pos;
-            p.y -= height;
+            auto p = pos * viewScale;
+            p.y -= std::round(height * viewScale);
             e.getComponent<cro::UIElement>().absolutePosition = p;
+
+            //hmm this will get called again on the actual resize for no reason
+            //but this is the only way to set the initial cam view once the texture
+            //is created the very first time
+            auto& cam = m_previewScene.getActiveCamera().getComponent<cro::Camera>();
+            cam.resizeCallback(cam);
         };
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
