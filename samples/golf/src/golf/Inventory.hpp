@@ -138,6 +138,8 @@ namespace inv
                 LogE << "Failed reading " << filePath << ", " << SDL_GetError() << std::endl;
                 return false;
             }
+
+            dst.balance = std::min(999999, dst.balance);
             return true;
         }
 

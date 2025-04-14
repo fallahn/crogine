@@ -236,7 +236,7 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
             try
             {
                 const auto v = std::stoi(val);
-                m_sharedData.inventory.balance = std::clamp(m_sharedData.inventory.balance + v, 0, 10000);
+                m_sharedData.inventory.balance = std::clamp(m_sharedData.inventory.balance + v, 0, 999999);
             }
             catch (...)
             {

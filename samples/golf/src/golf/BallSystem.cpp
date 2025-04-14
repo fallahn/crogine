@@ -61,7 +61,7 @@ namespace
     static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
     static constexpr float AttractRadius = HoleRadius * 1.5f;// 1.24f; //1.2f;
     static constexpr float MinAttractRadius = AttractRadius * AttractRadius;
-    static constexpr float AttractStrength = 50.f;
+    static constexpr float AttractStrength = 30.f;
     static constexpr float Margin = 1.02f;
     static constexpr float BallHoleDistance = (HoleRadius * Margin) * (HoleRadius * Margin);
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended

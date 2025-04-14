@@ -394,7 +394,7 @@ struct CreditID final
         LeagueWinThird = 1000,
     };
 };
-
+static constexpr std::int32_t MaxCredits = 999999;
 static inline void awardCredits(std::int32_t value)
 {
     auto* msg = cro::App::getInstance().getMessageBus().post<Social::SocialEvent>(Social::MessageID::SocialMessage);

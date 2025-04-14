@@ -4544,6 +4544,14 @@ void GolfState::spawnBall(const ActorInfo& info)
 #ifdef CRO_DEBUG_
     ballEntity = ballEnt;
 #endif
+
+    //registerWindow([&]() 
+    //    {
+    //        ImGui::Begin("sdf");
+    //        const auto p = m_miniGreenIndicatorEnt.getComponent<cro::Transform>().getPosition();
+    //        ImGui::Text("%3.2f, %3.2f", p.x, p.y);
+    //        ImGui::End();        
+    //    });
 }
 
 void GolfState::spawnBullsEye(const BullsEye& b)

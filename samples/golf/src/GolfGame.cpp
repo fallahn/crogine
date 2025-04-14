@@ -468,7 +468,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
         }
         else if (data.type == Social::SocialEvent::CreditsAwarded)
         {
-            m_sharedData.inventory.balance += data.level;
+            m_sharedData.inventory.balance = std::min(MaxCredits, m_sharedData.inventory.balance + data.level);
             inv::write(m_sharedData.inventory);
 
             ProgressMessage m;

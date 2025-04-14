@@ -563,7 +563,7 @@ void GolfState::createCameras()
     m_skyCameras[SkyCam::Flight] = m_skyScene.createEntity();
     m_skyCameras[SkyCam::Flight].addComponent<cro::Transform>();
     auto& skyCam = m_skyCameras[SkyCam::Flight].addComponent<cro::Camera>();
-    skyCam.setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, 5.f, 14.f);
+    skyCam.setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, 0.1f, 14.f);
     skyCam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
 }
