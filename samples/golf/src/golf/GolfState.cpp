@@ -1811,13 +1811,20 @@ void GolfState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::UI::PuttPower;
             cmd.action = [&](cro::Entity e, float)
             {
-                if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+                if (e.hasComponent<cro::Text>())
                 {
-                    auto club = getClub();
-                    if (club == ClubID::Putter)
+                    if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                     {
-                        auto str = Clubs[ClubID::Putter].getName(m_sharedData.imperialMeasurements, m_distanceToHole);
-                        e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
+                        auto club = getClub();
+                        if (club == ClubID::Putter)
+                        {
+                            auto str = Clubs[ClubID::Putter].getName(m_sharedData.imperialMeasurements, m_distanceToHole);
+                            e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
+                        }
+                        else
+                        {
+                            e.getComponent<cro::Text>().setString(" ");
+                        }
                     }
                     else
                     {
@@ -1826,7 +1833,25 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
                 else
                 {
-                    e.getComponent<cro::Text>().setString(" ");
+                    //this is the arrow indicator
+                    if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+                    {
+                        auto club = getClub();
+                        if (club == ClubID::Putter)
+                        {
+                            const auto idx = Clubs[ClubID::Putter].getScaleIndex(m_distanceToHole);
+                            e.getComponent<cro::SpriteAnimation>().play(idx + 1);
+                            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                        }
+                        else
+                        {
+                            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        }
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    }
                 }
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -2209,22 +2234,26 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cmd.targetFlags = CommandID::UI::PuttPower;
                 cmd.action = [&](cro::Entity e, float)
                 {
-                    if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+                    if (e.hasComponent<cro::Text>())
                     {
-                        auto club = getClub();
-                        if (club == ClubID::Putter)
+                        if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                         {
-                            auto str = Clubs[ClubID::Putter].getName(m_sharedData.imperialMeasurements, m_distanceToHole);
-                            e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
+
+                            auto club = getClub();
+                            if (club == ClubID::Putter)
+                            {
+                                auto str = Clubs[ClubID::Putter].getName(m_sharedData.imperialMeasurements, m_distanceToHole);
+                                e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
+                            }
+                            else
+                            {
+                                e.getComponent<cro::Text>().setString(" ");
+                            }
                         }
                         else
                         {
                             e.getComponent<cro::Text>().setString(" ");
                         }
-                    }
-                    else
-                    {
-                        e.getComponent<cro::Text>().setString(" ");
                     }
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

@@ -2116,6 +2116,8 @@ void GolfState::createPowerBars(cro::Entity rootNode)
             e.getComponent<cro::Transform>().setScale(scale);
         };
     
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
 
     //small power bar
 
@@ -2133,12 +2135,24 @@ void GolfState::createPowerBars(cro::Entity rootNode)
 
     //displays the range of the selected putter
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(bounds.width + 2.f, 12.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(bounds.width + 10.f, 12.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto rangeEnt = entity;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().rotate(cro::Util::Const::PI);
+    entity.getComponent<cro::Transform>().setPosition({ 3.f, 9.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("slope_indicator");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
+    rangeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //power bar
     auto BarCentre = bounds.width / 2.f;
@@ -2207,14 +2221,25 @@ void GolfState::createPowerBars(cro::Entity rootNode)
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     barEnt = entity;
 
-    //curent selected range
+    //current selected range
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(bounds.width, 12.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(bounds.width + 8.f, 12.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    rangeEnt = entity;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().rotate(cro::Util::Const::PI);
+    entity.getComponent<cro::Transform>().setPosition({ 3.f, 9.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("slope_indicator");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
+    rangeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //power bar
     BarCentre = bounds.width / 2.f;

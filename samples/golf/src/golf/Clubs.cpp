@@ -289,18 +289,33 @@ void Club::setModifierIndex(std::int32_t idx)
     CRO_ASSERT(idx > -1 && idx < 3, "");
 }
 
-//private
-float Club::getScaledValue(float value, float distanceToPin) const
+std::int32_t Club::getScaleIndex(float distanceToPin) const
 {
-    auto target = getBaseTarget();
+    const auto target = getBaseTarget();
     if (distanceToPin < target * ShortRangeThreshold)
     {
         if (distanceToPin < target * TinyRangeThreshold)
         {
-            return value * TinyRange;
+            return 0;
         }
-
-        return value * ShortRange;
+        return 1;
     }
-    return value;
+    return 2;
+}
+
+//private
+float Club::getScaledValue(float value, float distanceToPin) const
+{
+    const auto index = getScaleIndex(distanceToPin);
+
+    switch (index)
+    {
+    default:
+    case 2:
+        return value;
+    case 1:
+        return value * ShortRange;
+    case 0:
+        return value * TinyRange;
+    }
 }

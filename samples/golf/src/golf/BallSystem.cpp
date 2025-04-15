@@ -57,9 +57,9 @@ namespace
     static constexpr float MinWindStrength = 0.1f;
 
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
-    static constexpr float FallRadius = Ball::Radius * 0.05f;// 0.25f;
+    static constexpr float FallRadius = Ball::Radius * 0.08f;// 0.25f;
     static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
-    static constexpr float AttractRadius = HoleRadius * 1.5f;// 1.24f; //1.2f;
+    static constexpr float AttractRadius = HoleRadius * 1.35f;// 1.24f; //1.2f;
     static constexpr float MinAttractRadius = AttractRadius * AttractRadius;
     static constexpr float AttractStrength = 30.f;
     static constexpr float Margin = 1.02f;

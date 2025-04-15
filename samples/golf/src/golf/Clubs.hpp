@@ -132,6 +132,8 @@ public:
 
     static void setFixedPuttingDistance(bool b) { m_fixedPuttingDistance = b; }
 
+    std::int32_t getScaleIndex(float) const; //0, 1 or 2 for putter else 2, based on distance to the pin
+
 private:
     const std::int32_t m_id = -1;
     std::string m_name; //displayed in UI
