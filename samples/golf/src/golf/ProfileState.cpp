@@ -4335,6 +4335,37 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
     entity.getComponent<cro::Transform>().setOrigin({ std::round(bounds.width / 2.f), std::round(bounds.height / 2.f) });
     entity.getComponent<cro::Transform>().move(glm::vec2(entity.getComponent<cro::Transform>().getOrigin()));
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    //selection buttons
+    static constexpr float Spacing = 14.f;
+    static constexpr glm::vec2 TextOffset = glm::vec2(80.f, 11.f);
+    glm::vec2 pos(12.f, 213.f);
+
+    for (auto i = 0u; i < 13u; ++i)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.2f));
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("button_highlight");
+
+        bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos + TextOffset, 0.1f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("Default");
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+
+        bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        pos.y -= Spacing;
+    }
 }
 
 void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext& ctx)

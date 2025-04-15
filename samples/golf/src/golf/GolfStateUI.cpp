@@ -2146,7 +2146,7 @@ void GolfState::createPowerBars(cro::Entity rootNode)
     auto rangeEnt = entity;
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().rotate(cro::Util::Const::PI);
-    entity.getComponent<cro::Transform>().setPosition({ 3.f, 9.f });
+    entity.getComponent<cro::Transform>().setPosition({ 3.f, 11.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("slope_indicator");
     entity.addComponent<cro::SpriteAnimation>();
@@ -2234,7 +2234,7 @@ void GolfState::createPowerBars(cro::Entity rootNode)
     rangeEnt = entity;
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().rotate(cro::Util::Const::PI);
-    entity.getComponent<cro::Transform>().setPosition({ 3.f, 9.f });
+    entity.getComponent<cro::Transform>().setPosition({ 3.f, 11.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("slope_indicator");
     entity.addComponent<cro::SpriteAnimation>();

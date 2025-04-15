@@ -73,7 +73,7 @@ namespace
     static constexpr float MinSpinPower = 0.05f; //min velocity to stop doesn't kick in if there's more than this much top/back spin to apply
     static constexpr float MinRollSlope = 0.99f; //ball won't stop rolling if the ground is steeper that this (smaller == stickier)
 
-    static constexpr float MinRollVelocity = -0.25f;
+    static constexpr float MinRollVelocity = -0.15f;// -0.25f; //MUST be negative
     static constexpr float MaxStoneSlope = 0.95f; //dot prod with vertical - ball is OOB if less than this
 
     static constexpr float MaxRestitutionIncrease = 0.3f;// 0.05f; //depending on the angle of the bounce up to this much is added to restitution multiplier
