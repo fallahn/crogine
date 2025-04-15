@@ -129,7 +129,7 @@ private:
             ClubBrowser, GearEditor,
             HairEditor, HairHelp, 
             HairPreview, HairColourPreview,
-            SpeechEditor,
+            SpeechEditor, ClubPreview,
 
             Count
         };
@@ -254,7 +254,7 @@ private:
     void createLoadoutEditor(cro::Entity, const CallbackContext&);
     void createSpeechEditor(cro::Entity, const CallbackContext&);
     void createClubBrowser(cro::Entity, const CallbackContext&);
-    cro::FloatRect getHeadwearTextureRect(std::size_t);
+    cro::FloatRect getThumbnailTextureRect(std::size_t);
     std::size_t fetchUIIndexFromColour(std::uint8_t colourIndex, std::int32_t paletteIndex);
     std::pair<cro::Entity, cro::Entity> createBrowserBackground(std::int32_t, const CallbackContext&);
 

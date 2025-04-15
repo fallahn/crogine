@@ -1782,8 +1782,6 @@ void ProfileState::buildScene()
                 if (activated(evt))
                 {
                     applyTextEdit();
-                    //m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-                    //m_menuEntities[EntityID::ClubBrowser].getComponent<cro::Callback>().active = true;
 
                     m_menuEntities[EntityID::GearEditor].getComponent<cro::Callback>().active = true;
                     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().stop();
@@ -1796,7 +1794,7 @@ void ProfileState::buildScene()
             });
     clubs.getComponent<cro::UIInput>().setNextIndex(ButtonDescDown, ButtonUpdateIcon);
     clubs.getComponent<cro::UIInput>().setPrevIndex(ButtonSouthPaw, ButtonBallColour);
-    clubs.setLabel("Assign gear purchased at the Clubhouse Shop");
+    clubs.setLabel("Customise your clubs");
 
 
     //updates the profile icon
@@ -2208,19 +2206,6 @@ void ProfileState::buildScene()
     m_menuEntities[EntityID::BioText] = entity;
     setBioString(generateRandomBio());
 
-    //club style string - we stick this in the button label instead so it displays at the bottom of the window
-    /*entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 444.f, 85.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>().setCroppingArea({ -48.f, -10.f, 96.f, 10.f });
-    entity.addComponent<cro::Text>(smallFont);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_clubText = entity;*/
-
 
     //help string
     bounds = bgEnt.getComponent<cro::Sprite>().getTextureBounds();
@@ -2327,6 +2312,12 @@ void ProfileState::buildScene()
 
     ctx.onClose = [&]()
         {
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GearEditor);
+        };
+    createClubBrowser(rootNode, ctx);
+
+    ctx.onClose = [&]()
+        {
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
             m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
 
@@ -2337,13 +2328,6 @@ void ProfileState::buildScene()
             }
         };
     createBallBrowser(rootNode, ctx);
-
-    ctx.onClose = [&]()
-        {
-            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
-            m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
-        };
-    createClubBrowser(rootNode, ctx);
 
     CallbackContext ctx2;
     ctx2.closeUnselected = ctx.closeUnselected;
@@ -2362,6 +2346,18 @@ void ProfileState::buildScene()
     createHairEditor(rootNode, ctx2);
 
     ctx2.spriteSheet.loadFromFile("assets/golf/sprites/gear_editor.spt", m_resources.textures);
+    ctx2.onOpen = [&]() 
+        {
+            //set the active club set thumbnail
+            if (const auto res = std::find_if(m_clubData.cbegin(), m_clubData.cend(), 
+                [&](const ClubData& cd)
+                {
+                    return cd.uid == m_activeProfile.clubID;
+                }); res != m_clubData.cend())
+            {
+                m_menuEntities[EntityID::ClubPreview].getComponent<cro::Sprite>().setTextureRect(getThumbnailTextureRect(std::distance(m_clubData.cbegin(), res)));
+            }
+        };
     createLoadoutEditor(rootNode, ctx2);
 
     ctx2.closeButtonPosition = { 161.f, 69.f, 0.1f };
@@ -3795,8 +3791,8 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     m_menuEntities[EntityID::HairHelp] = entity;
 
 
-    m_headwearPreviewRects[HeadwearID::Hair] = getHeadwearTextureRect(m_avatarModels[m_avatarIndex].hairIndex);
-    m_headwearPreviewRects[HeadwearID::Hat] = getHeadwearTextureRect(m_avatarModels[m_avatarIndex].hatIndex);
+    m_headwearPreviewRects[HeadwearID::Hair] = getThumbnailTextureRect(m_avatarModels[m_avatarIndex].hairIndex);
+    m_headwearPreviewRects[HeadwearID::Hat] = getThumbnailTextureRect(m_avatarModels[m_avatarIndex].hatIndex);
     
 
     //hair / bust preview
@@ -4295,9 +4291,50 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
     m_menuEntities[EntityID::GearEditor] = bgEnt;
     parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
 
+    closeButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(70.f, 21.f) + glm::vec2(closeButtonEnt.getComponent<cro::Transform>().getOrigin()));
     closeButtonEnt.getComponent<cro::UIInput>().setSelectionIndex(IndexClose);
     //closeButtonEnt.getComponent<cro::UIInput>().setNextIndex(IndexThumb, IndexTrans + 5);
     //closeButtonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexThumb, IndexHat);
+
+
+    //clubset preview
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 398.f, 120.f, 0.2f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_pageContexts[PaginationID::Clubs].thumbnailTexture.getTexture());
+    entity.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, 192.f, 220.f });
+    m_menuEntities[EntityID::ClubPreview] = entity;
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //clubset button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 396.f, 118.f, 0.2f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("club_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::GearEditor);
+    /*entity.getComponent<cro::UIInput>().setSelectionIndex(IndexThumb);
+    entity.getComponent<cro::UIInput>().setNextIndex(IndexCol, IndexTrans);
+    entity.getComponent<cro::UIInput>().setPrevIndex(IndexHat, IndexReset);*/
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_menuEntities[EntityID::ClubBrowser].getComponent<cro::Callback>().active = true;
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
+    entity.getComponent<cro::Transform>().setOrigin({ std::round(bounds.width / 2.f), std::round(bounds.height / 2.f) });
+    entity.getComponent<cro::Transform>().move(glm::vec2(entity.getComponent<cro::Transform>().getOrigin()));
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext& ctx)
@@ -4590,6 +4627,7 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
 void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& ctx)
 {
     auto [bgEnt, _] = createBrowserBackground(MenuID::ClubSelect, ctx);
+    bgEnt.getComponent<cro::Transform>().move({ 0.f, 0.f, 0.85f });
     m_menuEntities[EntityID::ClubBrowser] = bgEnt;
     parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
 
@@ -4698,6 +4736,8 @@ void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& 
                     //apply selection
                     const auto idx = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
                     m_activeProfile.clubID = m_clubData[idx].uid;
+
+                    m_menuEntities[EntityID::ClubPreview].getComponent<cro::Sprite>().setTextureRect(getThumbnailTextureRect(idx));
                     quitMenu();
                 }
                 else if (deactivated(evt))
@@ -4742,7 +4782,7 @@ void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& 
     activatePage(PaginationID::Clubs, m_pageContexts[PaginationID::Clubs].pageIndex, true);
 }
 
-cro::FloatRect ProfileState::getHeadwearTextureRect(std::size_t idx)
+cro::FloatRect ProfileState::getThumbnailTextureRect(std::size_t idx)
 {
     cro::FloatRect textureBounds = { 0.f, 0.f, static_cast<float>(BallThumbSize.x * ThumbTextureScale), static_cast<float>(BallThumbSize.y * ThumbTextureScale) };
 
@@ -5116,7 +5156,7 @@ void ProfileState::setHairIndex(std::size_t idx)
 
     m_activeProfile.hairID = m_sharedData.hairInfo[hairIndex].uid;
 
-    m_headwearPreviewRects[HeadwearID::Hair] = getHeadwearTextureRect(hairIndex);
+    m_headwearPreviewRects[HeadwearID::Hair] = getThumbnailTextureRect(hairIndex);
 }
 
 void ProfileState::setHatIndex(std::size_t idx)
@@ -5157,7 +5197,7 @@ void ProfileState::setHatIndex(std::size_t idx)
 
     m_activeProfile.hatID = m_sharedData.hairInfo[hatIndex].uid;
 
-    m_headwearPreviewRects[HeadwearID::Hat] = getHeadwearTextureRect(hatIndex);
+    m_headwearPreviewRects[HeadwearID::Hat] = getThumbnailTextureRect(hatIndex);
 }
 
 void ProfileState::setBallIndex(std::size_t idx)
