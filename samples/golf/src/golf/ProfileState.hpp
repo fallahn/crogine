@@ -126,7 +126,7 @@ private:
 
             BallBrowser,
             HairBrowser,
-            ClubBrowser,
+            ClubBrowser, GearEditor,
             HairEditor, HairHelp, 
             HairPreview, HairColourPreview,
             SpeechEditor,
@@ -169,7 +169,6 @@ private:
         bool userItem = false;
     };
     std::vector<ClubData> m_clubData;
-    cro::Entity m_clubText;
 
     struct PaletteID final
     {
@@ -252,6 +251,7 @@ private:
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);
     void createHairEditor(cro::Entity, const CallbackContext&);
+    void createLoadoutEditor(cro::Entity, const CallbackContext&);
     void createSpeechEditor(cro::Entity, const CallbackContext&);
     void createClubBrowser(cro::Entity, const CallbackContext&);
     cro::FloatRect getHeadwearTextureRect(std::size_t);

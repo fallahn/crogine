@@ -103,7 +103,7 @@ namespace
             //browser windows
             BallSelect, HairSelect, ClubSelect,
             
-            HairEditor, SpeechEditor
+            HairEditor, SpeechEditor, GearEditor,
         };
     };
     
@@ -299,6 +299,11 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             else if (groupID == MenuID::HairEditor)
             {
                 m_menuEntities[EntityID::HairEditor].getComponent<cro::Callback>().active = true;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+            else if (groupID == MenuID::GearEditor)
+            {
+                m_menuEntities[EntityID::GearEditor].getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
             else if (groupID == MenuID::SpeechEditor)
@@ -500,6 +505,9 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 break;
             case MenuID::HairEditor:
                 m_menuEntities[EntityID::HairEditor].getComponent<cro::Callback>().active = true;
+                break;
+            case MenuID::GearEditor:
+                m_menuEntities[EntityID::GearEditor].getComponent<cro::Callback>().active = true;
                 break;
             case MenuID::SpeechEditor:
                 m_menuEntities[EntityID::SpeechEditor].getComponent<cro::Callback>().active = true;
@@ -1031,18 +1039,6 @@ void ProfileState::buildScene()
                 m_previousName = m_activeProfile.name;
 
                 refreshBio();
-
-                //get selected club index
-                if (const auto& cd = std::find_if(m_clubData.begin(), m_clubData.end(), 
-                    [&](const ClubData& cd) {return cd.uid == m_profileData.playerProfiles[m_profileData.activeProfileIndex].clubID;});
-                    cd != m_clubData.end())
-                {
-                    m_clubText.setLabel("Selected: " + cd->name);
-                }
-                else
-                {
-                    m_clubText.setLabel("Selected: Default Clubs");
-                }
 
                 //get selected voice index
                 if (const auto v = std::find_if(m_voices.begin(), m_voices.end(),
@@ -1786,8 +1782,12 @@ void ProfileState::buildScene()
                 if (activated(evt))
                 {
                     applyTextEdit();
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-                    m_menuEntities[EntityID::ClubBrowser].getComponent<cro::Callback>().active = true;
+                    //m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+                    //m_menuEntities[EntityID::ClubBrowser].getComponent<cro::Callback>().active = true;
+
+                    m_menuEntities[EntityID::GearEditor].getComponent<cro::Callback>().active = true;
+                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().stop();
+                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().gotoFrame(0);
 
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
 
@@ -1796,7 +1796,7 @@ void ProfileState::buildScene()
             });
     clubs.getComponent<cro::UIInput>().setNextIndex(ButtonDescDown, ButtonUpdateIcon);
     clubs.getComponent<cro::UIInput>().setPrevIndex(ButtonSouthPaw, ButtonBallColour);
-    m_clubText = clubs;
+    clubs.setLabel("Assign gear purchased at the Clubhouse Shop");
 
 
     //updates the profile icon
@@ -2361,6 +2361,8 @@ void ProfileState::buildScene()
     ctx2.onClose = ctx.onClose;
     createHairEditor(rootNode, ctx2);
 
+    ctx2.spriteSheet.loadFromFile("assets/golf/sprites/gear_editor.spt", m_resources.textures);
+    createLoadoutEditor(rootNode, ctx2);
 
     ctx2.closeButtonPosition = { 161.f, 69.f, 0.1f };
     ctx2.spriteSheet.loadFromFile("assets/golf/sprites/tourn_stats.spt", m_resources.textures);
@@ -4279,6 +4281,25 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     }
 }
 
+void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext& ctx)
+{
+    /*constexpr std::size_t IndexThumb = 10000;
+    constexpr std::size_t IndexCol = 10001;
+    constexpr std::size_t IndexHat = 10002;*/
+    constexpr std::size_t IndexClose = 10003;
+    /*constexpr std::size_t IndexTrans = 10004;
+    constexpr std::size_t IndexReset = 10022;*/
+
+    auto [bgEnt, closeButtonEnt] = createBrowserBackground(MenuID::GearEditor, ctx);
+    bgEnt.getComponent<cro::Transform>().move(glm::vec2(0.f, 10.f));
+    m_menuEntities[EntityID::GearEditor] = bgEnt;
+    parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
+
+    closeButtonEnt.getComponent<cro::UIInput>().setSelectionIndex(IndexClose);
+    //closeButtonEnt.getComponent<cro::UIInput>().setNextIndex(IndexThumb, IndexTrans + 5);
+    //closeButtonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexThumb, IndexHat);
+}
+
 void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext& ctx)
 {
     //parse all the available audioscapes
@@ -4677,7 +4698,6 @@ void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& 
                     //apply selection
                     const auto idx = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
                     m_activeProfile.clubID = m_clubData[idx].uid;
-                    m_clubText.setLabel("Selected: " + m_clubData[idx].name);
                     quitMenu();
                 }
                 else if (deactivated(evt))
