@@ -1350,6 +1350,22 @@ void GolfState::handleMessage(const cro::Message& msg)
         else if (data.type == SystemEvent::CrowdDensityChanged)
         {
             m_terrainBuilder.applyCrowdDensity();
+
+            if (m_sharedData.crowdDensity == (CrowdDensityCount - 1))
+            {
+                //we're hiddden
+                for (auto spectator : m_spectatorModels)
+                {
+                    spectator.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                }
+            }
+            else
+            {
+                for (auto spectator : m_spectatorModels)
+                {
+                    spectator.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                }
+            }
         }
     }
         break;

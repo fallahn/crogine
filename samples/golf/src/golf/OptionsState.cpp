@@ -3133,7 +3133,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         std::string("Low"),
         std::string("Normal"),
         std::string("High"),
-        std::string("Extreme")
+        std::string("Extreme"),
+        std::string("None"),
     };
     auto crowdDensityText = createLabel({ 325.f, 121.f }, CrowdLabels[m_sharedData.crowdDensity]);
     centreText(crowdDensityText);

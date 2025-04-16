@@ -1175,7 +1175,7 @@ void GolfState::loadMap()
 
                                 if (curve.size() < 4)
                                 {
-                                    for (auto i = 0; i < CrowdDensityCount; ++i)
+                                    for (auto i = 0; i < CrowdDensityCount - 1; ++i) //leave the last set of transforms empty, to hide the crowd
                                     {
                                         if (minDensity <= /*m_sharedData.crowdDensity*/i)
                                         {
@@ -2894,6 +2894,12 @@ void GolfState::loadSpectators()
 
                             skel.setMaxInterpolationDistance(30.f);
                         }
+                    }
+
+                    if (m_sharedData.crowdDensity == (CrowdDensityCount - 1))
+                    {
+                        //set to zero crowd
+                        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
                     }
 
                     m_spectatorModels.push_back(entity);

@@ -67,7 +67,7 @@ static constexpr float ToYards = 1.09361f;
 static constexpr float ToFeet = 3.281f;
 static constexpr float ToInches = 12.f;
 
-static inline constexpr std::int32_t CrowdDensityCount = 4;
+static inline constexpr std::int32_t CrowdDensityCount = 5;
 //decreased for each additional player to a minimum of 2
 //so max is actually 4 because we always have at least 2 players
 static inline constexpr std::uint8_t StartLives = 6;

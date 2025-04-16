@@ -307,10 +307,14 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             }
             else if (data.userType == SpriteAnimID::Footstep)
             {
-                auto sound = playSound(cro::Util::Random::value(AudioID::Foot01, AudioID::Foot04), data.position, 0.3f);
-                sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-                sound.getComponent<cro::AudioEmitter>().setRolloff(0.74f);
-                sound.getComponent<cro::AudioEmitter>().setPitch(1.f + cro::Util::Random::value(-0.2f, 0.2f));
+                //don't play footsteps if crowd is hidden
+                if (m_sharedData.crowdDensity != (CrowdDensityCount - 1))
+                {
+                    auto sound = playSound(cro::Util::Random::value(AudioID::Foot01, AudioID::Foot04), data.position, 0.3f);
+                    sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    sound.getComponent<cro::AudioEmitter>().setRolloff(0.74f);
+                    sound.getComponent<cro::AudioEmitter>().setPitch(1.f + cro::Util::Random::value(-0.2f, 0.2f));
+                }
             }
             else if (data.userType == SpriteAnimID::Pump)
             {

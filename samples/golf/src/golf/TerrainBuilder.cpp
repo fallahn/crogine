@@ -867,10 +867,17 @@ void TerrainBuilder::applyCrowdDensity()
 
     for (auto i = 0u; i < m_crowdEntities[crowdIndex].size(); ++i)
     {
-        if (m_crowdEntities[crowdIndex][i].isValid()
-            && !positions[i].empty())
+        if (m_crowdEntities[crowdIndex][i].isValid())
         {
-            m_crowdEntities[crowdIndex][i].getComponent<cro::Model>().setInstanceTransforms(positions[i]);
+            if (!positions[i].empty())
+            {
+                m_crowdEntities[crowdIndex][i].getComponent<cro::Model>().setInstanceTransforms(positions[i]);
+                m_crowdEntities[crowdIndex][i].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+            }
+            else
+            {
+                m_crowdEntities[crowdIndex][i].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+            }
         }
     }
 }
