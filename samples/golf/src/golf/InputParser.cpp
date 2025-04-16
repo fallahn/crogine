@@ -830,15 +830,30 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     //add hook/slice to yaw
     auto hook = getHook();
+    const auto level = Social::getLevel() / 10;
+    auto maxHook = MaxHook - (static_cast<float>(std::clamp(level, 0, 3)) * 0.03f);
+
+    switch (m_terrain)
+    {
+    default: break;
+    case TerrainID::Rough:
+        maxHook -= 0.08f;
+        break;
+    case TerrainID::Bunker:
+        maxHook -= 0.12f;
+        break;
+    }
+
     if (club != ClubID::Putter)
     {
+        maxHook -= (static_cast<float>(Club::getClubLevel()) * 0.05f);
+
         auto s = cro::Util::Maths::sgn(hook);
         //changing this func changes how accurate a player needs to be
         //sine, quad, cubic, quart, quint in steepness order
-        if (Achievements::getActive())
+        //if (Achievements::getActive())
         {
-            auto level = Social::getLevel();
-            switch (level / 10)
+            switch (level)
             {
             default:
                 hook = cro::Util::Easing::easeOutQuint(hook * s) * s;
@@ -857,10 +872,10 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
                 break;
             }
         }
-        else
+        /*else
         {
             hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
-        }
+        }*/
 
         power *= cro::Util::Easing::easeOutSine(getPower());
     }
@@ -868,7 +883,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     {
         power *= getPower();
     }
-    yaw += MaxHook * hook;
+    yaw += maxHook * hook;
 
     float sideSpin = -hook;
     sideSpin *= Clubs[club].getSideSpinMultiplier();
