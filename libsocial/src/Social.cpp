@@ -302,22 +302,26 @@ std::uint32_t Social::updateStreak()
 
     bool sunday = false;
 
+    //do a calendar check to see if it's the next day
+    const std::time_t p = prevTs;
+    const std::time_t c = ts;
+
+    //we have to copy the results else we just get 2 pointers to the same thing.
+    const auto prevTm = *std::localtime(&p);
+    const auto currTm = *std::localtime(&c);
+
+    if (currTm.tm_yday - prevTm.tm_yday > 0)
+    {
+        sunday = currTm.tm_wday == 0;
+    }
+
     if (dayCount == 0)
     {
-        //do a calendar check to see if it's the next day
-        std::time_t p = prevTs;
-        std::time_t c = ts;
-
-        //we have to copy the results else we just get 2 pointers to the same thing.
-        auto prevTm = *std::localtime(&p);
-        auto currTm = *std::localtime(&c);
-
         if ((currTm.tm_yday == 1 //fudge for year wrap around. There are more elegant ways, but brain.
             && prevTm.tm_yday == 365)
             || (currTm.tm_yday - prevTm.tm_yday) == 1)
         {
             dayCount = 1;
-            sunday = currTm.tm_wday == 0;
         }
         else
         {

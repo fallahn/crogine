@@ -4336,7 +4336,7 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
     entity.getComponent<cro::Transform>().move(glm::vec2(entity.getComponent<cro::Transform>().getOrigin()));
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
+    
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
     //selection buttons
