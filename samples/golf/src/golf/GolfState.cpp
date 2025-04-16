@@ -2947,7 +2947,8 @@ void GolfState::render()
     cro::Entity nightCam;
 
     //update mini green if ball is there
-    if (m_currentPlayer.terrain == TerrainID::Green)
+    if (m_currentPlayer.terrain == TerrainID::Green
+        && !m_flightCam.getComponent<cro::Camera>().active)
     {
         glUseProgram(m_gridShaders[1].shaderID);
         glUniform1f(m_gridShaders[1].transparency, 0.f);
@@ -2959,7 +2960,7 @@ void GolfState::render()
         m_gameScene.setActiveCamera(oldCam);
         nightCam = m_greenCam;
     }
-    else if (m_flightCam.getComponent<cro::Camera>().active)
+    else //if (m_flightCam.getComponent<cro::Camera>().active)
     {
         auto resolutionData = m_resolutionUpdate.resolutionData;
         resolutionData.nearFadeDistance = 0.15f;
@@ -7333,6 +7334,17 @@ void GolfState::hitBall()
         if (m_achievementTracker.puttCount > 2)
         {
             m_achievementTracker.underTwoPutts = false;
+        }
+    }
+
+    //switch to flight cam if requested when putting
+    if (m_sharedData.puttFollowCam)
+    {
+        if (m_currentPlayer.terrain == TerrainID::Green
+            && m_greenCam.getComponent<cro::Camera>().active)
+        {
+            m_greenCam.getComponent<cro::Camera>().active = false;
+            m_flightCam.getComponent<cro::Camera>().active = true;
         }
     }
 }
