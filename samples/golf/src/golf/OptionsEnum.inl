@@ -118,6 +118,7 @@ enum OptionsIndex
     SettLogChat,
     SettRemoteContent,
     SettShowRival,
+    SettPuttFollow,
     SettFlagDown,
     SettFlagUp,
     SettFlagLabelDown,

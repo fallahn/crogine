@@ -4648,7 +4648,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity = createHighlight(glm::vec2(12.f, 143.f));
     entity.setLabel("Display scores of the current monthly leader on the scoreboard in Free Play\nif they are available. Takes effect on round start.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettShowRival);
-    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetCareer);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, SettPuttFollow);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettRemoteContent);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
@@ -4670,6 +4670,33 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
+
+
+    //follow cam when putting
+    entity = createHighlight(glm::vec2(12.f, 127.f));
+    entity.setLabel("Use the ball follower camera instead of the top-down camera\nin the preview window top-left of the UI when putting");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettPuttFollow);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetCareer);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettShowRival);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.puttFollowCam = !m_sharedData.puttFollowCam;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = createCheckbox(glm::vec2(14.f, 129.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.puttFollowCam ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
 
 
 
@@ -5044,7 +5071,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Transform>().move(-entity.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setSelectionIndex(ResetCareer);
     entity.getComponent<cro::UIInput>().setNextIndex(ResetStats, WindowAdvanced);
-    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettShowRival);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettPuttFollow);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -5746,7 +5773,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         downLeftB = TabController;
         downRightA = TabAchievements;
         downRightB = TabStats;
-        upLeftA = SettShowRival;
+        upLeftA = SettPuttFollow;
         upLeftB = ResetCareer;
         upRightA = ResetStats;
         upRightB = SettPostR;

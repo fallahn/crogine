@@ -4550,7 +4550,8 @@ void GolfState::spawnBall(const ActorInfo& info)
         //}
         //else
         {
-            if (m_currentPlayer.terrain == TerrainID::Green)
+            if (m_currentPlayer.terrain == TerrainID::Green
+                && !m_flightCam.getComponent<cro::Camera>().active)
             {
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
                 auto pos = ballEnt.getComponent<cro::Transform>().getWorldPosition();
