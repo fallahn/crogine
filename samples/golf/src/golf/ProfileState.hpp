@@ -107,7 +107,7 @@ private:
         enum
         {
             Accept, Back, Select, Snap,
-
+            Nope,
             Count
         };
     };
@@ -247,6 +247,20 @@ private:
     std::vector<cro::AudioScape> m_voices;
     std::size_t m_voiceIndex;
     void playPreviewAudio();
+
+    struct GearID final
+    {
+        enum
+        {
+            Driver, ThreeW, FiveW, FourI,
+            FiveI, SixI, SevenI, EightI,
+            NineI, PitchWedge, GapWedge,
+            SandWedge, Balls, 
+            
+            Count
+        };
+    };
+    std::array<cro::Entity, GearID::Count> m_gearMenus = {};
 
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);
