@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "PlayerColours.hpp"
+#include "Inventory.hpp"
 
 #include <crogine/core/String.hpp>
 #include <crogine/graphics/Colour.hpp>
@@ -110,17 +111,22 @@ struct PlayerData final
     cro::ImageArray<std::uint8_t> mugshotData; //pixel data of the mugshot for avatar icon
     std::string mugshot; //path to mugshot if it exists
     mutable std::string profileID; //saving file generates this
+    std::array<std::int32_t, inv::ItemType::Count> loadout = {};
     bool saveProfile() const;
     bool loadProfile(const std::string& path, const std::string& uid);
 
     bool isSteamID = false;
     mutable bool isCustomName = false; //if not true and is a steam profile use the current steam name
 
+    void writeLoadout() const;
+
     PlayerData()
     {
         std::fill(headwearOffsets.begin(), headwearOffsets.end(), glm::vec3(0.f));
         headwearOffsets[HeadwearOffset::HairScale] = glm::vec3(1.f);
         headwearOffsets[HeadwearOffset::HatScale] = glm::vec3(1.f);
+
+        std::fill(loadout.begin(), loadout.end(), -1);
     }
 };
 

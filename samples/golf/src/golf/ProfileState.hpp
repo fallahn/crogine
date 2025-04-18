@@ -248,20 +248,6 @@ private:
     std::size_t m_voiceIndex;
     void playPreviewAudio();
 
-    struct GearID final
-    {
-        enum
-        {
-            Driver, ThreeW, FiveW, FourI,
-            FiveI, SixI, SevenI, EightI,
-            NineI, PitchWedge, GapWedge,
-            SandWedge, Balls, 
-            
-            Count
-        };
-    };
-    std::array<cro::Entity, GearID::Count> m_gearMenus = {};
-
 
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);
@@ -329,8 +315,37 @@ private:
     void refreshSwatch();
     void refreshBio();
 
-    //TODO the above should probably sit in this
     void onCachedPush() override;
+
+    struct GearID final
+    {
+        enum
+        {
+            Driver, ThreeW, FiveW, FourI,
+            FiveI, SixI, SevenI, EightI,
+            NineI, PitchWedge, GapWedge,
+            SandWedge, Balls,
+
+            Count
+        };
+    };
+
+    struct GearMenu final
+    {
+        cro::Entity background;
+        cro::Entity description;
+
+        //track the menu expansion so we know how must to restore before dynamically resizing it
+        float previousExpansion = 0.f;
+        std::vector<cro::Entity> items;
+    };
+
+    std::uint32_t m_itemSelected;
+    std::uint32_t m_itemUnselected;
+
+    std::array<GearMenu, GearID::Count> m_gearMenus = {};
+    void refreshItemLists();
+
 
     struct TextEdit final
     {

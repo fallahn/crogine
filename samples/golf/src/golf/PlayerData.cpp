@@ -132,12 +132,30 @@ bool PlayerData::saveProfile() const
         cro::FileSystem::createDirectory(path);
     }
 
+    //write the loadout for this profile separately
+    //we don't need to sync this and want to be backwards compatible
+    writeLoadout();
+
     path += profileID + ".pfl";
     return cfg.save(path);
 }
 
 bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
 {
+    std::fill(loadout.begin(), loadout.end(), -1);
+    const auto loadoutPath = cro::FileSystem::getFilePath(path) + "load.out";
+
+    cro::RaiiRWops file;
+    file.file = SDL_RWFromFile(loadoutPath.c_str(), "rb");
+    if (file.file)
+    {
+        if (!SDL_RWread(file.file, loadout.data(), sizeof(loadout), 1))
+        {
+            LogW << "Failed reading loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
+        }
+    }
+
+
     std::fill(headwearOffsets.begin(), headwearOffsets.end(), glm::vec3(0.f));
 
     headwearOffsets[2] = glm::vec3(1.f);
@@ -323,6 +341,32 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
         return true;
     }
     return false;
+}
+
+void PlayerData::writeLoadout() const
+{
+    auto path = Content::getUserContentPath(Content::UserContent::Profile);
+    if (!cro::FileSystem::directoryExists(path))
+    {
+        cro::FileSystem::createDirectory(path);
+    }
+    path += profileID + "/";
+
+    if (!cro::FileSystem::directoryExists(path))
+    {
+        cro::FileSystem::createDirectory(path);
+    }
+    path += "load.out";
+
+    cro::RaiiRWops file;
+    file.file = SDL_RWFromFile(path.c_str(), "wb");
+    if (file.file)
+    {
+        if (!file.file->write(file.file, loadout.data(), sizeof(loadout), 1))
+        {
+            LogW << "Failed writing loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
+        }
+    }
 }
 
 //------------------------------------------------------------

@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/graphics/Rectangle.hpp>
 
 #include <array>
+#include <any>
 
 namespace cro
 {
@@ -190,6 +191,37 @@ namespace cro
         */
         bool wasMouseEvent() const { return m_wasMouseEvent; }
 
+
+
+        
+        /*!
+        \brief Utility to set user data
+        \param Constructor parameters for T
+        NOTE that this OVERWRITES any user data. To modify
+        existing user data use a reference from getUserData()
+        */
+        template <typename T, typename... Args>
+        void setUserData(Args&&... args)
+        {
+            userData = std::make_any<T>(std::forward<Args>(args)...);
+        }
+
+        /*!
+        \brief Returns a reference to stored user data
+        */
+        template <typename T>
+        T& getUserData()
+        {
+            return std::any_cast<T&>(userData);
+        }
+
+        template <typename T>
+        const T& getUserData() const
+        {
+            return std::any_cast<const T&>(userData);
+        }
+
+
     private:
         static constexpr auto DefaultGroup = (1 << 0);
         std::uint32_t m_previousGroup = DefaultGroup;
@@ -216,6 +248,9 @@ namespace cro
         };
 
         cro::FloatRect m_worldArea; //cached by transform callback, ie dirty flag optimised
+
+        std::any userData; //optional state, such as ID data etc
+
 
         friend class UISystem;
     };
