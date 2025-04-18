@@ -31,6 +31,7 @@ source distribution.
 
 #include "ShopState.hpp"
 #include "SharedStateData.hpp"
+#include "SharedProfileData.hpp"
 #include "MenuConsts.hpp"
 #include "Clubs.hpp"
 #include "Social.hpp"
@@ -216,9 +217,10 @@ namespace
     };
 }
 
-ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStateData& sd)
+ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStateData& sd, SharedProfileData& sp)
     : cro::State        (stack, ctx),
     m_sharedData        (sd),
+    m_sharedProfileData (sp),
     m_uiScene           (ctx.appInstance.getMessageBus(), 512),
     m_viewScale         (1.f),
     m_previewScene      (ctx.appInstance.getMessageBus()),
@@ -2353,6 +2355,17 @@ void ShopState::sellItem()
 
     m_buyCounter.str0.getComponent<cro::Text>().setString(m_buyString);
     m_buyCounter.str1.getComponent<cro::Text>().setString(m_buyString);
+
+    //make sure to remove it from any profiles which have this item assigned to a loadout
+    for (auto& profile : m_sharedProfileData.playerProfiles)
+    {
+        if (auto res = std::find(profile.loadout.begin(), profile.loadout.end(), item.itemIndex);
+            res != profile.loadout.end())
+        {
+            *res = -1;
+            profile.writeLoadout();
+        }
+    }
 }
 
 void ShopState::quitState()

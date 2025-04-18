@@ -345,7 +345,7 @@ private:
 
     std::array<GearMenu, GearID::Count> m_gearMenus = {};
     void refreshItemLists();
-
+    void refreshStat();
 
     struct TextEdit final
     {

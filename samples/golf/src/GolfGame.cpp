@@ -217,7 +217,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData, m_profileData, *this);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
-    m_stateStack.registerState<ShopState>(StateID::Shop, m_sharedData);
+    m_stateStack.registerState<ShopState>(StateID::Shop, m_sharedData, m_profileData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
     m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
     m_stateStack.registerState<LeaderboardState>(StateID::Leaderboard, m_sharedData);

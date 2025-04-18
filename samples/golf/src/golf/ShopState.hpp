@@ -65,13 +65,14 @@ struct ThreePatch final
 };
 
 struct SharedStateData;
+struct SharedProfileData;
 class ShopState final : public cro::State
 #ifdef CRO_DEBUG_
     , public cro::ConsoleClient
 #endif
 {
 public:
-    ShopState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    ShopState(cro::StateStack&, cro::State::Context, SharedStateData&, SharedProfileData&);
 
     cro::StateID getStateID() const override { return StateID::Shop; }
 
@@ -84,6 +85,7 @@ public:
 private:
 
     SharedStateData& m_sharedData;
+    SharedProfileData& m_sharedProfileData;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
     float m_viewScale;

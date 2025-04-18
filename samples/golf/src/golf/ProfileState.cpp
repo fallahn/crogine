@@ -4520,6 +4520,10 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
             pos.y -= GearMenuSpacing;
         }
     }
+
+
+
+    //stats for selected item
 }
 
 void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext& ctx)
@@ -5609,7 +5613,9 @@ void ProfileState::refreshBio()
 
 void ProfileState::onCachedPush()
 {
-    if (m_activeProfile.name != m_profileData.playerProfiles[m_profileData.activeProfileIndex].name)
+    //hmmm really we should just be taking a pointer to the active profile, no?
+    //I guess we want to be able to modify the copy without committing to it though...
+    //if (m_activeProfile.name != m_profileData.playerProfiles[m_profileData.activeProfileIndex].name)
     {
         m_activeProfile = m_profileData.playerProfiles[m_profileData.activeProfileIndex];
 
@@ -5756,6 +5762,11 @@ void ProfileState::refreshItemLists()
             m_gearMenus[i].background.getComponent<cro::Drawable2D>().updateLocalBounds();
         }
     }
+}
+
+void ProfileState::refreshStat()
+{
+
 }
 
 void ProfileState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)
