@@ -262,6 +262,7 @@ private:
     };
     std::array<cro::Entity, GearID::Count> m_gearMenus = {};
 
+
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);
     void createHairEditor(cro::Entity, const CallbackContext&);
@@ -327,6 +328,9 @@ private:
     void refreshNameString();
     void refreshSwatch();
     void refreshBio();
+
+    //TODO the above should probably sit in this
+    void onCachedPush() override;
 
     struct TextEdit final
     {

@@ -312,6 +312,13 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 m_menuEntities[EntityID::GearEditor].getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
+            else if (groupID >= MenuID::Gear01
+                && groupID <= MenuID::Gear13)
+            {
+                m_gearMenus[groupID - MenuID::Gear01].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GearEditor);
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
             else if (groupID == MenuID::SpeechEditor)
             {
                 m_menuEntities[EntityID::SpeechEditor].getComponent<cro::Callback>().active = true;
@@ -518,6 +525,22 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             case MenuID::SpeechEditor:
                 m_menuEntities[EntityID::SpeechEditor].getComponent<cro::Callback>().active = true;
                 break;
+            case MenuID::Gear01:
+            case MenuID::Gear02:
+            case MenuID::Gear03:
+            case MenuID::Gear04:
+            case MenuID::Gear05:
+            case MenuID::Gear06:
+            case MenuID::Gear07:
+            case MenuID::Gear08:
+            case MenuID::Gear09:
+            case MenuID::Gear10:
+            case MenuID::Gear11:
+            case MenuID::Gear12:
+            case MenuID::Gear13:
+                m_gearMenus[currentMenu - MenuID::Gear01].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GearEditor);
+                break;
             }
             m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
         }
@@ -575,7 +598,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             case MenuID::TopL:
             case MenuID::TopD:
             {
-                auto flyoutID = currentMenu - MenuID::Hair;
+                const auto flyoutID = currentMenu - MenuID::Hair;
                 auto bounds = m_flyouts[flyoutID].background.getComponent<cro::Drawable2D>().getLocalBounds();
                 bounds = m_flyouts[flyoutID].background.getComponent<cro::Transform>().getWorldTransform() * bounds;
 
@@ -588,6 +611,37 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 }
             }
             break;
+            case MenuID::Gear01:
+            case MenuID::Gear02:
+            case MenuID::Gear03:
+            case MenuID::Gear04:
+            case MenuID::Gear05:
+            case MenuID::Gear06:
+            case MenuID::Gear07:
+            case MenuID::Gear08:
+            case MenuID::Gear09:
+            case MenuID::Gear10:
+            case MenuID::Gear11:
+            case MenuID::Gear12:
+            case MenuID::Gear13:
+            {
+                const auto menuID = currentMenu - MenuID::Gear01;
+                
+                auto bounds = m_gearMenus[menuID].getComponent<cro::Drawable2D>().getLocalBounds();
+                bounds = m_gearMenus[menuID].getComponent<cro::Transform>().getWorldTransform() * bounds;
+                
+                const auto mousePos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+                
+                if (!bounds.contains(mousePos))
+                {
+                    m_gearMenus[menuID].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GearEditor);
+
+                    //don't forward this to the menu system
+                    return false;
+                }
+            }
+                break;
             }
         }
     }
@@ -3074,7 +3128,7 @@ void ProfileState::createItemThumbs()
     cro::SimpleQuad clubQuad;
 
     m_pageContexts[PaginationID::Clubs].thumbnailTexture.create(texSize.x, texSize.y);
-    m_pageContexts[PaginationID::Clubs].thumbnailTexture.setSmooth(true);
+    //m_pageContexts[PaginationID::Clubs].thumbnailTexture.setSmooth(true);
     m_pageContexts[PaginationID::Clubs].thumbnailTexture.clear(CD32::Colours[CD32::BlueLight]);
 
     std::int32_t i = 0;
@@ -4371,7 +4425,12 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
     static constexpr glm::vec2 TextOffset = glm::vec2(80.f, 11.f);
     glm::vec2 pos(12.f, 213.f);
 
-    const auto itemSelected = m_uiScene.getSystem<cro::UISystem>()->addCallback([](cro::Entity e) {e.getComponent<cro::Text>().setFillColour(TextHighlightColour); });
+    const auto itemSelected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Text>().setFillColour(TextHighlightColour); 
+            e.getComponent<cro::AudioEmitter>().play();
+        });
     //TODO check if active item and set yellow
     const auto itemUnselected = m_uiScene.getSystem<cro::UISystem>()->addCallback([](cro::Entity e) {e.getComponent<cro::Text>().setFillColour(TextNormalColour); });
 
@@ -4471,6 +4530,7 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
                 //TODO if active item highlight yellow
                 entity = m_uiScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition(subPos);
+                entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Text>(smallFont).setString(subItems[j]);
                 entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -4490,6 +4550,8 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
                                 textEnt.getComponent<cro::Text>().setString(e.getComponent<cro::Text>().getString());
                                 m_gearMenus[i].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GearEditor);
+
+                                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                             }
                         });
                 menuEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -4513,6 +4575,8 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
                 const float Offset = verts[5].position.y * -1.f;
                 menuEnt.getComponent<cro::Transform>().move(glm::vec2(0.f, Offset));
             }
+
+            menuEnt.getComponent<cro::Drawable2D>().updateLocalBounds();
 
             pos.y -= Spacing;
         }
@@ -5600,6 +5664,11 @@ void ProfileState::refreshBio()
             setBioString(generateRandomBio());
         }
     }
+}
+
+void ProfileState::onCachedPush()
+{
+    //TODO refresh inventory / club assignement
 }
 
 void ProfileState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)

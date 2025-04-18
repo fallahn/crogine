@@ -833,16 +833,21 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     const auto level = Social::getLevel() / 10;
     auto maxHook = MaxHook - (static_cast<float>(std::clamp(level, 0, 3)) * 0.03f);
 
+    float powerMod = 0.f;
+
     switch (m_terrain)
     {
     default: break;
     case TerrainID::Rough:
         maxHook -= 0.08f;
+        powerMod = 0.2f;
         break;
     case TerrainID::Bunker:
         maxHook -= 0.12f;
+        powerMod = 0.3f;
         break;
     }
+    powerMod *= Club::getClubLevel();
 
     if (club != ClubID::Putter)
     {
@@ -881,9 +886,12 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     }
     else
     {
+        maxHook -= (static_cast<float>(Club::getClubLevel()) * 0.02f);
         power *= getPower();
     }
     yaw += maxHook * hook;
+    power *= 1.f - (std::abs(hook) * powerMod);
+    //LogI << (std::abs(hook) * powerMod) << std::endl;
 
     float sideSpin = -hook;
     sideSpin *= Clubs[club].getSideSpinMultiplier();
