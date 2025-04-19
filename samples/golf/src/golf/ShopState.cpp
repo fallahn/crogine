@@ -405,6 +405,9 @@ void ShopState::loadAssets()
     m_audioEnts[AudioID::Purchase] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Purchase].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("purchase");
 
+    m_audioEnts[AudioID::Swish] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Swish].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch02");
+
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/shop_badges.spt", m_resources.textures);
@@ -2364,6 +2367,8 @@ void ShopState::sellItem()
 
 void ShopState::quitState()
 {
+    m_audioEnts[AudioID::Swish].getComponent<cro::AudioEmitter>().play();
+
     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_rootNode.getComponent<cro::Callback>().function =
@@ -2383,6 +2388,8 @@ void ShopState::quitState()
 
 void ShopState::onCachedPush()
 {
+    m_audioEnts[AudioID::Swish].getComponent<cro::AudioEmitter>().play();
+
     m_viewScale = cro::UIElementSystem::getViewScale();
     
     Timeline::setTimelineDesc("In the Shop");

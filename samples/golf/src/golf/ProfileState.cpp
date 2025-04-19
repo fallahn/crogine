@@ -4643,34 +4643,13 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
         cro::String(" ")
     };
 
-    /*for (auto& t : m_manufacturerText)
-    {
-        cro::Util::String::wordWrap(t, 38);
-    }*/
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 260.f, 82.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(3.f);
-    entity.getComponent<cro::Callback>().function = 
-        [&](cro::Entity e, float dt) 
-        {
-            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
-            ct -= dt;
 
-            if (ct < 0)
-            {
-                ct += 3;
-
-                static int idx = 0;
-                idx = (idx + 1) % m_manufacturerText.size();
-                e.getComponent<cro::Text>().setString(m_manufacturerText[idx]);
-            }
-        
-        };
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_manufacturerInfo = entity;
 }
@@ -5455,7 +5434,7 @@ void ProfileState::setAvatarIndex(std::size_t idx)
     }
     else
     {
-        playPreviewAudio();
+        //playPreviewAudio();
     }
 }
 

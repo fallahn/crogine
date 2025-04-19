@@ -107,7 +107,7 @@ private:
         enum
         {
             Accept, Back, Select,
-            Nope, Purchase,
+            Nope, Purchase, Swish,
 
             Count
         };
