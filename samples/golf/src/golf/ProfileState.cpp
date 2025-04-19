@@ -184,6 +184,7 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_voiceIndex        (0),
     m_itemSelected      (0),
     m_itemUnselected    (0),
+    m_gearIndex         (0),
     m_mugshotUpdated    (false)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -321,6 +322,8 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             {
                 m_gearMenus[groupID - MenuID::Gear01].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GearEditor);
+                m_uiScene.getSystem<cro::UISystem>()->selectAt(m_gearIndex);
+
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 
                 refreshStat(0, m_activeProfile.loadout[0]);
@@ -546,6 +549,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             case MenuID::Gear13:
                 m_gearMenus[currentMenu - MenuID::Gear01].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GearEditor);
+                m_uiScene.getSystem<cro::UISystem>()->selectAt(m_gearIndex);
                 refreshStat(0, m_activeProfile.loadout[0]);
                 break;
             }
@@ -643,6 +647,8 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 {
                     m_gearMenus[menuID].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GearEditor);
+                    m_uiScene.getSystem<cro::UISystem>()->selectAt(m_gearIndex);
+
                     refreshStat(0, m_activeProfile.loadout[0]);
 
                     //don't forward this to the menu system
@@ -2369,6 +2375,7 @@ void ProfileState::buildScene()
     ctx.onClose = [&]()
         {
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GearEditor);
+            m_uiScene.getSystem<cro::UISystem>()->selectAt(m_gearIndex);
         };
     createClubBrowser(rootNode, ctx);
 
@@ -4335,12 +4342,10 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
 
 void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext& ctx)
 {
-    /*constexpr std::size_t IndexThumb = 10000;
-    constexpr std::size_t IndexCol = 10001;
-    constexpr std::size_t IndexHat = 10002;*/
-    constexpr std::size_t IndexClose = 10003;
-    /*constexpr std::size_t IndexTrans = 10004;
-    constexpr std::size_t IndexReset = 10022;*/
+    constexpr std::size_t IndexClose = 10000;
+    constexpr std::size_t IndexClubs = 10001;
+    constexpr std::size_t IndexList = 10002;
+
 
     auto [bgEnt, closeButtonEnt] = createBrowserBackground(MenuID::GearEditor, ctx);
     bgEnt.getComponent<cro::Transform>().move(glm::vec2(0.f, 10.f));
@@ -4349,8 +4354,8 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
 
     closeButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(70.f, 21.f) + glm::vec2(closeButtonEnt.getComponent<cro::Transform>().getOrigin()));
     closeButtonEnt.getComponent<cro::UIInput>().setSelectionIndex(IndexClose);
-    //closeButtonEnt.getComponent<cro::UIInput>().setNextIndex(IndexThumb, IndexTrans + 5);
-    //closeButtonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexThumb, IndexHat);
+    closeButtonEnt.getComponent<cro::UIInput>().setNextIndex(IndexClubs, IndexList);
+    closeButtonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexList + GearID::Count, IndexList + GearID::Count);
 
 
     //clubset preview
@@ -4373,9 +4378,9 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::GearEditor);
-    /*entity.getComponent<cro::UIInput>().setSelectionIndex(IndexThumb);
-    entity.getComponent<cro::UIInput>().setNextIndex(IndexCol, IndexTrans);
-    entity.getComponent<cro::UIInput>().setPrevIndex(IndexHat, IndexReset);*/
+    entity.getComponent<cro::UIInput>().setSelectionIndex(IndexClubs);
+    entity.getComponent<cro::UIInput>().setNextIndex(IndexList, IndexClose);
+    entity.getComponent<cro::UIInput>().setPrevIndex(IndexList, IndexClose);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -4449,6 +4454,7 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
             refreshStat(catID, m_activeProfile.loadout[catID]);
         });
 
+    std::vector<cro::Entity> temp;
     for (auto i = 0u; i < GearID::Count; ++i)
     {
         const auto available = itemAvailable(i);
@@ -4461,11 +4467,12 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
 
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        bounds.width *= 2.5f;
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().setGroup(MenuID::GearEditor);
-        /*entity.getComponent<cro::UIInput>().setSelectionIndex(IndexThumb);
-        entity.getComponent<cro::UIInput>().setNextIndex(IndexCol, IndexTrans);
-        entity.getComponent<cro::UIInput>().setPrevIndex(IndexHat, IndexReset);*/
+        entity.getComponent<cro::UIInput>().setSelectionIndex(IndexList + i);
+        entity.getComponent<cro::UIInput>().setNextIndex(IndexClubs, IndexList + (i + 1));
+        entity.getComponent<cro::UIInput>().setPrevIndex(IndexClubs, IndexList + (i - 1));
         entity.getComponent<cro::UIInput>().setUserData<std::uint32_t>(i);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = catSelected;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
@@ -4480,6 +4487,8 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
                             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Gear01 + i);
                             m_gearMenus[i].background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                            m_gearIndex = e.getComponent<cro::UIInput>().getSelectionIndex();
                         }
                         else
                         {
@@ -4491,7 +4500,7 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
         entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
         entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+        temp.push_back(entity);
 
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos + TextOffset, 0.1f));
@@ -4540,6 +4549,9 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
         }
     }
 
+    //correct indices for first / last
+    temp.front().getComponent<cro::UIInput>().setPrevIndex(IndexClubs, IndexClose);
+    temp.back().getComponent<cro::UIInput>().setNextIndex(IndexClubs, IndexClose);
 
 
     //stats for selected item
@@ -4594,7 +4606,7 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
                     const float pos = verts[4].position.x;
                     const float move = (target - pos) * dt * 5.f;
 
-                    verts[4].position.x += move; std::round(verts[4].position.x + move);
+                    verts[4].position.x += move; //std::round(verts[4].position.x + move);
                     verts[5].position.x = verts[4].position.x;
                 };
 
@@ -4633,7 +4645,7 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
         cro::String("Hand crafted by authentic one-eyed, three\nfingered craftsmen since the 1700s,\nFellowCraft avoid the hazards so you don't\nhave to."),
         cro::String("Whether you're a proponent of Imperial or\nMetric Akrun only deal in feet, three of which\nare gaurenteed to fit comfortably in your\ngrip."),
         cro::String("Though Dannis may sound like a different\nsport, their high quality equipment ensures you\nwon't be calling out for New Balls Please!"),
-        cro::String("Clix, inspired by the sound of every great\ngolfer's shoulder, they promise the only\nthing you'll be shouting on the fairway is\nFORE!"),
+        cro::String("Clix, inspired by the sound of every great\ngolfer's shoulder, promise the only thing\nyou'll be shouting on the fairway is FORE!"),
         cro::String("For over 100 years BeyTree, the makers of\nsome of the world's finest sporting equipment,\nhave been lamenting a single typo."),
         cro::String("Tunnelrock Balls, a name synonymous with\nspelunking, are carefully vacuum packed at\nthe source to preserve maximum freshness.\nFrom field to freezer in under an hour."),
         cro::String("Woven from the finest golden retreiver hair,\nFlaxen make sure their balls use only the\nsoftest clippings to ensure the swiftest of\nflights."),
@@ -5825,13 +5837,16 @@ void ProfileState::refreshItemLists()
                 entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_itemUnselected;
                 entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
                     m_uiScene.getSystem<cro::UISystem>()->addCallback(
-                        [&, i, itemIndex](cro::Entity e, const cro::ButtonEvent& evt) mutable
+                        [&, i, j, itemIndex](cro::Entity e, const cro::ButtonEvent& evt) mutable
                         {
                             if (activated(evt))
                             {
-                                m_gearMenus[i].description.getComponent<cro::Text>().setString(e.getComponent<cro::Text>().getString());
+                                const std::string num = "(" + std::to_string(j + 1) + "/" + std::to_string(m_gearMenus[i].items.size()) + ") ";
+
+                                m_gearMenus[i].description.getComponent<cro::Text>().setString(num + e.getComponent<cro::Text>().getString());
                                 m_gearMenus[i].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GearEditor);
+                                m_uiScene.getSystem<cro::UISystem>()->selectAt(m_gearIndex);
 
                                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
@@ -5849,11 +5864,25 @@ void ProfileState::refreshItemLists()
             //set the string for the selected item
             if (m_activeProfile.loadout[i] == -1)
             {
-                m_gearMenus[i].description.getComponent<cro::Text>().setString("Default");
+                m_gearMenus[i].description.getComponent<cro::Text>().setString("(1/" + std::to_string(m_gearMenus[i].items.size()) + ") Default");
             }
             else
             {
-                m_gearMenus[i].description.getComponent<cro::Text>().setString(inv::Manufacturers[inv::Items[m_activeProfile.loadout[i]].manufacturer]);
+                const auto& items = m_gearMenus[i].items;
+                std::size_t itemIndex = 0;
+                const auto toFind = m_activeProfile.loadout[i];
+                if (const auto res = std::find_if(items.cbegin(), items.cend(), 
+                    [toFind](cro::Entity e)
+                    {
+                        const auto idx = e.getComponent<cro::UIInput>().getUserData<std::pair<std::int32_t, std::int32_t>>().second;
+                        return idx == toFind;
+                    }); res != items.cend())
+                {
+                    itemIndex = std::distance(items.cbegin(), res);
+                }
+
+                const std::string num = "(" + std::to_string(itemIndex) + "/" + std::to_string(m_gearMenus[i].items.size()) + ") ";
+                m_gearMenus[i].description.getComponent<cro::Text>().setString(num + inv::Manufacturers[inv::Items[m_activeProfile.loadout[i]].manufacturer]);
             }
 
 

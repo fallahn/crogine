@@ -343,6 +343,7 @@ private:
     std::uint32_t m_itemSelected;
     std::uint32_t m_itemUnselected;
 
+    std::uint32_t m_gearIndex; //last selected button so we can return to it
     std::array<GearMenu, GearID::Count> m_gearMenus = {};
     void refreshItemLists();
     
