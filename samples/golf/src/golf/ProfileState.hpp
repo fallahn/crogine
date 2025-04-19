@@ -353,6 +353,8 @@ private:
     };
     std::vector<StatBar> m_statBars;
     cro::Entity m_statTitle;
+    std::vector<cro::String> m_manufacturerText;
+    cro::Entity m_manufacturerInfo;
     void refreshStat(std::uint32_t catID, std::int32_t invID);
 
     struct TextEdit final

@@ -4624,6 +4624,55 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     m_statTitle = entity;
+
+
+    m_manufacturerText =
+    {
+        cro::String("The original Scottish golf manufacturers,\nGallawent have only the firmest of woods and\ntoughest of drivers to back them up.\n\nGrab a caber, aye?"),
+        cro::String("Sonorous by name and sonorous by nature,\nthe satifying thunk of a Dong is all you need\nto get to the bottom of a hole."),
+        cro::String("Hand crafted by authentic one-eyed, three\nfingered craftsmen since the 1700s,\nFellowCraft avoid the hazards so you don't\nhave to."),
+        cro::String("Whether you're a proponent of Imperial or\nMetric Akrun only deal in feet, three of which\nare gaurenteed to fit comfortably in your\ngrip."),
+        cro::String("Though Dannis may sound like a different\nsport, their high quality equipment ensures you\nwon't be calling out for New Balls Please!"),
+        cro::String("Clix, inspired by the sound of every great\ngolfer's shoulder, they promise the only\nthing you'll be shouting on the fairway is\nFORE!"),
+        cro::String("For over 100 years BeyTree, the makers of\nsome of the world's finest sporting equipment,\nhave been lamenting a single typo."),
+        cro::String("Tunnelrock Balls, a name synonymous with\nspelunking, are carefully vacuum packed at\nthe source to preserve maximum freshness.\nFrom field to freezer in under an hour."),
+        cro::String("Woven from the finest golden retreiver hair,\nFlaxen make sure their balls use only the\nsoftest clippings to ensure the swiftest of\nflights."),
+        cro::String("Hardings Balls, both notorious and revered,\nhave a heart of gold and a west country\naccent that would turn any bushel of apples\ninto the sweetest of ciders."),
+        cro::String("The only splinters here are those from the\ncourse record, as Woodgear Balls are the\nepitome of driving long, hard, and fast.\nMay not contain actual wood."),
+        cro::String("Brilton & Stockley started in the soup\nindustry, nearly 200 years ago, before\nbranching out to manufacturing sports\nequipment after a rogue accident involving a\nyard long spoon."),
+        cro::String(" ")
+    };
+
+    /*for (auto& t : m_manufacturerText)
+    {
+        cro::Util::String::wordWrap(t, 38);
+    }*/
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 260.f, 82.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(3.f);
+    entity.getComponent<cro::Callback>().function = 
+        [&](cro::Entity e, float dt) 
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct -= dt;
+
+            if (ct < 0)
+            {
+                ct += 3;
+
+                static int idx = 0;
+                idx = (idx + 1) % m_manufacturerText.size();
+                e.getComponent<cro::Text>().setString(m_manufacturerText[idx]);
+            }
+        
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_manufacturerInfo = entity;
 }
 
 void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext& ctx)
@@ -5874,6 +5923,8 @@ void ProfileState::refreshStat(std::uint32_t catID, std::int32_t invID)
         m_statBars[0].bgEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         m_statBars[1].bgEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 
+        m_manufacturerInfo.getComponent<cro::Text>().setString(" ");
+
         return;
     }
 
@@ -5882,6 +5933,7 @@ void ProfileState::refreshStat(std::uint32_t catID, std::int32_t invID)
 
 
     const auto& item = inv::Items[invID];
+    m_manufacturerInfo.getComponent<cro::Text>().setString(m_manufacturerText[item.manufacturer]);
 
     m_statBars[0].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat01);
     m_statBars[1].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat02);
