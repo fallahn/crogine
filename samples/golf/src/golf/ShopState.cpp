@@ -1938,12 +1938,6 @@ void ShopState::createStatDisplay()
             constexpr auto Mid = CD32::Colours[CD32::Brown];
             constexpr auto Dark = CD32::Colours[CD32::TanDarkest];
 
-            /*auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-            verts[1].position.y = -height;
-            verts[2].position.x = width;
-            verts[3].position.x = width;
-            verts[3].position.y = -height;*/
-
             e.getComponent<cro::Drawable2D>().setVertexData(
                 {
                     //Top

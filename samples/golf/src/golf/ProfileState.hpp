@@ -345,7 +345,15 @@ private:
 
     std::array<GearMenu, GearID::Count> m_gearMenus = {};
     void refreshItemLists();
-    void refreshStat();
+    
+    struct StatBar final
+    {
+        cro::Entity bgEnt;
+        cro::Entity text;
+    };
+    std::vector<StatBar> m_statBars;
+    cro::Entity m_statTitle;
+    void refreshStat(std::uint32_t catID, std::int32_t invID);
 
     struct TextEdit final
     {
