@@ -35,7 +35,11 @@ source distribution.
 #include <crogine/audio/AudioScape.hpp>
 
 #include <crogine/core/State.hpp>
+
+#ifdef CRO_DEBUG_
 #include <crogine/core/ConsoleClient.hpp>
+#include <crogine/gui/GuiClient.hpp>
+#endif
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
@@ -45,7 +49,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
-#include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/graphics/CubeMapTexture.hpp>
 
 #include <array>
 #include <functional>
@@ -69,6 +73,7 @@ struct SharedProfileData;
 class ShopState final : public cro::State
 #ifdef CRO_DEBUG_
     , public cro::ConsoleClient
+    , public cro::GuiClient
 #endif
 {
 public:
@@ -91,8 +96,7 @@ private:
     float m_viewScale;
 
     cro::Scene m_previewScene;
-    cro::EnvironmentMap m_envMap;
-
+    cro::CubemapTexture m_reflectMap;
 
     cro::Entity m_rootNode;// transition animation
 
@@ -133,7 +137,7 @@ private:
 
         bool owned = false; //used to set correct texture
         std::int32_t modelIndex = 0; //index into model array for preview
-        float modelScale = 1.f; //fudge the scale slightly to make the driver model look like a wood
+        glm::vec3 modelScale = glm::vec3(1.f); //fudge the scale slightly to make the driver model look like a wood
     };
 
     struct CategoryItem final

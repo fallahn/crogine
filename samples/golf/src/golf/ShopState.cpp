@@ -33,6 +33,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "SharedProfileData.hpp"
 #include "MenuConsts.hpp"
+#include "GameConsts.hpp"
 #include "Clubs.hpp"
 #include "Social.hpp"
 #include "Timeline.hpp"
@@ -57,9 +58,14 @@ source distribution.
 
 #include <crogine/detail/OpenGL.hpp>
 
+#ifdef CRO_DEBUG_
+#include <crogine/gui/Gui.hpp>
+#endif
+
 namespace
 {
 #include "ShopEnum.inl"
+#include "shaders/ShopItems.inl"
 
     //from edge of window, scaled with getViewScale()
     constexpr float BorderPadding = 4.f;
@@ -245,6 +251,28 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
                 cro::Console::print("Usage: add_balance <value>");
             }
         });
+
+    //registerWindow([&]() 
+    //    {
+    //        ImGui::Begin("Cam");
+    //        auto sun = m_previewScene.getSunlight();
+
+    //        static float y = 0.f;
+    //        static float x = 0.f;
+    //        if (ImGui::SliderFloat("Y", &y, -cro::Util::Const::PI, cro::Util::Const::PI))
+    //        {
+    //            sun.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, y);
+    //            sun.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, x);
+    //        }
+
+    //        if (ImGui::SliderFloat("x", &x, -cro::Util::Const::PI, cro::Util::Const::PI))
+    //        {
+    //            sun.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, y);
+    //            sun.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, x);
+    //        }
+
+    //        ImGui::End();
+    //    });
 #endif
 
         loadAssets();
@@ -439,7 +467,13 @@ void ShopState::loadAssets()
     m_largeLogos[11] = spriteSheet.getSprite("large_12");
 
 
-    m_envMap.loadFromFile("assets/images/hills.hdr");
+    m_reflectMap.loadFromFiles(
+        {
+            "assets/golf/images/skybox/billiards/trophy.ccm",
+            "assets/golf/images/skybox/billiards/trophy_b1.ccm",
+            "assets/golf/images/skybox/billiards/trophy_b2.ccm",
+            "assets/golf/images/skybox/billiards/trophy_b3.ccm"        
+        });
 
 
     //load up the three-patch data for the button textures
@@ -1144,18 +1178,26 @@ void ShopState::buildScene()
 
                 if (item.type == inv::ItemType::FiveW)
                 {
-                    itemEntry.modelScale = 0.8f;
+                    itemEntry.modelScale = { 1.f, 0.96f, 0.8f };
+                    itemEntry.modelScale *= 1.1f;
                 }
                 else if (item.type == inv::ItemType::ThreeW)
                 {
-                    itemEntry.modelScale = 0.9f;
+                    itemEntry.modelScale = { 1.f, 1.f, 0.9f };
+                    itemEntry.modelScale *= 1.15f;
+                }
+                else if (item.type == inv::ItemType::Driver)
+                {
+                    itemEntry.modelScale = glm::vec3(1.2f);
                 }
                 break;
             case Category::Iron:
                 itemEntry.modelIndex = m_modelMaps[item.manufacturer].indices[ModelMap::Iron];
+                itemEntry.modelScale = glm::vec3(1.54f);
                 break;
             case Category::Wedge:
                 itemEntry.modelIndex = m_modelMaps[item.manufacturer].indices[ModelMap::Wedge];
+                itemEntry.modelScale = glm::vec3(1.84f);
                 break;
             case Category::Ball:
                 itemEntry.modelIndex = m_modelMaps[item.manufacturer].indices[ModelMap::Ball];
@@ -1633,7 +1675,7 @@ void ShopState::buildScene()
 
 void ShopState::buildPreviewScene()
 {
-    cro::ModelDefinition md(m_resources, &m_envMap);
+    cro::ModelDefinition md(m_resources);
 
     struct ModelPaths final
     {
@@ -1663,12 +1705,24 @@ void ShopState::buildPreviewScene()
         ModelPaths("", "", "", "")        
     };
 
+    constexpr auto shaderID = 10;
+    m_resources.shaders.loadFromString(shaderID, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), ShopFragment, "#define TEXTURED\n#define DIFFUSE_MAP\n#define BUMP\n#define MASK_MAP\n");
+    const auto matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    auto materialData = m_resources.materials.get(matID);
+
+
+    materialData.setProperty("u_reflectMap", cro::CubemapID(m_reflectMap.getGLHandle(), true));
+
     const auto createEnt = 
         [&](cro::ModelDefinition& md)
         {
             cro::Entity entity = m_previewScene.createEntity();
             entity.addComponent<cro::Transform>();
             md.createModel(entity);
+
+            applyMaterialData(md, materialData);
+            entity.getComponent<cro::Model>().setMaterial(0, materialData);
+
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
                 [](cro::Entity e, float dt)
@@ -1728,6 +1782,10 @@ void ShopState::buildPreviewScene()
 
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = resizeCallback;
+
+    auto sun = m_previewScene.getSunlight();
+    sun.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 2.9f);
+    sun.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -2.2f);
 }
 
 void ShopState::createStatDisplay()
@@ -2001,7 +2059,7 @@ void ShopState::updateStatDisplay(const ItemEntry& itemEntry)
     m_previewModels[itemEntry.modelIndex].getComponent<cro::Model>().setHidden(false);
     m_currentModelIndex = itemEntry.modelIndex;
 
-    m_previewModels[itemEntry.modelIndex].getComponent<cro::Transform>().setScale({ 1.f, 1.f, itemEntry.modelScale });
+    m_previewModels[itemEntry.modelIndex].getComponent<cro::Transform>().setScale(/*{ 1.f, 1.f, itemEntry.modelScale }*/itemEntry.modelScale);
 
 
     const auto itemIndex = itemEntry.itemIndex;

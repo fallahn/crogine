@@ -1040,6 +1040,7 @@
     <None Include="src\golf\shaders\RoidShader.inl" />
     <None Include="src\golf\shaders\ShaderIncludes.inl" />
     <None Include="src\golf\shaders\ShadowMapping.inl" />
+    <None Include="src\golf\shaders\ShopItems.inl" />
     <None Include="src\golf\shaders\TerrainShader.inl" />
     <None Include="src\golf\shaders\TransitionShader.inl" />
     <None Include="src\golf\shaders\TreeShader.inl" />

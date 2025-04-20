@@ -886,6 +886,11 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
             dest.setProperty("u_maskMap", cro::TextureID(m->properties.at("u_maskMap").second.textureID));
         }
 
+        if (m->properties.count("u_normalMap"))
+        {
+            dest.setProperty("u_normalMap", cro::TextureID(m->properties.at("u_normalMap").second.textureID));
+        }
+
         if (m->properties.count("u_colour")
             && dest.properties.count("u_colour"))
         {
