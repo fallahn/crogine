@@ -4641,7 +4641,7 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
     m_manufacturerText =
     {
         cro::String("The original Scottish golf manufacturers,\nGallawent have only the firmest of woods and\ntoughest of drivers to back them up.\n\nGrab a caber, aye?"),
-        cro::String("Sonorous by name and sonorous by nature,\nthe satifying thunk of a Dong is all you need\nto get to the bottom of a hole."),
+        cro::String("Sonorous by name and sonorous by nature,\nthe satisfying thunk of a Dong is all you need\nto get to the bottom of a hole."),
         cro::String("Hand crafted by authentic one-eyed, three\nfingered craftsmen since the 1700s,\nFellowCraft avoid the hazards so you don't\nhave to."),
         cro::String("Whether you're a proponent of Imperial or\nMetric Akrun only deal in feet, three of which\nare gaurenteed to fit comfortably in your\ngrip."),
         cro::String("Though Dannis may sound like a different\nsport, their high quality equipment ensures you\nwon't be calling out for New Balls Please!"),

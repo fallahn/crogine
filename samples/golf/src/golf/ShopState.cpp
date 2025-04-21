@@ -411,7 +411,7 @@ bool ShopState::simulate(float dt)
 
 void ShopState::render()
 {
-    m_itemPreviewTexture.clear(CD32::Colours[CD32::TanDarkest]);
+    m_itemPreviewTexture.clear(cro::Colour(0.f, 0.f, 0.f, 0.1f));
     m_previewScene.render();
     m_itemPreviewTexture.display();
 

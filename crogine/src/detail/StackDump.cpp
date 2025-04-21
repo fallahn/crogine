@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -65,12 +65,10 @@ void StackDump::dump(int type)
     std::string str = "_" + std::to_string(tm->tm_year + 1900);
     str += "-" + std::to_string(tm->tm_mon + 1);
     str += "-" + std::to_string(tm->tm_mday);
-    str += "-" + std::to_string(tm->tm_hour + 1);
+    str += "-" + std::to_string(tm->tm_hour);
     str += "-" + std::to_string(tm->tm_min);
     str += "-" + std::to_string(tm->tm_sec);
     //auto str = std::to_string(t);
-
-    Console::dumpBuffer(str);
 
     std::stringstream ss;
     ss << ust::generate();
@@ -79,6 +77,7 @@ void StackDump::dump(int type)
 #endif
 
     std::ofstream file("stack_dump" + str + ".txt");
+    file << str << "\n";
     switch (type)
     {
     case StackDump::Generic:
@@ -101,7 +100,8 @@ void StackDump::dump(int type)
         break;
     }
 
-
     file << "Call Stack:\n" << ss.str() << std::endl;
+
+    Console::dumpBuffer(str);
 //#endif
 }
