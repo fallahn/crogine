@@ -851,7 +851,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     if (club != ClubID::Putter)
     {
-        maxHook -= (static_cast<float>(Club::getClubLevel()) * 0.05f);
+        maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.05f);
 
         auto s = cro::Util::Maths::sgn(hook);
         //changing this func changes how accurate a player needs to be
@@ -886,7 +886,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     }
     else
     {
-        maxHook -= (static_cast<float>(Club::getClubLevel()) * 0.02f);
+        maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.025f);
         power *= getPower();
     }
     yaw += maxHook * hook;

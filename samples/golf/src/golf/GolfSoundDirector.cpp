@@ -413,13 +413,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 }
                 break;
             case GolfEvent::HookedBall:
-                //if (glm::length(data.position) > MinBallDistance)
+            if (cro::Util::Random::value(0,1) == 0)
             {
                 playSound(AudioID::Hook, glm::vec3(0.f));
             }
             break;
             case GolfEvent::SlicedBall:
-                //if (glm::length(data.position) > MinBallDistance)
+            if (cro::Util::Random::value(0, 1) == 0)
             {
                 playSound(AudioID::Slice, glm::vec3(0.f));
             }
@@ -1011,9 +1011,10 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
     case AudioID::TerrainRough01:
     case AudioID::TerrainScrub01:
     case AudioID::TerrainWater01:
+        return playSpecial();
     case AudioID::Hook:
     case AudioID::Slice:
-        return playSpecial();
+        return cro::Util::Random::value(0, 1) == 0 ? playSpecial() : playDefault();
     }
 
     m_soundTimers[id].restart();

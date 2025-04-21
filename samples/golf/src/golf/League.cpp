@@ -95,7 +95,7 @@ namespace
         }
     }
 
-    constexpr std::int32_t SkillRoof = 5; //after this many increments the skills stop getting better - just shift around
+    constexpr std::int32_t SkillRoof = 4;// 5; //after this many increments the skills stop getting better - just shift around
     constexpr float BaseQuality = 0.87f;
     constexpr float MinQuality = BaseQuality - 0.07f; //0.01 * PlayerCount/2
 
@@ -127,6 +127,16 @@ League::League(std::int32_t id, const SharedStateData& sd)
     }
 
     read();
+
+
+    //a retrofit to reduce existing leagues difficulty as we increased the
+    //difficulty of using the pro clubs instead
+    while (m_increaseCount > SkillRoof)
+    {
+        decreaseDifficulty();
+        m_increaseCount--;
+        LogI << "Decreased difficulty for league " << m_id << std::endl;
+    }
 }
 
 //public
@@ -535,16 +545,16 @@ void League::rollPlayers(bool resetScores)
     //    maxIncrease = 2;
         break;
     case LeagueRoundID::RoundThree:
-        maxIncrease = 2;
+        maxIncrease = 1;
         break;
     case LeagueRoundID::RoundFour:
         maxIncrease = 2;
         break;
     case LeagueRoundID::RoundFive:
-        maxIncrease = 3;
+        maxIncrease = 2;
         break;
     case LeagueRoundID::RoundSix:
-        maxIncrease = 4;
+        maxIncrease = 3;
         break;
     }
 
@@ -559,7 +569,7 @@ void League::increaseDifficulty()
     //increase ALL player quality, but show a bigger improvement near the bottom
     for (auto i = 0u; i < PlayerCount; ++i)
     {
-        m_players[i].quality = std::min(1.f, m_players[i].quality + ((0.02f * i) / 10.f));
+        m_players[i].quality = std::min(0.99f, m_players[i].quality + ((0.02f * i) / 10.f));
 
         //modify chance of making mistake 
         auto outlier = m_players[i].outlier;
@@ -1019,7 +1029,9 @@ void League::updateDB()
 ScoreCalculator::ScoreCalculator(std::int32_t clubset)
     : m_clubset (clubset)
 {
-
+    //this was added after making the use of pro clubs more difficult to cap
+    //CPU player difficulty at that level
+    m_clubset = std::min(1, m_clubset);
 }
 
 //public

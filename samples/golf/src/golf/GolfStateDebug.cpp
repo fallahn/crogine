@@ -562,6 +562,43 @@ void GolfState::registerDebugCommands()
             }
         });
 
+    registerCommand("cl_clubset", [&](const std::string& val)
+        {
+            const auto applySetting = [&]()
+                {
+                    m_allowAchievements = false;
+                    Social::setLeaderboardsEnabled(false);
+
+                    Club::setClubLevel(m_sharedData.clubSet);
+
+                    if (m_inputParser.getActive())
+                    {
+                        cro::Console::print("Club set is now level " + val + ", and will take effect on next player turn. Achievements are disabled.");
+                    }
+                };
+
+
+            if (val == "0")
+            {
+                m_sharedData.clubSet = 0;
+                applySetting();
+            }
+            else if (val == "1")
+            {
+                m_sharedData.clubSet = 1;
+                applySetting();
+            }
+            else if (val == "2")
+            {
+                m_sharedData.clubSet = 2;
+                applySetting();
+            }
+            else
+            {
+                cro::Console::print("Usage: cl_clubset <0|2> where 0 is Novice, 1 is Expert and 2 is Pro. This will also disable all achievements.");
+            }
+        });
+
     //nasssssty staticses
     static bool showKickWindow = false;
     if (m_sharedData.hosting)
