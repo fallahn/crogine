@@ -338,6 +338,13 @@ bool ShopState::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         }
+#ifdef CRO_DEBUG_
+        else if (evt.key.keysym.sym == SDLK_SPACE)
+        {
+            cro::App::getInstance().resetFrameTime();
+        }
+#endif
+        
         break;
     case SDL_CONTROLLERBUTTONUP:
         switch (evt.cbutton.button)
@@ -1935,10 +1942,27 @@ void ShopState::createStatDisplay()
     pos = { BorderPadding * 3.f, -((UITextSize * 8) + StatBarHeight + (BorderPadding * 4.f)) };
     createDisplay(pos);
 
-
+    //hint text
+    pos.y -= BorderPadding * 2.f;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Assign Upgrades in the Profile Editor");
+    entity.getComponent<cro::Text>().setFillColour(StatTextColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).absolutePosition = pos;
+    entity.getComponent<cro::UIElement>().characterSize = InfoTextSize;
+    entity.getComponent<cro::UIElement>().depth = TextDepth;
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [calcBackgroundWidth](cro::Entity e)
+        {
+            const auto w = calcBackgroundWidth() + (BorderPadding * 4.f);
+            e.getComponent<cro::UIElement>().absolutePosition.x = std::round(w / 2.f);
+        };
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //item thumbnail
-    pos.y -= BorderPadding * 2.f;
+    pos.y -= BorderPadding * 4.f;
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
