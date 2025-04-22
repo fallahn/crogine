@@ -4505,7 +4505,7 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos + TextOffset, 0.1f));
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString(available ? "Default" : "N/A");
+        entity.addComponent<cro::Text>(smallFont).setString(available ? "Default" : "Unlocked at level " + std::to_string(ClubID::getUnlockLevel(i))); //WARNING this relies on i matching ClubIDs
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         m_gearMenus[i].description = entity;

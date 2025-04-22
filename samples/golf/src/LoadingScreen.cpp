@@ -198,7 +198,6 @@ void LoadingScreen::launch()
         m_tipText->setAlignment(cro::SimpleText::Alignment::Centre);
         m_tipText->setCharacterSize(InfoTextSize);
         m_tipText->setFillColour(TextNormalColour);
-
     }
 
     stringIndex = (stringIndex + 1) % TipStrings.size();

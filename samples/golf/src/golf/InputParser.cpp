@@ -1159,7 +1159,7 @@ void InputParser::updateStroke(float dt)
             }
 
             //move level to 1 and back (returning to 0 is a fluff)
-            float speed = dt * 0.7f;
+            float speed = dt * 0.8f;// 0.7f;
             
             if (m_terrain == TerrainID::Green
                 && m_sharedData.showPuttingPower)
@@ -1170,7 +1170,7 @@ void InputParser::updateStroke(float dt)
             else
             {
                 //move more slowly for the first 10 levels
-                float increase = std::min(1.f, static_cast<float>(Social::getLevel()) / 10.f);
+                float increase = std::min(1.f, /*static_cast<float>(Social::getLevel()) / 10.f*/static_cast<float>(Club::getClubLevel()) / 2.f);
                 speed = (speed * MinBarSpeed) + ((speed * (1.f - MinBarSpeed)) * increase);
             }
 

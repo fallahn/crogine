@@ -3464,13 +3464,14 @@ void DrivingState::hitBall()
     hook *= playerXScale;
 
     //check if we hooked/sliced
-    if (hook < -MinHook/*-0.15f*/) //this magic number doesn't match that of the golf state...
+    const auto hookDivisor = 1.f + Club::getClubLevel();
+    if (hook < -(MinHook / hookDivisor))
     {
         auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
         msg2->type = GolfEvent::HookedBall;
         floatingMessage("Hook");
     }
-    else if (hook > MinHook/*0.15f*/)
+    else if (hook > (MinHook / hookDivisor))
     {
         auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
         msg2->type = GolfEvent::SlicedBall;
