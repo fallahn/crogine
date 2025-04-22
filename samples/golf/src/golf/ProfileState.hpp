@@ -350,13 +350,14 @@ private:
     struct StatBar final
     {
         cro::Entity bgEnt;
+        cro::Entity pointer;
         cro::Entity text;
     };
     std::vector<StatBar> m_statBars;
     cro::Entity m_statTitle;
     std::vector<cro::String> m_manufacturerText;
     cro::Entity m_manufacturerInfo;
-    void refreshStat(std::uint32_t catID, std::int32_t invID);
+    void refreshStat(std::uint32_t catID, std::int32_t invID, bool setPointer);
 
     struct TextEdit final
     {
