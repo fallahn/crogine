@@ -108,19 +108,22 @@ namespace inv
     struct Inventory final
     {
         static constexpr std::uint32_t MaxLoadouts = 6;
-        std::uint32_t loadoutCount = 2; //number of unlocked loadouts
+        std::uint32_t loadoutCount = 2; //number of unlocked loadouts (unused)
 
-        std::array<Loadout, MaxLoadouts> loadouts = {};
+        std::array<Loadout, MaxLoadouts> loadouts = {}; //unused - implement this if people like the idea of saving loadouts
         std::array<std::int32_t, MaxItems> inventory = {}; //indices of shop-bought items
 
         std::int32_t balance = 5000;
 
+        std::int32_t manufacturerFlags = 0;
+
         //in case of expansion in the future.
-        /*const */std::array<std::int32_t, 33> Reserved = {};
+        /*const */std::array<std::int32_t, 32> Reserved = {};
 
         Inventory()
         {
             std::fill(inventory.begin(), inventory.end(), -1);
+            std::fill(Reserved.begin(), Reserved.end(), 0);
         }
     };
 
@@ -165,8 +168,19 @@ namespace inv
         return false;
     }
 
+    struct ManufID final
+    {
+        enum
+        {
+            Gallawent, Dong, Fellowcraft, Akrun, Dannis, Clix,
+            BeyTree, TunnelRock, Flaxen, Hardings, Woodgear,
+            BriltonStockley, Default,
 
-    static inline const std::array<std::string, 13u> Manufacturers =
+            Count
+        };
+    };
+
+    static inline const std::array<std::string, ManufID::Count> Manufacturers =
     {
         "Gallawent", "Dong", "FellowCraft", "Akrun", "Dannis", "Clix",
         "BeyTree", "Tunnelrock", "Flaxen", "Hardings", "Woodgear",

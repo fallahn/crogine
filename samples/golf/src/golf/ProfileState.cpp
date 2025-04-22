@@ -976,6 +976,10 @@ void ProfileState::loadResources()
                             {
                                 data.uid = p.getValue<std::uint32_t>();
                             }
+                            else if (name == "man")
+                            {
+                                data.man = std::clamp(p.getValue<std::int32_t>(), 0, std::int32_t(inv::ManufID::BeyTree));
+                            }
                         }
 
                         //make sure some models are listed and exist
@@ -1038,6 +1042,16 @@ void ProfileState::loadResources()
         {
             processClubPath(basePath + s, false);
         }
+    }
+
+    //make sure the default set is first, if it's found
+    if (auto res = std::find_if(m_clubData.begin(), m_clubData.end(),
+        [](const ProfileState::ClubData& cd)
+        {
+            return cd.name.find("Default") != std::string::npos;
+        }); res != m_clubData.end() && m_clubData.size() > 1)
+    {
+        std::swap(m_clubData[0], m_clubData[std::distance(m_clubData.begin(), res)]);
     }
 
     //workshop clubs
@@ -3222,6 +3236,7 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page, std::in
         verts.emplace_back(glm::vec2(pos.x + IconSize.x, pos.y), glm::vec2(textureBounds.left + textureBounds.width, textureBounds.bottom));
     }
     entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+    browserPage.thumbnails = entity;
     browserPage.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -5115,12 +5130,21 @@ void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& 
 
                 if (activated(evt))
                 {
-                    //apply selection
                     const auto idx = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
-                    m_activeProfile.clubID = m_clubData[idx].uid;
 
-                    m_menuEntities[EntityID::ClubPreview].getComponent<cro::Sprite>().setTextureRect(getThumbnailTextureRect(idx));
-                    quitMenu();
+                    if (m_clubData[idx].man == -1
+                        || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[idx].man)) != 0)
+                    {
+                        //apply selection
+                        m_activeProfile.clubID = m_clubData[idx].uid;
+
+                        m_menuEntities[EntityID::ClubPreview].getComponent<cro::Sprite>().setTextureRect(getThumbnailTextureRect(idx));
+                        quitMenu();
+                    }
+                    else
+                    {
+                        LogI << "These clubs are locked" << std::endl;
+                    }
                 }
                 else if (deactivated(evt))
                 {
@@ -5144,13 +5168,20 @@ void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& 
                 m_pageContexts[PaginationID::Clubs].pageList[i].highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
 
                 const auto itemIndex = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
+                const bool locked = !(m_clubData[itemIndex].man == -1 || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[itemIndex].man)) != 0);
                 if (!m_clubData[itemIndex].name.empty())
                 {
-                    m_pageContexts[PaginationID::Clubs].pageHandles.itemLabel.getComponent<cro::Text>().setString(m_clubData[itemIndex].name);
+                    auto label = m_clubData[itemIndex].name;
+                    if (locked)
+                    {
+                        label += " (LOCKED)";
+                    }
+                    m_pageContexts[PaginationID::Clubs].pageHandles.itemLabel.getComponent<cro::Text>().setString(label);
                 }
                 else
                 {
-                    m_pageContexts[PaginationID::Clubs].pageHandles.itemLabel.getComponent<cro::Text>().setString(" ");
+                    auto label = locked ? "(LOCKED)" : " ";
+                    m_pageContexts[PaginationID::Clubs].pageHandles.itemLabel.getComponent<cro::Text>().setString(label);
                 }
 
                 m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
@@ -5641,11 +5672,29 @@ void ProfileState::activatePage(std::int32_t itemID, std::size_t page, bool forc
 
         pageIndex = page;
 
+        //this sets the colour of the verts based on whether an item is locked, eg clubs
+        const auto startIndex = page * ThumbRowCount* ThumbColCount;
+        auto& verts = pages[page].thumbnails.getComponent<cro::Drawable2D>().getVertexData();
+
         pages[pageIndex].background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         pages[pageIndex].highlight.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         for (auto item : pages[pageIndex].items)
         {
             item.getComponent<cro::UIInput>().enabled = true;
+            
+            if (itemID == PaginationID::Clubs)
+            {
+                const auto itemIndex = item.getComponent<cro::Callback>().getUserData<std::uint8_t>();
+                const bool locked = !(m_clubData[itemIndex].man == -1 || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[itemIndex].man)) != 0);
+
+                const cro::Colour c = locked ? cro::Colour::DarkGrey : cro::Colour::White;
+
+                const auto thumbIndex = (itemIndex - startIndex) * 6; //6 verts
+                for (auto i = thumbIndex; i < thumbIndex + 6; ++i)
+                {
+                    verts[i].colour = c;
+                }
+            }
         }
 
 

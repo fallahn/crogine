@@ -164,6 +164,7 @@ private:
     struct ClubData final
     {
         std::uint32_t uid = 0;
+        std::int32_t man = -1;
         std::string name;
         std::string thumbnail;
         bool userItem = false;

@@ -1159,7 +1159,7 @@ void InputParser::updateStroke(float dt)
             }
 
             //move level to 1 and back (returning to 0 is a fluff)
-            float speed = dt * 0.8f;// 0.7f;
+            float speed = dt * 0.75f;// 0.7f;
             
             if (m_terrain == TerrainID::Green
                 && m_sharedData.showPuttingPower)

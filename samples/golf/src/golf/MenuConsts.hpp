@@ -443,6 +443,7 @@ struct FlyoutMenu final
     std::vector<cro::Entity> items;
 
     cro::Entity background;
+    cro::Entity thumbnails; //holds the vertex array for thumbnail images
     cro::Entity detail; //could be text, could be colours
     cro::Entity highlight;
 };
