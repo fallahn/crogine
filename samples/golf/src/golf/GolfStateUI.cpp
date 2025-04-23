@@ -410,7 +410,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::SpriteAnimation>();
     entity.addComponent<cro::Sprite>() = freecamSheet.getSprite("freecam");
     const float offset = (entity.getComponent<UIElement>().absolutePosition.y * 2.f) +
-        entity.getComponent<cro::Sprite>().getTextureBounds().height;
+        entity.getComponent<cro::Sprite>().getTextureBounds().height + 16.f;
     entity.addComponent<cro::Callback>().function = 
         [&, offset](cro::Entity e, float dt)
         {
@@ -445,7 +445,7 @@ void GolfState::buildUI()
     //zoom amount text
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_freecamMenuEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 119.f, 0.1f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_freecamMenuEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 132.f, 0.1f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("Zoom: 100%");
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -468,7 +468,7 @@ void GolfState::buildUI()
 
     //up/down button text
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_freecamMenuEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 119.f, 0.1f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_freecamMenuEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 132.f, 0.1f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
@@ -501,14 +501,14 @@ void GolfState::buildUI()
 
     //movement button text
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(28.f, 84.f, 0.1f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(49.f, 97.f, 0.1f));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Text>(smallFont).setAlignment(cro::Text::Alignment::Right);
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     //entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setVerticalSpacing(5.f);
+    entity.getComponent<cro::Text>().setVerticalSpacing(1.f);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -526,6 +526,7 @@ void GolfState::buildUI()
                     {
                         str = "Aim Keys";
                     }
+                    str += "\n\n" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]);
                     e.getComponent<cro::Text>().setString(str);
                     e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 }
