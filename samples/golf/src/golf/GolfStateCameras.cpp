@@ -1891,6 +1891,63 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     }
 }
 
+void GolfState::sendFreecamToTarget()
+{
+    if (m_photoMode
+        && getClub() != ClubID::Putter) 
+    {
+        //TODO clamp to green area
+
+        const glm::vec3 dirVec = glm::rotate(cro::Transform::QUAT_IDENTITY, m_inputParser.getYaw() + (cro::Util::Const::PI / 2.f), cro::Transform::Y_AXIS) * cro::Transform::Z_AXIS;
+
+        auto targetLookAt = (dirVec * m_inputParser.getEstimatedDistance()) + m_currentPlayer.position;
+        targetLookAt.y = m_collisionMesh.getTerrain(targetLookAt).height + (GreenCamHeight / 2.f);
+        
+        auto targetPos = (dirVec * std::max(m_inputParser.getEstimatedDistance() * 0.95f, 1.f)) + m_currentPlayer.position;
+        targetPos.y = m_collisionMesh.getTerrain(targetPos).height + GreenCamHeight; //TODO reduce the height based on the length moved back from target
+
+        const auto lookAt = glm::lookAt(targetPos, targetLookAt, cro::Transform::Y_AXIS);
+        
+        glm::vec3 a, b;
+        glm::quat targetRot;
+        cro::Util::Matrix::decompose(lookAt, a, targetRot, b);
+
+        const auto startPos = m_freeCam.getComponent<cro::Transform>().getPosition();
+        const auto startRot = m_freeCam.getComponent<cro::Transform>().getRotation();
+
+        struct MoveData final
+        {
+            float currentTime = 0.f;
+            const float MaxTime = 0.25f;
+        };
+        m_gameScene.setSystemActive<FpsCameraSystem>(false);
+
+
+        cro::Entity entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<MoveData>();
+        entity.getComponent<cro::Callback>().function =
+            [&, startPos, startRot, targetPos, targetRot](cro::Entity e, float dt)
+            {
+                auto& [ct, MaxTime] = e.getComponent<cro::Callback>().getUserData<MoveData>();
+                ct += dt;
+                
+                const float amt = std::min(ct / MaxTime, 1.f);
+                m_freeCam.getComponent<cro::Transform>().setRotation(glm::slerp(startRot, targetRot, amt));
+                m_freeCam.getComponent<cro::Transform>().setPosition(glm::mix(startPos, targetPos, amt));
+                
+                if (amt == 1)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_gameScene.destroyEntity(e);
+
+                    m_gameScene.setSystemActive<FpsCameraSystem>(true);
+                    m_freeCam.getComponent<FpsCamera>().cameraPitch = glm::eulerAngles(targetRot).x;
+                }
+            };
+    }
+}
+
 void GolfState::setGhostPosition(glm::vec3 pos)
 {
     auto res = m_collisionMesh.getTerrain(pos);

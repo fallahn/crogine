@@ -777,6 +777,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case FixedKey::ZoomMinimap:
             toggleMiniZoom();
             break;
+        case SDLK_UP:
+            sendFreecamToTarget();
+            break;
         case FixedKey::ToggleDOF:
             toggleDOF();
             break;
@@ -6936,7 +6939,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_activeAvatar->model.getComponent<cro::Transform>().setPosition(player.position);
     if (player.terrain != TerrainID::Green)
     {
-        auto playerRotation = m_camRotation - (cro::Util::Const::PI / 2.f);
+        const auto playerRotation = m_camRotation - (cro::Util::Const::PI / 2.f);
 
         //check if we're on a slope
         const float offsetRot = getGroundRotation(player.position, playerRotation, m_activeAvatar->flipped);

@@ -455,6 +455,7 @@ private:
     void createTransition(const ActivePlayer&, bool = true);
     void startFlyBy();
     void setCameraPosition(glm::vec3, float, float);
+    void sendFreecamToTarget();
 
     //tracks the player positions in group play so we can switch cameras
     //between them while idling (1 for each active group)

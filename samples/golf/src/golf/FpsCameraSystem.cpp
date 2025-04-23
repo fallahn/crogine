@@ -477,7 +477,7 @@ void FpsCameraSystem::process(float dt)
 
                 //clamp pitch
                 float newPitch = controller.cameraPitch + pitchMove;
-                const float clamp = 1.4f;
+                static constexpr float clamp = 1.4f;
                 if (newPitch > clamp)
                 {
                     pitchMove -= (newPitch - clamp);
