@@ -245,6 +245,9 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
             {
                 const auto v = std::stoi(val);
                 m_sharedData.inventory.balance = std::clamp(m_sharedData.inventory.balance + v, 0, 999999);
+                inv::write(m_sharedData.inventory);
+
+                cro::Console::print("Balance set to " + std::to_string(m_sharedData.inventory.balance));
             }
             catch (...)
             {
@@ -2403,6 +2406,18 @@ void ShopState::purchaseItem()
 
     m_sharedData.inventory.inventory[item.itemIndex] = 1; //hmmmm I was going to store the actual indices here, but surely a bool will do?
     m_sharedData.inventory.balance -= invItem.price;
+    
+    const auto manFlag = (1 << invItem.manufacturer);
+    if (invItem.manufacturer < inv::ManufID::TunnelRock && //not a ball
+        (m_sharedData.inventory.manufacturerFlags & manFlag) == 0)
+    {
+        m_sharedData.inventory.manufacturerFlags |= manFlag;
+
+        auto* msg = postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
+        msg->type = Social::SocialEvent::NewClubset;
+        msg->level = invItem.manufacturer;
+    }
+    
     inv::write(m_sharedData.inventory);
 
     auto str = std::to_string(discountPrice(invItem.price)) + " Cr\nOwned";

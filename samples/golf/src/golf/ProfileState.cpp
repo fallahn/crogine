@@ -4432,6 +4432,9 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
                 {
                     m_menuEntities[EntityID::ClubBrowser].getComponent<cro::Callback>().active = true;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    //refreshes the vertex colours for unlocked items
+                    activatePage(PaginationID::Clubs, m_pageContexts[PaginationID::Clubs].pageIndex, true);
                 }
             });
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
@@ -5143,7 +5146,7 @@ void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& 
                     }
                     else
                     {
-                        LogI << "These clubs are locked" << std::endl;
+                        m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
                     }
                 }
                 else if (deactivated(evt))
@@ -5169,19 +5172,26 @@ void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& 
 
                 const auto itemIndex = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
                 const bool locked = !(m_clubData[itemIndex].man == -1 || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[itemIndex].man)) != 0);
+                
+                auto& tc = m_pageContexts[PaginationID::Clubs].pageHandles.itemLabel.getComponent<cro::Text>();
+
                 if (!m_clubData[itemIndex].name.empty())
                 {
+                    tc.setFillColour(TextNormalColour);
+
                     auto label = m_clubData[itemIndex].name;
                     if (locked)
                     {
+                        const auto idx = label.size();
                         label += " (LOCKED)";
+                        tc.setFillColour(TextHighlightColour, idx); //TODO this isn't working for some reason
                     }
-                    m_pageContexts[PaginationID::Clubs].pageHandles.itemLabel.getComponent<cro::Text>().setString(label);
+                    tc.setString(label);
                 }
                 else
                 {
                     auto label = locked ? "(LOCKED)" : " ";
-                    m_pageContexts[PaginationID::Clubs].pageHandles.itemLabel.getComponent<cro::Text>().setString(label);
+                    tc.setString(label);
                 }
 
                 m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();

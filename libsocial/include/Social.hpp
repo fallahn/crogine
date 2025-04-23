@@ -126,7 +126,8 @@ public:
             LeagueProgress,
             LobbyUpdated,
             PlayerNameChanged,
-            CreditsAwarded
+            CreditsAwarded,
+            NewClubset //an as-yet unpurchased manufacturer was added to available club set models
         }type = LevelUp;
         std::int32_t level = 0; //if monthly progress then current value, if credits then value
         std::int32_t reason = -1; //if monthly progress then target value

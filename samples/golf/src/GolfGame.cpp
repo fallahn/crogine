@@ -478,6 +478,14 @@ void GolfGame::handleMessage(const cro::Message& msg)
             m.audioID = ProgressMessage::Reward;
             m_progressIcon->queueMessage(m);
         }
+        else if (data.type == Social::SocialEvent::NewClubset)
+        {
+            ProgressMessage m;
+            m.title = inv::Manufacturers[data.level];
+            m.message = "New Clubset Model Unlocked";
+            m.type = ProgressMessage::Message;
+            m_progressIcon->queueMessage(m);
+        }
     }
     else if (msg.id == cro::Message::SystemMessage)
     {
