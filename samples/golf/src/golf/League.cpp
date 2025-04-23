@@ -101,7 +101,7 @@ namespace
 
     //used to version the league data file
     constexpr std::uint32_t VersionMask = 0x000000ff;
-    constexpr std::uint8_t VersionNumber = 2;
+    constexpr std::uint8_t VersionNumber = 3;
 }
 
 League::League(std::int32_t id, const SharedStateData& sd)
@@ -320,7 +320,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         if (playerPos < 2 //increase in top 2
             && m_increaseCount < SkillRoof)
         {
-            increaseDifficulty();
+            //increaseDifficulty(); //disabled while we decide if this is better to increase club set difficulty
             m_increaseCount++;
         }
         else if (/*m_currentSeason > 1
@@ -537,31 +537,35 @@ void League::rollPlayers(bool resetScores)
 
     //for career leagues we want to increase the initial difficulty
     //as it remains at that level between seasons
-    std::int32_t maxIncrease = 0;
-    switch (m_id)
-    {
-    default: break;
-    //case LeagueRoundID::RoundTwo:
+    
+    //we've disabled this in favour of making extended club sets more
+    //difficult to use.
+    
+    //std::int32_t maxIncrease = 0;
+    //switch (m_id)
+    //{
+    //default: break;
+    ////case LeagueRoundID::RoundTwo:
+    ////    maxIncrease = 2;
+    //    break;
+    //case LeagueRoundID::RoundThree:
+    //    maxIncrease = 1;
+    //    break;
+    //case LeagueRoundID::RoundFour:
     //    maxIncrease = 2;
-        break;
-    case LeagueRoundID::RoundThree:
-        maxIncrease = 1;
-        break;
-    case LeagueRoundID::RoundFour:
-        maxIncrease = 2;
-        break;
-    case LeagueRoundID::RoundFive:
-        maxIncrease = 2;
-        break;
-    case LeagueRoundID::RoundSix:
-        maxIncrease = 3;
-        break;
-    }
+    //    break;
+    //case LeagueRoundID::RoundFive:
+    //    maxIncrease = 2;
+    //    break;
+    //case LeagueRoundID::RoundSix:
+    //    maxIncrease = 3;
+    //    break;
+    //}
 
-    for (auto i = 0; i < maxIncrease; ++i)
-    {
-        increaseDifficulty();
-    }
+    //for (auto i = 0; i < maxIncrease; ++i)
+    //{
+    //    increaseDifficulty();
+    //}
 }
 
 void League::increaseDifficulty()
@@ -856,6 +860,7 @@ void League::read()
                 createSortedTable(); //this needs to be rebuilt now it knows what the last iteration ought to be
                 [[fallthrough]]; //if we're on V0 we definitely want to fall through to V1
             case 1:
+            case 2:
                 //updated league rule wants regenned players
                 rerollPlayers = true;
                 break;
