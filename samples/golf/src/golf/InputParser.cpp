@@ -443,12 +443,14 @@ void InputParser::handleEvent(const cro::Event& evt)
         }
         else if (evt.type == SDL_MOUSEBUTTONDOWN
             && m_sharedData.useMouseAction
-            && !m_isCPU)
+            && !m_isCPU
+            && evt.button.button == SDL_BUTTON_LEFT)
         {
             m_inputFlags |= InputFlag::Action;
         }
         else if (evt.type == SDL_MOUSEBUTTONUP
-            && !m_isCPU)
+            && !m_isCPU
+            && evt.button.button == SDL_BUTTON_LEFT)
         {
             m_inputFlags &= ~InputFlag::Action;
         }

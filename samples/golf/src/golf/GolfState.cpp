@@ -597,6 +597,16 @@ bool GolfState::handleEvent(const cro::Event& evt)
     bool emoteHandled = false;
     if (m_photoMode)
     {
+        if (evt.type == SDL_KEYDOWN
+            && evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        {
+            sendFreecamToTarget();
+        }
+        else if (evt.type == SDL_MOUSEBUTTONDOWN
+            && evt.button.button == SDL_BUTTON_MIDDLE)
+        {
+            sendFreecamToTarget();
+        }
         m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
     }
     else
@@ -665,6 +675,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 auto& [_, dir] = m_mapRoot.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
                 dir = (dir == 0) ? 1 : 0;
                 m_mapRoot.getComponent<cro::Callback>().active = true;
+            }
+            else if (m_photoMode)
+            {
+                sendFreecamToTarget();
             }
         };
 
@@ -776,9 +790,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case FixedKey::ZoomMinimap:
             toggleMiniZoom();
-            break;
-        case SDLK_UP:
-            sendFreecamToTarget();
             break;
         case FixedKey::ToggleDOF:
             toggleDOF();

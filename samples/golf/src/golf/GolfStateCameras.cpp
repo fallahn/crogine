@@ -1894,17 +1894,39 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 void GolfState::sendFreecamToTarget()
 {
     if (m_photoMode
-        && getClub() != ClubID::Putter) 
+        && getClub() != ClubID::Putter
+        && m_currentPlayer.terrain != TerrainID::Green) 
     {
-        //TODO clamp to green area
+        glm::vec3 targetLookAt = glm::vec3(0.f);
+        glm::vec3 targetPos = glm::vec3(0.f);
 
-        const glm::vec3 dirVec = glm::rotate(cro::Transform::QUAT_IDENTITY, m_inputParser.getYaw() + (cro::Util::Const::PI / 2.f), cro::Transform::Y_AXIS) * cro::Transform::Z_AXIS;
+        const auto estimatedDist = m_inputParser.getEstimatedDistance();
+        auto pinDir = m_holeData[m_currentHole].pin - m_currentPlayer.position;
 
-        auto targetLookAt = (dirVec * m_inputParser.getEstimatedDistance()) + m_currentPlayer.position;
-        targetLookAt.y = m_collisionMesh.getTerrain(targetLookAt).height + (GreenCamHeight / 2.f);
-        
-        auto targetPos = (dirVec * std::max(m_inputParser.getEstimatedDistance() * 0.95f, 1.f)) + m_currentPlayer.position;
-        targetPos.y = m_collisionMesh.getTerrain(targetPos).height + GreenCamHeight; //TODO reduce the height based on the length moved back from target
+        //look at the hole if it's closer
+        if (const auto len2 = glm::length2(pinDir); len2 < (estimatedDist * estimatedDist))
+        {
+            const auto len = std::sqrt(len2);
+
+            const glm::vec3 dirVec = pinDir / len;
+
+            targetLookAt = m_holeData[m_currentHole].pin;
+            targetLookAt.y = m_collisionMesh.getTerrain(targetLookAt).height + (GreenCamHeight / 3.f);
+
+            targetPos = (dirVec * std::max(len * 0.75f, 1.f)) + m_currentPlayer.position;
+            targetPos.y = m_collisionMesh.getTerrain(targetPos).height + (GreenCamHeight * 0.6f);
+        }
+        else
+        {
+            const glm::vec3 dirVec = glm::rotate(cro::Transform::QUAT_IDENTITY, m_inputParser.getYaw() + (cro::Util::Const::PI / 2.f), cro::Transform::Y_AXIS) * cro::Transform::Z_AXIS;
+
+            targetLookAt = (dirVec * estimatedDist) + m_currentPlayer.position;
+            targetLookAt.y = m_collisionMesh.getTerrain(targetLookAt).height + (GreenCamHeight / 2.f);
+
+            targetPos = (dirVec * std::max(estimatedDist * 0.95f, 1.f)) + m_currentPlayer.position;
+            targetPos.y = m_collisionMesh.getTerrain(targetPos).height + GreenCamHeight;
+        }
+
 
         const auto lookAt = glm::lookAt(targetPos, targetLookAt, cro::Transform::Y_AXIS);
         
@@ -1942,7 +1964,7 @@ void GolfState::sendFreecamToTarget()
                     m_gameScene.destroyEntity(e);
 
                     m_gameScene.setSystemActive<FpsCameraSystem>(true);
-                    m_freeCam.getComponent<FpsCamera>().cameraPitch = glm::eulerAngles(targetRot).x;
+                    m_freeCam.getComponent<FpsCamera>().correctPitch(targetRot);
                 }
             };
     }

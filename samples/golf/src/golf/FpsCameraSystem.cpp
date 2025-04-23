@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -477,16 +477,16 @@ void FpsCameraSystem::process(float dt)
 
                 //clamp pitch
                 float newPitch = controller.cameraPitch + pitchMove;
-                static constexpr float clamp = 1.4f;
-                if (newPitch > clamp)
+
+                if (newPitch > FpsCamera::MaxPitch)
                 {
-                    pitchMove -= (newPitch - clamp);
-                    controller.cameraPitch = clamp;
+                    pitchMove -= (newPitch - FpsCamera::MaxPitch);
+                    controller.cameraPitch = FpsCamera::MaxPitch;
                 }
-                else if (newPitch < -clamp)
+                else if (newPitch < -FpsCamera::MaxPitch)
                 {
-                    pitchMove -= (newPitch + clamp);
-                    controller.cameraPitch = -clamp;
+                    pitchMove -= (newPitch + FpsCamera::MaxPitch);
+                    controller.cameraPitch = -FpsCamera::MaxPitch;
                 }
                 else
                 {
@@ -783,6 +783,7 @@ void FpsCameraSystem::enterAnim(cro::Entity entity, float dt)
 
     if (fpsCam.transition.progress == 1)
     {
+        fpsCam.correctPitch(rot);
         fpsCam.state = FpsCamera::State::Active;
     }
 }
@@ -809,6 +810,7 @@ void FpsCameraSystem::exitAnim(cro::Entity entity, float dt)
 
     if (fpsCam.transition.progress == 0)
     {
+        fpsCam.correctPitch(rot);
         fpsCam.transition.completionCallback();
     }
 }
