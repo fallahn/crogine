@@ -1653,6 +1653,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.puttFollowCam = prop.getValue<bool>();
                     }
+                    else if (name == "zoom_follow")
+                    {
+                        m_sharedData.zoomFollowCam = prop.getValue<bool>();
+                    }
                     /*else if (name == "group_mode")
                     {
                         m_sharedData.groupMode = std::clamp(prop.getValue<std::int32_t>(), 0, std::int32_t(ClientGrouping::Four));
@@ -1812,6 +1816,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("flag_text").setValue(m_sharedData.flagText);
     cfg.addProperty("show_rival").setValue(m_sharedData.showRival);
     cfg.addProperty("putt_follow").setValue(m_sharedData.puttFollowCam);
+    cfg.addProperty("zoom_follow").setValue(m_sharedData.zoomFollowCam);
     cfg.save(path);
 
 

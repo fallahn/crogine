@@ -329,6 +329,7 @@ struct SharedStateData final
     bool remoteContent = false;
     bool showRival = true;
     bool puttFollowCam = false;
+    bool zoomFollowCam = false;
     std::int32_t flagText = 0; //none, black, white
     std::string flagPath;
 

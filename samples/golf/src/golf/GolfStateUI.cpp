@@ -1724,6 +1724,41 @@ void GolfState::buildUI()
     m_minimapIndicatorEnt = entity;
 
 
+    auto greenEntRoot = m_uiScene.createEntity();
+    greenEntRoot.addComponent<cro::Transform>();
+    greenEntRoot.addComponent<cro::Callback>().active = true;
+    greenEntRoot.getComponent<cro::Callback>().setUserData<float>(0.f);
+    greenEntRoot.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
+
+            //zooms based on the state of the display
+            if (m_flightCam.getComponent<cro::Camera>().active
+                && m_sharedData.zoomFollowCam)
+            {
+                const auto diff = 1.f - progress;
+                progress = std::min(1.f, progress + (diff * (dt * 5.f)));
+
+                const float zoom = std::max(1.f, 1.f + progress);
+
+                e.getComponent<cro::Transform>().setScale(glm::vec2(zoom));
+
+                auto offset = glm::vec2(m_overheadBuffer.getSize() / 8u) / m_viewScale;
+                offset *= (zoom - 1.f);
+                offset.x *= -1.f;
+                e.getComponent<cro::Transform>().setOrigin(offset);
+            }
+            else
+            {
+                progress = 0.f;
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::Transform>().setOrigin(glm::vec2(0.f));
+            }
+        };
+    infoEnt.getComponent<cro::Transform>().addChild(greenEntRoot.getComponent<cro::Transform>());
+
+
     //green close up view
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f }); //position is set in UI cam callback, below
@@ -1771,7 +1806,8 @@ void GolfState::buildUI()
         }
     };
 
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    greenEntRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto greenEnt = entity;
     m_miniGreenEnt = entity;
 
@@ -1866,14 +1902,14 @@ void GolfState::buildUI()
         auto windowScale = getViewScale();
         float scale = m_sharedData.pixelScale ? windowScale : 1.f;
         scale = (windowScale + 1.f) - scale;
-        texSize *= static_cast<std::uint32_t>(scale);
+        texSize *= static_cast<std::uint32_t>(scale) * 2;
 
         /*std::uint32_t samples = m_sharedData.pixelScale ? 0 :
             m_sharedData.antialias ? m_sharedData.multisamples : 0;*/
 
         m_overheadBuffer.setPrecision(m_sharedData.lightmapQuality);
         m_overheadBuffer.create(texSize, texSize, MRTIndex::Count); //yes, it's square
-        
+
         if (m_sharedData.nightTime)
         {
             m_lightMaps[LightMapID::Overhead].create(texSize, texSize);
@@ -1884,7 +1920,7 @@ void GolfState::buildUI()
             m_lightBlurQuads[LightMapID::Overhead].setShader(m_resources.shaders.get(ShaderID::Blur));
         }
 
-        auto targetScale = glm::vec2(1.f / scale);
+        auto targetScale = glm::vec2(1.f / scale) / 2.f;
 
         greenEnt.getComponent<cro::Sprite>().setTexture(m_overheadBuffer.getTexture());
         greenEnt.getComponent<cro::Transform>().setScale(targetScale);
@@ -1987,7 +2023,7 @@ void GolfState::buildUI()
 
 
     //callback for the UI camera when window is resized
-    auto updateView = [&, trophyEnt, courseEnt, infoEnt, spinEnt, windEnt, windEnt2, greenEnt, rootNode](cro::Camera& cam) mutable
+    auto updateView = [&, trophyEnt, courseEnt, infoEnt, spinEnt, windEnt, windEnt2, greenEntRoot, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -3.5f, 20.f);
@@ -2012,8 +2048,8 @@ void GolfState::buildUI()
         m_mapRoot.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y - 2.f, uiSize.y - mapSize.x - (UIBarHeight + 2.f), -0.65f }); //map sprite is rotated 90
 
 
-        greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - std::floor(MiniMapSize.y * 0.6f) - UIBarHeight - 2.f, 0.1f });
-        greenEnt.getComponent<cro::Transform>().move(glm::vec2(static_cast<float>(MiniMapSize.y) / 4.f));
+        greenEntRoot.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - std::floor(MiniMapSize.y * 0.6f) - UIBarHeight - 2.f, 0.1f });
+        greenEntRoot.getComponent<cro::Transform>().move(glm::vec2(static_cast<float>(MiniMapSize.y) / 4.f));
 
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(WindIndicatorPosition.x, WindIndicatorPosition.y));
         windEnt2.getComponent<cro::Transform>().setPosition(glm::vec2(WindIndicatorPosition.x, WindIndicatorPosition.y));
