@@ -4676,7 +4676,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity = createHighlight(glm::vec2(12.f, 127.f));
     entity.setLabel("Use the ball follower camera instead of the top-down camera\nin the preview window top-left of the UI when putting");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettPuttFollow);
-    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetCareer);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, SettPuttZoom);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettShowRival);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
@@ -4695,6 +4695,33 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         [&](cro::Entity e, float)
         {
             float scale = m_sharedData.puttFollowCam ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+
+
+    //zoom follow cam
+    entity = createHighlight(glm::vec2(12.f, 111.f));
+    entity.setLabel("Automatically zoom the follower camera when the ball is in motion");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettPuttZoom);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetCareer);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettPuttFollow);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.zoomFollowCam = !m_sharedData.zoomFollowCam;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = createCheckbox(glm::vec2(14.f, 113.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.zoomFollowCam ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -4950,7 +4977,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity = createHighlight(glm::vec2(246.f, 111.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettPost);
     entity.getComponent<cro::UIInput>().setNextIndex(SettPostL, ResetStats);
-    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettFlagDown);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPuttZoom, SettFlagDown);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -5010,7 +5037,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
     entity = createHighlight(glm::vec2(378.f, 111.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettPostR);
-    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, WindowClose);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPuttZoom, WindowClose);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettPostL, SettFlagLabelUp);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&, shaderLabel](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -5071,7 +5098,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Transform>().move(-entity.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setSelectionIndex(ResetCareer);
     entity.getComponent<cro::UIInput>().setNextIndex(ResetStats, WindowAdvanced);
-    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettPuttFollow);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettPuttZoom);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -5773,7 +5800,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         downLeftB = TabController;
         downRightA = TabAchievements;
         downRightB = TabStats;
-        upLeftA = SettPuttFollow;
+        upLeftA = SettPuttZoom;
         upLeftB = ResetCareer;
         upRightA = ResetStats;
         upRightB = SettPostR;
