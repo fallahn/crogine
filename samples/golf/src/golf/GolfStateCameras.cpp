@@ -1893,6 +1893,15 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
 void GolfState::sendFreecamToTarget()
 {
+    //hack to test if transition is already active to prevent
+    //multiple button presses, while keeping vars local...
+    static cro::Entity entity;
+
+    if (entity.isValid())
+    {
+        return;
+    }
+
     if (m_photoMode
         && getClub() != ClubID::Putter
         && m_currentPlayer.terrain != TerrainID::Green) 
@@ -1945,7 +1954,7 @@ void GolfState::sendFreecamToTarget()
         m_gameScene.setSystemActive<FpsCameraSystem>(false);
 
 
-        cro::Entity entity = m_gameScene.createEntity();
+        entity = m_gameScene.createEntity();
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<MoveData>();
         entity.getComponent<cro::Callback>().function =
