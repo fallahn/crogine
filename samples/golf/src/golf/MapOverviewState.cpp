@@ -176,6 +176,7 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
     m_viewScale         (2.f),
     m_shaderValueIndex  (0),
     m_zoomScale         (1.f),
+    m_transitionActive  (false),
     m_fingerCount       (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -210,6 +211,10 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             {
                 m_shaderValueIndex = (m_shaderValueIndex + (m_shaderValues.size() - 1)) % m_shaderValues.size();
                 refreshMap();
+            }
+            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
+            {
+                gotoTarget();
             }
             break;
         case SDLK_BACKSPACE:
@@ -251,6 +256,9 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             m_shaderValueIndex = (m_shaderValueIndex + (m_shaderValues.size() - 1)) % m_shaderValues.size();
             refreshMap();
             break;
+        case cro::GameController::ButtonRightStick:
+            gotoTarget();
+            break;
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
@@ -260,6 +268,11 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         }
+
+        /*else if (evt.button.button == SDL_BUTTON_MIDDLE)
+        {
+            gotoTarget();
+        }*/
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
@@ -896,7 +909,7 @@ void MapOverviewState::pan(glm::vec2 movement)
     position.x = std::floor(position.x);
     position.y = std::floor(position.y);
 
-    glm::vec2 bounds(m_renderBuffer.getSize());
+    const glm::vec2 bounds(m_renderBuffer.getSize());
 
     position.x = std::clamp(position.x, 0.f, bounds.x);
     position.y = std::clamp(position.y, 0.f, bounds.y);
@@ -915,4 +928,54 @@ glm::vec2 MapOverviewState::toMapCoords(glm::vec3 pos)
     };
 
     return ret * MapScale;
+}
+
+void MapOverviewState::gotoTarget()
+{
+    //check if transition exists and skip this
+    if (m_transitionActive)
+    {
+        return;
+    }
+
+    const auto startPos = glm::vec2(m_mapEnt.getComponent<cro::Transform>().getOrigin());
+    auto endPos = toMapCoords(m_sharedData.minimapData.targetPos);
+    const glm::vec2 bounds(m_renderBuffer.getSize());
+
+    endPos.x = std::clamp(endPos.x, 0.f, bounds.x);
+    endPos.y = std::clamp(endPos.y, 0.f, bounds.y);
+
+    const auto startZ = m_zoomScale;
+
+    cro::Entity entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, startPos, endPos, startZ](cro::Entity e, float dt)
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct = std::min(1.f, ct + dt);
+
+            const auto progress = cro::Util::Easing::easeOutQuint(ct);
+
+            m_mapEnt.getComponent<cro::Transform>().setOrigin(glm::mix(startPos, endPos, progress));
+
+            if (startZ < MaxZoom)
+            {
+                m_zoomScale = glm::mix(startZ, MaxZoom, progress);
+                rescaleMap();
+            }
+
+
+            if (ct == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_scene.destroyEntity(e);
+
+                m_transitionActive = false;
+            }
+        };
+
+
+    m_transitionActive = true;
 }

@@ -116,6 +116,7 @@ private:
     std::size_t m_shaderValueIndex;
 
     float m_zoomScale;
+    bool m_transitionActive;
 
     std::array<TrackpadFinger, 2u> m_trackpadFingers = {};
     std::int32_t m_fingerCount;
@@ -135,4 +136,5 @@ private:
 
     void pan(glm::vec2);
     glm::vec2 toMapCoords(glm::vec3);
+    void gotoTarget();
 };
