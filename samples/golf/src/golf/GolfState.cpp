@@ -598,7 +598,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     if (m_photoMode)
     {
         if (evt.type == SDL_KEYDOWN
-            && evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+            && evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
         {
             sendFreecamToTarget();
         }

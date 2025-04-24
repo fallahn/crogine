@@ -526,7 +526,7 @@ void GolfState::buildUI()
                     {
                         str = "Aim Keys";
                     }
-                    str += "\n\n" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]);
+                    str += "\n\n" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]);
                     e.getComponent<cro::Text>().setString(str);
                     e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 }

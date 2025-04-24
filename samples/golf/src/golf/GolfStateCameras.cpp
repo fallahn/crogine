@@ -1954,7 +1954,7 @@ void GolfState::sendFreecamToTarget()
                 auto& [ct, MaxTime] = e.getComponent<cro::Callback>().getUserData<MoveData>();
                 ct += dt;
                 
-                const float amt = std::min(ct / MaxTime, 1.f);
+                const float amt = cro::Util::Easing::easeOutQuint(std::min(ct / MaxTime, 1.f));
                 m_freeCam.getComponent<cro::Transform>().setRotation(glm::slerp(startRot, targetRot, amt));
                 m_freeCam.getComponent<cro::Transform>().setPosition(glm::mix(startPos, targetPos, amt));
                 
