@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -669,12 +669,41 @@ void MapOverviewState::buildScene()
 
     //draws the slope based on normals
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.3f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);
     entity.getComponent<cro::Drawable2D>().setShader(&m_slopeShader);
 
     m_mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_mapNormals = entity;
+
+
+    //marks approx landing area of ball
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_FAN);
+    entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Alpha);
+
+    std::vector<cro::Vertex2D> verts;
+    auto colour = TextGoldColour;
+    colour.setAlpha(0.5f);
+    verts.emplace_back(glm::vec2(0.f), colour);
+    colour.setAlpha(0.1f);
+    static constexpr float Radius = 120.f;
+    static constexpr float PointCount = 32.f;
+    static constexpr float ArcSize = cro::Util::Const::TAU / PointCount;
+
+    //for (auto i = PointCount; i >= 0; i--)
+    for (auto i = 0.f; i < PointCount + 1; i++)
+    {
+        auto p = glm::vec2(glm::cos(i * ArcSize), glm::sin(i * ArcSize)) * Radius;
+        verts.emplace_back(p, colour);
+    }
+    verts.push_back(verts.front());   
+
+    entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+    m_mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_ballLandingArea = entity;
+
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
@@ -725,20 +754,20 @@ void MapOverviewState::quitState()
 
 void MapOverviewState::recentreMap()
 {
-    glm::vec2 windowSize(cro::App::getWindow().getSize());
-    glm::vec2 mapSize(m_renderBuffer.getSize());
+    const glm::vec2 windowSize(cro::App::getWindow().getSize());
+    const auto centre = toMapCoords(m_sharedData.minimapData.mapCentre);
 
-    m_mapEnt.getComponent<cro::Transform>().setOrigin(mapSize / 2.f);
-    m_mapEnt.getComponent<cro::Transform>().setScale((glm::vec2(windowSize.x / mapSize.x) / m_viewScale.x) * BaseScaleMultiplier);
+    m_mapEnt.getComponent<cro::Transform>().setOrigin(centre);
+    m_mapEnt.getComponent<cro::Transform>().setScale((glm::vec2(windowSize.x / std::round(centre.x * 2.f)) / m_viewScale.x) * BaseScaleMultiplier);
     m_zoomScale = 1.f;
 }
 
 void MapOverviewState::rescaleMap()
 {
-    glm::vec2 windowSize(cro::App::getWindow().getSize());
-    glm::vec2 mapSize(m_renderBuffer.getSize());
+    const glm::vec2 windowSize(cro::App::getWindow().getSize());
+    const auto mapSize = toMapCoords(m_sharedData.minimapData.mapCentre) * 2.f;
 
-    const float baseScale = ((windowSize.x / mapSize.x) / m_viewScale.x) * BaseScaleMultiplier;
+    const float baseScale = ((windowSize.x / std::round(mapSize.x)) / m_viewScale.x) * BaseScaleMultiplier;
     m_mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(baseScale * m_zoomScale));
 
     refreshMap();
@@ -768,13 +797,10 @@ void MapOverviewState::refreshMap()
     glUniform1f(m_shaderUniforms.heatAmount, m_shaderValues[m_shaderValueIndex].second);
     glUniform1f(m_shaderUniforms.gridScale, /*std::ceil(m_zoomScale / 4.f)*/std::round(m_zoomScale));
 
-    const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MapSize.x;
 
-    glm::vec2 teePos = 
-    {
-        std::round(m_sharedData.minimapData.teePos.x),
-        std::round(-m_sharedData.minimapData.teePos.z)
-    };
+
+    const glm::vec2 teePos = toMapCoords(m_sharedData.minimapData.teePos);
+
     //glm::vec2 pinPos =
     //{
     //    std::round(m_sharedData.minimapData.pinPos.x),
@@ -789,9 +815,9 @@ void MapOverviewState::refreshMap()
     m_renderBuffer.clear(cro::Colour::Transparent);
     m_mapQuad.draw();
     m_mapString.setString("T");
-    m_mapString.setPosition(teePos * MapScale);
+    m_mapString.setPosition(teePos);
     m_mapString.draw();
-    //
+    
     //m_mapString.setString("P");
     //m_mapString.setPosition(pinPos * MapScale);
     //m_mapString.draw();
@@ -857,6 +883,11 @@ void MapOverviewState::updateNormals()
     m_mapNormals.getComponent<cro::Drawable2D>().setVertexData(verts);
 }
 
+void MapOverviewState::onCachedPush()
+{
+    m_ballLandingArea.getComponent<cro::Transform>().setPosition(toMapCoords(m_sharedData.minimapData.targetPos));
+}
+
 void MapOverviewState::pan(glm::vec2 movement)
 {
     auto position = m_mapEnt.getComponent<cro::Transform>().getOrigin();
@@ -871,4 +902,17 @@ void MapOverviewState::pan(glm::vec2 movement)
     position.y = std::clamp(position.y, 0.f, bounds.y);
 
     m_mapEnt.getComponent<cro::Transform>().setOrigin(position);
+}
+
+glm::vec2 MapOverviewState::toMapCoords(glm::vec3 pos)
+{
+    const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MapSize.x;
+
+    glm::vec2 ret
+    {
+        std::round(pos.x),
+        std::round(-pos.z)
+    };
+
+    return ret * MapScale;
 }

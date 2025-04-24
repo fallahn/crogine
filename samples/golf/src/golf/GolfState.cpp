@@ -659,13 +659,17 @@ bool GolfState::handleEvent(const cro::Event& evt)
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
-    /*const auto showMapOverview = [&]()
+    const auto showPauseMenu = [&]()
     {
-        if (m_sharedData.minimapData.active)
-        {
-            requestStackPush(StateID::MapOverview);
-        }
-    };*/
+        //set this so the overview map can preview the landing area
+        m_sharedData.minimapData.targetPos = 
+            glm::rotate(cro::Transform::QUAT_IDENTITY, m_inputParser.getYaw() + (cro::Util::Const::PI / 2.f), cro::Transform::Y_AXIS)* cro::Transform::Z_AXIS;
+
+        m_sharedData.minimapData.targetPos *= m_inputParser.getEstimatedDistance();
+        m_sharedData.minimapData.targetPos += m_currentPlayer.position;
+
+        requestStackPush(StateID::Pause);
+    };
 
     const auto toggleMiniZoom = [&]()
         {
@@ -1033,7 +1037,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
             //[[fallthrough]];
         //case SDLK_p:
-            requestStackPush(StateID::Pause);
+            showPauseMenu();
             break;
         case SDLK_SPACE:
             toggleQuitReady();
@@ -1130,7 +1134,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonGuide:
             if (!m_textChat.isVisible())
             {
-                requestStackPush(StateID::Pause);
+                showPauseMenu();
             }
             break;
         case cro::GameController::ButtonA:
@@ -1207,7 +1211,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         m_emoteWheel.refreshLabels(); //displays labels if no controllers connected
 
         //pause the game
-        requestStackPush(StateID::Pause);
+        showPauseMenu();
     }
     else if (evt.type == SDL_CONTROLLERDEVICEADDED)
     {
@@ -6491,6 +6495,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 
     m_sharedData.minimapData.teePos = m_holeData[m_currentHole].tee;
     m_sharedData.minimapData.pinPos = m_holeData[m_currentHole].pin;
+    m_sharedData.minimapData.mapCentre = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData().boundingBox.getCentre();
     //m_sharedData.minimapData.holeNumber = m_currentHole;
     
     if (m_sharedData.reverseCourse)

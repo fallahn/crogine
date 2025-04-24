@@ -1533,6 +1533,8 @@ void GolfState::loadMap()
 
         m_depthMap.setModel(m_holeData[0]);
         m_depthMap.update(-1);
+
+        m_sharedData.minimapData.mapCentre = m_holeData[0].modelEntity.getComponent<cro::Model>().getMeshData().boundingBox.getCentre();
     }
 
     m_terrainBuilder.create(m_resources, m_gameScene, theme);

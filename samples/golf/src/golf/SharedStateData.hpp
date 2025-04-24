@@ -136,6 +136,8 @@ struct SharedStateData final
         cro::MultiRenderTexture* mrt = nullptr;
         glm::vec3 teePos = glm::vec3(0.f);
         glm::vec3 pinPos = glm::vec3(0.f);
+        glm::vec3 targetPos = glm::vec3(0.f); //approx location of aiming target
+        glm::vec3 mapCentre = glm::vec3(0.f); //based on AABB of geom rather than world size
         cro::String courseName;
         std::int32_t holeNumber = -1;
         bool active = false;
