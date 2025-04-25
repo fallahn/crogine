@@ -1,6 +1,6 @@
 model cube
 {
-    mesh = cube
+    mesh = "cube"
 
     cast_shadows = true
 

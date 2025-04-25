@@ -71,11 +71,19 @@ namespace cro::Shaders::Sprite
         VARYING_IN LOW vec4 v_colour;
         VARYING_IN MED vec2 v_texCoord;
         OUTPUT
-            
+#ifdef FXAA
+#include FXAA
+        void main()
+        {
+            FRAG_OUT = fxaa(u_texture, v_texCoord) * v_colour;
+        }
+#else
         void main()
         {
             FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour;
-        })";
+        }
+#endif            
+        )";
 }
 
 namespace cro::Shaders::Text

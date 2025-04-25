@@ -133,9 +133,9 @@ static inline const std::string Vertex = R"(
         #if defined (RX_SHADOWS) //this should never be defined if SHADOW_MAPPING is
                 for(int i = 0; i < u_cascadeCount; i++)
                 {
-                    v_lightWorldPosition[i] = u_lightViewProjectionMatrix[i] * worldMatrix * position;
+                    v_lightWorldPosition[i] = u_lightViewProjectionMatrix[i] * u_worldMatrix * vec4(position, 1.0);
                 }
-                v_viewDepth = (u_ViewMatrix * position).z;
+                v_viewDepth = (u_viewMatrix * vec4(position, 1.0)).z;
         #endif
 
             #if defined (VERTEX_COLOUR)
@@ -280,7 +280,7 @@ static inline const std::string Fragment = R"(
     const int filterSize = 3;
     float shadowAmount(int cascadeIndex)
     {
-        vec4 lightWorldPosition = v_lightWorldPosition[cascadeIndex];
+        vec4 lightWorldPos = v_lightWorldPosition[cascadeIndex];
 
         vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
         projectionCoords = projectionCoords * 0.5 + 0.5;
@@ -383,7 +383,7 @@ static inline const std::string Fragment = R"(
         MED vec3 normal = normalize(v_normalVector);
         blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, vec3(1.0), 1.0);
 #if defined (RX_SHADOWS)
-        blendedColour *= shadowAmount(v_lightWorldPosition);
+        //blendedColour *= shadowAmount(v_lightWorldPosition);
 #endif
 
         FRAG_OUT.rgb = mix(blendedColour, diffuseColour.rgb, mask.b);

@@ -100,13 +100,13 @@ void main()
     a.wz = texture(u_texture, v_texCoord).xz; //Bottom / Left
 
     //Is there any blending weight with a value greater than 0.0?
-    if (dot(a, vec4(1.0, 1.0, 1.0, 1.0)) < 1e-5)
+    if (dot(a, vec4(1.0, 1.0, 1.0, 1.0)) <= 1e-5)
     {
         colour = textureLod(u_colourTexture, v_texCoord, 0.0);
     }
     else
     {
-        bool h = max(a.x, a.z) > max(-a.y, -a.w); //max(horizontal) > max(vertical)
+        bool h = max(a.x, a.z) > max(a.y, a.w);// max(-a.y, -a.w); //max(horizontal) > max(vertical)
 
         //Calculate the blending offsets:
         vec4 blendingOffset = vec4(0.0, a.y, 0.0, a.w);
@@ -118,12 +118,14 @@ void main()
         //Calculate the texture coordinates:
         vec4 blendingCoord = mad(blendingOffset, vec4(SMAA_RT_METRICS.xy, -SMAA_RT_METRICS.xy), v_texCoord.xyxy);
 
+        //blendingCoord.y = 1.0 - blendingCoord.y;
+
         //We exploit bilinear filtering to mix current pixel with the chosen
         //neighbor:
         colour = blendingWeight.x * textureLod(u_colourTexture, blendingCoord.xy, 0.0);
         colour += blendingWeight.y * textureLod(u_colourTexture, blendingCoord.zw, 0.0);
     }
 
-    FRAG_OUT = colour;
+    FRAG_OUT = colour;// * vec4(1.0, 0.0, 0.0, 1.0);
 })";
 }

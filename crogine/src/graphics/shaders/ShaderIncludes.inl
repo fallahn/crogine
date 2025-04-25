@@ -286,7 +286,7 @@ static inline const std::string FXAA = R"(
 
     const vec3 luma = vec3(0.299, 0.587, 0.114);
 
-    vec3 fxaa(sampler2D sampler, vec2 uv)
+    vec4 fxaa(sampler2D sampler, vec2 uv)
     {
         float FXAA_SPAN_MAX = 8.0;
         float FXAA_REDUCE_MUL = 1.0 / 8.0;
@@ -330,7 +330,7 @@ static inline const std::string FXAA = R"(
 
         if ((lumaB < lumaMin) || (lumaB > lumaMax))
         {
-            return rgbA;
+            return vec4(rgbA, 1.0);
         }
-        return rgbB;
+        return vec4(rgbB, 1.0);
     })";

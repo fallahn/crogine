@@ -1,6 +1,6 @@
 model Stars
 {
-	mesh = quad
+	mesh = "quad"
 	size = 175.0,98.3
 	uv = 0,0,3.56, 2.0
 
@@ -8,7 +8,7 @@ model Stars
 	{
 		diffuse = "assets/batcat/textures/stars.png"
 		repeat = true
-		blendmode = add
+		blendmode = "add"
 		smooth = true
 	}
 }

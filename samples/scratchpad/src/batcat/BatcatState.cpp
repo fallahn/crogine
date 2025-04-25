@@ -638,10 +638,14 @@ void BatcatState::createUI()
     auto weightEnt = ent;
 
     //non-SMAA
+
+    m_resources.shaders.loadFromString(123, cro::RenderSystem2D::getDefaultVertexShader(),
+        cro::RenderSystem2D::getDefaultFragmentShader(), "#define TEXTURED\n#define FXAA\n");
+
     ent = m_overlayScene.createEntity();
-    ent.addComponent<cro::Transform>();
-    ent.addComponent<cro::Drawable2D>();
-    ent.addComponent<cro::Sprite>(m_sceneTexture.getTexture()/*tex*/);
+    ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    ent.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(123));
+    ent.addComponent<cro::Sprite>(m_sceneTexture.getTexture());
     ent.addComponent<cro::UIElement>().depth = -0.2f;
     ent.getComponent<cro::UIElement>().resizeCallback =
         [](cro::Entity e)
@@ -651,7 +655,23 @@ void BatcatState::createUI()
             e.getComponent<cro::UIElement>().relativePosition = { 0.f, y / size.y };
         };
     
-    registerWindow([&, outputEnt, edgeEnt, weightEnt]() mutable
+
+
+    //auto fxEnt = m_overlayScene.createEntity();
+    //fxEnt.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    //fxEnt.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(123));
+    //fxEnt.addComponent<cro::Sprite>(m_sceneTexture.getTexture());
+    //fxEnt.addComponent<cro::UIElement>().depth = -0.2f;
+    //fxEnt.getComponent<cro::UIElement>().resizeCallback =
+    //    [](cro::Entity e)
+    //    {
+    //        glm::vec2 size(cro::App::getWindow().getSize());
+    //        const auto y = (size.y - ((size.x / 16.f) * 9.f)) / 2.f;
+    //        e.getComponent<cro::UIElement>().relativePosition = { 0.f, y / size.y };
+    //    };
+
+
+    registerWindow([&, outputEnt, edgeEnt, weightEnt, ent]() mutable
         {
             if (ImGui::Begin("SMAA"))
             {
@@ -660,6 +680,7 @@ void BatcatState::createUI()
                 {
                     const auto scale = showSMAA ? 1.f : 0.f;
                     m_smaaRoot.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                    ent.getComponent<cro::Transform>().setScale(glm::vec2(1.f-scale));
                 }
 
                 static int output = 0;
@@ -818,6 +839,8 @@ void BatcatState::updateView(cro::Camera& cam3D)
     size.y = (size.x / 16) * 9;
 
     m_sceneTexture.create(size.x, size.y);
+    m_sceneTexture.setSmooth(false);
+
     m_outputTexture.create(size.x, size.y, false);
     m_smaaPost.create(m_sceneTexture.getTexture()/*m_resources.textures.get("assets/batcat/Unigine01.png")*/, m_outputTexture);
 

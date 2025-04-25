@@ -120,6 +120,8 @@ SMAAPost::SMAAPost()
                 ImGui::Image(cro::TextureID(m_supportTextures[TextureID::Area]), { AREATEX_WIDTH, AREATEX_HEIGHT }, { 0.f, 1.f }, { 1.f, 0.f });
                 ImGui::SameLine();
                 ImGui::Image(cro::TextureID(m_supportTextures[TextureID::Search]), { SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT }, { 0.f, 1.f }, { 1.f, 0.f });
+
+                ImGui::Image(m_blendTexture.getTexture(), { 200.f, 150.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
         });  

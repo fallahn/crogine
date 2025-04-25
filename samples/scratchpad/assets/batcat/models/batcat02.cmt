@@ -1,6 +1,6 @@
 model batcat02
 {
-    mesh = assets/batcat/models/batcat02.cmb
+    mesh = "assets/batcat/models/batcat02.cmb"
     cast_shadows = true
 
     material Unlit
@@ -12,7 +12,7 @@ model batcat02
         depth_test = true
         double_sided = false
         rx_shadows = true
-        blendmode = none
+        blendmode = "none"
         diffuse = "assets/batcat/textures/batcat_diffuse.png"
         skinned = true
 

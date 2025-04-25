@@ -433,6 +433,11 @@ const std::string& RenderSystem2D::getDefaultVertexShader()
     return Shaders::Sprite::Vertex;
 }
 
+const std::string& RenderSystem2D::getDefaultFragmentShader()
+{
+    return Shaders::Sprite::Textured;
+}
+
 //private
 void RenderSystem2D::applyBlendMode(Material::BlendMode blendMode)
 {

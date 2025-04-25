@@ -126,6 +126,8 @@ namespace cro
         include the texture coords of the sprite
         */
         static const std::string& getDefaultVertexShader();
+        
+        static const std::string& getDefaultFragmentShader();
 
     private:
 
