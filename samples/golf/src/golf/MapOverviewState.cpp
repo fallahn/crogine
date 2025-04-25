@@ -737,10 +737,20 @@ void MapOverviewState::buildScene()
     entity.addComponent<cro::Transform>().setPosition({ 36.f, 23.f, 0.1f });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString("LAlt");
+    entity.addComponent<cro::Text>(smallFont).setString("Hello");
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (e.getComponent<cro::Transform>().getScale().x != 0)
+            {
+                const auto str = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]);
+                e.getComponent<cro::Text>().setString(str);
+            }
+        };
     bgNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
     m_controlText = entity;
 
