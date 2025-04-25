@@ -5998,7 +5998,7 @@ void ProfileState::refreshItemLists()
                     itemIndex = std::distance(items.cbegin(), res);
                 }
 
-                const std::string num = "(" + std::to_string(itemIndex) + "/" + std::to_string(m_gearMenus[i].items.size()) + ") ";
+                const std::string num = "(" + std::to_string(itemIndex + 1) + "/" + std::to_string(m_gearMenus[i].items.size()) + ") ";
                 m_gearMenus[i].description.getComponent<cro::Text>().setString(num + inv::Manufacturers[inv::Items[m_activeProfile.loadout[i]].manufacturer]);
             }
 
