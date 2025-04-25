@@ -190,6 +190,20 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
 //public
 bool MapOverviewState::handleEvent(const cro::Event& evt)
 {
+    const auto setControlIcon = [&](bool isController)
+        {
+            if (isController)
+            {
+                m_controlIcon.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                m_controlText.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+            else
+            {
+                m_controlIcon.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_controlText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            }
+        };
+
     if (ImGui::GetIO().WantCaptureKeyboard
         || ImGui::GetIO().WantCaptureMouse
         || m_rootNode.getComponent<cro::Callback>().active)
@@ -226,6 +240,8 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYDOWN)
     {
+        setControlIcon(false);
+
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -239,6 +255,8 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
+        setControlIcon(true);
+
         cro::App::getWindow().setMouseCaptured(true);
         switch (evt.cbutton.button)
         {
@@ -263,6 +281,8 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
     {
+        setControlIcon(false);
+
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             quitState();
@@ -278,12 +298,15 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     {
         if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
+            setControlIcon(true);
             cro::App::getWindow().setMouseCaptured(true);
         }
         m_thumbsticks.setValue(evt.caxis.axis, evt.caxis.value);
     }
     else if (evt.type == SDL_CONTROLLERTOUCHPADDOWN)
     {
+        setControlIcon(true);
+
         m_fingerCount++;
         if (evt.ctouchpad.finger < MaxFingers)
         {
@@ -304,6 +327,8 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERTOUCHPADMOTION)
     {
+        setControlIcon(true);
+
         if (evt.ctouchpad.finger < MaxFingers)
         {
             glm::vec2 pos({ evt.ctouchpad.x, 1.f - evt.ctouchpad.y });
@@ -313,8 +338,10 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEMOTION)
     {
+        setControlIcon(false);
+
         cro::App::getWindow().setMouseCaptured(false);
-        if (evt.motion.state & SDL_BUTTON_MIDDLE)
+        if (evt.motion.state & (SDL_BUTTON_MIDDLE | SDL_BUTTON_LEFT))
         {
             const float Scale = 1.f / m_mapEnt.getComponent<cro::Transform>().getScale().x;
 
@@ -328,6 +355,8 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEWHEEL)
     {
+        setControlIcon(false);
+
         const auto amount = evt.wheel.preciseY;
         m_zoomScale = std::clamp(m_zoomScale + amount, MinZoom, MaxZoom);
         rescaleMap();
@@ -655,12 +684,12 @@ void MapOverviewState::buildScene()
 
     //menu background
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/overview_controls.spt", m_sharedData.sharedResources->textures);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 1.6f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_sharedData.sharedResources->textures.get("assets/golf/images/overview.png"));
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
     entity.addComponent<UIElement>().relativePosition = {0.f, -0.49f };
@@ -669,7 +698,7 @@ void MapOverviewState::buildScene()
     auto bgNode = entity;
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), 56.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
@@ -679,6 +708,42 @@ void MapOverviewState::buildScene()
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_mapText = entity;
+
+
+    //displays the zoom control
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 1.6f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("control_label");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<UIElement>().relativePosition = { -0.5f, 0.5f };
+    entity.getComponent<UIElement>().absolutePosition = { 16.f, -(bounds.height + 16.f) };
+    entity.getComponent<UIElement>().depth = 0.6f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    bgNode = entity;
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 18.f, 8.f, 0.1f });
+    //entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("controller");
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_controlIcon = entity;
+
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 36.f, 23.f, 0.1f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("LAlt");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    bgNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
+    m_controlText = entity;
+
 
     //draws the slope based on normals
     entity = m_scene.createEntity();

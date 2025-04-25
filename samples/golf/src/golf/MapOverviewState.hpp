@@ -89,6 +89,9 @@ private:
     cro::Entity m_mapNormals;
     cro::Entity m_ballLandingArea;
 
+    cro::Entity m_controlIcon;
+    cro::Entity m_controlText;
+
     cro::RenderTexture m_renderBuffer;
     cro::SimpleQuad m_mapQuad;
     cro::SimpleText m_mapString;
