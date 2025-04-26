@@ -2872,6 +2872,12 @@ void GolfState::showCountdown(std::uint8_t seconds)
         }
     }
 
+    //award a nominal amount of credits for playing hotseat
+    if (m_hotSeat)
+    {
+        awardCredits(50 + (m_sharedData.localConnectionData.playerCount * 10));
+    }
+
     bool personalBest = false;
     cro::String bestString("PERSONAL BEST!");
 

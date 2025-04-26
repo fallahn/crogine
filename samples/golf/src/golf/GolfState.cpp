@@ -458,7 +458,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                     m_friendlyPlayers = std::make_unique<FriendlyPlayers>(sd.clubSet);
                     
                     //append an emoji to the rival name to show they're a rival (it might be ourself!)
-                    rivalName += cro::String(std::uint32_t(0x1F4C5));
+                    rivalName += " " + cro::String(std::uint32_t(0x1F4C5));
                     //we need to index the name correctly to rivalName not league name
                     m_sharedData.leagueNames[0] = rivalName;
                     LeaguePlayer player;

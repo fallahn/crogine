@@ -127,16 +127,6 @@ League::League(std::int32_t id, const SharedStateData& sd)
     }
 
     read();
-
-
-    //a retrofit to reduce existing leagues difficulty as we increased the
-    //difficulty of using the pro clubs instead
-    while (m_increaseCount > SkillRoof)
-    {
-        decreaseDifficulty();
-        m_increaseCount--;
-        LogI << "Decreased difficulty for league " << m_id << std::endl;
-    }
 }
 
 //public
