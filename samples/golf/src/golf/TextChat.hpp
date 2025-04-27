@@ -182,7 +182,7 @@ private:
         TTSSpeaker()
             : m_threadRunning   (true),
             m_busy              (false),
-            m_thread            (&Speak::threadFunc, this)
+            m_thread            (&TTSSpeaker::threadFunc, this)
         {
             m_threadRunning = cro::FileSystem::fileExists("flite");
             if (!m_threadRunning)
