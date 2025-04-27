@@ -254,6 +254,7 @@ private:
                             FILE* pip = popen(say.c_str(), "r");
                             if (pip)
                             {
+                                LogI << "Said " << say << std::endl;
                                 while (pclose(pip) == -1)
                                 {
                                     std::this_thread::sleep_for(std::chrono::milliseconds(30));
