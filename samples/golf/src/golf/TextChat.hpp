@@ -32,6 +32,13 @@ source distribution.
 #ifdef _WIN32
 #define NOMINMAX
 #include <sapi.h>
+#elif defined __linux__
+#include <stdio.h>
+#include <chrono>
+#include <thread>
+#include <queue>
+#include <atomic>
+#include <mutex>
 #endif
 
 #include "SharedStateData.hpp"
@@ -159,6 +166,102 @@ private:
             if (initOK)
             {
                 CoUninitialize();
+            }
+        }
+    }m_speaker;
+
+#elif defined(__linux__)
+    class TTSSpeaker final
+    {
+    public:
+        enum class Voice
+        {
+            One, Two, Three
+        };
+
+        TTSSpeaker()
+            : m_threadRunning   (true),
+            m_busy              (false),
+            m_thread            (&Speak::threadFunc, this)
+        {
+            m_threadRunning = cro::FileSystem::fileExists("flite");
+            if (!m_threadRunning)
+            {
+                LogW << "flite not found, TTS is unavailable" << std::endl;
+            }
+        }
+
+        ~TTSSpeaker()
+        {
+            m_threadRunning = false;
+            m_thread.join();
+        }
+
+        void say(const std::string& line, Voice voice)
+        {
+            if (cro::FileSystem::fileExists("flite"))
+            {
+                std::scoped_lock l(m_mutex);
+                m_queue.push(std::make_pair(line, voice));
+            }
+        }
+
+    private:
+        std::atomic_bool m_threadRunning;
+        std::atomic_bool m_busy;
+        std::mutex m_mutex;
+        std::queue<std::pair<std::string, Voice>> m_queue;
+
+        std::thread m_thread;
+        void threadFunc()
+        {
+            while (m_threadRunning)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(16));
+
+                if (!m_queue.empty())
+                {
+                    if (!m_busy)
+                    {
+                        std::string msg;
+                        Voice type;
+                        {
+                            std::scoped_lock l(m_mutex);
+                            msg = m_queue.front().first;
+                            type = m_queue.front().second;
+                            m_queue.pop();
+                        }
+
+                        {
+                            std::string say = "./flite -voice ";
+                            switch (type)
+                            {
+                            default:
+                            case Voice::One:
+                                say += "awb \"";
+                                break;
+                            case Voice::Two:
+                                say += "rms \"";
+                                break;
+                            case Voice::Three:
+                                say += "slt \"";
+                                break;
+                            }
+                            say += msg + "\"";
+
+                            FILE* pip = popen(say.c_str(), "r");
+                            if (pip)
+                            {
+                                while (pclose(pip) == -1)
+                                {
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                                }
+                            }
+
+                            m_busy = false;
+                        }
+                    }
+                }
             }
         }
     }m_speaker;

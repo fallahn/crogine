@@ -853,6 +853,9 @@ bool TextChat::speak(const cro::String& str) const
             return true;
         }
     }
+#elif defined __linux__
+    m_speaker.say(str.toAnsiString(), TTSSpeaker::Voice::Three);
+    return true;
 #endif
     return false;
 }
