@@ -249,7 +249,8 @@ private:
                                 say += "slt \"";
                                 break;
                             }
-                            say += msg + "\"";
+                            say += msg;
+                            say += "\"";
 
                             FILE* pip = popen(say.c_str(), "r");
                             if (pip)
