@@ -197,7 +197,7 @@ private:
             m_thread.join();
         }
 
-        void say(const std::string& line, Voice voice)
+        void say(const std::string& line, Voice voice) const
         {
             if (cro::FileSystem::fileExists("flite"))
             {
@@ -209,8 +209,8 @@ private:
     private:
         std::atomic_bool m_threadRunning;
         std::atomic_bool m_busy;
-        std::mutex m_mutex;
-        std::queue<std::pair<std::string, Voice>> m_queue;
+        mutable std::mutex m_mutex;
+        mutable std::queue<std::pair<std::string, Voice>> m_queue;
 
         std::thread m_thread;
         void threadFunc()
