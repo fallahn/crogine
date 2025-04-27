@@ -184,11 +184,12 @@ private:
             m_busy              (false),
             m_thread            (&TTSSpeaker::threadFunc, this)
         {
-            m_threadRunning = cro::FileSystem::fileExists("flite");
+            /*m_threadRunning = cro::FileSystem::fileExists("flite");
             if (!m_threadRunning)
             {
                 LogW << "flite not found, TTS is unavailable" << std::endl;
-            }
+            }*/
+            LogI << "Created TTS" << std::endl;
         }
 
         ~TTSSpeaker()
@@ -199,7 +200,8 @@ private:
 
         void say(const std::string& line, Voice voice) const
         {
-            if (cro::FileSystem::fileExists("flite"))
+            LogI << "Saying: " << line << std::endl;
+            //if (cro::FileSystem::fileExists("flite"))
             {
                 std::scoped_lock l(m_mutex);
                 m_queue.push(std::make_pair(line, voice));
@@ -256,6 +258,10 @@ private:
                                 {
                                     std::this_thread::sleep_for(std::chrono::milliseconds(30));
                                 }
+                            }
+                            else
+                            {
+                                LogE << "Could not pip to flite" << std::endl;
                             }
 
                             m_busy = false;
