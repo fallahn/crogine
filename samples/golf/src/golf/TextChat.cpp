@@ -914,24 +914,16 @@ void TextChat::TTSSpeaker::threadFunc()
                 Voice type;
                 {
                     std::scoped_lock l(m_mutex);
-                    msg = m_queue.front().first.to;
+                    msg = m_queue.front().first;
                     type = m_queue.front().second;
                     m_queue.pop();
                 }
 
-                //attempt to remove unpronouncable chars such
-                //as emojis, and add the terminating "
-                //std::remove_if(msg.begin(), msg.end(), [](std::uint32_t c)
-                //    {
-                //        //ugh we're never going to be able to cover everything
-                //        //as flite doesn't support UTF in any way that I can tell
-                //        //so let's just discard every char which would use more 
-                //        //than one byte (so keep ASCII + everything > 127)
-                //        return c > 255;
-                //    });
+                //TODO remove mid-line quotes as they break the string
+
+
                 msg += "\"";
-                //TODO test that the -t switch enforces playback of single words
-                //else we have to hack in a space and a period to make it look like multiple words...
+
 
                 {
                     std::string say = "./flite -voice ";
@@ -955,14 +947,12 @@ void TextChat::TTSSpeaker::threadFunc()
                     
                     std::copy(say.begin(), say.end(), finalMessage.data());
                     std::copy(utf.begin(), utf.end(), finalMessage.data() + say.length());
-                    
 
-                    //say += msg.toAnsiString();
 
-                    FILE* pipe = popen(/*say.c_str()*/finalMessage.data(), "r");
+                    FILE* pipe = popen(finalMessage.data(), "r");
                     if (pipe)
                     {
-                        LogI << "Said: " << /*say*/finalMessage.data() << std::endl;
+                        LogI << "Said: " << finalMessage.data() << std::endl;
                         while (pclose(pipe) == -1)
                         {
                             std::this_thread::sleep_for(std::chrono::milliseconds(30));
