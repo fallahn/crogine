@@ -849,13 +849,126 @@ bool TextChat::speak(const cro::String& str) const
     {
         if (m_speaker.voice != nullptr)
         {
+            //m_speaker.voice->SetVolume(); //TODO read mixer and scale 0 - 100
             m_speaker.voice->Speak((LPCWSTR)(str.toUtf16().c_str()), SPF_ASYNC, nullptr);
             return true;
         }
     }
 #elif defined(__linux__)
-    m_speaker.say(str.toAnsiString(), TTSSpeaker::Voice::Three);
+    m_speaker.say(str, TTSSpeaker::Voice::Three);
     return true;
 #endif
     return false;
 }
+
+//speaker class for linux
+#ifdef __linux__
+TextChat::TTSSpeaker::TTSSpeaker()
+    : m_threadRunning(true),
+    m_busy(false),
+    m_thread(&TTSSpeaker::threadFunc, this)
+{
+    m_threadRunning = cro::FileSystem::fileExists("flite");
+    if (!m_threadRunning)
+    {
+        LogW << "flite not found, TTS is unavailable" << std::endl;
+    }
+    else
+    {
+        LogI << "Created TTS" << std::endl;
+    }
+}
+
+TextChat::TTSSpeaker::~TTSSpeaker()
+{
+    if (m_threadRunning)
+    {
+        m_threadRunning = false;
+        m_thread.join();
+    }
+}
+
+//public
+void TextChat::TTSSpeaker::say(const cro::String& line, Voice voice) const
+{
+    LogI << "Saying: " << line.toAnsiString() << std::endl;
+    if (cro::FileSystem::fileExists("flite"))
+    {
+        std::scoped_lock l(m_mutex);
+        m_queue.push(std::make_pair(line, voice));
+    }
+}
+
+//private
+void TextChat::TTSSpeaker::threadFunc()
+{
+    while (m_threadRunning)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+
+        if (!m_queue.empty())
+        {
+            if (!m_busy)
+            {
+                cro::String msg;
+                Voice type;
+                {
+                    std::scoped_lock l(m_mutex);
+                    msg = m_queue.front().first.to;
+                    type = m_queue.front().second;
+                    m_queue.pop();
+                }
+
+                //attempt to remove unpronouncable chars such
+                //as emojis, and add the terminating "
+                std::remove_if(msg.begin(), msg.end(), [](std::uint32_t c)
+                    {
+                        //ugh we're never going to be able to cover everything
+                        //as flite doesn't support UTF in any way that I can tell
+                        //so let's just discard every char which would use more 
+                        //than one byte (so keep ASCII + everything > 127)
+                        return c > 255;
+                    });
+                msg += "\"";
+                //TODO test that the -t switch enforces playback of single words
+                //else we have to hack in a space and a period to make it look like multiple words...
+
+                {
+                    std::string say = "./flite -voice ";
+                    switch (type)
+                    {
+                    default:
+                    case Voice::One:
+                        say += "awb -t \"";
+                        break;
+                    case Voice::Two:
+                        say += "rms -t \"";
+                        break;
+                    case Voice::Three:
+                        say += "slt -t \"";
+                        break;
+                    }
+                    say += msg.toAnsiString();
+                    //say += "\"";
+
+                    FILE* pipe = popen(say.c_str(), "r");
+                    if (pipe)
+                    {
+                        LogI << "Said " << say << std::endl;
+                        while (pclose(pipe) == -1)
+                        {
+                            std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                        }
+                    }
+                    else
+                    {
+                        LogE << "Could not pipe to flite" << std::endl;
+                    }
+
+                    m_busy = false;
+                }
+            }
+        }
+    }
+}
+#endif

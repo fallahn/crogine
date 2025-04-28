@@ -220,7 +220,7 @@ private:
         float currentTime = 0.f;
         bool active = false;
 
-        bool [[nodiscard]] update(float dt)
+        [[nodiscard]] bool update(float dt)
         {
             const float progress = currentTime / MaxTime;
             auto bounds = cro::Text::getLocalBounds(str0);

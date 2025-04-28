@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -36,9 +36,9 @@ source distribution.
 #include <stdio.h>
 #include <chrono>
 #include <thread>
-#include <queue>
 #include <atomic>
 #include <mutex>
+#include <queue>
 #endif
 
 #include "SharedStateData.hpp"
@@ -179,99 +179,19 @@ private:
             One, Two, Three
         };
 
-        TTSSpeaker()
-            : m_threadRunning   (true),
-            m_busy              (false),
-            m_thread            (&TTSSpeaker::threadFunc, this)
-        {
-            /*m_threadRunning = cro::FileSystem::fileExists("flite");
-            if (!m_threadRunning)
-            {
-                LogW << "flite not found, TTS is unavailable" << std::endl;
-            }*/
-            LogI << "Created TTS" << std::endl;
-        }
+        TTSSpeaker();
+        ~TTSSpeaker();
 
-        ~TTSSpeaker()
-        {
-            m_threadRunning = false;
-            m_thread.join();
-        }
-
-        void say(const std::string& line, Voice voice) const
-        {
-            LogI << "Saying: " << line << std::endl;
-            //if (cro::FileSystem::fileExists("flite"))
-            {
-                std::scoped_lock l(m_mutex);
-                m_queue.push(std::make_pair(line, voice));
-            }
-        }
+        void say(const cro::String& line, Voice voice) const;
 
     private:
         std::atomic_bool m_threadRunning;
         std::atomic_bool m_busy;
         mutable std::mutex m_mutex;
-        mutable std::queue<std::pair<std::string, Voice>> m_queue;
+        mutable std::queue<std::pair<cro::String, Voice>> m_queue;
 
         std::thread m_thread;
-        void threadFunc()
-        {
-            while (m_threadRunning)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(16));
-
-                if (!m_queue.empty())
-                {
-                    if (!m_busy)
-                    {
-                        std::string msg;
-                        Voice type;
-                        {
-                            std::scoped_lock l(m_mutex);
-                            msg = m_queue.front().first;
-                            type = m_queue.front().second;
-                            m_queue.pop();
-                        }
-
-                        {
-                            std::string say = "./flite -voice ";
-                            switch (type)
-                            {
-                            default:
-                            case Voice::One:
-                                say += "awb \"";
-                                break;
-                            case Voice::Two:
-                                say += "rms \"";
-                                break;
-                            case Voice::Three:
-                                say += "slt \"";
-                                break;
-                            }
-                            say += msg;
-                            say += "\"";
-
-                            FILE* pip = popen(say.c_str(), "r");
-                            if (pip)
-                            {
-                                LogI << "Said " << say << std::endl;
-                                while (pclose(pip) == -1)
-                                {
-                                    std::this_thread::sleep_for(std::chrono::milliseconds(30));
-                                }
-                            }
-                            else
-                            {
-                                LogE << "Could not pip to flite" << std::endl;
-                            }
-
-                            m_busy = false;
-                        }
-                    }
-                }
-            }
-        }
+        void threadFunc();        
     }m_speaker;
 #endif
     bool speak(const cro::String&) const; //returns true if speech was initiated
