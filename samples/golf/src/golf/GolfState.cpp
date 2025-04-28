@@ -1394,14 +1394,29 @@ void GolfState::handleMessage(const cro::Message& msg)
         {
             m_windTracker.reset();
 
+            //switch to flight cam if requested when putting
+            if (m_sharedData.puttFollowCam)
+            {
+                if (m_currentPlayer.terrain == TerrainID::Green
+                    && m_greenCam.getComponent<cro::Camera>().active)
+                {
+                    m_greenCam.getComponent<cro::Camera>().active = false;
+                    m_flightCam.getComponent<cro::Camera>().active = true;
+                }
+            }
+
+            const auto club = getClub();
+
             //relay this message with the info needed for particle/sound effects
             auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
             msg2->type = GolfEvent::ClubSwing;
             msg2->position = m_currentPlayer.position;
             msg2->terrain = m_currentPlayer.terrain;
-            msg2->club = static_cast<std::uint8_t>(getClub());
+            msg2->club = static_cast<std::uint8_t>(club);
 
-            m_gameScene.getSystem<ClientCollisionSystem>()->setActiveClub(getClub());
+            m_gameScene.getSystem<ClientCollisionSystem>()->setActiveClub(club);
+
+
 
             auto isCPU = m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU;
             if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
@@ -1432,7 +1447,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             }
 
             //check if we hooked/sliced
-            if (auto club = getClub(); club != ClubID::Putter
+            if (club != ClubID::Putter
                 && (!isCPU || (isCPU && !m_sharedData.fastCPU)))
             {
                 //TODO this doesn't include any easing added when making the stroke
@@ -7356,17 +7371,6 @@ void GolfState::hitBall()
         if (m_achievementTracker.puttCount > 2)
         {
             m_achievementTracker.underTwoPutts = false;
-        }
-    }
-
-    //switch to flight cam if requested when putting
-    if (m_sharedData.puttFollowCam)
-    {
-        if (m_currentPlayer.terrain == TerrainID::Green
-            && m_greenCam.getComponent<cro::Camera>().active)
-        {
-            m_greenCam.getComponent<cro::Camera>().active = false;
-            m_flightCam.getComponent<cro::Camera>().active = true;
         }
     }
 }
