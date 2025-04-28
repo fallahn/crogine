@@ -187,6 +187,7 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_gearIndex         (0),
     m_mugshotUpdated    (false)
 {
+    std::fill(m_previousInv.begin(), m_previousInv.end(), -2);
     ctx.mainWindow.setMouseCaptured(false);
 
     m_activeProfile = sp.playerProfiles[sp.activeProfileIndex];
@@ -5885,155 +5886,168 @@ void ProfileState::onCachedPush()
 
 void ProfileState::refreshItemLists()
 {
-    //TODO check if the inventory has changed because if we keep doing this all
-    //the new menu callbacks are eventually going to waste memory, so there's no
-    //point resetting if the inventory is the same as previously
-
-    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-
-    //check our inventory so we know which is available
-    struct SubItem final
-    {
-        std::string name;
-        std::int32_t idx = -1;
-        SubItem(const std::string& s) :name(s) {}
-    };
-    std::array<std::vector<SubItem>, GearID::Count> subItems;
-    for (auto& list : subItems)
-    {
-        list.emplace_back("Default");
-    }
-
+    //check if the inventory has changed and don't bother doing this
+    //if we're already up to date (unfortuantely it tends to duplicate
+    //UI callbacks which is a bigger issue we need to address)
+    bool inventoryUpdated = false;
     for (auto i = 0u; i < m_sharedData.inventory.inventory.size(); ++i)
     {
-        auto idx = m_sharedData.inventory.inventory[i];
-        if (idx != -1)
+        if (m_sharedData.inventory.inventory[i] != m_previousInv[i])
         {
-            //we own this
-            const auto& item = inv::Items[i];
-            subItems[item.type].emplace_back(inv::Manufacturers[item.manufacturer]).idx = i;
+            inventoryUpdated = true;
+            break;
         }
     }
+    m_previousInv = m_sharedData.inventory.inventory;
 
-    for (auto i = 0u; i < m_gearMenus.size(); ++i)
+    if (inventoryUpdated)
     {
-        if (m_gearMenus[i].background.isValid())
+        const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+        //check our inventory so we know which is available
+        struct SubItem final
         {
-            for (auto e : m_gearMenus[i].items)
+            std::string name;
+            std::int32_t idx = -1;
+            SubItem(const std::string& s) :name(s) {}
+        };
+        std::array<std::vector<SubItem>, GearID::Count> subItems;
+        for (auto& list : subItems)
+        {
+            list.emplace_back("Default");
+        }
+
+        for (auto i = 0u; i < m_sharedData.inventory.inventory.size(); ++i)
+        {
+            auto idx = m_sharedData.inventory.inventory[i];
+            if (idx != -1)
             {
-                m_uiScene.destroyEntity(e);
+                //we own this
+                const auto& item = inv::Items[i];
+                subItems[item.type].emplace_back(inv::Manufacturers[item.manufacturer]).idx = i;
             }
-            m_gearMenus[i].items.clear();
+        }
 
-
-            static constexpr float SubSpacing = 10.f;
-            auto subPos = glm::vec3(4.f, -4.f, 0.1f);
-            float expansion = -SubSpacing;
-            for (auto j = 0u; j < subItems[i].size(); ++j)
+        for (auto i = 0u; i < m_gearMenus.size(); ++i)
+        {
+            if (m_gearMenus[i].background.isValid())
             {
-                const auto itemIndex = subItems[i][j].idx;
-
-                const auto textColour = m_activeProfile.loadout[i] == itemIndex ?
-                    TextGoldColour : TextNormalColour;
-
-                auto entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition(subPos);
-                entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-                entity.addComponent<cro::Drawable2D>();
-                entity.addComponent<cro::Text>(smallFont).setString(subItems[i][j].name);
-                entity.getComponent<cro::Text>().setFillColour(textColour);
-                entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-                entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
-                entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-                entity.addComponent<cro::UIInput>().setGroup(MenuID::Gear01 + i);
-                entity.getComponent<cro::UIInput>().setUserData<std::pair<std::int32_t, std::int32_t>>(i, itemIndex);
-                entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-                entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_itemSelected;
-                entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_itemUnselected;
-                entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-                    m_uiScene.getSystem<cro::UISystem>()->addCallback(
-                        [&, i, j, itemIndex](cro::Entity e, const cro::ButtonEvent& evt) mutable
-                        {
-                            if (activated(evt))
-                            {
-                                const std::string num = "(" + std::to_string(j + 1) + "/" + std::to_string(m_gearMenus[i].items.size()) + ") ";
-
-                                m_gearMenus[i].description.getComponent<cro::Text>().setString(num + e.getComponent<cro::Text>().getString());
-                                m_gearMenus[i].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GearEditor);
-                                m_uiScene.getSystem<cro::UISystem>()->selectAt(m_gearIndex);
-
-                                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                                m_activeProfile.loadout[i] = itemIndex;
-
-                                refreshStat(i, itemIndex, true);
-                            }
-                        });
-                m_gearMenus[i].background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-                m_gearMenus[i].items.push_back(entity);
-
-                subPos.y -= SubSpacing;
-                expansion += SubSpacing + 1.f;
-            }
-
-            //set the string for the selected item
-            if (m_activeProfile.loadout[i] == -1)
-            {
-                m_gearMenus[i].description.getComponent<cro::Text>().setString("(1/" + std::to_string(m_gearMenus[i].items.size()) + ") Default");
-            }
-            else
-            {
-                const auto& items = m_gearMenus[i].items;
-                std::size_t itemIndex = 0;
-                const auto toFind = m_activeProfile.loadout[i];
-                if (const auto res = std::find_if(items.cbegin(), items.cend(), 
-                    [toFind](cro::Entity e)
-                    {
-                        const auto idx = e.getComponent<cro::UIInput>().getUserData<std::pair<std::int32_t, std::int32_t>>().second;
-                        return idx == toFind;
-                    }); res != items.cend())
+                for (auto e : m_gearMenus[i].items)
                 {
-                    itemIndex = std::distance(items.cbegin(), res);
+                    m_uiScene.destroyEntity(e);
+                }
+                m_gearMenus[i].items.clear();
+
+
+                static constexpr float SubSpacing = 10.f;
+                auto subPos = glm::vec3(4.f, -4.f, 0.1f);
+                float expansion = -SubSpacing;
+                for (auto j = 0u; j < subItems[i].size(); ++j)
+                {
+                    const auto itemIndex = subItems[i][j].idx;
+
+                    const auto textColour = m_activeProfile.loadout[i] == itemIndex ?
+                        TextGoldColour : TextNormalColour;
+
+                    auto entity = m_uiScene.createEntity();
+                    entity.addComponent<cro::Transform>().setPosition(subPos);
+                    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+                    entity.addComponent<cro::Drawable2D>();
+                    entity.addComponent<cro::Text>(smallFont).setString(subItems[i][j].name);
+                    entity.getComponent<cro::Text>().setFillColour(textColour);
+                    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+                    entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
+                    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+                    entity.addComponent<cro::UIInput>().setGroup(MenuID::Gear01 + i);
+                    entity.getComponent<cro::UIInput>().setUserData<std::pair<std::int32_t, std::int32_t>>(i, itemIndex);
+                    entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+                    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_itemSelected;
+                    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_itemUnselected;
+                    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+                        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                            [&, i, j, itemIndex](cro::Entity e, const cro::ButtonEvent& evt) mutable
+                            {
+                                if (activated(evt))
+                                {
+                                    const std::string num = "(" + std::to_string(j + 1) + "/" + std::to_string(m_gearMenus[i].items.size()) + ") ";
+
+                                    m_gearMenus[i].description.getComponent<cro::Text>().setString(num + e.getComponent<cro::Text>().getString());
+                                    m_gearMenus[i].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GearEditor);
+                                    m_uiScene.getSystem<cro::UISystem>()->selectAt(m_gearIndex);
+
+                                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                                    m_activeProfile.loadout[i] = itemIndex;
+
+                                    refreshStat(i, itemIndex, true);
+                                }
+                            });
+                    m_gearMenus[i].background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+                    m_gearMenus[i].items.push_back(entity);
+
+                    subPos.y -= SubSpacing;
+                    expansion += SubSpacing + 1.f;
                 }
 
-                const std::string num = "(" + std::to_string(itemIndex + 1) + "/" + std::to_string(m_gearMenus[i].items.size()) + ") ";
-                m_gearMenus[i].description.getComponent<cro::Text>().setString(num + inv::Manufacturers[inv::Items[m_activeProfile.loadout[i]].manufacturer]);
+                //set the string for the selected item
+                if (m_activeProfile.loadout[i] == -1)
+                {
+                    m_gearMenus[i].description.getComponent<cro::Text>().setString("(1/" + std::to_string(m_gearMenus[i].items.size()) + ") Default");
+                }
+                else
+                {
+                    const auto& items = m_gearMenus[i].items;
+                    std::size_t itemIndex = 0;
+                    const auto toFind = m_activeProfile.loadout[i];
+                    if (const auto res = std::find_if(items.cbegin(), items.cend(),
+                        [toFind](cro::Entity e)
+                        {
+                            const auto idx = e.getComponent<cro::UIInput>().getUserData<std::pair<std::int32_t, std::int32_t>>().second;
+                            return idx == toFind;
+                        }); res != items.cend())
+                    {
+                        itemIndex = std::distance(items.cbegin(), res);
+                    }
+
+                    const std::string num = "(" + std::to_string(itemIndex + 1) + "/" + std::to_string(m_gearMenus[i].items.size()) + ") ";
+                    m_gearMenus[i].description.getComponent<cro::Text>().setString(num + inv::Manufacturers[inv::Items[m_activeProfile.loadout[i]].manufacturer]);
+                }
+
+
+                auto& verts = m_gearMenus[i].background.getComponent<cro::Drawable2D>().getVertexData();
+
+                //we need to reset this to the default size first
+                verts[1].position.y += m_gearMenus[i].previousExpansion;
+                verts[3].position.y += m_gearMenus[i].previousExpansion;
+                verts[5].position.y += m_gearMenus[i].previousExpansion;
+                verts[7].position.y += m_gearMenus[i].previousExpansion;
+                verts[9].position.y += m_gearMenus[i].previousExpansion;
+                verts[11].position.y += m_gearMenus[i].previousExpansion;
+
+                //expand background to fit the number of added items
+                verts[1].position.y -= expansion;
+                verts[3].position.y -= expansion;
+                verts[5].position.y -= expansion;
+                verts[7].position.y -= expansion;
+                verts[9].position.y -= expansion;
+                verts[11].position.y -= expansion;
+
+                m_gearMenus[i].previousExpansion = expansion;
+
+
+                //move the background up by background height if in the bottom half of the window
+                if (i > 5)
+                {
+                    const float Offset = verts[5].position.y * -1.f;
+                    auto pos = m_gearMenus[i].background.getComponent<cro::Transform>().getPosition();
+                    pos.y = GearMenuBasePos + (i * -GearMenuSpacing) + Offset;
+                    m_gearMenus[i].background.getComponent<cro::Transform>().setPosition(pos);
+                }
+
+                m_gearMenus[i].background.getComponent<cro::Drawable2D>().updateLocalBounds();
             }
-
-
-            auto& verts = m_gearMenus[i].background.getComponent<cro::Drawable2D>().getVertexData();
-            
-            //we need to reset this to the default size first
-            verts[1].position.y += m_gearMenus[i].previousExpansion;
-            verts[3].position.y += m_gearMenus[i].previousExpansion;
-            verts[5].position.y += m_gearMenus[i].previousExpansion;
-            verts[7].position.y += m_gearMenus[i].previousExpansion;
-            verts[9].position.y += m_gearMenus[i].previousExpansion;
-            verts[11].position.y += m_gearMenus[i].previousExpansion;
-
-            //expand background to fit the number of added items
-            verts[1].position.y -= expansion;
-            verts[3].position.y -= expansion;
-            verts[5].position.y -= expansion;
-            verts[7].position.y -= expansion;
-            verts[9].position.y -= expansion;
-            verts[11].position.y -= expansion;
-
-            m_gearMenus[i].previousExpansion = expansion;
-
-
-            //move the background up by background height if in the bottom half of the window
-            if (i > 5)
-            {
-                const float Offset = verts[5].position.y * -1.f;
-                auto pos = m_gearMenus[i].background.getComponent<cro::Transform>().getPosition();
-                pos.y = GearMenuBasePos + (i * -GearMenuSpacing) + Offset;
-                m_gearMenus[i].background.getComponent<cro::Transform>().setPosition(pos);
-            }
-
-            m_gearMenus[i].background.getComponent<cro::Drawable2D>().updateLocalBounds();
         }
     }
 }

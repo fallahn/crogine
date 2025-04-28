@@ -96,6 +96,10 @@ private:
     PlayerData m_activeProfile;
     cro::String m_previousName; //so we can restore if we cancel an edit
 
+    //compare the previous inventory and only rebuild the menu if
+    //the player bought or sold something previously
+    std::array<std::int32_t, inv::MaxItems> m_previousInv = {};
+
     cro::RenderTexture m_avatarTexture;
     cro::RenderTexture m_ballTexture;
     cro::RenderTexture m_hairEditorTexture;
