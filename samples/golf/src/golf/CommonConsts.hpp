@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "Networking.hpp"
+
 #include <crogine/core/App.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
@@ -78,8 +80,8 @@ namespace ConstVal
     static constexpr std::uint8_t MaxClients = 16;
     static constexpr std::uint8_t MaxPlayers = 8;
     static constexpr std::uint8_t NullValue = 255;
-    static constexpr std::uint8_t NetChannelReliable = 1;
-    static constexpr std::uint8_t NetChannelStrings = 2;
+    static constexpr std::uint8_t NetChannelReliable = net::Channel::Reliable;
+    static constexpr std::uint8_t NetChannelStrings = net::Channel::String;
 
     static constexpr std::uint16_t PositionCompressionRange = 4; //used in billiards! this is way too small for golf
     static constexpr std::uint16_t VelocityCompressionRange = 8;

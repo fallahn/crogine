@@ -234,6 +234,20 @@ void Server::run()
                 //remove from client list
                 removeClient(evt);
             }
+            else if (evt.type == net::NetEvent::ClientPeerUpdated)
+            {
+                //a remote client dropped out but managed to reconnect
+                //so we need to update the peer.
+                for (auto& client : m_sharedData.clients)
+                {
+                    if (client.peer == evt.userData)
+                    {
+                        client.peer = evt.peer;
+                        LogI << "Server: " << evt.peer.getID() << " reconnected..." << std::endl;
+                        break;
+                    }
+                }
+            }
             else if(evt.type == net::NetEvent::PacketReceived)
             {
                 switch (evt.packet.getID())

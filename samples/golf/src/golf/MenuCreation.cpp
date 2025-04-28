@@ -444,10 +444,11 @@ void MenuState::createUI()
 
 
     //m_resources.shaders.loadFromString(ShaderID::Tonemapping, cro::RenderSystem2D::getDefaultVertexShader(), TonemapFragment, "#define TEXTURED\n");
+    //m_resources.shaders.loadFromString(ShaderID::FXAA, cro::RenderSystem2D::getDefaultVertexShader(), cro::RenderSystem2D::getDefaultFragmentShader(), "#define FXAA\n#define TEXTURED\n");
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, -0.5f});
-    entity.addComponent<cro::Drawable2D>();// .setShader(&m_resources.shaders.get(ShaderID::Tonemapping));
+    entity.addComponent<cro::Drawable2D>();// .setShader(&m_resources.shaders.get(ShaderID::FXAA));
     entity.addComponent<cro::Sprite>(m_backgroundTexture.getTexture());
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
