@@ -924,6 +924,10 @@ void TextChat::TTSSpeaker::threadFunc()
 
                 msg += "\"";
 
+#ifdef USE_GNS
+                //yeah I have NO idea why this is necessary
+                msg += "\"";
+#endif
 
                 {
                     std::string say = "./flite -voice ";
