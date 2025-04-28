@@ -127,6 +127,11 @@ namespace cro
         */
         static const std::string& getDefaultVertexShader();
         
+        /*!
+        \brief Returns rhe default Fragment shader string for Drawabl2D components.
+        Define TEXTURED to use with textured objects and optionally FXAA to
+        render the item with FXAA anti-aliasing.
+        */
         static const std::string& getDefaultFragmentShader();
 
     private:
