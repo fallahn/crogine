@@ -942,7 +942,10 @@ void TextChat::TTSSpeaker::threadFunc()
                     }
 
                     //attempt to preserve any utf encoding
-                    const auto utf = msg.toUtf8();
+                    auto utf = msg.toUtf8();
+                    //these aren't null terminated by default
+                    utf.push_back(0);
+
                     std::vector<char> finalMessage(say.length() + utf.size());
                     
                     std::copy(say.begin(), say.end(), finalMessage.data());
