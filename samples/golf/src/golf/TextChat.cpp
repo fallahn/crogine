@@ -864,9 +864,9 @@ bool TextChat::speak(const cro::String& str) const
 //speaker class for linux
 #ifdef __linux__
 TextChat::TTSSpeaker::TTSSpeaker()
-    : m_threadRunning(true),
-    m_busy(false),
-    m_thread(&TTSSpeaker::threadFunc, this)
+    : m_threadRunning   (true),
+    m_busy              (false),
+    m_thread            (&TTSSpeaker::threadFunc, this)
 {
     m_threadRunning = cro::FileSystem::fileExists("flite");
     if (!m_threadRunning)
@@ -921,14 +921,14 @@ void TextChat::TTSSpeaker::threadFunc()
 
                 //attempt to remove unpronouncable chars such
                 //as emojis, and add the terminating "
-                std::remove_if(msg.begin(), msg.end(), [](std::uint32_t c)
-                    {
-                        //ugh we're never going to be able to cover everything
-                        //as flite doesn't support UTF in any way that I can tell
-                        //so let's just discard every char which would use more 
-                        //than one byte (so keep ASCII + everything > 127)
-                        return c > 255;
-                    });
+                //std::remove_if(msg.begin(), msg.end(), [](std::uint32_t c)
+                //    {
+                //        //ugh we're never going to be able to cover everything
+                //        //as flite doesn't support UTF in any way that I can tell
+                //        //so let's just discard every char which would use more 
+                //        //than one byte (so keep ASCII + everything > 127)
+                //        return c > 255;
+                //    });
                 msg += "\"";
                 //TODO test that the -t switch enforces playback of single words
                 //else we have to hack in a space and a period to make it look like multiple words...
@@ -948,13 +948,21 @@ void TextChat::TTSSpeaker::threadFunc()
                         say += "slt -t \"";
                         break;
                     }
-                    say += msg.toAnsiString();
-                    //say += "\"";
 
-                    FILE* pipe = popen(say.c_str(), "r");
+                    //attempt to preserve any utf encoding
+                    const auto utf = msg.toUtf8();
+                    std::vector<char> finalMessage(say.length() + utf.size());
+                    
+                    std::copy(say.begin(), say.end(), finalMessage.data());
+                    std::copy(utf.begin(), utf.end(), finalMessage.data() + say.length());
+                    
+
+                    //say += msg.toAnsiString();
+
+                    FILE* pipe = popen(/*say.c_str()*/finalMessage.data(), "r");
                     if (pipe)
                     {
-                        LogI << "Said " << say << std::endl;
+                        LogI << "Said: " << /*say*/finalMessage.data() << std::endl;
                         while (pclose(pipe) == -1)
                         {
                             std::this_thread::sleep_for(std::chrono::milliseconds(30));
