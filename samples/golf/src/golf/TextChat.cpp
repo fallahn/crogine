@@ -929,10 +929,8 @@ void TextChat::TTSSpeaker::threadFunc()
                 }
 
                 //remove mid-line quotes as they break the string
-                while (auto p = msg.find("\"") != cro::String::InvalidPos)
-                {
-                    msg.erase(p);
-                }
+                msg.replace("\"", " ");
+
                 //then propertly terminate
                 msg += "\"";
 
