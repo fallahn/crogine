@@ -835,7 +835,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     //TODO reduce the hook amount based on the active ball
 
     const auto level = Social::getLevel() / 10;
-    auto maxHook = MaxHook - (static_cast<float>(std::clamp(level, 0, 3)) * 0.005f);
+    auto maxHook = MaxHook - (static_cast<float>(std::clamp(level, 0, 3)) * 0.0025f);
 
     float powerMod = 0.f;
 
@@ -855,7 +855,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     if (club != ClubID::Putter)
     {
-        maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.05f);
+        maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.035f);
 
         auto s = cro::Util::Maths::sgn(hook);
         //changing this func changes how accurate a player needs to be

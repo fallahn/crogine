@@ -178,6 +178,27 @@ void UISystem::handleEvent(const Event& evt)
         auto& buttonEvent = m_buttonDownEvents.emplace_back();
         buttonEvent.type = evt.type;
         buttonEvent.key = evt.key;
+
+        if (evt.key.repeat == 0)
+        {
+            switch (evt.key.keysym.sym)
+            {
+            default: break;
+                //start press/hold timers
+            case SDLK_LEFT:
+                m_keyHoldEvents[0].start();
+                break;
+            case SDLK_RIGHT:
+                m_keyHoldEvents[1].start();
+                break;
+            case SDLK_UP:
+                m_keyHoldEvents[2].start();
+                break;
+            case SDLK_DOWN:
+                m_keyHoldEvents[3].start();
+                break;
+            }
+        }
     }
         break;
     case SDL_KEYUP:
@@ -193,15 +214,19 @@ void UISystem::handleEvent(const Event& evt)
             break;
         case SDLK_LEFT:
             selectPrev(1, UIInput::Index::Left);
+            m_keyHoldEvents[0].active = false;
             break;
         case SDLK_RIGHT:
             selectNext(1, UIInput::Index::Right);
+            m_keyHoldEvents[1].active = false;
             break;
         case SDLK_UP:
             selectPrev(m_columnCount, UIInput::Index::Up);
+            m_keyHoldEvents[2].active = false;
             break;
         case SDLK_DOWN:
             selectNext(m_columnCount, UIInput::Index::Down);
+            m_keyHoldEvents[3].active = false;
             break;
         }
     }
@@ -219,17 +244,21 @@ void UISystem::handleEvent(const Event& evt)
                 buttonEvent.cbutton = evt.cbutton;
             }
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_UP:
-                selectPrev(m_columnCount, UIInput::Index::Up);
-                break;
-            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-                selectNext(m_columnCount, UIInput::Index::Down);
-                break;
             case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
                 selectPrev(1, UIInput::Index::Left);
+                m_buttonHoldEvents[0].start();
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
                 selectNext(1, UIInput::Index::Right);
+                m_buttonHoldEvents[1].start();
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                selectPrev(m_columnCount, UIInput::Index::Up);
+                m_buttonHoldEvents[2].start();
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                selectNext(m_columnCount, UIInput::Index::Down);
+                m_buttonHoldEvents[3].start();
                 break;
             }
         }
@@ -246,6 +275,18 @@ void UISystem::handleEvent(const Event& evt)
                 buttonEvent.type = evt.type;
                 buttonEvent.cbutton = evt.cbutton;
             }
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                m_buttonHoldEvents[0].active = false;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                m_buttonHoldEvents[1].active = false;;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                m_buttonHoldEvents[2].active = false;;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                m_buttonHoldEvents[3].active = false;;
                 break;
             }
         }
@@ -319,8 +360,45 @@ void UISystem::handleEvent(const Event& evt)
     }
 }
 
-void UISystem::process(float)
+void UISystem::process(float dt)
 {    
+    //check if any input is held down
+    const auto holdTest = [&](std::array<UISystem::HoldEvent, 4u>& arr) 
+        {
+            for (auto i = 0u; i < arr.size(); ++i)
+            {
+                auto& holdEvent = arr[i];
+                if (holdEvent.active)
+                {
+                    holdEvent.timer -= dt;
+                    if (holdEvent.timer < 0.f)
+                    {
+                        holdEvent.timer += holdEvent.currentHoldTime;
+                        holdEvent.currentHoldTime = std::max(HoldEvent::MinHoldTime, holdEvent.currentHoldTime - (dt * 3.f));
+                        switch (i)
+                        {
+                        default: break;
+                        case 0:
+                            selectPrev(1, i);
+                            break;
+                        case 1:
+                            selectNext(1, i);
+                            break;
+                        case 2:
+                            selectPrev(m_columnCount, i);
+                            break;
+                        case 3:
+                            selectNext(m_columnCount, i);
+                            break;
+                        }
+                    }
+                }
+            }
+        };
+    holdTest(m_keyHoldEvents);
+    holdTest(m_buttonHoldEvents);
+
+
     //parse conrtoller inputs first
     auto diff = m_prevControllerMask ^ m_controllerMask;
     for (auto i = 0; i < 4; ++i)

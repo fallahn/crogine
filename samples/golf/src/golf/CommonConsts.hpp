@@ -72,7 +72,7 @@ namespace ConstVal
     static constexpr std::size_t MaxStringDataSize = MaxStringChars * sizeof(std::uint32_t);
 
 #ifdef USE_GNS
-    static constexpr std::uint16_t GamePort = 160;
+    static constexpr std::uint16_t GamePort = gns::DefaultPort;
 #else
     static constexpr std::uint16_t GamePort = 16002;
 #endif

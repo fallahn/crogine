@@ -246,6 +246,25 @@ namespace cro
         std::vector<ButtonEvent> m_mouseUpEvents;
         std::vector<MotionEvent> m_motionEvents;
 
+        struct HoldEvent final
+        {
+            static constexpr float HoldTime = 0.25f;
+            static constexpr float MinHoldTime = 0.05f;
+
+            float currentHoldTime = HoldTime;
+            float timer = HoldTime;
+            bool active = false;
+
+            void start()
+            {
+                active = true;
+                currentHoldTime = HoldTime;
+                timer = HoldTime;
+            }
+        };
+        std::array<HoldEvent, 4u> m_keyHoldEvents = {};
+        std::array<HoldEvent, 4u> m_buttonHoldEvents = {};
+
         glm::uvec2 m_windowSize;
 
         //void setViewPort(std::int32_t, std::int32_t);
