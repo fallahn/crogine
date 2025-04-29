@@ -861,7 +861,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
         maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.035f);
         //TODO reduce the maxHook amount based on clubs with accuracy buff
         //or even make it worse if club requires!!
-
+        //maxHook += (0.01f * ACCURACY_VAL); //make sure to clamp this to some value, say MaxHook/4.f
 
         const auto s = cro::Util::Maths::sgn(hook);
         //changing this func changes how accurate a player needs to be

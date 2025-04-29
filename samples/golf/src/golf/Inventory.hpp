@@ -67,10 +67,10 @@ namespace inv
     //5 categories in the shop / types of item
     static inline const std::array<StatLabel, 5u> StatLabels =
     {
-        StatLabel("Accuracy: ","Distance: "),
-        StatLabel("Accuracy: ","Distance: "),
-        StatLabel("Spin Influence: ","Punch Distance: "),
-        StatLabel("Flop Height: ","Backspin: "),
+        StatLabel("Distance: ", "Accuracy: "),
+        StatLabel("Distance: ", "Accuracy: "),
+        StatLabel("Spin: ",     "Accuracy: "),
+        StatLabel("Spin: ",     "Accuracy: "),
         StatLabel("Hook/Slice Reduction: ","")
     };
 
@@ -194,84 +194,87 @@ namespace inv
     {
         //type, stat 1, stat 2, price, manufacturer ID
         
-        //driver-wood stat 1 accuracy
-        //stat 2 distance
-        Item(ItemType::Driver, 8,-6,2300, 0),//8,-6
-        Item(ItemType::Driver, 5,-3,2400, 1),//5,-3
-        Item(ItemType::Driver, 3,-1,2500, 2),//3,-1
+        //driver-wood 
+        //stat 1 distance
+        //stat 2 accuracy
+        Item(ItemType::Driver, 8,-6,2300, 0),
+        Item(ItemType::Driver, 5,-3,2400, 1),
+        Item(ItemType::Driver, 3,-1,2500, 2),
         Item(ItemType::Driver, 1, 0,2550, 3),
-        Item(ItemType::Driver, -1,2,2600, 4),//-1,2
-        Item(ItemType::Driver, -2,3,2750, 5),//-2,3
-        Item(ItemType::Driver, -4,4,2800, 6),//-4,4
+        Item(ItemType::Driver, -1,2,2600, 4),
+        Item(ItemType::Driver, -2,3,2750, 5),
+        Item(ItemType::Driver, -4,4,2800, 6),
 
-        Item(ItemType::ThreeW, 7,-6,2050, 0),//7,-6
-        Item(ItemType::ThreeW, 3,-4,2140, 1),//3,-4
-        Item(ItemType::ThreeW, 4,-3,2200, 2),//4,-3
+        Item(ItemType::ThreeW, 7,-6,2050, 0),
+        Item(ItemType::ThreeW, 3,-4,2140, 1),
+        Item(ItemType::ThreeW, 4,-3,2200, 2),
         Item(ItemType::ThreeW, 2,-1,2350, 3),
-        Item(ItemType::ThreeW, -1,2,2540, 4),//-1,2
-        Item(ItemType::ThreeW, -3,4,2600, 5),//-3,4
-        Item(ItemType::ThreeW, -2,3,2650, 6),//-2,3
+        Item(ItemType::ThreeW, -1,2,2540, 4),
+        Item(ItemType::ThreeW, -3,4,2600, 5),
+        Item(ItemType::ThreeW, -2,3,2650, 6),
 
-        Item(ItemType::FiveW,  4,-1,2000, 0),//4,-1
-        Item(ItemType::FiveW,  5,-2,2100, 1),//5,-2
-        Item(ItemType::FiveW,  3,-1,2250, 2),//3,-1
+        Item(ItemType::FiveW,  4,-1,2000, 0),
+        Item(ItemType::FiveW,  5,-2,2100, 1),
+        Item(ItemType::FiveW,  3,-1,2250, 2),
         Item(ItemType::FiveW,  2,-1,2280, 3),
-        Item(ItemType::FiveW,  0, 1,2400, 4),//0,1
-        Item(ItemType::FiveW,  -2,3,2550, 5),//-2,3
-        Item(ItemType::FiveW,  -3,3,2700, 6),//-3,3
+        Item(ItemType::FiveW,  0, 1,2400, 4),
+        Item(ItemType::FiveW,  -2,3,2550, 5),
+        Item(ItemType::FiveW,  -3,3,2700, 6),
         
-        //irons stat1 more accuracy,
-        //stat2 spin effect - pos more spin
-        Item(ItemType::NineI,  3,-4,720, 0),//3,-4
-        Item(ItemType::NineI,  2,-3,700, 1),//2,-3
-        Item(ItemType::NineI,  1,-1,810, 2),//1,-1
+        //irons
+        //stat1 spin effect - pos more spin
+        //stat2 more accuracy
+        Item(ItemType::NineI,  3,-4,720, 0),
+        Item(ItemType::NineI,  2,-3,700, 1),
+        Item(ItemType::NineI,  1,-1,810, 2),
         Item(ItemType::NineI,  0, 1,780, 3),
-        Item(ItemType::NineI,  -1,3,850, 4),//-1,3
-        Item(ItemType::NineI,  -2,5,990, 5),//-2,5
-        Item(ItemType::NineI,  -2,6,920, 6),//-2,6
+        Item(ItemType::NineI,  -1,3,850, 4),
+        Item(ItemType::NineI,  -2,5,990, 5),
+        Item(ItemType::NineI,  -2,6,920, 6),
         
-        Item(ItemType::EightI, 3, -5,720, 0),//3,-5
-        Item(ItemType::EightI, 2, -1,700, 1),//2,-1
-        Item(ItemType::EightI, 1,  0,810, 2),//1,0
+        Item(ItemType::EightI, 3, -5,720, 0),
+        Item(ItemType::EightI, 2, -1,700, 1),
+        Item(ItemType::EightI, 1,  0,810, 2),
         Item(ItemType::EightI, -1, 2,780, 3),
-        Item(ItemType::EightI, -2, 4,850, 4),//-2,4
-        Item(ItemType::EightI, -2, 5,990, 5),//-2,5
-        Item(ItemType::EightI, -1, 5,920, 6),//-1,5
+        Item(ItemType::EightI, -2, 4,850, 4),
+        Item(ItemType::EightI, -2, 5,990, 5),
+        Item(ItemType::EightI, -1, 5,920, 6),
         
-        Item(ItemType::SevenI,  5,-6,720, 0),//5,-6
-        Item(ItemType::SevenI,  3,-3,700, 1),//3,-3
-        Item(ItemType::SevenI,  1, 0,810, 2),//1,0
+        Item(ItemType::SevenI,  5,-6,720, 0),
+        Item(ItemType::SevenI,  3,-3,700, 1),
+        Item(ItemType::SevenI,  1, 0,810, 2),
         Item(ItemType::SevenI,  0, 1,780, 3),
-        Item(ItemType::SevenI,  -2,4,850, 4),//-2,4
-        Item(ItemType::SevenI,  -4,6,990, 5),//-4,6
-        Item(ItemType::SevenI,  -2,5,920, 6),//-2,5
+        Item(ItemType::SevenI,  -2,4,850, 4),
+        Item(ItemType::SevenI,  -4,6,990, 5),
+        Item(ItemType::SevenI,  -2,5,920, 6),
         
-        Item(ItemType::SixI,  4,-4,720, 0),//4,-4
-        Item(ItemType::SixI,  1,-3,700, 1),//1,-3
-        Item(ItemType::SixI,  0,-1,810, 2),//0,-1
+        Item(ItemType::SixI,  4,-4,720, 0),
+        Item(ItemType::SixI,  1,-3,700, 1),
+        Item(ItemType::SixI,  0,-1,810, 2),
         Item(ItemType::SixI,  -2,1,780, 3),
-        Item(ItemType::SixI,  -2,3,850, 4),//-2,3
-        Item(ItemType::SixI,  -3,4,990, 5),//-3,4
-        Item(ItemType::SixI,  -3,6,920, 6),//-3,6
+        Item(ItemType::SixI,  -2,3,850, 4),
+        Item(ItemType::SixI,  -3,4,990, 5),
+        Item(ItemType::SixI,  -3,6,920, 6),
         
-        Item(ItemType::FiveI,  5,-4,720, 0),//5,-4
-        Item(ItemType::FiveI,  1,-2,700, 1),//1,-2
-        Item(ItemType::FiveI,  0, 1,810, 2),//0,1
+        Item(ItemType::FiveI,  5,-4,720, 0),
+        Item(ItemType::FiveI,  1,-2,700, 1),
+        Item(ItemType::FiveI,  0, 1,810, 2),
         Item(ItemType::FiveI,  -1,2,780, 3),
-        Item(ItemType::FiveI,  -3,4,850, 4),//-3,4
-        Item(ItemType::FiveI,  -2,3,990, 5),//-2,3
-        Item(ItemType::FiveI,  -2,5,920, 6),//-2,5
+        Item(ItemType::FiveI,  -3,4,850, 4),
+        Item(ItemType::FiveI,  -2,3,990, 5),
+        Item(ItemType::FiveI,  -2,5,920, 6),
         
-        Item(ItemType::FourI,  6,-5,720, 0),//6,-5
-        Item(ItemType::FourI,  3,-3,700, 1),//3,-3
-        Item(ItemType::FourI,  2,-1,810, 2),//2,-1
+        Item(ItemType::FourI,  6,-5,720, 0),
+        Item(ItemType::FourI,  3,-3,700, 1),
+        Item(ItemType::FourI,  2,-1,810, 2),
         Item(ItemType::FourI, -1, 0,780, 3),
-        Item(ItemType::FourI,  -1,2,850, 4),//-1,2
-        Item(ItemType::FourI,  -3,5,990, 5),//-3,5
-        Item(ItemType::FourI,  -2,4,920, 6),//-2,4
+        Item(ItemType::FourI,  -1,2,850, 4),
+        Item(ItemType::FourI,  -3,5,990, 5),
+        Item(ItemType::FourI,  -2,4,920, 6),
         
-        //wedges stat1 more accuracy
-        //stat2 top and back spin have more effect
+        //wedges 
+        //stat1 positive more spin effect
+        //stat2 more accuracy
         Item(ItemType::PitchWedge, 2,0,400, 0),
         Item(ItemType::PitchWedge, 2,1,510, 1),
         Item(ItemType::PitchWedge, 2,2,580, 2),
