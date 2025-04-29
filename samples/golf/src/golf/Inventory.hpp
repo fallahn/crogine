@@ -52,7 +52,7 @@ namespace inv
     {
         "Driver", "3 Wood", "5 Wood", "9 Iron", "8 Iron", "7 Iron",
         "6 Iron", "5 Iron", "4 Iron", "Pitch Wedge", "Gap Wedge",
-        "Sand Wedge", "Pack Of 25 Balls",
+        "Sand Wedge", "Pack Of 10 Balls",
     };
 
     struct StatLabel final

@@ -832,7 +832,10 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     //add hook/slice to yaw
     auto hook = getHook();
-    //TODO reduce the hook amount based on the active ball
+    
+    //reduce the hook amount based on the active ball - max buff is 7
+    const auto ballVal = 0.03f * static_cast<float>(7); //TODO get this from active profile
+    hook *= 1.f - ballVal;
 
     const auto level = Social::getLevel() / 10;
     auto maxHook = MaxHook - (static_cast<float>(std::clamp(level, 0, 3)) * 0.0025f);
@@ -857,7 +860,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     {
         maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.035f);
         //TODO reduce the maxHook amount based on clubs with accuracy buff
-
+        //or even make it worse if club requires!!
 
 
         const auto s = cro::Util::Maths::sgn(hook);
