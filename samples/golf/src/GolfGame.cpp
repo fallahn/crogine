@@ -932,6 +932,7 @@ bool GolfGame::initialise()
     cro::AudioMixer::setLabel("Vehicles", MixerChannel::Vehicles);
     cro::AudioMixer::setLabel("Environment", MixerChannel::Environment);
     cro::AudioMixer::setLabel("Game Music", MixerChannel::UserMusic);
+    cro::AudioMixer::setLabel("Text To Speech", MixerChannel::TextToSpeech);
 
     m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();

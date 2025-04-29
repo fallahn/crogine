@@ -832,8 +832,10 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     //add hook/slice to yaw
     auto hook = getHook();
+    //TODO reduce the hook amount based on the active ball
+
     const auto level = Social::getLevel() / 10;
-    auto maxHook = MaxHook - (static_cast<float>(std::clamp(level, 0, 3)) * 0.03f);
+    auto maxHook = MaxHook - (static_cast<float>(std::clamp(level, 0, 3)) * 0.005f);
 
     float powerMod = 0.f;
 
@@ -888,9 +890,12 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     }
     else
     {
-        maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.025f);
+        maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.022f);
         power *= getPower();
     }
+
+    //TODO reduce the maxHook amount based on active club buff
+
     yaw += maxHook * hook;
     power *= 1.f - (std::abs(hook) * powerMod);
     //LogI << (std::abs(hook) * powerMod) << std::endl;

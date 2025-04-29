@@ -45,7 +45,7 @@ struct MixerChannel final
     {
         Music, Effects, Menu,
         Voice, Vehicles, Environment,
-        UserMusic,
+        UserMusic, TextToSpeech,
 
         Count
     };

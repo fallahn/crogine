@@ -33,8 +33,6 @@ source distribution.
 #define NOMINMAX
 #include <sapi.h>
 #elif defined __linux__
-#include <stdio.h>
-#include <chrono>
 #include <thread>
 #include <atomic>
 #include <mutex>

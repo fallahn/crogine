@@ -138,7 +138,8 @@ namespace
         "Voice",
         "Vehicles",
         "Environment",
-        "Game Music"
+        "Game Music",
+        "Text To Speech"
     };
     //generally static vars would be a bad idea, but in this case
     //a static index value will remember the last channel between

@@ -47,6 +47,11 @@ source distribution.
 
 #include <cstring>
 
+#ifdef __linux__
+#include <stdio.h>
+#include <chrono>
+#endif
+
 namespace
 {
     //this is static so the preference is remember between
@@ -849,14 +854,18 @@ bool TextChat::speak(const cro::String& str) const
     {
         if (m_speaker.voice != nullptr)
         {
-            //m_speaker.voice->SetVolume(); //TODO read mixer and scale 0 - 100
+            m_speaker.voice->SetVolume(static_cast<std::uint16_t>(cro::AudioMixer::getVolume(MixerChannel::TextToSpeech) * 100.f));
             m_speaker.voice->Speak((LPCWSTR)(str.toUtf16().c_str()), SPF_ASYNC, nullptr);
             return true;
         }
     }
 #elif defined(__linux__)
-    m_speaker.say(str, TTSSpeaker::Voice::Three);
-    return true;
+    //if (m_sharedData.useTTS //hm there's currently no way to set flite volume
+    //    && cro::AudioMixer::getVolume(MixerChannel::TextToSpeech) > 0.2f)
+    {
+        m_speaker.say(str, TTSSpeaker::Voice::Three);
+        return true;
+    }
 #endif
     return false;
 }
@@ -869,14 +878,14 @@ TextChat::TTSSpeaker::TTSSpeaker()
     m_thread            (&TTSSpeaker::threadFunc, this)
 {
     m_threadRunning = cro::FileSystem::fileExists("flite");
-    if (!m_threadRunning)
-    {
-        LogW << "flite not found, TTS is unavailable" << std::endl;
-    }
-    else
-    {
-        LogI << "Created TTS" << std::endl;
-    }
+    //if (!m_threadRunning)
+    //{
+    //    LogW << "flite not found, TTS is unavailable" << std::endl;
+    //}
+    //else
+    //{
+    //    LogI << "Created TTS" << std::endl;
+    //}
 }
 
 TextChat::TTSSpeaker::~TTSSpeaker()
@@ -919,15 +928,13 @@ void TextChat::TTSSpeaker::threadFunc()
                     m_queue.pop();
                 }
 
-                //TODO remove mid-line quotes as they break the string
-
-
+                //remove mid-line quotes as they break the string
+                while (auto p = msg.find("\"") != cro::String::InvalidPos)
+                {
+                    msg.erase(p);
+                }
+                //then propertly terminate
                 msg += "\"";
-
-#ifdef USE_GNS
-                //yeah I have NO idea why this is necessary
-                msg += "\"";
-#endif
 
                 {
                     std::string say = "./flite -voice ";
@@ -955,7 +962,7 @@ void TextChat::TTSSpeaker::threadFunc()
                     std::copy(say.begin(), say.end(), finalMessage.data());
                     std::copy(utf.begin(), utf.end(), finalMessage.data() + say.length());
 
-
+                    //TODO is there a way to set the volume?
                     FILE* pipe = popen(finalMessage.data(), "r");
                     if (pipe)
                     {
