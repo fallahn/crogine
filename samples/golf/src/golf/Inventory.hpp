@@ -220,8 +220,8 @@ namespace inv
         Item(ItemType::FiveW,  -2,3,2550, 5),//-2,3
         Item(ItemType::FiveW,  -3,3,2700, 6),//-3,3
         
-        //irons stat1 spin effect - pos more spin,
-        //stat2 increased punch distance
+        //irons stat1 more accuracy,
+        //stat2 spin effect - pos more spin
         Item(ItemType::NineI,  3,-4,720, 0),//3,-4
         Item(ItemType::NineI,  2,-3,700, 1),//2,-3
         Item(ItemType::NineI,  1,-1,810, 2),//1,-1
@@ -270,7 +270,7 @@ namespace inv
         Item(ItemType::FourI,  -3,5,990, 5),//-3,5
         Item(ItemType::FourI,  -2,4,920, 6),//-2,4
         
-        //wedges stat1 increase flop height
+        //wedges stat1 more accuracy
         //stat2 top and back spin have more effect
         Item(ItemType::PitchWedge, 2,0,400, 0),
         Item(ItemType::PitchWedge, 2,1,510, 1),

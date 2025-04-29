@@ -856,45 +856,38 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     if (club != ClubID::Putter)
     {
         maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.035f);
+        //TODO reduce the maxHook amount based on clubs with accuracy buff
 
-        auto s = cro::Util::Maths::sgn(hook);
+
+
+        const auto s = cro::Util::Maths::sgn(hook);
         //changing this func changes how accurate a player needs to be
-        //sine, quad, cubic, quart, quint in steepness order
-        //if (Achievements::getActive())
+
+        //note that as most easings aren't symmetric that we use
+        //s to make the hook positive first, before reverting the
+        //result again.
+        switch (Social::getClubLevel())
         {
-            switch (level)
-            {
-            default:
-                hook = cro::Util::Easing::easeOutQuint(hook * s) * s;
-                break;
-            case 3:
-                hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
-                break;
-            case 2:
-                hook = cro::Util::Easing::easeOutCubic(hook * s) * s;
-                break;
-            case 1:
-                hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
-                break;
-            case 0:
-                hook = cro::Util::Easing::easeOutSine(hook * s) * s;
-                break;
-            }
+        default:
+        case 0:
+            hook = cro::Util::Easing::easeInQuad(hook * s) * s;
+            break;
+        case 1:
+            hook = cro::Util::Easing::easeInSine(hook * s) * s;
+            break;
+        case 2:
+            hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
+            break;
         }
-        /*else
-        {
-            hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
-        }*/
 
         power *= cro::Util::Easing::easeOutSine(getPower());
     }
     else
     {
-        maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.022f);
+        maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.03f);
         power *= getPower();
     }
 
-    //TODO reduce the maxHook amount based on active club buff
 
     yaw += maxHook * hook;
     power *= 1.f - (std::abs(hook) * powerMod);
