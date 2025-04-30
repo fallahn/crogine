@@ -860,8 +860,8 @@ bool TextChat::speak(const cro::String& str) const
         }
     }
 #elif defined(__linux__)
-    //if (m_sharedData.useTTS //hm there's currently no way to set flite volume
-    //    && cro::AudioMixer::getVolume(MixerChannel::TextToSpeech) > 0.2f)
+    if (m_sharedData.useTTS //hm there's currently no way to set flite volume
+        && cro::AudioMixer::getVolume(MixerChannel::TextToSpeech) > 0.2f)
     {
         m_speaker.say(str, TTSSpeaker::Voice::Three);
         return true;
@@ -900,7 +900,6 @@ TextChat::TTSSpeaker::~TTSSpeaker()
 //public
 void TextChat::TTSSpeaker::say(const cro::String& line, Voice voice) const
 {
-    LogI << "Saying: " << line.toAnsiString() << std::endl;
     if (cro::FileSystem::fileExists("flite"))
     {
         std::scoped_lock l(m_mutex);
@@ -964,7 +963,7 @@ void TextChat::TTSSpeaker::threadFunc()
                     FILE* pipe = popen(finalMessage.data(), "r");
                     if (pipe)
                     {
-                        LogI << "Said: " << finalMessage.data() << std::endl;
+                        //LogI << "Said: " << finalMessage.data() << std::endl;
                         while (pclose(pipe) == -1)
                         {
                             std::this_thread::sleep_for(std::chrono::milliseconds(30));
