@@ -178,6 +178,59 @@ namespace
         Emote({0x1F3C6}), Emote({0x1F947}), Emote({0x1F948}), Emote({0x1F949}), Emote({0x26F3}),
         Emote({0x2764}),  Emote({0x1F573}), Emote({0x1F4A5}), Emote({0x1F4A8}), Emote({0x1F4A4}),
     };
+
+    static constexpr std::size_t MAX_HISTORY = 10;
+    std::list<std::string> history;
+    std::int32_t historyIndex = -1;
+
+    int historyCallback(ImGuiInputTextCallbackData* data)
+    {
+        switch (data->EventFlag)
+        {
+        default: 
+            //LogI << "Flag: " << data->EventFlag << std::endl;
+            break;
+        case ImGuiInputTextFlags_CallbackCompletion: //user pressed tab to complete
+            break;
+        case ImGuiInputTextFlags_CallbackHistory:
+        {
+            const int prev_history_pos = historyIndex;
+            if (data->EventKey == ImGuiKey_UpArrow)
+            {
+                if (historyIndex == -1)
+                {
+                    historyIndex = static_cast<std::int32_t>(history.size()) - 1;
+                }
+                else if (historyIndex > 0)
+                {
+                    historyIndex--;
+                }
+            }
+            else if (data->EventKey == ImGuiKey_DownArrow)
+            {
+                if (historyIndex != -1)
+                {
+                    if (++historyIndex >= history.size())
+                    {
+                        historyIndex = -1;
+                    }
+                }
+            }
+
+            //a better implementation would preserve the data on the current input line along with cursor position.
+            if (prev_history_pos != historyIndex)
+            {
+                data->CursorPos = data->SelectionStart = data->SelectionEnd = data->BufTextLen =
+                    (int)snprintf(data->Buf, (size_t)data->BufSize, "%s", (historyIndex >= 0) ? 
+                        std::next(history.begin(), historyIndex)->c_str() : "");
+                data->BufDirty = true;
+            }
+        }
+        break;
+        }
+
+        return 0;
+    }
 }
 
 std::deque<TextChat::BufferLine> TextChat::m_displayBuffer;
@@ -374,8 +427,18 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
 
                     if (!Social::isSteamdeck())
                     {
-                        if (ImGui::InputText("##ip", &m_inputBuffer, ImGuiInputTextFlags_EnterReturnsTrue))
+                        if (ImGui::InputText("##ip", &m_inputBuffer, 
+                            ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory, &historyCallback))
                         {
+                            //store in history
+                            history.push_back(m_inputBuffer);
+                            if (history.size() > MAX_HISTORY)
+                            {
+                                history.pop_front();
+                            }
+                            historyIndex = -1;
+
+                            //this clears the buffer so do it *after* pushing to history
                             sendTextChat();
                             m_focusInput = true;
                         }
@@ -418,6 +481,8 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                                         m_inputBuffer.push_back(cp);
                                     }
                                     m_inputBuffer.pop_back(); //removes the terminator.. ugh
+                                    
+                                    //ImGui::CloseCurrentPopup();
                                 }
 
                                 if ((i % 5) != 4) ImGui::SameLine();

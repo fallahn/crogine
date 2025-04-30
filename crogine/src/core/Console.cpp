@@ -64,7 +64,7 @@ namespace
     const std::size_t MAX_BUFFER = 50;
 
     std::list<std::string> history;
-    const std::size_t MAX_HISTORY = 10;
+    constexpr std::size_t MAX_HISTORY = 10;
     std::int32_t historyIndex = -1;
 
     bool visible = false;
@@ -695,6 +695,7 @@ int textEditCallback(ImGuiInputTextCallbackData* data)
     {
     default: break;
     case ImGuiInputTextFlags_CallbackCompletion: //user pressed tab to complete
+        break;
     case ImGuiInputTextFlags_CallbackHistory:
     {
         const int prev_history_pos = historyIndex;
