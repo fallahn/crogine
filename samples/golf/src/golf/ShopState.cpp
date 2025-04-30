@@ -2112,7 +2112,7 @@ void ShopState::updateStatDisplay(const ItemEntry& itemEntry)
         valStr += "+";
     }
     valStr += std::to_string(item.stat01);
-    text1.getComponent<cro::Text>().setString(inv::StatLabels[m_selectedCategory].stat0 + valStr);
+    text1.getComponent<cro::Text>().setString(inv::StatLabels[m_selectedCategory].stat1 + valStr);
 
     auto& [bg2, text2] = m_statItems.statBars[1];
     bg2.getComponent<cro::Callback>().getUserData<StatBarData>().value = static_cast<float>(item.stat02);
@@ -2121,7 +2121,7 @@ void ShopState::updateStatDisplay(const ItemEntry& itemEntry)
     //second stat might be empty, eg balls
     valStr.clear();
 
-    if (!inv::StatLabels[m_selectedCategory].stat1.empty())
+    if (!inv::StatLabels[m_selectedCategory].stat2.empty())
     {
         if (item.stat02 > -1)
         {
@@ -2132,9 +2132,16 @@ void ShopState::updateStatDisplay(const ItemEntry& itemEntry)
     }
     else
     {
+        //check if we own any
+        if (itemEntry.owned)
+        {
+            const auto amt = m_sharedData.inventory.inventory[itemIndex];
+            valStr = std::to_string(amt) + " remaining";
+        }
+
         bg2.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     }
-    text2.getComponent<cro::Text>().setString(inv::StatLabels[m_selectedCategory].stat1 + valStr);
+    text2.getComponent<cro::Text>().setString(inv::StatLabels[m_selectedCategory].stat2 + valStr);
 
     //update manufacturer icon
     m_statItems.manufacturerIcon.getComponent<cro::Sprite>().setTextureRect(m_largeLogos[item.manufacturer].getTextureRect());
@@ -2404,11 +2411,15 @@ void ShopState::purchaseItem()
     auto& item = m_scrollNodes[m_selectedCategory].items[m_scrollNodes[m_selectedCategory].selectedItem];
     const auto& invItem = inv::Items[item.itemIndex];
 
-    m_sharedData.inventory.inventory[item.itemIndex] = 1; //hmmmm I was going to store the actual indices here, but surely a bool will do?
+    const auto isBall = invItem.manufacturer > inv::ManufID::BeyTree;
+
+    //we use this to track how many items were bought
+    //though it only really applies to balls which come in 10
+    m_sharedData.inventory.inventory[item.itemIndex] = isBall ? 10 : 1;
     m_sharedData.inventory.balance -= invItem.price;
     
     const auto manFlag = (1 << invItem.manufacturer);
-    if (invItem.manufacturer < inv::ManufID::TunnelRock && //not a ball
+    if (!isBall && //not a ball
         (m_sharedData.inventory.manufacturerFlags & manFlag) == 0)
     {
         m_sharedData.inventory.manufacturerFlags |= manFlag;
@@ -2429,6 +2440,8 @@ void ShopState::purchaseItem()
 
     m_buyCounter.str0.getComponent<cro::Text>().setString(m_sellString);
     m_buyCounter.str1.getComponent<cro::Text>().setString(m_sellString);
+
+    updateStatDisplay(item); // if this was a ball we need to refresh the number owned
 }
 
 void ShopState::sellItem()

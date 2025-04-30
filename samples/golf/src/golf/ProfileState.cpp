@@ -6132,12 +6132,12 @@ void ProfileState::refreshStat(std::uint32_t catID, std::int32_t invID, bool set
         valStr += "+";
     }
     valStr += std::to_string(item.stat01);
-    m_statBars[0].text.getComponent<cro::Text>().setString(inv::StatLabels[category].stat0 + valStr);
+    m_statBars[0].text.getComponent<cro::Text>().setString(inv::StatLabels[category].stat1 + valStr);
 
 
     //second stat might be empty, eg balls
     valStr.clear();
-    if (!inv::StatLabels[category].stat1.empty())
+    if (!inv::StatLabels[category].stat2.empty())
     {
         if (item.stat02 > -1)
         {
@@ -6149,10 +6149,14 @@ void ProfileState::refreshStat(std::uint32_t catID, std::int32_t invID, bool set
     }
     else
     {
+        //display number of balls remaining
+        const auto amt = m_sharedData.inventory.inventory[invID];
+        valStr = std::to_string(amt) + " remaining";
+
         m_statBars[1].bgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
         m_statBars[1].pointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     }
-    m_statBars[1].text.getComponent<cro::Text>().setString(inv::StatLabels[category].stat1 + valStr);
+    m_statBars[1].text.getComponent<cro::Text>().setString(inv::StatLabels[category].stat2 + valStr);
 }
 
 void ProfileState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)

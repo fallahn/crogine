@@ -57,11 +57,11 @@ namespace inv
 
     struct StatLabel final
     {
-        std::string stat0;
         std::string stat1;
+        std::string stat2;
 
         StatLabel(const std::string& s0, const std::string& s1)
-            :stat0(s0), stat1(s1) { }
+            :stat1(s0), stat2(s1) { }
     };
 
     //5 categories in the shop / types of item

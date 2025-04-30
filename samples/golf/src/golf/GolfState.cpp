@@ -1948,6 +1948,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             default: break;
             case TerrainID::Scrub:
             case TerrainID::Water:
+                updateInventory(data.terrain); //check if this counts as a loss for the local player's ball inventory
                 oob = true;
                 [[fallthrough]];
             case TerrainID::Bunker:
