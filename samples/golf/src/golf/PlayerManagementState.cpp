@@ -111,10 +111,11 @@ namespace
 
     const std::string HelpString =
 R"(
-Grouping allows splitting the round's players into smaller groups which
-play concurrently for a shorter round time. Multiple players on the same
-client or in the same group continue to play consecutively. Groups are
-approximate as players on the same client cannot be split between groups.
+Simultaneous play allows splitting the round's players into smaller
+groups which play concurrently for a shorter round time. Multiple
+players on the same client or in the same group continue to play
+consecutively. Groups are approximate as players on the same client
+cannot be split between groups.
 
 Skins rounds and Match play ignore group settings.
 
@@ -538,7 +539,7 @@ void PlayerManagementState::buildScene()
     };
 
     //grouping
-    if (false &&
+    if (/*false &&*/
         m_sharedData.baseState == StateID::Menu)
     {
         entity = m_scene.createEntity();
@@ -587,23 +588,26 @@ void PlayerManagementState::buildScene()
         auto helpRoot = entity;
         m_helpRoot = helpRoot;
 
+        
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 172.f, 0.2f });
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString("Group Mode");
-        entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-        helpRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-        entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ -258.f, 140.f, 0.2f });
+        entity.addComponent<cro::Transform>().setPosition({ -258.f, 0.f, 0.2f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString(HelpString);
         entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.addComponent<cro::UIInput>().setGroup(MenuID::Help);
+        bounds = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::Transform>().setOrigin({ 0.f, -std::round(bounds.height / 2.f) });
+        helpRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, std::round(bounds.height / 2.f) + 32.f, 0.2f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("Simultaneous Play");
+        entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         helpRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 

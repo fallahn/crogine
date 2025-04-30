@@ -2510,7 +2510,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //displays a message if current rule type requires more players
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 118.f, 20.f, 0.4f });
+    entity.addComponent<cro::Transform>().setPosition({ 113.f, 34.f, 0.4f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("NEED MORE PLAYERS");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -2960,10 +2960,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             {
 #ifdef USE_GNS
                 requestStackPush(StateID::Leaderboard);
-#else
-                cro::Util::String::parseURL("https://gamejolt.com/games/super-video-golf/809390/scores/872059/best");
-#endif
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+#else
+                //cro::Util::String::parseURL("https://gamejolt.com/games/super-video-golf/809390/scores/872059/best");
+                m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
+#endif
             }
         }
     );
@@ -4195,12 +4196,12 @@ void MenuState::quitLobby()
 void MenuState::addCourseSelectButtons()
 {
     //selection box to open player management
-    static constexpr float Width = 216.f;
-    static constexpr float Height = 228.f;
+    static constexpr float Width = 214.f;
+    static constexpr float Height = 14.f;
     static constexpr float Thickness = 1.f;
 
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 5.f, 7.f, 0.5f });
+    entity.addComponent<cro::Transform>().setPosition({ 6.f, 10.f, 0.5f });
     entity.getComponent<cro::Transform>().setOrigin({ Width / 2.f, Height / 2.f });
     entity.getComponent<cro::Transform>().move({ Width / 2.f, Height / 2.f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");

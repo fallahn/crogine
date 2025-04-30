@@ -2035,7 +2035,8 @@ void MenuState::updateLobbyAvatars()
 
         cro::String nameString;
 
-        constexpr float RowSpacing = -14.f;
+        constexpr float RowSpacing = -12.f;
+        constexpr float RankSpacing = -14.f;
         for (const auto& c : m_sharedData.connectionData)
         {
             //update the name label texture
@@ -2135,7 +2136,7 @@ void MenuState::updateLobbyAvatars()
 
                 //rank text
                 entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ 100.f, (RowSpacing * clientCount) + 180.f, 0.3f });
+                entity.addComponent<cro::Transform>().setPosition({ 100.f, (RankSpacing * clientCount) + 180.f, 0.3f });
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Text>(smallFont).setString("Level");
                 entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -2227,7 +2228,7 @@ void MenuState::updateLobbyAvatars()
                         ent.getComponent<cro::SpriteAnimation>().play(index);
                     }
                 };
-                entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::LobbyText;
+                //entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::LobbyText;
                 rankEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                 children.push_back(entity);
 
@@ -2319,17 +2320,18 @@ void MenuState::updateLobbyAvatars()
         //create text for name list
         if (!nameString.empty())
         {
+            //nameString += "buns\nflaps\ndicketry\nspeef\nbuns\nflaps\ndicketry\nspeef";
             auto entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(glm::vec3(1.f, 0.f, 0.2f));
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(largeFont).setString(nameString);
             entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
             entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-            entity.getComponent<cro::Text>().setVerticalSpacing(6.f);
+            entity.getComponent<cro::Text>().setVerticalSpacing(4.f); //was 6
 
             //used to update spacing by resize callback from lobby background ent.
             //TODO is this still used?
-            entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::LobbyText;
+            //entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::LobbyText;
             e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             children.push_back(entity);
         }
