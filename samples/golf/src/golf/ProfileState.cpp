@@ -4590,10 +4590,9 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
             m_gearMenus[i].background = entity;
             bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-            //items are updated dynamically when the menu is opened to account for new shop purchases
-
-            pos.y -= GearMenuSpacing;
+            //menu items are updated dynamically when the menu is opened to account for new shop purchases
         }
+        pos.y -= GearMenuSpacing;
     }
 
     //correct indices for first / last
