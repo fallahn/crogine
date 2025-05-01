@@ -1794,7 +1794,12 @@ void GolfState::handleMessage(const cro::Message& msg)
                 };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-            m_inputParser.setActive(false, m_currentPlayer.terrain);
+            const inv::Loadout* l = nullptr;
+            if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+            {
+                l = &m_sharedProfiles.playerProfiles[m_sharedData.profileIndices[m_currentPlayer.player]].loadout;
+            }
+            m_inputParser.setActive(false, m_currentPlayer.terrain, l);
         }
         break;
         case GolfEvent::NiceTiming:
@@ -6707,9 +6712,15 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     Club::setClubLevel(isCPU ? m_sharedData.clubLimit ? m_sharedData.clubSet : m_cpuGolfer.getClubLevel() : m_sharedData.clubSet); //do this first else setActive has the wrong estimation distance
     auto lie = m_avatars[player.client][player.player].ballModel.getComponent<ClientCollider>().lie;
 
+    const inv::Loadout* l = nullptr;
+    if (localPlayer)
+    {
+        l = &m_sharedProfiles.playerProfiles[m_sharedData.profileIndices[player.player]].loadout;
+    }
+
     m_puttViewState.isEnabled = true;
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
-    m_inputParser.setActive(localPlayer && !m_photoMode, m_currentPlayer.terrain, isCPU, lie);
+    m_inputParser.setActive(localPlayer && !m_photoMode, m_currentPlayer.terrain, l, isCPU, lie);
     m_inputParser.setDistanceToHole(glm::length(m_holeData[m_currentHole].pin - player.position));
     m_restoreInput = localPlayer; //if we're in photo mode should we restore input parser?
     Achievements::setActive(localPlayer && !isCPU && m_allowAchievements);
@@ -7297,7 +7308,7 @@ void GolfState::hitBall()
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, update, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_puttViewState.isEnabled = false;
-    m_inputParser.setActive(false, m_currentPlayer.terrain);
+    m_inputParser.setActive(false, m_currentPlayer.terrain, nullptr);
     m_restoreInput = false;
     m_achievementTracker.hadBackspin = (spin.y < 0);
     m_achievementTracker.hadTopspin = (spin.y > 0);

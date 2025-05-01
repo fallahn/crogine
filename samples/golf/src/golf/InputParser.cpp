@@ -79,6 +79,7 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_swingput          (sd),
     m_humanCount        (1),
     m_activeController  (-1),
+    m_activeLoadout     (nullptr),
     m_inputFlags        (0),
     m_prevFlags         (0),
     m_enableFlags       (std::numeric_limits<std::uint16_t>::max()),
@@ -610,11 +611,12 @@ void InputParser::setHumanCount(std::int32_t count)
     m_swingput.setHumanCount(count);
 }
 
-void InputParser::setActive(bool active, std::int32_t terrain, bool isCPU, std::uint8_t lie)
+void InputParser::setActive(bool active, std::int32_t terrain, const inv::Loadout* loadout, bool isCPU, std::uint8_t lie)
 {
     CRO_ASSERT(terrain < TerrainID::Count, "");
     m_active = active;
     m_terrain = terrain;
+    m_activeLoadout = loadout;
     m_isCPU = isCPU;
     m_lie = lie;
     m_state = State::Aim;
@@ -833,8 +835,24 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     //add hook/slice to yaw
     auto hook = getHook();
     
+    std::int32_t ballStat = 0;
+    std::int32_t clubStat = 0;
+    if (m_activeLoadout)
+    {
+        if (m_activeLoadout->items[inv::Ball] != -1)
+        {
+            ballStat = inv::Items[m_activeLoadout->items[inv::Ball]].stat01;
+        }
+
+        if (club != ClubID::Putter
+            && m_activeLoadout->items[club] != -1)
+        {
+            clubStat = inv::Items[m_activeLoadout->items[club]].stat02;
+        }
+    }
+
     //reduce the hook amount based on the active ball - max buff is 7
-    const auto ballVal = 0.03f * static_cast<float>(7); //TODO get this from active profile
+    const auto ballVal = 0.03f * static_cast<float>(ballStat);
     hook *= 1.f - ballVal;
 
     const auto level = Social::getLevel() / 10;
@@ -859,9 +877,9 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     if (club != ClubID::Putter)
     {
         maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.035f);
-        //TODO reduce the maxHook amount based on clubs with accuracy buff
+        //reduce the maxHook amount based on clubs with accuracy buff
         //or even make it worse if club requires!!
-        //maxHook += (0.01f * ACCURACY_VAL); //make sure to clamp this to some value, say MaxHook/4.f
+        maxHook = std::min(MaxHook + 0.1f, maxHook + (0.01f * clubStat));
 
         const auto s = cro::Util::Maths::sgn(hook);
         //changing this func changes how accurate a player needs to be
@@ -932,6 +950,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     impulse *= power;
 
+    m_activeLoadout = nullptr;
     return { impulse, spin, hook };
 }
 

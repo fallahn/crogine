@@ -821,7 +821,13 @@ void GolfState::toggleFreeCam()
         m_gameScene.getSystem<FpsCameraSystem>()->process(0.f);
 
         //m_waterEnt.getComponent<cro::Callback>().active = false;
-        m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain);
+
+        const inv::Loadout* l = nullptr;
+        if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+        {
+            l = &m_sharedProfiles.playerProfiles[m_sharedData.profileIndices[m_currentPlayer.player]].loadout;
+        }
+        m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain, l);
         cro::App::getWindow().setMouseCaptured(true);
 
 
@@ -882,7 +888,13 @@ void GolfState::toggleFreeCam()
                 m_gameScene.setSystemActive<FpsCameraSystem>(false);
 
                 m_waterEnt.getComponent<cro::Callback>().active = true;
-                m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain);
+
+                const inv::Loadout* l = nullptr;
+                if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+                {
+                    l = &m_sharedProfiles.playerProfiles[m_sharedData.profileIndices[m_currentPlayer.player]].loadout;
+                }
+                m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain, l);
                 cro::App::getWindow().setMouseCaptured(false);
 
                 m_freecamMenuEnt.getComponent<cro::Callback>().active = false; //this does the show/hide animation

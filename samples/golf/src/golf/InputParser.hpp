@@ -32,6 +32,7 @@ source distribution.
 #include "InputBinding.hpp"
 #include "Swingput.hpp"
 #include "Thumbsticks.hpp"
+#include "Inventory.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -70,7 +71,7 @@ public:
     void setHumanCount(std::int32_t); //if there's only one human count we can use input from any controller
 
     // *sigh* be careful with this, the int param can be implicitly converted to bool...
-    void setActive(bool active, std::int32_t terrain, bool isCPU = false, std::uint8_t lie = 1);
+    void setActive(bool active, std::int32_t terrain, const inv::Loadout*, bool isCPU = false, std::uint8_t lie = 1);
     void setSuspended(bool);
     void setEnableFlags(std::uint16_t); //bits which are set are *enabled*
     void setMaxClub(float, bool atTee); //based on overall distance of hole
@@ -119,6 +120,8 @@ private:
     Swingput m_swingput;
     std::int32_t m_humanCount;
     std::int32_t m_activeController; //used when multple controllers are connected in single player
+
+    mutable const inv::Loadout* m_activeLoadout;
 
     std::uint16_t m_inputFlags;
     std::uint16_t m_prevFlags;

@@ -770,7 +770,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-            m_inputParser.setActive(false, TerrainID::Fairway);
+            m_inputParser.setActive(false, TerrainID::Fairway, nullptr);
         }
             break;
         case GolfEvent::ClubChanged:
@@ -3310,7 +3310,7 @@ void DrivingState::createFlag()
                 e.getComponent<cro::Callback>().active = false;
                 e.getComponent<cro::ParticleEmitter>().start();
 
-                m_inputParser.setActive(true, TerrainID::Fairway);
+                m_inputParser.setActive(true, TerrainID::Fairway, nullptr);
                 m_inputParser.setHoleDirection(-PlayerPosition);
 
                 //show the input bar
@@ -3687,7 +3687,7 @@ void DrivingState::setActiveCamera(std::int32_t camID)
 
 void DrivingState::forceRestart()
 {
-    m_inputParser.setActive(false, TerrainID::Fairway);
+    m_inputParser.setActive(false, TerrainID::Fairway, nullptr);
 
     //reset minimap
     auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
