@@ -211,9 +211,9 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
                         *m_activeName = cro::String::fromUtf8(m_nameBuffer.data(), m_nameBuffer.data() + std::strlen(m_nameBuffer.data()));
                         *m_activeName = m_activeName->substr(0, ConstVal::MaxStringChars);
 
-                        if (m_activeName == &m_profileData.playerProfiles[0].name)
+                        if (m_activeName == &m_profileData.playerProfiles[0].playerData.name)
                         {
-                            m_profileData.playerProfiles[0].saveProfile();
+                            m_profileData.playerProfiles[0].playerData.saveProfile();
                             Social::setPlayerName(*m_activeName); //this raises a message to refresh any text which uses the name string
                         }
                         else
@@ -1427,7 +1427,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                     }
                     else
                     {
-                        m_activeName = &m_profileData.playerProfiles[0].name;
+                        m_activeName = &m_profileData.playerProfiles[0].playerData.name;
                     }
 
                     auto utf = m_activeName->toUtf8();
@@ -1446,9 +1446,9 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                                         *m_activeName = cro::String::fromUtf8(buff, buff + std::strlen(buff));
                                         *m_activeName = m_activeName->substr(0, ConstVal::MaxStringChars);
 
-                                        if (m_activeName == &m_profileData.playerProfiles[0].name)
+                                        if (m_activeName == &m_profileData.playerProfiles[0].playerData.name)
                                         {
-                                            m_profileData.playerProfiles[0].saveProfile();
+                                            m_profileData.playerProfiles[0].playerData.saveProfile();
                                             Social::setPlayerName(*m_activeName);
                                         }
                                         else

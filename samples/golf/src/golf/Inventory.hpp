@@ -101,6 +101,48 @@ namespace inv
             std::fill(items.begin(), items.end(), -1);
             std::fill(name.begin(), name.end(), 0);
         }
+
+        void read(const std::string profileID)
+        {
+            std::fill(items.begin(), items.end(), -1);
+            const auto loadoutPath = Content::getUserContentPath(Content::UserContent::Profile) + "/" + profileID + "/load.out";
+
+            cro::RaiiRWops file;
+            file.file = SDL_RWFromFile(loadoutPath.c_str(), "rb");
+            if (file.file)
+            {
+                if (!SDL_RWread(file.file, items.data(), sizeof(items), 1))
+                {
+                    LogW << "Failed reading loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
+                }
+            }
+        }
+
+        void write(const std::string& profileID) const
+        {
+            auto path = Content::getUserContentPath(Content::UserContent::Profile);
+            if (!cro::FileSystem::directoryExists(path))
+            {
+                cro::FileSystem::createDirectory(path);
+            }
+            path += profileID + "/";
+
+            if (!cro::FileSystem::directoryExists(path))
+            {
+                cro::FileSystem::createDirectory(path);
+            }
+            path += "load.out";
+
+            cro::RaiiRWops file;
+            file.file = SDL_RWFromFile(path.c_str(), "wb");
+            if (file.file)
+            {
+                if (!file.file->write(file.file, items.data(), sizeof(items), 1))
+                {
+                    LogW << "Failed writing loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
+                }
+            }
+        }
     };
 
     //the total item count available in the shop

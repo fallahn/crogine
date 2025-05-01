@@ -2464,13 +2464,13 @@ void ShopState::sellItem()
     m_buyCounter.str1.getComponent<cro::Text>().setString(m_buyString);
 
     //make sure to remove it from any profiles which have this item assigned to a loadout
-    for (auto& profile : m_sharedProfileData.playerProfiles)
+    for (auto& [pd, loadout] : m_sharedProfileData.playerProfiles)
     {
-        if (auto res = std::find(profile.loadout.begin(), profile.loadout.end(), item.itemIndex);
-            res != profile.loadout.end())
+        if (auto res = std::find(loadout.items.begin(), loadout.items.end(), item.itemIndex);
+            res != loadout.items.end())
         {
             *res = -1;
-            profile.writeLoadout();
+            loadout.write(pd.profileID);
         }
     }
 }

@@ -1349,7 +1349,7 @@ void MenuState::handleMessage(const cro::Message& msg)
                 auto avtIdx = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
 
                 m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] =
-                    m_profileData.playerProfiles[avtIdx];
+                    m_profileData.playerProfiles[avtIdx].playerData;
                 updateRoster();
             }
                 break;
@@ -3309,8 +3309,8 @@ void MenuState::launchQuickPlay()
     m_rosterMenu.activeIndex = 0;
     setProfileIndex(0, false);
     m_profileData.activeProfileIndex = 0;
-    m_profileData.playerProfiles[0].isCPU = false;
-    m_profileData.playerProfiles[0].saveProfile();
+    m_profileData.playerProfiles[0].playerData.isCPU = false;
+    m_profileData.playerProfiles[0].playerData.saveProfile();
 
     m_sharedData.hosting = true;
     m_sharedData.gameMode = GameMode::FreePlay;

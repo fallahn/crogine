@@ -32,6 +32,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "PacketIDs.hpp"
 #include "SharedStateData.hpp"
+#include "SharedProfileData.hpp"
 #include "InterpolationSystem.hpp"
 #include "ClientPacketData.hpp"
 #include "MessageIDs.hpp"
@@ -175,13 +176,14 @@ namespace
     }
 }
 
-GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
+GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedProfileData& sp)
     : cro::State            (stack, context),
     m_musicStream           (2,48000),
     m_hasSnow               (false),
     m_ntpPro                (sd.scoreType == ScoreType::NearestThePinPro),
     m_hotSeat               (false),
     m_sharedData            (sd),
+    m_sharedProfiles        (sp),
     m_gameScene             (context.appInstance.getMessageBus(), 1024/*, cro::INFO_FLAG_SYSTEM_TIME | cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_skyScene              (context.appInstance.getMessageBus(), 512),
     m_uiScene               (context.appInstance.getMessageBus(), 1536),

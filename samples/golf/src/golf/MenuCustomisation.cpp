@@ -624,7 +624,7 @@ void MenuState::updateProfileTextures(std::size_t start, std::size_t count)
 
     for (auto i = start; i < start + count; ++i)
     {
-        const auto& flags = m_profileData.playerProfiles[i].avatarFlags;
+        const auto& flags = m_profileData.playerProfiles[i].playerData.avatarFlags;
         for (auto j = 0u; j < pc::ColourKey::Count; ++j)
         {
             m_profileTextures[i].setColour(pc::ColourKey::Index(j), flags[j]);
@@ -939,40 +939,40 @@ void MenuState::parseAvatarDirectory()
     for (auto& profile : m_profileData.playerProfiles)
     {
         //make sure the profile avatar is actually available
-        const auto skinIndex = indexFromAvatarID(profile.skinID);
-        if (profile.skinID == 0
+        const auto skinIndex = indexFromAvatarID(profile.playerData.skinID);
+        if (profile.playerData.skinID == 0
             || m_sharedData.avatarInfo[skinIndex].locked)
         {
             //use first valid skin - locked skins are never loaded first
-            profile.skinID = m_sharedData.avatarInfo[0].uid;
+            profile.playerData.skinID = m_sharedData.avatarInfo[0].uid;
         }
 
         //and the hair
-        const auto hairIndex = indexFromHairID(profile.hairID);
+        const auto hairIndex = indexFromHairID(profile.playerData.hairID);
         if (m_sharedData.hairInfo[hairIndex].locked)
         {
-            profile.hairID = m_sharedData.hairInfo[0].uid;
+            profile.playerData.hairID = m_sharedData.hairInfo[0].uid;
         }
 
-        const auto hatIndex = indexFromHairID(profile.hairID);
+        const auto hatIndex = indexFromHairID(profile.playerData.hairID);
         if (m_sharedData.hairInfo[hatIndex].locked)
         {
-            profile.hatID = 0;
+            profile.playerData.hatID = 0;
         }
 
         //compare against list of unlocked balls and make sure we're in it
-        auto ballID = indexFromBallID(profile.ballID);
+        auto ballID = indexFromBallID(profile.playerData.ballID);
         if (ballID >= m_profileData.ballDefs.size()
             || m_sharedData.ballInfo[ballID].locked)
         {
-            profile.ballID = 0;
+            profile.playerData.ballID = 0;
         }
 
-        m_profileTextures.emplace_back(m_sharedData.avatarInfo[indexFromAvatarID(profile.skinID)].texturePath);
+        m_profileTextures.emplace_back(m_sharedData.avatarInfo[indexFromAvatarID(profile.playerData.skinID)].texturePath);
 
-        if (!profile.mugshot.empty())
+        if (!profile.playerData.mugshot.empty())
         {
-            m_profileTextures.back().setMugshot(profile.mugshot);
+            m_profileTextures.back().setMugshot(profile.playerData.mugshot);
         }
     }
     updateProfileTextures(0, m_profileTextures.size());

@@ -112,7 +112,7 @@ struct PlayerCallbackData final
 class GolfState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
-    GolfState(cro::StateStack&, cro::State::Context, struct SharedStateData&);
+    GolfState(cro::StateStack&, cro::State::Context, struct SharedStateData&, struct SharedProfileData&);
     ~GolfState();
 
     bool handleEvent(const cro::Event&) override;
@@ -131,6 +131,7 @@ private:
     bool m_ntpPro; //hack to display different score in same game mode as NTP
     bool m_hotSeat; //we're playing local hotseat
     SharedStateData& m_sharedData;
+    SharedProfileData& m_sharedProfiles;
     cro::Scene m_gameScene;
     cro::Scene m_skyScene;
     cro::Scene m_uiScene;

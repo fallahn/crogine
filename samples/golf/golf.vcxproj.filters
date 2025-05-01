@@ -998,9 +998,6 @@
     <ClInclude Include="src\golf\PlayerData.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
-    <ClInclude Include="src\golf\SharedProfileData.hpp">
-      <Filter>Header Files\golf</Filter>
-    </ClInclude>
     <ClInclude Include="src\golf\BallTrail.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
@@ -1360,6 +1357,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\ShopState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\SharedProfileData.hpp">
+      <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

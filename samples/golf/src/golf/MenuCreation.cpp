@@ -905,8 +905,8 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                             setProfileIndex(0, false);
                             m_profileData.activeProfileIndex = 0;
                             m_sharedData.localConnectionData.playerData[0].isCPU = false;
-                            m_profileData.playerProfiles[0].isCPU = false;
-                            m_profileData.playerProfiles[0].saveProfile();
+                            m_profileData.playerProfiles[0].playerData.isCPU = false;
+                            m_profileData.playerProfiles[0].playerData.saveProfile();
 
                             requestStackPush(data.menuID);
                             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();

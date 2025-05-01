@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "PlayerData.hpp"
+#include "Inventory.hpp"
 
 #include <crogine/graphics/ModelDefinition.hpp>
 
@@ -62,6 +63,11 @@ struct SharedProfileData final
         }
     }profileMaterials;
 
-    std::vector<PlayerData> playerProfiles;
+    struct LocalProfile final
+    {
+        PlayerData playerData;
+        inv::Loadout loadout;
+    };
+    std::vector<LocalProfile> playerProfiles;
     std::size_t activeProfileIndex = 0; //this indexes into the profile array when editing/deleting profiles
 };

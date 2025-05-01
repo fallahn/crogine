@@ -197,6 +197,8 @@ GolfGame::GolfGame()
     //must be set before anything, else cfg is still loaded from default path
     setApplicationStrings("Trederia", "golf");
 
+    std::fill(m_sharedData.profileIndices.begin(), m_sharedData.profileIndices.end(), 0);
+
     m_stateStack.registerState<SplashState>(StateID::SplashScreen, m_sharedData);
     m_stateStack.registerState<KeyboardState>(StateID::Keyboard, m_sharedData);
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
@@ -205,7 +207,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);
-    m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData);
+    m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData, m_profileData);
     m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);
     m_stateStack.registerState<PauseState>(StateID::Pause, m_sharedData);
     m_stateStack.registerState<PlayerManagementState>(StateID::PlayerManagement, m_sharedData);
@@ -1956,7 +1958,7 @@ void GolfGame::loadAvatars()
         sPlayer.name = Social::getPlayerName();
         sPlayer.saveProfile();
 
-        m_profileData.playerProfiles.push_back(sPlayer);
+        m_profileData.playerProfiles.emplace_back().playerData = sPlayer;
         i++;
     }
 
@@ -1991,7 +1993,7 @@ void GolfGame::loadAvatars()
             }
             pd.saveProfile();
 
-            m_profileData.playerProfiles.push_back(pd);
+            m_profileData.playerProfiles.emplace_back().playerData = pd;
             i++;
         }
         else
@@ -2001,12 +2003,12 @@ void GolfGame::loadAvatars()
             sPlayer.name = Social::getPlayerName();
             sPlayer.saveProfile();
 
-            m_profileData.playerProfiles.push_back(sPlayer);
+            m_profileData.playerProfiles.emplace_back().playerData = sPlayer;
             i++;
         }
     }
 
-    m_profileData.playerProfiles[0].isSteamID = true;
+    m_profileData.playerProfiles[0].playerData.isSteamID = true;
 
 #endif
 
@@ -2048,7 +2050,7 @@ void GolfGame::loadAvatars()
                     {
                         pd.profileID = Social::getPlayerID();
                         pd.saveProfile();
-                        m_profileData.playerProfiles[0] = pd;
+                        m_profileData.playerProfiles[0].playerData = pd;
 
                         auto copyFiles = cro::FileSystem::listFiles(profilePath);
                         for (const auto& cFile : copyFiles)
@@ -2076,7 +2078,9 @@ void GolfGame::loadAvatars()
                     else
                     {
 #endif
-                        m_profileData.playerProfiles.push_back(pd);
+                        auto& pf = m_profileData.playerProfiles.emplace_back();
+                        pf.playerData = pd;
+                        pf.loadout.read(pd.profileID);
                         i++;
 #ifdef USE_GNS
                     }
@@ -2094,10 +2098,12 @@ void GolfGame::loadAvatars()
 
     if (m_profileData.playerProfiles.empty())
     {
-        m_profileData.playerProfiles.emplace_back().name = "Default Profile";
-        m_profileData.playerProfiles[0].saveProfile();
+        auto& pf = m_profileData.playerProfiles.emplace_back();
+        pf.playerData.name = "Default Profile";
+        pf.playerData.saveProfile();
+        pf.loadout.write(pf.playerData.profileID);
     }
-    m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
+    m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0].playerData;
 }
 
 void GolfGame::loadMusic()

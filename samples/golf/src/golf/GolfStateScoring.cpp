@@ -412,18 +412,19 @@ void GolfState::updateInventory(std::int32_t terrainID)
         if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
         {
             //this is us
-            auto& loadout = m_sharedData.localConnectionData.playerData[m_currentPlayer.player].loadout;
-            m_sharedData.inventory.inventory[loadout[inv::Ball]]--;
+            auto& pf = m_sharedProfiles.playerProfiles[m_sharedData.profileIndices[m_currentPlayer.player]];
+            auto& loadout = pf.loadout;
+            m_sharedData.inventory.inventory[loadout.items[inv::Ball]]--;
             inv::write(m_sharedData.inventory);
 
-            const auto ballCount = m_sharedData.inventory.inventory[loadout[inv::Ball]];
+            const auto ballCount = m_sharedData.inventory.inventory[loadout.items[inv::Ball]];
             floatingMessage("Ball Lost!");
 
             if (ballCount == 0)
             {
-                m_sharedData.inventory.inventory[loadout[inv::Ball]] = -1;
-                loadout[inv::Ball] = -1;
-
+                m_sharedData.inventory.inventory[loadout.items[inv::Ball]] = -1;
+                loadout.items[inv::Ball] = -1;
+                loadout.write(pf.playerData.profileID);
                 floatingMessage("No Balls Left!!");
             }
             else

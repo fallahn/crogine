@@ -233,6 +233,7 @@ struct SharedStateData final
     std::uint64_t lobbyID = 0;
     std::uint64_t inviteID = 0;
     ConnectionData localConnectionData;
+    std::array<std::size_t, ConstVal::MaxPlayers> profileIndices = {};
     cro::String targetIP = "255.255.255.255";
 
     //sent to server if hosting else rx'd from server

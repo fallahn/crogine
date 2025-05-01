@@ -30,8 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
-#include "PlayerData.hpp"
-#include "PlayerAvatar.hpp"
+#include "SharedProfileData.hpp"
 #include "CommonConsts.hpp"
 #include "MenuConsts.hpp"
 
@@ -93,7 +92,7 @@ private:
     SharedStateData& m_sharedData;
     SharedProfileData& m_profileData;
 
-    PlayerData m_activeProfile;
+    SharedProfileData::LocalProfile m_activeProfile;
     cro::String m_previousName; //so we can restore if we cancel an edit
 
     //compare the previous inventory and only rebuild the menu if

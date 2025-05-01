@@ -2432,10 +2432,10 @@ void DrivingState::createPlayer()
     };
 
 #ifdef USE_GNS
-    const auto& playerData = m_profileData.playerProfiles[0]; //prefer steam profile
+    const auto& playerData = m_profileData.playerProfiles[0].playerData; //prefer steam profile
 #else
     auto playerIndex = cro::Util::Random::value(0u, m_profileData.playerProfiles.size() - 1);
-    const auto& playerData = m_profileData.playerProfiles[playerIndex];
+    const auto& playerData = m_profileData.playerProfiles[playerIndex].playerData;
 #endif
 
 
