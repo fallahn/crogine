@@ -4992,7 +4992,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             {
                 m_sharedData.clubSet = clubSet;
                 Club::setClubLevel(clubSet);
-
+                LogI << "Limited clubset to " << (int)clubSet << std::endl;
                 if (m_sharedData.scoreType != ScoreType::ClubShuffle)
                 {
                     //hmm this should be read from whichever player is setting the limit

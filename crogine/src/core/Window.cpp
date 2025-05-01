@@ -219,7 +219,7 @@ glm::uvec2 Window::getSize() const
 #ifdef PLATFORM_MOBILE
     SDL_GL_GetDrawableSize(m_window, &x, &y);
 #else
-    SDL_GetWindowSize(m_window, &x, &y);
+    SDL_GL_GetDrawableSize(m_window, &x, &y);
 #endif //PLATFORM_MOBILE
     return { x, y };
 }

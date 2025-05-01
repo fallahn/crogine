@@ -114,8 +114,8 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_estimatedDistance (0.f),
     m_iconActive        (false)
 {
-    m_bunkerWavetable = cro::Util::Wavetable::sine(0.25f, 0.035f);
-    m_roughWavetable = cro::Util::Wavetable::sine(0.25f, 0.025f);
+    m_bunkerWavetable = cro::Util::Wavetable::sine(0.25f, 0.035f * 0.25f);
+    m_roughWavetable = cro::Util::Wavetable::sine(0.25f, 0.025f * 0.25f);
 
     //registerWindow([&]() 
     //    {
@@ -846,12 +846,12 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     {
     default: break;
     case TerrainID::Rough:
-        maxHook -= 0.08f;
-        powerMod = 0.2f;
+        maxHook -= 0.01f;
+        powerMod = 0.05f;
         break;
     case TerrainID::Bunker:
-        maxHook -= 0.12f;
-        powerMod = 0.3f;
+        maxHook -= 0.04f;
+        powerMod = 0.1f;
         break;
     }
     powerMod *= Club::getClubLevel();
@@ -884,6 +884,13 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
         }
 
         power *= cro::Util::Easing::easeOutSine(getPower());
+
+        //CPU players get a bit of a free pass
+        if (m_isCPU)
+        {
+            maxHook *= 0.5f;
+            hook *= 0.5f;
+        }
     }
     else
     {
