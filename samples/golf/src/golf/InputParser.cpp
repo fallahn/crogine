@@ -906,8 +906,8 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
         //CPU players get a bit of a free pass
         if (m_isCPU)
         {
-            maxHook *= 0.5f;
-            hook *= 0.5f;
+            maxHook *= 0.75f;
+            hook *= 0.75f;
         }
     }
     else

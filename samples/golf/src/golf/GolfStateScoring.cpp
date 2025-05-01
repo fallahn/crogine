@@ -414,22 +414,26 @@ void GolfState::updateInventory(std::int32_t terrainID)
             //this is us
             auto& pf = m_sharedProfiles.playerProfiles[m_sharedData.profileIndices[m_currentPlayer.player]];
             auto& loadout = pf.loadout;
-            m_sharedData.inventory.inventory[loadout.items[inv::Ball]]--;
-            inv::write(m_sharedData.inventory);
-
-            const auto ballCount = m_sharedData.inventory.inventory[loadout.items[inv::Ball]];
-            floatingMessage("Ball Lost!");
-
-            if (ballCount == 0)
+            
+            if (m_sharedData.inventory.inventory[loadout.items[inv::Ball]] > 0)
             {
-                m_sharedData.inventory.inventory[loadout.items[inv::Ball]] = -1;
-                loadout.items[inv::Ball] = -1;
-                loadout.write(pf.playerData.profileID);
-                floatingMessage("No Balls Left!!");
-            }
-            else
-            {
-                floatingMessage(std::to_string(ballCount) + " Remaining");
+                m_sharedData.inventory.inventory[loadout.items[inv::Ball]]--;
+                inv::write(m_sharedData.inventory);
+
+                const auto ballCount = m_sharedData.inventory.inventory[loadout.items[inv::Ball]];
+                floatingMessage("Ball Lost!");
+
+                if (ballCount == 0)
+                {
+                    m_sharedData.inventory.inventory[loadout.items[inv::Ball]] = -1;
+                    loadout.items[inv::Ball] = -1;
+                    loadout.write(pf.playerData.profileID);
+                    floatingMessage("No Balls Left!!");
+                }
+                else
+                {
+                    floatingMessage(std::to_string(ballCount) + " Remaining");
+                }
             }
         }
     }

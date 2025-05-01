@@ -215,13 +215,16 @@ void LoadingScreen::update()
 
     while (accumulator > timestep)
     {
-        m_viewport = cro::App::getWindow().getSize();
-        const glm::vec2 windowSize = glm::vec2(m_viewport);
+        m_viewport = cro::App::getWindow().getScaledSize();
+        const glm::vec2 scaledWindowSize(m_viewport);
+
+        const glm::vec2 windowSize = glm::vec2(cro::App::getWindow().getSize());
 
         const auto scale = glm::vec2(getViewScale(windowSize));
+
         m_tipText->setScale(scale);
 
-        m_projectionMatrix = glm::ortho(0.f, windowSize.x, 0.f, windowSize.y, -0.1f, 10.f);
+        m_projectionMatrix = glm::ortho(0.f, scaledWindowSize.x, 0.f, scaledWindowSize.y, -0.1f, 10.f);
 
         float texSize = static_cast<float>(m_texture.getSize().x) * scale.x;
         m_transform = glm::translate(glm::mat4(1.f), { (windowSize.x - texSize) / 2.f, (windowSize.y - texSize) / 2.f, 0.f });

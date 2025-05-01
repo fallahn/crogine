@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -135,6 +135,12 @@ namespace cro
         glm::uvec2 getSize() const override;
 
         /*!
+        \brief Returns the total renderable size of the window taking
+        into account any high-DPI scaling that may currently be applied.
+        */
+        glm::uvec2 getScaledSize() const;
+
+        /*!
         \brief Attempts to set the window to the given size if it is valid
         */
         void setSize(glm::uvec2);
@@ -258,6 +264,7 @@ namespace cro
         from full screen mode
         */
         glm::uvec2 getWindowedSize() const;
+
 
     private:
 

@@ -435,7 +435,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             m_hotSeat = true;
         }
         //show the monthly rival if opted in
-        else if (sd.showRival)
+        else if (sd.showRival
+            && humanCount)
         {
             if (sd.gameMode == GameMode::FreePlay
                 && sd.scoreType == ScoreType::Stroke

@@ -215,12 +215,19 @@ void Window::close()
 glm::uvec2 Window::getSize() const
 {
     CRO_ASSERT(m_window, "window not created");
-    std::int32_t x, y;
 #ifdef PLATFORM_MOBILE
-    SDL_GL_GetDrawableSize(m_window, &x, &y);
+    return getScaledSize();
 #else
-    SDL_GL_GetDrawableSize(m_window, &x, &y);
+    std::int32_t x, y;
+    SDL_GetWindowSize(m_window, &x, &y);
+    return { x, y };
 #endif //PLATFORM_MOBILE
+}
+
+glm::uvec2 Window::getScaledSize() const
+{
+    std::int32_t x, y;
+    SDL_GL_GetDrawableSize(m_window, &x, &y);
     return { x, y };
 }
 
