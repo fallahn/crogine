@@ -53,6 +53,11 @@ source distribution.
 
 #include <crogine/detail/glm/vec2.hpp>
 
+namespace inv
+{
+    struct Loadout;
+}
+
 //callback data for anim/self destruction
 //of messages / options window
 struct PopupAnim final
@@ -101,6 +106,7 @@ private:
     SharedStateData& m_sharedData;
     const SharedProfileData& m_profileData;
     InputParser m_inputParser;
+    const inv::Loadout* m_loadout;
 
     cro::DynamicAudioStream m_musicStream;
 

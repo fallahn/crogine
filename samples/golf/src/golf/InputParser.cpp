@@ -876,7 +876,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     if (club != ClubID::Putter)
     {
-        maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.035f);
+        maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.032f);
         //reduce the maxHook amount based on clubs with accuracy buff
         //or even make it worse if club requires!!
         maxHook = std::min(MaxHook + 0.1f, maxHook + (0.01f * clubStat));
@@ -902,13 +902,6 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
         }
 
         power *= cro::Util::Easing::easeOutSine(getPower());
-
-        //CPU players get a bit of a free pass
-        if (m_isCPU)
-        {
-            maxHook *= 0.75f;
-            hook *= 0.75f;
-        }
     }
     else
     {
@@ -916,6 +909,12 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
         power *= getPower();
     }
 
+    //CPU players get a bit of a free pass
+    if (m_isCPU)
+    {
+        maxHook *= 0.75f;
+        hook *= 0.75f;
+    }
 
     yaw += maxHook * hook;
     power *= 1.f - (std::abs(hook) * powerMod);

@@ -2433,9 +2433,11 @@ void DrivingState::createPlayer()
 
 #ifdef USE_GNS
     const auto& playerData = m_profileData.playerProfiles[0].playerData; //prefer steam profile
+    m_loadout = &m_profileData.playerProfiles[0].loadout;
 #else
     auto playerIndex = cro::Util::Random::value(0u, m_profileData.playerProfiles.size() - 1);
     const auto& playerData = m_profileData.playerProfiles[playerIndex].playerData;
+    m_loadout = &m_profileData.playerProfiles[playerIndex].loadout;
 #endif
 
 
@@ -3310,7 +3312,7 @@ void DrivingState::createFlag()
                 e.getComponent<cro::Callback>().active = false;
                 e.getComponent<cro::ParticleEmitter>().start();
 
-                m_inputParser.setActive(true, TerrainID::Fairway, nullptr);
+                m_inputParser.setActive(true, TerrainID::Fairway, m_loadout);
                 m_inputParser.setHoleDirection(-PlayerPosition);
 
                 //show the input bar

@@ -1885,7 +1885,7 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
         heightMultiplier *= CameraTeeMultiplier;
     }
 
-    auto groundHeight = m_collisionMesh.getTerrain(newPos).height;
+    auto groundHeight = std::max(m_collisionMesh.getTerrain(newPos).height, WaterLevel);
     newPos.y = std::max(groundHeight + (CameraPuttHeight * heightMultiplier), newPos.y);
 
     camEnt.getComponent<cro::Transform>().setPosition(newPos);
