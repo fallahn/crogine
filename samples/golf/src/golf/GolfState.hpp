@@ -563,7 +563,6 @@ private:
     cro::Entity m_minimapIndicatorEnt;
     cro::Entity m_miniGreenEnt;
     cro::Entity m_strokeDistanceEnt;
-    cro::Entity m_miniGreenIndicatorEnt;
     cro::Entity m_scoreboardEnt;
     cro::Entity m_nemesisEnt;
     cro::Entity m_droneTextEnt;

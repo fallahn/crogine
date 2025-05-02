@@ -3362,6 +3362,7 @@ void GolfState::buildScene()
     };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
 
+    //we use line strip because we can AA with glLineSmooth (TODO use a shader instead)
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
     material.blendMode = cro::Material::BlendMode::Additive;
@@ -3373,9 +3374,9 @@ void GolfState::buildScene()
     glm::vec3 c(1.f, 0.97f, 0.88f);
     std::vector<float> verts =
     {
-        0.1f, Ball::Radius, 0.005f, c.r * IndicatorLightness, c.g * IndicatorLightness, c.b * IndicatorLightness, 1.f,
-        5.f, Ball::Radius, 0.f,    c.r * IndicatorDarkness,  c.g * IndicatorDarkness,  c.b * IndicatorDarkness, 1.f,
-        0.1f, Ball::Radius, -0.005f,c.r * IndicatorLightness, c.g * IndicatorLightness, c.b * IndicatorLightness, 1.f
+        0.1f,            Ball::Radius, 0.005f, c.r * IndicatorLightness, c.g * IndicatorLightness, c.b * IndicatorLightness, 1.f,
+        5.f,             Ball::Radius, 0.f,    c.r * IndicatorDarkness,  c.g * IndicatorDarkness,  c.b * IndicatorDarkness,  1.f,
+        0.1f,            Ball::Radius, -0.005f,c.r * IndicatorLightness, c.g * IndicatorLightness, c.b * IndicatorLightness, 1.f
     };
     std::vector<std::uint32_t> indices =
     {
@@ -3398,6 +3399,87 @@ void GolfState::buildScene()
 
     entity.getComponent<cro::Model>().setHidden(true);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection | RenderFlags::FlightCam | RenderFlags::CubeMap));
+    auto indicatorEnt = entity;
+
+
+    //a second indicator drawn only on the overview camera
+    static constexpr float IndicatorLength = 10.f;
+    static constexpr float IndicatorWidth = 0.02f;
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_STRIP));
+
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(pos);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, indicatorEnt](cro::Entity e, float dt)
+        {
+            const auto hidden = indicatorEnt.getComponent<cro::Model>().isHidden();
+            const float Speed = dt * 4.f;
+            auto& currSize = e.getComponent<cro::Callback>().getUserData<float>();
+
+            if (!hidden)
+            {
+                currSize = std::min(1.f, currSize + Speed);
+            }
+            else
+            {
+                currSize = std::max(0.f, currSize - Speed);
+            }
+
+            const auto pos = indicatorEnt.getComponent<cro::Transform>().getPosition();
+
+            e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
+            e.getComponent<cro::Transform>().setPosition(pos);
+
+            //calc scale based on distance to hole
+            auto dist = glm::length(pos - m_holeData[m_currentHole].pin);
+            dist = std::max(dist - 0.3f, 0.05f);
+            const auto scaleX = (dist / IndicatorLength) * cro::Util::Easing::easeOutExpo(currSize);
+
+            //and zoom of camera
+            const auto currZoom = m_greenCam.getComponent<cro::Callback>().getUserData<MiniCamData>().currentSize;
+            const auto scaleZ = 0.5f + (0.5f * (currZoom - MiniCamData::MinSize) / (MiniCamData::MaxSize - MiniCamData::MinSize));
+            e.getComponent<cro::Transform>().setScale({ scaleX, 1.f, scaleZ });
+            e.getComponent<cro::Model>().setHidden(currSize == 0);
+        };
+ 
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    meshData = &entity.getComponent<cro::Model>().getMeshData();
+    static constexpr float Darkness = 0.2f;
+    verts =
+    {
+        0.1f,                Ball::Radius, -IndicatorWidth, IndicatorLightness, IndicatorLightness, IndicatorLightness, 1.f,
+        0.1f,                Ball::Radius, IndicatorWidth,  IndicatorLightness, IndicatorLightness, IndicatorLightness, 1.f,
+
+        IndicatorLength*0.9f, Ball::Radius, -IndicatorWidth, IndicatorLightness, IndicatorLightness, IndicatorLightness, 1.f,
+        IndicatorLength*0.9f, Ball::Radius, IndicatorWidth,  IndicatorLightness, IndicatorLightness, IndicatorLightness, 1.f,
+
+        IndicatorLength,     Ball::Radius, -IndicatorWidth, Darkness,  Darkness,  Darkness,  1.f,
+        IndicatorLength,     Ball::Radius, IndicatorWidth,  Darkness,  Darkness,  Darkness,  1.f,
+    };
+    indices =
+    {
+        0,1,2,3,4,5
+    };
+    meshData->boundingBox = { glm::vec3(0.1f, 0.f, IndicatorWidth), glm::vec3(IndicatorLength, Ball::Radius, -IndicatorWidth) };
+    meshData->boundingSphere = meshData->boundingBox;
+
+    vertStride = (meshData->vertexSize / sizeof(float));
+    meshData->vertexCount = verts.size() / vertStride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize* meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    entity.getComponent<cro::Model>().setHidden(true);
+    entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::MiniGreen);
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", TextGoldColour);
 
 
     //a 'fan' which shows max rotation
@@ -4546,6 +4628,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     //miniball for player
     entity = m_uiScene.createEntity();
+    //setting this depth is irrelevant as it's overwritten by the MiniBallSystem
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, (0.01f * depthOffset) / 2.f });
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
@@ -4613,13 +4696,6 @@ void GolfState::spawnBall(const ActorInfo& info)
                 e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
 
                 e.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, static_cast<float>(depthOffset) / 100.f));
-
-                const auto activePlayer = ((m_currentPlayer.client * ConstVal::MaxPlayers) + m_currentPlayer.player) + 1;
-                if (m_inputParser.getActive()
-                    && activePlayer == depthOffset)
-                {
-                    m_miniGreenIndicatorEnt.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, 0.05f));
-                }
             }
             else
             {

@@ -1812,46 +1812,6 @@ void GolfState::buildUI()
     auto greenEnt = entity;
     m_miniGreenEnt = entity;
 
-    //stroke indicator for minigreen
-    const auto startCol = TextGoldColour;
-    auto endCol = startCol;
-    endCol.setAlpha(0.05f);
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>().setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(0.f, 0.25f), startCol),
-            cro::Vertex2D(glm::vec2(0.f, -0.25f), startCol),
-            cro::Vertex2D(glm::vec2(15.f, 0.25f), endCol),
-            cro::Vertex2D(glm::vec2(15.f, -0.25f), endCol),
-        });
-    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        const float Speed = dt * 4.f;
-        auto& currSize = e.getComponent<cro::Callback>().getUserData<float>();
-        if (m_inputParser.getActive()
-            && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU
-            && m_sharedData.showPuttingPower)
-        {
-            currSize = std::min(1.f, currSize + Speed);
-            const float rotation = m_inputParser.getYaw();
-            e.getComponent<cro::Transform>().setRotation(rotation);
-        }
-        else
-        {
-            currSize = std::max(0.f, currSize - Speed);
-        }
-        float scale = cro::Util::Easing::easeOutBack(currSize);
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale) * (m_viewScale.x / m_miniGreenEnt.getComponent<cro::Transform>().getScale().x));
-    };
-    m_miniGreenIndicatorEnt = entity;
-    greenEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
     createScoreboard();
 
 
