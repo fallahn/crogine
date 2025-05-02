@@ -3449,8 +3449,8 @@ void GolfState::buildScene()
     static constexpr float Darkness = 0.2f;
     verts =
     {
-        0.1f,                Ball::Radius, -IndicatorWidth, IndicatorLightness, IndicatorLightness, IndicatorLightness, 1.f,
-        0.1f,                Ball::Radius, IndicatorWidth,  IndicatorLightness, IndicatorLightness, IndicatorLightness, 1.f,
+        0.25f,                Ball::Radius, -IndicatorWidth, IndicatorLightness, IndicatorLightness, IndicatorLightness, 1.f,
+        0.25f,                Ball::Radius, IndicatorWidth,  IndicatorLightness, IndicatorLightness, IndicatorLightness, 1.f,
 
         IndicatorLength*0.9f, Ball::Radius, -IndicatorWidth, IndicatorLightness, IndicatorLightness, IndicatorLightness, 1.f,
         IndicatorLength*0.9f, Ball::Radius, IndicatorWidth,  IndicatorLightness, IndicatorLightness, IndicatorLightness, 1.f,
@@ -4691,10 +4691,12 @@ void GolfState::spawnBall(const ActorInfo& info)
                 iconPos += Centre;
 
                 auto terrain = ballEnt.getComponent<ClientCollider>().terrain;
-                float scale = terrain == TerrainID::Green ? m_viewScale.x / m_miniGreenEnt.getComponent<cro::Transform>().getScale().x : 0.f;
+                //this 0.5 magic number is the default scale of the green ent @ 1:1
+                //it just appears at 0.5 rather than 1 because the texture is actually
+                //double res to enable zooming.
+                float scale = 5.f * (0.5f / m_miniGreenEnt.getComponent<cro::Transform>().getScale().x);
 
                 e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-
                 e.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, static_cast<float>(depthOffset) / 100.f));
             }
             else
@@ -4715,8 +4717,8 @@ void GolfState::spawnBall(const ActorInfo& info)
     //registerWindow([&]() 
     //    {
     //        ImGui::Begin("sdf");
-    //        const auto p = m_miniGreenIndicatorEnt.getComponent<cro::Transform>().getPosition();
-    //        ImGui::Text("%3.2f, %3.2f", p.x, p.y);
+    //        ImGui::Text("View Scale: %3.2f", m_viewScale.x);
+    //        ImGui::Text("Icon Scale: %3.2f", m_miniGreenEnt.getComponent<cro::Transform>().getScale().x);
     //        ImGui::End();        
     //    });
 }
