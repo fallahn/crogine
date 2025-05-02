@@ -409,7 +409,8 @@ void GolfState::updateInventory(std::int32_t terrainID)
     if ((terrainID == TerrainID::Scrub && cro::Util::Random::value(0,1) == 0)
         || terrainID == TerrainID::Water)
     {
-        if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+        if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+            && !m_holeData[m_currentHole].puttFromTee)
         {
             //this is us
             auto& pf = m_sharedProfiles.playerProfiles[m_sharedData.profileIndices[m_currentPlayer.player]];

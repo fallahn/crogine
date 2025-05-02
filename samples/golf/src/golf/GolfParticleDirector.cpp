@@ -161,18 +161,8 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
         }
         else if (data.type == GolfEvent::BirdHit)
         {
-            getEnt(ParticleID::Bird, data.position).getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.travelDistance + (cro::Util::Const::PI / 2.f));
-        }
-        else if (data.type == GolfEvent::BallLanded)
-        {
-            if (data.club == ClubID::Putter &&
-                (data.terrain == TerrainID::Water || data.terrain == TerrainID::Scrub))
-            {
-                //assume we putt off the green on a putting course
-                auto pos = data.position;
-                pos.y += (Ball::Radius * 2.f);
-                getEnt(ParticleID::Puff, pos);
-            }
+            const auto id = data.terrain == TerrainID::Scrub ? ParticleID::Bird : ParticleID::Puff;
+            getEnt(id, data.position).getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.travelDistance + (cro::Util::Const::PI / 2.f));
         }
         else if (data.type == GolfEvent::TargetHit)
         {

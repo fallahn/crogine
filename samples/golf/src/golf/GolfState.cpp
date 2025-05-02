@@ -2470,9 +2470,21 @@ void GolfState::handleMessage(const cro::Message& msg)
                 auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                 msg2->type = GolfEvent::BirdHit;
                 msg2->position = data.position;
+                msg2->terrain = data.terrain;
 
                 float rot = glm::eulerAngles(m_cameras[m_currentCamera].getComponent<cro::Transform>().getWorldRotation()).y;
                 msg2->travelDistance = rot;
+            }
+        }
+        else if (data.terrain == TerrainID::Water)
+        {
+            if (m_holeData[m_currentHole].puttFromTee)
+            {
+                auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                msg2->type = GolfEvent::BirdHit;
+                msg2->position = data.position;
+                msg2->position.y = m_collisionMesh.getTerrain(data.position).height;
+                msg2->terrain = data.terrain; //this lets the particle spawner know not to spawn birds
             }
         }
 
@@ -2481,18 +2493,6 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_achievementTracker.nearMissChallenge = true;
             Social::awardXP(2, XPStringID::NearMiss);
         }
-        //else if (data.type == CollisionEvent::End
-        //    && data.terrain == TerrainID::Hole)
-        //{
-        //    //display ring animation
-        //    cro::Command cmd;
-        //    cmd.targetFlags = CommandID::HoleRing;
-        //    cmd.action = [](cro::Entity e2, float)
-        //        {
-        //            e2.getComponent<cro::Callback>().active = true;
-        //        };
-        //    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-        //}
     }
         break;
     }
