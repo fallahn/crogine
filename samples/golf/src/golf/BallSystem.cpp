@@ -941,9 +941,9 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                     const auto slope = dot(res.normal, glm::vec3(0.f, 1.f, 0.f));
 
-                    if (terrain != TerrainID::Water
-                        && terrain != TerrainID::Scrub
-                        && terrain != TerrainID::Stone //we're restoring from OOB, so we still don't want to land on stone here
+                    if ((terrain == TerrainID::Rough
+                        || terrain == TerrainID::Fairway
+                        || terrain == TerrainID::Green)
                         && slope > 0.996f)
                     {
                         //move the ball a bit closer so we're not balancing on the edge
