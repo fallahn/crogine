@@ -4196,7 +4196,7 @@ void MenuState::quitLobby()
 void MenuState::addCourseSelectButtons()
 {
     //selection box to open player management
-    static constexpr float Width = 214.f;
+    static constexpr float Width = 56.f;
     static constexpr float Height = 14.f;
     static constexpr float Thickness = 1.f;
 
