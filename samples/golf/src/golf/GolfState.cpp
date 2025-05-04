@@ -3178,7 +3178,7 @@ void GolfState::buildScene()
         requestStackPush(StateID::Error);
     }
 
-    //quality holing
+    //quality holing - note to future self: this model needs to be offset ~0.004 above ground
     cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/cup.cmt");
     auto entity = m_gameScene.createEntity();
@@ -3190,6 +3190,7 @@ void GolfState::buildScene()
         auto holeMat = m_resources.materials.get(m_materialIDs[MaterialID::BallNight]);
         entity.getComponent<cro::Model>().setMaterial(0, holeMat);
     }
+
 
     auto holeEntity = entity; //each of these entities are added to the entity with CommandID::Hole - below
 

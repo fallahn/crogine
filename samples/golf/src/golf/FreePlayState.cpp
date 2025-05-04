@@ -391,7 +391,7 @@ and All Time best scores.)";
                 break;
             case SelectionIndex::Clubset:
                 helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                helpText.getComponent<cro::Text>().setString("Set the opponent's difficulty\n(Level 15 or higher required)");
+                helpText.getComponent<cro::Text>().setString("Set the round's difficulty");
                 break;
             case SelectionIndex::NightTime:
                 helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
