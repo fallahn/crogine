@@ -76,6 +76,7 @@ namespace
 #include "shaders/Blur.inl"
 #include "shaders/LensFlare.inl"
 #include "shaders/EmissiveShader.inl"
+#include "shaders/ShopItems.inl"
 
     //NOTE Banner A should be rotated 180 degrees
     constexpr cro::FloatRect PlaneBannerA = { 12.f, 86.f, 484.f, 66.f };
@@ -1735,10 +1736,19 @@ void GolfState::loadMaterials()
     //we always create this because it's also used on clubs etc even at night
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Ball);
-    m_scaleBuffer.addShader(*shader);
+    m_scaleBuffer.addShader(*shader); //hmm I forget why balls need these UBOs
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Ball]).setProperty("u_ballColour", cro::Colour::White);
+
+    m_resources.shaders.loadFromString(ShaderID::BallBumped, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), ShopFragment, 
+        "#define NO_SUN_COLOUR\n#define VERTEX_COLOUR\n#define BALL_COLOUR\n#define BUMP\n#define TEXTURED\n");
+    shader = &m_resources.shaders.get(ShaderID::BallBumped);
+    //m_scaleBuffer.addShader(*shader);
+    //m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::BallBumped] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::BallBumped]).setProperty("u_ballColour", cro::Colour::White);
+
 
     m_resources.shaders.loadFromString(ShaderID::BallSkinned, CelVertexShader, CelFragmentShader, "#define SKINNED\n#define VERTEX_COLOURED\n#define BALL_COLOUR\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::BallSkinned);

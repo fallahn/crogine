@@ -283,6 +283,7 @@ private:
             HairGlass,
             Course,
             Ball,
+            BallBumped,
             BallSkinned,
             BallNight,
             BallNightSkinned,

@@ -4427,6 +4427,14 @@ void GolfState::spawnBall(const ActorInfo& info)
                 material = m_resources.materials.get(m_materialIDs[matIDSkinned]);
                 material.setProperty("u_ballColour", ballUserColour);
             }
+            else if (!m_sharedData.nightTime)
+            {
+                if (m_ballModels[ballID]->getMaterial(0)->properties.count("u_normalMap"))
+                {
+                    material = m_resources.materials.get(m_materialIDs[MaterialID::BallBumped]);
+                    material.setProperty("u_ballColour", ballUserColour);
+                }
+            }
 
             applyMaterialData(*m_ballModels[ballID], material);
 #ifdef USE_GNS

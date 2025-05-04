@@ -2513,7 +2513,16 @@ void ProfileState::buildPreviewScene()
         }
         else
         {
-            entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
+            if (ballDef.getMaterial(0)->properties.count("u_normalMap"))
+            {
+                auto mat = m_profileData.profileMaterials.ballBumped;
+                applyMaterialData(ballDef, mat);
+                entity.getComponent<cro::Model>().setMaterial(0, mat);
+            }
+            else
+            {
+                entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
+            }
         }
         entity.getComponent<cro::Model>().setMaterial(1, m_profileData.profileMaterials.ballReflection);
         entity.addComponent<cro::Callback>().active = true;

@@ -159,6 +159,7 @@ private:
         enum
         {
             Ball,
+            BallBumped,
             BallSkinned,
             Cel,
             CelTextured,

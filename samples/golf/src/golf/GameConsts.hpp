@@ -293,6 +293,7 @@ struct ShaderID final
         CourseGreen,
         CourseGrid,
         Ball,
+        BallBumped,
         BallSkinned,
         BallNight,
         BallNightSkinned,

@@ -66,6 +66,7 @@ namespace
 {
 #include "ShopEnum.inl"
 #include "shaders/ShopItems.inl"
+#include "shaders/ShaderIncludes.inl"
 
     //from edge of window, scaled with getViewScale()
     constexpr float BorderPadding = 4.f;
@@ -431,6 +432,11 @@ void ShopState::render()
 //private
 void ShopState::loadAssets()
 {
+    for (const auto& [name, str] : IncludeMappings)
+    {
+        m_resources.shaders.addInclude(name, str);
+    }
+
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
     m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
@@ -1716,7 +1722,8 @@ void ShopState::buildPreviewScene()
     };
 
     constexpr auto shaderID = 10;
-    m_resources.shaders.loadFromString(shaderID, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), ShopFragment, "#define TEXTURED\n#define DIFFUSE_MAP\n#define BUMP\n#define MASK_MAP\n");
+    m_resources.shaders.loadFromString(shaderID, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), ShopFragment, 
+        "#define TEXTURED\n#define DIFFUSE_MAP\n#define BUMP\n#define MASK_MAP\n#define REFLECTIONS\n");
     const auto matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
     auto materialData = m_resources.materials.get(matID);
 

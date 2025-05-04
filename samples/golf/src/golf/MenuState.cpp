@@ -118,6 +118,7 @@ namespace
 #include "shaders/Glass.inl"
 #include "shaders/ShaderIncludes.inl"
 #include "shaders/ShadowMapping.inl"
+#include "shaders/ShopItems.inl"
 #include "shaders/Lantern.inl"
 #include "shaders/Weather.inl"
 #include "shaders/WireframeShader.inl"
@@ -1846,6 +1847,7 @@ void MenuState::loadAssets()
     //but we don't know that until *after* the assets are loaded...
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define NO_SUN_COLOUR\n#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
+    m_resources.shaders.loadFromString(ShaderID::BallBumped, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), ShopFragment, "#define NO_SUN_COLOUR\n#define VERTEX_COLOUR\n#define BALL_COLOUR\n#define BUMP\n#define TEXTURED\n");
     m_resources.shaders.loadFromString(ShaderID::BallSkinned, CelVertexShader, CelFragmentShader, "#define SKINNED\n#define NO_SUN_COLOUR\n#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define MENU_PROJ\n#define RX_SHADOWS\n#define TEXTURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
@@ -1889,6 +1891,12 @@ void MenuState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
     m_profileData.profileMaterials.ball = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+
+    shader = &m_resources.shaders.get(ShaderID::BallBumped);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::BallBumped] = m_resources.materials.add(*shader);
+    m_profileData.profileMaterials.ballBumped = m_resources.materials.get(m_materialIDs[MaterialID::BallBumped]);
 
     shader = &m_resources.shaders.get(ShaderID::BallSkinned);
     m_scaleBuffer.addShader(*shader);
