@@ -39,7 +39,7 @@ void main()
 
 static inline const std::string HoleFragment =
 R"(
-OUTPUT
+//OUTPUT
 
 //uniform sampler2D u_depthMap;
 //uniform sampler2D u_diffuseMap;
@@ -72,7 +72,10 @@ OUTPUT
 //    return coords;
 //}
 
+#define USE_MRT
+#include OUTPUT_LOCATION
 
+uniform vec4 u_lightColour;
 
 VARYING_IN vec2 v_texCoord0;
 VARYING_IN vec3 v_tanWorldPosition;
@@ -94,6 +97,7 @@ float getDepth(vec2 uv)
     return 1.0 - c;
 }
 
+#include LIGHT_COLOUR
 
 void main()
 {
@@ -130,7 +134,8 @@ void main()
     uv -= delta * weight;
     depth -= (depth - lastDepth) * weight;
     
-    vec3 colour = vec3(1.0, 0.973, 0.882) * (MinDarkness + ((1.0 - MinDarkness) * (1.0 - depth)));
+    vec3 colour = vec3(1.0, 0.973, 0.882) * getLightColour().rgb * (MinDarkness + ((1.0 - MinDarkness) * (1.0 - depth)));
     FRAG_OUT = vec4(colour, 1.0);
+    LIGHT_OUT = vec4(vec3(0.0), 1.0);
 }
 )";

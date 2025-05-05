@@ -496,12 +496,12 @@ void SwingState::createScene()
         };
 
 
-    auto& tex = m_resources.textures.get("assets/golf/images/cup_colour.png");
-    tex.setRepeated(false);
+    //auto& tex = m_resources.textures.get("assets/golf/images/cup_colour.png");
+    //tex.setRepeated(false);
 
     material = m_resources.materials.get(MaterialID::Hole);
-    material.setProperty("u_depthMap", m_resources.textures.get("assets/golf/images/cup_depthmap.png"));
-    material.setProperty("u_diffuseMap", tex);
+    //material.setProperty("u_depthMap", m_resources.textures.get("assets/golf/images/cup_depthmap.png"));
+    //material.setProperty("u_diffuseMap", tex);
     entity.getComponent<cro::Model>().setMaterial(0, material);
 
 

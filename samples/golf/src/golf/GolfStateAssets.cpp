@@ -77,6 +77,7 @@ namespace
 #include "shaders/LensFlare.inl"
 #include "shaders/EmissiveShader.inl"
 #include "shaders/ShopItems.inl"
+#include "shaders/Hole.inl"
 
     //NOTE Banner A should be rotated 180 degrees
     constexpr cro::FloatRect PlaneBannerA = { 12.f, 86.f, 484.f, 66.f };
@@ -1727,6 +1728,10 @@ void GolfState::loadMaterials()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelSkinned] = m_resources.materials.add(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::Hole, HoleVertex, HoleFragment);
+    shader = &m_resources.shaders.get(ShaderID::Hole);
+    m_materialIDs[MaterialID::Hole] = m_resources.materials.add(*shader);
+    
     m_resources.shaders.loadFromString(ShaderID::Flag, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Flag);
     m_scaleBuffer.addShader(*shader);

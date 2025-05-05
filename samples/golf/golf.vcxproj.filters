@@ -1462,6 +1462,9 @@
     <None Include="src\golf\shaders\ShopItems.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
+    <None Include="src\golf\shaders\Hole.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="golf.rc">

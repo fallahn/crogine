@@ -300,6 +300,7 @@ private:
             LensFlare,
             PointFlare,
             Emissive, //self-illum for clubs
+            Hole,
 
             Count
         };

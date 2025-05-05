@@ -335,7 +335,8 @@ struct ShaderID final
         Roids,
         Tonemapping,
         FlagPreview,
-        Emissive
+        Emissive,
+        Hole
     };
 };
 

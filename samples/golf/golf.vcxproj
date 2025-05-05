@@ -1031,6 +1031,7 @@
     <None Include="src\golf\shaders\EmissiveShader.inl" />
     <None Include="src\golf\shaders\Glass.inl" />
     <None Include="src\golf\shaders\GlowShader.inl" />
+    <None Include="src\golf\shaders\Hole.inl" />
     <None Include="src\golf\shaders\Lantern.inl" />
     <None Include="src\golf\shaders\LensFlare.inl" />
     <None Include="src\golf\shaders\MinimapShader.inl" />
