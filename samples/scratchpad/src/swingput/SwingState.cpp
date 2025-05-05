@@ -54,6 +54,7 @@ namespace
 {
 #include "Rain.inl"
 #include "Glow.inl"
+#include "Hole.inl"
 
     float cohesion = 10.f;
     float maxVelocity = 200.f;
@@ -185,7 +186,8 @@ namespace
             Sphere,
 
             Rain,
-            Glow
+            Glow,
+            Hole
         };
     };
 
@@ -196,7 +198,8 @@ namespace
             Water,
             Sphere,
 
-            Glow
+            Glow,
+            Hole
         };
     };
 
@@ -215,7 +218,7 @@ SwingState::SwingState(cro::StateStack& stack, cro::State::Context context)
         createScene();
         createUI();
     });
-
+    cro::App::getInstance().setClearColour(cro::Colour::AliceBlue);
     loadSettings();
 }
 
@@ -335,7 +338,6 @@ void SwingState::render()
     glBindTexture(GL_TEXTURE_2D, m_rainShader.textureID);
     glUniform1i(m_rainShader.rainUniform, 11);
 
-
     m_rainQuad.draw();
     m_ballQuad.draw();
 
@@ -420,6 +422,9 @@ void SwingState::loadAssets()
 
     m_resources.shaders.loadFromString(ShaderID::Glow, GlowVertex, GlowFragment);
     m_resources.materials.add(MaterialID::Glow, m_resources.shaders.get(ShaderID::Glow));
+
+    m_resources.shaders.loadFromString(ShaderID::Hole, HoleVertex, HoleFragment);
+    m_resources.materials.add(MaterialID::Hole, m_resources.shaders.get(ShaderID::Hole));
 }
 
 void SwingState::createScene()
@@ -468,17 +473,51 @@ void SwingState::createScene()
     entity.getComponent<cro::Model>().setMaterial(0, material);
 
 
-    //sphere preview
-    md.loadFromFile("assets/models/sphere_1m.cmt");
+    //quality holing
+    md.loadFromFile("assets/golf/models/cup.cmt");
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -1.f, 0.5f, 0.f });
+    entity.addComponent<cro::Transform>().setPosition({ -0.1f, 1.25f, 1.2f });
+    entity.getComponent<cro::Transform>().setScale({ 3.f, 3.f, 3.f });
     md.createModel(entity);
 
-    material = m_resources.materials.get(MaterialID::Sphere);
-    material.setProperty("u_cubeMap", cro::CubemapID(m_cubemapArray));
-    entity.getComponent<cro::Model>().setMaterial(0, material);
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function = [](cro::Entity e, float dt) {e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt); };
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            static const std::vector<float> WaveTable = cro::Util::Wavetable::sine(0.1f);
+            static std::size_t idx = 0;
+            static float rotation = 0.f;
+            rotation += dt;
+
+            e.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, WaveTable[idx] * 0.5f);
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rotation);// (-cro::Util::Const::PI / 5.f) + cro::Util::Const::PI);
+
+            idx = (idx + 1) % WaveTable.size();
+        };
+
+
+    auto& tex = m_resources.textures.get("assets/golf/images/cup_colour.png");
+    tex.setRepeated(false);
+
+    material = m_resources.materials.get(MaterialID::Hole);
+    material.setProperty("u_depthMap", m_resources.textures.get("assets/golf/images/cup_depthmap.png"));
+    material.setProperty("u_diffuseMap", tex);
+    entity.getComponent<cro::Model>().setMaterial(0, material);
+
+
+
+
+    //sphere preview
+    //md.loadFromFile("assets/models/sphere_1m.cmt");
+    //entity = m_gameScene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition({ -1.f, 0.5f, 0.f });
+    //md.createModel(entity);
+
+    //material = m_resources.materials.get(MaterialID::Sphere);
+    //material.setProperty("u_cubeMap", cro::CubemapID(m_cubemapArray));
+    //entity.getComponent<cro::Model>().setMaterial(0, material);
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().function = [](cro::Entity e, float dt) {e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt); };
 
 
     //entity uses callback system to process logic of follower
@@ -682,9 +721,9 @@ void SwingState::createUI()
 
     auto updateUI = [](cro::Camera& cam)
     {
-        //glm::vec2 size(cro::App::getWindow().getSize());
-        //cam.setOrthographic(0.f, size.x, 0.f, size.y, -1.f, 2.f);
-        cam.setOrthographic(0.f, 720.f, 0.f, 480.f, -1.f, 2.f);
+        glm::vec2 size(cro::App::getWindow().getSize());
+        cam.setOrthographic(0.f, size.x, 0.f, size.y, -1.f, 2.f);
+        //cam.setOrthographic(0.f, 720.f, 0.f, 480.f, -1.f, 2.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     m_uiScene.getActiveCamera().getComponent<cro::Camera>().resizeCallback = updateUI;

@@ -613,5 +613,8 @@
     <None Include="src\batcat\smaa_shaders\blend.inl">
       <Filter>Header Files\batcat\smaa shaders</Filter>
     </None>
+    <None Include="src\swingput\Hole.inl">
+      <Filter>Header Files\swingput</Filter>
+    </None>
   </ItemGroup>
 </Project>

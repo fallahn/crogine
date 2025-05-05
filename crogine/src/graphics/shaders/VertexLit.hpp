@@ -161,7 +161,7 @@ static inline const std::string Vertex = R"(
         #if defined (SUBRECTS)
             v_texCoord0 = u_subrect.xy + (a_texCoord0 * u_subrect.zw);
         #else
-            v_texCoord0 = a_texCoord0;                    
+            v_texCoord0 = a_texCoord0;
         #endif
         #endif
         #if defined(LIGHTMAPPED)
