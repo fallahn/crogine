@@ -83,10 +83,13 @@ VARYING_IN vec3 v_tanCamPosition;
 
 const float Scale = 1.2;
 const uint Layers = 16u;
-const float MinDarkness = 0.3;
+const float MinDarkness = 0.15;
 
-const float RadiusOuter = 0.49;
-const float RadiusInner = 0.45;
+const float RadiusOuter = 0.48;
+const float RadiusInner = 0.44;
+
+const vec3 BeigeLight = vec3(1.0, 0.973, 0.882);
+const vec3 BeigeDark = vec3(0.404, 0.286, 0.286);
 
 float getDepth(vec2 uv)
 {
@@ -130,11 +133,11 @@ void main()
         depth = getDepth(uv);//1.0 - TEXTURE(u_depthMap, uv).r;
     }
     
-    float weight = (z - depth) / ((lastDepth - lastZ ) - ( depth - z ));
-    uv -= delta * weight;
+    float weight = (z - depth) / (((lastDepth - lastZ) - (depth - z)) + 0.000001); //prevent div0
     depth -= (depth - lastDepth) * weight;
-    
-    vec3 colour = vec3(1.0, 0.973, 0.882) * getLightColour().rgb * (MinDarkness + ((1.0 - MinDarkness) * (1.0 - depth)));
+
+   
+    vec3 colour = mix(BeigeDark, BeigeLight, (MinDarkness + ((1.0 - MinDarkness) * (1.0 - depth)))) * getLightColour().rgb;
     FRAG_OUT = vec4(colour, 1.0);
     LIGHT_OUT = vec4(vec3(0.0), 1.0);
 }

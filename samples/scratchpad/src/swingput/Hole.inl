@@ -91,7 +91,7 @@ float getDepth(vec2 uv)
     float c = smoothstep(RadiusInner, RadiusOuter, l);
     c += (l/RadiusInner) * 0.2;
 
-    return 1.0 - c;
+    return 1.0 - clamp(c, 0.0, 1.0);
 }
 
 
@@ -126,8 +126,8 @@ void main()
         depth = getDepth(uv);//1.0 - TEXTURE(u_depthMap, uv).r;
     }
     
-    float weight = (z - depth) / ((lastDepth - lastZ ) - ( depth - z ));
-    uv -= delta * weight;
+    float weight = (z - depth) / (((lastDepth - lastZ ) - ( depth - z )) + 0.00001);
+    //uv -= delta * weight;
     depth -= (depth - lastDepth) * weight;
     
     vec3 colour = vec3(1.0, 0.973, 0.882) * (MinDarkness + ((1.0 - MinDarkness) * (1.0 - depth)));
