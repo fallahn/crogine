@@ -305,6 +305,7 @@ static inline const std::string CelFragmentShader = R"(
 
 #if defined (TERRAIN)
     uniform float u_morphTime;
+    uniform vec3 u_ballPosition = vec3(0.0);
 #endif
 
 #if defined (TEXTURED)
@@ -548,6 +549,10 @@ static inline const std::string CelFragmentShader = R"(
 #endif
 
 #if defined(TERRAIN)
+        //float ballShadow = smoothstep(0.015, 0.03, length(v_worldPosition - u_ballPosition));
+        //ballShadow = 0.8 + (0.2 * ballShadow);
+        //colour.rgb *= ballShadow;
+
         vec2 texCheck = v_texCoord * 4096.0;
         int texX = int(mod(texCheck.x, MatrixSize));
         int texY = int(mod(texCheck.y, MatrixSize));

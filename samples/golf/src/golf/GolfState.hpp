@@ -322,6 +322,17 @@ private:
     std::array<std::unique_ptr<cro::ModelDefinition>, ModelID::Count> m_modelDefs = {};
     std::unordered_map<std::int32_t, std::unique_ptr<cro::ModelDefinition>> m_ballModels;
 
+    struct ShaderPair final
+    {
+        std::uint32_t shader = 0;
+        std::int32_t uniform = -1;
+    };
+    struct BallShadow final
+    {
+        std::vector<cro::Entity> balls;
+        std::array<ShaderPair, 2u> shaders = {};
+    }m_ballShadows;
+
     struct TextureID final
     {
         enum

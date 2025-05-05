@@ -2703,6 +2703,17 @@ bool GolfState::simulate(float dt)
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
+    //update the ball shadows
+    //for (auto e : m_ballShadows.balls)
+    //{
+    //    const auto pos = e.getComponent<cro::Transform>().getPosition();
+    //    for (const auto& [shader, uniform] : m_ballShadows.shaders)
+    //    {
+    //        glUseProgram(shader);
+    //        glUniform3f(uniform, pos.x, pos.y, pos.z);
+    //    }
+    //}
+
     //track followed ball if we're idle
     if (m_groupIdle)
     {
@@ -4249,7 +4260,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
     m_avatars[info.clientID][info.playerID].ballModel = entity;
 
-
+    m_ballShadows.balls.push_back(entity);
 
     //ball shadow
     auto ballEnt = entity;
@@ -4356,7 +4367,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         auto shadowEnt = entity;
         entity = m_gameScene.createEntity();
         shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
-        entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.003f, 0.f });
+        entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.001f, 0.f });
         m_modelDefs[ModelID::BallShadow]->createModel(entity);
         entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
         //entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));
@@ -5724,6 +5735,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
                         msg->type = GolfEvent::PlayerRemoved;
                         msg->position = e.getComponent<cro::Transform>().getWorldPosition();
+
+                        m_ballShadows.balls.erase(std::remove_if(
+                            m_ballShadows.balls.begin(), m_ballShadows.balls.end(), [e](cro::Entity ent) { return e == ent; }),
+                            m_ballShadows.balls.end());
 
                         m_gameScene.destroyEntity(e);
                         LOG("Packet removed ball entity", cro::Logger::Type::Warning);

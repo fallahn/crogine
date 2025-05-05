@@ -1952,6 +1952,8 @@ void GolfState::loadMaterials()
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).setProperty("u_angleTex", shaleTex);
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).addCustomSetting(GL_CLIP_DISTANCE1);
 
+    //m_ballShadows.shaders[0].shader = shader->getGLHandle();
+    //m_ballShadows.shaders[0].uniform = shader->getUniformID("u_ballPosition");
 
     m_resources.shaders.loadFromString(ShaderID::CourseGreen, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CourseGreen);
@@ -1963,6 +1965,8 @@ void GolfState::loadMaterials()
     m_gridShaders[0].transparency = shader->getUniformID("u_transparency");
     m_gridShaders[0].holeHeight = shader->getUniformID("u_holePosition");
 
+    //m_ballShadows.shaders[1].shader = shader->getGLHandle();
+    //m_ballShadows.shaders[1].uniform = shader->getUniformID("u_ballPosition");
 
     m_resources.shaders.loadFromString(ShaderID::CourseGrid, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TEXTURED\n#define RX_SHADOWS\n#define CONTOUR\n" + wobble + targetDefines);
     shader = &m_resources.shaders.get(ShaderID::CourseGrid);
