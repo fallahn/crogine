@@ -4252,7 +4252,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
     m_avatars[info.clientID][info.playerID].ballModel = entity;
 
-    m_ballShadows.balls.push_back(entity);
+    //m_ballShadows.balls.push_back(entity);
 
     //ball shadow
     auto ballEnt = entity;
@@ -5716,27 +5716,29 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::EntityRemoved:
         {
-            auto idx = evt.packet.as<std::uint32_t>();
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::Ball;
-            cmd.action = [&, idx](cro::Entity e, float)
-                {
-                    if (e.getComponent<InterpolationComponent<InterpolationType::Linear>>().id == idx)
-                    {
-                        //this just does some effects
-                        auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
-                        msg->type = GolfEvent::PlayerRemoved;
-                        msg->position = e.getComponent<cro::Transform>().getWorldPosition();
+            //moved to removeClient();
 
-                        m_ballShadows.balls.erase(std::remove_if(
-                            m_ballShadows.balls.begin(), m_ballShadows.balls.end(), [e](cro::Entity ent) { return e == ent; }),
-                            m_ballShadows.balls.end());
+            //auto idx = evt.packet.as<std::uint32_t>();
+            //cro::Command cmd;
+            //cmd.targetFlags = CommandID::Ball;
+            //cmd.action = [&, idx](cro::Entity e, float)
+            //    {
+            //        if (e.getComponent<InterpolationComponent<InterpolationType::Linear>>().id == idx)
+            //        {
+            //            //this just does some effects
+            //            auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
+            //            msg->type = GolfEvent::PlayerRemoved;
+            //            msg->position = e.getComponent<cro::Transform>().getWorldPosition();
 
-                        m_gameScene.destroyEntity(e);
-                        LOG("Packet removed ball entity", cro::Logger::Type::Warning);
-                    }
-                };
-            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            //            m_ballShadows.balls.erase(std::remove_if(
+            //                m_ballShadows.balls.begin(), m_ballShadows.balls.end(), [e](cro::Entity ent) { return e == ent; }),
+            //                m_ballShadows.balls.end());
+
+            //            m_gameScene.destroyEntity(e);
+            //            LOG("Packet removed ball entity", cro::Logger::Type::Warning);
+            //        }
+            //    };
+            //m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
         break;
         case PacketID::ConnectionRefused:
@@ -5891,6 +5893,19 @@ void GolfState::removeClient(std::uint8_t clientID)
     for (auto i = 0u; i < m_sharedData.connectionData[clientID].playerCount; ++i)
     {
         m_textChat.printToScreen(m_sharedData.connectionData[clientID].playerData[i].name + " has left the game.", CD32::Colours[CD32::BlueLight]);
+
+        //remove the ball entity - child ents should pick this up in their callback
+        //and delete themselves.
+
+        const auto pos = m_avatars[clientID][i].ballModel.getComponent<cro::Transform>().getWorldPosition();
+
+        //this just does some effects
+        auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
+        msg->type = GolfEvent::PlayerRemoved;
+        msg->position = pos;
+
+        m_gameScene.destroyEntity(m_avatars[clientID][i].ballModel);
+        m_avatars[clientID][i].ballModel = {};
     }
 
     for (auto i = m_netStrengthIcons.size() - 1; i >= (m_netStrengthIcons.size() - m_sharedData.connectionData[clientID].playerCount); i--)
@@ -6725,6 +6740,15 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    //this might arrive after a client quit
+    if (!m_avatars[player.client][player.player].ballModel.isValid())
+    {
+        //although it begs the question what happens if we can't set
+        //the active player - will we get a new update from the server?
+        //I'm so confused at this point...
+        return;
+    }
+
     //this needs refreshing if we just switched holes
     if (m_drawDebugMesh)
     {
