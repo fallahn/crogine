@@ -74,7 +74,7 @@ class Social final
 public:
     static constexpr std::int32_t ExpertLevel = 10;
     static constexpr std::int32_t ProLevel = 20;
-    static constexpr std::int32_t ClubStepLevel = 3;
+    static constexpr std::int32_t ClubStepLevel = 2;
 
     struct InfoID final
     {
