@@ -67,6 +67,8 @@ namespace
     static constexpr float MinAcceleration = 0.5f;
     static constexpr float MinBarSpeed = 0.9f; //base speed of power bar up to level 10
 
+    static constexpr float ReflexStrength = 350.f; //divisor, so larger == less effect on power bar speed
+
     const cro::Time DoubleTapTime = cro::milliseconds(200);
 
     std::int32_t lastActiveController = -1;
@@ -859,6 +861,9 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     auto maxHook = MaxHook - (static_cast<float>(std::clamp(level, 0, 3)) * 0.0025f);
 
     float powerMod = 0.f;
+    float spinBuff = 1.f;
+
+    const auto clubLevel = Club::getClubLevel();
 
     switch (m_terrain)
     {
@@ -872,7 +877,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
         powerMod = 0.1f;
         break;
     }
-    powerMod *= Club::getClubLevel();
+    powerMod *= clubLevel;
 
     if (club != ClubID::Putter)
     {
@@ -887,7 +892,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
         //note that as most easings aren't symmetric that we use
         //s to make the hook positive first, before reverting the
         //result again.
-        switch (Social::getClubLevel())
+        switch (clubLevel)
         {
         default:
         case 0:
@@ -902,6 +907,22 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
         }
 
         power *= cro::Util::Easing::easeOutSine(getPower());
+
+
+        //spin buff
+        if (club > ClubID::FiveWood
+            && m_activeLoadout)
+        {
+            auto lvlEffect = 1 + (2 - clubLevel);
+
+            auto spinStat = 0;
+            if (m_activeLoadout->items[club] != -1)
+            {
+                spinStat = inv::Items[m_activeLoadout->items[club]].stat01;
+            }
+            spinStat = 20 - (spinStat + 10);
+            spinBuff -= static_cast<float>(spinStat) / (2000.f * lvlEffect);
+        }
     }
     else
     {
@@ -931,7 +952,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     }
 
     float accuracy = 1.f - std::abs(hook);
-    auto spin = getSpin() * accuracy;
+    auto spin = getSpin() * accuracy * spinBuff;
 
     //modulate pitch with topspin
     spin.y *= Clubs[club].getTopSpinMultiplier();
@@ -1073,7 +1094,7 @@ void InputParser::updateStroke(float dt)
         {
             clubStat += 10; //range 0 - 20
             clubStat = 20 - clubStat; //invert so higher values make smaller changes
-            buffSpeedModifier += static_cast<float>(clubStat) / (350.f * lvlEffect);
+            buffSpeedModifier += static_cast<float>(clubStat) / (ReflexStrength * lvlEffect);
         }
         break;
         }
@@ -1282,8 +1303,6 @@ void InputParser::updateStroke(float dt)
                             m_state = State::Stroke;
                             m_doubleTapClock.restart();
                             beginIcon();
-
-                            LogI << "buff: " << buffSpeedModifier << std::endl;
                         }
                     }
                 }
@@ -1338,7 +1357,6 @@ void InputParser::updateStroke(float dt)
                     msg->type = GolfEvent::HitBall;
 
                     m_doubleTapClock.restart();
-                    LogI << "buff: " << buffSpeedModifier << std::endl;
                     endIcon();
                 }
             }
