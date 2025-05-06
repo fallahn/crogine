@@ -244,6 +244,9 @@ static inline const std::string LightColour = R"(
     }
 )";
 
+//normal output stores the 'emission' mask in alpha channel
+//ie light from the light map is multiplied by norm.a when
+//compositing
 static inline const std::string OutputLocation = R"(
 #if defined(USE_MRT)
     layout (location = 0) out vec4 FRAG_OUT;

@@ -113,7 +113,7 @@ void main()
 
     vec2 delta = eyeDirection.xy / float(Layers) * Scale;
     float z = 0.0;
-    float depth = getDepth(uv);// 1.0 - TEXTURE(u_depthMap, uv).r;
+    float depth = getDepth(uv);
     float lastDepth = depth;
     float lastZ = z;
     
@@ -130,7 +130,7 @@ void main()
         lastZ = z;
         z += layerStep;
         lastDepth = depth;
-        depth = getDepth(uv);//1.0 - TEXTURE(u_depthMap, uv).r;
+        depth = getDepth(uv);
     }
     
     float weight = (z - depth) / (((lastDepth - lastZ) - (depth - z)) + 0.000001); //prevent div0
@@ -140,5 +140,6 @@ void main()
     vec3 colour = mix(BeigeDark, BeigeLight, (MinDarkness + ((1.0 - MinDarkness) * (1.0 - depth)))) * getLightColour().rgb;
     FRAG_OUT = vec4(colour, 1.0);
     LIGHT_OUT = vec4(vec3(0.0), 1.0);
+    NORM_OUT.a = 0.0; //prevent hole rx light at night
 }
 )";
