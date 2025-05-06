@@ -1002,14 +1002,14 @@ void CareerState::buildScene()
         m_sharedData.preferredClubSet %= (Social::getClubLevel() + 1);
 
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 69.f, 69.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 77.f, 69.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bag_select");
         entity.addComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
         auto buttonEnt = entity;
-        entity = m_scene.createEntity();
+        /*entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ -32.f, 9.f, 0.f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString("Clubs:");
@@ -1017,7 +1017,7 @@ void CareerState::buildScene()
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
         entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-        buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
 
 
         entity = m_scene.createEntity();

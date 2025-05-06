@@ -595,7 +595,7 @@ void GolfState::registerDebugCommands()
             }
             else
             {
-                cro::Console::print("Usage: cl_clubset <0|2> where 0 is Novice, 1 is Expert and 2 is Pro. This will also disable all achievements.");
+                cro::Console::print("Usage: cl_clubset <0|2> where 0 is Casual, 1 is Expert and 2 is Pro. This will also disable all achievements.");
             }
         });
 

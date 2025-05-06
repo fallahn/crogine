@@ -428,11 +428,11 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         //the clubset limit is set
         if (humanCount > 1)
         {
-            if (!m_sharedData.clubLimit)
+            /*if (!m_sharedData.clubLimit)
             {
                 m_sharedData.clubSet = 2;
-            }
-            m_hotSeat = true;
+            }*/
+            m_hotSeat = true; //still used to award credits for hotseat play
         }
         //show the monthly rival if opted in
         else if (sd.showRival

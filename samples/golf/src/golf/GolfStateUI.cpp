@@ -2659,7 +2659,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
                         && m_friendlyPlayers->hasRival())
                     {
                         //we're actually playing solo
-                        credits = m_sharedData.holeCount == 0 ? CreditID::FreePlayThird / 2 : CreditID::FreePlayThird / 4;
+                        credits = m_sharedData.holeCount == 0 ? CreditID::FreePlayFirst / 2 : CreditID::FreePlayFirst / 4;
                     }
 
                     //this is irrelevant in anything but free play, but credits aren't awarded outside freeplay *anyway*
@@ -2685,7 +2685,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     if (m_allowAchievements
                         && m_sharedData.gameMode == GameMode::FreePlay)
                     {
-                        auto credits = m_sharedData.holeCount == 0 ? CreditID::FreePlayThird / 2 : CreditID::FreePlayThird / 4;
+                        auto credits = m_sharedData.holeCount == 0 ? CreditID::FreePlayFirst / 2 : CreditID::FreePlayFirst / 4;
                     
                         const auto parScore = m_sharedData.connectionData[m_statBoardScores[i].client].playerData[m_statBoardScores[i].player].parScore;
                         if (parScore < 1)
