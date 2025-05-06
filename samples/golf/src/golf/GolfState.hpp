@@ -312,7 +312,6 @@ private:
         enum
         {
             BallShadow,
-            PlayerShadow,
             BullsEye,
             PlayerFallBack,
 

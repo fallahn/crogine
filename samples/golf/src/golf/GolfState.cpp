@@ -3195,16 +3195,8 @@ void GolfState::buildScene()
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 1.1f, 1.f, 1.1f });
     md.createModel(entity);
+    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hole]));
 
-    //if (m_sharedData.nightTime)
-    //{
-    //    auto holeMat = m_resources.materials.get(m_materialIDs[MaterialID::BallNight]);
-    //    entity.getComponent<cro::Model>().setMaterial(0, holeMat);
-    //}
-    //else
-    {
-        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hole]));
-    }
 
 
     auto holeEntity = entity; //each of these entities are added to the entity with CommandID::Hole - below
