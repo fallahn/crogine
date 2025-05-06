@@ -2111,23 +2111,32 @@ void GolfState::loadMaterials()
 
     //wireframe
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment, "#define USE_MRT\n");
-    m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
+    shader = &m_resources.shaders.get(ShaderID::Wireframe);
+    m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]).blendMode = cro::Material::BlendMode::Alpha;
+    m_resolutionBuffer.addShader(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::WireframeCulled, WireframeVertex, WireframeFragment, "#define CULLED\n#define USE_MRT\n");
-    m_materialIDs[MaterialID::WireFrameCulled] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulled));
+    shader = &m_resources.shaders.get(ShaderID::WireframeCulled);
+    m_materialIDs[MaterialID::WireFrameCulled] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulled]).blendMode = cro::Material::BlendMode::Alpha;
+    m_resolutionBuffer.addShader(*shader);
+
 
     m_resources.shaders.loadFromString(ShaderID::WireframeCulledPoint, WireframeVertex, WireframeFragment, "#define CULLED\n#define USE_MRT\n#define POINT_RADIUS\n");
-    m_materialIDs[MaterialID::WireFrameCulledPoint] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulledPoint));
+    shader = &m_resources.shaders.get(ShaderID::WireframeCulledPoint);
+    m_materialIDs[MaterialID::WireFrameCulledPoint] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulledPoint]).blendMode = cro::Material::BlendMode::Alpha;
-    
+    m_resolutionBuffer.addShader(*shader);
 
 
     m_resources.shaders.loadFromString(ShaderID::BallTrail, WireframeVertex, WireframeFragment, "#define HUE\n#define USE_MRT\n");
-    m_materialIDs[MaterialID::BallTrail] = m_resources.materials.add(m_resources.shaders.get(ShaderID::BallTrail));
+    shader = &m_resources.shaders.get(ShaderID::BallTrail);
+    m_materialIDs[MaterialID::BallTrail] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::BallTrail]).blendMode = cro::Material::BlendMode::Additive;
     m_resources.materials.get(m_materialIDs[MaterialID::BallTrail]).setProperty("u_colourRotation", m_sharedData.beaconColour);
+    m_resolutionBuffer.addShader(*shader);
+
 
     //minimap - green overhead
     if (m_sharedData.weatherType == WeatherType::Rain
