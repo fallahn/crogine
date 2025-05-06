@@ -67,10 +67,10 @@ namespace inv
     //5 categories in the shop / types of item
     static inline const std::array<StatLabel, 5u> StatLabels =
     {
-        StatLabel("Distance: ", "Accuracy: "),
-        StatLabel("Distance: ", "Accuracy: "),
-        StatLabel("Spin: ",     "Accuracy: "),
-        StatLabel("Spin: ",     "Accuracy: "),
+        StatLabel("Reflex: ",             "Accuracy: "),
+        StatLabel("Reflex: ",             "Accuracy: "),
+        StatLabel("Spin Influence: ",     "Accuracy: "),
+        StatLabel("Spin Influence: ",     "Accuracy: "),
         StatLabel("Hook/Slice Reduction: ","")
     };
 

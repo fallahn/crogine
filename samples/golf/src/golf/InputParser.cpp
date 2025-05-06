@@ -1049,6 +1049,36 @@ void InputParser::updateStroke(float dt)
 {
     m_swingput.assertIdled(dt, m_inputFlags, static_cast<std::int32_t>(m_state));
 
+    //if we're not casual and have buffs available
+    //this modifies the bar movement
+    float buffSpeedModifier = 1.f;
+    if (m_activeLoadout
+        && Club::getClubLevel()
+        && !m_isCPU)
+    {
+        const auto club = getClub();
+        const auto lvlEffect = 1 + (2 - Club::getClubLevel());
+        std::int32_t clubStat = 0;
+        if (m_activeLoadout->items[club] != -1)
+        {
+            clubStat = inv::Items[m_activeLoadout->items[club]].stat01;
+        }
+
+        switch (club)
+        {
+        default: break;
+        case ClubID::Driver:
+        case ClubID::FiveWood:
+        case ClubID::ThreeWood:
+        {
+            clubStat += 10; //range 0 - 20
+            clubStat = 20 - clubStat; //invert so higher values make smaller changes
+            buffSpeedModifier += static_cast<float>(clubStat) / (350.f * lvlEffect);
+        }
+        break;
+        }
+    }
+
     //catch the inputs that where filtered by the
     //enable flags so we can raise their own event for them
     auto disabledFlags = (m_inputFlags & ~m_enableFlags);
@@ -1200,6 +1230,9 @@ void InputParser::updateStroke(float dt)
                 //move more slowly for the first 10 levels
                 float increase = std::min(1.f, /*static_cast<float>(Social::getLevel()) / 10.f*/static_cast<float>(Club::getClubLevel()) / 2.f);
                 speed = (speed * MinBarSpeed) + ((speed * (1.f - MinBarSpeed)) * increase);
+
+                //and apply any buffs
+                speed *= buffSpeedModifier;
             }
 
             //allowing the bar to go over 1 means we get a slight
@@ -1249,6 +1282,8 @@ void InputParser::updateStroke(float dt)
                             m_state = State::Stroke;
                             m_doubleTapClock.restart();
                             beginIcon();
+
+                            LogI << "buff: " << buffSpeedModifier << std::endl;
                         }
                     }
                 }
@@ -1279,6 +1314,8 @@ void InputParser::updateStroke(float dt)
                     float increase = std::min(1.f, static_cast<float>(l) / 10.f);
                     speed += ((dt * (1.f - MinBarSpeed)) * increase);
                 }
+
+                speed *= buffSpeedModifier;
             }
 
             m_hook = std::min(1.f, std::max(0.f, m_hook + ((speed * m_powerbarDirection))));
@@ -1301,7 +1338,7 @@ void InputParser::updateStroke(float dt)
                     msg->type = GolfEvent::HitBall;
 
                     m_doubleTapClock.restart();
-
+                    LogI << "buff: " << buffSpeedModifier << std::endl;
                     endIcon();
                 }
             }
