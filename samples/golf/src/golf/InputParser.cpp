@@ -876,7 +876,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     if (club != ClubID::Putter)
     {
-        maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.032f);
+        maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.035f);
         //reduce the maxHook amount based on clubs with accuracy buff
         //or even make it worse if club requires!!
         maxHook = std::min(MaxHook + 0.1f, maxHook + (0.01f * clubStat));
@@ -959,7 +959,7 @@ float InputParser::getEstimatedDistance() const
 
     if (m_sharedData.decimatePowerBar)
     {
-        ret = Clubs[m_currentClub].getTargetAtLevel(Club::getClubLevel());// *1.08f;
+        ret = Clubs[m_currentClub].getTargetAtLevel(/*Club::getClubLevel()*/2);// *1.08f;
     }
 
     switch (m_terrain)

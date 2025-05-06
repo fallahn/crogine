@@ -240,6 +240,9 @@ std::int32_t Social::getLevel()
 
 std::int32_t Social::getClubLevel()
 {
+    //for now we always return 2 just to unlock all sets
+    return 2;
+
     //check player level and return increased distance
     auto level = getLevel();
 

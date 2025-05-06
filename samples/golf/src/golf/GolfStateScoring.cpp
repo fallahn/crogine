@@ -416,7 +416,8 @@ void GolfState::updateInventory(std::int32_t terrainID)
             auto& pf = m_sharedProfiles.playerProfiles[m_sharedData.profileIndices[m_currentPlayer.player]];
             auto& loadout = pf.loadout;
             
-            if (m_sharedData.inventory.inventory[loadout.items[inv::Ball]] > 0)
+            if (loadout.items[inv::Ball] != -1 &&
+                m_sharedData.inventory.inventory[loadout.items[inv::Ball]] > 0)
             {
                 m_sharedData.inventory.inventory[loadout.items[inv::Ball]]--;
                 inv::write(m_sharedData.inventory);

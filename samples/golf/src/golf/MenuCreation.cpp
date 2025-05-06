@@ -5080,25 +5080,26 @@ void MenuState::updateUnlockedItems()
 
     if (genericFlags != -1)
     {
-        if (level > Social::ExpertLevel - 1)
-        {
-            //club range is extended at level Social::ExpertLevel and Social::ProLevel
-            auto flag = (1 << 0);
-            if ((genericFlags & flag) == 0)
-            {
-                genericFlags |= flag;
-                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::RangeExtend01;
-            }
-            else if (level > Social::ProLevel - 1)
-            {
-                flag = (1 << (ul::UnlockID::RangeExtend02 - genericBase));
-                if ((genericFlags & flag) == 0)
-                {
-                    genericFlags |= flag;
-                    m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::RangeExtend02;
-                }
-            }
-        }
+        //disabled while we experiment with unlocking all sets from the start
+        //if (level > Social::ExpertLevel - 1)
+        //{
+        //    //club range is extended at level Social::ExpertLevel and Social::ProLevel
+        //    auto flag = (1 << 0);
+        //    if ((genericFlags & flag) == 0)
+        //    {
+        //        genericFlags |= flag;
+        //        m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::RangeExtend01;
+        //    }
+        //    else if (level > Social::ProLevel - 1)
+        //    {
+        //        flag = (1 << (ul::UnlockID::RangeExtend02 - genericBase));
+        //        if ((genericFlags & flag) == 0)
+        //        {
+        //            genericFlags |= flag;
+        //            m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::RangeExtend02;
+        //        }
+        //    }
+        //}
 
         auto flag = (1 << (ul::UnlockID::Clubhouse - genericBase));
         if ((genericFlags & flag) == 0 &&
