@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -269,6 +269,7 @@ namespace XPID
         Count
     };
 }
+
 static constexpr inline std::array<std::int32_t, XPID::Count> XPValues =
 {
     500, 250, 100, 50, 20, 100,

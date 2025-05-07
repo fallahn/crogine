@@ -50,6 +50,7 @@ source distribution.
 #include "InterpolationSystem.hpp"
 #include "WeatherAnimationSystem.hpp"
 #include "XPAwardStrings.hpp"
+#include "XPValues.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -2325,6 +2326,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
         Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
         Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
     }
+    if (m_sharedData.scoreType != ScoreType::Skins)
+    {
+        Social::awardXP(xpValues[XPID::CompleteCourse] / (18 / m_holeData.size()), XPStringID::CourseComplete);
+    }
 
     //hide any input
     cro::Command cmd;
@@ -2641,18 +2646,18 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     {
                     default: break;
                     case 0:
-                        xp = static_cast<float>(XPValues[XPID::First]) * multiplier;
+                        xp = static_cast<float>(xpValues[XPID::First]) * multiplier;
                         xpReason = XPStringID::FirstPlace;
                         firstPlace = true;
                         credits = m_sharedData.holeCount == 0 ? CreditID::FreePlayFirst : CreditID::FreePlayFirst / 2;
                         break;
                     case 1:
-                        xp = static_cast<float>(XPValues[XPID::Second]) * multiplier;
+                        xp = static_cast<float>(xpValues[XPID::Second]) * multiplier;
                         xpReason = XPStringID::SecondPlace;
                         credits = m_sharedData.holeCount == 0 ? CreditID::FreePlaySecond : CreditID::FreePlaySecond / 2;
                         break;
                     case 2:
-                        xp = static_cast<float>(XPValues[XPID::Third]) * multiplier;
+                        xp = static_cast<float>(xpValues[XPID::Third]) * multiplier;
                         xpReason = XPStringID::ThirdPlace;
                         credits = m_sharedData.holeCount == 0 ? CreditID::FreePlayThird : CreditID::FreePlayThird / 2;
                         break;
@@ -4992,7 +4997,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             //hio is also technically an eagle or birdie
             //etc, so we need to differentiate
             score = ScoreID::HIO;
-            auto xp = XPValues[XPID::HIO];
+            auto xp = xpValues[XPID::HIO];
             if (m_holeData[m_currentHole].puttFromTee)
             {
                 //xp /= 5;
@@ -5083,13 +5088,13 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 {
                 default: break;
                 case ScoreID::Albatross:
-                    Social::awardXP(XPValues[XPID::Albatross] / divisor, XPStringID::Albatross + offset);
+                    Social::awardXP(xpValues[XPID::Albatross] / divisor, XPStringID::Albatross + offset);
                     break;
                 case ScoreID::Eagle:
-                    Social::awardXP(XPValues[XPID::Eagle] / divisor, XPStringID::Eagle + offset);
+                    Social::awardXP(xpValues[XPID::Eagle] / divisor, XPStringID::Eagle + offset);
                     break;
                 case ScoreID::Birdie:
-                    Social::awardXP(XPValues[XPID::Birdie] / divisor, XPStringID::Birdie + offset);
+                    Social::awardXP(xpValues[XPID::Birdie] / divisor, XPStringID::Birdie + offset);
                     break;
                 //would we ever have a HIO which is also par? :)
                 }
@@ -5224,12 +5229,12 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             switch (score)
             {
             case ScoreID::Albatross:
-                Social::awardXP(XPValues[XPID::Albatross] / divisor, XPStringID::Albatross + offset);
+                Social::awardXP(xpValues[XPID::Albatross] / divisor, XPStringID::Albatross + offset);
                 addIcon(SpriteID::AlbatrossLeft, SpriteID::AlbatrossRight);
                 Timeline::addEvent(Timeline::Event::Albatross, m_strokeTimer);
                 break;
             case ScoreID::Eagle:
-                Social::awardXP(XPValues[XPID::Eagle] / divisor, XPStringID::Eagle + offset);
+                Social::awardXP(xpValues[XPID::Eagle] / divisor, XPStringID::Eagle + offset);
                 addIcon(SpriteID::EagleLeft, SpriteID::EagleRight);
                 textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
                 textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
@@ -5237,7 +5242,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 Timeline::addEvent(Timeline::Event::Eagle, m_strokeTimer);
                 break;
             case ScoreID::Birdie:
-                Social::awardXP(XPValues[XPID::Birdie] / divisor, XPStringID::Birdie + offset);
+                Social::awardXP(xpValues[XPID::Birdie] / divisor, XPStringID::Birdie + offset);
                 addIcon(SpriteID::BirdieLeft, SpriteID::BirdieRight);
                 textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
                 textEnt.getComponent<cro::Text>().setFillColour({0xadd9b7ff});
@@ -5245,7 +5250,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 Timeline::addEvent(Timeline::Event::Birdie, m_strokeTimer);
                 break;
             case ScoreID::Par:
-                Social::awardXP(XPValues[XPID::Par] / divisor, XPStringID::Par + offset);
+                Social::awardXP(xpValues[XPID::Par] / divisor, XPStringID::Par + offset);
                 textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
                 textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
                 Timeline::addEvent(Timeline::Event::HoleOut, m_strokeTimer);

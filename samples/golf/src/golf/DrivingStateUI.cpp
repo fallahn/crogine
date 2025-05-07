@@ -39,6 +39,7 @@ source distribution.
 #include "FloatingTextSystem.hpp"
 #include "Clubs.hpp"
 #include "CallbackData.hpp"
+#include "XPValues.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -2684,19 +2685,19 @@ void DrivingState::showMessage(float range)
     {
         textEnt.getComponent<cro::Text>().setString("Good Effort!");
         starCount = 1;
-        Social::awardXP(XPValues[XPID::Good]);
+        Social::awardXP(xpValues[XPID::Good]);
     }
     else if (score < ExcellentScore)
     {
         textEnt.getComponent<cro::Text>().setString("Not Bad!");
         starCount = 2;
-        Social::awardXP(XPValues[XPID::NotBad]);
+        Social::awardXP(xpValues[XPID::NotBad]);
     }
     else
     {
         textEnt.getComponent<cro::Text>().setString("Excellent!");
         starCount = 3;
-        Social::awardXP(XPValues[XPID::Excellent]);
+        Social::awardXP(xpValues[XPID::Excellent]);
 
         if (m_avatar.animationIDs[AnimationID::Celebrate] != AnimationID::Invalid)
         {

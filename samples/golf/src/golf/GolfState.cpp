@@ -64,6 +64,7 @@ source distribution.
 #include "AvatarRotationSystem.hpp"
 #include "Career.hpp"
 #include "Tournament.hpp"
+#include "XPValues.hpp"
 #include "../WebsocketServer.hpp"
 
 #include <Achievements.hpp>
@@ -1458,17 +1459,20 @@ void GolfState::handleMessage(const cro::Message& msg)
                 auto hook = m_inputParser.getHook() * m_activeAvatar->model.getComponent<cro::Transform>().getScale().x;
                 const auto hookDivisor = 1.f + Club::getClubLevel();
 
+                bool isHook = false;
                 if (hook < -(MinHook / hookDivisor))
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = GolfEvent::HookedBall;
                     floatingMessage("Hook");
+                    isHook = true;
                 }
                 else if (hook > (MinHook / hookDivisor))
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = GolfEvent::SlicedBall;
                     floatingMessage("Slice");
+                    isHook = true;
                 }
 
                 //LogI << "Hook is " << hook << std::endl;
@@ -1487,7 +1491,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
 
                 if (power > 0.59f //hmm not sure why power should factor into this?
-                    && std::abs(hook) < 0.05f)
+                    && /*std::abs(hook) < 0.05f*/!isHook)
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = (power > PowerShot && club < ClubID::NineIron) ? GolfEvent::PowerShot : GolfEvent::NiceShot;
@@ -2036,7 +2040,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
                         if (data.pinDistance < 0.5f)
                         {
-                            Social::awardXP(XPValues[XPID::Special] / 2, XPStringID::NiceChip);
+                            Social::awardXP(xpValues[XPID::Special] / 2, XPStringID::NiceChip);
                             Social::getMonthlyChallenge().updateChallenge(ChallengeID::Zero, 0);
                         }
                     }
@@ -2157,7 +2161,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
                 {
                     Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOneMillion]);
-                    Social::awardXP(XPValues[XPID::Special] * 5, XPStringID::DroneHit);
+                    Social::awardXP(xpValues[XPID::Special] * 5, XPStringID::DroneHit);
                     Achievements::incrementStat(StatStrings[StatID::DroneHits]);
                 }
             }
@@ -5402,23 +5406,23 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     //check if this is our own score
                     if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                     {
-                        if (m_currentHole == m_holeData.size() - 1)
-                        {
-                            //just completed the course - moved to showCountdown() as a gimme skips over this
-                            //if (m_currentHole == 17) //full round
-                            //{
-                            //    auto old = Achievements::getActive();
-                            //    Achievements::setActive(m_allowAchievements);
-                            //    Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
-                            //    Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
-                            //    Achievements::setActive(old);
-                            //}
+                        //just completed the course - moved to showCountdown() as a gimme skips over this
+                        //if (m_currentHole == m_holeData.size() - 1)
+                        //{
+                        //    if (m_currentHole == 17) //full round
+                        //    {
+                        //        auto old = Achievements::getActive();
+                        //        Achievements::setActive(m_allowAchievements);
+                        //        Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
+                        //        Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
+                        //        Achievements::setActive(old);
+                        //    }
 
-                            if (m_sharedData.scoreType != ScoreType::Skins)
-                            {
-                                Social::awardXP(XPValues[XPID::CompleteCourse] / (18 / m_holeData.size()), XPStringID::CourseComplete);
-                            }
-                        }
+                        //    if (m_sharedData.scoreType != ScoreType::Skins)
+                        //    {
+                        //        Social::awardXP(XPValues[XPID::CompleteCourse] / (18 / m_holeData.size()), XPStringID::CourseComplete);
+                        //    }
+                        //}
 
                         //check putt distance / if this was in fact a putt
                         if (getClub() == ClubID::Putter)
@@ -5448,7 +5452,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                             {
                                 Achievements::awardAchievement(AchievementStrings[AchievementID::TopChip]);
                                 Achievements::incrementStat(StatStrings[StatID::ChipIns]);
-                                Social::awardXP(XPValues[XPID::Special], XPStringID::TopChip);
+                                Social::awardXP(xpValues[XPID::Special], XPStringID::TopChip);
 
                                 if (m_sharedData.gameMode == GameMode::Tutorial)
                                 {
@@ -5462,11 +5466,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                             if (m_achievementTracker.hadBackspin)
                             {
                                 Achievements::awardAchievement(AchievementStrings[AchievementID::SpinClass]);
-                                Social::awardXP((XPValues[XPID::Special] * 6) / 2, XPStringID::BackSpinSkill);
+                                Social::awardXP((xpValues[XPID::Special] * 6) / 2, XPStringID::BackSpinSkill);
                             }
                             else if (m_achievementTracker.hadTopspin)
                             {
-                                Social::awardXP(XPValues[XPID::Special] * 2, XPStringID::TopSpinSkill);
+                                Social::awardXP(xpValues[XPID::Special] * 2, XPStringID::TopSpinSkill);
                             }
 
                             if (m_achievementTracker.hadPunch)

@@ -930,6 +930,7 @@
     <ClInclude Include="src\golf\WeatherAnimationSystem.hpp" />
     <ClInclude Include="src\golf\WeatherDirector.hpp" />
     <ClInclude Include="src\golf\XPAwardStrings.hpp" />
+    <ClInclude Include="src\golf\XPValues.hpp" />
     <ClInclude Include="src\ImTheme.hpp" />
     <ClInclude Include="src\LatLong.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
