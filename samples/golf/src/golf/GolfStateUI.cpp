@@ -2320,6 +2320,12 @@ void GolfState::showCountdown(std::uint8_t seconds)
         Achievements::awardAchievement(AchievementStrings[AchievementID::DiveIn]);
     }
 
+    if (m_currentHole == 17) //full round
+    {
+        Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
+        Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
+    }
+
     //hide any input
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::Root;
