@@ -34,6 +34,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "InputParser.hpp"
 #include "CommandIDs.hpp"
+#include "Clubs.hpp"
 #include "../GolfGame.hpp"
 
 #include <Social.hpp>
@@ -399,6 +400,19 @@ struct CreditID final
 static constexpr std::int32_t MaxCredits = 999999;
 static inline void awardCredits(std::int32_t value)
 {
+    const auto clubLevel = Club::getClubLevel();
+    switch (clubLevel)
+    {
+    default: break;
+    case 1:
+        value += (value / 4);
+        break;
+    case 2:
+        value += (value / 2);
+        break;
+    }
+
+
     auto* msg = cro::App::getInstance().getMessageBus().post<Social::SocialEvent>(Social::MessageID::SocialMessage);
     msg->type = Social::SocialEvent::CreditsAwarded;
     msg->level = value;
