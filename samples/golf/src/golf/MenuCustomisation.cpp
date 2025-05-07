@@ -291,6 +291,16 @@ void MenuState::createBallScene()
         }
     }
 
+    //do a search for the default ball and put it at the fron if it's found
+    if (auto res = std::find_if(m_sharedData.ballInfo.begin(), m_sharedData.ballInfo.end(),
+        [](const SharedStateData::BallInfo& bi) 
+        {
+            return bi.label == "Golf Ball";
+        }); res != m_sharedData.ballInfo.end())
+    {
+        std::iter_swap(m_sharedData.ballInfo.begin(), res);
+    }
+
 
     //read in the info for unlockable balls - if valid
     //info is unlocked add it to ballModels now so it appears

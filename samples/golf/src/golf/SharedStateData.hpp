@@ -315,7 +315,7 @@ struct SharedStateData final
     bool pressHold = false; //press and hold the action button to select power
     bool useTTS = false;
     bool useLensFlare = true;
-    bool useMouseAction = true;
+    bool useMouseAction = false;
     bool useLargePowerBar = false;
     bool useContrastPowerBar = false;
     bool decimatePowerBar = false;
