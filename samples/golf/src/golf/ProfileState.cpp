@@ -2023,7 +2023,7 @@ void ProfileState::buildScene()
 
     struct AnimData final
     {
-        std::size_t m_lastIndex = 0;
+        std::size_t m_lastIndex = std::numeric_limits<std::size_t>::max();
         float progress = 0.f;
     };
     entity.addComponent<cro::Callback>().active = true;
