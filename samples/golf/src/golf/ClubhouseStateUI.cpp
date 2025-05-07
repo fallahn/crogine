@@ -904,14 +904,14 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                 auto scale = editEnt.getComponent<cro::Transform>().getScale();
                 if (scale.x * scale.y == 0)
                 {
-                    if (buttonEnt.getComponent<cro::UIInput>().getGroup() == MenuID::PlayerSelect)
+                    if (buttonEnt.getComponent<cro::UIInput>().getGroup() == (1 << MenuID::PlayerSelect))
                     {
                         buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Inactive);
                     }
                 }
                 else
                 {
-                    if (buttonEnt.getComponent<cro::UIInput>().getGroup() == MenuID::Inactive)
+                    if (buttonEnt.getComponent<cro::UIInput>().getGroup() == (1 << MenuID::Inactive))
                     {
                         buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::PlayerSelect);
                     }

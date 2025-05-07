@@ -62,7 +62,7 @@ namespace
         "Did You Know: An estimated 600 million golf balls are lost or discarded every year\nmore than 100,000 of which are at the bottom of Loch Ness!",
         "Tip: Make sure to spend some time on the Driving Range, to really learn your clubs",
         "Did You Know: There are playable arcade games waiting to be discovered in the Clubhouse",
-        "Tip: Upgrade your gear at the Clubhouse shop's Equipment Counter",
+        "Tip: Upgrade your gear at the Clubhouse Equipment Counter",
         "Did You Know: You can assign your gear upgrades in the Profile Editor"
     };
     std::size_t stringIndex = cro::Util::Random::value(0u, TipStrings.size() - 1);

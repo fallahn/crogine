@@ -74,7 +74,9 @@ static inline const std::string MinimapFragment = R"(
         OUTPUT
         
         const float stepPos = (0.49 * 0.49);
+        const float stepPosOuter = (0.5 * 0.5);
         const float borderPos = (0.46 * 0.46);
+        const float borderPosOuter = (0.465 * 0.465);
         const vec4 borderColour = vec4(vec3(0.0), 0.25);
 
         //these ought to be uniforms for texture
@@ -151,8 +153,8 @@ static inline const std::string MinimapFragment = R"(
 #endif
 
             FRAG_OUT = vec4(mix(noise, colour.rgb, v_colour.r), 1.0);
-            FRAG_OUT = mix(FRAG_OUT, borderColour, step(borderPos, length2));
-            FRAG_OUT.a *= 1.0 - step(stepPos, length2);
+            FRAG_OUT = mix(FRAG_OUT, borderColour, smoothstep(borderPos, borderPosOuter, length2));
+            FRAG_OUT.a *= 1.0 - smoothstep(stepPos, stepPosOuter, length2);
         })";
 
 //minimap as in mini course view

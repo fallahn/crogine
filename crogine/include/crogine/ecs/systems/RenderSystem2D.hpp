@@ -134,6 +134,17 @@ namespace cro
         */
         static const std::string& getDefaultFragmentShader();
 
+        /*!
+        \brief Returns the size of the drawlist at the given index
+        \param idx - retreive this with Camera::getDrawListIndex()
+        \returns draw list size
+        */
+        std::size_t getDrawListSize(std::size_t idx) const
+        {
+            CRO_ASSERT(idx < m_drawLists.size(), "");
+            return m_drawLists[idx].size();
+        }
+
     private:
 
         Shader m_colouredShader;

@@ -178,16 +178,10 @@ namespace
 
         void operator ()(cro::Entity e, float)
         {
-            auto cropRect = croppingArea;
-            auto localBounds = e.getComponent<cro::Drawable2D>().getLocalBounds();
-            auto pos = e.getComponent<cro::Transform>().getWorldPosition();
-            cropRect.left -= pos.x;
-            cropRect.bottom -= pos.y;
-            cropRect.bottom -= localBounds.bottom + localBounds.height;
-            e.getComponent<cro::Drawable2D>().setCroppingArea(cropRect);
+            const auto pos = e.getComponent<cro::Transform>().getWorldPosition();
+            e.getComponent<cro::Drawable2D>().setCroppingArea(croppingArea, true);
 
             float scale = 1.f;
-            pos.y -= (localBounds.height / 2.f);
             if (!croppingArea.contains(pos))
             {
                 scale = 0.f;
@@ -1432,7 +1426,8 @@ void PlaylistState::buildUI()
 void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuData)
 {
     m_menuEntities[MenuID::Skybox] = m_uiScene.createEntity();
-    rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::Skybox].addComponent<cro::Transform>());
+    m_menuEntities[MenuID::Skybox].addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
+    rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::Skybox].getComponent<cro::Transform>());
 
     m_skyboxes = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + SkyboxPath);
     //TODO we want as good a way as possible to validate the files...
@@ -3437,7 +3432,7 @@ void PlaylistState::setActiveTab(std::int32_t index)
     cmd.action = [index](cro::Entity e, float)
     {
         e.getComponent<cro::Callback>().active =
-            e.getComponent<cro::UIInput>().getGroup() == index;
+            (e.getComponent<cro::UIInput>().getGroup() & (1 << index)) != 0;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

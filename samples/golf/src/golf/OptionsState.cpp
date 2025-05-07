@@ -6020,13 +6020,13 @@ void OptionsState::updateToolTip(cro::Entity e, std::int32_t tipID)
 
 void OptionsState::updateActiveCallbacks()
 {
-    auto group = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
+    const auto group = static_cast<std::uint8_t>(m_scene.getSystem<cro::UISystem>()->getActiveGroup());
     const auto& entities = m_scene.getSystem<cro::CallbackSystem>()->getEntities();
     for (auto entity : entities)
     {
         if (entity.hasComponent<cro::UIInput>())
         {
-            entity.getComponent<cro::Callback>().active = entity.getComponent<cro::UIInput>().getGroup() == group;
+            entity.getComponent<cro::Callback>().active = (entity.getComponent<cro::UIInput>().getGroup() & (1 << group)) != 0;
         }
     }
 }
