@@ -4376,6 +4376,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                 {
                     e.getComponent<cro::Callback>().active = false;
                     m_gameScene.destroyEntity(e);
+                    return;
                 }
                 e.getComponent<cro::Model>().setHidden(ballEnt.getComponent<cro::Model>().isHidden());
                 e.getComponent<cro::Transform>().setScale(ballEnt.getComponent<cro::Transform>().getScale()/* * 0.95f*/);
@@ -4507,7 +4508,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
             //hack to stop the point light lens flares drawing on balls
             entity.addComponent<LightAnimation>().pattern.clear();
-
+            //TODO this isn't removed when the ball entity is!!
             ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
     }
@@ -4570,6 +4571,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         {
             e.getComponent<cro::Callback>().active = false;
             m_uiScene.destroyEntity(e);
+            return;
         }
 
         auto terrain = ballEnt.getComponent<ClientCollider>().terrain;

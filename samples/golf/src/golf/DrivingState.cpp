@@ -1085,7 +1085,7 @@ void DrivingState::toggleFreeCam()
     }
 
     m_gameScene.setSystemActive<FpsCameraSystem>(useFreeCam);
-    m_inputParser.setActive(!useFreeCam, TerrainID::Fairway);
+    m_inputParser.setActive(!useFreeCam, TerrainID::Fairway, nullptr);
     cro::App::getWindow().setMouseCaptured(useFreeCam);
 #endif
 }
