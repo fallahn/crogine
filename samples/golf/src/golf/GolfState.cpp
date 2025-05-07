@@ -2025,7 +2025,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                         }
                         break;
                     }
-                    showNotification(s);
+                    //showNotification(s);
+                    m_textChat.printToScreen(s, CD32::Colours[CD32::BlueLight]);
                 }
 
                 break;
@@ -5032,7 +5033,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             
             cro::String s = m_sharedData.connectionData[c].playerData[p].name;
             s += " was eliminated.";
-            showNotification(s);
+            //showNotification(s);
+            m_textChat.printToScreen(s, CD32::Colours[CD32::BlueLight]);
 
             postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::PlayerEliminated;
         }
@@ -5070,7 +5072,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 }
             }
 
-            showNotification(s);
+            //showNotification(s);
+            m_textChat.printToScreen(s, CD32::Colours[CD32::BlueLight]);
         }
             break;
         case PacketID::WeatherChange:

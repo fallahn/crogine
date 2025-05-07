@@ -5664,10 +5664,11 @@ void GolfState::notifyAchievement(const std::array<std::uint8_t, 2u>& data)
             && m_sharedData.connectionData[data[0]].playerCount != 0
             && data[1] < AchievementID::Count - 1)
         {
-            auto name = m_sharedData.connectionData[data[0]].playerData[0].name;
-            auto achievement = AchievementLabels[data[1]];
+            const auto name = m_sharedData.connectionData[data[0]].playerData[0].name;
+            const auto achievement = AchievementLabels[data[1]];
 
-            showNotification(name + " achieved " + achievement);
+            //showNotification(name + " achieved " + achievement);
+            m_textChat.printToScreen(name + " achieved " + achievement, CD32::Colours[CD32::BlueLight]);
 
             auto* msg = postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
             msg->type = Social::SocialEvent::PlayerAchievement;
@@ -5700,7 +5701,8 @@ void GolfState::showLevelUp(std::uint64_t levelData)
 
     cro::String msg = m_sharedData.connectionData[client].playerData[player].name;
     msg += " has reached level " + std::to_string(level);
-    showNotification(msg);
+    //showNotification(msg);
+    m_textChat.printToScreen(msg, CD32::Colours[CD32::BlueLight]);
 }
 
 void GolfState::toggleQuitReady()
