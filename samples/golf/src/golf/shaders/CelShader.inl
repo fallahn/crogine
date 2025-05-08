@@ -362,27 +362,11 @@ static inline const std::string CelFragmentShader = R"(
 
 #if defined(RX_SHADOWS)
 #include SHADOWMAP_INPUTS
+#include CASCADE_SELECTION
 
-#if defined (TERRAIN) || defined(CONTOUR)
-#include PCF_SHADOWS
-#else
-
-//not using PCF so don't bother with include
-    int getCascadeIndex()
-    {
-        for(int i = 0; i < u_cascadeCount; ++i)
-        {
-#if defined (GPU_AMD)
-            if (v_viewDepth > u_frustumSplits[i] - 15.0) //it might be an AMD driver bug. Wait for the next patch.
-#else
-            if (v_viewDepth > u_frustumSplits[i])
-#endif
-            {
-                return min(u_cascadeCount - 1, i);
-            }
-        }
-        return 0;//u_cascadeCount - 1;
-    }
+//#if defined (TERRAIN) || defined(CONTOUR)
+//#include PCF_SHADOWS
+//#else
 
     const float Bias = 0.001; //0.005
     float shadowAmount(int cascadeIndex)
@@ -401,7 +385,7 @@ static inline const std::string CelFragmentShader = R"(
         float depthSample = TEXTURE(u_shadowMap, vec3(projectionCoords.xy, float(cascadeIndex))).r;
         return (currDepth < depthSample) ? 1.0 : 1.0 - (0.3);
     }
-#endif
+//#endif
 #endif
 
 #if defined (ADD_NOISE)

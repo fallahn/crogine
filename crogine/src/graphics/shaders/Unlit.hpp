@@ -218,7 +218,7 @@ static inline const std::string Fragment = R"(
 
     #if defined(RX_SHADOWS)
 #include SHADOWMAP_INPUTS
-
+#include CASCADE_SELECTION
 
     #if defined(MOBILE)
     #if defined (GL_FRAGMENT_PRECISION_HIGH)

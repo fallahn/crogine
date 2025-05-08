@@ -188,21 +188,30 @@ R"(
     VARYING_IN float v_viewDepth;
 )";
 
+//#include CASCADE_SELECTION
+static inline const std::string CascadeSelection =
+R"(
+int getCascadeIndex()
+{
+    for(int i = 0; i < u_cascadeCount; ++i)
+    {
+#if defined (GPU_AMD)
+        if (v_viewDepth > u_frustumSplits[i] - 15.0)
+#else
+        if (v_viewDepth > u_frustumSplits[i])
+#endif
+        {
+            return min(u_cascadeCount - 1, i);
+        }
+    }
+    return 0;//u_cascadeCount - 1;
+}
+)";
+
+
 //#include PCF_SHADOWS
 static inline const std::string PCFShadows = 
 R"(
-    int getCascadeIndex()
-    {
-        for(int i = 0; i < u_cascadeCount; ++i)
-        {
-            if (v_viewDepth >= u_frustumSplits[i])
-            {
-                return min(u_cascadeCount - 1, i);
-            }
-        }
-        return u_cascadeCount - 1;
-    }
-
     const vec2 kernel[16] = vec2[](
         vec2(-0.94201624, -0.39906216),
         vec2(0.94558609, -0.76890725),

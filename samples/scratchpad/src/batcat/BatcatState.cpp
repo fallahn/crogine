@@ -121,6 +121,8 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
                 if (ImGui::Begin("Window of funnage"))
                 {
                     auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+                    //ImGui::Text("Visible Shadow Ents: %lu", m_scene.getSystem<cro::ShadowMapRenderer>()->getDrawListSize(cam.getDrawListIndex()));
+
                     float maxShadow = cam.getMaxShadowDistance();
                     if (ImGui::SliderFloat("Shadow Distance", &maxShadow, 1.f, cam.getFarPlane()))
                     {
