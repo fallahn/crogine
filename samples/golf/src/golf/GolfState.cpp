@@ -1454,9 +1454,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (club != ClubID::Putter
                 && (!isCPU || (isCPU && !m_sharedData.fastCPU)))
             {
-                //TODO this doesn't include any easing added when making the stroke
-                //we should be using the value returned by getStroke() in hitBall()
-                auto hook = m_inputParser.getHook() * m_activeAvatar->model.getComponent<cro::Transform>().getScale().x;
+                //calculated hook is the result of the previous call to InputParser::getStroke()
+                auto hook = m_inputParser.getCalculatedHook() * m_activeAvatar->model.getComponent<cro::Transform>().getScale().x;
                 const auto hookDivisor = 1.f + Club::getClubLevel();
 
                 bool isHook = false;
@@ -1491,7 +1490,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
 
                 if (power > 0.59f //hmm not sure why power should factor into this?
-                    && /*std::abs(hook) < 0.05f*/!isHook)
+                    && (std::abs(hook) < 0.02f && !isHook))
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = (power > PowerShot && club < ClubID::NineIron) ? GolfEvent::PowerShot : GolfEvent::NiceShot;

@@ -123,7 +123,7 @@ static constexpr glm::vec3 DefaultSkycamPosition(MapSize.x / 2.f, SkyCamHeight, 
 static constexpr float BallPointSize = 1.4f;
 static constexpr float LongPuttDistance = 6.f;
 
-static constexpr float MinHook = 0.12f;// 0.08f; //used to decide if we call a hook or slice in UI
+static constexpr float MinHook = 0.2f;// 0.08f; //used to decide if we call a hook or slice in UI
 static constexpr float MaxHook = -0.25f;
 static constexpr float KnotsPerMetre = 1.94384f;
 static constexpr float MPHPerMetre = 2.23694f;

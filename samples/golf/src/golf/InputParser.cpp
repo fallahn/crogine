@@ -82,6 +82,7 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_humanCount        (1),
     m_activeController  (-1),
     m_activeLoadout     (nullptr),
+    m_lastCalculatedHook(0.f),
     m_inputFlags        (0),
     m_prevFlags         (0),
     m_enableFlags       (std::numeric_limits<std::uint16_t>::max()),
@@ -972,6 +973,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     impulse *= power;
 
+    m_lastCalculatedHook = hook;
     m_activeLoadout = nullptr;
     return { impulse, spin, hook };
 }

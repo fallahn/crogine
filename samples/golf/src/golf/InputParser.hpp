@@ -66,6 +66,7 @@ public:
 
     float getPower() const; //0-1 multiplied by selected club
     float getHook() const; //-1 to -1 * some angle, club defined
+    float getCalculatedHook() const { return m_lastCalculatedHook; } //used by UI to display if current player hooked
 
     std::int32_t getClub() const;
     void setHumanCount(std::int32_t); //if there's only one human count we can use input from any controller
@@ -122,6 +123,7 @@ private:
     std::int32_t m_activeController; //used when multple controllers are connected in single player
 
     mutable const inv::Loadout* m_activeLoadout;
+    mutable float m_lastCalculatedHook; //final output of hook based on load/player after last shot - used for UI
 
     std::uint16_t m_inputFlags;
     std::uint16_t m_prevFlags;
