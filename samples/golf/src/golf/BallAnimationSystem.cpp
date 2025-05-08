@@ -47,12 +47,6 @@ void BallAnimationSystem::process(float dt)
     for (auto entity : getEntities())
     {
         const auto& animation = entity.getComponent<BallAnimation>();
-        if (animation.parent.destroyed())
-        {
-            //we're waiting to be cleaned up so don't bother animating
-            continue;
-        }
-
         const auto& interp = animation.parent.getComponent<InterpolationComponent<InterpolationType::Linear>>();
 
 
