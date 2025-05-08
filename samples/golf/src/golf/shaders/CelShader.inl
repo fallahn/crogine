@@ -363,6 +363,10 @@ static inline const std::string CelFragmentShader = R"(
 #if defined(RX_SHADOWS)
 #include SHADOWMAP_INPUTS
 
+#if defined (TERRAIN) || defined(CONTOUR)
+#include PCF_SHADOWS
+#else
+
 //not using PCF so don't bother with include
     int getCascadeIndex()
     {
@@ -397,6 +401,7 @@ static inline const std::string CelFragmentShader = R"(
         float depthSample = TEXTURE(u_shadowMap, vec3(projectionCoords.xy, float(cascadeIndex))).r;
         return (currDepth < depthSample) ? 1.0 : 1.0 - (0.3);
     }
+#endif
 #endif
 
 #if defined (ADD_NOISE)

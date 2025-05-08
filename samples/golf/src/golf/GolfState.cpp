@@ -1489,7 +1489,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     msg2->travelDistance = 1.f;
                 }
 
-                if (power > 0.59f //hmm not sure why power should factor into this?
+                if (power > 0.19f //hmm not sure why power should factor into this?
                     && (std::abs(hook) < 0.02f && !isHook))
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);

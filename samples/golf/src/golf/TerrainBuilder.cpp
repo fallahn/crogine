@@ -616,7 +616,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::SlopeIndicator;
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen | RenderFlags::FlightCam | RenderFlags::Reflection));
     entity.getComponent<cro::Model>().setHidden(true);
     entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
     entity.getComponent<cro::Callback>().function =
