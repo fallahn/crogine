@@ -36,6 +36,7 @@ using namespace cro;
 DepthTexture::DepthTexture()
     : m_fboID   (0),
     m_textureID (0),
+    m_colourID  (0),
     m_size      (0,0),
     m_layerCount(0)
 {
@@ -60,6 +61,11 @@ DepthTexture::~DepthTexture()
     {
         glCheck(glDeleteTextures(1, &m_textureID));
     }
+
+    if (m_colourID)
+    {
+        glCheck(glDeleteTextures(1, &m_colourID));
+    }
 }
 
 DepthTexture::DepthTexture(DepthTexture&& other) noexcept
@@ -67,12 +73,14 @@ DepthTexture::DepthTexture(DepthTexture&& other) noexcept
 {
     m_fboID = other.m_fboID;
     m_textureID = other.m_textureID;
+    m_colourID = other.m_colourID;
     setViewport(other.getViewport());
     setView(other.getView());
     m_layerCount = other.m_layerCount;
 
     other.m_fboID = 0;
     other.m_textureID = 0;
+    other.m_colourID = 0;
     other.setViewport({ 0, 0, 0, 0 });
     other.setView({ 0.f, 0.f });
     other.m_layerCount = 0;
@@ -109,12 +117,14 @@ DepthTexture& DepthTexture::operator=(DepthTexture&& other) noexcept
 
         m_fboID = other.m_fboID;
         m_textureID = other.m_textureID;
+        m_colourID = other.m_colourID;
         setViewport(other.getViewport());
         setView(other.getView());
         m_layerCount = other.m_layerCount;
 
         other.m_fboID = 0;
         other.m_textureID = 0;
+        other.m_colourID = 0;
         other.setViewport({ 0, 0, 0, 0 });
         other.setView({ 0.f, 0.f });
         other.m_layerCount = 0;
@@ -143,6 +153,9 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
         //resize the buffer
         glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_textureID));
         glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, width, height, layers, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
+        
+        /*glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_colourID));
+        glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, layers, 0, GL_RG, GL_FLOAT, NULL));*/
 
         setViewport({ 0, 0, static_cast<std::int32_t>(width), static_cast<std::int32_t>(height) });
         setView(FloatRect(getViewport()));
@@ -153,12 +166,17 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
 #else
         //else we have to regenerate it as it's immutable
         glCheck(glDeleteTextures(1, &m_textureID));
+
+
+        //glCheck(glDeleteTextures(1, &m_colourID));
 #endif
     }
 
     //else create it
     m_size = { 0, 0 };
     setViewport({ 0, 0, 0, 0 });
+
+    const float borderColor[] = { 1.f, 1.f, 1.f, 1.f };
 
     //create the texture
     glCheck(glGenTextures(1, &m_textureID));
@@ -174,9 +192,27 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
     glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER));
     glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
     glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
-    const float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glCheck(glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor));
     
+
+
+//    glCheck(glGenTextures(1, &m_colourID));
+//    glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_colourID));
+//
+//#ifdef GL41
+//    //apple drivers don't support immutable textures.
+//    glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, layers, 0, GL_RG, GL_FLOAT, NULL));
+//#else
+//    glCheck(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RG32F, width, height, layers));
+//#endif
+//    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+//    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+//    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
+//    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+//    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+    //glCheck(glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor));
+
+
 
     //create the frame buffer
     if (m_fboID == 0)
@@ -185,6 +221,8 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
     }
     glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_fboID));
     glCheck(glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_textureID, 0, 0));
+    /*glCheck(glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_colourID, 0, 0));
+    glCheck(glDrawBuffer(GL_COLOR_ATTACHMENT0));*/
     glCheck(glDrawBuffer(GL_NONE));
     glCheck(glReadBuffer(GL_NONE));
 
@@ -222,11 +260,21 @@ void DepthTexture::clear(std::uint32_t layer)
     //TODO does checking to see we're not already on the
     //active layer take less time than just setting it every time?
     glCheck(glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_textureID, 0, layer));
-
+    
     glCheck(glColorMask(false, false, false, false));
-
-    //clear buffer - UH OH this will clear the main buffer if FBO is null
     glCheck(glClear(GL_DEPTH_BUFFER_BIT));
+
+
+    //glCheck(glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_colourID, 0, layer));
+
+    ////TODO remember to set this all alse for depth-only rendering
+    //glCheck(glColorMask(true, true, false, false));
+
+    ////clear buffer - UH OH this will clear the main buffer if FBO is null
+    ////TODO set the bitmask according to which attachments we have
+    //glCheck(glGetFloatv(GL_COLOR_CLEAR_VALUE, m_lastClearColour.data()));
+    //glClearColor(1.f, 1.f, 0.f, 0.f);
+    //glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 #endif
 }
 
@@ -234,6 +282,7 @@ void DepthTexture::display()
 {
 #ifdef PLATFORM_DESKTOP
     glCheck(glColorMask(true, true, true, true));
+    //glClearColor(m_lastClearColour[0], m_lastClearColour[1], m_lastClearColour[2], m_lastClearColour[3]);
 
     //unbind buffer
     setActive(false);
@@ -243,6 +292,7 @@ void DepthTexture::display()
 TextureID DepthTexture::getTexture() const
 {
     return TextureID(m_textureID, true);
+    //return TextureID(m_colourID, true);
 }
 
 TextureID DepthTexture::getTexture(std::uint32_t index) const
@@ -272,6 +322,7 @@ void DepthTexture::updateHandles()
     for (auto i = 0u; i < m_layerHandles.size(); ++i)
     {
         glCheck(glTextureView(m_layerHandles[i], GL_TEXTURE_2D, m_textureID, GL_DEPTH_COMPONENT24, 0, 1, i, 1));
+        //glCheck(glTextureView(m_layerHandles[i], GL_TEXTURE_2D, m_colourID, GL_RG32F, 0, 1, i, 1));
     }
 #endif
 }

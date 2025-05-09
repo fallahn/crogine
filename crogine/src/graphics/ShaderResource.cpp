@@ -74,6 +74,7 @@ ShaderResource::ShaderResource()
     addInclude("SHADOWMAP_INPUTS", ShadowmapInputs.c_str());
     addInclude("CASCADE_SELECTION", CascadeSelection.c_str());
     addInclude("PCF_SHADOWS", PCFShadows.c_str());
+    addInclude("VSM_SHADOWS", VSMShadows.c_str());
     addInclude("FXAA", FXAA.c_str());
 }
 

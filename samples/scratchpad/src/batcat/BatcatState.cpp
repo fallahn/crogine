@@ -290,7 +290,7 @@ void BatcatState::createScene()
     entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Run);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
-    entity.getComponent<cro::Model>().setInstanceTransforms(tx);
+    //entity.getComponent<cro::Model>().setInstanceTransforms(tx);
 
     /*for (auto p : tx)
     {

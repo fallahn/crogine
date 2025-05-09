@@ -124,9 +124,11 @@ namespace cro
     private:
         std::uint32_t m_fboID;
         std::uint32_t m_textureID;
+        std::uint32_t m_colourID;
         glm::uvec2 m_size;
         std::uint32_t m_layerCount;
 
+        std::array<float, 4u> m_lastClearColour = {};
         std::uint32_t getFrameBufferID() const override { return m_fboID; }
 
         //this manages the texture views for reading individual layers

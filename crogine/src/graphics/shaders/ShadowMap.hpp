@@ -52,9 +52,7 @@ static inline const std::string Vertex = R"(
 
         uniform vec4 u_clipPlane;
 
-    #if defined (MOBILE)
         VARYING_OUT vec4 v_position;
-    #endif
 
     #if defined (ALPHA_CLIP)
         VARYING_OUT vec2 v_texCoord0;
@@ -78,11 +76,9 @@ static inline const std::string Vertex = R"(
         #endif                    
 
             gl_Position = wvp * position;
-
-        #if defined (MOBILE)
             v_position = gl_Position;
 
-        #else
+        #if !defined(MOBILE)
             gl_ClipDistance[0] = dot(worldMatrix * position, u_clipPlane);
         #endif
 
@@ -104,7 +100,7 @@ static inline const std::string FragmentMobile = R"(
         #define PREC
         #endif
 
-        VARYING_IN vec4 v_position;
+        VARYING_IN vec4 v_position; //TODO this needs to be output by billboard vert shader
         OUTPUT
 
         PREC vec4 pack(const float depth)
@@ -125,24 +121,38 @@ static inline const std::string FragmentMobile = R"(
 
 
 static inline std::string FragmentDesktop = R"(
-        #if defined(ALPHA_CLIP)
+    #if defined(ALPHA_CLIP)
 
         uniform sampler2D u_diffuseMap;
         uniform float u_alphaClip;
 
         in vec2 v_texCoord0;
-
-        void main()
-        {
-            if(texture(u_diffuseMap, v_texCoord0).a < u_alphaClip) discard;
-        }
-        #else
+    #endif
+        in vec4 v_position;
 
         OUTPUT             
+
         void main()
         {
-            FRAG_OUT = vec4(1.0);
+    #if defined(ALPHA_CLIP)
+            if(texture(u_diffuseMap, v_texCoord0).a < u_alphaClip) discard;
+    #endif
+            float depth = v_position.z / v_position.w;
+		    depth = depth * 0.5 + 0.5;
+//#define VSM
+#if defined(VSM)
+		    float m1 = depth;
+		    float m2 = depth * depth;
+	
+		    //adjust moments (this is sort of bias per pixel) using partial derivative
+		    float dx = dFdx(depth);
+		    float dy = dFdy(depth);
+		    m2 += 0.25 * (dx*dx + dy*dy);
+
+            FRAG_OUT = vec4(m1, m2, 0.0, 1.0);
+#else
+            FRAG_OUT = vec4(depth, 0.0, 0.0, 1.0);
+#endif
         }
-        #endif
         )";
 }

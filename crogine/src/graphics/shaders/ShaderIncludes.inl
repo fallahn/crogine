@@ -208,6 +208,33 @@ int getCascadeIndex()
 }
 )";
 
+//based on https://fabiensanglard.net/shadowmappingVSM/index.php
+//#include VSM_SHADOWS
+static inline const std::string VSMShadows =
+R"(
+#if defined (PBR)
+float shadowAmount(int cascadeIndex, SurfaceProperties surfProp)
+#else
+float shadowAmount(int cascadeIndex)
+#endif
+{
+    vec4 lightWorldPos = v_lightWorldPosition[cascadeIndex];
+    
+    vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
+    projectionCoords = projectionCoords * 0.5 + 0.5;
+
+	vec2 moments = texture(u_shadowMap, vec3(projectionCoords.xy, cascadeIndex)).rg;
+
+	float variance = moments.y - (moments.x * moments.x);
+	variance = max(variance, 0.0002); //the bigger this number the more 'feather' we get on the edge
+	
+	float d = projectionCoords.z - moments.x;
+	float p_max = ((variance / (variance + d*d)) * 0.5) + 0.5;
+	
+	return mix(1.0, p_max, step(moments.x, projectionCoords.z));
+}
+)";
+
 
 //#include PCF_SHADOWS
 static inline const std::string PCFShadows = 
