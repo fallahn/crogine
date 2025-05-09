@@ -1512,7 +1512,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                     }
                 }
                 else if (power > PowerShot
-                    && club < ClubID::NineIron)
+                    && club < ClubID::NineIron
+                    && !isHook)
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = GolfEvent::PowerShot;
@@ -7789,7 +7790,8 @@ void GolfState::gamepadNotify(std::int32_t type)
         };
 
         auto controllerID = activeControllerID(m_currentPlayer.player);
-        auto colour = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].ballTint;
+        auto colour = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].ballTint
+            * m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].ballColour;
 
         auto ent = m_gameScene.createEntity();
         ent.addComponent<cro::Callback>().active = true;
