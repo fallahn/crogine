@@ -854,10 +854,6 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
         }
     }
 
-    //reduce the hook amount based on the active ball - max buff is 7
-    const auto ballVal = 0.03f * static_cast<float>(ballStat);
-    hook *= 1.f - ballVal;
-
     const auto level = Social::getLevel() / 10;
     auto maxHook = MaxHook - (static_cast<float>(std::clamp(level, 0, 3)) * 0.0025f);
 
@@ -905,7 +901,8 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
             hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
             break;
         case 2:
-            hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
+            //hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
+            hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
             break;
         }
 
@@ -938,6 +935,12 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     {
         maxHook *= 0.75f;
         hook *= 0.75f;
+    }
+    else
+    {
+        //reduce the hook amount based on the active ball - max buff is 7
+        const auto ballVal = 0.07f * static_cast<float>(ballStat);
+        hook *= 1.f - ballVal;
     }
 
     yaw += maxHook * hook;
