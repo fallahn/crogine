@@ -6583,7 +6583,7 @@ void GolfState::updateLeagueHole()
                 //this may have been saved previously
                 if (league.getHoleScores()[0][m_currentHole] == 0)
                 {
-                    league.updateHoleScores(m_currentHole, par, playerScore > par, windChance);
+                    league.updateHoleScores(m_currentHole, par, playerScore > (par + 1), windChance);
                     updateScoreboard();
                 }
             }
@@ -6593,7 +6593,7 @@ void GolfState::updateLeagueHole()
                 League league(m_sharedData.leagueRoundID, m_sharedData);
                 if (league.getHoleScores()[0][m_currentHole] == 0)
                 {
-                    league.updateHoleScores(m_currentHole, par, playerScore > par, windChance);
+                    league.updateHoleScores(m_currentHole, par, playerScore > (par + 1), windChance);
                 }
             }
             break;

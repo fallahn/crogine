@@ -333,6 +333,7 @@ struct SharedStateData final
     bool showRival = true;
     bool puttFollowCam = false;
     bool zoomFollowCam = false;
+    bool showClubUpdate = true;
     std::int32_t flagText = 0; //none, black, white
     std::string flagPath;
 

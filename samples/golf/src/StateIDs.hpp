@@ -64,6 +64,7 @@ struct StateID final
         MapOverview,
         GC,
         League,
+        ClubInfo,
         PlayerManagement,
         EndlessAttract,
         EndlessRunner,

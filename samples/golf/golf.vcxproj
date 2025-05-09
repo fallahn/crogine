@@ -619,6 +619,7 @@
     <ClCompile Include="src\golf\CloudSystem.cpp" />
     <ClCompile Include="src\golf\ClubhouseState.cpp" />
     <ClCompile Include="src\golf\ClubhouseStateUI.cpp" />
+    <ClCompile Include="src\golf\ClubInfoState.cpp" />
     <ClCompile Include="src\golf\ClubModels.cpp" />
     <ClCompile Include="src\golf\Clubs.cpp" />
     <ClCompile Include="src\golf\CoinSystem.cpp" />
@@ -808,6 +809,7 @@
     <ClInclude Include="src\golf\ClientPacketData.hpp" />
     <ClInclude Include="src\golf\CloudSystem.hpp" />
     <ClInclude Include="src\golf\ClubhouseState.hpp" />
+    <ClInclude Include="src\golf\ClubInfoState.hpp" />
     <ClInclude Include="src\golf\ClubModels.hpp" />
     <ClInclude Include="src\golf\ClubModifiers.hpp" />
     <ClInclude Include="src\golf\Clubs.hpp" />

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,59 +29,35 @@ source distribution.
 
 #pragma once
 
-#include "StateIDs.hpp"
-
-#include <crogine/audio/AudioBuffer.hpp>
-#include <crogine/audio/AudioResource.hpp>
+#include "../StateIDs.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/Texture.hpp>
-#include <crogine/graphics/Shader.hpp>
-#include <crogine/graphics/VideoPlayer.hpp>
-#include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 
-namespace cro
-{
-    struct Camera;
-    class AudioResource;
-}
-
-struct SharedStateData;
-class SplashState final : public cro::State
+class ClubInfoState final : public cro::State
 {
 public:
-    SplashState(cro::StateStack&, cro::State::Context, SharedStateData&);
-
-    cro::StateID getStateID() const override { return StateID::SplashScreen; }
+    ClubInfoState(cro::StateStack&, cro::State::Context, struct SharedStateData&);
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
     bool simulate(float) override;
     void render() override;
 
+    cro::StateID getStateID() const override { return StateID::ClubInfo; }
+
 private:
+    cro::Scene m_scene;
     SharedStateData& m_sharedData;
-    cro::AudioResource m_audioResource;
 
-    cro::Scene m_uiScene;
-    float m_timer;
-
-    float m_windowRatio;
-    std::int32_t m_timeUniform;
-    std::int32_t m_scanlineUniform;
-
-    cro::Texture m_texture;
-    cro::Shader m_noiseShader;
-    cro::Shader m_scanlineShader;
-
-    cro::VideoPlayer m_video;
+    std::vector<cro::String> m_messages;
+    std::size_t m_messageIndex;
+    cro::Entity m_messageNode;
+    cro::Entity m_continueNode;
 
     void addSystems();
-    void loadAssets();
-    void createUI();
-    void gotoMenu();
+    void buildScene();
 
-    //assigned to camera resize callback
-    void updateView(cro::Camera&);
+    void centreText();
 };

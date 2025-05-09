@@ -71,6 +71,7 @@ source distribution.
 #include "golf/PacketIDs.hpp"
 #include "golf/UnlockItems.hpp"
 #include "golf/Clubs.hpp"
+#include "golf/ClubInfoState.hpp"
 #include "golf/XPAwardStrings.hpp"
 
 #include "editor/BushState.hpp"
@@ -221,6 +222,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
     m_stateStack.registerState<ShopState>(StateID::Shop, m_sharedData, m_profileData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
+    m_stateStack.registerState<ClubInfoState>(StateID::ClubInfo, m_sharedData);
     m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
     m_stateStack.registerState<LeaderboardState>(StateID::Leaderboard, m_sharedData);
     m_stateStack.registerState<StatsState>(StateID::Stats, m_sharedData);
@@ -321,6 +323,9 @@ void GolfGame::handleMessage(const cro::Message& msg)
             switch (data.id)
             {
             default: break;
+            case StateID::ClubInfo:
+                m_sharedData.showClubUpdate = false;
+                [[fallthrough]];
             case StateID::Options:
             case StateID::PlayerManagement:
             case StateID::MessageOverlay:
@@ -1660,6 +1665,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.zoomFollowCam = prop.getValue<bool>();
                     }
+                    else if (name == "club_update")
+                    {
+                        m_sharedData.showClubUpdate = prop.getValue<bool>();
+                    }
                     /*else if (name == "group_mode")
                     {
                         m_sharedData.groupMode = std::clamp(prop.getValue<std::int32_t>(), 0, std::int32_t(ClientGrouping::Four));
@@ -1820,6 +1829,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("show_rival").setValue(m_sharedData.showRival);
     cfg.addProperty("putt_follow").setValue(m_sharedData.puttFollowCam);
     cfg.addProperty("zoom_follow").setValue(m_sharedData.zoomFollowCam);
+    cfg.addProperty("club_update").setValue(m_sharedData.showClubUpdate);
     cfg.save(path);
 
 

@@ -169,29 +169,7 @@ bool SplashState::handleEvent(const cro::Event& evt)
         || evt.type == SDL_CONTROLLERBUTTONUP
         || evt.type == SDL_MOUSEBUTTONUP)
     {
-        requestStackClear();
-        requestStackPush(StateID::Menu);
-        if (m_sharedData.showTutorialTip)
-        {
-            m_sharedData.errorMessage = "Welcome";
-            requestStackPush(StateID::MessageOverlay);
-        }
-//#ifdef USE_GNS
-//#undef USE_RSS
-        else
-        {
-            if (!Social::isSteamdeck())
-            {
-                requestStackPush(StateID::News);
-            }
-        }
-//#endif
-//#ifdef USE_RSS
-        //else
-        //{
-        //    requestStackPush(StateID::News);
-        //}
-//#endif
+        gotoMenu();
     }
 
     m_uiScene.forwardEvent(evt);
@@ -219,29 +197,7 @@ bool SplashState::simulate(float dt)
     if (m_video.getDuration() != 0 &&
         m_video.getPosition() / m_video.getDuration() == 1)
     {
-        requestStackClear();
-        requestStackPush(StateID::Menu);
-        if (m_sharedData.showTutorialTip)
-        {
-            m_sharedData.errorMessage = "Welcome";
-            requestStackPush(StateID::MessageOverlay);
-        }
-//#ifdef USE_GNS
-//#undef USE_RSS
-        else
-        {
-            if (!Social::isSteamdeck())
-            {
-                requestStackPush(StateID::News);
-            }
-        }
-//#endif
-//#ifdef USE_RSS
-        //else
-        //{
-        //    requestStackPush(StateID::News);
-        //}
-//#endif
+        gotoMenu();
     }
 
     return false;
@@ -408,19 +364,7 @@ void SplashState::loadAssets()
                     if (currTime == FadeTime)
                     {
                         e.getComponent<cro::Callback>().active = false;
-                        requestStackClear();
-                        requestStackPush(StateID::Menu);
-                        if (m_sharedData.showTutorialTip)
-                        {
-                            m_sharedData.errorMessage = "Welcome";
-                            requestStackPush(StateID::MessageOverlay);
-                        }
-//#ifdef USE_RSS
-                        else
-                        {
-                            requestStackPush(StateID::News);
-                        }
-//#endif
+                        gotoMenu();
                     }
                 }
                 break;
@@ -435,6 +379,28 @@ void SplashState::createUI()
     auto camEnt = m_uiScene.getActiveCamera();
     updateView(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&SplashState::updateView, this, std::placeholders::_1);
+}
+
+void SplashState::gotoMenu()
+{
+    requestStackClear();
+    requestStackPush(StateID::Menu);
+    if (m_sharedData.showTutorialTip)
+    {
+        m_sharedData.errorMessage = "Welcome";
+        requestStackPush(StateID::MessageOverlay);
+    }
+    else if (m_sharedData.showClubUpdate)
+    {
+        requestStackPush(StateID::ClubInfo);
+    }
+    else
+    {   
+        if (!Social::isSteamdeck())
+        {
+            requestStackPush(StateID::News);
+        }
+    }
 }
 
 void SplashState::updateView(cro::Camera& cam)

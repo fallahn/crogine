@@ -260,6 +260,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Stats);
         cacheState(StateID::PlayerManagement);
         cacheState(StateID::Shop);
+        cacheState(StateID::ClubInfo);
 
         context.mainWindow.setMouseCaptured(false);
 

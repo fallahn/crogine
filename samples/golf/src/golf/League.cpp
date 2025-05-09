@@ -1026,7 +1026,7 @@ ScoreCalculator::ScoreCalculator(std::int32_t clubset)
 {
     //this was added after making the use of pro clubs more difficult to cap
     //CPU player difficulty at that level
-    m_clubset = std::min(1, m_clubset);
+    //m_clubset = std::min(1, m_clubset);
 }
 
 //public

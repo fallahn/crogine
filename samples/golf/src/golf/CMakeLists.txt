@@ -21,6 +21,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ClubModels.cpp
   ${PROJECT_DIR}/golf/ClubhouseStateUI.cpp
   ${PROJECT_DIR}/golf/Clubs.cpp
+  ${PROJECT_DIR}/golf/ClubInfoState.cpp
   ${PROJECT_DIR}/golf/CoinSystem.cpp
   ${PROJECT_DIR}/golf/CollisionMesh.cpp
   ${PROJECT_DIR}/golf/CPUGolfer.cpp
