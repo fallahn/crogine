@@ -837,10 +837,13 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     //add hook/slice to yaw
     auto hook = getHook();
-    
+
+    const auto clubLevel = Club::getClubLevel();
+
     std::int32_t ballStat = 0;
     std::int32_t clubStat = 0;
-    if (m_activeLoadout)
+    if (m_activeLoadout
+        && clubLevel != 0)
     {
         if (m_activeLoadout->items[inv::Ball] != -1)
         {
@@ -855,12 +858,11 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     }
 
     const auto level = Social::getLevel() / 10;
-    auto maxHook = MaxHook - (static_cast<float>(std::clamp(level, 0, 3)) * 0.0025f);
+    auto maxHook = MaxHook - (static_cast<float>(std::clamp(level, 0, 3)) * 0.0015f);
 
     float powerMod = 0.f;
     float spinBuff = 1.f;
 
-    const auto clubLevel = Club::getClubLevel();
 
     switch (m_terrain)
     {
@@ -895,14 +897,38 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
         case 0:
             //hook = cro::Util::Easing::easeInQuad(hook * s) * s;
             hook = cro::Util::Easing::easeOutSine(hook * s) * s;
+
+        {
+            //use level based curve
+            /*auto level = Social::getLevel();
+            switch (level / 10)
+            {
+            default:
+                hook = cro::Util::Easing::easeOutQuint(hook * s) * s;
+                break;
+            case 3:
+                hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
+                break;
+            case 2:
+                hook = cro::Util::Easing::easeOutCubic(hook * s) * s;
+                break;
+            case 1:
+                hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
+                break;
+            case 0:
+                hook = cro::Util::Easing::easeOutSine(hook * s) * s;
+                break;
+            }*/
+        }
+
             break;
         case 1:
             //hook = cro::Util::Easing::easeInSine(hook * s) * s;
             hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
             break;
         case 2:
-            //hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
-            hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
+            hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
+            //hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
             break;
         }
 
@@ -911,6 +937,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
         //spin buff
         if (club > ClubID::FiveWood
+            && clubLevel != 0
             && m_activeLoadout)
         {
             auto lvlEffect = 1 + (2 - clubLevel);

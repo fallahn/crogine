@@ -496,7 +496,7 @@ void NewsState::buildScene()
 
 
                     ent = m_scene.createEntity();
-                    ent.addComponent<cro::Transform>().setPosition({ -170.f, 74.f, 0.1f });
+                    ent.addComponent<cro::Transform>().setPosition({ -170.f, 76.f, 0.1f });
                     ent.addComponent<cro::Drawable2D>();
                     ent.addComponent<cro::Text>(smallFont).setString(description);
                     ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -515,7 +515,7 @@ void NewsState::buildScene()
                         prev += "---";
 
                         ent = m_scene.createEntity();
-                        ent.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 38.f, 0.2f));
+                        ent.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 36.f, 0.2f));
                         ent.getComponent<cro::Transform>().setOrigin(glm::vec2(188.f, 0.f));
                         ent.addComponent<cro::Drawable2D>();
                         ent.addComponent<cro::Text>(font).setString(prev);
