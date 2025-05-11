@@ -34,34 +34,36 @@ source distribution.
 #include <crogine/core/Log.hpp>
 
 #include <sstream>
+#include <cassert>
 
 #ifdef _MSC_VER
 #define __func__ __FUNCTION__
 #endif //_MSC_VER
 
 #ifdef CRO_DEBUG_
-#define CRO_ASSERT(condition, message) \
-do \
-{ \
-    if(!(condition)) \
-    { \
-        std::stringstream ss; \
-        ss << "Assertion failed in " << __FILE__ << ", function `" << __func__ << "`, line " << __LINE__ << ": " << message; \
-        cro::Logger::log(ss.str(), cro::Logger::Type::Error, cro::Logger::Output::All); \
-        abort(); \
-    } \
-}while (false)
-
-#define CRO_WARNING(condition, message) \
-do \
-{ \
-    if((condition)) \
-    { \
-        std::stringstream ss; \
-        ss << "in " << __FILE__ << ", function `" << __func__ << "`, line " << __LINE__ << ": " << message; \
-        cro::Logger::log(ss.str(), cro::Logger::Type::Warning, cro::Logger::Output::All); \
-    } \
-}while (false)
+#define CRO_ASSERT(condition, message) assert(condition)
+//#define CRO_ASSERT(condition, message) \
+//do \
+//{ \
+//    if(!(condition)) \
+//    { \
+//        std::stringstream ss; \
+//        ss << "Assertion failed in " << __FILE__ << ", function `" << __func__ << "`, line " << __LINE__ << ": " << message; \
+//        cro::Logger::log(ss.str(), cro::Logger::Type::Error, cro::Logger::Output::All); \
+//        abort(); \
+//    } \
+//}while (false)
+//
+//#define CRO_WARNING(condition, message) \
+//do \
+//{ \
+//    if((condition)) \
+//    { \
+//        std::stringstream ss; \
+//        ss << "in " << __FILE__ << ", function `" << __func__ << "`, line " << __LINE__ << ": " << message; \
+//        cro::Logger::log(ss.str(), cro::Logger::Type::Warning, cro::Logger::Output::All); \
+//    } \
+//}while (false)
 #else
 
 #define CRO_ASSERT(condition, message)

@@ -100,7 +100,7 @@ static inline const std::string FragmentMobile = R"(
         #define PREC
         #endif
 
-        VARYING_IN vec4 v_position; //TODO this needs to be output by billboard vert shader
+        VARYING_IN vec4 v_position;
         OUTPUT
 
         PREC vec4 pack(const float depth)

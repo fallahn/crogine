@@ -1894,8 +1894,8 @@ void MenuState::loadAssets()
     m_profileData.profileMaterials.ball = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
 
     shader = &m_resources.shaders.get(ShaderID::BallBumped);
-    m_scaleBuffer.addShader(*shader);
-    m_resolutionBuffer.addShader(*shader);
+    //m_scaleBuffer.addShader(*shader);
+    //m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::BallBumped] = m_resources.materials.add(*shader);
     m_profileData.profileMaterials.ballBumped = m_resources.materials.get(m_materialIDs[MaterialID::BallBumped]);
 

@@ -50,6 +50,9 @@ uniform MED vec4 u_clipPlane;
 uniform MED vec3 u_cameraWorldPosition;
 
 uniform mat4 u_cameraViewMatrix;
+
+VARYING_OUT vec4 v_position;
+
 #else
 #include CAMERA_UBO
 #endif
@@ -86,6 +89,8 @@ uniform mat4 u_cameraViewMatrix;
 #if defined (SHADOW_MAPPING)
             mat4 viewMatrix = u_cameraViewMatrix;
             mat4 viewProj = u_projectionMatrix * u_viewMatrix;
+
+            v_position = vec4(position, 1.0);
 #else
             mat4 viewMatrix = u_viewMatrix;
             mat4 viewProj = u_viewProjectionMatrix;

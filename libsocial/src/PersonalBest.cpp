@@ -91,7 +91,7 @@ void PersonalBest::insertScore(std::size_t index, std::int32_t score, const std:
 void PersonalBest::fetchScore(std::size_t index, std::int32_t& scoreDst, std::vector<std::uint8_t>& holeDst) const
 {
     CRO_ASSERT(index < m_entries.size(), "");
-    CRO_ASSERT(!holeScores.empty() && holeScores.size() <= 18, "");
+    //CRO_ASSERT(!holeScores.empty() && holeScores.size() <= 18, "");
 
     scoreDst = m_entries[index].score;
     std::copy(m_entries[index].holeScores.begin(), m_entries[index].holeScores.begin() + holeDst.size(), holeDst.begin());

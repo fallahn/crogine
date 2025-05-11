@@ -47,6 +47,8 @@ static inline const std::string BillboardVertexShader = R"(
     uniform mat4 u_projectionMatrix;
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
+
+    VARYING_OUT vec4 v_position;
 #else
 #include CAMERA_UBO
 #endif
