@@ -33,7 +33,7 @@ source distribution.
 
 using namespace cro;
 
-//#define VSM_TEST
+#define VSM_TEST
 
 DepthTexture::DepthTexture()
     : m_fboID   (0),
@@ -219,6 +219,7 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
     glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
     glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
     glCheck(glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor));
+    //glGenerateMipmap(GL_TEXTURE_2D_ARRAY); //this would need to be done every time the texture is rendered to...
 #endif
 
 

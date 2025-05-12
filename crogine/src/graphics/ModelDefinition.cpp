@@ -53,6 +53,8 @@ source distribution.
 
 using namespace cro;
 
+#define VSM_TEST
+
 namespace
 {
     std::array<std::string, 4u> materialTypes =
@@ -452,8 +454,9 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 if (p.getValue<bool>())
                 {
                     flags |= ShaderResource::RxShadows;
-
-                    //m_castShadows = true; //vsm shadows require recievers to be rendered to shadow map too
+#ifdef VSM_TEST
+                    m_castShadows = true; //vsm shadows require recievers to be rendered to shadow map too
+#endif
                 }
             }
             else if (name == "smooth")

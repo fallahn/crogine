@@ -167,7 +167,9 @@ static inline const std::string BillboardVertexShader = R"(
         vertPos.xyz *= vertPos.w;*/
 
         gl_Position = vertPos;
-
+#if defined(SHADOW_MAPPING)
+        v_position = vertPos;
+#endif
         v_texCoord0 = a_texCoord0;
 
 
@@ -183,10 +185,6 @@ static inline const std::string BillboardVertexShader = R"(
         vec4 worldPos = /*u_worldMatrix **/ vec4(position, 1.0);
         gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
         gl_ClipDistance[1] = dot(worldPos, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
-#if defined(SHADOW_MAPPING)
-        v_position = worldPos;
-#endif
-
     })";
 
 

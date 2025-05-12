@@ -380,10 +380,11 @@ void BatcatState::createScene()
     auto ent = m_scene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 50.f });
     //projection is set in updateView()
-    ent.addComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
+    ent.addComponent<cro::Camera>().shadowMapBuffer.create(1024, 1024);// (2048, 2048);
     ent.getComponent<cro::Camera>().resizeCallback = std::bind(&BatcatState::updateView, this, std::placeholders::_1);
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
     updateView(ent.getComponent<cro::Camera>());
+
 
 #ifdef CRO_DEBUG_
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);

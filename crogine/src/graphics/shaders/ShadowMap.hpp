@@ -139,7 +139,7 @@ static inline std::string FragmentDesktop = R"(
     #endif
             float depth = v_position.z / v_position.w;
 		    depth = depth * 0.5 + 0.5;
-//#define VSM
+#define VSM
 #if defined(VSM)
 		    float m1 = depth;
 		    float m2 = depth * depth;

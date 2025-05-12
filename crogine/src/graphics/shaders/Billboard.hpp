@@ -116,7 +116,7 @@ VARYING_OUT vec4 v_position;
 
             gl_Position = viewProj * vec4(position, 1.0);
 #if defined(SHADOW_MAPPING)
-            v_position = vec4(position, 1.0);
+            v_position = gl_Position;
 #endif
 
 #if defined (VERTEX_LIT)

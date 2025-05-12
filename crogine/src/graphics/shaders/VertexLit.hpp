@@ -280,7 +280,7 @@ static inline const std::string Vertex = R"(
             return (currDepth < depthSample) ? 1.0 : 0.4;
         }
     #else
-#include PCF_SHADOWS
+#include VSM_SHADOWS
     #endif
     #endif               
 

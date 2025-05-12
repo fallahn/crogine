@@ -212,6 +212,27 @@ int getCascadeIndex()
 //#include VSM_SHADOWS
 static inline const std::string VSMShadows =
 R"(
+const int size = 3;
+vec2 boxblur(vec2 coord, int cascadeIndex)
+{
+    float count = 0.0;
+    vec2 texSize = vec2(1.0) / textureSize(u_shadowMap, cascadeIndex).xy;
+    vec2 total = vec2(0.0);
+
+    for (int i = -size; i <= size; ++i)
+    {
+        for (int j = -size; j <= size; ++j)
+        {
+            vec3 c = vec3(coord + vec2(i, j) * texSize, cascadeIndex);
+            total += texture(u_shadowMap, c).rg;
+            count += 1.0;
+        }
+    }
+
+    total /= count;
+    return total;
+}
+
 #if defined (PBR)
 float shadowAmount(int cascadeIndex, SurfaceProperties surfProp)
 #else
@@ -221,17 +242,20 @@ float shadowAmount(int cascadeIndex)
     vec4 lightWorldPos = v_lightWorldPosition[cascadeIndex];
     
     vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
-    projectionCoords = projectionCoords * 0.5 + 0.5;
+    projectionCoords = clamp(projectionCoords * 0.5 + 0.5, 0.0, 1.0);
 
 	vec2 moments = texture(u_shadowMap, vec3(projectionCoords.xy, cascadeIndex)).rg;
+	//vec2 moments = boxblur(projectionCoords.xy, cascadeIndex);
 
 	float variance = moments.y - (moments.x * moments.x);
-	variance = max(variance, 0.0002); //the bigger this number the more 'feather' we get on the edge
+	variance = max(variance, 0.00001); //the bigger this number the more 'feather' we get on the edge
 	
 	float d = projectionCoords.z - moments.x;
-	float p_max = ((variance / (variance + d*d)) * 0.5) + 0.5;
+	float pMax = ((variance / (variance + d*d)) * 0.5) + 0.5;
 	
-	return mix(1.0, p_max, step(moments.x, projectionCoords.z));
+    pMax = smoothstep(0.005, 1.0, pMax); //smooth light bleed
+
+	return mix(1.0, pMax, step(moments.x, projectionCoords.z));
 }
 )";
 

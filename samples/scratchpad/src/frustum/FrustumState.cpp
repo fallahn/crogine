@@ -475,7 +475,7 @@ void FrustumState::createScene()
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = std::bind(&PerspectiveDebug::update, &perspectiveDebug, std::placeholders::_1);
-    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(512, 512);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(512,512);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Scene);
     perspectiveDebug.update(camEnt.getComponent<cro::Camera>());
     m_entities[EntityID::Camera] = camEnt;
