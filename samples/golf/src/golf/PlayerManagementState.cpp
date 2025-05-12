@@ -75,6 +75,9 @@ source distribution.
 
 using namespace cl;
 
+#define GROUP_ENABLED false
+//#define GROUP_ENABLED true
+
 namespace
 {
     struct MenuID final
@@ -539,7 +542,7 @@ void PlayerManagementState::buildScene()
     };
 
     //grouping
-    if (/*false &&*/
+    if (GROUP_ENABLED &&
         m_sharedData.baseState == StateID::Menu)
     {
         entity = m_scene.createEntity();

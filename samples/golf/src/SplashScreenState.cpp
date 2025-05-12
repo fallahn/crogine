@@ -390,10 +390,10 @@ void SplashState::gotoMenu()
         m_sharedData.errorMessage = "Welcome";
         requestStackPush(StateID::MessageOverlay);
     }
-    else if (m_sharedData.showClubUpdate)
-    {
-        requestStackPush(StateID::ClubInfo);
-    }
+    //else if (m_sharedData.showClubUpdate)
+    //{
+    //    requestStackPush(StateID::ClubInfo);
+    //}
     else
     {   
         if (!Social::isSteamdeck())

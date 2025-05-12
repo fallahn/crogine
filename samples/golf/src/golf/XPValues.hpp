@@ -42,8 +42,9 @@ public:
         {
         default:
         case 0:
-            return XPValues[idx];
         case 1:
+            return XPValues[idx];
+        case 2:
         {
             auto v = XPValues[idx];
             if (v >= 100)
@@ -56,19 +57,19 @@ public:
             }
             return v;
         }
-        case 2:
-        {
-            auto v = XPValues[idx];
-            if (v >= 100)
-            {
-                v += (v / 2);
-            }
-            else
-            {
-                v *= 2;
-            }
-            return v;
-        }
+        //case 2:
+        //{
+        //    auto v = XPValues[idx];
+        //    if (v >= 100)
+        //    {
+        //        v += (v / 2);
+        //    }
+        //    else
+        //    {
+        //        v *= 2;
+        //    }
+        //    return v;
+        //}
         }
     }
 };

@@ -5078,30 +5078,30 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         break;
         case PacketID::MaxClubs:
         {
-            std::uint8_t clubSet = evt.packet.as<std::uint8_t>();
-            if (clubSet < m_sharedData.clubSet)
-            {
-                m_sharedData.clubSet = clubSet;
-                Club::setClubLevel(clubSet);
-                LogI << "Limited clubset to " << (int)clubSet << std::endl;
-                if (m_sharedData.scoreType != ScoreType::ClubShuffle)
-                {
-                    //hmm this should be read from whichever player is setting the limit
-                    switch (clubSet)
-                    {
-                    default: break;
-                    case 0:
-                        m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
-                        break;
-                    case 1:
-                        m_sharedData.inputBinding.clubset = ClubID::DefaultSet | (1 << ClubID::FiveWood) | (1 << ClubID::FourIron) | (1 << ClubID::SixIron);
-                        break;
-                    case 2:
-                        m_sharedData.inputBinding.clubset = ClubID::FullSet;
-                        break;
-                    }
-                }
-            }
+            //std::uint8_t clubSet = evt.packet.as<std::uint8_t>();
+            //if (clubSet < m_sharedData.clubSet)
+            //{
+            //    m_sharedData.clubSet = clubSet;
+            //    Club::setClubLevel(clubSet);
+            //    LogI << "Limited clubset to " << (int)clubSet << std::endl;
+            //    if (m_sharedData.scoreType != ScoreType::ClubShuffle)
+            //    {
+            //        //hmm this should be read from whichever player is setting the limit
+            //        switch (clubSet)
+            //        {
+            //        default: break;
+            //        case 0:
+            //            m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
+            //            break;
+            //        case 1:
+            //            m_sharedData.inputBinding.clubset = ClubID::DefaultSet | (1 << ClubID::FiveWood) | (1 << ClubID::FourIron) | (1 << ClubID::SixIron);
+            //            break;
+            //        case 2:
+            //            m_sharedData.inputBinding.clubset = ClubID::FullSet;
+            //            break;
+            //        }
+            //    }
+            //}
         }
         break;
         case PacketID::ChatMessage:
