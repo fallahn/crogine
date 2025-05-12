@@ -452,6 +452,8 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 if (p.getValue<bool>())
                 {
                     flags |= ShaderResource::RxShadows;
+
+                    //m_castShadows = true; //vsm shadows require recievers to be rendered to shadow map too
                 }
             }
             else if (name == "smooth")

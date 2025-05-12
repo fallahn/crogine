@@ -2165,7 +2165,7 @@ void TutorialState::tutorialPutt(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("putt_flag");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("map_flag");
     entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<UIElement>().absolutePosition = { 0.f, -60.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };

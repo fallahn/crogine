@@ -2221,11 +2221,14 @@ void GolfState::loadSprites()
     m_sprites[SpriteID::PowerBarDoubleInnerHC] = spriteSheet.getSprite("power_bar_inner_double_hc");
     m_sprites[SpriteID::HookBarDouble] = spriteSheet.getSprite("hook_bar_double");
 
+    //most of these are loaded once or not at all so not really sure why
+    //we keep these hanging around in an array ike this
     m_sprites[SpriteID::SlopeStrength] = spriteSheet.getSprite("slope_indicator");
     m_sprites[SpriteID::BallSpeed] = spriteSheet.getSprite("ball_speed");
     m_sprites[SpriteID::MapFlag] = spriteSheet.getSprite("flag03");
     m_sprites[SpriteID::MapTarget] = spriteSheet.getSprite("multitarget");
     m_sprites[SpriteID::MiniFlag] = spriteSheet.getSprite("putt_flag");
+    m_sprites[SpriteID::MiniMapFlag] = spriteSheet.getSprite("map_flag");
     m_sprites[SpriteID::MiniFlagLarge] = spriteSheet.getSprite("putt_flag_large");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::WindSpeed] = spriteSheet.getSprite("wind_speed");

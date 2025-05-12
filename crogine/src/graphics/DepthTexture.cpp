@@ -33,6 +33,8 @@ source distribution.
 
 using namespace cro;
 
+//#define VSM_TEST
+
 DepthTexture::DepthTexture()
     : m_fboID   (0),
     m_textureID (0),
@@ -114,6 +116,12 @@ DepthTexture& DepthTexture::operator=(DepthTexture&& other) noexcept
         {
             glCheck(glDeleteTextures(1, &m_textureID));
         }
+#ifdef VSM_TEST
+        if (m_colourID)
+        {
+            glCheck(glDeleteTextures(1, &m_colourID));
+        }
+#endif
 
         m_fboID = other.m_fboID;
         m_textureID = other.m_textureID;
@@ -153,10 +161,10 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
         //resize the buffer
         glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_textureID));
         glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, width, height, layers, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
-        
-        /*glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_colourID));
-        glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, layers, 0, GL_RG, GL_FLOAT, NULL));*/
-
+#ifdef VSM_TEST       
+        glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_colourID));
+        glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, layers, 0, GL_RG, GL_FLOAT, NULL));
+#endif
         setViewport({ 0, 0, static_cast<std::int32_t>(width), static_cast<std::int32_t>(height) });
         setView(FloatRect(getViewport()));
         m_size = { width, height };
@@ -167,8 +175,9 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
         //else we have to regenerate it as it's immutable
         glCheck(glDeleteTextures(1, &m_textureID));
 
-
-        //glCheck(glDeleteTextures(1, &m_colourID));
+#ifdef VSM_TEST
+        glCheck(glDeleteTextures(1, &m_colourID));
+#endif
 #endif
     }
 
@@ -194,24 +203,23 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
     glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
     glCheck(glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor));
     
+    glCheck(glGenTextures(1, &m_colourID));
+    glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_colourID));
 
-
-//    glCheck(glGenTextures(1, &m_colourID));
-//    glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_colourID));
-//
-//#ifdef GL41
-//    //apple drivers don't support immutable textures.
-//    glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, layers, 0, GL_RG, GL_FLOAT, NULL));
-//#else
-//    glCheck(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RG32F, width, height, layers));
-//#endif
-//    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-//    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-//    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
-//    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-//    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-    //glCheck(glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor));
-
+#ifdef VSM_TEST
+#ifdef GL41
+    //apple drivers don't support immutable textures.
+    glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, layers, 0, GL_RG, GL_FLOAT, NULL));
+#else
+    glCheck(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RG32F, width, height, layers));
+#endif
+    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER));
+    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
+    glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
+    glCheck(glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor));
+#endif
 
 
     //create the frame buffer
@@ -221,9 +229,12 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
     }
     glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_fboID));
     glCheck(glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_textureID, 0, 0));
-    /*glCheck(glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_colourID, 0, 0));
-    glCheck(glDrawBuffer(GL_COLOR_ATTACHMENT0));*/
+#ifdef VSM_TEST
+    glCheck(glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_colourID, 0, 0));
+    glCheck(glDrawBuffer(GL_COLOR_ATTACHMENT0));
+#else
     glCheck(glDrawBuffer(GL_NONE));
+#endif
     glCheck(glReadBuffer(GL_NONE));
 
     auto result = (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
@@ -257,24 +268,26 @@ void DepthTexture::clear(std::uint32_t layer)
     //store active buffer and bind this one
     setActive(true);
 
+#ifdef VSM_TEST
+    glCheck(glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_textureID, 0, layer));
+    glCheck(glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_colourID, 0, layer));
+
+    //TODO remember to set this all alse for depth-only rendering
+    glCheck(glColorMask(true, true, false, false));
+
+    //clear buffer - UH OH this will clear the main buffer if FBO is null
+    //TODO set the bitmask according to which attachments we have
+    glCheck(glGetFloatv(GL_COLOR_CLEAR_VALUE, m_lastClearColour.data()));
+    glClearColor(1.f, 1.f, 0.f, 0.f);
+    glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+#else
     //TODO does checking to see we're not already on the
     //active layer take less time than just setting it every time?
     glCheck(glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_textureID, 0, layer));
-    
+
     glCheck(glColorMask(false, false, false, false));
     glCheck(glClear(GL_DEPTH_BUFFER_BIT));
-
-
-    //glCheck(glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_colourID, 0, layer));
-
-    ////TODO remember to set this all alse for depth-only rendering
-    //glCheck(glColorMask(true, true, false, false));
-
-    ////clear buffer - UH OH this will clear the main buffer if FBO is null
-    ////TODO set the bitmask according to which attachments we have
-    //glCheck(glGetFloatv(GL_COLOR_CLEAR_VALUE, m_lastClearColour.data()));
-    //glClearColor(1.f, 1.f, 0.f, 0.f);
-    //glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+#endif
 #endif
 }
 
@@ -282,8 +295,9 @@ void DepthTexture::display()
 {
 #ifdef PLATFORM_DESKTOP
     glCheck(glColorMask(true, true, true, true));
-    //glClearColor(m_lastClearColour[0], m_lastClearColour[1], m_lastClearColour[2], m_lastClearColour[3]);
-
+#ifdef VSM_TEST
+    glClearColor(m_lastClearColour[0], m_lastClearColour[1], m_lastClearColour[2], m_lastClearColour[3]);
+#endif
     //unbind buffer
     setActive(false);
 #endif
@@ -291,8 +305,11 @@ void DepthTexture::display()
 
 TextureID DepthTexture::getTexture() const
 {
+#ifdef VSM_TEST
+    return TextureID(m_colourID, true);
+#else
     return TextureID(m_textureID, true);
-    //return TextureID(m_colourID, true);
+#endif
 }
 
 TextureID DepthTexture::getTexture(std::uint32_t index) const
@@ -321,8 +338,11 @@ void DepthTexture::updateHandles()
 
     for (auto i = 0u; i < m_layerHandles.size(); ++i)
     {
+#ifdef VSM_TEST
+        glCheck(glTextureView(m_layerHandles[i], GL_TEXTURE_2D, m_colourID, GL_RG32F, 0, 1, i, 1));
+#else
         glCheck(glTextureView(m_layerHandles[i], GL_TEXTURE_2D, m_textureID, GL_DEPTH_COMPONENT24, 0, 1, i, 1));
-        //glCheck(glTextureView(m_layerHandles[i], GL_TEXTURE_2D, m_colourID, GL_RG32F, 0, 1, i, 1));
+#endif
     }
 #endif
 }

@@ -89,8 +89,6 @@ VARYING_OUT vec4 v_position;
 #if defined (SHADOW_MAPPING)
             mat4 viewMatrix = u_cameraViewMatrix;
             mat4 viewProj = u_projectionMatrix * u_viewMatrix;
-
-            v_position = vec4(position, 1.0);
 #else
             mat4 viewMatrix = u_viewMatrix;
             mat4 viewProj = u_viewProjectionMatrix;
@@ -117,6 +115,9 @@ VARYING_OUT vec4 v_position;
                                 + (camUp * a_position.y);
 
             gl_Position = viewProj * vec4(position, 1.0);
+#if defined(SHADOW_MAPPING)
+            v_position = vec4(position, 1.0);
+#endif
 
 #if defined (VERTEX_LIT)
             v_normalVector = normalize(cross(camRight, camUp));
