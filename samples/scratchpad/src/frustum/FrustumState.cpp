@@ -587,6 +587,13 @@ void FrustumState::createUI()
                     doUpdate = true;
                 }
 
+                std::int32_t blurCount = m_entities[EntityID::Camera].getComponent<cro::Camera>().getBlurPassCount();
+                if (ImGui::InputInt("Cascades Blurred", &blurCount))
+                {
+                    blurCount = std::clamp(blurCount, 0, CascadeCount);
+                    m_entities[EntityID::Camera].getComponent<cro::Camera>().setBlurPassCount(blurCount);
+                }
+
                 if (doUpdate)
                 {
                     perspectiveDebug.update(m_entities[EntityID::Camera].getComponent<cro::Camera>());

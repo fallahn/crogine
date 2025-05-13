@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -84,6 +84,8 @@ ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap,
             m_workingDir += '/';
         }
     }
+    std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
+    std::fill(m_shadowIDs.begin(), m_shadowIDs.end(), -1);
 }
 
 bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bool useDeferredShaders, bool forceReload)
@@ -356,6 +358,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
         bool enableDepthTest = true;
         bool doubleSided = false;
         bool createMipmaps = false;
+        bool writeShadows = false; //set to true when rx shadows so it writes to depth map
         std::string materialName;
         Material::Data::Animation animation;
 
@@ -456,6 +459,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                     flags |= ShaderResource::RxShadows;
 #ifdef VSM_TEST
                     m_castShadows = true; //vsm shadows require recievers to be rendered to shadow map too
+                    writeShadows = true;
 #endif
                 }
             }
@@ -718,7 +722,8 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
             }
         }
 
-        if (m_castShadows)
+        if (m_castShadows ||
+            writeShadows)
         {
             flags = ShaderResource::DepthMap | (flags & (ShaderResource::Skinning | ShaderResource::AlphaClip | ShaderResource::DiffuseMap));
             if (instanced)
@@ -739,8 +744,8 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
             shaderID = m_resources.shaders.loadBuiltIn(m_billboard ? ShaderResource::BillboardShadowMap : ShaderResource::ShadowMap, flags);
             matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
             m_shadowIDs[m_materialCount] = matID;
-
-            if (flags & ShaderResource::AlphaClip
+            
+            if ((flags & ShaderResource::AlphaClip)
                 && diffuseTex != nullptr)
             {
                 auto& m = m_resources.materials.get(matID);
@@ -753,6 +758,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
     }
 
     m_modelLoaded = true;
+    m_fileName = cro::FileSystem::getFileName(path);
     return true;
 }
 
@@ -773,14 +779,19 @@ bool ModelDefinition::createModel(Entity entity)
         {
             for (auto i = 0u; i < m_materialCount; ++i)
             {
-                if (m_shadowIDs[i] > 0)
+                if (m_shadowIDs[i] != -1)
                 {
                     auto shadowMat = m_resources.materials.get(m_shadowIDs[i]);
                     shadowMat.doubleSided = m_billboard ? true : m_resources.materials.get(m_materialIDs[i]).doubleSided;
                     model.setShadowMaterial(i, shadowMat);
                 }
+                else
+                {
+                    LogW << m_fileName << ": marked for shadow casting but missing material on slot " << i << std::endl;
+                }
             }
             entity.addComponent<ShadowCaster>().skinned = (m_skeleton);
+            entity.setLabel(m_fileName);
         }
 
         if (m_billboard)
@@ -841,7 +852,9 @@ void ModelDefinition::reset()
 {
     m_meshID = 0;
     m_materialIDs = {};
+    std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
     m_shadowIDs = {};
+    std::fill(m_shadowIDs.begin(), m_shadowIDs.end(), -1);
     m_materialTags = {};
     m_materialCount = 0;
     m_skeleton = {};

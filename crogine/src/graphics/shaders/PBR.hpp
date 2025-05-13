@@ -85,7 +85,7 @@ static inline const std::string Fragment =
 #include CASCADE_SELECTION
 
 #define PBR //affects the shadow include, below
-#include PCF_SHADOWS
+#include VSM_SHADOWS
 
         #endif
 

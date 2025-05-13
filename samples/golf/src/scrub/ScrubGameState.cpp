@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -878,9 +878,10 @@ void ScrubGameState::createScene()
     cam.resizeCallback = resize;
     resize(cam);
 
-    cam.shadowMapBuffer.create(2048, 2048);
+    cam.shadowMapBuffer.create(1024, 1024);
     cam.setMaxShadowDistance(1.f);
     cam.setShadowExpansion(6.f);
+    cam.setBlurPassCount(1);
 
     //callback is set up in resetCamera();
     camera.addComponent<cro::Callback>();

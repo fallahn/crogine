@@ -1542,12 +1542,13 @@ void ClubhouseState::buildScene()
     camEnt.getComponent<cro::Transform>().setPosition({ 18.9f, 1.54f, -4.58f });
     camEnt.getComponent<cro::Transform>().setRotation(glm::quat(-0.31f, 0.004f, -0.95f, 0.0057f));
 
-    const auto shadowRes = m_sharedData.hqShadows ? 4096 : 2048;
+    const auto shadowRes = m_sharedData.hqShadows ? 3072 : 1024;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     cam.shadowMapBuffer.create(shadowRes, shadowRes);
     cam.setMaxShadowDistance(11.f);
     cam.setShadowExpansion(9.9f);
+    cam.setBlurPassCount(1);
     updateView(cam);
 
     auto sunEnt = m_backgroundScene.getSunlight();
@@ -1609,7 +1610,7 @@ void ClubhouseState::createTableScene()
 
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
-    cam.shadowMapBuffer.create(1024, 1024);
+    cam.shadowMapBuffer.create(512, 512);
     updateView(cam);
 
     auto sunEnt = m_tableScene.getSunlight();

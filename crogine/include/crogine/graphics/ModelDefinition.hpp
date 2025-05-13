@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -202,6 +202,7 @@ namespace cro
         ResourceCollection& m_resources;
         EnvironmentMap* m_envMap;
         std::string m_workingDir;
+        std::string m_fileName;
 
         std::size_t m_meshID = 0; //!< ID of the mesh in the mesh resource
         std::array<std::int32_t, Mesh::IndexData::MaxBuffers> m_materialIDs = {}; //!< list of material IDs in the order in which they appear on the model

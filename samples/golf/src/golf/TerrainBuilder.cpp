@@ -68,6 +68,7 @@ namespace
 {
 #include "shaders/TerrainShader.inl"
 #include "shaders/CelShader.inl"
+#include "shaders/ShadowMapping.inl"
 
     constexpr glm::vec2 ChunkSize(static_cast<float>(MapSize.x) / ChunkVisSystem::ColCount, static_cast<float>(MapSize.y) / ChunkVisSystem::RowCount);
 
@@ -278,6 +279,16 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     terrainMat.setProperty("u_noiseColour", theme.grassTint);
     terrainMat.addCustomSetting(GL_CLIP_DISTANCE1);
 
+    //we still have to write to shadow map to receive shadows...
+    resources.shaders.loadFromString(ShaderID::TerrainShadow, TerrainVertexShader, ShadowFragment, "#define SHADOW_MAPPING\n#define TERRAIN\n" + wobble);
+    auto& shadowShader = resources.shaders.get(ShaderID::TerrainShadow);
+    m_terrainProperties.morphUniformShadow = shadowShader.getUniformID("u_morphTime");
+    m_terrainProperties.shaderIDShadow = shadowShader.getGLHandle();
+    materialID = resources.materials.add(shadowShader);
+    auto terrainShadowMat = resources.materials.get(materialID);
+    terrainShadowMat.addCustomSetting(GL_CLIP_DISTANCE1);
+
+
     auto entity = scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, TerrainLevel, 0.f });
     entity.addComponent<cro::Callback>().function =
@@ -286,6 +297,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         m_terrainProperties.morphTime = std::min(1.f, m_terrainProperties.morphTime + dt);
         glCheck(glUseProgram(m_terrainProperties.shaderID));
         glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
+        glCheck(glUseProgram(m_terrainProperties.shaderIDShadow));
+        glCheck(glUniform1f(m_terrainProperties.morphUniformShadow, m_terrainProperties.morphTime));
 
         if (m_terrainProperties.morphTime == 1)
         {
@@ -293,7 +306,9 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         }
     };
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), terrainMat);
+    entity.getComponent<cro::Model>().setShadowMaterial(0, terrainShadowMat);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
+    entity.addComponent<cro::ShadowCaster>();
 
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
     meshData->vertexCount = static_cast<std::uint32_t>(m_terrainBuffer.size());
@@ -783,6 +798,8 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
             m_terrainProperties.morphTime = 0.f;
             glCheck(glUseProgram(m_terrainProperties.shaderID));
             glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
+            glCheck(glUseProgram(m_terrainProperties.shaderIDShadow));
+            glCheck(glUniform1f(m_terrainProperties.morphUniformShadow, m_terrainProperties.morphTime));
             //terrain callback is set active when shrubbery callback switches
         }
         //upload the slope buffer data - this might be different even if the hole model is the same

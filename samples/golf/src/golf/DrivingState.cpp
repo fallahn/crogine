@@ -1916,11 +1916,12 @@ void DrivingState::createScene()
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.resizeCallback = updateView;
+    updateView(cam);
+
     cam.setMaxShadowDistance(40.f);
     cam.setShadowExpansion(30.f);
+    cam.setBlurPassCount(1);
     cam.setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
-    updateView(cam);
-    
     m_cameras[CameraID::Player] = camEnt;
 
     static constexpr auto halfSize = RangeSize / 2.f;
@@ -2020,7 +2021,10 @@ void DrivingState::createScene()
         cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, farPlane, 2);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
+    
+    setPerspective(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(80.f);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
@@ -2031,7 +2035,6 @@ void DrivingState::createScene()
     camEnt.getComponent<CameraFollower>().zoom.speed = 3.f;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>(); //fudge because follower system requires it (water plane would be attached to this if it existed).
-    setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Sky] = camEnt;
 
     //and a green camera
@@ -2044,9 +2047,11 @@ void DrivingState::createScene()
         cam.setPerspective((m_sharedData.fov* cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x, 2);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
+    setPerspective(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(50.f);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 20.f * 20.f;
@@ -2054,7 +2059,6 @@ void DrivingState::createScene()
     camEnt.getComponent<CameraFollower>().zoom.speed = 2.f;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
-    setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Green] = camEnt;
 
 
@@ -2073,11 +2077,13 @@ void DrivingState::createScene()
             2);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
+    setPerspective(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
-    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(20.f);
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(/*20.f*/40.f);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(50.f);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     camEnt.addComponent<cro::Callback>().setUserData<CameraFollower::ZoomData>();
@@ -2101,7 +2107,6 @@ void DrivingState::createScene()
             e.getComponent<cro::Transform>().setRotation(lookRotation(pos, target));
         }
     };
-    setPerspective(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().updateMatrices(camEnt.getComponent<cro::Transform>());
     m_cameras[CameraID::Idle] = camEnt;
 

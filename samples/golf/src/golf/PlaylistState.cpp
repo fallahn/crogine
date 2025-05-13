@@ -893,10 +893,11 @@ void PlaylistState::buildScene()
     cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     cam.reflectionBuffer.setSmooth(true);
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+    updateView(cam);
     cam.setMaxShadowDistance(20.f);
+    cam.setBlurPassCount(1);
     cam.setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
     cam.resizeCallback = updateView;
-    updateView(cam);
 
     camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("01");
     camEnt.getComponent<cro::AudioEmitter>().play();

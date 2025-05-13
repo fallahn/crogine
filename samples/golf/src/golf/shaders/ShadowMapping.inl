@@ -85,9 +85,7 @@ static inline const std::string ShadowVertex = R"(
         uniform sampler2D u_noiseTexture;
     #endif
 
-    #if defined (MOBILE)
         VARYING_OUT vec4 v_position;
-    #endif
 
 #if defined (DITHERED)
     #include RESOLUTION_BUFFER
@@ -259,11 +257,8 @@ worldPosition.z += windResult.lowFreq.y;
     #endif
     #endif
 
-        #if defined (MOBILE)
             v_position = gl_Position;
-        #else
             gl_ClipDistance[0] = dot(worldMatrix * position, u_clipPlane);
-        #endif
 
         #if defined (ALPHA_CLIP)
             v_texCoord0 = a_texCoord0;
@@ -322,7 +317,26 @@ static inline const std::string ShadowGeom = R"(
     })";
 
 static inline const std::string ShadowFragment = R"(
-        
+  
+VARYING_IN vec4 v_position;
+OUTPUT
+void writeDepth()
+{
+    float depth = v_position.z / v_position.w;
+	depth = depth * 0.5 + 0.5;
+
+	float m1 = depth;
+	float m2 = depth * depth;
+	
+	//adjust moments (this is sort of bias per pixel) using partial derivative
+	float dx = dFdx(depth);
+	float dy = dFdy(depth);
+	m2 += 0.25 * (dx*dx + dy*dy);
+
+    FRAG_OUT = vec4(m1, m2, 0.0, 1.0);
+}
+
+
 #if defined (DITHERED)
         in float v_ditherAmount;
 
@@ -355,23 +369,23 @@ static inline const std::string ShadowFragment = R"(
         vec2 coord = v_texCoord0;
 #endif
             if(texture(u_diffuseMap, coord).a < 0.5) discard;
+            writeDepth();
         }
         #else
 
-        OUTPUT             
         void main()
         {
 
 #if defined(DITHERED)
-        vec2 xy = gl_FragCoord.xy;
-        int x = int(mod(xy.x, MatrixSize));
-        int y = int(mod(xy.y, MatrixSize));
+            vec2 xy = gl_FragCoord.xy;
+            int x = int(mod(xy.x, MatrixSize));
+            int y = int(mod(xy.y, MatrixSize));
 
-        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
-        if(alpha < 0.5) discard;
+            float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+            if(alpha < 0.5) discard;
 #endif
-
-            FRAG_OUT = vec4(1.0);
+            writeDepth();
+            //FRAG_OUT = vec4(1.0);
         }
         #endif
         )";

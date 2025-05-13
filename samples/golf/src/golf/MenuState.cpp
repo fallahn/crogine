@@ -2743,6 +2743,7 @@ void MenuState::createScene()
     cam.shadowMapBuffer.create(2048, 2048);
     cam.setMaxShadowDistance(38.f);
     cam.setShadowExpansion(140.f);
+    cam.setBlurPassCount(1);
     updateView(cam);
 
     /*camEnt.getComponent<cro::Transform>().setPosition({ 12.2f, 1.8f, 15.6f });

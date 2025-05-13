@@ -212,7 +212,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
         //store the results here to use in frustum culling
         std::vector<glm::vec3> lightPositions;
-        std::vector<Box> frustums;
+        std::vector<Box> frustums; //frustae
 #ifdef CRO_DEBUG_
         camera.lightCorners.clear();
 #endif
@@ -408,7 +408,12 @@ void ShadowMapRenderer::render()
                 for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
                 {
                     const auto& mat = model.m_materials[Mesh::IndexData::Shadow][i];
-                    CRO_ASSERT(mat.shader, "Missing Shadow Cast material.");
+                    //CRO_ASSERT(mat.shader, "Missing Shadow Cast material.");
+                    //some sub-meshes aren't written to the depth map if they don't receive shadows
+                    if (mat.shader == 0)
+                    {
+                        continue;
+                    }
 
                     //bind shader
                     glCheck(glUseProgram(mat.shader));
@@ -489,12 +494,11 @@ void ShadowMapRenderer::render()
                 }
 
             }
-
             camera.shadowMapBuffer.display();
 
 
-            //TODO if blur enabled
-            //for each cascade
+            //if blur enabled
+            //for each requested cascade
             for (auto i = 0u; i < camera.m_blurPasses && m_drawLists[c].size(); ++i)
             {
                 //TODO we could optimise this a bit by setting up the OpenGL explicitly for
@@ -506,6 +510,7 @@ void ShadowMapRenderer::render()
                     || m_blurBuffer.getSize().y < passSize.y)
                 {
                     m_blurBuffer.create(passSize.x, passSize.y);
+                    LogI << "Resized blur buffer" << std::endl;
                 }
                 //we create the internal buffer to the largest shadow map
                 //we encounter - so we may also have smaller ones which render
@@ -525,6 +530,11 @@ void ShadowMapRenderer::render()
                 //render back to shadowmap
                 camera.shadowMapBuffer.clear(i);
                 m_outputQuad.draw();
+            }
+
+            //we only want to do this once per map
+            if (camera.m_blurPasses)
+            {
                 camera.shadowMapBuffer.display();
             }
         }
@@ -545,10 +555,12 @@ void ShadowMapRenderer::render()
 
 void ShadowMapRenderer::onEntityAdded(cro::Entity entity)
 {
-    if (entity.getComponent<cro::Model>().m_materials[Mesh::IndexData::Shadow][0].shader == 0)
-    {
-        LogW << "Shadow caster added to model with no shadow material. This will not render." << std::endl;
-    }
+    //hmm this warning is misleading as a sub-mesh other than 0 might still have a valid material
+    //if (entity.getComponent<cro::Model>().m_materials[Mesh::IndexData::Shadow][0].shader == 0)
+    //{
+        //LogW << entity.getLabel() << std::endl;
+        //LogW << "Shadow caster added to model with no shadow material. This will not render." << std::endl;
+    //}
 }
 
 void ShadowMapRenderer::onEntityRemoved(Entity e)

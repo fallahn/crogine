@@ -943,7 +943,7 @@ void GolfState::applyShadowQuality()
     auto applyShadowSettings =
         [&](cro::Camera& cam, std::int32_t camID)
         {
-            std::uint32_t shadowMapSize = m_sharedData.hqShadows ? 4096u : 2048u;
+            std::uint32_t shadowMapSize = m_sharedData.hqShadows ? 3072u : 1024u;
             if (camID == CameraID::Sky)
             {
                 shadowMapSize /= 2;
@@ -959,6 +959,7 @@ void GolfState::applyShadowQuality()
 
             cam.shadowMapBuffer.create(shadowMapSize, shadowMapSize);
             cam.setMaxShadowDistance(camDistance);
+            cam.setBlurPassCount(1);
 
             cam.setPerspective(cam.getFOV(), cam.getAspectRatio(), cam.getNearPlane(), cam.getFarPlane(), m_shadowQuality.cascadeCount);
         };

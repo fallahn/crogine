@@ -858,10 +858,11 @@ void BilliardsState::buildScene()
     cam.setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::Cue);
     setPerspective(cam);
 
-    const std::uint32_t ShadowMapSize = m_sharedData.hqShadows ? 4096u : 2048u;
+    const std::uint32_t ShadowMapSize = m_sharedData.hqShadows ? 3072u : 1027u;
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize, 3);
     cam.setMaxShadowDistance(MaxShadowDistance);
     cam.setShadowExpansion(ShadowExpansion * 2.f);
+    cam.setBlurPassCount(1);
 
     auto spectateController = m_gameScene.createEntity();
     spectateController.addComponent<cro::Transform>().setPosition({0.f, 0.2f, 0.f});
@@ -885,32 +886,36 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -90.f * cro::Util::Const::degToRad);
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
+    setPerspective(camEnt.getComponent<cro::Camera>()); //this needs to be called first to set the far plane and prevent default value clipping MaxShadowDistance
+
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(MaxShadowDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(ShadowExpansion);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     //camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.75f;
     camEnt.getComponent<CameraProperties>().farPlane = 6.f;
     camEnt.addComponent<cro::AudioListener>();
     m_cameras[CameraID::Overhead] = camEnt;
-    setPerspective(camEnt.getComponent<cro::Camera>());
 
 
     //transition cam
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
+    setPerspective(camEnt.getComponent<cro::Camera>());
+
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(MaxShadowDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(ShadowExpansion * 2.f);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::Cue);
     camEnt.addComponent<CameraProperties>().farPlane = 7.f;
     camEnt.getComponent<CameraProperties>().FOVAdjust = 0.8f; //needs to match spectate cam initial value to prevent popping
     camEnt.addComponent<cro::AudioListener>();
     m_cameras[CameraID::Transition] = camEnt;
-    setPerspective(camEnt.getComponent<cro::Camera>());
 
     //player cam is a bit more complicated because it can be rotated
     //by the player, and transformed by the game.
@@ -927,15 +932,17 @@ void BilliardsState::buildScene()
     camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.45f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -26.7f * cro::Util::Const::degToRad);
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
+    setPerspective(camEnt.getComponent<cro::Camera>());
+
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(MaxShadowDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(ShadowExpansion * 2.f);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
     camEnt.getComponent<CameraProperties>().farPlane = 6.f;
     camEnt.addComponent<cro::AudioListener>();
     m_cameras[CameraID::Player] = camEnt;
-    setPerspective(camEnt.getComponent<cro::Camera>());
 
     camTilt.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
 
