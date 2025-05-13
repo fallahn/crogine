@@ -331,6 +331,7 @@ void GCState::createScene()
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     cam.shadowMapBuffer.create(2048, 2048);
+    cam.setBlurPassCount(1);
     resize(cam);
 
     static constexpr float CamMin = 1.f;
@@ -360,7 +361,7 @@ void GCState::createScene()
     for (auto i = 0; i < CameraID::Count; ++i)
     {
         //TODO read shadow map size from settings
-        std::uint32_t ShadowSize = 4096;
+        const std::uint32_t ShadowSize = ShadowMapHigh;
 
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();

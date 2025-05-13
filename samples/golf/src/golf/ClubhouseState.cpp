@@ -635,7 +635,7 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<SystemEvent>();
         if (data.type == SystemEvent::ShadowQualityChanged)
         {
-            auto shadowRes = m_sharedData.hqShadows ? 4096 : 2048;
+            auto shadowRes = m_sharedData.hqShadows ? ShadowMapHigh : ShadowMapLow;
             m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.create(shadowRes, shadowRes);
         }
     }
@@ -1542,7 +1542,7 @@ void ClubhouseState::buildScene()
     camEnt.getComponent<cro::Transform>().setPosition({ 18.9f, 1.54f, -4.58f });
     camEnt.getComponent<cro::Transform>().setRotation(glm::quat(-0.31f, 0.004f, -0.95f, 0.0057f));
 
-    const auto shadowRes = m_sharedData.hqShadows ? 3072 : 1024;
+    const auto shadowRes = m_sharedData.hqShadows ? ShadowMapHigh : ShadowMapLow;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     cam.shadowMapBuffer.create(shadowRes, shadowRes);

@@ -469,6 +469,7 @@ void BushState::createScene()
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlagsThumbnail);
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(20.f);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(10.f);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 6.f });
 
 

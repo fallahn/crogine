@@ -497,7 +497,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<SystemEvent>();
         if (data.type == SystemEvent::ShadowQualityChanged)
         {
-            auto shadowRes = m_sharedData.hqShadows ? 4096 : 2048;
+            auto shadowRes = m_sharedData.hqShadows ? ShadowMapHigh : ShadowMapLow;
             for (auto& cam : m_cameras)
             {
                 cam.getComponent<cro::Camera>().shadowMapBuffer.create(shadowRes, shadowRes, 2);
@@ -858,7 +858,7 @@ void BilliardsState::buildScene()
     cam.setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::Cue);
     setPerspective(cam);
 
-    const std::uint32_t ShadowMapSize = m_sharedData.hqShadows ? 3072u : 1027u;
+    const std::uint32_t ShadowMapSize = m_sharedData.hqShadows ? ShadowMapHigh : ShadowMapLow;
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize, 3);
     cam.setMaxShadowDistance(MaxShadowDistance);
     cam.setShadowExpansion(ShadowExpansion * 2.f);
