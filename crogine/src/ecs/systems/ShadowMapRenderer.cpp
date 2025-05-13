@@ -65,6 +65,51 @@ using namespace cro;
 
 namespace
 {
+    const std::string BlurPassFrag =
+R"(
+uniform sampler2DArray u_texture;
+uniform float u_cascadeIndex = 0;
+
+VARYING_IN vec2 v_texCoord;
+
+OUTPUT
+void main()
+{
+    vec4 colour = vec4(0.0);
+    vec2 uv = v_texCoord;
+    vec2 resolution = textureSize(u_texture, 0).xy;
+#if defined(H)
+#if defined(B5)
+    vec2 off1 = vec2(1.3333333333333333, 0.0) / resolution;
+#else
+    vec2 off1 = vec2(1.3846153846, 0.0) / resolution;
+    vec2 off2 = vec2(3.2307692308, 0.0) / resolution;
+#endif
+
+#else
+#if defined(B5)
+    vec2 off1 = vec2(0.0, 1.3333333333333333) / resolution;
+#else
+    vec2 off1 = vec2(0.0, 1.3846153846) / resolution;
+    vec2 off2 = vec2(0.0, 3.2307692308) / resolution;
+#endif
+#endif
+
+#if defined(B5)
+    colour += texture(u_texture, vec3(uv, u_cascadeIndex)) * 0.29411764705882354;
+    colour += texture(u_texture, vec3(uv + off1, u_cascadeIndex)) * 0.35294117647058826;
+    colour += texture(u_texture, vec3(uv - off1, u_cascadeIndex)) * 0.35294117647058826;
+#else
+    colour += texture(u_texture, vec3(uv, u_cascadeIndex)) * 0.2270270270;
+    colour += texture(u_texture, vec3(uv + off1, u_cascadeIndex)) * 0.3162162162;
+    colour += texture(u_texture, vec3(uv - off1, u_cascadeIndex)) * 0.3162162162;
+    colour += texture(u_texture, vec3(uv + off2, u_cascadeIndex)) * 0.0702702703;
+    colour += texture(u_texture, vec3(uv - off2, u_cascadeIndex)) * 0.0702702703;
+#endif
+    FRAG_OUT = colour;
+})";
+    std::int32_t cascadeUniform = -1;
+
     std::uint32_t intervalCounter = 0;
 
     constexpr float CascadeOverlap = 0.5f;
@@ -92,6 +137,16 @@ ShadowMapRenderer::ShadowMapRenderer(MessageBus& mb)
             }
         });
 #endif
+
+    //TODO only create these if we get a request for a blur pass
+    //TODO make B5/B9 defines optional (number of taps)
+    m_blurShaderA.loadFromString(SimpleDrawable::getDefaultVertexShader(), BlurPassFrag, "#define H\n#define B5\n");
+    m_blurShaderB.loadFromString(SimpleDrawable::getDefaultVertexShader(), BlurPassFrag, "#define B5\n");
+
+    m_inputQuad.setShader(m_blurShaderA);
+    m_outputQuad.setShader(m_blurShaderB);
+
+    cascadeUniform = m_blurShaderA.getUniformID("u_cascadeIndex");
 }
 
 //public
@@ -436,6 +491,42 @@ void ShadowMapRenderer::render()
             }
 
             camera.shadowMapBuffer.display();
+
+
+            //TODO if blur enabled
+            //for each cascade
+            for (auto i = 0u; i < camera.m_blurPasses && m_drawLists[c].size(); ++i)
+            {
+                //TODO we could optimise this a bit by setting up the OpenGL explicitly for
+                //the render quads - but only if this damages perf too much
+
+                //render to internal buffer
+                const auto passSize = camera.shadowMapBuffer.getSize();
+                if (m_blurBuffer.getSize().x < passSize.x
+                    || m_blurBuffer.getSize().y < passSize.y)
+                {
+                    m_blurBuffer.create(passSize.x, passSize.y);
+                }
+                //we create the internal buffer to the largest shadow map
+                //we encounter - so we may also have smaller ones which render
+                //to a sub-area of the the buffer.
+                const auto bufferSize = m_blurBuffer.getSize();
+                m_outputQuad.setTexture(m_blurBuffer.getTexture(), bufferSize);
+                
+                //we need to select the layer in the shader
+                glUseProgram(m_blurShaderA.getGLHandle());
+                glUniform1f(cascadeUniform, i);
+
+                m_inputQuad.setTexture(camera.shadowMapBuffer.getTexture(), passSize);
+                m_blurBuffer.clear();
+                m_inputQuad.draw();
+                m_blurBuffer.display();
+
+                //render back to shadowmap
+                camera.shadowMapBuffer.clear(i);
+                m_outputQuad.draw();
+                camera.shadowMapBuffer.display();
+            }
         }
 #ifdef PLATFORM_DESKTOP
         glCheck(glBindVertexArray(0));

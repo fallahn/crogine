@@ -153,6 +153,7 @@ SimpleDrawable::SimpleDrawable()
 #endif
     m_vertexCount       (0),
     m_textureID         (0),
+    m_textureType       (GL_TEXTURE_2D),
     m_texture           (nullptr),
     m_blendMode         (Material::BlendMode::Alpha),
     m_cropped           (false)
@@ -286,6 +287,7 @@ bool SimpleDrawable::setTexture(const Texture& texture)
 void SimpleDrawable::setTexture(TextureID texture)
 {
     m_textureID = texture.textureID;
+    m_textureType = texture.isArray() ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
     m_texture = nullptr;
 
     //only replace the shader if active shader is
@@ -339,7 +341,7 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     {
         //bind texture
         glCheck(glActiveTexture(GL_TEXTURE0));
-        glCheck(glBindTexture(GL_TEXTURE_2D, m_textureID));
+        glCheck(glBindTexture(m_textureType, m_textureID));
 
         glCheck(glUniform1i(m_uniforms.texture, texIndex));
         texIndex++;

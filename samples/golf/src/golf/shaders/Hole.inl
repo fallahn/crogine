@@ -91,6 +91,10 @@ const float RadiusInner = 0.44;
 const vec3 BeigeLight = vec3(1.0, 0.973, 0.882);
 const vec3 BeigeDark = vec3(0.404, 0.286, 0.286);
 
+const vec3 GreyDark = vec3(0.227, 0.224, 0.255);
+const vec3 BlueDark = vec3(0.102, 0.118, 0.176);
+const vec3 RedDark = vec3(0.157, 0.090, 0.129);
+
 float getDepth(vec2 uv)
 {
     float l = length(uv - 0.5);
@@ -137,7 +141,7 @@ void main()
     depth -= (depth - lastDepth) * weight;
 
    
-    vec3 colour = mix(BeigeDark, BeigeLight, (MinDarkness + ((1.0 - MinDarkness) * (1.0 - depth)))) * getLightColour().rgb;
+    vec3 colour = mix(RedDark, BeigeLight, (MinDarkness + ((1.0 - MinDarkness) * (1.0 - depth)))) * getLightColour().rgb;
     FRAG_OUT = vec4(colour, 1.0);
     LIGHT_OUT = vec4(vec3(0.0), 1.0);
     NORM_OUT.a = 0.0; //prevent hole rx light at night

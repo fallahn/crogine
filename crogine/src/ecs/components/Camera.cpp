@@ -43,6 +43,7 @@ Camera::Camera()
     m_orthographic      (false),
     m_maxShadowDistance (std::numeric_limits<float>::max()),
     m_shadowExpansion   (0.f),
+    m_blurPasses        (0),
     m_dirtyTx           (true)
 {
     glm::vec2 windowSize(App::getWindow().getSize());

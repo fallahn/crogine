@@ -183,6 +183,7 @@ namespace cro
         std::uint32_t m_vertexCount;
 
         std::uint32_t m_textureID;
+        std::uint32_t m_textureType;
         const Texture* m_texture;
         Material::BlendMode m_blendMode;
 

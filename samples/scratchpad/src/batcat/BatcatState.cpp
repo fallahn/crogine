@@ -135,6 +135,13 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
                         cam.setShadowExpansion(exp);
                     }
 
+                    auto c = static_cast<std::int32_t>(cam.getBlurPassCount());
+                    if (ImGui::InputInt("Blurred Cascades", &c))
+                    {
+                        c = std::clamp(c, 0, static_cast<std::int32_t>(cam.getCascadeCount()));
+                        cam.setBlurPassCount(c);
+                    }
+
                     ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                     ImGui::DragFloat("Rate", &fireRate, 0.1f, 0.1f, 10.f);
@@ -379,11 +386,15 @@ void BatcatState::createScene()
     //3D camera
     auto ent = m_scene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 50.f });
+    ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
     //projection is set in updateView()
     ent.addComponent<cro::Camera>().shadowMapBuffer.create(1024, 1024);// (2048, 2048);
     ent.getComponent<cro::Camera>().resizeCallback = std::bind(&BatcatState::updateView, this, std::placeholders::_1);
-    ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
     updateView(ent.getComponent<cro::Camera>());
+
+    ent.getComponent<cro::Camera>().setMaxShadowDistance(142.f);
+    ent.getComponent<cro::Camera>().setShadowExpansion(17.f);
+    //ent.getComponent<cro::Camera>().setBlurPassCount(1);
 
 
 #ifdef CRO_DEBUG_

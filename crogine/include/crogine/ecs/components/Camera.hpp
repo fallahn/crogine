@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -484,6 +484,21 @@ namespace cro
         */
         std::size_t getCascadeCount() const;
 
+        /*!
+        \brief Set the number of cascades up to cascadeCount which should
+        be given a blur pass for soft shadowing. Set to 0 to disable.
+        Not all cascades necesserily need this so performance could be improved
+        by, say, only setting the first cascade to blur.
+        \param count Number of cascades to blur.
+        */
+        void setBlurPassCount(std::uint32_t count) { m_blurPasses = count; }
+
+        /*!
+        \brief Returns the number of cascades requested for a blur pass
+        Note that this may be more than the number of cascades available
+        \see setBlurPassCount()
+        */
+        std::uint32_t getBlurPassCount() const { return m_blurPasses; }
 
         /*!
         brief Returns the z depth, in view space, of each cascade split, ending
@@ -608,6 +623,7 @@ namespace cro
         std::vector<glm::mat4> m_shadowViewMatrices;
         std::vector<glm::mat4> m_shadowProjectionMatrices;
         float m_shadowExpansion;
+        std::uint32_t m_blurPasses;
         std::vector<float> m_splitDistances;
 
         bool m_dirtyTx;

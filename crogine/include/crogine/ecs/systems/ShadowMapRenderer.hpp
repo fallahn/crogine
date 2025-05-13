@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/DepthTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/Shader.hpp>
 
 #ifdef CRO_DEBUG_
 #include <crogine/gui/GuiClient.hpp>
@@ -144,6 +146,14 @@ namespace cro
         };
         //for each camera, for each camera cascade, a vector of entities
         std::vector<std::vector<std::vector<Drawable>>> m_drawLists;
+
+        //buffer to render first pass blur if soft shadowing
+        DepthTexture m_blurBuffer;
+        SimpleQuad m_inputQuad;
+        SimpleQuad m_outputQuad;
+
+        cro::Shader m_blurShaderA;
+        cro::Shader m_blurShaderB;
 
         void render();
 
