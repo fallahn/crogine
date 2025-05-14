@@ -118,6 +118,7 @@ void main()
 ShadowMapRenderer::ShadowMapRenderer(MessageBus& mb)
     : System(mb, typeid(ShadowMapRenderer)),
     m_interval      (1),
+    m_blurBuffer    (false),
     m_bufferIndices (MaxDepthMaps)
 {
     requireComponent<Model>();
@@ -277,7 +278,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             index = m_bufferIndices.back();
             m_bufferIndices.pop_back();
 
-            m_bufferResources[index].depthTexture = std::make_unique<DepthTexture>();
+            m_bufferResources[index].depthTexture = std::make_unique<DepthTexture>(false);
             m_bufferResources[index].depthTexture->create(dmap.m_size.x, dmap.m_size.y, dmap.m_layers);
         }
         else
@@ -642,7 +643,7 @@ void ShadowMapRenderer::render()
                 glUseProgram(m_blurShaderA.getGLHandle());
                 glUniform1f(cascadeUniform, i);
 
-                m_inputQuad.setTexture(camera.shadowMapBuffer.getTexture(), passSize);
+                m_inputQuad.setTexture(shadowMapBuffer.getTexture(), passSize);
                 m_blurBuffer.clear();
                 m_inputQuad.draw();
                 m_blurBuffer.display();

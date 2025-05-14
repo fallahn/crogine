@@ -38,7 +38,7 @@ source distribution.
 namespace cro
 {
     /*!
-    \brief A render buffer with only a depth component attached.
+    \brief A render buffer with a depth component attached, and optional high-precision 2 channel colour attachment.
     DepthTextures are non-copyable objects but *can* be moved.
     */
     class CRO_EXPORT_API DepthTexture final : public RenderTarget, public Detail::SDLResource
@@ -52,8 +52,10 @@ namespace cro
         it as the current target. All drawing operations will then be performed on it
         until display() is called. Both clear AND display() *must* be called either side of
         drawing to prevent undefined results.
+        \param depthOnly If true then this only creates a depth buffer, if false adds RG32F
+        format colour atachment for VSM shadow mapping.
         */
-        DepthTexture();
+        explicit DepthTexture(bool depthOnly = true);
         ~DepthTexture();
 
         DepthTexture(const DepthTexture&) = delete;
@@ -122,9 +124,12 @@ namespace cro
         std::uint32_t getLayerCount() const { return m_layerCount; }
 
     private:
+        bool m_depthOnly;
         std::uint32_t m_fboID;
-        std::uint32_t m_textureID;
+        std::uint32_t m_depthID;
         std::uint32_t m_colourID;
+        std::uint32_t m_returnTexture; //used to return the ID based on having a colour buffer
+
         glm::uvec2 m_size;
         std::uint32_t m_layerCount;
 
