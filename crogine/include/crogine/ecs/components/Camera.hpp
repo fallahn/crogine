@@ -424,7 +424,36 @@ namespace cro
         ShadowMapRenderer
         */
 #ifdef PLATFORM_DESKTOP
-        DepthTexture shadowMapBuffer;
+        //DepthTexture shadowMapBuffer;
+        struct ShadowMapBuffer final
+        {
+            /*!
+            \brief Used by ShadowMapRenderer to assign a depthmap texture so
+            that it can be recycled between multiple cameras
+            */
+        public:
+            void create(std::uint32_t width, std::uint32_t height, std::uint32_t layers = 1)
+            {
+                m_size = { width, height };
+                m_layers = layers;
+                m_dirty = true;
+            }
+
+            bool available() const { return m_resourceIndex != -1; }
+            const TextureID& getTexture() const { return m_textureID; }
+            std::uint32_t getLayerCount() const { return m_layers; }
+            glm::uvec2 getSize() const { return m_size; }
+        private:
+            friend class ShadowMapRenderer;
+            friend class ModelRenderer;
+
+            TextureID m_textureID;
+            glm::uvec2 m_size = glm::uvec2(0);
+            std::uint32_t m_layers = 0;
+
+            std::int32_t m_resourceIndex = -1;
+            bool m_dirty = false; //shadow map renderer should reassign map if this is true
+        }shadowMapBuffer;
 #else
         RenderTexture shadowMapBuffer;
 #endif

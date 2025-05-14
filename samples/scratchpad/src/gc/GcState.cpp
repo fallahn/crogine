@@ -48,8 +48,8 @@ GCState::GCState(cro::StateStack& stack, cro::State::Context context)
                     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition(pos);
                 }
 
-                auto t = m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0);
-                ImGui::Image(t, { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                //auto t = m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0);
+                //ImGui::Image(t, { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
         });

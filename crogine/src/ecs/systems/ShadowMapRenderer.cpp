@@ -117,7 +117,8 @@ void main()
 
 ShadowMapRenderer::ShadowMapRenderer(MessageBus& mb)
     : System(mb, typeid(ShadowMapRenderer)),
-    m_interval      (1)
+    m_interval      (1),
+    m_bufferIndices (MaxDepthMaps)
 {
     requireComponent<Model>();
     requireComponent<Transform>();
@@ -147,6 +148,30 @@ ShadowMapRenderer::ShadowMapRenderer(MessageBus& mb)
     m_outputQuad.setShader(m_blurShaderB);
 
     cascadeUniform = m_blurShaderA.getUniformID("u_cascadeIndex");
+
+    std::iota(m_bufferIndices.rbegin(), m_bufferIndices.rend(), 0);
+
+#ifdef CRO_DEBUG_
+    registerWindow([&]() 
+        {
+            ImGui::Begin("Buffers");
+            for (const auto& buff : m_bufferResources)
+            {
+                if (buff.depthTexture)
+                {
+                    const auto s = buff.depthTexture->getSize();
+                    const auto l = buff.depthTexture->getLayerCount();
+                    ImGui::Text("Width: %u, Height: %u, Layers: %u, Refcount: %u, Assign count: %u", s.x, s.y, l, buff.refcount, buff.useCount);
+                }
+                else
+                {
+                    ImGui::Text("Not Used");
+                }
+            }
+
+            ImGui::End();
+        });
+#endif
 }
 
 //public
@@ -168,7 +193,39 @@ void ShadowMapRenderer::process(float)
     if ((intervalCounter % m_interval) == 0)
     {
         render();
+
+        //for each camera mark its resource as now being free
+        //to use in the next call to updateDrawList()
+        for (auto cam : m_activeCameras)
+        {
+            const auto& dmap = cam.getComponent<cro::Camera>().shadowMapBuffer;
+            if (dmap.m_resourceIndex != -1)
+            {
+                //this *should* go back to zero as we iterate all cameras
+                //if it doesn't it's a more obvious bug than just forcing it to 0...
+                m_bufferResources[dmap.m_resourceIndex].useCount--;
+            }
+        }
+        
         m_activeCameras.clear();
+    }
+
+    //check buffer resource for updated refs and remove any now at zero
+    for (auto i = 0u; i< m_bufferResources.size(); ++i)
+    {
+        auto& buff = m_bufferResources[i];
+        if (buff.gc
+            && buff.refcount == 0)
+        {
+            //remove the texture
+            buff.depthTexture.reset();
+
+            //mark index as free
+            m_bufferIndices.push_back(i);
+        }
+        buff.gc = false;
+        //ideally we want to early-out but we can't
+        //gaurantee unused resources are contiguous.
     }
 
     intervalCounter++;
@@ -181,10 +238,63 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         return;
     }
 
+
     //this gets called once for each Camera in the CameraSystem
     //from CameraSystem::process() - so we'll check here if
     //the camera should actually be updated then render all the
     //cameras at once in process(), above
+    auto& camera = camEnt.getComponent<Camera>();
+
+
+    //first we check the camera to see if the depth map has been
+    //requested or created
+    auto& dmap = camera.shadowMapBuffer;
+    if (dmap.m_dirty)
+    {
+        //check if we already has an assignment and remove it, decrementing ref count
+        if (dmap.m_resourceIndex != -1)
+        {
+            m_bufferResources[dmap.m_resourceIndex].refcount--;
+
+            //mark the buffer as having its refcount changed - in process we use this to
+            //see if we should garbage collect any textures which are now not referenced
+            m_bufferResources[dmap.m_resourceIndex].gc = true;
+        }
+
+        //search the resource to see if we have and existing buffer we can use
+        auto res = std::find_if(m_bufferResources.begin(), m_bufferResources.end(), 
+            [&dmap](const BufferResource& br)
+            {
+                return br.depthTexture 
+                    && br.depthTexture->getSize() == dmap.m_size 
+                    && br.depthTexture->getLayerCount() == dmap.m_layers;
+            });
+
+        std::int32_t index = -1;
+        if (res == m_bufferResources.end())
+        {
+            //create a new one
+            index = m_bufferIndices.back();
+            m_bufferIndices.pop_back();
+
+            m_bufferResources[index].depthTexture = std::make_unique<DepthTexture>();
+            m_bufferResources[index].depthTexture->create(dmap.m_size.x, dmap.m_size.y, dmap.m_layers);
+        }
+        else
+        {
+            index = static_cast<std::int32_t>(std::distance(m_bufferResources.begin(), res));
+        }
+
+        //then assign it and increase the ref count.
+        if (index != -1)
+        {
+            m_bufferResources[index].refcount++;
+            dmap.m_textureID = m_bufferResources[index].depthTexture->getTexture();
+        }
+        dmap.m_resourceIndex = index; //assign this anyway if we didn't get one so we don't try rendering to it
+        dmap.m_dirty = false;
+    }
+
 
     //TODO this deals with splitting the camera frustum into
     //cascades (if more than one is set) but only applies to
@@ -195,7 +305,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
     //anyway, which requires a COMPLETE overhaul).
     //Technically this works on mobile, but is wasted processing
 
-    auto& camera = camEnt.getComponent<Camera>();
+
     if (camera.shadowMapBuffer.available())
     {
         if (m_drawLists.size() <= m_activeCameras.size())
@@ -208,6 +318,14 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         drawList.resize(camera.getCascadeCount());
 
         m_activeCameras.push_back(camEnt);
+        m_bufferResources[camera.shadowMapBuffer.m_resourceIndex].useCount++;
+
+        //TODO if usecount exceeds available texture count, increase textures
+        const auto count = m_bufferResources[camera.shadowMapBuffer.m_resourceIndex].useCount;
+        if (count > 1)
+        {
+            LogW << "Use count for depth tex is " << count << std::endl;
+        }
 
 
         //store the results here to use in frustum culling
@@ -217,8 +335,8 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         camera.lightCorners.clear();
 #endif
 
-        auto worldMat = camEnt.getComponent<cro::Transform>().getWorldTransform();
-        auto corners = camera.getFrustumSplits();
+        const auto worldMat = camEnt.getComponent<cro::Transform>().getWorldTransform();
+        auto corners = camera.getFrustumSplits(); //copy this as we'll transform it into world coords
         glm::vec3 lightDir = -getScene()->getSunlight().getComponent<Sunlight>().getDirection();
 
         for (auto i = 0u; i < corners.size(); ++i)
@@ -378,10 +496,12 @@ void ShadowMapRenderer::render()
         //glCheck(glCullFace(GL_FRONT));
         glCheck(glEnable(GL_DEPTH_TEST));
 
+        auto& shadowMapBuffer = *m_bufferResources[camera.shadowMapBuffer.m_resourceIndex].depthTexture;
+
         for (auto d = 0u; d < m_drawLists[c].size(); ++d)
         {
 #ifdef PLATFORM_DESKTOP
-            camera.shadowMapBuffer.clear(d);
+            shadowMapBuffer.clear(d);
 #else
             //this should only ever have one draw list so
             //clearing in this loop only happens once.
@@ -494,7 +614,7 @@ void ShadowMapRenderer::render()
                 }
 
             }
-            camera.shadowMapBuffer.display();
+            shadowMapBuffer.display();
 
 
             //if blur enabled
@@ -505,7 +625,7 @@ void ShadowMapRenderer::render()
                 //the render quads - but only if this damages perf too much
 
                 //render to internal buffer
-                const auto passSize = camera.shadowMapBuffer.getSize();
+                const auto passSize = shadowMapBuffer.getSize();
                 if (m_blurBuffer.getSize().x < passSize.x
                     || m_blurBuffer.getSize().y < passSize.y)
                 {
@@ -528,14 +648,9 @@ void ShadowMapRenderer::render()
                 m_blurBuffer.display();
 
                 //render back to shadowmap
-                camera.shadowMapBuffer.clear(i);
+                shadowMapBuffer.clear(i);
                 m_outputQuad.draw();
-            }
-
-            //we only want to do this once per map
-            if (camera.m_blurPasses)
-            {
-                camera.shadowMapBuffer.display();
+                shadowMapBuffer.display();
             }
         }
 #ifdef PLATFORM_DESKTOP

@@ -241,7 +241,7 @@ void Console::dumpBuffer(const std::string& str)
     }
 
 #ifdef _MSC_VER
-    FileSystem::showMessageBox("Console Output", "Something went wrong :(\nIf you'd like to help fix this crash please take a screen shot\nof this message and send it to the developer.\n\n" + s);
+    //FileSystem::showMessageBox("Console Output", "Something went wrong :(\nIf you'd like to help fix this crash please take a screen shot\nof this message and send it to the developer.\n\n" + s);
 #endif
 
     std::ofstream ofile(fileName);

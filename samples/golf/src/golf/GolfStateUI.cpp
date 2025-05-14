@@ -1850,8 +1850,8 @@ void GolfState::buildUI()
     miniCam.active = false;
     //this is a hack to stop the entire terrain being drawn in shadow
     miniCam.shadowMapBuffer.create(2, 2);
-    miniCam.shadowMapBuffer.clear();
-    miniCam.shadowMapBuffer.display();
+    //miniCam.shadowMapBuffer.clear();
+    //miniCam.shadowMapBuffer.display();
     //miniCam.resizeCallback = updateMiniView; //don't do this on resize as recreating the buffer clears it..
 
 
@@ -1905,8 +1905,8 @@ void GolfState::buildUI()
     greenCam.resizeCallback = updateGreenView;
     greenCam.active = false;
     greenCam.shadowMapBuffer.create(2, 2);
-    greenCam.shadowMapBuffer.clear();
-    greenCam.shadowMapBuffer.display();
+    //greenCam.shadowMapBuffer.clear();
+    //greenCam.shadowMapBuffer.display();
     updateGreenView(greenCam);
 
     if (m_sharedData.nightTime)
