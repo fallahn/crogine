@@ -172,7 +172,7 @@ static constexpr glm::vec3 PreviewHairOffset(0.f, -0.29f, -0.008f);
 static constexpr float MinMusicVolume = 0.001f;
 static constexpr glm::uvec2 FlagTextureSize(336u, 240u);
 
-static constexpr std::uint32_t ShadowMapLow = 1024;
+static constexpr std::uint32_t ShadowMapLow = 2048;
 static constexpr std::uint32_t ShadowMapHigh = 3072;
 
 class btVector3;

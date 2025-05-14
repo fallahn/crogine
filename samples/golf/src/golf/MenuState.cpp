@@ -2730,7 +2730,7 @@ void MenuState::createScene()
             && m_sharedData.multisamples != 0
             && !m_sharedData.pixelScale;
 
-        const auto res = m_sharedData.hqShadows ? 4096 : 2048;
+        const auto res = m_sharedData.hqShadows ? ShadowMapHigh : ShadowMapLow;
         cam.shadowMapBuffer.create(res, res);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 600.f);
@@ -2740,7 +2740,7 @@ void MenuState::createScene()
     auto camEnt = m_backgroundScene.getActiveCamera();
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
-    cam.shadowMapBuffer.create(2048, 2048);
+    cam.shadowMapBuffer.create(ShadowMapLow, ShadowMapLow);
     cam.setMaxShadowDistance(38.f);
     cam.setShadowExpansion(140.f);
     cam.setBlurPassCount(1);

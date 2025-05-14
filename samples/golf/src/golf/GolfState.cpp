@@ -6608,16 +6608,17 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     auto ret = Social::setStatus(Social::InfoID::Course, { reinterpret_cast<const char*>(title.c_str()), holeNumber.c_str(), holeTotal.c_str() });
     WebSock::broadcastPacket(ret);
 
-    //cue up next depth map
-    const auto next = m_currentHole + 1;
-    if (next < m_holeData.size())
-    {
-        m_depthMap.setModel(m_holeData[next]);
-    }
-    else
-    {
-        m_depthMap.forceSwap(); //make sure we're reading the correct texture anyway
-    }
+    //cue up next depth map ( we no longer double buffer, waste of VRAM)
+    m_depthMap.setModel(m_holeData[m_currentHole]);
+    //const auto next = m_currentHole + 1;
+    //if (next < m_holeData.size())
+    //{
+    //    m_depthMap.setModel(m_holeData[next]);
+    //}
+    //else
+    //{
+    //    m_depthMap.forceSwap(); //make sure we're reading the correct texture anyway
+    //}
     m_waterEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_depthMap", m_depthMap.getTexture());
 
     m_sharedData.minimapData.teePos = m_holeData[m_currentHole].tee;

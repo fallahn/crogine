@@ -142,8 +142,8 @@ ShadowMapRenderer::ShadowMapRenderer(MessageBus& mb)
 
     //TODO only create these if we get a request for a blur pass
     //TODO make B5/B9 defines optional (number of taps)
-    m_blurShaderA.loadFromString(SimpleDrawable::getDefaultVertexShader(), BlurPassFrag, "#define H\n#define B5\n");
-    m_blurShaderB.loadFromString(SimpleDrawable::getDefaultVertexShader(), BlurPassFrag, "#define B5\n");
+    m_blurShaderA.loadFromString(SimpleDrawable::getDefaultVertexShader(), BlurPassFrag, "#define H\n#define B9\n");
+    m_blurShaderB.loadFromString(SimpleDrawable::getDefaultVertexShader(), BlurPassFrag, "#define B9\n");
 
     m_inputQuad.setShader(m_blurShaderA);
     m_outputQuad.setShader(m_blurShaderB);

@@ -133,7 +133,7 @@ void TerrainDepthmap::setModel(const HoleData& holeData)
     m_holeEnt.addComponent<cro::Model>(meshData, m_holeMaterial);
 
     m_gridIndex = 0;
-    std::swap(m_srcTexture, m_dstTexture);
+    //std::swap(m_srcTexture, m_dstTexture);
 }
 
 void TerrainDepthmap::update(std::int32_t count)
@@ -152,9 +152,11 @@ void TerrainDepthmap::update(std::int32_t count)
         //we need to update the scene to make sure camera settings are updated
         m_scene.simulate(0.1f);
 
-        m_textures[m_dstTexture].clear(m_gridIndex);
+        m_textures[m_srcTexture].clear(m_gridIndex);
+       // m_textures[m_dstTexture].clear(m_gridIndex);
         m_scene.render();
-        m_textures[m_dstTexture].display();
+        m_textures[m_srcTexture].display();
+        //m_textures[m_dstTexture].display();
     }
 }
 
