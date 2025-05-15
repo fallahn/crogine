@@ -136,6 +136,7 @@ private:
     cro::Scene m_skyScene;
     cro::Scene m_uiScene;
     cro::Scene m_trophyScene;
+    cro::Scene m_mapScene;
     TerrainDepthmap m_depthMap;
     cro::Texture m_defaultMaskMap;
 
@@ -240,7 +241,7 @@ private:
     };
     std::array<PostProcess, PostID::Count> m_postProcesses = {};
 
-    //cro::Image m_currentMap;
+
     float m_holeToModelRatio;
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;
@@ -677,6 +678,8 @@ private:
     cro::Entity m_mapRoot;
     cro::MultiRenderTexture m_mapTextureMRT; //hack to create images for map explorer
     
+    std::vector<cro::Entity> m_minimapModels;
+
     std::int32_t m_minimapTexturePass;
     static constexpr std::int32_t MaxMinimapPasses = 1;
     void updateMinimapTexture();

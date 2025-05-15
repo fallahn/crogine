@@ -673,6 +673,13 @@ void GolfState::loadMap()
                         prevHoleEntity = holeData.modelEntity;
 
                         holeModelCount++;
+
+                        //duplicate for rendering on minimap
+                        m_minimapModels.emplace_back() = m_mapScene.createEntity();
+                        m_minimapModels.back().addComponent<cro::Transform>();
+                        modelDef.createModel(m_minimapModels.back());
+                        m_minimapModels.back().getComponent<cro::Model>().setHidden(true);
+                        //TODO apply material to allow target rendering
                     }
                     else
                     {
@@ -687,6 +694,8 @@ void GolfState::loadMap()
                     holeData.modelEntity = prevHoleEntity;
                     duplicate = true;
                     propCount++;
+
+                    m_minimapModels.push_back(m_minimapModels.back());
                 }
             }
             else if (name == "include")

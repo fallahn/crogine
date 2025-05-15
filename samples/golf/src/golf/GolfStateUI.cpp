@@ -1841,17 +1841,13 @@ void GolfState::buildUI()
     };
 
 
-    m_mapCam = m_gameScene.createEntity();
+    m_mapCam = m_mapScene.createEntity();
     m_mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, 36.f, -static_cast<float>(MapSize.y) / 2.f});
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
     updateMiniView(miniCam);
-    miniCam.setRenderFlags(cro::Camera::Pass::Final, RenderFlags::MiniMap);
     miniCam.active = false;
-    //this is a hack to stop the entire terrain being drawn in shadow
-    miniCam.shadowMapBuffer.create(2, 2);
-    //miniCam.shadowMapBuffer.clear();
-    //miniCam.shadowMapBuffer.display();
+    m_mapScene.setActiveCamera(m_mapCam); //TODO we probably don't need to store this as a member now.
     //miniCam.resizeCallback = updateMiniView; //don't do this on resize as recreating the buffer clears it..
 
 
@@ -6141,8 +6137,6 @@ void GolfState::updateMinimapTexture()
         m_targetShader.update();
     }
 
-    m_mapCam.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-
     //update render
     glUseProgram(m_gridShaders[1].shaderID);
     glUniform1f(m_gridShaders[1].transparency, 0.f); //hides any putting grid
@@ -6155,18 +6149,23 @@ void GolfState::updateMinimapTexture()
     miniCam.viewport = { 0.f, 0.f, 1.f/4.f, 1.f/4.f };*/
 
 
+    m_minimapModels[m_currentHole].getComponent<cro::Model>().setHidden(false);
+    m_mapScene.getSystem<cro::CameraSystem>()->process(0.f);
+    m_mapScene.getSystem<cro::ModelRenderer>()->process(0.f);
 
-    auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
-    m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);
-    m_gameScene.getSystem<cro::ModelRenderer>()->process(0.f);
-    //m_gameScene.simulate(0.f);
 
-    auto& model = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>();
-    const auto matCount = model.getMeshData().submeshCount;
-    for (auto i = 0u; i < matCount; ++i)
-    {
-        model.getMaterialData(cro::Mesh::IndexData::Pass::Final, i).removeCustomSetting(GL_CLIP_DISTANCE1);
-    }
+    //auto vCount = m_mapScene.getSystem<cro::ModelRenderer>()->getVisibleCount(m_mapCam.getComponent<cro::Camera>().getDrawListIndex());
+    //LogI << "Visible count: " << vCount << std::endl;
+
+    //auto entCount = m_mapScene.getSystem<cro::ModelRenderer>()->getEntities().size();
+    //LogI << "Entity count: " << entCount << std::endl;
+
+    //auto& model = m_minimapModels[m_currentHole].getComponent<cro::Model>();
+    //const auto matCount = model.getMeshData().submeshCount;
+    //for (auto i = 0u; i < matCount; ++i)
+    //{
+    //    model.getMaterialData(cro::Mesh::IndexData::Pass::Final, i).removeCustomSetting(GL_CLIP_DISTANCE1);
+    //}
 
 
     cro::Colour c = cro::Colour::Transparent;
@@ -6180,8 +6179,10 @@ void GolfState::updateMinimapTexture()
     {
         m_mapTextureMRT.activate(true);
     }
-    m_gameScene.render();
+    m_mapScene.render();
     m_minimapTexturePass++;
+
+    m_minimapModels[m_currentHole].getComponent<cro::Model>().setHidden(true);
 
     if (m_minimapTexturePass == MaxMinimapPasses)
     {
@@ -6191,13 +6192,13 @@ void GolfState::updateMinimapTexture()
     {
         m_mapTextureMRT.activate(false);
     }
-    m_gameScene.setActiveCamera(oldCam);
-    //m_mapTextureMRT.setBorderColour(c);
 
-    for (auto i = 0u; i < matCount; ++i)
-    {
-        model.getMaterialData(cro::Mesh::IndexData::Pass::Final, i).addCustomSetting(GL_CLIP_DISTANCE1);
-    }
+    ////m_mapTextureMRT.setBorderColour(c);
+
+    //for (auto i = 0u; i < matCount; ++i)
+    //{
+    //    model.getMaterialData(cro::Mesh::IndexData::Pass::Final, i).addCustomSetting(GL_CLIP_DISTANCE1);
+    //}
 
 
 
@@ -6207,9 +6208,6 @@ void GolfState::updateMinimapTexture()
         //this triggers a map refresh so don't set it until
         //we know the texture is up to date.
         m_sharedData.minimapData.holeNumber = m_currentHole;
-
-        //disable the cam again
-        m_mapCam.getComponent<cro::Camera>().active = false;
 
         retargetMinimap(true);
 

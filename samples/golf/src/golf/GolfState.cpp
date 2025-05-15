@@ -189,6 +189,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_skyScene              (context.appInstance.getMessageBus(), 512),
     m_uiScene               (context.appInstance.getMessageBus(), 1536),
     m_trophyScene           (context.appInstance.getMessageBus()),
+    m_mapScene              (context.appInstance.getMessageBus()),
     m_textChat              (m_uiScene, sd),
     m_inputParser           (sd, &m_gameScene),
     m_cpuGolfer             (m_inputParser, m_currentPlayer, m_collisionMesh),
@@ -2520,6 +2521,7 @@ bool GolfState::simulate(float dt)
 {
     if (m_minimapTexturePass < MaxMinimapPasses)
     {
+        m_mapScene.simulate(dt);
         updateMinimapTexture();
     }
 
@@ -3176,6 +3178,9 @@ void GolfState::addSystems()
     m_trophyScene.addSystem<cro::ModelRenderer>(mb);
     m_trophyScene.addSystem<cro::AudioPlayerSystem>(mb);
     m_trophyScene.setTitle("Trophy Scene");
+
+    m_mapScene.addSystem<cro::CameraSystem>(mb);
+    m_mapScene.addSystem<cro::ModelRenderer>(mb);
 }
 
 void GolfState::buildScene()
