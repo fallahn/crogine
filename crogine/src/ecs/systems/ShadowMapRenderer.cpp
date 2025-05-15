@@ -306,7 +306,6 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
     //anyway, which requires a COMPLETE overhaul).
     //Technically this works on mobile, but is wasted processing
 
-
     if (camera.shadowMapBuffer.available())
     {
         if (m_drawLists.size() <= m_activeCameras.size())
@@ -321,7 +320,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         m_activeCameras.push_back(camEnt);
         m_bufferResources[camera.shadowMapBuffer.m_resourceIndex].useCount++;
 
-        //TODO if usecount exceeds available texture count, increase textures
+        //TODO if useCount exceeds available texture count, increase textures
         const auto count = m_bufferResources[camera.shadowMapBuffer.m_resourceIndex].useCount;
         if (count > 1)
         {
@@ -409,24 +408,46 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 #endif
         }
 
+#ifdef USE_PARALLEL_PROCESSING
+        std::mutex listMutex;
+#endif
+        //hmmm how do we make camera immutable from this point on?
+
         //use depth frusta to cull entities
         auto& entities = getEntities();
-        for (auto& entity : entities)
+#ifdef USE_PARALLEL_PROCESSING
+        std::for_each(std::execution::par, entities.cbegin(), entities.cend(),
+            [&](Entity entity)
+#else
+        for (auto entity : entities)
+#endif
         {
             if (!entity.getComponent<ShadowCaster>().active)
             {
+#ifdef USE_PARALLEL_PROCESSING
+                return;
+#else
                 continue;
+#endif
             }
 
-            auto& model = entity.getComponent<Model>();
+            const auto& model = entity.getComponent<Model>();
             if (model.isHidden())
             {
+#ifdef USE_PARALLEL_PROCESSING
+                return;
+#else
                 continue;
+#endif
             }
 
             if ((model.m_renderFlags & camera.getPass(Camera::Pass::Final).renderFlags) == 0)
             {
+#ifdef USE_PARALLEL_PROCESSING
+                return;
+#else
                 continue;
+#endif
             }
 
             const auto& tx = entity.getComponent<Transform>();
@@ -456,6 +477,9 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                 if (frustums[i].intersects(lightSphere))
                 {
 #ifdef PLATFORM_DESKTOP
+#ifdef USE_PARALLEL_PROCESSING
+                    std::scoped_lock lock(listMutex);
+#endif
                     drawList[i].emplace_back(entity, distance);
 #else
                     //just place them all in the same draw list
@@ -464,16 +488,29 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                 }
             }
         }
+#ifdef USE_PARALLEL_PROCESSING
+            );
+#endif
 
         //sort back to front
+#ifdef USE_PARALLEL_PROCESSING
+        std::for_each(std::execution::par, drawList.begin(), drawList.end(),
+            [&](std::vector<ShadowMapRenderer::Drawable>& cascade)
+        {
+                std::sort(std::execution::par, cascade.begin(), cascade.end(),
+#else
         for (auto& cascade : drawList)
         {
             std::sort(cascade.begin(), cascade.end(),
+#endif
                 [](const ShadowMapRenderer::Drawable& a, const ShadowMapRenderer::Drawable& b)
                 {
                     return a.distance > b.distance;
                 });
         }
+#ifdef USE_PARALLEL_PROCESSING
+            );
+#endif
 
 #ifdef CRO_DEBUG_
         //used for debug drawing of light positions
