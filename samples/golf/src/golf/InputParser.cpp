@@ -345,6 +345,13 @@ void InputParser::handleEvent(const cro::Event& evt)
                     {
                         m_inputFlags |= InputFlag::Down;
                     }
+                    else//if (!isSpinputActive())
+                    {
+                        //toggles freecam
+                        auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+                        msg->type = SceneEvent::RequestToggleFreecam;
+                        msg->data = evt.cbutton.which;
+                    }
                 }
 
                 /*else if (evt.cbutton.button == cro::GameController::ButtonRightStick)
@@ -411,13 +418,14 @@ void InputParser::handleEvent(const cro::Event& evt)
                 {
                     m_inputFlags &= ~InputFlag::Down;
 
-                    if (!isSpinputActive())
-                    {
-                        //toggles freecam
-                        auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
-                        msg->type = SceneEvent::RequestToggleFreecam;
-                        msg->data = evt.cbutton.which;
-                    }
+                    //moved to button down event
+                    //if (!isSpinputActive())
+                    //{
+                    //    //toggles freecam
+                    //    auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+                    //    msg->type = SceneEvent::RequestToggleFreecam;
+                    //    msg->data = evt.cbutton.which;
+                    //}
                 }
 
                 /*else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)

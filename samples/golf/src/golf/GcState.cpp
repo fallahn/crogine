@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -361,13 +361,14 @@ void GCState::createScene()
     for (auto i = 0; i < CameraID::Count; ++i)
     {
         //TODO read shadow map size from settings
-        const std::uint32_t ShadowSize = ShadowMapHigh;
+        const std::uint32_t ShadowSize = ShadowMapLow;
 
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Camera>().resizeCallback = resize;
         entity.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowSize, ShadowSize);
         entity.getComponent<cro::Camera>().active = false;
+        entity.getComponent<cro::Camera>().setBlurPassCount(1);
         resize(entity.getComponent<cro::Camera>());
         m_cameras[i] = entity;
     }
