@@ -283,6 +283,7 @@ private:
             HairReflect,
             HairGlass,
             Course,
+            Minimap,
             Ball,
             BallBumped,
             BallSkinned,
@@ -674,7 +675,6 @@ private:
 
     //-----------
 
-    cro::Entity m_mapCam;
     cro::Entity m_mapRoot;
     cro::MultiRenderTexture m_mapTextureMRT; //hack to create images for map explorer
     

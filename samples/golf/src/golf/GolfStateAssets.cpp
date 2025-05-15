@@ -679,7 +679,13 @@ void GolfState::loadMap()
                         m_minimapModels.back().addComponent<cro::Transform>();
                         modelDef.createModel(m_minimapModels.back());
                         m_minimapModels.back().getComponent<cro::Model>().setHidden(true);
-                        //TODO apply material to allow target rendering
+                        
+                        for (auto m = 0u; m < m_minimapModels.back().getComponent<cro::Model>().getMeshData().submeshCount; ++m)
+                        {
+                            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Minimap]);
+                            applyMaterialData(modelDef, material, m);
+                            m_minimapModels.back().getComponent<cro::Model>().setMaterial(m, material);
+                        }
                     }
                     else
                     {
@@ -1960,6 +1966,12 @@ void GolfState::loadMaterials()
     shaleTex.setRepeated(true);
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).setProperty("u_angleTex", shaleTex);
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).addCustomSetting(GL_CLIP_DISTANCE1);
+
+    m_resources.shaders.loadFromString(ShaderID::MinimapModel, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n" + wobble + targetDefines);
+    shader = &m_resources.shaders.get(ShaderID::MinimapModel);
+    m_materialIDs[MaterialID::Minimap] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Minimap]).setProperty("u_angleTex", shaleTex);
+
 
     //m_ballShadows.shaders[0].shader = shader->getGLHandle();
     //m_ballShadows.shaders[0].uniform = shader->getUniformID("u_ballPosition");

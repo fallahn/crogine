@@ -946,8 +946,8 @@ void GolfState::enableDOF(bool enable)
 void GolfState::applyShadowQuality()
 {
     m_shadowQuality.update(m_sharedData.hqShadows);
-
-    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setRenderInterval(m_sharedData.hqShadows ? 2 : 3);
+    //setting this to 1 removes some distinct flickering from the map being out of date every X frames
+    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setRenderInterval(/*m_sharedData.hqShadows ? 2 : 3*/1);
 
     auto applyShadowSettings =
         [&](cro::Camera& cam, std::int32_t camID)

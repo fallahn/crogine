@@ -305,6 +305,7 @@ struct ShaderID final
         BallWasher,
         Slope,
         Minimap,
+        MinimapModel,
         MinimapView,
         TutorialSlope,
         Wireframe,

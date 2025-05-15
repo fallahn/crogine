@@ -3120,7 +3120,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<FpsCameraSystem>(mb, m_collisionMesh, m_sharedData)->setHumanCount(m_humanCount);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<ChunkVisSystem>(mb, MapSize, &m_terrainBuilder);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setRenderInterval(m_sharedData.hqShadows ? 2 : 3);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setRenderInterval(/*m_sharedData.hqShadows ? 2 : 3*/1); //set to 1 to remove flickering
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);

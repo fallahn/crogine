@@ -1841,13 +1841,12 @@ void GolfState::buildUI()
     };
 
 
-    m_mapCam = m_mapScene.createEntity();
-    m_mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, 36.f, -static_cast<float>(MapSize.y) / 2.f});
-    m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    auto& miniCam = m_mapCam.addComponent<cro::Camera>();
+    auto mapCam = m_mapScene.createEntity();
+    mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, 36.f, -static_cast<float>(MapSize.y) / 2.f});
+    mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+    auto& miniCam = mapCam.addComponent<cro::Camera>();
     updateMiniView(miniCam);
-    miniCam.active = false;
-    m_mapScene.setActiveCamera(m_mapCam); //TODO we probably don't need to store this as a member now.
+    m_mapScene.setActiveCamera(mapCam);
     //miniCam.resizeCallback = updateMiniView; //don't do this on resize as recreating the buffer clears it..
 
 
@@ -6124,7 +6123,7 @@ void GolfState::updateMinimapTexture()
     //TODO assert if we need to do this every pass
     if (m_sharedData.scoreType == ScoreType::MultiTarget)
     {
-        auto* shader = m_holeData[m_currentHole].puttFromTee ? &m_resources.shaders.get(ShaderID::CourseGrid) : &m_resources.shaders.get(ShaderID::Course);
+        auto* shader = &m_resources.shaders.get(ShaderID::MinimapModel);
         m_targetShader.shaderID = shader->getGLHandle();
         m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
 
@@ -6136,11 +6135,6 @@ void GolfState::updateMinimapTexture()
         m_targetShader.position = m_holeData[m_currentHole].target;
         m_targetShader.update();
     }
-
-    //update render
-    glUseProgram(m_gridShaders[1].shaderID);
-    glUniform1f(m_gridShaders[1].transparency, 0.f); //hides any putting grid
-
 
     //16 pass for 4x4 smaller renders
     /*glm::vec2 viewSize(MapSize);
@@ -6159,13 +6153,6 @@ void GolfState::updateMinimapTexture()
 
     //auto entCount = m_mapScene.getSystem<cro::ModelRenderer>()->getEntities().size();
     //LogI << "Entity count: " << entCount << std::endl;
-
-    //auto& model = m_minimapModels[m_currentHole].getComponent<cro::Model>();
-    //const auto matCount = model.getMeshData().submeshCount;
-    //for (auto i = 0u; i < matCount; ++i)
-    //{
-    //    model.getMaterialData(cro::Mesh::IndexData::Pass::Final, i).removeCustomSetting(GL_CLIP_DISTANCE1);
-    //}
 
 
     cro::Colour c = cro::Colour::Transparent;
@@ -6194,12 +6181,6 @@ void GolfState::updateMinimapTexture()
     }
 
     ////m_mapTextureMRT.setBorderColour(c);
-
-    //for (auto i = 0u; i < matCount; ++i)
-    //{
-    //    model.getMaterialData(cro::Mesh::IndexData::Pass::Final, i).addCustomSetting(GL_CLIP_DISTANCE1);
-    //}
-
 
 
     //only finalise the minimap once all passes are complete
@@ -6230,7 +6211,7 @@ void GolfState::updateMiniMap()
     {
         //trigger animation - this does the actual render
         en.getComponent<cro::Callback>().active = true;
-        m_mapCam.getComponent<cro::Camera>().active = true;
+        //m_mapCam.getComponent<cro::Camera>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
