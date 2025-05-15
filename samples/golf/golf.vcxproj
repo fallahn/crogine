@@ -299,6 +299,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>4723</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -517,6 +518,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\curl\include;$(SolutionDir)extlibs\libgns\include;$(SolutionDir)libsocial\include;$(SolutionDir)extlibs\sqlite\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>4723</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

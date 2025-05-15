@@ -373,6 +373,12 @@ namespace cro
         */
         bool active = true;
 
+        /*!
+        \brief Returns true if the Camera was actived this frame
+        Useful for cases where eg, a shadow map requires an immediate update.
+        Only valid during Renderable::updateDrawList()
+        */
+        bool activatedThisFrame() const { return active && !m_lastActive; }
 
         /*!
         \brief If this camera is in a static Scene then this can be set to true.
@@ -621,7 +627,7 @@ namespace cro
 #endif
 
     private:
-
+        bool m_lastActive = false; //so we can track if we just changed state
         std::array<Pass, 2u> m_passes = {}; //final pass and refraction pass share the same data
         std::uint32_t m_passIndex = Pass::Final;
 

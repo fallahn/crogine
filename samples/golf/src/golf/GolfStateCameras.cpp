@@ -979,10 +979,7 @@ void GolfState::applyShadowQuality()
         applyShadowSettings(m_cameras[i].getComponent<cro::Camera>(), i);
     }
 
-#ifdef CRO_DEBUG_
     applyShadowSettings(m_freeCam.getComponent<cro::Camera>(), -1);
-#endif // CRO_DEBUG_
-
 }
 
 void GolfState::updateSkybox(float dt)

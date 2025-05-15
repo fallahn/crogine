@@ -234,18 +234,18 @@ void ShadowMapRenderer::process(float)
 
 void ShadowMapRenderer::updateDrawList(Entity camEnt)
 {
-    if (intervalCounter % m_interval)
-    {
-        return;
-    }
-
-
     //this gets called once for each Camera in the CameraSystem
     //from CameraSystem::process() - so we'll check here if
     //the camera should actually be updated then render all the
     //cameras at once in process(), above
     auto& camera = camEnt.getComponent<Camera>();
 
+
+    if ((intervalCounter % m_interval)
+        && !camera.activatedThisFrame())
+    {
+        return;
+    }
 
     //first we check the camera to see if the depth map has been
     //requested or created
@@ -479,6 +479,12 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         //used for debug drawing of light positions
         camera.lightPositions.swap(lightPositions);
 #endif
+
+        //if (camera.activatedThisFrame())
+        //{
+        //    //do an immediate update on the map
+        //    render();
+        //}
     }
 }
 
