@@ -907,7 +907,10 @@ void GolfState::toggleFreeCam()
                 cro::App::getWindow().setMouseCaptured(false);
 
                 m_freecamMenuEnt.getComponent<cro::Callback>().active = false; //this does the show/hide animation
-
+                
+                //hack to prevent a flicker caused by a 1 frame delay in updating shadow map
+                m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);
+                m_gameScene.getSystem<cro::ShadowMapRenderer>()->process(0.f);
             };
         enableDOF(false);
 
