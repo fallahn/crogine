@@ -497,7 +497,12 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         std::for_each(std::execution::par, drawList.begin(), drawList.end(),
             [&](std::vector<ShadowMapRenderer::Drawable>& cascade)
         {
+#ifdef _WIN32
                 std::sort(std::execution::par, cascade.begin(), cascade.end(),
+#else
+                //gcc complains about no appropriate ctor - not sure why it needs a ctor for parallel sorting??
+                std::sort(cascade.begin(), cascade.end(),
+#endif
 #else
         for (auto& cascade : drawList)
         {
