@@ -301,15 +301,20 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             /*case cro::GameController::DPadUp:
                 m_input.buttonFlags |= Input::Flags::Forward;
                 break;
-            case cro::GameController::DPadDown:
-                m_input.buttonFlags |= Input::Flags::Backward;
-                break;
             case cro::GameController::DPadLeft:
                 m_input.buttonFlags |= Input::Flags::Left;
                 break;
             case cro::GameController::DPadRight:
                 m_input.buttonFlags |= Input::Flags::Right;
                 break;*/
+            case cro::GameController::DPadDown:
+                //m_input.buttonFlags |= Input::Flags::Backward;
+            {
+                auto* msg = postMessage<SceneEvent>(cl::MessageID::SceneMessage);
+                msg->type = SceneEvent::RequestToggleFreecam;
+                msg->data = evt.cbutton.button;
+            }
+                break;
             case cro::GameController::ButtonRightShoulder:
                 m_input.buttonFlags |= Input::Flags::ZoomIn;
                 break;
@@ -348,11 +353,12 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
                 m_input.buttonFlags &= ~Input::Flags::Walk;
                 break;
             case cro::GameController::DPadDown:
-            {
+                //moved to button down
+            /*{
                 auto* msg = postMessage<SceneEvent>(cl::MessageID::SceneMessage);
                 msg->type = SceneEvent::RequestToggleFreecam;
                 msg->data = evt.cbutton.button;
-            }
+            }*/
                 break;
             /*case cro::GameController::DPadUp:
                 m_input.buttonFlags &= ~Input::Flags::Forward;

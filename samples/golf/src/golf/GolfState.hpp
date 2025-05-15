@@ -74,7 +74,7 @@ source distribution.
 //#define PATH_TRACING
 #endif
 
-static constexpr std::uint32_t MaxCascades = 4; //actual value is 1 less this - see ShadowQuality::update()
+static constexpr std::uint32_t MaxCascades = 3; //actual value is 1 less this - see ShadowQuality::update()
 static constexpr float MaxShadowFarDistance = 150.f;
 static constexpr float MaxShadowNearDistance = 90.f;
 
@@ -415,7 +415,7 @@ private:
 
         void update(bool hq)
         {
-            cascadeCount = hq ? 3 : 1;
+            cascadeCount = hq ? MaxCascades - 1 : 1;
             float divisor = static_cast<float>(std::pow((MaxCascades - cascadeCount), 2)); //cascade sizes are exponential
             shadowNearDistance = 90.f / divisor;
             shadowFarDistance = 150.f / divisor;
