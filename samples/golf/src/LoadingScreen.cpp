@@ -52,7 +52,7 @@ source distribution.
 
 namespace
 {
-    const std::array<std::string, 10u> TipStrings =
+    const std::array<std::string, 11u> TipStrings =
     {
         std::string("Tip: Click on an opponent's name in the League Browser to change it"),
         "Did You Know: Before golf tees players would shape mounds of sand and place the golf ball on top",
@@ -63,7 +63,8 @@ namespace
         "Tip: Make sure to spend some time on the Driving Range, to really learn your clubs",
         "Did You Know: There are playable arcade games waiting to be discovered in the Clubhouse",
         "Tip: Upgrade your gear at the Clubhouse Equipment Counter",
-        "Did You Know: You can assign your gear upgrades in the Profile Editor"
+        "Did You Know: You can find a full break down of your stats on the rightmost tab\nof the Options menu",
+        "Tip: You can assign your gear upgrades in the Profile Editor"
     };
     std::size_t stringIndex = cro::Util::Random::value(0u, TipStrings.size() - 1);
 

@@ -175,6 +175,19 @@ static constexpr glm::uvec2 FlagTextureSize(336u, 240u);
 static constexpr std::uint32_t ShadowMapLow = 2048;
 static constexpr std::uint32_t ShadowMapHigh = 3072;
 
+inline std::uint32_t getShadowResolution(const SharedStateData& sd)
+{
+    if (sd.nightTime)
+    {
+        if (Social::isSteamdeck())
+        {
+            return sd.hqShadows ? ShadowMapHigh / 2 : ShadowMapLow / 2;
+        }
+        return sd.hqShadows ? ShadowMapHigh : ShadowMapLow;
+    }
+    return sd.hqShadows ? ShadowMapHigh : ShadowMapLow;
+}
+
 class btVector3;
 glm::vec3 btToGlm(btVector3 v);
 btVector3 glmToBt(glm::vec3 v);

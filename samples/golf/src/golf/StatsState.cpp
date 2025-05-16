@@ -776,7 +776,7 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         };
     };
 
-    auto playerLevel = Social::getLevel();
+    //auto playerLevel = Social::getLevel();
     auto clubFlags = Social::getUnlockStatus(Social::UnlockType::Club);
 
     const auto createStat = [&](std::int32_t clubID)

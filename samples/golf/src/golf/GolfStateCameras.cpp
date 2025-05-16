@@ -212,7 +212,7 @@ void GolfState::createCameras()
     updateView(cam);
 
     static constexpr std::uint32_t ReflectionMapSize = 1024u;
-    const std::uint32_t ShadowMapSize = m_sharedData.hqShadows ? ShadowMapHigh : ShadowMapLow;
+    const std::uint32_t ShadowMapSize = getShadowResolution(m_sharedData);
 
     //used by transition callback to interp camera
     camEnt.addComponent<TargetInfo>().waterPlane = m_waterEnt;
@@ -955,7 +955,7 @@ void GolfState::applyShadowQuality()
     auto applyShadowSettings =
         [&](cro::Camera& cam, std::int32_t camID)
         {
-            std::uint32_t shadowMapSize = m_sharedData.hqShadows ? ShadowMapHigh : ShadowMapLow;
+            std::uint32_t shadowMapSize = getShadowResolution(m_sharedData);
             if (camID == CameraID::Sky
                 || camID == CameraID::Drone)
             {
