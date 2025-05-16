@@ -222,6 +222,11 @@ AchievementImage DefaultAchievements::getIcon(const std::string& name) const
 
 void DefaultAchievements::setStat(const std::string& name, std::int32_t value)
 {
+    setStat(name, static_cast<float>(value));
+}
+
+void DefaultAchievements::setStat(const std::string& name, float value)
+{
     if (m_stats.count(name) != 0)
     {
         CRO_ASSERT(m_stats[name].id > -1, "");
@@ -229,8 +234,12 @@ void DefaultAchievements::setStat(const std::string& name, std::int32_t value)
         //LOG("Set stat " + name + " to " + std::to_string(value), cro::Logger::Type::Info);
 
         auto& stat = m_stats[name];
-        stat.value = static_cast<float>(value);
+        stat.value = value;
         syncStat(stat);
+    }
+    else
+    {
+        LogI << name << ": stat not found" << std::endl;
     }
 }
 

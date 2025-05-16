@@ -656,10 +656,10 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "beauchamp_played",
     "unreal_best",
     "beauchamp_best",
-    "st_average_drive",
-    "st_longest_drive",
-    "st_average_putt",
-    "st_longest_putt"
+    "average_drive",
+    "longest_drive",
+    "average_putt",
+    "longest_putt"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =

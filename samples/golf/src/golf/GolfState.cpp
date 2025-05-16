@@ -5663,41 +5663,43 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
                 if (su.client == m_sharedData.localConnectionData.connectionID)
                 {
-                    if (getClub() == ClubID::Putter)
+                    if (su.strokeDistance > 0)
                     {
-                        Achievements::incrementStat(StatStrings[StatID::PuttDistance], su.strokeDistance);
+                        if (getClub() == ClubID::Putter)
+                        {
+                            Achievements::incrementStat(StatStrings[StatID::PuttDistance], su.strokeDistance);
 
-                        //hmm we want to track longest putt, but only if it goes in the hole
-                        //if (m_currentPlayer.terrain == TerrainID::Hole)
-                        {
-                            //LogI << cro::FileSystem::getFileName(__FILE__) << ", " << __LINE__ << " Putt of " << su.strokeDistance << std::endl;
-                            const auto stat = Achievements::getStat(StatStrings[StatID::LongestPutt])->value;
-                            if (su.strokeDistance > stat)
+                            //hmm we want to track longest putt, but only if it goes in the hole
+                            //if (m_currentPlayer.terrain == TerrainID::Hole)
                             {
-                                Achievements::setStat(StatStrings[StatID::LongestPutt], su.strokeDistance);
+                                //LogI << cro::FileSystem::getFileName(__FILE__) << ", " << __LINE__ << " Putt of " << su.strokeDistance << std::endl;
+                                const auto stat = Achievements::getStat(StatStrings[StatID::LongestPutt])->value;
+                                if (su.strokeDistance > stat)
+                                {
+                                    Achievements::setStat(StatStrings[StatID::LongestPutt], su.strokeDistance);
+                                }
+                                Achievements::setAvgStat(StatStrings[StatID::AveragePutt], su.strokeDistance, 1.f);
                             }
-                            Achievements::setAvgStat(StatStrings[StatID::AveragePutt], su.strokeDistance, 1.f);
-                        }
-                        /*else
-                        {
-                            LogI << "Terrain: " << (int)m_currentPlayer.terrain << std::endl;
-                        }*/
-                    }
-                    else
-                    {
-                        Achievements::incrementStat(StatStrings[StatID::StrokeDistance], su.strokeDistance);
-                        if (getClub() < ClubID::NineIron)
-                        {
-                            //track rolling average and longest drive
-                            const auto stat = Achievements::getStat(StatStrings[StatID::LongestDrive])->value;
-                            if (su.strokeDistance > stat)
+                            /*else
                             {
-                                Achievements::setStat(StatStrings[StatID::LongestDrive], su.strokeDistance);
+                                LogI << "Terrain: " << (int)m_currentPlayer.terrain << std::endl;
+                            }*/
+                        }
+                        else
+                        {
+                            Achievements::incrementStat(StatStrings[StatID::StrokeDistance], su.strokeDistance);
+                            if (getClub() < ClubID::FourIron)
+                            {
+                                //track rolling average and longest drive
+                                const auto stat = Achievements::getStat(StatStrings[StatID::LongestDrive])->value;
+                                if (su.strokeDistance > stat)
+                                {
+                                    Achievements::setStat(StatStrings[StatID::LongestDrive], su.strokeDistance);
+                                }
+                                Achievements::setAvgStat(StatStrings[StatID::AverageDrive], su.strokeDistance, 1.f);
                             }
-                            Achievements::setAvgStat(StatStrings[StatID::AverageDrive], su.strokeDistance, 1.f);
                         }
                     }
-
                     m_personalBests[su.player][su.hole].hole = su.hole;
                     m_personalBests[su.player][su.hole].course = m_courseIndex;
                     m_personalBests[su.player][su.hole].score = su.stroke;
