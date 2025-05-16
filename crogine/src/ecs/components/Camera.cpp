@@ -333,8 +333,8 @@ glm::vec3 Camera::pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize) 
 //private
 void Camera::updateFrustumCorners(std::size_t numSplits)
 {
-    float tanHalfFOVY = std::tan(m_verticalFOV / 2.f);
-    float tanHalfFOVX = std::tan((m_verticalFOV * m_aspectRatio) / 2.f);
+    const float tanHalfFOVY = std::tan(m_verticalFOV / 2.f);
+    const float tanHalfFOVX = std::tan((m_verticalFOV * m_aspectRatio) / 2.f);
 
     float xNear = (m_nearPlane * tanHalfFOVX);
     float xFar = (m_farPlane * tanHalfFOVX);
@@ -367,8 +367,8 @@ void Camera::updateFrustumCorners(std::size_t numSplits)
     farPlanes[numSplits] = lastFar;
     for (auto i = numSplits - 1; i > 0; i--)
     {
-        offset /= 3.f;
-        lastFar -= (offset * 2.f);
+        offset /= 4.f;
+        lastFar -= (offset * 3.f);
         farPlanes[i] = lastFar;
     }
     farPlanes[0] = m_nearPlane;

@@ -573,6 +573,14 @@ void FrustumState::createUI()
                 const auto& splits = m_entities[EntityID::Camera].getComponent<cro::Camera>().getSplitDistances();
                 //ImGui::Text("Splits: %3.3f, %3.3f, %3.3f", splits[0], splits[1], splits[2]);
                 
+                const auto dist = m_entities[EntityID::Camera].getComponent<cro::Camera>().getSplitDistances();
+                ImGui::Text("Splits:");
+                for (const auto s : dist)
+                {
+                    ImGui::SameLine();
+                    ImGui::Text("%3.3f", s);
+                }
+
                 if (ImGui::InputInt("Cascades", &CascadeCount))
                 {
                     CascadeCount = std::min(3, std::max(1, CascadeCount));
