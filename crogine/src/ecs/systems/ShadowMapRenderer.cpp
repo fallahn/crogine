@@ -322,10 +322,10 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
         //TODO if useCount exceeds available texture count, increase textures
         const auto count = m_bufferResources[camera.shadowMapBuffer.m_resourceIndex].useCount;
-        if (count > 1)
+        /*if (count > 1)
         {
             LogW << "Use count for depth tex is " << count << std::endl;
-        }
+        }*/
 
 
         //store the results here to use in frustum culling
@@ -679,7 +679,7 @@ void ShadowMapRenderer::render()
                     || m_blurBuffer.getSize().y < passSize.y)
                 {
                     m_blurBuffer.create(passSize.x, passSize.y);
-                    LogI << "Resized blur buffer" << std::endl;
+                    //LogI << "Resized blur buffer" << std::endl;
                 }
                 //we create the internal buffer to the largest shadow map
                 //we encounter - so we may also have smaller ones which render

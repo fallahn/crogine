@@ -253,6 +253,11 @@ namespace StatID
         UnrealBest,
         BeauchampBest,
 
+        AverageDrive,
+        LongestDrive,
+        AveragePutt,
+        LongestPutt,
+
         Count
     };
     static_assert(Count <= 64, "Count exceeds maximum number of stats");

@@ -412,9 +412,9 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Finish 9 holes on a full size course with less than 15m in Nearest the Pin", false),
     std::make_pair("Finish 18 holes on a full size course with less than 15m in Nearest the Pin", false),
     std::make_pair("Take at least one screenshot on each course using freecam", false),
-    std::make_pair("Come first in any Career league round using the Novice clubs", false),
-    std::make_pair("Come first in any Career league round using the Expert clubs", false),
-    std::make_pair("Come first in any Career league round using the Pro clubs", false),
+    std::make_pair("Come first in any Career league round on Casual difficulty", false),
+    std::make_pair("Come first in any Career league round on Expert difficulty", false),
+    std::make_pair("Come first in any Career league round on Pro difficulty", false),
     std::make_pair("Hole out with a Punch shot", false),
     std::make_pair("Hole out with a Flop shot", false),
     std::make_pair("Sink a hole from the fringe using a putter", false),
@@ -423,12 +423,12 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Win a round of Nearest The Pin+ with at least 4 players", false),
     std::make_pair("Scrub 40 balls in a single round of Scrub!", false),
     std::make_pair("Play a random 9 holes in Quick Play", false),
-    std::make_pair("Come first in a Quick Play round using Novice clubs", false),
+    std::make_pair("Come first in a Quick Play round using Casual clubs", false),
     std::make_pair("Come first in a Quick Play round using Expert clubs", false),
     std::make_pair("Come first in a Quick Play round using Pro clubs", false),
     std::make_pair("Come first in the Dagle-Bunnage Cup", false),
     std::make_pair("Come first in the Sammonfield Championship", false),
-    std::make_pair("Win a tournament using only the Novice clubs", false),
+    std::make_pair("Win a tournament using only the Casual clubs", false),
     std::make_pair("Win a tournament using only the Expert clubs", false),
     std::make_pair("Win a tournament using only the Pro clubs", false),
     std::make_pair("Complete the tutorial early with a chip-in", false),
@@ -656,6 +656,10 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "beauchamp_played",
     "unreal_best",
     "beauchamp_best",
+    "st_average_drive",
+    "st_longest_drive",
+    "st_average_putt",
+    "st_longest_putt"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -712,6 +716,10 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Number Of Times The Sammonfield Championship Was Played",
     "Best Position In The Dagle-Bunnage Cup",
     "Best Position In The Sammonfield Championship",
+    "Average Drive Distance (metres)",
+    "Longest Drive Distance (metres)",
+    "Average Putt Distance (metres)",
+    "Longest Putt Distance (metres)"
 };
 
 struct StatType final
@@ -777,6 +785,11 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
     StatType::Integer,
+
+    StatType::Float,
+    StatType::Float,
+    StatType::Float,
+    StatType::Float,
 };
 
 struct StatTrigger final
