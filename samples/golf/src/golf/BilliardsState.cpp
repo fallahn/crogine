@@ -311,10 +311,6 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             spawnSnail();
             break;
 #else
-        case SDLK_KP_1:
-        case SDLK_1:
-            toggleOverhead();
-            break;
 #endif
         
         case SDLK_KP_5:

@@ -82,6 +82,8 @@ void GolfState::createCameras()
     //        ImGui::End();
     //    });
 
+    m_shadowQuality.update(m_sharedData.hqShadows);
+
     //update the 3D view - applied on player cam and transition cam
     auto updateView = [&](cro::Camera& cam)
         {

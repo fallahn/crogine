@@ -413,9 +413,9 @@ private:
         void update(bool hq)
         {
             cascadeCount = getCascadeCount(hq);
-            float divisor = static_cast<float>(std::pow((MaxCascades - cascadeCount), 4)); //cascade sizes are exponential
-            shadowNearDistance = 90.f / divisor;
-            shadowFarDistance = 150.f / divisor;
+            float divisor = static_cast<float>(std::pow((MaxCascades - cascadeCount), 2)); //cascade sizes are exponential
+            shadowNearDistance = (90.f / divisor);// / cascadeCount;
+            shadowFarDistance = (150.f / divisor);// / cascadeCount;
         }
     }m_shadowQuality;
 

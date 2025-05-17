@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -367,8 +367,8 @@ void Camera::updateFrustumCorners(std::size_t numSplits)
     farPlanes[numSplits] = lastFar;
     for (auto i = numSplits - 1; i > 0; i--)
     {
-        offset /= 4.f;
-        lastFar -= (offset * 3.f);
+        offset /= 3.f;
+        lastFar -= (offset * 2.f);
         farPlanes[i] = lastFar;
     }
     farPlanes[0] = m_nearPlane;

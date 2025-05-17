@@ -912,15 +912,16 @@ bool GolfState::handleEvent(const cro::Event& evt)
             msg->level = 19;
         }
             break;
-        /*case SDLK_KP_7: //taken over by emote quick key
+        case SDLK_KP_7: //taken over by emote quick key
         {
-            auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+            cro::App::getInstance().resetFrameTime();
+            /*auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
             msg2->type = GolfEvent::BirdHit;
             msg2->position = m_currentPlayer.position;
             float rot = glm::eulerAngles(m_cameras[m_currentCamera].getComponent<cro::Transform>().getWorldRotation()).y;
-            msg2->travelDistance = rot;
+            msg2->travelDistance = rot;*/
         }
-            break;*/
+            break;
             //used in font smoothing debug GolfGame.cpp
         /*case SDLK_KP_MULTIPLY:
         {
