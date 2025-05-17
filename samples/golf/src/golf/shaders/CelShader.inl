@@ -584,7 +584,7 @@ static inline const std::string CelFragmentShader = R"(
 
 //shows cascade boundries
 #if defined(SHOW_CASCADES)
-        vec3 Colours[MAX_CASCADES] = vec3[MAX_CASCADES](vec3(0.2,0.0,0.0), vec3(0.0,0.2,0.0),vec3(0.0,0.0,0.2));
+        vec3 Colours[MAX_CASCADES] = vec3[MAX_CASCADES](vec3(0.1,0.0,0.0), vec3(0.0,0.1,0.0),vec3(0.0,0.0,0.1));
         FRAG_OUT.rgb += Colours[cascadeIndex];
         for(int i = 0; i < u_cascadeCount; ++i)
         {

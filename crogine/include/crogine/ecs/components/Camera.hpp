@@ -433,12 +433,13 @@ namespace cro
         //DepthTexture shadowMapBuffer;
         struct ShadowMapBuffer final
         {
+        public:
             /*!
             \brief Used by ShadowMapRenderer to assign a depthmap texture so
             that it can be recycled between multiple cameras
+            NOTE layers is ignored and read directly from Camera::getCascadeCount()
+            and left here only for backwards compatibility (ie I'm lazy)
             */
-        public:
-            //NOTE layers is ignore in favour of Camera::getCascadeCount()
             void create(std::uint32_t width, std::uint32_t height, std::uint32_t layers = 1)
             {
                 m_size = { width, height };
