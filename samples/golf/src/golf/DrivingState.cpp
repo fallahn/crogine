@@ -1941,7 +1941,6 @@ void DrivingState::createScene()
 
     static constexpr std::uint32_t ShadowMapSize = 2048u;
     auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.setLabel("Player");
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.resizeCallback = updateView;
@@ -2040,7 +2039,6 @@ void DrivingState::createScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
-    camEnt.setLabel("Overhead");
     camEnt.addComponent<cro::Transform>().setPosition({ RangeSize.x / 3.f, SkyCamHeight, 10.f });
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [&, camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
@@ -2069,7 +2067,6 @@ void DrivingState::createScene()
 
     //and a green camera
     camEnt = m_gameScene.createEntity();
-    camEnt.setLabel("Green");
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [&,camEnt](cro::Camera& cam)
@@ -2095,7 +2092,6 @@ void DrivingState::createScene()
 
     //idle cam when player AFKs
     camEnt = m_gameScene.createEntity();
-    camEnt.setLabel("AFK");
     camEnt.addComponent<cro::Transform>().setPosition(PlayerPosition + glm::vec3(0.f, 2.f, 5.f));
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [&, camEnt](cro::Camera& cam)
@@ -2161,15 +2157,6 @@ void DrivingState::createScene()
     auto sunEnt = m_gameScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -65.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -15.f * cro::Util::Const::degToRad);
-
-
-    for (auto cam : m_cameras)
-    {
-        if (cam.isValid())
-        {
-            cam.getComponent<cro::Camera>().active = false;
-        }
-    }
 
     //we only want these to happen if the scene creation was successful
     createUI();

@@ -204,7 +204,7 @@ int getCascadeIndex()
             return min(u_cascadeCount - 1, i);
         }
     }
-    u_cascadeCount - 1;//return 0;//
+    return 0;//u_cascadeCount - 1;//
 }
 )";
 
