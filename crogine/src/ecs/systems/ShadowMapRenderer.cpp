@@ -113,6 +113,8 @@ void main()
     std::uint32_t intervalCounter = 0;
 
     constexpr float CascadeOverlap = 0.5f;
+
+    std::int32_t renderCount = 0;
 }
 
 ShadowMapRenderer::ShadowMapRenderer(MessageBus& mb)
@@ -169,6 +171,7 @@ ShadowMapRenderer::ShadowMapRenderer(MessageBus& mb)
                     ImGui::Text("Not Used");
                 }
             }
+            ImGui::Text("Render Count: %d", renderCount);
 
             ImGui::End();
         });
@@ -260,15 +263,22 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             //mark the buffer as having its refcount changed - in process we use this to
             //see if we should garbage collect any textures which are now not referenced
             m_bufferResources[dmap.m_resourceIndex].gc = true;
+
+#ifndef GL41
+            dmap.m_textureViews.clear();
+#endif
         }
+
+        const auto layerCount = camera.getCascadeCount();
+        dmap.m_layers = layerCount; //set this so that it returns the correct value from getLayerCount()
 
         //search the resource to see if we have and existing buffer we can use
         auto res = std::find_if(m_bufferResources.begin(), m_bufferResources.end(), 
-            [&dmap](const BufferResource& br)
+            [&dmap, layerCount](const BufferResource& br)
             {
                 return br.depthTexture 
                     && br.depthTexture->getSize() == dmap.m_size 
-                    && br.depthTexture->getLayerCount() == dmap.m_layers;
+                    && br.depthTexture->getLayerCount() == layerCount;
             });
 
         std::int32_t index = -1;
@@ -279,7 +289,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             m_bufferIndices.pop_back();
 
             m_bufferResources[index].depthTexture = std::make_unique<DepthTexture>(false);
-            m_bufferResources[index].depthTexture->create(dmap.m_size.x, dmap.m_size.y, dmap.m_layers);
+            m_bufferResources[index].depthTexture->create(dmap.m_size.x, dmap.m_size.y, layerCount);
         }
         else
         {
@@ -291,6 +301,13 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         {
             m_bufferResources[index].refcount++;
             dmap.m_textureID = m_bufferResources[index].depthTexture->getTexture();
+
+#ifndef GL41
+            for (auto i = 0u; i < layerCount; ++i)
+            {
+                dmap.m_textureViews.push_back(m_bufferResources[index].depthTexture->getTexture(i));
+            }
+#endif
         }
         dmap.m_resourceIndex = index; //assign this anyway if we didn't get one so we don't try rendering to it
         dmap.m_dirty = false;
@@ -533,6 +550,10 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 //private
 void ShadowMapRenderer::render()
 {
+#ifdef CRO_DEBUG_
+    renderCount = 0;
+#endif
+
     for (auto c = 0u; c < m_activeCameras.size(); c++)
     {
         auto& camera = m_activeCameras[c].getComponent<Camera>();
@@ -634,6 +655,9 @@ void ShadowMapRenderer::render()
 
 #ifdef PLATFORM_DESKTOP
                     model.draw(i, Mesh::IndexData::Shadow);
+#ifdef CRO_DEBUG_
+                    renderCount++;
+#endif
 #else
                     //bind attribs
                     const auto& attribs = mat.attribs;

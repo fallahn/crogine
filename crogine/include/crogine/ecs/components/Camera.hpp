@@ -438,10 +438,13 @@ namespace cro
             that it can be recycled between multiple cameras
             */
         public:
+            //NOTE layers is ignore in favour of Camera::getCascadeCount()
             void create(std::uint32_t width, std::uint32_t height, std::uint32_t layers = 1)
             {
                 m_size = { width, height };
-                m_layers = layers;
+                //this is actually set by the ShadowMap renderer based on the camera's cascade count
+                //we've left  the func param for compatibility
+                //m_layers = layers; 
                 m_dirty = true;
             }
 
@@ -449,9 +452,20 @@ namespace cro
             const TextureID& getTexture() const { return m_textureID; }
             std::uint32_t getLayerCount() const { return m_layers; }
             glm::uvec2 getSize() const { return m_size; }
+
+#ifndef GL41
+            TextureID getTexture(std::size_t i) const
+            {
+                return i < m_textureViews.size() ? m_textureViews[i] : TextureID(0);
+            }
+#endif
         private:
             friend class ShadowMapRenderer;
             friend class ModelRenderer;
+
+#ifndef GL41
+            std::vector<TextureID> m_textureViews;
+#endif
 
             TextureID m_textureID;
             glm::uvec2 m_size = glm::uvec2(0);

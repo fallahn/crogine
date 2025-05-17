@@ -244,6 +244,31 @@ void main()
         glm::vec3 targetPos = glm::vec3(0.f);
         static constexpr float MaxDepth = 3.f;
     };
+
+    float getMaxShadowDistance(std::int32_t camID, bool hq)
+    {
+        if (hq)
+        {
+            switch (camID)
+            {
+            default: return 80.f;
+            case CameraID::Player: return 40.f;
+            case CameraID::Idle: return 40.f;
+            case CameraID::Green: return 55.f; //50.f
+            }
+        }
+        else
+        {
+            switch (camID)
+            {
+            default: return 80.f;
+            case CameraID::Player: return 20.f;
+            case CameraID::Idle: return 15.f;
+            case CameraID::Green: return 15.f;
+            }
+        }
+        return 80.f;
+    }
 }
 
 DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, const SharedProfileData& sp)
@@ -377,6 +402,10 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 {
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
+        if (evt.type == SDL_MOUSEMOTION)
+        {
+            cro::App::getWindow().setMouseCaptured(false);
+        }
         return true;
     }
 
@@ -1104,7 +1133,6 @@ void DrivingState::addSystems()
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
-    //m_gameScene.getSystem<cro::ShadowMapRenderer>()->setNumCascades(1);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
@@ -1907,18 +1935,19 @@ void DrivingState::createScene()
         d.resolution = texSize / invScale;
         m_resolutionBuffer.setData(d);
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 320.f, 3);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 320.f, getCascadeCount(m_sharedData.hqShadows));
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
     static constexpr std::uint32_t ShadowMapSize = 2048u;
     auto camEnt = m_gameScene.getActiveCamera();
+    camEnt.setLabel("Player");
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.resizeCallback = updateView;
     updateView(cam);
 
-    cam.setMaxShadowDistance(40.f);
+    cam.setMaxShadowDistance(getMaxShadowDistance(CameraID::Player, m_sharedData.hqShadows));
     cam.setShadowExpansion(30.f);
     cam.setBlurPassCount(1);
     cam.setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
@@ -2007,10 +2036,11 @@ void DrivingState::createScene()
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, 320.f);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, 320.f, getCascadeCount(m_sharedData.hqShadows));
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
+    camEnt.setLabel("Overhead");
     camEnt.addComponent<cro::Transform>().setPosition({ RangeSize.x / 3.f, SkyCamHeight, 10.f });
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [&, camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
@@ -2018,7 +2048,7 @@ void DrivingState::createScene()
         const float farPlane = static_cast<float>(RangeSize.y) * 2.5f;
 
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, farPlane, 2);
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, farPlane, getCascadeCount(m_sharedData.hqShadows));
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     
@@ -2039,18 +2069,19 @@ void DrivingState::createScene()
 
     //and a green camera
     camEnt = m_gameScene.createEntity();
+    camEnt.setLabel("Green");
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [&,camEnt](cro::Camera& cam)
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov* cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x, 2);
+        cam.setPerspective((m_sharedData.fov* cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x, getCascadeCount(m_sharedData.hqShadows));
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     setPerspective(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
-    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(50.f);
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(getMaxShadowDistance(CameraID::Green, m_sharedData.hqShadows));
     camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
@@ -2064,6 +2095,7 @@ void DrivingState::createScene()
 
     //idle cam when player AFKs
     camEnt = m_gameScene.createEntity();
+    camEnt.setLabel("AFK");
     camEnt.addComponent<cro::Transform>().setPosition(PlayerPosition + glm::vec3(0.f, 2.f, 5.f));
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [&, camEnt](cro::Camera& cam)
@@ -2074,14 +2106,14 @@ void DrivingState::createScene()
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
         cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * zoomFOV * 0.7f,
             vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f,
-            2);
+            getCascadeCount(m_sharedData.hqShadows));
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     setPerspective(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
-    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(/*20.f*/40.f);
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(getMaxShadowDistance(CameraID::Idle, m_sharedData.hqShadows));
     camEnt.getComponent<cro::Camera>().setShadowExpansion(50.f);
     camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     camEnt.addComponent<cro::AudioListener>();
@@ -2112,10 +2144,11 @@ void DrivingState::createScene()
 
 #ifdef CRO_DEBUG_
     camEnt = m_gameScene.createEntity();
+    camEnt.setLabel("Free Cam");
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = updateView;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
-    //camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
+    camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<FpsCamera>();
     updateView(camEnt.getComponent<cro::Camera>());
@@ -2129,6 +2162,14 @@ void DrivingState::createScene()
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -65.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -15.f * cro::Util::Const::degToRad);
 
+
+    for (auto cam : m_cameras)
+    {
+        if (cam.isValid())
+        {
+            cam.getComponent<cro::Camera>().active = false;
+        }
+    }
 
     //we only want these to happen if the scene creation was successful
     createUI();

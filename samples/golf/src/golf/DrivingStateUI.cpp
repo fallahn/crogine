@@ -216,6 +216,37 @@ namespace
 
 void DrivingState::createUI()
 {
+#ifdef CRO_DEBUG_
+    registerWindow(
+        [&]() mutable
+        {
+            ImGui::Begin("Camera");
+            static const std::array<std::string, CameraID::Count> CamStrings =
+            {
+                "Player", "Bystander", "Sky", "Green",
+                "Transition", "Idle", "Drone",
+            };
+            ImGui::Text("%s", CamStrings[m_currentCamera].c_str());
+
+            auto& cam = m_cameras[m_currentCamera].getComponent<cro::Camera>();
+            auto shadowDist = cam.getMaxShadowDistance();
+            if (ImGui::SliderFloat("Distance", &shadowDist, 10.f, cam.getFarPlane()))
+            {
+                cam.setMaxShadowDistance(shadowDist);
+            }
+
+            for (auto i = 0u; i < cam.getCascadeCount(); ++i)
+            {
+                ImGui::Image(cam.shadowMapBuffer.getTexture(i), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::SameLine();
+            }
+            ImGui::NewLine();
+
+
+            ImGui::End();
+        });
+#endif
+
     //displays the game scene
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();

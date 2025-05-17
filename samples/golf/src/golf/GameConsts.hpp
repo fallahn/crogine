@@ -175,6 +175,10 @@ static constexpr glm::uvec2 FlagTextureSize(336u, 240u);
 static constexpr std::uint32_t ShadowMapLow = 2048;
 static constexpr std::uint32_t ShadowMapHigh = 3072;
 
+static constexpr std::uint32_t MaxCascades = 3; //actual value is 1 less this
+static constexpr float MaxShadowFarDistance = 150.f;
+static constexpr float MaxShadowNearDistance = 90.f;
+
 inline std::uint32_t getShadowResolution(const SharedStateData& sd)
 {
     if (sd.nightTime)
@@ -186,6 +190,11 @@ inline std::uint32_t getShadowResolution(const SharedStateData& sd)
         return sd.hqShadows ? ShadowMapHigh : ShadowMapLow;
     }
     return sd.hqShadows ? ShadowMapHigh : ShadowMapLow;
+}
+
+inline std::uint32_t getCascadeCount(bool hq)
+{
+    return hq ? MaxCascades - 1 : 1;
 }
 
 class btVector3;
