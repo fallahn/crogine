@@ -454,19 +454,15 @@ namespace cro
             std::uint32_t getLayerCount() const { return m_layers; }
             glm::uvec2 getSize() const { return m_size; }
 
-#ifndef GL41
             TextureID getTexture(std::size_t i) const
             {
                 return i < m_textureViews.size() ? m_textureViews[i] : TextureID(0);
             }
-#endif
         private:
             friend class ShadowMapRenderer;
             friend class ModelRenderer;
 
-#ifndef GL41
             std::vector<TextureID> m_textureViews;
-#endif
 
             TextureID m_textureID;
             glm::uvec2 m_size = glm::uvec2(0);
