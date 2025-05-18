@@ -7154,7 +7154,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         }
 
         //set just far enough the flag shows in the distance
-        m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
+        m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.getMaxDistance(CameraID::Player));
 
 
         //update the position of the bystander camera
@@ -7221,7 +7221,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         m_activeAvatar->model.getComponent<cro::Model>().setHidden(true);
 
         //and use closer shadow mapping
-        m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowNearDistance);
+        m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.getMaxDistance(CameraID::Player));
     }
     setActiveCamera(CameraID::Player);
 
