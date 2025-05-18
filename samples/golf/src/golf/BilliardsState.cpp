@@ -842,7 +842,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.8f * (spectateOffset / 1.6f), spectateOffset});
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
-    camEnt.getComponent<CameraProperties>().farPlane = 3.f;// 7.f;
+    camEnt.getComponent<CameraProperties>().farPlane = 7.f;
     m_cameras[CameraID::Spectate] = camEnt;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = setPerspective;
@@ -878,7 +878,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -90.f * cro::Util::Const::degToRad);
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.75f;
-    camEnt.getComponent<CameraProperties>().farPlane = 3.f;// 6.f;
+    camEnt.getComponent<CameraProperties>().farPlane = 6.f;
     setPerspective(camEnt.getComponent<cro::Camera>()); //this needs to be called first to set the far plane and prevent default value clipping MaxShadowDistance
 
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
@@ -895,7 +895,7 @@ void BilliardsState::buildScene()
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
-    camEnt.addComponent<CameraProperties>().farPlane = 3.f;// 7.f;
+    camEnt.addComponent<CameraProperties>().farPlane = 7.f;
     camEnt.getComponent<CameraProperties>().FOVAdjust = 0.8f; //needs to match spectate cam initial value to prevent popping
     setPerspective(camEnt.getComponent<cro::Camera>());
 
@@ -924,7 +924,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -26.7f * cro::Util::Const::degToRad);
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
-    camEnt.getComponent<CameraProperties>().farPlane = 3.f;// 6.f;
+    camEnt.getComponent<CameraProperties>().farPlane = 6.f;
     setPerspective(camEnt.getComponent<cro::Camera>());
 
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
