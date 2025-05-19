@@ -114,6 +114,7 @@ namespace
 #include "shaders/BeaconShader.inl"
 #include "shaders/WaterShader.inl"
 #include "shaders/Glass.inl"
+#include "shaders/ShopItems.inl"
 #include "shaders/ShaderIncludes.inl"
 
 #ifdef CRO_DEBUG_
@@ -1231,6 +1232,10 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::HairGlass,
         cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), GlassFragment, "#define USER_COLOUR\n");
    
+    m_resources.shaders.loadFromString(ShaderID::BallBumped, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), ShopFragment,
+        "#define NO_SUN_COLOUR\n#define VERTEX_COLOUR\n#define BALL_COLOUR\n#define BUMP\n#define TEXTURED\n");
+
+    
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
 
@@ -1260,6 +1265,10 @@ void DrivingState::loadAssets()
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]).setProperty("u_maskMap", m_defaultMaskMap);
+
+    shader = &m_resources.shaders.get(ShaderID::BallBumped);
+    m_materialIDs[MaterialID::BallBumped] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::BallBumped]).setProperty("u_ballColour", cro::Colour::White);
 
     shader = &m_resources.shaders.get(ShaderID::Flag);
     m_resolutionBuffer.addShader(*shader);
@@ -2513,14 +2522,15 @@ void DrivingState::createPlayer()
         return 0;
     };
 
-#ifdef USE_GNS
-    const auto& playerData = m_profileData.playerProfiles[0].playerData; //prefer steam profile
+//#ifdef USE_GNS
+    //always use the default player to that we have a predictable loadout
+    const auto& playerData = m_profileData.playerProfiles[0].playerData;
     m_loadout = &m_profileData.playerProfiles[0].loadout;
-#else
-    auto playerIndex = cro::Util::Random::value(0u, m_profileData.playerProfiles.size() - 1);
-    const auto& playerData = m_profileData.playerProfiles[playerIndex].playerData;
-    m_loadout = &m_profileData.playerProfiles[playerIndex].loadout;
-#endif
+//#else
+//    auto playerIndex = cro::Util::Random::value(0u, m_profileData.playerProfiles.size() - 1);
+//    const auto& playerData = m_profileData.playerProfiles[playerIndex].playerData;
+//    m_loadout = &m_profileData.playerProfiles[playerIndex].loadout;
+//#endif
 
 
     //club models - collect all search paths for club models
@@ -3190,7 +3200,14 @@ void DrivingState::createBall()
     }
     else
     {
-        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+        if (ballDef.getMaterial(0)->properties.count("u_normalMap"))
+        {
+            entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::BallBumped]));
+        }
+        else
+        {
+            entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+        }
     }
     if (entity.getComponent<cro::Model>().getMeshData().submeshCount > 1)
     {

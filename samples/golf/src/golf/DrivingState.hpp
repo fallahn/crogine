@@ -140,6 +140,7 @@ private:
     {
         enum
         {
+            BallBumped,
             Billboard,
             Cel,
             CelSkinned,
