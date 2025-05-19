@@ -40,7 +40,6 @@ source distribution.
 #include "CollisionMesh.hpp"
 #include "LeaderboardTexture.hpp"
 #include "CPUGolfer.hpp"
-#include "TerrainDepthmap.hpp"
 #include "MinimapZoom.hpp"
 #include "BallTrail.hpp"
 #include "TextChat.hpp"
@@ -134,7 +133,6 @@ private:
     cro::Scene m_uiScene;
     cro::Scene m_trophyScene;
     cro::Scene m_mapScene;
-    TerrainDepthmap m_depthMap;
     cro::Texture m_defaultMaskMap;
 
     TextChat m_textChat;

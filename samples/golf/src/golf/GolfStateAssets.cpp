@@ -1548,9 +1548,6 @@ void GolfState::loadMap()
             loadSpectators();
         }
 
-        m_depthMap.setModel(m_holeData[0]);
-        m_depthMap.update(-1);
-
         m_sharedData.minimapData.mapCentre = m_holeData[0].modelEntity.getComponent<cro::Model>().getMeshData().boundingBox.getCentre();
     }
 
@@ -1604,9 +1601,6 @@ void GolfState::loadMap()
         {
             m_currentHole = std::min(holeStrings.size() - 1, std::size_t(holeIndex));
             m_terrainBuilder.applyHoleIndex(m_currentHole);
-
-            m_depthMap.setModel(m_holeData[m_currentHole]);
-            m_depthMap.update(-1);
 
             auto& player = m_sharedData.connectionData[0].playerData[0];
             player.holeScores.swap(scores);
@@ -2181,31 +2175,31 @@ void GolfState::loadMaterials()
     m_minimapZoom.shaderID = shader->getGLHandle();
     m_minimapZoom.matrixUniformID = shader->getUniformID("u_coordMatrix");
 
-    //water
-    std::string waterDefines;
+    //water - this is if we ever get the rain splash pattern working
+    //std::string waterDefines;
     //if (m_sharedData.weatherType == WeatherType::Rain
     //    || m_sharedData.weatherType == WeatherType::Showers)
     //{
     //    waterDefines = "#define RAIN\n";
     //}
 
-    static const std::string DepthConsts = "\nconst float ColCount = " + std::to_string(m_depthMap.getGridCount().x) 
+    /*static const std::string DepthConsts = "\nconst float ColCount = " + std::to_string(m_depthMap.getGridCount().x) 
         + ".0;\nconst float MetresPerTexture = "+ std::to_string(m_depthMap.getMetresPerTile())
         + ".0;\nconst float MaxTiles = "
         + std::to_string(m_depthMap.getTileCount() - 1) + ".0;\n";
-    m_resources.shaders.addInclude("DEPTH_CONSTS", DepthConsts.c_str());
+    m_resources.shaders.addInclude("DEPTH_CONSTS", DepthConsts.c_str());*/
 
-    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define USE_MRT\n" + waterDefines);
+    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define NO_DEPTH\n#define USE_MRT\n"/* + waterDefines*/);
     shader = &m_resources.shaders.get(ShaderID::Water);
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(*shader);
-    if (!waterDefines.empty())
-    {
-        auto& waterTex = m_resources.textures.get("assets/golf/images/rain_water.png");
-        m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainTexture", waterTex);
-        m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainAmount", 1.f);
-    }
+    //if (!waterDefines.empty())
+    //{
+    //    auto& waterTex = m_resources.textures.get("assets/golf/images/rain_water.png");
+    //    m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainTexture", waterTex);
+    //    m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainAmount", 1.f);
+    //}
 
  
 

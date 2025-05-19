@@ -129,7 +129,7 @@ uniform sampler2DArray u_depthMap;
     }
 
 #if !defined(NO_DEPTH)
-#include DEPTH_CONSTS
+//#include DEPTH_CONSTS
 
     float getDepth()
     {
