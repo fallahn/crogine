@@ -36,6 +36,7 @@ source distribution.
 #include "PoissonDisk.hpp"
 #include "Career.hpp"
 #include "AvatarRotationSystem.hpp"
+#include "BannerTexture.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
@@ -79,10 +80,6 @@ namespace
 #include "shaders/ShopItems.inl"
 #include "shaders/Hole.inl"
 
-    //NOTE Banner A should be rotated 180 degrees
-    constexpr cro::FloatRect PlaneBannerA = { 12.f, 86.f, 484.f, 66.f };
-    constexpr cro::FloatRect PlaneBannerB = { 12.f, 6.f, 484.f, 66.f };
-    constexpr std::uint32_t BannerTextSize = 16;
     //colour is normal colour with dark shadow
     const std::array BannerStrings =
     {
@@ -2967,7 +2964,6 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
 {
     if (cro::AudioMixer::hasAudioRenderer())
     {
-
         if (m_sharedData.nightTime)
         {
             auto ext = cro::FileSystem::getFileExtension(m_audioPath);
@@ -3088,29 +3084,9 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                         static constexpr std::uint32_t TexSize = 512;
                         m_planeTexture.create(TexSize, TexSize, false);
 
+                        const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
                         const auto tex = cro::TextureID(m->properties.at("u_diffuseMap").second.textureID);
-                        cro::SimpleQuad q;
-                        q.setTexture(tex, { TexSize,TexSize });
-
-                        cro::SimpleText t(m_sharedData.sharedResources->fonts.get(FontID::UI));
-                        t.setCharacterSize(BannerTextSize);
-                        t.setFillColour(TextNormalColour);
-                        t.setShadowColour(LeaderboardTextDark);
-                        t.setShadowOffset({ 2.f, -2.f });
-                        t.setString(BannerStrings[BannerIndex]);
-                        t.setAlignment(cro::SimpleText::Alignment::Centre);
-                        t.setVerticalSpacing(2.f);
-
-                        t.setPosition(glm::vec2(PlaneBannerB.left + (PlaneBannerB.width / 2.f), PlaneBannerB.bottom + (PlaneBannerB.height / 2.f) + (t.getVerticalSpacing() / 2.f)));
-
-                        m_planeTexture.clear(cro::Colour::Transparent);
-                        q.draw();
-                        t.draw();
-                        t.rotate(180.f);
-                        t.move(glm::vec2(0.f, PlaneBannerA.bottom - PlaneBannerB.bottom));
-                        t.move(glm::vec2(0.f, -t.getVerticalSpacing()));
-                        t.draw();
-                        m_planeTexture.display();
+                        updateBannerTexture(font, tex, m_planeTexture, BannerStrings[BannerIndex]);
 
                         material.setProperty("u_diffuseMap", m_planeTexture.getTexture());
                     }

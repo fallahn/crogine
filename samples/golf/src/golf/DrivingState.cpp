@@ -49,6 +49,7 @@ source distribution.
 #include "FloatingTextSystem.hpp"
 #include "CloudSystem.hpp"
 #include "BeaconCallback.hpp"
+#include "BannerTexture.hpp"
 #include "server/ServerMessages.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
@@ -200,6 +201,22 @@ void main()
     static constexpr glm::vec2 BillboardChunk(40.f, 50.f);
     static constexpr std::size_t ChunkCount = 5;
 
+    const std::array BannerStrings =
+    {
+        cro::String("Missed Me!!"),
+        cro::String("Buy Pentworth's\nIndispensible Lube"),
+        cro::String("Also Available In Chartreuse"),
+        cro::String("Honk if you love cilantro"),
+        cro::String("Brilton & Stockley"),
+        cro::String("Space For Rent"),
+        cro::String("Strike it with a Dong"),
+        cro::String("Dannis Always Chips In")
+    };
+
+    //make this static so throughout the duration of the game we
+    //cycle without repetition (until we reach the end)
+    static std::int32_t BannerIndex = cro::Util::Random::value(0, static_cast<std::int32_t>(BannerStrings.size()) - 1);
+
     struct FanData final
     {
         std::int32_t dir = 1;
@@ -289,6 +306,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_currentCamera     (CameraID::Player),
     m_saturationUniform (-1)
 {
+    BannerIndex = (BannerIndex + 1) % BannerStrings.size();
+
     prevBillBox = false;
     noiseTable = cro::Util::Wavetable::noise(2.f, 10.f);
     
@@ -1456,6 +1475,21 @@ void DrivingState::initAudio()
 
                     auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
                     applyMaterialData(md, material);
+
+                    const auto* m = md.getMaterial(0);
+                    if (m->properties.count("u_diffuseMap"))
+                    {
+                        static constexpr std::uint32_t TexSize = 512;
+                        m_planeTexture.create(TexSize, TexSize, false);
+
+                        const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+                        const auto tex = cro::TextureID(m->properties.at("u_diffuseMap").second.textureID);
+                        updateBannerTexture(font, tex, m_planeTexture, BannerStrings[BannerIndex]);
+
+                        material.setProperty("u_diffuseMap", m_planeTexture.getTexture());
+                    }
+                    entity.getComponent<cro::Model>().setMaterial(0, material);
+
                     entity.getComponent<cro::Model>().setMaterial(0, material);
 
                     //engine

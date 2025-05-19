@@ -119,6 +119,7 @@ private:
     cro::RenderTexture m_backgroundTexture;
     cro::CubemapTexture m_reflectionMap;
     cro::Texture m_defaultMaskMap;
+    cro::RenderTexture m_planeTexture;
 
     cro::UniformBuffer<float> m_scaleBuffer;
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
