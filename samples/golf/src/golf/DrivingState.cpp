@@ -1035,6 +1035,18 @@ void DrivingState::handleMessage(const cro::Message& msg)
         {
             forceRestart();
         }
+        else if (data.type == SystemEvent::ShadowQualityChanged)
+        {
+            auto shadowRes = m_sharedData.shadowQuality ? ShadowMapHigh : ShadowMapLow;
+            for (auto i = 0u; i < m_cameras.size(); ++i)
+            {
+                if (m_cameras[i].isValid())
+                {
+                    m_cameras[i].getComponent<cro::Camera>().setMaxShadowDistance(getMaxShadowDistance(i, m_sharedData.shadowQuality));
+                    m_cameras[i].getComponent<cro::Camera>().shadowMapBuffer.create(shadowRes, shadowRes);
+                }
+            }
+        }
     }
         break;
     }
