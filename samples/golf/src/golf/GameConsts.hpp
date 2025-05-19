@@ -175,9 +175,6 @@ static constexpr glm::uvec2 FlagTextureSize(336u, 240u);
 static constexpr std::uint32_t ShadowMapLow = 2048;
 static constexpr std::uint32_t ShadowMapHigh = 3072;
 
-static constexpr std::uint32_t MaxCascades = 3; //actual value is 1 less this
-static constexpr float MaxShadowFarDistance = 150.f;
-static constexpr float MaxShadowNearDistance = 90.f;
 
 inline std::uint32_t getShadowResolution(const SharedStateData& sd)
 {
@@ -192,9 +189,9 @@ inline std::uint32_t getShadowResolution(const SharedStateData& sd)
     return sd.shadowQuality ? ShadowMapHigh : ShadowMapLow;
 }
 
-inline std::uint32_t getCascadeCount(bool hq)
+inline std::uint32_t getCascadeCount(std::int32_t q)
 {
-    return hq ? MaxCascades - 1 : 1;
+    return std::clamp(q + 1, 1, 3);
 }
 
 class btVector3;

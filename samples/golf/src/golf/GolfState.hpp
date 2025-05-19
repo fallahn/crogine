@@ -404,11 +404,12 @@ private:
 
     struct ShadowQuality final
     {
-        std::uint32_t cascadeCount = MaxCascades - 1;
+        std::uint32_t cascadeCount = 1;
 
-        void update(bool hq)
+        void update(std::int32_t q)
         {
-            cascadeCount = getCascadeCount(hq);
+            //somewhat superfluous now, but I'm too lazy to refactor :)
+            cascadeCount = getCascadeCount(q);
         }
 
         float getMaxDistance(std::int32_t camID) const
@@ -434,23 +435,26 @@ private:
             }
             else
             {
-                //TODO extend these by 50% if using 3 cascades in ultra
+                //extend these by 50% if using 3 cascades in ultra
+                float val = 90.f;
                 switch (camID)
                 {
-                default: return 90.f;
+                default: break;;
                 case CameraID::Player:
                 case CameraID::Green:
                 case CameraID::Bystander:
                 case CameraID::Idle:
-                    return 30.f;
+                    val = 30.f;
+                    break;
                 case CameraID::Transition:
                 case CameraID::Sky:
                 case CameraID::Drone:
-                    return 150.f;
+                    val = 150.f;
+                    break;
                 }
+                return val + ((val / 2.f) * (cascadeCount - 1));
             }
         }
-
     }m_shadowQuality;
 
 
