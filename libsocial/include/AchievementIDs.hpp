@@ -257,6 +257,7 @@ namespace StatID
         LongestDrive,
         AveragePutt,
         LongestPutt,
+        LongestChipIn,
 
         Count
     };

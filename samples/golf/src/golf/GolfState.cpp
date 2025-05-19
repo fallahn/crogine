@@ -5376,24 +5376,6 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     //check if this is our own score
                     if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                     {
-                        //just completed the course - moved to showCountdown() as a gimme skips over this
-                        //if (m_currentHole == m_holeData.size() - 1)
-                        //{
-                        //    if (m_currentHole == 17) //full round
-                        //    {
-                        //        auto old = Achievements::getActive();
-                        //        Achievements::setActive(m_allowAchievements);
-                        //        Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
-                        //        Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
-                        //        Achievements::setActive(old);
-                        //    }
-
-                        //    if (m_sharedData.scoreType != ScoreType::Skins)
-                        //    {
-                        //        Social::awardXP(XPValues[XPID::CompleteCourse] / (18 / m_holeData.size()), XPStringID::CourseComplete);
-                        //    }
-                        //}
-
                         //check putt distance / if this was in fact a putt
                         if (getClub() == ClubID::Putter)
                         {
@@ -5430,6 +5412,12 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                                     Achievements::setActive(true);
                                     Achievements::awardAchievement(AchievementStrings[AchievementID::AheadOfTheGame]);
                                     Achievements::setActive(wasActive);
+                                }
+
+                                const float dist = glm::length(m_currentPlayer.position - m_holeData[m_currentHole].pin);
+                                if (dist > Achievements::getStat(StatStrings[StatID::LongestChipIn])->value)
+                                {
+                                    Achievements::setStat(StatStrings[StatID::LongestChipIn], dist);
                                 }
                             }
 

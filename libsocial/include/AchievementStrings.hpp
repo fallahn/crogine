@@ -659,7 +659,8 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "average_drive",
     "longest_drive",
     "average_putt",
-    "longest_putt"
+    "longest_putt",
+    "longest_chip_in"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -719,7 +720,8 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Average Drive Distance (metres)",
     "Longest Drive Distance (metres)",
     "Average Putt Distance (metres)",
-    "Longest Putt Distance (metres)"
+    "Longest Putt Distance (metres)",
+    "Longest Chip-in (metres)"
 };
 
 struct StatType final
@@ -786,6 +788,7 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
 
+    StatType::Float,
     StatType::Float,
     StatType::Float,
     StatType::Float,
