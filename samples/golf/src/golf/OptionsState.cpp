@@ -180,7 +180,7 @@ namespace
 
     const std::array<std::string, 3u> ShadowText =
     {
-        "Low", "High", "Ultra"
+        "Low", "High", "Very High"
     };
 
     //this needs to be here to be accessed by label callback

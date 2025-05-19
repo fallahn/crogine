@@ -1326,6 +1326,7 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::WireframeCulledPoint, WireframeVertex, WireframeFragment, "#define CULLED\n#define POINT_RADIUS\n");
     m_materialIDs[MaterialID::WireframeCulledPoint] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulledPoint));
     m_resources.materials.get(m_materialIDs[MaterialID::WireframeCulledPoint]).blendMode = cro::Material::BlendMode::Alpha;
+    m_scaleBuffer.addShader(m_resources.shaders.get(ShaderID::WireframeCulledPoint));
 
     m_resources.shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define TEXTURED\n");
     m_materialIDs[MaterialID::Beacon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Beacon));
@@ -3140,7 +3141,7 @@ void DrivingState::createBall()
 
     //ball shadow
     auto ballEnt = entity;
-    material = m_resources.materials.get(m_materialIDs[MaterialID::WireframeCulled]);
+    material = m_resources.materials.get(m_materialIDs[MaterialID::WireframeCulledPoint]);
     material.setProperty("u_colour", cro::Colour::White);
     material.blendMode = cro::Material::BlendMode::Multiply;
 
@@ -3202,7 +3203,9 @@ void DrivingState::createBall()
     {
         if (ballDef.getMaterial(0)->properties.count("u_normalMap"))
         {
-            entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::BallBumped]));
+            auto m = m_resources.materials.get(m_materialIDs[MaterialID::BallBumped]);
+            applyMaterialData(ballDef, m);
+            entity.getComponent<cro::Model>().setMaterial(0, m);
         }
         else
         {

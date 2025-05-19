@@ -48,6 +48,10 @@ static inline const std::string WireframeVertex = R"(
     #include RESOLUTION_BUFFER
 //#endif
 
+#if defined (POINT_RADIUS)
+#include SCALE_BUFFER
+#endif
+
 #if defined (HUE)
     uniform float u_colourRotation = 1.0;
     uniform vec4 u_colour = vec4(1.0);
@@ -110,6 +114,10 @@ float far = 15.0;
 #endif
 
         gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
+
+#if defined (POINT_RADIUS)
+        gl_PointSize = u_pixelScale;
+#endif
     }
 )";
 

@@ -184,7 +184,7 @@ inline std::uint32_t getShadowResolution(const SharedStateData& sd)
         {
             return sd.shadowQuality ? ShadowMapHigh / 2 : ShadowMapLow / 2;
         }
-        return sd.shadowQuality ? ShadowMapHigh : ShadowMapLow;
+        return sd.shadowQuality ? ShadowMapLow : ShadowMapLow / 2;
     }
     return sd.shadowQuality ? ShadowMapHigh : ShadowMapLow;
 }

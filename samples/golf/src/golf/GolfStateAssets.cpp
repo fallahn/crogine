@@ -2145,6 +2145,7 @@ void GolfState::loadMaterials()
     m_materialIDs[MaterialID::WireFrameCulledPoint] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulledPoint]).blendMode = cro::Material::BlendMode::Alpha;
     m_resolutionBuffer.addShader(*shader);
+    m_scaleBuffer.addShader(*shader);
 
 
     m_resources.shaders.loadFromString(ShaderID::BallTrail, WireframeVertex, WireframeFragment, "#define HUE\n#define USE_MRT\n");
