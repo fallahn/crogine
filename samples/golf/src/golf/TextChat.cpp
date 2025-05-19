@@ -943,10 +943,11 @@ TextChat::TTSSpeaker::TTSSpeaker()
     m_thread            (&TTSSpeaker::threadFunc, this)
 {
     m_threadRunning = cro::FileSystem::fileExists("flite");
-    //if (!m_threadRunning)
-    //{
-    //    LogW << "flite not found, TTS is unavailable" << std::endl;
-    //}
+    if (!m_threadRunning)
+    {
+        LogW << "flite not found, TTS is unavailable" << std::endl;
+        m_thread.detach();
+    }
     //else
     //{
     //    LogI << "Created TTS" << std::endl;
@@ -965,7 +966,7 @@ TextChat::TTSSpeaker::~TTSSpeaker()
 //public
 void TextChat::TTSSpeaker::say(const cro::String& line, Voice voice) const
 {
-    if (cro::FileSystem::fileExists("flite"))
+    if (/*cro::FileSystem::fileExists("flite")*/m_threadRunning)
     {
         std::scoped_lock l(m_mutex);
         m_queue.push(std::make_pair(line, voice));

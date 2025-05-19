@@ -79,7 +79,7 @@ namespace
     {
         enum
         {
-            GameMode, Quickplay,
+            GameMode, Quickplay, Dummy,
 
             Count
         };
@@ -409,7 +409,10 @@ and All Time best scores.)";
             e.getComponent<cro::Text>().setFillColour(TextNormalColour);
         });
 
-    
+    auto dummyEnt = m_scene.createEntity();
+    dummyEnt.addComponent<cro::Transform>();
+    dummyEnt.addComponent<cro::UIInput>().setGroup(MenuID::Dummy);
+
     auto createItem = [&](glm::vec2 position, const std::string& label, cro::Entity parent) 
     {
         auto e = m_scene.createEntity();
@@ -670,13 +673,15 @@ void FreePlayState::menuShownCallback()
 
     const std::string s = /*m_sharedData.nightTime ? "Night Time: On" :*/ "Night Time: Off";
     m_callbackEntities[CallbackEntID::NightButton].getComponent<cro::Text>().setString(s);
+
+    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GameMode);
 }
 
 void FreePlayState::quitState()
 {
     m_callbackEntities[CallbackEntID::GameMenu].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
     m_callbackEntities[CallbackEntID::QuickPlayMenu].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GameMode);
+    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
 
     m_scene.setSystemActive<cro::UISystem>(false);
 

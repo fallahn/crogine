@@ -565,6 +565,9 @@ void NewsState::buildScene()
                 {
                     auto ent = m_scene.createEntity();
                     ent.addComponent<cro::Transform>().setPosition(position);
+#ifdef USE_GNS
+                    ent.getComponent<cro::Transform>().move({ 0.f, 44.f });
+#endif
                     ent.addComponent<cro::Drawable2D>();
                     ent.addComponent<cro::Text>(font).setString("No news found");
                     ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
