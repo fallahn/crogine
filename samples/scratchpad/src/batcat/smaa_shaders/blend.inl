@@ -119,6 +119,10 @@ void main()
         vec4 blendingCoord = mad(blendingOffset, vec4(SMAA_RT_METRICS.xy, -SMAA_RT_METRICS.xy), v_texCoord.xyxy);
 
         //blendingCoord.y = 1.0 - blendingCoord.y;
+        //blendingCoord.w = 1.0 - blendingCoord.w;
+
+        //blendingCoord.y *= -1.0;
+        //blendingCoord.w *= -1.0;
 
         //We exploit bilinear filtering to mix current pixel with the chosen
         //neighbor:

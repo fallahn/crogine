@@ -142,7 +142,7 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
                         cam.setBlurPassCount(c);
                     }
 
-                    ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                     ImGui::DragFloat("Rate", &fireRate, 0.1f, 0.1f, 10.f);
                     ImGui::DragFloat("Position", &sourcePosition.x, 0.1f, -19.f, 19.f);
@@ -651,7 +651,7 @@ void BatcatState::createUI()
     m_smaaRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
     auto weightEnt = ent;
 
-    //non-SMAA
+    //non-SMAA (but with FXAA)
 
     m_resources.shaders.loadFromString(123, cro::RenderSystem2D::getDefaultVertexShader(),
         cro::RenderSystem2D::getDefaultFragmentShader(), "#define TEXTURED\n#define FXAA\n");
