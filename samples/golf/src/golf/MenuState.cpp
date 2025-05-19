@@ -1998,7 +1998,7 @@ void MenuState::loadAssets()
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
-    if (m_sharedData.treeQuality == SharedStateData::Classic)
+    if (m_sharedData.treeQuality == SharedStateData::TreeQuality::Classic)
     {
         spriteSheet.loadFromFile("assets/golf/sprites/shrubbery_low.spt", m_resources.textures);
     }
@@ -2483,7 +2483,7 @@ void MenuState::createScene()
 
 
     //billboards
-    auto shrubPath = m_sharedData.treeQuality == SharedStateData::Classic ?
+    auto shrubPath = m_sharedData.treeQuality == SharedStateData::TreeQuality::Classic ?
         "assets/golf/models/shrubbery_low.cmt" :
         "assets/golf/models/shrubbery.cmt";
     if (md.loadFromFile(shrubPath))
@@ -2730,7 +2730,7 @@ void MenuState::createScene()
             && m_sharedData.multisamples != 0
             && !m_sharedData.pixelScale;
 
-        const auto res = m_sharedData.hqShadows ? ShadowMapHigh : ShadowMapLow;
+        const auto res = m_sharedData.shadowQuality ? ShadowMapHigh : ShadowMapLow;
         cam.shadowMapBuffer.create(res, res);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 600.f);

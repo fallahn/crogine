@@ -504,7 +504,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
                     material = resources.materials.get(leafShadowMaterialID);
-                    if (m_sharedData.hqShadows)
+                    if (m_sharedData.shadowQuality)
                     {
                         material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
                         material.setProperty("u_noiseTexture", noiseTex);
@@ -844,7 +844,7 @@ void TerrainBuilder::applyTreeQuality()
     std::uint64_t hqFlags = 0;
     std::uint64_t bbFlags = RenderFlags::FlightCam | RenderFlags::Main | RenderFlags::Reflection;
 
-    if (m_sharedData.treeQuality == SharedStateData::High)
+    if (m_sharedData.treeQuality == SharedStateData::TreeQuality::High)
     {
         hqFlags = RenderFlags::Main | RenderFlags::Reflection;
         bbFlags = RenderFlags::FlightCam;

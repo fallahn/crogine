@@ -294,12 +294,22 @@ struct SharedStateData final
     float beaconColour = 1.f; //normalised rotation
     bool imperialMeasurements = false;
     float gridTransparency = 1.f;
-    enum TreeQuality
+    struct TreeQuality final
     {
-        Classic, Low, High
+        enum
+        {
+            Classic, Low, High
+        };
     };
-    std::int32_t treeQuality = Low;
-    bool hqShadows = false;
+    std::int32_t treeQuality = TreeQuality::Low;
+    struct ShadowQuality final
+    {
+        enum
+        {
+            Low, Normal, Ultra
+        };
+    };
+    std::int32_t shadowQuality = ShadowQuality::Low;
     bool logBenchmarks = false;
     bool showCustomCourses = true;
     bool showTutorialTip = true;

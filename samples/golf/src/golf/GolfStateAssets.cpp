@@ -397,7 +397,7 @@ void GolfState::loadMap()
     }
 
     //use old sprites if user so wishes
-    if (m_sharedData.treeQuality == SharedStateData::Classic)
+    if (m_sharedData.treeQuality == SharedStateData::TreeQuality::Classic)
     {
         std::string classicModel;
         std::string classicSprites;
@@ -2074,7 +2074,7 @@ void GolfState::loadMaterials()
     m_windBuffer.addShader(*shader);
 
     std::string alphaClip;
-    if (m_sharedData.hqShadows)
+    if (m_sharedData.shadowQuality)
     {
         alphaClip = "#define ALPHA_CLIP\n";
     }

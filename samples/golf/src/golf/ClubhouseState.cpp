@@ -635,7 +635,7 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<SystemEvent>();
         if (data.type == SystemEvent::ShadowQualityChanged)
         {
-            auto shadowRes = m_sharedData.hqShadows ? ShadowMapHigh : ShadowMapLow;
+            auto shadowRes = m_sharedData.shadowQuality ? ShadowMapHigh : ShadowMapLow;
             m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.create(shadowRes, shadowRes);
         }
     }
@@ -881,7 +881,7 @@ void ClubhouseState::loadResources()
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
-    if (m_sharedData.treeQuality == SharedStateData::Classic)
+    if (m_sharedData.treeQuality == SharedStateData::TreeQuality::Classic)
     {
         spriteSheet.loadFromFile("assets/golf/sprites/shrubbery_low.spt", m_resources.textures);
     }
@@ -1310,7 +1310,7 @@ void ClubhouseState::buildScene()
 
 
     //billboards
-    auto shrubPath = m_sharedData.treeQuality == SharedStateData::Classic ?
+    auto shrubPath = m_sharedData.treeQuality == SharedStateData::TreeQuality::Classic ?
         "assets/golf/models/shrubbery_low.cmt" :
         "assets/golf/models/shrubbery.cmt";
     if (md.loadFromFile(shrubPath))
@@ -1542,7 +1542,7 @@ void ClubhouseState::buildScene()
     camEnt.getComponent<cro::Transform>().setPosition({ 18.9f, 1.54f, -4.58f });
     camEnt.getComponent<cro::Transform>().setRotation(glm::quat(-0.31f, 0.004f, -0.95f, 0.0057f));
 
-    const auto shadowRes = m_sharedData.hqShadows ? ShadowMapHigh : ShadowMapLow;
+    const auto shadowRes = m_sharedData.shadowQuality ? ShadowMapHigh : ShadowMapLow;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     cam.shadowMapBuffer.create(shadowRes, shadowRes);

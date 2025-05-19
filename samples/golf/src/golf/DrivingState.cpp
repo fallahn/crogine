@@ -1300,7 +1300,7 @@ void DrivingState::loadAssets()
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
-    if (m_sharedData.treeQuality == SharedStateData::Classic)
+    if (m_sharedData.treeQuality == SharedStateData::TreeQuality::Classic)
     {
         spriteSheet.loadFromFile("assets/golf/sprites/shrubbery_low.spt", m_resources.textures);
     }
@@ -1935,7 +1935,7 @@ void DrivingState::createScene()
         d.resolution = texSize / invScale;
         m_resolutionBuffer.setData(d);
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 320.f, getCascadeCount(m_sharedData.hqShadows));
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 320.f, getCascadeCount(m_sharedData.shadowQuality));
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -1946,7 +1946,7 @@ void DrivingState::createScene()
     cam.resizeCallback = updateView;
     updateView(cam);
 
-    cam.setMaxShadowDistance(getMaxShadowDistance(CameraID::Player, m_sharedData.hqShadows));
+    cam.setMaxShadowDistance(getMaxShadowDistance(CameraID::Player, m_sharedData.shadowQuality));
     cam.setShadowExpansion(30.f);
     cam.setBlurPassCount(1);
     cam.setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
@@ -2035,7 +2035,7 @@ void DrivingState::createScene()
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, 320.f, getCascadeCount(m_sharedData.hqShadows));
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, 320.f, getCascadeCount(m_sharedData.shadowQuality));
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
@@ -2046,7 +2046,9 @@ void DrivingState::createScene()
         const float farPlane = static_cast<float>(RangeSize.y) * 2.5f;
 
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, farPlane, getCascadeCount(m_sharedData.hqShadows));
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, 
+            vpSize.x / vpSize.y, 0.1f, farPlane,
+            getCascadeCount(m_sharedData.shadowQuality));
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     
@@ -2072,13 +2074,14 @@ void DrivingState::createScene()
         [&,camEnt](cro::Camera& cam)
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov* cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x, getCascadeCount(m_sharedData.hqShadows));
+        cam.setPerspective((m_sharedData.fov* cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, 
+            vpSize.x / vpSize.y, 0.1f, vpSize.x, getCascadeCount(m_sharedData.shadowQuality));
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     setPerspective(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
-    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(getMaxShadowDistance(CameraID::Green, m_sharedData.hqShadows));
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(getMaxShadowDistance(CameraID::Green, m_sharedData.shadowQuality));
     camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
@@ -2102,14 +2105,14 @@ void DrivingState::createScene()
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
         cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * zoomFOV * 0.7f,
             vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f,
-            getCascadeCount(m_sharedData.hqShadows));
+            getCascadeCount(m_sharedData.shadowQuality));
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     setPerspective(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
-    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(getMaxShadowDistance(CameraID::Idle, m_sharedData.hqShadows));
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(getMaxShadowDistance(CameraID::Idle, m_sharedData.shadowQuality));
     camEnt.getComponent<cro::Camera>().setShadowExpansion(50.f);
     camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     camEnt.addComponent<cro::AudioListener>();
@@ -2292,7 +2295,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     };
 
     cro::ModelDefinition md(m_resources);
-    const std::string shrubPath = m_sharedData.treeQuality == SharedStateData::Classic ?
+    const std::string shrubPath = m_sharedData.treeQuality == SharedStateData::TreeQuality::Classic ?
         ("assets/golf/models/shrubbery_low.cmt") :
         ("assets/golf/models/shrubbery.cmt");
 

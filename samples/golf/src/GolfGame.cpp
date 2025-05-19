@@ -1416,7 +1416,11 @@ void GolfGame::loadPreferences()
                 }
                 else if (name == "hq_shadows")
                 {
-                    m_sharedData.hqShadows = prop.getValue<bool>();
+                    m_sharedData.shadowQuality = prop.getValue<bool>() ? 1 : 0;
+                }
+                else if (name == "shadow_quality")
+                {
+                    m_sharedData.shadowQuality = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
                 }
                 else if (name == "log_benchmark")
                 {
@@ -1777,7 +1781,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("multisamples").setValue(m_sharedData.multisamples);
     cfg.addProperty("swingput_threshold").setValue(m_sharedData.swingputThreshold);
     cfg.addProperty("tree_quality").setValue(m_sharedData.treeQuality);
-    cfg.addProperty("hq_shadows").setValue(m_sharedData.hqShadows);
+    cfg.addProperty("shadow_quality").setValue(m_sharedData.shadowQuality);
     cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
     cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
     cfg.addProperty("crowd_density").setValue(m_sharedData.crowdDensity);

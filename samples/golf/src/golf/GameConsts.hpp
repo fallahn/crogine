@@ -185,11 +185,11 @@ inline std::uint32_t getShadowResolution(const SharedStateData& sd)
     {
         if (Social::isSteamdeck())
         {
-            return sd.hqShadows ? ShadowMapHigh / 2 : ShadowMapLow / 2;
+            return sd.shadowQuality ? ShadowMapHigh / 2 : ShadowMapLow / 2;
         }
-        return sd.hqShadows ? ShadowMapHigh : ShadowMapLow;
+        return sd.shadowQuality ? ShadowMapHigh : ShadowMapLow;
     }
-    return sd.hqShadows ? ShadowMapHigh : ShadowMapLow;
+    return sd.shadowQuality ? ShadowMapHigh : ShadowMapLow;
 }
 
 inline std::uint32_t getCascadeCount(bool hq)

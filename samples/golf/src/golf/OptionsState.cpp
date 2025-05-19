@@ -178,6 +178,11 @@ namespace
         0,2,4,8
     };
 
+    const std::array<std::string, 3u> ShadowText =
+    {
+        "Low", "High", "Ultra"
+    };
+
     //this needs to be here to be accessed by label callback
     std::array<cro::Entity, InputBinding::Count> bindingEnts = {}; //buttons to activate key rebinding
 
@@ -3089,35 +3094,48 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
 
 
-    auto shadowQualityText = createLabel({ 325.f, 137.f }, m_sharedData.hqShadows ? "High" : "Low");
+    auto shadowQualityText = createLabel({ 325.f, 137.f }, ShadowText[m_sharedData.shadowQuality]);
     centreText(shadowQualityText);
 
     //prev / next shadow quality
-    const auto shadowChanged = uiSystem.addCallback([&, shadowQualityText](cro::Entity e, cro::ButtonEvent evt) mutable
+    auto shadowUpdate = [&, shadowQualityText]() mutable
+        {
+            shadowQualityText.getComponent<cro::Text>().setString(ShadowText[m_sharedData.shadowQuality]);
+            centreText(shadowQualityText);
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+            auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+            msg->type = SystemEvent::ShadowQualityChanged;
+        };
+
+    const auto shadowChangedUp = uiSystem.addCallback([&, shadowUpdate](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {
-                    m_sharedData.hqShadows = !m_sharedData.hqShadows;
-                    shadowQualityText.getComponent<cro::Text>().setString(m_sharedData.hqShadows ? "High" : "Low");
-                    centreText(shadowQualityText);
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                    auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
-                    msg->type = SystemEvent::ShadowQualityChanged;
+                    m_sharedData.shadowQuality = (m_sharedData.shadowQuality + 1) % 3;
+                    shadowUpdate();
                 }
             });
+    const auto shadowChangedDown = uiSystem.addCallback([&, shadowUpdate](cro::Entity e, cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                m_sharedData.shadowQuality = (m_sharedData.shadowQuality + 2) % 3;
+                shadowUpdate();
+            }
+        });
 
     entity = createHighlight(glm::vec2(286.f, 128.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVShadowL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVShadowR, AVCrowdL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVFullScreen, AVTreeL);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = shadowChanged;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = shadowChangedDown;
 
     entity = createHighlight(glm::vec2(355.f, 128.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVShadowR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVFullScreen, AVCrowdR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVShadowL, AVTreeR);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = shadowChanged;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = shadowChangedUp;
 
     //prev/next crowd density
     static const std::array CrowdLabels =

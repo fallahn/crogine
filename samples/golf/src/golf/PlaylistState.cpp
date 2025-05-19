@@ -736,7 +736,7 @@ void PlaylistState::loadAssets()
     m_materialIDs[MaterialID::BranchShadow] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::BranchShadow]).setProperty("u_noiseTexture", noiseTex);
 
-    std::string alphaClip = m_sharedData.hqShadows ? "#define ALPHA_CLIP\n" : "";
+    std::string alphaClip = m_sharedData.shadowQuality ? "#define ALPHA_CLIP\n" : "";
     m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n #define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
     m_windBuffer.addShader(*shader);
@@ -3712,7 +3712,7 @@ void PlaylistState::loadShrubbery(const std::string& path)
                         shrubbery.treesetEnts[i].getComponent<cro::Model>().setMaterial(idx, material);
 
                         material = m_resources.materials.get(m_materialIDs[MaterialID::LeafShadow]);
-                        if (m_sharedData.hqShadows)
+                        if (m_sharedData.shadowQuality)
                         {
                             material.setProperty("u_diffuseMap", m_resources.textures.get(treesets[i].texturePath));
                         }
@@ -3794,7 +3794,7 @@ void PlaylistState::applyShrubQuality()
     switch (m_sharedData.treeQuality)
     {
     default: break;
-    case SharedStateData::Classic:
+    case SharedStateData::TreeQuality::Classic:
         if (shrubbery.billboardEnts[0].isValid())
         {
             shrubbery.billboardEnts[0].getComponent<cro::Model>().setHidden(true);
@@ -3815,7 +3815,7 @@ void PlaylistState::applyShrubQuality()
             }
         }
         break;
-    case SharedStateData::Low:
+    case SharedStateData::TreeQuality::Low:
         if (shrubbery.billboardEnts[0].isValid())
         {
             shrubbery.billboardEnts[0].getComponent<cro::Model>().setHidden(false);
@@ -3836,7 +3836,7 @@ void PlaylistState::applyShrubQuality()
             }
         }
         break;
-    case SharedStateData::High:
+    case SharedStateData::TreeQuality::High:
         if (shrubbery.billboardEnts[0].isValid())
         {
             shrubbery.billboardEnts[0].getComponent<cro::Model>().setHidden(false);

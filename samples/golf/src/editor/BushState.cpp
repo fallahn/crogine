@@ -693,7 +693,7 @@ void BushState::drawUI()
 
                     for (auto j = 1u; j < m_models.size(); ++j)
                     {
-                        auto primitiveType = m_sharedData.treeQuality == SharedStateData::High ? GL_POINTS : GL_TRIANGLES;
+                        auto primitiveType = m_sharedData.treeQuality == SharedStateData::TreeQuality::High ? GL_POINTS : GL_TRIANGLES;
 
                         m_models[j].getComponent<cro::Model>().setMaterial(i, m_materials[i].materials[m_materials[i].activeMaterial]);
                         m_models[j].getComponent<cro::Model>().getMeshData().indexData[i].primitiveType =
@@ -980,7 +980,7 @@ void BushState::loadPreset(const std::string& path)
         {
             for (auto i = 0u; i < m_materials.size(); ++i)
             {
-                auto primitiveType = m_sharedData.treeQuality == SharedStateData::High ? GL_POINTS : GL_TRIANGLES;
+                auto primitiveType = m_sharedData.treeQuality == SharedStateData::TreeQuality::High ? GL_POINTS : GL_TRIANGLES;
 
                 m_models[j].getComponent<cro::Model>().setMaterial(i, m_materials[i].materials[m_materials[i].activeMaterial]);
                 m_models[j].getComponent<cro::Model>().getMeshData().indexData[i].primitiveType =

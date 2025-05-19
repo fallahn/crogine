@@ -313,7 +313,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
 
-    m_shadowQuality.update(sd.hqShadows);
+    m_shadowQuality.update(sd.shadowQuality);
 
     sd.baseState = StateID::Golf;
 
@@ -1350,7 +1350,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         else if (data.type == SystemEvent::TreeQualityChanged)
         {
             m_terrainBuilder.applyTreeQuality();
-            m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::High);
+            m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::TreeQuality::High);
         }
         else if (data.type == SystemEvent::CrowdDensityChanged)
         {
@@ -3113,7 +3113,7 @@ void GolfState::addSystems()
 
     //m_gameScene.setSystemActive<InterpolationSystem<InterpolationType::Linear>>(false);
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
-    m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::High);
+    m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::TreeQuality::High);
     m_gameScene.setSystemActive<WeatherAnimationSystem>(m_sharedData.weatherType == WeatherType::Rain || m_sharedData.weatherType == WeatherType::Showers);
 #ifdef CRO_DEBUG_
     m_gameScene.setSystemActive<cro::ParticleSystem>(false);

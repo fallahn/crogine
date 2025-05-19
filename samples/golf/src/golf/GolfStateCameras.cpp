@@ -82,7 +82,7 @@ void GolfState::createCameras()
     //        ImGui::End();
     //    });
 
-    m_shadowQuality.update(m_sharedData.hqShadows);
+    m_shadowQuality.update(m_sharedData.shadowQuality);
 
     //update the 3D view - applied on player cam and transition cam
     auto updateView = [&](cro::Camera& cam)
@@ -469,9 +469,14 @@ void GolfState::createCameras()
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [&, camEnt](cro::Camera& cam)
         {
+            /*auto maxDist = m_shadowQuality.getMaxDistance(-1);
+            maxDist += (maxDist / 3.f) * camEnt.getComponent<FpsCamera>().zoomProgress;
+            
+            cam.setMaxShadowDistance(maxDist, false);*/
+
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective(m_sharedData.fov * camEnt.getComponent<FpsCamera>().fov * cro::Util::Const::degToRad,
-                vpSize.x / vpSize.y, 0.1f, CameraFarPlane /** 1.25f*/,
+                vpSize.x / vpSize.y, 0.1f, CameraFarPlane,
                 m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
@@ -576,7 +581,6 @@ void GolfState::createCameras()
     auto& skyCam = m_skyCameras[SkyCam::Flight].addComponent<cro::Camera>();
     skyCam.setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, 0.1f, 14.f);
     skyCam.viewport = { 0.f, 0.f, 1.f, 1.f };
-
 }
 
 void GolfState::setGreenCamPosition()
@@ -950,7 +954,7 @@ void GolfState::enableDOF(bool enable)
 
 void GolfState::applyShadowQuality()
 {
-    m_shadowQuality.update(m_sharedData.hqShadows);
+    m_shadowQuality.update(m_sharedData.shadowQuality);
     //setting this to 1 removes some distinct flickering from the map being out of date every X frames
     m_gameScene.getSystem<cro::ShadowMapRenderer>()->setRenderInterval(/*m_sharedData.hqShadows ? 2 : 3*/1);
 

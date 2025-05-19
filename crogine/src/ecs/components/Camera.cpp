@@ -227,10 +227,14 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
     }
 }
 
-void Camera::setMaxShadowDistance(float distance)
+void Camera::setMaxShadowDistance(float distance, bool updateCorners)
 {
     m_maxShadowDistance = std::min(m_farPlane, std::max(m_nearPlane + 0.05f, distance));
-    updateFrustumCorners(m_frustumSplits.size());
+    
+    if (updateCorners)
+    {
+        updateFrustumCorners(m_frustumSplits.size());
+    }
 
     //TODO update the frustum splits if this is an ortho camera.
 }

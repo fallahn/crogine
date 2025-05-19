@@ -1135,7 +1135,7 @@ void GolfState::dumpBenchmark()
             + " | Max fps: " + std::to_string (m_benchmark.maxRate) 
             + " | Average fps: " + std::to_string(m_benchmark.getAverage());
 
-        std::string shadowQ = m_sharedData.hqShadows ? "High" : "Low";
+        std::string shadowQ = m_sharedData.shadowQuality ? "High" : "Low";
         std::string vsync = cro::App::getWindow().getVsyncEnabled() ? " | vsync: ON" : " | vsync: OFF";
         std::string vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
         std::string renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));

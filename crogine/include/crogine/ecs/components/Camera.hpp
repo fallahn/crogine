@@ -491,9 +491,12 @@ namespace cro
         is usually adjusted along with setShadowExpansion()
         \param distance The distance in world units from the camera
         to which to clamp shadow rendering.
+        \param updateCorners Updates the frustum corners - this is also
+        done when calling setPerspective() or setOrtho() so optionally
+        setting this to false can prevent unecessary updates
         \see ShadowMapRenderer
         */
-        void setMaxShadowDistance(float distance);
+        void setMaxShadowDistance(float distance, bool updateCorners = true);
 
 
         /*!
