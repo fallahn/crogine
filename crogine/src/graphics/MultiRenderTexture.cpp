@@ -153,7 +153,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
     }
 
     //automatically resizes if already created
-    m_defaultTexture.create(width, height, ImageFormat::RGBA, floatingPoint);
+    m_defaultTexture.create(width, height, ImageFormat::RGBA/*, floatingPoint*/);
     if (m_textureIDs.empty())
     {
         //store this so the handles align to indices correctly
@@ -189,7 +189,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
                 std::uint32_t id = 0;
                 glCheck(glGenTextures(1, &id));
                 glCheck(glBindTexture(GL_TEXTURE_2D, id));
-                glCheck(glTexImage2D(GL_TEXTURE_2D, 0, m_precision, width, height, 0, GL_RGBA, GL_FLOAT, NULL));
+                glCheck(glTexImage2D(GL_TEXTURE_2D, 0, m_precision, width, height, 0, GL_RGBA, GL_HALF_FLOAT, NULL));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
@@ -336,7 +336,7 @@ void MultiRenderTexture::setPrecision(std::uint32_t precision)
         for (auto id : m_textureIDs)
         {
             glCheck(glBindTexture(GL_TEXTURE_2D, id));
-            glCheck(glTexImage2D(GL_TEXTURE_2D, 0, m_precision, m_size.x, m_size.y, 0, GL_RGBA, GL_FLOAT, NULL));
+            glCheck(glTexImage2D(GL_TEXTURE_2D, 0, m_precision, m_size.x, m_size.y, 0, GL_RGBA, GL_HALF_FLOAT, NULL));
         }
     }
 }

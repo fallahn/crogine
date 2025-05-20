@@ -3004,7 +3004,7 @@ void DrivingState::floatingMessage(const std::string& msg)
 {
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
-    const float offsetScale = Social::isSteamdeck() ? 2.f : 1.f;
+    const float offsetScale = m_sharedData.useLargePowerBar ? 2.f : 1.f;
 
     glm::vec2 size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     glm::vec3 position((size.x / 2.f), (UIBarHeight + (14.f * offsetScale)) * m_viewScale.y, 0.2f);

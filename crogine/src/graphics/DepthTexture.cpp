@@ -170,7 +170,7 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
         if (!m_depthOnly)
         {
             glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_colourID));
-            glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, layers, 0, GL_RG, GL_FLOAT, NULL));
+            glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, layers, 0, GL_RG, /*GL_FLOAT*/GL_HALF_FLOAT, NULL));
         }
 
         setViewport({ 0, 0, static_cast<std::int32_t>(width), static_cast<std::int32_t>(height) });
@@ -220,7 +220,7 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
 
 #ifdef GL41
         //apple drivers don't support immutable textures.
-        glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, layers, 0, GL_RG, GL_FLOAT, NULL));
+        glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, layers, 0, GL_RG, /*GL_FLOAT*/GL_HALF_FLOAT, NULL));
 #else
         glCheck(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RG32F, width, height, layers));
 #endif

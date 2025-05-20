@@ -955,7 +955,7 @@ void UISystem::updateGroupAssignments()
                             }
 
                             m_groups[i].push_back(e);
-                            updatedGroups |= i; //mark this for sorting
+                            updatedGroups |= (1 << i); //mark this for sorting
                         }
                     }
                 }
