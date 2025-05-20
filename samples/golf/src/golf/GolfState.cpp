@@ -1815,16 +1815,8 @@ void GolfState::handleMessage(const cro::Message& msg)
         break;
         case GolfEvent::ClubChanged:
         {
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::StrokeIndicator;
-            cmd.action = [&](cro::Entity e, float)
-            {
-                float scale = std::max(0.25f, Clubs[getClub()].getPower(m_distanceToHole, m_sharedData.imperialMeasurements) / Clubs[ClubID::Driver].getPower(m_distanceToHole, m_sharedData.imperialMeasurements));
-                e.getComponent<cro::Transform>().setScale({ scale, 1.f });
-            };
-            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
             //update the player with correct club
+            //this includes remoe player changes
             if (m_activeAvatar
                 && m_activeAvatar->hands)
             {
@@ -1833,108 +1825,128 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
             }
 
-            //update club text colour based on distance
-            cmd.targetFlags = CommandID::UI::ClubName;
-            cmd.action = [&](cro::Entity e, float)
+            //but only update the UI if this is us
+            if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
             {
-                if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
-                {
-                    e.getComponent<cro::Text>().setString(Clubs[getClub()].getName(m_sharedData.imperialMeasurements, m_distanceToHole));
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::StrokeIndicator;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        float scale = std::max(0.25f, Clubs[getClub()].getPower(m_distanceToHole, m_sharedData.imperialMeasurements) / Clubs[ClubID::Driver].getPower(m_distanceToHole, m_sharedData.imperialMeasurements));
+                        e.getComponent<cro::Transform>().setScale({ scale, 1.f });
+                    };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-                    auto dist = m_distanceToHole * 1.67f;
-                    if (getClub() < ClubID::NineIron &&
-                        Clubs[getClub()].getTarget(m_distanceToHole) > dist)
+                //update club text colour based on distance
+                cmd.targetFlags = CommandID::UI::ClubName;
+                cmd.action = [&](cro::Entity e, float)
                     {
-                        e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
-                    }
-                    else
-                    {
-                        e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-                    }
-                }
-                else
-                {
-                    e.getComponent<cro::Text>().setString(" ");
-                }
-            };
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-            cmd.targetFlags = CommandID::UI::PuttPower;
-            cmd.action = [&](cro::Entity e, float)
-            {
-                if (e.hasComponent<cro::Text>())
-                {
-                    if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
-                    {
-                        auto club = getClub();
-                        if (club == ClubID::Putter)
+                        if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                         {
-                            auto str = Clubs[ClubID::Putter].getName(m_sharedData.imperialMeasurements, m_distanceToHole);
-                            e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
+                            e.getComponent<cro::Text>().setString(Clubs[getClub()].getName(m_sharedData.imperialMeasurements, m_distanceToHole));
+
+                            auto dist = m_distanceToHole * 1.67f;
+                            if (getClub() < ClubID::NineIron &&
+                                Clubs[getClub()].getTarget(m_distanceToHole) > dist)
+                            {
+                                e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+                            }
+                            else
+                            {
+                                e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                            }
                         }
                         else
                         {
                             e.getComponent<cro::Text>().setString(" ");
                         }
-                    }
-                    else
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::UI::PuttPower;
+                cmd.action = [&](cro::Entity e, float)
                     {
-                        e.getComponent<cro::Text>().setString(" ");
-                    }
-                }
-                else
-                {
-                    //this is the arrow indicator
-                    if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
-                    {
-                        auto club = getClub();
-                        if (club == ClubID::Putter)
+                        if (e.hasComponent<cro::Text>())
                         {
-                            const auto idx = Clubs[ClubID::Putter].getScaleIndex(m_distanceToHole);
-                            e.getComponent<cro::SpriteAnimation>().play(idx + 1);
-                            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                            if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+                            {
+                                auto club = getClub();
+                                if (club == ClubID::Putter)
+                                {
+                                    auto str = Clubs[ClubID::Putter].getName(m_sharedData.imperialMeasurements, m_distanceToHole);
+                                    e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
+                                }
+                                else
+                                {
+                                    e.getComponent<cro::Text>().setString(" ");
+                                }
+                            }
+                            else
+                            {
+                                e.getComponent<cro::Text>().setString(" ");
+                            }
                         }
                         else
                         {
-                            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                            //this is the arrow indicator
+                            if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+                            {
+                                auto club = getClub();
+                                if (club == ClubID::Putter)
+                                {
+                                    const auto idx = Clubs[ClubID::Putter].getScaleIndex(m_distanceToHole);
+                                    e.getComponent<cro::SpriteAnimation>().play(idx + 1);
+                                    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                                }
+                                else
+                                {
+                                    e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                                }
+                            }
+                            else
+                            {
+                                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                            }
                         }
-                    }
-                    else
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //hide wind indicator if club is less than min wind distance to hole
+                cmd.targetFlags = CommandID::UI::WindHidden;
+                cmd.action = [&](cro::Entity e, float)
                     {
-                        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        std::int32_t dir = (getClub() > ClubID::PitchWedge) && (glm::length(m_holeData[m_currentHole].pin - m_currentPlayer.position) < 30.f) ? 0 : 1;
+                        e.getComponent<cro::Callback>().getUserData<WindHideData>().direction = dir;
+                        e.getComponent<cro::Callback>().active = true;
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+                /*if (m_currentPlayer.terrain != TerrainID::Green
+                    && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+                {
+                    if (getClub() > ClubID::SevenIron)
+                    {
+                        retargetMinimap(false);
+                    }
+                }*/
+
+                //sync other clients with our change
+                if (m_currentPlayer.terrain != TerrainID::Green)
+                {
+                    auto club = getClub();
+                    togglePuttingView(club == ClubID::Putter);
+
+                    std::uint16_t p = (club & 0xff) << 8 | m_sharedData.localConnectionData.connectionID;
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubChanged, p, net::NetFlag::Reliable);
+
+                    //and retarget if we're not CPU
+                    if (!m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU
+                        && club > ClubID::SevenIron)
+                    {
+                        retargetMinimap(false);
                     }
                 }
-            };
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-            //hide wind indicator if club is less than min wind distance to hole
-            cmd.targetFlags = CommandID::UI::WindHidden;
-            cmd.action = [&](cro::Entity e, float)
-            {
-                std::int32_t dir = (getClub() > ClubID::PitchWedge) && (glm::length(m_holeData[m_currentHole].pin - m_currentPlayer.position) < 30.f) ? 0 : 1;
-                e.getComponent<cro::Callback>().getUserData<WindHideData>().direction = dir;
-                e.getComponent<cro::Callback>().active = true;
-            };
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-
-            if (m_currentPlayer.terrain != TerrainID::Green
-                && m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
-                && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
-            {
-                if (getClub() > ClubID::SevenIron)
-                {
-                    retargetMinimap(false);
-                }
-            }
-
-            if (m_currentPlayer.terrain != TerrainID::Green)
-            {
-                auto club = getClub();
-                togglePuttingView(club == ClubID::Putter);
-
-                std::uint16_t p = (club & 0xff) << 8 | m_sharedData.localConnectionData.connectionID;
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubChanged, p, net::NetFlag::Reliable);
             }
         }
         break;
@@ -4904,11 +4916,12 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 const auto club = (data & 0xff00) >> 8;
                 togglePuttingView(club == ClubID::Putter);
 
-                //for some reason this makes the default clubs flicker.
-                /*if (club != ClubID::Putter
-                    && (data & 0x00ff) == m_currentPlayer.client)
+                if (club != ClubID::Putter
+                    /*&& (data & 0x00ff) == m_currentPlayer.client*/)
                 {
-                    if (m_activeAvatar
+                    m_inputParser.syncClub(club);
+                    //for some reason this makes the default clubs flicker.
+                    /*if (m_activeAvatar
                         && m_activeAvatar->hands)
                     {
                         const auto& models = m_clubModels.at(m_activeAvatar->clubModelID);
@@ -4921,8 +4934,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         {
                             LogI << "Index out of range, wanted club " << (int)club << ", models range: " << models.indices.size() << std::endl;
                         }
-                    }
-                }*/
+                    }*/
+                }
             }
         }
             break;

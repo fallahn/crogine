@@ -537,6 +537,14 @@ void InputParser::setClub(float dist)
     updateDistanceEstimation();
 }
 
+void InputParser::syncClub(std::int32_t club)
+{
+    m_currentClub = club;
+    auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
+    msg->type = GolfEvent::ClubChanged;
+    msg->score = 0; //pretends to be CPU so we don't get sound effect played
+}
+
 float InputParser::getYaw() const
 {
     return m_holeDirection + m_rotation;
