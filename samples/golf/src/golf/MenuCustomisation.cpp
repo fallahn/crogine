@@ -244,6 +244,9 @@ void MenuState::createBallScene()
 
     ballTexCallback(m_ballCam.getComponent<cro::Camera>());
 
+
+    //parse the content firs into file paths - though
+    //these balls aren't actually loaded until after unlocks.
     const auto ContentDirs = Content::getInstallPaths();
     const std::string BallDir = "balls/";
     std::vector<std::string> ballFiles;
@@ -267,40 +270,62 @@ void MenuState::createBallScene()
         ballFiles.resize(ConstVal::MaxBalls);
     }
 
+    //we've specifically loaded the default ball first
+    ballFiles.erase(std::remove_if(ballFiles.begin(), ballFiles.end(), [](const std::string& s) { return s == "default.ball"; }), ballFiles.end());
+
+
     m_sharedData.ballInfo.clear();
 
-    //parse the default ball directory
-    for (const auto& file : ballFiles)
+
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile("assets/golf/balls/default.ball"))
     {
+        auto info = readBallCfg(cfg);
+        info.type = SharedStateData::BallInfo::Regular;
+
+        insertInfo(info, m_sharedData.ballInfo, true);
+    }
+
+    //TODO add the unlockable balls before the silly ones
+    std::vector<SharedStateData::BallInfo> delayedEntries;
+    const std::array<std::string, 5u> ShopPaths =
+    {
+        "assets/golf/balls/extra/tunnelrock.ball",
+        "assets/golf/balls/extra/flaxen.ball",
+        "assets/golf/balls/extra/hardings.ball",
+        "assets/golf/balls/extra/woodgear.ball",
+        "assets/golf/balls/extra/bns.ball",
+    };
+    
+    for (auto i = 0u; i < ShopPaths.size(); ++i)
+    {
+        const auto flag = (1 << (inv::ManufID::TunnelRock + i));
+
         cro::ConfigFile cfg;
-        if (cro::FileSystem::getFileExtension(file) == ".ball"
-            && cfg.loadFromFile(file))
+        if (cfg.loadFromFile(ShopPaths[i]))
         {
             auto info = readBallCfg(cfg);
-            info.type = SharedStateData::BallInfo::Regular;
+            info.type = SharedStateData::BallInfo::Unlock;
 
             //if we didn't find a UID create one from the file name and save it to the cfg
             if (info.uid == 0)
             {
-                info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                info.uid = SpookyHash::Hash32(ShopPaths[i].data(), ShopPaths[i].size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
-                cfg.save(file);
+                cfg.save(ShopPaths[i]);
             }
 
+            if ((m_sharedData.inventory.manufacturerFlags & flag) == 0)
+            {
+                info.locked = true;
+            }
+            //else
+            //{
+            //    //delayedEntries.push_back(info);
+            //}
             insertInfo(info, m_sharedData.ballInfo, true);
         }
     }
-
-    //do a search for the default ball and put it at the fron if it's found
-    if (auto res = std::find_if(m_sharedData.ballInfo.begin(), m_sharedData.ballInfo.end(),
-        [](const SharedStateData::BallInfo& bi) 
-        {
-            return bi.label == "Golf Ball";
-        }); res != m_sharedData.ballInfo.end())
-    {
-        std::iter_swap(m_sharedData.ballInfo.begin(), res);
-    }
-
 
     //read in the info for unlockable balls - if valid
     //info is unlocked add it to ballModels now so it appears
@@ -321,7 +346,7 @@ void MenuState::createBallScene()
         10,20,30,40,50,100
     };
     const std::uint32_t level = Social::getLevel();
-    std::vector<SharedStateData::BallInfo> delayedEntries;
+
     for (auto i = 0u; i < SpecialPaths.size(); ++i)
     {
         cro::ConfigFile cfg;
@@ -419,6 +444,31 @@ void MenuState::createBallScene()
                 info.locked = true;
                 delayedEntries.push_back(info);
             }
+        }
+    }
+
+
+
+
+    //parse the default ball directory
+    for (const auto& file : ballFiles)
+    {
+        cro::ConfigFile cfg;
+        if (cro::FileSystem::getFileExtension(file) == ".ball"
+            && cfg.loadFromFile(file))
+        {
+            auto info = readBallCfg(cfg);
+            info.type = SharedStateData::BallInfo::Regular;
+
+            //if we didn't find a UID create one from the file name and save it to the cfg
+            if (info.uid == 0)
+            {
+                info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                cfg.addProperty("uid").setValue(info.uid);
+                cfg.save(file);
+            }
+
+            insertInfo(info, m_sharedData.ballInfo, true);
         }
     }
 

@@ -2550,6 +2550,7 @@ void ProfileState::buildPreviewScene()
         auto& preview = m_ballModels.emplace_back();
         preview.ball = entity;
         preview.type = m_sharedData.ballInfo[c].type;
+        preview.infoIndex = c;
         preview.root = m_modelScene.createEntity();
         preview.root.addComponent<cro::Transform>().setPosition(BallPos);
         preview.root.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_sharedData.ballInfo[c].previewRotation);
@@ -3633,9 +3634,18 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
 
             if (activated(evt))
             {
-                //apply selection
-                setBallIndex(e.getComponent<cro::Callback>().getUserData<std::uint8_t>());
-                quitMenu();
+                const std::int32_t idx = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
+
+                if (m_sharedData.ballInfo[m_ballModels[idx].infoIndex].locked)
+                {
+                    m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
+                }
+                else
+                {
+                    //apply selection
+                    setBallIndex(idx);
+                    quitMenu();
+                }
             }
             else if (deactivated(evt))
             {
@@ -3659,7 +3669,12 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
                 const auto itemIndex = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
                 if (!m_sharedData.ballInfo[itemIndex].label.empty())
                 {
-                    m_pageContexts[PaginationID::Balls].pageHandles.itemLabel.getComponent<cro::Text>().setString(m_sharedData.ballInfo[itemIndex].label);
+                    auto str = m_sharedData.ballInfo[itemIndex].label;
+                    if (m_sharedData.ballInfo[itemIndex].locked)
+                    {
+                        str += " (Locked)";
+                    }
+                    m_pageContexts[PaginationID::Balls].pageHandles.itemLabel.getComponent<cro::Text>().setString(str);
                 }
                 else
                 {

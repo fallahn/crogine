@@ -55,6 +55,7 @@ struct BallPreview final
     cro::Entity ball;
 
     std::int32_t type = 0;
+    std::int32_t infoIndex = -1;
 };
 
 struct AvatarPreview final

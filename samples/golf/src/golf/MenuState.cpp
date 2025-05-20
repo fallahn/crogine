@@ -1006,6 +1006,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_PAGEUP:
             /*m_sharedData.useOSKBuffer = true;
             requestStackPush(StateID::Keyboard);*/
+
             break;
         case SDLK_PAUSE:
             if (evt.key.keysym.mod & KMOD_SHIFT)

@@ -2426,14 +2426,14 @@ void ShopState::purchaseItem()
     m_sharedData.inventory.balance -= invItem.price;
     
     const auto manFlag = (1 << invItem.manufacturer);
-    if (!isBall && //not a ball
-        (m_sharedData.inventory.manufacturerFlags & manFlag) == 0)
+    if ((m_sharedData.inventory.manufacturerFlags & manFlag) == 0)
     {
         m_sharedData.inventory.manufacturerFlags |= manFlag;
 
         auto* msg = postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
         msg->type = Social::SocialEvent::NewClubset;
         msg->level = invItem.manufacturer;
+        msg->reason = isBall ? 1 : 0;
     }
     
     inv::write(m_sharedData.inventory);

@@ -3364,11 +3364,11 @@ void GolfState::buildScene()
     {
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
     };
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator /*| CommandID::BeaconColour*/;
 
     //we use line strip because we can AA with glLineSmooth (TODO use a shader instead)
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
-    auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
+    auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame/*BallTrail*/]);
     material.blendMode = cro::Material::BlendMode::Additive;
     material.enableDepthTest = false;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
@@ -3402,6 +3402,8 @@ void GolfState::buildScene()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     entity.getComponent<cro::Model>().setHidden(true);
+    //entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
+    //entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour(0.2f, 0.f, 0.2f, 1.f));
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection | RenderFlags::FlightCam | RenderFlags::CubeMap));
     auto indicatorEnt = entity;
 

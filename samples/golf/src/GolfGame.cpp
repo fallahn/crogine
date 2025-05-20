@@ -489,9 +489,20 @@ void GolfGame::handleMessage(const cro::Message& msg)
         {
             ProgressMessage m;
             m.title = inv::Manufacturers[data.level];
-            m.message = "New Clubset Model Unlocked";
+            m.message = data.reason ? "New Ball Model Unlocked" : "New Clubset Model Unlocked";
             m.type = ProgressMessage::Message;
             m_progressIcon->queueMessage(m);
+
+            //hacky way of unlocking the ball model
+            if (auto res = std::find_if(m_sharedData.ballInfo.begin(), m_sharedData.ballInfo.end(), 
+                [&m](const SharedStateData::BallInfo& bi)
+                {
+                    return bi.label.find(m.title) != cro::String::InvalidPos;
+                }); 
+                res != m_sharedData.ballInfo.end())
+            {
+                res->locked = false;
+            }
         }
     }
     else if (msg.id == cro::Message::SystemMessage)
