@@ -775,6 +775,17 @@ void DrivingState::handleMessage(const cro::Message& msg)
             msg->terrain = TerrainID::Fairway;
             msg->club = static_cast<std::uint8_t>(m_inputParser.getClub());
         }
+        else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
+        {
+            if (data.animationID == m_avatar.animationIDs[AnimationID::ToChip])
+            {
+                m_avatar.model.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::ChipIdle]);
+            }
+            else if (data.animationID == m_avatar.animationIDs[AnimationID::FromChip])
+            {
+                m_avatar.model.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Idle]);
+            }
+        }
     }
     break;
     case sv::MessageID::GolfMessage:
@@ -815,7 +826,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::PlayerAvatar;
             cmd.action = [&](cro::Entity e, float)
             {
-                e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Swing]);
+                e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[m_inputParser.getClub() > ClubID::NineIron ? AnimationID::Chip : AnimationID::Swing]);
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -855,9 +866,33 @@ void DrivingState::handleMessage(const cro::Message& msg)
 
 
             //set the correct club model on our attachment
+            const auto club = m_inputParser.getClub();
             if (m_avatar.hands)
             {
-                m_avatar.hands->setModel(m_clubModels.models[m_clubModels.indices[m_inputParser.getClub()]]);
+                m_avatar.hands->setModel(m_clubModels.models[m_clubModels.indices[club]]);
+            }
+
+            //and change the stance
+            const auto current = m_avatar.model.getComponent<cro::Skeleton>().getCurrentAnimation();
+            std::int32_t next = current;
+            if (club > ClubID::NineIron)
+            {
+                if (current == m_avatar.animationIDs[AnimationID::Idle])
+                {
+                    next = m_avatar.animationIDs[AnimationID::ToChip];
+                }
+            }
+            else
+            {
+                if (current == m_avatar.animationIDs[AnimationID::ChipIdle])
+                {
+                    next = m_avatar.animationIDs[AnimationID::FromChip];
+                }
+            }
+
+            if (current != next)
+            {
+                m_avatar.model.getComponent<cro::Skeleton>().play(next);
             }
         }
         break;
@@ -2676,8 +2711,19 @@ void DrivingState::createPlayer()
     std::fill(m_avatar.animationIDs.begin(), m_avatar.animationIDs.end(), AnimationID::Invalid);
     if (entity.hasComponent<cro::Skeleton>())
     {
-        //map the animation IDs
+        cro::ModelDefinition animations(m_resources);
+        animations.loadFromFile("assets/golf/models/avatars/animations.cmt");
+
         auto& skel = entity.getComponent<cro::Skeleton>();
+        if (animations.hasSkeleton())
+        {
+            for (auto s = 0u; s < animations.getSkeleton().getAnimations().size(); ++s)
+            {
+                skel.addAnimation(animations.getSkeleton(), s);
+            }
+        }
+
+        //map the animation IDs
         const auto& anims = skel.getAnimations();
         for (auto i = 0u; i < anims.size(); ++i)
         {
@@ -2693,6 +2739,18 @@ void DrivingState::createPlayer()
             else if (anims[i].name == "chip")
             {
                 m_avatar.animationIDs[AnimationID::Chip] = i;
+            }
+            else if (anims[i].name == "chip_idle")
+            {
+                m_avatar.animationIDs[AnimationID::ChipIdle] = i;
+            }
+            else if (anims[i].name == "to_chip")
+            {
+                m_avatar.animationIDs[AnimationID::ToChip] = i;
+            }
+            else if (anims[i].name == "from_chip")
+            {
+                m_avatar.animationIDs[AnimationID::FromChip] = i;
             }
             else if (anims[i].name == "celebrate")
             {
@@ -3628,7 +3686,7 @@ void DrivingState::setHole(std::int32_t index)
     cmd.targetFlags = CommandID::PlayerAvatar;
     cmd.action = [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Idle], 1.f, 0.2f);
+        e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[m_inputParser.getClub() > ClubID::NineIron ? AnimationID::ChipIdle : AnimationID::Idle], 1.f, 0.2f);
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -3861,7 +3919,7 @@ void DrivingState::forceRestart()
 
 
     //reset any active animation from the avatar else it'll resume and hit the ball...
-    m_avatar.model.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Idle]);
+    m_avatar.model.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[m_inputParser.getClub() > ClubID::NineIron ? AnimationID::ChipIdle : AnimationID::Idle]);
 }
 
 void DrivingState::triggerGC(glm::vec3 position)
