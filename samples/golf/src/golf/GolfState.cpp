@@ -1632,6 +1632,15 @@ void GolfState::handleMessage(const cro::Message& msg)
                         m_gameScene.destroyEntity(e);
                     }
                 };
+
+                if (data.animationID == m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::ToChip])
+                {
+                    m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::ChipIdle]);
+                }
+                else if (data.animationID == m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::FromChip])
+                {
+                    m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::Idle]);
+                }
             }
         }
     }
@@ -1816,13 +1825,37 @@ void GolfState::handleMessage(const cro::Message& msg)
         case GolfEvent::ClubChanged:
         {
             //update the player with correct club
-            //this includes remoe player changes
+            //this includes remote player changes
             if (m_activeAvatar
                 && m_activeAvatar->hands)
             {
+                const auto club = getClub();
+
                 const auto& models = m_clubModels.at(m_activeAvatar->clubModelID);
-                m_activeAvatar->hands->setModel(models.models[models.indices[getClub()]]);
+                m_activeAvatar->hands->setModel(models.models[models.indices[club]]);
                 m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
+
+                const auto current = m_activeAvatar->model.getComponent<cro::Skeleton>().getCurrentAnimation();
+                std::int32_t next = current;
+                if (club > ClubID::NineIron)
+                {
+                    if (current == m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::Idle])
+                    {
+                        next = m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::ToChip];
+                    }
+                }
+                else
+                {
+                    if (current == m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::ChipIdle])
+                    {
+                        next = m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::FromChip];
+                    }
+                }
+
+                if (current != next)
+                {
+                    m_activeAvatar->model.getComponent<cro::Skeleton>().play(next);
+                }
             }
 
             //but only update the UI if this is us
@@ -4919,22 +4952,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 if (club != ClubID::Putter
                     /*&& (data & 0x00ff) == m_currentPlayer.client*/)
                 {
-                    m_inputParser.syncClub(club);
-                    //for some reason this makes the default clubs flicker.
-                    /*if (m_activeAvatar
-                        && m_activeAvatar->hands)
-                    {
-                        const auto& models = m_clubModels.at(m_activeAvatar->clubModelID);
-                        if (club < models.indices.size())
-                        {
-                            m_activeAvatar->hands->setModel(models.models[models.indices[club]]);
-                            m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
-                        }
-                        else
-                        {
-                            LogI << "Index out of range, wanted club " << (int)club << ", models range: " << models.indices.size() << std::endl;
-                        }
-                    }*/
+                    m_inputParser.syncClub(club); //this triggers the club changed event
                 }
             }
         }
@@ -5579,30 +5597,12 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             if (m_activeAvatar)
             {
                 auto animID = evt.packet.as<std::uint8_t>();
-                
-                //TBH I don't recall this having ever worked
-                /*if (animID == AnimationID::Celebrate)
+                if (animID == AnimationID::Swing
+                    && getClub() > ClubID::NineIron)
                 {
-                    for (auto e : m_clubModels.models)
-                    {
-                        e.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-                    }
+                    //we don't know the club server side to send correct animation *sigh*
+                    animID = AnimationID::Chip;
                 }
-                else
-                {
-                    for (auto e : m_clubModels.models)
-                    {
-                        e.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
-                    }
-                }*/
-
-                /*if (animID == AnimationID::Swing)
-                {
-                    if(m_inputParser.getPower() * Clubs[getClub()].target < 20.f)
-                    {
-                        animID = AnimationID::Chip;
-                    }
-                }*/
 
                 //TODO scale club model to zero if not idle or swing
 

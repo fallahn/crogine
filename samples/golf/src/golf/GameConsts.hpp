@@ -369,7 +369,7 @@ struct AnimationID final
 {
     enum
     {
-        Idle, Swing, Chip, Putt,
+        Idle, Swing, ToChip, Chip, ChipIdle, FromChip, Putt,
         Celebrate, Disappoint,
         Impatient, IdleStand,
         Count,

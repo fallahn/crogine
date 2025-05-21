@@ -2371,6 +2371,9 @@ void GolfState::loadModels()
             return 0;// static_cast<std::int32_t>(cro::Util::Random::value(0u, m_sharedData.hairInfo.size() - 1));
         };
 
+    cro::ModelDefinition animations(m_resources);
+    animations.loadFromFile("assets/golf/models/avatars/animations.cmt");
+
     //player avatars
     cro::ModelDefinition md(m_resources);
     for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
@@ -2514,6 +2517,14 @@ void GolfState::loadModels()
                 {
                     auto& skel = entity.getComponent<cro::Skeleton>();
 
+                    if (animations.hasSkeleton())
+                    {
+                        for (auto s = 0u; s < animations.getSkeleton().getAnimations().size(); ++s)
+                        {
+                            skel.addAnimation(animations.getSkeleton(), s);
+                        }
+                    }
+
                     const auto& anims = skel.getAnimations();
                     for (auto k = 0u; k < std::min(anims.size(), static_cast<std::size_t>(AnimationID::Count)); ++k)
                     {
@@ -2529,6 +2540,18 @@ void GolfState::loadModels()
                         else if (anims[k].name == "chip")
                         {
                             m_avatars[i][j].animationIDs[AnimationID::Chip] = k;
+                        }
+                        else if (anims[k].name == "chip_idle")
+                        {
+                            m_avatars[i][j].animationIDs[AnimationID::ChipIdle] = k;
+                        }
+                        else if (anims[k].name == "to_chip")
+                        {
+                            m_avatars[i][j].animationIDs[AnimationID::ToChip] = k;
+                        }
+                        else if (anims[k].name == "from_chip")
+                        {
+                            m_avatars[i][j].animationIDs[AnimationID::FromChip] = k;
                         }
                         else if (anims[k].name == "putt")
                         {
