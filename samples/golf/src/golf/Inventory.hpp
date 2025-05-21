@@ -153,14 +153,16 @@ namespace inv
         std::uint32_t loadoutCount = 2; //number of unlocked loadouts (unused)
 
         std::array<Loadout, MaxLoadouts> loadouts = {}; //unused - implement this if people like the idea of saving loadouts
-        std::array<std::int32_t, MaxItems> inventory = {}; //indices of shop-bought items
+        std::array<std::int32_t, MaxItems> inventory = {}; //qty of shop-bought items, -1 if not owned
 
         std::int32_t balance = 5000;
 
         std::int32_t manufacturerFlags = 0;
+        std::int32_t itemTypes = 0; //flags used to track buying one of each club
+        static constexpr std::int32_t AllTypes = 0xfff;
 
         //in case of expansion in the future.
-        /*const */std::array<std::int32_t, 32> Reserved = {};
+        /*const */std::array<std::int32_t, 31> Reserved = {};
 
         Inventory()
         {

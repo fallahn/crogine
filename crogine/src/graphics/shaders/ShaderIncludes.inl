@@ -320,8 +320,11 @@ R"(
 
 //#include FXAA
 static inline const std::string FXAA = R"(
+#if !defined(NO_RES)
     uniform vec2 u_resolution = vec2(640.0, 480.0);
-
+#else
+    vec2 u_resolution = vec2(0.0);
+#endif
     const vec3 luma = vec3(0.299, 0.587, 0.114);
 
     vec4 fxaa(sampler2D sampler, vec2 uv)

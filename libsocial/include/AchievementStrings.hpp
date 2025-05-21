@@ -171,7 +171,12 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "beginners_luck",
     "first_rodeo",
     "bigger_shelf",
-    "ahead_of_the_game"
+    "ahead_of_the_game",
+    "upgrade",
+    "custom_kit",
+    "big_spender",
+    "hoarder",
+    "entrepreneur"
 };
 
 //appears on the notification
@@ -301,7 +306,12 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Beginner's Luck",
     "Not My First Rodeo",
     "Gonna Need A Bigger Shelf",
-    "Ahead Of The Game"
+    "Ahead Of The Game",
+    "Upgrade",
+    "Custom Kit",
+    "Big Spender",
+    "Hoarder",
+    "Entrepreneur"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -432,6 +442,11 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Win a tournament using only the Expert clubs", false),
     std::make_pair("Win a tournament using only the Pro clubs", false),
     std::make_pair("Complete the tutorial early with a chip-in", false),
+    std::make_pair("Buy an upgrade at the Equipment Counter", false),
+    std::make_pair("Upgrade one of each club", false),
+    std::make_pair("Spend more than 50k Credits at the Equipment Counter", false),
+    std::make_pair("Buy everything at the Equipment Counter", false),
+    std::make_pair("Sell a piece of gear back to the Equipment Counter", false),
 };
 
 //assuming trophies load correctly they are:
@@ -599,6 +614,12 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*123*/TrophyID::SilverFigure,
     /*124*/TrophyID::GoldFigure,
     /*125*/TrophyID::SilverCup,
+
+    /*126*/TrophyID::BronzeCup,
+    /*127*/TrophyID::SilverFigure,
+    /*128*/TrophyID::GoldFigure,
+    /*129*/TrophyID::Platinum,
+    /*130*/TrophyID::BronzeCup,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
@@ -660,7 +681,8 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "longest_drive",
     "average_putt",
     "longest_putt",
-    "longest_chip_in"
+    "longest_chip_in",
+    "credits_spent"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -721,7 +743,8 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Longest Drive Distance (metres)",
     "Average Putt Distance (metres)",
     "Longest Putt Distance (metres)",
-    "Longest Chip-in (metres)"
+    "Longest Chip-in (metres)",
+    "Credits Spent At The Equipment Counter"
 };
 
 struct StatType final
@@ -793,6 +816,7 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Float,
     StatType::Float,
     StatType::Float,
+    StatType::Integer
 };
 
 struct StatTrigger final

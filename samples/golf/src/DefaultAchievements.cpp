@@ -132,6 +132,10 @@ bool DefaultAchievements::init()
     trigger->achID = AchievementID::MonthOfSundays;
     trigger->threshold = 30;
 
+    trigger = &StatTriggers[StatID::CreditsSpent].emplace_back();
+    trigger->achID = AchievementID::BigSpender;
+    trigger->threshold = 50000;
+
 #ifndef USE_GNS
     Social::readAllStats();
 #endif

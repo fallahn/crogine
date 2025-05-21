@@ -37,6 +37,8 @@ source distribution.
 #include "Clubs.hpp"
 #include "Social.hpp"
 #include "Timeline.hpp"
+#include "Achievements.hpp"
+#include "AchievementStrings.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -2424,7 +2426,14 @@ void ShopState::purchaseItem()
     //though it only really applies to balls which come in 10
     m_sharedData.inventory.inventory[item.itemIndex] = isBall ? 10 : 1;
     m_sharedData.inventory.balance -= invItem.price;
+    m_sharedData.inventory.itemTypes |= (1 << invItem.type);
     
+    if ((m_sharedData.inventory.itemTypes & inv::Inventory::AllTypes) == inv::Inventory::AllTypes)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::CustomKit]);
+    }
+    Achievements::incrementStat(StatStrings[StatID::CreditsSpent], invItem.price);
+
     const auto manFlag = (1 << invItem.manufacturer);
     if ((m_sharedData.inventory.manufacturerFlags & manFlag) == 0)
     {
@@ -2449,6 +2458,21 @@ void ShopState::purchaseItem()
     m_buyCounter.str1.getComponent<cro::Text>().setString(m_sellString);
 
     updateStatDisplay(item); // if this was a ball we need to refresh the number owned
+
+    bool allBought = true;
+    for (auto i : m_sharedData.inventory.inventory)
+    {
+        if (i == -1)
+        {
+            allBought = false;
+            break;
+        }
+    }
+    if (allBought)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::Hoarder]);
+    }
+    Achievements::awardAchievement(AchievementStrings[AchievementID::Upgrade]);
 }
 
 void ShopState::sellItem()
@@ -2480,6 +2504,8 @@ void ShopState::sellItem()
             loadout.write(pd.profileID);
         }
     }
+
+    Achievements::awardAchievement(AchievementStrings[AchievementID::Entrepreneur]);
 }
 
 void ShopState::quitState()

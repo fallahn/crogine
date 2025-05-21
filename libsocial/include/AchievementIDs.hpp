@@ -186,6 +186,12 @@ namespace AchievementID
 
         AheadOfTheGame,
 
+        Upgrade,
+        CustomKit,
+        BigSpender,
+        Hoarder,
+        Entrepreneur,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
@@ -258,6 +264,7 @@ namespace StatID
         AveragePutt,
         LongestPutt,
         LongestChipIn,
+        CreditsSpent,
 
         Count
     };

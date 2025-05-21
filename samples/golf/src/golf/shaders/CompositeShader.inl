@@ -135,9 +135,16 @@ float brightnessContrast(float value)
 }
 #endif
 
+//this wants a uniform u_resolution
+//which we hack around with NO_RES
+//#define NO_RES
+//#include FXAA
 
 void main()
 {
+//u_resolution = textureSize(u_texture, 0);
+
+    //vec4 colour = fxaa(u_texture, v_texCoord) * v_colour;
     vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
     colour.rgb = dim(colour.rgb);
 
