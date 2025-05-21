@@ -88,7 +88,7 @@ namespace
         cro::String("Will You Marry Me?"),
         cro::String("Cats are better than Dogs"),
         cro::String("I can see my house from here"),
-        cro::String("<insert text here>"),
+        cro::String("You Can't Go Wrong\nWith a 50ft Dong."),
         cro::String("Harding's Balls"),
         cro::String("Claire: Have you seen my keys?\nThey're not where I left them"),
         cro::String("To truly find yourself you must\nplay hide and seek alone."),
@@ -2374,6 +2374,9 @@ void GolfState::loadModels()
     cro::ModelDefinition animations(m_resources);
     animations.loadFromFile("assets/golf/models/avatars/animations.cmt");
 
+    cro::ModelDefinition defaultAnims(m_resources);
+    defaultAnims.loadFromFile("assets/golf/models/avatars/player_zero.cmt");
+
     //player avatars
     cro::ModelDefinition md(m_resources);
     for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
@@ -2516,6 +2519,26 @@ void GolfState::loadModels()
                 if (entity.hasComponent<cro::Skeleton>())
                 {
                     auto& skel = entity.getComponent<cro::Skeleton>();
+                    auto defaultAttachment = -1;
+
+                    if (defaultAnims.hasSkeleton())
+                    {
+                        defaultAttachment = defaultAnims.getSkeleton().getAttachmentIndex("hands");
+                        for (auto s = 0u; s < defaultAnims.getSkeleton().getAnimations().size(); ++s)
+                        {
+                            //hmm this is a bit kludgy, but the models have different celebrate/disappoint
+                            //animations and we probably want to keep these for a bit of variation. This
+                            //also means we still have to embed these anims in workshop models where we
+                            //could have otherwise saved some file-size by not importing anims into the model.
+                            const auto& anim = defaultAnims.getSkeleton().getAnimations()[s];
+                            if (anim.name != "celebrate"
+                                && anim.name != "disappointment"
+                                && anim.name != "impatient")
+                            {
+                                skel.addAnimation(defaultAnims.getSkeleton(), s);
+                            }
+                        }
+                    }
 
                     if (animations.hasSkeleton())
                     {
@@ -2666,6 +2689,11 @@ void GolfState::loadModels()
                     id = skel.getAttachmentIndex("hands");
                     if (id > -1)
                     {
+                        //if we're using a single set of anims we need to copy the hand attachment to match
+                        if (defaultAttachment != -1)
+                        {
+                            skel.getAttachments()[id] = defaultAnims.getSkeleton().getAttachments()[defaultAttachment];
+                        }
                         m_avatars[i][j].hands = &skel.getAttachments()[id];
                     }
                 }

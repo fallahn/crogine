@@ -241,7 +241,7 @@ namespace cro
         If an animation with the name already exists then it is overwritten!
         \param source The skeleton component to copy from
         \param idx The index of the animation to copy. If this is out of range nothing is copied
-        Note that animations in this compnent will be re-indexed so existing indices will be invalid
+        Note that animations in this component will be re-indexed so existing indices will be invalid
         \returns true on success else returns false
         */
         bool addAnimation(const Skeleton& source, std::size_t idx);

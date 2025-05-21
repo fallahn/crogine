@@ -160,7 +160,7 @@ static inline const std::string WireframeFragment = R"(
     FRAG_OUT.a *= 1.0 - step(stepPos, pos);
 #else
     float dist = length(v_lineCentre - gl_FragCoord.xy);
-    FRAG_OUT.a *= mix(pow((LineWidth - dist) / LineWidth, BlendAmount), 0.0, step(LineWidth, dist));
+    //FRAG_OUT.a *= mix(pow((LineWidth - dist) / LineWidth, BlendAmount), 0.0, step(LineWidth, dist));
 #endif
     }
 )";

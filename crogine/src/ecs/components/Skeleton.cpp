@@ -213,7 +213,7 @@ bool Skeleton::addAnimation(const Skeleton& source, std::size_t idx)
     if (auto exists = getAnimationIndex(srcAnim.name); exists != -1)
     {
         removeAnimation(exists);
-        LogI << "Replaced animation " << srcAnim.name << std::endl;
+        //LogI << "Replaced animation " << srcAnim.name << std::endl;
     }
 
     if (m_frameSize == 0)

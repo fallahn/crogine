@@ -2714,7 +2714,29 @@ void DrivingState::createPlayer()
         cro::ModelDefinition animations(m_resources);
         animations.loadFromFile("assets/golf/models/avatars/animations.cmt");
 
+        cro::ModelDefinition defaultAnims(m_resources);
+        defaultAnims.loadFromFile("assets/golf/models/avatars/player_zero.cmt");
+
+        auto defaultAttachment = -1;
+
         auto& skel = entity.getComponent<cro::Skeleton>();
+        if (defaultAnims.hasSkeleton())
+        {
+            defaultAttachment = defaultAnims.getSkeleton().getAttachmentIndex("hands");
+            for (auto s = 0u; s < defaultAnims.getSkeleton().getAnimations().size(); ++s)
+            {
+                //hmm this is a bit kludgy, but the models have different celebrate/disappoint
+                //animations and we probably want to keep these for a bit of variation
+                const auto& anim = defaultAnims.getSkeleton().getAnimations()[s];
+                if (anim.name != "celebrate"
+                    && anim.name != "disappointment"
+                    && anim.name != "impatient")
+                {
+                    skel.addAnimation(defaultAnims.getSkeleton(), s);
+                }
+            }
+        }
+
         if (animations.hasSkeleton())
         {
             for (auto s = 0u; s < animations.getSkeleton().getAnimations().size(); ++s)
@@ -2864,6 +2886,11 @@ void DrivingState::createPlayer()
         id = skel.getAttachmentIndex("hands");
         if (id > -1)
         {
+            if (defaultAttachment != -1)
+            {
+                skel.getAttachments()[id] = defaultAnims.getSkeleton().getAttachments()[defaultAttachment];
+            }
+
             m_avatar.hands = &skel.getAttachments()[id];
             m_avatar.hands->setModel(m_clubModels.models[m_clubModels.indices[ClubID::Driver]]);
         }
