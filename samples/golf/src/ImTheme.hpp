@@ -146,5 +146,13 @@ static inline void applyImGuiStyle(SharedStateData& sd)
         sd.chatFonts.buttonHeight = 24.f;// 30.f;
     }
 
+    //fonts used in help screen
+    ImFontConfig configC;
+    configC.FontBuilderFlags |= (1 << 8) | (1 << 9);
+
+    sd.helpFonts[0] = fonts->AddFontFromFileTTF((rp + "assets/fonts/VeraMono.ttf").c_str(), 12.f, &configC);
+    sd.helpFonts[1] = fonts->AddFontFromFileTTF((rp + "assets/fonts/VeraMono.ttf").c_str(), 24.f, &configC);
+    sd.helpFonts[2] = fonts->AddFontFromFileTTF((rp + "assets/fonts/VeraMono.ttf").c_str(), 48.f, &configC);
+
     fonts->Build();
 }

@@ -116,6 +116,8 @@ private:
     void applyPostProcess();
     bool setShader(const char*);
 
+    void createHowTo();
+
 #ifdef _WIN32
     void assertFileSystem();
 #endif

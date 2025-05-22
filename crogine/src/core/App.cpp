@@ -790,6 +790,16 @@ void App::handleEvents()
             }
             break;
         case SDL_KEYUP:
+            if (evt.key.keysym.scancode == SDL_SCANCODE_GRAVE)
+            {
+                Console::show();
+                if (!Console::isVisible())
+                {
+                    saveSettings();
+                }
+                return;
+            }
+                
             switch (evt.key.keysym.sym)
             {
             default: break;

@@ -270,6 +270,18 @@ void GolfGame::handleEvent(const cro::Event& evt)
     case SDL_MOUSEMOTION:
         //cro::App::getWindow().setMouseCaptured(false);
         break;
+    case SDL_MOUSEBUTTONUP:
+        if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            m_sharedData.showHelp = false;
+        }
+        break;
+    case SDL_CONTROLLERBUTTONUP:
+        if (evt.cbutton.button == cro::GameController::ButtonB)
+        {
+            m_sharedData.showHelp = false;
+        }
+        break;
     case SDL_KEYUP:
         switch (evt.key.keysym.sym)
         {
@@ -287,6 +299,11 @@ void GolfGame::handleEvent(const cro::Event& evt)
             m_achievements->showTest();
             break;
 #endif
+#else
+        case SDLK_ESCAPE:
+        case SDLK_BACKSPACE:
+            m_sharedData.showHelp = false;
+            break;
 #endif
         case SDLK_KP_MINUS:
             togglePixelScale(m_sharedData, false);
@@ -524,6 +541,11 @@ void GolfGame::handleMessage(const cro::Message& msg)
 
 void GolfGame::simulate(float dt)
 {
+    if (m_sharedData.showHelp)
+    {
+        //TODO check controller input and converts to mouse scroll events
+    }
+
     if (m_sharedData.usePostProcess)
     {
         //update optional uniforms (should be -1 if not loaded)
@@ -667,6 +689,7 @@ bool GolfGame::initialise()
 #endif
 
     parseCredits();
+    createHowTo();
 
     registerConsoleTab("Advanced",
         [&]()
@@ -2236,6 +2259,34 @@ bool GolfGame::setShader(const char* frag)
     }
     return false;
 };
+
+void GolfGame::createHowTo()
+{
+    registerWindow([&]() 
+        {
+            if (m_sharedData.showHelp)
+            {
+                const auto viewSize = std::min(static_cast<std::int32_t>(getViewScale()) - 1, 2);
+                const glm::vec2 size = cro::App::getWindow().getScaledSize();
+                ImGui::SetNextWindowSize({ size.x, size.y });
+                ImGui::SetNextWindowPos({ 0.f, 0.f });
+                ImGui::Begin("How To Play", nullptr/*&m_sharedData.showHelp*/, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+                
+
+                ImGui::PushFont(m_sharedData.helpFonts[viewSize]);
+                ImGui::Text("Text");
+
+                //image_size_scaled = imgSize/viewScale
+                //SetCursorPos((GetWindowSize() - image_size_scaled) * 0.5f);
+                //ImGui::Image();
+
+                ImGui::PopFont();
+
+
+                ImGui::End();
+            }
+        });
+}
 
 #ifdef _WIN32
 void GolfGame::assertFileSystem()
