@@ -1837,7 +1837,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
                 const auto current = m_activeAvatar->model.getComponent<cro::Skeleton>().getCurrentAnimation();
                 std::int32_t next = current;
-                if (club > ClubID::NineIron)
+                if (club > ClubID::PitchWedge)
                 {
                     if (current == m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::Idle])
                     {
@@ -5603,7 +5603,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             {
                 auto animID = evt.packet.as<std::uint8_t>();
                 if (animID == AnimationID::Swing
-                    && getClub() > ClubID::NineIron)
+                    && getClub() > ClubID::PitchWedge)
                 {
                     //we don't know the club server side to send correct animation *sigh*
                     animID = AnimationID::Chip;
@@ -5611,7 +5611,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
                 //TODO scale club model to zero if not idle or swing
 
-                auto anim = m_activeAvatar->animationIDs[animID];
+                const auto anim = m_activeAvatar->animationIDs[animID];
                 auto& skel = m_activeAvatar->model.getComponent<cro::Skeleton>();
 
                 if (skel.getState() == cro::Skeleton::Stopped

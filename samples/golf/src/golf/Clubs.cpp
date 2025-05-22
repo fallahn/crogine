@@ -95,10 +95,11 @@ namespace
     constexpr std::size_t DebugLevel = 35;
     std::int32_t playerLevel = 0;
 
-    std::int32_t levelOffset(std::int32_t l)
+    std::int32_t levelOffset(std::int32_t level)
     {
-        return std::max(1, l); //casual/expert 240, pro 260
-        //return l; //default selection
+        return std::min(2, level + 1); //casual 240, expert/pro 260
+        //return std::max(1, level); //casual/expert 240, pro 260
+        //return level; //default selection
         //return 2; //always pro distance
     }
 

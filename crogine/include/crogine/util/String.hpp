@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -47,6 +47,46 @@ source distribution.
 
 namespace cro::Util::String
 {
+    /*!
+    \brief Splits a string with a given token and returns a vector of results
+    */
+    static inline std::vector<std::string> tokenize(const std::string& str, char delim, bool keepEmpty = false)
+    {
+        CRO_ASSERT(!str.empty(), "string empty");
+        std::stringstream ss(str);
+        std::string token;
+        std::vector<std::string> output;
+        while (std::getline(ss, token, delim))
+        {
+            if (!token.empty() ||
+                (token.empty() && keepEmpty))
+            {
+                output.push_back(token);
+            }
+        }
+        return output;
+    }
+
+    static inline std::vector<cro::String> tokenize(const cro::String& str, const cro::String& delim)
+    {
+        std::vector<cro::String> retVal;
+        std::size_t begin = 0;
+        std::size_t end = str.find(delim, begin);
+
+        while (end != cro::String::InvalidPos)
+        {
+            if (end > begin)
+            {
+                retVal.push_back(str.substr(begin, end - begin));
+            }
+            begin = end + 1;
+            end = str.find(delim, begin);
+        }
+        retVal.push_back(str.substr(begin));
+
+        return retVal;
+    }
+
     /*!
     \brief Takes a utf8 encoded std::string and returns
     a word-wrapped cro::String based on the max character
@@ -111,19 +151,56 @@ namespace cro::Util::String
     */
     static inline std::size_t wordWrap(cro::String& str, std::size_t MaxWidth)
     {
+        if (str.empty())
+        {
+            return 0;
+        }
+
         static const cro::String endline(" ");
         static const cro::String newline("\n");
 
+        
         std::size_t rowCount = 1;
+        const auto tokens = tokenize(str, endline);
+        cro::String result;
+        std::size_t currLength = 0;
 
-        std::size_t startPos = MaxWidth - 1;
-        while ((startPos = str.find(endline, startPos)) != cro::String::InvalidPos)
+        for (auto i = 0; i < tokens.size(); ++i)
         {
-            str.replace(startPos, endline.size(), newline);
-            startPos += newline.size() + MaxWidth;
+            if (tokens[i].size() > MaxWidth)
+            {
+                //hyphenate
+                cro::String f = tokens[i].substr(0, (MaxWidth - currLength) - 1) + "-";
+                cro::String s = tokens[i].substr(MaxWidth - currLength);
 
-            rowCount++;
+                result += f + newline;
+                result += s;
+                currLength = s.size() + 1; //inc space appended below
+            }
+            else
+            {
+                if (currLength + (tokens[i].size() + 1) >= MaxWidth)
+                {
+                    result += newline;
+                    currLength = 0;
+                }
+                
+                result += tokens[i];
+                currLength += tokens[i].size() + 1;
+            }
+            result += " ";
         }
+        result.erase(result.size() - 1);
+        str.swap(result);
+
+        //std::size_t startPos = MaxWidth - 1;
+        //while ((startPos = str.find(endline, startPos)) != cro::String::InvalidPos)
+        //{
+        //    str.replace(startPos, endline.size(), newline);
+        //    startPos += newline.size() + MaxWidth;
+
+        //    rowCount++;
+        //}
 
         return rowCount;
     }
@@ -352,45 +429,6 @@ namespace cro::Util::String
             }
         }
         return codePoints;
-    }
-
-    /*!
-    \brief Splits a string with a given token and returns a vector of results
-    */
-    static inline std::vector<std::string> tokenize(const std::string& str, char delim, bool keepEmpty = false)
-    {
-        CRO_ASSERT(!str.empty(), "string empty");
-        std::stringstream ss(str);
-        std::string token;
-        std::vector<std::string> output;
-        while (std::getline(ss, token, delim))
-        {
-            if (!token.empty() ||
-                (token.empty() && keepEmpty))
-            {
-                output.push_back(token);
-            }
-        }
-        return output;
-    }
-
-    static inline std::vector<cro::String> tokenize(const cro::String& str, const cro::String& delim)
-    {
-        std::vector<cro::String> retVal;
-        std::size_t begin = 0;
-        std::size_t end = str.find(delim, begin);
-
-        while (end != cro::String::InvalidPos)
-        {
-            if (end > begin)
-            {
-                retVal.push_back(str.substr(begin, end - begin));
-            }
-            begin = end + 1;
-            end = str.find(delim, begin);
-        }
-
-        return retVal;
     }
 
     /*!

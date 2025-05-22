@@ -826,7 +826,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::PlayerAvatar;
             cmd.action = [&](cro::Entity e, float)
             {
-                e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[m_inputParser.getClub() > ClubID::NineIron ? AnimationID::Chip : AnimationID::Swing]);
+                e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[m_inputParser.getClub() > ClubID::PitchWedge ? AnimationID::Chip : AnimationID::Swing]);
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -875,7 +875,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
             //and change the stance
             const auto current = m_avatar.model.getComponent<cro::Skeleton>().getCurrentAnimation();
             std::int32_t next = current;
-            if (club > ClubID::NineIron)
+            if (club > ClubID::PitchWedge)
             {
                 if (current == m_avatar.animationIDs[AnimationID::Idle])
                 {
@@ -3715,7 +3715,7 @@ void DrivingState::setHole(std::int32_t index)
     cmd.targetFlags = CommandID::PlayerAvatar;
     cmd.action = [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[m_inputParser.getClub() > ClubID::NineIron ? AnimationID::ChipIdle : AnimationID::Idle], 1.f, 0.2f);
+        e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[m_inputParser.getClub() > ClubID::PitchWedge ? AnimationID::ChipIdle : AnimationID::Idle], 1.f, 0.2f);
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -3948,7 +3948,7 @@ void DrivingState::forceRestart()
 
 
     //reset any active animation from the avatar else it'll resume and hit the ball...
-    m_avatar.model.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[m_inputParser.getClub() > ClubID::NineIron ? AnimationID::ChipIdle : AnimationID::Idle]);
+    m_avatar.model.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[m_inputParser.getClub() > ClubID::PitchWedge ? AnimationID::ChipIdle : AnimationID::Idle]);
 }
 
 void DrivingState::triggerGC(glm::vec3 position)
