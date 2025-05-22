@@ -44,6 +44,7 @@ source distribution.
 #include "BallTrail.hpp"
 #include "TextChat.hpp"
 #include "League.hpp"
+#include "AvatarAnimation.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/audio/DynamicAudioStream.hpp>

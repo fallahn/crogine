@@ -144,6 +144,13 @@ std::ostream& operator << (std::ostream& out, glm::tvec4<T> v)
 }
 
 template <typename T>
+std::ostream& operator << (std::ostream& out, glm::qua<T> v)
+{
+    out << "{ " << v.x << ", " << v.y << ", " << v.z << ", " << v.w << " }";
+    return out;
+}
+
+template <typename T>
 std::ostream& operator << (std::ostream& out, cro::Rectangle<T> r)
 {
     out << "[ " << r.left << ", " << r.bottom << ", " << r.width << ", " << r.height << " ]";

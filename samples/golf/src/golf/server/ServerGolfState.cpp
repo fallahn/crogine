@@ -36,6 +36,7 @@ source distribution.
 #include "../MessageIDs.hpp"
 #include "../WeatherDirector.hpp"
 #include "../League.hpp"
+#include "../AvatarAnimation.hpp"
 #include "CPUStats.hpp"
 #include "ServerGolfState.hpp"
 #include "ServerMessages.hpp"

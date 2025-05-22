@@ -2546,6 +2546,11 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 bool GolfState::simulate(float dt)
 {
+    if (m_activeAvatar)
+    {
+        m_activeAvatar->applyAttachment();
+    }
+
     if (m_minimapTexturePass < MaxMinimapPasses)
     {
         m_mapScene.simulate(dt);

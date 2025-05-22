@@ -37,6 +37,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "BallTrail.hpp"
 #include "ClubModels.hpp"
+#include "AvatarAnimation.hpp"
 
 #include <crogine/audio/DynamicAudioStream.hpp>
 

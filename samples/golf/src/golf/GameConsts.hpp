@@ -365,19 +365,6 @@ struct ShaderID final
     };
 };
 
-struct AnimationID final
-{
-    enum
-    {
-        Idle, Swing, ToChip, Chip, ChipIdle, FromChip, Putt,
-        Celebrate, Disappoint,
-        Impatient, IdleStand,
-        Count,
-
-    };
-    static constexpr std::size_t Invalid = std::numeric_limits<std::size_t>::max();
-};
-
 struct SkipState final
 {
     std::int32_t state = -1;
@@ -388,16 +375,6 @@ struct SkipState final
 
     std::int32_t previousState = state;
     bool displayControllerMessage = false;
-};
-
-struct Avatar final
-{
-    bool flipped = false;
-    cro::Entity model;
-    cro::Attachment* hands = nullptr;
-    std::array<std::size_t, AnimationID::Count> animationIDs = {};
-    cro::Entity ballModel;
-    std::uint32_t clubModelID = 0;
 };
 
 struct CreditID final

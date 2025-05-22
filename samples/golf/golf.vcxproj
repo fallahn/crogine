@@ -788,6 +788,7 @@
     <ClInclude Include="src\DefaultAchievements.hpp" />
     <ClInclude Include="src\editor\BushState.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
+    <ClInclude Include="src\golf\AvatarAnimation.hpp" />
     <ClInclude Include="src\golf\AvatarRotationSystem.hpp" />
     <ClInclude Include="src\golf\BallAnimationSystem.hpp" />
     <ClInclude Include="src\golf\BallSystem.hpp" />

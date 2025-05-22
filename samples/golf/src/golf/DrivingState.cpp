@@ -1090,6 +1090,8 @@ void DrivingState::handleMessage(const cro::Message& msg)
 
 bool DrivingState::simulate(float dt)
 {
+    m_avatar.applyAttachment();
+
     m_ballTrail.update();
 
     if (getStateCount() == 1)
