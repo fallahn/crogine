@@ -264,23 +264,42 @@ void GolfGame::setSafeModeEnabled(bool sm)
 
 void GolfGame::handleEvent(const cro::Event& evt)
 {
+    if (m_sharedData.showHelp)
+    {
+        switch (evt.type)
+        {
+        default: break;
+        case SDL_MOUSEBUTTONUP:
+            if (evt.button.button == SDL_BUTTON_RIGHT)
+            {
+                m_sharedData.showHelp = false;
+            }
+            break;
+        case SDL_CONTROLLERBUTTONUP:
+            if (evt.cbutton.button == cro::GameController::ButtonB)
+            {
+                m_sharedData.showHelp = false;
+            }
+            break;
+        case SDL_KEYUP:
+            switch (evt.key.keysym.sym)
+            {
+            default: break;
+            case SDLK_ESCAPE:
+            case SDLK_BACKSPACE:
+                m_sharedData.showHelp = false;
+                break;
+            }
+            break;
+        }
+        return;
+    }
+
     switch (evt.type)
     {
     default: break;
     case SDL_MOUSEMOTION:
         //cro::App::getWindow().setMouseCaptured(false);
-        break;
-    case SDL_MOUSEBUTTONUP:
-        if (evt.button.button == SDL_BUTTON_RIGHT)
-        {
-            m_sharedData.showHelp = false;
-        }
-        break;
-    case SDL_CONTROLLERBUTTONUP:
-        if (evt.cbutton.button == cro::GameController::ButtonB)
-        {
-            m_sharedData.showHelp = false;
-        }
         break;
     case SDL_KEYUP:
         switch (evt.key.keysym.sym)
@@ -299,11 +318,6 @@ void GolfGame::handleEvent(const cro::Event& evt)
             m_achievements->showTest();
             break;
 #endif
-#else
-        case SDLK_ESCAPE:
-        case SDLK_BACKSPACE:
-            m_sharedData.showHelp = false;
-            break;
 #endif
         case SDLK_KP_MINUS:
             togglePixelScale(m_sharedData, false);
@@ -2276,6 +2290,10 @@ void GolfGame::createHowTo()
                 ImGui::PushFont(m_sharedData.helpFonts[viewSize]);
                 ImGui::Text("Text");
 
+                //for(chapter : chapters)
+                // for(item : chapter)
+                //   if(item.type == text)
+                //   else if (item.type == image)
                 //image_size_scaled = imgSize/viewScale
                 //SetCursorPos((GetWindowSize() - image_size_scaled) * 0.5f);
                 //ImGui::Image();
