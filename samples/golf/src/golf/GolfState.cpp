@@ -457,16 +457,23 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     Social::setGroup(m_sharedData.clientConnection.hostID, playerCount);
 
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
-    context.mainWindow.loadResources([this]() {
+    context.mainWindow.loadResources([&]() {
+        context.mainWindow.setLoadingProgress(0.f);
         addSystems();
         loadAssets();
+        context.mainWindow.setLoadingProgress(0.3f);
         buildTrophyScene();
         buildScene();
+        context.mainWindow.setLoadingProgress(0.5f);
 
         createTransition();
+        context.mainWindow.setLoadingProgress(0.6f);
         cacheState(StateID::Pause);
+        context.mainWindow.setLoadingProgress(0.7f);
         cacheState(StateID::MapOverview);
+        context.mainWindow.setLoadingProgress(0.8f);
         cacheState(StateID::Keyboard);
+        context.mainWindow.setLoadingProgress(1.f);
         });
     Timeline::setGameMode(Timeline::GameMode::Playing);
 

@@ -29,6 +29,7 @@ source distribution.
 
 #include "LoadingScreen.hpp"
 #include "WebsocketServer.hpp"
+#include "Colordome-32.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/SharedStateData.hpp"
 #include "golf/PacketIDs.hpp"
@@ -204,6 +205,12 @@ void LoadingScreen::launch()
     stringIndex = (stringIndex + 1) % TipStrings.size();
     m_tipText->setString(TipStrings[stringIndex]);
     m_tipText->setPosition({ std::round(cro::App::getWindow().getSize().x / 2.f), 86.f });
+
+    cro::Image img;
+    img.create(1, 1, CD32::Colours[CD32::BeigeLight]);
+    m_progressTexture.loadFromImage(img);
+    m_progressBar.setTexture(m_progressTexture);
+    m_progressBar.setScale({ 10.f, 10.f });
 }
 
 void LoadingScreen::update()
@@ -213,6 +220,10 @@ void LoadingScreen::update()
     
     static std::int32_t frameCounter = 0;
     static constexpr std::int32_t MaxFrames = 6;
+
+    auto& window = cro::App::getWindow();
+    auto old = window.getVsyncEnabled();
+    window.setVsyncEnabled(false); //this causes the loading screen to wait otherwise
 
     while (accumulator > timestep)
     {
@@ -275,12 +286,18 @@ void LoadingScreen::update()
             net::NetEvent evt;
             while (m_sharedData.voiceConnection.netClient.pollEvent(evt)) {}
         }
+
+        window.clear();
+        draw();
+        window.display();
     }
+    window.setVsyncEnabled(old);
 }
 
 void LoadingScreen::draw()
 {
     m_tipText->draw();
+    m_progressBar.draw();
 
     std::int32_t oldView[4];
     glCheck(glGetIntegerv(GL_VIEWPORT, oldView));
@@ -301,4 +318,17 @@ void LoadingScreen::draw()
 
     glCheck(glViewport(oldView[0], oldView[1], oldView[2], oldView[3]));
     glCheck(glDisable(GL_BLEND));
+}
+
+void LoadingScreen::setProgress(float p)
+{
+    auto& window = cro::App::getWindow();
+    const auto size = window.getSize().x;
+    m_progressBar.setScale({ size * p, 10.f });
+
+    update();
+
+    window.clear();
+    draw();
+    window.display();
 }

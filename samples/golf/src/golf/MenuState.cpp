@@ -245,22 +245,26 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         loadAssets();
         createScene();
         setVoiceCallbacks();
+        context.mainWindow.setLoadingProgress(0.1f);
 
         cacheState(StateID::Unlock);
         cacheState(StateID::Options);
         cacheState(StateID::Profile);
         cacheState(StateID::Practice);
         cacheState(StateID::Career);
+        context.mainWindow.setLoadingProgress(0.2f);
         cacheState(StateID::Tournament);
         cacheState(StateID::FreePlay);
         cacheState(StateID::Keyboard);
         cacheState(StateID::Leaderboard);
         cacheState(StateID::League);
+        context.mainWindow.setLoadingProgress(0.5f);
         cacheState(StateID::News);
         cacheState(StateID::Stats);
         cacheState(StateID::PlayerManagement);
         cacheState(StateID::Shop);
         cacheState(StateID::ClubInfo);
+        context.mainWindow.setLoadingProgress(0.7f);
 
         context.mainWindow.setMouseCaptured(false);
 
@@ -463,6 +467,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         }
         m_sharedData.inviteID = 0;
         m_sharedData.lobbyID = 0;
+
+        context.mainWindow.setLoadingProgress(1.f);
         });
     
     Timeline::setGameMode(Timeline::GameMode::Menu);

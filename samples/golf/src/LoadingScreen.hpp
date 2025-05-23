@@ -55,6 +55,9 @@ public:
     void update() override;
     void draw() override;
 
+    void setProgress(float p) override;
+
+
 private:
     SharedStateData& m_sharedData;
 
@@ -77,5 +80,8 @@ private:
     cro::Texture m_texture;
 
     cro::Font m_font;
-    std::unique_ptr<cro::SimpleText> m_tipText;
+    std::unique_ptr<cro::SimpleText> m_tipText; //TODO make this a regular member as it's no longer threaded
+    
+    cro::Texture m_progressTexture;
+    cro::SimpleQuad m_progressBar;
 };

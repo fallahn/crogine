@@ -75,8 +75,8 @@ struct Avatar final
                 {
                     const auto& skel = model.getComponent<cro::Skeleton>();
                     const auto& anim = skel.getAnimations()[animID];
-                    const float progress = static_cast<float>(anim.currentFrame - anim.startFrame) / anim.frameCount;
                     const float subFrame = 1.f / anim.frameCount;
+                    const float progress = static_cast<float>(anim.currentFrame - anim.startFrame) * subFrame;
 
                     return (subFrame * skel.getCurrentFrameTime()) + progress;
                 };
