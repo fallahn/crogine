@@ -232,6 +232,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_minimapTexturePass    (MaxMinimapPasses),
     m_drawDebugMesh         (false)
 {
+    context.mainWindow.setLoadingProgress(0.f);
+
     sd.activeResources = &m_resources;
     sd.quickplayOpponents = std::clamp(sd.quickplayOpponents, 0, 3);
     if (sd.quickplayOpponents != 0)
@@ -458,11 +460,13 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     context.mainWindow.loadResources([&]() {
-        context.mainWindow.setLoadingProgress(0.f);
+        context.mainWindow.setLoadingProgress(0.1f);
         addSystems();
+        context.mainWindow.setLoadingProgress(0.2f);
         loadAssets();
         context.mainWindow.setLoadingProgress(0.3f);
         buildTrophyScene();
+        context.mainWindow.setLoadingProgress(0.4f);
         buildScene();
         context.mainWindow.setLoadingProgress(0.5f);
 

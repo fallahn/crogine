@@ -286,12 +286,17 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
     ctx.mainWindow.setMouseCaptured(false);
 
     ctx.mainWindow.loadResources(
-        [this]() 
+        [&]() 
         {
+            ctx.mainWindow.setLoadingProgress(0.f);
             addSystems();
+            ctx.mainWindow.setLoadingProgress(0.3f);
             loadAssets();
+            ctx.mainWindow.setLoadingProgress(0.6f);
             buildScene();
+            ctx.mainWindow.setLoadingProgress(0.8f);
             buildUI();
+            ctx.mainWindow.setLoadingProgress(1.f);
         });
 
     Social::setStatus(Social::InfoID::Menu, { "Editing a Course" });
