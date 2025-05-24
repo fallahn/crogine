@@ -200,9 +200,14 @@ void LoadingScreen::update()
             while (m_sharedData.voiceConnection.netClient.pollEvent(evt)) {}
         }
 
-        window.clear();
-        draw();
-        window.display();
+        //hmmm steam deck frame limiter negates any vsync setting...
+        //who else will this affect? :/
+        if (!Social::isSteamdeck())
+        {
+            window.clear();
+            draw();
+            window.display();
+        }
     }
     window.setVsyncEnabled(old);
 }

@@ -165,7 +165,7 @@ namespace cro::Util::String
         cro::String result;
         std::size_t currLength = 0;
 
-        for (auto i = 0; i < tokens.size(); ++i)
+        for (auto i = 0u; i < tokens.size(); ++i)
         {
             if (tokens[i].size() > MaxWidth)
             {
