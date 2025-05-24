@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -142,7 +142,7 @@ namespace cro
         glm::vec3 getPosition() const { return m_position; }
         glm::quat getRotation() const { return m_rotation; }
         glm::vec3 getScale() const { return m_scale; }
-        const glm::mat4& getLocalTransform() const { return m_transform; }
+        const glm::mat4& getLocalTransform() const;
         const std::string& getName() const { return m_name; }
 
         static constexpr std::size_t MaxNameLength = 30;
@@ -153,11 +153,14 @@ namespace cro
         glm::vec3 m_position = glm::vec3(0.f);
         glm::quat m_rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
         glm::vec3 m_scale = glm::vec3(1.f);
-        glm::mat4 m_transform = glm::mat4(1.f);
-
         std::string m_name = "Attachment";
+        
+        //mutable to allow for dirty optimisation
+        mutable glm::mat4 m_transform = glm::mat4(1.f);
+        mutable bool m_dirtyTx = true;
 
-        void updateLocalTransform();
+
+        void updateLocalTransform() const;
     };
 
     /*!
@@ -281,6 +284,11 @@ namespace cro
         \brief Returns the current, normalised, time between frames
         */
         float getCurrentFrameTime() const;
+
+        /*!
+        \brief Returns the normalised progress through the current animation
+        */
+        float getAnimationProgress() const;
 
         operator bool() const
         {

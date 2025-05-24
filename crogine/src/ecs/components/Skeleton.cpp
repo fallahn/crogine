@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -297,6 +297,11 @@ float Skeleton::getCurrentFrameTime() const
     return m_animations[m_currentAnimation].currentFrameTime / m_animations[m_currentAnimation].frameTime;
 }
 
+float Skeleton::getAnimationProgress() const
+{
+    return (static_cast<float>(m_animations[m_currentAnimation].currentFrame - m_animations[m_currentAnimation].startFrame) + getCurrentFrameTime()) / m_animations[m_currentAnimation].frameCount;
+}
+
 void Skeleton::addNotification(std::size_t frameID, Notification n)
 {
     CRO_ASSERT(frameID < m_frameCount, "Out of range");
@@ -393,19 +398,22 @@ void Attachment::setModel(cro::Entity model)
 void Attachment::setPosition(glm::vec3 position)
 {
     m_position = position;
-    updateLocalTransform();
+    //updateLocalTransform();
+    m_dirtyTx = true;
 }
 
 void Attachment::setRotation(glm::quat rotation)
 {
     m_rotation = rotation;
-    updateLocalTransform();
+    //updateLocalTransform();
+    m_dirtyTx = true;
 }
 
 void Attachment::setScale(glm::vec3 scale)
 {
     m_scale = scale;
-    updateLocalTransform();
+    //updateLocalTransform();
+    m_dirtyTx = true;
 }
 
 void Attachment::setName(const std::string& name)
@@ -417,9 +425,20 @@ void Attachment::setName(const std::string& name)
     }
 }
 
-void Attachment::updateLocalTransform()
+const glm::mat4& Attachment::getLocalTransform() const
+{
+    if (m_dirtyTx)
+    {
+        updateLocalTransform();
+    }
+    return m_transform;
+}
+
+void Attachment::updateLocalTransform() const
 {
     m_transform = glm::translate(glm::mat4(1.f), m_position);
     m_transform *= glm::toMat4(m_rotation);
     m_transform = glm::scale(m_transform, m_scale);
+
+    m_dirtyTx = false;
 }

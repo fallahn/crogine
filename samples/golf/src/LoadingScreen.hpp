@@ -59,7 +59,7 @@ private:
 
     cro::HiResTimer m_clock;
 
-    cro::Texture m_loadingTexture;
+    //cro::Texture m_loadingTexture;
     cro::SimpleQuad m_loadingQuad;
 
     cro::SimpleText m_tipText;

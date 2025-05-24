@@ -53,59 +53,80 @@ struct Avatar final
 
     //hackery to allow different attachment offsets for different animations
     static constexpr glm::vec3 DriveOffset = glm::vec3(0.f, -1.f, 1.f);
-    static constexpr glm::vec3 ChipOffset = glm::vec3(-1.f, -7.f, 3.f);
+    //static constexpr glm::vec3 ChipOffset = glm::vec3(-1.f, -7.f, 3.f); //V1
+    static constexpr glm::vec3 ChipOffset = glm::vec3(0.f, 0.f, 1.f);
 
     static constexpr glm::quat DriveRotation = glm::quat(0.0628276f, 0.952123f, -0.284735f, -0.0918745f);
-    static constexpr glm::quat ChipRotation = glm::quat(0.154042f, 0.839663f, -0.266642f, -0.447369f);
+    //static constexpr glm::quat ChipRotation = glm::quat(0.154042f, 0.839663f, -0.266642f, -0.447369f); //V1
+    static constexpr glm::quat ChipRotation = glm::quat(-0.0210049f, 0.907963f, -0.0598632f, -0.414221f); //V2
+
+    //glm::quat ChipRotation;
 
     std::uint32_t clubModelID = 0;
     bool flipped = false;
 
     //Avatar()
     //{
-
+    //    ChipRotation = cro::Util::Vector::eulerToQuat(glm::vec3(179.f, 49.f, -8.f) * cro::Util::Const::degToRad);
+    //    LogI << ChipRotation << std::endl;
     //}
+
+    float progress = 0.f;
+    float direction = -1.f;
+    static constexpr float toStep = 1.f / 8.25f; //hacky way to do this but the logical way is... bumpy
+    static constexpr float fromStep = 1.f / 3.f;
 
     void applyAttachment() 
     {
         if (hands)
         {
-            const auto getProgress =
-                [&](std::int32_t animID) 
-                {
-                    const auto& skel = model.getComponent<cro::Skeleton>();
-                    const auto& anim = skel.getAnimations()[animID];
-                    const float subFrame = 1.f / anim.frameCount;
-                    const float progress = static_cast<float>(anim.currentFrame - anim.startFrame) * subFrame;
-
-                    return (subFrame * skel.getCurrentFrameTime()) + progress;
-                };
-
             if (model.getComponent<cro::Skeleton>().getState() == cro::Skeleton::Playing)
             {
                 const auto animID = model.getComponent<cro::Skeleton>().getCurrentAnimation();
-                if (animID == animationIDs[AnimationID::Chip]
-                    || animID == animationIDs[AnimationID::ChipIdle])
+                if (/*animID == animationIDs[AnimationID::Chip]
+                    ||*/ animID == animationIDs[AnimationID::ChipIdle])
                 {
-                    hands->setPosition(ChipOffset);
-                    hands->setRotation(ChipRotation);
+                    /*hands->setPosition(ChipOffset);
+                    hands->setRotation(ChipRotation);*/
+
+                    progress = std::clamp(progress + (toStep * direction), 0.f, 1.f);
+                    hands->setPosition(glm::mix(DriveOffset, ChipOffset, progress));
+                    hands->setRotation(glm::slerp(DriveRotation, ChipRotation, progress));
                 }
                 else if (animID == animationIDs[AnimationID::ToChip])
                 {
-                    const auto p = getProgress(animID);
+                    /*const auto p = model.getComponent<cro::Skeleton>().getAnimationProgress();
                     hands->setPosition(glm::mix(DriveOffset, ChipOffset, p));
-                    hands->setRotation(glm::lerp(DriveRotation, ChipRotation, p));
+                    hands->setRotation(glm::slerp(DriveRotation, ChipRotation, p));*/
+                    direction = 1.f;
+
+                    progress = std::clamp(progress + (toStep * direction), 0.f, 1.f);
+                    hands->setPosition(glm::mix(DriveOffset, ChipOffset, progress));
+                    hands->setRotation(glm::slerp(DriveRotation, ChipRotation, progress));
                 }
                 else if (animID == animationIDs[AnimationID::FromChip])
                 {
-                    const auto p = getProgress(animID);
+                    /*const auto p = model.getComponent<cro::Skeleton>().getAnimationProgress();
                     hands->setPosition(glm::mix(ChipOffset, DriveOffset, p));
-                    hands->setRotation(glm::lerp(ChipRotation, DriveRotation, p));
-                }
-                else
-                {
+                    hands->setRotation(glm::slerp(ChipRotation, DriveRotation, p));*/
+                    direction = -1.f;
+
+                    progress = std::clamp(progress + (fromStep * direction), 0.f, 1.f);
+                    hands->setPosition(glm::mix(DriveOffset, ChipOffset, progress));
+                    hands->setRotation(glm::slerp(DriveRotation, ChipRotation, progress));
+
+                    /*progress = 0.f;
                     hands->setPosition(DriveOffset);
-                    hands->setRotation(DriveRotation);
+                    hands->setRotation(DriveRotation);*/
+                }
+                else if (animID == animationIDs[AnimationID::Idle])
+                {
+                    /*hands->setPosition(DriveOffset);
+                    hands->setRotation(DriveRotation);*/
+
+                    progress = std::clamp(progress + (fromStep * direction), 0.f, 1.f);
+                    hands->setPosition(glm::mix(DriveOffset, ChipOffset, progress));
+                    hands->setRotation(glm::slerp(DriveRotation, ChipRotation, progress));
                 }
             }
         }

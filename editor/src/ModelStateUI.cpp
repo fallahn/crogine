@@ -2292,6 +2292,7 @@ void ModelState::drawBrowser()
                     if (ImGui::DragFloat3("Rotation##attachment", &rot[0], 1.f, -180.f, 180.f, "%3.2f"))
                     {
                         ap.setRotation(cro::Util::Vector::eulerToQuat(rot * cro::Util::Const::degToRad));
+                        //LogI << ap.getRotation() << std::endl;
                     }
 
                     if (ImGui::Button("R##scale"))

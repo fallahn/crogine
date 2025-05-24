@@ -80,15 +80,15 @@ LoadingScreen::LoadingScreen(SharedStateData& sd)
     m_targetProgress    (0.f),
     m_progressScale     (0.f)
 {
-    if (!m_loadingTexture.loadFromFile("assets/images/loading02.png"))
-    {
-        cro::Image img;
-        img.create(12, 12, cro::Colour::Magenta);
-        m_loadingTexture.loadFromImage(img);
-    }
+    //if (!m_loadingTexture.loadFromFile("assets/images/loading02.png"))
+    //{
+    //    cro::Image img;
+    //    img.create(12, 12, cro::Colour::Magenta);
+    //    m_loadingTexture.loadFromImage(img);
+    //}
 
-    m_loadingQuad.setTexture(m_loadingTexture);
-    m_loadingQuad.setOrigin(glm::vec2(m_loadingTexture.getSize()) / 2.f);
+    //m_loadingQuad.setTexture(loadingTexture);
+    //m_loadingQuad.setOrigin(glm::vec2(m_loadingTexture.getSize()) / 2.f);
 
     cro::Image img;
     img.create(1, 1, CD32::Colours[CD32::BeigeLight]);
@@ -122,14 +122,33 @@ void LoadingScreen::launch()
     m_tipText.setPosition({ std::round(screenSize.x / 2.f), 56.f * viewScale});
     m_tipText.setScale({ viewScale, viewScale });
 
+    const auto& loadingTexture = m_sharedData.sharedResources->textures.get("assets/images/loading02.png");
+
+    m_loadingQuad.setTexture(loadingTexture);
+    m_loadingQuad.setOrigin(glm::vec2(loadingTexture.getSize()) / 2.f);
     m_loadingQuad.setPosition(screenSize / 2.f);
     m_loadingQuad.setScale({ viewScale, viewScale });
 
     m_progressBar.setScale({ 0.f, 0.f });
+    m_progressBar.setPosition({ 0.f, 4.f * viewScale });
+
+    
+    m_previousProgress = 0.f;
+    m_progressScale = 0.f;
+
+    auto& window = cro::App::getWindow();
+    const auto size = window.getSize().x;
+    m_progressBar.setScale({ 0.f, 0.f });
+
+    window.clear();
+    draw();
+    window.display();
 }
 
 void LoadingScreen::update()
 {
+    static std::int32_t updateCount = 0;
+    
     static float accumulator = 0.f;
     accumulator += m_clock.restart();
     
@@ -142,18 +161,20 @@ void LoadingScreen::update()
 
     while (accumulator > timestep)
     {
+        updateCount++;
+
         const glm::vec2 windowSize = glm::vec2(cro::App::getWindow().getSize());
         const auto scale = getViewScale(windowSize);
 
         m_progressScale += progressSize;
         m_progressBar.setScale({ m_progressScale * windowSize.x, scale * ProgressHeight });
 
-        m_loadingQuad.rotate(90.f);
+        m_loadingQuad.setRotation(90.f * (updateCount % 4));
 
         accumulator -= timestep;
 
 
-        //we must pump the queue during loading else ew timeout
+        //we must pump the queue during loading else we timeout
         if (m_sharedData.clientConnection.connected)
         {
             net::NetEvent evt;
