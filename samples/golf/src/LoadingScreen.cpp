@@ -55,119 +55,52 @@ namespace
 {
     const std::array<std::string, 11u> TipStrings =
     {
-        std::string("Tip: Click on an opponent's name in the League Browser to change it"),
-        "Did You Know: Before golf tees players would shape mounds of sand and place the golf ball on top",
-        "Tip: You can find alternative control schemes such as Swingput in the Options menu",
-        "Did You Know: Apollo 14 astronaut Alan Shepard used a Wilson 6-iron to play golf on the moon",
-        "Tip: The clubset you choose affects the CPU opponent's difficulty",
-        "Did You Know: An estimated 600 million golf balls are lost or discarded every year\nmore than 100,000 of which are at the bottom of Loch Ness!",
-        "Tip: Make sure to spend some time on the Driving Range, to really learn your clubs",
-        "Did You Know: There are playable arcade games waiting to be discovered in the Clubhouse",
-        "Tip: Upgrade your gear at the Clubhouse Equipment Counter",
-        "Did You Know: You can find a full break down of your stats on the rightmost tab\nof the Options menu",
-        "Tip: You can assign your gear upgrades in the Profile Editor"
+        std::string("Loading...\n\nTip: Click on an opponent's name in the League Browser to change it"),
+        "Loading...\n\nDid You Know: Before golf tees players would shape mounds of sand and place the golf ball on top",
+        "Loading...\n\nTip: You can find alternative control schemes such as Swingput in the Options menu",
+        "Loading...\n\nDid You Know: Apollo 14 astronaut Alan Shepard used a Wilson 6-iron to play golf on the moon",
+        "Loading...\n\nTip: The clubset you choose affects the CPU opponent's difficulty",
+        "Loading...\n\nDid You Know: An estimated 600 million golf balls are lost or discarded every year\nmore than 100,000 of which are at the bottom of Loch Ness!",
+        "Loading...\n\nTip: Make sure to spend some time on the Driving Range, to really learn your clubs",
+        "Loading...\n\nDid You Know: There are playable arcade games waiting to be discovered in the Clubhouse",
+        "Loading...\n\nTip: Upgrade your gear at the Clubhouse Equipment Counter",
+        "Loading...\n\nDid You Know: You can find a full break down of your stats on the rightmost tab\nof the Options menu",
+        "Loading...\n\nTip: You can assign your gear upgrades in the Profile Editor"
     };
     std::size_t stringIndex = cro::Util::Random::value(0u, TipStrings.size() - 1);
 
-    constexpr std::uint32_t vertexSize = 2 * sizeof(float);
+    constexpr float ProgressHeight = 10.f;
     constexpr float timestep = 1.f / 60.f;
 
-    const std::string vertex = R"(
-        ATTRIBUTE vec4 a_position;
-
-        uniform mat4 u_worldMatrix;
-        uniform mat4 u_projectionMatrix;
-
-        VARYING_OUT vec2 v_texCoord;
-
-        void main()
-        {
-            gl_Position = u_projectionMatrix * u_worldMatrix * a_position;
-            v_texCoord = a_position.xy;
-        }
-    )";
-
-    const std::string fragment = R"(
-        uniform sampler2D u_texture;
-        uniform float u_frameNumber;
-        
-        VARYING_IN vec2 v_texCoord;
-        OUTPUT
-
-        const float FrameHeight = 1.0/8.0;
-
-        void main()
-        {
-            vec2 texCoord = v_texCoord;
-            texCoord.y *= FrameHeight;
-            texCoord.y += 1.0 - (u_frameNumber * FrameHeight);
-
-            FRAG_OUT = TEXTURE(u_texture, texCoord);
-        }
-    )";
 }
 
 LoadingScreen::LoadingScreen(SharedStateData& sd)
     :m_sharedData       (sd),
-    m_vao               (0),
-    m_vbo               (0),
-    m_projectionIndex   (-1),
-    m_transformIndex    (-1),
-    m_frameIndex        (-1),
-    m_currentFrame      (0),
-    m_transform         (1.f),
-    m_projectionMatrix  (1.f),
-    m_viewport          (cro::App::getWindow().getSize())
+    m_previousProgress  (0.f),
+    m_targetProgress    (0.f),
+    m_progressScale     (0.f)
 {
-    if (!m_texture.loadFromFile("assets/images/loading.png"))
+    if (!m_loadingTexture.loadFromFile("assets/images/loading02.png"))
     {
         cro::Image img;
         img.create(12, 12, cro::Colour::Magenta);
-        m_texture.loadFromImage(img);
-    }
-    m_texture.setRepeated(true);
-
-    if (m_shader.loadFromString(vertex, fragment))
-    {
-        m_transformIndex = m_shader.getUniformID("u_worldMatrix");
-        m_projectionIndex = m_shader.getUniformID("u_projectionMatrix");
-        m_frameIndex = m_shader.getUniformID("u_frameNumber");
-
-        glCheck(glUseProgram(m_shader.getGLHandle()));
-        glCheck(glUniform1i(m_shader.getUniformID("u_texture"), 0));
-        glCheck(glUseProgram(0));
-
-        //create VBO
-        //0------2
-        //|      |
-        //|      |
-        //1------3
-
-        std::vector<float> verts =
-        {
-            0.f, 1.f,
-            0.f, 0.f,
-            1.f, 1.f,
-            1.f, 0.f,
-        };
-        glCheck(glGenBuffers(1, &m_vbo));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
-        glCheck(glBufferData(GL_ARRAY_BUFFER, vertexSize * verts.size(), verts.data(), GL_STATIC_DRAW));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-    }
-}
-
-LoadingScreen::~LoadingScreen()
-{
-    if (m_vbo)
-    {
-        glCheck(glDeleteBuffers(1, &m_vbo));
+        m_loadingTexture.loadFromImage(img);
     }
 
-    if (m_vao)
-    {
-        glCheck(glDeleteVertexArrays(1, &m_vao));
-    }
+    m_loadingQuad.setTexture(m_loadingTexture);
+    m_loadingQuad.setOrigin(glm::vec2(m_loadingTexture.getSize()) / 2.f);
+
+    cro::Image img;
+    img.create(1, 1, CD32::Colours[CD32::BeigeLight]);
+    m_progressTexture.loadFromImage(img);
+    m_progressTexture.setBorderColour(cro::Colour::Black);
+    m_progressBar.setTexture(m_progressTexture);
+
+    //fonts not loaded yet, so deferred to launch();
+    //m_tipText.setFont(sd.sharedResources->fonts.get(FontID::Info));
+    m_tipText.setAlignment(cro::SimpleText::Alignment::Centre);
+    m_tipText.setCharacterSize(InfoTextSize);
+    m_tipText.setFillColour(TextNormalColour);
 }
 
 //public
@@ -175,91 +108,60 @@ void LoadingScreen::launch()
 {
     WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Loading..." }));
 
-    if (!m_vao)
+    const glm::vec2 screenSize = cro::App::getWindow().getSize();
+
+    if (!m_tipText.getFont())
     {
-        CRO_ASSERT(m_vbo, "");
-
-        glCheck(glGenVertexArrays(1, &m_vao));
-
-        glCheck(glBindVertexArray(m_vao));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
-
-        //pos
-        glCheck(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, vertexSize, (void*)0));
-        glCheck(glEnableVertexAttribArray(0));
-
-        glCheck(glBindVertexArray(0));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+        m_tipText.setFont(m_sharedData.sharedResources->fonts.get(FontID::Info));
     }
 
-    //this has to be created in the launch thread because VAOs / OpenGL etc etc
-    if (!m_tipText)
-    {
-        m_font.loadFromFile("assets/golf/fonts/MCPixel.otf");
-        m_tipText = std::make_unique<cro::SimpleText>(m_font);
-        m_tipText->setAlignment(cro::SimpleText::Alignment::Centre);
-        m_tipText->setCharacterSize(InfoTextSize);
-        m_tipText->setFillColour(TextNormalColour);
-    }
+    const auto viewScale = getViewScale();
 
     stringIndex = (stringIndex + 1) % TipStrings.size();
-    m_tipText->setString(TipStrings[stringIndex]);
-    m_tipText->setPosition({ std::round(cro::App::getWindow().getSize().x / 2.f), 86.f });
+    m_tipText.setString(TipStrings[stringIndex]);
+    m_tipText.setPosition({ std::round(screenSize.x / 2.f), 56.f * viewScale});
+    m_tipText.setScale({ viewScale, viewScale });
 
-    cro::Image img;
-    img.create(1, 1, CD32::Colours[CD32::BeigeLight]);
-    m_progressTexture.loadFromImage(img);
-    m_progressBar.setTexture(m_progressTexture);
-    m_progressBar.setScale({ 10.f, 10.f });
+    m_loadingQuad.setPosition(screenSize / 2.f);
+    m_loadingQuad.setScale({ viewScale, viewScale });
+
+    m_progressBar.setScale({ 0.f, 0.f });
 }
 
 void LoadingScreen::update()
 {
     static float accumulator = 0.f;
-    accumulator += m_clock.restart().asSeconds();
+    accumulator += m_clock.restart();
     
-    static std::int32_t frameCounter = 0;
-    static constexpr std::int32_t MaxFrames = 6;
-
     auto& window = cro::App::getWindow();
     auto old = window.getVsyncEnabled();
     window.setVsyncEnabled(false); //this causes the loading screen to wait otherwise
 
+    const float stepCount = std::floor(accumulator / timestep);
+    const float progressSize = (m_targetProgress - m_previousProgress) / stepCount;
+
     while (accumulator > timestep)
     {
-        m_viewport = cro::App::getWindow().getScaledSize();
-        const glm::vec2 scaledWindowSize(m_viewport);
-
         const glm::vec2 windowSize = glm::vec2(cro::App::getWindow().getSize());
+        const auto scale = getViewScale(windowSize);
 
-        const auto scale = glm::vec2(getViewScale(windowSize));
+        m_progressScale += progressSize;
+        m_progressBar.setScale({ m_progressScale * windowSize.x, scale * ProgressHeight });
 
-        m_tipText->setScale(scale);
-
-        m_projectionMatrix = glm::ortho(0.f, scaledWindowSize.x, 0.f, scaledWindowSize.y, -0.1f, 10.f);
-
-        float texSize = static_cast<float>(m_texture.getSize().x) * scale.x;
-        m_transform = glm::translate(glm::mat4(1.f), { (windowSize.x - texSize) / 2.f, (windowSize.y - texSize) / 2.f, 0.f });
-        m_transform = glm::scale(m_transform, { texSize, texSize, 1.f });
-
-        frameCounter = (frameCounter + 1) % MaxFrames;
-        if (frameCounter == 0)
-        {
-            m_currentFrame = (m_currentFrame + 1) % FrameCount;
-        }
-        
-        glCheck(glUseProgram(m_shader.getGLHandle()));
-        glCheck(glUniformMatrix4fv(m_projectionIndex, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
-        glCheck(glUniformMatrix4fv(m_transformIndex, 1, GL_FALSE, glm::value_ptr(m_transform)));
-        glCheck(glUniform1f(m_frameIndex, static_cast<float>(m_currentFrame)));
+        m_loadingQuad.rotate(90.f);
 
         accumulator -= timestep;
 
+
+        //we must pump the queue during loading else ew timeout
         if (m_sharedData.clientConnection.connected)
         {
             net::NetEvent evt;
             while (m_sharedData.clientConnection.netClient.pollEvent(evt))
             {
+                //HOWEVER we want to ignore irrelevant packets else this
+                //buffer can become incredibly LARGE before we get around
+                //to handling it in out destination state.
                 switch (evt.packet.getID())
                 {
                 default:
@@ -296,39 +198,30 @@ void LoadingScreen::update()
 
 void LoadingScreen::draw()
 {
-    m_tipText->draw();
+    m_tipText.draw();
     m_progressBar.draw();
-
-    std::int32_t oldView[4];
-    glCheck(glGetIntegerv(GL_VIEWPORT, oldView));
-    glCheck(glEnable(GL_BLEND));
-    glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-    glCheck(glBlendEquation(GL_FUNC_ADD));
-
-    glCheck(glViewport(0, 0, m_viewport.x, m_viewport.y));
-    glCheck(glUseProgram(m_shader.getGLHandle()));
-
-    glCheck(glActiveTexture(GL_TEXTURE0));
-    glCheck(glBindTexture(GL_TEXTURE_2D, m_texture.getGLHandle()));
-
-    glCheck(glBindVertexArray(m_vao));
-    glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-
-    glCheck(glUseProgram(0));
-
-    glCheck(glViewport(oldView[0], oldView[1], oldView[2], oldView[3]));
-    glCheck(glDisable(GL_BLEND));
+    m_loadingQuad.draw();
 }
 
 void LoadingScreen::setProgress(float p)
 {
     auto& window = cro::App::getWindow();
-    const auto size = window.getSize().x;
-    m_progressBar.setScale({ size * p, 10.f });
 
-    update();
+    m_targetProgress = p;
+
+    if (p == 0)
+    {
+        m_previousProgress = 0.f;
+        m_progressScale = 0.f;
+
+        const auto size = window.getSize().x;
+        m_progressBar.setScale({ 0.f, 0.f });
+    }
 
     window.clear();
     draw();
     window.display();
+    
+    //this also draws!!
+    update();
 }

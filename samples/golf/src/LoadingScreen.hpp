@@ -31,25 +31,21 @@ source distribution.
 
 #include <crogine/graphics/LoadingScreen.hpp>
 #include <crogine/detail/Types.hpp>
-#include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/Texture.hpp>
-#include <crogine/core/Clock.hpp>
-
-#include <crogine/detail/glm/mat4x4.hpp>
+#include <crogine/core/HiResTimer.hpp>
 
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/SimpleText.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 
 #include <vector>
-#include <memory>
+
 
 struct SharedStateData;
 class LoadingScreen final : public cro::LoadingScreen
 {
 public:
     explicit LoadingScreen(SharedStateData&);
-    ~LoadingScreen();
 
     void launch() override;
     void update() override;
@@ -61,27 +57,17 @@ public:
 private:
     SharedStateData& m_sharedData;
 
-    std::uint32_t m_vao;
-    std::uint32_t m_vbo;
-    std::int32_t m_projectionIndex;
-    std::int32_t m_transformIndex;
-    std::int32_t m_frameIndex;
+    cro::HiResTimer m_clock;
 
-    std::int32_t m_currentFrame;
-    static constexpr std::int32_t FrameCount = 8;
+    cro::Texture m_loadingTexture;
+    cro::SimpleQuad m_loadingQuad;
 
-    cro::Shader m_shader;
-    glm::mat4 m_transform;
-    glm::mat4 m_projectionMatrix;
-    glm::uvec2 m_viewport;
-
-    cro::Clock m_clock;
-
-    cro::Texture m_texture;
-
-    cro::Font m_font;
-    std::unique_ptr<cro::SimpleText> m_tipText; //TODO make this a regular member as it's no longer threaded
+    cro::SimpleText m_tipText;
     
     cro::Texture m_progressTexture;
     cro::SimpleQuad m_progressBar;
+
+    float m_previousProgress;
+    float m_targetProgress;
+    float m_progressScale; //normalised val to multiply by screen size
 };
