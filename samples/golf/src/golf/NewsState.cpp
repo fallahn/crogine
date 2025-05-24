@@ -492,7 +492,7 @@ void NewsState::buildScene()
                     menuEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
                     auto description = items[0].description.substr(0, 180) + "...";
-                    cro::Util::String::wordWrap(description, 60);
+                    cro::Util::String::wordWrap(description, 70);
 
 
                     ent = m_scene.createEntity();

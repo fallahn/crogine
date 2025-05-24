@@ -170,57 +170,84 @@ void ClubInfoState::buildScene()
 
     m_messages =
     {
-R"(Welcome Back Golfer! A little note on the new club sets...
+R"(Welcome Golfer! A note on Club Sets...
 
-Firstly - all club sets are unlocked from the beginning.
-Secondly - all club sets have a full range of 260m/284yds
 
-No more grinding for upgrades - just dive right in!
-)",
 
-R"(
-So what's changed? Mostly how the abilities are distributed.
+You'll find 3 different sets of clubs in Super Video Golf,
+each of which affect the game in a different ways. These are:
 
-The Novice clubs are now Casual clubs. These are the clubs
-you knew and loved previously as the Pro clubs. Full range and
-easy to use - perfect if all you want to do is bat the ball
-up and down the fairways.
-)",
 
-R"(
-If you fancy more of a challenge, however, then the Expert
-clubs are for you! These narrow down the tolerance for an
-accurate shot, as well as increasing the CPU opponent difficulty.
-)",
+Casual: Great all-round clubs. Easy to use and perfect for
+a quick game, either solo, with friends or against the CPU.
 
-R"(
-And, if this wasn't challenge enough, the Pro set is now
-extra tough! The accuracy margin is incredibly slim requiring
-a near perfect stroke every time - and an inaccurate stroke
-will cause your shot to fall short, especially from the rough
-or a bunker.
-)",
 
-R"(
-Expert and Pro club sets offer increased rewards in the form
-of up to double XP and double clubshop credits for more
-difficult shots. And, for those so inclined, the Expert and
-Pro sets can be customised and fine tuned from the Equipment
-Counter - available in the Clubhouse or Roster menu.
-)",
+Expert: These clubs have an extended range, at the slight cost
+of difficulty - both in CPU behaviour and in the accuracy
+required to not hook or slice with them. They are, however,
+upgradable at the Equipment Counter which will improve their stats.
 
-R"(
-As Casual clubs are essentially fully buffed, custom equipment
-will make no difference to them. However a new set of balls or
-a high reflex club can make all the difference to your Pro game!
-Assign any new equipment you acquire using the Loadout button
-in the Profile Editor.
-)",
 
-R"(
-That's it! Good luck out there and, as always,
+Pro: These are the most challenging clubs, requiring a high
+degree of accuracy to use. They are also highly affected by
+terrain and will fall short of the target if you're not careful!
+Pro clubs can also be upgraded at the Equipment Counter.
 
-Happy Golfing! )"
+
+
+Choose wisely - and have fun!)"
+
+//R"(Welcome Back Golfer! A little note on the new club sets...
+//
+//Firstly - all club sets are unlocked from the beginning.
+//Secondly - all club sets have a full range of 260m/284yds
+//
+//No more grinding for upgrades - just dive right in!
+//)",
+//
+//R"(
+//So what's changed? Mostly how the abilities are distributed.
+//
+//The Novice clubs are now Casual clubs. These are the clubs
+//you knew and loved previously as the Pro clubs. Full range and
+//easy to use - perfect if all you want to do is bat the ball
+//up and down the fairways.
+//)",
+//
+//R"(
+//If you fancy more of a challenge, however, then the Expert
+//clubs are for you! These narrow down the tolerance for an
+//accurate shot, as well as increasing the CPU opponent difficulty.
+//)",
+//
+//R"(
+//And, if this wasn't challenge enough, the Pro set is now
+//extra tough! The accuracy margin is incredibly slim requiring
+//a near perfect stroke every time - and an inaccurate stroke
+//will cause your shot to fall short, especially from the rough
+//or a bunker.
+//)",
+//
+//R"(
+//Expert and Pro club sets offer increased rewards in the form
+//of up to double XP and double clubshop credits for more
+//difficult shots. And, for those so inclined, the Expert and
+//Pro sets can be customised and fine tuned from the Equipment
+//Counter - available in the Clubhouse or Roster menu.
+//)",
+//
+//R"(
+//As Casual clubs are essentially fully buffed, custom equipment
+//will make no difference to them. However a new set of balls or
+//a high reflex club can make all the difference to your Pro game!
+//Assign any new equipment you acquire using the Loadout button
+//in the Profile Editor.
+//)",
+//
+//R"(
+//That's it! Good luck out there and, as always,
+//
+//Happy Golfing! )"
     };
 
 #ifdef __linux__
@@ -308,4 +335,9 @@ void ClubInfoState::centreText()
     const glm::vec2 pos = { 0.f, std::round(bounds.height / 2.f) };
     m_messageNode.getComponent<cro::UIElement>().absolutePosition = pos;
     m_messageNode.getComponent<cro::Transform>().setPosition(pos);
+}
+
+void ClubInfoState::onCachedPush()
+{
+    centreText();
 }

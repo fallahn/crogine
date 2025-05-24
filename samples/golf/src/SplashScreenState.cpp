@@ -390,7 +390,7 @@ void SplashState::gotoMenu()
         m_sharedData.errorMessage = "Welcome";
         requestStackPush(StateID::MessageOverlay);
     }
-    //else if (m_sharedData.showClubUpdate)
+    //else if (/*m_sharedData.showClubUpdate*/true)
     //{
     //    requestStackPush(StateID::ClubInfo);
     //}

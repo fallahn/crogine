@@ -239,7 +239,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         while (cl.elapsed().asSeconds() < 1.5f)
         {
             Achievements::update();
-            curr = std::min(0.1499f, curr + 0.001f);
+            curr = std::min(0.1499f, curr + 0.00001f);
             context.mainWindow.setLoadingProgress(curr);
         }
         checkBeta();
@@ -1042,16 +1042,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
             }
             break;
 #ifdef CRO_DEBUG_
-#ifdef USE_GNS
-        case SDLK_PAGEUP:
-            /*LogI << "resetting achievements" << std::endl;
-            Achievements::resetAll();*/
-            Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
-            break;
-        case SDLK_PAGEDOWN:
-            Achievements::resetAchievement(AchievementStrings[AchievementID::JoinTheClub]);
-            break;
-#endif
+//#ifdef USE_GNS
+//        case SDLK_PAGEUP:
+//            /*LogI << "resetting achievements" << std::endl;
+//            Achievements::resetAll();*/
+//            Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
+//            break;
+//        case SDLK_PAGEDOWN:
+//            Achievements::resetAchievement(AchievementStrings[AchievementID::JoinTheClub]);
+//            break;
+//#endif
         case SDLK_SPACE:
             cro::App::getInstance().resetFrameTime();
             break;

@@ -60,4 +60,6 @@ private:
     void buildScene();
 
     void centreText();
+
+    void onCachedPush() override;
 };

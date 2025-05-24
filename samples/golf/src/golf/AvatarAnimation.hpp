@@ -83,17 +83,18 @@ struct Avatar final
             if (model.getComponent<cro::Skeleton>().getState() == cro::Skeleton::Playing)
             {
                 const auto animID = model.getComponent<cro::Skeleton>().getCurrentAnimation();
-                if (/*animID == animationIDs[AnimationID::Chip]
-                    ||*/ animID == animationIDs[AnimationID::ChipIdle])
-                {
-                    /*hands->setPosition(ChipOffset);
-                    hands->setRotation(ChipRotation);*/
+                //if (animID == animationIDs[AnimationID::ChipIdle])
+                //{
+                //    /*hands->setPosition(ChipOffset);
+                //    hands->setRotation(ChipRotation);*/
 
-                    progress = std::clamp(progress + (toStep * direction), 0.f, 1.f);
-                    hands->setPosition(glm::mix(DriveOffset, ChipOffset, progress));
-                    hands->setRotation(glm::slerp(DriveRotation, ChipRotation, progress));
-                }
-                else if (animID == animationIDs[AnimationID::ToChip])
+                //    progress = std::clamp(progress + (toStep * direction), 0.f, 1.f);
+                //    hands->setPosition(glm::mix(DriveOffset, ChipOffset, progress));
+                //    hands->setRotation(glm::slerp(DriveRotation, ChipRotation, progress));
+                //}
+                //else 
+                if (animID == animationIDs[AnimationID::ToChip]
+                    || animID == animationIDs[AnimationID::ChipIdle])
                 {
                     /*const auto p = model.getComponent<cro::Skeleton>().getAnimationProgress();
                     hands->setPosition(glm::mix(DriveOffset, ChipOffset, p));
@@ -104,7 +105,8 @@ struct Avatar final
                     hands->setPosition(glm::mix(DriveOffset, ChipOffset, progress));
                     hands->setRotation(glm::slerp(DriveRotation, ChipRotation, progress));
                 }
-                else if (animID == animationIDs[AnimationID::FromChip])
+                else if (animID == animationIDs[AnimationID::FromChip]
+                    || animID == animationIDs[AnimationID::Idle])
                 {
                     /*const auto p = model.getComponent<cro::Skeleton>().getAnimationProgress();
                     hands->setPosition(glm::mix(ChipOffset, DriveOffset, p));
@@ -119,15 +121,15 @@ struct Avatar final
                     hands->setPosition(DriveOffset);
                     hands->setRotation(DriveRotation);*/
                 }
-                else if (animID == animationIDs[AnimationID::Idle])
-                {
-                    /*hands->setPosition(DriveOffset);
-                    hands->setRotation(DriveRotation);*/
+                //else if (animID == animationIDs[AnimationID::Idle])
+                //{
+                //    /*hands->setPosition(DriveOffset);
+                //    hands->setRotation(DriveRotation);*/
 
-                    progress = std::clamp(progress + (fromStep * direction), 0.f, 1.f);
-                    hands->setPosition(glm::mix(DriveOffset, ChipOffset, progress));
-                    hands->setRotation(glm::slerp(DriveRotation, ChipRotation, progress));
-                }
+                //    progress = std::clamp(progress + (fromStep * direction), 0.f, 1.f);
+                //    hands->setPosition(glm::mix(DriveOffset, ChipOffset, progress));
+                //    hands->setRotation(glm::slerp(DriveRotation, ChipRotation, progress));
+                //}
             }
         }
     }

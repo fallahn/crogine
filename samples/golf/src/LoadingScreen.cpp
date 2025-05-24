@@ -80,18 +80,8 @@ LoadingScreen::LoadingScreen(SharedStateData& sd)
     m_targetProgress    (0.f),
     m_progressScale     (0.f)
 {
-    //if (!m_loadingTexture.loadFromFile("assets/images/loading02.png"))
-    //{
-    //    cro::Image img;
-    //    img.create(12, 12, cro::Colour::Magenta);
-    //    m_loadingTexture.loadFromImage(img);
-    //}
-
-    //m_loadingQuad.setTexture(loadingTexture);
-    //m_loadingQuad.setOrigin(glm::vec2(m_loadingTexture.getSize()) / 2.f);
-
     cro::Image img;
-    img.create(1, 1, CD32::Colours[CD32::BeigeLight]);
+    img.create(1, 1, CD32::Colours[CD32::Brown]);
     m_progressTexture.loadFromImage(img);
     m_progressTexture.setBorderColour(cro::Colour::Black);
     m_progressBar.setTexture(m_progressTexture);
@@ -119,7 +109,7 @@ void LoadingScreen::launch()
 
     stringIndex = (stringIndex + 1) % TipStrings.size();
     m_tipText.setString(TipStrings[stringIndex]);
-    m_tipText.setPosition({ std::round(screenSize.x / 2.f), 56.f * viewScale});
+    m_tipText.setPosition({ std::round(screenSize.x / 2.f), 64.f * viewScale});
     m_tipText.setScale({ viewScale, viewScale });
 
     const auto& loadingTexture = m_sharedData.sharedResources->textures.get("assets/images/loading02.png");
@@ -130,7 +120,7 @@ void LoadingScreen::launch()
     m_loadingQuad.setScale({ viewScale, viewScale });
 
     m_progressBar.setScale({ 0.f, 0.f });
-    m_progressBar.setPosition({ 0.f, 4.f * viewScale });
+    m_progressBar.setPosition({ 0.f, 8.f * viewScale });
 
     
     m_previousProgress = 0.f;
