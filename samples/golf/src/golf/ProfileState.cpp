@@ -1721,7 +1721,14 @@ void ProfileState::buildScene()
                 if (activated(evt))
                 {
                     applyTextEdit();
-                    setBallIndex((m_ballIndex + (m_ballModels.size() - 1)) % m_ballModels.size());
+
+                    auto idx = m_ballIndex;
+                    do
+                    {
+                        idx = (idx + (m_ballModels.size() - 1)) % m_ballModels.size();
+                    } while (m_sharedData.ballInfo[m_ballModels[idx].infoIndex].locked);
+
+                    setBallIndex(idx);
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -1757,7 +1764,14 @@ void ProfileState::buildScene()
                 if (activated(evt))
                 {
                     applyTextEdit();
-                    setBallIndex((m_ballIndex + 1) % m_ballModels.size());
+
+                    auto idx = m_ballIndex;
+                    do
+                    {
+                        idx = (idx + 1) % m_ballModels.size();
+                    } while (m_sharedData.ballInfo[m_ballModels[idx].infoIndex].locked);
+
+                    setBallIndex(idx);
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });

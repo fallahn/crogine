@@ -681,6 +681,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //    });
 
     //createDebugWindows();
+    cro::App::getInstance().resetFrameTime();
 }
 
 MenuState::~MenuState()
