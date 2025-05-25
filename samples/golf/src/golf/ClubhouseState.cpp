@@ -148,6 +148,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     Social::getMonthlyChallenge().refresh();
 
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
+    sd.clientConnection.launchThread();
     ctx.mainWindow.loadResources([&]() {
         ctx.mainWindow.setLoadingProgress(0.f);
         addSystems();
@@ -185,6 +186,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         cacheState(StateID::Shop);
         ctx.mainWindow.setLoadingProgress(1.f);
         });
+    sd.clientConnection.quitThread();
     Timeline::setGameMode(Timeline::GameMode::Menu);
     Timeline::setTimelineDesc("In the Clubhouse");
 

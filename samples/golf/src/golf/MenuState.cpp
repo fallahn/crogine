@@ -225,6 +225,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
     //launches a loading screen (registered in MyApp.cpp)
     CRO_ASSERT(!isCached(), "Don't use loading screen on cached states!");
+    sd.clientConnection.launchThread(); //pumps any message queue while we wait for loading to complete
     context.mainWindow.loadResources([&]() {
 
         context.mainWindow.setLoadingProgress(0.f);
@@ -487,7 +488,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
         context.mainWindow.setLoadingProgress(1.f);
         });
-    
+    sd.clientConnection.quitThread();
     Timeline::setGameMode(Timeline::GameMode::Menu);
         
     //for some reason this immediately unsets itself

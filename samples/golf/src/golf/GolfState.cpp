@@ -459,6 +459,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     Social::setGroup(m_sharedData.clientConnection.hostID, playerCount);
 
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
+    sd.clientConnection.launchThread();
     context.mainWindow.loadResources([&]() {
         context.mainWindow.setLoadingProgress(0.1f);
         addSystems();
@@ -479,6 +480,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Keyboard);
         context.mainWindow.setLoadingProgress(1.f);
         });
+    sd.clientConnection.quitThread();
     Timeline::setGameMode(Timeline::GameMode::Playing);
 
     //glLineWidth(1.5f);

@@ -50,6 +50,9 @@ source distribution.
 #include <array>
 #include <memory>
 #include <unordered_map>
+#include <thread>
+#include <atomic>
+#include <chrono>
 
 namespace cro
 {
@@ -150,12 +153,40 @@ struct SharedStateData final
     struct ClientConnection final
     {
         net::NetClient netClient;
-        bool connected = false;
+        std::atomic_bool connected = false;
         bool ready = false;
         std::uint8_t connectionID = ConstVal::NullValue;
 
         std::uint64_t hostID = 0;
         std::vector<net::NetEvent> eventBuffer; //don't touch this while loading screen is active!!
+
+        //pumps the message queue in a separate thread
+        //as the loading screen is blocking and can cause timeouts
+        std::unique_ptr<std::thread> loadingThread;
+        std::atomic_bool threadRunning = false;
+
+        ~ClientConnection()
+        {
+            quitThread();
+        }
+
+        void launchThread()
+        {
+            threadRunning = true;
+            loadingThread = std::make_unique<std::thread>(&ClientConnection::threadFunc, this);
+        }
+
+        void quitThread()
+        {
+            if (loadingThread)
+            {
+                threadRunning = false;
+                loadingThread->join();
+                loadingThread.reset();
+            }
+        }
+
+        void threadFunc();
     };
     ClientConnection clientConnection;
     ClientConnection voiceConnection;

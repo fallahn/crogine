@@ -80,12 +80,6 @@ LoadingScreen::LoadingScreen(SharedStateData& sd)
     m_targetProgress    (0.f),
     m_progressScale     (0.f)
 {
-    //cro::Image img;
-    //img.create(1, 1, CD32::Colours[CD32::Brown]);
-    //m_progressTexture.loadFromImage(img);
-    //m_progressTexture.setBorderColour(cro::Colour::Black);
-    //m_progressBar.setTexture(m_progressTexture);
-
     //fonts not loaded yet, so deferred to launch();
     //m_tipText.setFont(sd.sharedResources->fonts.get(FontID::Info));
     m_tipText.setAlignment(cro::SimpleText::Alignment::Centre);
@@ -174,33 +168,8 @@ void LoadingScreen::update()
 
         accumulator -= timestep;
 
-
-        //we must pump the queue during loading else we timeout
-        if (m_sharedData.clientConnection.connected)
-        {
-            net::NetEvent evt;
-            while (m_sharedData.clientConnection.netClient.pollEvent(evt))
-            {
-                //HOWEVER we want to ignore irrelevant packets else this
-                //buffer can become incredibly LARGE before we get around
-                //to handling it in out destination state.
-                switch (evt.packet.getID())
-                {
-                default:
-                    m_sharedData.clientConnection.eventBuffer.emplace_back(std::move(evt));
-                    break;
-                case PacketID::ActorUpdate:
-                case PacketID::WindDirection:
-                case PacketID::DronePosition:
-                case PacketID::ClubChanged:
-                case PacketID::PingTime:
-                    //skip these while loading it just fills up the buffer
-                    break;
-                }
-                evt = {}; //not strictly necessary but squashes warning about re-using a moved object
-            }
-        }
-
+        //TODO this should be launched in its own thread - it's been left here out
+        //of laziness as we're not currently implementing the voice comms feature.
         if (m_sharedData.voiceConnection.connected)
         {
             //this NEEDS to be done to stop the voice channels backlogging the
