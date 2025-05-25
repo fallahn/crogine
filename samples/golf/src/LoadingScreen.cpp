@@ -69,7 +69,7 @@ namespace
     };
     std::size_t stringIndex = cro::Util::Random::value(0u, TipStrings.size() - 1);
 
-    constexpr float ProgressHeight = 10.f;
+    constexpr float ProgressHeight = 16.f;
     constexpr float timestep = 1.f / 60.f;
 
 }
@@ -80,11 +80,11 @@ LoadingScreen::LoadingScreen(SharedStateData& sd)
     m_targetProgress    (0.f),
     m_progressScale     (0.f)
 {
-    cro::Image img;
-    img.create(1, 1, CD32::Colours[CD32::Brown]);
-    m_progressTexture.loadFromImage(img);
-    m_progressTexture.setBorderColour(cro::Colour::Black);
-    m_progressBar.setTexture(m_progressTexture);
+    //cro::Image img;
+    //img.create(1, 1, CD32::Colours[CD32::Brown]);
+    //m_progressTexture.loadFromImage(img);
+    //m_progressTexture.setBorderColour(cro::Colour::Black);
+    //m_progressBar.setTexture(m_progressTexture);
 
     //fonts not loaded yet, so deferred to launch();
     //m_tipText.setFont(sd.sharedResources->fonts.get(FontID::Info));
@@ -112,19 +112,30 @@ void LoadingScreen::launch()
     m_tipText.setPosition({ std::round(screenSize.x / 2.f), 64.f * viewScale});
     m_tipText.setScale({ viewScale, viewScale });
 
-    const auto& loadingTexture = m_sharedData.sharedResources->textures.get("assets/images/loading02.png");
+    auto& loadingTexture = m_sharedData.sharedResources->textures.get("assets/images/loading02.png");
+    loadingTexture.setBorderColour(cro::Colour::Black);
+    const auto texSize = glm::vec2(loadingTexture.getSize());
+
+    auto rect = cro::FloatRect(glm::vec2(2.f), glm::vec2(texSize.x - 4.f, texSize.y - ProgressHeight - 4.f));
 
     m_loadingQuad.setTexture(loadingTexture);
-    m_loadingQuad.setOrigin(glm::vec2(loadingTexture.getSize()) / 2.f);
+    m_loadingQuad.setTextureRect(rect);
+    m_loadingQuad.setOrigin({ rect.width / 2.f, rect.height / 2.f });
     m_loadingQuad.setPosition(screenSize / 2.f);
     m_loadingQuad.setScale({ viewScale, viewScale });
 
+    rect.left = 0.f;
+    rect.width = ProgressHeight * 2.f;
+    rect.bottom = ProgressHeight * 2.f;
+    rect.height = ProgressHeight;
+    m_progressBar.setTexture(loadingTexture);
+    m_progressBar.setTextureRect(rect);
     m_progressBar.setScale({ 0.f, 0.f });
     m_progressBar.setPosition({ 0.f, 8.f * viewScale });
 
-    
     m_previousProgress = 0.f;
     m_progressScale = 0.f;
+
 
     auto& window = cro::App::getWindow();
     const auto size = window.getSize().x;
@@ -157,7 +168,7 @@ void LoadingScreen::update()
         const auto scale = getViewScale(windowSize);
 
         m_progressScale += progressSize;
-        m_progressBar.setScale({ m_progressScale * windowSize.x, scale * ProgressHeight });
+        m_progressBar.setScale({ m_progressScale * windowSize.x, scale });
 
         m_loadingQuad.setRotation(90.f * (updateCount % 4));
 

@@ -344,7 +344,7 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
         glCheck(glBindTexture(m_textureType, m_textureID));
 
         glCheck(glUniform1i(m_uniforms.texture, texIndex));
-        texIndex++;
+        m_boundTextures[texIndex++] = m_textureType;
     }
 
     for (const auto& [_, uniformPair] : m_uniformValues)
@@ -375,7 +375,7 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
             glCheck(glBindTexture(GL_TEXTURE_2D, value.textureID));
 
             glCheck(glUniform1i(uid, texIndex));
-            texIndex++;
+            m_boundTextures[texIndex++] = GL_TEXTURE_2D;
             break;
         }
     }
@@ -409,6 +409,7 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     {
         auto rtSize = RenderTarget::getActiveTarget()->getSize();
         glCheck(glScissor(0, 0, rtSize.x, rtSize.y));
+        glCheck(glDisable(GL_SCISSOR_TEST));
     }
 
     //TODO do we want to enable single sided rendering?
@@ -442,6 +443,12 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     glCheck(glDisableVertexAttribArray(0));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 #endif
+
+    for(auto i = texIndex - 1; i >= 0; --i)
+    {
+        glCheck(glActiveTexture(GL_TEXTURE0 + i));
+        glCheck(glBindTexture(m_boundTextures[i], 0));
+    }
 
     //restore viewport/blendmode etc
     glCheck(glDepthMask(GL_TRUE));

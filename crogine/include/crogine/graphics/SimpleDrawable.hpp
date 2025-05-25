@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/graphics/Vertex2D.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 
+#include <array>
+
 namespace cro
 {
     class Shader;
@@ -186,6 +188,9 @@ namespace cro
         std::uint32_t m_textureType;
         const Texture* m_texture;
         Material::BlendMode m_blendMode;
+
+        //tracks bound texture types for unbinding after draw
+        mutable std::array<std::uint32_t, 32> m_boundTextures = {};
 
         struct ShaderUniforms final
         {
