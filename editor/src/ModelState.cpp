@@ -100,7 +100,8 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_showSphere            (false),
     m_selectedTexture       (std::numeric_limits<std::uint32_t>::max()),
     m_selectedMaterial      (std::numeric_limits<std::uint32_t>::max()),
-    m_attachmentIndex       (0)
+    m_attachmentIndex       (0),
+    m_boneScaleIndex        (0)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();

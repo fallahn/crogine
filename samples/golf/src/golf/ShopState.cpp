@@ -2121,7 +2121,7 @@ void ShopState::updateStatDisplay(const ItemEntry& itemEntry)
         valStr += "+";
     }
     valStr += std::to_string(item.stat01);
-    text1.getComponent<cro::Text>().setString(inv::StatLabels[m_selectedCategory].stat1 + valStr);
+    text1.getComponent<cro::Text>().setString(inv::StatLabels[m_selectedCategory].stat1 + inv::StatDesc[m_selectedCategory].stat1 + valStr);
 
     auto& [bg2, text2] = m_statItems.statBars[1];
     bg2.getComponent<cro::Callback>().getUserData<StatBarData>().value = static_cast<float>(item.stat02);
@@ -2150,7 +2150,7 @@ void ShopState::updateStatDisplay(const ItemEntry& itemEntry)
 
         bg2.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     }
-    text2.getComponent<cro::Text>().setString(inv::StatLabels[m_selectedCategory].stat2 + valStr);
+    text2.getComponent<cro::Text>().setString(inv::StatLabels[m_selectedCategory].stat2 + inv::StatDesc[m_selectedCategory].stat2 + valStr);
 
     //update manufacturer icon
     m_statItems.manufacturerIcon.getComponent<cro::Sprite>().setTextureRect(m_largeLogos[item.manufacturer].getTextureRect());

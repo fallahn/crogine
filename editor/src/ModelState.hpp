@@ -238,6 +238,7 @@ private:
     std::int32_t m_attachmentIndex;
     std::vector<glm::vec3> m_attachmentAngles;
     std::vector<cro::Entity> m_attachmentModels;
+    std::int32_t m_boneScaleIndex;
     void buildUI();
     void showSaveMessage();
     void drawInspector();
