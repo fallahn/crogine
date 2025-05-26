@@ -127,17 +127,18 @@ void LoadingScreen::launch()
     m_progressBar.setScale({ 0.f, 0.f });
     m_progressBar.setPosition({ 0.f, 8.f * viewScale });
 
+    m_targetProgress = 0.f;
     m_previousProgress = 0.f;
     m_progressScale = 0.f;
 
-
-    auto& window = cro::App::getWindow();
-    const auto size = window.getSize().x;
     m_progressBar.setScale({ 0.f, 0.f });
 
+    auto& window = cro::App::getWindow();
     window.clear();
     draw();
     window.display();
+
+    m_clock.restart();
 }
 
 void LoadingScreen::update()
@@ -182,13 +183,17 @@ void LoadingScreen::update()
 
         //hmmm steam deck frame limiter negates any vsync setting...
         //who else will this affect? :/
-        if (!Social::isSteamdeck())
+        /*if (!Social::isSteamdeck())
         {
             window.clear();
             draw();
             window.display();
-        }
+        }*/
     }
+
+    window.clear();
+    draw();
+    window.display();
     window.setVsyncEnabled(old);
 }
 
@@ -210,7 +215,6 @@ void LoadingScreen::setProgress(float p)
         m_previousProgress = 0.f;
         m_progressScale = 0.f;
 
-        const auto size = window.getSize().x;
         m_progressBar.setScale({ 0.f, 0.f });
     }
 
