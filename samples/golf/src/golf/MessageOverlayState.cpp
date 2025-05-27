@@ -393,6 +393,11 @@ void MessageOverlayState::buildScene()
                     if (activated(evt))
                     {
                         quitState();
+
+                        /*if (true)
+                        {
+                            requestStackPush(StateID::ClubInfo);
+                        }*/
                     }
                 });
 

@@ -2078,3 +2078,11 @@ void CareerState::saveConfig() const
     cfg.addProperty("weather").setValue(m_sharedData.weatherType);
     cfg.save(Content::getUserContentPath(Content::UserContent::Career) + ConfigFile);
 }
+
+void CareerState::onCachedPush()
+{
+    if (m_sharedData.showClubUpdate)
+    {
+        requestStackPush(StateID::ClubInfo);
+    }
+}

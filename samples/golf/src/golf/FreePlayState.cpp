@@ -675,6 +675,11 @@ void FreePlayState::menuShownCallback()
     m_callbackEntities[CallbackEntID::NightButton].getComponent<cro::Text>().setString(s);
 
     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GameMode);
+
+    if (m_sharedData.showClubUpdate)
+    {
+        requestStackPush(StateID::ClubInfo);
+    }
 }
 
 void FreePlayState::quitState()

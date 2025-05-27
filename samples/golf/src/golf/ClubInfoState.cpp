@@ -195,7 +195,13 @@ Pro clubs can also be upgraded at the Equipment Counter.
 
 
 
-Choose wisely - and have fun!)"
+Choose wisely!)",
+
+R"(More information and an in-depth guide on how to play
+can be found in the Options menu.
+
+
+Happy Golfing!)"
 
 //R"(Welcome Back Golfer! A little note on the new club sets...
 //
