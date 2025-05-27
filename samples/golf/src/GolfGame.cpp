@@ -35,6 +35,7 @@ source distribution.
 #include "ImTheme.hpp"
 #include "M3UPlaylist.hpp"
 #include "WebsocketServer.hpp"
+#include "rss/pugixml.hpp"
 
 #include "golf/MenuState.hpp"
 #include "golf/GolfState.hpp"
@@ -336,6 +337,9 @@ void GolfGame::handleEvent(const cro::Event& evt)
             m.audioID = ProgressMessage::Reward;
             m_progressIcon->queueMessage(m);*/
         }
+            break;
+        case SDLK_KP_DIVIDE:
+            m_sharedData.showHelp = true;
             break;
         }
         break;
@@ -2276,6 +2280,52 @@ bool GolfGame::setShader(const char* frag)
 
 void GolfGame::createHowTo()
 {
+    const std::string rootPath = cro::FileSystem::getResourcePath() + "assets/golf/guide/en/";
+    const std::string imagePath = cro::FileSystem::getResourcePath() + "assets/golf/guide/images/";
+    const auto filePaths = cro::FileSystem::listFiles(rootPath);
+
+    pugi::xml_document doc;
+    for (const auto path : filePaths)
+    {
+        if (const auto res = doc.load_file((rootPath + path).c_str(), 116, pugi::encoding_utf8); !res)
+        {
+            LogE << "Could not open guide doc " << path << std::endl;
+            LogE << res.description() << std::endl;
+        }
+
+        auto& chapter = m_guideChapters.emplace_back();
+        for (const auto& c : doc.child("root").children())
+        {
+            //oh the fun of utf8 preservation in C++...
+            if (std::strcmp(c.name(), "text") == 0
+                || std::strcmp(c.name(),  "title") == 0
+                || std::strcmp(c.name(), "h") == 0)
+            {
+                std::basic_string<std::uint8_t> s(reinterpret_cast<const std::uint8_t*>(c.text().as_string()));
+                
+                if (!s.empty())
+                {
+                    auto& item = chapter.items.emplace_back();
+                    item.type = std::strcmp(c.name(), "title") == 0 ? pg::Item::Title 
+                        : std::strcmp(c.name(), "h") == 0 ? pg::Item::Header : pg::Item::Text;
+                    item.string.swap(s);
+                }
+            }
+            else if (std::strcmp(c.name(), "image") == 0)
+            {
+                const std::string imgName = c.text().as_string();
+                const auto& img = m_guideTextures.get(imagePath + imgName);
+                auto& item = chapter.items.emplace_back();
+                item.type = pg::Item::Image;
+                item.image = &img;
+            }
+            else if (std::strcmp(c.name(), "hr") == 0)
+            {
+                auto& item = chapter.items.emplace_back();
+                item.type = pg::Item::Separator;
+            }
+        }
+    }
     registerWindow([&]() 
         {
             if (m_sharedData.showHelp)
@@ -2288,15 +2338,49 @@ void GolfGame::createHowTo()
                 
 
                 ImGui::PushFont(m_sharedData.helpFonts[viewSize]);
-                ImGui::Text("Text");
 
-                //for(chapter : chapters)
-                // for(item : chapter)
-                //   if(item.type == text)
-                //   else if (item.type == image)
-                //image_size_scaled = imgSize/viewScale
-                //SetCursorPos((GetWindowSize() - image_size_scaled) * 0.5f);
-                //ImGui::Image();
+                for (const auto& chapter : m_guideChapters)
+                {
+                    for (const auto& item : chapter.items)
+                    {
+                        switch (item.type)
+                        {
+                        default: break;
+                        case pg::Item::Separator:
+                            ImGui::Separator();
+                            break;
+                        case pg::Item::Title:
+                            ImGui::PushStyleColor(ImGuiCol_Text, CD32::Colours[CD32::Yellow]);
+                            ImGui::Text(reinterpret_cast<const char*>(item.string.data()));
+                            ImGui::PopStyleColor();
+                            break;
+                        case pg::Item::Header:
+                            ImGui::NewLine();
+                            ImGui::PushStyleColor(ImGuiCol_Text, CD32::Colours[CD32::BlueLight]);
+                            ImGui::Text(reinterpret_cast<const char*>(item.string.data()));
+                            ImGui::PopStyleColor();
+                            break;
+                        case pg::Item::Text:
+                            ImGui::TextWrapped(reinterpret_cast<const char*>(item.string.data()));
+                            break;
+                        case pg::Item::Image:
+                        {
+                            ImGui::NewLine();
+                            const auto imgSize = glm::vec2(item.image->getSize());// / static_cast<float>(4 - viewSize);
+                            const auto oldPos = ImGui::GetCursorPos();
+                            ImGui::SetCursorPos({ (ImGui::GetWindowSize().x - imgSize.x) * 0.5f, oldPos.y });
+                            ImGui::Image(*item.image, { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
+                            ImGui::SetCursorPos({ oldPos.x, oldPos.y + imgSize.y });
+                            ImGui::NewLine();
+                        }
+                            break;
+                        }
+                    }
+                    ImGui::NewLine();
+                    ImGui::Separator();
+                    ImGui::NewLine();
+                }
+                
 
                 ImGui::PopFont();
 

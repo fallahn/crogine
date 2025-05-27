@@ -34,6 +34,8 @@ source distribution.
 #else
 #include <Achievements.hpp>
 #endif
+#include "PlayerGuide.hpp"
+
 #include "golf/SharedStateData.hpp"
 #include "golf/SharedProfileData.hpp"
 #include "golf/ProgressIcon.hpp"
@@ -116,6 +118,8 @@ private:
     void applyPostProcess();
     bool setShader(const char*);
 
+    std::vector<pg::Chapter> m_guideChapters;
+    cro::TextureResource m_guideTextures;
     void createHowTo();
 
 #ifdef _WIN32

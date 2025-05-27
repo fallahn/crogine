@@ -942,6 +942,7 @@
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\GolfGame.hpp" />
     <ClInclude Include="src\M3UPlaylist.hpp" />
+    <ClInclude Include="src\PlayerGuide.hpp" />
     <ClInclude Include="src\rss\Newsfeed.hpp" />
     <ClInclude Include="src\rss\pugiconfig.hpp" />
     <ClInclude Include="src\rss\pugixml.hpp" />
