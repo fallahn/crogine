@@ -139,6 +139,7 @@ enum OptionsIndex
     Window = 2000,
     WindowCredits,
     WindowAdvanced,
+    WindowHowTo,
     WindowApply,
     WindowClose
 };
