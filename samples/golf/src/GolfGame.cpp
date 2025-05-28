@@ -2347,7 +2347,8 @@ void GolfGame::createHowTo()
 {
     const std::string rootPath = cro::FileSystem::getResourcePath() + "assets/golf/guide/en/";
     const std::string imagePath = cro::FileSystem::getResourcePath() + "assets/golf/guide/images/";
-    const auto filePaths = cro::FileSystem::listFiles(rootPath);
+    auto filePaths = cro::FileSystem::listFiles(rootPath);
+    std::sort(filePaths.begin(), filePaths.end());
 
     pugi::xml_document doc;
     for (const auto& path : filePaths)
@@ -2523,7 +2524,7 @@ void GolfGame::createHowTo()
                             const float NavScale = std::min(1.f, PaneWidth / ImGui::GetWindowSize().x);
 
                             ImGui::NewLine();
-                            auto imgSize = glm::vec2(item.image->getSize()) * viewScale;
+                            auto imgSize = glm::vec2(item.image->getSize()) * std::max(1.f, viewScale - 1.f);
                             /*if (imgSize.x > (PaneWidth - 10.f))
                             {
                                 imgSize *= NavScale;
