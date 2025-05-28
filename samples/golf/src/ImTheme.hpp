@@ -112,7 +112,7 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     static const std::vector<ImWchar> rangesA = { 0x1, /*0xFFFF*/0xe004, 0 }; //TODO what's the third number? Plane? Terminator?
     
     const auto rp = cro::FileSystem::getResourcePath();
-    fonts->AddFontFromFileTTF((rp + "assets/golf/fonts/ProggyClean.ttf").c_str(), 13.f, &config, rangesA.data());
+    auto* defaultFont = fonts->AddFontFromFileTTF((rp + "assets/golf/fonts/ProggyClean.ttf").c_str(), 13.f, &config, rangesA.data());
     fonts->AddFontFromFileTTF((rp + "assets/golf/fonts/NotoSans-Regular.ttf").c_str(), 10.f, &config, fonts->GetGlyphRangesCyrillic());
     fonts->AddFontFromFileTTF((rp + "assets/golf/fonts/NotoSans-Regular.ttf").c_str(), 10.f, &config, fonts->GetGlyphRangesGreek());
     fonts->AddFontFromFileTTF((rp + "assets/golf/fonts/NotoSans-Regular.ttf").c_str(), 10.f, &config, fonts->GetGlyphRangesVietnamese());
@@ -153,10 +153,10 @@ static inline void applyImGuiStyle(SharedStateData& sd)
 
     const std::string helpFontPath = rp + "assets/golf/fonts/NotoSans-Regular.ttf";
 
-    sd.helpFonts[0] = fonts->AddFontFromFileTTF(helpFontPath.c_str(), 12.f, &configC);
+    sd.helpFonts[0] = defaultFont;/* fonts->AddFontFromFileTTF(helpFontPath.c_str(), 12.f, &configC);
     configC.MergeMode = true;
     fonts->AddFontFromFileTTF(emojiFontPath.c_str(), 12.f, &configC, rangesB.data());
-    configC.MergeMode = false;
+    configC.MergeMode = false;*/
 
     sd.helpFonts[1] = fonts->AddFontFromFileTTF(helpFontPath.c_str(), 24.f, &configC);
     configC.MergeMode = true;

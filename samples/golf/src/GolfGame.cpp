@@ -135,6 +135,23 @@ namespace
     bool safeMode = false;
 #endif
 
+    struct HelpNav final
+    {
+        std::int32_t chapterCount = 0;
+        std::int32_t scrollIndex = 0;
+        std::int32_t targetIndex = 0;
+
+        std::int32_t selectedScroll = 0;
+
+        bool wantsScroll = false;
+
+        float manualScroll = 0.f;
+        float currTime = 0.f;
+        static constexpr float ScrollTime = 0.025f;
+        static constexpr float ScrollAmount = 12.f;
+
+    }helpNav;
+
     els::SharedStateData elsShared;
 
     struct ShaderDescription final
@@ -267,6 +284,19 @@ void GolfGame::handleEvent(const cro::Event& evt)
 {
     if (m_sharedData.showHelp)
     {
+        const auto scrollUp = 
+            []()
+            {
+                helpNav.targetIndex = (helpNav.selectedScroll + (helpNav.chapterCount - 1)) % helpNav.chapterCount;
+                helpNav.wantsScroll = true;
+            };
+        const auto scrollDown = 
+            []()
+            {
+                helpNav.targetIndex = (helpNav.selectedScroll + 1) % helpNav.chapterCount;
+                helpNav.wantsScroll = true;
+            };
+
         switch (evt.type)
         {
         default: break;
@@ -277,9 +307,18 @@ void GolfGame::handleEvent(const cro::Event& evt)
             }
             break;
         case SDL_CONTROLLERBUTTONUP:
-            if (evt.cbutton.button == cro::GameController::ButtonB)
+            switch (evt.cbutton.button)
             {
+            default: break;
+            case cro::GameController::ButtonB:
                 m_sharedData.showHelp = false;
+                break;
+            case cro::GameController::DPadDown:
+                scrollDown();
+                break;
+            case cro::GameController::DPadUp:
+                scrollUp();
+                break;
             }
             break;
         case SDL_KEYUP:
@@ -289,6 +328,12 @@ void GolfGame::handleEvent(const cro::Event& evt)
             case SDLK_ESCAPE:
             case SDLK_BACKSPACE:
                 m_sharedData.showHelp = false;
+                break;
+            case SDLK_DOWN:
+                scrollDown();
+                break;
+            case SDLK_UP:
+                scrollUp();
                 break;
             }
             break;
@@ -561,7 +606,27 @@ void GolfGame::simulate(float dt)
 {
     if (m_sharedData.showHelp)
     {
-        //TODO check controller input and converts to mouse scroll events
+        const auto scroll = 
+            [&](float dir)
+            {
+                helpNav.currTime += dt;
+                if (helpNav.currTime > HelpNav::ScrollTime)
+                {
+                    helpNav.currTime -= HelpNav::ScrollTime;
+                    helpNav.manualScroll = dir;
+                }
+            };
+
+        if (cro::GameController::getAxisPosition(0, cro::GameController::AxisRightY) > cro::GameController::LeftThumbDeadZoneV)
+        //if(cro::Keyboard::isKeyPressed(SDLK_PAGEUP))
+        {
+            scroll(-1.f);
+        }
+        else if (cro::GameController::getAxisPosition(0, cro::GameController::AxisRightY) < -cro::GameController::LeftThumbDeadZoneV)
+        //else if (cro::Keyboard::isKeyPressed(SDLK_PAGEDOWN))
+        {
+            scroll(1.f);
+        }
     }
 
     if (m_sharedData.usePostProcess)
@@ -2285,7 +2350,7 @@ void GolfGame::createHowTo()
     const auto filePaths = cro::FileSystem::listFiles(rootPath);
 
     pugi::xml_document doc;
-    for (const auto path : filePaths)
+    for (const auto& path : filePaths)
     {
         if (const auto res = doc.load_file((rootPath + path).c_str(), 116, pugi::encoding_utf8); !res)
         {
@@ -2309,6 +2374,12 @@ void GolfGame::createHowTo()
                     item.type = std::strcmp(c.name(), "title") == 0 ? pg::Item::Title 
                         : std::strcmp(c.name(), "h") == 0 ? pg::Item::Header : pg::Item::Text;
                     item.string.swap(s);
+
+                    if (item.type == pg::Item::Title)
+                    {
+                        chapter.title = item.string;
+                        helpNav.chapterCount++;
+                    }
                 }
             }
             else if (std::strcmp(c.name(), "image") == 0)
@@ -2330,16 +2401,81 @@ void GolfGame::createHowTo()
         {
             if (m_sharedData.showHelp)
             {
-                const auto viewSize = std::min(static_cast<std::int32_t>(getViewScale()) - 1, 2);
+                const auto viewScale = std::clamp(getViewScale(), 1.f, 3.f);
+                const auto viewSize = std::min(static_cast<std::int32_t>(viewScale) - 1, 2);
                 const glm::vec2 size = cro::App::getWindow().getScaledSize();
                 ImGui::SetNextWindowSize({ size.x, size.y });
                 ImGui::SetNextWindowPos({ 0.f, 0.f });
                 ImGui::Begin("How To Play", nullptr/*&m_sharedData.showHelp*/, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
                 
 
-                ImGui::PushFont(m_sharedData.helpFonts[viewSize]);
+                ImGui::PushFont(m_sharedData.helpFonts[std::min(viewSize, 1)]);
+                static constexpr auto NavWidth = 180.f;
+                const auto NavWidthScaled = NavWidth * viewScale;
 
+                //chapter navigation
+                ImGui::BeginChild("##nav", { NavWidthScaled, 0.f }, true);
+                helpNav.scrollIndex = 0;
+                static constexpr std::array Offsets = { 0.f, 0.f, 0.4f };
+                ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, {0.5f, Offsets[viewSize]});
                 for (const auto& chapter : m_guideChapters)
+                {
+                    if (helpNav.scrollIndex == helpNav.selectedScroll)
+                    {
+                        ImGui::PushStyleColor(ImGuiCol_Button, CD32::Colours[CD32::Yellow]);
+                        ImGui::PushStyleColor(ImGuiCol_Text, CD32::Colours[CD32::Black]);
+                    }
+
+                    if (ImGui::Button(reinterpret_cast<const char*>(chapter.title.c_str()), {NavWidthScaled - (18.f /** viewScale*/), 20.f * viewScale}))
+                    {
+                        helpNav.targetIndex = helpNav.scrollIndex;
+                        helpNav.wantsScroll = true;
+                    }
+
+                    if (helpNav.scrollIndex == helpNav.selectedScroll)
+                    {
+                        ImGui::PopStyleColor(2);
+                    }
+
+                    helpNav.scrollIndex++;
+                }
+                ImGui::PopStyleVar();
+
+                //TODO display controller input
+                if (cro::GameController::getControllerCount())
+                {
+                    if (cro::GameController::hasPSLayout(0))
+                    {
+
+                    }
+                    else
+                    {
+
+                    }
+                }
+                else
+                {
+                    ImGui::NewLine();
+                    ImGui::Text("Press Escape To Close");
+                }
+
+                ImGui::EndChild();
+                ImGui::PopFont();
+                ImGui::SameLine();
+
+                //main pane
+                ImGui::PushFont(m_sharedData.helpFonts[viewSize]);
+                ImGui::BeginChild("##main_view");
+                
+                if (helpNav.manualScroll != 0.f)
+                {
+                    const auto pos = std::clamp(ImGui::GetScrollY() + (HelpNav::ScrollAmount * viewScale * helpNav.manualScroll), 0.f, ImGui::GetScrollMaxY());
+                    ImGui::SetScrollY(pos);
+                    helpNav.manualScroll = 0.f;
+                }
+
+                helpNav.scrollIndex = 0;
+                for (auto& chapter : m_guideChapters)
                 {
                     for (const auto& item : chapter.items)
                     {
@@ -2353,6 +2489,24 @@ void GolfGame::createHowTo()
                             ImGui::PushStyleColor(ImGuiCol_Text, CD32::Colours[CD32::Yellow]);
                             ImGui::Text(reinterpret_cast<const char*>(item.string.data()));
                             ImGui::PopStyleColor();
+
+                            if (helpNav.wantsScroll
+                                && helpNav.targetIndex == helpNav.scrollIndex)
+                            {
+                                ImGui::SetScrollHereY(0.01f);
+                                helpNav.wantsScroll = false;
+                                helpNav.selectedScroll = helpNav.scrollIndex;
+                            }
+                            else
+                            {
+                                bool visible = ImGui::IsItemVisible();
+                                if (visible && !chapter.isVisible)
+                                {
+                                    //we were just exposed
+                                    helpNav.selectedScroll = helpNav.scrollIndex;
+                                }
+                                chapter.isVisible = visible;
+                            }
                             break;
                         case pg::Item::Header:
                             ImGui::NewLine();
@@ -2365,8 +2519,15 @@ void GolfGame::createHowTo()
                             break;
                         case pg::Item::Image:
                         {
+                            const float PaneWidth = (ImGui::GetWindowSize().x - NavWidth);
+                            const float NavScale = std::min(1.f, PaneWidth / ImGui::GetWindowSize().x);
+
                             ImGui::NewLine();
-                            const auto imgSize = glm::vec2(item.image->getSize());// / static_cast<float>(4 - viewSize);
+                            auto imgSize = glm::vec2(item.image->getSize()) * viewScale;
+                            /*if (imgSize.x > (PaneWidth - 10.f))
+                            {
+                                imgSize *= NavScale;
+                            }*/
                             const auto oldPos = ImGui::GetCursorPos();
                             ImGui::SetCursorPos({ (ImGui::GetWindowSize().x - imgSize.x) * 0.5f, oldPos.y });
                             ImGui::Image(*item.image, { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
@@ -2376,12 +2537,13 @@ void GolfGame::createHowTo()
                             break;
                         }
                     }
+                    helpNav.scrollIndex++;
+
                     ImGui::NewLine();
                     ImGui::Separator();
                     ImGui::NewLine();
                 }
-                
-
+                ImGui::EndChild();
                 ImGui::PopFont();
 
 

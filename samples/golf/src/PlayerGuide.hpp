@@ -50,6 +50,10 @@ namespace pg
 
     struct Chapter final
     {
+        //I know this duplicates, but the item list
+        //resizing invalidates a pointer to the string
+        std::basic_string<std::uint8_t> title;
         std::vector<Item> items;
+        bool isVisible = false;
     };
 }
