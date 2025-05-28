@@ -620,12 +620,12 @@ void GolfGame::simulate(float dt)
         if (cro::GameController::getAxisPosition(0, cro::GameController::AxisRightY) > cro::GameController::LeftThumbDeadZoneV)
         //if(cro::Keyboard::isKeyPressed(SDLK_PAGEUP))
         {
-            scroll(-1.f);
+            scroll(1.f);
         }
         else if (cro::GameController::getAxisPosition(0, cro::GameController::AxisRightY) < -cro::GameController::LeftThumbDeadZoneV)
         //else if (cro::Keyboard::isKeyPressed(SDLK_PAGEDOWN))
         {
-            scroll(1.f);
+            scroll(-1.f);
         }
     }
 
@@ -2350,6 +2350,8 @@ void GolfGame::createHowTo()
     auto filePaths = cro::FileSystem::listFiles(rootPath);
     std::sort(filePaths.begin(), filePaths.end());
 
+    const auto& controlTex = m_guideTextures.get(imagePath + "controls.png");
+
     pugi::xml_document doc;
     for (const auto& path : filePaths)
     {
@@ -2445,13 +2447,16 @@ void GolfGame::createHowTo()
                 //TODO display controller input
                 if (cro::GameController::getControllerCount())
                 {
+                    auto size = glm::vec2(controlTex.getSize()) * viewScale;
+                    size.y /= 2.f;
+
                     if (cro::GameController::hasPSLayout(0))
                     {
-
+                        ImGui::Image(controlTex, { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.5f });
                     }
                     else
                     {
-
+                        ImGui::Image(controlTex, { size.x, size.y }, { 0.f, 0.5f }, { 1.f, 0.f });
                     }
                 }
                 else

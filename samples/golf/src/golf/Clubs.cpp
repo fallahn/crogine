@@ -177,7 +177,7 @@ std::string Club::getName(bool imperial, float distanceToPin) const
 std::string Club::getDistanceLabel(bool imperial, std::int32_t level) const
 {
     CRO_ASSERT(level > -1 && level < 3, "");
-    level = levelOffset(level); //force distance fudge
+    //level = levelOffset(level); //don't do this - get targetAtLevel() applies it
 
     auto t = getTargetAtLevel(level);
     if (imperial)
