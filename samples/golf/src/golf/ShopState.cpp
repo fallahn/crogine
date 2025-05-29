@@ -2443,8 +2443,13 @@ void ShopState::purchaseItem()
         msg->type = Social::SocialEvent::NewClubset;
         msg->level = invItem.manufacturer;
         msg->reason = isBall ? 1 : 0;
-    }
     
+        if ((m_sharedData.inventory.manufacturerFlags & inv::ManufID::AllFlags) == inv::ManufID::AllFlags)
+        {
+            Achievements::awardAchievement(AchievementStrings[AchievementID::Fickle]);
+        }
+    }
+
     inv::write(m_sharedData.inventory);
 
     auto str = std::to_string(discountPrice(invItem.price)) + " Cr\nOwned";

@@ -191,6 +191,7 @@ namespace AchievementID
         BigSpender,
         Hoarder,
         Entrepreneur,
+        Fickle,
 
         Count
     };

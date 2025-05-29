@@ -229,7 +229,9 @@ namespace inv
             BeyTree, TunnelRock, Flaxen, Hardings, Woodgear,
             BriltonStockley, Default,
 
-            Count
+            Count,
+
+            AllFlags = 2047// 0b00000000000000000000011111111111
         };
     };
 

@@ -176,7 +176,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "custom_kit",
     "big_spender",
     "hoarder",
-    "entrepreneur"
+    "entrepreneur",
+    "fickle"
 };
 
 //appears on the notification
@@ -311,7 +312,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Custom Kit",
     "Big Spender",
     "Hoarder",
-    "Entrepreneur"
+    "Entrepreneur",
+    "Fickle"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -447,6 +449,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Spend more than 50k Credits at the Equipment Counter", false),
     std::make_pair("Buy everything at the Equipment Counter", false),
     std::make_pair("Sell a piece of gear back to the Equipment Counter", false),
+    std::make_pair("Buy at least one item from each manufacturer at the Equipment Counter", false),
 };
 
 //assuming trophies load correctly they are:
@@ -620,6 +623,7 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*128*/TrophyID::GoldFigure,
     /*129*/TrophyID::Platinum,
     /*130*/TrophyID::BronzeCup,
+    /*131*/TrophyID::GoldCup,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
