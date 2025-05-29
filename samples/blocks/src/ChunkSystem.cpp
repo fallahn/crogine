@@ -273,7 +273,7 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc, Chunk
     //and tell the shader how big one tile is
     auto& shader = rc.shaders.get(ShaderID::Chunk);
     glCheck(glUseProgram(shader.getGLHandle()));
-    glCheck(glUniform2f(shader.getUniformMap().at("u_tileSize"), tileUVSize.x, tileUVSize.y));
+    glCheck(glUniform2f(shader.getUniformID("u_tileSize"), tileUVSize.x, tileUVSize.y));
     glCheck(glUseProgram(0));
     
     rc.materials.get(m_materialIDs[MaterialID::ChunkSolid]).setProperty("u_texture", texture);

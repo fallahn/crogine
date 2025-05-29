@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -53,6 +53,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/GBuffer.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
 
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -422,6 +423,7 @@ void ModelState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::GroundPlane]));
+    entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::DefaultShadow]));
     auto* mesh = &entity.getComponent<cro::Model>().getMeshData();
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo));
@@ -438,6 +440,7 @@ void ModelState::createScene()
     mesh->vertexCount = 4;
     mesh->indexData[0].indexCount = 4;
 
+    entity.addComponent<cro::ShadowCaster>();
     m_entities[EntityID::GroundPlane] = entity;
     m_entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

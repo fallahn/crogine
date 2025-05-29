@@ -210,8 +210,8 @@ void MyApp::loadSettings()
 void MyApp::saveSettings()
 {
     cro::ConfigFile cfg;
-    cfg.addProperty("player_name", m_sharedData.localPlayer.name.toAnsiString());
-    cfg.addProperty("target_ip", m_sharedData.targetIP.toAnsiString());
+    cfg.addProperty("player_name").setValue(m_sharedData.localPlayer.name);
+    cfg.addProperty("target_ip").setValue(m_sharedData.targetIP);
 
     //TODO write key/controller bindings
 

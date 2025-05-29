@@ -115,10 +115,9 @@ std::int32_t SeaSystem::loadResources(cro::ResourceCollection& rc)
 
     m_shaderProperties.shaderID = rc.shaders.get(ShaderID::Sea).getGLHandle();
 
-    const auto& uniforms = rc.shaders.get(ShaderID::Sea).getUniformMap();
-    if (uniforms.count("u_time"))
+    //if (uniforms.count("u_time"))
     {
-        m_shaderProperties.timeUniform = uniforms.at("u_time");
+        m_shaderProperties.timeUniform = rc.shaders.get(ShaderID::Sea).getUniformID("u_time");
     }
 
     return matID;

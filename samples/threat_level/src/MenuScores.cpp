@@ -168,7 +168,7 @@ void MainState::createScoreMenu(std::uint32_t mouseEnterCallback, std::uint32_t 
         };
         for (auto i = 0u; i < 10u; ++i)
         {
-            scores.addProperty(std::to_string(cro::Util::Random::value(10000, 500000)), names[i]);
+            scores.addProperty(std::to_string(cro::Util::Random::value(10000, 500000))).setValue(names[i]);
         }
         if (!scores.save(cro::App::getPreferencePath() + highscoreFile))
         {

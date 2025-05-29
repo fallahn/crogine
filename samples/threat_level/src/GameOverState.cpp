@@ -263,7 +263,7 @@ void GameOverState::load()
             cro::ConfigFile scores;
             if (scores.loadFromFile(cro::App::getPreferencePath() + highscoreFile))
             {
-                scores.addProperty(std::to_string(m_sharedResources.score), m_sharedResources.playerName);
+                scores.addProperty(std::to_string(m_sharedResources.score)).setValue(m_sharedResources.playerName);
                 scores.save(cro::App::getPreferencePath() + highscoreFile);
             }
 

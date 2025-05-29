@@ -169,7 +169,7 @@ namespace cro
         Use getCollisionCount() to first check the number of collisions
         before attempting to read the array, as old data may exist.
         */
-        const std::array<Entity::ID, 100u>& getCollisionIDs() const { return m_collisionIDs; }
+        const std::array<std::size_t, 100u>& getCollisionIDs() const { return m_collisionIDs; }
 
         //up to 4 points which make the overlapping area
         //of a collision manifold
@@ -204,7 +204,7 @@ namespace cro
         std::size_t m_shapeCount;
 
         static constexpr std::size_t MaxCollisions = 100;
-        std::array<Entity::ID, MaxCollisions> m_collisionIDs = {};
+        std::array<std::size_t, MaxCollisions> m_collisionIDs = {};
         std::array<Manifold, MaxCollisions> m_manifolds = {};
         std::size_t m_collisionCount;
         
