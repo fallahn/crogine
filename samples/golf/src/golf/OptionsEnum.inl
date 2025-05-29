@@ -132,6 +132,7 @@ enum OptionsIndex
     Scroll = 1000,
     ScrollUp,
     ScrollDown,
+    ResetHints,
     ResetStats,
     ResetCareer,
 

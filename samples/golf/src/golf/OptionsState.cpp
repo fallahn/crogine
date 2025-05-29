@@ -5080,21 +5080,58 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
             return ent;
         };
 
-    //reset career button
+    //reset hints button
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ std::round(bgBounds.width / 3.f), 32.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ std::round((bgBounds.width / 2.f) - 128.f), 32.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_career");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_hints");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    entity = createbuttonHighlight({ std::round(bgBounds.width / 3.f), 32.f }, "reset_button_highlight");
+    entity = createbuttonHighlight({ std::round((bgBounds.width / 2.f) - 128.f), 32.f }, "reset_button_highlight");
+    entity.setLabel("Resets all previously dismissed hint pop-ups.");
+    entity.getComponent<cro::Transform>().move(-entity.getComponent<cro::Transform>().getOrigin());
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ResetHints);
+    if (Social::isSteamdeck())
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(ResetCareer, WindowHowTo);
+    }
+    else
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(ResetCareer, WindowAdvanced);
+    }
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettPuttZoom);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.showClubUpdate = true;
+                    m_sharedData.showRosterTip = true;
+                    m_sharedData.showTutorialTip = true;
+                    //m_sharedData.c
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+
+    //reset career button
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ std::round(bgBounds.width / 2.f), 32.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_career");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createbuttonHighlight({ std::round(bgBounds.width / 2.f), 32.f }, "reset_button_highlight");
     entity.setLabel("Resets all Career progress and CPU opponents.\nPreviously awarded bonuses remain unlocked.");
     entity.getComponent<cro::Transform>().move(-entity.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setSelectionIndex(ResetCareer);
-    entity.getComponent<cro::UIInput>().setNextIndex(ResetStats, WindowAdvanced);
-    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettPuttZoom);
+    entity.getComponent<cro::UIInput>().setNextIndex(ResetStats, WindowHowTo);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetHints, SettPuttZoom);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -5108,18 +5145,18 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
     //reset profile button
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ std::round((bgBounds.width / 3.f) * 2.f), 32.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ std::round((bgBounds.width / 2.f) + 128.f), 32.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_button");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    entity = createbuttonHighlight({ std::round((bgBounds.width / 3.f) * 2.f), 32.f }, "reset_button_highlight");
+    entity = createbuttonHighlight({ std::round((bgBounds.width / 2.f) + 128.f), 32.f }, "reset_button_highlight");
     entity.setLabel("WARNING! This will completely reset your profile including XP and current level!");
     entity.getComponent<cro::Transform>().move(-entity.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setSelectionIndex(ResetStats);
-    entity.getComponent<cro::UIInput>().setNextIndex(ResetCareer, WindowApply);
+    entity.getComponent<cro::UIInput>().setNextIndex(ResetHints, WindowApply);
     entity.getComponent<cro::UIInput>().setPrevIndex(ResetCareer, SettPost);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
@@ -5791,10 +5828,10 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         downLeftB = TabController;
         downRightA = TabAchievements;
         downRightB = TabStats;
-        upLeftA = SettPuttZoom;
-        upLeftB = ResetCareer;
+        upLeftA = ResetHints;
+        upLeftB = ResetHints;
         upRightA = ResetStats;
-        upRightB = SettPostR;
+        upRightB = ResetStats;
         upCentre = ResetCareer;
         downCentre = TabAchievements;
         break;
