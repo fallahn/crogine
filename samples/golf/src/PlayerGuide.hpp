@@ -29,7 +29,9 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/glm/vec2.hpp>
 #include <crogine/graphics/Texture.hpp>
+#include <crogine/gui/Gui.hpp>
 
 #include <string>
 #include <vector>
@@ -46,6 +48,37 @@ namespace pg
         }type = Text;
         std::basic_string<std::uint8_t> string;
         const cro::Texture* image = nullptr;
+        glm::vec2 frameSize = glm::vec2(0.f);
+
+        struct Animation final
+        {
+            glm::vec2 frameSizeNorm = glm::vec2(0.f);
+            glm::ivec2 frameCount = glm::ivec2(0);
+            std::int32_t currentFrame = 0;
+
+            float currentTime = 0.f;
+            float FPS = 1.f / 14.f;
+            bool active = false;
+
+            cro::FloatRect update()
+            {
+                static constexpr float timeStep = 1.f / 60.f;
+                currentTime += timeStep;
+                if (currentTime > FPS)
+                {
+                    currentTime -= FPS;
+                    currentFrame++;
+                    currentFrame %= frameCount.x * frameCount.y;
+                }
+                
+                const auto x = currentFrame % frameCount.x;
+                const auto y = currentFrame / frameCount.x;
+
+                glm::vec2 pos(x * frameSizeNorm.x, y * frameSizeNorm.y);
+
+                return { pos, pos + frameSizeNorm };
+            }
+        }animation;
     };
 
     struct Chapter final

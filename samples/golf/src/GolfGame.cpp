@@ -2392,6 +2392,27 @@ void GolfGame::createHowTo()
                 auto& item = chapter.items.emplace_back();
                 item.type = pg::Item::Image;
                 item.image = &img;
+                item.frameSize = img.getSize();
+
+                //if we have this attribute assume the image is animated
+                if (c.attribute("w") && c.attribute("h"))
+                {
+                    auto frameCount = item.frameSize;
+
+                    item.frameSize.x = c.attribute("w").as_float();
+                    item.frameSize.y = c.attribute("h").as_float();
+
+                    frameCount /= item.frameSize;
+
+                    item.animation.frameCount = frameCount;
+                    item.animation.frameSizeNorm = item.frameSize / glm::vec2(img.getSize());
+                    item.animation.active = true;
+
+                    if (c.attribute("fps"))
+                    {
+                        item.animation.FPS = 1.f / c.attribute("fps").as_float(1.f);
+                    }
+                }
             }
             else if (std::strcmp(c.name(), "hr") == 0)
             {
@@ -2400,6 +2421,8 @@ void GolfGame::createHowTo()
             }
         }
     }
+
+
     registerWindow([&]() 
         {
             if (m_sharedData.showHelp)
@@ -2483,13 +2506,15 @@ void GolfGame::createHowTo()
                 helpNav.scrollIndex = 0;
                 for (auto& chapter : m_guideChapters)
                 {
-                    for (const auto& item : chapter.items)
+                    for (auto& item : chapter.items)
                     {
                         switch (item.type)
                         {
                         default: break;
                         case pg::Item::Separator:
+                            ImGui::NewLine();
                             ImGui::Separator();
+                            ImGui::NewLine();
                             break;
                         case pg::Item::Title:
                             ImGui::PushStyleColor(ImGuiCol_Text, CD32::Colours[CD32::Yellow]);
@@ -2529,14 +2554,20 @@ void GolfGame::createHowTo()
                             const float NavScale = std::min(1.f, PaneWidth / ImGui::GetWindowSize().x);
 
                             ImGui::NewLine();
-                            auto imgSize = glm::vec2(item.image->getSize()) * std::max(1.f, viewScale - 1.f);
+                            auto imgSize = item.frameSize * std::max(1.f, viewScale - 1.f);
                             /*if (imgSize.x > (PaneWidth - 10.f))
                             {
                                 imgSize *= NavScale;
                             }*/
+
+                            cro::FloatRect frame = { 0.f, 0.f, 1.f, 1.f };
+                            if (item.animation.active)
+                            {
+                                frame = item.animation.update();
+                            }
                             const auto oldPos = ImGui::GetCursorPos();
                             ImGui::SetCursorPos({ (ImGui::GetWindowSize().x - imgSize.x) * 0.5f, oldPos.y });
-                            ImGui::Image(*item.image, { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
+                            ImGui::Image(*item.image, { imgSize.x, imgSize.y }, { frame.left, 1.f - frame.bottom }, { frame.width, 1.f - frame.height });
                             ImGui::SetCursorPos({ oldPos.x, oldPos.y + imgSize.y });
                             ImGui::NewLine();
                         }
