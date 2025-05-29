@@ -66,6 +66,7 @@ namespace
         "Loading...\n\nTip: Upgrade your gear at the Clubhouse Equipment Counter",
         "Loading...\n\nDid You Know: You can find a full break down of your stats on the rightmost tab\nof the Options menu",
         "Loading...\n\nTip: You can assign your gear upgrades in the Profile Editor"
+        "Loading...\n\nTip: Check out the How To Play guide in the Options menu for a full break-down\nof Super Video Golf's mechanics"
     };
     std::size_t stringIndex = cro::Util::Random::value(0u, TipStrings.size() - 1);
 
