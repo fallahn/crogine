@@ -109,6 +109,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/ball/stone.wav",
         "assets/golf/sound/ball/pole.wav",
         "assets/golf/sound/ball/power.wav",
+        "assets/golf/sound/party.wav",
 
         "assets/golf/sound/holes/albatross.wav",
         "assets/golf/sound/holes/birdie.wav",
@@ -510,6 +511,8 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 break;
             case GolfEvent::ClubSwing:
             {
+                //if(data.club != ClubID::Putter)
+                //playSound(AudioID::Party, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                 switch (data.club)
                 {
                 default:

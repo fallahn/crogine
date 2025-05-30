@@ -149,7 +149,8 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
                 getEnt(ParticleID::Water, data.position);
                 break;
             }
-            if (m_partyMode)
+            if (m_partyMode
+                && data.club != ClubID::Putter)
             {
                 getEnt(ParticleID::Confetti, data.position);
                 getEnt(ParticleID::Balloons, data.position);

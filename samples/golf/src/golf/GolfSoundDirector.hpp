@@ -90,6 +90,7 @@ public:
             Stone,
             Pole,
             PowerBall,
+            Party,
 
             ScoreAlbatross,
             ScoreBirdie,

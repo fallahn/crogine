@@ -53,7 +53,7 @@ source distribution.
 
 namespace
 {
-    const std::array<std::string, 11u> TipStrings =
+    const std::array<std::string, 12u> TipStrings =
     {
         std::string("Loading...\n\nTip: Click on an opponent's name in the League Browser to change it"),
         "Loading...\n\nDid You Know: Before golf tees players would shape mounds of sand and place the golf ball on top",
@@ -65,7 +65,7 @@ namespace
         "Loading...\n\nDid You Know: There are playable arcade games waiting to be discovered in the Clubhouse",
         "Loading...\n\nTip: Upgrade your gear at the Clubhouse Equipment Counter",
         "Loading...\n\nDid You Know: You can find a full break down of your stats on the rightmost tab\nof the Options menu",
-        "Loading...\n\nTip: You can assign your gear upgrades in the Profile Editor"
+        "Loading...\n\nTip: You can assign your gear upgrades in the Profile Editor",
         "Loading...\n\nTip: Check out the How To Play guide in the Options menu for a full break-down\nof Super Video Golf's mechanics"
     };
     std::size_t stringIndex = cro::Util::Random::value(0u, TipStrings.size() - 1);
@@ -104,7 +104,7 @@ void LoadingScreen::launch()
 
     stringIndex = (stringIndex + 1) % TipStrings.size();
     m_tipText.setString(TipStrings[stringIndex]);
-    m_tipText.setPosition({ std::round(screenSize.x / 2.f), 64.f * viewScale});
+    m_tipText.setPosition({ std::round(screenSize.x / 2.f), 80.f * viewScale});
     m_tipText.setScale({ viewScale, viewScale });
 
     auto& loadingTexture = m_sharedData.sharedResources->textures.get("assets/images/loading02.png");
@@ -163,7 +163,7 @@ void LoadingScreen::update()
         const glm::vec2 windowSize = glm::vec2(cro::App::getWindow().getSize());
         const auto scale = getViewScale(windowSize);
 
-        m_progressScale += progressSize;
+        //m_progressScale = std::min(m_progressScale + progressSize, m_targetProgress);
         m_progressBar.setScale({ m_progressScale * windowSize.x, scale });
 
         m_loadingQuad.setRotation(90.f * (updateCount % 4));
@@ -191,6 +191,7 @@ void LoadingScreen::update()
             window.display();
         }*/
     }
+    m_previousProgress = m_targetProgress;
 
     window.clear();
     draw();
@@ -210,6 +211,7 @@ void LoadingScreen::setProgress(float p)
     auto& window = cro::App::getWindow();
 
     m_targetProgress = p;
+    m_progressScale = p;
 
     if (p == 0)
     {

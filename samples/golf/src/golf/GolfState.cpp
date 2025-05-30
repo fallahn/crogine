@@ -1452,7 +1452,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 //calculated hook is the result of the previous call to InputParser::getStroke()
                 auto hook = m_inputParser.getCalculatedHook() * m_activeAvatar->model.getComponent<cro::Transform>().getScale().x;
-                const auto hookDivisor = 1.f;// +Club::getClubLevel();
+                const auto hookDivisor = 1.f + Club::getClubLevel();
 
                 bool isHook = false;
                 if (hook < -(MinHook / hookDivisor))
@@ -3192,7 +3192,7 @@ void GolfState::addSystems()
     //m_gameScene.setSystemActive<cro::SkeletalAnimator>(false); //can't do this because we rely on player animation events
 #endif
 
-    m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures, m_sharedData)->init();
+    m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures, m_sharedData/*, true*/)->init();
     m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio, m_sharedData)->init();
     m_gameScene.setTitle("Game Scene");
 
