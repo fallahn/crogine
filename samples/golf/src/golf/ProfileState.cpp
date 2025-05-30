@@ -4314,7 +4314,7 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
     //we can't always gaurantee paths are read in the same order across
     //different OS so let's sort them to be sure
     std::sort(paths.begin(), paths.end());
-    auto next = paths.end();
+    auto next = paths.size();
 
     const auto basePath = Content::getUserContentPath(Content::UserContent::Voice);
     const auto dirs = cro::FileSystem::listDirectories(basePath);
@@ -4330,10 +4330,10 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
         }
     }
     
-    if (next != paths.end())
+    if (next != paths.size())
     {
         //more were added
-        std::sort(next, paths.end());
+        std::sort(paths.begin() + next, paths.end());
     }
 
     for (const auto& path : paths)

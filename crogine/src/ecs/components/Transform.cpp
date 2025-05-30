@@ -45,7 +45,7 @@ Transform::Transform()
     m_rotation              (1.f, 0.f, 0.f, 0.f),
     m_transform             (1.f),
     m_parent                (nullptr),
-    m_depth                 (0),
+    //m_depth                 (0),
     m_dirtyFlags            (Flags::Tx),
     m_attachmentTransform   (1.f)
 {
@@ -59,7 +59,7 @@ Transform::Transform(Transform&& other) noexcept
     m_rotation              (1.f, 0.f, 0.f, 0.f),
     m_transform             (1.f),
     m_parent                (nullptr),
-    m_depth                 (0),
+    //m_depth                 (0),
     m_dirtyFlags            (Flags::Tx),
     m_attachmentTransform   (1.f)
 {
@@ -72,15 +72,15 @@ Transform::Transform(Transform&& other) noexcept
         {
             c->m_parent = nullptr;
 
-            while (c->m_depth > 0)
+            /*while (c->m_depth > 0)
             {
                 c->decreaseDepth();
-            }
+            }*/
         }
 
         //and adopt new
         m_parent = other.m_parent;
-        m_depth = other.m_depth;
+        //m_depth = other.m_depth;
 
         other.m_parent = nullptr;
 
@@ -107,8 +107,8 @@ Transform::Transform(Transform&& other) noexcept
             c->m_parent = this;
 
             //should already be at the correct depth if
-            //we're taking on theexisting depth..?
-            while (c->m_depth > m_depth + 1)
+            //we're taking on the existing depth..?
+            /*while (c->m_depth > m_depth + 1)
             {
                 c->decreaseDepth();
             }
@@ -116,7 +116,7 @@ Transform::Transform(Transform&& other) noexcept
             while (c->m_depth <= m_depth)
             {
                 c->increaseDepth();
-            }
+            }*/
         }
 
         //actually take on the other transform
@@ -154,14 +154,14 @@ Transform& Transform::operator=(Transform&& other) noexcept
         {
             c->m_parent = nullptr;
 
-            while (c->m_depth > 0)
+            /*while (c->m_depth > 0)
             {
                 c->decreaseDepth();
-            }
+            }*/
         }
 
         m_parent = other.m_parent;
-        m_depth = other.m_depth;
+        //m_depth = other.m_depth;
 
         other.m_parent = nullptr;
 
@@ -187,15 +187,15 @@ Transform& Transform::operator=(Transform&& other) noexcept
             CRO_ASSERT(c != this, "we already exist in the child list!");
             c->m_parent = this;
 
-            while (c->m_depth > m_depth + 1)
+            /*while (c->m_depth > m_depth + 1)
             {
                 c->decreaseDepth();
-            }
+            }*/
 
-            while (c->m_depth <= m_depth)
+            /*while (c->m_depth <= m_depth)
             {
                 c->increaseDepth();
-            }
+            }*/
         }
 
         //actually take on the other transform
@@ -225,10 +225,10 @@ Transform::~Transform()
     {
         c->m_parent = nullptr;
 
-        while (c->m_depth > 0)
+        /*while (c->m_depth > 0)
         {
             c->decreaseDepth();
-        }
+        }*/
     }
 }
 
@@ -548,14 +548,14 @@ bool Transform::addChild(Transform& child)
 
 
         //correct the depth
-        while (child.m_depth < (m_depth + 1))
+        /*while (child.m_depth < (m_depth + 1))
         {
             child.increaseDepth();
         }
         while (child.m_depth > (m_depth + 1))
         {
             child.decreaseDepth();
-        }
+        }*/
 
 
         {
@@ -583,10 +583,10 @@ void Transform::removeChild(Transform& tx)
     }
 
 
-    while (tx.m_depth > 0)
+    /*while (tx.m_depth > 0)
     {
         tx.decreaseDepth();
-    }
+    }*/
 
 #ifdef USE_PARALLEL_PROCESSING
     std::scoped_lock l(m_mutex);
@@ -619,7 +619,7 @@ void Transform::reset()
     m_transform = glm::mat4(1.f);
     m_parent = nullptr;
     m_dirtyFlags = 0;
-    m_depth = 0;
+    //m_depth = 0;
     m_attachmentTransform = glm::mat4(1.f);
 
     m_callbacks.clear();
@@ -639,30 +639,30 @@ void Transform::doCallbacks() const
     }
 }
 
-void Transform::increaseDepth()
-{
-#ifdef USE_PARALLEL_PROCESSING
-    std::scoped_lock l(m_mutex);
-#endif
-    m_depth++;
-    for (auto& c : m_children)
-    {
-        c->increaseDepth();
-    }
-}
-
-void Transform::decreaseDepth()
-{
-#ifdef USE_PARALLEL_PROCESSING
-    std::scoped_lock l(m_mutex);
-#endif
-    if (m_depth > 0)
-    {
-        m_depth--; //this is a hack, we should never call this if we're at 0 already
-    }
-
-    for (auto& c : m_children)
-    {
-        c->decreaseDepth();
-    }
-}
+//void Transform::increaseDepth()
+//{
+//#ifdef USE_PARALLEL_PROCESSING
+//    std::scoped_lock l(m_mutex);
+//#endif
+//    m_depth++;
+//    for (auto& c : m_children)
+//    {
+//        c->increaseDepth();
+//    }
+//}
+//
+//void Transform::decreaseDepth()
+//{
+//#ifdef USE_PARALLEL_PROCESSING
+//    std::scoped_lock l(m_mutex);
+//#endif
+//    if (m_depth > 0)
+//    {
+//        m_depth--; //this is a hack, we should never call this if we're at 0 already
+//    }
+//
+//    for (auto& c : m_children)
+//    {
+//        c->decreaseDepth();
+//    }
+//}
