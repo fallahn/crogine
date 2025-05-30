@@ -58,6 +58,8 @@ namespace cro
 #endif
     {
     public:
+        static constexpr std::size_t MaxRandomColours = 6;
+
         explicit ParticleSystem(MessageBus&);
         ~ParticleSystem();
 
@@ -71,6 +73,12 @@ namespace cro
         void process(float) override;
 
         void render(Entity, const RenderTarget&) override;
+
+        /*!
+        \brief Sets the array of colours used to pick at random when
+        a particle emitter has the Random Colour property set.
+        */
+        void setRandomColours(const std::array<Colour, MaxRandomColours>& colours) { m_randomColours = colours; }
 
     private:
         //for two passes, normal and reflection
@@ -95,7 +103,6 @@ namespace cro
         //textured and untextured shaders.
         cro::Texture m_fallbackTexture;
 
-        static constexpr std::size_t MaxRandomColours = 6;
         std::array<cro::Colour, MaxRandomColours> m_randomColours = {};
 
         void allocateBuffer();
