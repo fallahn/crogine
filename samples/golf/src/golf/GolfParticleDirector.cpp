@@ -50,8 +50,9 @@ source distribution.
 
 using namespace cl;
 
-GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const SharedStateData& sd)
-    : m_sharedData(sd)
+GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const SharedStateData& sd, bool pm)
+    : m_sharedData  (sd),
+    m_partyMode     (pm)
 {
     //m_emitterSettings[ParticleID::Bubbles].loadFromFile("assets/arcade/scrub/particles/bubble.cps", tr);
     m_emitterSettings[ParticleID::Water].loadFromFile("assets/golf/particles/water.cps", tr);
@@ -70,6 +71,12 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const Share
     m_emitterSettings[ParticleID::Trail].loadFromFile("assets/golf/particles/trail.cps", tr);
     m_emitterSettings[ParticleID::Firework].loadFromFile("assets/golf/particles/firework.cps", tr);
     m_emitterSettings[ParticleID::Firework].blendmode = cro::EmitterSettings::BlendMode::Add;
+
+    if (pm)
+    {
+        m_emitterSettings[ParticleID::Confetti].loadFromFile("assets/golf/particles/confetti.cps", tr);
+        m_emitterSettings[ParticleID::Balloons].loadFromFile("assets/golf/particles/balloons.cps", tr);
+    }
 
     //hmm how to set smoothing on the texture?
     cro::SpriteSheet spriteSheet;
@@ -114,6 +121,11 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
             pos.y += 0.45f;
             getEnt(ParticleID::Water, pos);
         }
+        /*else if (data.userType == SpriteAnimID::Swing)
+        {
+            getEnt(ParticleID::Confetti, data.position);
+            getEnt(ParticleID::Balloons, data.position);
+        }*/
     }
         break;
     case MessageID::GolfMessage:
@@ -136,6 +148,11 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
             case TerrainID::Water:
                 getEnt(ParticleID::Water, data.position);
                 break;
+            }
+            if (m_partyMode)
+            {
+                getEnt(ParticleID::Confetti, data.position);
+                getEnt(ParticleID::Balloons, data.position);
             }
         }
         else if (data.type == GolfEvent::SetNewPlayer)

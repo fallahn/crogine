@@ -3166,7 +3166,15 @@ void GolfState::addSystems()
     m_gameScene.addSystem<ChunkVisSystem>(mb, MapSize, &m_terrainBuilder);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setRenderInterval(/*m_sharedData.hqShadows ? 2 : 3*/1); //set to 1 to remove flickering
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
-    m_gameScene.addSystem<cro::ParticleSystem>(mb);
+    m_gameScene.addSystem<cro::ParticleSystem>(mb)->setRandomColours(
+        {
+            CD32::Colours[CD32::Yellow],
+            CD32::Colours[CD32::BlueLight],
+            CD32::Colours[CD32::BeigeLight],
+            CD32::Colours[CD32::GreyLight],
+            CD32::Colours[CD32::Orange],
+            CD32::Colours[CD32::Red]
+        });
     m_gameScene.addSystem<cro::AudioSystem>(mb);
 
     if (m_sharedData.nightTime)
