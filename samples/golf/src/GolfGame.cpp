@@ -284,17 +284,25 @@ void GolfGame::handleEvent(const cro::Event& evt)
 {
     if (m_sharedData.showHelp)
     {
+        const auto doScroll =
+            [&]()
+            {
+                helpNav.wantsScroll = true;
+                auto* msg = postMessage<SystemEvent>(MessageID::SystemMessage);
+                msg->type = SystemEvent::MenuSwitched;
+            };
+
         const auto scrollUp = 
-            []()
+            [&]()
             {
                 helpNav.targetIndex = (helpNav.selectedScroll + (helpNav.chapterCount - 1)) % helpNav.chapterCount;
-                helpNav.wantsScroll = true;
+                doScroll();
             };
         const auto scrollDown = 
-            []()
+            [&]()
             {
                 helpNav.targetIndex = (helpNav.selectedScroll + 1) % helpNav.chapterCount;
-                helpNav.wantsScroll = true;
+                doScroll();
             };
 
         switch (evt.type)

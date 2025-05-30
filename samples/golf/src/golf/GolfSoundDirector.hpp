@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -173,6 +173,7 @@ public:
             Poke,
             SkinsWin,
             Snapshot,
+            Switch,
             Toot,
             PlayerQuit,
             Fore,

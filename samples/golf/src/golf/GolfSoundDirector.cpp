@@ -196,6 +196,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/menu/poke.wav",
         "assets/golf/sound/menu/skins.wav",
         "assets/golf/sound/menu/snapshot.wav",
+        "assets/golf/sound/menu/switch.wav",
         "assets/golf/sound/menu/toot2.wav",
         "assets/golf/sound/menu/lobby_exit.wav",
         "assets/golf/sound/menu/start_game.wav",
@@ -326,6 +327,15 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             }
         }
         break;
+        case MessageID::SystemMessage:
+        {
+            const auto& data = msg.getData<SystemEvent>();
+            if (data.type == SystemEvent::MenuSwitched)
+            {
+                playSound(AudioID::Switch, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+            }
+        }
+            break;
         case MessageID::GolfMessage:
         {
             const auto& data = msg.getData<GolfEvent>();

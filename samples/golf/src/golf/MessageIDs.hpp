@@ -172,7 +172,8 @@ struct SystemEvent final
         SubmitOSK, //OSK was closed and there's data in the buffer to be read
         CancelOSK,
         LobbyEntered, //someone other than us joined the lobby
-        LobbyExit
+        LobbyExit,
+        MenuSwitched
     }type = PostProcessToggled;
     std::int32_t data = -1;
 };
