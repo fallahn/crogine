@@ -48,7 +48,7 @@ struct Avatar final
 {
     cro::Entity model;
     cro::Attachment* hands = nullptr;
-    std::array<std::size_t, AnimationID::Count> animationIDs = {};
+    std::array<std::int32_t, AnimationID::Count> animationIDs = {};
     cro::Entity ballModel;
 
     //hackery to allow different attachment offsets for different animations

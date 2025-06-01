@@ -7798,10 +7798,10 @@ void GolfState::remoteRotation(std::uint32_t data)
             }
         }
     }
-    else
+    /*else
     {
-        LogI << "Avatat is nullptr" << std::endl;
-    }
+        LogI << "Avatar is nullptr" << std::endl;
+    }*/
 }
 
 float GolfState::getGroundRotation(glm::vec3 pos, float yRot, bool flipped) const

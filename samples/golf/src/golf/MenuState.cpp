@@ -217,6 +217,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     sd.minimapData = {};
+    sd.clientConnection.netClient.warningCallback = [&](const std::string& msg) {m_textChat.printToScreen(msg, CD32::Colours[CD32::Red]); };
 
     //auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     m_viewScale = glm::vec2(getViewScale());
@@ -695,6 +696,8 @@ MenuState::~MenuState()
 
     m_sharedData.courseData = nullptr;
     m_sharedData.activeResources = nullptr;
+
+    m_sharedData.clientConnection.netClient.warningCallback = {};
 }
 
 //public

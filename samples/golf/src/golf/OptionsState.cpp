@@ -357,6 +357,8 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
 
     cacheState(StateID::Credits);
     //cacheState(StateID::MessageOverlay); //don't cache this else the correct menu isn't created
+
+    applyAudioDevice();
 }
 
 //public
