@@ -338,6 +338,12 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     {
         Social::setPlayerName(m_sharedData.localConnectionData.playerData[humanIndex].name);
     }
+#else
+    m_sharedData.clientConnection.netClient.warningCallback = 
+    [&](const std::string& msg)
+        {
+            m_textChat.printToScreen(msg, CD32::Colours[CD32::Red]);
+        };
 #endif
 
     for (auto& p : m_groupPlayerPositions)
@@ -527,6 +533,7 @@ GolfState::~GolfState()
 {
 #ifdef USE_GNS
     Social::endStats();
+    m_sharedData.clientConnection.netClient.warningCallback = {};
 #endif
 
     for (auto i = 0; i < 4; ++i)
