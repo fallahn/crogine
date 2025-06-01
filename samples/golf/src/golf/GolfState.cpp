@@ -2664,7 +2664,7 @@ bool GolfState::simulate(float dt)
         net::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
-            if (evt.type == cro::NetEvent::PacketReceived)
+            if (evt.type == net::NetEvent::PacketReceived)
             {
                 m_networkDebugContext.bitrateCounter += evt.packet.getSize() * 8;
                 m_networkDebugContext.total += evt.packet.getSize();
@@ -4768,7 +4768,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                 iconPos *= std::min(1.f, Centre.x / glm::length(iconPos));
                 iconPos += Centre;
 
-                auto terrain = ballEnt.getComponent<ClientCollider>().terrain;
+                //auto terrain = ballEnt.getComponent<ClientCollider>().terrain;
                 //this 0.5 magic number is the default scale of the green ent @ 1:1
                 //it just appears at 0.5 rather than 1 because the texture is actually
                 //double res to enable zooming.

@@ -2559,7 +2559,7 @@ void GolfGame::createHowTo()
                         case pg::Item::Image:
                         {
                             const float PaneWidth = (ImGui::GetWindowSize().x - NavWidth);
-                            const float NavScale = std::min(1.f, PaneWidth / ImGui::GetWindowSize().x);
+                            //const float NavScale = std::min(1.f, PaneWidth / ImGui::GetWindowSize().x);
 
                             ImGui::NewLine();
                             auto imgSize = item.frameSize * std::max(1.f, viewScale - 1.f);

@@ -217,7 +217,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     sd.minimapData = {};
-    sd.clientConnection.netClient.warningCallback = [&](const std::string& msg) {m_textChat.printToScreen(msg, CD32::Colours[CD32::Red]); };
 
     //auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     m_viewScale = glm::vec2(getViewScale());
@@ -231,6 +230,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
         context.mainWindow.setLoadingProgress(0.f);
 #ifdef USE_GNS
+        sd.clientConnection.netClient.warningCallback = [&](const std::string& msg) {m_textChat.printToScreen(msg, CD32::Colours[CD32::Red]); };
         Social::findLeaderboards(Social::BoardType::Courses);
 
         float curr = 0.f;
@@ -696,8 +696,9 @@ MenuState::~MenuState()
 
     m_sharedData.courseData = nullptr;
     m_sharedData.activeResources = nullptr;
-
+#ifdef USE_GNS
     m_sharedData.clientConnection.netClient.warningCallback = {};
+#endif
 }
 
 //public
