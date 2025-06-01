@@ -976,6 +976,36 @@ void GolfState::loadMap()
                                         {
                                             leaderboardProps.push_back(ent);
                                         }
+                                        else if (cro::FileSystem::getFileName(path) == "rotating_billboard.cmt")
+                                        {
+                                            if (modelDef.hasSkeleton())
+                                            {
+                                                //animation callback
+                                                ent.addComponent<cro::Callback>().setUserData<float>(15.f);
+                                                ent.getComponent<cro::Callback>().function =
+                                                    [](cro::Entity e, float dt)
+                                                    {
+                                                        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                                                        currTime -= dt;
+                                                        if (currTime < 0.f)
+                                                        {
+                                                            currTime += 15.f;
+                                                            e.getComponent<cro::Skeleton>().play(0, 1.f, 0.1f, false);
+                                                            e.getComponent<cro::Callback>().active = false;
+
+                                                            e.getComponent<cro::AudioEmitter>().play();
+                                                        }
+                                                    };
+                                                ent.addComponent<cro::AudioEmitter>() = propAudio.getEmitter("billboard");
+
+                                                if (m_billboardVideo.loadFromFile("assets/golf/video/hardings.mpg"))
+                                                {
+                                                    m_billboardVideo.play();
+                                                    m_billboardVideo.setLooped(true);
+                                                    ent.getComponent<cro::Model>().setMaterialProperty(2, "u_diffuseMap", cro::TextureID(m_billboardVideo.getTexture()));
+                                                }
+                                            }
+                                        }
 
                                         //add path if it exists
                                         if (curve.size() > 3)

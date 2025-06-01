@@ -181,9 +181,10 @@ namespace cro
         \param idx Index of the animation to play
         \param rate A speed multiplier at which to play the animation eg 1 is normal speed
         \param blendTime time in seconds to blend / overlap the new animation
+        \param startFromBeginning Restart the animation from the beginning if idx is the same as the current animation
         with any previously playing animation
         */
-        void play(std::size_t idx, float rate = 1.f, float blendingTime = 0.1f);
+        void play(std::size_t idx, float rate = 1.f, float blendingTime = 0.1f, bool startFromBeginning = true);
 
         /*!
         \brief Steps the current animation to the previous frame if it is not playing

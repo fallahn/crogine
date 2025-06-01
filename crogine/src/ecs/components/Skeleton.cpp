@@ -60,7 +60,7 @@ Skeleton::Skeleton()
 
 }
 
-void Skeleton::play(std::size_t idx, float rate, float blendingTime)
+void Skeleton::play(std::size_t idx, float rate, float blendingTime, bool restart)
 {
     CRO_ASSERT(idx < m_animations.size(), "Index out of range");
     CRO_ASSERT(rate >= 0, "");
@@ -72,10 +72,17 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
     }
 
     m_animations[idx].playbackRate = rate;
-    m_animations[idx].currentFrame = m_animations[idx].startFrame;
+
+    if (restart)
+    {
+        m_animations[idx].currentFrame = m_animations[idx].startFrame;
+    }
 
     if (idx != m_currentAnimation)
     {
+        //always restart if this is a new aniamtion
+        m_animations[idx].currentFrame = m_animations[idx].startFrame;
+
         if (blendingTime > 0)
         {
             //blend if we're already playing

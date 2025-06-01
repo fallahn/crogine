@@ -64,6 +64,7 @@ source distribution.
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
+#include <crogine/graphics/VideoPlayer.hpp>
 
 #include <array>
 #include <future>
@@ -123,6 +124,7 @@ public:
 private:
     cro::ResourceCollection m_resources;
     cro::DynamicAudioStream m_musicStream;
+    cro::VideoPlayer m_billboardVideo;
 
     bool m_hasSnow; //we hardly ever use this, but have to ttrack it anyway...
     bool m_ntpPro; //hack to display different score in same game mode as NTP

@@ -1656,6 +1656,12 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
             }
         }
+        else if (data.userType == SpriteAnimID::BillboardPause)
+        {
+            auto ent = data.entity; //copy this to remove constness
+            ent.getComponent<cro::Skeleton>().stop();
+            ent.getComponent<cro::Callback>().active = true;
+        }
     }
     break;
     case MessageID::SceneMessage:
@@ -2559,6 +2565,10 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 bool GolfState::simulate(float dt)
 {
+    //while this mostly does nothing it would be nice
+    //to be able to stop/start it when only a hole requires it
+    m_billboardVideo.update(dt);
+
     if (m_activeAvatar)
     {
         m_activeAvatar->applyAttachment();
@@ -6137,7 +6147,23 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
             for (auto i = 0u; i < propModels->size(); ++i)
             {
                 //if we're not rescaling we're recycling the model so don't hide its props
-                propModels->at(i).getComponent<cro::Model>().setHidden(rescale);
+                auto propEnt = propModels->at(i);
+                propEnt.getComponent<cro::Model>().setHidden(rescale);
+
+                if (rescale)
+                {
+                    if (propEnt.hasComponent<cro::Skeleton>())
+                    {
+                        propEnt.getComponent<cro::Skeleton>().stop();
+
+                        //this might have a callback which tries to play the animation again
+                        /*if (propEnt.hasComponent<cro::Callback>())
+                        {
+                            propEnt.getComponent<cro::Callback>().active = false;
+                            propEnt.getComponent<cro::Callback>().function = [](cro::Entity, float) {};
+                        }*/
+                    }
+                }
             }
 
             

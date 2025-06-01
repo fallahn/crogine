@@ -260,7 +260,8 @@ struct SpriteAnimID final
         BillboardRewind,
         Footstep,
         Pump,
-        Swoosh
+        Swoosh,
+        BillboardPause
     };
 };
 
