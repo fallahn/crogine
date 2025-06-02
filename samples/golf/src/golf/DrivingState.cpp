@@ -287,6 +287,21 @@ void main()
         }
         return 80.f;
     }
+
+    std::uint32_t getShadowMapSize(std::int32_t q)
+    {
+        switch (q)
+        {
+        default:
+        case 0:
+            return ShadowMapLowest;
+        case 1:
+            return ShadowMapLow;
+        case 2:
+        case 3:
+            return ShadowMapHigh;
+        }
+    }
 }
 
 DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, const SharedProfileData& sp)
@@ -1072,13 +1087,14 @@ void DrivingState::handleMessage(const cro::Message& msg)
         }
         else if (data.type == SystemEvent::ShadowQualityChanged)
         {
-            auto shadowRes = m_sharedData.shadowQuality ? ShadowMapHigh : ShadowMapLow;
+            const auto shadowRes = getShadowMapSize(m_sharedData.shadowQuality);
             for (auto i = 0u; i < m_cameras.size(); ++i)
             {
                 if (m_cameras[i].isValid())
                 {
                     m_cameras[i].getComponent<cro::Camera>().setMaxShadowDistance(getMaxShadowDistance(i, m_sharedData.shadowQuality));
                     m_cameras[i].getComponent<cro::Camera>().shadowMapBuffer.create(shadowRes, shadowRes);
+                    m_cameras[i].getComponent<cro::Camera>().setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
                 }
             }
         }
@@ -2031,7 +2047,7 @@ void DrivingState::createScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
-    static constexpr std::uint32_t ShadowMapSize = 2048u;
+    const std::uint32_t ShadowMapSize = getShadowMapSize(m_sharedData.shadowQuality);
     auto camEnt = m_gameScene.getActiveCamera();
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
@@ -2040,7 +2056,7 @@ void DrivingState::createScene()
 
     cam.setMaxShadowDistance(getMaxShadowDistance(CameraID::Player, m_sharedData.shadowQuality));
     cam.setShadowExpansion(30.f);
-    cam.setBlurPassCount(1);
+    cam.setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
     cam.setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
     m_cameras[CameraID::Player] = camEnt;
 
@@ -2146,7 +2162,7 @@ void DrivingState::createScene()
     
     setPerspective(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(80.f);
-    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
@@ -2174,7 +2190,7 @@ void DrivingState::createScene()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(getMaxShadowDistance(CameraID::Green, m_sharedData.shadowQuality));
-    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 20.f * 20.f;
@@ -2206,7 +2222,7 @@ void DrivingState::createScene()
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(getMaxShadowDistance(CameraID::Idle, m_sharedData.shadowQuality));
     camEnt.getComponent<cro::Camera>().setShadowExpansion(50.f);
-    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     camEnt.addComponent<cro::Callback>().setUserData<CameraFollower::ZoomData>();

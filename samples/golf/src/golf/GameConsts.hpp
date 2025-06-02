@@ -172,26 +172,38 @@ static constexpr glm::vec3 PreviewHairOffset(0.f, -0.29f, -0.008f);
 static constexpr float MinMusicVolume = 0.001f;
 static constexpr glm::uvec2 FlagTextureSize(336u, 240u);
 
+static constexpr std::uint32_t ShadowMapLowest = 512;
 static constexpr std::uint32_t ShadowMapLow = 2048;
 static constexpr std::uint32_t ShadowMapHigh = 3072;
 
 
-inline std::uint32_t getShadowResolution(const SharedStateData& sd)
+static inline std::uint32_t getShadowResolution(const SharedStateData& sd)
 {
+    if (sd.shadowQuality == 0)
+    {
+        return ShadowMapLowest;
+    }
+
     if (sd.nightTime)
     {
         if (Social::isSteamdeck())
         {
-            return sd.shadowQuality ? ShadowMapHigh / 2 : ShadowMapLow / 2;
+            return sd.shadowQuality > 1 ? ShadowMapHigh / 2 : ShadowMapLow / 2;
         }
-        return sd.shadowQuality ? ShadowMapLow : ShadowMapLow / 2;
+        return sd.shadowQuality > 1 ? ShadowMapLow : ShadowMapLow / 2;
     }
-    return sd.shadowQuality ? ShadowMapHigh : ShadowMapLow;
+    return sd.shadowQuality > 1 ? ShadowMapHigh : ShadowMapLow;
 }
 
-inline std::uint32_t getCascadeCount(std::int32_t q)
+static inline std::uint32_t getCascadeCount(std::int32_t q)
 {
-    return std::clamp(q + 1, 1, 3);
+    //return std::clamp(q + 1, 1, 3);
+    return q == 3 ? 3 : 1;
+}
+
+static inline std::uint32_t getBlurPassCount(std::int32_t q)
+{
+    return q == 0 ? 0 : 1;
 }
 
 class btVector3;

@@ -640,6 +640,7 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
         {
             auto shadowRes = m_sharedData.shadowQuality ? ShadowMapHigh : ShadowMapLow;
             m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.create(shadowRes, shadowRes);
+            m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
         }
     }
     else if (msg.id == Social::MessageID::SocialMessage)
@@ -1551,7 +1552,7 @@ void ClubhouseState::buildScene()
     cam.shadowMapBuffer.create(shadowRes, shadowRes);
     cam.setMaxShadowDistance(11.f);
     cam.setShadowExpansion(9.9f);
-    cam.setBlurPassCount(1);
+    cam.setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
     updateView(cam);
 
     auto sunEnt = m_backgroundScene.getSunlight();

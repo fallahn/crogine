@@ -1545,7 +1545,7 @@ void GolfGame::loadPreferences()
                 }
                 else if (name == "shadow_quality")
                 {
-                    m_sharedData.shadowQuality = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
+                    m_sharedData.shadowQuality = std::clamp(prop.getValue<std::int32_t>(), 0, SharedStateData::ShadowQuality::Count - 1);
                 }
                 else if (name == "log_benchmark")
                 {

@@ -178,9 +178,9 @@ namespace
         0,2,4,8
     };
 
-    const std::array<std::string, 3u> ShadowText =
+    const std::array<std::string, 4u> ShadowText =
     {
-        "Low", "High", "Very High"
+        "Very Low", "Low", "High", "Very High"
     };
 
     //this needs to be here to be accessed by label callback
@@ -3123,7 +3123,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             {
                 if (activated(evt))
                 {
-                    m_sharedData.shadowQuality = (m_sharedData.shadowQuality + 1) % 3;
+                    m_sharedData.shadowQuality = (m_sharedData.shadowQuality + 1) % SharedStateData::ShadowQuality::Count;
                     shadowUpdate();
                 }
             });
@@ -3131,7 +3131,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         {
             if (activated(evt))
             {
-                m_sharedData.shadowQuality = (m_sharedData.shadowQuality + 2) % 3;
+                m_sharedData.shadowQuality = (m_sharedData.shadowQuality + (SharedStateData::ShadowQuality::Count - 1)) % SharedStateData::ShadowQuality::Count;
                 shadowUpdate();
             }
         });

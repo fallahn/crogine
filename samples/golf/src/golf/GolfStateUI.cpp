@@ -3152,7 +3152,7 @@ void GolfState::createScoreboard()
         static constexpr float Speed = 10.f;
 
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-        auto target = glm::vec3(size / 2.f, 0.22f);
+        auto target = glm::vec3(size / 2.f, 0.f);
         target.y -= e.getComponent<cro::Callback>().getUserData<std::int32_t>() * size.y;
 
         auto pos = e.getComponent<cro::Transform>().getPosition();
@@ -3168,6 +3168,7 @@ void GolfState::createScoreboard()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::Scoreboard | CommandID::UI::UIElement;
     auto bgSprite = spriteSheet.getSprite("border");
     entity.addComponent<UIElement>().absolutePosition = { 0.f, -12.f };
+    entity.getComponent<UIElement>().depth = 0.5f;
     entity.getComponent<UIElement>().resizeCallback =
         [&,bgSprite](cro::Entity e)
     {

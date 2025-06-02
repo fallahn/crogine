@@ -339,7 +339,8 @@ struct SharedStateData final
     {
         enum
         {
-            Low, Normal, Ultra
+            VeryLow, Low, Normal, Ultra,
+            Count
         };
     };
     std::int32_t shadowQuality = ShadowQuality::Low;

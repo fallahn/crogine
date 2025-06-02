@@ -224,7 +224,7 @@ void GolfState::createCameras()
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.setMaxShadowDistance(m_shadowQuality.getMaxDistance(CameraID::Player));
     cam.setShadowExpansion(20.f);
-    cam.setBlurPassCount(1);
+    cam.setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
 
     //create an overhead camera
     auto setPerspective = [&](cro::Camera& cam)
@@ -259,7 +259,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.getMaxDistance(CameraID::Sky));
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
-    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
@@ -301,7 +301,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.getMaxDistance(CameraID::Drone));
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
-    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::DroneCam;
@@ -333,7 +333,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.getMaxDistance(CameraID::Green));
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
-    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
@@ -366,7 +366,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.getMaxDistance(CameraID::Bystander));
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
-    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::AudioListener>();
@@ -415,7 +415,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.getMaxDistance(CameraID::Idle));
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
-    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::AudioListener>();
@@ -455,7 +455,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.getMaxDistance(CameraID::Transition));
     camEnt.getComponent<cro::Camera>().setShadowExpansion(45.f);
-    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::AudioListener>();
@@ -487,7 +487,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.getMaxDistance(-1));
     camEnt.getComponent<cro::Camera>().setShadowExpansion(15.f);
-    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::AudioListener>();
@@ -520,7 +520,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(/*m_shadowQuality.shadowFarDistance*/3.f);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(1.f);
-    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
 
     camEnt.addComponent<cro::Callback>().active = true;
     camEnt.getComponent<cro::Callback>().setUserData<cro::Entity>(); //this is the target ball
@@ -978,7 +978,7 @@ void GolfState::applyShadowQuality()
 
             cam.shadowMapBuffer.create(shadowMapSize, shadowMapSize);
             cam.setMaxShadowDistance(m_shadowQuality.getMaxDistance(camID));
-            //cam.setBlurPassCount(1); //should be already set
+            cam.setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
 
             cam.setPerspective(cam.getFOV(), cam.getAspectRatio(), cam.getNearPlane(), cam.getFarPlane(), m_shadowQuality.cascadeCount);
         };
