@@ -35,6 +35,8 @@ source distribution.
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 
+#include <functional>
+
 struct SharedStateData;
 class FreePlayState final : public cro::State
 {
@@ -84,6 +86,7 @@ private:
         };
     };
     std::array<cro::Entity, CallbackEntID::Count> m_callbackEntities = {};
+    std::function<void(std::int32_t)> switchClubs;
 
     void buildScene();
 

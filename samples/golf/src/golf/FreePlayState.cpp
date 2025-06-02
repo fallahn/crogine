@@ -149,11 +149,29 @@ bool FreePlayState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
         cro::App::getWindow().setMouseCaptured(true);
-        if (evt.cbutton.button == cro::GameController::ButtonB)
+        
+        switch (evt.cbutton.button)
         {
+        default: break;
+        case cro::GameController::ButtonB:
             quitState();
             return false;
+        case cro::GameController::ButtonLeftShoulder:
+            if (m_scene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Quickplay)
+            {
+                const auto clubset = (m_sharedData.preferredClubSet + 2) % (Social::getClubLevel() + 1);
+                switchClubs(clubset);
+            }
+            break;
+        case cro::GameController::ButtonRightShoulder:
+            if (m_scene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Quickplay)
+            {
+                const auto clubset = (m_sharedData.preferredClubSet + 1) % (Social::getClubLevel() + 1);
+                switchClubs(clubset);
+            }
+            break;
         }
+        
     }
 
     else if (evt.type == SDL_MOUSEBUTTONUP)
@@ -560,16 +578,23 @@ and All Time best scores.)";
                 {
                     if (activated(evt))
                     {
-                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                        m_sharedData.preferredClubSet = (m_sharedData.preferredClubSet + 1) % (Social::getClubLevel() + 1);
-                        m_sharedData.clubSet = m_sharedData.preferredClubSet;
-                        Club::setClubLevel(m_sharedData.clubSet);
-
-                        e.getComponent<cro::Text>().setString("Club Set: " + ClubsetStrings[m_sharedData.clubSet]);
-                        centreText(e);
+                        const auto clubset = (m_sharedData.preferredClubSet + 1) % (Social::getClubLevel() + 1);
+                        switchClubs(clubset);
                     }
                 });
     }
+
+    switchClubs = 
+        [&, entity](std::int32_t clubSet) mutable
+        {
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            m_sharedData.preferredClubSet = clubSet;
+            m_sharedData.clubSet = m_sharedData.preferredClubSet;
+            Club::setClubLevel(m_sharedData.clubSet);
+
+            entity.getComponent<cro::Text>().setString("Club Set: " + ClubsetStrings[m_sharedData.clubSet]);
+            centreText(entity);
+        };
     position.y -= ItemHeight;
 
     const std::string s = m_sharedData.nightTime ? "Night Time: On" : "Night Time: Off";
