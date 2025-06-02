@@ -125,6 +125,7 @@ private:
     cro::ResourceCollection m_resources;
     cro::DynamicAudioStream m_musicStream;
     cro::VideoPlayer m_billboardVideo;
+    cro::RenderTexture m_billboardLeagueTexture;
 
     bool m_hasSnow; //we hardly ever use this, but have to ttrack it anyway...
     bool m_ntpPro; //hack to display different score in same game mode as NTP
