@@ -149,15 +149,10 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     sd.clientConnection.launchThread();
     ctx.mainWindow.loadResources([&]()
         {
-            ctx.mainWindow.setLoadingProgress(0.f);
             loadAssets();
-            ctx.mainWindow.setLoadingProgress(0.2f);
             addSystems();
-            ctx.mainWindow.setLoadingProgress(0.6f);
             buildScene();
-            ctx.mainWindow.setLoadingProgress(0.8f);
             cacheState(StateID::Pause);
-            ctx.mainWindow.setLoadingProgress(1.f);
         });
     sd.clientConnection.quitThread();
     Timeline::setGameMode(Timeline::GameMode::Playing);

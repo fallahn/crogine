@@ -150,15 +150,11 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     sd.clientConnection.launchThread();
     ctx.mainWindow.loadResources([&]() {
-        ctx.mainWindow.setLoadingProgress(0.f);
         addSystems();
         loadResources();
-        ctx.mainWindow.setLoadingProgress(0.2f);
         buildScene();
-        ctx.mainWindow.setLoadingProgress(0.4f);
 
 #ifdef USE_GNS
-        float curr = 0.4f;
         Social::findLeaderboards(Social::BoardType::Courses);
 
         //cached menu states depend on steam stats being
@@ -167,24 +163,15 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         while (cl.elapsed().asSeconds() < 3.f)
         {
             Achievements::update();
-
-            curr = std::min(curr + 0.01f, 0.59f);
-            ctx.mainWindow.setLoadingProgress(curr);
         }
 #endif
 
         cacheState(StateID::Options);
-        ctx.mainWindow.setLoadingProgress(0.6f);
         cacheState(StateID::Trophy);
-        ctx.mainWindow.setLoadingProgress(0.65f);
         cacheState(StateID::Leaderboard);
-        ctx.mainWindow.setLoadingProgress(0.7f);
         cacheState(StateID::Stats);
-        ctx.mainWindow.setLoadingProgress(0.75f);
         cacheState(StateID::League);
-        ctx.mainWindow.setLoadingProgress(0.85f);
         cacheState(StateID::Shop);
-        ctx.mainWindow.setLoadingProgress(1.f);
         });
     sd.clientConnection.quitThread();
     Timeline::setGameMode(Timeline::GameMode::Menu);
@@ -353,6 +340,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 #endif
 
     cro::App::getInstance().resetFrameTime();
+    simulate(0.f);
 }
 
 ClubhouseState::~ClubhouseState()

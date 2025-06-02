@@ -74,24 +74,16 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
 {
     ctx.mainWindow.loadResources([&]() 
         {
-            ctx.mainWindow.setLoadingProgress(0.f);
 #ifndef HIDE_BACKGROUND
             addSystems();
-            ctx.mainWindow.setLoadingProgress(0.16f);
             loadAssets();
-            ctx.mainWindow.setLoadingProgress(0.32f);
             createScene();
-            ctx.mainWindow.setLoadingProgress(0.48f);
 #endif
             initFonts();
-            ctx.mainWindow.setLoadingProgress(0.64f);
 
             cacheState(StateID::ScrubAttract);
-            ctx.mainWindow.setLoadingProgress(0.8f);
             cacheState(StateID::ScrubGame);
-            ctx.mainWindow.setLoadingProgress(0.96f);
             cacheState(StateID::ScrubPause);
-            ctx.mainWindow.setLoadingProgress(1.f);
         });
     cro::App::getInstance().resetFrameTime();
 #ifdef CRO_DEBUG_

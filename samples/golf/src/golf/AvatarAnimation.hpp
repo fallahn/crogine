@@ -41,7 +41,7 @@ struct AnimationID final
         Count,
 
     };
-    static constexpr std::size_t Invalid = std::numeric_limits<std::size_t>::max();
+    static constexpr std::int32_t Invalid = std::numeric_limits<std::int32_t>::max();
 };
 
 struct Avatar final

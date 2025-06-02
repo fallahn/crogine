@@ -51,21 +51,14 @@ public:
     void update() override;
     void draw() override;
 
-    void setProgress(float p) override;
+    void setProgress(float) override;
 
 
 private:
     SharedStateData& m_sharedData;
 
-    cro::HiResTimer m_clock;
-
+    cro::Texture m_brownTexture;
     cro::SimpleQuad m_loadingQuad;
+    cro::SimpleQuad m_textQuad;
     cro::SimpleText m_tipText;
-    
-    cro::Texture m_progressTexture;
-    cro::SimpleQuad m_progressBar;
-
-    float m_previousProgress;
-    float m_targetProgress;
-    float m_progressScale; //normalised val to multiply by screen size
 };

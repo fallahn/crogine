@@ -323,9 +323,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     m_sharedData.hosting = false; //TODO shouldn't have to do this...
     context.mainWindow.loadResources([&]() {
-        context.mainWindow.setLoadingProgress(0.f);
 #ifdef USE_GNS
-        float curr = 0.f;
         Social::findLeaderboards(Social::BoardType::DrivingRange);
 
         //pump the queue a bit to make sure leaderboards are up to date before building the menu
@@ -333,20 +331,13 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
         while (cl.elapsed().asSeconds() < 3.f)
         {
             Achievements::update();
-            curr = std::min(0.299f, curr + 0.01f);
-            context.mainWindow.setLoadingProgress(curr);
         }
 #endif
-        context.mainWindow.setLoadingProgress(0.3f);
         addSystems();
         loadAssets();
         createScene();
-        context.mainWindow.setLoadingProgress(0.6f);
-
         cacheState(StateID::Pause);
-        context.mainWindow.setLoadingProgress(0.8f);
         cacheState(StateID::GC);
-        context.mainWindow.setLoadingProgress(1.f);
     });
     Timeline::setGameMode(Timeline::GameMode::Playing);
     Timeline::setTimelineDesc("On The Driving Range");

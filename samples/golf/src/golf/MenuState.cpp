@@ -227,13 +227,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     CRO_ASSERT(!isCached(), "Don't use loading screen on cached states!");
     sd.clientConnection.launchThread(); //pumps any message queue while we wait for loading to complete
     context.mainWindow.loadResources([&]() {
-
-        context.mainWindow.setLoadingProgress(0.f);
 #ifdef USE_GNS
         sd.clientConnection.netClient.warningCallback = [&](const std::string& msg) {m_textChat.printToScreen(msg, CD32::Colours[CD32::Red]); };
         Social::findLeaderboards(Social::BoardType::Courses);
-
-        float curr = 0.f;
 
         //cached menu states depend on steam stats being
         //up to date so this hacks in a delay and pumps the callback loop
@@ -241,8 +237,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         while (cl.elapsed().asSeconds() < 1.5f)
         {
             Achievements::update();
-            curr = std::min(0.1499f, curr + 0.00001f);
-            context.mainWindow.setLoadingProgress(curr);
         }
         checkBeta();
 #endif
@@ -252,38 +246,22 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         loadAssets();
         createScene();
         setVoiceCallbacks();
-        context.mainWindow.setLoadingProgress(0.15f);
 
         cacheState(StateID::Unlock);
-        context.mainWindow.setLoadingProgress(0.2f);
         cacheState(StateID::Options);
-        context.mainWindow.setLoadingProgress(0.25f);
         cacheState(StateID::Profile);
-        context.mainWindow.setLoadingProgress(0.3f);
         cacheState(StateID::Practice);
-        context.mainWindow.setLoadingProgress(0.35f);
         cacheState(StateID::Career);
-        context.mainWindow.setLoadingProgress(0.4f);
         cacheState(StateID::Tournament);
-        context.mainWindow.setLoadingProgress(0.45f);
         cacheState(StateID::FreePlay);
-        context.mainWindow.setLoadingProgress(0.5f);
         cacheState(StateID::Keyboard);
-        context.mainWindow.setLoadingProgress(0.55f);
         cacheState(StateID::Leaderboard);
-        context.mainWindow.setLoadingProgress(0.6f);
         cacheState(StateID::League);
-        context.mainWindow.setLoadingProgress(0.65f);
         cacheState(StateID::News);
-        context.mainWindow.setLoadingProgress(0.7f);
         cacheState(StateID::Stats);
-        context.mainWindow.setLoadingProgress(0.75f);
         cacheState(StateID::PlayerManagement);
-        context.mainWindow.setLoadingProgress(0.8f);
         cacheState(StateID::Shop);
-        context.mainWindow.setLoadingProgress(0.85f);
         cacheState(StateID::ClubInfo);
-        context.mainWindow.setLoadingProgress(0.9f);
 
         context.mainWindow.setMouseCaptured(false);
 
@@ -486,8 +464,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         }
         m_sharedData.inviteID = 0;
         m_sharedData.lobbyID = 0;
-
-        context.mainWindow.setLoadingProgress(1.f);
         });
     sd.clientConnection.quitThread();
     Timeline::setGameMode(Timeline::GameMode::Menu);
@@ -683,6 +659,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
     //createDebugWindows();
     cro::App::getInstance().resetFrameTime();
+    simulate(0.f);
 }
 
 MenuState::~MenuState()

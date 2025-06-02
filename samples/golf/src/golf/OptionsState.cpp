@@ -318,6 +318,8 @@ namespace
     {
         return " (" + cro::Keyboard::keyString(sharedData.inputBinding.keys[idx]) + ")";
     };
+
+    bool audioHackDone = false;
 }
 
 OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -333,11 +335,6 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_viewScale             (2.f),
     m_refreshControllers    (false)
 {
-    if (Social::isSteamdeck())
-    {
-        lastInput = LastInput::XBox;
-    }
-    
     std::fill(m_controllerScrollAxes.begin(), m_controllerScrollAxes.end(), 0);
 
     ctx.mainWindow.setMouseCaptured(false);
@@ -358,7 +355,17 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     cacheState(StateID::Credits);
     //cacheState(StateID::MessageOverlay); //don't cache this else the correct menu isn't created
 
-    applyAudioDevice();
+    if (Social::isSteamdeck())
+    {
+        lastInput = LastInput::XBox;
+        
+        //currently the deck needs to re-apply the audio device for some reason
+        if (!audioHackDone)
+        {
+            applyAudioDevice();
+            audioHackDone = true;
+        }
+    }
 }
 
 //public

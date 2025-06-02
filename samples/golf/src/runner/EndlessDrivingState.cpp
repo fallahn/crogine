@@ -240,30 +240,14 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
     esd.lastScore = 0.f;
     
     context.mainWindow.loadResources([&]() {
-        context.mainWindow.setLoadingProgress(0.f);
         addSystems();
-        context.mainWindow.setLoadingProgress(0.1f);
         loadAssets();
-        context.mainWindow.setLoadingProgress(0.2f);
         createPlayer();
-        context.mainWindow.setLoadingProgress(0.3f);
         createScene();
-        context.mainWindow.setLoadingProgress(0.4f);
         createUI();
-        context.mainWindow.setLoadingProgress(0.5f);
 
         cacheState(StateID::EndlessAttract);
         cacheState(StateID::EndlessPause);
-        context.mainWindow.setLoadingProgress(0.8f);
-
-        float curr = 0.8f;
-        cro::Clock c;
-        while (c.elapsed().asSeconds() < 1.f)
-        {
-            curr = std::min(1.f, curr + 0.01f);
-            context.mainWindow.setLoadingProgress(curr);
-        }
-        context.mainWindow.setLoadingProgress(1.f);
     });
     
 

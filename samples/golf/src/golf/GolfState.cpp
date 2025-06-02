@@ -232,8 +232,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_minimapTexturePass    (MaxMinimapPasses),
     m_drawDebugMesh         (false)
 {
-    context.mainWindow.setLoadingProgress(0.f);
-
     sd.activeResources = &m_resources;
     sd.quickplayOpponents = std::clamp(sd.quickplayOpponents, 0, 3);
     if (sd.quickplayOpponents != 0)
@@ -467,24 +465,14 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     sd.clientConnection.launchThread();
     context.mainWindow.loadResources([&]() {
-        context.mainWindow.setLoadingProgress(0.1f);
         addSystems();
-        context.mainWindow.setLoadingProgress(0.2f);
         loadAssets();
-        context.mainWindow.setLoadingProgress(0.3f);
         buildTrophyScene();
-        context.mainWindow.setLoadingProgress(0.4f);
         buildScene();
-        context.mainWindow.setLoadingProgress(0.5f);
-
         createTransition();
-        context.mainWindow.setLoadingProgress(0.6f);
         cacheState(StateID::Pause);
-        context.mainWindow.setLoadingProgress(0.7f);
         cacheState(StateID::MapOverview);
-        context.mainWindow.setLoadingProgress(0.8f);
         cacheState(StateID::Keyboard);
-        context.mainWindow.setLoadingProgress(1.f);
         });
     sd.clientConnection.quitThread();
     Timeline::setGameMode(Timeline::GameMode::Playing);
@@ -496,8 +484,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 #endif
     registerDebugWindows();
     registerDebugCommands(); //includes cubemap creation
-
-    cro::App::getInstance().resetFrameTime();
 
     for (auto i = 0; i < 4; ++i)
     {
@@ -512,7 +498,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<std::int32_t>(2);
+    entity.getComponent<cro::Callback>().setUserData<std::int32_t>(3);
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
@@ -527,6 +513,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 m_gameScene.destroyEntity(e);
             }
         };
+
+    cro::App::getInstance().resetFrameTime();
+    simulate(0.f);
 }
 
 GolfState::~GolfState()
