@@ -1537,6 +1537,9 @@ void MenuState::handleMessage(const cro::Message& msg)
                     m_clubsetButtons.lobby.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
                     m_clubsetButtons.roster.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
                 }
+
+                //refreshes the avatar preview when first joining
+                setProfileIndex(m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]);
             }
             else if (data.data == StateID::Career)
             {

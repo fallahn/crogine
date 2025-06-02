@@ -976,7 +976,7 @@ void GolfState::loadMap()
                                         {
                                             leaderboardProps.push_back(ent);
                                         }
-                                        else if (cro::FileSystem::getFileName(path) == "rotating_billboard.cmt")
+                                        else if (cro::FileSystem::getFileName(path).find("rotating_billboard") != std::string::npos)
                                         {
                                             if (modelDef.hasSkeleton())
                                             {
@@ -1004,6 +1004,9 @@ void GolfState::loadMap()
                                                     m_billboardVideo.setLooped(true);
                                                     ent.getComponent<cro::Model>().setMaterialProperty(2, "u_diffuseMap", cro::TextureID(m_billboardVideo.getTexture()));
                                                 }
+#ifdef USE_GNS
+
+#endif
                                             }
                                         }
 
