@@ -69,10 +69,6 @@ namespace
         "Loading...\n\nTip: Check out the How To Play guide in the Options menu for a full break-down\nof Super Video Golf's mechanics"
     };
     std::size_t stringIndex = cro::Util::Random::value(0u, TipStrings.size() - 1);
-
-    //constexpr float ProgressHeight = 16.f;
-    //constexpr float timestep = 1.f / 60.f;
-
 }
 
 LoadingScreen::LoadingScreen(SharedStateData& sd)
@@ -87,7 +83,7 @@ LoadingScreen::LoadingScreen(SharedStateData& sd)
     m_tipText.setShadowOffset({ 1.f, -1.f });
 
     cro::Image img;
-    img.create(1, 1, cro::Colour(0.f, 0.f, 0.f, 0.3f));
+    img.create(1, 1, cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha));
     m_brownTexture.loadFromImage(img);
     m_textQuad.setTexture(m_brownTexture);
 }
