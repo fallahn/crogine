@@ -3152,10 +3152,10 @@ void GolfState::createScoreboard()
         static constexpr float Speed = 10.f;
 
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-        auto target = glm::vec3(size / 2.f, 0.f);
+        auto target = glm::vec2(size / 2.f);
         target.y -= e.getComponent<cro::Callback>().getUserData<std::int32_t>() * size.y;
 
-        auto pos = e.getComponent<cro::Transform>().getPosition();
+        auto pos = glm::vec2(e.getComponent<cro::Transform>().getPosition());
         pos += (target - pos) * dt * Speed;
 
         e.getComponent<cro::Transform>().setPosition(pos);
