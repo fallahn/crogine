@@ -1005,56 +1005,60 @@ void GolfState::loadMap()
                                                     ent.getComponent<cro::Model>().setMaterialProperty(2, "u_diffuseMap", cro::TextureID(m_billboardVideo.getTexture()));
                                                 }
 #ifdef USE_GNS
-                                                cro::SimpleText text(m_sharedData.sharedResources->fonts.get(FontID::UI));
-                                                text.setFillColour(LeaderboardTextDark);
-                                                text.setCharacterSize(UITextSize * 4);
-                                                text.setPosition({ 320.f, 444.f });
-                                                text.setString("Last Month's\nChampions");
-                                                text.setAlignment(cro::SimpleText::Alignment::Centre);
-                                                text.setVerticalSpacing(-2.f);
-                                                text.draw(); //hacks around the font bug where the texture is messed up the first time a char size is used
-
-                                                cro::SimpleQuad av;
-                                                av.setPosition({ 18.f, 310.f });
-                                                cro::Texture avTex;
-
-                                                const auto& prevWinners = Social::getPreviousLeague();
-                                                for (const auto& [name, score, handle] : prevWinners)
+                                                if (!m_billboardLeagueTexture.available())
                                                 {
-                                                    if (!m_billboardLeagueTexture.available()
-                                                        && handle != 0)
-                                                    {
-                                                        m_billboardLeagueTexture.create(640, 480, false);
-                                                        m_billboardLeagueTexture.setSmooth(true);
-                                                        m_billboardLeagueTexture.clear(TextNormalColour);
-                                                        text.draw();
+                                                    m_billboardLeagueTexture.create(640, 480, false);
+                                                    m_billboardLeagueTexture.setSmooth(true);
+                                                    m_billboardLeagueTexture.clear(TextNormalColour);
 
-                                                        text.setAlignment(cro::SimpleText::Alignment::Left);
-                                                        text.setPosition({ 18.f, 350.f });
-                                                        text.setCharacterSize(UITextSize * 3);
-                                                    }
 
-                                                    auto img = Social::getUserIcon(handle);
-                                                    avTex.loadFromImage(img);
-                                                    av.setTexture(avTex);
-                                                    av.setScale({ 0.5f, 0.5f });
-                                                    av.draw();
-                                                    av.move({ 0.f, -135.f });
-
-                                                    cro::String s("     ");
-                                                    s += name;
-                                                    s += "\n\n\n" + std::to_string(score);
-                                                    text.setString(s);
+                                                    cro::SimpleText text(m_sharedData.sharedResources->fonts.get(FontID::UI));
                                                     text.setFillColour(TextNormalColour);
-                                                    text.draw();
+                                                    text.setCharacterSize(UITextSize * 4);
+                                                    text.setPosition({ 320.f, 444.f });
+                                                    text.setString("Last Month's\nChampions");
+                                                    text.setAlignment(cro::SimpleText::Alignment::Centre);
+                                                    text.setVerticalSpacing(-2.f);
+                                                    text.draw(); //hacks around the font bug where the texture is messed up the first time a char size is used
                                                     text.setFillColour(LeaderboardTextDark);
                                                     text.draw();
-                                                    text.move({ 0.f, -135.f });
-                                                }
 
+                                                    text.setAlignment(cro::SimpleText::Alignment::Left);
+                                                    text.setPosition({ 18.f, 350.f });
+                                                    text.setCharacterSize(UITextSize * 3);
+
+                                                    cro::SimpleQuad av;
+                                                    av.setPosition({ 18.f, 310.f });
+                                                    cro::Texture avTex;
+
+                                                    const auto& prevWinners = Social::getPreviousLeague();
+                                                    for (const auto& [name, score, handle] : prevWinners)
+                                                    {
+                                                        if (handle != 0)
+                                                        {
+                                                            auto img = Social::getUserIcon(handle);
+                                                            avTex.loadFromImage(img);
+                                                            av.setTexture(avTex);
+                                                            av.setScale({ 0.5f, 0.5f });
+                                                            av.draw();
+                                                            av.move({ 0.f, -135.f });
+
+                                                            cro::String s("     ");
+                                                            s += name;
+                                                            s += "\n\n\n" + std::to_string(score);
+                                                            text.setString(s);
+                                                            text.setFillColour(TextNormalColour);
+                                                            text.draw();
+                                                            text.setFillColour(LeaderboardTextDark);
+                                                            text.draw();
+                                                            text.move({ 0.f, -135.f });
+                                                        }
+                                                    }
+
+                                                    m_billboardLeagueTexture.display();
+                                                }
                                                 if (m_billboardLeagueTexture.available())
                                                 {
-                                                    m_billboardLeagueTexture.display();
                                                     ent.getComponent<cro::Model>().setMaterialProperty(3, "u_diffuseMap", cro::TextureID(m_billboardLeagueTexture.getTexture()));
                                                 }
 #endif
