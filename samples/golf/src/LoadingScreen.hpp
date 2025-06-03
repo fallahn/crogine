@@ -29,14 +29,15 @@ source distribution.
 
 #pragma once
 
-#include <crogine/graphics/LoadingScreen.hpp>
+#include <crogine/core/HiResTimer.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/Texture.hpp>
-#include <crogine/core/HiResTimer.hpp>
+#include <crogine/graphics/LoadingScreen.hpp>
 
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/SimpleText.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/SimpleVertexArray.hpp>
 
 #include <vector>
 
@@ -57,8 +58,7 @@ public:
 private:
     SharedStateData& m_sharedData;
 
-    cro::Texture m_brownTexture;
+    cro::SimpleVertexArray m_backgroundVerts;
     cro::SimpleQuad m_loadingQuad;
-    cro::SimpleQuad m_textQuad;
     cro::SimpleText m_tipText;
 };

@@ -82,10 +82,13 @@ LoadingScreen::LoadingScreen(SharedStateData& sd)
     m_tipText.setShadowColour(LeaderboardTextDark);
     m_tipText.setShadowOffset({ 1.f, -1.f });
 
-    cro::Image img;
-    img.create(1, 1, cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha));
-    m_brownTexture.loadFromImage(img);
-    m_textQuad.setTexture(m_brownTexture);
+    const cro::Colour c(0.f, 0.f, 0.f, BackgroundAlpha);
+    m_backgroundVerts.setVertexData({
+        cro::Vertex2D(glm::vec2(0.f, 1.f), c),
+        cro::Vertex2D(glm::vec2(0.f), c),
+        cro::Vertex2D(glm::vec2(1.f), c),
+        cro::Vertex2D(glm::vec2(1.f, 0.f), c)
+        });
 }
 
 //public
@@ -108,7 +111,7 @@ void LoadingScreen::launch()
     m_tipText.setPosition({ std::round(screenSize.x / 2.f), TextHeight * viewScale});
     m_tipText.setScale({ viewScale, viewScale });
 
-    m_textQuad.setScale({ screenSize.x, (TextHeight + 28.f) * viewScale });
+    m_backgroundVerts.setScale({ screenSize.x, (TextHeight + 28.f) * viewScale });
 
     const std::array paths =
     {
@@ -139,7 +142,7 @@ void LoadingScreen::update()
 void LoadingScreen::draw()
 {
     m_loadingQuad.draw();
-    m_textQuad.draw();
+    m_backgroundVerts.draw();
     m_tipText.draw();
 }
 
