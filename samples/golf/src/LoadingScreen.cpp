@@ -49,11 +49,9 @@ source distribution.
 #include <vector>
 #include <array>
 
-#define glCheck(x) x
-
 namespace
 {
-    const std::array<std::string, 12u> TipStrings =
+    const std::array<std::string, 17> TipStrings  =
     {
         std::string("Loading...\n\nTip: Click on an opponent's name in the League Browser to change it"),
         "Loading...\n\nDid You Know: Before golf tees players would shape mounds of sand and place the golf ball on top",
@@ -66,7 +64,12 @@ namespace
         "Loading...\n\nTip: Upgrade your gear at the Clubhouse Equipment Counter",
         "Loading...\n\nDid You Know: You can find a full break down of your stats on the rightmost tab\nof the Options menu",
         "Loading...\n\nTip: You can assign your gear upgrades in the Profile Editor",
-        "Loading...\n\nTip: Check out the How To Play guide in the Options menu for a full break-down\nof Super Video Golf's mechanics"
+        "Loading...\n\nDid You Know: The longest golf hole in the world can be found at Satsuki Golf Club in\nJapan - a whopping 909 yard par 7! Good luck getting a hole in one there!",
+        "Loading...\n\nTip: Check out the How To Play guide in the Options menu for a full break-down\nof Super Video Golf's mechanics",
+        "Loading...\n\nDid You Know: The chances of making a hole in one in real life is 12,500 to 1.\nThe chances of being struck by lightning in your lifetime is 15,300 to 1!",
+        "Loading...\n\nTip: Hitting certain paths and bridges can give you an exaggerated bounce...\nbut be careful what you wish for!",
+        "Loading...\n\nDid You Know: There are exactly 336 dimples on a regulation golf ball,\nand they must weigh no more than 45.93 grammes (including logo paint!)",
+        "Loading...\n\nTip: You can check out the lie of the green or the fairway ahead at any time!\nUse D-pad Down or Keyboard \"2\" to manually control the drone"
     };
     std::size_t stringIndex = cro::Util::Random::value(0u, TipStrings.size() - 1);
 }
