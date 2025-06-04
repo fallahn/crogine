@@ -1849,7 +1849,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 const auto& models = m_clubModels.at(m_activeAvatar->clubModelID);
                 m_activeAvatar->hands->setModel(models.models[models.indices[club]]);
                 m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
-
+                LogI << "Set Club Model " << club << std::endl;
                 const auto current = m_activeAvatar->model.getComponent<cro::Skeleton>().getCurrentAnimation();
                 std::int32_t next = current;
                 if (club > ClubID::PitchWedge)
