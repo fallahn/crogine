@@ -1005,58 +1005,7 @@ void GolfState::loadMap()
                                                     ent.getComponent<cro::Model>().setMaterialProperty(2, "u_diffuseMap", cro::TextureID(m_billboardVideo.getTexture()));
                                                 }
 #ifdef USE_GNS
-                                                if (!m_billboardLeagueTexture.available())
-                                                {
-                                                    m_billboardLeagueTexture.create(640, 480, false);
-                                                    m_billboardLeagueTexture.setSmooth(true);
-                                                    m_billboardLeagueTexture.clear(TextNormalColour);
-
-
-                                                    cro::SimpleText text(m_sharedData.sharedResources->fonts.get(FontID::UI));
-                                                    text.setFillColour(TextNormalColour);
-                                                    text.setCharacterSize(UITextSize * 4);
-                                                    text.setPosition({ 320.f, 444.f });
-                                                    text.setString("Last Month's\nChampions");
-                                                    text.setAlignment(cro::SimpleText::Alignment::Centre);
-                                                    text.setVerticalSpacing(-2.f);
-                                                    text.draw(); //hacks around the font bug where the texture is messed up the first time a char size is used
-                                                    text.setFillColour(LeaderboardTextDark);
-                                                    text.draw();
-
-                                                    text.setAlignment(cro::SimpleText::Alignment::Left);
-                                                    text.setPosition({ 18.f, 350.f });
-                                                    text.setCharacterSize(UITextSize * 3);
-
-                                                    cro::SimpleQuad av;
-                                                    av.setPosition({ 18.f, 310.f });
-                                                    cro::Texture avTex;
-
-                                                    const auto& prevWinners = Social::getPreviousLeague();
-                                                    for (const auto& [name, score, handle] : prevWinners)
-                                                    {
-                                                        if (handle != 0)
-                                                        {
-                                                            auto img = Social::getUserIcon(handle);
-                                                            avTex.loadFromImage(img);
-                                                            av.setTexture(avTex);
-                                                            av.setScale({ 0.5f, 0.5f });
-                                                            av.draw();
-                                                            av.move({ 0.f, -135.f });
-
-                                                            cro::String s("     ");
-                                                            s += name;
-                                                            s += "\n\n\n" + std::to_string(score);
-                                                            text.setString(s);
-                                                            text.setFillColour(TextNormalColour);
-                                                            text.draw();
-                                                            text.setFillColour(LeaderboardTextDark);
-                                                            text.draw();
-                                                            text.move({ 0.f, -135.f });
-                                                        }
-                                                    }
-
-                                                    m_billboardLeagueTexture.display();
-                                                }
+                                                initBillboardLeagueTexture();
                                                 if (m_billboardLeagueTexture.available())
                                                 {
                                                     ent.getComponent<cro::Model>().setMaterialProperty(3, "u_diffuseMap", cro::TextureID(m_billboardLeagueTexture.getTexture()));
@@ -3537,6 +3486,107 @@ void GolfState::updateFlagTexture(bool reloadTexture)
         };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
+
+#ifdef USE_GNS
+void GolfState::initBillboardLeagueTexture()
+{
+    if (!m_billboardLeagueTexture.available())
+    {
+        /*registerWindow([&]() 
+            {
+                ImGui::Begin("Text");
+                ImGui::Image(m_billboardLeagueTexture.getTexture(), {320.f, 240.f}, {0.f, 1.f}, {1.f, 0.f});
+                ImGui::End();
+            });*/
+
+        m_billboardLeagueTexture.create(640, 480, false);
+        m_billboardLeagueTexture.setSmooth(true);
+        m_billboardLeagueTexture.clear(TextNormalColour);
+
+        cro::SimpleText text(m_sharedData.sharedResources->fonts.get(FontID::UI));
+        text.setFillColour(TextNormalColour);
+        text.setCharacterSize(UITextSize * 4);
+        text.setPosition({ 320.f, 444.f });
+        text.setString("Last Month's\nChampions");
+        text.setAlignment(cro::SimpleText::Alignment::Centre);
+        text.setVerticalSpacing(-2.f);
+        text.draw(); //hacks around the font bug where the texture is messed up the first time a char size is used
+        text.setFillColour(LeaderboardTextDark);
+        text.draw();
+
+        text.setAlignment(cro::SimpleText::Alignment::Left);
+        text.setPosition({ 18.f, 378.f });
+        text.setCharacterSize(UITextSize * 2);
+
+        cro::SimpleQuad av;
+        av.setPosition({ 24.f, 358.f });
+        cro::Texture avTex;
+
+        constexpr float VerticalSpacing = -76.f; //-135.f;
+        constexpr float BGTop = 408.f;
+        constexpr float BGWidth = 640.f;
+
+        constexpr auto c = CD32::Colours[CD32::BeigeMid];
+        cro::SimpleVertexArray arr;
+        arr.setPrimitiveType(GL_TRIANGLES);
+        arr.setVertexData(
+            {
+                cro::Vertex2D(glm::vec2(0.f, BGTop), c),
+                cro::Vertex2D(glm::vec2(0.f, BGTop + VerticalSpacing), c),
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop), c),
+                
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop), c),
+                cro::Vertex2D(glm::vec2(0.f, BGTop + VerticalSpacing), c),
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop + VerticalSpacing), c),
+
+
+                cro::Vertex2D(glm::vec2(0.f, BGTop + (VerticalSpacing * 2.f)), c),
+                cro::Vertex2D(glm::vec2(0.f, BGTop + (VerticalSpacing * 3.f)), c),
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop + (VerticalSpacing * 2.f)), c),
+
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop + (VerticalSpacing * 2.f)), c),
+                cro::Vertex2D(glm::vec2(0.f, BGTop + (VerticalSpacing * 3.f)), c),
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop + (VerticalSpacing * 3.f)), c),
+
+
+                cro::Vertex2D(glm::vec2(0.f, BGTop + (VerticalSpacing * 4.f)), c),
+                cro::Vertex2D(glm::vec2(0.f, BGTop + (VerticalSpacing * 5.f)), c),
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop + (VerticalSpacing * 4.f)), c),
+
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop + (VerticalSpacing * 4.f)), c),
+                cro::Vertex2D(glm::vec2(0.f, BGTop + (VerticalSpacing * 5.f)), c),
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop + (VerticalSpacing * 5.f)), c),
+            });
+        arr.draw();
+
+        const auto& prevWinners = Social::getPreviousLeague();
+        for (const auto& [name, score, handle] : prevWinners)
+        {
+            if (handle != 0)
+            {
+                auto img = Social::getUserIcon(handle);
+                avTex.loadFromImage(img);
+                av.setTexture(avTex);
+                av.setScale({ 0.25f, 0.25f });
+                av.draw();
+                av.move({ 0.f, VerticalSpacing });
+
+                cro::String s("     ");
+                s += name;
+                s += "\n\n\n" + std::to_string(score);
+                text.setString(s);
+                text.setFillColour(TextNormalColour);
+                text.draw();
+                text.setFillColour(LeaderboardTextDark);
+                text.draw();
+                text.move({ 0.f, VerticalSpacing });
+            }
+        }
+
+        m_billboardLeagueTexture.display();
+    }
+}
+#endif
 
 void GolfState::TargetShader::update()
 {

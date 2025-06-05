@@ -371,6 +371,9 @@ private:
     void loadMap();
     void initAudio(bool loadTrees, bool loadPlane);
     void updateFlagTexture(bool reloadTexture);
+#ifdef USE_GNS
+    void initBillboardLeagueTexture();
+#endif
 
     void addSystems();
     void buildScene();
