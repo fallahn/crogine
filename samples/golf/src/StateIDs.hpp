@@ -75,6 +75,10 @@ struct StateID final
         ScrubAttract,
         ScrubPause,
 
+        SBallBackground,
+        SBallGame,
+        SBallAttract,
+
         SQLite, //used for testing SQLite features
         Workshop = 1100,
         Count

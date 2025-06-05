@@ -31,7 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "../golf/Path.hpp"
-#include"../golf/CollisionMesh.hpp"
+#include "../golf/CollisionMesh.hpp"
 #include "../golf/Billboard.hpp"
 
 #include <crogine/core/State.hpp>

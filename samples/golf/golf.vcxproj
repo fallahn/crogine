@@ -778,6 +778,12 @@
     <ClCompile Include="src\sockets\IXWebSocketServer.cpp" />
     <ClCompile Include="src\sockets\IXWebSocketTransport.cpp" />
     <ClCompile Include="src\SplashScreenState.cpp" />
+    <ClCompile Include="src\sportsball\SBallAttractState.cpp" />
+    <ClCompile Include="src\sportsball\SBallBackgroundState.cpp" />
+    <ClCompile Include="src\sportsball\SBallGameState.cpp" />
+    <ClCompile Include="src\sportsball\SBallParticleDirector.cpp" />
+    <ClCompile Include="src\sportsball\SBallPhysicsSystem.cpp" />
+    <ClCompile Include="src\sportsball\SBallSoundDirector.cpp" />
     <ClCompile Include="src\sqlite\ProfileDB.cpp" />
     <ClCompile Include="src\sqlite\SqliteState.cpp" />
     <ClCompile Include="src\Sunclock.cpp" />
@@ -1019,6 +1025,9 @@
     <ClInclude Include="src\sockets\IXWebSocketTransport.h" />
     <ClInclude Include="src\sockets\IXWebSocketVersion.h" />
     <ClInclude Include="src\SplashScreenState.hpp" />
+    <ClInclude Include="src\sportsball\SBallBackgroundState.hpp" />
+    <ClInclude Include="src\sportsball\SBallGameState.hpp" />
+    <ClInclude Include="src\sportsball\SBallPhysicsSystem.hpp" />
     <ClInclude Include="src\sqlite\ProfileDB.hpp" />
     <ClInclude Include="src\sqlite\SqliteState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />

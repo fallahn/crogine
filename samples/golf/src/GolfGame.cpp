@@ -86,6 +86,9 @@ source distribution.
 #include "scrub/ScrubGameState.hpp"
 #include "scrub/ScrubPauseState.hpp"
 
+#include "sportsball/SBallBackgroundState.hpp"
+#include "sportsball/SBallGameState.hpp"
+
 #include "ErrorCheck.hpp"
 
 #include <AchievementIDs.hpp>
@@ -258,6 +261,9 @@ GolfGame::GolfGame()
     m_stateStack.registerState<ScrubAttractState>(StateID::ScrubAttract, m_sharedData, m_minigameData);
     m_stateStack.registerState<ScrubGameState>(StateID::ScrubGame, m_sharedData, m_minigameData);
     m_stateStack.registerState<ScrubPauseState>(StateID::ScrubPause, m_sharedData, m_minigameData);
+
+    m_stateStack.registerState<SBallBackgroundState>(StateID::SBallBackground, m_minigameData);
+    m_stateStack.registerState<SBallGameState>(StateID::SBallGame, m_minigameData);
 
     m_sharedData.courseIndex = courseOfTheMonth();
 
@@ -1190,7 +1196,7 @@ bool GolfGame::initialise()
     //m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
     //m_stateStack.pushState(StateID::Shop);
-    m_stateStack.pushState(StateID::Menu);
+    m_stateStack.pushState(StateID::SBallBackground);
     //m_stateStack.pushState(StateID::EndlessAttract);
     //m_stateStack.pushState(StateID::Workshop);
 #else

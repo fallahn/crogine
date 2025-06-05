@@ -106,6 +106,12 @@
     <Filter Include="Source Files\websocket">
       <UniqueIdentifier>{8a948265-bb55-4baf-bc64-4d1f02135f7c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\sportsball">
+      <UniqueIdentifier>{bc5b40f9-ed82-4b64-9a5b-3d19a004d9d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\sportsball">
+      <UniqueIdentifier>{774b2a37-f5e3-4e3f-8adf-d216c7e3173f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -653,6 +659,24 @@
     </ClCompile>
     <ClCompile Include="src\golf\ClubInfoState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sportsball\SBallAttractState.cpp">
+      <Filter>Source Files\sportsball</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sportsball\SBallBackgroundState.cpp">
+      <Filter>Source Files\sportsball</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sportsball\SBallGameState.cpp">
+      <Filter>Source Files\sportsball</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sportsball\SBallParticleDirector.cpp">
+      <Filter>Source Files\sportsball</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sportsball\SBallPhysicsSystem.cpp">
+      <Filter>Source Files\sportsball</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sportsball\SBallSoundDirector.cpp">
+      <Filter>Source Files\sportsball</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1378,6 +1402,15 @@
     </ClInclude>
     <ClInclude Include="src\PlayerGuide.hpp">
       <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sportsball\SBallBackgroundState.hpp">
+      <Filter>Header Files\sportsball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sportsball\SBallGameState.hpp">
+      <Filter>Header Files\sportsball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sportsball\SBallPhysicsSystem.hpp">
+      <Filter>Header Files\sportsball</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

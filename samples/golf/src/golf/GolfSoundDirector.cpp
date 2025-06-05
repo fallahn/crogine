@@ -772,7 +772,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 default:
                 {
                     const float multiplier = std::min(1.f, data.velocity / 16.f);
-                    const float vol = 0.2f + (0.8f * multiplier);
+                    const float vol = 0.1f + (0.9f * multiplier);
                     playSound(AudioID::Ground, data.position, vol).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                 }
                     break;

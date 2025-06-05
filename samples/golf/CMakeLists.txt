@@ -119,10 +119,11 @@ include(${PROJECT_DIR}/editor/CMakeLists.txt)
 include(${PROJECT_DIR}/runner/CMakeLists.txt)
 include(${PROJECT_DIR}/scrub/CMakeLists.txt)
 include(${PROJECT_DIR}/sockets/CMakeLists.txt)
+include(${PROJECT_DIR}/sportsball/CMakeLists.txt)
 include(${PROJECT_DIR}/sqlite/CMakeLists.txt)
 include(${SOCIAL_DIR}/CMakeLists.txt)
 
-SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SCRUB_SRC} ${SOCKETS_SRC} ${SQLITE_SRC})
+SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SCRUB_SRC} ${SOCKETS_SRC} ${SBALL_SRC} ${SQLITE_SRC})
 #Steam version actually uses this too now...
 #if(USE_NEWSFEED)
   include(${PROJECT_DIR}/rss/CMakeLists.txt)
