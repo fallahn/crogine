@@ -49,7 +49,7 @@ source distribution.
 
 #include <crogine/graphics/Font.hpp>
 
-ScrubPauseState::ScrubPauseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedScrubData& sc)
+ScrubPauseState::ScrubPauseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedMinigameData& sc)
     : cro::State        (ss, ctx),
     m_sharedData        (sd),
     m_sharedScrubData   (sc),

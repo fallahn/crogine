@@ -67,7 +67,7 @@ private:
     
     SharedStateData m_sharedData;
     SharedProfileData m_profileData;
-    SharedScrubData m_scrubData;
+    SharedMinigameData m_minigameData;
     cro::StateStack m_stateStack;
 
     std::vector<std::string> m_hostAddresses;

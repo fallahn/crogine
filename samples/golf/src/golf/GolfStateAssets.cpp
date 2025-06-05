@@ -3507,7 +3507,7 @@ void GolfState::initBillboardLeagueTexture()
         text.setFillColour(TextNormalColour);
         text.setCharacterSize(UITextSize * 4);
         text.setPosition({ 320.f, 444.f });
-        text.setString("Last Month's\nChampions");
+        text.setString("Last Month's\nLeague Champions");
         text.setAlignment(cro::SimpleText::Alignment::Centre);
         text.setVerticalSpacing(-2.f);
         text.draw(); //hacks around the font bug where the texture is messed up the first time a char size is used

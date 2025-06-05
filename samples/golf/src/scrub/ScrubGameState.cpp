@@ -113,7 +113,7 @@ namespace
     std::int32_t scoreSumID = 0;
 }
 
-ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedScrubData& sc)
+ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedMinigameData& sc)
     : cro::State            (stack, context),
     m_sharedData            (sd),
     m_sharedScrubData       (sc),

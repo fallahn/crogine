@@ -67,7 +67,7 @@ namespace
     }
 }
 
-ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Context ctx, SharedScrubData& sd)
+ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Context ctx, SharedMinigameData& sd)
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus()),
     m_sharedScrubData   (sd)
@@ -79,7 +79,7 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
             loadAssets();
             createScene();
 #endif
-            initFonts();
+            sd.initFonts();
 
             cacheState(StateID::ScrubAttract);
             cacheState(StateID::ScrubGame);
@@ -548,17 +548,17 @@ void ScrubBackgroundState::loadClouds()
     }
 }
 
-void ScrubBackgroundState::initFonts()
+void SharedMinigameData::initFonts()
 {
-    if (!m_sharedScrubData.fonts)
+    if (!fonts)
     {
-        m_sharedScrubData.fonts = std::make_unique<cro::FontResource>();
-        m_sharedScrubData.fonts->load(sc::FontID::Title, "assets/arcade/scrub/fonts/BowlbyOne-Regular.ttf");
-        auto& titleFont = m_sharedScrubData.fonts->get(sc::FontID::Title);
+        fonts = std::make_unique<cro::FontResource>();
+        fonts->load(sc::FontID::Title, "assets/arcade/scrub/fonts/BowlbyOne-Regular.ttf");
+        auto& titleFont = fonts->get(sc::FontID::Title);
         titleFont.setSmooth(true);
 
-        m_sharedScrubData.fonts->load(sc::FontID::Body, "assets/arcade/scrub/fonts/Candal-Regular.ttf");
-        auto& bodyFont = m_sharedScrubData.fonts->get(sc::FontID::Body);
+        fonts->load(sc::FontID::Body, "assets/arcade/scrub/fonts/Candal-Regular.ttf");
+        auto& bodyFont = fonts->get(sc::FontID::Body);
         bodyFont.setSmooth(true);
 
 

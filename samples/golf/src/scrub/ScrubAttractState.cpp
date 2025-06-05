@@ -160,7 +160,7 @@ namespace
     }
 }
 
-ScrubAttractState::ScrubAttractState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedScrubData& sc)
+ScrubAttractState::ScrubAttractState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedMinigameData& sc)
     : cro::State        (ss, ctx),
     m_sharedData        (sd),
     m_sharedScrubData   (sc),

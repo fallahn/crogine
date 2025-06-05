@@ -254,10 +254,10 @@ GolfGame::GolfGame()
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
     m_stateStack.registerState<GCState>(StateID::GC);
 
-    m_stateStack.registerState<ScrubBackgroundState>(StateID::ScrubBackground, m_scrubData);
-    m_stateStack.registerState<ScrubAttractState>(StateID::ScrubAttract, m_sharedData, m_scrubData);
-    m_stateStack.registerState<ScrubGameState>(StateID::ScrubGame, m_sharedData, m_scrubData);
-    m_stateStack.registerState<ScrubPauseState>(StateID::ScrubPause, m_sharedData, m_scrubData);
+    m_stateStack.registerState<ScrubBackgroundState>(StateID::ScrubBackground, m_minigameData);
+    m_stateStack.registerState<ScrubAttractState>(StateID::ScrubAttract, m_sharedData, m_minigameData);
+    m_stateStack.registerState<ScrubGameState>(StateID::ScrubGame, m_sharedData, m_minigameData);
+    m_stateStack.registerState<ScrubPauseState>(StateID::ScrubPause, m_sharedData, m_minigameData);
 
     m_sharedData.courseIndex = courseOfTheMonth();
 
@@ -1235,9 +1235,9 @@ void GolfGame::finalise()
 
     Achievements::shutdown();
 
-    if (m_scrubData.fonts)
+    if (m_minigameData.fonts)
     {
-        m_scrubData.fonts.reset();
+        m_minigameData.fonts.reset();
     }
 
     m_sharedData.sharedResources.reset();
