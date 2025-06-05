@@ -2540,8 +2540,8 @@ void ShopState::onCachedPush()
 
     m_viewScale = cro::UIElementSystem::getViewScale();
     
-    Timeline::setTimelineDesc("In the Shop");
-    Social::setStatus(Social::InfoID::Menu, { "At the equipment counter" });
+    Timeline::setTimelineDesc("At the Equipment Counter");
+    Social::setStatus(Social::InfoID::Menu, { "At the Equipment Counter" });
 
     const float width = static_cast<float>(cro::App::getWindow().getSize().x);
     m_rootNode.getComponent<cro::Transform>().setPosition(glm::vec2(width, 0.f));

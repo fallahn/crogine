@@ -35,6 +35,7 @@ source distribution.
 
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -188,6 +189,9 @@ public:
 					std::int32_t elapsed = interp.getElapsedTime();
 					while (elapsed > difference)
 					{
+						//fusge to guess the velocity used in impact sound
+						const auto lastPos = interp.m_buffer.front().position;
+
 						interp.m_overflow = elapsed - difference;
 						interp.m_timer.restart();
 						interp.m_buffer.pop_front();
@@ -199,6 +203,7 @@ public:
 							msg->type = CollisionEvent::Begin;
 							msg->position = interp.m_buffer.front().position;
 							msg->terrain = interp.m_buffer.front().collisionTerrain;
+							msg->velocity = glm::length2((lastPos - msg->position) * 20.f); //these are ~20hz updates
 							//TODO set the client - we don't have this here though :/
 						}
 

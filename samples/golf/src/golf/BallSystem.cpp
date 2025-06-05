@@ -1262,6 +1262,7 @@ void BallSystem::doCollision(cro::Entity entity)
             msg->terrain = terrainResult.terrain;
             msg->position = pos;
             msg->type = CollisionEvent::Begin;
+            msg->velocity = glm::length2(ball.velocity);
 
             ball.lastTerrain = terrainResult.terrain;
 

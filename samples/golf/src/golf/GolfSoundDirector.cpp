@@ -770,7 +770,11 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     }
                     break;
                 default:
-                    playSound(AudioID::Ground, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                {
+                    const float multiplier = std::min(1.f, data.velocity / 16.f);
+                    const float vol = 0.2f + (0.8f * multiplier);
+                    playSound(AudioID::Ground, data.position, vol).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                }
                     break;
                 case TerrainID::Water:
                     playSound(AudioID::Water, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
