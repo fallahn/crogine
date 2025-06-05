@@ -32,6 +32,9 @@ source distribution.
 #include "../StateIDs.hpp"
 
 #include <crogine/core/State.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/ecs/Scene.hpp>
 
 struct SharedMinigameData;
 class SBallGameState final : public cro::State
@@ -50,4 +53,16 @@ public:
 private:
     SharedMinigameData& m_sharedGameData;
 
+    cro::Scene m_gameScene;
+    cro::Scene m_uiScene;
+    cro::ResourceCollection m_resources;
+    cro::EnvironmentMap m_environmentMap;
+
+    void loadAssets();
+    void addSystems();
+    void buildScene();
+    void buildUI();
+
+    void onCachedPush() override;
+    void onCachedPop() override;
 };
