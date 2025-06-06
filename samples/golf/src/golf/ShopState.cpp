@@ -1266,7 +1266,7 @@ void ShopState::buildScene()
             default: break;
             case inv::ItemType::Driver:
             case inv::ItemType::ThreeW:
-            case inv::ItemType::NineI:
+            case inv::ItemType::FourI:
             case inv::ItemType::PitchWedge:
             case inv::ItemType::Ball:
                 //new scroll node (no UIElement)

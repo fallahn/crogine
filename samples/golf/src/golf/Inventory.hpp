@@ -41,18 +41,18 @@ namespace inv
 {
     enum ItemType
     {
-        Driver, ThreeW, FiveW, NineI, EightI, SevenI,
-        SixI, FiveI, FourI, PitchWedge, GapWedge,
-        SandWedge, Ball,
+        Driver, ThreeW, FiveW, 
+        FourI, FiveI, SixI, SevenI, EightI, NineI,
+        PitchWedge, GapWedge, SandWedge, Ball,
 
         Count
     };
 
     static inline const std::array<std::string, ItemType::Count> ItemStrings =
     {
-        "Driver", "3 Wood", "5 Wood", "9 Iron", "8 Iron", "7 Iron",
-        "6 Iron", "5 Iron", "4 Iron", "Pitch Wedge", "Gap Wedge",
-        "Sand Wedge", "Pack Of 10 Balls",
+        "Driver", "3 Wood", "5 Wood", 
+        "4 Iron", "5 Iron", "6 Iron", "7 Iron", "8 Iron", "9 Iron",
+        "Pitch Wedge", "Gap Wedge", "Sand Wedge", "Pack Of 10 Balls",
     };
 
     struct StatLabel final
@@ -279,46 +279,6 @@ namespace inv
         //irons
         //stat1 spin effect - pos more spin
         //stat2 more accuracy
-        Item(ItemType::NineI,  3,-4,720, 0),
-        Item(ItemType::NineI,  2,-3,700, 1),
-        Item(ItemType::NineI,  1,-1,810, 2),
-        Item(ItemType::NineI,  0, 1,780, 3),
-        Item(ItemType::NineI,  -1,3,850, 4),
-        Item(ItemType::NineI,  -2,5,990, 5),
-        Item(ItemType::NineI,  -2,6,920, 6),
-        
-        Item(ItemType::EightI, 3, -5,720, 0),
-        Item(ItemType::EightI, 2, -1,700, 1),
-        Item(ItemType::EightI, 1,  0,810, 2),
-        Item(ItemType::EightI, -1, 2,780, 3),
-        Item(ItemType::EightI, -2, 4,850, 4),
-        Item(ItemType::EightI, -2, 5,990, 5),
-        Item(ItemType::EightI, -1, 5,920, 6),
-        
-        Item(ItemType::SevenI,  5,-6,720, 0),
-        Item(ItemType::SevenI,  3,-3,700, 1),
-        Item(ItemType::SevenI,  1, 0,810, 2),
-        Item(ItemType::SevenI,  0, 1,780, 3),
-        Item(ItemType::SevenI,  -2,4,850, 4),
-        Item(ItemType::SevenI,  -4,6,990, 5),
-        Item(ItemType::SevenI,  -2,5,920, 6),
-        
-        Item(ItemType::SixI,  4,-4,720, 0),
-        Item(ItemType::SixI,  1,-3,700, 1),
-        Item(ItemType::SixI,  0,-1,810, 2),
-        Item(ItemType::SixI,  -2,1,780, 3),
-        Item(ItemType::SixI,  -2,3,850, 4),
-        Item(ItemType::SixI,  -3,4,990, 5),
-        Item(ItemType::SixI,  -3,6,920, 6),
-        
-        Item(ItemType::FiveI,  5,-4,720, 0),
-        Item(ItemType::FiveI,  1,-2,700, 1),
-        Item(ItemType::FiveI,  0, 1,810, 2),
-        Item(ItemType::FiveI,  -1,2,780, 3),
-        Item(ItemType::FiveI,  -3,4,850, 4),
-        Item(ItemType::FiveI,  -2,3,990, 5),
-        Item(ItemType::FiveI,  -2,5,920, 6),
-        
         Item(ItemType::FourI,  6,-5,720, 0),
         Item(ItemType::FourI,  3,-3,700, 1),
         Item(ItemType::FourI,  2,-1,810, 2),
@@ -326,6 +286,47 @@ namespace inv
         Item(ItemType::FourI,  -1,2,850, 4),
         Item(ItemType::FourI,  -3,5,990, 5),
         Item(ItemType::FourI,  -2,4,920, 6),
+
+        Item(ItemType::FiveI,  5,-4,720, 0),
+        Item(ItemType::FiveI,  1,-2,700, 1),
+        Item(ItemType::FiveI,  0, 1,810, 2),
+        Item(ItemType::FiveI,  -1,2,780, 3),
+        Item(ItemType::FiveI,  -3,4,850, 4),
+        Item(ItemType::FiveI,  -2,3,990, 5),
+        Item(ItemType::FiveI,  -2,5,920, 6),
+
+        Item(ItemType::SixI,  4,-4,720, 0),
+        Item(ItemType::SixI,  1,-3,700, 1),
+        Item(ItemType::SixI,  0,-1,810, 2),
+        Item(ItemType::SixI,  -2,1,780, 3),
+        Item(ItemType::SixI,  -2,3,850, 4),
+        Item(ItemType::SixI,  -3,4,990, 5),
+        Item(ItemType::SixI,  -3,6,920, 6),
+
+        Item(ItemType::SevenI,  5,-6,720, 0),
+        Item(ItemType::SevenI,  3,-3,700, 1),
+        Item(ItemType::SevenI,  1, 0,810, 2),
+        Item(ItemType::SevenI,  0, 1,780, 3),
+        Item(ItemType::SevenI,  -2,4,850, 4),
+        Item(ItemType::SevenI,  -4,6,990, 5),
+        Item(ItemType::SevenI,  -2,5,920, 6),
+
+        Item(ItemType::EightI, 3, -5,720, 0),
+        Item(ItemType::EightI, 2, -1,700, 1),
+        Item(ItemType::EightI, 1,  0,810, 2),
+        Item(ItemType::EightI, -1, 2,780, 3),
+        Item(ItemType::EightI, -2, 4,850, 4),
+        Item(ItemType::EightI, -2, 5,990, 5),
+        Item(ItemType::EightI, -1, 5,920, 6),
+
+        Item(ItemType::NineI,  3,-4,720, 0),
+        Item(ItemType::NineI,  2,-3,700, 1),
+        Item(ItemType::NineI,  1,-1,810, 2),
+        Item(ItemType::NineI,  0, 1,780, 3),
+        Item(ItemType::NineI,  -1,3,850, 4),
+        Item(ItemType::NineI,  -2,5,990, 5),
+        Item(ItemType::NineI,  -2,6,920, 6),
+
         
         //wedges 
         //stat1 positive more spin effect
