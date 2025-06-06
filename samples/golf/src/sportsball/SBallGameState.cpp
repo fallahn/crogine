@@ -30,6 +30,7 @@ source distribution.
 #include "../scrub/ScrubSharedData.hpp"
 #include "SBallGameState.hpp"
 #include "SBallPhysicsSystem.hpp"
+#include "SBallConsts.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 
@@ -54,6 +55,13 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
 
+#include <crogine/gui/Gui.hpp>
+
+namespace
+{
+    std::int32_t nextID = 0;
+}
+
 SBallGameState::SBallGameState(cro::StateStack& stack, cro::State::Context ctx, SharedMinigameData& sd)
     : cro::State        (stack, ctx),
     m_sharedGameData    (sd),
@@ -69,11 +77,13 @@ SBallGameState::SBallGameState(cro::StateStack& stack, cro::State::Context ctx, 
 //public
 bool SBallGameState::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_KEYDOWN
+    if ((evt.type == SDL_KEYDOWN
         && evt.key.keysym.sym == SDLK_SPACE)
+        || evt.type == SDL_MOUSEBUTTONDOWN)
     {
-        const float x = cro::Util::Random::value(-0.2f, 0.2f);
-        m_gameScene.getSystem<SBallPhysicsSystem>()->spawnBall(cro::Util::Random::value(0, 8), {x, 1.f, 0.f});
+        const float x = cro::Util::Random::value(-0.4f, 0.4f);
+        m_gameScene.getSystem<SBallPhysicsSystem>()->spawnBall(nextID, {x, 1.f, 0.f});
+        nextID = cro::Util::Random::value(0, 3);
     }
 
     m_gameScene.forwardEvent(evt);
@@ -83,7 +93,26 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
 
 void SBallGameState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == sb::MessageID::CollisionMessage)
+    {
+        const auto& data = msg.getData<sb::CollisionEvent>();
+        if (data.entityA.isValid()
+            && data.entityB.isValid())
+        {
+            auto a = data.entityA;
+            a.getComponent<SBallPhysics>().collisionHandled = true;
+            m_gameScene.destroyEntity(data.entityA);
 
+            auto b = data.entityB;
+            b.getComponent<SBallPhysics>().collisionHandled = true;
+            m_gameScene.destroyEntity(data.entityB);
+
+            if (data.ballID < BallID::Count - 1)
+            {
+                m_gameScene.getSystem<SBallPhysicsSystem>()->spawnBall(data.ballID + 1, data.position);
+            }
+        }
+    }
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
@@ -113,7 +142,7 @@ void SBallGameState::render()
 void SBallGameState::loadAssets()
 {
     m_environmentMap.loadFromFile("assets/images/hills.hdr");
-
+    //float previewX = -1.f;
     cro::ConfigFile cfg;
     if (cfg.loadFromFile("assets/arcade/sportsball/data/balls.dat"))
     {
@@ -154,6 +183,12 @@ void SBallGameState::loadAssets()
                 //hmm this will mis-align the indices
                 if (info.modelDef->isLoaded())
                 {
+                    auto e = m_previewModels.emplace_back(m_gameScene.createEntity());
+                    e.addComponent<cro::Transform>().setScale(glm::vec3(info.radius));
+                    info.modelDef->createModel(e);
+                    /*previewX += (2.f / 9.f);*/
+                    e.getComponent<cro::Model>().setHidden(true);
+
                     m_gameScene.getSystem<SBallPhysicsSystem>()->addBallData(std::move(info));
                 }
             }
@@ -220,6 +255,24 @@ void SBallGameState::buildScene()
 
 void SBallGameState::buildUI()
 {
+    //registerWindow([&]() 
+    //    {
+    //        ImGui::Begin("erg");
+    //        int i = 0;
+    //        for (auto e : m_previewModels)
+    //        {
+    //            float s = e.getComponent<cro::Transform>().getScale().x;
+    //            const std::string label = "Scale##" + std::to_string(i);
+    //            if (ImGui::SliderFloat(label.c_str(), &s, 0.1f, 3.f))
+    //            {
+    //                e.getComponent<cro::Transform>().setScale(glm::vec3(s));
+    //            }
+
+    //            i++;
+    //        }
+    //        ImGui::End();
+    //    });
+
 
     auto resize = [](cro::Camera& cam)
         {

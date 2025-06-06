@@ -29,44 +29,24 @@ source distribution.
 
 #pragma once
 
-#include "../StateIDs.hpp"
+#include "../scrub/ScrubConsts.hpp" //contains font stuff
 
-#include <crogine/core/State.hpp>
-#include <crogine/graphics/EnvironmentMap.hpp>
-#include <crogine/graphics/ModelDefinition.hpp>
-#include <crogine/ecs/Scene.hpp>
 
-#include <crogine/gui/GuiClient.hpp>
-
-struct SharedMinigameData;
-class SBallGameState final : public cro::State, public cro::GuiClient
+namespace sb
 {
-public:
+    struct MessageID final
+    {
+        enum
+        {
+            CollisionMessage = cl::MessageID::Count * 300
+        };
+    };
 
-    SBallGameState(cro::StateStack&, cro::State::Context, SharedMinigameData&);
-
-    cro::StateID getStateID() const override { return StateID::SBallGame; }
-
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
-
-private:
-    SharedMinigameData& m_sharedGameData;
-
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
-    cro::ResourceCollection m_resources;
-    cro::EnvironmentMap m_environmentMap;
-
-    std::vector<cro::Entity> m_previewModels;
-
-    void loadAssets();
-    void addSystems();
-    void buildScene();
-    void buildUI();
-
-    void onCachedPush() override;
-    void onCachedPop() override;
-};
+    struct CollisionEvent final
+    {
+        cro::Entity entityA;
+        cro::Entity entityB;
+        std::int32_t ballID = -1;
+        glm::vec3 position;
+    };
+}

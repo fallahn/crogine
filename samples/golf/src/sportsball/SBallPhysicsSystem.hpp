@@ -44,7 +44,11 @@ source distribution.
 
 struct SBallPhysics final
 {
+    std::int32_t id = -1;
     std::unique_ptr<btRigidBody> body;
+
+    bool collisionHandled = false;
+    cro::Entity parent;
 };
 
 class SBallPhysicsSystem final : public cro::System

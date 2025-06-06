@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "SBallPhysicsSystem.hpp"
+#include "SBallConsts.hpp"
 #include "../golf/GameConsts.hpp" //convert bt/glm vectors
 
 #include <crogine/ecs/Scene.hpp>
@@ -37,7 +38,7 @@ source distribution.
 
 namespace
 {
-    constexpr float BoxWidth = 0.99f;
+    constexpr float BoxWidth = 0.8f;
     constexpr float BoxHeight = 1.f;
     constexpr float BoxDepth = 0.49f;
 
@@ -75,14 +76,17 @@ SBallPhysicsSystem::SBallPhysicsSystem(cro::MessageBus& mb)
     info.m_spinningFriction = 0.01f;
 
     auto& b0 = m_box.emplace_back(std::make_unique<btRigidBody>(info));
+    b0->setUserIndex(-1);
     m_collisionWorld->addCollisionObject(b0.get());
 
     info = { 0.f, nullptr, &m_boxLeft, { 0.f,0.f,0.f } };
     auto& b1 = m_box.emplace_back(std::make_unique<btRigidBody>(info));
+    b1->setUserIndex(-1);
     m_collisionWorld->addCollisionObject(b1.get());
 
     info = { 0.f, nullptr, &m_boxRight, { 0.f,0.f,0.f } };
     auto& b2 = m_box.emplace_back(std::make_unique<btRigidBody>(info));
+    b2->setUserIndex(-1);
     m_collisionWorld->addCollisionObject(b2.get());
 
 #ifdef CRO_DEBUG_
@@ -117,9 +121,8 @@ void SBallPhysicsSystem::process(float dt)
 
         CRO_ASSERT(body.body, "");
 
-        //we could make this also a motion state and have the
-        //simulation call transform updates for us - though unless
-        //there's some advantage to that this is less code. And I'm lazy.
+        //we could make this also a motion state but its main
+        //advantage is only interpolation, which we're not using anyway
         body.body->getWorldTransform().getOpenGLMatrix(matrixBuffer.data());
         const auto mat = glm::make_mat4(matrixBuffer.data());
         tx.setPosition(glm::vec3(mat[3]));
@@ -129,6 +132,42 @@ void SBallPhysicsSystem::process(float dt)
         if (tx.getPosition().y < -2.f)
         {
             getScene()->destroyEntity(entity);
+        }
+    }
+
+    const auto manifoldCount = m_collisionDispatcher->getNumManifolds();
+    for (auto i = 0; i < manifoldCount; ++i)
+    {
+        auto manifold = m_collisionDispatcher->getManifoldByIndexInternal(i);
+        auto body0 = manifold->getBody0();
+        auto body1 = manifold->getBody1();
+
+        manifold->refreshContactPoints(body0->getWorldTransform(), body1->getWorldTransform());
+
+        if (body0->getUserIndex() == body1->getUserIndex())
+        {
+            auto contactCount = manifold->getNumContacts();
+            for (auto j = 0; j < contactCount; ++j)
+            {
+                //OK this is fine if we want to remove this pair - however
+                //we also want incidental collisions for sound effects etc
+                const auto& maniPoint = manifold->getContactPoint(j);
+                const auto a = btToGlm(maniPoint.getPositionWorldOnA());
+                const auto b = btToGlm(maniPoint.getPositionWorldOnB());
+                const auto pos = a + ((b - a) / 2.f);
+
+                auto* phys0 = reinterpret_cast<SBallPhysics*>(body0->getUserPointer());
+                auto* phys1 = reinterpret_cast<SBallPhysics*>(body1->getUserPointer());
+
+                //if (!phys0->collisionHandled && !phys1->collisionHandled)
+                {
+                    auto* msg = postMessage<sb::CollisionEvent>(sb::MessageID::CollisionMessage);
+                    msg->ballID = body0->getUserIndex();
+                    msg->entityA = phys0->parent;
+                    msg->entityB = phys1->parent;
+                    msg->position = pos;
+                }
+            }
         }
     }
 }
@@ -151,11 +190,10 @@ void SBallPhysicsSystem::spawnBall(std::int32_t id, glm::vec3 position)
 
     auto entity = getScene()->createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
-    //entity.getComponent<cro::Transform>().setScale(glm::vec3(RadMultiplier));
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(Data.radius));
 
     CRO_ASSERT(Data.modelDef->isLoaded(), "");
     Data.modelDef->createModel(entity);
-    //entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
 
     //set Physics property
     const auto& shape = m_ballShapes[id];
@@ -163,6 +201,7 @@ void SBallPhysicsSystem::spawnBall(std::int32_t id, glm::vec3 position)
     btVector3 inertia;
     shape->calculateLocalInertia(Data.mass, inertia);
     auto& phys = entity.addComponent<SBallPhysics>();
+    phys.id = id;
 
     btRigidBody::btRigidBodyConstructionInfo info(Data.mass, nullptr, shape.get(), inertia);
     info.m_restitution = Data.restititution;
@@ -171,6 +210,10 @@ void SBallPhysicsSystem::spawnBall(std::int32_t id, glm::vec3 position)
     info.m_spinningFriction = 0.01f;
 
     phys.body = std::make_unique<btRigidBody>(info);
+    phys.body->setUserIndex(id);
+    phys.body->setUserPointer(&phys);
+
+    phys.parent = entity;
 
     //set the phys position from new entity
     btTransform transform;
