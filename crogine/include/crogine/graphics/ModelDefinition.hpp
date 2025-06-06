@@ -146,7 +146,7 @@ namespace cro
         component should be attached
 
         */
-        bool createModel(Entity entity);
+        bool createModel(Entity entity) const;
 
         /*!
         \brief Returns true if the material for this model requested that it casts

@@ -762,7 +762,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
     return true;
 }
 
-bool ModelDefinition::createModel(Entity entity)
+bool ModelDefinition::createModel(Entity entity) const
 {
     CRO_ASSERT(entity.isValid(), "Invalid Entity");
     CRO_ASSERT(entity.hasComponent<cro::Transform>(), "Missing transform component");

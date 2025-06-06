@@ -29,6 +29,9 @@ source distribution.
 
 #include "../scrub/ScrubSharedData.hpp"
 #include "SBallGameState.hpp"
+#include "SBallPhysicsSystem.hpp"
+
+#include <crogine/core/ConfigFile.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -49,6 +52,7 @@ source distribution.
 
 #include <crogine/graphics/Font.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Random.hpp>
 
 SBallGameState::SBallGameState(cro::StateStack& stack, cro::State::Context ctx, SharedMinigameData& sd)
     : cro::State        (stack, ctx),
@@ -65,6 +69,12 @@ SBallGameState::SBallGameState(cro::StateStack& stack, cro::State::Context ctx, 
 //public
 bool SBallGameState::handleEvent(const cro::Event& evt)
 {
+    if (evt.type == SDL_KEYDOWN
+        && evt.key.keysym.sym == SDLK_SPACE)
+    {
+        const float x = cro::Util::Random::value(-0.2f, 0.2f);
+        m_gameScene.getSystem<SBallPhysicsSystem>()->spawnBall(cro::Util::Random::value(0, 8), {x, 1.f, 0.f});
+    }
 
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
@@ -90,12 +100,69 @@ void SBallGameState::render()
 {
     m_gameScene.render();
     m_uiScene.render();
+
+#ifdef CRO_DEBUG_
+    //auto cam = m_gameScene.getActiveCamera();
+    //m_gameScene.getSystem<SBallPhysicsSystem>()->renderDebug(
+    //    cam.getComponent<cro::Camera>().getActivePass().viewProjectionMatrix,
+    //    cro::App::getWindow().getSize());
+#endif
 }
 
 //private
 void SBallGameState::loadAssets()
 {
     m_environmentMap.loadFromFile("assets/images/hills.hdr");
+
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile("assets/arcade/sportsball/data/balls.dat"))
+    {
+        const auto& objs = cfg.getObjects();
+        for (const auto& obj : objs)
+        {
+            if (obj.getName() == "ball")
+            {
+                BallData info;
+
+                const auto& props = obj.getProperties();
+                for (const auto& prop : props)
+                {
+                    const auto& name = prop.getName();
+                    if (name == "mass")
+                    {
+                        info.mass = prop.getValue<float>();
+                    }
+                    else if (name == "restitution")
+                    {
+                        info.restititution = prop.getValue<float>();
+                    }
+                    else if (name == "radius")
+                    {
+                        info.radius = prop.getValue<float>();
+                    }
+                    else if (name == "model")
+                    {
+                        const auto path = "assets/arcade/sportsball/models/" + prop.getValue<std::string>();
+                        info.modelDef = std::make_unique<cro::ModelDefinition>(m_resources, &m_environmentMap);
+                        if (!info.modelDef->loadFromFile(path))
+                        {
+                            LogW << "Failed opening model " << prop.getValue<std::string>() << std::endl;
+                        }
+                    }
+                }
+
+                //hmm this will mis-align the indices
+                if (info.modelDef->isLoaded())
+                {
+                    m_gameScene.getSystem<SBallPhysicsSystem>()->addBallData(std::move(info));
+                }
+            }
+        }
+    }
+    else
+    {
+        LogI << "[SportsBall] Failed opening Data File" << std::endl;
+    }
 }
 
 void SBallGameState::addSystems()
@@ -103,6 +170,7 @@ void SBallGameState::addSystems()
     auto& mb = cro::App::getInstance().getMessageBus();
 
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
+    m_gameScene.addSystem<SBallPhysicsSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
@@ -140,14 +208,14 @@ void SBallGameState::buildScene()
     resize(cam);
     cam.resizeCallback = resize;
     cam.shadowMapBuffer.create(1024, 1024);
-    cam.setMaxShadowDistance(3.f);
+    cam.setMaxShadowDistance(10.f);
     cam.setBlurPassCount(1); //TODO read shadow quality
-    cam.setShadowExpansion(0.5f);
+    cam.setShadowExpansion(15.f);
 
 
     auto lightEnt = m_gameScene.getSunlight();
-    lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 10.f * cro::Util::Const::degToRad);
-    lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -10.f * cro::Util::Const::degToRad);
+    lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -65.f * cro::Util::Const::degToRad);
+    lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -1.f * cro::Util::Const::degToRad);
 }
 
 void SBallGameState::buildUI()
