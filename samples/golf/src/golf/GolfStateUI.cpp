@@ -1995,7 +1995,7 @@ void GolfState::buildUI()
         courseEnt.getComponent<cro::Transform>().setScale(courseScale);
         courseEnt.getComponent<cro::Callback>().active = true; //makes sure to delay so updating the texture size is complete first
 
-        trophyEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, 2.5f));
+        trophyEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, 3.5f));
         trophyEnt.getComponent<cro::Transform>().setScale(courseScale);
         trophyEnt.getComponent<cro::Callback>().active = true;
 

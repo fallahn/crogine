@@ -158,7 +158,7 @@ void LoadingScreen::launch()
         m_music.play();
 
         //just set the thread off on its own - it'll quit once the volume reaches 0
-        m_targetVolume = cro::AudioMixer::getVolume(MixerChannel::Environment) / 2.f;
+        m_targetVolume = cro::AudioMixer::getVolume(MixerChannel::Environment) / 4.f;
         std::thread t(&LoadingScreen::threadFunc, this);
         t.detach();
     }
