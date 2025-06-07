@@ -78,6 +78,11 @@ namespace cro
         */
         virtual void setProgress(float prog) {}
 
+        /*!
+        \brief Optionally overload this to be notified when the loading screen quits
+        */
+        virtual void quit() {}
+
     private:
 
     };

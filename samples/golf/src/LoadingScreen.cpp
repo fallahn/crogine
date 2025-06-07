@@ -48,6 +48,7 @@ source distribution.
 #include <string>
 #include <vector>
 #include <array>
+#include <chrono>
 
 namespace
 {
@@ -75,7 +76,9 @@ namespace
 }
 
 LoadingScreen::LoadingScreen(SharedStateData& sd)
-    : m_sharedData       (sd)
+    : m_sharedData  (sd),
+    m_targetVolume  (0.f),
+    m_currentVolume (0.f)
 {
     //fonts not loaded yet, so deferred to launch();
     //m_tipText.setFont(sd.sharedResources->fonts.get(FontID::Info));
@@ -116,7 +119,7 @@ void LoadingScreen::launch()
 
     m_backgroundVerts.setScale({ screenSize.x, (TextHeight + 28.f) * viewScale });
 
-    const std::array paths =
+    const std::array imagePaths =
     {
         "assets/images/loading/01.png",
         "assets/images/loading/02.png",
@@ -126,7 +129,9 @@ void LoadingScreen::launch()
         "assets/images/loading/06.png",
     };
 
-    auto& loadingTexture = m_sharedData.sharedResources->textures.get(paths[cro::Util::Random::value(0u, paths.size() - 1)]);
+    const auto screenIndex = cro::Util::Random::value(0u, imagePaths.size() - 1);
+
+    auto& loadingTexture = m_sharedData.sharedResources->textures.get(imagePaths[screenIndex]);
     loadingTexture.setBorderColour(cro::Colour::Black);
     loadingTexture.setSmooth(true);
     const auto texSize = glm::vec2(loadingTexture.getSize());
@@ -135,6 +140,28 @@ void LoadingScreen::launch()
     m_loadingQuad.setTexture(loadingTexture);
     m_loadingQuad.setScale({ scale, scale });
     m_loadingQuad.setPosition({ 0.f, std::ceil(screenSize.y - (texSize.y * scale)) / 2.f });
+
+    const std::array audioPaths =
+    {
+        "assets/sound/loading01.ogg",
+        "assets/sound/loading02.ogg",
+        "assets/sound/loading03.ogg",
+        "assets/sound/loading04.ogg",
+        "assets/sound/loading04.ogg",
+        "assets/sound/loading04.ogg",
+    };
+
+    if (m_music.loadFromFile(audioPaths[screenIndex]))
+    {
+        m_music.setLooped(true);
+        m_music.setVolume(0.f);
+        m_music.play();
+
+        //just set the thread off on its own - it'll quit once the volume reaches 0
+        m_targetVolume = cro::AudioMixer::getVolume(MixerChannel::Environment) / 2.f;
+        std::thread t(&LoadingScreen::threadFunc, this);
+        t.detach();
+    }
 }
 
 void LoadingScreen::update()
@@ -149,7 +176,36 @@ void LoadingScreen::draw()
     m_tipText.draw();
 }
 
-void LoadingScreen::setProgress(float)
+void LoadingScreen::quit()
 {
+    //m_music.stop();
 
+    m_targetVolume = 0.f;
+}
+
+//private
+void LoadingScreen::threadFunc()
+{
+    m_threadClock.restart();
+
+    do
+    {
+        const auto elapsed = m_threadClock.elapsed().asSeconds();
+        m_threadClock.restart();
+
+        if (m_currentVolume < m_targetVolume)
+        {
+            const float t = m_targetVolume;
+            m_currentVolume = std::min(t, m_currentVolume + elapsed);
+        }
+        else if (m_currentVolume > m_targetVolume)
+        {
+            m_currentVolume = std::max(0.f, m_currentVolume - elapsed);
+        }
+        m_music.setVolume(m_currentVolume);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    } while (m_currentVolume != 0 || m_targetVolume != 0);
+
+    m_music.stop();
 }

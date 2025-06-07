@@ -109,7 +109,7 @@ SBallPhysicsSystem::~SBallPhysicsSystem()
 void SBallPhysicsSystem::process(float dt)
 {
     //step physics
-    m_collisionWorld->stepSimulation(dt, 2, 1.f / 120.f);
+    m_collisionWorld->stepSimulation(dt, 6, 1.f / 240.f);
 
     //used to hold temp matrix before applying to entities
     static std::array<float, 16> matrixBuffer = {};
@@ -143,8 +143,8 @@ void SBallPhysicsSystem::process(float dt)
         auto body1 = manifold->getBody1();
 
         manifold->refreshContactPoints(body0->getWorldTransform(), body1->getWorldTransform());
-
-        if (body0->getUserIndex() == body1->getUserIndex())
+        
+        //if (body0->getUserIndex() == body1->getUserIndex())
         {
             auto contactCount = manifold->getNumContacts();
             for (auto j = 0; j < contactCount; ++j)
@@ -152,20 +152,31 @@ void SBallPhysicsSystem::process(float dt)
                 //OK this is fine if we want to remove this pair - however
                 //we also want incidental collisions for sound effects etc
                 const auto& maniPoint = manifold->getContactPoint(j);
-                const auto a = btToGlm(maniPoint.getPositionWorldOnA());
-                const auto b = btToGlm(maniPoint.getPositionWorldOnB());
-                const auto pos = a + ((b - a) / 2.f);
-
-                auto* phys0 = reinterpret_cast<SBallPhysics*>(body0->getUserPointer());
-                auto* phys1 = reinterpret_cast<SBallPhysics*>(body1->getUserPointer());
-
-                //if (!phys0->collisionHandled && !phys1->collisionHandled)
+                if (maniPoint.getLifeTime() == 1
+                    && maniPoint.getDistance() < 0.f)
                 {
-                    auto* msg = postMessage<sb::CollisionEvent>(sb::MessageID::CollisionMessage);
-                    msg->ballID = body0->getUserIndex();
-                    msg->entityA = phys0->parent;
-                    msg->entityB = phys1->parent;
-                    msg->position = pos;
+                    const auto a = btToGlm(maniPoint.getPositionWorldOnA());
+                    const auto b = btToGlm(maniPoint.getPositionWorldOnB());
+                    const auto pos = a + ((b - a) / 2.f);
+
+                    auto* phys0 = reinterpret_cast<SBallPhysics*>(body0->getUserPointer());
+                    auto* phys1 = reinterpret_cast<SBallPhysics*>(body1->getUserPointer());
+
+                    //this is a match
+                    if (body0->getUserIndex() == body1->getUserIndex() &&
+                        !phys0->collisionHandled && !phys1->collisionHandled)
+                    {
+                        phys0->collisionHandled = true;
+                        phys1->collisionHandled = true;
+
+                        auto* msg = postMessage<sb::CollisionEvent>(sb::MessageID::CollisionMessage);
+                        msg->ballID = body0->getUserIndex();
+                        msg->entityA = phys0->parent;
+                        msg->entityB = phys1->parent;
+                        msg->position = pos;
+                    }
+
+                    //TODO event for generic sound
                 }
             }
         }
@@ -204,7 +215,7 @@ void SBallPhysicsSystem::spawnBall(std::int32_t id, glm::vec3 position)
     phys.id = id;
 
     btRigidBody::btRigidBodyConstructionInfo info(Data.mass, nullptr, shape.get(), inertia);
-    info.m_restitution = Data.restititution;
+    info.m_restitution = Data.restititution / 2.f;
     info.m_friction = 0.8f; //hmm should this vary per ball?
     info.m_rollingFriction = 0.001f;
     info.m_spinningFriction = 0.01f;
@@ -221,7 +232,8 @@ void SBallPhysicsSystem::spawnBall(std::int32_t id, glm::vec3 position)
     phys.body->setWorldTransform(transform);
     phys.body->setLinearFactor({ 1.f, 1.f, 0.f });
     phys.body->setAngularFactor({ 0.f, 1.f, 1.f });
-    //phys.physicsBody->applyTorqueImpulse({ 0.01f, offset / 2.f, 0.01f * cro::Util::Random::value(0,1) });
+    //phys.body->setActivationState(DISABLE_DEACTIVATION);
+    phys.body->applyTorqueImpulse({ 0.01f, 0.002f, 0.01f * cro::Util::Random::value(0,1) });
 
     m_collisionWorld->addRigidBody(phys.body.get()/*, (1 << sc::CollisionID::Ball), (1 << sc::CollisionID::Bucket) | (1 << sc::CollisionID::Ball)*/);
 }

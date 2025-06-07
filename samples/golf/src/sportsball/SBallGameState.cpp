@@ -232,17 +232,19 @@ void SBallGameState::buildScene()
         {
             //TODO update shadow quality from settings
 
-            cam.setPerspective(60.f * cro::Util::Const::degToRad, 4.f / 3.f, 0.1f, 4.f);
+            glm::vec2 size(cro::App::getWindow().getSize());
+
+            cam.setPerspective(60.f * cro::Util::Const::degToRad, size.x/size.y, 0.1f, 4.f);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
 
     auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 1.4f });
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.65f, 1.4f });
 
     auto& cam = camEnt.getComponent<cro::Camera>();
     resize(cam);
     cam.resizeCallback = resize;
-    cam.shadowMapBuffer.create(1024, 1024);
+    cam.shadowMapBuffer.create(2048, 2048);
     cam.setMaxShadowDistance(10.f);
     cam.setBlurPassCount(1); //TODO read shadow quality
     cam.setShadowExpansion(15.f);

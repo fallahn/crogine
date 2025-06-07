@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <crogine/audio/sound_system/MusicPlayer.hpp>
+
 #include <crogine/core/HiResTimer.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/Texture.hpp>
@@ -40,7 +42,8 @@ source distribution.
 #include <crogine/graphics/SimpleVertexArray.hpp>
 
 #include <vector>
-
+#include <atomic>
+#include <thread>
 
 struct SharedStateData;
 class LoadingScreen final : public cro::LoadingScreen
@@ -52,7 +55,7 @@ public:
     void update() override;
     void draw() override;
 
-    void setProgress(float) override;
+    void quit() override;
 
 
 private:
@@ -61,4 +64,11 @@ private:
     cro::SimpleVertexArray m_backgroundVerts;
     cro::SimpleQuad m_loadingQuad;
     cro::SimpleText m_tipText;
+
+    cro::MusicPlayer m_music;
+
+    std::atomic<float> m_targetVolume;
+    float m_currentVolume;
+    cro::Clock m_threadClock;
+    void threadFunc();
 };

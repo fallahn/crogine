@@ -392,6 +392,7 @@ namespace
             threadData->loadingScreen->draw();
             SDL_GL_SwapWindow(threadData->window);
         }
+        threadData->loadingScreen->quit();
 
         SDL_GL_MakeCurrent(threadData->window, nullptr);
         return 0;
@@ -457,6 +458,8 @@ void Window::loadResources(const std::function<void()>& loader, bool threaded)
             //SDL_GL_SwapWindow(m_window);
 
             loader();
+
+            m_loadingScreen->quit();
         }
     }
 #endif
