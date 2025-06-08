@@ -1094,7 +1094,7 @@ void TournamentState::buildScene()
 
         //warning string 
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 358.f, 38.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 358.f, 37.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString(std::uint32_t(0x26A0));
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -1122,7 +1122,7 @@ void TournamentState::buildScene()
 
 
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ -2.f, -3.f, 0.f });
+        entity.addComponent<cro::Transform>().setPosition({ -2.f, -2.f, 0.f });
         entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bag_highlight");

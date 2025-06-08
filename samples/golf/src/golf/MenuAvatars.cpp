@@ -890,7 +890,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         m_sharedData.preferredClubSet %= (Social::getClubLevel() + 1);
      
         entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 195.f, 32.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 174.f, 27.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bag_select");
         entity.addComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
