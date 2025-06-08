@@ -461,6 +461,32 @@ void App::run(bool resetSettings)
                     Console::print("No Audio Devices Found");
                 }
             }, nullptr);
+
+        Console::addCommand("set_window_size", [&](const std::string& size)
+            {
+                const auto dims = cro::Util::String::tokenize(size, ' ');
+                if (dims.size() != 2)
+                {
+                    Console::print("Usage: set_window_size <x y>");
+                }
+
+                glm::uvec2 newSize(0);
+                try
+                {
+                    newSize.x = std::stoul(dims[0]);
+                }
+                catch (...) { Console::print(dims[0] + ": invalid X value"); }
+
+                try
+                {
+                    newSize.y = std::stoul(dims[1]);
+                }catch (...) { Console::print(dims[1] + ": invalid Y value"); }
+
+                if (newSize.x && newSize.y)
+                {
+                    m_window.setSize(newSize);
+                }
+            }, nullptr);
     }
     else
     {
