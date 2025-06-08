@@ -65,7 +65,7 @@ SBallPhysicsSystem::SBallPhysicsSystem(cro::MessageBus& mb)
         m_broadphaseInterface.get(),
         m_constraintSolver.get(),
         m_collisionConfiguration.get());
-    m_collisionWorld->setGravity({ 0.f, -10.f, 0.f });
+    m_collisionWorld->setGravity({ 0.f, -9.9f, 0.f });
 
     //create the 'box' static shape
 
@@ -110,6 +110,7 @@ void SBallPhysicsSystem::process(float dt)
 {
     //step physics
     m_collisionWorld->stepSimulation(dt, 6, 1.f / 240.f);
+    //m_collisionWorld->stepSimulation(dt/*, 6, 1.f / 240.f*/);
 
     //used to hold temp matrix before applying to entities
     static std::array<float, 16> matrixBuffer = {};
@@ -215,10 +216,10 @@ void SBallPhysicsSystem::spawnBall(std::int32_t id, glm::vec3 position)
     phys.id = id;
 
     btRigidBody::btRigidBodyConstructionInfo info(Data.mass, nullptr, shape.get(), inertia);
-    info.m_restitution = Data.restititution / 2.f;
-    info.m_friction = 0.8f; //hmm should this vary per ball?
-    info.m_rollingFriction = 0.001f;
-    info.m_spinningFriction = 0.01f;
+    info.m_restitution = Data.restititution / 8.f; //high restitution seems to prevent initial contacts registering
+    info.m_friction = 0.4f; //hmm should this vary per ball?
+    //info.m_rollingFriction = 0.001f;
+    //info.m_spinningFriction = 0.005f;
 
     phys.body = std::make_unique<btRigidBody>(info);
     phys.body->setUserIndex(id);

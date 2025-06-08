@@ -141,7 +141,7 @@ void SBallGameState::render()
 //private
 void SBallGameState::loadAssets()
 {
-    m_environmentMap.loadFromFile("assets/images/hills.hdr");
+    m_environmentMap.loadFromFile("assets/images/indoor.hdr");
     //float previewX = -1.f;
     cro::ConfigFile cfg;
     if (cfg.loadFromFile("assets/arcade/sportsball/data/balls.dat"))
@@ -232,14 +232,18 @@ void SBallGameState::buildScene()
         {
             //TODO update shadow quality from settings
 
-            glm::vec2 size(cro::App::getWindow().getSize());
+            const glm::vec2 size(cro::App::getWindow().getSize());
+            const float ratio = size.x / size.y;
+            const float y = 1.2f;
+            const float x = y * ratio;
 
-            cam.setPerspective(60.f * cro::Util::Const::degToRad, size.x/size.y, 0.1f, 4.f);
+            //cam.setPerspective(60.f * cro::Util::Const::degToRad, size.x/size.y, 0.1f, 4.f);
+            cam.setOrthographic(-x / 2.f, x / 2.f, 0.f, y, 0.1f, 4.f);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
 
     auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.65f, 1.4f });
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, /*0.65f*/-0.1f, 1.4f });
 
     auto& cam = camEnt.getComponent<cro::Camera>();
     resize(cam);
@@ -251,7 +255,7 @@ void SBallGameState::buildScene()
 
 
     auto lightEnt = m_gameScene.getSunlight();
-    lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -65.f * cro::Util::Const::degToRad);
+    lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -45.f * cro::Util::Const::degToRad);
     lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -1.f * cro::Util::Const::degToRad);
 }
 
