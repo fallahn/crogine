@@ -563,7 +563,7 @@ and All Time best scores.)";
 
     static const std::array<std::string, 3u> ClubsetStrings =
     {
-        std::string("Casual"), "Expert", "Pro"
+        std::string("Casual"), "Regular", "Pro"
     };
 
     //club selection
