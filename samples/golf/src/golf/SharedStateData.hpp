@@ -101,7 +101,8 @@ static constexpr float MaxFOV = 90.f;
 
 enum class GameMode
 {
-    Career, FreePlay, Tutorial, Clubhouse, Tournament
+    Career, FreePlay, Tutorial, Clubhouse, Tournament,
+    Reset //use this to reset the main menu when quitting
 };
 
 struct SharedCourseData;

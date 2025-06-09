@@ -526,7 +526,7 @@ void PauseState::buildScene()
                         //this is a kludge which tells the
                         //menu state to remove any existing connection/server instance
                         //rather than disconnecting here which would raise an error message
-                        m_sharedData.gameMode = GameMode::Tutorial;
+                        m_sharedData.gameMode = GameMode::Reset;// Tutorial;
 
                         requestStackClear();
                         //requestStackPush(StateID::Menu);

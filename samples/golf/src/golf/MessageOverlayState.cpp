@@ -551,6 +551,38 @@ void MessageOverlayState::buildScene()
 
         menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
+    else if (m_sharedData.errorMessage == "more_info")
+    {
+        //entity.getComponent<cro::Transform>().move({ 0.f, 4.f });
+        entity.getComponent<cro::Text>().setString("Tutorial Complete!");
+        centreText(entity);
+
+        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position + glm::vec2(0.f, -4.f));
+        entity.addComponent<cro::Drawable2D>();
+        //entity.addComponent<cro::Text>(smallFont).setString("To add an opponent click\nAdd Player or Create Profile");
+        entity.addComponent<cro::Text>(smallFont).setString("A detailed player guide\ncan be found in the Options\nmenu under How To Play");
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        entity = createItem(glm::vec2(0.f, -26.f), "OK", menuEntity);
+        //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        quitState();
+                    }
+                });
+
+        m_sharedData.errorMessage.clear();
+    }
 
     else if (m_sharedData.errorMessage == "reset_profile")
     {
@@ -657,7 +689,7 @@ void MessageOverlayState::buildScene()
                         //this is a kludge which tells the
                         //menu state to remove any existing connection/server instance
                         //if for some reason we're resetting mid-game
-                        m_sharedData.gameMode = GameMode::Tutorial;
+                        m_sharedData.gameMode = GameMode::Reset;// Tutorial;
                         m_sharedData.leagueTable = 0; //must reset this else league browser tries to open non-existent table
                         m_sharedData.leagueRoundID = 0;
 

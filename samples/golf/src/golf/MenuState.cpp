@@ -329,6 +329,13 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             || sd.quickplayOpponents != 0 //we were playing quickplay
             || sd.activeTournament != TournamentIndex::NullVal) //or a tournament (although the above ought to be set to 1 in this case...)
         {
+            if (sd.gameMode == GameMode::Tutorial)
+            {
+                //show further tip
+                sd.errorMessage = "more_info";
+                requestStackPush(StateID::MessageOverlay);
+            }
+
             m_voiceChat.disconnect();
 
             sd.serverInstance.stop();
@@ -1012,7 +1019,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_PAGEUP:
             /*m_sharedData.useOSKBuffer = true;
             requestStackPush(StateID::Keyboard);*/
-
             break;
         case SDLK_PAUSE:
             if (evt.key.keysym.mod & KMOD_SHIFT)
