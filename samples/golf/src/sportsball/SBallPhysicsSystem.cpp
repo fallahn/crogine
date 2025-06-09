@@ -61,13 +61,13 @@ SBallPhysicsSystem::SBallPhysicsSystem(cro::MessageBus& mb)
         m_broadphaseInterface.get(),
         m_constraintSolver.get(),
         m_collisionConfiguration.get());
-    m_collisionWorld->setGravity({ 0.f, -9.9f, 0.f });
+    m_collisionWorld->setGravity({ 0.f, -9.8f, 0.f });
 
     //create the 'box' static shape
 
     btRigidBody::btRigidBodyConstructionInfo info(0.f, nullptr, &m_boxFloor, {0.f,0.f,0.f});
     info.m_restitution = 0.4f;
-    info.m_friction = 0.8f;
+    info.m_friction = 0.7f;
     info.m_rollingFriction = 0.001f;
     info.m_spinningFriction = 0.01f;
 
@@ -156,7 +156,7 @@ void SBallPhysicsSystem::process(float dt)
                 //we also want incidental collisions for sound effects etc
                 const auto& maniPoint = manifold->getContactPoint(j);
                 if (maniPoint.getLifeTime() == 1
-                    && maniPoint.getDistance() < 0.f)
+                    /*&& maniPoint.getDistance() < 0.f*/)
                 {
                     const auto a = btToGlm(maniPoint.getPositionWorldOnA());
                     const auto b = btToGlm(maniPoint.getPositionWorldOnB());
@@ -167,7 +167,7 @@ void SBallPhysicsSystem::process(float dt)
 
                     //this is a match
                     if (body0->getUserIndex() == body1->getUserIndex() &&
-                        !phys0->collisionHandled && !phys1->collisionHandled)
+                        (!phys0->collisionHandled || !phys1->collisionHandled))
                     {
                         phys0->collisionHandled = true;
                         phys1->collisionHandled = true;
@@ -178,7 +178,11 @@ void SBallPhysicsSystem::process(float dt)
                         msg->entityB = phys1->parent;
                         msg->position = pos;
                     }
-
+                    /*else
+                    {
+                        LogI << body0->getUserIndex() << ", " << body1->getUserIndex() << std::endl;
+                    }*/
+                    //LogI << maniPoint.getLifeTime() << std::endl;
                     //TODO event for generic sound
                 }
             }

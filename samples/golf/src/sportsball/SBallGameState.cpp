@@ -90,7 +90,7 @@ SBallGameState::SBallGameState(cro::StateStack& stack, cro::State::Context ctx, 
     : cro::State        (stack, ctx),
     m_sharedData        (ss),
     m_sharedGameData    (sd),
-    m_gameScene         (ctx.appInstance.getMessageBus()),
+    m_gameScene         (ctx.appInstance.getMessageBus(), 1024),
     m_uiScene           (ctx.appInstance.getMessageBus()),
     m_currentID         (cro::Util::Random::value(0, 3)),
     m_nextID            (cro::Util::Random::value(0, 3)),
@@ -106,6 +106,8 @@ SBallGameState::SBallGameState(cro::StateStack& stack, cro::State::Context ctx, 
 //public
 bool SBallGameState::handleEvent(const cro::Event& evt)
 {
+    //TODO we need to stop this once the game has ended
+
     switch (evt.type)
     {
     default: break;
@@ -184,7 +186,9 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
     case SDL_MOUSEBUTTONDOWN:
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
-            dropBall();
+            //TODO this should at least account for cursor pos
+            //set he drop pos, and check if it's in bounds
+            //dropBall();
         }
         break;
     case SDL_CONTROLLERAXISMOTION:
