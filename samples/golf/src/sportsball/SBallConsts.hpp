@@ -31,6 +31,12 @@ source distribution.
 
 #include "../scrub/ScrubConsts.hpp" //contains font stuff
 
+constexpr float BoxWidth = 0.8f;
+constexpr float BoxHeight = 1.f;
+constexpr float BoxDepth = 0.49f;
+
+constexpr float CursorHeight = BoxHeight + 0.01f;
+constexpr float OOB = CursorHeight + 0.01f;
 
 namespace sb
 {
@@ -38,7 +44,8 @@ namespace sb
     {
         enum
         {
-            CollisionMessage = cl::MessageID::Count * 300
+            CollisionMessage = cl::MessageID::Count * 300,
+            GameMessage
         };
     };
 
@@ -48,5 +55,13 @@ namespace sb
         cro::Entity entityB;
         std::int32_t ballID = -1;
         glm::vec3 position;
+    };
+
+    struct GameEvent final
+    {
+        enum
+        {
+            OutOfBounds
+        }type = OutOfBounds;
     };
 }

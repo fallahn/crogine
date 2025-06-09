@@ -1758,7 +1758,7 @@ will be given a score based on your overall accuracy. Good Luck!
             labelEnt.getComponent<cro::Text>().setString("Clubset: Casual");
             break;
         case 1:
-            labelEnt.getComponent<cro::Text>().setString("Clubset: Expert");
+            labelEnt.getComponent<cro::Text>().setString("Clubset: Regular");
             break;
         case 2:
             labelEnt.getComponent<cro::Text>().setString("Clubset: Pro");
@@ -1801,7 +1801,7 @@ will be given a score based on your overall accuracy. Good Luck!
                             labelEnt.getComponent<cro::Text>().setString("Clubset: Casual");
                             break;
                         case 1:
-                            labelEnt.getComponent<cro::Text>().setString("Clubset: Expert");
+                            labelEnt.getComponent<cro::Text>().setString("Clubset: Regular");
                             break;
                         case 2:
                             labelEnt.getComponent<cro::Text>().setString("Clubset: Pro");

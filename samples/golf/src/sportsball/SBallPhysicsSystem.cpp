@@ -38,11 +38,7 @@ source distribution.
 
 namespace
 {
-    constexpr float BoxWidth = 0.8f;
-    constexpr float BoxHeight = 1.f;
-    constexpr float BoxDepth = 0.49f;
-
-    constexpr float WallThickness = 0.5f;
+    //constexpr float WallThickness = 0.5f;
 }
 
 SBallPhysicsSystem::SBallPhysicsSystem(cro::MessageBus& mb)
@@ -130,9 +126,15 @@ void SBallPhysicsSystem::process(float dt)
         tx.setRotation(glm::quat_cast(mat));
 
         //remove anything that fell out of the world
-        if (tx.getPosition().y < -2.f)
+        /*if (tx.getPosition().y < -2.f)
         {
             getScene()->destroyEntity(entity);
+        }*/
+
+        if (tx.getPosition().y > OOB)
+        {
+            auto* msg = postMessage<sb::GameEvent>(sb::MessageID::GameMessage);
+            msg->type = sb::GameEvent::OutOfBounds;
         }
     }
 

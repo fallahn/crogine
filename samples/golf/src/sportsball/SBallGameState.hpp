@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 
+#include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -39,11 +40,12 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 
 struct SharedMinigameData;
+struct SharedStateData;
 class SBallGameState final : public cro::State, public cro::GuiClient
 {
 public:
 
-    SBallGameState(cro::StateStack&, cro::State::Context, SharedMinigameData&);
+    SBallGameState(cro::StateStack&, cro::State::Context, SharedStateData&, SharedMinigameData&);
 
     cro::StateID getStateID() const override { return StateID::SBallGame; }
 
@@ -53,6 +55,7 @@ public:
     void render() override;
 
 private:
+    SharedStateData& m_sharedData;
     SharedMinigameData& m_sharedGameData;
 
     cro::Scene m_gameScene;
@@ -61,11 +64,25 @@ private:
     cro::EnvironmentMap m_environmentMap;
 
     std::vector<cro::Entity> m_previewModels;
+    std::vector<cro::Entity> m_nextModels;
+
+    std::int32_t m_currentID;
+    std::int32_t m_nextID;
+
+    cro::Entity m_wheelEnt;
+    cro::Entity m_cursor;
+    std::uint16_t m_inputFlags;
+    float m_inputMultiplier; //speed ramp for finer input adjustment
 
     void loadAssets();
     void addSystems();
     void buildScene();
     void buildUI();
+
+    cro::Clock m_dropClock;
+    void dropBall();
+
+    void endGame();
 
     void onCachedPush() override;
     void onCachedPop() override;

@@ -174,7 +174,7 @@ ShadowMapRenderer::ShadowMapRenderer(MessageBus& mb)
             ImGui::Text("Render Count: %d", renderCount);
 
             ImGui::End();
-        });
+        }, true);
 #endif
 }
 
