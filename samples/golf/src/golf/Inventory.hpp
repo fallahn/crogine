@@ -150,6 +150,10 @@ namespace inv
                 {
                     LogW << "Failed writing loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
                 }
+                else
+                {
+                    LogI << "Updated loadout for " << profileID << std::endl;
+                }
             }
         }
     };

@@ -43,9 +43,10 @@ struct MixerChannel final
 {
     enum
     {
-        Music, Effects, Menu,
+        Music, UserMusic,
+        Effects, Menu,
         Voice, Vehicles, Environment,
-        UserMusic, TextToSpeech,
+        TextToSpeech,
 
         Count
     };

@@ -316,6 +316,8 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             {
                 m_menuEntities[EntityID::GearEditor].getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_activeProfile.loadout.write(m_activeProfile.playerData.profileID);
             }
             else if (groupID >= MenuID::Gear01
                 && groupID <= MenuID::Gear13)
@@ -5338,13 +5340,18 @@ std::pair<cro::Entity, cro::Entity> ProfileState::createBrowserBackground(std::i
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, entity](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, entity, menuID](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                     entity.getComponent<cro::Callback>().active = true;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    if (menuID == MenuID::GearEditor)
+                    {
+                        m_activeProfile.loadout.write(m_activeProfile.playerData.profileID);
+                    }
                 }
             });
 

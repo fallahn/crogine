@@ -133,12 +133,12 @@ namespace
     const std::array<cro::String, MixerChannel::Count> MixerLabels =
     {
         "Menu Music",
+        "Game Music",
         "Effects",
         "Menu Sounds",
-        "Voice",
+        "Voices",
         "Vehicles",
         "Environment",
-        "Game Music",
         "Text To Speech"
     };
     //generally static vars would be a bad idea, but in this case

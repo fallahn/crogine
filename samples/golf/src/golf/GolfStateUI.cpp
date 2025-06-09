@@ -593,7 +593,7 @@ void GolfState::buildUI()
     };
     nameEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //think bulb displayed when players are thinking
+    //light bulb displayed when players are thinking
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
@@ -1568,7 +1568,7 @@ void GolfState::buildUI()
     mapOffset = glm::normalize(mapOffset);
 
     m_mapRoot = m_uiScene.createEntity();
-    m_mapRoot.addComponent<cro::Transform>().setPosition({0.f, 0.f, 0.2f});
+    m_mapRoot.addComponent<cro::Transform>().setPosition({0.f, 0.f, 0.02f});
     m_mapRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_mapRoot.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 1);
     m_mapRoot.getComponent<cro::Callback>().function =
