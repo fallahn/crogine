@@ -68,8 +68,8 @@ SBallPhysicsSystem::SBallPhysicsSystem(cro::MessageBus& mb)
 
     btRigidBody::btRigidBodyConstructionInfo info(0.f, nullptr, &m_boxFloor, {0.f,0.f,0.f});
     info.m_restitution = 0.4f;
-    info.m_friction = 0.7f;
-    info.m_rollingFriction = 0.001f;
+    info.m_friction = 0.9f;
+    info.m_rollingFriction = 0.003f;
     info.m_spinningFriction = 0.01f;
 
     auto& b0 = m_box.emplace_back(std::make_unique<btRigidBody>(info));
@@ -180,8 +180,9 @@ void SBallPhysicsSystem::process(float dt)
                     //raise non-matching events too so we can play audio
                     if (body0->getUserIndex() == body1->getUserIndex())
                     {
-                        phys0->collisionHandled = true;
-                        phys1->collisionHandled = true;
+                        //this is set in message handler
+                        /*phys0->collisionHandled = true;
+                        phys1->collisionHandled = true;*/
                         msg->type = sb::CollisionEvent::Match;
                     }
                     else
@@ -229,7 +230,7 @@ void SBallPhysicsSystem::spawnBall(std::int32_t id, glm::vec3 position)
 
     btRigidBody::btRigidBodyConstructionInfo info(Data.mass, nullptr, shape.get(), inertia);
     info.m_restitution = Data.restititution / 8.f; //high restitution seems to prevent initial contacts registering
-    info.m_friction = 0.4f; //hmm should this vary per ball?
+    info.m_friction = 0.6f; //hmm should this vary per ball?
     //info.m_rollingFriction = 0.001f;
     //info.m_spinningFriction = 0.005f;
 

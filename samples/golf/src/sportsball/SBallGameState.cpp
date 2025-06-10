@@ -104,6 +104,11 @@ SBallGameState::SBallGameState(cro::StateStack& stack, cro::State::Context ctx, 
     loadAssets();
     buildScene();
     buildUI();
+
+#ifdef CRO_DEBUG_
+    onCachedPush();
+#endif
+
 }
 
 //public
@@ -111,6 +116,20 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
 {
     if (m_gameEnded)
     {
+        const auto restart = 
+            [&]()
+            {
+                onCachedPop();
+                onCachedPush();
+            };
+
+        const auto quit = 
+            [&]()
+            {
+                requestStackPop();
+                requestStackPush(StateID::SBallAttract);
+            };
+
         if (m_roundEndClock.elapsed() > RoundEndTime)
         {
             switch (evt.type)
@@ -119,16 +138,25 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
             case SDL_KEYUP:
                 if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
                 {
-                    requestStackPop();
-                    requestStackPush(StateID::SBallAttract);
+                    //restart the game
+                    restart();
+                }
+                else if (evt.key.keysym.sym == SDLK_ESCAPE)
+                {
+                    quit();
                 }
                 break;
             case SDL_CONTROLLERBUTTONUP:
-                if (cro::GameController::controllerID(evt.cbutton.which) == 0
-                    && evt.cbutton.button == cro::GameController::ButtonA)
+                if (cro::GameController::controllerID(evt.cbutton.which) == 0)
                 {
-                    requestStackPop();
-                    requestStackPush(StateID::SBallAttract);
+                    if (evt.cbutton.button == evt.cbutton.button == cro::GameController::ButtonA)
+                    {
+                        restart();
+                    }
+                    else
+                    {
+                        quit();
+                    }
                 }
                 break;
             }
@@ -264,32 +292,42 @@ void SBallGameState::handleMessage(const cro::Message& msg)
             && data.entityB.isValid())
         {
             auto a = data.entityA;
-            a.getComponent<SBallPhysics>().collisionHandled = true;
-
             auto b = data.entityB;
-            b.getComponent<SBallPhysics>().collisionHandled = true;
 
+            auto& phys0 = a.getComponent<SBallPhysics>();
+            auto& phys1 = b.getComponent<SBallPhysics>();
 
-            if (data.type == sb::CollisionEvent::Match)
+            //if (!phys0.collisionHandled && !phys1.collisionHandled)
             {
-                m_gameScene.destroyEntity(data.entityA);
-                m_gameScene.destroyEntity(data.entityB);
+                phys0.collisionHandled = true;
+                phys1.collisionHandled = true;
 
-                const auto oldScore = m_sharedGameData.score.score;
-                m_sharedGameData.score.score += (5 * data.ballID) * 2;
 
-                if (data.ballID < BallID::Count - 1)
+                if (data.type == sb::CollisionEvent::Match)
                 {
-                    m_gameScene.getSystem<SBallPhysicsSystem>()->spawnBall(data.ballID + 1, data.position);
-                    m_sharedGameData.score.score += 10 * (data.ballID + 1);
-                }
+                    m_gameScene.destroyEntity(data.entityA);
+                    m_gameScene.destroyEntity(data.entityB);
 
-                if (m_sharedGameData.score.score > m_sharedGameData.score.personalBest)
-                {
-                    m_sharedGameData.score.personalBest = m_sharedGameData.score.score;
-                }
+                    const auto oldScore = m_sharedGameData.score.score;
+                    m_sharedGameData.score.score += (1 * data.ballID) * 2;
 
-                floatingScore(m_sharedGameData.score.score - oldScore, data.position);
+                    if (data.ballID < BallID::Count - 1)
+                    {
+                        m_gameScene.getSystem<SBallPhysicsSystem>()->spawnBall(data.ballID + 1, data.position);
+                        m_sharedGameData.score.score += 2 * (data.ballID + 1);
+                    }
+                    else
+                    {
+                        //this is a beachball TODO trigger some UI effect
+                    }
+
+                    if (m_sharedGameData.score.score > m_sharedGameData.score.personalBest)
+                    {
+                        m_sharedGameData.score.personalBest = m_sharedGameData.score.score;
+                    }
+
+                    floatingScore(m_sharedGameData.score.score - oldScore, data.position);
+                }
             }
         }
     }
@@ -621,8 +659,7 @@ void SBallGameState::buildUI()
     scoreRoot.getComponent<cro::Transform>().addChild(scoreVal.getComponent<cro::Transform>());
     m_scoreEntity = scoreVal;
     
-    std::string scoreStr = std::to_string(m_sharedGameData.score.score) + "\n\nPersonal Best:\n" + std::to_string(m_sharedGameData.score.personalBest);
-    m_scoreEntity.getComponent<cro::Text>().setString(scoreStr);
+    updateScoreString();
 
 
 
@@ -667,10 +704,46 @@ void SBallGameState::buildUI()
     m_roundEndEntity = roundEndRoot;
 
 
-    //TODO background fade
-    //TODO round end text
-    //TODO score summary
+    //background fade
+    const cro::Colour c(0.f, 0.f, 0.f, BackgroundAlpha);
+    auto bgEnt = m_uiScene.createEntity();
+    bgEnt.addComponent<cro::Transform>();
+    bgEnt.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-0.5f, 0.5f), c),
+            cro::Vertex2D(glm::vec2(-0.5f), c),
+            cro::Vertex2D(glm::vec2(0.5f), c),
+            cro::Vertex2D(glm::vec2(0.5f, -0.5f), c),
+        });
+    bgEnt.addComponent<cro::Callback>().active = true;
+    bgEnt.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+        {
+            const auto size = glm::vec2(cro::App::getWindow().getSize());
+            e.getComponent<cro::Transform>().setScale(size);
+        };
+    roundEndRoot.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
 
+    //round end text
+    auto textEnt = m_uiScene.createEntity();
+    textEnt.addComponent<cro::Transform>();
+    textEnt.addComponent<cro::Drawable2D>();
+    textEnt.addComponent<cro::Text>(font).setString("Game Over");
+    textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    textEnt.addComponent<cro::UIElement>(cro::UIElement::Text, true);
+    textEnt.getComponent<cro::UIElement>().characterSize = LargeTextSize;
+    textEnt.getComponent<cro::UIElement>().depth = 0.1f;
+    textEnt.getComponent<cro::UIElement>().resizeCallback =
+        [](cro::Entity e)
+        {
+            const auto size = glm::vec2(cro::App::getWindow().getSize());
+            e.getComponent<cro::UIElement>().absolutePosition.y = (size.y / 4.f) / cro::UIElementSystem::getViewScale();
+        };
+    roundEndRoot.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
+
+    //TODO score summary
+    //TODO set correct input based on controller/keyb
 
 
     auto resize = [](cro::Camera& cam)
@@ -776,6 +849,11 @@ void SBallGameState::floatingScore(std::int32_t score, glm::vec3 pos)
 
 
     //update the score UI element here too
+    updateScoreString();
+}
+
+void SBallGameState::updateScoreString()
+{
     std::string scoreStr = std::to_string(m_sharedGameData.score.score) + "\n\nPersonal Best:\n" + std::to_string(m_sharedGameData.score.personalBest);
     m_scoreEntity.getComponent<cro::Text>().setString(scoreStr);
 }
@@ -806,6 +884,7 @@ void SBallGameState::onCachedPush()
     m_cursor.getComponent<cro::Transform>().setPosition(pos);
 
     m_sharedGameData.score.score = 0;
+    updateScoreString();
 
     m_gameScene.setSystemActive<SBallPhysicsSystem>(true);
     m_gameScene.getSystem<SBallPhysicsSystem>()->clearBalls();

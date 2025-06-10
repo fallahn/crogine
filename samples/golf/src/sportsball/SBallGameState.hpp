@@ -85,6 +85,7 @@ private:
     cro::Entity m_scoreEntity;
     cro::Entity m_roundEndEntity;
     void floatingScore(std::int32_t score, glm::vec3 pos);
+    void updateScoreString();
 
     bool m_gameEnded;
     cro::Clock m_roundEndClock;
