@@ -39,6 +39,7 @@ source distribution.
 namespace
 {
     //constexpr float WallThickness = 0.5f;
+    constexpr float CollisionMargin = 0.004f;
 }
 
 SBallPhysicsSystem::SBallPhysicsSystem(cro::MessageBus& mb)
@@ -113,7 +114,9 @@ void SBallPhysicsSystem::process(float dt)
 
     for (auto entity : getEntities())
     {
-        const auto& body = entity.getComponent<SBallPhysics>();
+        auto& body = entity.getComponent<SBallPhysics>();
+        body.collisionHandled = false; //reset for this frame to allow new collisions
+
         auto& tx = entity.getComponent<cro::Transform>();
 
         CRO_ASSERT(body.body, "");
@@ -145,45 +148,47 @@ void SBallPhysicsSystem::process(float dt)
         auto body0 = manifold->getBody0();
         auto body1 = manifold->getBody1();
 
-        manifold->refreshContactPoints(body0->getWorldTransform(), body1->getWorldTransform());
+        auto* phys0 = reinterpret_cast<SBallPhysics*>(body0->getUserPointer());
+        auto* phys1 = reinterpret_cast<SBallPhysics*>(body1->getUserPointer());
+
+        const auto id0 = body0->getUserIndex();
+        const auto id1 = body1->getUserIndex();
         
-        //if (body0->getUserIndex() == body1->getUserIndex())
+        //*sigh* we actually get better results if we test this ourself
+        //bullet seems to fail to report some collision, even though balls
+        //are bouncing off each other.
+        if (id0 > -1 && id1 > -1)
         {
-            auto contactCount = manifold->getNumContacts();
-            for (auto j = 0; j < contactCount; ++j)
+            const auto pos0 = phys0->parent.getComponent<cro::Transform>().getPosition();
+            const auto pos1 = phys1->parent.getComponent<cro::Transform>().getPosition();
+            const auto l2 = glm::length2(pos0 - pos1);
+
+            auto minDist = phys0->rad + phys1->rad;
+            minDist *= minDist;
+
+            if (l2 < minDist)
             {
-                //OK this is fine if we want to remove this pair - however
-                //we also want incidental collisions for sound effects etc
-                const auto& maniPoint = manifold->getContactPoint(j);
-                if (maniPoint.getLifeTime() == 1
-                    /*&& maniPoint.getDistance() < 0.f*/)
+                //ignore this if one object has a collision already - TODO fix this
+                //if ((!phys0->collisionHandled && !phys1->collisionHandled))
                 {
-                    const auto a = btToGlm(maniPoint.getPositionWorldOnA());
-                    const auto b = btToGlm(maniPoint.getPositionWorldOnB());
-                    const auto pos = a + ((b - a) / 2.f);
+                    auto* msg = postMessage<sb::CollisionEvent>(sb::MessageID::CollisionMessage);
+                    msg->ballID = body0->getUserIndex();
+                    msg->entityA = phys0->parent;
+                    msg->entityB = phys1->parent;
+                    msg->position = pos0 + ((pos1 - pos0) / 2.f);
 
-                    auto* phys0 = reinterpret_cast<SBallPhysics*>(body0->getUserPointer());
-                    auto* phys1 = reinterpret_cast<SBallPhysics*>(body1->getUserPointer());
-
-                    //this is a match
-                    if (body0->getUserIndex() == body1->getUserIndex() &&
-                        (!phys0->collisionHandled || !phys1->collisionHandled))
+                    //raise non-matching events too so we can play audio
+                    if (body0->getUserIndex() == body1->getUserIndex())
                     {
                         phys0->collisionHandled = true;
                         phys1->collisionHandled = true;
-
-                        auto* msg = postMessage<sb::CollisionEvent>(sb::MessageID::CollisionMessage);
-                        msg->ballID = body0->getUserIndex();
-                        msg->entityA = phys0->parent;
-                        msg->entityB = phys1->parent;
-                        msg->position = pos;
+                        msg->type = sb::CollisionEvent::Match;
                     }
-                    /*else
+                    else
                     {
-                        LogI << body0->getUserIndex() << ", " << body1->getUserIndex() << std::endl;
-                    }*/
-                    //LogI << maniPoint.getLifeTime() << std::endl;
-                    //TODO event for generic sound
+                        //perhaps we need to include velocity so we only play audio on high impact?
+                        msg->type = sb::CollisionEvent::Default;
+                    }
                 }
             }
         }
@@ -220,6 +225,7 @@ void SBallPhysicsSystem::spawnBall(std::int32_t id, glm::vec3 position)
     shape->calculateLocalInertia(Data.mass, inertia);
     auto& phys = entity.addComponent<SBallPhysics>();
     phys.id = id;
+    phys.rad = Data.radius + CollisionMargin;
 
     btRigidBody::btRigidBodyConstructionInfo info(Data.mass, nullptr, shape.get(), inertia);
     info.m_restitution = Data.restititution / 8.f; //high restitution seems to prevent initial contacts registering

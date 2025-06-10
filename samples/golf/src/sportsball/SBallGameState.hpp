@@ -82,6 +82,12 @@ private:
     cro::Clock m_dropClock;
     void dropBall();
 
+    cro::Entity m_scoreEntity;
+    cro::Entity m_roundEndEntity;
+    void floatingScore(std::int32_t score, glm::vec3 pos);
+
+    bool m_gameEnded;
+    cro::Clock m_roundEndClock;
     void endGame();
 
     void onCachedPush() override;

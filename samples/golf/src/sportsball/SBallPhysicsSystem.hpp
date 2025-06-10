@@ -47,6 +47,7 @@ struct SBallPhysics final
     std::int32_t id = -1;
     std::unique_ptr<btRigidBody> body;
 
+    float rad = 0.f;
     bool collisionHandled = false;
     cro::Entity parent;
 };

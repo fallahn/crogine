@@ -38,6 +38,9 @@ constexpr float BoxDepth = 0.49f;
 constexpr float CursorHeight = BoxHeight + 0.01f;
 constexpr float OOB = CursorHeight + 0.01f;
 
+constexpr float WheelHeight = 0.2f;
+constexpr float NextBallHeight = CursorHeight - 0.1f;
+
 namespace sb
 {
     struct MessageID final
@@ -55,6 +58,11 @@ namespace sb
         cro::Entity entityB;
         std::int32_t ballID = -1;
         glm::vec3 position;
+
+        enum
+        {
+            Match, Default
+        }type = Match;
     };
 
     struct GameEvent final

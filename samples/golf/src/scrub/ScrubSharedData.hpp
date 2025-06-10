@@ -41,6 +41,12 @@ namespace cro
 //also used for other minigames such as Sportsball
 struct SharedMinigameData final
 {
+    struct ScoreData final
+    {
+        std::int32_t score = 0;
+        std::int32_t personalBest = 0;
+    }score;
+
     cro::RenderTexture* backgroundTexture = nullptr;
     std::unique_ptr<cro::FontResource> fonts;
 

@@ -37,6 +37,8 @@ SBallBackgroundState::SBallBackgroundState(cro::StateStack& stack, cro::State::C
 {
     ctx.mainWindow.loadResources([&]()
         {
+            sd.initFonts();
+
             cacheState(StateID::SBallGame);
             //cacheState(StateID::SBallAttract);
             //cacheState(StateID::ScrubPause);
