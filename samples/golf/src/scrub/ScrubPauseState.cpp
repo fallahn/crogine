@@ -67,6 +67,10 @@ bool ScrubPauseState::handleEvent(const cro::Event& evt)
         {
             requestStackPop();
             requestStackPop();
+
+            //game background states detect this via message
+            //and push their own attract state so we can
+            //recycle the pause state in multple games
         };
 
     if (evt.type == SDL_KEYDOWN)

@@ -156,7 +156,8 @@ static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, 
 
 static constexpr cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
 static constexpr cro::Colour SkyTop(0.678f, 0.851f, 0.718f);
-static constexpr cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
+//static constexpr cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
+static constexpr cro::Colour SkyBottom(0.15294f, 0.2196f, 0.6f);
 static constexpr cro::Colour SkyNight(std::uint8_t(101), 103, 178);
 //static constexpr cro::Colour SkyNight(std::uint8_t(69), 71, 130);
 static constexpr cro::Colour DropShadowColour(0.396f, 0.263f, 0.184f);

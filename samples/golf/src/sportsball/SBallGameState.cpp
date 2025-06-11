@@ -27,9 +27,11 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "../Colordome-32.hpp"
 #include "../golf/GameConsts.hpp"
 #include "../golf/SharedStateData.hpp"
 #include "../scrub/ScrubSharedData.hpp"
+#include "../scrub/ScrubConsts.hpp"
 #include "SBallGameState.hpp"
 #include "SBallPhysicsSystem.hpp"
 #include "SBallConsts.hpp"
@@ -63,6 +65,24 @@ source distribution.
 
 namespace
 {
+    cro::String InputKeyb(const InputBinding& ib)
+    {
+        return cro::Keyboard::keyString(ib.keys[InputBinding::Left]) + "/" + cro::Keyboard::keyString(ib.keys[InputBinding::Right]) + ": Move     "
+            + cro::Keyboard::keyString(ib.keys[InputBinding::Action]) + ": Drop     Escape: Pause/Quit";
+    }
+    const cro::String InputPS = cro::String(LeftStick) + " Move     " + cro::String(ButtonCross) + " Drop     " + cro::String(ButtonOption) + " Pause/Quit";
+    const cro::String InputXBox = cro::String(LeftStick) + " Move     " + cro::String(ButtonA) + " Drop     " + cro::String(ButtonStart) + " Pause/Quit";
+
+    //given the ubiquity of this IDK why I keep on redefining it
+    struct InputType final
+    {
+        enum
+        {
+            Keyboard, PS, XBox
+        };
+    };
+    std::int32_t lastInput = InputType::Keyboard;
+
     const cro::Time DropTime = cro::seconds(0.5f);
     const cro::Time RoundEndTime = cro::seconds(2.5f);
     constexpr float MinMultiplier = 0.2f;
@@ -164,6 +184,12 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
     }
     else
     {
+        const auto pause =
+            [&]()
+            {
+                requestStackPush(StateID::ScrubPause);
+            };
+
         switch (evt.type)
         {
         default: break;
@@ -199,7 +225,7 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
             default: break;
             case SDLK_BACKSPACE:
             case SDLK_ESCAPE:
-                //TODO push pause state
+                pause();
                 break;
 #ifdef CRO_DEBUG_
             case SDLK_p:
@@ -234,7 +260,7 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
                     dropBall();
                     break;
                 case cro::GameController::ButtonStart:
-                    //TODO puah pause state
+                    pause();
                     break;
                 case cro::GameController::DPadLeft:
                     m_inputFlags |= InputFlag::Left;
@@ -278,6 +304,45 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
             break;
         }
     }
+
+    //update interface regardless
+    if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
+    }
+    else
+    {
+        switch (evt.type)
+        {
+        default:
+
+            break;
+        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL_CONTROLLERBUTTONUP:
+        case SDL_CONTROLLERAXISMOTION:
+            cro::App::getWindow().setMouseCaptured(true);
+
+            if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)))
+            {
+                m_controlTextEntity.getComponent<cro::Text>().setString(InputPS);
+                lastInput = InputType::PS;
+            }
+            else
+            {
+                m_controlTextEntity.getComponent<cro::Text>().setString(InputXBox);
+                lastInput = InputType::XBox;
+            }
+            break;
+        case SDL_KEYDOWN:
+        case SDL_KEYUP:
+            cro::App::getWindow().setMouseCaptured(true);
+            m_controlTextEntity.getComponent<cro::Text>().setString(InputKeyb(m_sharedData.inputBinding));
+            lastInput = InputType::Keyboard;
+            break;
+        }
+    }
+
+
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
     return false;
@@ -688,9 +753,63 @@ void SBallGameState::buildUI()
 
     //right side is next ball and wheel of evo. These have fixed world
     //positions so we should be able to line up the text relatively easily
+    auto nextText = m_uiScene.createEntity();
+    nextText.addComponent<cro::Transform>();
+    nextText.addComponent<cro::Drawable2D>();
+    nextText.addComponent<cro::Text>(font).setString("Next");
+    nextText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    nextText.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    nextText.addComponent<cro::UIElement>(cro::UIElement::Type::Text, true);
+    nextText.getComponent<cro::UIElement>().characterSize = sc::MediumTextSize;
 
+    nextText.addComponent<cro::Callback>().active = true;
+    nextText.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const auto pos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(m_nextModels[0].getComponent<cro::Transform>().getPosition());
+            e.getComponent<cro::Transform>().setPosition(pos - glm::vec2(0.f, 24.f * cro::UIElementSystem::getViewScale()));
+        };
 
     //ribbon along bottom diplays controls keyb/xbox/ps
+    auto ribbonRoot = m_uiScene.createEntity();
+    ribbonRoot.addComponent<cro::Transform>();
+    ribbonRoot.addComponent<cro::UIElement>(cro::UIElement::Position, true).relativePosition = { 0.5f, 1.f };
+
+    static constexpr float RibbonHeight = 20.f;
+    auto ribbonBG = m_uiScene.createEntity();
+    ribbonBG.addComponent<cro::Transform>();
+    ribbonBG.addComponent<cro::Drawable2D>();
+    ribbonBG.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    ribbonBG.getComponent<cro::UIElement>().depth = -0.2f;
+    ribbonBG.getComponent<cro::UIElement>().absolutePosition = { 0.f, -RibbonHeight };
+    ribbonBG.getComponent<cro::UIElement>().resizeCallback =
+        [](cro::Entity e)
+        {
+            const float width = cro::App::getWindow().getSize().x / cro::UIElementSystem::getViewScale();
+
+            const auto c = CD32::Colours[CD32::Brown];
+            e.getComponent<cro::Drawable2D>().setVertexData({
+                    cro::Vertex2D(glm::vec2(-(width / 2.f), RibbonHeight), c),
+                    cro::Vertex2D(glm::vec2(-(width / 2.f), 0.f), c),
+                    cro::Vertex2D(glm::vec2(width / 2.f, RibbonHeight), c),
+                    cro::Vertex2D(glm::vec2(width / 2.f, 0.f), c),
+                });
+        };
+
+    ribbonRoot.getComponent<cro::Transform>().addChild(ribbonBG.getComponent<cro::Transform>());
+
+
+    auto ribbonText = m_uiScene.createEntity();
+    ribbonText.addComponent<cro::Transform>();
+    ribbonText.addComponent<cro::Drawable2D>();
+    ribbonText.addComponent<cro::Text>(font).setString(/*InputKeyb(m_sharedData.inputBinding)*/InputXBox);
+    ribbonText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    ribbonText.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    ribbonText.addComponent<cro::UIElement>(cro::UIElement::Text, true).characterSize = sc::SmallTextSize;
+    ribbonText.getComponent<cro::UIElement>().depth = 0.1f;
+    ribbonText.getComponent<cro::UIElement>().absolutePosition = { 0.f, -4.f };
+    ribbonRoot.getComponent<cro::Transform>().addChild(ribbonText.getComponent<cro::Transform>());
+    m_controlTextEntity = ribbonText;
 
 
 
@@ -701,6 +820,24 @@ void SBallGameState::buildUI()
     roundEndRoot.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     roundEndRoot.addComponent<cro::UIElement>(cro::UIElement::Position, true).relativePosition = { 0.5f, 0.5f };
     roundEndRoot.getComponent<cro::UIElement>().depth = 2.f;
+    
+    roundEndRoot.addComponent<cro::Callback>().setUserData<float>(0.f);
+    roundEndRoot.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
+            progress = std::min(1.f, progress + dt);
+
+            const auto scale = cro::Util::Easing::easeOutBounce(progress);
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+            if (progress == 1)
+            {
+                progress = 0.f;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
+    
     m_roundEndEntity = roundEndRoot;
 
 
@@ -742,8 +879,26 @@ void SBallGameState::buildUI()
         };
     roundEndRoot.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
 
-    //TODO score summary
-    //TODO set correct input based on controller/keyb
+    //score summary
+    textEnt = m_uiScene.createEntity();
+    textEnt.addComponent<cro::Transform>();
+    textEnt.addComponent<cro::Drawable2D>();
+    textEnt.addComponent<cro::Text>(font).setString("You Scored: 123456\nSpace: Restart  -  Esc Quit");
+    textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    textEnt.addComponent<cro::UIElement>(cro::UIElement::Text, true);
+    textEnt.getComponent<cro::UIElement>().characterSize = MediumTextSize;
+    textEnt.getComponent<cro::UIElement>().depth = 0.1f;
+    textEnt.getComponent<cro::UIElement>().resizeCallback =
+        [](cro::Entity e)
+        {
+            /*const auto size = glm::vec2(cro::App::getWindow().getSize());
+            e.getComponent<cro::UIElement>().absolutePosition.y = (size.y / 4.f) / cro::UIElementSystem::getViewScale();*/
+        };
+    roundEndRoot.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
+    m_endScoreTextEntity = textEnt;
+
+    //TODO personal best text to flash when appropriate
 
 
     auto resize = [](cro::Camera& cam)
@@ -870,10 +1025,29 @@ void SBallGameState::endGame()
     m_gameScene.getActiveCamera().getComponent<cro::Callback>().setUserData<float>(1.f);
     m_gameScene.getActiveCamera().getComponent<cro::Callback>().active = true;
 
-    //TODO show score summary / post scores to leaderboard
+    //show score summary 
+    //TODO post scores to leaderboard
+    cro::String scoreText = "Score: " + std::to_string(m_sharedGameData.score.score) + "\n\n";
+    switch (lastInput)
+    {
+    default:
+        scoreText += "Restart: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + "  -  " + "Quit: Escape";
+        break;
+    case InputType::PS:
+        scoreText += "Restart: " + cro::String(ButtonCross) + "  -  " + "Quit: " + cro::String(ButtonCircle);
+        break;
+    case InputType::XBox:
+        scoreText += "Restart: " + cro::String(ButtonA) + "  -  " + "Quit: " + cro::String(ButtonB);
+        break;
+    }
+    m_endScoreTextEntity.getComponent<cro::Text>().setString(scoreText);
 
+    //TODO show PB text if needed
     
-    m_roundEndEntity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    //TODO swap this for transition anim
+    //m_roundEndEntity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    m_roundEndEntity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    m_roundEndEntity.getComponent<cro::Callback>().active = true;
 }
 
 void SBallGameState::onCachedPush()
@@ -889,6 +1063,76 @@ void SBallGameState::onCachedPush()
     m_gameScene.setSystemActive<SBallPhysicsSystem>(true);
     m_gameScene.getSystem<SBallPhysicsSystem>()->clearBalls();
     m_gameEnded = false;
+
+    //hacky intro text
+    const auto size = glm::vec2(cro::App::getWindow().getSize());
+    const auto& font = m_sharedGameData.fonts->get(sc::FontID::Title);
+    const auto viewScale = cro::UIElementSystem::getViewScale();
+
+    auto ent = m_uiScene.createEntity();
+    ent.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, 1.f));
+    ent.addComponent<cro::Drawable2D>();
+    ent.addComponent<cro::Text>(font).setString("Ready!");
+    ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    ent.getComponent<cro::Text>().setCharacterSize(sc::LargeTextSize * viewScale);
+
+    struct CBData final
+    {
+        float progress = 0.f;
+        std::int32_t state = 0;
+    };
+
+    ent.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    ent.addComponent<cro::Callback>().active = true;
+    ent.getComponent<cro::Callback>().setUserData<CBData>();
+    ent.getComponent<cro::Callback>().function =
+        [&, size, viewScale](cro::Entity e, float dt)
+        {
+            auto& [progress, state] = e.getComponent<cro::Callback>().getUserData<CBData>();
+            
+            if (state == 0)
+            {
+                //zoom in
+                progress = std::min(1.f, progress + (dt * 3.f));
+
+                const float scale = cro::Util::Easing::easeOutBounce(progress);
+                e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+
+                if (progress == 1)
+                {
+                    state = 1;
+                }
+            }
+            else if (state == 1)
+            {
+                progress = std::max(0.f, progress - dt);
+                if (progress == 0)
+                {
+                    state = 2;
+                    e.getComponent<cro::Text>().setString("GO!");
+                }
+            }
+            else if (state == 2)
+            {
+                progress = std::min(1.f, progress + dt);
+                if (progress == 1)
+                {
+                    state = 3;
+                }
+            }
+            else
+            {
+                //move off screen
+                e.getComponent<cro::Transform>().move({ -(3200.f * viewScale) * dt, 0.f });
+                if (e.getComponent<cro::Transform>().getPosition().x < -size.x)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
+            }
+        };
+
 }
 
 void SBallGameState::onCachedPop()

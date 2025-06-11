@@ -41,7 +41,7 @@ SBallBackgroundState::SBallBackgroundState(cro::StateStack& stack, cro::State::C
 
             cacheState(StateID::SBallGame);
             //cacheState(StateID::SBallAttract);
-            //cacheState(StateID::ScrubPause);
+            cacheState(StateID::ScrubPause);
         });
 #ifdef CRO_DEBUG_
     requestStackPush(StateID::SBallGame);
@@ -70,9 +70,17 @@ bool SBallBackgroundState::handleEvent(const cro::Event&)
     return false;
 }
 
-void SBallBackgroundState::handleMessage(const cro::Message&)
+void SBallBackgroundState::handleMessage(const cro::Message& msg)
 {
-
+    if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped
+            && data.id == StateID::SBallGame)
+        {
+            requestStackPush(StateID::SBallAttract);
+        }
+    }
 }
 
 bool SBallBackgroundState::simulate(float)
