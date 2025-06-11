@@ -430,7 +430,7 @@ bool SBallGameState::simulate(float dt)
         }
         pos += move * m_inputMultiplier * dt;
 
-        const float padding = m_previewModels[m_currentID].getComponent<cro::Transform>().getScale().x + 0.01f;
+        constexpr float padding = 0.07f;// m_previewModels[3].getComponent<cro::Transform>().getScale().x + 0.01f;
         const float maxBounds = (BoxWidth / 2.f) - padding;
         pos.x = std::clamp(pos.x, -maxBounds, maxBounds);
 

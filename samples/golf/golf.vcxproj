@@ -1026,6 +1026,7 @@
     <ClInclude Include="src\sockets\IXWebSocketVersion.h" />
     <ClInclude Include="src\SplashScreenState.hpp" />
     <ClInclude Include="src\sportsball\BallType.hpp" />
+    <ClInclude Include="src\sportsball\SBallAttractState.hpp" />
     <ClInclude Include="src\sportsball\SBallBackgroundState.hpp" />
     <ClInclude Include="src\sportsball\SBallConsts.hpp" />
     <ClInclude Include="src\sportsball\SBallGameState.hpp" />

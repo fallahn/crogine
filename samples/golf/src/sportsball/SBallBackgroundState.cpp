@@ -40,11 +40,12 @@ SBallBackgroundState::SBallBackgroundState(cro::StateStack& stack, cro::State::C
             sd.initFonts();
 
             cacheState(StateID::SBallGame);
-            //cacheState(StateID::SBallAttract);
+            cacheState(StateID::SBallAttract);
             cacheState(StateID::ScrubPause);
         });
 #ifdef CRO_DEBUG_
-    requestStackPush(StateID::SBallGame);
+    //requestStackPush(StateID::SBallGame);
+    requestStackPush(StateID::SBallAttract);
 #else
     requestStackPush(StateID::SBallAttract);
 #endif
