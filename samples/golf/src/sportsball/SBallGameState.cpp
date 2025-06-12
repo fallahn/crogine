@@ -79,6 +79,38 @@ namespace
     const cro::Time RoundEndTime = cro::seconds(2.5f);
     constexpr float MinMultiplier = 0.2f;
 
+    struct FloatingTextAnim final
+    {
+        FloatingTextAnim(cro::Scene& s, const float vs)
+            : scene(s), viewScale(vs) { }
+
+        cro::Scene& scene;
+        const float viewScale = 1.f;
+        float ct = 1.f;
+
+        void operator()(cro::Entity e, float dt)
+        {
+            ct = std::max(0.f, ct - dt);
+
+            auto c = TextNormalColour;
+            c.setAlpha(ct);
+            e.getComponent<cro::Text>().setFillColour(c);
+
+            c = LeaderboardTextDark;
+            c.setAlpha(ct);
+            e.getComponent<cro::Text>().setShadowColour(c);
+
+            const float speed = 10.f * viewScale;
+            e.getComponent<cro::Transform>().move({ 0.f, speed * dt });
+
+            if (ct == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                scene.destroyEntity(e);
+            }
+        }
+    };
+
     struct ExpandAnim final
     {
         explicit ExpandAnim(float r) : rad(r) {}
@@ -399,8 +431,7 @@ void SBallGameState::handleMessage(const cro::Message& msg)
                     }
                     else
                     {
-                        //this is a beachball TODO trigger some UI effect
-                        m_sharedGameData.score.level++;
+                        levelUp();
                     }
 
                     score *= m_sharedGameData.score.level;
@@ -413,11 +444,11 @@ void SBallGameState::handleMessage(const cro::Message& msg)
 
                     floatingScore(score, data.position);
                 }
-                else if (data.type == sb::CollisionEvent::FastCol)
-                {
-                    //TODO move this to audio director
-                    LogI << data.ballID << ": boink!" << std::endl;
-                }
+                //else if (data.type == sb::CollisionEvent::FastCol)
+                //{
+                //    //TODO move this to audio director
+                //    LogI << data.ballID << ": boink!" << std::endl;
+                //}
             }
         }
     }
@@ -1005,36 +1036,13 @@ void SBallGameState::floatingScore(std::int32_t score, glm::vec3 pos)
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(std::to_string(score));
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.getComponent<cro::Text>().setCharacterSize(sc::SmallTextSize * viewScale);
+    entity.getComponent<cro::Text>().setCharacterSize(sc::MediumTextSize * viewScale);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    entity.getComponent<cro::Text>().setShadowOffset(sc::SmallTextOffset * viewScale);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset * viewScale);
 
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
-    entity.getComponent<cro::Callback>().function =
-        [&, viewScale](cro::Entity e, float dt)
-        {
-            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
-            ct = std::max(0.f, ct - dt);
-
-            auto c = TextNormalColour;
-            c.setAlpha(ct);
-            e.getComponent<cro::Text>().setFillColour(c);
-
-            c = LeaderboardTextDark;
-            c.setAlpha(ct);
-            e.getComponent<cro::Text>().setShadowColour(c);
-
-            const float speed = 10.f * viewScale;
-            e.getComponent<cro::Transform>().move({ 0.f, speed * dt });
-
-            if (ct == 0)
-            {
-                e.getComponent<cro::Callback>().active = false;
-                m_uiScene.destroyEntity(e);
-            }
-        };
+    entity.getComponent<cro::Callback>().function = FloatingTextAnim(m_uiScene, viewScale);
 
 
     //update the score UI element here too
@@ -1048,6 +1056,30 @@ void SBallGameState::updateScoreString()
 
     //update level text
     m_levelEntity.getComponent<cro::Text>().setString("Level\n" + std::to_string(m_sharedGameData.score.level));
+}
+
+void SBallGameState::levelUp()
+{
+    m_sharedGameData.score.level++;
+
+    const auto& font = m_sharedGameData.fonts->get(sc::FontID::Body);
+    const auto viewScale = cro::UIElementSystem::getViewScale();
+    const auto screenPos = glm::vec2(cro::App::getWindow().getSize()) / 2.f;
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(screenPos, 0.1f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Level Up!!");
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setCharacterSize(sc::LargeTextSize * viewScale);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::LargeTextOffset * viewScale);
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = FloatingTextAnim(m_uiScene, viewScale);
+
+    //TODO trigger some audio
 }
 
 void SBallGameState::endGame()
