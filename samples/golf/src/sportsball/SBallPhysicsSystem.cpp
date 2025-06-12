@@ -155,7 +155,7 @@ void SBallPhysicsSystem::process(float dt)
         const auto id1 = body1->getUserIndex();
         
         //*sigh* we actually get better results if we test this ourself
-        //bullet seems to fail to report some collision, even though balls
+        //bullet seems to fail to report some collisions, even though balls
         //are bouncing off each other.
         if (id0 > -1 && id1 > -1)
         {
@@ -187,8 +187,30 @@ void SBallPhysicsSystem::process(float dt)
                     }
                     else
                     {
-                        //perhaps we need to include velocity so we only play audio on high impact?
                         msg->type = sb::CollisionEvent::Default;
+
+                        static constexpr float MinVel = 2.f;
+
+                        //perhaps we need to include velocity so we only play audio on high impact?
+                        const auto vel0 = glm::length2(btToGlm(body0->getInterpolationLinearVelocity()));
+                        const auto vel1 = glm::length2(btToGlm(body1->getInterpolationLinearVelocity()));
+
+                        if (vel0 > vel1)
+                        {
+                            if (vel0 > MinVel)
+                            {
+                                msg->ballID =  body0->getUserIndex();
+                                msg->type = sb::CollisionEvent::FastCol;
+                            }
+                        }
+                        else
+                        {
+                            if (vel1 > MinVel)
+                            {
+                                msg->ballID = body1->getUserIndex();
+                                msg->type = sb::CollisionEvent::FastCol;
+                            }
+                        }
                     }
                 }
             }

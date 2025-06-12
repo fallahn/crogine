@@ -83,6 +83,7 @@ private:
     void dropBall();
 
     cro::Entity m_scoreEntity;
+    cro::Entity m_levelEntity;
     cro::Entity m_roundEndEntity;
     cro::Entity m_controlTextEntity;
     cro::Entity m_endScoreTextEntity;

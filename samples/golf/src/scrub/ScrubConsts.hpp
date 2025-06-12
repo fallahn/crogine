@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -44,6 +44,15 @@ static constexpr inline glm::vec3 BucketSpawnPosition = glm::vec3(BucketOffset, 
 
 static constexpr inline float MaxSpriteScale = 4.f; //when view scale returns this (~2kHD) sprites on the HUD are 1:1
 static constexpr inline cro::Colour SoapMeterColour = cro::Colour(0x0207ffff);// cro::Colour(0xadd9b7ff);
+
+//given the ubiquity of this IDK why I keep on redefining it
+struct InputType final
+{
+    enum
+    {
+        Keyboard, PS, XBox
+    };
+};
 
 //xbox
 static constexpr inline std::uint32_t ButtonLT    = 0x2196;

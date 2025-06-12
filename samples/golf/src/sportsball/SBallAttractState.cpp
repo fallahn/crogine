@@ -27,7 +27,13 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "../scrub/ScrubConsts.hpp"
 #include "SBallAttractState.hpp"
+
+namespace
+{
+    std::int32_t lastInput = InputType::Keyboard;
+}
 
 SBallAttractState::SBallAttractState(cro::StateStack& ss, cro::State::Context ctx, SharedMinigameData& sd)
     : cro::State    (ss, ctx),
@@ -47,14 +53,75 @@ SBallAttractState::~SBallAttractState()
 //public
 bool SBallAttractState::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_MOUSEMOTION)
     {
-        if (evt.key.keysym.sym == SDLK_SPACE)
+        cro::App::getWindow().setMouseCaptured(false);
+    }
+    else
+    {
+        switch (evt.type)
         {
-            requestStackPop();
-            requestStackPush(StateID::SBallGame);
+        default:
+
+            break;
+        case SDL_CONTROLLERDEVICEREMOVED:
+            //pause();
+            break;
+        case SDL_CONTROLLERDEVICEADDED:
+            for (auto i = 0; i < 4; ++i)
+            {
+                cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0, 1, 2));
+            }
+            break;
+        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL_CONTROLLERBUTTONUP:
+            cro::App::getWindow().setMouseCaptured(true);
+            if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)))
+            {
+                //m_controlTextEntity.getComponent<cro::Text>().setString(InputPS);
+                lastInput = InputType::PS;
+            }
+            else
+            {
+                //m_controlTextEntity.getComponent<cro::Text>().setString(InputXBox);
+                lastInput = InputType::XBox;
+            }
+            break;
+        case SDL_CONTROLLERAXISMOTION:
+            cro::App::getWindow().setMouseCaptured(true);
+
+            if (evt.caxis.value < -cro::GameController::LeftThumbDeadZone || evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+            {
+                if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)))
+                {
+                    //m_controlTextEntity.getComponent<cro::Text>().setString(InputPS);
+                    lastInput = InputType::PS;
+                }
+                else
+                {
+                    //m_controlTextEntity.getComponent<cro::Text>().setString(InputXBox);
+                    lastInput = InputType::XBox;
+                }
+            }
+            break;
+        case SDL_KEYUP:
+            if (evt.key.keysym.sym == SDLK_SPACE)
+            {
+                requestStackPop();
+                requestStackPush(StateID::SBallGame);
+            }
+            [[fallthrough]];
+        case SDL_KEYDOWN:
+            cro::App::getWindow().setMouseCaptured(true);
+            //m_controlTextEntity.getComponent<cro::Text>().setString(InputKeyb(m_sharedData.inputBinding));
+            lastInput = InputType::Keyboard;
+            break;
         }
     }
+
+
+
+
 
     m_scene.forwardEvent(evt);
     return false;

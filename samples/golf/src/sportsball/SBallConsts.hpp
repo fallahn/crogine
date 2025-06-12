@@ -35,6 +35,8 @@ constexpr float BoxWidth = 0.8f;
 constexpr float BoxHeight = 1.f;
 constexpr float BoxDepth = 0.49f;
 
+constexpr float WorldHeight = 1.2f; //this is the 3D ortho cam height
+
 constexpr float CursorHeight = BoxHeight + 0.01f;
 constexpr float OOB = CursorHeight + 0.01f;
 
@@ -61,7 +63,8 @@ namespace sb
 
         enum
         {
-            Match, Default
+            //fast collision just means we want to make a noise
+            Match, FastCol, Default
         }type = Match;
     };
 

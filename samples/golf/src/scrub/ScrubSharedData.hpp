@@ -43,6 +43,7 @@ struct SharedMinigameData final
 {
     struct ScoreData final
     {
+        std::int32_t level = 1;
         std::int32_t score = 0;
         std::int32_t personalBest = 0;
     }score;

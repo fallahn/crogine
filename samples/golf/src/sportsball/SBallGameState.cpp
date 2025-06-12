@@ -73,14 +73,6 @@ namespace
     const cro::String InputPS = cro::String(LeftStick) + " Move     " + cro::String(ButtonCross) + " Drop     " + cro::String(ButtonOption) + " Pause/Quit";
     const cro::String InputXBox = cro::String(LeftStick) + " Move     " + cro::String(ButtonA) + " Drop     " + cro::String(ButtonStart) + " Pause/Quit";
 
-    //given the ubiquity of this IDK why I keep on redefining it
-    struct InputType final
-    {
-        enum
-        {
-            Keyboard, PS, XBox
-        };
-    };
     std::int32_t lastInput = InputType::Keyboard;
 
     const cro::Time DropTime = cro::seconds(0.5f);
@@ -134,6 +126,12 @@ SBallGameState::SBallGameState(cro::StateStack& stack, cro::State::Context ctx, 
 //public
 bool SBallGameState::handleEvent(const cro::Event& evt)
 {
+    const auto pause =
+        [&]()
+        {
+            requestStackPush(StateID::ScrubPause);
+        };
+
     if (m_gameEnded)
     {
         const auto restart = 
@@ -169,7 +167,7 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
             case SDL_CONTROLLERBUTTONUP:
                 if (cro::GameController::controllerID(evt.cbutton.which) == 0)
                 {
-                    if (evt.cbutton.button == evt.cbutton.button == cro::GameController::ButtonA)
+                    if (evt.cbutton.button == cro::GameController::ButtonA)
                     {
                         restart();
                     }
@@ -184,12 +182,6 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
     }
     else
     {
-        const auto pause =
-            [&]()
-            {
-                requestStackPush(StateID::ScrubPause);
-            };
-
         switch (evt.type)
         {
         default: break;
@@ -317,12 +309,19 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
         default:
 
             break;
+        case SDL_CONTROLLERDEVICEREMOVED:
+            pause();
+            break;
+        case SDL_CONTROLLERDEVICEADDED:
+            for (auto i = 0; i < 4; ++i)
+            {
+                cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0, 1, 2));
+            }
+            break;
         case SDL_CONTROLLERBUTTONDOWN:
         case SDL_CONTROLLERBUTTONUP:
-        case SDL_CONTROLLERAXISMOTION:
             cro::App::getWindow().setMouseCaptured(true);
-
-            if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)))
+            if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)))
             {
                 m_controlTextEntity.getComponent<cro::Text>().setString(InputPS);
                 lastInput = InputType::PS;
@@ -331,6 +330,23 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
             {
                 m_controlTextEntity.getComponent<cro::Text>().setString(InputXBox);
                 lastInput = InputType::XBox;
+            }
+            break;
+        case SDL_CONTROLLERAXISMOTION:
+            cro::App::getWindow().setMouseCaptured(true);
+
+            if (evt.caxis.value < -cro::GameController::LeftThumbDeadZone || evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+            {
+                if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)))
+                {
+                    m_controlTextEntity.getComponent<cro::Text>().setString(InputPS);
+                    lastInput = InputType::PS;
+                }
+                else
+                {
+                    m_controlTextEntity.getComponent<cro::Text>().setString(InputXBox);
+                    lastInput = InputType::XBox;
+                }
             }
             break;
         case SDL_KEYDOWN:
@@ -363,35 +379,44 @@ void SBallGameState::handleMessage(const cro::Message& msg)
             auto& phys1 = b.getComponent<SBallPhysics>();
 
             //if (!phys0.collisionHandled && !phys1.collisionHandled)
+            if (!a.destroyed() && !b.destroyed())
             {
                 phys0.collisionHandled = true;
                 phys1.collisionHandled = true;
-
 
                 if (data.type == sb::CollisionEvent::Match)
                 {
                     m_gameScene.destroyEntity(data.entityA);
                     m_gameScene.destroyEntity(data.entityB);
 
-                    const auto oldScore = m_sharedGameData.score.score;
-                    m_sharedGameData.score.score += (1 * data.ballID) * 2;
+                    
+                    auto score = (1 * data.ballID) * 2;
 
                     if (data.ballID < BallID::Count - 1)
                     {
                         m_gameScene.getSystem<SBallPhysicsSystem>()->spawnBall(data.ballID + 1, data.position);
-                        m_sharedGameData.score.score += 2 * (data.ballID + 1);
+                        score += 2 * (data.ballID + 1);
                     }
                     else
                     {
                         //this is a beachball TODO trigger some UI effect
+                        m_sharedGameData.score.level++;
                     }
+
+                    score *= m_sharedGameData.score.level;
+                    m_sharedGameData.score.score += score;
 
                     if (m_sharedGameData.score.score > m_sharedGameData.score.personalBest)
                     {
                         m_sharedGameData.score.personalBest = m_sharedGameData.score.score;
                     }
 
-                    floatingScore(m_sharedGameData.score.score - oldScore, data.position);
+                    floatingScore(score, data.position);
+                }
+                else if (data.type == sb::CollisionEvent::FastCol)
+                {
+                    //TODO move this to audio director
+                    LogI << data.ballID << ": boink!" << std::endl;
                 }
             }
         }
@@ -635,7 +660,7 @@ void SBallGameState::buildScene()
 
             const glm::vec2 size(cro::App::getWindow().getSize());
             const float ratio = size.x / size.y;
-            const float y = 1.2f;
+            const float y = WorldHeight;
             const float x = y * ratio;
 
             cam.setOrthographic(-x / 2.f, x / 2.f, 0.f, y, 0.1f, 4.f);
@@ -724,28 +749,35 @@ void SBallGameState::buildUI()
     scoreRoot.getComponent<cro::Transform>().addChild(scoreVal.getComponent<cro::Transform>());
     m_scoreEntity = scoreVal;
     
-    updateScoreString();
 
-
-
+    //this was going to be high score table but actually shows the current
+    //level (which increases when making a beachball match)
     auto tableRoot = m_uiScene.createEntity();
     tableRoot.addComponent<cro::Transform>();
     tableRoot.addComponent<cro::UIElement>(cro::UIElement::Position, true);
-    tableRoot.getComponent<cro::UIElement>().relativePosition = { 0.12f, 0.45f };
+    tableRoot.getComponent<cro::UIElement>().relativePosition = { 0.12f, WheelHeight / WorldHeight };
 
 
     auto tableTitle = m_uiScene.createEntity();
     tableTitle.addComponent<cro::Transform>();
     tableTitle.addComponent<cro::Drawable2D>();
-    tableTitle.addComponent<cro::Text>(font).setString("World\nRankings");
+    tableTitle.addComponent<cro::Text>(font).setString("Level\n1");
     tableTitle.getComponent<cro::Text>().setFillColour(TextNormalColour);
     tableTitle.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     tableTitle.addComponent<cro::UIElement>(cro::UIElement::Type::Text, true).absolutePosition = { 0.f, 34.f };
     tableTitle.getComponent<cro::UIElement>().characterSize = sc::MediumTextSize;
     tableRoot.getComponent<cro::Transform>().addChild(tableTitle.getComponent<cro::Transform>());
+    m_levelEntity = tableTitle;
 
-    //TODO add a sprite for the table background which doesn't scale, rather
-    //has a callback which selects a sprite image based on the view scale.
+    //auto levelEnt = m_uiScene.createEntity();
+    //levelEnt.addComponent<cro::Transform>();
+    //levelEnt.addComponent<cro::Drawable2D>();
+    //levelEnt.addComponent<cro::Text>(font).setString("1");
+    //levelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    //levelEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    //levelEnt.addComponent<cro::UIElement>(cro::UIElement::Type::Text, true).absolutePosition = { 0.f, 4.f };
+    //levelEnt.getComponent<cro::UIElement>().characterSize = sc::SmallTextSize;
+    //tableRoot.getComponent<cro::Transform>().addChild(levelEnt.getComponent<cro::Transform>());
 
 
 
@@ -900,6 +932,8 @@ void SBallGameState::buildUI()
 
     //TODO personal best text to flash when appropriate
 
+    //make sure to do this last
+    updateScoreString();
 
     auto resize = [](cro::Camera& cam)
         {
@@ -1011,6 +1045,9 @@ void SBallGameState::updateScoreString()
 {
     std::string scoreStr = std::to_string(m_sharedGameData.score.score) + "\n\nPersonal Best:\n" + std::to_string(m_sharedGameData.score.personalBest);
     m_scoreEntity.getComponent<cro::Text>().setString(scoreStr);
+
+    //update level text
+    m_levelEntity.getComponent<cro::Text>().setString("Level\n" + std::to_string(m_sharedGameData.score.level));
 }
 
 void SBallGameState::endGame()
@@ -1031,13 +1068,13 @@ void SBallGameState::endGame()
     switch (lastInput)
     {
     default:
-        scoreText += "Restart: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + "  -  " + "Quit: Escape";
+        scoreText += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " Restart  -  " + "Escape Quit";
         break;
     case InputType::PS:
-        scoreText += "Restart: " + cro::String(ButtonCross) + "  -  " + "Quit: " + cro::String(ButtonCircle);
+        scoreText += cro::String(ButtonCross) + " Restart  -  " + cro::String(ButtonCircle) + " Quit";
         break;
     case InputType::XBox:
-        scoreText += "Restart: " + cro::String(ButtonA) + "  -  " + "Quit: " + cro::String(ButtonB);
+        scoreText += cro::String(ButtonA) + " Restart  -  " + cro::String(ButtonB) + " Quit";
         break;
     }
     m_endScoreTextEntity.getComponent<cro::Text>().setString(scoreText);
@@ -1057,6 +1094,7 @@ void SBallGameState::onCachedPush()
     pos.x = 0.f;
     m_cursor.getComponent<cro::Transform>().setPosition(pos);
 
+    m_sharedGameData.score.level = 1;
     m_sharedGameData.score.score = 0;
     updateScoreString();
 
