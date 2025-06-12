@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 
+#include <array>
+
 struct SharedMinigameData;
 class SBallAttractState final : public cro::State
 {
@@ -59,6 +61,18 @@ private:
     SharedMinigameData& m_sharedGameData;
 
     cro::Scene m_scene;
+
+
+    struct TabID final
+    {
+        enum
+        {
+            Title, HowTo, Scores,
+            Count
+        };
+    };
+    std::array<cro::Entity, TabID::Count> m_tabs = {};
+    std::size_t m_currentTab;
 
     void loadAssets();
     void addSystems();

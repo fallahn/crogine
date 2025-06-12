@@ -150,7 +150,7 @@ SBallGameState::SBallGameState(cro::StateStack& stack, cro::State::Context ctx, 
     buildUI();
 
 #ifdef CRO_DEBUG_
-    onCachedPush();
+    //onCachedPush();
 #endif
 
 }
@@ -398,7 +398,8 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
 
 void SBallGameState::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == sb::MessageID::CollisionMessage)
+    if (msg.id == sb::MessageID::CollisionMessage
+        && !m_gameEnded) //stops the small chance there might be a collision / score update AFTER the game ends and prints the score
     {
         const auto& data = msg.getData<sb::CollisionEvent>();
         if (data.entityA.isValid()
@@ -1078,6 +1079,11 @@ void SBallGameState::levelUp()
 
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = FloatingTextAnim(m_uiScene, viewScale);
+
+
+    //camera shake
+    m_gameScene.getActiveCamera().getComponent<cro::Callback>().active = true;
+    m_gameScene.getActiveCamera().getComponent<cro::Callback>().setUserData<float>(1.f);
 
     //TODO trigger some audio
 }
