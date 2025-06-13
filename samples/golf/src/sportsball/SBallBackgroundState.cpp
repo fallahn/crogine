@@ -30,6 +30,7 @@ source distribution.
 #include "../scrub/ScrubSharedData.hpp"
 #include "SBallBackgroundState.hpp"
 
+#include <Social.hpp>
 
 SBallBackgroundState::SBallBackgroundState(cro::StateStack& stack, cro::State::Context ctx, SharedMinigameData& sd)
     : cro::State        (stack, ctx),
@@ -50,8 +51,8 @@ SBallBackgroundState::SBallBackgroundState(cro::StateStack& stack, cro::State::C
     requestStackPush(StateID::SBallAttract);
 #endif
 
-    //Social::refreshSBallScore();
-    //Social::setStatus(Social::InfoID::Menu, { "Playing Sports Ball" });
+    Social::refreshSBallScore();
+    Social::setStatus(Social::InfoID::Menu, { "Playing Sports Ball" });
 }
 
 SBallBackgroundState::~SBallBackgroundState()

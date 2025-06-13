@@ -67,6 +67,8 @@ source distribution.
 
 #include <crogine/gui/Gui.hpp>
 
+#include <Social.hpp>
+
 namespace
 {
     cro::String InputKeyb(const InputBinding& ib)
@@ -966,16 +968,52 @@ void SBallGameState::buildUI()
     textEnt.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     textEnt.getComponent<cro::UIElement>().characterSize = MediumTextSize;
     textEnt.getComponent<cro::UIElement>().depth = 0.1f;
-    textEnt.getComponent<cro::UIElement>().resizeCallback =
-        [](cro::Entity e)
-        {
-            /*const auto size = glm::vec2(cro::App::getWindow().getSize());
-            e.getComponent<cro::UIElement>().absolutePosition.y = (size.y / 4.f) / cro::UIElementSystem::getViewScale();*/
-        };
+    textEnt.getComponent<cro::UIElement>().absolutePosition = { 0.f, 22.f };
     roundEndRoot.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
     m_endScoreTextEntity = textEnt;
 
-    //TODO personal best text to flash when appropriate
+    //personal best text to flash when appropriate
+    textEnt = m_uiScene.createEntity();
+    textEnt.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    textEnt.addComponent<cro::Drawable2D>();
+    textEnt.addComponent<cro::Text>(font).setString("Personal Best!!");
+    textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    textEnt.addComponent<cro::UIElement>(cro::UIElement::Text, true);
+    textEnt.getComponent<cro::UIElement>().characterSize = MediumTextSize;
+    textEnt.getComponent<cro::UIElement>().depth = 0.1f;
+    textEnt.getComponent<cro::UIElement>().resizeCallback =
+        [](cro::Entity e)
+        {
+            const auto size = glm::vec2(cro::App::getWindow().getSize());
+            e.getComponent<cro::UIElement>().absolutePosition.y = -(size.y / 4.f) / cro::UIElementSystem::getViewScale();
+        };
+
+    struct FlashData final
+    {
+        float currTime = 0.1f;
+        cro::Drawable2D::Facing facing = cro::Drawable2D::Facing::Front;
+    };
+    textEnt.addComponent<cro::Callback>().active = true;
+    textEnt.getComponent<cro::Callback>().setUserData<FlashData>();
+    textEnt.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            static constexpr float FlashTime = 1.f;
+            auto& [ct, facing] = e.getComponent<cro::Callback>().getUserData<FlashData>();
+            ct -= dt;
+            if (ct < 0)
+            {
+                ct += FlashTime;
+                facing = facing == cro::Drawable2D::Facing::Front ? cro::Drawable2D::Facing::Back : cro::Drawable2D::Facing::Front;
+                e.getComponent<cro::Drawable2D>().setFacing(facing);
+            }
+        };
+
+    roundEndRoot.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
+    m_pbTextEntity = textEnt;
+
+
 
     //make sure to do this last
     updateScoreString();
@@ -1115,7 +1153,7 @@ void SBallGameState::endGame()
 
     //show score summary 
     //TODO post scores to leaderboard
-    cro::String scoreText = "Score: " + std::to_string(m_sharedGameData.score.score) + "\n\n";
+    cro::String scoreText = "Score: " + std::to_string(m_sharedGameData.score.score) + "\n";
     switch (lastInput)
     {
     default:
@@ -1130,10 +1168,14 @@ void SBallGameState::endGame()
     }
     m_endScoreTextEntity.getComponent<cro::Text>().setString(scoreText);
 
-    //TODO show PB text if needed
-    
-    //TODO swap this for transition anim
-    //m_roundEndEntity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    //show PB text if needed
+    if (m_sharedGameData.score.score > Social::getSBallPB())
+    {
+        m_pbTextEntity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    }
+    Social::setSBallScore(m_sharedGameData.score.score);
+
+    //display game over sign
     m_roundEndEntity.getComponent<cro::Callback>().setUserData<float>(0.f);
     m_roundEndEntity.getComponent<cro::Callback>().active = true;
 }
@@ -1145,6 +1187,7 @@ void SBallGameState::onCachedPush()
     pos.x = 0.f;
     m_cursor.getComponent<cro::Transform>().setPosition(pos);
 
+    m_sharedGameData.score.personalBest = Social::getSBallPB();
     m_sharedGameData.score.level = 1;
     m_sharedGameData.score.score = 0;
     updateScoreString();
@@ -1228,4 +1271,5 @@ void SBallGameState::onCachedPop()
 {
     //reset any end-game overlay
     m_roundEndEntity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_pbTextEntity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 }

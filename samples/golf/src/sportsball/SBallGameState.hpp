@@ -87,6 +87,7 @@ private:
     cro::Entity m_roundEndEntity;
     cro::Entity m_controlTextEntity;
     cro::Entity m_endScoreTextEntity;
+    cro::Entity m_pbTextEntity;
     void floatingScore(std::int32_t score, glm::vec3 pos);
     void updateScoreString();
     void levelUp();

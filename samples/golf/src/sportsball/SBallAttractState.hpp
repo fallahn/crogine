@@ -72,6 +72,8 @@ private:
     std::array<cro::Entity, TabID::Count> m_tabs = {};
     std::size_t m_currentTab;
 
+    cro::Entity m_highScoreText;
+
     void loadAssets();
     void addSystems();
     void buildScene();

@@ -106,7 +106,8 @@ public:
             AwardsReceived,
             RequestRestart,
             LeagueReceived,
-            ScrubScoresReceived
+            ScrubScoresReceived,
+            SBallScoresReceived,
         }type = StatsReceived;
         std::int32_t index = -1;
         std::int32_t page = -1;
@@ -249,6 +250,11 @@ public:
     static void refreshScrubScore();
     static const cro::String& getScrubScores();
     static std::int32_t getScrubPB();
+
+    static void setSBallScore(std::int32_t);
+    static void refreshSBallScore();
+    static const cro::String& getSBallScores();
+    static std::int32_t getSBallPB();
 
     static void showWebPage(const std::string&) {}
     static void readAllStats();

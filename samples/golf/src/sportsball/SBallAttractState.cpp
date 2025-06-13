@@ -147,6 +147,15 @@ bool SBallAttractState::handleEvent(const cro::Event& evt)
 
 void SBallAttractState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == Social::MessageID::StatsMessage)
+    {
+        const auto& data = msg.getData<Social::StatEvent>();
+        if (data.type == Social::StatEvent::SBallScoresReceived)
+        {
+            m_highScoreText.getComponent<cro::Text>().setString(Social::getSBallScores());
+        }
+    }
+
     m_uiScene.forwardMessage(msg);
 }
 
@@ -428,7 +437,7 @@ void SBallAttractState::buildScene()
     entity.getComponent<UIElement>().absolutePosition = { 0.f, 100.f };
     entity.getComponent<UIElement>().characterSize = sc::SmallTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
-    //m_highScoreText = entity;
+    m_highScoreText = entity;
     m_tabs[TabID::Scores].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -555,7 +564,8 @@ void SBallAttractState::nextTab()
 
 void SBallAttractState::onCachedPush()
 {
-    //Social::refreshSBallScore();
+    Social::refreshSBallScore();
+    m_sharedGameData.score.personalBest = Social::getSBallPB();
 
     //reset to default tab
     prevTab(); //this just tidies up existing tab before forcing the index below
