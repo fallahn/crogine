@@ -35,6 +35,7 @@ source distribution.
 #include "SBallGameState.hpp"
 #include "SBallPhysicsSystem.hpp"
 #include "SBallConsts.hpp"
+#include "SBallParticleDirector.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 
@@ -54,6 +55,8 @@ source distribution.
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/UIElementSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
+#include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/graphics/Font.hpp>
 #include <crogine/util/Constants.hpp>
@@ -411,10 +414,9 @@ void SBallGameState::handleMessage(const cro::Message& msg)
             auto& phys0 = a.getComponent<SBallPhysics>();
             auto& phys1 = b.getComponent<SBallPhysics>();
 
-            //if (!phys0.collisionHandled && !phys1.collisionHandled)
             if (!a.destroyed() && !b.destroyed())
             {
-                phys0.collisionHandled = true;
+                phys0.collisionHandled = true; //TODO this doesn't really do anything
                 phys1.collisionHandled = true;
 
                 if (data.type == sb::CollisionEvent::Match)
@@ -626,6 +628,10 @@ void SBallGameState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::ParticleSystem>(mb);
+    m_gameScene.addSystem<cro::AudioSystem>(mb);
+
+    m_gameScene.addDirector<SBallParticleDirector>(m_resources.textures)->init();
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);

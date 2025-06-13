@@ -1424,6 +1424,9 @@
     <ClInclude Include="src\scrub\TabData.hpp">
       <Filter>Header Files\scrub</Filter>
     </ClInclude>
+    <ClInclude Include="src\sportsball\SballParticleDirector.hpp">
+      <Filter>Header Files\sportsball</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">

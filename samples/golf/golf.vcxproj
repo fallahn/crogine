@@ -1031,6 +1031,7 @@
     <ClInclude Include="src\sportsball\SBallBackgroundState.hpp" />
     <ClInclude Include="src\sportsball\SBallConsts.hpp" />
     <ClInclude Include="src\sportsball\SBallGameState.hpp" />
+    <ClInclude Include="src\sportsball\SballParticleDirector.hpp" />
     <ClInclude Include="src\sportsball\SBallPhysicsSystem.hpp" />
     <ClInclude Include="src\sqlite\ProfileDB.hpp" />
     <ClInclude Include="src\sqlite\SqliteState.hpp" />

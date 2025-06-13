@@ -27,34 +27,29 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "SBallParticleDirector.hpp"
-#include "SBallConsts.hpp"
+#pragma once
 
-#include <crogine/ecs/components/Transform.hpp>
+#include "../scrub/ScrubConsts.hpp"
+#include "../golf/ParticleDirector.hpp"
 
-SBallParticleDirector::SBallParticleDirector(cro::TextureResource& tr)
+#include <crogine/ecs/components/ParticleEmitter.hpp>
+
+#include <array>
+
+namespace cro
 {
-    m_emitterSettings[sc::ParticleID::BallMatch].loadFromFile("assets/arcade/sportsball/particles/puff.cps", tr);
+    class TextureResource;
 }
 
-//public
-void SBallParticleDirector::handleMessage(const cro::Message& msg)
+struct SharedStateData;
+class SBallParticleDirector final : public ParticleDirector
 {
-    const auto getEnt = [&](std::int32_t id, glm::vec3 position)
-        {
-            auto entity = getNextEntity();
-            entity.getComponent<cro::Transform>().setPosition(position);
-            entity.getComponent<cro::ParticleEmitter>().settings = m_emitterSettings[id];
-            entity.getComponent<cro::ParticleEmitter>().start();
-            return entity;
-        };
+public:
+    SBallParticleDirector(cro::TextureResource&);
 
-    if (msg.id == sb::MessageID::CollisionMessage)
-    {
-        const auto& data = msg.getData<sb::CollisionEvent>();
-        if (data.type == sb::CollisionEvent::Match)
-        {
-            getEnt(sc::ParticleID::BallMatch, data.position);
-        }
-    }
-}
+    void handleMessage(const cro::Message&) override;
+    void init() { resizeEmitters(); }
+private:
+
+    std::array<cro::EmitterSettings, sc::ParticleID::Count> m_emitterSettings = {};
+};

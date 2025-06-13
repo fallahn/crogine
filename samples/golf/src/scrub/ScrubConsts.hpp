@@ -134,6 +134,8 @@ namespace sc
         {
             Bubbles, Splash,
 
+            BallMatch,
+
             Count
         };
     };
