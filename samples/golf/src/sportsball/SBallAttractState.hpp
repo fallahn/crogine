@@ -33,22 +33,17 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 
 #include <array>
 
+struct SharedStateData;
 struct SharedMinigameData;
 class SBallAttractState final : public cro::State
 {
 public:
 
-    SBallAttractState(cro::StateStack&, cro::State::Context, SharedMinigameData&);
-    ~SBallAttractState();
-
-    SBallAttractState(const SBallAttractState&) = delete;
-    SBallAttractState(SBallAttractState&&) = delete;
-
-    SBallAttractState& operator = (const SBallAttractState&) = delete;
-    SBallAttractState& operator = (SBallAttractState&&) = delete;
+    SBallAttractState(cro::StateStack&, cro::State::Context, const SharedStateData&, SharedMinigameData&);
 
     cro::StateID getStateID() const override { return StateID::SBallAttract; }
 
@@ -58,10 +53,13 @@ public:
     void render() override;
 
 private:
+    const SharedStateData& m_sharedData;
     SharedMinigameData& m_sharedGameData;
 
-    cro::Scene m_scene;
-
+    cro::Scene m_uiScene;
+    cro::ResourceCollection m_resources;
+    std::int32_t m_controllerIndex;
+    cro::String m_keyboardHelpString;
 
     struct TabID final
     {
@@ -77,4 +75,10 @@ private:
     void loadAssets();
     void addSystems();
     void buildScene();
+
+    void prevTab();
+    void nextTab();
+
+    void onCachedPush() override;
+    void onCachedPop() override;
 };

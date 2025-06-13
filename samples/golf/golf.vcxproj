@@ -974,6 +974,7 @@
     <ClInclude Include="src\scrub\ScrubPhysicsSystem.hpp" />
     <ClInclude Include="src\scrub\ScrubSharedData.hpp" />
     <ClInclude Include="src\scrub\ScrubSoundDirector.hpp" />
+    <ClInclude Include="src\scrub\TabData.hpp" />
     <ClInclude Include="src\sockets\IXBase64.h" />
     <ClInclude Include="src\sockets\IXBench.h" />
     <ClInclude Include="src\sockets\IXCancellationRequest.h" />
