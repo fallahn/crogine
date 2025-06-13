@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -39,12 +39,10 @@ namespace cro
     class AudioResource;
 }
 
-//dear future me: you managed to duplicate this exactly for sports ball, 
-//so instead of doing that *again* just use another instance of this...
-class ScrubSoundDirector final : public SoundEffectsDirector
+class SBallSoundDirector final : public SoundEffectsDirector
 {
 public:
-    ScrubSoundDirector();
+    SBallSoundDirector();
 
     void handleMessage(const cro::Message&) override {}
 

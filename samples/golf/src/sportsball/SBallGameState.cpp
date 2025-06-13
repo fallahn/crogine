@@ -36,6 +36,7 @@ source distribution.
 #include "SBallPhysicsSystem.hpp"
 #include "SBallConsts.hpp"
 #include "SBallParticleDirector.hpp"
+#include "SBallSoundDirector.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 
@@ -522,6 +523,11 @@ void SBallGameState::render()
 //private
 void SBallGameState::loadAssets()
 {
+    //TODO this is actually the same as the scrub director
+    //so we could just use that
+    std::vector<std::string> paths;
+    m_gameScene.getDirector<SBallSoundDirector>()->loadSounds(paths, m_resources.audio);
+
     m_environmentMap.loadFromFile("assets/images/indoor.hdr");
     
     std::vector<cro::Entity> wheelModels;
@@ -632,6 +638,7 @@ void SBallGameState::addSystems()
     m_gameScene.addSystem<cro::AudioSystem>(mb);
 
     m_gameScene.addDirector<SBallParticleDirector>(m_resources.textures)->init();
+    m_gameScene.addDirector<SBallSoundDirector>();
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);

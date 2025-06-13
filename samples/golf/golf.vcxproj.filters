@@ -1427,6 +1427,9 @@
     <ClInclude Include="src\sportsball\SballParticleDirector.hpp">
       <Filter>Header Files\sportsball</Filter>
     </ClInclude>
+    <ClInclude Include="src\sportsball\SBallSoundDirector.hpp">
+      <Filter>Header Files\sportsball</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">
