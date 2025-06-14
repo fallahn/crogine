@@ -32,13 +32,17 @@ source distribution.
 #include "../StateIDs.hpp"
 
 #include <crogine/core/State.hpp>
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
 
+struct SharedStateData;
 struct SharedMinigameData;
 class SBallBackgroundState final : public cro::State
 {
 public:
 
-    SBallBackgroundState(cro::StateStack&, cro::State::Context, SharedMinigameData&);
+    SBallBackgroundState(cro::StateStack&, cro::State::Context, const SharedStateData&, SharedMinigameData&);
     ~SBallBackgroundState();
 
     SBallBackgroundState(const SBallBackgroundState&) = delete;
@@ -55,6 +59,12 @@ public:
     void render() override;
 
 private:
+    const SharedStateData& m_sharedData;
     SharedMinigameData& m_sharedGameData;
 
+    cro::Scene m_scene;
+    cro::ResourceCollection m_resources;
+    cro::EnvironmentMap m_environmentMap;
+
+    void buildScene();
 };

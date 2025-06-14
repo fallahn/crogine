@@ -27,18 +27,33 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "../golf/SharedStateData.hpp"
 #include "../scrub/ScrubSharedData.hpp"
 #include "SBallBackgroundState.hpp"
+#include "SBallConsts.hpp"
 
 #include <Social.hpp>
 
-SBallBackgroundState::SBallBackgroundState(cro::StateStack& stack, cro::State::Context ctx, SharedMinigameData& sd)
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Camera.hpp>
+
+#include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
+
+#include <crogine/util/Constants.hpp>
+
+SBallBackgroundState::SBallBackgroundState(cro::StateStack& stack, cro::State::Context ctx, const SharedStateData& ssd, SharedMinigameData& sd)
     : cro::State        (stack, ctx),
-    m_sharedGameData    (sd)
+    m_sharedData        (ssd),
+    m_sharedGameData    (sd),
+    m_scene             (cro::App::getInstance().getMessageBus())
 {
     ctx.mainWindow.loadResources([&]()
         {
             sd.initFonts();
+
+            buildScene();
 
             cacheState(StateID::SBallGame);
             cacheState(StateID::SBallAttract);
@@ -70,8 +85,9 @@ SBallBackgroundState::~SBallBackgroundState()
 }
 
 //public
-bool SBallBackgroundState::handleEvent(const cro::Event&)
+bool SBallBackgroundState::handleEvent(const cro::Event& evt)
 {
+    m_scene.forwardEvent(evt);
     return false;
 }
 
@@ -86,14 +102,81 @@ void SBallBackgroundState::handleMessage(const cro::Message& msg)
             requestStackPush(StateID::SBallAttract);
         }
     }
+
+    m_scene.forwardMessage(msg);
 }
 
-bool SBallBackgroundState::simulate(float)
+bool SBallBackgroundState::simulate(float dt)
 {
+    m_scene.simulate(dt);
     return false;
 }
 
 void SBallBackgroundState::render()
 {
+    m_scene.render();
+}
 
+//private
+void SBallBackgroundState::buildScene()
+{
+    auto& mb = cro::App::getInstance().getMessageBus();
+
+    m_scene.addSystem<cro::CameraSystem>(mb);
+    m_scene.addSystem<cro::ShadowMapRenderer>(mb);
+    m_scene.addSystem<cro::ModelRenderer>(mb);
+
+
+    m_environmentMap.loadFromFile("assets/images/indoor.hdr");
+    cro::ModelDefinition md(m_resources, &m_environmentMap);
+
+    md.loadFromFile("assets/arcade/sportsball/models/background.cmt");
+
+    cro::Entity entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    md.createModel(entity);
+
+
+
+    auto resize = [&](cro::Camera& cam)
+        {
+            //update shadow quality from settings
+            std::uint32_t res = 512;
+            switch (m_sharedData.shadowQuality)
+            {
+            case 0:
+                res = 512;
+                break;
+            case 1:
+                res = 1024;
+                break;
+            default:
+                res = 2048;
+                break;
+            }
+            cam.shadowMapBuffer.create(res, res);
+            cam.setBlurPassCount(m_sharedData.shadowQuality == 0 ? 0 : 1);
+
+            const glm::vec2 size(cro::App::getWindow().getSize());
+            const float ratio = size.x / size.y;
+            const float y = WorldHeight;
+            const float x = y * ratio;
+
+            cam.setOrthographic(-x / 2.f, x / 2.f, 0.f, y, 0.1f, 4.f);
+            cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+        };
+
+    auto camEnt = m_scene.getActiveCamera();
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, -0.05f, 1.4f });
+
+    auto& cam = camEnt.getComponent<cro::Camera>();
+    resize(cam);
+    cam.resizeCallback = resize;
+    cam.setMaxShadowDistance(10.f);
+    cam.setShadowExpansion(15.f);
+
+
+    auto lightEnt = m_scene.getSunlight();
+    lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -45.f * cro::Util::Const::degToRad);
+    lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -1.f * cro::Util::Const::degToRad);
 }

@@ -263,7 +263,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<ScrubGameState>(StateID::ScrubGame, m_sharedData, m_minigameData);
     m_stateStack.registerState<ScrubPauseState>(StateID::ScrubPause, m_sharedData, m_minigameData);
 
-    m_stateStack.registerState<SBallBackgroundState>(StateID::SBallBackground, m_minigameData);
+    m_stateStack.registerState<SBallBackgroundState>(StateID::SBallBackground, m_sharedData, m_minigameData);
     m_stateStack.registerState<SBallAttractState>(StateID::SBallAttract, m_sharedData, m_minigameData);
     m_stateStack.registerState<SBallGameState>(StateID::SBallGame, m_sharedData, m_minigameData);
 

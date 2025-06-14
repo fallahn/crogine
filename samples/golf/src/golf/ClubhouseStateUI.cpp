@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -2863,7 +2863,7 @@ void ClubhouseState::createArcadeMenu(cro::Entity parent, std::uint32_t mouseEnt
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     static constexpr float LineSpacing = 10.f;
-    glm::vec3 textPos = { std::floor(bounds.width / 2.f), 57.f, 0.1f };
+    glm::vec3 textPos = { std::floor(bounds.width / 2.f), 62.f, 0.1f };
 
     auto createButton = [&](const std::string& label)
         {
@@ -2895,6 +2895,18 @@ void ClubhouseState::createArcadeMenu(cro::Entity parent, std::uint32_t mouseEnt
                 {
                     requestStackClear();
                     requestStackPush(StateID::ScrubBackground);
+                }
+            });
+
+    //sports ball
+    entity = createButton("Sports Ball");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(StateID::SBallBackground);
                 }
             });
 
