@@ -47,6 +47,9 @@ struct SBallPhysics final
     std::int32_t id = -1;
     std::unique_ptr<btRigidBody> body;
 
+    float lastY = 1.f; //crude detection for hittin bottom of the screen
+    std::int32_t boxCollisionCount = 0;
+
     float rad = 0.f;
     bool collisionHandled = false;
     cro::Entity parent;

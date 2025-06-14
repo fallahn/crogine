@@ -858,7 +858,6 @@ std::int32_t Social::getScrubPB()
     return scrubScore.value;
 }
 
-
 void Social::setSBallScore(std::int32_t score)
 {
     sballScore.read();
@@ -866,7 +865,7 @@ void Social::setSBallScore(std::int32_t score)
     {
         sballScore.value = score;
         sballScore.write();
-        LogI << "Wrote score of " << score << std::endl;
+
         refreshSBallScore();
     }
 }
@@ -896,7 +895,6 @@ std::int32_t Social::getSBallPB()
 {
     return sballScore.value;
 }
-
 
 void Social::takeScreenshot(const cro::String&, std::size_t courseIndex)
 {

@@ -598,7 +598,7 @@ void SBallAttractState::onCachedPush()
 
     cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::UserMusic);
     //m_music.getComponent<cro::AudioEmitter>().play();
-    LogI << "Implment onCachedPush" << std::endl;
+    //LogI << "Implment onCachedPush" << std::endl;
     //update the keyboard help string with current key binds
     m_keyboardHelpString = "Use " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left])
         + " and " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]) + " to Aim.\nPress "
@@ -608,7 +608,7 @@ void SBallAttractState::onCachedPush()
 
 void SBallAttractState::onCachedPop()
 {
-    LogI << "Implement onCachedPop" << std::endl;
+    //LogI << "Implement onCachedPop" << std::endl;
     //m_music.getComponent<cro::AudioEmitter>().stop();
-    m_uiScene.simulate(0.f);
+    //m_uiScene.simulate(0.f);
 }

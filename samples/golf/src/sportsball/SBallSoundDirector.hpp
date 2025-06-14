@@ -39,6 +39,23 @@ namespace cro
     class AudioResource;
 }
 
+struct AudioID final
+{
+    enum
+    {
+        GameOver,
+        LevelUp,
+        Match,
+        Ball01,
+        Ball02,
+        Ball03,
+        Ball04,
+        Ball05,
+        Ball06,
+        Ball07,
+    };
+};
+
 class SBallSoundDirector final : public SoundEffectsDirector
 {
 public:

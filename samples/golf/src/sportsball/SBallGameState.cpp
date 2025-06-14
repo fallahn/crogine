@@ -262,6 +262,12 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
                 m_gameScene.getActiveCamera().getComponent<cro::Callback>().active = true;
                 m_gameScene.getActiveCamera().getComponent<cro::Callback>().setUserData<float>(1.f);
                 break;
+            case SDLK_i:
+                levelUp();
+                break;
+            case SDLK_o:
+                endGame();
+                break;
 #endif
             }
             break;
@@ -449,13 +455,19 @@ void SBallGameState::handleMessage(const cro::Message& msg)
                     }
 
                     floatingScore(score, data.position);
+
+                    m_gameScene.getDirector<SBallSoundDirector>()->playSound(AudioID::Match, 2, 0.35f);
                 }
-                //else if (data.type == sb::CollisionEvent::FastCol)
-                //{
-                //    //TODO move this to audio director
-                //    LogI << data.ballID << ": boink!" << std::endl;
-                //}
+                else if (data.type == sb::CollisionEvent::FastCol)
+                {
+                    m_gameScene.getDirector<SBallSoundDirector>()->playSound(cro::Util::Random::value(AudioID::Ball01, AudioID::Ball07), 2);
+                }
             }
+        }
+        else if (data.type == sb::CollisionEvent::FastCol)
+        {
+            //box collision
+            m_gameScene.getDirector<SBallSoundDirector>()->playSound(cro::Util::Random::value(AudioID::Ball01, AudioID::Ball07), 2, 0.5f);
         }
     }
     else if (msg.id == sb::MessageID::GameMessage)
@@ -527,7 +539,19 @@ void SBallGameState::loadAssets()
 {
     //TODO this is actually the same as the scrub director
     //so we could just use that
-    std::vector<std::string> paths;
+    std::vector<std::string> paths = 
+    {
+        "assets/arcade/scrub/sound/fx/streak_broken.wav",
+        "assets/arcade/scrub/sound/fx/zoom_in.wav",
+        "assets/arcade/sportsball/sound/fx/match.wav",
+        "assets/arcade/sportsball/sound/fx/ball01.wav",
+        "assets/arcade/sportsball/sound/fx/ball02.wav",
+        "assets/arcade/sportsball/sound/fx/ball03.wav",
+        "assets/arcade/sportsball/sound/fx/ball04.wav",
+        "assets/arcade/sportsball/sound/fx/ball05.wav",
+        "assets/arcade/sportsball/sound/fx/ball06.wav",
+        "assets/arcade/sportsball/sound/fx/ball07.wav",
+    };
     m_gameScene.getDirector<SBallSoundDirector>()->loadSounds(paths, m_resources.audio);
 
     m_environmentMap.loadFromFile("assets/images/indoor.hdr");
@@ -1128,6 +1152,9 @@ void SBallGameState::levelUp()
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset(sc::LargeTextOffset * viewScale);
 
+    auto bounds = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::Transform>().move({ 0.f, bounds.height / 2.f });
+
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = FloatingTextAnim(m_uiScene, viewScale);
 
@@ -1136,7 +1163,7 @@ void SBallGameState::levelUp()
     m_gameScene.getActiveCamera().getComponent<cro::Callback>().active = true;
     m_gameScene.getActiveCamera().getComponent<cro::Callback>().setUserData<float>(1.f);
 
-    //TODO trigger some audio
+    m_gameScene.getDirector<SBallSoundDirector>()->playSound(AudioID::LevelUp, 2, 0.5f);
 }
 
 void SBallGameState::endGame()
@@ -1178,6 +1205,8 @@ void SBallGameState::endGame()
     //display game over sign
     m_roundEndEntity.getComponent<cro::Callback>().setUserData<float>(0.f);
     m_roundEndEntity.getComponent<cro::Callback>().active = true;
+
+    m_gameScene.getDirector<SBallSoundDirector>()->playSound(AudioID::GameOver, 2, 0.5f);
 }
 
 void SBallGameState::onCachedPush()

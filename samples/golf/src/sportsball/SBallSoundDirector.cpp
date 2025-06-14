@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/audio/AudioSource.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 
+#include <crogine/util/Random.hpp>
+
 SBallSoundDirector::SBallSoundDirector()
 {
 
@@ -67,7 +69,7 @@ cro::Entity SBallSoundDirector::playSound(std::int32_t idx, std::uint8_t channel
     auto emitter = getNextEntity();
     emitter.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[idx]);
     emitter.getComponent<cro::AudioEmitter>().setVolume(vol);
-    emitter.getComponent<cro::AudioEmitter>().setPitch(1.f);
+    emitter.getComponent<cro::AudioEmitter>().setPitch(1.f + (static_cast<float>(cro::Util::Random::value(-10, 10)) / 100.f));
     emitter.getComponent<cro::AudioEmitter>().setMixerChannel(channel);
     emitter.getComponent<cro::AudioEmitter>().play();
 

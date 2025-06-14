@@ -134,11 +134,37 @@ void SBallPhysicsSystem::process(float dt)
             getScene()->destroyEntity(entity);
         }*/
 
-        if (tx.getPosition().y > OOB)
+        const auto y = tx.getPosition().y;
+
+        //out of the top
+        if (y > OOB)
         {
             auto* msg = postMessage<sb::GameEvent>(sb::MessageID::GameMessage);
             msg->type = sb::GameEvent::OutOfBounds;
         }
+
+
+        //crude bottom of the box collision
+
+        const auto vel = glm::length2(btToGlm(body.body->getInterpolationLinearVelocity()));
+        if (vel > 0.1f
+            && (y - body.rad) < 0 
+            && y < body.lastY)
+        {
+            body.boxCollisionCount++;
+
+            //hit the bottom
+            if (body.boxCollisionCount == 1)
+            {
+                auto* msg = postMessage<sb::CollisionEvent>(sb::MessageID::CollisionMessage);
+                msg->type = sb::CollisionEvent::FastCol;
+            }
+        }
+        else
+        {
+            body.boxCollisionCount = std::max(0, body.boxCollisionCount - 1);
+        }
+        body.lastY = y;
     }
 
     const auto manifoldCount = m_collisionDispatcher->getNumManifolds();
@@ -189,7 +215,7 @@ void SBallPhysicsSystem::process(float dt)
                     {
                         msg->type = sb::CollisionEvent::Default;
 
-                        static constexpr float MinVel = 2.f;
+                        static constexpr float MinVel = 1.f;
 
                         //perhaps we need to include velocity so we only play audio on high impact?
                         const auto vel0 = glm::length2(btToGlm(body0->getInterpolationLinearVelocity()));

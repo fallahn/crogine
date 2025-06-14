@@ -51,8 +51,11 @@ SBallBackgroundState::SBallBackgroundState(cro::StateStack& stack, cro::State::C
     requestStackPush(StateID::SBallAttract);
 #endif
 
+    cro::String str("Playing Sports Ball ");
+    str += cro::String(std::uint32_t(0x26BD));
+
     Social::refreshSBallScore();
-    Social::setStatus(Social::InfoID::Menu, { "Playing Sports Ball" });
+    Social::setStatus(Social::InfoID::Menu, { reinterpret_cast<const char*>(str.toUtf8().c_str()) });
 }
 
 SBallBackgroundState::~SBallBackgroundState()
