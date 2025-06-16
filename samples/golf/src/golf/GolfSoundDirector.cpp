@@ -657,7 +657,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                             {
                                 if (m_soundTimers[AudioID::Applause].elapsed() > ApplauseSoundTime)
                                 {
-                                    playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f);
+                                    playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f, MixerChannel::Effects);
                                     applaud();
                                 }
                                 Social::awardXP(xpValues[XPID::Par] / 2, XPStringID::NiceOn);

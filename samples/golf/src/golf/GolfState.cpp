@@ -4978,7 +4978,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             const std::uint16_t data = evt.packet.as<std::uint16_t>();
             if ((data & 0x00ff) != m_sharedData.localConnectionData.connectionID)
             {
-                const auto club = (data & 0xff00) >> 8;
+                const auto club = std::max(0, std::min((data & 0xff00) >> 8, static_cast<std::int32_t>(ClubID::Putter)));
                 togglePuttingView(club == ClubID::Putter);
 
                 if (club != ClubID::Putter

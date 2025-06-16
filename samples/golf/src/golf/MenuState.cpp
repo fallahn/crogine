@@ -564,13 +564,15 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
             const auto updateServer = [&]()
                 {
-                    if (m_sharedData.hosting
+                    /*if (m_sharedData.hosting
                         && m_sharedData.clientConnection.connected)
                     {
                         m_sharedData.clientConnection.netClient.sendPacket(
                             PacketID::GroupMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    }
+                    }*/
                     cro::Console::print("Grouping set to " + GroupStrings[m_sharedData.groupMode]);
+
+                    m_sharedData.groupMode = ClientGrouping::None;
                 };
 
             if (param == "0")
