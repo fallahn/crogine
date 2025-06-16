@@ -76,7 +76,7 @@ bool PlayerData::saveProfile() const
         cfg.addProperty("name").setValue(/*std::string(s.c_str(), s.c_str() + s.length())*/name);
 
 #ifdef USE_GNS
-        isCustomName = (name != Social::getPlayerName());
+        isCustomName = (name != Social::getSteamName());
 #endif
     }
     cfg.addProperty("ball_colour").setValue(ballColourIndex);
