@@ -365,26 +365,27 @@ static inline const std::string CelFragmentShader = R"(
 #include CASCADE_SELECTION
 
 //#if defined (TERRAIN) || defined(CONTOUR)
+#if !defined (CLASSIC_SHADOWS)
 #include VSM_SHADOWS
-//#else
-//    const float Bias = 0.001; //0.005
-//    float shadowAmount(int cascadeIndex)
-//    {
-//        vec4 lightWorldPos = v_lightWorldPosition[cascadeIndex];
-//
-//        vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
-//        projectionCoords = projectionCoords * 0.5 + 0.5;
-//        float currDepth = projectionCoords.z - Bias;
-//
-//        if (projectionCoords.z > 1.0)
-//        {
-//            return 1.0;
-//        }
-//
-//        float depthSample = TEXTURE(u_shadowMap, vec3(projectionCoords.xy, float(cascadeIndex))).r;
-//        return (currDepth < depthSample) ? 1.0 : 1.0 - (0.3);
-//    }
-//#endif
+#else
+    const float Bias = 0.001; //0.005
+    float shadowAmount(int cascadeIndex)
+    {
+        vec4 lightWorldPos = v_lightWorldPosition[cascadeIndex];
+
+        vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
+        projectionCoords = projectionCoords * 0.5 + 0.5;
+        float currDepth = projectionCoords.z - Bias;
+
+        if (projectionCoords.z > 1.0)
+        {
+            return 1.0;
+        }
+
+        float depthSample = TEXTURE(u_shadowMap, vec3(projectionCoords.xy, float(cascadeIndex))).r;
+        return (currDepth < depthSample) ? 1.0 : 1.0 - (0.3);
+    }
+#endif
 #endif
 
 #if defined (ADD_NOISE)

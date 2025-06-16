@@ -1744,6 +1744,12 @@ void GolfState::loadMaterials()
     {
         wobble = "#define WOBBLE\n";
     }
+
+    if (m_sharedData.shadowQuality == SharedStateData::ShadowQuality::Classic)
+    {
+        wobble += "#define CLASSIC_SHADOWS\n";
+    }
+
     const std::string FadeDistance = "#define FAR_DISTANCE " + std::to_string(CameraFarPlane) + "\n";
     const std::string FadeDistanceHQ = "#define FAR_DISTANCE " + std::to_string(CameraFarPlane *0.8f) + "\n"; //fade closer for HQ trees before they are culled
 

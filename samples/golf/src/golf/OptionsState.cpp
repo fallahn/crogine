@@ -178,9 +178,9 @@ namespace
         0,2,4,8
     };
 
-    const std::array<std::string, 4u> ShadowText =
+    const std::array<std::string, SharedStateData::ShadowQuality::Count> ShadowText =
     {
-        "Very Low", "Low", "High", "Very High"
+        "Very Low", "Low", "High", "Very High", "Classic"
     };
 
     //this needs to be here to be accessed by label callback
@@ -3137,12 +3137,14 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         });
 
     entity = createHighlight(glm::vec2(286.f, 128.f));
+    entity.setLabel("NOTE Toggling Classic shadows requires a restart\nand may cause visual artifacts until done so.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVShadowL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVShadowR, AVCrowdL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVFullScreen, AVTreeL);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = shadowChangedDown;
 
     entity = createHighlight(glm::vec2(355.f, 128.f));
+    entity.setLabel("NOTE Toggling Classic shadows requires a restart\nand may cause visual artifacts until done so.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVShadowR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVFullScreen, AVCrowdR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVShadowL, AVTreeR);

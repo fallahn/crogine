@@ -340,7 +340,7 @@ struct SharedStateData final
     {
         enum
         {
-            VeryLow, Low, Normal, Ultra,
+            VeryLow, Low, Normal, Ultra, Classic,
             Count
         };
     };

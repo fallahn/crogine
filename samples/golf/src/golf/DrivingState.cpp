@@ -1263,6 +1263,11 @@ void DrivingState::loadAssets()
         wobble = "#define WOBBLE\n";
     }
 
+    if (m_sharedData.shadowQuality == SharedStateData::ShadowQuality::Classic)
+    {
+        wobble += "#define CLASSIC_SHADOWS\n";
+    }
+
     for (const auto& [name, str] : IncludeMappings)
     {
         m_resources.shaders.addInclude(name, str);

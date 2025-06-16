@@ -180,9 +180,17 @@ static constexpr std::uint32_t ShadowMapHigh = 3072;
 
 static inline std::uint32_t getShadowResolution(const SharedStateData& sd)
 {
+    /*
+    Lowest, Low, High, Highest, Classic
+    */
     if (sd.shadowQuality == 0)
     {
         return ShadowMapLowest;
+    }
+    else if (sd.shadowQuality == 4)
+    {
+        //classic shadows
+        return ShadowMapLow;
     }
 
     if (sd.nightTime)
@@ -204,7 +212,8 @@ static inline std::uint32_t getCascadeCount(std::int32_t q)
 
 static inline std::uint32_t getBlurPassCount(std::int32_t q)
 {
-    return q == 0 ? 0 : 1;
+    //very low or Classic
+    return (q == 0 || q == 4) ? 0 : 1;
 }
 
 class btVector3;
