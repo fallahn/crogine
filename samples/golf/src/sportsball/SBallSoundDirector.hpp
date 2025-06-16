@@ -31,6 +31,8 @@ source distribution.
 
 #include "../golf/SoundEffectsDirector.hpp"
 
+#include <crogine/detail/glm/vec3.hpp>
+
 #include <vector>
 
 namespace cro
@@ -65,7 +67,7 @@ public:
 
     void loadSounds(const std::vector<std::string>&, cro::AudioResource&);
 
-    cro::Entity playSound(std::int32_t, std::uint8_t, float = 1.f);
+    cro::Entity playSound(std::int32_t, std::uint8_t, float = 1.f, glm::vec3 = glm::vec3(0.f));
 
 private:
     std::vector<const cro::AudioSource*> m_audioSources;

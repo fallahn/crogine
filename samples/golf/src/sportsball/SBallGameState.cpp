@@ -73,8 +73,14 @@ namespace
 {
     cro::String InputKeyb(const InputBinding& ib)
     {
-        return cro::Keyboard::keyString(ib.keys[InputBinding::Left]) + "/" + cro::Keyboard::keyString(ib.keys[InputBinding::Right]) + ": Move     "
+        cro::String str = cro::Keyboard::keyString(ib.keys[InputBinding::Left]) + "/" + cro::Keyboard::keyString(ib.keys[InputBinding::Right]) + ": Move     "
             + cro::Keyboard::keyString(ib.keys[InputBinding::Action]) + ": Drop     Escape: Pause/Quit";
+#ifdef USE_GNS
+        //const auto leader = Social::getSBallLeader();
+        //str += "\nCurrent Leader: " + leader;
+#endif
+
+        return str;
     }
     const cro::String InputPS = cro::String(LeftStick) + " Move     " + cro::String(ButtonCross) + " Drop     " + cro::String(ButtonOption) + " Pause/Quit";
     const cro::String InputXBox = cro::String(LeftStick) + " Move     " + cro::String(ButtonA) + " Drop     " + cro::String(ButtonStart) + " Pause/Quit";
@@ -331,10 +337,11 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
                         m_inputFlags |= InputFlag::Right;
                         m_inputFlags &= ~InputFlag::Left;
                     }
-                    else
+                    //this overrides DPad input...
+                    /*else
                     {
                         m_inputFlags &= ~(InputFlag::Left | InputFlag::Right);
-                    }
+                    }*/
                 }
             }
             break;
@@ -438,7 +445,26 @@ void SBallGameState::handleMessage(const cro::Message& msg)
 
                     if (data.ballID < BallID::Count - 1)
                     {
-                        m_gameScene.getSystem<SBallPhysicsSystem>()->spawnBall(data.ballID + 1, data.position);
+                        //m_gameScene.getSystem<SBallPhysicsSystem>()->spawnBall(data.ballID + 1, data.position);
+
+                        //delay spawning by a frame so the physics can makes sure to tidy up
+                        //first and not overlap the new body
+                        auto ent = m_gameScene.createEntity();
+                        ent.addComponent<cro::Callback>().active = true;
+                        ent.getComponent<cro::Callback>().setUserData<std::uint32_t>(2);
+                        ent.getComponent<cro::Callback>().function
+                            = [&, data](cro::Entity e, float)
+                            {
+                                auto& c = e.getComponent<cro::Callback>().getUserData<std::uint32_t>();
+                                c--;
+                                if (c == 0)
+                                {
+                                    m_gameScene.getSystem<SBallPhysicsSystem>()->spawnBall(data.ballID + 1, data.position);
+                                    e.getComponent<cro::Callback>().active = false;
+                                    m_gameScene.destroyEntity(e);
+                                }
+                            };
+
                         score += 2 * (data.ballID + 1);
                     }
                     else
@@ -456,11 +482,11 @@ void SBallGameState::handleMessage(const cro::Message& msg)
 
                     floatingScore(score, data.position);
 
-                    m_gameScene.getDirector<SBallSoundDirector>()->playSound(AudioID::Match, 2, 0.35f);
+                    m_gameScene.getDirector<SBallSoundDirector>()->playSound(AudioID::Match, 2, 0.35f, data.position);
                 }
                 else if (data.type == sb::CollisionEvent::FastCol)
                 {
-                    m_gameScene.getDirector<SBallSoundDirector>()->playSound(cro::Util::Random::value(AudioID::Ball01, AudioID::Ball07), 2);
+                    m_gameScene.getDirector<SBallSoundDirector>()->playSound(cro::Util::Random::value(AudioID::Ball01, AudioID::Ball07), 2, 1.1f, data.position);
                 }
             }
         }
@@ -620,6 +646,7 @@ void SBallGameState::loadAssets()
                     e.addComponent<cro::Transform>();
                     info.modelDef->createModel(e);
 
+                    info.mass *= 2.f;
                     m_gameScene.getSystem<SBallPhysicsSystem>()->addBallData(std::move(info));
                 }
             }
@@ -911,6 +938,7 @@ void SBallGameState::buildUI()
     ribbonText.addComponent<cro::UIElement>(cro::UIElement::Text, true).characterSize = sc::SmallTextSize;
     ribbonText.getComponent<cro::UIElement>().depth = 0.1f;
     ribbonText.getComponent<cro::UIElement>().absolutePosition = { 0.f, -4.f };
+    ribbonText.getComponent<cro::UIElement>().verticalSpacing = 2.f;
     ribbonRoot.getComponent<cro::Transform>().addChild(ribbonText.getComponent<cro::Transform>());
     m_controlTextEntity = ribbonText;
 
@@ -1127,7 +1155,12 @@ void SBallGameState::floatingScore(std::int32_t score, glm::vec3 pos)
 
 void SBallGameState::updateScoreString()
 {
-    std::string scoreStr = std::to_string(m_sharedGameData.score.score) + "\n\nPersonal Best:\n" + std::to_string(m_sharedGameData.score.personalBest);
+    cro::String scoreStr = std::to_string(m_sharedGameData.score.score) + "\n\nPersonal Best:\n" + std::to_string(m_sharedGameData.score.personalBest);
+//#ifdef USE_GNS
+//    const auto leader = Social::getSBallLeader();
+//    scoreStr += "\n\nCurrent Leader:\n" + leader;// +Social::getSBallLeader();
+//#endif
+    
     m_scoreEntity.getComponent<cro::Text>().setString(scoreStr);
 
     //update level text

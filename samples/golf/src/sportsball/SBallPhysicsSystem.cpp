@@ -216,6 +216,7 @@ void SBallPhysicsSystem::process(float dt)
                         msg->type = sb::CollisionEvent::Default;
 
                         static constexpr float MinVel = 1.f;
+                        static constexpr float MaxVel = 16.f;
 
                         //perhaps we need to include velocity so we only play audio on high impact?
                         const auto vel0 = glm::length2(btToGlm(body0->getInterpolationLinearVelocity()));
@@ -227,6 +228,7 @@ void SBallPhysicsSystem::process(float dt)
                             {
                                 msg->ballID =  body0->getUserIndex();
                                 msg->type = sb::CollisionEvent::FastCol;
+                                msg->vol = std::min(1.f, (vel0 - MinVel) / (MaxVel - MinVel));
                             }
                         }
                         else
@@ -235,8 +237,10 @@ void SBallPhysicsSystem::process(float dt)
                             {
                                 msg->ballID = body1->getUserIndex();
                                 msg->type = sb::CollisionEvent::FastCol;
+                                msg->vol = std::min(1.f, (vel1 - MinVel) / (MaxVel - MinVel));
                             }
                         }
+                        LogI << msg->vol << std::endl;
                     }
                 }
             }

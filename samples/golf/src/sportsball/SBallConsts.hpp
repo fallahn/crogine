@@ -61,6 +61,8 @@ namespace sb
         std::int32_t ballID = -1;
         glm::vec3 position;
 
+        float vol = 1.f; //estimated volume based on collision vel
+
         enum
         {
             //fast collision just means we want to make a noise

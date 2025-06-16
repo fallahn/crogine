@@ -161,11 +161,13 @@ void UIElementSystem::updateEntity(Entity entity, glm::vec2 size)
             const auto screenScale = getViewScale(size);
             entity.getComponent<cro::Transform>().setPosition(glm::vec3(roundPos(element.absolutePosition * screenScale), element.depth));
             entity.getComponent<cro::Text>().setCharacterSize(element.characterSize * screenScale);
+            entity.getComponent<cro::Text>().setVerticalSpacing(element.verticalSpacing * screenScale);
         }
         else
         {
             entity.getComponent<cro::Transform>().setPosition(glm::vec3(element.absolutePosition, element.depth));
             entity.getComponent<cro::Text>().setCharacterSize(element.characterSize);
+            entity.getComponent<cro::Text>().setVerticalSpacing(element.verticalSpacing);
         }
     }
         break;

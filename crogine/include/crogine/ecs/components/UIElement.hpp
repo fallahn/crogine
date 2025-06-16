@@ -62,6 +62,9 @@ namespace cro
         //<! base character size for Text type elements
         std::uint32_t characterSize = 10u;
 
+        //<! base vertical spacing for Text type elements
+        float verticalSpacing = 0.f;
+
         //<!absolute in units offset from relative position
         glm::vec2 absolutePosition = glm::vec2(0.f); 
         //<!normalised relative to screen size (ignored by Sprite and Text types)

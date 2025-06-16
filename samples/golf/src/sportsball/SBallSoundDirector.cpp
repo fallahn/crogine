@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/audio/AudioResource.hpp>
 #include <crogine/audio/AudioSource.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 
 #include <crogine/util/Random.hpp>
 
@@ -59,7 +60,7 @@ void SBallSoundDirector::loadSounds(const std::vector<std::string>& paths, cro::
     }
 }
 
-cro::Entity SBallSoundDirector::playSound(std::int32_t idx, std::uint8_t channel, float vol)
+cro::Entity SBallSoundDirector::playSound(std::int32_t idx, std::uint8_t channel, float vol, glm::vec3 pos)
 {
     //channel 2 = menu sounds
     //channel 3 = voice over
@@ -67,6 +68,7 @@ cro::Entity SBallSoundDirector::playSound(std::int32_t idx, std::uint8_t channel
     CRO_ASSERT(idx > -1 && idx < m_audioSources.size(), "");
 
     auto emitter = getNextEntity();
+    emitter.getComponent<cro::Transform>().setPosition(pos);
     emitter.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[idx]);
     emitter.getComponent<cro::AudioEmitter>().setVolume(vol);
     emitter.getComponent<cro::AudioEmitter>().setPitch(1.f + (static_cast<float>(cro::Util::Random::value(-10, 10)) / 100.f));
