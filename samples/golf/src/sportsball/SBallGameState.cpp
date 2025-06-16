@@ -280,6 +280,8 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
         case SDL_CONTROLLERBUTTONUP:
             if (cro::GameController::controllerID(evt.cbutton.which) == 0)
             {
+                //hmm this just gets overwritten by the left stick...
+                //does it matter though?
                 switch (evt.cbutton.button)
                 {
                 default: break;
@@ -327,21 +329,21 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
                 if (evt.caxis.axis == SDL_CONTROLLER_AXIS_LEFTX
                     /*|| evt.caxis.axis == SDL_CONTROLLER_AXIS_RIGHTX*/) //hmm these will overwrite each other if we try reading both axes
                 {
-                    if (evt.caxis.value < -cro::GameController::LeftThumbDeadZoneV)
+                    if (evt.caxis.value < -cro::GameController::LeftThumbDeadZoneV * 3)
                     {
                         m_inputFlags |= InputFlag::Left;
                         m_inputFlags &= ~InputFlag::Right;
                     }
-                    else if (evt.caxis.value > cro::GameController::LeftThumbDeadZoneV)
+                    else if (evt.caxis.value > cro::GameController::LeftThumbDeadZoneV * 3)
                     {
                         m_inputFlags |= InputFlag::Right;
                         m_inputFlags &= ~InputFlag::Left;
                     }
                     //this overrides DPad input...
-                    /*else
+                    else
                     {
                         m_inputFlags &= ~(InputFlag::Left | InputFlag::Right);
-                    }*/
+                    }
                 }
             }
             break;

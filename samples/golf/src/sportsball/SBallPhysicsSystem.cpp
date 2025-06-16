@@ -240,7 +240,7 @@ void SBallPhysicsSystem::process(float dt)
                                 msg->vol = std::min(1.f, (vel1 - MinVel) / (MaxVel - MinVel));
                             }
                         }
-                        LogI << msg->vol << std::endl;
+                        //LogI << msg->vol << std::endl;
                     }
                 }
             }
