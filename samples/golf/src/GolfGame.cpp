@@ -2198,6 +2198,7 @@ void GolfGame::loadAvatars()
                         pd.profileID = Social::getPlayerID();
                         pd.saveProfile();
                         m_profileData.playerProfiles[0].playerData = pd;
+                        m_profileData.playerProfiles[0].loadout.read(pd.profileID);
 
                         auto copyFiles = cro::FileSystem::listFiles(profilePath);
                         for (const auto& cFile : copyFiles)
@@ -2240,6 +2241,13 @@ void GolfGame::loadAvatars()
             {
                 break;
             }
+        }
+
+        //for some reason we have to do this else the
+        //steam profile won't read the loadout
+        for (auto& pf : m_profileData.playerProfiles)
+        {
+            pf.loadout.read(pf.playerData.profileID);
         }
     }
 

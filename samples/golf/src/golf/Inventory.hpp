@@ -124,7 +124,15 @@ namespace inv
                 {
                     LogW << "Failed reading loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
                 }
+                /*else
+                {
+                    LogI << "Read " << loadoutPath << " successfully" << std::endl;
+                }*/
             }
+            /*else
+            {
+                LogW << "Could not find " << loadoutPath << " for opening" << std::endl;
+            }*/
         }
 
         void write(const std::string& profileID) const
@@ -150,10 +158,10 @@ namespace inv
                 {
                     LogW << "Failed writing loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
                 }
-                else
+                /*else
                 {
-                    LogI << "Updated loadout for " << profileID << std::endl;
-                }
+                    LogI << "Wrote loadout to " << path << std::endl;
+                }*/
             }
         }
     };
