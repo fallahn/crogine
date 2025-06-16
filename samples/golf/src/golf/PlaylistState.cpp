@@ -2138,12 +2138,31 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
         //check if thumb exists and only add if it does.
         //DON'T FORGET YOU HAVE TO MANUALLY GENERATE THE THUMBS!!
         std::vector<std::string> thumbs;
+        std::vector<std::string> pars;
         for (const auto& file : files)
         {
             auto thumb = file.substr(0, file.find_last_of('.')) + ".png";
-            auto thumbPath = cro::FileSystem::getResourcePath() + ThumbPath + dir + "/" + thumb;
+            const auto thumbPath = cro::FileSystem::getResourcePath() + ThumbPath + dir + "/" + thumb;
             if (cro::FileSystem::fileExists(thumbPath))
             {
+                cro::ConfigFile cfg;
+                if (cfg.loadFromFile(cro::FileSystem::getResourcePath() + CoursePath + dir + "/" + file))
+                {
+                    if (const auto* prop = cfg.findProperty("par"); prop != nullptr)
+                    {
+                       pars.push_back(" - Par: " + std::to_string(prop->getValue<std::int32_t>()));
+                    }
+                    else
+                    {
+                        //make sure this aligns the size with thumbs vector
+                        pars.push_back(" ");
+                    }
+                }
+                else
+                {
+                    pars.push_back(" ");
+                }
+
                 thumbs.push_back(thumb);
             }
         }
@@ -2153,9 +2172,10 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
             auto& holeDir = m_holeDirs.emplace_back();
             holeDir.name = dir;
             
-            for (auto& thumb : thumbs)
+            for(auto i = 0u; i < thumbs.size(); ++i)
             {
-                holeDir.holes.emplace_back().name.swap(thumb);
+                holeDir.holes.emplace_back().name.swap(thumbs[i]);
+                holeDir.holes.back().par = pars[i];
             }
         }
     }
@@ -2219,7 +2239,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString(m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name);
+    entity.addComponent<cro::Text>(smallFont).setString(m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name + m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].par);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -2305,7 +2325,8 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(
                             m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].defaultScale);
 
-                        labelEnt.getComponent<cro::Text>().setString(m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name);
+                        const auto str = m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name + m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].par;
+                        labelEnt.getComponent<cro::Text>().setString(str);
                         centreText(labelEnt);
 
                         updateInfo();
@@ -2437,7 +2458,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
-    entity.getComponent<UIElement>().absolutePosition = { -30.f - RootOffset, 16.f + ItemSpacing };
+    entity.getComponent<UIElement>().absolutePosition = { -50.f - RootOffset, 16.f + ItemSpacing };
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto scrollEnt = entity;
 
@@ -2462,7 +2483,9 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
 
                     auto holeCount = m_holeDirs[m_holeDirIndex].holes.size();
                     m_thumbnailIndex = (m_thumbnailIndex + (holeCount - 1)) % holeCount;
-                    labelEnt.getComponent<cro::Text>().setString(m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name);
+
+                    const auto str = m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name + m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].par;
+                    labelEnt.getComponent<cro::Text>().setString(str);
                     centreText(labelEnt);
                     
                     m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(
@@ -2480,7 +2503,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
-    entity.getComponent<UIElement>().absolutePosition = { 21.f - RootOffset, 16.f + ItemSpacing};
+    entity.getComponent<UIElement>().absolutePosition = { 41.f - RootOffset, 16.f + ItemSpacing};
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     scrollEnt = entity;
 
@@ -2504,7 +2527,9 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
 
                     auto holeCount = m_holeDirs[m_holeDirIndex].holes.size();
                     m_thumbnailIndex = (m_thumbnailIndex + 1) % holeCount;
-                    labelEnt.getComponent<cro::Text>().setString(m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name);
+
+                    const auto str = m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name + m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].par;
+                    labelEnt.getComponent<cro::Text>().setString(str);
                     centreText(labelEnt);
 
                     m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(
