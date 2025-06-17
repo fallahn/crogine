@@ -778,6 +778,7 @@
     <ClCompile Include="src\sockets\IXWebSocketServer.cpp" />
     <ClCompile Include="src\sockets\IXWebSocketTransport.cpp" />
     <ClCompile Include="src\SplashScreenState.cpp" />
+    <ClCompile Include="src\sportsball\BackgroundPhysicsSystem.cpp" />
     <ClCompile Include="src\sportsball\SBallAttractState.cpp" />
     <ClCompile Include="src\sportsball\SBallBackgroundState.cpp" />
     <ClCompile Include="src\sportsball\SBallGameState.cpp" />
@@ -1026,6 +1027,7 @@
     <ClInclude Include="src\sockets\IXWebSocketTransport.h" />
     <ClInclude Include="src\sockets\IXWebSocketVersion.h" />
     <ClInclude Include="src\SplashScreenState.hpp" />
+    <ClInclude Include="src\sportsball\BackgroundPhysicsSystem.hpp" />
     <ClInclude Include="src\sportsball\BallType.hpp" />
     <ClInclude Include="src\sportsball\SBallAttractState.hpp" />
     <ClInclude Include="src\sportsball\SBallBackgroundState.hpp" />

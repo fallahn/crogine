@@ -31,17 +31,25 @@ source distribution.
 #include "../scrub/ScrubSharedData.hpp"
 #include "SBallBackgroundState.hpp"
 #include "SBallConsts.hpp"
+#include "BackgroundPhysicsSystem.hpp"
 
 #include <Social.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Random.hpp>
+
+#ifdef CRO_DEBUG_
+#include <crogine/gui/Gui.hpp>
+#endif
 
 SBallBackgroundState::SBallBackgroundState(cro::StateStack& stack, cro::State::Context ctx, const SharedStateData& ssd, SharedMinigameData& sd)
     : cro::State        (stack, ctx),
@@ -114,7 +122,11 @@ bool SBallBackgroundState::simulate(float dt)
 
 void SBallBackgroundState::render()
 {
+    m_renderTexture.clear();
     m_scene.render();
+    m_renderTexture.display();
+
+    m_renderQuad.draw();
 }
 
 //private
@@ -122,6 +134,8 @@ void SBallBackgroundState::buildScene()
 {
     auto& mb = cro::App::getInstance().getMessageBus();
 
+    m_scene.addSystem<BGPhysicsSystem>(mb);
+    m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
@@ -136,6 +150,41 @@ void SBallBackgroundState::buildScene()
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
 
+
+    //spawns random balls i nthe background
+    m_backgroundModels[0] = std::make_unique<cro::ModelDefinition>(m_resources, &m_environmentMap);
+    m_backgroundModels[0]->loadFromFile("assets/arcade/sportsball/models/tennis_ball.cmt");
+    m_backgroundModels[1] = std::make_unique<cro::ModelDefinition>(m_resources, &m_environmentMap);
+    m_backgroundModels[1]->loadFromFile("assets/arcade/sportsball/models/soccer_ball.cmt");
+    m_backgroundModels[2] = std::make_unique<cro::ModelDefinition>(m_resources, &m_environmentMap);
+    m_backgroundModels[2]->loadFromFile("assets/arcade/sportsball/models/beach_ball.cmt");
+    
+    static constexpr std::array Scales = {0.043f, 0.124f, 0.21f};
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(3.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct -= dt;
+            if (ct < 0)
+            {
+                ct += 1.f + cro::Util::Random::value(3, 5);
+
+                auto ent = m_scene.createEntity();
+                ent.addComponent<cro::Transform>().setPosition({ -4.f, 1.f, 0.f });
+                
+                const auto ballID = cro::Util::Random::value(0, 2);
+                m_backgroundModels[ballID]->createModel(ent);
+                ent.getComponent<cro::Transform>().setScale(glm::vec3(Scales[ballID]));
+
+                ent.addComponent<BGPhysics>().radius = Scales[ballID];
+                ent.getComponent<BGPhysics>().velocity.x *= (1.f + (static_cast<float>(cro::Util::Random::value(-50, 50)) / 100.f));
+                ent.getComponent<BGPhysics>().id = ballID;
+            }
+        };
 
 
     auto resize = [&](cro::Camera& cam)
@@ -157,12 +206,16 @@ void SBallBackgroundState::buildScene()
             cam.shadowMapBuffer.create(res, res);
             cam.setBlurPassCount(m_sharedData.shadowQuality == 0 ? 0 : 1);
 
-            const glm::vec2 size(cro::App::getWindow().getSize());
+            const auto winSize = cro::App::getWindow().getSize();
+            m_renderTexture.create(winSize.x, winSize.y);
+            m_renderQuad.setTexture(m_renderTexture.getTexture());
+
+            const glm::vec2 size(winSize);
             const float ratio = size.x / size.y;
             const float y = WorldHeight;
             const float x = y * ratio;
 
-            cam.setOrthographic(-x / 2.f, x / 2.f, 0.f, y, 0.1f, 4.f);
+            cam.setOrthographic(-x / 2.f, x / 2.f, 0.f, y, 0.1f, 14.f);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
 

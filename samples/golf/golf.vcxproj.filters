@@ -678,6 +678,9 @@
     <ClCompile Include="src\sportsball\SBallSoundDirector.cpp">
       <Filter>Source Files\sportsball</Filter>
     </ClCompile>
+    <ClCompile Include="src\sportsball\BackgroundPhysicsSystem.cpp">
+      <Filter>Source Files\sportsball</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -1428,6 +1431,9 @@
       <Filter>Header Files\sportsball</Filter>
     </ClInclude>
     <ClInclude Include="src\sportsball\SBallSoundDirector.hpp">
+      <Filter>Header Files\sportsball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sportsball\BackgroundPhysicsSystem.hpp">
       <Filter>Header Files\sportsball</Filter>
     </ClInclude>
   </ItemGroup>

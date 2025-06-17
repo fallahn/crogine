@@ -1,4 +1,5 @@
 set(SBALL_SRC
+  ${PROJECT_DIR}/sportsball/BackgroundPhysicsSystem.cpp
   ${PROJECT_DIR}/sportsball/SBallAttractState.cpp
   ${PROJECT_DIR}/sportsball/SBallBackgroundState.cpp
   ${PROJECT_DIR}/sportsball/SBallGameState.cpp

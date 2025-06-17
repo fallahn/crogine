@@ -35,10 +35,19 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+
+#include <crogine/gui/GuiClient.hpp>
+
+#include <memory>
 
 struct SharedStateData;
 struct SharedMinigameData;
 class SBallBackgroundState final : public cro::State
+#ifdef CRO_DEBUG_
+    , public cro::GuiClient
+#endif
 {
 public:
 
@@ -65,6 +74,11 @@ private:
     cro::Scene m_scene;
     cro::ResourceCollection m_resources;
     cro::EnvironmentMap m_environmentMap;
+
+    std::array<std::unique_ptr<cro::ModelDefinition>, 3u> m_backgroundModels;
+
+    cro::RenderTexture m_renderTexture;
+    cro::SimpleQuad m_renderQuad;
 
     void buildScene();
 };

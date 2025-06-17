@@ -29,48 +29,25 @@ source distribution.
 
 #pragma once
 
-#include "../golf/SoundEffectsDirector.hpp"
+#include <crogine/ecs/System.hpp>
 
 #include <crogine/detail/glm/vec3.hpp>
 
-#include <vector>
-
-namespace cro
+struct BGPhysics final
 {
-    class AudioSource;
-    class AudioResource;
-}
-
-struct AudioID final
-{
-    enum
-    {
-        //BGTennis, BGFoot, BGBeach
-
-        GameOver,
-        LevelUp,
-        Match,
-        Ball01,
-        Ball02,
-        Ball03,
-        Ball04,
-        Ball05,
-        Ball06,
-        Ball07,
-    };
+    glm::vec3 velocity = glm::vec3(2.f, 0.f, 0.f);
+    float lifetime = 6.f;
+    float radius = 1.f;
+    std::int32_t id = 0;
 };
 
-class SBallSoundDirector final : public SoundEffectsDirector
+class BGPhysicsSystem final : public cro::System
 {
 public:
-    SBallSoundDirector();
+    explicit BGPhysicsSystem(cro::MessageBus&);
 
-    void handleMessage(const cro::Message&) override;
-
-    void loadSounds(const std::vector<std::string>&, cro::AudioResource&);
-
-    cro::Entity playSound(std::int32_t, std::uint8_t, float = 1.f, glm::vec3 = glm::vec3(0.f));
+    void process(float) override;
 
 private:
-    std::vector<const cro::AudioSource*> m_audioSources;
+
 };

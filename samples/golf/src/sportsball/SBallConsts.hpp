@@ -66,7 +66,7 @@ namespace sb
         enum
         {
             //fast collision just means we want to make a noise
-            Match, FastCol, Default
+            Match, FastCol, Default, Background
         }type = Match;
     };
 

@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "SBallSoundDirector.hpp"
+#include "SBallConsts.hpp"
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/audio/AudioResource.hpp>
@@ -39,10 +40,31 @@ source distribution.
 
 SBallSoundDirector::SBallSoundDirector()
 {
-
+    //TODO add background sounds - these have to be FIRST
+    //so that extra audio source indices line up.
 }
 
 //public
+void SBallSoundDirector::handleMessage(const cro::Message& msg)
+{
+    if (msg.id == sb::MessageID::CollisionMessage)
+    {
+        const auto& data = msg.getData<sb::CollisionEvent>();
+        if (data.type == sb::CollisionEvent::Background)
+        {
+            switch (data.ballID)
+            {
+            default: break;
+            case 0:
+            case 1:
+            case 2:
+                //playSound(AudioID::BGTennis + data.ballID, 2, 1.f, data.position);
+                break;
+            }
+        }
+    }
+}
+
 void SBallSoundDirector::loadSounds(const std::vector<std::string>& paths, cro::AudioResource& ar)
 {
     for (const auto& path : paths)

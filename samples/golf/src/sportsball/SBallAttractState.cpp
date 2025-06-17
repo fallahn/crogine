@@ -32,6 +32,7 @@ source distribution.
 #include "../scrub/ScrubSharedData.hpp"
 #include "../scrub/TabData.hpp"
 #include "SBallAttractState.hpp"
+#include "SBallSoundDirector.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 
@@ -198,6 +199,8 @@ void SBallAttractState::addSystems()
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::ParticleSystem>(mb);
     m_uiScene.addSystem<cro::AudioSystem>(mb);
+
+    m_uiScene.addDirector<SBallSoundDirector>();
 }
 
 void SBallAttractState::buildScene()

@@ -80,7 +80,7 @@ struct TextAnimCallback final
 struct MenuTextCallback final
 {
     const float baseScale = 1.f;
-    MenuTextCallback(float bs = 1.f) : baseScale(bs) {}
+    explicit MenuTextCallback(float bs = 1.f) : baseScale(bs) {}
 
     void operator() (cro::Entity e, float dt)
     {
