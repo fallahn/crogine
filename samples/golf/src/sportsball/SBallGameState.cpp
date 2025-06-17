@@ -654,7 +654,8 @@ void SBallGameState::loadAssets()
                     e.addComponent<cro::Transform>();
                     info.modelDef->createModel(e);
 
-                    info.mass *= 2.f;
+                    //attempt at making the balls weightier
+                    info.mass *= 100.f;
                     m_gameScene.getSystem<SBallPhysicsSystem>()->addBallData(std::move(info));
                 }
             }
@@ -702,7 +703,7 @@ void SBallGameState::addSystems()
     m_gameScene.addSystem<cro::AudioSystem>(mb);
 
     m_gameScene.addDirector<SBallParticleDirector>(m_resources.textures)->init();
-    m_gameScene.addDirector<SBallSoundDirector>();
+    m_gameScene.addDirector<SBallSoundDirector>(m_resources.audio)->init();
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
@@ -785,7 +786,7 @@ void SBallGameState::buildScene()
         };
 
     auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, -0.05f, 1.4f });
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, -0.05f, 2.4f });
 
     //callback for camera shake
     camEnt.addComponent<cro::Callback>().setUserData<float>(1.f);

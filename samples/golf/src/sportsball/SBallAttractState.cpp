@@ -195,12 +195,11 @@ void SBallAttractState::addSystems()
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
-    //m_uiScene.addSystem<cro::UIElementSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::ParticleSystem>(mb);
     m_uiScene.addSystem<cro::AudioSystem>(mb);
 
-    m_uiScene.addDirector<SBallSoundDirector>();
+    m_uiScene.addDirector<SBallSoundDirector>(m_resources.audio)->init();
 }
 
 void SBallAttractState::buildScene()
@@ -545,6 +544,8 @@ void SBallAttractState::buildScene()
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     resize(cam);
+
+    m_uiScene.getActiveListener().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.4f });
 }
 
 void SBallAttractState::prevTab()

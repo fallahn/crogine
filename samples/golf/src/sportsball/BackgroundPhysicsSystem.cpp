@@ -33,6 +33,8 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 
+#include <crogine/util/Maths.hpp>
+
 namespace
 {
     constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
@@ -63,7 +65,7 @@ void BGPhysicsSystem::process(float dt)
             auto& tx = entity.getComponent<cro::Transform>();
             tx.move(phys.velocity * dt);
 
-            const float rotation = glm::length(phys.velocity) / phys.radius;
+            const float rotation = (glm::length(phys.velocity) / phys.radius) * cro::Util::Maths::sgn(phys.velocity.x);
             tx.rotate(cro::Transform::Z_AXIS, -rotation * dt);
 
             const auto newPos = tx.getPosition();
@@ -71,7 +73,7 @@ void BGPhysicsSystem::process(float dt)
             {
                 tx.setPosition({ newPos.x, phys.radius, newPos.y });
                 phys.velocity = glm::reflect(phys.velocity, cro::Transform::Y_AXIS);
-                phys.velocity *= 0.9f;
+                phys.velocity *= 0.85f;
 
                 auto* msg = postMessage<sb::CollisionEvent>(sb::MessageID::CollisionMessage);
                 msg->ballID = phys.id;

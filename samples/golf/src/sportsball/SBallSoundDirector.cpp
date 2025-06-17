@@ -38,10 +38,11 @@ source distribution.
 
 #include <crogine/util/Random.hpp>
 
-SBallSoundDirector::SBallSoundDirector()
+SBallSoundDirector::SBallSoundDirector(cro::AudioResource& ar)
 {
-    //TODO add background sounds - these have to be FIRST
+    //add background sounds - these have to be FIRST
     //so that extra audio source indices line up.
+    loadSounds({"assets/arcade/sportsball/sound/fx/tennis.wav","assets/arcade/sportsball/sound/fx/ball03.wav","assets/arcade/sportsball/sound/fx/beach.wav"}, ar);
 }
 
 //public
@@ -58,7 +59,7 @@ void SBallSoundDirector::handleMessage(const cro::Message& msg)
             case 0:
             case 1:
             case 2:
-                //playSound(AudioID::BGTennis + data.ballID, 2, 1.f, data.position);
+                playSound(AudioID::BGTennis + data.ballID, 2, 1.f, data.position);
                 break;
             }
         }

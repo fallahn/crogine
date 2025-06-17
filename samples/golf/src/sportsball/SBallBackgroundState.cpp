@@ -173,8 +173,10 @@ void SBallBackgroundState::buildScene()
             {
                 ct += 1.f + cro::Util::Random::value(3, 5);
 
+                const float dir = static_cast<float>((cro::Util::Random::value(0, 1) * 2) - 1);
+
                 auto ent = m_scene.createEntity();
-                ent.addComponent<cro::Transform>().setPosition({ -4.f, 1.f, 0.f });
+                ent.addComponent<cro::Transform>().setPosition({ -4.f * dir, 1.f, 0.f });
                 
                 const auto ballID = cro::Util::Random::value(0, 2);
                 m_backgroundModels[ballID]->createModel(ent);
@@ -182,6 +184,7 @@ void SBallBackgroundState::buildScene()
 
                 ent.addComponent<BGPhysics>().radius = Scales[ballID];
                 ent.getComponent<BGPhysics>().velocity.x *= (1.f + (static_cast<float>(cro::Util::Random::value(-50, 50)) / 100.f));
+                ent.getComponent<BGPhysics>().velocity.x *= dir;
                 ent.getComponent<BGPhysics>().id = ballID;
             }
         };

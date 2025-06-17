@@ -45,7 +45,7 @@ struct AudioID final
 {
     enum
     {
-        //BGTennis, BGFoot, BGBeach
+        BGTennis, BGFoot, BGBeach,
 
         GameOver,
         LevelUp,
@@ -63,13 +63,15 @@ struct AudioID final
 class SBallSoundDirector final : public SoundEffectsDirector
 {
 public:
-    SBallSoundDirector();
+    SBallSoundDirector(cro::AudioResource&);
 
     void handleMessage(const cro::Message&) override;
 
     void loadSounds(const std::vector<std::string>&, cro::AudioResource&);
 
     cro::Entity playSound(std::int32_t, std::uint8_t, float = 1.f, glm::vec3 = glm::vec3(0.f));
+
+    void init() { resizeEmitters(); }
 
 private:
     std::vector<const cro::AudioSource*> m_audioSources;
