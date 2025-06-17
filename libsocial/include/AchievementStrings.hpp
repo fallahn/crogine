@@ -177,7 +177,9 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "big_spender",
     "hoarder",
     "entrepreneur",
-    "fickle"
+    "fickle",
+    "get_this_over",
+    "another_level"
 };
 
 //appears on the notification
@@ -313,7 +315,9 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Big Spender",
     "Hoarder",
     "Entrepreneur",
-    "Fickle"
+    "Fickle",
+    "Let's Get This Over With",
+    "Another Level"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -450,6 +454,8 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Buy everything at the Equipment Counter", false),
     std::make_pair("Sell a piece of gear back to the Equipment Counter", false),
     std::make_pair("Buy at least one item from each manufacturer at the Equipment Counter", false),
+    std::make_pair("Take a Gimme from a tee shot", false),
+    std::make_pair("Reach Level 2 or higher at Sports Ball", false),
 };
 
 //assuming trophies load correctly they are:
@@ -624,6 +630,8 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*129*/TrophyID::Platinum,
     /*130*/TrophyID::BronzeCup,
     /*131*/TrophyID::GoldCup,
+    /*132*/TrophyID::SilverCup,
+    /*133*/TrophyID::SilverFigure,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

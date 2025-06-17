@@ -192,6 +192,8 @@ namespace AchievementID
         Hoarder,
         Entrepreneur,
         Fickle,
+        GetThisOver,
+        AnotherLevel,
 
         Count
     };

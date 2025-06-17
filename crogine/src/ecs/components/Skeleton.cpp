@@ -391,15 +391,34 @@ void Attachment::setParent(std::int32_t parent)
 
 void Attachment::setModel(cro::Entity model)
 {
+    if (model == m_model)
+    {
+        return;
+    }
+
+    if (model.isValid() &&
+        model.getComponent<cro::Transform>().m_attachmentParent != nullptr)
+    {
+        LogW << "Attachment model is already attached to another model and will be removed!" << std::endl;
+        model.getComponent<cro::Transform>().m_attachmentParent->m_model = {};
+        model.getComponent<cro::Transform>().m_attachmentParent = nullptr;
+    }
+
     //reset any existing transform
-    if (m_model != model &&
-        m_model.isValid() &&
+    if (m_model.isValid() &&
         m_model.hasComponent<cro::Transform>())
     {
+        m_model.getComponent<cro::Transform>().m_attachmentParent = nullptr;
         m_model.getComponent<cro::Transform>().m_attachmentTransform = glm::mat4(1.f);
     }
 
     m_model = model;
+
+    //if we have a new model make sure its parent is up to date
+    if (m_model.isValid())
+    {
+        m_model.getComponent<cro::Transform>().m_attachmentParent = this;
+    }
 }
 
 void Attachment::setPosition(glm::vec3 position)

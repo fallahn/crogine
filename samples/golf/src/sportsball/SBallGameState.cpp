@@ -39,6 +39,9 @@ source distribution.
 #include "SBallParticleDirector.hpp"
 #include "SBallSoundDirector.hpp"
 
+#include <Achievements.hpp>
+#include <AchievementStrings.hpp>
+
 #include <crogine/core/ConfigFile.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -1252,6 +1255,8 @@ void SBallGameState::updateScoreString()
 
 void SBallGameState::levelUp()
 {
+    Achievements::awardAchievement(AchievementStrings[AchievementID::AnotherLevel]);
+
     m_sharedGameData.score.level++;
 
     const auto& font = m_sharedGameData.fonts->get(sc::FontID::Body);

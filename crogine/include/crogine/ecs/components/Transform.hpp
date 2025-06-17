@@ -338,6 +338,7 @@ namespace cro
         //this is a fudge to allow transforms to read
         //skeletal attachment points
         glm::mat4 m_attachmentTransform;
+        Attachment* m_attachmentParent = nullptr; //use this to make sure we're only parented to one attachment at a time.
         friend class SkeletalAnimator;
         friend struct Attachment;
     };

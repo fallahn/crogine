@@ -5354,6 +5354,12 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     Achievements::incrementStat(StatStrings[StatID::PutterGimmies]);
                 }
 
+                if (m_sharedData.connectionData[client].playerData[player].holeScores[m_currentHole] == 2)
+                {
+                    //we got this from a tee shot
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::GetThisOver]);
+                }
+
                 if (!m_sharedData.connectionData[client].playerData[player].isCPU)
                 {
                     m_achievementTracker.noGimmeUsed = false;
