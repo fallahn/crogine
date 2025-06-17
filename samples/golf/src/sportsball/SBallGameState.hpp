@@ -69,6 +69,7 @@ private:
     std::int32_t m_currentID;
     std::int32_t m_nextID;
 
+    std::vector<cro::Entity> m_wheelModels;
     cro::Entity m_wheelEnt;
     cro::Entity m_cursor;
     std::uint16_t m_inputFlags;

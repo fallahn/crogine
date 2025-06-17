@@ -30,6 +30,7 @@ source distribution.
 #include "../Colordome-32.hpp"
 #include "../golf/GameConsts.hpp"
 #include "../golf/SharedStateData.hpp"
+#include "../golf/TextAnimCallback.hpp"
 #include "../scrub/ScrubSharedData.hpp"
 #include "../scrub/ScrubConsts.hpp"
 #include "SBallGameState.hpp"
@@ -461,7 +462,10 @@ void SBallGameState::handleMessage(const cro::Message& msg)
                                 c--;
                                 if (c == 0)
                                 {
-                                    m_gameScene.getSystem<SBallPhysicsSystem>()->spawnBall(data.ballID + 1, data.position);
+                                    const auto id = data.ballID + 1;
+
+                                    m_gameScene.getSystem<SBallPhysicsSystem>()->spawnBall(id, data.position);
+                                    m_wheelModels[id].getComponent<cro::Callback>().active = true;
                                     e.getComponent<cro::Callback>().active = false;
                                     m_gameScene.destroyEntity(e);
                                 }
@@ -584,7 +588,6 @@ void SBallGameState::loadAssets()
 
     m_environmentMap.loadFromFile("assets/images/indoor.hdr");
     
-    std::vector<cro::Entity> wheelModels;
 
     cro::ConfigFile cfg;
     if (cfg.loadFromFile("assets/arcade/sportsball/data/balls.dat"))
@@ -644,7 +647,7 @@ void SBallGameState::loadAssets()
 
 
                     //for wheel of evolution - see below
-                    e = wheelModels.emplace_back(m_gameScene.createEntity());
+                    e = m_wheelModels.emplace_back(m_gameScene.createEntity());
                     e.addComponent<cro::Transform>();
                     info.modelDef->createModel(e);
 
@@ -661,22 +664,25 @@ void SBallGameState::loadAssets()
 
 
     //create the 'wheel of evolution'
-    if(!wheelModels.empty())
+    if(!m_wheelModels.empty())
     m_wheelEnt = m_gameScene.createEntity();
     m_wheelEnt.addComponent<cro::Transform>().setPosition({ 0.6f, 0.2f, 0.2f });
 
     static constexpr float Rad = 0.13f;
-    const float Arc = cro::Util::Const::TAU / wheelModels.size();
+    const float Arc = cro::Util::Const::TAU / m_wheelModels.size();
 
     static constexpr float BaseScale = 0.01f;
 
-    for (auto i = 0u; i < wheelModels.size(); ++i)
+    for (auto i = 0u; i < m_wheelModels.size(); ++i)
     {
-        glm::vec3 p(std::cos(Arc * i), std::sin(Arc * i), 0.f);
-        wheelModels[i].getComponent<cro::Transform>().setPosition(p * Rad);
-        wheelModels[i].getComponent<cro::Transform>().setScale(glm::vec3(BaseScale + (i * 0.0045f)));
+        const glm::vec3 p(std::cos(Arc * i), std::sin(Arc * i), 0.f);
+        const auto scale = glm::vec3(BaseScale + (i * 0.0045f));
 
-        m_wheelEnt.getComponent<cro::Transform>().addChild(wheelModels[i].getComponent<cro::Transform>());
+        m_wheelModels[i].getComponent<cro::Transform>().setPosition(p * Rad);
+        m_wheelModels[i].getComponent<cro::Transform>().setScale(scale);
+        m_wheelModels[i].addComponent<cro::Callback>().function = MenuTextCallback(scale.x);
+
+        m_wheelEnt.getComponent<cro::Transform>().addChild(m_wheelModels[i].getComponent<cro::Transform>());
     }
 }
 
