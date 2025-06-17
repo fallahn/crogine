@@ -944,7 +944,82 @@ void SBallGameState::buildUI()
     ribbonRoot.getComponent<cro::Transform>().addChild(ribbonText.getComponent<cro::Transform>());
     m_controlTextEntity = ribbonText;
 
+#ifdef USE_GNS
+    ribbonText = m_uiScene.createEntity();
+    ribbonText.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    ribbonText.addComponent<cro::Drawable2D>();
+    ribbonText.addComponent<cro::Text>(font).setString(Social::getSBallLeader());
+    ribbonText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    ribbonText.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    ribbonText.addComponent<cro::UIElement>(cro::UIElement::Text, true).characterSize = sc::SmallTextSize;
+    ribbonText.getComponent<cro::UIElement>().depth = 0.1f;
+    ribbonText.getComponent<cro::UIElement>().absolutePosition = { 0.f, -4.f };
+    ribbonText.getComponent<cro::UIElement>().verticalSpacing = 2.f;
 
+    static constexpr float DisplayTime = 6.f;
+    struct RibbonData final
+    {
+        float currentTime = DisplayTime;
+        float scale = 1.f;
+        std::int32_t state = 0;
+        std::int32_t entityIndex = 0;
+    };
+    ribbonText.addComponent<cro::Callback>().active = true;
+    ribbonText.getComponent<cro::Callback>().setUserData<RibbonData>();
+    ribbonText.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& [ct, scale, state, idx] = e.getComponent<cro::Callback>().getUserData<RibbonData>();
+            switch (state)
+            {
+            default: break;
+            case 0:
+                //pause
+                ct -= dt;
+                if (ct < 0)
+                {
+                    ct += DisplayTime;
+                    state = 1;
+
+                    //when the ent was created this may not be up to date
+                    //so we check again here
+                    e.getComponent<cro::Text>().setString(Social::getSBallLeader());
+                }
+                break;
+            case 1:
+                //shrink
+            {
+                auto activeEnt = idx == 1 ? e : m_controlTextEntity;
+                scale = std::max(0.f, scale - (dt * 5.f));
+
+                activeEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f, cro::Util::Easing::easeOutBack(scale)));
+
+                if (scale == 0)
+                {
+                    state = 2;
+                }
+            }
+                break;
+            case 2:
+                //grow
+            {
+                auto activeEnt = idx == 0 ? e : m_controlTextEntity;
+                scale = std::min(1.f, scale + (dt * 5.f));
+
+                activeEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f, cro::Util::Easing::easeOutBack(scale)));
+
+                if (scale == 1)
+                {
+                    state = 0;
+                    idx = idx == 0 ? 1 : 0;
+                }
+            }
+                break;
+            }
+        };
+    ribbonRoot.getComponent<cro::Transform>().addChild(ribbonText.getComponent<cro::Transform>());
+
+#endif
 
 
     //separate node has round end sign / final scores / high score on it
