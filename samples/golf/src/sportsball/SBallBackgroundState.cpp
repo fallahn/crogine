@@ -70,6 +70,7 @@ SBallBackgroundState::SBallBackgroundState(cro::StateStack& stack, cro::State::C
 #ifdef CRO_DEBUG_
     //requestStackPush(StateID::SBallGame);
     requestStackPush(StateID::SBallAttract);
+    //voiceWindow();
 #else
     requestStackPush(StateID::SBallAttract);
 #endif
@@ -236,3 +237,22 @@ void SBallBackgroundState::buildScene()
     lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -45.f * cro::Util::Const::degToRad);
     lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -1.f * cro::Util::Const::degToRad);
 }
+
+//#ifdef CRO_DEBUG_
+//void SBallBackgroundState::voiceWindow()
+//{
+//#ifdef _WIN32
+//    registerWindow([&]()
+//        {
+//            for (auto i = 0; i < m_comInitRAII.voiceCount; ++i)
+//            {
+//                ISpObjectToken* t = nullptr;
+//                m_comInitRAII.voiceList->Item(i, &t);
+//                m_comInitRAII.voice->SetVoice(t);
+//                m_comInitRAII.voice->Speak(L"Hello World", SPF_DEFAULT, NULL);
+//                t->Release();
+//            }        
+//        });
+//#endif
+//}
+//#endif

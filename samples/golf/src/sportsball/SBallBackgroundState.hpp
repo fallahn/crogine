@@ -42,6 +42,13 @@ source distribution.
 
 #include <memory>
 
+//#ifdef CRO_DEBUG_
+//#ifdef _WIN32
+//#include <sapi.h>
+//#include <sphelper.h>
+//#endif
+//#endif
+
 struct SharedStateData;
 struct SharedMinigameData;
 class SBallBackgroundState final : public cro::State
@@ -81,4 +88,40 @@ private:
     cro::SimpleQuad m_renderQuad;
 
     void buildScene();
+
+#ifdef CRO_DEBUG_
+    /*struct ComInitRAII final
+    {
+        ISpVoice* voice = nullptr;
+        IEnumSpObjectTokens* voiceList = nullptr;
+        unsigned long voiceCount = 0;
+
+        ISpObjectToken* selectedVoice = nullptr;
+
+        ComInitRAII()
+        {
+            CoInitialize(NULL);
+            CoCreateInstance(CLSID_SpVoice, NULL, CLSCTX_ALL, IID_ISpVoice, (void**)&voice);
+
+            SpEnumTokens(SPCAT_VOICES, NULL, NULL, &voiceList);
+            voiceList->GetCount(&voiceCount);
+        }
+        ~ComInitRAII()
+        {
+            if (voiceList)
+            {
+                voiceList->Release();
+            }
+
+            if (voice)
+            {
+                voice->Release();
+            }
+
+            CoUninitialize();
+        }
+    }m_comInitRAII;
+    
+    void voiceWindow();*/
+#endif
 };

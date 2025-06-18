@@ -39,39 +39,6 @@ void main()
 
 static inline const std::string HoleFragment =
 R"(
-//OUTPUT
-
-//uniform sampler2D u_depthMap;
-//uniform sampler2D u_diffuseMap;
-
-//vec2 calcCoords(vec3 eyeDirection)
-//{
-//    float depth = (1.0 - texture(u_depthMap, v_texCoord0).r) * scale;
-//    vec2 pos = (eyeDirection.xy / eyeDirection.z) * depth;
-//    return v_texCoord0 - pos;
-//}
-//
-//vec2 calcCoordsStepped(vec3 eyeDirection)
-//{
-//    float layerThickness = 1.0 / float(layers);
-//    float currDepth = 0.0;
-//
-//    vec2 pos = eyeDirection.xy * scale;
-//    vec2 delta = pos / float(layers);
-//
-//    vec2 coords = v_texCoord0;
-//    float depthVal = 1.0 - TEXTURE(u_depthMap, coords).r;
-//
-//    while(currDepth < depthVal)
-//    {
-//        coords -= delta;
-//        depthVal = 1.0 - TEXTURE(u_depthMap, coords).r;
-//        currDepth += layerThickness;
-//    }
-//
-//    return coords;
-//}
-
 #define USE_MRT
 #include OUTPUT_LOCATION
 
