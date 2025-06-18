@@ -171,7 +171,7 @@ void SBallBackgroundState::buildScene()
             ct -= dt;
             if (ct < 0)
             {
-                ct += 1.f + cro::Util::Random::value(3, 5);
+                ct += 1.f + cro::Util::Random::value(5, 7);
 
                 const float dir = static_cast<float>((cro::Util::Random::value(0, 1) * 2) - 1);
 

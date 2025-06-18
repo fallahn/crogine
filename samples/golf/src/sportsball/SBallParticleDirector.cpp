@@ -54,7 +54,7 @@ void SBallParticleDirector::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<sb::CollisionEvent>();
         if (data.type == sb::CollisionEvent::Match)
         {
-            getEnt(sc::ParticleID::BallMatch, data.position);
+            getEnt(sc::ParticleID::BallMatch, data.position).getComponent<cro::ParticleEmitter>().settings.spawnRadius = data.ballRadius;
         }
     }
 }

@@ -352,6 +352,8 @@ private:
     std::array<GearMenu, GearID::Count> m_gearMenus = {};
     void refreshItemLists();
     
+    void refreshItemDescription(std::uint32_t);
+
     struct StatBar final
     {
         cro::Entity bgEnt;

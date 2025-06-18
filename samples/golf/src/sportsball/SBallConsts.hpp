@@ -62,6 +62,7 @@ namespace sb
         glm::vec3 position;
 
         float vol = 1.f; //estimated volume based on collision vel
+        float ballRadius = 0.5f;
 
         enum
         {

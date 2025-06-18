@@ -5365,6 +5365,7 @@ std::pair<cro::Entity, cro::Entity> ProfileState::createBrowserBackground(std::i
 void ProfileState::quitState()
 {
     m_activeProfile.loadout.write(m_activeProfile.playerData.profileID);
+    m_profileData.playerProfiles[m_profileData.activeProfileIndex].loadout = m_activeProfile.loadout;
 
     auto currentMenu = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
     if (currentMenu == MenuID::Main)
@@ -5917,6 +5918,12 @@ void ProfileState::onCachedPush()
     {
         m_activeProfile = m_profileData.playerProfiles[m_profileData.activeProfileIndex];
 
+        m_activeProfile.loadout.read(m_activeProfile.playerData.profileID);
+        for (auto i = 0u; i < m_gearMenus.size(); ++i)
+        {
+            refreshItemDescription(i);
+        }
+
         //refresh the avatar settings
         setAvatarIndex(indexFromAvatarID(m_activeProfile.playerData.skinID));
         setHairIndex(indexFromHairID(m_activeProfile.playerData.hairID));
@@ -6037,29 +6044,7 @@ void ProfileState::refreshItemLists()
                 }
 
                 //set the string for the selected item
-                if (m_activeProfile.loadout.items[i] == -1)
-                {
-                    m_gearMenus[i].description.getComponent<cro::Text>().setString("(1/" + std::to_string(m_gearMenus[i].items.size()) + ") Default");
-                }
-                else
-                {
-                    const auto& items = m_gearMenus[i].items;
-                    std::size_t itemIndex = 0;
-                    const auto toFind = m_activeProfile.loadout.items[i];
-                    if (const auto res = std::find_if(items.cbegin(), items.cend(),
-                        [toFind](cro::Entity e)
-                        {
-                            const auto idx = e.getComponent<cro::UIInput>().getUserData<std::pair<std::int32_t, std::int32_t>>().second;
-                            return idx == toFind;
-                        }); res != items.cend())
-                    {
-                        itemIndex = std::distance(items.cbegin(), res);
-                    }
-
-                    const std::string num = "(" + std::to_string(itemIndex + 1) + "/" + std::to_string(m_gearMenus[i].items.size()) + ") ";
-                    m_gearMenus[i].description.getComponent<cro::Text>().setString(num + inv::Manufacturers[inv::Items[m_activeProfile.loadout.items[i]].manufacturer]);
-                }
-
+                refreshItemDescription(i);
 
                 auto& verts = m_gearMenus[i].background.getComponent<cro::Drawable2D>().getVertexData();
 
@@ -6094,6 +6079,32 @@ void ProfileState::refreshItemLists()
                 m_gearMenus[i].background.getComponent<cro::Drawable2D>().updateLocalBounds();
             }
         }
+    }
+}
+
+void ProfileState::refreshItemDescription(std::uint32_t i)
+{
+    if (m_activeProfile.loadout.items[i] == -1)
+    {
+        m_gearMenus[i].description.getComponent<cro::Text>().setString("(1/" + std::to_string(m_gearMenus[i].items.size()) + ") Default");
+    }
+    else
+    {
+        const auto& items = m_gearMenus[i].items;
+        std::size_t itemIndex = 0;
+        const auto toFind = m_activeProfile.loadout.items[i];
+        if (const auto res = std::find_if(items.cbegin(), items.cend(),
+            [toFind](cro::Entity e)
+            {
+                const auto idx = e.getComponent<cro::UIInput>().getUserData<std::pair<std::int32_t, std::int32_t>>().second;
+                return idx == toFind;
+            }); res != items.cend())
+        {
+            itemIndex = std::distance(items.cbegin(), res);
+        }
+
+        const std::string num = "(" + std::to_string(itemIndex + 1) + "/" + std::to_string(m_gearMenus[i].items.size()) + ") ";
+        m_gearMenus[i].description.getComponent<cro::Text>().setString(num + inv::Manufacturers[inv::Items[m_activeProfile.loadout.items[i]].manufacturer]);
     }
 }
 

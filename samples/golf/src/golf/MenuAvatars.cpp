@@ -800,7 +800,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.addComponent<cro::Transform>().setPosition({ 106.f, 101.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_flyout");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_highlight_small");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
@@ -1015,7 +1015,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     }
                     else
                     {
-                        profile.ballID = m_cosmeticIDs.balls[cro::Util::Random::value(0u, m_cosmeticIDs.balls.size() - 1)];
+                        profile.ballID = 0;// m_cosmeticIDs.balls[cro::Util::Random::value(0u, m_cosmeticIDs.balls.size() - 1)];
 
                     }
 

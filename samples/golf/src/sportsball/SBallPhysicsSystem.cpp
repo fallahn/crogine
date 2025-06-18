@@ -210,6 +210,7 @@ void SBallPhysicsSystem::process(float dt)
                         /*phys0->collisionHandled = true;
                         phys1->collisionHandled = true;*/
                         msg->type = sb::CollisionEvent::Match;
+                        msg->ballRadius = glm::length(pos1 - pos0) / 2.f;
                     }
                     else
                     {
