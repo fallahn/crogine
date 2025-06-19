@@ -1214,8 +1214,12 @@ bool GolfGame::initialise()
         WebSock::start(m_sharedData.webPort);
     }
 
-    //Discord::connect();
-
+#ifdef USE_GNS
+    /*if (m_sharedData.useDiscord)
+    {
+        Discord::connect();
+    }*/
+#endif
     return true;
 }
 
