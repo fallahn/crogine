@@ -88,6 +88,26 @@ if(USE_STEAM)
   SET(GNS_DIR ${libgns_SOURCE_DIR})
   SET(SOCIAL_DIR ${GNS_DIR}/golf_ach/src)
   SET(SOCIAL_INCLUDE_DIR ${GNS_DIR}/golf_ach/include)
+
+if(APPLE)
+#apple sucks
+else()
+
+  SET(DISCORD_SDK_ROOT "${GNS_DIR}/extlibs/discord")
+  SET(DISCORD_SDK_LIB_DIR "${DISCORD_SDK_ROOT}/lib/release")
+  SET(DISCORD_SDK_BIN_DIR "${DISCORD_SDK_ROOT}/bin/release")
+  SET(DISCORD_SDK_INCLUDE_DIR "${DISCORD_SDK_ROOT}/include")
+
+  add_compile_definitions(USE_DCD)
+  if(WIN32)
+      set(DISCORD_LIB_PATH "${DISCORD_SDK_LIB_DIR}/discord_partner_sdk.lib")
+      set(DISCORD_SHARED_LIB "${DISCORD_SDK_BIN_DIR}/discord_partner_sdk.dll")
+  else() # Linux
+      set(DISCORD_LIB_PATH "${DISCORD_SDK_LIB_DIR}/libdiscord_partner_sdk.so")
+      set(DISCORD_SHARED_LIB "${DISCORD_SDK_LIB_DIR}/libdiscord_partner_sdk.so")
+  endif()
+endif()
+
   SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${GNS_DIR}/cmake/modules/")
   find_package(STEAMWORKS REQUIRED)
 
@@ -110,6 +130,7 @@ if(USE_STEAM)
   include_directories(${STEAMWORKS_INCLUDE_DIR})
   include_directories(${GNS_DIR}/golf_workshop/include)
   include_directories(${GNS_DIR}/libgns/include)
+  include_directories(${DISCORD_SDK_INCLUDE_DIR})
 endif()
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -200,6 +221,10 @@ endif()
 
 if(USE_STEAM)
   target_link_libraries(${PROJECT_NAME} ${STEAMWORKS_LIBRARIES})
+
+  if (NOT APPLE)
+    target_link_libraries(${PROJECT_NAME} ${DISCORD_LIB_PATH})
+  endif()
 else()
   target_link_libraries(${PROJECT_NAME} CURL::libcurl)
 endif()

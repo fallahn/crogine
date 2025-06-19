@@ -1215,10 +1215,11 @@ bool GolfGame::initialise()
     }
 
 #ifdef USE_GNS
-    /*if (m_sharedData.useDiscord)
-    {
+    //if (m_sharedData.useDiscord)
+    /*{
         Discord::connect();
     }*/
+    //Discord::disconnect();
 #endif
     return true;
 }
