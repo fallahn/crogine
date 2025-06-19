@@ -297,8 +297,9 @@ void SBallPhysicsSystem::spawnBall(std::int32_t id, glm::vec3 position)
     btTransform transform;
     transform.setFromOpenGLMatrix(&entity.getComponent<cro::Transform>().getWorldTransform()[0][0]);
     phys.body->setWorldTransform(transform);
-    phys.body->setLinearFactor({ 1.f, 1.f, 0.f });
+    phys.body->setLinearFactor({ 1.f, 1.f, 0.f }); 
     phys.body->setAngularFactor({ 0.f, 1.f, 1.f });
+    phys.body->setDamping(0.5f, 0.f); //dampen motion to help prevent things flying about quite as much
     //phys.body->setActivationState(DISABLE_DEACTIVATION);
     phys.body->applyTorqueImpulse({ 0.01f, 0.002f, 0.01f * cro::Util::Random::value(0,1) });
 

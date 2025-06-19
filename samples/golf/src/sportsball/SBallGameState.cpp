@@ -492,6 +492,11 @@ void SBallGameState::handleMessage(const cro::Message& msg)
                     floatingScore(score, data.position);
 
                     m_gameScene.getDirector<SBallSoundDirector>()->playSound(AudioID::Match, 2, 0.35f, data.position);
+
+                    if (m_sharedData.enableRumble)
+                    {
+                        cro::GameController::rumbleStart(cro::GameController::controllerID(0), 50000, 35000, 200);
+                    }
                 }
                 else if (data.type == sb::CollisionEvent::FastCol)
                 {
@@ -655,7 +660,7 @@ void SBallGameState::loadAssets()
                     info.modelDef->createModel(e);
 
                     //attempt at making the balls weightier
-                    info.mass *= 100.f;
+                    info.mass *= 10.f;
                     m_gameScene.getSystem<SBallPhysicsSystem>()->addBallData(std::move(info));
                 }
             }

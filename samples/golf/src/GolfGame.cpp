@@ -98,6 +98,7 @@ source distribution.
 #ifdef USE_GNS
 #include <AchievementsImpl.hpp>
 #include <Social.hpp>
+#include <Discord.hpp>
 #endif
 #ifdef USE_WORKSHOP
 #include <WorkshopState.hpp>
@@ -1212,6 +1213,8 @@ bool GolfGame::initialise()
     {
         WebSock::start(m_sharedData.webPort);
     }
+
+    //Discord::connect();
 
     return true;
 }
