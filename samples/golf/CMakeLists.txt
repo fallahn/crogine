@@ -215,19 +215,7 @@ if(TARGET crogine)
  target_link_libraries(${PROJECT_NAME} crogine)
 endif()
 
-#if(USE_NEWSFEED)
-#  target_link_libraries(${PROJECT_NAME} CURL::libcurl)
-#endif()
 
-if(USE_STEAM)
-  target_link_libraries(${PROJECT_NAME} ${STEAMWORKS_LIBRARIES})
-
-  if (NOT APPLE)
-    target_link_libraries(${PROJECT_NAME} ${DISCORD_LIB_PATH})
-  endif()
-else()
-  target_link_libraries(${PROJECT_NAME} CURL::libcurl)
-endif()
 
 #websockets needs this
 if (WIN32)
@@ -240,6 +228,21 @@ if (UNIX AND NOT APPLE)
   target_link_libraries(${PROJECT_NAME} Threads::Threads)
 endif()
 #end websockets
+
+
+
+
+if(USE_STEAM)
+  target_link_libraries(${PROJECT_NAME} ${STEAMWORKS_LIBRARIES})
+
+  if (NOT APPLE)
+    target_link_libraries(${PROJECT_NAME} ${DISCORD_LIB_PATH} ${CMAKE_DL_LIBS})
+  endif()
+else()
+  target_link_libraries(${PROJECT_NAME} CURL::libcurl)
+endif()
+
+
 
 
 if(APPLE)
