@@ -98,8 +98,12 @@ else()
   SET(DISCORD_SDK_BIN_DIR "${DISCORD_SDK_ROOT}/bin/release")
   SET(DISCORD_SDK_INCLUDE_DIR "${DISCORD_SDK_ROOT}/include")
 
-  add_compile_definitions(USE_DCD)
+  
   if(WIN32)
+#TODO if discord update their lib to work with sniper define this for linux
+add_compile_definitions(USE_DCD)
+
+
       set(DISCORD_LIB_PATH "${DISCORD_SDK_LIB_DIR}/discord_partner_sdk.lib")
       set(DISCORD_SHARED_LIB "${DISCORD_SDK_BIN_DIR}/discord_partner_sdk.dll")
   else() # Linux
@@ -235,8 +239,9 @@ endif()
 if(USE_STEAM)
   target_link_libraries(${PROJECT_NAME} ${STEAMWORKS_LIBRARIES})
 
-  if (NOT APPLE)
-    target_link_libraries(${PROJECT_NAME} ${DISCORD_LIB_PATH} ${CMAKE_DL_LIBS})
+  #if (NOT APPLE)
+  if (WIN32)
+    target_link_libraries(${PROJECT_NAME} ${DISCORD_LIB_PATH})
   endif()
 else()
   target_link_libraries(${PROJECT_NAME} CURL::libcurl)
