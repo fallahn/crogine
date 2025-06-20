@@ -333,7 +333,7 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
     //if we're playing team play copy the result to the
     //other player's score and update their position
 
-    if (m_playTeams
+    if (m_sharedData.teamMode
         && m_playerInfo.size() == 1)
     {
         const auto& playerInfo = m_playerInfo[0].playerInfo[0];

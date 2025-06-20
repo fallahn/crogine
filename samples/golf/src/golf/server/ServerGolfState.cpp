@@ -106,8 +106,7 @@ GolfState::GolfState(SharedData& sd)
     m_currentHole           (0),
     m_skinsPot              (1),
     m_currentBest           (MaxStrokes),
-    m_randomTargetCount     (0),
-    m_playTeams             (/*true*/false)
+    m_randomTargetCount     (0)
 {
     if (m_mapDataValid = validateMap(); m_mapDataValid)
     {
@@ -188,7 +187,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
             }
 
-            if (m_playTeams)
+            if (m_sharedData.teamMode)
             {
                 for (auto& team : m_teams)
                 {
@@ -1003,7 +1002,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance = 0.f;
 
-        if (m_playTeams)
+        if (m_sharedData.teamMode)
         {
             //we'll need to send the team mate's score too - this was done
             //in handleRules()
@@ -1134,7 +1133,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
                 //sort players by distance
                 const auto predicate = [&](const PlayerStatus& a, const PlayerStatus& b)
                     {
-                        if (m_playTeams
+                        if (m_sharedData.teamMode
                             && a.teamIndex == b.teamIndex)
                         {
                             return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer][1] == a.player;
@@ -1159,7 +1158,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             //winner of the last hole goes first - TODO this doesn't work in group play
             const auto predicate = [&](const PlayerStatus& a, const PlayerStatus& b)
                 {
-                    if (m_playTeams
+                    if (m_sharedData.teamMode
                         && a.teamIndex == b.teamIndex)
                     {
                         return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer][1] == a.player;
@@ -1178,7 +1177,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             {
                 if ((playerInfo[0].client != m_honour[0]
                     || playerInfo[0].player != m_honour[1])
-                    && !m_playTeams)
+                    && m_sharedData.teamMode == 0)
                 {
                     auto r = std::find_if(playerInfo.begin(), playerInfo.end(),
                         [&](const PlayerStatus& ps)
@@ -1748,7 +1747,7 @@ void GolfState::initScene()
         && m_sharedData.scoreType != ScoreType::StablefordPro
         && m_sharedData.scoreType != ScoreType::MultiTarget)
     {
-        m_playTeams = false;
+        m_sharedData.teamMode = 0;
     }
 
     //make sure to ignore gimme radii on NTP...
@@ -1854,7 +1853,7 @@ void GolfState::initScene()
 
     if (groupMode != ClientGrouping::None)
     {
-        m_playTeams = false;
+        m_sharedData.teamMode = 0;
     }
 
     if (groupMode == ClientGrouping::Even)
@@ -1922,7 +1921,7 @@ void GolfState::initScene()
                 player.position = m_holeData[0].tee;
                 player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[0].pin);
 
-                if (m_playTeams)
+                if (m_sharedData.teamMode)
                 {
                     const auto teamPlayerIndex = teamCounter % 2;
                     if (teamPlayerIndex == 0)

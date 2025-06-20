@@ -564,12 +564,14 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
             const auto updateServer = [&]()
                 {
-                    /*if (m_sharedData.hosting
+                    if (m_sharedData.hosting
                         && m_sharedData.clientConnection.connected)
                     {
                         m_sharedData.clientConnection.netClient.sendPacket(
-                            PacketID::GroupMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    }*/
+                            PacketID::TeamMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        /*m_sharedData.clientConnection.netClient.sendPacket(
+                            PacketID::GroupMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);*/
+                    }
                     cro::Console::print("Grouping set to " + GroupStrings[m_sharedData.groupMode]);
 
                     m_sharedData.groupMode = ClientGrouping::None;
@@ -4032,6 +4034,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::GroupMode:
             m_sharedData.groupMode = std::min(std::int32_t(ClientGrouping::Four), evt.packet.as<std::int32_t>());
+            break;
+        case PacketID::TeamMode:
+            m_sharedData.teamMode = evt.packet.as<std::int32_t>();
             break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())

@@ -213,6 +213,13 @@ void LobbyState::netEvent(const net::NetEvent& evt)
                 m_sharedData.maxWind = v;
             }
             break;
+        case PacketID::TeamMode:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.teamMode = evt.packet.as<std::int32_t>();
+                m_sharedData.host.broadcastPacket(PacketID::TeamMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
         case PacketID::GroupMode:
             if (evt.peer.getID() == m_sharedData.hostID)
             {

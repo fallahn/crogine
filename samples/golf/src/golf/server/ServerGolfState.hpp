@@ -83,7 +83,6 @@ namespace sv
             std::array<std::array<std::uint8_t, 2u>, 2u> players = {};
         };
         std::vector<Team> m_teams;
-        bool m_playTeams;
 
         struct PlayerGroup final
         {

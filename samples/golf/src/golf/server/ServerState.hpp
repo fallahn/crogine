@@ -103,6 +103,7 @@ namespace sv
         std::uint8_t randomWind = 0;
         float maxWind = 1.f;
 
+        std::int32_t teamMode = 0;
         std::int32_t groupMode = 0;
         std::array<std::uint8_t, ConstVal::MaxClients> clubLevels = {};
 
