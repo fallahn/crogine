@@ -1061,6 +1061,20 @@ bool GolfGame::initialise()
             m_stateStack.pushState(StateID::ScrubBackground);
         });
 
+#ifdef USE_GNS
+    registerCommand("discord_connect",
+        [](const std::string&) 
+        {
+            Discord::connect(); 
+        });
+
+    registerCommand("discord_disconnect",
+        [](const std::string&) 
+        {
+            Discord::disconnect(); 
+        });
+#endif
+
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Super Video Golf - " + StringVer);
     getWindow().setIcon(icon);
