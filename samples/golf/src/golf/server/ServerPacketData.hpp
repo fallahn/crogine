@@ -57,15 +57,18 @@ struct PlayerStatus final : public ActivePlayer
 {
     cro::Entity ballEntity;
     glm::vec3 prevBallPos = glm::vec3(0.f); //used for returning the ball after a mulligan
-    std::uint8_t previousBallScore = 0; //also used for mulligan
     float distanceToHole = 0.f; //used for sorting
     std::vector<std::uint8_t> holeScore;
     std::vector<float> distanceScore;
-    bool targetHit = false;
-    bool eliminated = false;
+    std::uint8_t previousBallScore = 0; //also used for mulligan
     std::uint8_t totalScore = 0;
     std::uint8_t skins = 0; //stores number of lives in elimination mode
     std::uint8_t matchWins = 0; //used as a 'life lost' flag in elimination
+
+    std::int32_t teamIndex = -1; //indexes into the teams array so we can look up the other player
+
+    bool targetHit = false;
+    bool eliminated = false;
     bool readyQuit = false; //used at round end to see if all players want to skip scores
 };
 

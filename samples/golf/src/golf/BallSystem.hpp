@@ -93,6 +93,25 @@ struct Ball final
     std::uint8_t client = 0; //needs to be tracked when sending multiplayer messages
     std::uint8_t lastTerrain = ConstVal::NullValue; //set on a collision begin event, reset once set to interp
 
+    //used to clone the ball info when playing team play
+    void clone(Ball& dst) const
+    {
+        dst.terrain = terrain;
+        dst.lie = lie;
+        dst.checkGimme = checkGimme;
+        dst.velocity = velocity;
+        dst.delay = delay;
+        dst.rotation = rotation;
+        dst.windEffect = windEffect;
+        dst.spin = spin;
+        dst.initialForwardVector = initialForwardVector;
+        dst.initialSideVector = initialSideVector;
+        dst.startPoint = startPoint;
+        dst.lastStrokeDistance = lastStrokeDistance;
+        dst.hadAir = hadAir;
+        dst.lastTerrain = lastTerrain;
+    }
+
     //used for wall collision when putting
     btPairCachingGhostObject* collisionObject = nullptr;
 };

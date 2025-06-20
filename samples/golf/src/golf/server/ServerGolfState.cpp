@@ -106,7 +106,8 @@ GolfState::GolfState(SharedData& sd)
     m_currentHole           (0),
     m_skinsPot              (1),
     m_currentBest           (MaxStrokes),
-    m_randomTargetCount     (0)
+    m_randomTargetCount     (0),
+    m_playTeams             (/*true*/false)
 {
     if (m_mapDataValid = validateMap(); m_mapDataValid)
     {
@@ -186,6 +187,25 @@ void GolfState::handleMessage(const cro::Message& msg)
                     setNewPlayer = m_groupAssignments[playerInfo[0].client];
                 }
             }
+
+            if (m_playTeams)
+            {
+                for (auto& team : m_teams)
+                {
+                    for (auto i = 0u; i < team.players.size(); ++i)
+                    {
+                        //if this was the removed client set to the other player
+                        //this just creates an empty team if no players are left
+                        if (team.players[i][0] == data.clientID)
+                        {
+                            const auto idx = (i + 1) % 2;
+                            team.players[i][0] = team.players[idx][0];
+                            team.players[i][1] = team.players[idx][1];
+                        }
+                    }
+                }
+            }
+
 
             if (!m_playerInfo.empty())
             {
@@ -982,6 +1002,39 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
     
         m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance = 0.f;
+
+        if (m_playTeams)
+        {
+            //we'll need to send the team mate's score too - this was done
+            //in handleRules()
+            const auto& team = m_teams[m_playerInfo[0].playerInfo[0].teamIndex];
+            const auto& teamMate = team.players[team.currentPlayer];
+            auto& pi = m_playerInfo[0].playerInfo;
+            auto teamMateInfo = std::find_if(pi.begin(), pi.end(),
+                [&teamMate](const PlayerStatus& ps)
+                {
+                    return ps.client == teamMate[0] && ps.player == teamMate[1];
+                });
+
+            if (teamMateInfo != pi.end()
+                && !(teamMateInfo->client == playerInfo[0].client //don't do this if it's a one person team
+                    && teamMateInfo->player == playerInfo[0].player))
+            {
+                ScoreUpdate su2;
+                su2.strokeDistance = teamMateInfo->ballEntity.getComponent<Ball>().lastStrokeDistance;
+                su2.client = teamMateInfo->client;
+                su2.player = teamMateInfo->player;
+                su2.score = teamMateInfo->totalScore;
+                su2.stroke = teamMateInfo->holeScore[m_currentHole];
+                su2.distanceScore = teamMateInfo->distanceScore[m_currentHole];
+                su2.matchScore = teamMateInfo->matchWins; //not used in teeamplay but let's be consistent
+                su2.skinsScore = teamMateInfo->skins;
+                su2.hole = m_currentHole;
+
+                m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su2, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                teamMateInfo->ballEntity.getComponent<Ball>().lastStrokeDistance = 0.f;
+            }
+        }
     }
 
     
@@ -1079,8 +1132,13 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             else
             {
                 //sort players by distance
-                const auto predicate = [](const PlayerStatus& a, const PlayerStatus& b)
+                const auto predicate = [&](const PlayerStatus& a, const PlayerStatus& b)
                     {
+                        if (m_playTeams
+                            && a.teamIndex == b.teamIndex)
+                        {
+                            return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer][1] == a.player;
+                        }
                         return a.distanceToHole > b.distanceToHole;
                     };
 
@@ -1101,6 +1159,11 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             //winner of the last hole goes first - TODO this doesn't work in group play
             const auto predicate = [&](const PlayerStatus& a, const PlayerStatus& b)
                 {
+                    if (m_playTeams
+                        && a.teamIndex == b.teamIndex)
+                    {
+                        return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer][1] == a.player;
+                    }
                     return a.holeScore[m_currentHole - 1] < b.holeScore[m_currentHole - 1];
                 };
 
@@ -1113,8 +1176,9 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             //but ehhhh no harm in being explicit I guess?
             if (!playerInfo.empty())
             {
-                if (playerInfo[0].client != m_honour[0]
+                if ((playerInfo[0].client != m_honour[0]
                     || playerInfo[0].player != m_honour[1])
+                    && !m_playTeams)
                 {
                     auto r = std::find_if(playerInfo.begin(), playerInfo.end(),
                         [&](const PlayerStatus& ps)
@@ -1129,6 +1193,9 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
                             std::swap(playerInfo[std::distance(playerInfo.begin(), r)], playerInfo[0]);
                         }
                     }
+
+                    ///TODO if this *is* teams we want to check if this is the team player turn and if not
+                    //swap them with their team mate
                 }
 
                 //set whoever is first as current honour taker
@@ -1674,6 +1741,16 @@ bool GolfState::validateMap()
 
 void GolfState::initScene()
 {
+    //this is horroible, but at least it's explicit :)
+    if (m_sharedData.scoreType != ScoreType::Stroke
+        && m_sharedData.scoreType != ScoreType::ShortRound
+        && m_sharedData.scoreType != ScoreType::Stableford
+        && m_sharedData.scoreType != ScoreType::StablefordPro
+        && m_sharedData.scoreType != ScoreType::MultiTarget)
+    {
+        m_playTeams = false;
+    }
+
     //make sure to ignore gimme radii on NTP...
     if (m_sharedData.scoreType == ScoreType::NearestThePin)
     {
@@ -1775,6 +1852,11 @@ void GolfState::initScene()
         groupMode = ClientGrouping::None;
     }
 
+    if (groupMode != ClientGrouping::None)
+    {
+        m_playTeams = false;
+    }
+
     if (groupMode == ClientGrouping::Even)
     {
         m_playerInfo.resize(std::min(clientCount, 2));
@@ -1787,6 +1869,7 @@ void GolfState::initScene()
     auto startLives = StartLives;
     clientCount = 0;
     //for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
+    std::int32_t teamCounter = 0;
     for(const auto& d : clientSortData)
     {
         //if (m_sharedData.clients[d.clientID].connected) //this should always be true if the client made it into the sort data
@@ -1838,6 +1921,25 @@ void GolfState::initScene()
                 player.player = j;
                 player.position = m_holeData[0].tee;
                 player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[0].pin);
+
+                if (m_playTeams)
+                {
+                    const auto teamPlayerIndex = teamCounter % 2;
+                    if (teamPlayerIndex == 0)
+                    {
+                        auto& team = m_teams.emplace_back();
+                        //fill the second slot with first player, in case there isn't a second
+                        //player for the team because the roster has an odd number of players
+                        m_teams.back().players[1][0] = player.client;
+                        m_teams.back().players[1][1] = j;
+                    }
+                    player.teamIndex = static_cast<std::int32_t>(m_teams.size() - 1);
+
+                    m_teams.back().players[teamPlayerIndex][0] = player.client;
+                    m_teams.back().players[teamPlayerIndex][1] = j;
+
+                    teamCounter++;
+                }
 
                 startLives = std::max(startLives - 1, 2);
             }

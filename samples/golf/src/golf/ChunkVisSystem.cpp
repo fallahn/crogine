@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -88,7 +88,7 @@ void ChunkVisSystem::process(float)
 #endif
     for (auto i = 0; i < ChunkCount; ++i)
     {
-        auto dir = camPos - m_boundingBoxes[i].getCentre();
+        const auto dir = camPos - m_boundingBoxes[i].getCentre();
 
         //cull any chunks behind the camera
         //TODO hm... doesn't work :S

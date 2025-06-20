@@ -77,6 +77,14 @@ namespace sv
 
         std::array<std::uint8_t, 2u> m_honour = { 0, 0 };
 
+        struct Team final
+        {
+            std::int32_t currentPlayer = 0; //which of the two players is next
+            std::array<std::array<std::uint8_t, 2u>, 2u> players = {};
+        };
+        std::vector<Team> m_teams;
+        bool m_playTeams;
+
         struct PlayerGroup final
         {
             cro::Clock turnTimer;
@@ -86,7 +94,7 @@ namespace sv
             std::uint8_t id = 0; //this group's ID, save keep measuring it
             std::uint8_t playerCount = 0; //total number of players in the group for all clients
 
-            bool waitingForHole = false; //waiting for other groups to complte the hole
+            bool waitingForHole = false; //waiting for other groups to complete the hole
         };
         std::vector<PlayerGroup> m_playerInfo;
 
