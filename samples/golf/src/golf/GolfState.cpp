@@ -425,6 +425,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         }
         //show the monthly rival if opted in
         else if (sd.showRival
+            && !m_sharedData.teamMode
             && humanCount)
         {
             if (sd.gameMode == GameMode::FreePlay
@@ -4299,6 +4300,9 @@ void GolfState::spawnBall(const ActorInfo& info)
         material.setProperty("u_colour", miniBallColour);
     }
 
+    //in teamplay we hide these if our team mate is playing
+    std::vector<cro::Entity> teamHiddenEnts;
+
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(info.position);
     //entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
@@ -4312,7 +4316,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     
     
     entity.addComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [&, info](cro::Entity e, float dt)
     {
         auto scale = e.getComponent<cro::Transform>().getScale().x;
         scale = std::min(1.f, scale + (dt * 1.5f));
@@ -4324,11 +4328,14 @@ void GolfState::spawnBall(const ActorInfo& info)
             e.getComponent<cro::Model>().setHidden(false);
         }
     };
+
+
     //we use this to store child entities to be able to tidy them up if the ball is removed.
     entity.getComponent<cro::Callback>().setUserData<std::vector<cro::Entity>>();
     auto& childList = entity.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
     m_avatars[info.clientID][info.playerID].ballModel = entity;
 
+    teamHiddenEnts.push_back(entity);
     //m_ballShadows.balls.push_back(entity);
 
     //ball shadow
@@ -4408,6 +4415,8 @@ void GolfState::spawnBall(const ActorInfo& info)
             };
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.shadowMeshID), material);
         entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
+
+        teamHiddenEnts.push_back(entity);
     }
     childList.push_back(entity);
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -4432,6 +4441,8 @@ void GolfState::spawnBall(const ActorInfo& info)
                 e.getComponent<cro::Transform>().setScale(ballEnt.getComponent<cro::Transform>().getScale()/* * 0.95f*/);
             };
         childList.push_back(entity);
+
+        teamHiddenEnts.push_back(entity);
     }
 
     //adding a ball model means we see something a bit more reasonable when close up
@@ -4529,7 +4540,10 @@ void GolfState::spawnBall(const ActorInfo& info)
         entity.getComponent<cro::Model>().setMaterial(1, mat);
     }
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
+    
+    
     childList.push_back(entity);
+    teamHiddenEnts.push_back(entity);
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -4551,6 +4565,7 @@ void GolfState::spawnBall(const ActorInfo& info)
             //hack to stop the point light lens flares drawing on balls
             entity.addComponent<LightAnimation>().pattern.clear();
 
+            teamHiddenEnts.push_back(entity);
             childList.push_back(entity);
             ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
@@ -4691,7 +4706,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
     //childList.push_back(entity); //don't do this it belongs to a different scene
     m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    auto labelEnt = entity;
 
     //miniball for player
     entity = m_uiScene.createEntity();
@@ -4725,6 +4740,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(1.f); //used as a scale multiplier to hide in team play
     entity.getComponent<cro::Callback>().function =
         [&, ballEnt, depthOffset](cro::Entity e, float)
     {
@@ -4763,7 +4779,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                 //double res to enable zooming.
                 float scale = 5.f * (0.5f / m_miniGreenEnt.getComponent<cro::Transform>().getScale().x);
 
-                e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                e.getComponent<cro::Transform>().setScale(glm::vec2(scale) * e.getComponent<cro::Callback>().getUserData<float>());
                 e.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, static_cast<float>(depthOffset) / 100.f));
             }
             else
@@ -4774,8 +4790,43 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
     //childList.push_back(entity); //can't do this as we belong to a different scene
     m_miniGreenEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    auto pointerEnt = entity;
     m_sharedData.connectionData[info.clientID].playerData[info.playerID].ballTint = miniBallColour;
+
+
+
+    //create a special entity to hide the ball in team play mode
+    //TODO this might be better to trigger once on player change?
+    if (m_sharedData.teamMode)
+    {
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, info, teamHiddenEnts, labelEnt, pointerEnt](cro::Entity, float) mutable
+            {
+                if (m_sharedData.connectionData[info.clientID].playerData[info.playerID].activeTeamMember)
+                {
+                    for (auto e : teamHiddenEnts)
+                    {
+                        e.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
+                    }
+                    labelEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                    pointerEnt.getComponent<cro::Callback>().setUserData<float>(1.f);
+                }
+                else
+                {
+                    for (auto e : teamHiddenEnts)
+                    {
+                        e.getComponent<cro::Model>().setRenderFlags(0);
+                    }
+                    labelEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                    pointerEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
+                }
+            };
+        childList.push_back(entity);
+    }
+
+
 
 #ifdef CRO_DEBUG_
     ballEntity = ballEnt;
@@ -6798,6 +6849,27 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         //the active player - will we get a new update from the server?
         //I'm so confused at this point...
         return;
+    }
+
+    //mark which team member is active so we can hide the ball of inactive members
+    if (m_sharedData.teamMode)
+    {
+        auto& newPlayer = m_sharedData.connectionData[player.client].playerData[player.player];
+        newPlayer.activeTeamMember = true;
+
+        for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+        {
+            for(auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
+            {
+                const bool samePlayer = (i == player.client && j == player.player);
+                if (!samePlayer &&
+                    m_sharedData.connectionData[i].playerData[j].teamIndex == newPlayer.teamIndex)
+                {
+                    m_sharedData.connectionData[i].playerData[j].activeTeamMember = false;
+                    break;
+                }
+            }
+        }
     }
 
     //this needs refreshing if we just switched holes

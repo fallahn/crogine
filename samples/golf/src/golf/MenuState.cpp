@@ -356,6 +356,15 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         sd.quickplayOpponents = 0; //make sure to always reset this
         sd.activeTournament = TournamentIndex::NullVal; //make sure to always reset this
 
+        for (auto& client : m_sharedData.connectionData)
+        {
+            for (auto& player : client.playerData)
+            {
+                player.teamIndex = -1;
+            }
+        }
+
+
         //we returned from a previous game (this will have been disconnected above, otherwise)
         if (sd.clientConnection.connected)
         {
@@ -640,12 +649,12 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //    {
     //        if (ImGui::Begin("buns"))
     //        {
-    //            /*auto size = glm::vec2(LabelTextureSize);
+    //            auto size = glm::vec2(LabelTextureSize);
     //            for (const auto& t : m_sharedData.nameTextures)
     //            {
     //                ImGui::Image(t.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
     //                ImGui::SameLine();
-    //            }*/
+    //            }
     //        }
     //        ImGui::End();
     //    });
@@ -2886,7 +2895,7 @@ MenuState::PropFileData MenuState::getPropPath() const
     else if (mon == 6 && day == 21)
     {
         ret.propFilePath = "somer.bgd";
-        ret.fireworks = true;
+        //ret.fireworks = true;
     }
     else
     {
@@ -2923,7 +2932,7 @@ MenuState::PropFileData MenuState::getPropPath() const
             ret.fireworks = day == 2;
             break;
         case 6:
-            ret.fireworks = day == 16;
+            ret.fireworks =( day == 16 || day == 21);
             break;
         }
     }
@@ -4037,6 +4046,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::TeamMode:
             m_sharedData.teamMode = evt.packet.as<std::int32_t>();
+            updateLobbyAvatars(); //updates the team mode display
             break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())

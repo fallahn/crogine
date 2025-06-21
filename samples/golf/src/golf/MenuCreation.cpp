@@ -4139,6 +4139,19 @@ void MenuState::updateLobbyList()
 #endif
 }
 
+void MenuState::refreshTeams()
+{
+    std::int32_t currIndex = 0;
+    for (auto& client : m_sharedData.connectionData)
+    {
+        for (auto i = 0u; i < client.playerCount; ++i)
+        {
+            client.playerData[i].teamIndex = m_sharedData.teamMode ? (currIndex / 2) : -1;
+            currIndex++;
+        }
+    }
+}
+
 void MenuState::quitLobby()
 {
     m_sharedData.clientConnection.connected = false;

@@ -1436,6 +1436,9 @@
     <ClInclude Include="src\sportsball\BackgroundPhysicsSystem.hpp">
       <Filter>Header Files\sportsball</Filter>
     </ClInclude>
+    <ClInclude Include="src\Colordome-32.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">

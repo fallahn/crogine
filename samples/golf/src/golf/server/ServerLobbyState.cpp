@@ -217,7 +217,7 @@ void LobbyState::netEvent(const net::NetEvent& evt)
             if (evt.peer.getID() == m_sharedData.hostID)
             {
                 m_sharedData.teamMode = evt.packet.as<std::int32_t>();
-                m_sharedData.host.broadcastPacket(PacketID::TeamMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_sharedData.host.broadcastPacket(PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             break;
         case PacketID::GroupMode:
@@ -367,6 +367,7 @@ void LobbyState::broadcastRules()
     m_sharedData.host.broadcastPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::FastCPU, m_sharedData.fastCPU, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket(PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
 
     //check for can and do a delayed spawn

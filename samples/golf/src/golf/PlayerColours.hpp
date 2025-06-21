@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "../Colordome-32.hpp"
+
 #include <crogine/graphics/Colour.hpp>
 
 #include <cstdint>
@@ -36,6 +38,18 @@ source distribution.
 
 namespace pc
 {
+    static inline constexpr std::array<cro::Colour, 8U> TeamColours =
+    {
+        CD32::Colours[CD32::Red],
+        CD32::Colours[CD32::GreenMid],
+        CD32::Colours[CD32::BlueMid],
+        CD32::Colours[CD32::Yellow],
+        CD32::Colours[CD32::BlueLight],
+        CD32::Colours[CD32::Pink],
+        CD32::Colours[CD32::Black],
+        CD32::Colours[CD32::BeigeLight]
+    };
+
     static inline constexpr std::array<std::array<std::uint32_t, 2u>, 12u> KeyMap =
     {
         std::array<std::uint32_t, 2u>({8u, 7u}),

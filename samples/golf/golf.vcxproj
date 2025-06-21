@@ -792,6 +792,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\Colordome-32.hpp" />
     <ClInclude Include="src\DefaultAchievements.hpp" />
     <ClInclude Include="src\editor\BushState.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />

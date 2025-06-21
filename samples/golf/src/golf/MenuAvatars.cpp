@@ -1,4 +1,4 @@
-/*-----------------------------------------------------------------------
+﻿/*-----------------------------------------------------------------------
 
 Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
@@ -1991,6 +1991,8 @@ void MenuState::refreshProfileFlyout()
 
 void MenuState::updateLobbyAvatars()
 {
+    refreshTeams();
+
     //TODO we need to refine this so only textures of the most
     //recently updated client are updated
 
@@ -2029,6 +2031,26 @@ void MenuState::updateLobbyAvatars()
         simpleQuad.setBlendMode(cro::Material::BlendMode::None);
         simpleQuad.setColour(cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha / 2.f));
 
+        cro::SimpleVertexArray teamIcon;
+        std::vector<cro::Vertex2D> vertices;
+
+        if (m_sharedData.teamMode)
+        {
+            constexpr float radius = 8.f;
+            constexpr std::int32_t pointCount = 16;
+
+            vertices.emplace_back(glm::vec2(radius), cro::Colour::White);
+            for (auto i = 0; i < (pointCount + 1); ++i)
+            {
+                const float r = i * (cro::Util::Const::TAU / pointCount);
+                glm::vec2 p(std::sin(r) * radius, std::cos(r) * radius);
+                vertices.emplace_back(p + glm::vec2(radius), cro::Colour::White);
+            }
+
+            teamIcon.setVertexData(vertices);
+            teamIcon.setPrimitiveType(GL_TRIANGLE_FAN);
+        }
+
         cro::Texture iconTexture;
         cro::Image iconImage;
 
@@ -2042,6 +2064,7 @@ void MenuState::updateLobbyAvatars()
         auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
         cro::String nameString;
+        std::vector<std::pair<std::uint32_t, cro::Colour>> colourIndices;
 
         constexpr float RowSpacing = -12.f;
         constexpr float RankSpacing = -14.f;
@@ -2097,10 +2120,21 @@ void MenuState::updateLobbyAvatars()
                     if (hasIcon)
                     {
                         simpleQuad.setTexture(iconTexture);
-                        simpleQuad.setScale(iconScale);
                         simpleQuad.setPosition({ (i % 2) * Social::IconSize, textureSize.y + ((i/2) * Social::IconSize) });
+                        simpleQuad.setScale(iconScale);
                         simpleQuad.setColour(cro::Colour::White);
                         simpleQuad.draw();
+
+                        if (m_sharedData.teamMode)
+                        {
+                            for (auto& vert : vertices)
+                            {
+                                vert.colour = pc::TeamColours[c.playerData[i].teamIndex];
+                            }
+                            teamIcon.setVertexData(vertices);
+                            teamIcon.setPosition(simpleQuad.getPosition());
+                            teamIcon.draw();
+                        }
                     }
                 }
 
@@ -2115,10 +2149,21 @@ void MenuState::updateLobbyAvatars()
             for (auto i = 0u; i < c.playerCount; ++i)
             {
                 //stringCols[playerCount / ConstVal::MaxPlayers] += "buns\n";
-
+                std::size_t charOffset = 0;
                 auto avatarIndex = indexFromAvatarID(c.playerData[i].skinID);
                 applyTexture(avatarIndex, m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
-                nameString += c.playerData[i].name.substr(0, ConstVal::MaxStringChars) + "\n";
+                if (m_sharedData.teamMode)
+                {
+                    colourIndices.push_back(std::make_pair(static_cast<std::uint32_t>(nameString.size()), pc::TeamColours[c.playerData[i].teamIndex]));
+                    //nameString += cro::String(std::uint32_t(0x2299));
+                    nameString += cro::String(std::uint32_t(0x2261));
+                    //nameString += " ";
+                    colourIndices.push_back(std::make_pair(static_cast<std::uint32_t>(nameString.size()), LeaderboardTextDark));
+
+                    charOffset = 1;
+                }
+
+                nameString += c.playerData[i].name.substr(0, ConstVal::MaxStringChars - charOffset) + "\n";
 
                 playerCount++;
             }
@@ -2336,6 +2381,11 @@ void MenuState::updateLobbyAvatars()
             entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
             entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
             entity.getComponent<cro::Text>().setVerticalSpacing(4.f); //was 6
+
+            for (const auto& [idx, colour] : colourIndices)
+            {
+                entity.getComponent<cro::Text>().setFillColour(colour, idx);
+            }
 
             //used to update spacing by resize callback from lobby background ent.
             //TODO is this still used?

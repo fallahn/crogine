@@ -439,6 +439,7 @@ private:
     void updateRemoteContent(const ConnectionData&);
     void updateLobbyAvatars();
     void updateLobbyList();
+    void refreshTeams();
     void quitLobby();
     void addCourseSelectButtons();
     void prevRules();

@@ -107,6 +107,10 @@ struct PlayerData final
     cro::Colour ballTint;
     cro::Colour ballColour = cro::Colour::White;
 
+    //this should probably come from the server to ensure sync
+    std::int32_t teamIndex = -1;
+    bool activeTeamMember = false; //set this on player change so we know if we should draw the ball
+
     //this is client side profile specific data
     cro::ImageArray<std::uint8_t> mugshotData; //pixel data of the mugshot for avatar icon
     std::string mugshot; //path to mugshot if it exists
