@@ -62,7 +62,7 @@ SBallPhysicsSystem::SBallPhysicsSystem(cro::MessageBus& mb)
         m_broadphaseInterface.get(),
         m_constraintSolver.get(),
         m_collisionConfiguration.get());
-    m_collisionWorld->setGravity({ 0.f, -9.8f, 0.f });
+    m_collisionWorld->setGravity({ 0.f, -19.8f, 0.f });
 
     //create the 'box' static shape
 
