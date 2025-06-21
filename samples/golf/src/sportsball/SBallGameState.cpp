@@ -581,6 +581,8 @@ void SBallGameState::loadAssets()
     //so we could just use that
     std::vector<std::string> paths = 
     {
+        "assets/arcade/sportsball/sound/fx/whistle_short.wav",
+        "assets/arcade/sportsball/sound/fx/whistle_long.wav",
         "assets/arcade/scrub/sound/fx/streak_broken.wav",
         "assets/arcade/scrub/sound/fx/zoom_in.wav",
         "assets/arcade/sportsball/sound/fx/match.wav",
@@ -834,7 +836,8 @@ void SBallGameState::buildScene()
 
 void SBallGameState::buildUI()
 {
-    const auto& font = m_sharedGameData.fonts->get(sc::FontID::Body);
+    const auto& font = m_sharedGameData.fonts->get(sc::FontID::SBBody);
+    const float viewScale = 1.f;
 
     //left side is current score and PB top, leaderboard top 5 bottom
     //LB/RB or Prev/next club switches between monthly and all time?
@@ -848,6 +851,8 @@ void SBallGameState::buildUI()
     scoreTitle.addComponent<cro::Drawable2D>();
     scoreTitle.addComponent<cro::Text>(font).setString("Score");
     scoreTitle.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    scoreTitle.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    scoreTitle.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset * viewScale);
     scoreTitle.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     scoreTitle.addComponent<cro::UIElement>(cro::UIElement::Type::Text, true).absolutePosition = { 0.f, 14.f };
     scoreTitle.getComponent<cro::UIElement>().characterSize = sc::MediumTextSize;
@@ -858,6 +863,8 @@ void SBallGameState::buildUI()
     scoreVal.addComponent<cro::Drawable2D>();
     scoreVal.addComponent<cro::Text>(font);
     scoreVal.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    scoreVal.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    scoreVal.getComponent<cro::Text>().setShadowOffset(sc::SmallTextOffset * viewScale);
     scoreVal.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     scoreVal.addComponent<cro::UIElement>(cro::UIElement::Type::Text, true).absolutePosition = { 0.f, -8.f };
     scoreVal.getComponent<cro::UIElement>().characterSize = sc::SmallTextSize;
@@ -878,6 +885,8 @@ void SBallGameState::buildUI()
     tableTitle.addComponent<cro::Drawable2D>();
     tableTitle.addComponent<cro::Text>(font).setString("Level\n1");
     tableTitle.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    tableTitle.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    tableTitle.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset * viewScale);
     tableTitle.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     tableTitle.addComponent<cro::UIElement>(cro::UIElement::Type::Text, true).absolutePosition = { 0.f, 34.f };
     tableTitle.getComponent<cro::UIElement>().characterSize = sc::MediumTextSize;
@@ -905,6 +914,8 @@ void SBallGameState::buildUI()
     nextText.addComponent<cro::Drawable2D>();
     nextText.addComponent<cro::Text>(font).setString("Next");
     nextText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    nextText.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    nextText.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset * viewScale);
     nextText.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     nextText.addComponent<cro::UIElement>(cro::UIElement::Type::Text, true);
     nextText.getComponent<cro::UIElement>().characterSize = sc::MediumTextSize;
@@ -1085,12 +1096,15 @@ void SBallGameState::buildUI()
     roundEndRoot.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
 
     //round end text
+    const auto& largeFont = m_sharedGameData.fonts->get(sc::FontID::SBTitle);
     auto textEnt = m_uiScene.createEntity();
     textEnt.addComponent<cro::Transform>();
     textEnt.addComponent<cro::Drawable2D>();
-    textEnt.addComponent<cro::Text>(font).setString("Game Over");
+    textEnt.addComponent<cro::Text>(largeFont).setString("Game Over");
     textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    textEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    textEnt.getComponent<cro::Text>().setShadowOffset(sc::LargeTextOffset* viewScale);
     textEnt.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     textEnt.getComponent<cro::UIElement>().characterSize = LargeTextSize;
     textEnt.getComponent<cro::UIElement>().depth = 0.1f;
@@ -1109,10 +1123,12 @@ void SBallGameState::buildUI()
     textEnt.addComponent<cro::Text>(font).setString("You Scored: 123456\nSpace: Restart  -  Esc Quit");
     textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    textEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    textEnt.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset* viewScale);
     textEnt.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     textEnt.getComponent<cro::UIElement>().characterSize = MediumTextSize;
     textEnt.getComponent<cro::UIElement>().depth = 0.1f;
-    textEnt.getComponent<cro::UIElement>().absolutePosition = { 0.f, 22.f };
+    textEnt.getComponent<cro::UIElement>().absolutePosition = { 0.f, 20.f };
     roundEndRoot.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
     m_endScoreTextEntity = textEnt;
 
@@ -1122,6 +1138,8 @@ void SBallGameState::buildUI()
     textEnt.addComponent<cro::Drawable2D>();
     textEnt.addComponent<cro::Text>(font).setString("Personal Best!!");
     textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    textEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    textEnt.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset* viewScale);
     textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     textEnt.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     textEnt.getComponent<cro::UIElement>().characterSize = MediumTextSize;
@@ -1221,7 +1239,7 @@ void SBallGameState::dropBall()
 
 void SBallGameState::floatingScore(std::int32_t score, glm::vec3 pos)
 {
-    const auto& font = m_sharedGameData.fonts->get(sc::FontID::Body);
+    const auto& font = m_sharedGameData.fonts->get(sc::FontID::SBBody);
     const auto viewScale = cro::UIElementSystem::getViewScale();
 
     //spawn some score text at pos
@@ -1265,7 +1283,7 @@ void SBallGameState::levelUp()
 
     m_sharedGameData.score.level++;
 
-    const auto& font = m_sharedGameData.fonts->get(sc::FontID::Body);
+    const auto& font = m_sharedGameData.fonts->get(sc::FontID::SBBody);
     const auto viewScale = cro::UIElementSystem::getViewScale();
     const auto screenPos = glm::vec2(cro::App::getWindow().getSize()) / 2.f;
 
@@ -1354,7 +1372,7 @@ void SBallGameState::onCachedPush()
 
     //hacky intro text
     const auto size = glm::vec2(cro::App::getWindow().getSize());
-    const auto& font = m_sharedGameData.fonts->get(sc::FontID::Title);
+    const auto& font = m_sharedGameData.fonts->get(sc::FontID::SBTitle);
     const auto viewScale = cro::UIElementSystem::getViewScale();
 
     auto ent = m_uiScene.createEntity();
@@ -1362,6 +1380,8 @@ void SBallGameState::onCachedPush()
     ent.addComponent<cro::Drawable2D>();
     ent.addComponent<cro::Text>(font).setString("Ready!");
     ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    ent.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    ent.getComponent<cro::Text>().setShadowOffset(sc::LargeTextOffset * viewScale);
     ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     ent.getComponent<cro::Text>().setCharacterSize(sc::LargeTextSize * viewScale);
 
@@ -1399,6 +1419,7 @@ void SBallGameState::onCachedPush()
                 {
                     state = 2;
                     e.getComponent<cro::Text>().setString("GO!");
+                    m_gameScene.getDirector<SBallSoundDirector>()->playSound(AudioID::WhistleLong, 2);
                 }
             }
             else if (state == 2)
@@ -1420,7 +1441,7 @@ void SBallGameState::onCachedPush()
                 }
             }
         };
-
+    m_gameScene.getDirector<SBallSoundDirector>()->playSound(AudioID::WhistleShort, 2);
 }
 
 void SBallGameState::onCachedPop()

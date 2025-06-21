@@ -114,6 +114,7 @@ namespace sc
         {
             Title, Body,
 
+            SBTitle, SBBody,
             Count
         };
     };

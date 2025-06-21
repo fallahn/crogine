@@ -47,6 +47,7 @@ struct AudioID final
     {
         BGTennis, BGFoot, BGBeach,
 
+        WhistleShort, WhistleLong,
         GameOver,
         LevelUp,
         Match,

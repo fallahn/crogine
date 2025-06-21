@@ -204,8 +204,8 @@ void SBallAttractState::addSystems()
 
 void SBallAttractState::buildScene()
 {
-    const auto& largeFont = m_sharedGameData.fonts->get(sc::FontID::Title);
-    const auto& smallFont = m_sharedGameData.fonts->get(sc::FontID::Body);
+    const auto& largeFont = m_sharedGameData.fonts->get(sc::FontID::SBTitle);
+    const auto& smallFont = m_sharedGameData.fonts->get(sc::FontID::SBBody);
 
     auto size = glm::vec2(cro::App::getWindow().getSize());
 

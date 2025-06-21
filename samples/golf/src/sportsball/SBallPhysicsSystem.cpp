@@ -194,6 +194,11 @@ void SBallPhysicsSystem::process(float dt)
 
             if (l2 < minDist)
             {
+                //once we've dropped set this in a vaugue attempt to
+                //stop the balls being so... explodey
+                phys0->body->setDamping(0.7f, 0.f);
+                phys1->body->setDamping(0.7f, 0.f);
+
                 //ignore this if one object has a collision already - TODO fix this
                 //if ((!phys0->collisionHandled && !phys1->collisionHandled))
                 {

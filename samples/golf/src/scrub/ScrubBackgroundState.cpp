@@ -557,9 +557,19 @@ void SharedMinigameData::initFonts()
         auto& titleFont = fonts->get(sc::FontID::Title);
         titleFont.setSmooth(true);
 
+        fonts->load(sc::FontID::SBTitle, "assets/arcade/sportsball/fonts/PROMESHStitch-Regular.ttf");
+        auto& titleFont2 = fonts->get(sc::FontID::SBTitle);
+        titleFont2.setSmooth(true);
+
         fonts->load(sc::FontID::Body, "assets/arcade/scrub/fonts/Candal-Regular.ttf");
         auto& bodyFont = fonts->get(sc::FontID::Body);
         bodyFont.setSmooth(true);
+
+
+        //hmm we're not sharing between games now - maybe this should be managed on a more fine-grained level?
+        fonts->load(sc::FontID::SBBody, "assets/arcade/sportsball/fonts/Graduate-Regular.ttf");
+        auto& bodyFont2 = fonts->get(sc::FontID::SBBody);
+        bodyFont2.setSmooth(true);
 
 
         //appeand icon font
@@ -570,7 +580,9 @@ void SharedMinigameData::initFonts()
         ctx.codepointRange = { 0x2196, 0xE011 };
 
         titleFont.appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
+        titleFont2.appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
         bodyFont.appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
+        bodyFont2.appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
 
         //and emoji fonts
         static constexpr std::array Ranges =
@@ -589,7 +601,9 @@ void SharedMinigameData::initFonts()
             {
                 ctx.codepointRange = r;
                 titleFont.appendFromFile(winPath, ctx);
+                titleFont2.appendFromFile(winPath, ctx);
                 bodyFont.appendFromFile(winPath, ctx);
+                bodyFont2.appendFromFile(winPath, ctx);
             }
         }
         else
@@ -601,7 +615,9 @@ void SharedMinigameData::initFonts()
             {
                 ctx.codepointRange = r;
                 titleFont.appendFromFile(path, ctx);
+                titleFont2.appendFromFile(path, ctx);
                 bodyFont.appendFromFile(path, ctx);
+                bodyFont2.appendFromFile(path, ctx);
             }
         }
     }
