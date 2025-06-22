@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -77,11 +77,6 @@ namespace sv
 
         std::array<std::uint8_t, 2u> m_honour = { 0, 0 };
 
-        struct Team final
-        {
-            std::int32_t currentPlayer = 0; //which of the two players is next
-            std::array<std::array<std::uint8_t, 2u>, 2u> players = {};
-        };
         std::vector<Team> m_teams;
 
         struct PlayerGroup final

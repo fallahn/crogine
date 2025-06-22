@@ -359,8 +359,10 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     std::int32_t clientCount = 0;
     std::int32_t cpuCount = 0;
     std::uint8_t startLives = StartLives;
-    for (auto& c : sd.connectionData)
+    //for (auto& c : sd.connectionData)
+    for(auto j = 0u; j < sd.connectionData.size(); ++j)
     {
+        auto& c = sd.connectionData[j];
         if (c.playerCount != 0)
         {
             clientCount++;
@@ -377,6 +379,22 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 startLives = std::max(startLives - 1, 2);
 
                 playerCount++;
+
+                if (sd.teamMode)
+                {
+                    CRO_ASSERT(c.playerData[i].teamIndex != -1, "");
+                    if (m_teams[c.playerData[i].teamIndex].players[0].client == ConstVal::NullValue)
+                    {
+                        //this is player 1
+                        m_teams[c.playerData[i].teamIndex].players[0].client = j;
+                        m_teams[c.playerData[i].teamIndex].players[0].player = i;
+                    }
+                    else
+                    {
+                        m_teams[c.playerData[i].teamIndex].players[1].client = j;
+                        m_teams[c.playerData[i].teamIndex].players[1].player = i;
+                    }
+                }
             }
         }
     }
@@ -5910,6 +5928,14 @@ void GolfState::handleBullHit(const BullHit& bh)
 
     m_sharedData.connectionData[bh.client].playerData[bh.player].targetHit = true;
 
+    if (m_sharedData.teamMode)
+    {
+        //make sure the team mate gets the hit too
+        const auto& team = m_teams[m_sharedData.connectionData[bh.client].playerData[bh.player].teamIndex];
+        const auto idx = (team.currentPlayer + 1) % 2;
+        m_sharedData.connectionData[team.players[idx].client].playerData[team.players[idx].player].targetHit = true;
+    }
+
     Timeline::addEvent(Timeline::Event::TargetHit, m_strokeTimer);
 }
 
@@ -6855,20 +6881,20 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     if (m_sharedData.teamMode)
     {
         auto& newPlayer = m_sharedData.connectionData[player.client].playerData[player.player];
-        newPlayer.activeTeamMember = true;
+        newPlayer.activeTeamMember = true; //hm we could probably use the team.currentPlayer to track this
 
-        for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+        auto& team = m_teams[newPlayer.teamIndex];
+        const bool samePlayer = (team.players[0].client == player.client && team.players[0].player == player.player);
+        if (!samePlayer)
         {
-            for(auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
-            {
-                const bool samePlayer = (i == player.client && j == player.player);
-                if (!samePlayer &&
-                    m_sharedData.connectionData[i].playerData[j].teamIndex == newPlayer.teamIndex)
-                {
-                    m_sharedData.connectionData[i].playerData[j].activeTeamMember = false;
-                    break;
-                }
-            }
+            //player 0
+            m_sharedData.connectionData[team.players[0].client].playerData[team.players[0].player].activeTeamMember = false;
+            team.currentPlayer = 1;
+        }
+        else
+        {
+            m_sharedData.connectionData[team.players[1].client].playerData[team.players[1].player].activeTeamMember = false;
+            team.currentPlayer = 0;
         }
     }
 
@@ -7378,7 +7404,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
 
     //this is just so that the particle director knows if we're on a new hole
-    if (glm::length2(m_currentPlayer.position - m_holeData[m_currentHole].tee) < (0.05f * 0.05f))
+    if (glm::length2(m_currentPlayer.position - m_holeData[m_currentHole].tee) < (0.05f * 0.05f)
+        || m_sharedData.teamMode)
     {
         msg2->travelDistance = -1.f;
     }

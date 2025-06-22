@@ -340,14 +340,14 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
 
         //this should never be true if there are any more than one group
         auto& team = m_teams[m_playerInfo[0].playerInfo[0].teamIndex];
-        team.currentPlayer = (team.players[0][0] == playerInfo.client && team.players[0][1] == playerInfo.player) ? 1 : 0;
+        team.currentPlayer = (team.players[0].client == playerInfo.client && team.players[0].player == playerInfo.player) ? 1 : 0;
 
         const auto& teamMate = team.players[team.currentPlayer];
         auto& pi = m_playerInfo[0].playerInfo;
         auto teamMateInfo = std::find_if(pi.begin(), pi.end(), 
             [&teamMate](const PlayerStatus& ps) 
             {
-                return ps.client == teamMate[0] && ps.player == teamMate[1];
+                return ps.client == teamMate.client && ps.player == teamMate.player;
             });
 
 

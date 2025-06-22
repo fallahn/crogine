@@ -524,6 +524,9 @@ private:
     void setGhostPosition(glm::vec3);
     void spectateGroup(std::uint8_t group);
 
+    //look up table so we can find player info based on their team index
+    std::array<Team, ConstVal::MaxPlayers> m_teams = {};
+
     //follows the ball mid-flight
     cro::Entity m_flightCam;
     cro::Entity m_drone;

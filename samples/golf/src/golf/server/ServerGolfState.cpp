@@ -195,11 +195,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                     {
                         //if this was the removed client set to the other player
                         //this just creates an empty team if no players are left
-                        if (team.players[i][0] == data.clientID)
+                        if (team.players[i].client == data.clientID)
                         {
                             const auto idx = (i + 1) % 2;
-                            team.players[i][0] = team.players[idx][0];
-                            team.players[i][1] = team.players[idx][1];
+                            team.players[i] = team.players[idx];
+                            //team.players[i] = team.players[idx];
                         }
                     }
                 }
@@ -1012,7 +1012,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             auto teamMateInfo = std::find_if(pi.begin(), pi.end(),
                 [&teamMate](const PlayerStatus& ps)
                 {
-                    return ps.client == teamMate[0] && ps.player == teamMate[1];
+                    return ps.client == teamMate.client && ps.player == teamMate.player;
                 });
 
             if (teamMateInfo != pi.end()
@@ -1136,7 +1136,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
                         if (m_sharedData.teamMode
                             && a.teamIndex == b.teamIndex)
                         {
-                            return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer][1] == a.player;
+                            return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer].player == a.player;
                         }
                         return a.distanceToHole > b.distanceToHole;
                     };
@@ -1161,7 +1161,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
                     if (m_sharedData.teamMode
                         && a.teamIndex == b.teamIndex)
                     {
-                        return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer][1] == a.player;
+                        return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer].player == a.player;
                     }
                     return a.holeScore[m_currentHole - 1] < b.holeScore[m_currentHole - 1];
                 };
@@ -1923,19 +1923,23 @@ void GolfState::initScene()
 
                 if (m_sharedData.teamMode)
                 {
+                    //TODO eventually we'll accept the indices from the host client
+                    //so we need to convert the team vector to an array as indices
+                    //may no be in ascending order.
+
                     const auto teamPlayerIndex = teamCounter % 2;
                     if (teamPlayerIndex == 0)
                     {
                         auto& team = m_teams.emplace_back();
                         //fill the second slot with first player, in case there isn't a second
                         //player for the team because the roster has an odd number of players
-                        m_teams.back().players[1][0] = player.client;
-                        m_teams.back().players[1][1] = j;
+                        m_teams.back().players[1].client = player.client;
+                        m_teams.back().players[1].player = j;
                     }
                     player.teamIndex = static_cast<std::int32_t>(m_teams.size() - 1);
 
-                    m_teams.back().players[teamPlayerIndex][0] = player.client;
-                    m_teams.back().players[teamPlayerIndex][1] = j;
+                    m_teams.back().players[teamPlayerIndex].client = player.client;
+                    m_teams.back().players[teamPlayerIndex].player = j;
 
                     teamCounter++;
                 }
