@@ -2618,10 +2618,18 @@ void GolfState::showCountdown(std::uint8_t seconds)
     
     if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
     {
-        auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());
+        auto scoreCount = m_statBoardScores.size();
+        if (m_sharedData.teamMode)
+        {
+            scoreCount /= 2;
+            scoreCount += m_statBoardScores.size() % 2;
+        }
+
+        const auto trophyCount = std::min(std::size_t(3), scoreCount);
         for (auto i = 0u; i < trophyCount; ++i)
         {
-            if (m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID //if this is a virtual CPU client is NullVal
+            if (!m_sharedData.teamMode //don;t give SP awards for team mode
+                && m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID //if this is a virtual CPU client is NullVal
                 && !m_sharedData.localConnectionData.playerData[m_statBoardScores[i].player].isCPU)
             {
                 if (m_statBoardScores.size() > 1
@@ -2713,16 +2721,19 @@ void GolfState::showCountdown(std::uint8_t seconds)
             //this might be true if we're playing a Quick Round
             if (m_statBoardScores[i].client != ConstVal::NullValue)
             {
-                m_trophies[i].badge.getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[i].client].level / 10));
+                //TODO we want to show both player names/icons if this is team mode
+                const auto playerIndex = m_sharedData.teamMode ? i * 2 : i;
+
+                m_trophies[i].badge.getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[playerIndex].client].level / 10));
                 m_trophies[i].badge.getComponent<cro::Model>().setDoubleSided(0, true);
 
-                m_trophies[i].label.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[i].client].getTexture(), false);
+                m_trophies[i].label.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[playerIndex].client].getTexture(), false);
                 auto bounds = m_trophies[i].label.getComponent<cro::Sprite>().getTextureBounds();
-                bounds.bottom = bounds.height * m_statBoardScores[i].player;
+                bounds.bottom = bounds.height * m_statBoardScores[playerIndex].player;
                 m_trophies[i].label.getComponent<cro::Sprite>().setTextureRect(bounds);
             
                 //choose the relevant player from the sheet
-                bounds = getAvatarBounds(m_statBoardScores[i].player);
+                bounds = getAvatarBounds(m_statBoardScores[playerIndex].player);
                 m_trophies[i].avatar.getComponent<cro::Sprite>().setTextureRect(bounds);
             }
             else
