@@ -4494,11 +4494,13 @@ void MenuState::applyTutorialConnection()
     //hmmm is this going to get in soon enough?
     m_sharedData.gimmeRadius = GimmeSize::None;
     m_sharedData.scoreType = ScoreType::Stroke;
+    m_sharedData.teamMode = 0;
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RandomWind, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
@@ -4509,10 +4511,12 @@ void MenuState::applyCareerConnection()
     m_sharedData.clubLimit = 0;
     m_sharedData.reverseCourse = 0;
     m_sharedData.scoreType = ScoreType::Stroke;
+    m_sharedData.teamMode = 0;
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     //set by career menu
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, m_sharedData.weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -4535,6 +4539,7 @@ void MenuState::applyQuickPlayConnection()
     m_sharedData.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
     m_sharedData.holeCount = cro::Util::Random::value(1, 2);
     m_sharedData.gimmeRadius = GimmeSize::Leather; //hmmm should we let the player choose this?
+    m_sharedData.teamMode = 0;
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -4543,6 +4548,7 @@ void MenuState::applyQuickPlayConnection()
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::NightTime, m_sharedData.nightTime, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RandomWind, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);

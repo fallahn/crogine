@@ -1753,6 +1753,9 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
+
+                    //refeshes newly unlocked balls
+                    activatePage(PaginationID::Balls, m_pageContexts[PaginationID::Balls].pageIndex, true);
                 }
             });
     ballThumb.getComponent<cro::UIInput>().setNextIndex(ButtonNextBall, ButtonBallColour);
@@ -3685,12 +3688,22 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
                 const auto itemIndex = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
                 if (!m_sharedData.ballInfo[itemIndex].label.empty())
                 {
+                    auto& t = m_pageContexts[PaginationID::Balls].pageHandles.itemLabel.getComponent<cro::Text>();
+                    t.setFillColour(TextNormalColour);
+
                     auto str = m_sharedData.ballInfo[itemIndex].label;
+                    std::uint32_t idx = 0;
                     if (m_sharedData.ballInfo[itemIndex].locked)
                     {
-                        str += " (Locked)";
+                        idx = str.size();
+                        str += " (LOCKED)";
                     }
-                    m_pageContexts[PaginationID::Balls].pageHandles.itemLabel.getComponent<cro::Text>().setString(str);
+                    t.setString(str);
+
+                    if (idx)
+                    {
+                        t.setFillColour(TextGoldColour, idx);
+                    }
                 }
                 else
                 {
@@ -5221,13 +5234,20 @@ void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& 
                     tc.setFillColour(TextNormalColour);
 
                     auto label = m_clubData[itemIndex].name;
+                    std::uint32_t idx = 0;
                     if (locked)
                     {
-                        const auto idx = label.size();
+                        idx = label.size();
                         label += " (LOCKED)";
-                        tc.setFillColour(TextHighlightColour, idx); //TODO this isn't working for some reason
                     }
                     tc.setString(label);
+                    
+                    //we have to set this *after* the string
+                    //else the index is out of range
+                    if (idx)
+                    {
+                        tc.setFillColour(TextGoldColour, idx);
+                    }
                 }
                 else
                 {
@@ -5739,11 +5759,21 @@ void ProfileState::activatePage(std::int32_t itemID, std::size_t page, bool forc
         {
             item.getComponent<cro::UIInput>().enabled = true;
             
-            if (itemID == PaginationID::Clubs)
+            if (itemID == PaginationID::Clubs
+                || itemID == PaginationID::Balls)
             {
-                const auto itemIndex = item.getComponent<cro::Callback>().getUserData<std::uint8_t>();
-                const bool locked = !(m_clubData[itemIndex].man == -1 || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[itemIndex].man)) != 0);
+                bool locked = false;
 
+                const auto itemIndex = item.getComponent<cro::Callback>().getUserData<std::uint8_t>();
+
+                if (itemID == PaginationID::Balls)
+                {
+                    locked = m_sharedData.ballInfo[itemIndex].locked;
+                }
+                else
+                {
+                    locked = !(m_clubData[itemIndex].man == -1 || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[itemIndex].man)) != 0);
+                }
                 const cro::Colour c = locked ? cro::Colour::DarkGrey : cro::Colour::White;
 
                 const auto thumbIndex = (itemIndex - startIndex) * 6; //6 verts
