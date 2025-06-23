@@ -111,6 +111,18 @@ void LobbyState::netEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default:break;
+        case PacketID::TeamData:
+        {
+            const auto data = evt.packet.as<TeamData>();
+            if (data.client < ConstVal::MaxClients
+                && data.player < ConstVal::MaxPlayers)
+            {
+                //LogI << "[server] Set Team " << data.index << " for " << data.client << ", " << data.player << std::endl;
+                m_sharedData.clients[data.client].playerData[data.player].teamIndex = data.index;
+                m_sharedData.host.broadcastPacket<TeamData>(PacketID::TeamData, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+        }
+            break;
         case PacketID::CoinSpawn:
             spawnCoin(evt.packet.as<float>(), evt.peer.getID());
             break;

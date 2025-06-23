@@ -966,6 +966,15 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
 
 void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
 {
+    if (m_sharedData.teamMode && newHole)
+    {
+        //ensure we always alternate team member on the tee
+        for (auto& t : m_teams)
+        {
+            t.currentPlayer = m_currentHole % 2;
+        }
+    }
+
     //each player is sequential (ideally with fewest skins, use connect ID to tie break)
     const auto skinsPredicate = 
         [&](const PlayerStatus& a, const PlayerStatus& b)
@@ -1136,7 +1145,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
                         if (m_sharedData.teamMode
                             && a.teamIndex == b.teamIndex)
                         {
-                            return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer].player == a.player;
+                            return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer] == a;
                         }
                         return a.distanceToHole > b.distanceToHole;
                     };
@@ -1161,7 +1170,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
                     if (m_sharedData.teamMode
                         && a.teamIndex == b.teamIndex)
                     {
-                        return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer].player == a.player;
+                        return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer] == a;
                     }
                     return a.holeScore[m_currentHole - 1] < b.holeScore[m_currentHole - 1];
                 };
@@ -1176,25 +1185,24 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             if (!playerInfo.empty())
             {
                 if ((playerInfo[0].client != m_honour[0]
-                    || playerInfo[0].player != m_honour[1])
-                    && m_sharedData.teamMode == 0)
+                    || playerInfo[0].player != m_honour[1]))
                 {
-                    auto r = std::find_if(playerInfo.begin(), playerInfo.end(),
-                        [&](const PlayerStatus& ps)
-                        {
-                            return ps.client == m_honour[0] && ps.player == m_honour[1];
-                        });
-
-                    if (r != playerInfo.end())
+                    if (m_sharedData.teamMode == 0) //in teams we always alternate who tees off
                     {
-                        if (r->holeScore[m_currentHole - 1] == playerInfo[0].holeScore[m_currentHole - 1])
+                        auto r = std::find_if(playerInfo.begin(), playerInfo.end(),
+                            [&](const PlayerStatus& ps)
+                            {
+                                return ps.client == m_honour[0] && ps.player == m_honour[1];
+                            });
+
+                        if (r != playerInfo.end())
                         {
-                            std::swap(playerInfo[std::distance(playerInfo.begin(), r)], playerInfo[0]);
+                            if (r->holeScore[m_currentHole - 1] == playerInfo[0].holeScore[m_currentHole - 1])
+                            {
+                                std::swap(playerInfo[std::distance(playerInfo.begin(), r)], playerInfo[0]);
+                            }
                         }
                     }
-
-                    ///TODO if this *is* teams we want to check if this is the team player turn and if not
-                    //swap them with their team mate
                 }
 
                 //set whoever is first as current honour taker
@@ -1923,25 +1931,23 @@ void GolfState::initScene()
 
                 if (m_sharedData.teamMode)
                 {
-                    //TODO eventually we'll accept the indices from the host client
-                    //so we need to convert the team vector to an array as indices
-                    //may no be in ascending order.
+                    player.teamIndex = m_sharedData.clients[d.clientID].playerData[j].teamIndex;
 
-                    const auto teamPlayerIndex = teamCounter % 2;
-                    if (teamPlayerIndex == 0)
+                    CRO_ASSERT(player.teamIndex > -1 && player.teamIndex < m_teams.size(), "");
+                    m_teams[player.teamIndex].players[m_teams[player.teamIndex].currentPlayer].client = player.client;
+                    m_teams[player.teamIndex].players[m_teams[player.teamIndex].currentPlayer].player = j;
+
+                    if (m_teams[player.teamIndex].currentPlayer == 0)
                     {
-                        auto& team = m_teams.emplace_back();
-                        //fill the second slot with first player, in case there isn't a second
-                        //player for the team because the roster has an odd number of players
-                        m_teams.back().players[1].client = player.client;
-                        m_teams.back().players[1].player = j;
+                        //duplicate the player into the second slot in case there's
+                        //no second team member - it'll be overwritten with correct data if necessary
+                        m_teams[player.teamIndex].players[1].client = player.client;
+                        m_teams[player.teamIndex].players[1].player = j;
                     }
-                    player.teamIndex = static_cast<std::int32_t>(m_teams.size() - 1);
 
-                    m_teams.back().players[teamPlayerIndex].client = player.client;
-                    m_teams.back().players[teamPlayerIndex].player = j;
-
-                    teamCounter++;
+                    //increment this so next time we hit the team index the player is put
+                    //in the next slot
+                    m_teams[player.teamIndex].currentPlayer = (m_teams[player.teamIndex].currentPlayer + 1) % 2;
                 }
 
                 startLives = std::max(startLives - 1, 2);

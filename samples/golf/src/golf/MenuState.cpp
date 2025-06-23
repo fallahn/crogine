@@ -571,6 +571,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                         PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                     cro::Console::print("Team mode set to 1");
+
+                    //updates team index assignments
+                    updateLobbyAvatars();
                 }
                 else
                 {
@@ -3516,6 +3519,21 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::TeamData:
+        {
+            const auto data = evt.packet.as<TeamData>();
+            m_sharedData.connectionData[data.client].playerData[data.player].teamIndex = data.index;
+            //LogI << "Set team index " << data.index << " for " << data.client << ", " << data.player << std::endl;
+
+            if (!m_sharedData.hosting)
+            {
+                //this updates the text display - but if we're
+                //hosting also re-transmits the indices, so only
+                //do this here if we're a guest!!
+                updateLobbyAvatars();
+            }
+        }
+            break;
         case PacketID::CoinBucketed:
             m_backgroundScene.getDirector<MenuSoundDirector>()->playSound(
                 cro::Util::Random::value(MenuSoundDirector::AudioID::Land01, MenuSoundDirector::AudioID::Land01 + 2), 0.5f);

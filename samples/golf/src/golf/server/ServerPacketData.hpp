@@ -31,6 +31,7 @@ source distribution.
 
 #include "../CommonConsts.hpp"
 #include "../Terrain.hpp"
+#include "../HoleData.hpp"
 
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/detail/glm/vec3.hpp>
@@ -53,6 +54,16 @@ static inline bool operator != (const ActivePlayer& a, const ActivePlayer& b)
     return !(a == b);
 }
 
+static inline bool operator == (const Team::Player& a, const ActivePlayer& b)
+{
+    return (a.client == b.client) && (a.player == b.player);
+}
+
+static inline bool operator != (const Team::Player& a, const ActivePlayer& b)
+{
+    return !(a == b);
+}
+
 struct PlayerStatus final : public ActivePlayer
 {
     cro::Entity ballEntity;
@@ -70,6 +81,13 @@ struct PlayerStatus final : public ActivePlayer
     bool targetHit = false;
     bool eliminated = false;
     bool readyQuit = false; //used at round end to see if all players want to skip scores
+};
+
+struct TeamData final
+{
+    std::int32_t index = -1;
+    std::uint16_t client = ConstVal::NullValue;
+    std::uint16_t player = ConstVal::NullValue;
 };
 
 struct GroupPosition final

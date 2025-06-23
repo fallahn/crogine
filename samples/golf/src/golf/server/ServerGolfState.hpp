@@ -77,7 +77,7 @@ namespace sv
 
         std::array<std::uint8_t, 2u> m_honour = { 0, 0 };
 
-        std::vector<Team> m_teams;
+        std::array<Team, ConstVal::MaxPlayers> m_teams = {};
 
         struct PlayerGroup final
         {

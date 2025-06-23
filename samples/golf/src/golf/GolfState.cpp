@@ -388,6 +388,11 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                         //this is player 1
                         m_teams[c.playerData[i].teamIndex].players[0].client = j;
                         m_teams[c.playerData[i].teamIndex].players[0].player = i;
+
+                        //duplicate to second slot in case we don't have a second
+                        //tem member just yet (it'll be overwritten if we do)
+                        m_teams[c.playerData[i].teamIndex].players[1].client = j;
+                        m_teams[c.playerData[i].teamIndex].players[1].player = i;
                     }
                     else
                     {
@@ -6882,6 +6887,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     }
 
     //mark which team member is active so we can hide the ball of inactive members
+    bool singleTeam = true; //used for ball effect in SetNewPlayer message, below
     if (m_sharedData.teamMode)
     {
         auto& newPlayer = m_sharedData.connectionData[player.client].playerData[player.player];
@@ -6889,16 +6895,22 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
         auto& team = m_teams[newPlayer.teamIndex];
         const bool samePlayer = (team.players[0].client == player.client && team.players[0].player == player.player);
-        if (!samePlayer)
+        
+        //don't do this if both team players are the same person
+        if (team.players[0] != team.players[1])
         {
-            //player 0
-            m_sharedData.connectionData[team.players[0].client].playerData[team.players[0].player].activeTeamMember = false;
-            team.currentPlayer = 1;
-        }
-        else
-        {
-            m_sharedData.connectionData[team.players[1].client].playerData[team.players[1].player].activeTeamMember = false;
-            team.currentPlayer = 0;
+            singleTeam = false;
+            if (!samePlayer)
+            {
+                //player 0
+                m_sharedData.connectionData[team.players[0].client].playerData[team.players[0].player].activeTeamMember = false;
+                team.currentPlayer = 1;
+            }
+            else
+            {
+                m_sharedData.connectionData[team.players[1].client].playerData[team.players[1].player].activeTeamMember = false;
+                team.currentPlayer = 0;
+            }
         }
     }
 
@@ -7409,7 +7421,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     //this is just so that the particle director knows if we're on a new hole
     if (glm::length2(m_currentPlayer.position - m_holeData[m_currentHole].tee) < (0.05f * 0.05f)
-        || m_sharedData.teamMode)
+        || (m_sharedData.teamMode && !singleTeam))
     {
         msg2->travelDistance = -1.f;
     }

@@ -51,6 +51,69 @@ using namespace sv;
 
 void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
 {
+    //if we're playing team play copy the result to the
+    //other player's score and update their position
+    if (m_sharedData.teamMode
+        /*&& m_playerInfo.size() == 1*/)
+    {
+        const auto& playerInfo = m_playerInfo[0].playerInfo[0];
+
+        //this should never be true if there are any more than one group
+        auto& team = m_teams[m_playerInfo[0].playerInfo[0].teamIndex];
+        team.currentPlayer = (team.players[0].client == playerInfo.client && team.players[0].player == playerInfo.player) ? 1 : 0;
+
+        LogI << "[server] Updated team info for team " << m_playerInfo[0].playerInfo[0].teamIndex << std::endl;
+
+        const auto& teamMate = team.players[team.currentPlayer];
+        auto& pi = m_playerInfo[0].playerInfo;
+        auto teamMateInfo = std::find_if(pi.begin(), pi.end(),
+            [&teamMate](const PlayerStatus& ps)
+            {
+                return ps.client == teamMate.client && ps.player == teamMate.player;
+            });
+
+
+        if (teamMateInfo != pi.end()
+            && !(teamMateInfo->client == playerInfo.client //don't do this if it's a one person team
+                && teamMateInfo->player == playerInfo.player))
+        {
+            //clone ball info
+            playerInfo.ballEntity.getComponent<Ball>().clone(teamMateInfo->ballEntity.getComponent<Ball>());
+            teamMateInfo->ballEntity.getComponent<cro::Transform>().setPosition(playerInfo.ballEntity.getComponent<cro::Transform>().getPosition());
+
+            //and the score
+            teamMateInfo->holeScore[m_currentHole] = playerInfo.holeScore[m_currentHole];
+            teamMateInfo->targetHit = playerInfo.targetHit;
+
+
+            teamMateInfo->position = playerInfo.position;
+            teamMateInfo->terrain = playerInfo.terrain;
+            teamMateInfo->distanceToHole = playerInfo.distanceToHole;
+            teamMateInfo->totalScore = playerInfo.totalScore;
+
+            //make sure to update the clients immediately before setting next player
+            auto ball = teamMateInfo->ballEntity;
+            const auto timestamp = m_serverTime.elapsed().asMilliseconds();
+            auto& ballC = ball.getComponent<Ball>();
+
+            ActorInfo info;
+            info.serverID = static_cast<std::uint32_t>(ball.getIndex());
+            info.position = ball.getComponent<cro::Transform>().getPosition();
+            info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
+            info.windEffect = ballC.windEffect;
+            info.timestamp = timestamp;
+            info.clientID = teamMateInfo->client;
+            info.playerID = teamMateInfo->player;
+            info.state = static_cast<std::uint8_t>(ballC.state);
+            info.lie = ballC.lie;
+            info.groupID = 0;
+            //as these are only used for sound effects only send the events where we bounce on something
+            info.collisionTerrain = ballC.state == Ball::State::Flight ? ballC.lastTerrain : ConstVal::NullValue;
+            ballC.lastTerrain = ConstVal::NullValue;
+            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Reliable);
+        }
+    }
+
     if (m_playerInfo[groupID].playerInfo.empty())
     {
         return;
@@ -327,68 +390,6 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
             }
             break;
         }
-        }
-    }
-
-    //if we're playing team play copy the result to the
-    //other player's score and update their position
-
-    if (m_sharedData.teamMode
-        && m_playerInfo.size() == 1)
-    {
-        const auto& playerInfo = m_playerInfo[0].playerInfo[0];
-
-        //this should never be true if there are any more than one group
-        auto& team = m_teams[m_playerInfo[0].playerInfo[0].teamIndex];
-        team.currentPlayer = (team.players[0].client == playerInfo.client && team.players[0].player == playerInfo.player) ? 1 : 0;
-
-        const auto& teamMate = team.players[team.currentPlayer];
-        auto& pi = m_playerInfo[0].playerInfo;
-        auto teamMateInfo = std::find_if(pi.begin(), pi.end(), 
-            [&teamMate](const PlayerStatus& ps) 
-            {
-                return ps.client == teamMate.client && ps.player == teamMate.player;
-            });
-
-
-        if (teamMateInfo != pi.end()
-            && !(teamMateInfo->client == playerInfo.client //don't do this if it's a one person team
-            && teamMateInfo->player == playerInfo.player))
-        {
-            //clone ball info
-            playerInfo.ballEntity.getComponent<Ball>().clone(teamMateInfo->ballEntity.getComponent<Ball>());
-            teamMateInfo->ballEntity.getComponent<cro::Transform>().setPosition(playerInfo.ballEntity.getComponent<cro::Transform>().getPosition());
-            
-            //and the score
-            teamMateInfo->holeScore[m_currentHole] = playerInfo.holeScore[m_currentHole];
-            teamMateInfo->targetHit = playerInfo.targetHit;
-
-
-            teamMateInfo->position = playerInfo.position;
-            teamMateInfo->terrain = playerInfo.terrain;
-            teamMateInfo->distanceToHole = playerInfo.distanceToHole;
-            teamMateInfo->totalScore = playerInfo.totalScore;
-
-            //make sure to update the clients immediately before setting next player
-            auto ball = teamMateInfo->ballEntity;
-            const auto timestamp = m_serverTime.elapsed().asMilliseconds();
-            auto& ballC = ball.getComponent<Ball>();
-
-            ActorInfo info;
-            info.serverID = static_cast<std::uint32_t>(ball.getIndex());
-            info.position = ball.getComponent<cro::Transform>().getPosition();
-            info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
-            info.windEffect = ballC.windEffect;
-            info.timestamp = timestamp;
-            info.clientID = teamMateInfo->client;
-            info.playerID = teamMateInfo->player;
-            info.state = static_cast<std::uint8_t>(ballC.state);
-            info.lie = ballC.lie;
-            info.groupID = 0;// m_groupAssignments[player.client];
-            //as these are only used for sound effects only send the events where we bounce on something
-            info.collisionTerrain = ballC.state == Ball::State::Flight ? ballC.lastTerrain : ConstVal::NullValue;
-            ballC.lastTerrain = ConstVal::NullValue;
-            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Reliable);
         }
     }
 }

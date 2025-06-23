@@ -247,6 +247,8 @@ namespace PacketID
         ClubChanged, //< updates putt cam on remote clients: uint8 club | uint8 client
         AvatarRotation, //uin32_t client | player | finalRotation compressed as int16
 
+        TeamData, //<TeamData struct mapping client/player to team index
+
         CanUpdate, //CanInfo struct
         CoinSpawn, //float power - sent to server. Result comes back as actor spawn
         CoinRemove, //uint32_t server ID

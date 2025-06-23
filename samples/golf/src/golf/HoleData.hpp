@@ -53,6 +53,16 @@ struct Team final
     std::array<Player, 2u> players = {}; //client, player of each player
 };
 
+static inline bool operator == (const Team::Player& a, const Team::Player& b)
+{
+    return (a.client == b.client) && (a.player == b.player);
+}
+
+static inline bool operator != (const Team::Player& a, const Team::Player& b)
+{
+    return !(a == b);
+}
+
 static inline const std::array<std::string, 12u> CourseNames =
 {
     "course_01",
