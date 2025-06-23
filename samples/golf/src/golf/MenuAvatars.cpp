@@ -521,8 +521,10 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                auto idx = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
-                m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = indexFromBallID(m_profileData.playerProfiles[idx].playerData.ballID);
+                const auto idx = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+                const auto ballIdx = indexFromBallID(m_profileData.playerProfiles[idx].playerData.ballID);
+                m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = ballIdx;
+                m_ballModels[ballIdx].getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_profileData.playerProfiles[idx].playerData.ballColour);
 
                 showAvatar(idx);
             }
@@ -568,7 +570,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
         //button
         entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 14.f, 2.f });
+        entity.addComponent<cro::Transform>().setPosition({ 14.f, 2.f, 0.2f });
         entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_highlight");
@@ -710,6 +712,8 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                 auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                 i = (i + (m_profileData.playerProfiles.size() - 1)) % m_profileData.playerProfiles.size();
                 setProfileIndex(i);
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -849,6 +853,8 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                 auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                 i = (i + 1) % m_profileData.playerProfiles.size();
                 setProfileIndex(i);
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
