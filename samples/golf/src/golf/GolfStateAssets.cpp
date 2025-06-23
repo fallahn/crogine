@@ -2006,7 +2006,7 @@ void GolfState::loadMaterials()
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).setProperty("u_angleTex", shaleTex);
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).addCustomSetting(GL_CLIP_DISTANCE1);
 
-    m_resources.shaders.loadFromString(ShaderID::MinimapModel, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n" + wobble + targetDefines);
+    m_resources.shaders.loadFromString(ShaderID::MinimapModel, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n" + targetDefines);
     shader = &m_resources.shaders.get(ShaderID::MinimapModel);
     m_materialIDs[MaterialID::Minimap] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Minimap]).setProperty("u_angleTex", shaleTex);

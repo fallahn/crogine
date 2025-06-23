@@ -1030,15 +1030,15 @@ void LeagueState::createInfoTab(cro::Entity parent)
     constexpr float vertPos = 292.f;
     std::string desc = R"(
 Every Monthly Best score on the Steam Leaderboards contributes to the Global League.
-
 The Global League is created from the sum of all Steam players Monthly Best scores and
 the season lasts one calendar month, composed of 36 rounds. Beating an existing personal
 Monthly Best (for the current month) will also improve your existing league score.
 
-Every Stroke Play or Stableford round you play contributes to the Club League. Each Career
-round you play contributes to the selected Career League. These leagues are split into 
-seasons, with 24 rounds played for each Club season, and 6 rounds for each Career season.
-The Club and Career results are entirely offline, and opponents are fictional.
+Every Stroke Play or Stableford round you play in Freeplay contributes to the Club League.
+Each Career round you play contributes to the selected Career League. These leagues are
+split into seasons, with 24 rounds played for each Club season, and 6 rounds for each
+Career season. The Club and Career results are entirely offline, and opponents are
+fictional.
 
 At the end of a round your scores are converted using the Stableford scoring system with
 par being worth 2 points and 1 point extra awarded for each stroke under par. Scores for
@@ -1053,10 +1053,10 @@ decrease. The offline leagues are reset if you reset your player progress at any
 #else
     constexpr float vertPos = 284.f;
     std::string desc = R"(
-Every Stroke Play or Stableford round you play contributes to the Club League. Each
-Career round you play contributes to the selected Career League. The leagues are split
-into seasons, with 24 rounds played for each Club season, and 6 rounds for each Career
-season. At the end of a season the top three players win an award.
+Every Stroke Play or Stableford round you play in Freeplay contributes to the Club League.
+Each Career round you play contributes to the selected Career League. The leagues are
+split into seasons, with 24 rounds played for each Club season, and 6 rounds for each
+Career season. At the end of a season the top three players win an award.
 
 At the end of a round your scores are converted using the Stableford scoring system with
 par being worth 2 points and 1 point extra awarded for each stroke under par. Scores for

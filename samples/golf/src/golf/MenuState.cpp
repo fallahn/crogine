@@ -559,6 +559,43 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 #endif
+    registerCommand("sv_team_mode", [&](const std::string& param)
+        {
+            if (param == "1")
+            {
+                if (m_sharedData.hosting
+                    && m_sharedData.clientConnection.connected)
+                {
+                    m_sharedData.teamMode = 1;
+                    m_sharedData.clientConnection.netClient.sendPacket(
+                        PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    cro::Console::print("Team mode set to 1");
+                }
+                else
+                {
+                    cro::Console::print("Not connected to a lobby");
+                }
+            }
+            else if (param == "0")
+            {
+
+                if (m_sharedData.hosting
+                    && m_sharedData.clientConnection.connected)
+                {
+                    m_sharedData.teamMode = 0;
+                    m_sharedData.clientConnection.netClient.sendPacket(
+                        PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    cro::Console::print("Team mode set to 0");
+                }
+            }
+            else
+            {
+                cro::Console::print("Usage: sv_team_mode <0|1>");
+            }
+        });
+
     registerCommand("sv_group_mode", [&](const std::string& param)
         {
             const std::array GroupStrings =
@@ -576,8 +613,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                     if (m_sharedData.hosting
                         && m_sharedData.clientConnection.connected)
                     {
-                        m_sharedData.clientConnection.netClient.sendPacket(
-                            PacketID::TeamMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        /*m_sharedData.clientConnection.netClient.sendPacket(
+                            PacketID::TeamMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);*/
                         /*m_sharedData.clientConnection.netClient.sendPacket(
                             PacketID::GroupMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);*/
                     }

@@ -327,7 +327,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             humanIndex = i;
         }
     }
-    m_allowAchievements = (humanCount == 1) && (getCourseIndex(sd.mapDirectory) != -1);
+    m_allowAchievements = (humanCount == 1) && (getCourseIndex(sd.mapDirectory) != -1) && (sd.teamMode == 0);
     m_humanCount = humanCount;
     m_inputParser.setHumanCount(humanCount);
 
@@ -3882,6 +3882,7 @@ void GolfState::buildScene()
             entity.getComponent<cro::Transform>().setScale(glm::vec3(LightRadius));
             m_lightVolumeDefinition.createModel(entity);
             entity.getComponent<cro::Model>().setHidden(true);
+            entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::Reflection));
             entity.addComponent<cro::LightVolume>().radius = LightRadius;
             entity.getComponent<cro::LightVolume>().colour = cro::Colour(1.f, 0.55f, 0.1f);
             entity.addComponent<LightAnimation>(0.7f, 1.f);// .setPattern(LightAnimation::FlickerA);
@@ -4579,6 +4580,7 @@ void GolfState::spawnBall(const ActorInfo& info)
             entity.addComponent<cro::LightVolume>().radius = LightRadius;
             entity.getComponent<cro::LightVolume>().colour = miniBallColour.getVec4() / 2.f;
             entity.getComponent<cro::Model>().setHidden(true);
+            entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::Reflection));
 
             //hack to stop the point light lens flares drawing on balls
             entity.addComponent<LightAnimation>().pattern.clear();
@@ -4826,6 +4828,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                 {
                     for (auto e : teamHiddenEnts)
                     {
+                        //hmm we want to disable on reflection pass too if this is a ball
                         e.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
                     }
                     labelEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
@@ -6294,6 +6297,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 
                         m_lightVolumeDefinition.createModel(lightEnt);
                         lightEnt.getComponent<cro::Model>().setHidden(true);
+                        lightEnt.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::Reflection));
 
                         if (lightData.parent.isValid())
                         {
