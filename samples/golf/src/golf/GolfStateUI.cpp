@@ -2628,7 +2628,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         const auto trophyCount = std::min(std::size_t(3), scoreCount);
         for (auto i = 0u; i < trophyCount; ++i)
         {
-            if (!m_sharedData.teamMode //don;t give SP awards for team mode
+            if (!m_sharedData.teamMode //don't give SP awards for team mode
                 && m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID //if this is a virtual CPU client is NullVal
                 && !m_sharedData.localConnectionData.playerData[m_statBoardScores[i].player].isCPU)
             {
@@ -2717,37 +2717,62 @@ void GolfState::showCountdown(std::uint8_t seconds)
             m_trophies[i].trophy.getComponent<TrophyDisplay>().state = TrophyDisplay::In;
             //m_trophyLabels[i].getComponent<cro::Callback>().active = true; //this is done by TrophyDisplay (above) to properly delay it
 
-
+            const auto scoreIndex = m_sharedData.teamMode ? i * 2 : i;
+           
             //this might be true if we're playing a Quick Round
-            if (m_statBoardScores[i].client != ConstVal::NullValue)
+            if (m_statBoardScores[scoreIndex].client != ConstVal::NullValue)
             {
-                //TODO we want to show both player names/icons if this is team mode
-                const auto playerIndex = m_sharedData.teamMode ? i * 2 : i;
-
-                m_trophies[i].badge.getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[playerIndex].client].level / 10));
+                m_trophies[i].badge.getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[scoreIndex].client].level / 10));
                 m_trophies[i].badge.getComponent<cro::Model>().setDoubleSided(0, true);
 
-                m_trophies[i].label.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[playerIndex].client].getTexture(), false);
+                m_trophies[i].label.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[scoreIndex].client].getTexture(), false);
                 auto bounds = m_trophies[i].label.getComponent<cro::Sprite>().getTextureBounds();
-                bounds.bottom = bounds.height * m_statBoardScores[playerIndex].player;
+                bounds.bottom = bounds.height * m_statBoardScores[scoreIndex].player;
                 m_trophies[i].label.getComponent<cro::Sprite>().setTextureRect(bounds);
-            
-                //choose the relevant player from the sheet
-                bounds = getAvatarBounds(m_statBoardScores[playerIndex].player);
-                m_trophies[i].avatar.getComponent<cro::Sprite>().setTextureRect(bounds);
+
+                //team size might actually be 1 if odd number of players or someone
+                //left mid-game
+                auto teamSize = 1;
+                if (m_sharedData.teamMode)
+                {
+                    const auto teamIndex = m_sharedData.connectionData[m_statBoardScores[scoreIndex].client].playerData[m_statBoardScores[scoreIndex].player].teamIndex;
+                    if (m_teams[teamIndex].players[0] != m_teams[teamIndex].players[1])
+                    {
+                        teamSize = 2;
+                    }
+                }
+
+                for (auto j = 0; j < teamSize; ++j)
+                {
+                    const auto idx = scoreIndex + j;
+                    if (idx < m_statBoardScores.size())
+                    {
+                        //choose the relevant player from the sheet
+                        bounds = getAvatarBounds(m_statBoardScores[idx].player);
+                        m_trophies[i].avatars[j].getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[idx].client].getTexture(), false);
+                        m_trophies[i].avatars[j].getComponent<cro::Sprite>().setTextureRect(bounds);
+
+                        //offset icons if team mode
+                        if (teamSize == 2)
+                        {
+                            const auto offset = (j * 2) - 1;
+                            m_trophies[i].avatars[j].getComponent<cro::Transform>().move({ offset * 22.f, 0.f });
+                        }
+                    }
+                }
             }
             else
             {
                 //this is a league player so there's nothing to show...
-                m_trophies[i].avatar.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                m_trophies[i].avatar.getComponent<cro::Callback>().active = false; //otherwise this overrides the scale
+                //and should never be true for team modes
+                m_trophies[i].avatars[0].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_trophies[i].avatars[0].getComponent<cro::Callback>().active = false; //otherwise this overrides the scale
                 m_trophies[i].label.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 //m_trophies[i].label.getComponent<cro::Callback>().active = false;
                 //TrophyDisplaySystem sets this true so we override the function to do nothing
                 m_trophies[i].label.getComponent<cro::Callback>().function = [](cro::Entity, float) {};
                 m_trophies[i].badge.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
-            
         }
         m_trophyScene.getActiveCamera().getComponent<cro::Camera>().active = true;
     }
@@ -6028,51 +6053,55 @@ void GolfState::buildTrophyScene()
 
             m_trophies[i].label = entity;
 
+            const auto avCount = m_sharedData.teamMode ? 2 : 1;
 
             //icon
-            entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height - 8.f, 0.1f });
-            entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
-            bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.y * 4.f), LabelIconSize.x, LabelIconSize.y };
-            entity.getComponent<cro::Sprite>().setTextureRect(bounds);
-            entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -14.f, -0.1f });
-            m_trophies[i].label.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-            m_trophies[i].avatar = entity;
-
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().setUserData<float>(1.f);
-            entity.getComponent<cro::Callback>().function =
-                [&,i](cro::Entity e, float dt)
+            const glm::vec3 iconPos = { bounds.width / 2.f, bounds.height - 8.f, 0.1f };
+            for (auto j = 0; j < avCount; ++j)
             {
-                if (m_trophies[i].label.getComponent<cro::Callback>().active)
-                {
-                    e.getComponent<cro::Sprite>().setTexture(*m_trophies[i].label.getComponent<cro::Sprite>().getTexture(), false);
+                entity = m_uiScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition(iconPos);
+                entity.addComponent<cro::Drawable2D>();
+                entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
+                bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.y * 4.f), LabelIconSize.x, LabelIconSize.y };
+                entity.getComponent<cro::Sprite>().setTextureRect(/*bounds*/{});
+                entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -14.f, -0.1f });
+                m_trophies[i].label.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                m_trophies[i].avatars[j] = entity;
 
-                    static constexpr float BaseScale = 0.5f;
-                    static constexpr float SpinCount = 6.f;
-                    static constexpr float Duration = 3.f;
-
-                    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-                    currTime = std::max(0.f, currTime - (dt / Duration));
-
-                    float progress = cro::Util::Easing::easeInQuart(currTime) * SpinCount;
-                    float scale = std::cos(cro::Util::Const::TAU * progress);
-
-                    scale += 1.f;
-                    scale /= 2.f;
-                    scale *= BaseScale;
-
-                    e.getComponent<cro::Transform>().setScale({ scale, BaseScale });
-
-                    if (currTime == 0)
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+                entity.getComponent<cro::Callback>().function =
+                    [&, i](cro::Entity e, float dt)
                     {
-                        e.getComponent<cro::Callback>().active = false;
-                        e.getComponent<cro::Transform>().setScale({ BaseScale, BaseScale });
-                    }
-                }
-            };
+                        if (m_trophies[i].label.getComponent<cro::Callback>().active)
+                        {
+                            e.getComponent<cro::Sprite>().setTexture(*m_trophies[i].label.getComponent<cro::Sprite>().getTexture(), false);
 
+                            static constexpr float BaseScale = 0.5f;
+                            static constexpr float SpinCount = 6.f;
+                            static constexpr float Duration = 3.f;
+
+                            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                            currTime = std::max(0.f, currTime - (dt / Duration));
+
+                            float progress = cro::Util::Easing::easeInQuart(currTime) * SpinCount;
+                            float scale = std::cos(cro::Util::Const::TAU * progress);
+
+                            scale += 1.f;
+                            scale /= 2.f;
+                            scale *= BaseScale;
+
+                            e.getComponent<cro::Transform>().setScale({ scale, BaseScale });
+
+                            if (currTime == 0)
+                            {
+                                e.getComponent<cro::Callback>().active = false;
+                                e.getComponent<cro::Transform>().setScale({ BaseScale, BaseScale });
+                            }
+                        }
+                    };
+            }
 
             //fireworks for end of career round
             struct FireWorkData final

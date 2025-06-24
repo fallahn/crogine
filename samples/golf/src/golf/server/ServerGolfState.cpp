@@ -189,8 +189,9 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             if (m_sharedData.teamMode)
             {
-                for (auto& team : m_teams)
+                for (auto j = 0u; j < m_teams.size(); ++j)
                 {
+                    auto& team = m_teams[j];
                     for (auto i = 0u; i < team.players.size(); ++i)
                     {
                         //if this was the removed client set to the other player
@@ -199,7 +200,6 @@ void GolfState::handleMessage(const cro::Message& msg)
                         {
                             const auto idx = (i + 1) % 2;
                             team.players[i] = team.players[idx];
-                            //team.players[i] = team.players[idx];
                         }
                     }
                 }

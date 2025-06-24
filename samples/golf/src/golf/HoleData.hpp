@@ -49,6 +49,9 @@ struct Team final
     {
         std::uint8_t client = ConstVal::NullValue;
         std::uint8_t player = ConstVal::NullValue;
+        Player() = default;
+        explicit Player(std::uint8_t c, std::uint8_t p)
+            : client(c), player(p) { }
     };
     std::array<Player, 2u> players = {}; //client, player of each player
 };

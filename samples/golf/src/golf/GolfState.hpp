@@ -677,7 +677,7 @@ private:
         cro::Entity trophy;
         cro::Entity badge;
         cro::Entity label;
-        cro::Entity avatar;
+        std::array<cro::Entity, 2u> avatars = {};
     };
     std::array<Trophy, 3u> m_trophies = {};
     std::array<cro::Entity, 3u> m_fireworks = {};

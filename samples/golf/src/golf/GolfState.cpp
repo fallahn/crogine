@@ -851,7 +851,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
         //    msg->club = getClub();
         //    msg->position = m_currentPlayer.position;
         //}
-            m_drawDepthMaps = !m_drawDepthMaps;
+            //m_drawDepthMaps = !m_drawDepthMaps;
+            showCountdown(10);
             break;
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
@@ -6010,9 +6011,24 @@ void GolfState::removeClient(std::uint8_t clientID)
         }
     }
 
-    //looks neater at the top, plus gets logged if chat log is enabled.
     for (auto i = 0u; i < m_sharedData.connectionData[clientID].playerCount; ++i)
     {
+        if (m_sharedData.teamMode)
+        {
+            //remove all players from any teams they may appear in
+            const Team::Player p(clientID, i);
+            const auto idx = m_sharedData.connectionData[clientID].playerData[i].teamIndex;
+            if (m_teams[idx].players[0] == p)
+            {
+                m_teams[idx].players[0] = m_teams[idx].players[1];
+            }
+            else
+            {
+                m_teams[idx].players[1] = m_teams[idx].players[0];
+            }
+        }
+
+        //looks neater at the top, plus gets logged if chat log is enabled.
         m_textChat.printToScreen(m_sharedData.connectionData[clientID].playerData[i].name + " has left the game.", CD32::Colours[CD32::BlueLight]);
 
         //remove the ball entity - make sure to check the list of child entities first!
