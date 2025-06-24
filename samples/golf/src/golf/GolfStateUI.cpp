@@ -346,7 +346,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_trophySceneTexture.getTexture());
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, 0.f));
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, (bounds.height / 2.f), 0.f));
     entity.addComponent<cro::Callback>().function = resizeCallback;
 
     auto trophyEnt = entity;
@@ -1997,6 +1997,11 @@ void GolfState::buildUI()
 
         trophyEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, 3.5f));
         trophyEnt.getComponent<cro::Transform>().setScale(courseScale);
+        if (m_sharedData.teamMode)
+        {
+            //hack to make team mate's name more visible
+            trophyEnt.getComponent<cro::Transform>().move({ 0.f, 18.f });
+        }
         trophyEnt.getComponent<cro::Callback>().active = true;
 
         //update minimap
@@ -2757,6 +2762,21 @@ void GolfState::showCountdown(std::uint8_t seconds)
                         {
                             const auto offset = (j * 2) - 1;
                             m_trophies[i].avatars[j].getComponent<cro::Transform>().move({ offset * 22.f, 0.f });
+
+                        }
+                        //and add another team label
+                        if (j == 1)
+                        {
+                            auto entity = m_uiScene.createEntity();
+                            entity.addComponent<cro::Transform>();
+                            entity.addComponent<cro::Drawable2D>();
+                            entity.addComponent<cro::Sprite>(*m_trophies[i].avatars[j].getComponent<cro::Sprite>().getTexture());
+                            
+                            auto bounds = m_trophies[i].label.getComponent<cro::Sprite>().getTextureBounds();
+                            bounds.bottom = bounds.height * m_statBoardScores[idx].player;
+                            entity.getComponent<cro::Sprite>().setTextureRect(bounds);
+                            entity.getComponent<cro::Transform>().move({ 0.f, -bounds.height });
+                            m_trophies[i].label.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                         }
                     }
                 }
