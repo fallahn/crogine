@@ -62,7 +62,7 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
         auto& team = m_teams[m_playerInfo[0].playerInfo[0].teamIndex];
         team.currentPlayer = (team.players[0].client == playerInfo.client && team.players[0].player == playerInfo.player) ? 1 : 0;
 
-        LogI << "[server] Updated team info for team " << m_playerInfo[0].playerInfo[0].teamIndex << std::endl;
+        //LogI << "[server] Updated team info for team " << m_playerInfo[0].playerInfo[0].teamIndex << std::endl;
 
         const auto& teamMate = team.players[team.currentPlayer];
         auto& pi = m_playerInfo[0].playerInfo;

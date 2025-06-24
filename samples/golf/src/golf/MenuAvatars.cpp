@@ -2162,7 +2162,8 @@ void MenuState::updateLobbyAvatars()
                 {
                     colourIndices.push_back(std::make_pair(static_cast<std::uint32_t>(nameString.size()), pc::TeamColours[c.playerData[i].teamIndex]));
                     //nameString += cro::String(std::uint32_t(0x2299));
-                    nameString += cro::String(std::uint32_t(0x2261));
+                    //nameString += cro::String(std::uint32_t(0x2261));
+                    nameString += cro::String(std::uint32_t(pc::TeamEmoji[c.playerData[i].teamIndex]));
                     //nameString += " ";
                     colourIndices.push_back(std::make_pair(static_cast<std::uint32_t>(nameString.size()), LeaderboardTextDark));
 
@@ -2388,10 +2389,10 @@ void MenuState::updateLobbyAvatars()
             entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
             entity.getComponent<cro::Text>().setVerticalSpacing(4.f); //was 6
 
-            for (const auto& [idx, colour] : colourIndices)
+            /*for (const auto& [idx, colour] : colourIndices)
             {
                 entity.getComponent<cro::Text>().setFillColour(colour, idx);
-            }
+            }*/
 
             //used to update spacing by resize callback from lobby background ent.
             //TODO is this still used?

@@ -4334,7 +4334,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<InterpolationComponent<InterpolationType::Linear>>(
         InterpolationPoint(info.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).id = info.serverID;
-    entity.addComponent<ClientCollider>();
+    auto* collider = &entity.addComponent<ClientCollider>();
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.ballMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
     
@@ -4827,7 +4827,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
-            [&, info, teamHiddenEnts, labelEnt, pointerEnt](cro::Entity, float) mutable
+            [&, info, teamHiddenEnts, labelEnt, pointerEnt, collider](cro::Entity, float) mutable
             {
                 if (m_sharedData.connectionData[info.clientID].playerData[info.playerID].activeTeamMember)
                 {
@@ -4838,6 +4838,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                     }
                     labelEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
                     pointerEnt.getComponent<cro::Callback>().setUserData<float>(1.f);
+                    collider->hidden = false;
                 }
                 else
                 {
@@ -4847,6 +4848,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                     }
                     labelEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                     pointerEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
+                    collider->hidden = true;
                 }
             };
         childList.push_back(entity);

@@ -75,6 +75,7 @@ void ClientCollisionSystem::process(float)
 
         //skip if not near the ground
         if (!collider.active
+            || collider.hidden //this is a hidden ball in team play
             || position.y > 30.f) //NOTE this assumes the ground is less than this, some courses are 27m high!
         {
             continue;
@@ -152,6 +153,12 @@ void ClientCollisionSystem::process(float)
         else
         {
             collider.nearHole = false;
+        }
+
+        if (collider.terrain != TerrainID::Bunker)
+        {
+            //reset any offset
+            entity.getComponent<cro::Transform>().setOrigin(glm::vec3(0.f));
         }
 
         //tracks dolphin achievement - should happen only once per round
