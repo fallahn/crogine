@@ -6096,7 +6096,8 @@ void GolfState::buildTrophyScene()
                     {
                         if (m_trophies[i].label.getComponent<cro::Callback>().active)
                         {
-                            e.getComponent<cro::Sprite>().setTexture(*m_trophies[i].label.getComponent<cro::Sprite>().getTexture(), false);
+                            //don't do this, texture is set when the round end is displayed
+                            //e.getComponent<cro::Sprite>().setTexture(*m_trophies[i].label.getComponent<cro::Sprite>().getTexture(), false);
 
                             static constexpr float BaseScale = 0.5f;
                             static constexpr float SpinCount = 6.f;

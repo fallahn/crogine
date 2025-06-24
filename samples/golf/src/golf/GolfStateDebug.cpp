@@ -925,6 +925,15 @@ void GolfState::registerDebugWindows()
 {
     registerWindow([&]()
         {
+            ImGui::Begin("sdef");
+            for (auto& t : m_sharedData.nameTextures)
+            {
+                glm::vec2 size(t.getSize());
+                ImGui::Image(t.getTexture(), size, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::SameLine();
+            }
+            ImGui::End();
+
             //if (ImGui::Begin("Ball Cam"))
             //{
             //    glm::vec2 size(m_flightTexture.getSize());
