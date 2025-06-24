@@ -3979,6 +3979,11 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(MaxPlayerWarning);
                     }
                 }
+                else if (m_sharedData.teamMode && !ScoreType::CanTeamPlay[m_sharedData.scoreType])
+                {
+                    m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(NoTeamplayWarning);
+                }
                 else
                 {
                     m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -4101,6 +4106,28 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::TeamMode:
             m_sharedData.teamMode = evt.packet.as<std::int32_t>();
+            if (m_sharedData.teamMode && !ScoreType::CanTeamPlay[m_sharedData.scoreType])
+            {
+                m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(NoTeamplayWarning);
+            }
+            else if (m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType]
+                || m_connectedPlayerCount > ScoreType::MaxPlayerCount[m_sharedData.scoreType])
+            {
+                m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                if (m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType])
+                {
+                    m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(MinPlayerWarning);
+                }
+                else
+                {
+                    m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(MaxPlayerWarning);
+                }
+            }
+            else
+            {
+                m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
             updateLobbyAvatars(); //updates the team mode display
             break;
         case PacketID::ServerError:

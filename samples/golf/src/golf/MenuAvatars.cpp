@@ -2432,6 +2432,11 @@ void MenuState::updateLobbyAvatars()
                 m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(MaxPlayerWarning);
             }
         }
+        else if (m_sharedData.teamMode && !ScoreType::CanTeamPlay[m_sharedData.scoreType])
+        {
+            m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(NoTeamplayWarning);
+        }
         else
         {
             m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(0.f));

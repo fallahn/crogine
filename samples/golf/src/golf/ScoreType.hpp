@@ -59,14 +59,19 @@ namespace ScoreType
         LongestDrive,
     };
 
-    static const inline std::array<std::int32_t, Count> MinPlayerCount =
+    static constexpr inline std::array<std::int32_t, Count> MinPlayerCount =
     {
         1,1,1,2,2,1,1,2,1,2,2//,2
     };
 
-    static const inline std::array<std::int32_t, Count> MaxPlayerCount =
+    static constexpr inline std::array<std::int32_t, Count> MaxPlayerCount =
     {
         16,16,16,2,16,16,16,16,16,16,16//,16
+    };
+
+    static constexpr inline std::array<bool, Count> CanTeamPlay =
+    {
+        true, true, true, false, false, true, true, false, false, false, false
     };
 }
 

@@ -2510,11 +2510,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //displays a message if current rule type requires more players
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 113.f, 34.f, 0.4f });
+    entity.addComponent<cro::Transform>().setPosition({ 113.f, 36.f, 0.4f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("NEED MORE PLAYERS");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -3604,8 +3604,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     if (m_sharedData.hosting)
                     {
                         //prevents starting the game if a game mode requires a certain number of players
+                        //or team play is not allowed
                         if (m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType]
-                            || m_connectedPlayerCount > ScoreType::MaxPlayerCount[m_sharedData.scoreType])
+                            || m_connectedPlayerCount > ScoreType::MaxPlayerCount[m_sharedData.scoreType]
+                            || (m_sharedData.teamMode && !ScoreType::CanTeamPlay[m_sharedData.scoreType]))
                         {
                             m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Callback>().active = true;
                             m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
