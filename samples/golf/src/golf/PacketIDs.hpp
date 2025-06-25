@@ -245,9 +245,10 @@ namespace PacketID
         ChatMessage, //TextMessage struct
         DronePosition, //< compressed vec3 from host rebroadcast to clients
         ClubChanged, //< updates putt cam on remote clients: uint8 club | uint8 client
-        AvatarRotation, //uin32_t client | player | finalRotation compressed as int16
+        AvatarRotation, //< uin32_t client | player | finalRotation compressed as int16
 
-        TeamData, //<TeamData struct mapping client/player to team index
+        TeamData, //< TeamData struct mapping client/player to team index
+        DisplayList, //< DisplayList struct containing order of players in lobby
 
         CanUpdate, //CanInfo struct
         CoinSpawn, //float power - sent to server. Result comes back as actor spawn

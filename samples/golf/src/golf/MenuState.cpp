@@ -42,7 +42,6 @@ source distribution.
 #include "SharedProfileData.hpp"
 #include "spooky2.hpp"
 #include "Clubs.hpp"
-#include "HoleData.hpp"
 #include "League.hpp"
 #include "RopeSystem.hpp"
 #include "LightmapProjectionSystem.hpp"
@@ -191,6 +190,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_scaleBuffer           ("PixelScale"),
     m_resolutionBuffer      ("ScaledResolution"),
     m_windBuffer            ("WindValues"),
+    m_selectedDisplayMember (0),
     m_lobbyExpansion        (0.f),
     m_avatarCallbacks       (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu           (MenuID::Main),
@@ -705,17 +705,45 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 #endif
 
 #endif
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("buns"))
-    //        {
-    //            for (auto i = 0u; i < cro::GameController::getControllerCount(); ++i)
-    //            {
-    //                ImGui::Text("%s", cro::GameController::getName(i).c_str());
-    //            }
-    //        }
-    //        ImGui::End();
-    //    });
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("buns"))
+            {
+                /*for (auto i = 0u; i < cro::GameController::getControllerCount(); ++i)
+                {
+                    ImGui::Text("%s", cro::GameController::getName(i).c_str());
+                }*/
+                for (auto i = 0u; i < m_displayOrder.size(); ++i)
+                {
+                    ImGui::Text("%s", (const char*)m_sharedData.connectionData[m_displayOrder[i].client].playerData[m_displayOrder[i].player].name.toUtf8().c_str());
+                    if (i == m_selectedDisplayMember)
+                    {
+                        ImGui::SameLine();
+                        ImGui::Text("X");
+                    }
+                }
+                if (!m_displayOrder.empty())
+                {
+                    ImGui::PushItemWidth(70.f);
+                    if (ImGui::InputInt("Selected", reinterpret_cast<int*>(&m_selectedDisplayMember)))
+                    {
+                        m_selectedDisplayMember %= m_displayOrder.size();
+                    }
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine();
+                    if (ImGui::Button("Up"))
+                    {
+                        moveDisplayMemberUp();
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Down"))
+                    {
+                        moveDisplayMemberDown();
+                    }
+                }
+            }
+            ImGui::End();
+        });
 
     //createDebugWindows();
     cro::App::getInstance().resetFrameTime();
@@ -3519,6 +3547,28 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::DisplayList:
+        {
+            auto list = evt.packet.as<DisplayList>();
+            list.count = std::max(0, std::min(list.count, std::int32_t(ConstVal::MaxPlayers)));
+            
+            m_displayOrder.clear();
+            if (list.count)
+            {
+                for (auto i = 0; i < list.count; ++i)
+                {
+                    m_displayOrder.push_back(list.list[i]);
+                }
+            }
+            //refreshes the display, if hosting also updates the teams
+            //hmmm this will get called twice consecutively by guests
+            //as this will trigger a team index update too
+            if (m_sharedData.hosting)
+            {
+                updateLobbyAvatars();
+            }
+        }
+            break;
         case PacketID::TeamData:
         {
             const auto data = evt.packet.as<TeamData>();
@@ -3651,10 +3701,16 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::ConnectionAccepted:
             {
                 //update local player data
-                m_sharedData.clientConnection.connectionID = evt.packet.as<std::uint8_t>();
-                m_sharedData.localConnectionData.connectionID = evt.packet.as<std::uint8_t>();
+                const auto connID = evt.packet.as<std::uint8_t>();
+                m_sharedData.clientConnection.connectionID = connID;
+                m_sharedData.localConnectionData.connectionID = connID;
                 m_sharedData.localConnectionData.peerID = m_sharedData.clientConnection.netClient.getPeer().getID();
                 m_sharedData.connectionData[m_sharedData.clientConnection.connectionID] = m_sharedData.localConnectionData;
+
+                for (auto i = 0u; i < m_sharedData.connectionData[connID].playerCount; ++i)
+                {
+                    m_displayOrder.emplace_back(connID, std::uint8_t(i));
+                }
 
                 //send player details to server (name, skin)
                 auto buffer = m_sharedData.localConnectionData.serialise();
@@ -3751,9 +3807,18 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 m_textChat.printToScreen(m_sharedData.connectionData[client].playerData[i].name + " has left the game.", CD32::Colours[CD32::BlueLight]);
             }
             
+            m_displayOrder.erase(std::remove_if(m_displayOrder.begin(), m_displayOrder.end(), 
+                [client](const Team::Player& tp) {return tp.client == client; }), m_displayOrder.end());
+
             m_sharedData.connectionData[client].playerCount = 0;
             m_readyState[client] = false;
-            updateLobbyAvatars();
+            if (m_sharedData.hosting)
+            {
+                //this calls updateLobbyAvatars() and forwards team assignments to guests
+                refreshDisplayMembers();
+            }
+            //updateLobbyAvatars();
+
 
             postMessage<SystemEvent>(cl::MessageID::SystemMessage)->type = SystemEvent::LobbyExit;
             postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage)->type = Social::SocialEvent::LobbyUpdated;

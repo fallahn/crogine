@@ -35,6 +35,13 @@ source distribution.
 
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/detail/glm/vec3.hpp>
+#include <array>
+
+struct DisplayList final
+{
+    std::int32_t count = 0;
+    std::array<Team::Player, ConstVal::MaxPlayers> list = {};
+};
 
 struct ActivePlayer
 {

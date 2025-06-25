@@ -41,6 +41,7 @@ source distribution.
 #include "MenuCallbacks.hpp"
 #include "TextChat.hpp"
 #include "VoiceChat.hpp"
+#include "HoleData.hpp"
 
 #include <MatchMaking.hpp>
 
@@ -186,6 +187,11 @@ private:
     cro::UniformBuffer<WindData> m_windBuffer;
 
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
+    std::vector<Team::Player> m_displayOrder; //allows changing the display order of players, which in turn assigns teams
+    std::size_t m_selectedDisplayMember;
+    void moveDisplayMemberUp();
+    void moveDisplayMemberDown();
+    void refreshDisplayMembers();
 
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
     float m_lobbyExpansion; //how much the lobby menu has been stretched to fill the screen in total

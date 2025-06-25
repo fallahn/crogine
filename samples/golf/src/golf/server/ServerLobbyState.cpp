@@ -123,6 +123,9 @@ void LobbyState::netEvent(const net::NetEvent& evt)
             }
         }
             break;
+        case PacketID::DisplayList:
+            m_sharedData.host.broadcastPacket(PacketID::DisplayList, evt.packet.as<DisplayList>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            break;
         case PacketID::CoinSpawn:
             spawnCoin(evt.packet.as<float>(), evt.peer.getID());
             break;
@@ -133,7 +136,7 @@ void LobbyState::netEvent(const net::NetEvent& evt)
             insertPlayerInfo(evt);
             break;
         case PacketID::NewLobbyReady:
-            m_sharedData.host.broadcastPacket(PacketID::NewLobbyReady, evt.packet.as<std::uint64_t>(), net::NetFlag::Reliable);
+            m_sharedData.host.broadcastPacket(PacketID::NewLobbyReady, evt.packet.as<std::uint64_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
         case PacketID::LobbyReady:
         {

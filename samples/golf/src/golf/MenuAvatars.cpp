@@ -2072,6 +2072,9 @@ void MenuState::updateLobbyAvatars()
         cro::String nameString;
         std::vector<std::pair<std::uint32_t, cro::Colour>> colourIndices;
 
+        //ugh - we need to update this texture in client/player order
+        //so that it's indexed correctly - however the name list needs
+        //to follow m_displayOrder
         constexpr float RowSpacing = -12.f;
         constexpr float RankSpacing = -14.f;
         for (const auto& c : m_sharedData.connectionData)

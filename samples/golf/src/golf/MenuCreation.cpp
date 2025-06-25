@@ -3970,6 +3970,8 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
     {
         for (auto i = 0u; i < cd.playerCount; ++i)
         {
+            m_displayOrder.emplace_back(cd.connectionID, std::uint8_t(i));
+            
             m_printQueue.emplace_back(cd.playerData[i].name + " has joined the game.");
 
             //auto ent = m_uiScene.createEntity();
@@ -3989,6 +3991,12 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
             //        }
             //    };
         }
+    }
+
+    //make sure display order is up to date
+    if (m_sharedData.hosting)
+    {
+        refreshDisplayMembers();
     }
 }
 
@@ -4147,21 +4155,34 @@ void MenuState::refreshTeams()
         && m_sharedData.clientConnection.connected)
     {
         std::int32_t currIndex = 0;
-        for (auto j = 0u; j < m_sharedData.connectionData.size(); ++j)
-        {
-            auto& client = m_sharedData.connectionData[j];
-            for (auto i = 0u; i < client.playerCount; ++i)
-            {
-                client.playerData[i].teamIndex = m_sharedData.teamMode ? (currIndex / 2) : -1;
-                currIndex++;
+        //for (auto j = 0u; j < m_sharedData.connectionData.size(); ++j)
+        //{
+        //    auto& client = m_sharedData.connectionData[j];
+        //    for (auto i = 0u; i < client.playerCount; ++i)
+        //    {
+        //        client.playerData[i].teamIndex = m_sharedData.teamMode ? (currIndex / 2) : -1;
+        //        currIndex++;
 
-                //let the server know which will forward to other clients
-                TeamData data;
-                data.client = j;
-                data.player = i;
-                data.index = client.playerData[i].teamIndex;
-                m_sharedData.clientConnection.netClient.sendPacket<TeamData>(PacketID::TeamData, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-            }
+        //        //let the server know which will forward to other clients
+        //        TeamData data;
+        //        data.client = j;
+        //        data.player = i;
+        //        data.index = client.playerData[i].teamIndex;
+        //        m_sharedData.clientConnection.netClient.sendPacket<TeamData>(PacketID::TeamData, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        //    }
+        //}
+
+        for (const auto& [c, p] : m_displayOrder)
+        {
+            const auto idx = m_sharedData.teamMode ? (currIndex++ / 2) : -1;
+            m_sharedData.connectionData[c].playerData[p].teamIndex = idx;
+
+            //let the server know which will forward to other clients
+            TeamData data;
+            data.client = c;
+            data.player = p;
+            data.index = idx;
+            m_sharedData.clientConnection.netClient.sendPacket<TeamData>(PacketID::TeamData, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
     }
 }
@@ -4190,7 +4211,7 @@ void MenuState::quitLobby()
     {
         cd.playerCount = 0;
     }
-    
+    m_displayOrder.clear();
 
     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
@@ -6536,4 +6557,41 @@ void MenuState::refreshLobbyButtons()
         m_lobbyButtonContext.infoLeague.getComponent<cro::UIInput>().setNextIndex(LobbyRulesB, LobbyRulesB);
         m_lobbyButtonContext.infoLeague.getComponent<cro::UIInput>().setPrevIndex(InfoLeaderboards, LobbyQuit);
     }
+}
+
+void MenuState::moveDisplayMemberUp()
+{
+    if (!m_displayOrder.empty())
+    {
+        const auto dst = (m_selectedDisplayMember - 1) % m_displayOrder.size();
+        std::iter_swap(m_displayOrder.begin() + m_selectedDisplayMember, m_displayOrder.begin() + dst);
+        m_selectedDisplayMember = dst;
+        refreshDisplayMembers();
+    }
+}
+
+void MenuState::moveDisplayMemberDown()
+{
+    if (!m_displayOrder.empty())
+    {
+        const auto dst = (m_selectedDisplayMember + 1) % m_displayOrder.size();
+        std::iter_swap(m_displayOrder.begin() + m_selectedDisplayMember, m_displayOrder.begin() + dst);
+        m_selectedDisplayMember = dst;
+        refreshDisplayMembers();
+    }
+}
+
+void MenuState::refreshDisplayMembers()
+{
+    //notify clients
+    DisplayList list;
+    list.count = m_displayOrder.size();
+    for (auto i = 0; i < list.count; ++i)
+    {
+        list.list[i] = m_displayOrder[i];
+    }
+    m_sharedData.clientConnection.netClient.sendPacket<DisplayList>(PacketID::DisplayList, list, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    //wehn receive this packet we'll updateLobbyAvatars() which then calculates
+    //the team indices, and forwards those to the guests for them to update
 }
