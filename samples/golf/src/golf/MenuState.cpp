@@ -368,6 +368,43 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         //we returned from a previous game (this will have been disconnected above, otherwise)
         if (sd.clientConnection.connected)
         {
+            //repopulate the display list
+            struct SortData final
+            {
+                std::uint8_t client = 0;
+                std::uint8_t player = 0;
+                std::int32_t team = -1;
+            };
+            std::vector<SortData> displayMembers;
+            for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+            {
+                for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++i)
+                {
+                    auto& dm = displayMembers.emplace_back();
+                    dm.client = i;
+                    dm.player = j;
+                    dm.team = m_sharedData.connectionData[i].playerData[j].teamIndex;
+                }
+            }
+            std::sort(displayMembers.begin(), displayMembers.end(), 
+                [](const SortData& a, const SortData& b)
+                {
+                    if (a.team == b.team)
+                    {
+                        if (a.client == b.client)
+                        {
+                            return a.player < b.player;
+                        }
+                        return a.client < b.client;
+                    }
+                    return a.team < b.team;
+                });
+
+            for (const auto& [client, player, _] : displayMembers)
+            {
+                m_displayOrder.emplace_back(client, player);
+            }
+
             updateLobbyAvatars();
             createPreviousScoreCard();
 
