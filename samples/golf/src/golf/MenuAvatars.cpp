@@ -1671,7 +1671,7 @@ void MenuState::createMenuCallbacks()
             if (holeScale + infoScale == 0)
             {
                 //we're on the rules tab
-                e.getComponent<cro::UIInput>().setNextIndex(LobbyCourseA, LobbyQuit);
+                //e.getComponent<cro::UIInput>().setNextIndex(LobbyTeamsEnable, LobbyQuit);
                 e.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoA, LobbyQuit);
             }
             else
@@ -1679,13 +1679,13 @@ void MenuState::createMenuCallbacks()
                 if (holeScale == 0)
                 {
                     //we're on info
-                    e.getComponent<cro::UIInput>().setNextIndex(LobbyCourseB, LobbyQuit);
+                    //e.getComponent<cro::UIInput>().setNextIndex(LobbyTeamsEnable, LobbyQuit);
                     e.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesB, LobbyQuit);
                 }
                 else
                 {
                     //we're on course tab
-                    e.getComponent<cro::UIInput>().setNextIndex(LobbyRulesA, LobbyQuit);
+                    //e.getComponent<cro::UIInput>().setNextIndex(LobbyTeamsEnable, LobbyQuit);
                     e.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoB, LobbyQuit);
                 }
             }

@@ -378,7 +378,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             std::vector<SortData> displayMembers;
             for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
             {
-                for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++i)
+                for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
                 {
                     auto& dm = displayMembers.emplace_back();
                     dm.client = i;
