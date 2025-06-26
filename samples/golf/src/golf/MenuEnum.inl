@@ -72,6 +72,11 @@ enum MenuIndex
     LobbyInfoB,
     LobbyOptions,
     PlayerManagement,
+    LobbyTeamsEnable,
+    LobbyTeamsLeft,
+    LobbyTeamsRight,
+    LobbyTeamsUp,
+    LobbyTeamsDown,
 
     CoursePrev,
     CourseNext,
