@@ -3650,6 +3650,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
 
         bool leaguePlayer = false;
         std::int32_t nameIndex = -1;
+        std::int32_t teamIndex = -1;
     };
 
     std::vector<ScoreEntry> scores;
@@ -3669,6 +3670,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             entry.client = clientID; //used to display whether or not this is CPU or a netstrength icon
             entry.player = i; //see above
             entry.lives = client.playerData[i].skinScore; //mostly ignored, except in Elimination
+            entry.teamIndex = client.playerData[i].teamIndex;
 
             bool overPar = false;
 
@@ -3819,6 +3821,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             leaderboardEntry.player = i;
             leaderboardEntry.score = entry.total;
             leaderboardEntry.distance = entry.totalDistance;
+            leaderboardEntry.team = entry.teamIndex;
         }
         clientID++;
     }
@@ -3947,11 +3950,22 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:
+                if (a.score == b.score)
+                {
+                    //hmm this unfairly uses the team ID
+                    //to tie-break, but it's necessary to
+                    //keep team members together on the board
+                    return a.team < b.team;
+                }
                 return a.score < b.score;
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
             case ScoreType::Match:
             case ScoreType::Skins:
+                if (a.score == b.score)
+                {
+                    return a.team < b.team;
+                }
                 return b.score < a.score;
             case ScoreType::NearestThePin:
                 if (m_ntpPro)
@@ -3983,11 +3997,19 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:
+                if (a.total == b.total)
+                {
+                    return a.teamIndex < b.teamIndex;
+                }
                 return a.total < b.total;
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
             case ScoreType::Skins:
             case ScoreType::Match:
+                if (a.total == b.total)
+                {
+                    return a.teamIndex < b.teamIndex;
+                }
                 return b.total < a.total;
             case ScoreType::NearestThePin:
                 if (m_ntpPro)

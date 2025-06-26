@@ -2508,6 +2508,35 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Callback>().setUserData<std::vector<cro::Entity>>(); //abuse this component to store handles to the text children.
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //highlight ent for shuffling teams
+    auto memberEnt = entity;
+    constexpr glm::vec2 Offset(-1.f, -9.f);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.01f });
+    entity.addComponent<cro::Drawable2D>().setVertexData({
+        cro::Vertex2D(Offset + glm::vec2(0.f, 12.f), TextGoldColour),
+        cro::Vertex2D(Offset + glm::vec2(0.f), TextGoldColour),
+        cro::Vertex2D(Offset + glm::vec2(198.f, 12.f), TextGoldColour),
+        cro::Vertex2D(Offset + glm::vec2(198.f, 0.f), TextGoldColour)
+        });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            static constexpr float RowSize = -12.f;
+            if (m_sharedData.teamMode)
+            {
+                e.getComponent<cro::Transform>().setPosition({ 0.f, RowSize * m_selectedDisplayMember });
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+    memberEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     //displays a message if current rule type requires more players
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 113.f, 36.f, 0.4f });

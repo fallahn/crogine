@@ -2070,7 +2070,6 @@ void MenuState::updateLobbyAvatars()
         auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
         cro::String nameString;
-        std::vector<std::pair<std::uint32_t, cro::Colour>> colourIndices;
 
         //ugh - we need to update this texture in client/player order
         //so that it's indexed correctly - however the name list needs
@@ -2151,70 +2150,8 @@ void MenuState::updateLobbyAvatars()
             }
             playerCount += c.playerCount;
 
-            //glm::vec2 iconPos(1.f, 0.f);
-            //const std::int32_t row = playerCount;
-            //iconPos.y = row * RowSpacing;
-
-            ////add list of names on the connected client
-            //for (auto i = 0u; i < c.playerCount; ++i)
-            //{
-            //    //stringCols[playerCount / ConstVal::MaxPlayers] += "buns\n";
-            //    std::size_t charOffset = 0;
-            //    auto avatarIndex = indexFromAvatarID(c.playerData[i].skinID);
-            //    applyTexture(avatarIndex, m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
-            //    if (m_sharedData.teamMode)
-            //    {
-            //        colourIndices.push_back(std::make_pair(static_cast<std::uint32_t>(nameString.size()), pc::TeamColours[c.playerData[i].teamIndex]));
-            //        //nameString += cro::String(std::uint32_t(0x2299));
-            //        //nameString += cro::String(std::uint32_t(0x2261));
-            //        nameString += cro::String(std::uint32_t(pc::TeamEmoji[c.playerData[i].teamIndex]));
-            //        //nameString += " ";
-            //        colourIndices.push_back(std::make_pair(static_cast<std::uint32_t>(nameString.size()), LeaderboardTextDark));
-
-            //        charOffset = 1;
-            //    }
-
-            //    nameString += c.playerData[i].name.substr(0, ConstVal::MaxStringChars - charOffset) + "\n";
-            //    playerCount++;
-
-            //    //add a ready status for that client
-            //    auto entity = m_uiScene.createEntity();
-            //    entity.addComponent<cro::Transform>().setPosition({ -11.f, iconPos.y - 7.f });
-            //    entity.addComponent<cro::Drawable2D>();
-            //    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyStatus];
-            //    entity.addComponent<cro::SpriteAnimation>();
-            //    entity.addComponent<cro::Callback>().active = true;
-            //    entity.getComponent<cro::Callback>().function =
-            //        [&, h](cro::Entity e2, float)
-            //        {
-            //            auto index = m_readyState[h] ? 1 : 0;
-            //            e2.getComponent<cro::SpriteAnimation>().play(index);
-            //        };
-            //    e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-            //    children.push_back(entity);
-
-            //    iconPos.y += RowSpacing; //this is a *negative* value
-            //}
-
             if (c.playerCount != 0)
             {
-                ////add a ready status for that client
-                //auto entity = m_uiScene.createEntity();
-                //entity.addComponent<cro::Transform>().setPosition({ -11.f, iconPos.y - 7.f });
-                //entity.addComponent<cro::Drawable2D>();
-                //entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyStatus];
-                //entity.addComponent<cro::SpriteAnimation>();
-                //entity.addComponent<cro::Callback>().active = true;
-                //entity.getComponent<cro::Callback>().function =
-                //    [&, h](cro::Entity e2, float)
-                //{
-                //    auto index = m_readyState[h] ? 1 : 0;
-                //    e2.getComponent<cro::SpriteAnimation>().play(index);
-                //};
-                //e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-                //children.push_back(entity);
-
-
                 //rank text
                 auto entity = m_uiScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition({ 100.f, (RankSpacing * clientCount) + 180.f, 0.3f });
@@ -2413,13 +2350,8 @@ void MenuState::updateLobbyAvatars()
             applyTexture(avatarIndex, m_sharedData.avatarTextures[c.connectionID][pID], c.playerData[pID].avatarFlags);
             if (m_sharedData.teamMode)
             {
-                //colourIndices.push_back(std::make_pair(static_cast<std::uint32_t>(nameString.size()), pc::TeamColours[c.playerData[i].teamIndex]));
-                //nameString += cro::String(std::uint32_t(0x2299));
                 //nameString += cro::String(std::uint32_t(0x2261));
                 nameString += cro::String(std::uint32_t(pc::TeamEmoji[c.playerData[pID].teamIndex]));
-                //nameString += " ";
-                //colourIndices.push_back(std::make_pair(static_cast<std::uint32_t>(nameString.size()), LeaderboardTextDark));
-
                 charOffset = 1;
             }
 
@@ -2428,7 +2360,7 @@ void MenuState::updateLobbyAvatars()
 
             //add a ready status for that client
             auto entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(/*{ -11.f, iconPos.y - 7.f }*/iconPos);
+            entity.addComponent<cro::Transform>().setPosition(iconPos);
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyStatus];
             entity.addComponent<cro::SpriteAnimation>();
@@ -2457,11 +2389,6 @@ void MenuState::updateLobbyAvatars()
             entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
             entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
             entity.getComponent<cro::Text>().setVerticalSpacing(4.f); //was 6
-
-            /*for (const auto& [idx, colour] : colourIndices)
-            {
-                entity.getComponent<cro::Text>().setFillColour(colour, idx);
-            }*/
 
             //used to update spacing by resize callback from lobby background ent.
             //TODO is this still used?

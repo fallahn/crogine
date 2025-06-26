@@ -796,6 +796,7 @@ private:
         std::uint8_t client = 0;
         std::uint8_t player = 0;
         std::int32_t score = 0;
+        std::int32_t team = -1;
         float distance = 0.f;
     };
     std::vector<StatBoardEntry> m_statBoardScores;
