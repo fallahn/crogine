@@ -64,5 +64,43 @@ int main(int argc, char** argsv)
     }
 #endif
 
+
+
+    /*struct SortData final
+    {
+        std::uint8_t client = 0;
+        std::uint8_t player = 0;
+        std::int32_t team = -1;
+        SortData() = default;
+        SortData(std::uint8_t c, std::uint8_t p, std::int32_t t)
+            : client(c),player(p),team(t){ }
+    };
+    std::vector<SortData> displayMembers =
+    {
+        SortData(0, 0, 0),
+        SortData(0, 1, 1),
+        SortData(0, 2, 0),
+        SortData(0, 3, 1),
+    };
+
+    std::sort(displayMembers.begin(), displayMembers.end(),
+        [](const SortData& a, const SortData& b)
+        {
+            if (a.team == b.team)
+            {
+                if (a.client == b.client)
+                {
+                    return a.player < b.player;
+                }
+                return a.client < b.client;
+            }
+            return a.team < b.team;
+        });
+
+    for (const auto& [client, player, team] : displayMembers)
+    {
+        std::cout << (int)client << ", " << (int)player << "," << (int)team << std::endl;
+    }*/
+
     return 0;
 }

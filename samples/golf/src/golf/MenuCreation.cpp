@@ -5948,7 +5948,15 @@ void MenuState::createPreviousScoreCard()
 
     for (const auto& entry : scoreEntries)
     {
-        str += "\n " + m_sharedData.connectionData[entry.client].playerData[entry.player].name.substr(0, ConstVal::MaxStringChars);
+        std::size_t offset = 0;
+
+        str += "\n ";
+        if (m_sharedData.teamMode)
+        {
+            str += pc::TeamEmoji[m_sharedData.connectionData[entry.client].playerData[entry.player].teamIndex];
+            offset = 1;
+        }
+        str += m_sharedData.connectionData[entry.client].playerData[entry.player].name.substr(0, ConstVal::MaxStringChars - offset);
     }
 
     if (page2)
@@ -5975,7 +5983,16 @@ void MenuState::createPreviousScoreCard()
 
         for (const auto& entry : scoreEntries)
         {
-            str += "\n " + m_sharedData.connectionData[entry.client].playerData[entry.player].name.substr(0, ConstVal::MaxStringChars);
+            //str += "\n " + m_sharedData.connectionData[entry.client].playerData[entry.player].name.substr(0, ConstVal::MaxStringChars);
+            std::size_t offset = 0;
+
+            str += "\n ";
+            if (m_sharedData.teamMode)
+            {
+                str += pc::TeamEmoji[m_sharedData.connectionData[entry.client].playerData[entry.player].teamIndex];
+                offset = 1;
+            }
+            str += m_sharedData.connectionData[entry.client].playerData[entry.player].name.substr(0, ConstVal::MaxStringChars - offset);
         }
     }
     entity.getComponent<cro::Text>().setString(str);
@@ -6775,6 +6792,6 @@ void MenuState::refreshDisplayMembers()
     }
     m_sharedData.clientConnection.netClient.sendPacket<DisplayList>(PacketID::DisplayList, list, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-    //wehn receive this packet we'll updateLobbyAvatars() which then calculates
+    //when we receive this packet we call updateLobbyAvatars() which then calculates
     //the team indices, and forwards those to the guests for them to update
 }

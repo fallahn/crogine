@@ -520,7 +520,14 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         });
     sd.clientConnection.quitThread();
     Timeline::setGameMode(Timeline::GameMode::Menu);
-        
+
+    //make sure to send this if we re-populated it returning to the menu from the game
+    if (!m_displayOrder.empty()
+        && m_sharedData.hosting)
+    {
+        refreshDisplayMembers();
+    }
+
     //for some reason this immediately unsets itself
     //cro::App::getWindow().setCursor(&m_cursor);
 #ifndef __APPLE__
@@ -720,7 +727,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 #endif
 
     WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Main Menu" }));
-    Social::setGroup(0);
+    Social::setGroup(0); //hmm should we only do this if we're not connected?
 
     //registerWindow([&]()
     //    {

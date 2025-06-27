@@ -178,6 +178,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                     }),
                     playerInfo.end());
 
+                //UGH I don't really kow what I was trying to achieve
+                //with this. Groups suck. I'm sure there's an error here
                 if (playerInfo.empty()
                     || wantNewPlayer)
                 {

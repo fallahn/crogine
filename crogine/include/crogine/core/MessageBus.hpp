@@ -89,7 +89,7 @@ namespace cro
         {
             if (!m_enabled) return static_cast<T*>((void*)m_pendingBuffer.data());
 
-            static_assert(sizeof(T) < 128, "MEssage size limit is 128 bytes");
+            static_assert(sizeof(T) < 128, "Message size limit is 128 bytes");
 
             const auto dataSize = sizeof(T);
             static const auto msgSize = sizeof(Message);
