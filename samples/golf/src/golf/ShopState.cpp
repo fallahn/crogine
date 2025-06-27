@@ -242,7 +242,7 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
 
 #ifdef CRO_DEBUG_
     registerCommand("add_balance", 
-        [&](const std::string val)
+        [&](const std::string& val)
         {
             try
             {
@@ -1471,7 +1471,7 @@ void ShopState::buildScene()
             {
                 if (activated(evt))
                 {
-                    auto& item = m_scrollNodes[m_selectedCategory].items[m_scrollNodes[m_selectedCategory].selectedItem];
+                    const auto& item = m_scrollNodes[m_selectedCategory].items[m_scrollNodes[m_selectedCategory].selectedItem];
                     const auto& invItem = inv::Items[item.itemIndex];
 
                     //can't afford
@@ -1702,7 +1702,7 @@ void ShopState::buildPreviewScene()
         std::string wedge;
         std::string ball;
 
-        ModelPaths(const std::string& d, const std::string i, const std::string& w, const std::string b)
+        ModelPaths(const std::string& d, const std::string& i, const std::string& w, const std::string& b)
             : driver(d), iron(i), wedge(w), ball(b) {}
     };
 

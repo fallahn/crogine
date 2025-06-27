@@ -783,11 +783,11 @@ void DrivingState::handleMessage(const cro::Message& msg)
         }
         else if (data.userType == SpriteAnimID::Swoosh)
         {
-            auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-            msg->type = GolfEvent::ClubDraw;
-            msg->position = PlayerPosition;
-            msg->terrain = TerrainID::Fairway;
-            msg->club = static_cast<std::uint8_t>(m_inputParser.getClub());
+            auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+            msg2->type = GolfEvent::ClubDraw;
+            msg2->position = PlayerPosition;
+            msg2->terrain = TerrainID::Fairway;
+            msg2->club = static_cast<std::uint8_t>(m_inputParser.getClub());
         }
         else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
         {

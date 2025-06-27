@@ -951,7 +951,7 @@ void ProfileState::loadResources()
 
     //parse all the clubset files - these count as resources, right? :)
     const auto processClubPath = 
-        [&](const std::string path, bool isUser)
+        [&](const std::string& path, bool isUser)
         {
             ClubData data;
             data.userItem = isUser;

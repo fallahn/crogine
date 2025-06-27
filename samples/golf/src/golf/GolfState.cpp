@@ -7943,7 +7943,7 @@ float GolfState::getGroundRotation(glm::vec3 pos, float yRot, bool flipped) cons
 
     const auto groundHeight = m_collisionMesh.getTerrain(pos + offset).height - pos.y;
 
-    if (std::abs(groundHeight < 0.1f))
+    if (std::abs(groundHeight) < 0.1f)
     {
         float offsetRot = getOffsetRotation(groundHeight);
         if (!flipped)

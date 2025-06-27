@@ -2352,7 +2352,7 @@ void GolfState::loadModels()
     std::unordered_map<std::uint32_t, std::string> audioPaths;
     //list all available audio and put into map
     const auto processPath =
-        [&](const std::string path)
+        [&](const std::string& path)
         {
             auto audioFiles = cro::FileSystem::listFiles(path);
             for (const auto& file : audioFiles)

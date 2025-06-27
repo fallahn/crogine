@@ -183,7 +183,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     //if this group is empty setNextPlayer() will still
                     //test if we want the next hole if other groups are waiting
-                    setNewPlayer = m_groupAssignments[playerInfo[0].client];
+                    setNewPlayer = m_groupAssignments[data.clientID];
                 }
             }
 
@@ -2005,6 +2005,18 @@ void GolfState::buildWorld()
         [&](std::vector<std::uint8_t>& scores, std::uint64_t holeIndex)
         {
             m_currentHole = std::min(std::size_t(holeIndex), m_holeData.size() - 1);
+
+            LogI << "Current hole: " << (int)m_currentHole << std::endl;
+            std::stringstream ss;
+            ss << "Scores: ";
+            for (auto s : scores)
+            {
+                ss << (int)s << ", ";
+            }
+
+            LogI << ss.str() << std::endl;
+            cro::Console::show();
+
 
             //if we're here we *should* only have one player...
             auto& player = m_playerInfo[0].playerInfo[0];

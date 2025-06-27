@@ -3224,7 +3224,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
             for (auto i = 0u; i < polePos.size() - 1; ++i)
             {
                 auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(polePos[i], polePos[i+1], 0.001f);
-                for (auto i = 0; i < NodeCount; ++i)
+                for (auto j = 0; j < NodeCount; ++j)
                 {
                     const auto scale = 1.f + cro::Util::Random::value(-0.2f, 0.5f);
 
@@ -3361,7 +3361,7 @@ void MenuState::createSnow()
 void MenuState::setVoiceCallbacks()
 {
     const auto voiceCreate =
-        [&](VoiceChat& vc, std::size_t idx)
+        [&](const VoiceChat& vc, std::size_t idx)
         {
             if (!m_voiceEntities[idx].isValid())
             {

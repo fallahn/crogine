@@ -231,7 +231,7 @@ void LobbyState::netEvent(const net::NetEvent& evt)
         case PacketID::TeamMode:
             if (evt.peer.getID() == m_sharedData.hostID)
             {
-                m_sharedData.teamMode = evt.packet.as<std::int32_t>();
+                m_sharedData.teamMode = std::clamp(evt.packet.as<std::int32_t>(), 0, 1);
                 m_sharedData.host.broadcastPacket(PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             break;

@@ -3585,7 +3585,7 @@ void GolfState::createScoreboard()
     {
         //create 'net strength' icons to display CPU status
         //as well as pad out the net status vector to the correct size
-        for (auto i = 0u; i < League::PlayerCount; ++i)
+        for (auto j = 0u; j < League::PlayerCount; ++j)
         {
             createAvatar(createIcon(0,0,true), 0, 0);            
             iconPos.y -= IconSpacing;
@@ -3617,7 +3617,7 @@ void GolfState::createScoreboard()
     //create leaderboard entries for any 'quick round' players
     if (m_friendlyPlayers)
     {
-        for (auto i = 0u; i < m_friendlyPlayers->getPlayerCount(); ++i)
+        for (auto j = 0u; j < m_friendlyPlayers->getPlayerCount(); ++j)
         {
             createAvatar(createIcon(0, 0, true), 0, 0);
             iconPos.y -= IconSpacing;
@@ -4406,7 +4406,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             if (m_sharedData.scoreType == ScoreType::Elimination)
             {
                 cro::String str;
-                for (auto i = 0u; i < 10 - strLen; ++i)
+                for (auto j = 0u; j < 10 - strLen; ++j)
                 {
                     str += " ";
                 }
@@ -4586,7 +4586,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 if (m_sharedData.scoreType == ScoreType::Elimination)
                 {
                     cro::String str;
-                    for (auto i = 0u; i < 8 - strLen; ++i)
+                    for (auto j = 0u; j < 8 - strLen; ++j)
                     {
                         str += " ";
                     }
@@ -4728,7 +4728,7 @@ void GolfState::logCSV() const
 
             std::int32_t totalPar = 0;
             ss << "par,";
-            for (auto hole : m_holeData)
+            for (const auto& hole : m_holeData)
             {
                 ss << hole.par << ",";
                 totalPar += hole.par;

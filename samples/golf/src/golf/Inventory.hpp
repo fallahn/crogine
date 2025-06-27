@@ -111,7 +111,7 @@ namespace inv
             std::fill(name.begin(), name.end(), 0);
         }
 
-        void read(const std::string profileID)
+        void read(const std::string& profileID)
         {
             std::fill(items.begin(), items.end(), -1);
             const auto loadoutPath = Content::getUserContentPath(Content::UserContent::Profile) + "/" + profileID + "/load.out";
