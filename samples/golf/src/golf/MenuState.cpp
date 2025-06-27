@@ -403,6 +403,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             for (const auto& [client, player, _] : displayMembers)
             {
                 m_displayOrder.emplace_back(client, player);
+                LogI << (int)client << ", " << (int)player << ", " << _ << std::endl;
             }
 
             updateLobbyAvatars();

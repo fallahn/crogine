@@ -4338,22 +4338,6 @@ void MenuState::refreshTeams()
         && m_sharedData.clientConnection.connected)
     {
         std::int32_t currIndex = 0;
-        //for (auto j = 0u; j < m_sharedData.connectionData.size(); ++j)
-        //{
-        //    auto& client = m_sharedData.connectionData[j];
-        //    for (auto i = 0u; i < client.playerCount; ++i)
-        //    {
-        //        client.playerData[i].teamIndex = m_sharedData.teamMode ? (currIndex / 2) : -1;
-        //        currIndex++;
-
-        //        //let the server know which will forward to other clients
-        //        TeamData data;
-        //        data.client = j;
-        //        data.player = i;
-        //        data.index = client.playerData[i].teamIndex;
-        //        m_sharedData.clientConnection.netClient.sendPacket<TeamData>(PacketID::TeamData, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        //    }
-        //}
 
         for (const auto& [c, p] : m_displayOrder)
         {
