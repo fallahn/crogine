@@ -919,8 +919,12 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //to miss if the terrain is much higher than
                 //the water level.
 
+                //ACTUALLY the terrain may rise up between the two points
+                //so we need to set this at least as high as the
+                //tallest terrain point (can we use the mesh AABB?)
+
                 glm::vec3 dir = ball.startPoint - ballPos;
-                ballPos.y = ball.startPoint.y;
+                ballPos.y = 30.f;// ball.startPoint.y;
 
                 auto length = glm::length(dir);
                 dir /= length;
@@ -936,7 +940,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 for (auto i = 0; i < maxDist; ++i)
                 {
                     ballPos += dir;
-                    auto res = getTerrain(ballPos);
+                    auto res = getTerrain(ballPos, -cro::Transform::Y_AXIS, 40.f); //+/- 20.f above below ball pos
                     terrain = res.terrain;
 
                     const auto slope = dot(res.normal, glm::vec3(0.f, 1.f, 0.f));
