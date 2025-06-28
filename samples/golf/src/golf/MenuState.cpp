@@ -356,14 +356,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         sd.quickplayOpponents = 0; //make sure to always reset this
         sd.activeTournament = TournamentIndex::NullVal; //make sure to always reset this
 
-        for (auto& client : m_sharedData.connectionData)
-        {
-            for (auto& player : client.playerData)
-            {
-                player.teamIndex = -1;
-            }
-        }
-
 
         //we returned from a previous game (this will have been disconnected above, otherwise)
         if (sd.clientConnection.connected)
@@ -403,7 +395,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             for (const auto& [client, player, _] : displayMembers)
             {
                 m_displayOrder.emplace_back(client, player);
-                LogI << (int)client << ", " << (int)player << ", " << _ << std::endl;
             }
 
             updateLobbyAvatars();
@@ -503,6 +494,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             for (auto& cd : m_sharedData.connectionData)
             {
                 cd.playerCount = 0;
+
+                for (auto& p : cd.playerData)
+                {
+                    p.teamIndex = -1;
+                }
             }
             m_sharedData.hosting = false;
 

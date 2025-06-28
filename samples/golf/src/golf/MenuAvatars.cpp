@@ -1657,10 +1657,7 @@ void MenuState::createMenuCallbacks()
     m_courseSelectCallbacks.selectPM = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity e)
         {
-            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
-            {
-                v.colour = TextGoldColour;
-            }
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
             //e.getComponent<cro::Callback>().active = true;
 
@@ -1693,10 +1690,7 @@ void MenuState::createMenuCallbacks()
     m_courseSelectCallbacks.unselectPM = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
-            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
-            {
-                v.colour = cro::Colour::Transparent;
-            }
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
     m_courseSelectCallbacks.activatePM = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity, const cro::ButtonEvent& evt)

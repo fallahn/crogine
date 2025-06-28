@@ -315,7 +315,7 @@ void SBallAttractState::buildScene()
 
 
     //help background
-    auto& helpTex = m_resources.textures.get("assets/arcade/scrub/images/rules_bg.png");
+    auto& helpTex = m_resources.textures.get("assets/arcade/sportsball/images/rules_bg.png");
     helpTex.setSmooth(true);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::UIBackgroundDepth));
@@ -391,7 +391,7 @@ void SBallAttractState::buildScene()
 
 
     //score background
-    auto& scoreTex = m_resources.textures.get("assets/arcade/scrub/images/highscore_bg.png");
+    auto& scoreTex = m_resources.textures.get("assets/arcade/sportsball/images/highscore_bg.png");
     scoreTex.setSmooth(true);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::UIBackgroundDepth));
