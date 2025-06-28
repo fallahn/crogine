@@ -2583,7 +2583,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     teamEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 58.f, -1.f });
+    entity.addComponent<cro::Transform>().setPosition({ 52.f, -1.f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("teams_left");
@@ -2600,18 +2600,24 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity, const cro::ButtonEvent& evt)
         {
-            if (activated(evt)
-                && m_sharedData.teamMode)
+            if (activated(evt))
             {
-                m_selectedDisplayMember = (m_selectedDisplayMember + (m_displayOrder.size() - 1)) % m_displayOrder.size();
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                if (m_sharedData.teamMode)
+                {
+                    m_selectedDisplayMember = (m_selectedDisplayMember + (m_displayOrder.size() - 1)) % m_displayOrder.size();
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+                else
+                {
+                    m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
+                }
             }
         }
     );
     teamEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 69.f, -1.f });
+    entity.addComponent<cro::Transform>().setPosition({ 63.f, -1.f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("teams_right");
@@ -2628,18 +2634,24 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity, const cro::ButtonEvent& evt)
         {
-            if (activated(evt)
-                && m_sharedData.teamMode)
+            if (activated(evt))
             {
-                m_selectedDisplayMember = (m_selectedDisplayMember + 1) % m_displayOrder.size();
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                if (m_sharedData.teamMode)
+                {
+                    m_selectedDisplayMember = (m_selectedDisplayMember + 1) % m_displayOrder.size();
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                }
+                else
+                {
+                    m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
+                }
             }
         }
     );
     teamEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 88.f, 1.f });
+    entity.addComponent<cro::Transform>().setPosition({ 94.f, 1.f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("teams_up");
@@ -2656,18 +2668,24 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity, const cro::ButtonEvent& evt)
         {
-            if (activated(evt)
-                && m_sharedData.teamMode)
+            if (activated(evt))
             {
-                moveDisplayMemberUp();
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                if (m_sharedData.teamMode)
+                {
+                    moveDisplayMemberUp();
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+                else
+                {
+                    m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
+                }
             }
         }
     );
     teamEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 102.f, 1.f });
+    entity.addComponent<cro::Transform>().setPosition({ 108.f, 1.f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("teams_down");
@@ -2684,11 +2702,18 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity, const cro::ButtonEvent& evt)
         {
-            if (activated(evt)
-                && m_sharedData.teamMode)
+            if (activated(evt))
             {
-                moveDisplayMemberDown();
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                if (m_sharedData.teamMode)
+                {
+                    moveDisplayMemberDown();
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                }
+
+                else
+                {
+                    m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
+                }
             }
         }
     );
@@ -6763,7 +6788,7 @@ void MenuState::moveDisplayMemberUp()
 {
     if (!m_displayOrder.empty())
     {
-        const auto dst = (m_selectedDisplayMember - 1) % m_displayOrder.size();
+        const auto dst = (m_selectedDisplayMember + (m_displayOrder.size() - 1)) % m_displayOrder.size();
         std::iter_swap(m_displayOrder.begin() + m_selectedDisplayMember, m_displayOrder.begin() + dst);
         m_selectedDisplayMember = dst;
         refreshDisplayMembers();
