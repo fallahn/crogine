@@ -5741,7 +5741,8 @@ void MenuState::createPreviousScoreCard()
         std::int32_t totalFront = 0;
         std::int32_t totalBack = 0;
         std::int32_t roundScore = 0; //rule type, ie par diff or match points
-        std::uint8_t lives = 0;
+        std::uint32_t lives = 0;
+        std::int32_t teamIndex = -1;
 
         std::array<float, 18> distanceScores = {};
         float totalDistance = 0.f;
@@ -5759,6 +5760,7 @@ void MenuState::createPreviousScoreCard()
                 auto& entry = scoreEntries.emplace_back();
                 entry.client = i;
                 entry.player = j;
+                entry.teamIndex = m_sharedData.connectionData[i].playerData[j].teamIndex;
 
                 switch (m_sharedData.scoreType)
                 {
@@ -5876,12 +5878,20 @@ void MenuState::createPreviousScoreCard()
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:
+                if (a.total == b.total)
+                {
+                    return a.teamIndex < b.teamIndex;
+                }
                 return a.total < b.total;
             case ScoreType::Match:
             case ScoreType::Skins:
                 return a.roundScore > b.roundScore;
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
+                if (a.total == b.total)
+                {
+                    return a.teamIndex < b.teamIndex;
+                }
                 return a.total > b.total;
             case ScoreType::NearestThePin:
                 return a.totalDistance < b.totalDistance;

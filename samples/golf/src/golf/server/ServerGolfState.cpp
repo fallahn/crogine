@@ -2008,7 +2008,7 @@ void GolfState::buildWorld()
         {
             m_currentHole = std::min(std::size_t(holeIndex), m_holeData.size() - 1);
 
-            LogI << "Current hole: " << (int)m_currentHole << std::endl;
+            /*LogI << "Current hole: " << (int)m_currentHole << std::endl;
             std::stringstream ss;
             ss << "Scores: ";
             for (auto s : scores)
@@ -2017,7 +2017,7 @@ void GolfState::buildWorld()
             }
 
             LogI << ss.str() << std::endl;
-            cro::Console::show();
+            cro::Console::show();*/
 
 
             //if we're here we *should* only have one player...

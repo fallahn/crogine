@@ -923,8 +923,13 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //so we need to set this at least as high as the
                 //tallest terrain point (can we use the mesh AABB?)
 
-                glm::vec3 dir = ball.startPoint - ballPos;
-                ballPos.y = 30.f;// ball.startPoint.y;
+                static constexpr float SearchHeight = 15.f;
+
+                auto start = ball.startPoint;
+                //start.y = SearchHeight;
+                ballPos.y = start.y;// SearchHeight;// ball.startPoint.y;
+
+                glm::vec3 dir = start - ballPos;
 
                 auto length = glm::length(dir);
                 dir /= length;
