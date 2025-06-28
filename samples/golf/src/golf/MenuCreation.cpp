@@ -4446,7 +4446,7 @@ void MenuState::addCourseSelectButtons()
     static constexpr float Thickness = 1.f;
 
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, 9.f, 0.5f });
+    entity.addComponent<cro::Transform>().setPosition({ 6.f, 9.f, 0.5f });
     entity.getComponent<cro::Transform>().setOrigin({ Width / 2.f, Height / 2.f });
     entity.getComponent<cro::Transform>().move({ Width / 2.f, Height / 2.f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");

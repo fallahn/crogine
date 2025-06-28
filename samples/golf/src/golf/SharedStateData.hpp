@@ -286,7 +286,7 @@ struct SharedStateData final
     std::int32_t leagueRoundID = 0; //which league we're playing in
     std::int32_t quickplayOpponents = 0; //1-3 if quickplay, 0 to disable
     std::int32_t groupMode = 0; //experimental group mode - buggy as all balls.
-    bool teamMode = false;
+    std::int32_t teamMode = 0;
 
     //counts the number of holes actually played in elimination
     std::uint8_t holesPlayed = 0;
