@@ -1208,12 +1208,12 @@ bool GolfGame::initialise()
     m_activeIndex = m_sharedData.postProcessIndex;
 
 #ifdef CRO_DEBUG_
-   // m_stateStack.pushState(StateID::ScrubBackground);
+    m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::Bush);
     //m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
     //m_stateStack.pushState(StateID::Shop);
-    m_stateStack.pushState(StateID::SBallBackground);
+    //m_stateStack.pushState(StateID::SBallBackground);
     //m_stateStack.pushState(StateID::EndlessAttract);
     //m_stateStack.pushState(StateID::Workshop);
 #else
