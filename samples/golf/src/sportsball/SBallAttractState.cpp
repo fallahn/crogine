@@ -245,7 +245,7 @@ void SBallAttractState::buildScene()
     entity.getComponent<cro::Text>().setShadowOffset(sc::LargeTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
-    entity.getComponent<UIElement>().absolutePosition = { -60.f, 160.f };
+    entity.getComponent<UIElement>().absolutePosition = { -20.f, 140.f };
     entity.getComponent<UIElement>().characterSize = sc::LargeTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
 
@@ -273,28 +273,63 @@ void SBallAttractState::buildScene()
     auto textEnt = entity;
     m_tabs[TabID::Title].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //title background - remember sprites are added to the spriteNode of the current tab for correct scaling...
+    auto& bgTex = m_resources.textures.get("assets/arcade/sportsball/images/attract_bg.png");
+    bgTex.setSmooth(true);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("menu_show");
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::UIBackgroundDepth));
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(bgTex);
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
+    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
+            progress = std::min(1.f, progress + dt);
+
+            const auto scale = cro::Util::Easing::easeOutElastic(progress);
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+            if (progress == 1)
+            {
+                progress = 0.f;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
+
+    auto bgEnt = entity;
+    titleData.spriteNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     titleData.onStartIn =
-        [textEnt/*, bgEnt, scrubEnt*/](cro::Entity) mutable
+        [textEnt, bgEnt/*, scrubEnt*/](cro::Entity) mutable
         {
             textEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             textEnt.getComponent<cro::Transform>().setRotation(0.f);
             textEnt.getComponent<cro::Callback>().getUserData<TitleAnimationData>().rotation = 0.f;
 
-            /*bgEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            bgEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             bgEnt.getComponent<cro::Callback>().getUserData<float>() = 0.f;
 
-            scrubEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            /*scrubEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             scrubEnt.getComponent<cro::Callback>().getUserData<float>() = 0.f;*/
         };
     titleData.onEndIn =
-        [textEnt/*, bgEnt, scrubEnt*/](cro::Entity) mutable //to play anim
+        [textEnt, bgEnt/*, scrubEnt*/](cro::Entity) mutable //to play anim
         {
             textEnt.getComponent<cro::Callback>().active = true;
-            /*bgEnt.getComponent<cro::Callback>().active = true;
-            scrubEnt.getComponent<cro::Callback>().active = true;
+            bgEnt.getComponent<cro::Callback>().active = true;
+            /*scrubEnt.getComponent<cro::Callback>().active = true;
 
-            scrubEnt.getComponent<cro::AudioEmitter>().play();
-            bgEnt.getComponent<cro::AudioEmitter>().play();*/
+            scrubEnt.getComponent<cro::AudioEmitter>().play();*/
+            bgEnt.getComponent<cro::AudioEmitter>().play();
         };
 
 
@@ -321,7 +356,7 @@ void SBallAttractState::buildScene()
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::UIBackgroundDepth));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(helpTex);
-    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
@@ -351,7 +386,7 @@ void SBallAttractState::buildScene()
     bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, std::floor(bounds.height / 2.f) + 20.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, std::floor(bounds.height / 2.f) + 80.f };
     entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
 
@@ -370,10 +405,28 @@ void SBallAttractState::buildScene()
                 e.getComponent<cro::Text>().setString(m_keyboardHelpString);
             }
         };
-
+    auto helpEnt = entity;
     m_tabs[TabID::HowTo].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //help image
+    auto& t = m_resources.textures.get("assets/arcade/sportsball/images/htp.png");
+    t.setSmooth(true);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -660.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(t);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const auto viewScale = getViewScale() / 3.f;
+            e.getComponent<cro::Transform>().setPosition({ 0.f, -660.f * viewScale });
+            e.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
+        };
+    helpEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //high scores tab (or personal best in non-steam)
