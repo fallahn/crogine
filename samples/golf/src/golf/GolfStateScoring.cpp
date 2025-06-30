@@ -434,7 +434,14 @@ void GolfState::updateInventory(std::int32_t terrainID)
                 }
                 else
                 {
-                    floatingMessage(std::to_string(ballCount) + " Remaining");
+                    if (ballCount == 1)
+                    {
+                        floatingMessage("1 Ball Remaining");
+                    }
+                    else
+                    {
+                        floatingMessage(std::to_string(ballCount) + " Balls Remaining");
+                    }
                 }
             }
         }

@@ -354,7 +354,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 {
                     playSoundDelayed(AudioID::Win, data.position, 1.6f, 1.f, MixerChannel::Voice);
                 }
-                else
+                else if(!m_sharedData.teamMode)
                 {
                     playSoundDelayed(AudioID::Lose, data.position, 1.6f, 1.f, MixerChannel::Voice);
                 }
@@ -780,8 +780,12 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     playSound(AudioID::Water, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                     break;
                 case TerrainID::Hole:
-                    playSound(AudioID::Hole, data.position, 0.9f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                {
+                    auto s = playSound(AudioID::Hole, data.position);
+                    s.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    s.getComponent<cro::AudioEmitter>().setRolloff(0.05f);
                     break;
+                }
                 case TerrainID::Scrub:
                     playSound(AudioID::Scrub, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                     break;
@@ -799,7 +803,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 }
                 else if (data.terrain == TerrainID::Hole)
                 {
-                    playSound(AudioID::Hole, data.position, 0.9f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    auto s = playSound(AudioID::Hole, data.position);
+                    s.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    s.getComponent<cro::AudioEmitter>().setRolloff(0.05f);
                 }
             }
             else if (data.type == CollisionEvent::NearMiss)

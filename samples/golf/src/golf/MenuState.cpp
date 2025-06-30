@@ -3675,6 +3675,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::Poke:
             m_audioEnts[AudioID::Poke].getComponent<cro::AudioEmitter>().play();
+            m_textChat.printToScreen("You were poked!", CD32::Colours[CD32::BlueLight]);
             break;
         case PacketID::ChatMessage:
             if (m_textChat.handlePacket(evt.packet))

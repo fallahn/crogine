@@ -1878,7 +1878,7 @@ void GolfState::initScene()
     auto startLives = StartLives;
     clientCount = 0;
     //for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
-    std::int32_t teamCounter = 0;
+    //std::int32_t teamCounter = 0;
     for(const auto& d : clientSortData)
     {
         //if (m_sharedData.clients[d.clientID].connected) //this should always be true if the client made it into the sort data
