@@ -699,9 +699,12 @@ void MessageOverlayState::buildScene()
                         t.id = 0;
                         resetTournament(t);
                         writeTournamentData(t);
+                        m_sharedData.tournaments[0] = t;
+
                         t.id = 1;
                         resetTournament(t);
                         writeTournamentData(t);
+                        m_sharedData.tournaments[1] = t;
 
                         /*Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
                         Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);

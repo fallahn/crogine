@@ -121,7 +121,8 @@ static inline const std::string FragmentMobile = R"(
 
 
 static inline std::string FragmentDesktop = R"(
-    #if defined(ALPHA_CLIP)
+//#extension GL_ARB_derivative_control : enable    
+#if defined(ALPHA_CLIP)
 
         uniform sampler2D u_diffuseMap;
         uniform float u_alphaClip;
@@ -147,6 +148,8 @@ static inline std::string FragmentDesktop = R"(
 		    //adjust moments (this is sort of bias per pixel) using partial derivative
 		    float dx = dFdx(depth);
 		    float dy = dFdy(depth);
+            //float dx = dFdxFine(depth);
+		    //float dy = dFdyFine(depth);
 		    m2 += 0.25 * (dx*dx + dy*dy);
 
             FRAG_OUT = vec4(m1, m2, 0.0, 1.0);
