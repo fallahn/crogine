@@ -304,6 +304,25 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
                 playerInfo[0].terrain = data.terrain;
 
+                //this isn't triggered if the ball is holed
+                //so we can safely just handle this here.
+                //TODO this needs to look at gimme too
+                //if (playerInfo[0].puttCount == 1
+                //    && m_sharedData.snekEnabled)
+                //{
+                //    //update snek if enabled and not already us
+                //    Team::Player current(m_sharedData.snekClient, m_sharedData.snekPlayer);
+                //    Team::Player pl(playerInfo[0].client, playerInfo[0].player);
+                //    if (current != pl)
+                //    {
+                //        m_sharedData.snekClient = playerInfo[0].client;
+                //        m_sharedData.snekPlayer = playerInfo[0].player;
+
+                //        const std::uint16_t d = (m_sharedData.snekClient << 8) | m_sharedData.snekPlayer;
+                //        m_sharedData.host.broadcastPacket(PacketID::SnekUpdate, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                //    }
+                //}
+
                 handleRules(groupID, data);
 
                 setNextPlayer(groupID);
@@ -869,12 +888,17 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
             dir.y = dir.x;
             dir.x = x;
             ball.rotation = glm::dot(dir, glm::normalize(glm::vec2(ball.velocity.x, ball.velocity.z))) + 0.1f;
-
+            
             if (!predict)
             {
                 group.playerInfo[0].previousBallScore = group.playerInfo[0].holeScore[m_currentHole];
                 group.playerInfo[0].holeScore[m_currentHole]++;
                 group.playerInfo[0].prevBallPos = ball.startPoint;
+                //track for snek play
+                if (input.clubID == ClubID::Putter)
+                {
+                    group.playerInfo[0].puttCount++;
+                }
 
                 auto animID = isPutt ? AnimationID::Putt : AnimationID::Swing;
 
@@ -1333,6 +1357,7 @@ void GolfState::setNextHole()
         {
             player.totalScore += player.holeScore[scoreHole];
             player.targetHit = false;
+            player.puttCount = 0;
 
             ScoreUpdate su;
             su.client = player.client;

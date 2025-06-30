@@ -392,6 +392,26 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
         }
         }
     }
+
+    //update snek
+    if (data.type != GolfBallEvent::Holed)
+    {
+        if (m_playerInfo[groupID].playerInfo[0].puttCount == 1
+            && m_sharedData.snekEnabled)
+        {
+            //update snek if enabled and not already us
+            Team::Player current(m_sharedData.snekClient, m_sharedData.snekPlayer);
+            Team::Player pl(m_playerInfo[groupID].playerInfo[0].client, m_playerInfo[groupID].playerInfo[0].player);
+            if (current != pl)
+            {
+                m_sharedData.snekClient = m_playerInfo[groupID].playerInfo[0].client;
+                m_sharedData.snekPlayer = m_playerInfo[groupID].playerInfo[0].player;
+
+                const std::uint16_t d = (m_sharedData.snekClient << 8) | m_sharedData.snekPlayer;
+                m_sharedData.host.broadcastPacket(PacketID::SnekUpdate, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+        }
+    }
 }
 
 bool GolfState::summariseRules()

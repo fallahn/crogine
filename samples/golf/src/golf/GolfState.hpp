@@ -130,6 +130,7 @@ private:
     bool m_hasSnow; //we hardly ever use this, but have to ttrack it anyway...
     bool m_ntpPro; //hack to display different score in same game mode as NTP
     bool m_hotSeat; //we're playing local hotseat
+    std::int32_t m_baseClubSet; //used when playing with snek
     SharedStateData& m_sharedData;
     SharedProfileData& m_sharedProfiles;
     cro::Scene m_gameScene;
@@ -140,6 +141,7 @@ private:
     cro::Texture m_defaultMaskMap;
 
     TextChat m_textChat;
+    Team::Player m_snekPlayer;
 
     //fudge to track real time state of buttons
     struct ButtonState final

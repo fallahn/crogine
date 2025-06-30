@@ -4075,7 +4075,16 @@ void GolfState::updateScoreboard(bool updateParDiff)
 
     for (auto i = 0u; i < playerCount; ++i)
     {
-        nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
+        nameString += "\n  ";
+
+        std::int32_t offset = 0;
+        if (Team::Player(scores[i].client, scores[i].player) == m_snekPlayer)
+        {
+            offset = 1;
+            nameString += cro::String(std::uint32_t(0x1F40D));
+        }
+
+        nameString += scores[i].name.substr(0, ConstVal::MaxStringChars - offset);
         m_netStrengthIcons[i].getComponent<cro::Callback>().setUserData<NetStatData>(scores[i].client, scores[i].player, scores[i].leaguePlayer);
     }
     if (page2)
@@ -4101,7 +4110,17 @@ void GolfState::updateScoreboard(bool updateParDiff)
 
         for (auto i = 0u; i < playerCount; ++i)
         {
-            nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
+            //nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
+            nameString += "\n  ";
+
+            std::int32_t offset = 0;
+            if (Team::Player(scores[i].client, scores[i].player) == m_snekPlayer)
+            {
+                offset = 1;
+                nameString += cro::String(std::uint32_t(0x1F40D));
+            }
+
+            nameString += scores[i].name.substr(0, ConstVal::MaxStringChars - offset);
         }
     }
     ents[0].getComponent<cro::Text>().setString(nameString);

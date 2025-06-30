@@ -85,6 +85,12 @@ struct ClubID final
 
     static constexpr std::int32_t FullSet = 0x1FFF;
 
+    //these are disable while the player has the snek
+    static constexpr std::int32_t SnekFlags =
+        Flags[ThreeWood] | Flags[FiveWood]  | Flags[FourIron]  |
+        Flags[SixIron]   | Flags[SevenIron] | Flags[EightIron] |
+        Flags[NineIron];
+
     static inline std::int32_t getRandomSet()
     {
         std::int32_t retVal = /*Flags[Driver] | */Flags[Putter];

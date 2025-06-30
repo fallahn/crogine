@@ -175,28 +175,28 @@ MainMenuContext::MainMenuContext(MenuState* state)
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedProfileData& sp)
-    : cro::State            (stack, context),
-    m_sharedData            (sd),
-    m_profileData           (sp),
-    m_connectedClientCount  (0),
-    m_connectedPlayerCount  (0),
-    m_canActive             (false),
-    m_textChat              (m_uiScene, sd),
-    m_voiceChat             (m_sharedData),
-    m_matchMaking           (context.appInstance.getMessageBus(), checkCommandLine),
-    m_uiScene               (context.appInstance.getMessageBus(), 1024),
-    m_backgroundScene       (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_avatarScene           (context.appInstance.getMessageBus(), 1536/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_scaleBuffer           ("PixelScale"),
-    m_resolutionBuffer      ("ScaledResolution"),
-    m_windBuffer            ("WindValues"),
-    m_selectedDisplayMember (0),
-    m_lobbyExpansion        (0.f),
-    m_avatarCallbacks       (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
-    m_currentMenu           (MenuID::Main),
-    m_prevMenu              (MenuID::Main),
-    m_viewScale             (1.f),
-    m_scrollSpeed           (1.f)
+    : cro::State(stack, context),
+    m_sharedData(sd),
+    m_profileData(sp),
+    m_connectedClientCount(0),
+    m_connectedPlayerCount(0),
+    m_canActive(false),
+    m_textChat(m_uiScene, sd),
+    m_voiceChat(m_sharedData),
+    m_matchMaking(context.appInstance.getMessageBus(), checkCommandLine),
+    m_uiScene(context.appInstance.getMessageBus(), 1024),
+    m_backgroundScene(context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_avatarScene(context.appInstance.getMessageBus(), 1536/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_scaleBuffer("PixelScale"),
+    m_resolutionBuffer("ScaledResolution"),
+    m_windBuffer("WindValues"),
+    m_selectedDisplayMember(0),
+    m_lobbyExpansion(0.f),
+    m_avatarCallbacks(std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
+    m_currentMenu(MenuID::Main),
+    m_prevMenu(MenuID::Main),
+    m_viewScale(1.f),
+    m_scrollSpeed(1.f)
 {
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     Timeline::setTimelineDesc("Main Menu");
@@ -205,7 +205,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     {
         cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
     }
-    
+
     checkCommandLine = false;
     sd.courseData = &m_sharedCourseData;
     sd.baseState = StateID::Menu;
@@ -378,7 +378,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                     dm.team = m_sharedData.connectionData[i].playerData[j].teamIndex;
                 }
             }
-            std::sort(displayMembers.begin(), displayMembers.end(), 
+            std::sort(displayMembers.begin(), displayMembers.end(),
                 [](const SortData& a, const SortData& b)
                 {
                     if (a.team == b.team)
@@ -637,6 +637,30 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             else
             {
                 cro::Console::print("Usage: sv_team_mode <0|1>");
+            }
+        });
+
+    registerCommand("sv_snek_enable", [&](const std::string& param) 
+        {
+            if (param == "1")
+            {
+                if (m_sharedData.hosting
+                    && m_sharedData.clientConnection.connected)
+                {
+                    m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::SnekEnable, std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+            }
+            else if (param == "0")
+            {
+                if (m_sharedData.hosting
+                    && m_sharedData.clientConnection.connected)
+                {
+                    m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::SnekEnable, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+            }
+            else
+            {
+                cro::Console::print("Usage: sv_snek_enable <0|1>");
             }
         });
 
@@ -3588,6 +3612,16 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::SnekEnable:
+            if (evt.packet.as<std::uint8_t>())
+            {
+                m_textChat.printToScreen("Host has enabled Snek", CD32::Colours[CD32::BlueLight]);
+            }
+            else
+            {
+                m_textChat.printToScreen("Host has disabled Snek", CD32::Colours[CD32::BlueLight]);
+            }
+            break;
         case PacketID::DisplayList:
         {
             auto list = evt.packet.as<DisplayList>();

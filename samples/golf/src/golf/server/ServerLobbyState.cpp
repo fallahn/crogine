@@ -73,6 +73,10 @@ LobbyState::LobbyState(SharedData& sd)
 {
     LOG("Entered Server Lobby State", cro::Logger::Type::Info);
 
+    sd.snekEnabled = false;
+    sd.snekClient = ConstVal::NullValue;
+    sd.snekPlayer = ConstVal::NullValue;
+
     //this is client readyness to receive map data
     for (auto& c : sd.clients)
     {
@@ -122,6 +126,13 @@ void LobbyState::netEvent(const net::NetEvent& evt)
                 m_sharedData.host.broadcastPacket<TeamData>(PacketID::TeamData, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
         }
+            break;
+        case PacketID::SnekEnable:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.snekEnabled = evt.packet.as<std::uint8_t>();
+                m_sharedData.host.broadcastPacket(PacketID::SnekEnable, m_sharedData.snekEnabled, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
             break;
         case PacketID::DisplayList:
             m_sharedData.host.broadcastPacket(PacketID::DisplayList, evt.packet.as<DisplayList>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);

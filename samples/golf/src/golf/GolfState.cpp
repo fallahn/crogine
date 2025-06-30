@@ -181,6 +181,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_hasSnow               (false),
     m_ntpPro                (sd.scoreType == ScoreType::NearestThePinPro),
     m_hotSeat               (false),
+    m_baseClubSet           (sd.inputBinding.clubset),
     m_sharedData            (sd),
     m_sharedProfiles        (sp),
     m_gameScene             (context.appInstance.getMessageBus(), 1024/*, cro::INFO_FLAG_SYSTEM_TIME | cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
@@ -548,6 +549,8 @@ GolfState::~GolfState()
     Social::endStats();
     m_sharedData.clientConnection.netClient.warningCallback = {};
 #endif
+
+    m_sharedData.inputBinding.clubset = m_baseClubSet;
 
     for (auto i = 0; i < 4; ++i)
     {
@@ -4964,6 +4967,17 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::SnekUpdate:
+        {
+            const std::uint16_t data = evt.packet.as<std::uint16_t>();
+            const auto client = std::min(std::uint8_t(ConstVal::MaxClients - 1), std::uint8_t((data & 0xff00) >> 8));
+            const auto player = std::min(std::uint8_t(ConstVal::MaxPlayers - 1), std::uint8_t((data & 0x00ff)));
+            m_snekPlayer = Team::Player(client, player);
+
+            updateScoreboard(); //moves the snek icon
+            m_textChat.printToScreen(cro::String(std::uint32_t(0x1F40D)) + m_sharedData.connectionData[client].playerData[player].name + " now has the Snek!", CD32::Colours[CD32::BlueLight]);
+        }
+            break;
         case PacketID::GroupHoled:
             if (m_groupIdle && evt.packet.as<std::int32_t>() != m_serverGroup)
             {
@@ -5434,7 +5448,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     Achievements::incrementStat(StatStrings[StatID::PutterGimmies]);
                 }
 
-                if (m_sharedData.connectionData[client].playerData[player].holeScores[m_currentHole] == 2)
+                if (m_sharedData.connectionData[client].playerData[player].holeScores[m_currentHole] == 2
+                    && !m_holeData[m_currentHole].puttFromTee)
                 {
                     //we got this from a tee shot
                     Achievements::awardAchievement(AchievementStrings[AchievementID::GetThisOver]);
@@ -6895,6 +6910,20 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    /*if (m_sharedData.scoreType == ScoreType::ClubShuffle)
+    {
+        m_sharedData.clubSet = ClubID::getRandomSet();
+    }
+    else
+    {
+        m_sharedData.clubSet = m_baseClubSet;
+    }
+
+    if (Team::Player(player.client, player.player) == m_snekPlayer)
+    {
+        m_sharedData.clubSet &= ~ClubID::SnekFlags;
+    }*/
+
     //this might arrive after a client quit
     if (!m_avatars[player.client][player.player].ballModel.isValid())
     {

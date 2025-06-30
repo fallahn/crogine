@@ -100,6 +100,9 @@ namespace sv
         std::uint8_t reverseCourse = 0;
         std::uint8_t clubLimit = 0;
         std::uint8_t fastCPU = 1;
+        std::uint8_t snekEnabled = 0;
+        std::uint8_t snekClient = ConstVal::NullValue;
+        std::uint8_t snekPlayer = ConstVal::NullValue;
 
         std::uint8_t randomWind = 0;
         float maxWind = 1.f;

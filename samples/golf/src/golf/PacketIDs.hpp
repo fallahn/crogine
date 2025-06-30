@@ -201,6 +201,7 @@ namespace PacketID
         WeatherChange, //< 0 off 1 on uint8
         Poke, //< uint8 0 - only sent to specific client
         CAT,
+        SnekUpdate, //< uint16 client|player has been given the snek
 
         //from client
         RequestGameStart, //uint8 sv::State, ie Golf to start golf, Billiards to start billiards etc
@@ -249,6 +250,7 @@ namespace PacketID
 
         TeamData, //< TeamData struct mapping client/player to team index
         DisplayList, //< DisplayList struct containing order of players in lobby
+        SnekEnable, //< uint8 0 or 1
 
         CanUpdate, //CanInfo struct
         CoinSpawn, //float power - sent to server. Result comes back as actor spawn
