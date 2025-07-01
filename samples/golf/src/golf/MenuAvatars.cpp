@@ -1991,6 +1991,13 @@ void MenuState::refreshProfileFlyout()
 
 void MenuState::updateLobbyAvatars()
 {
+    //we want to limit this to as few times as possible
+    if (m_avUpdateCount > 2)
+    {
+        return;
+    }
+    
+    m_avUpdateCount++;
     refreshTeams();
 
     //TODO we need to refine this so only textures of the most
@@ -2460,8 +2467,8 @@ void MenuState::updateLobbyAvatars()
             };
         };
     };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
+    //m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    m_lobbyUpdateBuffer.push(cmd);
 
     //show or hide the chat hint depending on number of clients
     cmd.targetFlags = CommandID::Menu::ChatHint;
@@ -2489,7 +2496,9 @@ void MenuState::updateLobbyAvatars()
                 }
             };
     }
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    //m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    m_lobbyUpdateBuffer.push(cmd);
 
     if (m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
     {

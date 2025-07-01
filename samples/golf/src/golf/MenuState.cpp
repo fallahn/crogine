@@ -1815,12 +1815,22 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
+    m_avUpdateCount = 0;
+
+    if (!m_lobbyUpdateBuffer.empty())
+    {
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(m_lobbyUpdateBuffer.front());
+        m_lobbyUpdateBuffer.pop();
+    }
+
+
     if (!m_printQueue.empty() &&
         m_printTimer.elapsed().asSeconds() > 1.f)
     {
         m_printTimer.restart();
-        m_textChat.printToScreen(m_printQueue.front(), TextGoldColour);
-        m_printQueue.pop_front();
+        const auto& [s, c] = m_printQueue.front();
+        m_textChat.printToScreen(s, c);
+        m_printQueue.pop();
     }
 
     m_textChat.update(dt);
@@ -1938,8 +1948,6 @@ void MenuState::addSystems()
     //        }
     //    }
     //}
-
-
 
     auto& mb = getContext().appInstance.getMessageBus();
 
@@ -3625,7 +3633,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::DisplayList:
         {
             auto list = evt.packet.as<DisplayList>();
-            list.count = std::max(0, std::min(list.count, std::int32_t(ConstVal::MaxPlayers)));
+            list.count = std::max(0, std::min(list.count, std::int32_t(list.list.size())));
             
             m_displayOrder.clear();
             if (list.count)
@@ -3880,7 +3888,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             auto client = evt.packet.as<std::uint8_t>();
             for (auto i = 0u; i < m_sharedData.connectionData[client].playerCount; ++i)
             {
-                m_textChat.printToScreen(m_sharedData.connectionData[client].playerData[i].name + " has left the game.", CD32::Colours[CD32::BlueLight]);
+                //m_textChat.printToScreen(m_sharedData.connectionData[client].playerData[i].name + " has left the game.", CD32::Colours[CD32::BlueLight]);
+                m_printQueue.push(std::make_pair(m_sharedData.connectionData[client].playerData[i].name + " has left the game.", CD32::Colours[CD32::BlueLight]));
             }
             
             m_displayOrder.erase(std::remove_if(m_displayOrder.begin(), m_displayOrder.end(), 

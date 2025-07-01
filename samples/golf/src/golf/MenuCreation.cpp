@@ -4185,24 +4185,7 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
         {
             m_displayOrder.emplace_back(cd.connectionID, std::uint8_t(i));
             
-            m_printQueue.emplace_back(cd.playerData[i].name + " has joined the game.");
-
-            //auto ent = m_uiScene.createEntity();
-            //ent.addComponent<cro::Callback>().active = true;
-            //ent.getComponent<cro::Callback>().setUserData<float>((static_cast<float>(i)/* * 2.f*/) + (cd.connectionID * ConstVal::MaxPlayers));
-            //ent.getComponent<cro::Callback>().function =
-            //    [&, s](cro::Entity e, float dt)
-            //    {
-            //        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-            //        currTime -= dt;
-
-            //        if (currTime < 0)
-            //        {
-            //            m_textChat.printToScreen(s, TextGoldColour);
-            //            e.getComponent<cro::Callback>().active = false;
-            //            m_uiScene.destroyEntity(e);
-            //        }
-            //    };
+            m_printQueue.push(std::make_pair(cd.playerData[i].name + " has joined the game.", TextGoldColour));
         }
     }
 
@@ -4420,6 +4403,10 @@ void MenuState::quitLobby()
     m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().setScale({ 0.f, 0.f });
     navigationUpdate(LobbyCourseA);
     m_uiScene.getSystem<cro::UISystem>()->selectByIndex(LobbyCourseA);
+
+    //clear the update buffer so no more updates are attempted
+    std::queue<cro::Command> temp;
+    m_lobbyUpdateBuffer.swap(temp);
 
     //delete the course selection entities as they'll be re-created as needed
     cro::Command cmd;

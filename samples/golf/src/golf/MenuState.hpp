@@ -60,7 +60,7 @@ source distribution.
 #include <crogine/graphics/VideoPlayer.hpp>
 
 #include <array>
-#include <deque>
+#include <queue>
 #include <unordered_map>
 
 static const std::uint32_t BallRenderFlags = (1 << 22);
@@ -125,7 +125,7 @@ private:
         std::vector<std::uint32_t> avatars;
     }m_cosmeticIDs;
 
-    std::deque<cro::String> m_printQueue;
+    std::queue<std::pair<cro::String, cro::Colour>> m_printQueue;
     cro::Clock m_printTimer;
     TextChat m_textChat;
     VoiceChat m_voiceChat;
@@ -443,6 +443,9 @@ private:
     bool applyTextEdit(); //returns true if this consumed event
     void updateLobbyData(const net::NetEvent&);
     void updateRemoteContent(const ConnectionData&);
+    
+    std::int32_t m_avUpdateCount = 0; //TODO test this properly and move to init list
+    std::queue<cro::Command> m_lobbyUpdateBuffer;
     void updateLobbyAvatars();
     void updateLobbyList();
     void refreshTeams();
@@ -455,7 +458,7 @@ private:
     void prevCourse();
     void nextCourse();
     void refreshUI();
-    void updateCourseRuleString(bool updateScoreboard );
+    void updateCourseRuleString(bool updateScoreboard);
     void updateUnlockedItems();
 
     void createPreviousScoreCard();
