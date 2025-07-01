@@ -1987,7 +1987,7 @@ void GolfState::loadMaterials()
 
 
 
-    std::string targetDefines = (m_sharedData.scoreType == ScoreType::MultiTarget || Social::getMonth() == 2) ? "#define MULTI_TARGET\n" : "";
+    std::string targetDefines = (m_sharedData.scoreType == ScoreType::MultiTarget || Social::getMonth() == 2) ? "#define MULTI_TARGET\n" : "";// "#define SHOW_CASCADES\n";
 
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n#define TERRAIN_CLIP\n" + wobble + targetDefines);
     shader = &m_resources.shaders.get(ShaderID::Course);

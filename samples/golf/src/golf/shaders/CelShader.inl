@@ -573,13 +573,13 @@ static inline const std::string CelFragmentShader = R"(
         int cascadeIndex = getCascadeIndex();
         float shadow = shadowAmount(cascadeIndex);
         //float shadow = shadowAmountSoft(cascadeIndex);
-        float borderMix = smoothstep(u_frustumSplits[cascadeIndex] + 0.5, u_frustumSplits[cascadeIndex], v_viewDepth);
+        /*float borderMix = smoothstep(u_frustumSplits[cascadeIndex] + 0.5, u_frustumSplits[cascadeIndex], v_viewDepth);
         if (borderMix > 0)
         {
             int nextIndex = min(cascadeIndex + 1, u_cascadeCount - 1);
             shadow = mix(shadow, shadowAmount(nextIndex), borderMix);
-            //shadow = mix(shadow, shadowAmountSoft(nextIndex), borderMix);
-        }
+            shadow = mix(shadow, shadowAmountSoft(nextIndex), borderMix);
+        }*/
 
         FRAG_OUT.rgb *= shadow;
 

@@ -194,7 +194,7 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
     m_size = { 0, 0 };
     setViewport({ 0, 0, 0, 0 });
 
-    const float borderColor[] = { 1.f, 1.f, 1.f, 1.f };
+    constexpr float borderColor[] = { 1.f, 2.f, 1.f, 1.f }; //green channel is red^2 + 1
 
     //create the texture
     glCheck(glGenTextures(1, &m_depthID));

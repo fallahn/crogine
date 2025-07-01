@@ -222,6 +222,7 @@ float shadowAmount(int cascadeIndex)
     
     vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
     projectionCoords = clamp(projectionCoords * 0.5 + 0.5, 0.0, 1.0);
+    //projectionCoords = projectionCoords * 0.5 + 0.5;
 
 	vec2 moments = texture(u_shadowMap, vec3(projectionCoords.xy, cascadeIndex)).rg;
 
