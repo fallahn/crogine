@@ -239,10 +239,15 @@ void CameraFollowSystem::process(float dt)
     for (auto entity : entities)
     {
         auto& follower = entity.getComponent<CameraFollower>();
+
+        if (!follower.target.isValid())
+        {
+            continue;
+        }
+
         const auto& collider = follower.target.getComponent<ClientCollider>();
 
-        if (!follower.target.isValid()
-            || collider.hidden) //ball is hidden in team mode
+        if (collider.hidden) //ball is hidden in team mode
         {
             continue;
         }
