@@ -74,7 +74,7 @@ namespace cro
         template <>
         struct MaxPoolSize<cro::AudioEmitter> final
         {
-            static constexpr std::size_t value = MinFreeIDs / 2;
+            static constexpr std::size_t value = MinFreeIDs / 3;
         };
 
         template <>
