@@ -2475,7 +2475,7 @@ void GolfGame::createHowTo()
             {
                 const auto viewScale = std::clamp(getViewScale(), 1.f, 3.f);
                 const auto viewSize = std::min(static_cast<std::int32_t>(viewScale) - 1, 2);
-                const glm::vec2 size = cro::App::getWindow().getScaledSize();
+                const glm::vec2 size = cro::App::getWindow().getSize();// getScaledSize();
                 ImGui::SetNextWindowSize({ size.x, size.y });
                 ImGui::SetNextWindowPos({ 0.f, 0.f });
                 ImGui::Begin("How To Play", nullptr/*&m_sharedData.showHelp*/, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
