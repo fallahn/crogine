@@ -683,8 +683,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                     {
                         /*m_sharedData.clientConnection.netClient.sendPacket(
                             PacketID::TeamMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);*/
-                        /*m_sharedData.clientConnection.netClient.sendPacket(
-                            PacketID::GroupMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);*/
+                        m_sharedData.clientConnection.netClient.sendPacket(
+                            PacketID::GroupMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     }
                     cro::Console::print("Grouping set to " + GroupStrings[m_sharedData.groupMode]);
 
