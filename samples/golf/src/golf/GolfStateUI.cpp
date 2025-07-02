@@ -2298,6 +2298,12 @@ void GolfState::showCountdown(std::uint8_t seconds)
     Timeline::setTimelineDesc("Final Scores");
     Timeline::addEvent(Timeline::Event::EndOfRound);
 
+    //allow teams in hotseat
+    if (m_sharedData.teamMode)
+    {
+        Achievements::setActive(true);
+        Achievements::awardAchievement(AchievementStrings[AchievementID::Tag]);
+    }
     m_roundEnded = true;
     Achievements::setActive(m_allowAchievements); //make sure these are re-enabled in case CPU player was last
 

@@ -179,7 +179,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "entrepreneur",
     "fickle",
     "get_this_over",
-    "another_level"
+    "another_level",
+    "tag"
 };
 
 //appears on the notification
@@ -317,7 +318,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Entrepreneur",
     "Fickle",
     "Let's Get This Over With",
-    "Another Level"
+    "Another Level",
+    "Tag!"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -456,6 +458,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Buy at least one item from each manufacturer at the Equipment Counter", false),
     std::make_pair("Take a Gimme from a tee shot", false),
     std::make_pair("Reach Level 2 or higher at Sports Ball", false),
+    std::make_pair("Play a Teams round in Freeplay", false),
 };
 
 //assuming trophies load correctly they are:
@@ -632,6 +635,7 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*131*/TrophyID::GoldCup,
     /*132*/TrophyID::SilverCup,
     /*133*/TrophyID::SilverFigure,
+    /*143*/TrophyID::BronzeCup
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

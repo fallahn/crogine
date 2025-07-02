@@ -194,6 +194,7 @@ namespace AchievementID
         Fickle,
         GetThisOver,
         AnotherLevel,
+        Tag,
 
         Count
     };

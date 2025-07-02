@@ -546,8 +546,12 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     playSound(AudioID::Wedge, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                     break;
                 case ClubID::Putter:
-                    playSound(cro::Util::Random::value(AudioID::Putt01, AudioID::Putt03), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                {
+                    auto e = playSound(cro::Util::Random::value(AudioID::Putt01, AudioID::Putt03), data.position);
+                    e.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    e.getComponent<cro::AudioEmitter>().setRolloff(0.f);
                     break;
+                }
                 }
             }
             break;
@@ -783,7 +787,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 {
                     auto s = playSound(AudioID::Hole, data.position);
                     s.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-                    s.getComponent<cro::AudioEmitter>().setRolloff(0.05f);
+                    s.getComponent<cro::AudioEmitter>().setRolloff(0.f);
                     break;
                 }
                 case TerrainID::Scrub:
@@ -805,7 +809,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 {
                     auto s = playSound(AudioID::Hole, data.position);
                     s.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-                    s.getComponent<cro::AudioEmitter>().setRolloff(0.05f);
+                    s.getComponent<cro::AudioEmitter>().setRolloff(0.f);
                 }
             }
             else if (data.type == CollisionEvent::NearMiss)
@@ -971,6 +975,7 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
         ent.getComponent<cro::AudioEmitter>().setVolume(volume * 0.5f);
         ent.getComponent<cro::AudioEmitter>().setPitch(1.f);
         ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+        ent.getComponent<cro::AudioEmitter>().setRolloff(1.f);
         ent.getComponent<cro::AudioEmitter>().play();
         ent.getComponent<cro::Transform>().setPosition(position);
         return ent;
@@ -1079,6 +1084,7 @@ cro::Entity GolfSoundDirector::playAvatarSound(std::int32_t idx, const std::stri
     ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
     ent.getComponent<cro::AudioEmitter>().setPitch(1.f);
     ent.getComponent<cro::AudioEmitter>().setVolume(0.5f);
+    ent.getComponent<cro::AudioEmitter>().setRolloff(1.f);
     
     //urgh, we want to cancel this entirely really
     //but we need to return a valid entity...
