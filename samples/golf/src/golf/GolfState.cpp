@@ -1648,33 +1648,37 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (m_activeAvatar &&
                 data.entity == m_activeAvatar->model)
             {
-                //delayed ent to restore player cam
-                auto entity = m_gameScene.createEntity();
-                entity.addComponent<cro::Callback>().active = true;
-                entity.getComponent<cro::Callback>().setUserData<float>(0.6f);
-                entity.getComponent<cro::Callback>().function =
-                    [&](cro::Entity e, float dt)
+                if ((data.animationID == m_activeAvatar->animationIDs[AnimationID::Swing]
+                    || data.animationID == m_activeAvatar->animationIDs[AnimationID::Chip]))
                 {
-                    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-                    currTime -= dt;
-
-                    if (currTime < 0)
-                    {
-                        if (m_currentCamera == CameraID::Bystander)
+                    //delayed ent to restore player cam
+                    auto entity = m_gameScene.createEntity();
+                    entity.addComponent<cro::Callback>().active = true;
+                    entity.getComponent<cro::Callback>().setUserData<float>(0.6f);
+                    entity.getComponent<cro::Callback>().function =
+                        [&](cro::Entity e, float dt)
                         {
-                            setActiveCamera(CameraID::Player);
-                        }
+                            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                            currTime -= dt;
 
-                        e.getComponent<cro::Callback>().active = false;
-                        m_gameScene.destroyEntity(e);
-                    }
-                };
+                            if (currTime < 0)
+                            {
+                                if (m_currentCamera == CameraID::Bystander)
+                                {
+                                    setActiveCamera(CameraID::Player);
+                                }
 
-                if (data.animationID == m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::ToChip])
+                                e.getComponent<cro::Callback>().active = false;
+                                m_gameScene.destroyEntity(e);
+                            }
+                        };
+                }
+
+                else if (data.animationID == m_activeAvatar->animationIDs[AnimationID::ToChip])
                 {
                     m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::ChipIdle]);
                 }
-                else if (data.animationID == m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::FromChip])
+                else if (data.animationID == m_activeAvatar->animationIDs[AnimationID::FromChip])
                 {
                     m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::Idle]);
                 }
