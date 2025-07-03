@@ -233,6 +233,11 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_minimapTexturePass    (MaxMinimapPasses),
     m_drawDebugMesh         (false)
 {
+    for (auto& scales : m_ballScales)
+    {
+        std::fill(scales.begin(), scales.end(), 0.f);
+    }
+
     sd.activeResources = &m_resources;
     sd.quickplayOpponents = std::clamp(sd.quickplayOpponents, 0, 3);
     if (sd.quickplayOpponents != 0)
@@ -4555,8 +4560,8 @@ void GolfState::spawnBall(const ActorInfo& info)
         loadDefaultBall();
     }
     //clamp scale of balls in case someone got funny with a large model
-    const float scale = std::min(1.f, MaxBallRadius / entity.getComponent<cro::Model>().getBoundingSphere().radius);
-    entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+    const float maxScale = std::min(1.f, MaxBallRadius / entity.getComponent<cro::Model>().getBoundingSphere().radius);
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(maxScale));
     if (entity.hasComponent<cro::Skeleton>())
     {
         entity.getComponent<cro::Skeleton>().play(0);
@@ -4573,6 +4578,34 @@ void GolfState::spawnBall(const ActorInfo& info)
     }
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
     
+    //hmm if we tracked the state client side we could conditionally add this
+    //based on whether or not big balls were enabled.
+    struct BallContext final
+    {
+        float maxScale = 1.f;
+        std::uint8_t client = 0;
+        std::uint8_t player = 0;
+        bool rollAnimation = false;
+    }ctx;
+    ctx.maxScale = maxScale;
+    ctx.client = info.clientID;
+    ctx.player = info.playerID;
+    ctx.rollAnimation = rollAnimation;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<BallContext>(ctx);
+    entity.getComponent<cro::Callback>().function = 
+        [&](cro::Entity e, float) 
+        {
+            const auto& ctx = e.getComponent<cro::Callback>().getUserData<BallContext>();
+            const float scale = ctx.maxScale + m_ballScales[ctx.client][ctx.player];
+
+            /*if (ctx.rollAnimation)
+            {
+                e.getComponent<cro::Transform>().setPosition({ 0.f, Ball::Radius * scale, 0.f });
+                e.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius * scale, 0.f });
+            }*/
+            e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+        };
     
     childList.push_back(entity);
     teamHiddenEnts.push_back(entity);
@@ -4971,6 +5004,19 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::BigBallUpdate:
+        {
+            const auto data = evt.packet.as<std::uint32_t>();
+            std::int32_t scale = (data & 0x0000ffff) - 6;
+            scale *= (1 + (glm::step(0, scale)));
+            const auto info = (data & 0xffff0000) >> 16;
+            const std::int32_t client = (info & 0xff00) >> 8;
+            const std::int32_t player = info & 0x00ff;
+
+            //LogI << client << ", " << player << ": scale set to " << scale << std::endl;
+            m_ballScales[std::clamp(client, 0, ConstVal::MaxClients - 1)][std::clamp(player, 0, ConstVal::MaxPlayers - 1)] = 0.1f * scale;
+        }
+            break;
         case PacketID::SnekUpdate:
         {
             const std::uint16_t data = evt.packet.as<std::uint16_t>();

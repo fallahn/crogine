@@ -1037,6 +1037,13 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance = 0.f;
 
+        if (m_sharedData.bigBalls)
+        {
+            //playerInfo[0].ballScale = std::clamp(playerInfo[0].ballScale + (playerInfo[0].holeScore[m_currentHole] - m_holeData[m_currentHole].par), -5, 5);
+            std::uint32_t data = (((playerInfo[0].client << 8) | playerInfo[0].player) << 16) | std::uint16_t(playerInfo[0].ballScale + 6);
+            m_sharedData.host.broadcastPacket(PacketID::BigBallUpdate, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+
         if (m_sharedData.teamMode)
         {
             //we'll need to send the team mate's score too - this was done
@@ -1067,6 +1074,13 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
 
                 m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su2, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 teamMateInfo->ballEntity.getComponent<Ball>().lastStrokeDistance = 0.f;
+
+                if (m_sharedData.bigBalls)
+                {
+                    //teamMateInfo->ballScale = std::clamp(teamMateInfo->ballScale + (teamMateInfo->holeScore[m_currentHole] - m_holeData[m_currentHole].par), -5, 5);
+                    std::uint32_t data = (((teamMateInfo->client << 8) | teamMateInfo->player) << 16) | std::uint16_t(teamMateInfo->ballScale + 6);
+                    m_sharedData.host.broadcastPacket(PacketID::BigBallUpdate, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
             }
         }
     }
@@ -1343,7 +1357,7 @@ void GolfState::setNextHole()
     }
 
     //update player skins/match scores
-    auto gameFinished = summariseRules();
+    const auto gameFinished = summariseRules();
     
 
     //broadcast all scores to make sure everyone is up to date
@@ -1358,6 +1372,9 @@ void GolfState::setNextHole()
             player.totalScore += player.holeScore[scoreHole];
             player.targetHit = false;
             player.puttCount = 0;
+            //track this for big balls, though it's only sent to client
+            //on player change (as we might need to do teams updates) see setNextPlayer()
+            player.ballScale = std::clamp(player.ballScale + (m_holeData[scoreHole].par - player.holeScore[scoreHole]), -5, 5);
 
             ScoreUpdate su;
             su.client = player.client;

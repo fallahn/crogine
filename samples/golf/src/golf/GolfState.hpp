@@ -142,6 +142,7 @@ private:
 
     TextChat m_textChat;
     Team::Player m_snekPlayer;
+    std::array<std::array<float, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_ballScales = {};
 
     //fudge to track real time state of buttons
     struct ButtonState final

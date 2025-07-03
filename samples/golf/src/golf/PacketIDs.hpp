@@ -142,6 +142,15 @@ struct ClientGrouping final
     };
 };
 
+struct RuleMod final
+{
+    enum
+    {
+        Snek,
+        BigBalls
+    };
+};
+
 namespace PacketID
 {
     /*
@@ -202,6 +211,7 @@ namespace PacketID
         Poke, //< uint8 0 - only sent to specific client
         CAT,
         SnekUpdate, //< uint16 client|player has been given the snek
+        BigBallUpdate, //< uint16(client|player) | uint16 scale 0-11 (rescaled on client to +/-5)
 
         //from client
         RequestGameStart, //uint8 sv::State, ie Golf to start golf, Billiards to start billiards etc
@@ -250,7 +260,7 @@ namespace PacketID
 
         TeamData, //< TeamData struct mapping client/player to team index
         DisplayList, //< DisplayList struct containing order of players in lobby
-        SnekEnable, //< uint8 0 or 1
+        RuleMod, //< (uint8 ID |uint8 0 or 1)
 
         CanUpdate, //CanInfo struct
         CoinSpawn, //float power - sent to server. Result comes back as actor spawn

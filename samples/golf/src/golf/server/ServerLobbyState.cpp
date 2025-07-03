@@ -127,11 +127,23 @@ void LobbyState::netEvent(const net::NetEvent& evt)
             }
         }
             break;
-        case PacketID::SnekEnable:
+        case PacketID::RuleMod:
             if (evt.peer.getID() == m_sharedData.hostID)
             {
-                m_sharedData.snekEnabled = evt.packet.as<std::uint8_t>();
-                m_sharedData.host.broadcastPacket(PacketID::SnekEnable, m_sharedData.snekEnabled, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                const std::uint16_t data = evt.packet.as<std::uint16_t>();
+                const auto rule = (data & 0xff00) >> 8;
+                const auto value = data & 0x00ff;
+
+                if (rule == RuleMod::Snek)
+                {
+                    m_sharedData.snekEnabled = value;
+                }
+                else if (rule == RuleMod::BigBalls)
+                {
+                    m_sharedData.bigBalls = value;
+                }
+
+                m_sharedData.host.broadcastPacket(PacketID::RuleMod, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             break;
         case PacketID::DisplayList:

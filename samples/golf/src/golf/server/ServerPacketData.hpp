@@ -86,6 +86,7 @@ struct PlayerStatus final : public ActivePlayer
     std::int32_t teamIndex = -1; //indexes into the teams array so we can look up the other player
     std::int32_t puttCount = 0; //number of putts this hole for snek
 
+    std::int8_t ballScale = 0; //used to scale big balls based on par, +/- 5
     bool targetHit = false;
     bool eliminated = false;
     bool readyQuit = false; //used at round end to see if all players want to skip scores

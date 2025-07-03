@@ -647,7 +647,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 if (m_sharedData.hosting
                     && m_sharedData.clientConnection.connected)
                 {
-                    m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::SnekEnable, std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    constexpr std::uint16_t d = (std::uint8_t(RuleMod::Snek) << 8) | std::uint8_t(1);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
             }
             else if (param == "0")
@@ -655,12 +656,41 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 if (m_sharedData.hosting
                     && m_sharedData.clientConnection.connected)
                 {
-                    m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::SnekEnable, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    //yes, OR'ing 0 is redundant, but it's explicit
+                    constexpr std::uint16_t d = (std::uint8_t(RuleMod::Snek) << 8) | std::uint8_t(0);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
             }
             else
             {
                 cro::Console::print("Usage: sv_snek_enable <0|1>");
+            }
+        });
+
+    registerCommand("sv_bigballs_enable", [&](const std::string& param)
+        {
+            if (param == "1")
+            {
+                if (m_sharedData.hosting
+                    && m_sharedData.clientConnection.connected)
+                {
+                    constexpr std::uint16_t d = (std::uint8_t(RuleMod::BigBalls) << 8) | std::uint8_t(1);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+            }
+            else if (param == "0")
+            {
+                if (m_sharedData.hosting
+                    && m_sharedData.clientConnection.connected)
+                {
+                    //yes, OR'ing 0 is redundant, but it's explicit
+                    constexpr std::uint16_t d = (std::uint8_t(RuleMod::BigBalls) << 8) | std::uint8_t(0);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+            }
+            else
+            {
+                cro::Console::print("Usage: sv_bigballs_enable <0|1>");
             }
         });
 
@@ -3620,15 +3650,35 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
-        case PacketID::SnekEnable:
-            if (evt.packet.as<std::uint8_t>())
+        case PacketID::RuleMod:
+        {
+            const std::uint16_t data = evt.packet.as<std::uint16_t>();
+            const auto ruleType = (data & 0xff00) >> 8;
+            const auto value = (data & 0x00ff);
+
+            if (ruleType == RuleMod::Snek)
             {
-                m_textChat.printToScreen("Host has enabled Snek", CD32::Colours[CD32::BlueLight]);
+                if (value)
+                {
+                    m_textChat.printToScreen("Host has enabled Snek", CD32::Colours[CD32::BlueLight]);
+                }
+                else
+                {
+                    m_textChat.printToScreen("Host has disabled Snek", CD32::Colours[CD32::BlueLight]);
+                }
             }
-            else
+            else if (ruleType == RuleMod::BigBalls)
             {
-                m_textChat.printToScreen("Host has disabled Snek", CD32::Colours[CD32::BlueLight]);
+                if (value)
+                {
+                    m_textChat.printToScreen("Host has enabled Big Balls", CD32::Colours[CD32::BlueLight]);
+                }
+                else
+                {
+                    m_textChat.printToScreen("Host has disabled Big Balls", CD32::Colours[CD32::BlueLight]);
+                }
             }
+        }
             break;
         case PacketID::DisplayList:
         {
