@@ -42,7 +42,8 @@ struct ProgressMessage final
 {
     enum
     {
-        Challenge, League, Message
+        Challenge, League, Message,
+        AchievementProgress
     }type = Message;
 
     std::int32_t index = 0;
@@ -87,6 +88,7 @@ private:
     float m_pauseTime;
 
     void showChallenge(std::int32_t index, std::int32_t progress, std::int32_t total);
+    void showAchievement(std::int32_t index, std::int32_t progress, std::int32_t total);
     void showLeague(std::int32_t index, std::int32_t progress, std::int32_t total);
     void showMessage(const std::string& title, const std::string& msg);
 };

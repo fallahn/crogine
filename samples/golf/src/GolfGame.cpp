@@ -601,6 +601,15 @@ void GolfGame::handleMessage(const cro::Message& msg)
                 res->locked = false;
             }
         }
+        else if (data.type == Social::SocialEvent::AchievementProgress)
+        {
+            ProgressMessage m;
+            m.index = data.challengeID;
+            m.progress = data.level;
+            m.total = data.reason;
+            m.type = ProgressMessage::AchievementProgress;
+            m_progressIcon->queueMessage(m);
+        }
     }
     else if (msg.id == cro::Message::SystemMessage)
     {

@@ -32,6 +32,7 @@ source distribution.
 #include "CommonConsts.hpp"
 
 #include <MonthlyChallenge.hpp>
+#include <AchievementStrings.hpp>
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/App.hpp>
@@ -188,6 +189,9 @@ void ProgressIcon::update(float dt)
         case ProgressMessage::League:
             showLeague(msg.index, msg.progress, msg.total);
             break;
+        case ProgressMessage::AchievementProgress:
+            showAchievement(msg.index, msg.progress, msg.total);
+            break;
         }
 
         m_messageQueue.pop_front();
@@ -244,6 +248,36 @@ void ProgressIcon::showChallenge(std::int32_t index, std::int32_t progress, std:
                 m_titleText.setString("CHALLENGE PROGRESS " + str);
             }
         }
+
+        m_active = true;
+        m_state = ScrollIn;
+        m_pauseTime = PauseTime;
+
+        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+        setPosition({ windowSize.x - IconSize.x, windowSize.y });
+    }
+}
+
+void ProgressIcon::showAchievement(std::int32_t index, std::int32_t progress, std::int32_t total)
+{
+    //rare, but we don't want, say, a league notification clobbering an active challenge
+    if (!m_active)
+    {
+        //update progress bar verts
+        float pc = static_cast<float>(progress) / total;
+        auto idx = m_vertexData.size() - 1;
+        const auto pos = (BarSize.x * pc) + BarPos.x;
+        m_vertexData[idx].position.x = pos;
+        m_vertexData[idx - 1].position.x = pos;
+        m_vertexData[idx - 3].position.x = pos;
+        m_background.setVertexData(m_vertexData);
+
+        //update text 
+        auto str = cro::Util::String::wordWrap(AchievementDesc[index].first, 40, 128);
+        m_text.setString(str);
+
+        str = std::to_string(progress) + "/" + std::to_string(total);
+        m_titleText.setString(AchievementLabels[index] + " " + str);
 
         m_active = true;
         m_state = ScrollIn;

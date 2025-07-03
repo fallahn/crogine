@@ -87,14 +87,17 @@ bool DefaultAchievements::init()
     trigger = &StatTriggers[StatID::PuttDistance].emplace_back();
     trigger->achID = AchievementID::LongDistanceClara;
     trigger->threshold = 1000; //metres
+    trigger->showProgress = false;
 
     trigger = &StatTriggers[StatID::StrokeDistance].emplace_back();
     trigger->achID = AchievementID::StrokeOfMidnight;
     trigger->threshold = 12000; //metres
+    trigger->showProgress = false;
 
     trigger = &StatTriggers[StatID::TimeOnTheRange].emplace_back();
     trigger->achID = AchievementID::PracticeMakesPerfect;
     trigger->threshold = 60 * 60; //seconds
+    trigger->showProgress = false;
 
     trigger = &StatTriggers[StatID::Birdies].emplace_back();
     trigger->achID = AchievementID::AllOfATwitter;
@@ -111,6 +114,7 @@ bool DefaultAchievements::init()
     trigger = &StatTriggers[StatID::TimeOnTheCourse].emplace_back();
     trigger->achID = AchievementID::DayJob;
     trigger->threshold = 24 * 60 * 60;
+    trigger->showProgress = false;
 
     trigger = &StatTriggers[StatID::LongPutts].emplace_back();
     trigger->achID = AchievementID::BigPutts;
@@ -354,6 +358,18 @@ void DefaultAchievements::syncStat(const StatData& stat)
             {
                 awardAchievement(AchievementStrings[t.achID]);
             }
+#ifndef USE_GNS
+            else if (t.showProgress
+                && t.threshold > stat.value)
+            {
+                //display progress
+                auto* msg = cro::App::getInstance().getMessageBus().post<Social::SocialEvent>(Social::MessageID::SocialMessage);
+                msg->type = Social::SocialEvent::AchievementProgress;
+                msg->level = stat.value;
+                msg->reason = t.threshold;
+                msg->challengeID = t.achID;
+            }
+#endif
         }
 
         //and remove completed

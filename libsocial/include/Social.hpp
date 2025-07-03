@@ -125,6 +125,7 @@ public:
             PlayerAchievement, //as in we should cheer, not an actual achievement
             MonthlyProgress,
             LeagueProgress,
+            AchievementProgress,
             LobbyUpdated,
             PlayerNameChanged,
             CreditsAwarded,

@@ -839,6 +839,7 @@ struct StatTrigger final
 {
     std::int32_t achID = -1;
     float threshold = std::numeric_limits<float>::max();
+    bool showProgress = true;
 };
 
 static std::array<std::vector<StatTrigger>, StatID::Count> StatTriggers = {};
