@@ -56,6 +56,8 @@ namespace
 {
     static constexpr float MinWindStrength = 0.1f;
 
+    static constexpr float CupDepth = (Ball::Radius * 2.f) * 2.1f;
+
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
     static constexpr float FallRadius = Ball::Radius * 0.08f;// 0.25f;
     static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
@@ -792,7 +794,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 && std::abs(ball.spin.y) < MinSpinPower //this might be true when there's still spin to be applied
                 && glm::dot(cro::Transform::Y_AXIS, terrainContact.normal) > MinRollSlope) //and we don't want to stop on a slope                
                 
-                || (terrainContact.penetration > (Ball::Radius * 2.5f)) 
+                || (terrainContact.penetration > CupDepth) 
                 || ((ball.delay < BallRollTimeout * 1.5f) && (vel2 < BallTimeoutVelocity))
                 || (ball.delay < (BallRollTimeout * 2.f)))
             {
@@ -1022,7 +1024,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 msg2->client = ball.client;
 
                 position.x = m_holeData->pin.x;
-                position.y = m_holeData->pin.y - (Ball::Radius * 2.5f);
+                position.y = m_holeData->pin.y - CupDepth;
                 position.z = m_holeData->pin.z;
                 entity.getComponent<cro::Transform>().setPosition(position);
 

@@ -4599,11 +4599,11 @@ void GolfState::spawnBall(const ActorInfo& info)
             const auto& ctx = e.getComponent<cro::Callback>().getUserData<BallContext>();
             const float scale = ctx.maxScale + m_ballScales[ctx.client][ctx.player];
 
-            /*if (ctx.rollAnimation)
+            if (ctx.rollAnimation)
             {
                 e.getComponent<cro::Transform>().setPosition({ 0.f, Ball::Radius * scale, 0.f });
-                e.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius * scale, 0.f });
-            }*/
+                //e.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius * scale, 0.f });
+            }
             e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
         };
     
@@ -5008,7 +5008,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         {
             const auto data = evt.packet.as<std::uint32_t>();
             std::int32_t scale = (data & 0x0000ffff) - 6;
-            scale *= (1 + (glm::step(0, scale)));
+            scale *= (1 + (glm::step(0, scale) * 2));
             const auto info = (data & 0xffff0000) >> 16;
             const std::int32_t client = (info & 0xff00) >> 8;
             const std::int32_t player = info & 0x00ff;

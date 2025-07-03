@@ -69,10 +69,12 @@ void BallAnimationSystem::process(float dt)
                 rightVec = glm::inverse(entity.getComponent<cro::Transform>().getRotation()) * rightVec;
                 CRO_ASSERT(!std::isnan(rightVec.x), "NaN from ball rotation");
 
-                const float rotation = (len / Ball::Radius);
+                auto& tx = entity.getComponent<cro::Transform>();
+
+                const float rotation = (len / /*Ball::Radius*/tx.getPosition().y); //if we're playing with big balls the Y represents the scaled radius
                 CRO_ASSERT(!std::isnan(rotation), "");
 
-                entity.getComponent<cro::Transform>().rotate(rightVec, rotation * dt);
+                tx.rotate(rightVec, rotation * dt);
             }
         }
     }
