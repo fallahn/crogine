@@ -135,6 +135,7 @@ bool DefaultAchievements::init()
     trigger = &StatTriggers[StatID::SundaysPlayed].emplace_back();
     trigger->achID = AchievementID::MonthOfSundays;
     trigger->threshold = 30;
+    trigger->showProgress = cro::SysTime::now().days() == 0;
 
     trigger = &StatTriggers[StatID::CreditsSpent].emplace_back();
     trigger->achID = AchievementID::BigSpender;

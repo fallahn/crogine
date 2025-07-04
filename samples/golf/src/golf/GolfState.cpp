@@ -4472,10 +4472,13 @@ void GolfState::spawnBall(const ActorInfo& info)
         //entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
-            [&, ballEnt](cro::Entity e, float)
+            [&, ballEnt, info](cro::Entity e, float)
             {
+                auto scale = ballEnt.getComponent<cro::Transform>().getScale();
+                scale += m_ballScales[info.clientID][info.playerID] * scale;
+
                 e.getComponent<cro::Model>().setHidden(ballEnt.getComponent<cro::Model>().isHidden());
-                e.getComponent<cro::Transform>().setScale(ballEnt.getComponent<cro::Transform>().getScale()/* * 0.95f*/);
+                e.getComponent<cro::Transform>().setScale(scale);
             };
         childList.push_back(entity);
 
@@ -4592,11 +4595,11 @@ void GolfState::spawnBall(const ActorInfo& info)
     ctx.player = info.playerID;
     ctx.rollAnimation = rollAnimation;
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<BallContext>(ctx);
+    entity.getComponent<cro::Callback>().setUserData<const BallContext>(ctx);
     entity.getComponent<cro::Callback>().function = 
         [&](cro::Entity e, float) 
         {
-            const auto& ctx = e.getComponent<cro::Callback>().getUserData<BallContext>();
+            const auto& ctx = e.getComponent<cro::Callback>().getUserData<const BallContext>();
             const float scale = ctx.maxScale + m_ballScales[ctx.client][ctx.player];
 
             if (ctx.rollAnimation)
@@ -5015,6 +5018,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
             //LogI << client << ", " << player << ": scale set to " << scale << std::endl;
             m_ballScales[std::clamp(client, 0, ConstVal::MaxClients - 1)][std::clamp(player, 0, ConstVal::MaxPlayers - 1)] = 0.1f * scale;
+
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
         }
             break;
         case PacketID::SnekUpdate:
@@ -5026,6 +5031,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
             updateScoreboard(); //moves the snek icon
             m_textChat.printToScreen(cro::String(std::uint32_t(0x1F40D)) + m_sharedData.connectionData[client].playerData[player].name + " now has the Snek!", CD32::Colours[CD32::BlueLight]);
+        
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
         }
             break;
         case PacketID::GroupHoled:

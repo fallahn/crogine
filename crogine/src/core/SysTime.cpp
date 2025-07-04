@@ -76,6 +76,12 @@ int SysTime::Data::days() const
     return m_time->tm_mday;
 }
 
+int SysTime::Data::weekDay() const
+{
+    update();
+    return m_time->tm_wday;
+}
+
 int SysTime::Data::months() const
 {
     update();

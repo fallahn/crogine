@@ -175,28 +175,28 @@ MainMenuContext::MainMenuContext(MenuState* state)
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedProfileData& sp)
-    : cro::State(stack, context),
-    m_sharedData(sd),
-    m_profileData(sp),
-    m_connectedClientCount(0),
-    m_connectedPlayerCount(0),
-    m_canActive(false),
-    m_textChat(m_uiScene, sd),
-    m_voiceChat(m_sharedData),
-    m_matchMaking(context.appInstance.getMessageBus(), checkCommandLine),
-    m_uiScene(context.appInstance.getMessageBus(), 1024),
-    m_backgroundScene(context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_avatarScene(context.appInstance.getMessageBus(), 1536/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_scaleBuffer("PixelScale"),
-    m_resolutionBuffer("ScaledResolution"),
-    m_windBuffer("WindValues"),
-    m_selectedDisplayMember(0),
-    m_lobbyExpansion(0.f),
-    m_avatarCallbacks(std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
-    m_currentMenu(MenuID::Main),
-    m_prevMenu(MenuID::Main),
-    m_viewScale(1.f),
-    m_scrollSpeed(1.f)
+    : cro::State            (stack, context),
+    m_sharedData            (sd),
+    m_profileData           (sp),
+    m_connectedClientCount  (0),
+    m_connectedPlayerCount  (0),
+    m_canActive             (false),
+    m_textChat              (m_uiScene, sd),
+    m_voiceChat             (m_sharedData),
+    m_matchMaking           (context.appInstance.getMessageBus(), checkCommandLine),
+    m_uiScene               (context.appInstance.getMessageBus(), 1024),
+    m_backgroundScene       (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_avatarScene           (context.appInstance.getMessageBus(), 1536/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_scaleBuffer           ("PixelScale"),
+    m_resolutionBuffer      ("ScaledResolution"),
+    m_windBuffer            ("WindValues"),
+    m_selectedDisplayMember (0),
+    m_lobbyExpansion        (0.f),
+    m_avatarCallbacks       (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
+    m_currentMenu           (MenuID::Main),
+    m_prevMenu              (MenuID::Main),
+    m_viewScale             (1.f),
+    m_scrollSpeed           (1.f)
 {
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     Timeline::setTimelineDesc("Main Menu");
@@ -3678,6 +3678,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     m_textChat.printToScreen("Host has disabled Big Balls", CD32::Colours[CD32::BlueLight]);
                 }
             }
+
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
         }
             break;
         case PacketID::DisplayList:
@@ -3700,6 +3702,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             {
                 updateLobbyAvatars();
             }
+
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
         }
             break;
         case PacketID::TeamData:
@@ -3715,6 +3719,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 //do this here if we're a guest!!
                 updateLobbyAvatars();
             }
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
         }
             break;
         case PacketID::CoinBucketed:
@@ -4329,6 +4334,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
             updateLobbyAvatars(); //updates the team mode display
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
             break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())
