@@ -2299,7 +2299,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
     Timeline::addEvent(Timeline::Event::EndOfRound);
 
     //allow teams in hotseat
-    if (m_sharedData.teamMode)
+    if (m_sharedData.teamMode
+        && m_humanCount != 0)
     {
         Achievements::setActive(true);
         Achievements::awardAchievement(AchievementStrings[AchievementID::Tag]);

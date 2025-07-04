@@ -41,6 +41,9 @@ source distribution.
 #include "../GolfGame.hpp"
 
 #include <Social.hpp>
+#ifdef USE_GNS
+#include <SteamBeta.hpp>
+#endif
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
@@ -75,7 +78,11 @@ source distribution.
 
 using namespace cl;
 
+#ifdef USE_GNS
+#define GROUP_ENABLED (!Social::isSteamdeck() && SteamBeta::isOnBeta())
+#else
 #define GROUP_ENABLED false
+#endif
 //#define GROUP_ENABLED true
 
 namespace
