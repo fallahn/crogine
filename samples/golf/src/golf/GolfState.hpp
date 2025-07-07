@@ -436,7 +436,7 @@ private:
                     return 10.f;
                 case CameraID::Idle:
                 case CameraID::Bystander:
-                    return 11.f;
+                    return 14.f;
                 case CameraID::Transition:
                 case CameraID::Sky:
                 case CameraID::Drone:

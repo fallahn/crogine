@@ -170,13 +170,15 @@ namespace
         std::vector<char> icon;
     };
 
-    const std::array<Emote, 25u> Emotes =
+    const std::array<Emote, 30u> Emotes =
     {
         Emote({0x1F600}), Emote({0x1F601}), Emote({0x1F602}), Emote({0x1F929}), Emote({0x1F61B}),
         Emote({0x1F914}), Emote({0x1F92D}), Emote({0x1F973}), Emote({0x1F60E}), Emote({0x1F644}),
         Emote({0x1F62C}), Emote({0x1F632}), Emote({0x1F633}), Emote({0x1F629}), Emote({0x1F624}),
         Emote({0x1F3C6}), Emote({0x1F947}), Emote({0x1F948}), Emote({0x1F949}), Emote({0x26F3}),
         Emote({0x2764}),  Emote({0x1F573}), Emote({0x1F4A5}), Emote({0x1F4A8}), Emote({0x1F4A4}),
+
+        Emote({0x1F373}),  Emote({0x1F426}), Emote({0x1F985}), Emote({0x1F40D}), Emote({0x1F40A}),
     };
 
     static constexpr std::size_t MAX_HISTORY = 10;
@@ -472,7 +474,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         {
                             ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
 
-                            for (auto i = 0; i < 25; ++i)
+                            for (auto i = 0u; i < Emotes.size(); ++i)
                             {
                                 if (ImGui::Button(Emotes[i].icon.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                                 {
