@@ -131,6 +131,7 @@ private:
     VoiceChat m_voiceChat;
     MatchMaking m_matchMaking;
     cro::ResourceCollection m_resources;
+    void playMessageSound();
 
     TimeOfDay m_tod;
     cro::RenderTexture m_lightProjectionMap;

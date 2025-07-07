@@ -1868,6 +1868,7 @@ bool MenuState::simulate(float dt)
         m_printTimer.restart();
         const auto& [s, c] = m_printQueue.front();
         m_textChat.printToScreen(s, c);
+        playMessageSound();
         m_printQueue.pop();
     }
 
@@ -1968,6 +1969,21 @@ void MenuState::render()
 }
 
 //private
+void MenuState::playMessageSound()
+{
+    float pitch = static_cast<float>(cro::Util::Random::value(7, 13)) / 10.f;
+    auto& e = m_audioEnts[AudioID::Message].getComponent<cro::AudioEmitter>();
+    e.setPitch(pitch);
+    if (e.getState() == cro::AudioEmitter::State::Playing)
+    {
+        e.setPlayingOffset(cro::seconds(0.f));
+    }
+    else
+    {
+        e.play();
+    }
+}
+
 void MenuState::addSystems()
 {
     //const auto basePath = std::string("assets/golf/sound/avatars/");
@@ -3669,10 +3685,12 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 if (value)
                 {
                     m_textChat.printToScreen("Host has enabled Snek", CD32::Colours[CD32::BlueLight]);
+                    playMessageSound();
                 }
                 else
                 {
                     m_textChat.printToScreen("Host has disabled Snek", CD32::Colours[CD32::BlueLight]);
+                    playMessageSound();
                 }
             }
             else if (ruleType == RuleMod::BigBalls)
@@ -3680,10 +3698,12 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 if (value)
                 {
                     m_textChat.printToScreen("Host has enabled Big Balls", CD32::Colours[CD32::BlueLight]);
+                    playMessageSound();
                 }
                 else
                 {
                     m_textChat.printToScreen("Host has disabled Big Balls", CD32::Colours[CD32::BlueLight]);
+                    playMessageSound();
                 }
             }
 
@@ -3785,17 +3805,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::ChatMessage:
             if (m_textChat.handlePacket(evt.packet))
             {
-                float pitch = static_cast<float>(cro::Util::Random::value(7, 13)) / 10.f;
-                auto& e = m_audioEnts[AudioID::Message].getComponent<cro::AudioEmitter>();
-                e.setPitch(pitch);
-                if (e.getState() == cro::AudioEmitter::State::Playing)
-                {
-                    e.setPlayingOffset(cro::seconds(0.f));
-                }
-                else
-                {
-                    e.play();
-                }
+                playMessageSound();
             }
             break;
         case PacketID::ClientPlayerCount:

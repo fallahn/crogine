@@ -2112,6 +2112,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     }
                     //showNotification(s);
                     m_textChat.printToScreen(s, CD32::Colours[CD32::BlueLight]);
+                    postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
                 }
 
                 break;
@@ -5031,7 +5032,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
             updateScoreboard(); //moves the snek icon
             m_textChat.printToScreen(cro::String(std::uint32_t(0x1F40D)) + m_sharedData.connectionData[client].playerData[player].name + " now has the Snek!", CD32::Colours[CD32::BlueLight]);
-        
+            postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
+
             WebSock::broadcastPacket(evt.packet.getDataRaw());
         }
             break;
@@ -5218,6 +5220,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             s += " was eliminated.";
             //showNotification(s);
             m_textChat.printToScreen(s, CD32::Colours[CD32::BlueLight]);
+            postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
 
             postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::PlayerEliminated;
         }
@@ -5257,6 +5260,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
             //showNotification(s);
             m_textChat.printToScreen(s, CD32::Colours[CD32::BlueLight]);
+            postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
         }
             break;
         case PacketID::WeatherChange:
@@ -8029,7 +8033,7 @@ float GolfState::getGroundRotation(glm::vec3 pos, float yRot, bool flipped) cons
 
     const auto groundHeight = m_collisionMesh.getTerrain(pos + offset).height - pos.y;
 
-    if (std::abs(groundHeight) < 0.1f)
+    if (std::abs(groundHeight) < 0.2f)
     {
         float offsetRot = getOffsetRotation(groundHeight);
         if (!flipped)
