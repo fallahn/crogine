@@ -1217,6 +1217,18 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    auto labelEnt = m_uiScene.createEntity();
+    labelEnt.addComponent<cro::Transform>().setPosition({ 18.f, 12.f });
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(smallFont).setString("Leave");
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+    entity.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(labelEnt).width;
 
 
     //add player button
@@ -1271,9 +1283,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
 
-    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-
-    auto labelEnt = m_uiScene.createEntity();
+    labelEnt = m_uiScene.createEntity();
     labelEnt.addComponent<cro::Transform>().setPosition({ 18.f, 12.f });
     labelEnt.addComponent<cro::Drawable2D>();
     labelEnt.addComponent<cro::Text>(smallFont).setString("Add Player");
@@ -1414,6 +1424,32 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<UIElement>().absolutePosition.x = -bounds.width;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
+
+    labelEnt = m_uiScene.createEntity();
+    labelEnt.addComponent<cro::Transform>().setPosition({ -4.f, 12.f });
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(smallFont).setString("Join");
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    labelEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+    labelEnt.addComponent<cro::Callback>().active = true;
+    labelEnt.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float) 
+        {
+            if (m_sharedData.hosting)
+            {
+                e.getComponent<cro::Text>().setString("Create");
+            }
+            else
+            {
+                e.getComponent<cro::Text>().setString("Join");
+            }
+        };
+    entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+    entity.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(labelEnt).width;
+    entity.getComponent<cro::UIInput>().area.left -= cro::Text::getLocalBounds(labelEnt).width;
 
     //make sure any active players are included in the list
     updateRoster();

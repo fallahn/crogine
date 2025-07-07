@@ -649,6 +649,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 {
                     constexpr std::uint16_t d = (std::uint8_t(RuleMod::Snek) << 8) | std::uint8_t(1);
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    cro::Console::print("snek enabled");
                 }
             }
             else if (param == "0")
@@ -659,6 +661,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                     //yes, OR'ing 0 is redundant, but it's explicit
                     constexpr std::uint16_t d = (std::uint8_t(RuleMod::Snek) << 8) | std::uint8_t(0);
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    cro::Console::print("snek disabled");
                 }
             }
             else
@@ -676,6 +680,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 {
                     constexpr std::uint16_t d = (std::uint8_t(RuleMod::BigBalls) << 8) | std::uint8_t(1);
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    cro::Console::print("big balls enabled");
                 }
             }
             else if (param == "0")
@@ -686,6 +692,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                     //yes, OR'ing 0 is redundant, but it's explicit
                     constexpr std::uint16_t d = (std::uint8_t(RuleMod::BigBalls) << 8) | std::uint8_t(0);
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    cro::Console::print("big balls disabled");
                 }
             }
             else
