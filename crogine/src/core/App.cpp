@@ -991,7 +991,7 @@ void App::handleMessages()
 void App::doImGui()
 {
     ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplSDL2_NewFrame(m_window.m_window);
+    ImGui_ImplSDL2_NewFrame(/*m_window.m_window*/);
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
 
