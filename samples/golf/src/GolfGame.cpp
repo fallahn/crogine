@@ -2605,7 +2605,7 @@ void GolfGame::createHowTo()
                             break;
                         case pg::Item::Image:
                         {
-                            const float PaneWidth = (ImGui::GetWindowSize().x - NavWidth);
+                            //const float PaneWidth = (ImGui::GetWindowSize().x - NavWidth);
                             //const float NavScale = std::min(1.f, PaneWidth / ImGui::GetWindowSize().x);
 
                             ImGui::NewLine();

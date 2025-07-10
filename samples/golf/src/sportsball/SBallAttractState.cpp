@@ -52,7 +52,7 @@ source distribution.
 namespace
 {
     float tabScrollTime = 0.f;
-    std::int32_t lastInput = InputType::Keyboard;
+    //std::int32_t lastInput = InputType::Keyboard;
 }
 
 SBallAttractState::SBallAttractState(cro::StateStack& ss, cro::State::Context ctx, const SharedStateData& ssd, SharedMinigameData& sd)

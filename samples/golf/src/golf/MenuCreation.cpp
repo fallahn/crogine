@@ -4430,7 +4430,7 @@ void MenuState::addCourseSelectButtons()
     //selection box to open player management
     static constexpr float Width = 56.f;
     static constexpr float Height = 14.f;
-    static constexpr float Thickness = 1.f;
+    //static constexpr float Thickness = 1.f;
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 6.f, 9.f, 0.5f });

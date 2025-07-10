@@ -925,7 +925,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //so we need to set this at least as high as the
                 //tallest terrain point (can we use the mesh AABB?)
 
-                static constexpr float SearchHeight = 15.f;
+                //static constexpr float SearchHeight = 15.f;
 
                 auto start = ball.startPoint;
                 //start.y = SearchHeight;

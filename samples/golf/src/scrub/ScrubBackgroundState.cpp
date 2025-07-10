@@ -61,10 +61,10 @@ namespace
     static constexpr std::array Path03 = { glm::vec3(-7.f, 0.f, 30.f),glm::vec3(-7.f, 0.f, 21.f), glm::vec3(-7.f, 0.f, 11.5f), glm::vec3(-7.f, 0.f, 6.5f) };
     //static constexpr std::array Path03 = { glm::vec3(76.f, 0.f, 9.5f), glm::vec3(8.f, 0.f, 9.5f), glm::vec3(-30.f, 0.f, 9.5f),glm::vec3(-70.f, 0.f, 9.5f) };
 
-    namespace Debug
+    /*namespace Debug
     {
         float rotate = 0.f;
-    }
+    }*/
 }
 
 ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Context ctx, SharedMinigameData& sd)

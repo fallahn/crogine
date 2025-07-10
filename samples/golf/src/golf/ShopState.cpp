@@ -158,14 +158,14 @@ namespace
         float value = 0.f; //+/- 10
     };
 
-    void applyButtonBackgroundColour(const cro::Colour c, cro::Entity e)
+    /*void applyButtonBackgroundColour(const cro::Colour c, cro::Entity e)
     {
         auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
         for (auto& v : verts)
         {
             v.colour = c;
         }
-    }
+    }*/
 
     struct ButtonTexID final
     {

@@ -122,7 +122,7 @@ namespace
         };
     };
 
-    std::size_t courseIndex = 0;
+    //std::size_t courseIndex = 0;
 
     bool showStats = false;
 }
