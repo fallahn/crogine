@@ -74,7 +74,7 @@ namespace
     std::int32_t lastActiveController = -1;
 }
 
-InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
+InputParser::InputParser(SharedStateData& sd, cro::Scene* s)
     : m_sharedData      (sd),
     m_inputBinding      (sd.inputBinding),
     m_gameScene         (s),
@@ -1241,6 +1241,12 @@ void InputParser::updateStroke(float dt)
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = m_isCPU ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
 
+                //if we're on the green toggle putt assist
+                if (m_terrain == TerrainID::Green)
+                {
+                    m_sharedData.showPuttingPower = !m_sharedData.showPuttingPower;
+                }
+
                 updateDistanceEstimation();
                 beginIcon();
             }
@@ -1272,6 +1278,12 @@ void InputParser::updateStroke(float dt)
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = m_isCPU? 0 : 1;
+                
+                if (m_terrain == TerrainID::Green)
+                {
+                    m_sharedData.showPuttingPower = !m_sharedData.showPuttingPower;
+                }
+                
                 updateDistanceEstimation();
                 beginIcon();
             }

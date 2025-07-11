@@ -50,7 +50,7 @@ class InputParser final //: public cro::GuiClient
 {
 public:
        
-    InputParser(const SharedStateData&, cro::Scene*);
+    InputParser(SharedStateData&, cro::Scene*);
 
     void handleEvent(const cro::Event&);
     void setHoleDirection(glm::vec3);
@@ -115,7 +115,7 @@ public:
 
     std::int32_t getLastActiveController() const;
 private:
-    const SharedStateData& m_sharedData;
+    SharedStateData& m_sharedData;
     const InputBinding& m_inputBinding;
     cro::Scene* m_gameScene;
 
