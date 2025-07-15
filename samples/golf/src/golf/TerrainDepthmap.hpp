@@ -63,7 +63,7 @@ public:
 private:
     std::uint32_t m_gridIndex;
     std::size_t m_srcTexture;
-    std::size_t m_dstTexture;
+    //std::size_t m_dstTexture;
     std::array<cro::DepthTexture, 1u> m_textures;
 
     cro::Scene m_scene;

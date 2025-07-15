@@ -36,12 +36,11 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
-struct SharedStateData;
 struct SharedMinigameData;
 class ScrubPauseState final : public cro::State
 {
 public:
-    ScrubPauseState(cro::StateStack&, cro::State::Context, SharedStateData&, SharedMinigameData&);
+    ScrubPauseState(cro::StateStack&, cro::State::Context, SharedMinigameData&);
 
     cro::StateID getStateID() const override { return StateID::ScrubPause; }
 
@@ -51,7 +50,6 @@ public:
     void render() override;
 
 private:
-    SharedStateData& m_sharedData;
     SharedMinigameData& m_sharedScrubData;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;

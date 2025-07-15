@@ -49,9 +49,8 @@ source distribution.
 
 #include <crogine/graphics/Font.hpp>
 
-ScrubPauseState::ScrubPauseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedMinigameData& sc)
+ScrubPauseState::ScrubPauseState(cro::StateStack& ss, cro::State::Context ctx, SharedMinigameData& sc)
     : cro::State        (ss, ctx),
-    m_sharedData        (sd),
     m_sharedScrubData   (sc),
     m_uiScene           (ctx.appInstance.getMessageBus()),
     m_controllerIndex   (0)

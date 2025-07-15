@@ -99,7 +99,7 @@ namespace
 TerrainDepthmap::TerrainDepthmap()
     : m_gridIndex   (0),
     m_srcTexture    (0),
-    m_dstTexture    (1),
+    //m_dstTexture    (1),
     m_scene         (cro::App::getInstance().getMessageBus())
 {
     isDeck = Social::isSteamdeck();
