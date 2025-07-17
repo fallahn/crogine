@@ -54,7 +54,7 @@ public:
     cro::TextureID getTextureAt(std::uint32_t idx) const;
 
     //if there's only one hole loaded then we need to force swap indices
-    void forceSwap() { std::swap(m_srcTexture, m_dstTexture); }
+    void forceSwap() { /*std::swap(m_srcTexture, m_dstTexture);*/ }
 
     glm::ivec2 getGridCount() const;
     std::int32_t getTileCount() const;
@@ -63,8 +63,8 @@ public:
 private:
     std::uint32_t m_gridIndex;
     std::size_t m_srcTexture;
-    std::size_t m_dstTexture;
-    std::array<cro::DepthTexture, 2u> m_textures;
+    //std::size_t m_dstTexture;
+    std::array<cro::DepthTexture, 1u> m_textures;
 
     cro::Scene m_scene;
     cro::MeshResource m_meshes;

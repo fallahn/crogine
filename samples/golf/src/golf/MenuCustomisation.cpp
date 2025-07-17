@@ -244,6 +244,9 @@ void MenuState::createBallScene()
 
     ballTexCallback(m_ballCam.getComponent<cro::Camera>());
 
+
+    //parse the content firs into file paths - though
+    //these balls aren't actually loaded until after unlocks.
     const auto ContentDirs = Content::getInstallPaths();
     const std::string BallDir = "balls/";
     std::vector<std::string> ballFiles;
@@ -251,7 +254,7 @@ void MenuState::createBallScene()
     for (const auto& c : ContentDirs)
     {
         auto b = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + c + BallDir);
-        for (const auto f : b)
+        for (const auto& f : b)
         {
             ballFiles.push_back(c + BallDir + f);
         }
@@ -267,30 +270,62 @@ void MenuState::createBallScene()
         ballFiles.resize(ConstVal::MaxBalls);
     }
 
+    //we've specifically loaded the default ball first
+    ballFiles.erase(std::remove_if(ballFiles.begin(), ballFiles.end(), [](const std::string& s) { return s == "default.ball"; }), ballFiles.end());
+
+
     m_sharedData.ballInfo.clear();
 
-    //parse the default ball directory
-    for (const auto& file : ballFiles)
+
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile("assets/golf/balls/default.ball"))
     {
+        auto info = readBallCfg(cfg);
+        info.type = SharedStateData::BallInfo::Regular;
+
+        insertInfo(info, m_sharedData.ballInfo, true);
+    }
+
+    //TODO add the unlockable balls before the silly ones
+    std::vector<SharedStateData::BallInfo> delayedEntries;
+    const std::array<std::string, 5u> ShopPaths =
+    {
+        "assets/golf/balls/extra/tunnelrock.ball",
+        "assets/golf/balls/extra/flaxen.ball",
+        "assets/golf/balls/extra/hardings.ball",
+        "assets/golf/balls/extra/woodgear.ball",
+        "assets/golf/balls/extra/bns.ball",
+    };
+    
+    for (auto i = 0u; i < ShopPaths.size(); ++i)
+    {
+        const auto flag = (1 << (inv::ManufID::TunnelRock + i));
+
         cro::ConfigFile cfg;
-        if (cro::FileSystem::getFileExtension(file) == ".ball"
-            && cfg.loadFromFile(file))
+        if (cfg.loadFromFile(ShopPaths[i]))
         {
             auto info = readBallCfg(cfg);
-            info.type = SharedStateData::BallInfo::Regular;
+            info.type = SharedStateData::BallInfo::Unlock;
 
             //if we didn't find a UID create one from the file name and save it to the cfg
             if (info.uid == 0)
             {
-                info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                info.uid = SpookyHash::Hash32(ShopPaths[i].data(), ShopPaths[i].size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
-                cfg.save(file);
+                cfg.save(ShopPaths[i]);
             }
 
+            if ((m_sharedData.inventory.manufacturerFlags & flag) == 0)
+            {
+                info.locked = true;
+            }
+            //else
+            //{
+            //    //delayedEntries.push_back(info);
+            //}
             insertInfo(info, m_sharedData.ballInfo, true);
         }
     }
-
 
     //read in the info for unlockable balls - if valid
     //info is unlocked add it to ballModels now so it appears
@@ -311,7 +346,7 @@ void MenuState::createBallScene()
         10,20,30,40,50,100
     };
     const std::uint32_t level = Social::getLevel();
-    std::vector<SharedStateData::BallInfo> delayedEntries;
+
     for (auto i = 0u; i < SpecialPaths.size(); ++i)
     {
         cro::ConfigFile cfg;
@@ -413,6 +448,31 @@ void MenuState::createBallScene()
     }
 
 
+
+
+    //parse the default ball directory
+    for (const auto& file : ballFiles)
+    {
+        cro::ConfigFile cfg;
+        if (cro::FileSystem::getFileExtension(file) == ".ball"
+            && cfg.loadFromFile(file))
+        {
+            auto info = readBallCfg(cfg);
+            info.type = SharedStateData::BallInfo::Regular;
+
+            //if we didn't find a UID create one from the file name and save it to the cfg
+            if (info.uid == 0)
+            {
+                info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                cfg.addProperty("uid").setValue(info.uid);
+                cfg.save(file);
+            }
+
+            insertInfo(info, m_sharedData.ballInfo, true);
+        }
+    }
+
+
     //look in the user directory - only do this if the default dir is OK?
     const auto BallUserPath = Content::getUserContentPath(Content::UserContent::Ball);
     if (cro::FileSystem::directoryExists(BallUserPath))
@@ -482,10 +542,14 @@ void MenuState::createBallScene()
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
             //allow for double sided balls.
-            auto material = ballDef.hasSkeleton() ? m_resources.materials.get(m_materialIDs[MaterialID::BallSkinned])
-                : m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+            auto material = ballDef.hasSkeleton() ? 
+                m_resources.materials.get(m_materialIDs[MaterialID::BallSkinned])
+                : ballDef.getMaterial(0)->properties.count("u_normalMap") ?
+                m_resources.materials.get(m_materialIDs[MaterialID::BallBumped]) : m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
             applyMaterialData(ballDef, material);
+
             entity.getComponent<cro::Model>().setMaterial(0, material);
+
             if (entity.getComponent<cro::Model>().getMeshData().submeshCount > 1)
             {
                 material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
@@ -624,7 +688,7 @@ void MenuState::updateProfileTextures(std::size_t start, std::size_t count)
 
     for (auto i = start; i < start + count; ++i)
     {
-        const auto& flags = m_profileData.playerProfiles[i].avatarFlags;
+        const auto& flags = m_profileData.playerProfiles[i].playerData.avatarFlags;
         for (auto j = 0u; j < pc::ColourKey::Count; ++j)
         {
             m_profileTextures[i].setColour(pc::ColourKey::Index(j), flags[j]);
@@ -939,40 +1003,40 @@ void MenuState::parseAvatarDirectory()
     for (auto& profile : m_profileData.playerProfiles)
     {
         //make sure the profile avatar is actually available
-        const auto skinIndex = indexFromAvatarID(profile.skinID);
-        if (profile.skinID == 0
+        const auto skinIndex = indexFromAvatarID(profile.playerData.skinID);
+        if (profile.playerData.skinID == 0
             || m_sharedData.avatarInfo[skinIndex].locked)
         {
             //use first valid skin - locked skins are never loaded first
-            profile.skinID = m_sharedData.avatarInfo[0].uid;
+            profile.playerData.skinID = m_sharedData.avatarInfo[0].uid;
         }
 
         //and the hair
-        const auto hairIndex = indexFromHairID(profile.hairID);
+        const auto hairIndex = indexFromHairID(profile.playerData.hairID);
         if (m_sharedData.hairInfo[hairIndex].locked)
         {
-            profile.hairID = m_sharedData.hairInfo[0].uid;
+            profile.playerData.hairID = m_sharedData.hairInfo[0].uid;
         }
 
-        const auto hatIndex = indexFromHairID(profile.hairID);
+        const auto hatIndex = indexFromHairID(profile.playerData.hairID);
         if (m_sharedData.hairInfo[hatIndex].locked)
         {
-            profile.hatID = 0;
+            profile.playerData.hatID = 0;
         }
 
         //compare against list of unlocked balls and make sure we're in it
-        auto ballID = indexFromBallID(profile.ballID);
+        auto ballID = indexFromBallID(profile.playerData.ballID);
         if (ballID >= m_profileData.ballDefs.size()
             || m_sharedData.ballInfo[ballID].locked)
         {
-            profile.ballID = 0;
+            profile.playerData.ballID = 0;
         }
 
-        m_profileTextures.emplace_back(m_sharedData.avatarInfo[indexFromAvatarID(profile.skinID)].texturePath);
+        m_profileTextures.emplace_back(m_sharedData.avatarInfo[indexFromAvatarID(profile.playerData.skinID)].texturePath);
 
-        if (!profile.mugshot.empty())
+        if (!profile.playerData.mugshot.empty())
         {
-            m_profileTextures.back().setMugshot(profile.mugshot);
+            m_profileTextures.back().setMugshot(profile.playerData.mugshot);
         }
     }
     updateProfileTextures(0, m_profileTextures.size());

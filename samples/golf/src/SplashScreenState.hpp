@@ -80,6 +80,7 @@ private:
     void addSystems();
     void loadAssets();
     void createUI();
+    void gotoMenu();
 
     //assigned to camera resize callback
     void updateView(cro::Camera&);

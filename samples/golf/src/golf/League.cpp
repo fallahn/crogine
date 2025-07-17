@@ -95,13 +95,13 @@ namespace
         }
     }
 
-    constexpr std::int32_t SkillRoof = 10; //after this many increments the skills stop getting better - just shift around
+    constexpr std::int32_t SkillRoof = 4;// 5; //after this many increments the skills stop getting better - just shift around
     constexpr float BaseQuality = 0.87f;
     constexpr float MinQuality = BaseQuality - 0.07f; //0.01 * PlayerCount/2
 
     //used to version the league data file
     constexpr std::uint32_t VersionMask = 0x000000ff;
-    constexpr std::uint8_t VersionNumber = 2;
+    constexpr std::uint8_t VersionNumber = 3;
 }
 
 League::League(std::int32_t id, const SharedStateData& sd)
@@ -310,11 +310,11 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         if (playerPos < 2 //increase in top 2
             && m_increaseCount < SkillRoof)
         {
-            increaseDifficulty();
+            //increaseDifficulty(); //disabled while we decide if this is better to increase club set difficulty
             m_increaseCount++;
         }
         else if (/*m_currentSeason > 1
-            &&*/ m_currentBest > 3) //if we played a couple of seasons and still not won, make it easier
+            &&*/ m_currentBest > 2) //if we played a couple of seasons and still not won, make it easier
         {
             decreaseDifficulty();
         }
@@ -527,31 +527,35 @@ void League::rollPlayers(bool resetScores)
 
     //for career leagues we want to increase the initial difficulty
     //as it remains at that level between seasons
-    std::int32_t maxIncrease = 0;
-    switch (m_id)
-    {
-    default: break;
-    //case LeagueRoundID::RoundTwo:
+    
+    //we've disabled this in favour of making extended club sets more
+    //difficult to use.
+    
+    //std::int32_t maxIncrease = 0;
+    //switch (m_id)
+    //{
+    //default: break;
+    ////case LeagueRoundID::RoundTwo:
+    ////    maxIncrease = 2;
+    //    break;
+    //case LeagueRoundID::RoundThree:
+    //    maxIncrease = 1;
+    //    break;
+    //case LeagueRoundID::RoundFour:
     //    maxIncrease = 2;
-        break;
-    case LeagueRoundID::RoundThree:
-        maxIncrease = 2;
-        break;
-    case LeagueRoundID::RoundFour:
-        maxIncrease = 3;
-        break;
-    case LeagueRoundID::RoundFive:
-        maxIncrease = 4;
-        break;
-    case LeagueRoundID::RoundSix:
-        maxIncrease = 4;
-        break;
-    }
+    //    break;
+    //case LeagueRoundID::RoundFive:
+    //    maxIncrease = 2;
+    //    break;
+    //case LeagueRoundID::RoundSix:
+    //    maxIncrease = 3;
+    //    break;
+    //}
 
-    for (auto i = 0; i < maxIncrease; ++i)
-    {
-        increaseDifficulty();
-    }
+    //for (auto i = 0; i < maxIncrease; ++i)
+    //{
+    //    increaseDifficulty();
+    //}
 }
 
 void League::increaseDifficulty()
@@ -559,7 +563,7 @@ void League::increaseDifficulty()
     //increase ALL player quality, but show a bigger improvement near the bottom
     for (auto i = 0u; i < PlayerCount; ++i)
     {
-        m_players[i].quality = std::min(1.f, m_players[i].quality + ((0.02f * i) / 10.f));
+        m_players[i].quality = std::min(0.99f, m_players[i].quality + ((0.02f * i) / 10.f));
 
         //modify chance of making mistake 
         auto outlier = m_players[i].outlier;
@@ -846,6 +850,7 @@ void League::read()
                 createSortedTable(); //this needs to be rebuilt now it knows what the last iteration ought to be
                 [[fallthrough]]; //if we're on V0 we definitely want to fall through to V1
             case 1:
+            case 2:
                 //updated league rule wants regenned players
                 rerollPlayers = true;
                 break;
@@ -1019,7 +1024,9 @@ void League::updateDB()
 ScoreCalculator::ScoreCalculator(std::int32_t clubset)
     : m_clubset (clubset)
 {
-
+    //this was added after making the use of pro clubs more difficult to cap
+    //CPU player difficulty at that level
+    //m_clubset = std::min(1, m_clubset);
 }
 
 //public
@@ -1056,7 +1063,9 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
     float quality = aim * power;
 
     //outlier for cock-up
-    if (cro::Util::Random::value(0, 49) < player.outlier)
+    const auto clubsetAdjust = (2 - m_clubset) * 3;
+
+    if (cro::Util::Random::value(0, 49) < (player.outlier + clubsetAdjust))
     {
         float errorAmount = static_cast<float>(cro::Util::Random::value(5, 7)) / 10.f;
         quality *= errorAmount;
@@ -1106,7 +1115,7 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
         //players with skill 0 (0 good, 2 bad) + good clubs have better chance of keeping the HIO
         //players with skill 2 and short clubs have worse chance of keeping the HIO
         const auto hioSkill = (std::max(1, player.skill) + (2 - m_clubset)) * 2;
-        if (cro::Util::Random::value(0, (40 + hioSkill)) != 0)
+        if (cro::Util::Random::value(0, (400 + hioSkill)) != 0)
         {
             holeScore += std::max(1, (par - 2));
         }
@@ -1162,7 +1171,7 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
     //special case on par 5's where eagle should be REALLY rare
     if (par >= 5)
     {
-        if (cro::Util::Random::value(-1, skill) != 0)
+        if (cro::Util::Random::value(-1, skill * 10) != 0)
         {
             holeScore = std::max(holeScore, 4);
         }
@@ -1177,7 +1186,7 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
     //comes back as zero - rather than fix my logic I'm going to paste over the cracks.
     if (holeScore == 0)
     {
-        holeScore = std::max(2, par + cro::Util::Random::value(-1, 1));
+        holeScore = std::max(3, par + cro::Util::Random::value(-1, 1));
     }
 
 
@@ -1199,20 +1208,35 @@ FriendlyPlayers::FriendlyPlayers(std::int32_t clubset)
 void FriendlyPlayers::updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar, std::int32_t windChance)
 {
     windChance = std::clamp(windChance, 1, 100);
-    for (auto& player : m_players)
+    for (auto& [player, isRival] : m_players)
     {
-        m_scoreCalculator.calculate(player, hole, par, overPar, m_holeScores[player.nameIndex]);
-
-        if (cro::Util::Random::value(0, 99) < windChance)
+        if (!isRival)
         {
-            m_holeScores[player.nameIndex][hole]++;
+            m_scoreCalculator.calculate(player, hole, par, overPar, m_holeScores[player.nameIndex]);
+
+            if (cro::Util::Random::value(0, 99) < windChance)
+            {
+                m_holeScores[player.nameIndex][hole]++;
+            }
+        }
+        else
+        {
+            //pull the score from the stored stats
+            m_holeScores[player.nameIndex][hole] = m_rivalScores[hole];
         }
     }
 }
 
-void FriendlyPlayers::addPlayer(LeaguePlayer p)
+void FriendlyPlayers::addPlayer(const LeaguePlayer& p)
 {
-    m_players.push_back(p);
+    m_players.push_back(std::make_pair(p, false));
+}
+
+void FriendlyPlayers::addRival(const LeaguePlayer& p, const std::vector<std::uint8_t>& scores)
+{
+    CRO_ASSERT(scores.size() > 8, "");
+    m_players.push_back(std::make_pair(p, true));
+    m_rivalScores = scores;
 }
 
 void FriendlyPlayers::setHoleScores(std::int32_t playerNameIndex, const HoleScores& scores)

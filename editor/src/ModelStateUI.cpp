@@ -2292,6 +2292,7 @@ void ModelState::drawBrowser()
                     if (ImGui::DragFloat3("Rotation##attachment", &rot[0], 1.f, -180.f, 180.f, "%3.2f"))
                     {
                         ap.setRotation(cro::Util::Vector::eulerToQuat(rot * cro::Util::Const::degToRad));
+                        //LogI << ap.getRotation() << std::endl;
                     }
 
                     if (ImGui::Button("R##scale"))
@@ -2413,6 +2414,27 @@ void ModelState::drawBrowser()
                 }
 
                 ImGui::EndChild();
+
+                /*ImGui::SameLine();
+                ImGui::BeginChild("##bone_scale", { 240.f, 0.f }, true);
+                
+                const auto boneCount = skel.getFrameSize();
+                if (boneCount)
+                {
+                    static float scale = 1.f;
+                    if (ImGui::SliderFloat("Bone Scale", &scale, 0.f, 3.f))
+                    {
+                        scale = std::clamp(scale, 0.f, 3.f);
+                        skel.
+                    }
+
+                    if (ImGui::InputInt("Bone", &m_boneScaleIndex))
+                    {
+                        m_boneScaleIndex = (m_boneScaleIndex + boneCount) % boneCount;
+                    }
+                }
+
+                ImGui::EndChild();*/
 
                 ImGui::EndTabItem();
             }

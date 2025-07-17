@@ -148,7 +148,8 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     Social::getMonthlyChallenge().refresh();
 
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
-    ctx.mainWindow.loadResources([this]() {
+    sd.clientConnection.launchThread();
+    ctx.mainWindow.loadResources([&]() {
         addSystems();
         loadResources();
         buildScene();
@@ -170,7 +171,9 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         cacheState(StateID::Leaderboard);
         cacheState(StateID::Stats);
         cacheState(StateID::League);
+        cacheState(StateID::Shop);
         });
+    sd.clientConnection.quitThread();
     Timeline::setGameMode(Timeline::GameMode::Menu);
     Timeline::setTimelineDesc("In the Clubhouse");
 
@@ -305,7 +308,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_sharedData.lobbyID = 0;
 
     Achievements::setActive(true);
-    Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
+    Social::setStatus(Social::InfoID::Menu, { "In the Clubhouse" });
     Social::setGroup(0);
     Social::getRandomBest();
 
@@ -337,6 +340,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 #endif
 
     cro::App::getInstance().resetFrameTime();
+    simulate(0.f);
 }
 
 ClubhouseState::~ClubhouseState()
@@ -543,10 +547,20 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::StateMessage)
     {
         const auto& data = msg.getData<cro::Message::StateEvent>();
-        if (data.action == cro::Message::StateEvent::Popped
-            && data.id == StateID::Keyboard)
+        if (data.action == cro::Message::StateEvent::Popped)
         {
-            applyTextEdit();
+            switch (data.id)
+            {
+            default: break;
+            case StateID::Shop:
+                Timeline::setTimelineDesc("In the Clubhouse");
+                Social::setStatus(Social::InfoID::Menu, { "In the Clubhouse" });
+                break;
+            case StateID::Keyboard:
+                applyTextEdit();
+                break;
+            }
+
         }
     }
     else if (msg.id == MatchMaking::MessageID)
@@ -624,8 +638,9 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<SystemEvent>();
         if (data.type == SystemEvent::ShadowQualityChanged)
         {
-            auto shadowRes = m_sharedData.hqShadows ? 4096 : 2048;
+            auto shadowRes = m_sharedData.shadowQuality ? ShadowMapHigh : ShadowMapLow;
             m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.create(shadowRes, shadowRes);
+            m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
         }
     }
     else if (msg.id == Social::MessageID::SocialMessage)
@@ -870,7 +885,7 @@ void ClubhouseState::loadResources()
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
-    if (m_sharedData.treeQuality == SharedStateData::Classic)
+    if (m_sharedData.treeQuality == SharedStateData::TreeQuality::Classic)
     {
         spriteSheet.loadFromFile("assets/golf/sprites/shrubbery_low.spt", m_resources.textures);
     }
@@ -1299,7 +1314,7 @@ void ClubhouseState::buildScene()
 
 
     //billboards
-    auto shrubPath = m_sharedData.treeQuality == SharedStateData::Classic ?
+    auto shrubPath = m_sharedData.treeQuality == SharedStateData::TreeQuality::Classic ?
         "assets/golf/models/shrubbery_low.cmt" :
         "assets/golf/models/shrubbery.cmt";
     if (md.loadFromFile(shrubPath))
@@ -1531,12 +1546,13 @@ void ClubhouseState::buildScene()
     camEnt.getComponent<cro::Transform>().setPosition({ 18.9f, 1.54f, -4.58f });
     camEnt.getComponent<cro::Transform>().setRotation(glm::quat(-0.31f, 0.004f, -0.95f, 0.0057f));
 
-    const auto shadowRes = m_sharedData.hqShadows ? 4096 : 2048;
+    const auto shadowRes = m_sharedData.shadowQuality ? ShadowMapHigh : ShadowMapLow;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     cam.shadowMapBuffer.create(shadowRes, shadowRes);
     cam.setMaxShadowDistance(11.f);
     cam.setShadowExpansion(9.9f);
+    cam.setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
     updateView(cam);
 
     auto sunEnt = m_backgroundScene.getSunlight();
@@ -1598,7 +1614,7 @@ void ClubhouseState::createTableScene()
 
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
-    cam.shadowMapBuffer.create(1024, 1024);
+    cam.shadowMapBuffer.create(512, 512);
     updateView(cam);
 
     auto sunEnt = m_tableScene.getSunlight();

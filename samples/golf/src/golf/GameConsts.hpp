@@ -34,6 +34,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "InputParser.hpp"
 #include "CommandIDs.hpp"
+#include "Clubs.hpp"
 #include "../GolfGame.hpp"
 
 #include <Social.hpp>
@@ -67,7 +68,7 @@ static constexpr float ToYards = 1.09361f;
 static constexpr float ToFeet = 3.281f;
 static constexpr float ToInches = 12.f;
 
-static inline constexpr std::int32_t CrowdDensityCount = 4;
+static inline constexpr std::int32_t CrowdDensityCount = 5;
 //decreased for each additional player to a minimum of 2
 //so max is actually 4 because we always have at least 2 players
 static inline constexpr std::uint8_t StartLives = 6;
@@ -122,7 +123,7 @@ static constexpr glm::vec3 DefaultSkycamPosition(MapSize.x / 2.f, SkyCamHeight, 
 static constexpr float BallPointSize = 1.4f;
 static constexpr float LongPuttDistance = 6.f;
 
-static constexpr float MinHook = 0.08f; //used to decide if we call a hook or slice in UI
+static constexpr float MinHook = 0.24f;// 0.08f; //used to decide if we call a hook or slice in UI
 static constexpr float MaxHook = -0.25f;
 static constexpr float KnotsPerMetre = 1.94384f;
 static constexpr float MPHPerMetre = 2.23694f;
@@ -155,7 +156,8 @@ static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, 
 
 static constexpr cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
 static constexpr cro::Colour SkyTop(0.678f, 0.851f, 0.718f);
-static constexpr cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
+//static constexpr cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
+static constexpr cro::Colour SkyBottom(0.15294f, 0.2196f, 0.6f);
 static constexpr cro::Colour SkyNight(std::uint8_t(101), 103, 178);
 //static constexpr cro::Colour SkyNight(std::uint8_t(69), 71, 130);
 static constexpr cro::Colour DropShadowColour(0.396f, 0.263f, 0.184f);
@@ -170,6 +172,49 @@ static constexpr glm::vec3 PreviewHairOffset(0.f, -0.29f, -0.008f);
 
 static constexpr float MinMusicVolume = 0.001f;
 static constexpr glm::uvec2 FlagTextureSize(336u, 240u);
+
+static constexpr std::uint32_t ShadowMapLowest = 512;
+static constexpr std::uint32_t ShadowMapLow = 2048;
+static constexpr std::uint32_t ShadowMapHigh = 3072;
+
+
+static inline std::uint32_t getShadowResolution(const SharedStateData& sd)
+{
+    /*
+    Lowest, Low, High, Highest, Classic
+    */
+    if (sd.shadowQuality == 0)
+    {
+        return ShadowMapLowest;
+    }
+    else if (sd.shadowQuality == 4)
+    {
+        //classic shadows
+        return ShadowMapLow;
+    }
+
+    if (sd.nightTime)
+    {
+        if (Social::isSteamdeck())
+        {
+            return sd.shadowQuality > 1 ? ShadowMapHigh / 2 : ShadowMapLow / 2;
+        }
+        return sd.shadowQuality > 1 ? ShadowMapLow : ShadowMapLow / 2;
+    }
+    return sd.shadowQuality > 1 ? ShadowMapHigh : ShadowMapLow;
+}
+
+static inline std::uint32_t getCascadeCount(std::int32_t q)
+{
+    //return std::clamp(q + 1, 1, 3);
+    return q == 3 ? 3 : 1;
+}
+
+static inline std::uint32_t getBlurPassCount(std::int32_t q)
+{
+    //very low or Classic
+    return (q == 0 || q == 4) ? 0 : 1;
+}
 
 class btVector3;
 glm::vec3 btToGlm(btVector3 v);
@@ -237,7 +282,8 @@ struct SpriteAnimID final
         BillboardRewind,
         Footstep,
         Pump,
-        Swoosh
+        Swoosh,
+        BillboardPause
     };
 };
 
@@ -263,6 +309,7 @@ struct ShaderID final
         Horizon,
         HorizonSun,
         Terrain,
+        TerrainShadow,
         Billboard,
         BillboardShadow,
         Cel,
@@ -293,12 +340,14 @@ struct ShaderID final
         CourseGreen,
         CourseGrid,
         Ball,
+        BallBumped,
         BallSkinned,
         BallNight,
         BallNightSkinned,
         BallWasher,
         Slope,
         Minimap,
+        MinimapModel,
         MinimapView,
         TutorialSlope,
         Wireframe,
@@ -334,21 +383,9 @@ struct ShaderID final
         Roids,
         Tonemapping,
         FlagPreview,
-        Emissive
+        Emissive,
+        Hole
     };
-};
-
-struct AnimationID final
-{
-    enum
-    {
-        Idle, Swing, Chip, Putt,
-        Celebrate, Disappoint,
-        Impatient, IdleStand,
-        Count,
-
-    };
-    static constexpr std::size_t Invalid = std::numeric_limits<std::size_t>::max();
 };
 
 struct SkipState final
@@ -363,15 +400,47 @@ struct SkipState final
     bool displayControllerMessage = false;
 };
 
-struct Avatar final
+struct CreditID final
 {
-    bool flipped = false;
-    cro::Entity model;
-    cro::Attachment* hands = nullptr;
-    std::array<std::size_t, AnimationID::Count> animationIDs = {};
-    cro::Entity ballModel;
-    std::uint32_t clubModelID = 0;
+    enum
+    {
+        TournyRound = 300,
+        TournyFinal = 2000,
+        TournySecond = 1500,
+
+        FreePlayFirst = 100,
+        FreePlaySecond = 80,
+        FreePlayThird = 60,
+
+        LeagueRoundFirst = 250,
+        LeagueRoundSecond = 200,
+        LeagueRoundThird = 150,
+
+        LeagueWinFirst = 1500,
+        LeagueWinSecond = 1250,
+        LeagueWinThird = 1000,
+    };
 };
+static constexpr std::int32_t MaxCredits = 999999;
+static inline void awardCredits(std::int32_t value)
+{
+    const auto clubLevel = Club::getClubLevel();
+    switch (clubLevel)
+    {
+    default: break;
+    case 1:
+        value += (value / 4);
+        break;
+    case 2:
+        value += (value / 2);
+        break;
+    }
+
+
+    auto* msg = cro::App::getInstance().getMessageBus().post<Social::SocialEvent>(Social::MessageID::SocialMessage);
+    msg->type = Social::SocialEvent::CreditsAwarded;
+    msg->level = value;
+}
 
 static inline std::int32_t courseOfTheMonth()
 {
@@ -388,7 +457,6 @@ static inline float getOffsetRotation(float heightToGround)
     const float c = std::sqrt((a * a) + PlayerDist);
     return std::asin(a / c) * cro::Util::Maths::sgn(heightToGround);
 }
-
 
 static inline float getWindMultiplier(float ballHeight, float distanceToPin)
 {
@@ -636,17 +704,147 @@ static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated)
 
     if (decimated)
     {
+        static constexpr std::array Offsets =
+        {
+            0.0001f, 0.0002f, 0.0004f, 0.0008f
+        };
+
         return
         {
             //gold
             cro::Vertex2D(glm::vec2(0.f, 0.5f), TextGoldColour),
             cro::Vertex2D(glm::vec2(0.f, -0.5f), TextGoldColour),
 
-            cro::Vertex2D(glm::vec2(0.4575f, 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.4575f, -0.5f), TextGoldColour),
 
-            cro::Vertex2D(glm::vec2(0.4575f, 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.4575f, -0.5f), TextGoldColour),
+            //05 - 0.045 0.055
+            cro::Vertex2D(glm::vec2(0.045f - Offsets[3], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.045f - Offsets[3], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.045f - Offsets[3], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.045f - Offsets[3], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.055f - Offsets[3], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.055f - Offsets[3], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.055f - Offsets[3], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.055f - Offsets[3], -0.5f), TextGoldColour),
+
+
+            //1 - 0.095 0.105
+            cro::Vertex2D(glm::vec2(0.095f - Offsets[2], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.095f - Offsets[2], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.095f - Offsets[2], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.095f - Offsets[2], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.105f - Offsets[2], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.105f - Offsets[2], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.105f - Offsets[2], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.105f - Offsets[2], -0.5f), TextGoldColour),
+
+
+            //15 - 0.145 0.155
+            cro::Vertex2D(glm::vec2(0.145f - Offsets[1], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.145f - Offsets[1], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.145f - Offsets[1], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.145f - Offsets[1], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.155f - Offsets[1], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.155f - Offsets[1], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.155f - Offsets[1], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.155f - Offsets[1], -0.5f), TextGoldColour),
+
+
+            //2 - 0.195 0.205
+            cro::Vertex2D(glm::vec2(0.195f - Offsets[0], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.195f - Offsets[0], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.195f - Offsets[0], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.195f - Offsets[0], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.205f - Offsets[0], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.205f - Offsets[0], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.205f - Offsets[0], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.205f - Offsets[0], -0.5f), TextGoldColour),
+
+
+
+            //25 - 0.245 0.255
+            cro::Vertex2D(glm::vec2(0.245f, 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.245f, -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.245f, 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.245f, -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.255f, 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.255f, -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.255f, 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.255f, -0.5f), TextGoldColour),
+
+
+            //3 - 0.295 0.305
+            cro::Vertex2D(glm::vec2(0.295f + Offsets[0], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.295f + Offsets[0], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.295f + Offsets[0], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.295f + Offsets[0], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.305f + Offsets[0], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.305f + Offsets[0], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.305f + Offsets[0], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.305f + Offsets[0], -0.5f), TextGoldColour),
+
+
+            //35 - 0.345 0.355
+            cro::Vertex2D(glm::vec2(0.345f + Offsets[1], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.345f + Offsets[1], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.345f + Offsets[1], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.345f + Offsets[1], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.355f + Offsets[1], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.355f + Offsets[1], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.355f + Offsets[1], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.355f + Offsets[1], -0.5f), TextGoldColour),
+
+
+            //4 - 0.395 0.405
+            cro::Vertex2D(glm::vec2(0.395f + Offsets[2], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.395f + Offsets[2], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.395f + Offsets[2], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.395f + Offsets[2], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.405f + Offsets[2], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.405f + Offsets[2], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.405f + Offsets[2], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.405f + Offsets[2], -0.5f), TextGoldColour),
+
+
+
+            //45 0.445 0. 455
+            cro::Vertex2D(glm::vec2(0.445f + Offsets[3], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.445f + Offsets[3], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.445f + Offsets[3], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.445f + Offsets[3], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.455f + Offsets[3], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.455f + Offsets[3], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.455f + Offsets[3], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.455f + Offsets[3], -0.5f), TextGoldColour),
+
+
+
 
             cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
             cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
@@ -857,6 +1055,11 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
             dest.setProperty("u_maskMap", cro::TextureID(m->properties.at("u_maskMap").second.textureID));
         }
 
+        if (m->properties.count("u_normalMap"))
+        {
+            dest.setProperty("u_normalMap", cro::TextureID(m->properties.at("u_normalMap").second.textureID));
+        }
+
         if (m->properties.count("u_colour")
             && dest.properties.count("u_colour"))
         {
@@ -1016,6 +1219,8 @@ struct SkyboxMaterials final
     std::int32_t skinned = -1;
     std::int32_t glass = -1;
     
+    bool showWater = true;
+
     //if loading the skybox finds a 
     //sun position this is set to true
     //it's then up to the current game
@@ -1023,6 +1228,7 @@ struct SkyboxMaterials final
     bool requestLensFlare = false;
     glm::vec3 sunPos = glm::vec3(0.f);
     cro::Colour sunColour = cro::Colour::White;
+
 };
 
 //returns the entity with the cloud ring (so we can apply material)
@@ -1078,6 +1284,10 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
                 else if (name == "clouds")
                 {
                     loadClouds = p.getValue<bool>();
+                }
+                else if (name == "water")
+                {
+                    materials.showWater = p.getValue<bool>();
                 }
             }
         }

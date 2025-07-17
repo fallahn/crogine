@@ -29,6 +29,7 @@ source distribution.
 
 #include "SharedStateData.hpp"
 #include "CommonConsts.hpp"
+#include "PacketIDs.hpp"
 
 struct PacketHeader final
 {
@@ -262,4 +263,37 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
     }
 
     return true;
+}
+
+void SharedStateData::ClientConnection::threadFunc() 
+{
+    while (threadRunning)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        if (connected)
+        {
+            net::NetEvent evt;
+            while (netClient.pollEvent(evt))
+            {
+                //HOWEVER we want to ignore irrelevant packets else this
+                //buffer can become incredibly LARGE before we get around
+                //to handling it in out destination state.
+                switch (evt.packet.getID())
+                {
+                default:
+                    eventBuffer.emplace_back(std::move(evt));
+                    break;
+                case PacketID::ActorUpdate:
+                case PacketID::WindDirection:
+                case PacketID::DronePosition:
+                case PacketID::ClubChanged:
+                case PacketID::PingTime:
+                    //skip these while loading it just fills up the buffer
+                    break;
+                }
+                evt = {}; //not strictly necessary but squashes warning about re-using a moved object
+            }
+        }
+    }
 }

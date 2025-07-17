@@ -250,7 +250,8 @@ bool TimeOfDay::doSnow() const
     //return true;
 
     static constexpr std::int32_t MinChance = 5;
-    if (cro::SysTime::now().months() == 12)
+    if (cro::SysTime::now().months() == 12
+        && m_latlon.x > 0) //check we're actin *in* the north
     {
         //up north
         const float chance = 30.f * std::clamp((m_latlon.x / MaxLat), 0.f, 1.f);
@@ -258,7 +259,8 @@ bool TimeOfDay::doSnow() const
         //TODO this should probably be some curve or smoothstep, but eh.
         return cro::Util::Random::value(0, MinChance + static_cast<std::int32_t>(chance)) == 0;
     }
-    else if (cro::SysTime::now().months() == 6)
+    else if (cro::SysTime::now().months() == 6
+        && m_latlon.x < 0)
     {
         //down south
         const float chance = 30.f * std::clamp((m_latlon.x / MinLat), 0.f, 1.f);

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -43,6 +43,7 @@ Camera::Camera()
     m_orthographic      (false),
     m_maxShadowDistance (std::numeric_limits<float>::max()),
     m_shadowExpansion   (0.f),
+    m_blurPasses        (0),
     m_dirtyTx           (true)
 {
     glm::vec2 windowSize(App::getWindow().getSize());
@@ -226,10 +227,14 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
     }
 }
 
-void Camera::setMaxShadowDistance(float distance)
+void Camera::setMaxShadowDistance(float distance, bool updateCorners)
 {
     m_maxShadowDistance = std::min(m_farPlane, std::max(m_nearPlane + 0.05f, distance));
-    updateFrustumCorners(m_frustumSplits.size());
+    
+    if (updateCorners)
+    {
+        updateFrustumCorners(m_frustumSplits.size());
+    }
 
     //TODO update the frustum splits if this is an ortho camera.
 }
@@ -332,8 +337,8 @@ glm::vec3 Camera::pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize) 
 //private
 void Camera::updateFrustumCorners(std::size_t numSplits)
 {
-    float tanHalfFOVY = std::tan(m_verticalFOV / 2.f);
-    float tanHalfFOVX = std::tan((m_verticalFOV * m_aspectRatio) / 2.f);
+    const float tanHalfFOVY = std::tan(m_verticalFOV / 2.f);
+    const float tanHalfFOVX = std::tan((m_verticalFOV * m_aspectRatio) / 2.f);
 
     float xNear = (m_nearPlane * tanHalfFOVX);
     float xFar = (m_farPlane * tanHalfFOVX);

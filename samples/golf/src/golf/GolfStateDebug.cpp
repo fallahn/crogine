@@ -562,6 +562,43 @@ void GolfState::registerDebugCommands()
             }
         });
 
+    registerCommand("cl_clubset", [&](const std::string& val)
+        {
+            const auto applySetting = [&]()
+                {
+                    m_allowAchievements = false;
+                    Social::setLeaderboardsEnabled(false);
+
+                    Club::setClubLevel(m_sharedData.clubSet);
+
+                    if (m_inputParser.getActive())
+                    {
+                        cro::Console::print("Club set is now level " + val + ", and will take effect on next player turn. Achievements are disabled.");
+                    }
+                };
+
+
+            if (val == "0")
+            {
+                m_sharedData.clubSet = 0;
+                applySetting();
+            }
+            else if (val == "1")
+            {
+                m_sharedData.clubSet = 1;
+                applySetting();
+            }
+            else if (val == "2")
+            {
+                m_sharedData.clubSet = 2;
+                applySetting();
+            }
+            else
+            {
+                cro::Console::print("Usage: cl_clubset <0|2> where 0 is Casual, 1 is Expert and 2 is Pro. This will also disable all achievements.");
+            }
+        });
+
     //nasssssty staticses
     static bool showKickWindow = false;
     if (m_sharedData.hosting)
@@ -705,35 +742,43 @@ void GolfState::registerDebugCommands()
         });
 #endif
 
-    /*registerWindow([&]()
-        {
-            const auto printCam = [](const std::string& s, bool active)
-                {
-                    if (active)
-                    {
-                        ImGui::ColorButton("##", ImVec4(0.f, 1.f, 0.f, 1.f));
-                    }
-                    else
-                    {
-                        ImGui::ColorButton("##", ImVec4(1.f, 0.f, 0.f, 1.f));
-                    }
-                    ImGui::SameLine();
-                    ImGui::Text("%s", s.c_str());
-                };
+    //registerWindow([&]()
+    //    {
+    //        const auto printCam = [](const std::string& s, bool active)
+    //            {
+    //                if (active)
+    //                {
+    //                    ImGui::ColorButton("##", ImVec4(0.f, 1.f, 0.f, 1.f));
+    //                }
+    //                else
+    //                {
+    //                    ImGui::ColorButton("##", ImVec4(1.f, 0.f, 0.f, 1.f));
+    //                }
+    //                ImGui::SameLine();
+    //                ImGui::Text("%s", s.c_str());
+    //            };
 
-            if (ImGui::Begin("Cams"))
-            {
-                for (auto i = 0u; i < CameraID::Count; ++i)
-                {
-                    printCam(CameraStrings[i], m_cameras[i].getComponent<cro::Camera>().active);
-                }
-                printCam("Flight Cam", m_flightCam.getComponent<cro::Camera>().active);
-                printCam("Green Cam", m_greenCam.getComponent<cro::Camera>().active);
-                printCam("Map Cam", m_mapCam.getComponent<cro::Camera>().active);
-            }
-            ImGui::End();
-        
-        });*/
+    //        if (ImGui::Begin("Cams"))
+    //        {
+    //            for (auto i = 0u; i < CameraID::Count; ++i)
+    //            {
+    //                printCam(CameraStrings[i], m_cameras[i].getComponent<cro::Camera>().active);
+    //            }
+    //            printCam("Flight Cam", m_flightCam.getComponent<cro::Camera>().active);
+    //            printCam("Green Cam", m_greenCam.getComponent<cro::Camera>().active);
+
+
+    //            auto& cam = m_cameras[m_currentCamera].getComponent<cro::Camera>();
+    //            auto dist = cam.getMaxShadowDistance();
+    //            if (ImGui::SliderFloat("Dist", &dist, 1.f, cam.getFarPlane()))
+    //            {
+    //                cam.setMaxShadowDistance(dist);
+    //            }
+
+    //        }
+    //        ImGui::End();
+    //    
+    //    });
 
     //registerWindow([&]()
     //    {
@@ -880,6 +925,15 @@ void GolfState::registerDebugWindows()
 {
     registerWindow([&]()
         {
+            /*ImGui::Begin("sdef");
+            for (auto& t : m_sharedData.nameTextures)
+            {
+                glm::vec2 size(t.getSize());
+                ImGui::Image(t.getTexture(), size, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::SameLine();
+            }
+            ImGui::End();*/
+
             //if (ImGui::Begin("Ball Cam"))
             //{
             //    glm::vec2 size(m_flightTexture.getSize());
@@ -1090,7 +1144,7 @@ void GolfState::dumpBenchmark()
             + " | Max fps: " + std::to_string (m_benchmark.maxRate) 
             + " | Average fps: " + std::to_string(m_benchmark.getAverage());
 
-        std::string shadowQ = m_sharedData.hqShadows ? "High" : "Low";
+        std::string shadowQ = m_sharedData.shadowQuality ? "High" : "Low";
         std::string vsync = cro::App::getWindow().getVsyncEnabled() ? " | vsync: ON" : " | vsync: OFF";
         std::string vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
         std::string renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));

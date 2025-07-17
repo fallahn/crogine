@@ -126,6 +126,24 @@ namespace cro
         include the texture coords of the sprite
         */
         static const std::string& getDefaultVertexShader();
+        
+        /*!
+        \brief Returns rhe default Fragment shader string for Drawabl2D components.
+        Define TEXTURED to use with textured objects and optionally FXAA to
+        render the item with FXAA anti-aliasing.
+        */
+        static const std::string& getDefaultFragmentShader();
+
+        /*!
+        \brief Returns the size of the drawlist at the given index
+        \param idx - retreive this with Camera::getDrawListIndex()
+        \returns draw list size
+        */
+        std::size_t getDrawListSize(std::size_t idx) const
+        {
+            CRO_ASSERT(idx < m_drawLists.size(), "");
+            return m_drawLists[idx].size();
+        }
 
     private:
 

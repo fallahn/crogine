@@ -29,53 +29,46 @@ source distribution.
 
 #pragma once
 
-#include <crogine/graphics/LoadingScreen.hpp>
-#include <crogine/detail/Types.hpp>
-#include <crogine/graphics/Shader.hpp>
-#include <crogine/graphics/Texture.hpp>
-#include <crogine/core/Clock.hpp>
+#include <crogine/audio/sound_system/MusicPlayer.hpp>
 
-#include <crogine/detail/glm/mat4x4.hpp>
+#include <crogine/core/HiResTimer.hpp>
+#include <crogine/detail/Types.hpp>
+#include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/LoadingScreen.hpp>
 
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/SimpleText.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/SimpleVertexArray.hpp>
 
 #include <vector>
-#include <memory>
+#include <atomic>
+#include <thread>
 
 struct SharedStateData;
 class LoadingScreen final : public cro::LoadingScreen
 {
 public:
     explicit LoadingScreen(SharedStateData&);
-    ~LoadingScreen();
 
     void launch() override;
     void update() override;
     void draw() override;
 
+    void quit() override;
+
+
 private:
     SharedStateData& m_sharedData;
 
-    std::uint32_t m_vao;
-    std::uint32_t m_vbo;
-    std::int32_t m_projectionIndex;
-    std::int32_t m_transformIndex;
-    std::int32_t m_frameIndex;
+    cro::SimpleVertexArray m_backgroundVerts;
+    cro::SimpleQuad m_loadingQuad;
+    cro::SimpleText m_tipText;
 
-    std::int32_t m_currentFrame;
-    static constexpr std::int32_t FrameCount = 8;
+    cro::MusicPlayer m_music;
 
-    cro::Shader m_shader;
-    glm::mat4 m_transform;
-    glm::mat4 m_projectionMatrix;
-    glm::uvec2 m_viewport;
-
-    cro::Clock m_clock;
-
-    cro::Texture m_texture;
-
-    cro::Font m_font;
-    std::unique_ptr<cro::SimpleText> m_tipText;
+    std::atomic<float> m_targetVolume;
+    float m_currentVolume;
+    cro::Clock m_threadClock;
+    void threadFunc();
 };

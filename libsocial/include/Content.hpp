@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <cstdint>
+
 #include <vector>
 #include <string>
 
@@ -48,6 +50,8 @@ public:
             Count
         };
     };
+    //returns the content path for the current user
     static std::string getBaseContentPath();
+    //returns the ubase content path plus the given user content dir
     static std::string getUserContentPath(std::int32_t);
 };

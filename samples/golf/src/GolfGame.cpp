@@ -35,9 +35,11 @@ source distribution.
 #include "ImTheme.hpp"
 #include "M3UPlaylist.hpp"
 #include "WebsocketServer.hpp"
+#include "rss/pugixml.hpp"
 
 #include "golf/MenuState.hpp"
 #include "golf/GolfState.hpp"
+#include "golf/ShopState.hpp"
 #include "golf/BilliardsState.hpp"
 #include "golf/ErrorState.hpp"
 #include "golf/OptionsState.hpp"
@@ -70,6 +72,7 @@ source distribution.
 #include "golf/PacketIDs.hpp"
 #include "golf/UnlockItems.hpp"
 #include "golf/Clubs.hpp"
+#include "golf/ClubInfoState.hpp"
 #include "golf/XPAwardStrings.hpp"
 
 #include "editor/BushState.hpp"
@@ -83,6 +86,10 @@ source distribution.
 #include "scrub/ScrubGameState.hpp"
 #include "scrub/ScrubPauseState.hpp"
 
+#include "sportsball/SBallBackgroundState.hpp"
+#include "sportsball/SBallAttractState.hpp"
+#include "sportsball/SBallGameState.hpp"
+
 #include "ErrorCheck.hpp"
 
 #include <AchievementIDs.hpp>
@@ -91,6 +98,7 @@ source distribution.
 #ifdef USE_GNS
 #include <AchievementsImpl.hpp>
 #include <Social.hpp>
+#include <Discord.hpp>
 #endif
 #ifdef USE_WORKSHOP
 #include <WorkshopState.hpp>
@@ -131,6 +139,23 @@ namespace
 #else
     bool safeMode = false;
 #endif
+
+    struct HelpNav final
+    {
+        std::int32_t chapterCount = 0;
+        std::int32_t scrollIndex = 0;
+        std::int32_t targetIndex = 0;
+
+        std::int32_t selectedScroll = 0;
+
+        bool wantsScroll = false;
+
+        float manualScroll = 0.f;
+        float currTime = 0.f;
+        static constexpr float ScrollTime = 0.025f;
+        static constexpr float ScrollAmount = 12.f;
+
+    }helpNav;
 
     els::SharedStateData elsShared;
 
@@ -196,6 +221,8 @@ GolfGame::GolfGame()
     //must be set before anything, else cfg is still loaded from default path
     setApplicationStrings("Trederia", "golf");
 
+    std::fill(m_sharedData.profileIndices.begin(), m_sharedData.profileIndices.end(), 0);
+
     m_stateStack.registerState<SplashState>(StateID::SplashScreen, m_sharedData);
     m_stateStack.registerState<KeyboardState>(StateID::Keyboard, m_sharedData);
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
@@ -204,7 +231,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);
-    m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData);
+    m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData, m_profileData);
     m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);
     m_stateStack.registerState<PauseState>(StateID::Pause, m_sharedData);
     m_stateStack.registerState<PlayerManagementState>(StateID::PlayerManagement, m_sharedData);
@@ -216,7 +243,9 @@ GolfGame::GolfGame()
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData, m_profileData, *this);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
+    m_stateStack.registerState<ShopState>(StateID::Shop, m_sharedData, m_profileData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
+    m_stateStack.registerState<ClubInfoState>(StateID::ClubInfo, m_sharedData);
     m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
     m_stateStack.registerState<LeaderboardState>(StateID::Leaderboard, m_sharedData);
     m_stateStack.registerState<StatsState>(StateID::Stats, m_sharedData);
@@ -230,10 +259,14 @@ GolfGame::GolfGame()
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
     m_stateStack.registerState<GCState>(StateID::GC);
 
-    m_stateStack.registerState<ScrubBackgroundState>(StateID::ScrubBackground, m_scrubData);
-    m_stateStack.registerState<ScrubAttractState>(StateID::ScrubAttract, m_sharedData, m_scrubData);
-    m_stateStack.registerState<ScrubGameState>(StateID::ScrubGame, m_sharedData, m_scrubData);
-    m_stateStack.registerState<ScrubPauseState>(StateID::ScrubPause, m_sharedData, m_scrubData);
+    m_stateStack.registerState<ScrubBackgroundState>(StateID::ScrubBackground, m_minigameData);
+    m_stateStack.registerState<ScrubAttractState>(StateID::ScrubAttract, m_sharedData, m_minigameData);
+    m_stateStack.registerState<ScrubGameState>(StateID::ScrubGame, m_sharedData, m_minigameData);
+    m_stateStack.registerState<ScrubPauseState>(StateID::ScrubPause, m_minigameData);
+
+    m_stateStack.registerState<SBallBackgroundState>(StateID::SBallBackground, m_sharedData, m_minigameData);
+    m_stateStack.registerState<SBallAttractState>(StateID::SBallAttract, m_sharedData, m_minigameData);
+    m_stateStack.registerState<SBallGameState>(StateID::SBallGame, m_sharedData, m_minigameData);
 
     m_sharedData.courseIndex = courseOfTheMonth();
 
@@ -258,6 +291,73 @@ void GolfGame::setSafeModeEnabled(bool sm)
 
 void GolfGame::handleEvent(const cro::Event& evt)
 {
+    if (m_sharedData.showHelp)
+    {
+        const auto doScroll =
+            [&]()
+            {
+                helpNav.wantsScroll = true;
+                auto* msg = postMessage<SystemEvent>(MessageID::SystemMessage);
+                msg->type = SystemEvent::MenuSwitched;
+            };
+
+        const auto scrollUp = 
+            [&]()
+            {
+                helpNav.targetIndex = (helpNav.selectedScroll + (helpNav.chapterCount - 1)) % helpNav.chapterCount;
+                doScroll();
+            };
+        const auto scrollDown = 
+            [&]()
+            {
+                helpNav.targetIndex = (helpNav.selectedScroll + 1) % helpNav.chapterCount;
+                doScroll();
+            };
+
+        switch (evt.type)
+        {
+        default: break;
+        case SDL_MOUSEBUTTONUP:
+            if (evt.button.button == SDL_BUTTON_RIGHT)
+            {
+                m_sharedData.showHelp = false;
+            }
+            break;
+        case SDL_CONTROLLERBUTTONUP:
+            switch (evt.cbutton.button)
+            {
+            default: break;
+            case cro::GameController::ButtonB:
+                m_sharedData.showHelp = false;
+                break;
+            case cro::GameController::DPadDown:
+                scrollDown();
+                break;
+            case cro::GameController::DPadUp:
+                scrollUp();
+                break;
+            }
+            break;
+        case SDL_KEYUP:
+            switch (evt.key.keysym.sym)
+            {
+            default: break;
+            case SDLK_ESCAPE:
+            case SDLK_BACKSPACE:
+                m_sharedData.showHelp = false;
+                break;
+            case SDLK_DOWN:
+                scrollDown();
+                break;
+            case SDLK_UP:
+                scrollUp();
+                break;
+            }
+            break;
+        }
+        return;
+    }
+
     switch (evt.type)
     {
     default: break;
@@ -289,7 +389,19 @@ void GolfGame::handleEvent(const cro::Event& evt)
             togglePixelScale(m_sharedData, true);
             break;
         case SDLK_KP_MULTIPLY:
-            m_sharedData.sharedResources->fonts.get(FontID::Label).setSmooth(true);
+            //hmm what was this for???
+            //m_sharedData.sharedResources->fonts.get(FontID::Label).setSmooth(true);
+        {
+            /*ProgressMessage m;
+            m.title = "Credits Awarded";
+            m.message = "Prize Reward: " + std::to_string(2000) + "Cr\nCurrent Balance : " + std::to_string(m_sharedData.inventory.balance) + "Cr";
+            m.type = ProgressMessage::Message;
+            m.audioID = ProgressMessage::Reward;
+            m_progressIcon->queueMessage(m);*/
+        }
+            break;
+        case SDLK_KP_DIVIDE:
+            m_sharedData.showHelp = true;
             break;
         }
         break;
@@ -308,6 +420,9 @@ void GolfGame::handleMessage(const cro::Message& msg)
             switch (data.id)
             {
             default: break;
+            case StateID::ClubInfo:
+                m_sharedData.showClubUpdate = false;
+                [[fallthrough]];
             case StateID::Options:
             case StateID::PlayerManagement:
             case StateID::MessageOverlay:
@@ -430,7 +545,12 @@ void GolfGame::handleMessage(const cro::Message& msg)
         }
         else if (data.type == Social::SocialEvent::MonthlyProgress)
         {
-            m_progressIcon->showChallenge(data.challengeID, data.level, data.reason);
+            ProgressMessage m;
+            m.index = data.challengeID;
+            m.progress = data.level;
+            m.total = data.reason;
+            m.type = ProgressMessage::Challenge;
+            m_progressIcon->queueMessage(m);
 
             if (data.challengeID > -1 &&
                 data.level == data.reason)
@@ -441,8 +561,54 @@ void GolfGame::handleMessage(const cro::Message& msg)
         }
         else if (data.type == Social::SocialEvent::LeagueProgress)
         {
-            m_progressIcon->showLeague(data.challengeID, data.level, data.reason);
+            ProgressMessage m;
+            m.index = data.challengeID;
+            m.progress = data.level;
+            m.total = data.reason;
+            m.type = ProgressMessage::League;
+            m_progressIcon->queueMessage(m);
+
             //achievement is awarded by League class on completion
+        }
+        else if (data.type == Social::SocialEvent::CreditsAwarded)
+        {
+            m_sharedData.inventory.balance = std::min(MaxCredits, m_sharedData.inventory.balance + data.level);
+            inv::write(m_sharedData.inventory);
+
+            ProgressMessage m;
+            m.title = "Credits Awarded";
+            m.message = "Prize Reward: " + std::to_string(data.level) + "Cr\nCurrent Balance : " + std::to_string(m_sharedData.inventory.balance) + "Cr";
+            m.type = ProgressMessage::Message;
+            m.audioID = ProgressMessage::Reward;
+            m_progressIcon->queueMessage(m);
+        }
+        else if (data.type == Social::SocialEvent::NewClubset)
+        {
+            ProgressMessage m;
+            m.title = inv::Manufacturers[data.level];
+            m.message = data.reason ? "New Ball Model Unlocked" : "New Clubset Model Unlocked";
+            m.type = ProgressMessage::Message;
+            m_progressIcon->queueMessage(m);
+
+            //hacky way of unlocking the ball model
+            if (auto res = std::find_if(m_sharedData.ballInfo.begin(), m_sharedData.ballInfo.end(), 
+                [&m](const SharedStateData::BallInfo& bi)
+                {
+                    return bi.label.find(m.title) != cro::String::InvalidPos;
+                }); 
+                res != m_sharedData.ballInfo.end())
+            {
+                res->locked = false;
+            }
+        }
+        else if (data.type == Social::SocialEvent::AchievementProgress)
+        {
+            ProgressMessage m;
+            m.index = data.challengeID;
+            m.progress = data.level;
+            m.total = data.reason;
+            m.type = ProgressMessage::AchievementProgress;
+            m_progressIcon->queueMessage(m);
         }
     }
     else if (msg.id == cro::Message::SystemMessage)
@@ -450,7 +616,12 @@ void GolfGame::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::SystemEvent>();
         if (data.type == cro::Message::SystemEvent::ScreenshotTaken)
         {
-            m_progressIcon->showMessage(" ", "Screenshot Saved.");
+            ProgressMessage m;
+            m.title = " ";
+            m.message = "Screenshot Saved.";
+            m.type = ProgressMessage::Message;
+            m.audioID = ProgressMessage::ScreenShot;
+            m_progressIcon->queueMessage(m);
         }
     }
 
@@ -459,6 +630,31 @@ void GolfGame::handleMessage(const cro::Message& msg)
 
 void GolfGame::simulate(float dt)
 {
+    if (m_sharedData.showHelp)
+    {
+        const auto scroll = 
+            [&](float dir)
+            {
+                helpNav.currTime += dt;
+                if (helpNav.currTime > HelpNav::ScrollTime)
+                {
+                    helpNav.currTime -= HelpNav::ScrollTime;
+                    helpNav.manualScroll = dir;
+                }
+            };
+
+        if (cro::GameController::getAxisPosition(0, cro::GameController::AxisRightY) > cro::GameController::LeftThumbDeadZoneV)
+        //if(cro::Keyboard::isKeyPressed(SDLK_PAGEUP))
+        {
+            scroll(1.f);
+        }
+        else if (cro::GameController::getAxisPosition(0, cro::GameController::AxisRightY) < -cro::GameController::LeftThumbDeadZoneV)
+        //else if (cro::Keyboard::isKeyPressed(SDLK_PAGEDOWN))
+        {
+            scroll(-1.f);
+        }
+    }
+
     if (m_sharedData.usePostProcess)
     {
         //update optional uniforms (should be -1 if not loaded)
@@ -602,6 +798,7 @@ bool GolfGame::initialise()
 #endif
 
     parseCredits();
+    createHowTo();
 
     registerConsoleTab("Advanced",
         [&]()
@@ -873,6 +1070,20 @@ bool GolfGame::initialise()
             m_stateStack.pushState(StateID::ScrubBackground);
         });
 
+#ifdef USE_GNS
+    registerCommand("discord_connect",
+        [](const std::string&) 
+        {
+            Discord::connect(); 
+        });
+
+    registerCommand("discord_disconnect",
+        [](const std::string&) 
+        {
+            Discord::disconnect(); 
+        });
+#endif
+
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Super Video Golf - " + StringVer);
     getWindow().setIcon(icon);
@@ -885,6 +1096,7 @@ bool GolfGame::initialise()
     cro::AudioMixer::setLabel("Vehicles", MixerChannel::Vehicles);
     cro::AudioMixer::setLabel("Environment", MixerChannel::Environment);
     cro::AudioMixer::setLabel("Game Music", MixerChannel::UserMusic);
+    cro::AudioMixer::setLabel("Text To Speech", MixerChannel::TextToSpeech);
 
     m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
@@ -1005,12 +1217,12 @@ bool GolfGame::initialise()
     m_activeIndex = m_sharedData.postProcessIndex;
 
 #ifdef CRO_DEBUG_
-   // m_stateStack.pushState(StateID::ScrubBackground);
+    m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::Bush);
     //m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
-    m_stateStack.pushState(StateID::Menu);
-    //m_stateStack.pushState(StateID::EndlessRunner);
+    //m_stateStack.pushState(StateID::Shop);
+    //m_stateStack.pushState(StateID::SBallBackground);
     //m_stateStack.pushState(StateID::EndlessAttract);
     //m_stateStack.pushState(StateID::Workshop);
 #else
@@ -1025,6 +1237,13 @@ bool GolfGame::initialise()
         WebSock::start(m_sharedData.webPort);
     }
 
+#ifdef USE_GNS
+    //if (m_sharedData.useDiscord)
+    /*{
+        Discord::connect();
+    }*/
+    //Discord::disconnect();
+#endif
     return true;
 }
 
@@ -1055,9 +1274,9 @@ void GolfGame::finalise()
 
     Achievements::shutdown();
 
-    if (m_scrubData.fonts)
+    if (m_minigameData.fonts)
     {
-        m_scrubData.fonts.reset();
+        m_minigameData.fonts.reset();
     }
 
     m_sharedData.sharedResources.reset();
@@ -1361,7 +1580,11 @@ void GolfGame::loadPreferences()
                 }
                 else if (name == "hq_shadows")
                 {
-                    m_sharedData.hqShadows = prop.getValue<bool>();
+                    m_sharedData.shadowQuality = prop.getValue<bool>() ? 1 : 0;
+                }
+                else if (name == "shadow_quality")
+                {
+                    m_sharedData.shadowQuality = std::clamp(prop.getValue<std::int32_t>(), 0, SharedStateData::ShadowQuality::Count - 1);
                 }
                 else if (name == "log_benchmark")
                 {
@@ -1574,6 +1797,10 @@ void GolfGame::loadPreferences()
                         m_sharedData.fixedPuttingRange = prop.getValue<bool>();
                     }
                     
+                    else if (name == "log_csv")
+                    {
+                        m_sharedData.logCSV = prop.getValue<bool>();
+                    }
                     else if (name == "web_chat")
                     {
                         m_sharedData.blockChat = prop.getValue<bool>();
@@ -1593,6 +1820,22 @@ void GolfGame::loadPreferences()
                     else if (name == "flag_text")
                     {
                         m_sharedData.flagText = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
+                    }
+                    else if (name == "show_rival")
+                    {
+                        m_sharedData.showRival = prop.getValue<bool>();
+                    }
+                    else if (name == "putt_follow")
+                    {
+                        m_sharedData.puttFollowCam = prop.getValue<bool>();
+                    }
+                    else if (name == "zoom_follow")
+                    {
+                        m_sharedData.zoomFollowCam = prop.getValue<bool>();
+                    }
+                    else if (name == "club_update")
+                    {
+                        m_sharedData.showClubUpdate = prop.getValue<bool>();
                     }
                     /*else if (name == "group_mode")
                     {
@@ -1677,7 +1920,10 @@ void GolfGame::loadPreferences()
     }
     loadMusic();
 
-    m_sharedData.inventory.read();
+    if (!inv::read(m_sharedData.inventory))
+    {
+        m_sharedData.inventory = {};
+    }
 
     //do this last so we're saving any settings which were loaded successfully too
     savePreferences();
@@ -1699,7 +1945,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("multisamples").setValue(m_sharedData.multisamples);
     cfg.addProperty("swingput_threshold").setValue(m_sharedData.swingputThreshold);
     cfg.addProperty("tree_quality").setValue(m_sharedData.treeQuality);
-    cfg.addProperty("hq_shadows").setValue(m_sharedData.hqShadows);
+    cfg.addProperty("shadow_quality").setValue(m_sharedData.shadowQuality);
     cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
     cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
     cfg.addProperty("crowd_density").setValue(m_sharedData.crowdDensity);
@@ -1742,11 +1988,16 @@ void GolfGame::savePreferences()
     cfg.addProperty("show_roster").setValue(m_sharedData.showRosterTip);
     cfg.addProperty("group_mode").setValue(m_sharedData.groupMode);
     cfg.addProperty("fixed_putting").setValue(m_sharedData.fixedPuttingRange);
+    cfg.addProperty("log_csv").setValue(m_sharedData.logCSV);
     cfg.addProperty("web_chat").setValue(m_sharedData.blockChat);
     cfg.addProperty("log_chat").setValue(m_sharedData.logChat);
     cfg.addProperty("remote_content").setValue(m_sharedData.remoteContent);
     cfg.addProperty("flag_path").setValue(m_sharedData.flagPath);
     cfg.addProperty("flag_text").setValue(m_sharedData.flagText);
+    cfg.addProperty("show_rival").setValue(m_sharedData.showRival);
+    cfg.addProperty("putt_follow").setValue(m_sharedData.puttFollowCam);
+    cfg.addProperty("zoom_follow").setValue(m_sharedData.zoomFollowCam);
+    cfg.addProperty("club_update").setValue(m_sharedData.showClubUpdate);
     cfg.save(path);
 
 
@@ -1760,7 +2011,14 @@ void GolfGame::savePreferences()
         SDL_RWwrite(file.file, &m_sharedData.inputBinding, sizeof(InputBinding), 1);
     }
 
-    m_sharedData.inventory.write();
+    inv::write(m_sharedData.inventory);
+
+    //std::int32_t total = 0;
+    //for (const auto& i : inv::Items)
+    //{
+    //    total += i.price;
+    //}
+    //LogI << "Total: " << total << ", half: " << (total / 2) << std::endl;
 }
 
 void GolfGame::loadAvatars()
@@ -1878,7 +2136,7 @@ void GolfGame::loadAvatars()
         sPlayer.name = Social::getPlayerName();
         sPlayer.saveProfile();
 
-        m_profileData.playerProfiles.push_back(sPlayer);
+        m_profileData.playerProfiles.emplace_back().playerData = sPlayer;
         i++;
     }
 
@@ -1913,7 +2171,7 @@ void GolfGame::loadAvatars()
             }
             pd.saveProfile();
 
-            m_profileData.playerProfiles.push_back(pd);
+            m_profileData.playerProfiles.emplace_back().playerData = pd;
             i++;
         }
         else
@@ -1923,12 +2181,12 @@ void GolfGame::loadAvatars()
             sPlayer.name = Social::getPlayerName();
             sPlayer.saveProfile();
 
-            m_profileData.playerProfiles.push_back(sPlayer);
+            m_profileData.playerProfiles.emplace_back().playerData = sPlayer;
             i++;
         }
     }
 
-    m_profileData.playerProfiles[0].isSteamID = true;
+    m_profileData.playerProfiles[0].playerData.isSteamID = true;
 
 #endif
 
@@ -1970,7 +2228,8 @@ void GolfGame::loadAvatars()
                     {
                         pd.profileID = Social::getPlayerID();
                         pd.saveProfile();
-                        m_profileData.playerProfiles[0] = pd;
+                        m_profileData.playerProfiles[0].playerData = pd;
+                        m_profileData.playerProfiles[0].loadout.read(pd.profileID);
 
                         auto copyFiles = cro::FileSystem::listFiles(profilePath);
                         for (const auto& cFile : copyFiles)
@@ -1998,7 +2257,9 @@ void GolfGame::loadAvatars()
                     else
                     {
 #endif
-                        m_profileData.playerProfiles.push_back(pd);
+                        auto& pf = m_profileData.playerProfiles.emplace_back();
+                        pf.playerData = pd;
+                        pf.loadout.read(pd.profileID);
                         i++;
 #ifdef USE_GNS
                     }
@@ -2012,14 +2273,23 @@ void GolfGame::loadAvatars()
                 break;
             }
         }
+
+        //for some reason we have to do this else the
+        //steam profile won't read the loadout
+        for (auto& pf : m_profileData.playerProfiles)
+        {
+            pf.loadout.read(pf.playerData.profileID);
+        }
     }
 
     if (m_profileData.playerProfiles.empty())
     {
-        m_profileData.playerProfiles.emplace_back().name = "Default Profile";
-        m_profileData.playerProfiles[0].saveProfile();
+        auto& pf = m_profileData.playerProfiles.emplace_back();
+        pf.playerData.name = "Default Profile";
+        pf.playerData.saveProfile();
+        pf.loadout.write(pf.playerData.profileID);
     }
-    m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
+    m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0].playerData;
 }
 
 void GolfGame::loadMusic()
@@ -2127,6 +2397,252 @@ bool GolfGame::setShader(const char* frag)
     }
     return false;
 };
+
+void GolfGame::createHowTo()
+{
+    const std::string rootPath = cro::FileSystem::getResourcePath() + "assets/golf/guide/en/";
+    const std::string imagePath = cro::FileSystem::getResourcePath() + "assets/golf/guide/images/";
+    auto filePaths = cro::FileSystem::listFiles(rootPath);
+    std::sort(filePaths.begin(), filePaths.end());
+
+    const auto& controlTex = m_guideTextures.get(imagePath + "controls.png");
+
+    pugi::xml_document doc;
+    for (const auto& path : filePaths)
+    {
+        if (const auto res = doc.load_file((rootPath + path).c_str(), 116, pugi::encoding_utf8); !res)
+        {
+            LogE << "Could not open guide doc " << path << std::endl;
+            LogE << res.description() << std::endl;
+        }
+
+        auto& chapter = m_guideChapters.emplace_back();
+        for (const auto& c : doc.child("root").children())
+        {
+            //oh the fun of utf8 preservation in C++...
+            if (std::strcmp(c.name(), "text") == 0
+                || std::strcmp(c.name(),  "title") == 0
+                || std::strcmp(c.name(), "h") == 0)
+            {
+                std::basic_string<std::uint8_t> s(reinterpret_cast<const std::uint8_t*>(c.text().as_string()));
+                
+                if (!s.empty())
+                {
+                    auto& item = chapter.items.emplace_back();
+                    item.type = std::strcmp(c.name(), "title") == 0 ? pg::Item::Title 
+                        : std::strcmp(c.name(), "h") == 0 ? pg::Item::Header : pg::Item::Text;
+                    item.string.swap(s);
+
+                    if (item.type == pg::Item::Title)
+                    {
+                        chapter.title = item.string;
+                        helpNav.chapterCount++;
+                    }
+                }
+            }
+            else if (std::strcmp(c.name(), "image") == 0)
+            {
+                const std::string imgName = c.text().as_string();
+                const auto& img = m_guideTextures.get(imagePath + imgName);
+                auto& item = chapter.items.emplace_back();
+                item.type = pg::Item::Image;
+                item.image = &img;
+                item.frameSize = img.getSize();
+
+                //if we have this attribute assume the image is animated
+                if (c.attribute("w") && c.attribute("h"))
+                {
+                    auto frameCount = item.frameSize;
+
+                    item.frameSize.x = c.attribute("w").as_float();
+                    item.frameSize.y = c.attribute("h").as_float();
+
+                    frameCount /= item.frameSize;
+
+                    item.animation.frameCount = frameCount;
+                    item.animation.frameSizeNorm = item.frameSize / glm::vec2(img.getSize());
+                    item.animation.active = true;
+
+                    if (c.attribute("fps"))
+                    {
+                        item.animation.FPS = 1.f / c.attribute("fps").as_float(1.f);
+                    }
+                }
+            }
+            else if (std::strcmp(c.name(), "hr") == 0)
+            {
+                auto& item = chapter.items.emplace_back();
+                item.type = pg::Item::Separator;
+            }
+        }
+    }
+
+
+    registerWindow([&]() 
+        {
+            if (m_sharedData.showHelp)
+            {
+                const auto viewScale = std::clamp(getViewScale(), 1.f, 3.f);
+                const auto viewSize = std::min(static_cast<std::int32_t>(viewScale) - 1, 2);
+                const glm::vec2 size = cro::App::getWindow().getSize();// getScaledSize();
+                ImGui::SetNextWindowSize({ size.x, size.y });
+                ImGui::SetNextWindowPos({ 0.f, 0.f });
+                ImGui::Begin("How To Play", nullptr/*&m_sharedData.showHelp*/, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+                
+
+                ImGui::PushFont(m_sharedData.helpFonts[std::min(viewSize, 1)]);
+                static constexpr auto NavWidth = 180.f;
+                const auto NavWidthScaled = NavWidth * viewScale;
+
+                //chapter navigation
+                ImGui::BeginChild("##nav", { NavWidthScaled, 0.f }, true);
+                helpNav.scrollIndex = 0;
+                static constexpr std::array Offsets = { 0.f, 0.f, 0.4f };
+                ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, {0.5f, Offsets[viewSize]});
+                for (const auto& chapter : m_guideChapters)
+                {
+                    if (helpNav.scrollIndex == helpNav.selectedScroll)
+                    {
+                        ImGui::PushStyleColor(ImGuiCol_Button, CD32::Colours[CD32::Yellow]);
+                        ImGui::PushStyleColor(ImGuiCol_Text, CD32::Colours[CD32::Black]);
+                    }
+
+                    if (ImGui::Button(reinterpret_cast<const char*>(chapter.title.c_str()), {NavWidthScaled - (18.f /** viewScale*/), 20.f * viewScale}))
+                    {
+                        helpNav.targetIndex = helpNav.scrollIndex;
+                        helpNav.wantsScroll = true;
+                    }
+
+                    if (helpNav.scrollIndex == helpNav.selectedScroll)
+                    {
+                        ImGui::PopStyleColor(2);
+                    }
+
+                    helpNav.scrollIndex++;
+                }
+                ImGui::PopStyleVar();
+
+                //TODO display controller input
+                if (cro::GameController::getControllerCount())
+                {
+                    auto size = glm::vec2(controlTex.getSize()) * viewScale;
+                    size.y /= 2.f;
+
+                    if (cro::GameController::hasPSLayout(0))
+                    {
+                        ImGui::Image(controlTex, { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.5f });
+                    }
+                    else
+                    {
+                        ImGui::Image(controlTex, { size.x, size.y }, { 0.f, 0.5f }, { 1.f, 0.f });
+                    }
+                }
+                else
+                {
+                    ImGui::NewLine();
+                    ImGui::Text("Press Escape To Close");
+                }
+
+                ImGui::EndChild();
+                ImGui::PopFont();
+                ImGui::SameLine();
+
+                //main pane
+                ImGui::PushFont(m_sharedData.helpFonts[viewSize]);
+                ImGui::BeginChild("##main_view");
+                
+                if (helpNav.manualScroll != 0.f)
+                {
+                    const auto pos = std::clamp(ImGui::GetScrollY() + (HelpNav::ScrollAmount * viewScale * helpNav.manualScroll), 0.f, ImGui::GetScrollMaxY());
+                    ImGui::SetScrollY(pos);
+                    helpNav.manualScroll = 0.f;
+                }
+
+                helpNav.scrollIndex = 0;
+                for (auto& chapter : m_guideChapters)
+                {
+                    for (auto& item : chapter.items)
+                    {
+                        switch (item.type)
+                        {
+                        default: break;
+                        case pg::Item::Separator:
+                            ImGui::NewLine();
+                            ImGui::Separator();
+                            ImGui::NewLine();
+                            break;
+                        case pg::Item::Title:
+                            ImGui::PushStyleColor(ImGuiCol_Text, CD32::Colours[CD32::Yellow]);
+                            ImGui::Text(reinterpret_cast<const char*>(item.string.data()));
+                            ImGui::PopStyleColor();
+
+                            if (helpNav.wantsScroll
+                                && helpNav.targetIndex == helpNav.scrollIndex)
+                            {
+                                ImGui::SetScrollHereY(0.01f);
+                                helpNav.wantsScroll = false;
+                                helpNav.selectedScroll = helpNav.scrollIndex;
+                            }
+                            else
+                            {
+                                bool visible = ImGui::IsItemVisible();
+                                if (visible && !chapter.isVisible)
+                                {
+                                    //we were just exposed
+                                    helpNav.selectedScroll = helpNav.scrollIndex;
+                                }
+                                chapter.isVisible = visible;
+                            }
+                            break;
+                        case pg::Item::Header:
+                            ImGui::NewLine();
+                            ImGui::PushStyleColor(ImGuiCol_Text, CD32::Colours[CD32::BlueLight]);
+                            ImGui::Text(reinterpret_cast<const char*>(item.string.data()));
+                            ImGui::PopStyleColor();
+                            break;
+                        case pg::Item::Text:
+                            ImGui::TextWrapped(reinterpret_cast<const char*>(item.string.data()));
+                            break;
+                        case pg::Item::Image:
+                        {
+                            //const float PaneWidth = (ImGui::GetWindowSize().x - NavWidth);
+                            //const float NavScale = std::min(1.f, PaneWidth / ImGui::GetWindowSize().x);
+
+                            ImGui::NewLine();
+                            auto imgSize = item.frameSize * std::max(1.f, viewScale - 1.f);
+                            /*if (imgSize.x > (PaneWidth - 10.f))
+                            {
+                                imgSize *= NavScale;
+                            }*/
+
+                            cro::FloatRect frame = { 0.f, 0.f, 1.f, 1.f };
+                            if (item.animation.active)
+                            {
+                                frame = item.animation.update();
+                            }
+                            const auto oldPos = ImGui::GetCursorPos();
+                            ImGui::SetCursorPos({ (ImGui::GetWindowSize().x - imgSize.x) * 0.5f, oldPos.y });
+                            ImGui::Image(*item.image, { imgSize.x, imgSize.y }, { frame.left, 1.f - frame.bottom }, { frame.width, 1.f - frame.height });
+                            ImGui::SetCursorPos({ oldPos.x, oldPos.y + imgSize.y });
+                            ImGui::NewLine();
+                        }
+                            break;
+                        }
+                    }
+                    helpNav.scrollIndex++;
+
+                    ImGui::NewLine();
+                    ImGui::Separator();
+                    ImGui::NewLine();
+                }
+                ImGui::EndChild();
+                ImGui::PopFont();
+
+
+                ImGui::End();
+            }
+        });
+}
 
 #ifdef _WIN32
 void GolfGame::assertFileSystem()

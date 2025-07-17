@@ -163,6 +163,8 @@ static inline const std::string Vertex = R"(
         })";
 
 static inline const std::string Fragment = R"(
+//#define SHOW_CASCADE
+
         OUTPUT
 #include CAMERA_UBO
 
@@ -218,7 +220,7 @@ static inline const std::string Fragment = R"(
 
     #if defined(RX_SHADOWS)
 #include SHADOWMAP_INPUTS
-
+#include CASCADE_SELECTION
 
     #if defined(MOBILE)
     #if defined (GL_FRAGMENT_PRECISION_HIGH)
@@ -248,7 +250,7 @@ static inline const std::string Fragment = R"(
             return (currDepth < depthSample) ? 1.0 : 0.4;
         }
     #else
-    #include PCF_SHADOWS
+    #include VSM_SHADOWS
     #endif
 
     #endif
@@ -297,20 +299,21 @@ static inline const std::string Fragment = R"(
 
             FRAG_OUT.rgb *= shadow;
 
-
-//vec3 Colours[4] = vec3[4](vec3(0.2,0.0,0.0), vec3(0.0,0.2,0.0),vec3(0.0,0.0,0.2),vec3(0.2,0.0,0.2));
-//for(int i = 0; i < u_cascadeCount; ++i)
-//{
-//    if (v_lightWorldPosition[i].w > 0.0)
-//    {
-//        vec2 coords = v_lightWorldPosition[i].xy / v_lightWorldPosition[i].w / 2.0 + 0.5;
-//        if (coords.x > 0 && coords.x < 1 
-//                && coords.y > 0 && coords.y < 1)
-//        {
-//            FRAG_OUT.rgb += Colours[i];
-//        }
-//    }
-//}
+#if defined(SHOW_CASCADE)
+vec3 Colours[4] = vec3[4](vec3(0.2,0.0,0.0), vec3(0.0,0.2,0.0),vec3(0.0,0.0,0.2),vec3(0.2,0.0,0.2));
+for(int i = 0; i < u_cascadeCount; ++i)
+{
+    if (v_lightWorldPosition[i].w > 0.0)
+    {
+        vec2 coords = v_lightWorldPosition[i].xy / v_lightWorldPosition[i].w / 2.0 + 0.5;
+        if (coords.x > 0 && coords.x < 1 
+                && coords.y > 0 && coords.y < 1)
+        {
+            FRAG_OUT.rgb += Colours[i];
+        }
+    }
+}
+#endif
         #endif
 
         #if defined (RIMMING)

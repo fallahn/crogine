@@ -41,6 +41,16 @@ struct _ENetPeer;
 
 namespace cro
 {
+    struct CRO_EXPORT_API Channel final
+    {
+        enum
+        {
+            Unreliable,
+            Reliable,
+            String
+        };
+    };
+
     /*!
     \brief A peer represents a single connection made up of multiple
     channels between a client and a host.
@@ -67,6 +77,10 @@ namespace cro
         };
         State getState() const; //! <Current state of the peer
 
+        //yeah this makes no sense, it's for compatibility with Steam networking overloads
+        bool operator == (std::uint32_t) const { return false; }
+        bool operator != (std::uint32_t) const { return true; }
+
         bool operator == (const NetPeer& other) const { return (&other == this || other.m_peer == m_peer); }
         bool operator != (const NetPeer& other) const { return !(other == *this); }
 
@@ -86,15 +100,6 @@ namespace cro
     */
     struct CRO_EXPORT_API NetEvent final
     {
-        std::uint8_t channel = 0; //! <channel event was received on
-        enum
-        {
-            None,
-            ClientConnect,
-            ClientDisconnect,
-            PacketReceived
-        }type = None;
-
         /*!
         \brief Event packet.
         Contains packet data received by PacketRecieved event.
@@ -150,6 +155,18 @@ namespace cro
         \brief Contains the peer from which this event was transmitted
         */
         NetPeer peer;
+
+        enum
+        {
+            None,
+            ClientConnect,
+            ClientDisconnect,
+            ClientPeerUpdated,
+            PacketReceived
+        }type = None;
+
+        std::uint32_t userData = 0;
+        std::uint8_t channel = 0; //! <channel event was received on
     };
 
 #include "NetData.inl"

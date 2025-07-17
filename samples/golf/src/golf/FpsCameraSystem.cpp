@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -301,15 +301,20 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             /*case cro::GameController::DPadUp:
                 m_input.buttonFlags |= Input::Flags::Forward;
                 break;
-            case cro::GameController::DPadDown:
-                m_input.buttonFlags |= Input::Flags::Backward;
-                break;
             case cro::GameController::DPadLeft:
                 m_input.buttonFlags |= Input::Flags::Left;
                 break;
             case cro::GameController::DPadRight:
                 m_input.buttonFlags |= Input::Flags::Right;
                 break;*/
+            case cro::GameController::DPadDown:
+                //m_input.buttonFlags |= Input::Flags::Backward;
+            {
+                auto* msg = postMessage<SceneEvent>(cl::MessageID::SceneMessage);
+                msg->type = SceneEvent::RequestToggleFreecam;
+                msg->data = evt.cbutton.button;
+            }
+                break;
             case cro::GameController::ButtonRightShoulder:
                 m_input.buttonFlags |= Input::Flags::ZoomIn;
                 break;
@@ -348,11 +353,12 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
                 m_input.buttonFlags &= ~Input::Flags::Walk;
                 break;
             case cro::GameController::DPadDown:
-            {
+                //moved to button down
+            /*{
                 auto* msg = postMessage<SceneEvent>(cl::MessageID::SceneMessage);
                 msg->type = SceneEvent::RequestToggleFreecam;
                 msg->data = evt.cbutton.button;
-            }
+            }*/
                 break;
             /*case cro::GameController::DPadUp:
                 m_input.buttonFlags &= ~Input::Flags::Forward;
@@ -477,16 +483,16 @@ void FpsCameraSystem::process(float dt)
 
                 //clamp pitch
                 float newPitch = controller.cameraPitch + pitchMove;
-                const float clamp = 1.4f;
-                if (newPitch > clamp)
+
+                if (newPitch > FpsCamera::MaxPitch)
                 {
-                    pitchMove -= (newPitch - clamp);
-                    controller.cameraPitch = clamp;
+                    pitchMove -= (newPitch - FpsCamera::MaxPitch);
+                    controller.cameraPitch = FpsCamera::MaxPitch;
                 }
-                else if (newPitch < -clamp)
+                else if (newPitch < -FpsCamera::MaxPitch)
                 {
-                    pitchMove -= (newPitch + clamp);
-                    controller.cameraPitch = -clamp;
+                    pitchMove -= (newPitch + FpsCamera::MaxPitch);
+                    controller.cameraPitch = -FpsCamera::MaxPitch;
                 }
                 else
                 {
@@ -783,6 +789,7 @@ void FpsCameraSystem::enterAnim(cro::Entity entity, float dt)
 
     if (fpsCam.transition.progress == 1)
     {
+        fpsCam.correctPitch(rot);
         fpsCam.state = FpsCamera::State::Active;
     }
 }
@@ -809,6 +816,7 @@ void FpsCameraSystem::exitAnim(cro::Entity entity, float dt)
 
     if (fpsCam.transition.progress == 0)
     {
+        fpsCam.correctPitch(rot);
         fpsCam.transition.completionCallback();
     }
 }

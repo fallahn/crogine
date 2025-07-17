@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -135,6 +135,12 @@ namespace cro
         glm::uvec2 getSize() const override;
 
         /*!
+        \brief Returns the total renderable size of the window taking
+        into account any high-DPI scaling that may currently be applied.
+        */
+        glm::uvec2 getScaledSize() const;
+
+        /*!
         \brief Attempts to set the window to the given size if it is valid
         */
         void setSize(glm::uvec2);
@@ -203,7 +209,7 @@ namespace cro
         a loading screen. Usually you pass a std::function object which loads
         OpenGL resources.
         */
-        void loadResources(const std::function<void()>&);
+        void loadResources(const std::function<void()>&, bool threaded = false);
 
         /*!
         \brief Sets a custom loading screen.
@@ -212,6 +218,14 @@ namespace cro
         */
         template <typename T, typename... Args>
         void setLoadingScreen(Args&&...);
+
+        /*!
+        \brief Sets the progress of the loading screen by calling LoadingScreen::setProgress()
+        This does nothing with the default loading screen. This should be called manually
+        from the function passed via loadResources(), with the threaded param set to FALSE
+        \param progress Normalised progress value to which to set the loading screen
+        */
+        void setLoadingProgress(float progress);
 
         /*!
         \brief Sets if the mouse cursor is captured or not.
@@ -258,6 +272,7 @@ namespace cro
         from full screen mode
         */
         glm::uvec2 getWindowedSize() const;
+
 
     private:
 

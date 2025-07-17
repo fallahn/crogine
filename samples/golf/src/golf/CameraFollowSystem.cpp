@@ -245,6 +245,13 @@ void CameraFollowSystem::process(float dt)
             continue;
         }
 
+        const auto& collider = follower.target.getComponent<ClientCollider>();
+
+        if (collider.hidden) //ball is hidden in team mode
+        {
+            continue;
+        }
+
         switch (follower.state)
         {
         default:
@@ -257,8 +264,6 @@ void CameraFollowSystem::process(float dt)
             auto target = ballPos + TargetOffset;
             CRO_ASSERT(!std::isnan(target.x), "Target pos is NaN");
 
-
-            const auto& collider = follower.target.getComponent<ClientCollider>();
             if (collider.state == static_cast<std::uint8_t>(Ball::State::Reset)
                 || collider.terrain == TerrainID::Hole)
             {

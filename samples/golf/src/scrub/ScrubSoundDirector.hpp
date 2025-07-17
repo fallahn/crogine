@@ -39,6 +39,8 @@ namespace cro
     class AudioResource;
 }
 
+//dear future me: you managed to duplicate this exactly for sports ball, 
+//so instead of doing that *again* just use another instance of this...
 class ScrubSoundDirector final : public SoundEffectsDirector
 {
 public:

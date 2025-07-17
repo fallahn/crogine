@@ -460,7 +460,8 @@ void SSAOState::createScene()
     };
     auto camEnt = m_gameScene.getActiveCamera();
     camEnt.getComponent<cro::Camera>().resizeCallback = resizeWindow;
-    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(1024, 1024);// (2048, 2048);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 2.f, 3.878f });
     camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.254f);
     resizeWindow(camEnt.getComponent<cro::Camera>());

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -246,6 +246,25 @@ namespace cro
         std::vector<ButtonEvent> m_mouseUpEvents;
         std::vector<MotionEvent> m_motionEvents;
 
+        struct HoldEvent final
+        {
+            static constexpr float HoldTime = 0.25f;
+            static constexpr float MinHoldTime = 0.05f;
+
+            float currentHoldTime = HoldTime;
+            float timer = HoldTime;
+            bool active = false;
+
+            void start()
+            {
+                active = true;
+                currentHoldTime = HoldTime;
+                timer = HoldTime;
+            }
+        };
+        std::array<HoldEvent, 4u> m_keyHoldEvents = {};
+        std::array<HoldEvent, 4u> m_buttonHoldEvents = {};
+
         glm::uvec2 m_windowSize;
 
         //void setViewPort(std::int32_t, std::int32_t);
@@ -270,8 +289,8 @@ namespace cro
         void selectNext(std::size_t, std::int32_t = UIInput::Index::Right);
         void selectPrev(std::size_t, std::int32_t = UIInput::Index::Left);
 
-        void unselect(std::size_t);
-        void select(std::size_t);
+        void unselect(std::size_t, bool wasMouseEvent = false);
+        void select(std::size_t, bool wasMouseEvent = false);
 
 
         std::unordered_map<std::size_t, std::vector<Entity>> m_groups;

@@ -88,6 +88,8 @@ ScrubPhysicsSystem::ScrubPhysicsSystem(cro::MessageBus& mb)
 
 ScrubPhysicsSystem::~ScrubPhysicsSystem()
 {
+    clearBalls();
+
     for (auto& o : m_bucketObjects)
     {
         m_collisionWorld->removeCollisionObject(o.get());

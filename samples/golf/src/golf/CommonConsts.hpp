@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "Networking.hpp"
+
 #include <crogine/core/App.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
@@ -41,9 +43,10 @@ struct MixerChannel final
 {
     enum
     {
-        Music, Effects, Menu,
+        Music, UserMusic,
+        Effects, Menu,
         Voice, Vehicles, Environment,
-        UserMusic,
+        TextToSpeech,
 
         Count
     };
@@ -70,16 +73,16 @@ namespace ConstVal
     static constexpr std::size_t MaxStringDataSize = MaxStringChars * sizeof(std::uint32_t);
 
 #ifdef USE_GNS
-    static constexpr std::uint16_t GamePort = 160;
+    static constexpr std::uint16_t GamePort = gns::DefaultPort;
 #else
     static constexpr std::uint16_t GamePort = 16002;
 #endif
     static constexpr std::uint16_t VoicePort = GamePort + 5;
-    static constexpr std::uint8_t MaxClients = 8;
+    static constexpr std::uint8_t MaxClients = 12; //I mean, would do 16, but there's not enough room on the lobby menu to display more than 13...
     static constexpr std::uint8_t MaxPlayers = 8;
     static constexpr std::uint8_t NullValue = 255;
-    static constexpr std::uint8_t NetChannelReliable = 1;
-    static constexpr std::uint8_t NetChannelStrings = 2;
+    static constexpr std::uint8_t NetChannelReliable = net::Channel::Reliable;
+    static constexpr std::uint8_t NetChannelStrings = net::Channel::String;
 
     static constexpr std::uint16_t PositionCompressionRange = 4; //used in billiards! this is way too small for golf
     static constexpr std::uint16_t VelocityCompressionRange = 8;
@@ -92,7 +95,7 @@ namespace ConstVal
 
     //root dir for course files prepended to directory
     //received from the hosting client
-    static const std::string MapPath("assets/golf/courses/");
+    static const std::string MapPath("courses/");
     static const std::string UserCoursePath("courses/");
     static const std::string UserMapPath("courses/export/");
 

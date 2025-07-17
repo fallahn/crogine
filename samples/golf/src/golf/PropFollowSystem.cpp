@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -194,6 +194,12 @@ void PropFollowSystem::onEntityAdded(cro::Entity entity)
     auto& follower = entity.getComponent<PropFollower>();
     CRO_ASSERT(follower.path.size() > 1, "Needs at least 2 points");
 
+    if (follower.loop &&
+        cro::Util::Random::value(0, 1) == 0)
+    {
+        std::reverse(follower.path.begin(), follower.path.end());
+    }
+    
     entity.getComponent<cro::Transform>().setPosition(follower.path[0]);
 
     follower.targetRotation = getTargetRotation(follower.path[1] - follower.path[0]);

@@ -32,6 +32,7 @@ source distribution.
 #include "Achievements.hpp"
 #include "AchievementStrings.hpp"
 #include "StoredValue.hpp"
+#include "PersonalBest.hpp"
 
 #ifdef USE_GJS
 #include <libgjs.hpp>
@@ -42,9 +43,38 @@ source distribution.
 #include <crogine/core/SysTime.hpp>
 
 #include <ctime>
+#include <memory>
 
 namespace
 {
+    const std::array<std::string, 12u> CourseNames =
+    {
+        "course_01",
+        "course_02",
+        "course_03",
+        "course_04",
+        "course_05",
+        "course_06",
+        "course_07",
+        "course_08",
+        "course_09",
+        "course_10",
+        "course_11",
+        "course_12",
+    };
+
+    std::unique_ptr<PersonalBest> personalBest;
+    void assertPB()
+    {
+        if (!personalBest)
+        {
+            personalBest = std::make_unique<PersonalBest>();
+            personalBest->load();
+        }
+    }
+
+    bool leaderboardsEnabled = false;
+
     struct ValueID final
     {
         enum
@@ -86,8 +116,10 @@ namespace
 
     StoredValue snapperFlags("snp");
     StoredValue scrubScore("scb");
+    StoredValue sballScore("sba");
 
     cro::String scrubString;
+    cro::String sballString;
 
     std::vector<Social::Award> awards;
     const std::array<std::string, 12u> MonthStrings =
@@ -195,7 +227,7 @@ std::int32_t Social::doubleXP()
     auto ts = std::time(nullptr);
     const auto* tm = std::localtime(&ts);
     if ((tm->tm_wday == 0 && (tm->tm_mday > 14 && tm->tm_mday < 22))
-        || tm->tm_wday == 6 && (tm->tm_mday > 13 && tm->tm_mday < 21))
+        || (tm->tm_wday == 6 && (tm->tm_mday > 13 && tm->tm_mday < 21)))
     {
         return 2;
     }
@@ -210,6 +242,9 @@ std::int32_t Social::getLevel()
 
 std::int32_t Social::getClubLevel()
 {
+    //for now we always return 2 just to unlock all sets
+    return 2;
+
     //check player level and return increased distance
     auto level = getLevel();
 
@@ -272,22 +307,26 @@ std::uint32_t Social::updateStreak()
 
     bool sunday = false;
 
+    //do a calendar check to see if it's the next day
+    const std::time_t p = prevTs;
+    const std::time_t c = ts;
+
+    //we have to copy the results else we just get 2 pointers to the same thing.
+    const auto prevTm = *std::localtime(&p);
+    const auto currTm = *std::localtime(&c);
+
+    if (currTm.tm_yday - prevTm.tm_yday > 0)
+    {
+        sunday = currTm.tm_wday == 0;
+    }
+
     if (dayCount == 0)
     {
-        //do a calendar check to see if it's the next day
-        std::time_t p = prevTs;
-        std::time_t c = ts;
-
-        //we have to copy the results else we just get 2 pointers to the same thing.
-        auto prevTm = *std::localtime(&p);
-        auto currTm = *std::localtime(&c);
-
         if ((currTm.tm_yday == 1 //fudge for year wrap around. There are more elegant ways, but brain.
             && prevTm.tm_yday == 365)
             || (currTm.tm_yday - prevTm.tm_yday) == 1)
         {
             dayCount = 1;
-            sunday = currTm.tm_wday == 0;
         }
         else
         {
@@ -819,6 +858,44 @@ std::int32_t Social::getScrubPB()
     return scrubScore.value;
 }
 
+void Social::setSBallScore(std::int32_t score)
+{
+    sballScore.read();
+    if (score > sballScore.value)
+    {
+        sballScore.value = score;
+        sballScore.write();
+
+        refreshSBallScore();
+    }
+}
+
+void Social::refreshSBallScore()
+{
+    sballScore.read();
+    if (sballScore.value != 0)
+    {
+        sballString = "Personal Best: " + std::to_string(sballScore.value);
+    }
+    else
+    {
+        sballString = "No Score Yet.";
+    }
+
+    //lets the game know to refresh UI
+    cro::App::postMessage<Social::StatEvent>(Social::MessageID::StatsMessage)->type = Social::StatEvent::SBallScoresReceived;
+}
+
+const cro::String& Social::getSBallScores()
+{
+    return sballString;
+}
+
+std::int32_t Social::getSBallPB()
+{
+    return sballScore.value;
+}
+
 void Social::takeScreenshot(const cro::String&, std::size_t courseIndex)
 {
     cro::App::getInstance().saveScreenshot();
@@ -835,11 +912,46 @@ void Social::takeScreenshot(const cro::String&, std::size_t courseIndex)
     }
 }
 
-void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score, std::int32_t, const std::vector<std::uint8_t>&)
+void Social::setLeaderboardsEnabled(bool b)
+{
+    leaderboardsEnabled = b;
+}
+
+bool Social::getLeaderboardsEnabled()
+{
+    return leaderboardsEnabled;
+}
+
+void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score, std::int32_t, const std::vector<std::uint8_t>& holeScores)
 {
 #ifdef USE_GJS
     //GJ::insertScore(course, hole, score);
 #endif
+
+    assertPB();
+
+    if (const auto& res = std::find(CourseNames.cbegin(), CourseNames.cend(), course); res != CourseNames.cend())
+    {
+        const auto idx = (std::distance(CourseNames.begin(), res) * 3) + hole;
+        personalBest->insertScore(idx, score, holeScores);
+    }
+}
+
+cro::String Social::getLeader(const std::string& course, std::uint8_t holeCount)
+{
+    return getTopFive(course, holeCount);
+}
+
+std::int32_t Social::getPersonalBest(const std::string& course, std::uint8_t holeCount)
+{
+    assertPB();
+
+    if (const auto& res = std::find(CourseNames.cbegin(), CourseNames.cend(), course); res != CourseNames.cend())
+    {
+        const auto idx = (std::distance(CourseNames.begin(), res) * 3) + holeCount;
+        return personalBest->getRoundScore(idx);
+    }
+    return -1;
 }
 
 cro::String Social::getTopFive(const std::string& course, std::uint8_t holeCount)
@@ -848,7 +960,20 @@ cro::String Social::getTopFive(const std::string& course, std::uint8_t holeCount
     //return GJ::getTopFive(course, holeCount);
     return {};
 #else
-    return {};
+    assertPB();
+
+    if (const auto& res = std::find(CourseNames.cbegin(), CourseNames.cend(), course); res != CourseNames.cend())
+    {
+        const auto idx = (std::distance(CourseNames.begin(), res) * 3) + holeCount;
+        const auto score = personalBest->getRoundScore(idx);
+
+        if (score)
+        {
+            return "Personal Best: " + std::to_string(score);
+        }
+    }
+
+    return "No Personal Best";
 #endif
 }
 
@@ -857,6 +982,26 @@ void Social::invalidateTopFive(const std::string& course, std::uint8_t holeCount
 #ifdef USE_GJS
     //GJ::invalidateTopFive(course, holeCount);
 #endif
+}
+
+std::vector<std::uint8_t> Social::getMonthlyHoleScores(const std::string& course, std::uint8_t holeCount, cro::String& playerName)
+{
+    assertPB();
+
+    std::vector<std::uint8_t> ret(18);
+    std::fill(ret.begin(), ret.end(), 0);
+
+    if (const auto& res = std::find(CourseNames.cbegin(), CourseNames.cend(), course); res != CourseNames.cend())
+    {
+        std::int32_t score = 0;
+
+        const auto idx = (std::distance(CourseNames.begin(), res) * 3) + holeCount;
+        personalBest->fetchScore(idx, score, ret);
+
+        playerName = "Personal Best";
+    }
+
+    return ret;
 }
 
 void Social::readAllStats()

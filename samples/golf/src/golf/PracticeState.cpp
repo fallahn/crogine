@@ -374,6 +374,8 @@ void PracticeState::buildScene()
                     }
                     else
                     {
+                        m_sharedData.gameMode = GameMode::Reset;
+
                         //quick connect sets the error for us
                         requestStackPush(StateID::Error); //error makes sure to reset any connection
                     }

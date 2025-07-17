@@ -79,7 +79,7 @@ namespace
     {
         enum
         {
-            GameMode, Quickplay,
+            GameMode, Quickplay, Dummy,
 
             Count
         };
@@ -149,11 +149,29 @@ bool FreePlayState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
         cro::App::getWindow().setMouseCaptured(true);
-        if (evt.cbutton.button == cro::GameController::ButtonB)
+        
+        switch (evt.cbutton.button)
         {
+        default: break;
+        case cro::GameController::ButtonB:
             quitState();
             return false;
+        case cro::GameController::ButtonLeftShoulder:
+            if (m_scene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Quickplay)
+            {
+                const auto clubset = (m_sharedData.preferredClubSet + 2) % (Social::getClubLevel() + 1);
+                switchClubs(clubset);
+            }
+            break;
+        case cro::GameController::ButtonRightShoulder:
+            if (m_scene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Quickplay)
+            {
+                const auto clubset = (m_sharedData.preferredClubSet + 1) % (Social::getClubLevel() + 1);
+                switchClubs(clubset);
+            }
+            break;
         }
+        
     }
 
     else if (evt.type == SDL_MOUSEBUTTONUP)
@@ -391,7 +409,7 @@ and All Time best scores.)";
                 break;
             case SelectionIndex::Clubset:
                 helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                helpText.getComponent<cro::Text>().setString("Set the opponent's difficulty\n(Level 15 or higher required)");
+                helpText.getComponent<cro::Text>().setString("Set the round's difficulty");
                 break;
             case SelectionIndex::NightTime:
                 helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
@@ -409,7 +427,10 @@ and All Time best scores.)";
             e.getComponent<cro::Text>().setFillColour(TextNormalColour);
         });
 
-    
+    auto dummyEnt = m_scene.createEntity();
+    dummyEnt.addComponent<cro::Transform>();
+    dummyEnt.addComponent<cro::UIInput>().setGroup(MenuID::Dummy);
+
     auto createItem = [&](glm::vec2 position, const std::string& label, cro::Entity parent) 
     {
         auto e = m_scene.createEntity();
@@ -542,7 +563,7 @@ and All Time best scores.)";
 
     static const std::array<std::string, 3u> ClubsetStrings =
     {
-        std::string("Novice"), "Expert", "Pro"
+        std::string("Casual"), "Regular", "Pro"
     };
 
     //club selection
@@ -557,16 +578,23 @@ and All Time best scores.)";
                 {
                     if (activated(evt))
                     {
-                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                        m_sharedData.preferredClubSet = (m_sharedData.preferredClubSet + 1) % (Social::getClubLevel() + 1);
-                        m_sharedData.clubSet = m_sharedData.preferredClubSet;
-                        Club::setClubLevel(m_sharedData.clubSet);
-
-                        e.getComponent<cro::Text>().setString("Club Set: " + ClubsetStrings[m_sharedData.clubSet]);
-                        centreText(e);
+                        const auto clubset = (m_sharedData.preferredClubSet + 1) % (Social::getClubLevel() + 1);
+                        switchClubs(clubset);
                     }
                 });
     }
+
+    switchClubs = 
+        [&, entity](std::int32_t clubSet) mutable
+        {
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            m_sharedData.preferredClubSet = clubSet;
+            m_sharedData.clubSet = m_sharedData.preferredClubSet;
+            Club::setClubLevel(m_sharedData.clubSet);
+
+            entity.getComponent<cro::Text>().setString("Club Set: " + ClubsetStrings[m_sharedData.clubSet]);
+            centreText(entity);
+        };
     position.y -= ItemHeight;
 
     const std::string s = m_sharedData.nightTime ? "Night Time: On" : "Night Time: Off";
@@ -670,13 +698,20 @@ void FreePlayState::menuShownCallback()
 
     const std::string s = /*m_sharedData.nightTime ? "Night Time: On" :*/ "Night Time: Off";
     m_callbackEntities[CallbackEntID::NightButton].getComponent<cro::Text>().setString(s);
+
+    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GameMode);
+
+    if (m_sharedData.showClubUpdate)
+    {
+        requestStackPush(StateID::ClubInfo);
+    }
 }
 
 void FreePlayState::quitState()
 {
     m_callbackEntities[CallbackEntID::GameMenu].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
     m_callbackEntities[CallbackEntID::QuickPlayMenu].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GameMode);
+    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
 
     m_scene.setSystemActive<cro::UISystem>(false);
 

@@ -403,3 +403,47 @@ void GolfState::updateTournament(bool playerWon)
         LogW << "Not a tournament" << std::endl;
     }*/
 }
+
+void GolfState::updateInventory(std::int32_t terrainID)
+{
+    if ((terrainID == TerrainID::Scrub && cro::Util::Random::value(0,1) == 0)
+        || terrainID == TerrainID::Water)
+    {
+        if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+            && !m_holeData[m_currentHole].puttFromTee)
+        {
+            //this is us
+            auto& pf = m_sharedProfiles.playerProfiles[m_sharedData.profileIndices[m_currentPlayer.player]];
+            auto& loadout = pf.loadout;
+            
+            if (loadout.items[inv::Ball] != -1 &&
+                m_sharedData.inventory.inventory[loadout.items[inv::Ball]] > 0)
+            {
+                m_sharedData.inventory.inventory[loadout.items[inv::Ball]]--;
+                inv::write(m_sharedData.inventory);
+
+                const auto ballCount = m_sharedData.inventory.inventory[loadout.items[inv::Ball]];
+                floatingMessage("Ball Lost!");
+
+                if (ballCount == 0)
+                {
+                    m_sharedData.inventory.inventory[loadout.items[inv::Ball]] = -1;
+                    loadout.items[inv::Ball] = -1;
+                    loadout.write(pf.playerData.profileID);
+                    floatingMessage("No Balls Left!!");
+                }
+                else
+                {
+                    if (ballCount == 1)
+                    {
+                        floatingMessage("1 Ball Remaining");
+                    }
+                    else
+                    {
+                        floatingMessage(std::to_string(ballCount) + " Balls Remaining");
+                    }
+                }
+            }
+        }
+    }
+}

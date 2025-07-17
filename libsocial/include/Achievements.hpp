@@ -123,9 +123,9 @@ public:
 
     static const StatData* getGlobalStat(const std::string&) { return nullptr; }
 
-    static void setAvgStat(const std::string&, float, float) {}
+    static void setAvgStat(const std::string&, float v, float duration);
 
-    static float getAvgStat(const std::string&) { return 0.f; }
+    static float getAvgStat(const std::string& s) { return getStat(s)->value; }
 
     static void setActive(bool);
 

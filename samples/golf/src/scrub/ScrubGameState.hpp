@@ -50,7 +50,7 @@ source distribution.
 #include <array>
 
 struct SharedStateData;
-struct SharedScrubData;
+struct SharedMinigameData;
 class ScrubSoundDirector;
 class ScrubGameState final : public cro::State
 #ifdef CRO_DEBUG_
@@ -58,7 +58,7 @@ class ScrubGameState final : public cro::State
 #endif
 {
 public:
-    ScrubGameState(cro::StateStack&, cro::State::Context, SharedStateData&, SharedScrubData&);
+    ScrubGameState(cro::StateStack&, cro::State::Context, SharedStateData&, SharedMinigameData&);
 
     cro::StateID getStateID() const override { return StateID::ScrubGame; }
 
@@ -69,7 +69,7 @@ public:
 
 private:
     SharedStateData& m_sharedData;
-    SharedScrubData& m_sharedScrubData;
+    SharedMinigameData& m_sharedScrubData;
     ScrubSoundDirector* m_soundDirector;
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;

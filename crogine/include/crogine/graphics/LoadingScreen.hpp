@@ -72,6 +72,17 @@ namespace cro
         */
         virtual void draw() = 0;
 
+        /*!
+        \brief Optional overload to set the progress bar when manually updating
+        \param prog Normalised value representing total progress
+        */
+        virtual void setProgress(float prog) {}
+
+        /*!
+        \brief Optionally overload this to be notified when the loading screen quits
+        */
+        virtual void quit() {}
+
     private:
 
     };

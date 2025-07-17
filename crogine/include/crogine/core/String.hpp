@@ -537,6 +537,19 @@ public:
     ////////////////////////////////////////////////////////////
     ConstIterator end() const;
 
+    ////////////////////////////////////////////////////////////
+    /// \brief Swap the contents of this string with the given string
+    ///
+    /// \param other A string with which to swap contents.
+    ///
+    ////////////////////////////////////////////////////////////
+    void swap(String& other) noexcept
+    {
+        if (&other != this)
+        {
+            m_string.swap(other.m_string);
+        }
+    }
 private:
 
     friend CRO_EXPORT_API bool operator ==(const String& left, const String& right);

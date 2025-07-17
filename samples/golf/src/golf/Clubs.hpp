@@ -85,6 +85,12 @@ struct ClubID final
 
     static constexpr std::int32_t FullSet = 0x1FFF;
 
+    //these are disable while the player has the snek
+    static constexpr std::int32_t SnekFlags =
+        Flags[ThreeWood] | Flags[FiveWood]  | Flags[FourIron]  |
+        Flags[SixIron]   | Flags[SevenIron] | Flags[EightIron] |
+        Flags[NineIron];
+
     static inline std::int32_t getRandomSet()
     {
         std::int32_t retVal = /*Flags[Driver] | */Flags[Putter];
@@ -131,6 +137,8 @@ public:
     static void setModifierIndex(std::int32_t);
 
     static void setFixedPuttingDistance(bool b) { m_fixedPuttingDistance = b; }
+
+    std::int32_t getScaleIndex(float) const; //0, 1 or 2 for putter else 2, based on distance to the pin
 
 private:
     const std::int32_t m_id = -1;

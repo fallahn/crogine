@@ -31,6 +31,7 @@ source distribution.
 
 #include "Path.hpp"
 #include "GameConsts.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/util/Spline.hpp>
@@ -39,6 +40,31 @@ source distribution.
 
 #include <array>
 #include <string>
+
+struct Team final
+{
+    std::int32_t currentPlayer = 0; //which of the two players is next
+    
+    struct Player final
+    {
+        std::uint8_t client = ConstVal::NullValue;
+        std::uint8_t player = ConstVal::NullValue;
+        Player() = default;
+        explicit Player(std::uint8_t c, std::uint8_t p)
+            : client(c), player(p) { }
+    };
+    std::array<Player, 2u> players = {}; //client, player of each player
+};
+
+static inline bool operator == (const Team::Player& a, const Team::Player& b)
+{
+    return (a.client == b.client) && (a.player == b.player);
+}
+
+static inline bool operator != (const Team::Player& a, const Team::Player& b)
+{
+    return !(a == b);
+}
 
 static inline const std::array<std::string, 12u> CourseNames =
 {

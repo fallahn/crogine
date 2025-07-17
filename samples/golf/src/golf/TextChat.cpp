@@ -47,6 +47,11 @@ source distribution.
 
 #include <cstring>
 
+#ifdef __linux__
+#include <stdio.h>
+#include <chrono>
+#endif
+
 namespace
 {
     //this is static so the preference is remember between
@@ -165,14 +170,69 @@ namespace
         std::vector<char> icon;
     };
 
-    const std::array<Emote, 25u> Emotes =
+    const std::array<Emote, 30u> Emotes =
     {
         Emote({0x1F600}), Emote({0x1F601}), Emote({0x1F602}), Emote({0x1F929}), Emote({0x1F61B}),
         Emote({0x1F914}), Emote({0x1F92D}), Emote({0x1F973}), Emote({0x1F60E}), Emote({0x1F644}),
         Emote({0x1F62C}), Emote({0x1F632}), Emote({0x1F633}), Emote({0x1F629}), Emote({0x1F624}),
         Emote({0x1F3C6}), Emote({0x1F947}), Emote({0x1F948}), Emote({0x1F949}), Emote({0x26F3}),
         Emote({0x2764}),  Emote({0x1F573}), Emote({0x1F4A5}), Emote({0x1F4A8}), Emote({0x1F4A4}),
+
+        Emote({0x1F373}),  Emote({0x1F426}), Emote({0x1F985}), Emote({0x1F40D}), Emote({0x1F40A}),
     };
+
+    static constexpr std::size_t MAX_HISTORY = 10;
+    std::list<std::string> history;
+    std::int32_t historyIndex = -1;
+
+    int historyCallback(ImGuiInputTextCallbackData* data)
+    {
+        switch (data->EventFlag)
+        {
+        default: 
+            //LogI << "Flag: " << data->EventFlag << std::endl;
+            break;
+        case ImGuiInputTextFlags_CallbackCompletion: //user pressed tab to complete
+            break;
+        case ImGuiInputTextFlags_CallbackHistory:
+        {
+            const int prev_history_pos = historyIndex;
+            if (data->EventKey == ImGuiKey_UpArrow)
+            {
+                if (historyIndex == -1)
+                {
+                    historyIndex = static_cast<std::int32_t>(history.size()) - 1;
+                }
+                else if (historyIndex > 0)
+                {
+                    historyIndex--;
+                }
+            }
+            else if (data->EventKey == ImGuiKey_DownArrow)
+            {
+                if (historyIndex != -1)
+                {
+                    if (++historyIndex >= history.size())
+                    {
+                        historyIndex = -1;
+                    }
+                }
+            }
+
+            //a better implementation would preserve the data on the current input line along with cursor position.
+            if (prev_history_pos != historyIndex)
+            {
+                data->CursorPos = data->SelectionStart = data->SelectionEnd = data->BufTextLen =
+                    (int)snprintf(data->Buf, (size_t)data->BufSize, "%s", (historyIndex >= 0) ? 
+                        std::next(history.begin(), historyIndex)->c_str() : "");
+                data->BufDirty = true;
+            }
+        }
+        break;
+        }
+
+        return 0;
+    }
 }
 
 std::deque<TextChat::BufferLine> TextChat::m_displayBuffer;
@@ -369,8 +429,18 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
 
                     if (!Social::isSteamdeck())
                     {
-                        if (ImGui::InputText("##ip", &m_inputBuffer, ImGuiInputTextFlags_EnterReturnsTrue))
+                        if (ImGui::InputText("##ip", &m_inputBuffer, 
+                            ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory, &historyCallback))
                         {
+                            //store in history
+                            history.push_back(m_inputBuffer);
+                            if (history.size() > MAX_HISTORY)
+                            {
+                                history.pop_front();
+                            }
+                            historyIndex = -1;
+
+                            //this clears the buffer so do it *after* pushing to history
                             sendTextChat();
                             m_focusInput = true;
                         }
@@ -404,7 +474,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         {
                             ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
 
-                            for (auto i = 0; i < 25; ++i)
+                            for (auto i = 0u; i < Emotes.size(); ++i)
                             {
                                 if (ImGui::Button(Emotes[i].icon.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                                 {
@@ -413,6 +483,8 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                                         m_inputBuffer.push_back(cp);
                                     }
                                     m_inputBuffer.pop_back(); //removes the terminator.. ugh
+                                    
+                                    //ImGui::CloseCurrentPopup();
                                 }
 
                                 if ((i % 5) != 4) ImGui::SameLine();
@@ -849,10 +921,131 @@ bool TextChat::speak(const cro::String& str) const
     {
         if (m_speaker.voice != nullptr)
         {
+            m_speaker.voice->SetVolume(static_cast<std::uint16_t>(cro::AudioMixer::getVolume(MixerChannel::TextToSpeech) * 100.f));
             m_speaker.voice->Speak((LPCWSTR)(str.toUtf16().c_str()), SPF_ASYNC, nullptr);
             return true;
         }
     }
+#elif defined(__linux__)
+    if (m_sharedData.useTTS //hm there's currently no way to set flite volume
+        && cro::AudioMixer::getVolume(MixerChannel::TextToSpeech) > 0.2f)
+    {
+        m_speaker.say(str, TTSSpeaker::Voice::Three);
+        return true;
+    }
 #endif
     return false;
 }
+
+//speaker class for linux
+#ifdef __linux__
+TextChat::TTSSpeaker::TTSSpeaker()
+    : m_threadRunning   (true),
+    m_busy              (false),
+    m_thread            (&TTSSpeaker::threadFunc, this)
+{
+    m_threadRunning = cro::FileSystem::fileExists("flite");
+    if (!m_threadRunning)
+    {
+        LogW << "flite not found, TTS is unavailable" << std::endl;
+        m_thread.detach();
+    }
+    //else
+    //{
+    //    LogI << "Created TTS" << std::endl;
+    //}
+}
+
+TextChat::TTSSpeaker::~TTSSpeaker()
+{
+    if (m_threadRunning)
+    {
+        m_threadRunning = false;
+        m_thread.join();
+    }
+}
+
+//public
+void TextChat::TTSSpeaker::say(const cro::String& line, Voice voice) const
+{
+    if (/*cro::FileSystem::fileExists("flite")*/m_threadRunning)
+    {
+        std::scoped_lock l(m_mutex);
+        m_queue.push(std::make_pair(line, voice));
+    }
+}
+
+//private
+void TextChat::TTSSpeaker::threadFunc()
+{
+    while (m_threadRunning)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+
+        if (!m_queue.empty())
+        {
+            if (!m_busy)
+            {
+                cro::String msg;
+                Voice type;
+                {
+                    std::scoped_lock l(m_mutex);
+                    msg = m_queue.front().first;
+                    type = m_queue.front().second;
+                    m_queue.pop();
+                }
+
+                //remove mid-line quotes as they break the string
+                msg.replace("\"", " ");
+
+                //then propertly terminate
+                msg += "\"";
+
+                {
+                    std::string say = "./flite -voice ";
+                    switch (type)
+                    {
+                    default:
+                    case Voice::One:
+                        say += "awb -t \"";
+                        break;
+                    case Voice::Two:
+                        say += "rms -t \"";
+                        break;
+                    case Voice::Three:
+                        say += "slt -t \"";
+                        break;
+                    }
+
+                    //attempt to preserve any utf encoding
+                    auto utf = msg.toUtf8();
+                    //these aren't null terminated by default
+                    utf.push_back(0);
+
+                    std::vector<char> finalMessage(say.length() + utf.size());
+                    
+                    std::copy(say.begin(), say.end(), finalMessage.data());
+                    std::copy(utf.begin(), utf.end(), finalMessage.data() + say.length());
+
+                    //TODO is there a way to set the volume?
+                    FILE* pipe = popen(finalMessage.data(), "r");
+                    if (pipe)
+                    {
+                        //LogI << "Said: " << finalMessage.data() << std::endl;
+                        while (pclose(pipe) == -1)
+                        {
+                            std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                        }
+                    }
+                    else
+                    {
+                        LogE << "Could not pipe to flite" << std::endl;
+                    }
+
+                    m_busy = false;
+                }
+            }
+        }
+    }
+}
+#endif

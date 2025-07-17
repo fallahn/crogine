@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -186,6 +186,16 @@ namespace AchievementID
 
         AheadOfTheGame,
 
+        Upgrade,
+        CustomKit,
+        BigSpender,
+        Hoarder,
+        Entrepreneur,
+        Fickle,
+        GetThisOver,
+        AnotherLevel,
+        Tag,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
@@ -253,6 +263,13 @@ namespace StatID
         UnrealBest,
         BeauchampBest,
 
+        AverageDrive,
+        LongestDrive,
+        AveragePutt,
+        LongestPutt,
+        LongestChipIn,
+        CreditsSpent,
+
         Count
     };
     static_assert(Count <= 64, "Count exceeds maximum number of stats");
@@ -269,6 +286,7 @@ namespace XPID
         Count
     };
 }
+
 static constexpr inline std::array<std::int32_t, XPID::Count> XPValues =
 {
     500, 250, 100, 50, 20, 100,

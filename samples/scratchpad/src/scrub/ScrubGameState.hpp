@@ -10,6 +10,10 @@
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 
+#include <crogine/graphics/MultiRenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/Shader.hpp>
+
 #include <crogine/util/Easings.hpp>
 
 #include <array>
@@ -34,6 +38,11 @@ private:
     cro::EnvironmentMap m_environmentMap;
 
     std::int16_t m_axisPosition;
+
+
+    cro::Shader m_postShader;
+    cro::MultiRenderTexture m_postTexture;
+    cro::SimpleQuad m_postQuad;
 
     struct Handle final
     {

@@ -149,6 +149,8 @@ private:
         std::uint32_t vbo = 0;
         std::uint32_t shaderID = 0;
         std::int32_t morphUniform = -1;
+        std::uint32_t shaderIDShadow = 0;
+        std::int32_t morphUniformShadow = -1;
         float morphTime = 0.f;
     }m_terrainProperties;
     cro::Entity m_terrainEntity;

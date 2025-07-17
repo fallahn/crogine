@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,6 +32,10 @@ source distribution.
 #include <array>
 #include <cstdint>
 
+/*
+NOTE! If we add more of these here we must update April's monthly challenge!
+*/
+
 namespace ScoreType
 {
     enum
@@ -55,14 +59,19 @@ namespace ScoreType
         LongestDrive,
     };
 
-    static const inline std::array<std::int32_t, Count> MinPlayerCount =
+    static constexpr inline std::array<std::int32_t, Count> MinPlayerCount =
     {
         1,1,1,2,2,1,1,2,1,2,2//,2
     };
 
-    static const inline std::array<std::int32_t, Count> MaxPlayerCount =
+    static constexpr inline std::array<std::int32_t, Count> MaxPlayerCount =
     {
         16,16,16,2,16,16,16,16,16,16,16//,16
+    };
+
+    static constexpr inline std::array<bool, Count> CanTeamPlay =
+    {
+        true, true, true, false, false, true, true, false, false, false, false
     };
 }
 

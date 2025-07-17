@@ -106,6 +106,12 @@
     <Filter Include="Source Files\websocket">
       <UniqueIdentifier>{8a948265-bb55-4baf-bc64-4d1f02135f7c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\sportsball">
+      <UniqueIdentifier>{bc5b40f9-ed82-4b64-9a5b-3d19a004d9d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\sportsball">
+      <UniqueIdentifier>{774b2a37-f5e3-4e3f-8adf-d216c7e3173f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -648,6 +654,33 @@
     <ClCompile Include="src\golf\CoinSystem.cpp">
       <Filter>Source Files\golf\server\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\ShopState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ClubInfoState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sportsball\SBallAttractState.cpp">
+      <Filter>Source Files\sportsball</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sportsball\SBallBackgroundState.cpp">
+      <Filter>Source Files\sportsball</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sportsball\SBallGameState.cpp">
+      <Filter>Source Files\sportsball</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sportsball\SBallParticleDirector.cpp">
+      <Filter>Source Files\sportsball</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sportsball\SBallPhysicsSystem.cpp">
+      <Filter>Source Files\sportsball</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sportsball\SBallSoundDirector.cpp">
+      <Filter>Source Files\sportsball</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sportsball\BackgroundPhysicsSystem.cpp">
+      <Filter>Source Files\sportsball</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -994,9 +1027,6 @@
     </ClInclude>
     <ClInclude Include="src\golf\PlayerData.hpp">
       <Filter>Header Files\golf\client</Filter>
-    </ClInclude>
-    <ClInclude Include="src\golf\SharedProfileData.hpp">
-      <Filter>Header Files\golf</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\BallTrail.hpp">
       <Filter>Header Files\golf\client</Filter>
@@ -1355,6 +1385,60 @@
     <ClInclude Include="src\golf\Inventory.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\ShopState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\SharedProfileData.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\XPValues.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ClubInfoState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BannerTexture.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\AvatarAnimation.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlayerGuide.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sportsball\SBallBackgroundState.hpp">
+      <Filter>Header Files\sportsball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sportsball\SBallGameState.hpp">
+      <Filter>Header Files\sportsball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sportsball\SBallPhysicsSystem.hpp">
+      <Filter>Header Files\sportsball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sportsball\BallType.hpp">
+      <Filter>Header Files\sportsball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sportsball\SBallConsts.hpp">
+      <Filter>Header Files\sportsball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sportsball\SBallAttractState.hpp">
+      <Filter>Header Files\sportsball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\TabData.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sportsball\SballParticleDirector.hpp">
+      <Filter>Header Files\sportsball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sportsball\SBallSoundDirector.hpp">
+      <Filter>Header Files\sportsball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sportsball\BackgroundPhysicsSystem.hpp">
+      <Filter>Header Files\sportsball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Colordome-32.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">
@@ -1448,6 +1532,15 @@
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
     <None Include="src\golf\shaders\EmissiveShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\ShopEnum.inl">
+      <Filter>Header Files\golf\client\states</Filter>
+    </None>
+    <None Include="src\golf\shaders\ShopItems.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\Hole.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
   </ItemGroup>

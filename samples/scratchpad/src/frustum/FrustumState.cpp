@@ -475,7 +475,7 @@ void FrustumState::createScene()
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = std::bind(&PerspectiveDebug::update, &perspectiveDebug, std::placeholders::_1);
-    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(512, 512);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(512,512, CascadeCount);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Scene);
     perspectiveDebug.update(camEnt.getComponent<cro::Camera>());
     m_entities[EntityID::Camera] = camEnt;
@@ -571,8 +571,16 @@ void FrustumState::createUI()
                     m_entities[EntityID::Camera].getComponent<cro::Camera>().setShadowExpansion(perspectiveDebug.overshoot);
                 }
                 const auto& splits = m_entities[EntityID::Camera].getComponent<cro::Camera>().getSplitDistances();
-                ImGui::Text("Splits: %3.3f, %3.3f, %3.3f", splits[0], splits[1], splits[2]);
+                //ImGui::Text("Splits: %3.3f, %3.3f, %3.3f", splits[0], splits[1], splits[2]);
                 
+                const auto dist = m_entities[EntityID::Camera].getComponent<cro::Camera>().getSplitDistances();
+                ImGui::Text("Splits:");
+                for (const auto s : dist)
+                {
+                    ImGui::SameLine();
+                    ImGui::Text("%3.3f", s);
+                }
+
                 if (ImGui::InputInt("Cascades", &CascadeCount))
                 {
                     CascadeCount = std::min(3, std::max(1, CascadeCount));
@@ -585,6 +593,13 @@ void FrustumState::createUI()
                     }
 
                     doUpdate = true;
+                }
+
+                std::int32_t blurCount = m_entities[EntityID::Camera].getComponent<cro::Camera>().getBlurPassCount();
+                if (ImGui::InputInt("Cascades Blurred", &blurCount))
+                {
+                    blurCount = std::clamp(blurCount, 0, CascadeCount);
+                    m_entities[EntityID::Camera].getComponent<cro::Camera>().setBlurPassCount(blurCount);
                 }
 
                 if (doUpdate)
@@ -600,7 +615,7 @@ void FrustumState::createUI()
             }
             ImGui::End();     
 
-            if (ImGui::Begin("Depth Layers"))
+            /*if (ImGui::Begin("Depth Layers"))
             {
                 const auto& depthMap = m_entities[EntityID::Camera].getComponent<cro::Camera>().shadowMapBuffer;
                 for (auto i = 0u; i < depthMap.getLayerCount(); ++i)
@@ -608,7 +623,7 @@ void FrustumState::createUI()
                     ImGui::Image(depthMap.getTexture(i), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 }
             }
-            ImGui::End();
+            ImGui::End();*/
         });
 
     auto updateView = [](cro::Camera& cam)

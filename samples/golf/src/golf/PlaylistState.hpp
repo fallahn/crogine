@@ -236,6 +236,7 @@ private:
     struct Thumbnail final
     {
         std::string name;
+        std::string par;
         cro::Entity thumbEnt;
         glm::vec2 defaultScale = glm::vec2(1.f);
     };

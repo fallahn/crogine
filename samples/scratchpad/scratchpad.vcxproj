@@ -444,6 +444,7 @@
     <None Include="src\retro\RetroShaders.inl" />
     <None Include="src\ssao\BlurShaders.inl" />
     <None Include="src\swingput\Glow.inl" />
+    <None Include="src\swingput\Hole.inl" />
     <None Include="src\swingput\Rain.inl" />
     <None Include="src\voxels\Tables.inl" />
   </ItemGroup>

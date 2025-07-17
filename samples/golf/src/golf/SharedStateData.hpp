@@ -50,6 +50,9 @@ source distribution.
 #include <array>
 #include <memory>
 #include <unordered_map>
+#include <thread>
+#include <atomic>
+#include <chrono>
 
 namespace cro
 {
@@ -98,7 +101,8 @@ static constexpr float MaxFOV = 90.f;
 
 enum class GameMode
 {
-    Career, FreePlay, Tutorial, Clubhouse, Tournament
+    Career, FreePlay, Tutorial, Clubhouse, Tournament,
+    Reset //use this to reset the main menu when quitting
 };
 
 struct SharedCourseData;
@@ -118,6 +122,8 @@ struct SharedStateData final
     SharedCourseData* courseData = nullptr; //only valid when MenuState is active
 
     ChatFonts chatFonts;
+    std::array<ImFont*, 3u> helpFonts = { nullptr, nullptr, nullptr };
+    bool showHelp = false;
 
     bool useOSKBuffer = false; //if true output of OSK is buffered here instead of sending codepoints
     cro::String OSKBuffer;
@@ -136,6 +142,8 @@ struct SharedStateData final
         cro::MultiRenderTexture* mrt = nullptr;
         glm::vec3 teePos = glm::vec3(0.f);
         glm::vec3 pinPos = glm::vec3(0.f);
+        glm::vec3 targetPos = glm::vec3(0.f); //approx location of aiming target
+        glm::vec3 mapCentre = glm::vec3(0.f); //based on AABB of geom rather than world size
         cro::String courseName;
         std::int32_t holeNumber = -1;
         bool active = false;
@@ -146,12 +154,40 @@ struct SharedStateData final
     struct ClientConnection final
     {
         net::NetClient netClient;
-        bool connected = false;
+        std::atomic_bool connected = false;
         bool ready = false;
         std::uint8_t connectionID = ConstVal::NullValue;
 
         std::uint64_t hostID = 0;
         std::vector<net::NetEvent> eventBuffer; //don't touch this while loading screen is active!!
+
+        //pumps the message queue in a separate thread
+        //as the loading screen is blocking and can cause timeouts
+        std::unique_ptr<std::thread> loadingThread;
+        std::atomic_bool threadRunning = false;
+
+        ~ClientConnection()
+        {
+            quitThread();
+        }
+
+        void launchThread()
+        {
+            threadRunning = true;
+            loadingThread = std::make_unique<std::thread>(&ClientConnection::threadFunc, this);
+        }
+
+        void quitThread()
+        {
+            if (loadingThread)
+            {
+                threadRunning = false;
+                loadingThread->join();
+                loadingThread.reset();
+            }
+        }
+
+        void threadFunc();
     };
     ClientConnection clientConnection;
     ClientConnection voiceConnection;
@@ -231,6 +267,7 @@ struct SharedStateData final
     std::uint64_t lobbyID = 0;
     std::uint64_t inviteID = 0;
     ConnectionData localConnectionData;
+    std::array<std::size_t, ConstVal::MaxPlayers> profileIndices = {};
     cro::String targetIP = "255.255.255.255";
 
     //sent to server if hosting else rx'd from server
@@ -248,6 +285,8 @@ struct SharedStateData final
     std::uint8_t windStrength = 0; //1-5 but stored 0-4 for ease of iteration
     std::int32_t leagueRoundID = 0; //which league we're playing in
     std::int32_t quickplayOpponents = 0; //1-3 if quickplay, 0 to disable
+    std::int32_t groupMode = 0; //experimental group mode - buggy as all balls.
+    std::int32_t teamMode = 0;
 
     //counts the number of holes actually played in elimination
     std::uint8_t holesPlayed = 0;
@@ -291,12 +330,23 @@ struct SharedStateData final
     float beaconColour = 1.f; //normalised rotation
     bool imperialMeasurements = false;
     float gridTransparency = 1.f;
-    enum TreeQuality
+    struct TreeQuality final
     {
-        Classic, Low, High
+        enum
+        {
+            Classic, Low, High
+        };
     };
-    std::int32_t treeQuality = Low;
-    bool hqShadows = false;
+    std::int32_t treeQuality = TreeQuality::Low;
+    struct ShadowQuality final
+    {
+        enum
+        {
+            VeryLow, Low, Normal, Ultra, Classic,
+            Count
+        };
+    };
+    std::int32_t shadowQuality = ShadowQuality::Low;
     bool logBenchmarks = false;
     bool showCustomCourses = true;
     bool showTutorialTip = true;
@@ -308,11 +358,11 @@ struct SharedStateData final
     std::int32_t clubSet = 0;
     std::int32_t preferredClubSet = 0; //this is what the player chooses, may be overridden by game rules
     std::int32_t crowdDensity = 1;
-    std::int32_t groupMode = 0;
+
     bool pressHold = false; //press and hold the action button to select power
     bool useTTS = false;
     bool useLensFlare = true;
-    bool useMouseAction = true;
+    bool useMouseAction = false;
     bool useLargePowerBar = false;
     bool useContrastPowerBar = false;
     bool decimatePowerBar = false;
@@ -327,6 +377,10 @@ struct SharedStateData final
     bool blockChat = false;
     bool logChat = false;
     bool remoteContent = false;
+    bool showRival = true;
+    bool puttFollowCam = false;
+    bool zoomFollowCam = false;
+    bool showClubUpdate = true;
     std::int32_t flagText = 0; //none, black, white
     std::string flagPath;
 

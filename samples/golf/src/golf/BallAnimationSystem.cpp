@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -54,8 +54,8 @@ void BallAnimationSystem::process(float dt)
         //possible to get a cross product (and probably causes the NaN case...)
         if (auto len2 = glm::length2(interp.getVelocity()); len2 != 0)
         {
-            auto len = glm::sqrt(len2);
-            auto forward = interp.getVelocity() / len;
+            const auto len = glm::sqrt(len2);
+            const auto forward = interp.getVelocity() / len;
 
             if (auto d = glm::dot(forward, cro::Transform::Y_AXIS);
                 d < 0.9f && d > -0.9f)
@@ -69,10 +69,12 @@ void BallAnimationSystem::process(float dt)
                 rightVec = glm::inverse(entity.getComponent<cro::Transform>().getRotation()) * rightVec;
                 CRO_ASSERT(!std::isnan(rightVec.x), "NaN from ball rotation");
 
-                float rotation = (len / Ball::Radius);
+                auto& tx = entity.getComponent<cro::Transform>();
+
+                const float rotation = (len / /*Ball::Radius*/tx.getPosition().y); //if we're playing with big balls the Y represents the scaled radius
                 CRO_ASSERT(!std::isnan(rotation), "");
 
-                entity.getComponent<cro::Transform>().rotate(rightVec, rotation * dt);
+                tx.rotate(rightVec, rotation * dt);
             }
         }
     }

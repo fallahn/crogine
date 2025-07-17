@@ -117,6 +117,9 @@ enum OptionsIndex
     SettInGameChat,
     SettLogChat,
     SettRemoteContent,
+    SettShowRival,
+    SettPuttFollow,
+    SettPuttZoom,
     SettFlagDown,
     SettFlagUp,
     SettFlagLabelDown,
@@ -129,6 +132,7 @@ enum OptionsIndex
     Scroll = 1000,
     ScrollUp,
     ScrollDown,
+    ResetHints,
     ResetStats,
     ResetCareer,
 
@@ -136,6 +140,7 @@ enum OptionsIndex
     Window = 2000,
     WindowCredits,
     WindowAdvanced,
+    WindowHowTo,
     WindowApply,
     WindowClose
 };

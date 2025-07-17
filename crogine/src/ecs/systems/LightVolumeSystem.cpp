@@ -339,23 +339,28 @@ void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
     target.clear();
     for (const auto& entity : drawList)
     {
-        const auto& tx = entity.getComponent<Transform>();
-        glm::mat4 worldMat = tx.getWorldTransform();
-        glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::World], 1, GL_FALSE, &worldMat[0][0]));
-
-        if (m_spaceIndex == LightVolume::ViewSpace)
+        const auto flags = entity.getComponent<cro::Model>().getRenderFlags();
+        if ((flags & pass.renderFlags) != 0)
         {
-            const auto viewPos = glm::vec3(pass.viewMatrix * glm::vec4(tx.getWorldPosition(), 1.f));
-            glCheck(glUniform3f(m_uniformIDs[UniformID::LightPosition], viewPos.x, viewPos.y, viewPos.z));
+
+            const auto& tx = entity.getComponent<Transform>();
+            glm::mat4 worldMat = tx.getWorldTransform();
+            glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::World], 1, GL_FALSE, &worldMat[0][0]));
+
+            if (m_spaceIndex == LightVolume::ViewSpace)
+            {
+                const auto viewPos = glm::vec3(pass.viewMatrix * glm::vec4(tx.getWorldPosition(), 1.f));
+                glCheck(glUniform3f(m_uniformIDs[UniformID::LightPosition], viewPos.x, viewPos.y, viewPos.z));
+            }
+
+            const auto& light = entity.getComponent<LightVolume>();
+            float radius = light.radius * light.lightScale;
+            glm::vec4 colour = light.colour.getVec4() * light.cullAttenuation;
+            glCheck(glUniform3f(m_uniformIDs[UniformID::LightColour], colour.r, colour.g, colour.b));
+            glCheck(glUniform1f(m_uniformIDs[UniformID::LightRadiusSqr], radius * radius));
+
+            entity.getComponent<Model>().draw(0, Mesh::IndexData::Final);
         }
-
-        const auto& light = entity.getComponent<LightVolume>();
-        float radius = light.radius * light.lightScale;
-        glm::vec4 colour = light.colour.getVec4() * light.cullAttenuation;
-        glCheck(glUniform3f(m_uniformIDs[UniformID::LightColour], colour.r, colour.g, colour.b));
-        glCheck(glUniform1f(m_uniformIDs[UniformID::LightRadiusSqr], radius * radius));
-
-        entity.getComponent<Model>().draw(0, Mesh::IndexData::Final);
     }
     target.display();
 

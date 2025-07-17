@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -79,7 +79,7 @@ static const std::array<std::string, ChallengeID::Count> ChallengeDescriptions =
     "Make 50 Nice Putts",
     "Hit 25 random bull's eyes",
     "Play a full 18 (or 12) hole round in every game mode in Free Play",
-    "Play 9 holes on each course with at least 3 human or CPU players",
+    "Play 9 holes on each course against at least 3 human or CPU players",
     "Get the equivalent of 10 Boomerang achievements",
     "Get 99% or better on each target on the Driving Range",
     "Take 50 gimmes resulting from a Near Miss",
@@ -138,7 +138,7 @@ private:
         Challenge(100, Challenge::Counter),
         Challenge(50, Challenge::Counter),
         Challenge(25, Challenge::Counter),
-        Challenge(0x3FF, Challenge::Flag), //game mode count
+        Challenge(0x7FF, Challenge::Flag), //game mode count
         Challenge(0xfff, Challenge::Flag), //(1 << 0) - (1 << 11) course count
         Challenge(10, Challenge::Counter),
         Challenge(0x1fff, Challenge::Flag), //(1 << 0) - (1 << 12)

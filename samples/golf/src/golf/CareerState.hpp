@@ -124,4 +124,6 @@ private:
 
     void loadConfig();
     void saveConfig() const;
+
+    void onCachedPush() override;
 };

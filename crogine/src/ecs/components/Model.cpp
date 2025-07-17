@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -464,7 +464,7 @@ void Model::updateMaterialAnimations(float dt)
             material.animation.currentTime -= material.animation.frameTime;
             material.animation.frame.y -= material.animation.frame.w;
 
-            if (material.animation.frame.y < 0)
+            if (material.animation.frame.y < -(material.animation.frame.w / 2.f)) //saying less than zero might still be true due to rounding error
             {
                 material.animation.frame.y = 1.f - material.animation.frame.w;
                 material.animation.frame.x = std::fmod(material.animation.frame.x + material.animation.frame.z, 1.f);

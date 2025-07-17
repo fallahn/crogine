@@ -1094,7 +1094,7 @@ void TournamentState::buildScene()
 
         //warning string 
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 350.f, 38.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 364.f, 37.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString(std::uint32_t(0x26A0));
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -1103,14 +1103,14 @@ void TournamentState::buildScene()
 
 
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 307.f, 27.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 315.f, 27.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bag_select");
         entity.addComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
         auto buttonEnt = entity;
-        entity = m_scene.createEntity();
+        /*entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ -32.f, 9.f, 0.f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString("Clubs:");
@@ -1118,11 +1118,11 @@ void TournamentState::buildScene()
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
         entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-        buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
 
 
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ -2.f, -3.f, 0.f });
+        entity.addComponent<cro::Transform>().setPosition({ -2.f, -2.f, 0.f });
         entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bag_highlight");
@@ -2574,4 +2574,12 @@ void TournamentState::saveConfig() const
     cfg.addProperty("night").setValue(m_sharedData.nightTime);
     cfg.addProperty("weather").setValue(m_sharedData.weatherType);
     cfg.save(Content::getUserContentPath(Content::UserContent::Career) + ConfigFile);
+}
+
+void TournamentState::onCachedPush()
+{
+    if (m_sharedData.showClubUpdate)
+    {
+        requestStackPush(StateID::ClubInfo);
+    }
 }

@@ -26,9 +26,9 @@ SET(USE_PARALLEL_EXECUTION TRUE CACHE BOOL "Enable parallel execution, requires 
 
 if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
   if(PROJECT_STATIC_RUNTIME)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -std=c++17 -static")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -Wno-comment -std=c++17 -static")
   else()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -std=c++17")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -Wno-comment -std=c++17")
   endif()
 endif()
 
@@ -88,6 +88,30 @@ if(USE_STEAM)
   SET(GNS_DIR ${libgns_SOURCE_DIR})
   SET(SOCIAL_DIR ${GNS_DIR}/golf_ach/src)
   SET(SOCIAL_INCLUDE_DIR ${GNS_DIR}/golf_ach/include)
+
+if(APPLE)
+#apple sucks
+else()
+
+  SET(DISCORD_SDK_ROOT "${GNS_DIR}/extlibs/discord")
+  SET(DISCORD_SDK_LIB_DIR "${DISCORD_SDK_ROOT}/lib/release")
+  SET(DISCORD_SDK_BIN_DIR "${DISCORD_SDK_ROOT}/bin/release")
+  SET(DISCORD_SDK_INCLUDE_DIR "${DISCORD_SDK_ROOT}/include")
+
+  
+  if(WIN32)
+#TODO if discord update their lib to work with sniper define this for linux
+add_compile_definitions(USE_DCD)
+
+
+      set(DISCORD_LIB_PATH "${DISCORD_SDK_LIB_DIR}/discord_partner_sdk.lib")
+      set(DISCORD_SHARED_LIB "${DISCORD_SDK_BIN_DIR}/discord_partner_sdk.dll")
+  else() # Linux
+      set(DISCORD_LIB_PATH "${DISCORD_SDK_LIB_DIR}/libdiscord_partner_sdk.so")
+      set(DISCORD_SHARED_LIB "${DISCORD_SDK_LIB_DIR}/libdiscord_partner_sdk.so")
+  endif()
+endif()
+
   SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${GNS_DIR}/cmake/modules/")
   find_package(STEAMWORKS REQUIRED)
 
@@ -110,6 +134,7 @@ if(USE_STEAM)
   include_directories(${STEAMWORKS_INCLUDE_DIR})
   include_directories(${GNS_DIR}/golf_workshop/include)
   include_directories(${GNS_DIR}/libgns/include)
+  include_directories(${DISCORD_SDK_INCLUDE_DIR})
 endif()
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -119,10 +144,11 @@ include(${PROJECT_DIR}/editor/CMakeLists.txt)
 include(${PROJECT_DIR}/runner/CMakeLists.txt)
 include(${PROJECT_DIR}/scrub/CMakeLists.txt)
 include(${PROJECT_DIR}/sockets/CMakeLists.txt)
+include(${PROJECT_DIR}/sportsball/CMakeLists.txt)
 include(${PROJECT_DIR}/sqlite/CMakeLists.txt)
 include(${SOCIAL_DIR}/CMakeLists.txt)
 
-SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SCRUB_SRC} ${SOCKETS_SRC} ${SQLITE_SRC})
+SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SCRUB_SRC} ${SOCKETS_SRC} ${SBALL_SRC} ${SQLITE_SRC})
 #Steam version actually uses this too now...
 #if(USE_NEWSFEED)
   include(${PROJECT_DIR}/rss/CMakeLists.txt)
@@ -193,15 +219,7 @@ if(TARGET crogine)
  target_link_libraries(${PROJECT_NAME} crogine)
 endif()
 
-#if(USE_NEWSFEED)
-#  target_link_libraries(${PROJECT_NAME} CURL::libcurl)
-#endif()
 
-if(USE_STEAM)
-  target_link_libraries(${PROJECT_NAME} ${STEAMWORKS_LIBRARIES})
-else()
-  target_link_libraries(${PROJECT_NAME} CURL::libcurl)
-endif()
 
 #websockets needs this
 if (WIN32)
@@ -214,6 +232,22 @@ if (UNIX AND NOT APPLE)
   target_link_libraries(${PROJECT_NAME} Threads::Threads)
 endif()
 #end websockets
+
+
+
+
+if(USE_STEAM)
+  target_link_libraries(${PROJECT_NAME} ${STEAMWORKS_LIBRARIES})
+
+  #if (NOT APPLE)
+  if (WIN32)
+    target_link_libraries(${PROJECT_NAME} ${DISCORD_LIB_PATH})
+  endif()
+else()
+  target_link_libraries(${PROJECT_NAME} CURL::libcurl)
+endif()
+
+
 
 
 if(APPLE)

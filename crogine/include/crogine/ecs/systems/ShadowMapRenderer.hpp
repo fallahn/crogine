@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/DepthTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/Shader.hpp>
 
 #ifdef CRO_DEBUG_
 #include <crogine/gui/GuiClient.hpp>
@@ -144,6 +146,27 @@ namespace cro
         };
         //for each camera, for each camera cascade, a vector of entities
         std::vector<std::vector<std::vector<Drawable>>> m_drawLists;
+
+        //buffer to render first pass blur if soft shadowing
+        DepthTexture m_blurBuffer;
+        SimpleQuad m_inputQuad;
+        SimpleQuad m_outputQuad;
+
+        cro::Shader m_blurShaderA;
+        cro::Shader m_blurShaderB;
+
+        static constexpr std::size_t MaxDepthMaps = 8;
+        struct BufferResource final
+        {
+            std::int32_t refcount = 0; //number of cameras this has been assigned to
+            std::int32_t useCount = 0; //number of cameras using the resoure *this frame*
+
+            std::unique_ptr<DepthTexture> depthTexture;
+            bool gc = false; //this only checks for garbage collection - it doesn't actually happen unless refcount is 0
+        };
+        std::array<BufferResource, MaxDepthMaps> m_bufferResources = {};
+        std::vector<std::int32_t> m_bufferIndices;
+
 
         void render();
 

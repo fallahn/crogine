@@ -67,18 +67,22 @@ namespace
     static constexpr float MinAcceleration = 0.5f;
     static constexpr float MinBarSpeed = 0.9f; //base speed of power bar up to level 10
 
+    static constexpr float ReflexStrength = 350.f; //divisor, so larger == less effect on power bar speed
+
     const cro::Time DoubleTapTime = cro::milliseconds(200);
 
     std::int32_t lastActiveController = -1;
 }
 
-InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
+InputParser::InputParser(SharedStateData& sd, cro::Scene* s)
     : m_sharedData      (sd),
     m_inputBinding      (sd.inputBinding),
     m_gameScene         (s),
     m_swingput          (sd),
     m_humanCount        (1),
     m_activeController  (-1),
+    m_activeLoadout     (nullptr),
+    m_lastCalculatedHook(0.f),
     m_inputFlags        (0),
     m_prevFlags         (0),
     m_enableFlags       (std::numeric_limits<std::uint16_t>::max()),
@@ -102,6 +106,7 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_spin              (0.f),
     m_active            (false),
     m_suspended         (false),
+    m_allowPunch        (true),
     m_state             (State::Aim),
     m_currentClub       (ClubID::Driver),
     m_firstClub         (ClubID::Driver),
@@ -113,8 +118,8 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_estimatedDistance (0.f),
     m_iconActive        (false)
 {
-    m_bunkerWavetable = cro::Util::Wavetable::sine(0.25f, 0.035f);
-    m_roughWavetable = cro::Util::Wavetable::sine(0.25f, 0.025f);
+    m_bunkerWavetable = cro::Util::Wavetable::sine(0.25f, 0.035f * 0.25f);
+    m_roughWavetable = cro::Util::Wavetable::sine(0.25f, 0.025f * 0.25f);
 
     //registerWindow([&]() 
     //    {
@@ -340,6 +345,13 @@ void InputParser::handleEvent(const cro::Event& evt)
                     {
                         m_inputFlags |= InputFlag::Down;
                     }
+                    else//if (!isSpinputActive())
+                    {
+                        //toggles freecam
+                        auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+                        msg->type = SceneEvent::RequestToggleFreecam;
+                        msg->data = evt.cbutton.which;
+                    }
                 }
 
                 /*else if (evt.cbutton.button == cro::GameController::ButtonRightStick)
@@ -406,13 +418,14 @@ void InputParser::handleEvent(const cro::Event& evt)
                 {
                     m_inputFlags &= ~InputFlag::Down;
 
-                    if (!isSpinputActive())
-                    {
-                        //toggles freecam
-                        auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
-                        msg->type = SceneEvent::RequestToggleFreecam;
-                        msg->data = evt.cbutton.which;
-                    }
+                    //moved to button down event
+                    //if (!isSpinputActive())
+                    //{
+                    //    //toggles freecam
+                    //    auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+                    //    msg->type = SceneEvent::RequestToggleFreecam;
+                    //    msg->data = evt.cbutton.which;
+                    //}
                 }
 
                 /*else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
@@ -442,12 +455,14 @@ void InputParser::handleEvent(const cro::Event& evt)
         }
         else if (evt.type == SDL_MOUSEBUTTONDOWN
             && m_sharedData.useMouseAction
-            && !m_isCPU)
+            && !m_isCPU
+            && evt.button.button == SDL_BUTTON_LEFT)
         {
             m_inputFlags |= InputFlag::Action;
         }
         else if (evt.type == SDL_MOUSEBUTTONUP
-            && !m_isCPU)
+            && !m_isCPU
+            && evt.button.button == SDL_BUTTON_LEFT)
         {
             m_inputFlags &= ~InputFlag::Action;
         }
@@ -520,6 +535,14 @@ void InputParser::setClub(float dist)
         Club::setModifierIndex(0);
     }
     updateDistanceEstimation();
+}
+
+void InputParser::syncClub(std::int32_t club)
+{
+    m_currentClub = club;
+    auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
+    msg->type = GolfEvent::ClubChanged;
+    msg->score = 0; //pretends to be CPU so we don't get sound effect played
 }
 
 float InputParser::getYaw() const
@@ -607,11 +630,12 @@ void InputParser::setHumanCount(std::int32_t count)
     m_swingput.setHumanCount(count);
 }
 
-void InputParser::setActive(bool active, std::int32_t terrain, bool isCPU, std::uint8_t lie)
+void InputParser::setActive(bool active, std::int32_t terrain, const inv::Loadout* loadout, bool isCPU, std::uint8_t lie)
 {
     CRO_ASSERT(terrain < TerrainID::Count, "");
     m_active = active;
     m_terrain = terrain;
+    m_activeLoadout = loadout;
     m_isCPU = isCPU;
     m_lie = lie;
     m_state = State::Aim;
@@ -829,14 +853,70 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     //add hook/slice to yaw
     auto hook = getHook();
+
+    const auto clubLevel = Club::getClubLevel();
+
+    std::int32_t ballStat = 0;
+    std::int32_t clubStat = 0;
+    if (m_activeLoadout
+        && clubLevel != 0)
+    {
+        if (m_activeLoadout->items[inv::Ball] != -1)
+        {
+            ballStat = inv::Items[m_activeLoadout->items[inv::Ball]].stat01;
+        }
+
+        if (club != ClubID::Putter
+            && m_activeLoadout->items[club] != -1)
+        {
+            clubStat = inv::Items[m_activeLoadout->items[club]].stat02;
+        }
+    }
+
+    const auto level = Social::getLevel() / 10;
+    auto maxHook = MaxHook - (static_cast<float>(std::clamp(level, 0, 3)) * 0.0015f);
+
+    float powerMod = 0.f;
+    float spinBuff = 1.f;
+
+
+    switch (m_terrain)
+    {
+    default: break;
+    case TerrainID::Rough:
+        maxHook -= 0.01f;
+        powerMod = 0.05f;
+        break;
+    case TerrainID::Bunker:
+        maxHook -= 0.04f;
+        powerMod = 0.1f;
+        break;
+    }
+    powerMod *= clubLevel;
+
     if (club != ClubID::Putter)
     {
-        auto s = cro::Util::Maths::sgn(hook);
+        maxHook -= (static_cast<float>(clubLevel * clubLevel) * 0.038f);
+        //reduce the maxHook amount based on clubs with accuracy buff
+        //or even make it worse if club requires!!
+        maxHook = std::min(MaxHook + 0.1f, maxHook + (0.01f * clubStat));
+
+        const auto s = cro::Util::Maths::sgn(hook);
         //changing this func changes how accurate a player needs to be
-        //sine, quad, cubic, quart, quint in steepness order
-        if (Achievements::getActive())
+
+        //note that as most easings aren't symmetric that we use
+        //s to make the hook positive first, before reverting the
+        //result again.
+        switch (clubLevel)
         {
-            auto level = Social::getLevel();
+        default:
+        case 0:
+            //hook = cro::Util::Easing::easeInQuad(hook * s) * s;
+            hook = cro::Util::Easing::easeOutSine(hook * s) * s;
+
+        {
+            //use level based curve
+            /*auto level = Social::getLevel();
             switch (level / 10)
             {
             default:
@@ -854,20 +934,61 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
             case 0:
                 hook = cro::Util::Easing::easeOutSine(hook * s) * s;
                 break;
-            }
+            }*/
         }
-        else
-        {
+
+            break;
+        case 1:
+            //hook = cro::Util::Easing::easeInSine(hook * s) * s;
             hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
+            break;
+        case 2:
+            hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
+            //hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
+            break;
         }
 
         power *= cro::Util::Easing::easeOutSine(getPower());
+
+
+        //spin buff
+        if (club > ClubID::FiveWood
+            && clubLevel != 0
+            && m_activeLoadout)
+        {
+            auto lvlEffect = 1 + (2 - clubLevel);
+
+            auto spinStat = 0;
+            if (m_activeLoadout->items[club] != -1)
+            {
+                spinStat = inv::Items[m_activeLoadout->items[club]].stat01;
+            }
+            spinStat = 20 - (spinStat + 10);
+            spinBuff -= static_cast<float>(spinStat) / (2000.f * lvlEffect);
+        }
     }
     else
     {
+        maxHook -= (static_cast<float>(Club::getClubLevel() * Club::getClubLevel()) * 0.03f);
         power *= getPower();
     }
-    yaw += MaxHook * hook;
+
+    //CPU players get a bit of a free pass
+    if (m_isCPU)
+    {
+        maxHook *= 0.75f;
+        hook *= 0.75f;
+    }
+    else
+    {
+        //reduce the hook amount based on the active ball - max buff is 7
+        const auto ballVal = 0.07f * static_cast<float>(ballStat);
+        hook *= 1.f - ballVal;
+    }
+
+    yaw += maxHook * hook;
+    power *= 1.f - (std::abs(hook) * powerMod);
+    //LogI << (std::abs(hook) * powerMod) << std::endl;
 
     float sideSpin = -hook;
     sideSpin *= Clubs[club].getSideSpinMultiplier();
@@ -880,7 +1001,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     }
 
     float accuracy = 1.f - std::abs(hook);
-    auto spin = getSpin() * accuracy;
+    auto spin = getSpin() * accuracy * spinBuff;
 
     //modulate pitch with topspin
     spin.y *= Clubs[club].getTopSpinMultiplier();
@@ -898,6 +1019,8 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     impulse *= power;
 
+    m_lastCalculatedHook = hook;
+    m_activeLoadout = nullptr;
     return { impulse, spin, hook };
 }
 
@@ -907,7 +1030,7 @@ float InputParser::getEstimatedDistance() const
 
     if (m_sharedData.decimatePowerBar)
     {
-        ret = Clubs[m_currentClub].getTargetAtLevel(Club::getClubLevel());// *1.08f;
+        ret = Clubs[m_currentClub].getTargetAtLevel(/*Club::getClubLevel()*/2);// *1.08f;
     }
 
     switch (m_terrain)
@@ -996,6 +1119,36 @@ void InputParser::updateDistanceEstimation()
 void InputParser::updateStroke(float dt)
 {
     m_swingput.assertIdled(dt, m_inputFlags, static_cast<std::int32_t>(m_state));
+
+    //if we're not casual and have buffs available
+    //this modifies the bar movement
+    float buffSpeedModifier = 1.f;
+    if (m_activeLoadout
+        && Club::getClubLevel()
+        && !m_isCPU)
+    {
+        const auto club = getClub();
+        const auto lvlEffect = 1 + (2 - Club::getClubLevel());
+        std::int32_t clubStat = 0;
+        if (m_activeLoadout->items[club] != -1)
+        {
+            clubStat = inv::Items[m_activeLoadout->items[club]].stat01;
+        }
+
+        switch (club)
+        {
+        default: break;
+        case ClubID::Driver:
+        case ClubID::FiveWood:
+        case ClubID::ThreeWood:
+        {
+            clubStat += 10; //range 0 - 20
+            clubStat = 20 - clubStat; //invert so higher values make smaller changes
+            buffSpeedModifier += static_cast<float>(clubStat) / (ReflexStrength * lvlEffect);
+        }
+        break;
+        }
+    }
 
     //catch the inputs that where filtered by the
     //enable flags so we can raise their own event for them
@@ -1088,6 +1241,12 @@ void InputParser::updateStroke(float dt)
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = m_isCPU ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
 
+                //if we're on the green toggle putt assist
+                if (m_terrain == TerrainID::Green)
+                {
+                    m_sharedData.showPuttingPower = !m_sharedData.showPuttingPower;
+                }
+
                 updateDistanceEstimation();
                 beginIcon();
             }
@@ -1119,6 +1278,12 @@ void InputParser::updateStroke(float dt)
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = m_isCPU? 0 : 1;
+                
+                if (m_terrain == TerrainID::Green)
+                {
+                    m_sharedData.showPuttingPower = !m_sharedData.showPuttingPower;
+                }
+                
                 updateDistanceEstimation();
                 beginIcon();
             }
@@ -1135,7 +1300,7 @@ void InputParser::updateStroke(float dt)
             }
 
             //move level to 1 and back (returning to 0 is a fluff)
-            float speed = dt * 0.7f;
+            float speed = dt * 0.75f;// 0.7f;
             
             if (m_terrain == TerrainID::Green
                 && m_sharedData.showPuttingPower)
@@ -1146,8 +1311,11 @@ void InputParser::updateStroke(float dt)
             else
             {
                 //move more slowly for the first 10 levels
-                float increase = std::min(1.f, static_cast<float>(Social::getLevel()) / 10.f);
+                float increase = std::min(1.f, /*static_cast<float>(Social::getLevel()) / 10.f*/static_cast<float>(Club::getClubLevel()) / 2.f);
                 speed = (speed * MinBarSpeed) + ((speed * (1.f - MinBarSpeed)) * increase);
+
+                //and apply any buffs
+                speed *= buffSpeedModifier;
             }
 
             //allowing the bar to go over 1 means we get a slight
@@ -1227,6 +1395,8 @@ void InputParser::updateStroke(float dt)
                     float increase = std::min(1.f, static_cast<float>(l) / 10.f);
                     speed += ((dt * (1.f - MinBarSpeed)) * increase);
                 }
+
+                speed *= buffSpeedModifier;
             }
 
             m_hook = std::min(1.f, std::max(0.f, m_hook + ((speed * m_powerbarDirection))));
@@ -1249,7 +1419,6 @@ void InputParser::updateStroke(float dt)
                     msg->type = GolfEvent::HitBall;
 
                     m_doubleTapClock.restart();
-
                     endIcon();
                 }
             }
@@ -1334,7 +1503,8 @@ void InputParser::updateSpin(float dt)
         && ((m_prevFlags & InputFlag::PrevClub) == 0))
     {
         //we pressed punch shot
-        if ((ClubShot[m_currentClub] & ShotType::Punch)
+        if (m_allowPunch
+            && (ClubShot[m_currentClub] & ShotType::Punch)
             && m_terrain != TerrainID::Stone)
         {
             Club::setModifierIndex(Club::getModifierIndex() == 1 ? 0 : 1);

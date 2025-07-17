@@ -110,7 +110,7 @@ void LobbyState::buildScene()
             [&](cro::Entity e, float dt)
             {
                 std::int32_t count = 0;
-                for (auto& c : m_sharedData.clients)
+                for (const auto& c : m_sharedData.clients)
                 {
                     if (c.connected)
                     {

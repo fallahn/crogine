@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -359,7 +359,7 @@ void SpriteState::drawInspector()
     
     if (!m_spriteSheet.getSprites().empty())
     {
-        ImGui::ListBoxHeader("##", std::min(20, static_cast<std::int32_t>(m_spriteSheet.getSprites().size() + 1)));
+        ImGui::BeginListBox("##");
         for (auto& spritePair : m_spriteSheet.getSprites())
         {
             if (ImGui::Selectable(spritePair.first.c_str(), &spritePair == m_activeSprite))
@@ -368,7 +368,7 @@ void SpriteState::drawInspector()
                 updateBoundsEntity();
             }
         }
-        ImGui::ListBoxFooter();
+        ImGui::EndListBox();
     }
     ImGui::End();
 }
@@ -478,7 +478,7 @@ void SpriteState::drawSpriteWindow()
                 ImGui::Text("Animations");
 
                 auto i = 0;
-                ImGui::ListBoxHeader("##buns", std::min(20, static_cast<std::int32_t>(anims.size() + 1)));
+                ImGui::BeginListBox("##buns");
                 for (const auto& anim : anims)
                 {
                     std::string label = "Add Name Here##" + std::to_string(i);
@@ -489,7 +489,7 @@ void SpriteState::drawSpriteWindow()
 
                     i++;
                 }
-                ImGui::ListBoxFooter();
+                ImGui::EndListBox();
 
                 if (currentAnim)
                 {

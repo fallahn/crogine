@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,6 +32,7 @@ source distribution.
 #include "InputBinding.hpp"
 #include "Swingput.hpp"
 #include "Thumbsticks.hpp"
+#include "Inventory.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -49,12 +50,13 @@ class InputParser final //: public cro::GuiClient
 {
 public:
        
-    InputParser(const SharedStateData&, cro::Scene*);
+    InputParser(SharedStateData&, cro::Scene*);
 
     void handleEvent(const cro::Event&);
     void setHoleDirection(glm::vec3);
     void setDistanceToHole(float d) { m_distanceToHole = d; }
     void setClub(float); //picks closest club to given distance
+    void syncClub(std::int32_t); //matches the club to the remote player's
     float getYaw() const; //yaw in world space (includes facing direction)
     float getRotation() const; //relative rotation
     float getRotationSpeed() const;
@@ -65,12 +67,13 @@ public:
 
     float getPower() const; //0-1 multiplied by selected club
     float getHook() const; //-1 to -1 * some angle, club defined
+    float getCalculatedHook() const { return m_lastCalculatedHook; } //used by UI to display if current player hooked
 
     std::int32_t getClub() const;
     void setHumanCount(std::int32_t); //if there's only one human count we can use input from any controller
 
     // *sigh* be careful with this, the int param can be implicitly converted to bool...
-    void setActive(bool active, std::int32_t terrain, bool isCPU = false, std::uint8_t lie = 1);
+    void setActive(bool active, std::int32_t terrain, const inv::Loadout*, bool isCPU = false, std::uint8_t lie = 1);
     void setSuspended(bool);
     void setEnableFlags(std::uint16_t); //bits which are set are *enabled*
     void setMaxClub(float, bool atTee); //based on overall distance of hole
@@ -92,6 +95,8 @@ public:
     glm::vec2 getSpin() const { return m_spin; }
     bool isSpinputActive() const { return (m_inputFlags & InputFlag::SpinMenu) != 0; }
 
+    void setAllowPunch(bool b) { m_allowPunch = b; }
+
     const InputBinding getInputBinding() const { return m_inputBinding; }
 
     struct StrokeResult final
@@ -110,13 +115,16 @@ public:
 
     std::int32_t getLastActiveController() const;
 private:
-    const SharedStateData& m_sharedData;
+    SharedStateData& m_sharedData;
     const InputBinding& m_inputBinding;
     cro::Scene* m_gameScene;
 
     Swingput m_swingput;
     std::int32_t m_humanCount;
     std::int32_t m_activeController; //used when multple controllers are connected in single player
+
+    mutable const inv::Loadout* m_activeLoadout;
+    mutable float m_lastCalculatedHook; //final output of hook based on load/player after last shot - used for UI
 
     std::uint16_t m_inputFlags;
     std::uint16_t m_prevFlags;
@@ -147,6 +155,7 @@ private:
 
     bool m_active;
     bool m_suspended;
+    bool m_allowPunch;
 
     enum class State
     {

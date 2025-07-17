@@ -190,7 +190,7 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
 #ifdef CRO_DEBUG_
     registerCommand("build_dummy_best", [](const std::string&)
         {
-            auto path = Social::getUserContentPath(Social::UserContent::Profile);
+            auto path = Content::getUserContentPath(Content::UserContent::Profile);
             auto dirs = cro::FileSystem::listDirectories(path);
             ProfileDB db;
             std::int32_t recordCount = 0;
@@ -216,7 +216,7 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
         });
     registerCommand("build_dummy_data", [](const std::string&) 
         {
-            auto path = Social::getUserContentPath(Social::UserContent::Profile);
+            auto path = Content::getUserContentPath(Content::UserContent::Profile);
             auto dirs = cro::FileSystem::listDirectories(path);
             ProfileDB db;
             std::int32_t recordCount = 0;
@@ -776,7 +776,7 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         };
     };
 
-    auto playerLevel = Social::getLevel();
+    //auto playerLevel = Social::getLevel();
     auto clubFlags = Social::getUnlockStatus(Social::UnlockType::Club);
 
     const auto createStat = [&](std::int32_t clubID)
@@ -856,23 +856,25 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         }
 
 
-        auto unlockLevel = ClubID::getUnlockLevel(clubID);
+        const auto unlockLevel = ClubID::getUnlockLevel(clubID);
 
         label = ((clubFlags & ClubID::Flags[clubID]) == 0) ? "Level " + std::to_string(unlockLevel) : "|";
         label += "\n";
 
-        if ((playerLevel < Social::ExpertLevel) || (clubFlags & ClubID::Flags[clubID]) == 0)
+        if (/*(playerLevel < Social::ExpertLevel) || */(clubFlags & ClubID::Flags[clubID]) == 0)
         {
-            auto l = std::max(Social::ExpertLevel, unlockLevel);
-            label += "Level " + std::to_string(l) + "\n";
+            //auto l = std::max(Social::ExpertLevel, unlockLevel);
+            //label += "Level " + std::to_string(l) + "\n";
+            label += "Level " + std::to_string(unlockLevel) + "\n";
         }
         else
         {
             label += "|\n";
         }
-        if ((playerLevel < Social::ProLevel) || (clubFlags & ClubID::Flags[clubID]) == 0)
+        if (/*(playerLevel < Social::ProLevel) || */(clubFlags & ClubID::Flags[clubID]) == 0)
         {
-            label += "Level " + std::to_string(Social::ProLevel) + "\n";
+            //label += "Level " + std::to_string(Social::ProLevel) + "\n";
+            label += "Level " + std::to_string(unlockLevel) + "\n";
         }
         else
         {
@@ -897,11 +899,11 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         {
             //fudgenstein.
             auto c = BarColours[colourIndex];
-            if ((colourIndex == 2 && playerLevel < 30)
-                || (colourIndex == 1 && playerLevel < 15))
+            /*if ((colourIndex == 2 && playerLevel < Social::ProLevel)
+                || (colourIndex == 1 && playerLevel < Social::ExpertLevel))
             {
                 c.setAlpha(0.15f);
-            }
+            }*/
 
             if ((clubFlags & ClubID::Flags[clubID]) == 0)
             {

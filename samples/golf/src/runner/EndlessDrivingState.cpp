@@ -239,7 +239,7 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
 {
     esd.lastScore = 0.f;
     
-    context.mainWindow.loadResources([this]() {
+    context.mainWindow.loadResources([&]() {
         addSystems();
         loadAssets();
         createPlayer();
@@ -248,9 +248,6 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
 
         cacheState(StateID::EndlessAttract);
         cacheState(StateID::EndlessPause);
-
-        cro::Clock c;
-        while (c.elapsed().asSeconds() < 1) {}
     });
     
 

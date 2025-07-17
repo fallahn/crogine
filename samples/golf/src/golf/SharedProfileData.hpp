@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "PlayerData.hpp"
+#include "Inventory.hpp"
 
 #include <crogine/graphics/ModelDefinition.hpp>
 
@@ -52,16 +53,22 @@ struct SharedProfileData final
         cro::Material::Data hairReflection;
         cro::Material::Data hairGlass;
         cro::Material::Data ball;
+        cro::Material::Data ballBumped;
         cro::Material::Data ballSkinned;
         cro::Material::Data ballReflection;
         cro::Material::Data avatar;
 
         void reset()
         {
-            hair = hairReflection = hairGlass = ball = ballSkinned = ballReflection = avatar = {};
+            hair = hairReflection = hairGlass = ball = ballBumped = ballSkinned = ballReflection = avatar = {};
         }
     }profileMaterials;
 
-    std::vector<PlayerData> playerProfiles;
+    struct LocalProfile final
+    {
+        PlayerData playerData;
+        inv::Loadout loadout;
+    };
+    std::vector<LocalProfile> playerProfiles;
     std::size_t activeProfileIndex = 0; //this indexes into the profile array when editing/deleting profiles
 };

@@ -51,6 +51,9 @@ static inline void readValue(std::int32_t& dst, const std::string& fileName)
 
 static inline void writeValue(std::int32_t src, const std::string& fileName)
 {
+#ifdef CRO_DEBUG_
+    //return;
+#endif
     auto path = cro::App::getPreferencePath() + fileName;
     auto* file = SDL_RWFromFile(path.c_str(), "wb");
     if (file)

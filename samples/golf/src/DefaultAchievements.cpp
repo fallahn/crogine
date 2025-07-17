@@ -87,14 +87,17 @@ bool DefaultAchievements::init()
     trigger = &StatTriggers[StatID::PuttDistance].emplace_back();
     trigger->achID = AchievementID::LongDistanceClara;
     trigger->threshold = 1000; //metres
+    trigger->showProgress = false;
 
     trigger = &StatTriggers[StatID::StrokeDistance].emplace_back();
     trigger->achID = AchievementID::StrokeOfMidnight;
     trigger->threshold = 12000; //metres
+    trigger->showProgress = false;
 
     trigger = &StatTriggers[StatID::TimeOnTheRange].emplace_back();
     trigger->achID = AchievementID::PracticeMakesPerfect;
     trigger->threshold = 60 * 60; //seconds
+    trigger->showProgress = false;
 
     trigger = &StatTriggers[StatID::Birdies].emplace_back();
     trigger->achID = AchievementID::AllOfATwitter;
@@ -111,6 +114,7 @@ bool DefaultAchievements::init()
     trigger = &StatTriggers[StatID::TimeOnTheCourse].emplace_back();
     trigger->achID = AchievementID::DayJob;
     trigger->threshold = 24 * 60 * 60;
+    trigger->showProgress = false;
 
     trigger = &StatTriggers[StatID::LongPutts].emplace_back();
     trigger->achID = AchievementID::BigPutts;
@@ -131,6 +135,11 @@ bool DefaultAchievements::init()
     trigger = &StatTriggers[StatID::SundaysPlayed].emplace_back();
     trigger->achID = AchievementID::MonthOfSundays;
     trigger->threshold = 30;
+    trigger->showProgress = cro::SysTime::now().days() == 0;
+
+    trigger = &StatTriggers[StatID::CreditsSpent].emplace_back();
+    trigger->achID = AchievementID::BigSpender;
+    trigger->threshold = 50000;
 
 #ifndef USE_GNS
     Social::readAllStats();
@@ -222,6 +231,11 @@ AchievementImage DefaultAchievements::getIcon(const std::string& name) const
 
 void DefaultAchievements::setStat(const std::string& name, std::int32_t value)
 {
+    setStat(name, static_cast<float>(value));
+}
+
+void DefaultAchievements::setStat(const std::string& name, float value)
+{
     if (m_stats.count(name) != 0)
     {
         CRO_ASSERT(m_stats[name].id > -1, "");
@@ -229,8 +243,12 @@ void DefaultAchievements::setStat(const std::string& name, std::int32_t value)
         //LOG("Set stat " + name + " to " + std::to_string(value), cro::Logger::Type::Info);
 
         auto& stat = m_stats[name];
-        stat.value = static_cast<float>(value);
+        stat.value = value;
         syncStat(stat);
+    }
+    else
+    {
+        LogI << name << ": stat not found" << std::endl;
     }
 }
 
@@ -341,6 +359,18 @@ void DefaultAchievements::syncStat(const StatData& stat)
             {
                 awardAchievement(AchievementStrings[t.achID]);
             }
+#ifndef USE_GNS
+            else if (t.showProgress
+                && t.threshold > stat.value)
+            {
+                //display progress
+                auto* msg = cro::App::getInstance().getMessageBus().post<Social::SocialEvent>(Social::MessageID::SocialMessage);
+                msg->type = Social::SocialEvent::AchievementProgress;
+                msg->level = stat.value;
+                msg->reason = t.threshold;
+                msg->challengeID = t.achID;
+            }
+#endif
         }
 
         //and remove completed

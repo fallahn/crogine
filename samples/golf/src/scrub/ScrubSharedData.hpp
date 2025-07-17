@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -38,8 +38,19 @@ namespace cro
     class RenderTexture;
 }
 
-struct SharedScrubData final
+//also used for other minigames such as Sportsball
+struct SharedMinigameData final
 {
+    struct ScoreData final
+    {
+        std::int32_t level = 1;
+        std::int32_t score = 0;
+        std::int32_t personalBest = 0;
+    }score;
+
     cro::RenderTexture* backgroundTexture = nullptr;
     std::unique_ptr<cro::FontResource> fonts;
+
+    //defined in ScrubBackgroundState
+    void initFonts();
 };

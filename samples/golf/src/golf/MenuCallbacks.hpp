@@ -95,6 +95,7 @@ struct SpriteID final
         NetStrength,
         StartGame,
         Connect,
+        PlayerManage,
         PrevCourse,
         PrevCourseHighlight,
         NextCourse,

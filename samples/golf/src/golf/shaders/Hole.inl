@@ -1,0 +1,116 @@
+#pragma once
+
+#include <string>
+
+static inline const std::string HoleVertex =
+R"(
+ATTRIBUTE vec4 a_position;
+
+ATTRIBUTE vec3 a_normal;
+ATTRIBUTE vec3 a_tangent;
+ATTRIBUTE vec3 a_bitangent;
+ATTRIBUTE vec2 a_texCoord0;
+
+#include CAMERA_UBO
+#include WVP_UNIFORMS
+
+VARYING_OUT vec2 v_texCoord0;
+VARYING_OUT vec3 v_tanWorldPosition;
+VARYING_OUT vec3 v_tanCamPosition;
+
+void main()
+{
+    mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
+    gl_Position = wvp * a_position;
+
+    vec3 t = normalize(mat3(u_worldMatrix) * a_tangent);
+    vec3 b = normalize(mat3(u_worldMatrix) * -a_bitangent); //WHY is this backwards??
+    vec3 n = normalize(mat3(u_worldMatrix) * a_normal);
+
+    mat3 tbn = transpose(mat3(t,b,n));
+
+    vec3 worldPos = (u_worldMatrix * a_position).xyz;
+    v_tanWorldPosition = tbn * worldPos;
+    v_tanCamPosition = tbn * u_cameraWorldPosition;
+
+    v_texCoord0 = a_texCoord0;
+}
+)";
+
+static inline const std::string HoleFragment =
+R"(
+#define USE_MRT
+#include OUTPUT_LOCATION
+
+uniform vec4 u_lightColour;
+
+VARYING_IN vec2 v_texCoord0;
+VARYING_IN vec3 v_tanWorldPosition;
+VARYING_IN vec3 v_tanCamPosition;
+
+const float Scale = 1.2;
+const uint Layers = 16u;
+const float MinDarkness = 0.15;
+
+const float RadiusOuter = 0.48;
+const float RadiusInner = 0.44;
+
+const vec3 BeigeLight = vec3(1.0, 0.973, 0.882);
+const vec3 BeigeDark = vec3(0.404, 0.286, 0.286);
+
+const vec3 GreyDark = vec3(0.227, 0.224, 0.255);
+const vec3 BlueDark = vec3(0.102, 0.118, 0.176);
+const vec3 RedDark = vec3(0.157, 0.090, 0.129);
+
+float getDepth(vec2 uv)
+{
+    float l = length(uv - 0.5);
+    float c = smoothstep(RadiusInner, RadiusOuter, l);
+    c += (l/RadiusInner) * 0.2;
+
+    return 1.0 - c;
+}
+
+#include LIGHT_COLOUR
+
+void main()
+{
+    //vec2 uv = calcCoords(eyeDirection);
+    //vec2 uv = calcCoordsStepped(eyeDirection);
+
+
+    vec3 eyeDirection = normalize(v_tanCamPosition - v_tanWorldPosition);
+    vec2 uv = v_texCoord0;
+
+    vec2 delta = eyeDirection.xy / float(Layers) * Scale;
+    float z = 0.0;
+    float depth = getDepth(uv);
+    float lastDepth = depth;
+    float lastZ = z;
+    
+    float layerStep = 1.0 / float(Layers);
+    
+    for (uint i = 0u; i < Layers; i++)
+    {
+        if( z >= depth )
+        {
+            break;
+        }
+        
+        uv -= delta;
+        lastZ = z;
+        z += layerStep;
+        lastDepth = depth;
+        depth = getDepth(uv);
+    }
+    
+    float weight = (z - depth) / (((lastDepth - lastZ) - (depth - z)) + 0.000001); //prevent div0
+    depth -= (depth - lastDepth) * weight;
+
+   
+    vec3 colour = mix(RedDark, BeigeLight, (MinDarkness + ((1.0 - MinDarkness) * (1.0 - depth)))) * getLightColour().rgb;
+    FRAG_OUT = vec4(colour, 1.0);
+    LIGHT_OUT = vec4(vec3(0.0), 1.0);
+    NORM_OUT.a = 0.0; //prevent hole rx light at night
+}
+)";

@@ -39,6 +39,7 @@ source distribution.
 #include "FloatingTextSystem.hpp"
 #include "Clubs.hpp"
 #include "CallbackData.hpp"
+#include "XPValues.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -215,6 +216,37 @@ namespace
 
 void DrivingState::createUI()
 {
+#ifdef CRO_DEBUG_
+    registerWindow(
+        [&]() mutable
+        {
+            ImGui::Begin("Camera");
+            static const std::array<std::string, CameraID::Count> CamStrings =
+            {
+                "Player", "Bystander", "Sky", "Green",
+                "Transition", "Idle", "Drone",
+            };
+            ImGui::Text("%s", CamStrings[m_currentCamera].c_str());
+
+            auto& cam = m_cameras[m_currentCamera].getComponent<cro::Camera>();
+            auto shadowDist = cam.getMaxShadowDistance();
+            if (ImGui::SliderFloat("Distance", &shadowDist, 10.f, cam.getFarPlane()))
+            {
+                cam.setMaxShadowDistance(shadowDist);
+            }
+
+            for (auto i = 0u; i < cam.getCascadeCount(); ++i)
+            {
+                ImGui::Image(cam.shadowMapBuffer.getTexture(i), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::SameLine();
+            }
+            ImGui::NewLine();
+
+
+            ImGui::End();
+        });
+#endif
+
     //displays the game scene
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1723,10 +1755,10 @@ will be given a score based on your overall accuracy. Good Luck!
         {
         default:
         case 0:
-            labelEnt.getComponent<cro::Text>().setString("Clubset: Novice");
+            labelEnt.getComponent<cro::Text>().setString("Clubset: Casual");
             break;
         case 1:
-            labelEnt.getComponent<cro::Text>().setString("Clubset: Expert");
+            labelEnt.getComponent<cro::Text>().setString("Clubset: Regular");
             break;
         case 2:
             labelEnt.getComponent<cro::Text>().setString("Clubset: Pro");
@@ -1766,10 +1798,10 @@ will be given a score based on your overall accuracy. Good Luck!
                         {
                         default:
                         case 0:
-                            labelEnt.getComponent<cro::Text>().setString("Clubset: Novice");
+                            labelEnt.getComponent<cro::Text>().setString("Clubset: Casual");
                             break;
                         case 1:
-                            labelEnt.getComponent<cro::Text>().setString("Clubset: Expert");
+                            labelEnt.getComponent<cro::Text>().setString("Clubset: Regular");
                             break;
                         case 2:
                             labelEnt.getComponent<cro::Text>().setString("Clubset: Pro");
@@ -2684,19 +2716,19 @@ void DrivingState::showMessage(float range)
     {
         textEnt.getComponent<cro::Text>().setString("Good Effort!");
         starCount = 1;
-        Social::awardXP(XPValues[XPID::Good]);
+        Social::awardXP(xpValues[XPID::Good]);
     }
     else if (score < ExcellentScore)
     {
         textEnt.getComponent<cro::Text>().setString("Not Bad!");
         starCount = 2;
-        Social::awardXP(XPValues[XPID::NotBad]);
+        Social::awardXP(xpValues[XPID::NotBad]);
     }
     else
     {
         textEnt.getComponent<cro::Text>().setString("Excellent!");
         starCount = 3;
-        Social::awardXP(XPValues[XPID::Excellent]);
+        Social::awardXP(xpValues[XPID::Excellent]);
 
         if (m_avatar.animationIDs[AnimationID::Celebrate] != AnimationID::Invalid)
         {
@@ -2972,7 +3004,7 @@ void DrivingState::floatingMessage(const std::string& msg)
 {
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
-    const float offsetScale = Social::isSteamdeck() ? 2.f : 1.f;
+    const float offsetScale = m_sharedData.useLargePowerBar ? 2.f : 1.f;
 
     glm::vec2 size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     glm::vec3 position((size.x / 2.f), (UIBarHeight + (14.f * offsetScale)) * m_viewScale.y, 0.2f);

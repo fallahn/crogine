@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "../Colordome-32.hpp"
+
 #include <crogine/graphics/Colour.hpp>
 
 #include <cstdint>
@@ -36,6 +38,38 @@ source distribution.
 
 namespace pc
 {
+    static inline const std::array<cro::Colour, 8U> TeamColours =
+    {
+        //CD32::Colours[CD32::Red],
+        //CD32::Colours[CD32::GreenMid],
+        //CD32::Colours[CD32::BlueMid],
+        //CD32::Colours[CD32::Yellow],
+        //CD32::Colours[CD32::Pink],
+        //CD32::Colours[CD32::BlueLight],
+        //CD32::Colours[CD32::Black],
+        //CD32::Colours[CD32::BeigeLight]
+        cro::Colour::Red,
+        cro::Colour::Green,
+        cro::Colour::Blue,
+        cro::Colour::Yellow,
+        cro::Colour(1.f, 0.5f, 0.f, 1.f),
+        cro::Colour(0.5f, 0.f, 1.f, 1.f),
+        cro::Colour::Black,
+        cro::Colour::White
+    };
+
+    static inline constexpr std::array<std::uint32_t, 8U> TeamEmoji =
+    {
+        0x1F534, //red
+        0x1F7E2, //green
+        0x1F535, //blue
+        0x1F7E1, //yellow
+        0x1F7E0, //orange
+        0x1F7E3, //purple
+        0x26AB,  //black
+        0x26AA,  //white
+    };
+
     static inline constexpr std::array<std::array<std::uint32_t, 2u>, 12u> KeyMap =
     {
         std::array<std::uint32_t, 2u>({8u, 7u}),

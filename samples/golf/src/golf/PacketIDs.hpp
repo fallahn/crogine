@@ -142,6 +142,15 @@ struct ClientGrouping final
     };
 };
 
+struct RuleMod final
+{
+    enum
+    {
+        Snek,
+        BigBalls
+    };
+};
+
 namespace PacketID
 {
     /*
@@ -201,7 +210,7 @@ namespace PacketID
         WeatherChange, //< 0 off 1 on uint8
         Poke, //< uint8 0 - only sent to specific client
         CAT,
-
+//DON'T ADD NEW VALUES HERE!
         //from client
         RequestGameStart, //uint8 sv::State, ie Golf to start golf, Billiards to start billiards etc
         ClientReady, //< uint8 clientID - requests game data from server. Sent repeatedly until ack'd
@@ -216,7 +225,7 @@ namespace PacketID
         ClubLevel, //< uint8 client ID | uint8 client club level (max clubs - used to limit to lowest player)
         Mulligan, //< uint8 client ID - career mode requests a mulligan
         GroupMode, //< int32 how multiplayer games should be grouped on a server
-
+//DON'T ADD NEW VALUES HERE!
         //both directions
         ClientVersion, //uint16 FROM server on join contains the game mode, TO server CURRENT_VER of client. Clients are kicked if this does not match the server
         ClientPlayerCount, //uint8_t 0 if from server, client count if from client. Server tracks total players and rejects connections which would exceed maximum players
@@ -244,12 +253,22 @@ namespace PacketID
         ChatMessage, //TextMessage struct
         DronePosition, //< compressed vec3 from host rebroadcast to clients
         ClubChanged, //< updates putt cam on remote clients: uint8 club | uint8 client
-        AvatarRotation, //uin32_t client | player | finalRotation compressed as int16
+        AvatarRotation, //< uin32_t client | player | finalRotation compressed as int16
 
         CanUpdate, //CanInfo struct
         CoinSpawn, //float power - sent to server. Result comes back as actor spawn
         CoinRemove, //uint32_t server ID
         CoinBucketed, //coin was removed because it landed in the bucket uint64_t peerID
+
+//ADDING NEW VALUES MUST BE SEQUENTIAL FROM HERE FOR WEBSOCKET
+
+        //these have to be here as to not break WebSocket compat
+        TeamMode, //< toggle pairs mode
+        TeamData, //< TeamData struct mapping client/player to team index
+        DisplayList, //< DisplayList struct containing order of players in lobby
+        RuleMod, //< (uint8 ID |uint8 0 or 1)
+        SnekUpdate, //< uint16 client|player has been given the snek
+        BigBallUpdate, //< uint16(client|player) | uint16 scale 0-11 (rescaled on client to +/-5)
 
         //special cases for websocket
         RichPresence = 127

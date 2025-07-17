@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant - 2022 - 2023
+Matt Marchant - 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -66,6 +66,57 @@ namespace
 
 void BilliardsState::createUI()
 {
+#ifdef CRO_DEBUG_
+    registerWindow(
+        [&]()
+        {
+            ImGui::Begin("Camera");
+        
+            static const std::array<std::string, CameraID::Count> CameraStrings =
+            {
+                "Spectate",
+                "Overhead",
+                "Player",
+                "Transition",
+            };
+            ImGui::Text("Camera: %s", CameraStrings[m_activeCamera].c_str());
+
+            auto& cam = m_cameras[m_activeCamera].getComponent<cro::Camera>();
+            float dist = cam.getMaxShadowDistance();
+            if (ImGui::SliderFloat("Dist", &dist, 1.f, cam.getFarPlane()))
+            {
+                cam.setMaxShadowDistance(dist);
+            }
+
+            float exp = cam.getShadowExpansion();
+            if (ImGui::SliderFloat("Exp", &exp, 1.f, 50.f))
+            {
+                cam.setShadowExpansion(exp);
+            }
+
+            auto& prop = m_cameras[m_activeCamera].getComponent<CameraProperties>();
+            float farP = prop.farPlane;
+            if (ImGui::SliderFloat("Far", &farP, 1.f, 8.f))
+            {
+                prop.farPlane = farP;
+                cam.resizeCallback(cam);
+            }
+
+            float nearP = cam.getNearPlane();
+            if (ImGui::SliderFloat("Near", &nearP, 0.1f, farP - 0.1f))
+            {
+                cam.resizeCallback(cam);
+            }
+
+            for (auto i = 0u; i < cam.getCascadeCount(); ++i)
+            {
+                ImGui::Image(cam.shadowMapBuffer.getTexture(i), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+
+            ImGui::End();
+        });
+#endif
+
     createMiniballScenes();
     updateTargetTexture(0, -1);
     updateTargetTexture(1, -1);

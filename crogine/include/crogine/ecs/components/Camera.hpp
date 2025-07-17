@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -373,6 +373,12 @@ namespace cro
         */
         bool active = true;
 
+        /*!
+        \brief Returns true if the Camera was actived this frame
+        Useful for cases where eg, a shadow map requires an immediate update.
+        Only valid during Renderable::updateDrawList()
+        */
+        bool activatedThisFrame() const { return active && !m_lastActive; }
 
         /*!
         \brief If this camera is in a static Scene then this can be set to true.
@@ -424,7 +430,47 @@ namespace cro
         ShadowMapRenderer
         */
 #ifdef PLATFORM_DESKTOP
-        DepthTexture shadowMapBuffer;
+        //DepthTexture shadowMapBuffer;
+        struct ShadowMapBuffer final
+        {
+        public:
+            /*!
+            \brief Used by ShadowMapRenderer to assign a depthmap texture so
+            that it can be recycled between multiple cameras
+            NOTE layers is ignored and read directly from Camera::getCascadeCount()
+            and left here only for backwards compatibility (ie I'm lazy)
+            */
+            void create(std::uint32_t width, std::uint32_t height, std::uint32_t layers = 1)
+            {
+                m_size = { width, height };
+                //this is actually set by the ShadowMap renderer based on the camera's cascade count
+                //we've left  the func param for compatibility
+                //m_layers = layers; 
+                m_dirty = true;
+            }
+
+            bool available() const { return m_resourceIndex != -1; }
+            const TextureID& getTexture() const { return m_textureID; }
+            std::uint32_t getLayerCount() const { return m_layers; }
+            glm::uvec2 getSize() const { return m_size; }
+
+            TextureID getTexture(std::size_t i) const
+            {
+                return i < m_textureViews.size() ? m_textureViews[i] : TextureID(0);
+            }
+        private:
+            friend class ShadowMapRenderer;
+            friend class ModelRenderer;
+
+            std::vector<TextureID> m_textureViews;
+
+            TextureID m_textureID;
+            glm::uvec2 m_size = glm::uvec2(0);
+            std::uint32_t m_layers = 0;
+
+            std::int32_t m_resourceIndex = -1;
+            bool m_dirty = false; //shadow map renderer should reassign map if this is true
+        }shadowMapBuffer;
 #else
         RenderTexture shadowMapBuffer;
 #endif
@@ -445,9 +491,12 @@ namespace cro
         is usually adjusted along with setShadowExpansion()
         \param distance The distance in world units from the camera
         to which to clamp shadow rendering.
+        \param updateCorners Updates the frustum corners - this is also
+        done when calling setPerspective() or setOrtho() so optionally
+        setting this to false can prevent unecessary updates
         \see ShadowMapRenderer
         */
-        void setMaxShadowDistance(float distance);
+        void setMaxShadowDistance(float distance, bool updateCorners = true);
 
 
         /*!
@@ -484,6 +533,21 @@ namespace cro
         */
         std::size_t getCascadeCount() const;
 
+        /*!
+        \brief Set the number of cascades up to cascadeCount which should
+        be given a blur pass for soft shadowing. Set to 0 to disable.
+        Not all cascades necesserily need this so performance could be improved
+        by, say, only setting the first cascade to blur.
+        \param count Number of cascades to blur.
+        */
+        void setBlurPassCount(std::uint32_t count) { m_blurPasses = count; }
+
+        /*!
+        \brief Returns the number of cascades requested for a blur pass
+        Note that this may be more than the number of cascades available
+        \see setBlurPassCount()
+        */
+        std::uint32_t getBlurPassCount() const { return m_blurPasses; }
 
         /*!
         brief Returns the z depth, in view space, of each cascade split, ending
@@ -577,7 +641,7 @@ namespace cro
 #endif
 
     private:
-
+        bool m_lastActive = false; //so we can track if we just changed state
         std::array<Pass, 2u> m_passes = {}; //final pass and refraction pass share the same data
         std::uint32_t m_passIndex = Pass::Final;
 
@@ -608,6 +672,7 @@ namespace cro
         std::vector<glm::mat4> m_shadowViewMatrices;
         std::vector<glm::mat4> m_shadowProjectionMatrices;
         float m_shadowExpansion;
+        std::uint32_t m_blurPasses;
         std::vector<float> m_splitDistances;
 
         bool m_dirtyTx;

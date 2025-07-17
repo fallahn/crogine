@@ -34,6 +34,8 @@ source distribution.
 #else
 #include <Achievements.hpp>
 #endif
+#include "PlayerGuide.hpp"
+
 #include "golf/SharedStateData.hpp"
 #include "golf/SharedProfileData.hpp"
 #include "golf/ProgressIcon.hpp"
@@ -65,7 +67,7 @@ private:
     
     SharedStateData m_sharedData;
     SharedProfileData m_profileData;
-    SharedScrubData m_scrubData;
+    SharedMinigameData m_minigameData;
     cro::StateStack m_stateStack;
 
     std::vector<std::string> m_hostAddresses;
@@ -115,6 +117,10 @@ private:
     void recreatePostProcess();
     void applyPostProcess();
     bool setShader(const char*);
+
+    std::vector<pg::Chapter> m_guideChapters;
+    cro::TextureResource m_guideTextures;
+    void createHowTo();
 
 #ifdef _WIN32
     void assertFileSystem();

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -60,7 +60,7 @@ namespace
             FRAG_OUT = v_colour;
         })";
 
-    static constexpr std::size_t MaxVertices = 5000;
+    static constexpr std::size_t MaxVertices = 500000;
     static constexpr std::uint32_t VertSize = (3 * sizeof(float)) + (3 * sizeof(float));
 }
 

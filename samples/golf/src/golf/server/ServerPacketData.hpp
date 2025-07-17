@@ -31,9 +31,17 @@ source distribution.
 
 #include "../CommonConsts.hpp"
 #include "../Terrain.hpp"
+#include "../HoleData.hpp"
 
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/detail/glm/vec3.hpp>
+#include <array>
+
+struct DisplayList final
+{
+    std::int32_t count = 0;
+    std::array<Team::Player, ConstVal::MaxPlayers*2> list = {};
+};
 
 struct ActivePlayer
 {
@@ -53,20 +61,42 @@ static inline bool operator != (const ActivePlayer& a, const ActivePlayer& b)
     return !(a == b);
 }
 
+static inline bool operator == (const Team::Player& a, const ActivePlayer& b)
+{
+    return (a.client == b.client) && (a.player == b.player);
+}
+
+static inline bool operator != (const Team::Player& a, const ActivePlayer& b)
+{
+    return !(a == b);
+}
+
 struct PlayerStatus final : public ActivePlayer
 {
     cro::Entity ballEntity;
     glm::vec3 prevBallPos = glm::vec3(0.f); //used for returning the ball after a mulligan
-    std::uint8_t previousBallScore = 0; //also used for mulligan
     float distanceToHole = 0.f; //used for sorting
     std::vector<std::uint8_t> holeScore;
     std::vector<float> distanceScore;
-    bool targetHit = false;
-    bool eliminated = false;
+    std::uint8_t previousBallScore = 0; //also used for mulligan
     std::uint8_t totalScore = 0;
     std::uint8_t skins = 0; //stores number of lives in elimination mode
     std::uint8_t matchWins = 0; //used as a 'life lost' flag in elimination
+
+    std::int32_t teamIndex = -1; //indexes into the teams array so we can look up the other player
+    std::int32_t puttCount = 0; //number of putts this hole for snek
+
+    std::int8_t ballScale = 0; //used to scale big balls based on par, +/- 5
+    bool targetHit = false;
+    bool eliminated = false;
     bool readyQuit = false; //used at round end to see if all players want to skip scores
+};
+
+struct TeamData final
+{
+    std::int32_t index = -1;
+    std::uint16_t client = ConstVal::NullValue;
+    std::uint16_t player = ConstVal::NullValue;
 };
 
 struct GroupPosition final

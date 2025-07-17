@@ -42,7 +42,6 @@ source distribution.
 #include "SharedProfileData.hpp"
 #include "spooky2.hpp"
 #include "Clubs.hpp"
-#include "HoleData.hpp"
 #include "League.hpp"
 #include "RopeSystem.hpp"
 #include "LightmapProjectionSystem.hpp"
@@ -118,6 +117,7 @@ namespace
 #include "shaders/Glass.inl"
 #include "shaders/ShaderIncludes.inl"
 #include "shaders/ShadowMapping.inl"
+#include "shaders/ShopItems.inl"
 #include "shaders/Lantern.inl"
 #include "shaders/Weather.inl"
 #include "shaders/WireframeShader.inl"
@@ -190,6 +190,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_scaleBuffer           ("PixelScale"),
     m_resolutionBuffer      ("ScaledResolution"),
     m_windBuffer            ("WindValues"),
+    m_selectedDisplayMember (0),
     m_lobbyExpansion        (0.f),
     m_avatarCallbacks       (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu           (MenuID::Main),
@@ -204,7 +205,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     {
         cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
     }
-    
+
     checkCommandLine = false;
     sd.courseData = &m_sharedCourseData;
     sd.baseState = StateID::Menu;
@@ -224,9 +225,10 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
     //launches a loading screen (registered in MyApp.cpp)
     CRO_ASSERT(!isCached(), "Don't use loading screen on cached states!");
+    sd.clientConnection.launchThread(); //pumps any message queue while we wait for loading to complete
     context.mainWindow.loadResources([&]() {
-
 #ifdef USE_GNS
+        sd.clientConnection.netClient.warningCallback = [&](const std::string& msg) {m_textChat.printToScreen(msg, CD32::Colours[CD32::Red]); };
         Social::findLeaderboards(Social::BoardType::Courses);
 
         //cached menu states depend on steam stats being
@@ -258,6 +260,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::News);
         cacheState(StateID::Stats);
         cacheState(StateID::PlayerManagement);
+        cacheState(StateID::Shop);
+        cacheState(StateID::ClubInfo);
 
         context.mainWindow.setMouseCaptured(false);
 
@@ -325,6 +329,13 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             || sd.quickplayOpponents != 0 //we were playing quickplay
             || sd.activeTournament != TournamentIndex::NullVal) //or a tournament (although the above ought to be set to 1 in this case...)
         {
+            if (sd.gameMode == GameMode::Tutorial)
+            {
+                //show further tip
+                sd.errorMessage = "more_info";
+                requestStackPush(StateID::MessageOverlay);
+            }
+
             m_voiceChat.disconnect();
 
             sd.serverInstance.stop();
@@ -345,9 +356,47 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         sd.quickplayOpponents = 0; //make sure to always reset this
         sd.activeTournament = TournamentIndex::NullVal; //make sure to always reset this
 
+
         //we returned from a previous game (this will have been disconnected above, otherwise)
         if (sd.clientConnection.connected)
         {
+            //repopulate the display list
+            struct SortData final
+            {
+                std::uint8_t client = 0;
+                std::uint8_t player = 0;
+                std::int32_t team = -1;
+            };
+            std::vector<SortData> displayMembers;
+            for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+            {
+                for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
+                {
+                    auto& dm = displayMembers.emplace_back();
+                    dm.client = i;
+                    dm.player = j;
+                    dm.team = m_sharedData.connectionData[i].playerData[j].teamIndex;
+                }
+            }
+            std::sort(displayMembers.begin(), displayMembers.end(),
+                [](const SortData& a, const SortData& b)
+                {
+                    if (a.team == b.team)
+                    {
+                        if (a.client == b.client)
+                        {
+                            return a.player < b.player;
+                        }
+                        return a.client < b.client;
+                    }
+                    return a.team < b.team;
+                });
+
+            for (const auto& [client, player, _] : displayMembers)
+            {
+                m_displayOrder.emplace_back(client, player);
+            }
+
             updateLobbyAvatars();
             createPreviousScoreCard();
 
@@ -445,6 +494,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             for (auto& cd : m_sharedData.connectionData)
             {
                 cd.playerCount = 0;
+
+                for (auto& p : cd.playerData)
+                {
+                    p.teamIndex = -1;
+                }
             }
             m_sharedData.hosting = false;
 
@@ -461,9 +515,16 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         m_sharedData.inviteID = 0;
         m_sharedData.lobbyID = 0;
         });
-    
+    sd.clientConnection.quitThread();
     Timeline::setGameMode(Timeline::GameMode::Menu);
-        
+
+    //make sure to send this if we re-populated it returning to the menu from the game
+    if (!m_displayOrder.empty()
+        && m_sharedData.hosting)
+    {
+        refreshDisplayMembers();
+    }
+
     //for some reason this immediately unsets itself
     //cro::App::getWindow().setCursor(&m_cursor);
 #ifndef __APPLE__
@@ -539,6 +600,108 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 #endif
+    registerCommand("sv_team_mode", [&](const std::string& param)
+        {
+            if (param == "1")
+            {
+                if (m_sharedData.hosting
+                    && m_sharedData.clientConnection.connected)
+                {
+                    m_sharedData.teamMode = 1;
+                    m_sharedData.clientConnection.netClient.sendPacket(
+                        PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    cro::Console::print("Team mode set to 1");
+
+                    //updates team index assignments
+                    updateLobbyAvatars();
+                }
+                else
+                {
+                    cro::Console::print("Not connected to a lobby");
+                }
+            }
+            else if (param == "0")
+            {
+
+                if (m_sharedData.hosting
+                    && m_sharedData.clientConnection.connected)
+                {
+                    m_sharedData.teamMode = 0;
+                    m_sharedData.clientConnection.netClient.sendPacket(
+                        PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    cro::Console::print("Team mode set to 0");
+                }
+            }
+            else
+            {
+                cro::Console::print("Usage: sv_team_mode <0|1>");
+            }
+        });
+
+    registerCommand("sv_snek_enable", [&](const std::string& param) 
+        {
+            if (param == "1")
+            {
+                if (m_sharedData.hosting
+                    && m_sharedData.clientConnection.connected)
+                {
+                    constexpr std::uint16_t d = (std::uint8_t(RuleMod::Snek) << 8) | std::uint8_t(1);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    cro::Console::print("snek enabled");
+                }
+            }
+            else if (param == "0")
+            {
+                if (m_sharedData.hosting
+                    && m_sharedData.clientConnection.connected)
+                {
+                    //yes, OR'ing 0 is redundant, but it's explicit
+                    constexpr std::uint16_t d = (std::uint8_t(RuleMod::Snek) << 8) | std::uint8_t(0);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    cro::Console::print("snek disabled");
+                }
+            }
+            else
+            {
+                cro::Console::print("Usage: sv_snek_enable <0|1>");
+            }
+        });
+
+    registerCommand("sv_bigballs_enable", [&](const std::string& param)
+        {
+            if (param == "1")
+            {
+                if (m_sharedData.hosting
+                    && m_sharedData.clientConnection.connected)
+                {
+                    constexpr std::uint16_t d = (std::uint8_t(RuleMod::BigBalls) << 8) | std::uint8_t(1);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    cro::Console::print("big balls enabled");
+                }
+            }
+            else if (param == "0")
+            {
+                if (m_sharedData.hosting
+                    && m_sharedData.clientConnection.connected)
+                {
+                    //yes, OR'ing 0 is redundant, but it's explicit
+                    constexpr std::uint16_t d = (std::uint8_t(RuleMod::BigBalls) << 8) | std::uint8_t(0);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    cro::Console::print("big balls disabled");
+                }
+            }
+            else
+            {
+                cro::Console::print("Usage: sv_bigballs_enable <0|1>");
+            }
+        });
+
     registerCommand("sv_group_mode", [&](const std::string& param)
         {
             const std::array GroupStrings =
@@ -556,10 +719,14 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                     if (m_sharedData.hosting
                         && m_sharedData.clientConnection.connected)
                     {
+                        /*m_sharedData.clientConnection.netClient.sendPacket(
+                            PacketID::TeamMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);*/
                         m_sharedData.clientConnection.netClient.sendPacket(
                             PacketID::GroupMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     }
                     cro::Console::print("Grouping set to " + GroupStrings[m_sharedData.groupMode]);
+
+                    m_sharedData.groupMode = ClientGrouping::None;
                 };
 
             if (param == "0")
@@ -619,18 +786,18 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 #endif
 
     WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Main Menu" }));
-    Social::setGroup(0);
+    Social::setGroup(0); //hmm should we only do this if we're not connected?
 
     //registerWindow([&]()
     //    {
     //        if (ImGui::Begin("buns"))
     //        {
-    //            /*auto size = glm::vec2(LabelTextureSize);
+    //            auto size = glm::vec2(LabelTextureSize);
     //            for (const auto& t : m_sharedData.nameTextures)
     //            {
     //                ImGui::Image(t.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
     //                ImGui::SameLine();
-    //            }*/
+    //            }
     //        }
     //        ImGui::End();
     //    });
@@ -645,15 +812,45 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //    {
     //        if (ImGui::Begin("buns"))
     //        {
-    //            for (auto i = 0u; i < cro::GameController::getControllerCount(); ++i)
+    //            /*for (auto i = 0u; i < cro::GameController::getControllerCount(); ++i)
     //            {
     //                ImGui::Text("%s", cro::GameController::getName(i).c_str());
+    //            }*/
+    //            for (auto i = 0u; i < m_displayOrder.size(); ++i)
+    //            {
+    //                ImGui::Text("%s", (const char*)m_sharedData.connectionData[m_displayOrder[i].client].playerData[m_displayOrder[i].player].name.toUtf8().c_str());
+    //                if (i == m_selectedDisplayMember)
+    //                {
+    //                    ImGui::SameLine();
+    //                    ImGui::Text("X");
+    //                }
+    //            }
+    //            if (!m_displayOrder.empty())
+    //            {
+    //                ImGui::PushItemWidth(70.f);
+    //                if (ImGui::InputInt("Selected", reinterpret_cast<int*>(&m_selectedDisplayMember)))
+    //                {
+    //                    m_selectedDisplayMember %= m_displayOrder.size();
+    //                }
+    //                ImGui::PopItemWidth();
+    //                ImGui::SameLine();
+    //                if (ImGui::Button("Up"))
+    //                {
+    //                    moveDisplayMemberUp();
+    //                }
+    //                ImGui::SameLine();
+    //                if (ImGui::Button("Down"))
+    //                {
+    //                    moveDisplayMemberDown();
+    //                }
     //            }
     //        }
     //        ImGui::End();
     //    });
 
     //createDebugWindows();
+    cro::App::getInstance().resetFrameTime();
+    simulate(0.f);
 }
 
 MenuState::~MenuState()
@@ -667,6 +864,9 @@ MenuState::~MenuState()
 
     m_sharedData.courseData = nullptr;
     m_sharedData.activeResources = nullptr;
+#ifdef USE_GNS
+    m_sharedData.clientConnection.netClient.warningCallback = {};
+#endif
 }
 
 //public
@@ -1015,16 +1215,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
             }
             break;
 #ifdef CRO_DEBUG_
-#ifdef USE_GNS
-        case SDLK_PAGEUP:
-            /*LogI << "resetting achievements" << std::endl;
-            Achievements::resetAll();*/
-            Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
-            break;
-        case SDLK_PAGEDOWN:
-            Achievements::resetAchievement(AchievementStrings[AchievementID::JoinTheClub]);
-            break;
-#endif
+//#ifdef USE_GNS
+//        case SDLK_PAGEUP:
+//            /*LogI << "resetting achievements" << std::endl;
+//            Achievements::resetAll();*/
+//            Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
+//            break;
+//        case SDLK_PAGEDOWN:
+//            Achievements::resetAchievement(AchievementStrings[AchievementID::JoinTheClub]);
+//            break;
+//#endif
         case SDLK_SPACE:
             cro::App::getInstance().resetFrameTime();
             break;
@@ -1348,7 +1548,7 @@ void MenuState::handleMessage(const cro::Message& msg)
                 auto avtIdx = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
 
                 m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] =
-                    m_profileData.playerProfiles[avtIdx];
+                    m_profileData.playerProfiles[avtIdx].playerData;
                 updateRoster();
             }
                 break;
@@ -1357,6 +1557,10 @@ void MenuState::handleMessage(const cro::Message& msg)
                 {
                     m_textChat.initLog();
                 }
+                break;
+            case StateID::Shop:
+                Timeline::setTimelineDesc("Main Menu");
+                Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
                 break;
             }
         }
@@ -1523,6 +1727,9 @@ void MenuState::handleMessage(const cro::Message& msg)
                     m_clubsetButtons.lobby.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
                     m_clubsetButtons.roster.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
                 }
+
+                //refreshes the avatar preview when first joining
+                setProfileIndex(m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]);
             }
             else if (data.data == StateID::Career)
             {
@@ -1646,12 +1853,23 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
+    m_avUpdateCount = 0;
+
+    if (!m_lobbyUpdateBuffer.empty())
+    {
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(m_lobbyUpdateBuffer.front());
+        m_lobbyUpdateBuffer.pop();
+    }
+
+
     if (!m_printQueue.empty() &&
         m_printTimer.elapsed().asSeconds() > 1.f)
     {
         m_printTimer.restart();
-        m_textChat.printToScreen(m_printQueue.front(), TextGoldColour);
-        m_printQueue.pop_front();
+        const auto& [s, c] = m_printQueue.front();
+        m_textChat.printToScreen(s, c);
+        playMessageSound();
+        m_printQueue.pop();
     }
 
     m_textChat.update(dt);
@@ -1751,6 +1969,21 @@ void MenuState::render()
 }
 
 //private
+void MenuState::playMessageSound()
+{
+    float pitch = static_cast<float>(cro::Util::Random::value(7, 13)) / 10.f;
+    auto& e = m_audioEnts[AudioID::Message].getComponent<cro::AudioEmitter>();
+    e.setPitch(pitch);
+    if (e.getState() == cro::AudioEmitter::State::Playing)
+    {
+        e.setPlayingOffset(cro::seconds(0.f));
+    }
+    else
+    {
+        e.play();
+    }
+}
+
 void MenuState::addSystems()
 {
     //const auto basePath = std::string("assets/golf/sound/avatars/");
@@ -1769,8 +2002,6 @@ void MenuState::addSystems()
     //        }
     //    }
     //}
-
-
 
     auto& mb = getContext().appInstance.getMessageBus();
 
@@ -1841,6 +2072,7 @@ void MenuState::loadAssets()
     //but we don't know that until *after* the assets are loaded...
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define NO_SUN_COLOUR\n#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
+    m_resources.shaders.loadFromString(ShaderID::BallBumped, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), ShopFragment, "#define NO_SUN_COLOUR\n#define VERTEX_COLOUR\n#define BALL_COLOUR\n#define BUMP\n#define TEXTURED\n");
     m_resources.shaders.loadFromString(ShaderID::BallSkinned, CelVertexShader, CelFragmentShader, "#define SKINNED\n#define NO_SUN_COLOUR\n#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define MENU_PROJ\n#define RX_SHADOWS\n#define TEXTURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
@@ -1884,6 +2116,12 @@ void MenuState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
     m_profileData.profileMaterials.ball = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+
+    shader = &m_resources.shaders.get(ShaderID::BallBumped);
+    //m_scaleBuffer.addShader(*shader);
+    //m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::BallBumped] = m_resources.materials.add(*shader);
+    m_profileData.profileMaterials.ballBumped = m_resources.materials.get(m_materialIDs[MaterialID::BallBumped]);
 
     shader = &m_resources.shaders.get(ShaderID::BallSkinned);
     m_scaleBuffer.addShader(*shader);
@@ -1984,7 +2222,7 @@ void MenuState::loadAssets()
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
-    if (m_sharedData.treeQuality == SharedStateData::Classic)
+    if (m_sharedData.treeQuality == SharedStateData::TreeQuality::Classic)
     {
         spriteSheet.loadFromFile("assets/golf/sprites/shrubbery_low.spt", m_resources.textures);
     }
@@ -2469,7 +2707,7 @@ void MenuState::createScene()
 
 
     //billboards
-    auto shrubPath = m_sharedData.treeQuality == SharedStateData::Classic ?
+    auto shrubPath = m_sharedData.treeQuality == SharedStateData::TreeQuality::Classic ?
         "assets/golf/models/shrubbery_low.cmt" :
         "assets/golf/models/shrubbery.cmt";
     if (md.loadFromFile(shrubPath))
@@ -2716,8 +2954,9 @@ void MenuState::createScene()
             && m_sharedData.multisamples != 0
             && !m_sharedData.pixelScale;
 
-        const auto res = m_sharedData.hqShadows ? 4096 : 2048;
+        const auto res = m_sharedData.shadowQuality ? ShadowMapHigh : ShadowMapLow;
         cam.shadowMapBuffer.create(res, res);
+        cam.setBlurPassCount(getBlurPassCount(m_sharedData.shadowQuality));
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 600.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
@@ -2726,9 +2965,10 @@ void MenuState::createScene()
     auto camEnt = m_backgroundScene.getActiveCamera();
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
-    cam.shadowMapBuffer.create(2048, 2048);
+    cam.shadowMapBuffer.create(ShadowMapLow, ShadowMapLow);
     cam.setMaxShadowDistance(38.f);
     cam.setShadowExpansion(140.f);
+    //cam.setBlurPassCount(1);
     updateView(cam);
 
     /*camEnt.getComponent<cro::Transform>().setPosition({ 12.2f, 1.8f, 15.6f });
@@ -2850,7 +3090,7 @@ MenuState::PropFileData MenuState::getPropPath() const
     else if (mon == 6 && day == 21)
     {
         ret.propFilePath = "somer.bgd";
-        ret.fireworks = true;
+        //ret.fireworks = true;
     }
     else
     {
@@ -2887,7 +3127,7 @@ MenuState::PropFileData MenuState::getPropPath() const
             ret.fireworks = day == 2;
             break;
         case 6:
-            ret.fireworks = day == 16;
+            ret.fireworks =( day == 16 || day == 21);
             break;
         }
     }
@@ -3074,7 +3314,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
             for (auto i = 0u; i < polePos.size() - 1; ++i)
             {
                 auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(polePos[i], polePos[i+1], 0.001f);
-                for (auto i = 0; i < NodeCount; ++i)
+                for (auto j = 0; j < NodeCount; ++j)
                 {
                     const auto scale = 1.f + cro::Util::Random::value(-0.2f, 0.5f);
 
@@ -3211,7 +3451,7 @@ void MenuState::createSnow()
 void MenuState::setVoiceCallbacks()
 {
     const auto voiceCreate =
-        [&](VoiceChat& vc, std::size_t idx)
+        [&](const VoiceChat& vc, std::size_t idx)
         {
             if (!m_voiceEntities[idx].isValid())
             {
@@ -3304,8 +3544,8 @@ void MenuState::launchQuickPlay()
     m_rosterMenu.activeIndex = 0;
     setProfileIndex(0, false);
     m_profileData.activeProfileIndex = 0;
-    m_profileData.playerProfiles[0].isCPU = false;
-    m_profileData.playerProfiles[0].saveProfile();
+    m_profileData.playerProfiles[0].playerData.isCPU = false;
+    m_profileData.playerProfiles[0].playerData.saveProfile();
 
     m_sharedData.hosting = true;
     m_sharedData.gameMode = GameMode::FreePlay;
@@ -3434,6 +3674,82 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::RuleMod:
+        {
+            const std::uint16_t data = evt.packet.as<std::uint16_t>();
+            const auto ruleType = (data & 0xff00) >> 8;
+            const auto value = (data & 0x00ff);
+
+            if (ruleType == RuleMod::Snek)
+            {
+                if (value)
+                {
+                    m_textChat.printToScreen("Host has enabled Snek", CD32::Colours[CD32::BlueLight]);
+                    playMessageSound();
+                }
+                else
+                {
+                    m_textChat.printToScreen("Host has disabled Snek", CD32::Colours[CD32::BlueLight]);
+                    playMessageSound();
+                }
+            }
+            else if (ruleType == RuleMod::BigBalls)
+            {
+                if (value)
+                {
+                    m_textChat.printToScreen("Host has enabled Big Balls", CD32::Colours[CD32::BlueLight]);
+                    playMessageSound();
+                }
+                else
+                {
+                    m_textChat.printToScreen("Host has disabled Big Balls", CD32::Colours[CD32::BlueLight]);
+                    playMessageSound();
+                }
+            }
+
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
+        }
+            break;
+        case PacketID::DisplayList:
+        {
+            auto list = evt.packet.as<DisplayList>();
+            list.count = std::max(0, std::min(list.count, std::int32_t(list.list.size())));
+            
+            m_displayOrder.clear();
+            if (list.count)
+            {
+                for (auto i = 0; i < list.count; ++i)
+                {
+                    m_displayOrder.push_back(list.list[i]);
+                }
+            }
+            //refreshes the display, if hosting also updates the teams
+            //hmmm this will get called twice consecutively by guests
+            //as this will trigger a team index update too
+            if (m_sharedData.hosting)
+            {
+                updateLobbyAvatars();
+            }
+
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
+        }
+            break;
+        case PacketID::TeamData:
+        {
+            const auto data = evt.packet.as<TeamData>();
+            m_sharedData.connectionData[data.client].playerData[data.player].teamIndex = data.index;
+            //LogI << "Set team index " << data.index << " for " << data.client << ", " << data.player << std::endl;
+
+            if (!m_sharedData.hosting)
+            {
+                //this updates the text display - but if we're
+                //hosting also re-transmits the indices, so only
+                //do this here if we're a guest!!
+                updateLobbyAvatars();
+            }
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
+        }
+            break;
         case PacketID::CoinBucketed:
             m_backgroundScene.getDirector<MenuSoundDirector>()->playSound(
                 cro::Util::Random::value(MenuSoundDirector::AudioID::Land01, MenuSoundDirector::AudioID::Land01 + 2), 0.5f);
@@ -3484,21 +3800,12 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::Poke:
             m_audioEnts[AudioID::Poke].getComponent<cro::AudioEmitter>().play();
+            m_textChat.printToScreen("You were poked!", CD32::Colours[CD32::BlueLight]);
             break;
         case PacketID::ChatMessage:
             if (m_textChat.handlePacket(evt.packet))
             {
-                float pitch = static_cast<float>(cro::Util::Random::value(7, 13)) / 10.f;
-                auto& e = m_audioEnts[AudioID::Message].getComponent<cro::AudioEmitter>();
-                e.setPitch(pitch);
-                if (e.getState() == cro::AudioEmitter::State::Playing)
-                {
-                    e.setPlayingOffset(cro::seconds(0.f));
-                }
-                else
-                {
-                    e.play();
-                }
+                playMessageSound();
             }
             break;
         case PacketID::ClientPlayerCount:
@@ -3551,10 +3858,16 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::ConnectionAccepted:
             {
                 //update local player data
-                m_sharedData.clientConnection.connectionID = evt.packet.as<std::uint8_t>();
-                m_sharedData.localConnectionData.connectionID = evt.packet.as<std::uint8_t>();
+                const auto connID = evt.packet.as<std::uint8_t>();
+                m_sharedData.clientConnection.connectionID = connID;
+                m_sharedData.localConnectionData.connectionID = connID;
                 m_sharedData.localConnectionData.peerID = m_sharedData.clientConnection.netClient.getPeer().getID();
                 m_sharedData.connectionData[m_sharedData.clientConnection.connectionID] = m_sharedData.localConnectionData;
+
+                for (auto i = 0u; i < m_sharedData.connectionData[connID].playerCount; ++i)
+                {
+                    m_displayOrder.emplace_back(connID, std::uint8_t(i));
+                }
 
                 //send player details to server (name, skin)
                 auto buffer = m_sharedData.localConnectionData.serialise();
@@ -3648,12 +3961,22 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             auto client = evt.packet.as<std::uint8_t>();
             for (auto i = 0u; i < m_sharedData.connectionData[client].playerCount; ++i)
             {
-                m_textChat.printToScreen(m_sharedData.connectionData[client].playerData[i].name + " has left the game.", CD32::Colours[CD32::BlueLight]);
+                //m_textChat.printToScreen(m_sharedData.connectionData[client].playerData[i].name + " has left the game.", CD32::Colours[CD32::BlueLight]);
+                m_printQueue.push(std::make_pair(m_sharedData.connectionData[client].playerData[i].name + " has left the game.", CD32::Colours[CD32::BlueLight]));
             }
             
+            m_displayOrder.erase(std::remove_if(m_displayOrder.begin(), m_displayOrder.end(), 
+                [client](const Team::Player& tp) {return tp.client == client; }), m_displayOrder.end());
+
             m_sharedData.connectionData[client].playerCount = 0;
             m_readyState[client] = false;
-            updateLobbyAvatars();
+            if (m_sharedData.hosting)
+            {
+                //this calls updateLobbyAvatars() and forwards team assignments to guests
+                refreshDisplayMembers();
+            }
+            //updateLobbyAvatars();
+
 
             postMessage<SystemEvent>(cl::MessageID::SystemMessage)->type = SystemEvent::LobbyExit;
             postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage)->type = Social::SocialEvent::LobbyUpdated;
@@ -3879,6 +4202,11 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(MaxPlayerWarning);
                     }
                 }
+                else if (m_sharedData.teamMode && !ScoreType::CanTeamPlay[m_sharedData.scoreType])
+                {
+                    m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(NoTeamplayWarning);
+                }
                 else
                 {
                     m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -3998,6 +4326,33 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::GroupMode:
             m_sharedData.groupMode = std::min(std::int32_t(ClientGrouping::Four), evt.packet.as<std::int32_t>());
+            break;
+        case PacketID::TeamMode:
+            m_sharedData.teamMode = evt.packet.as<std::int32_t>();
+            if (m_sharedData.teamMode && !ScoreType::CanTeamPlay[m_sharedData.scoreType])
+            {
+                m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(NoTeamplayWarning);
+            }
+            else if (m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType]
+                || m_connectedPlayerCount > ScoreType::MaxPlayerCount[m_sharedData.scoreType])
+            {
+                m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                if (m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType])
+                {
+                    m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(MinPlayerWarning);
+                }
+                else
+                {
+                    m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(MaxPlayerWarning);
+                }
+            }
+            else
+            {
+                m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+            updateLobbyAvatars(); //updates the team mode display
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
             break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())
@@ -4408,11 +4763,13 @@ void MenuState::applyTutorialConnection()
     //hmmm is this going to get in soon enough?
     m_sharedData.gimmeRadius = GimmeSize::None;
     m_sharedData.scoreType = ScoreType::Stroke;
+    m_sharedData.teamMode = 0;
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RandomWind, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
@@ -4423,10 +4780,12 @@ void MenuState::applyCareerConnection()
     m_sharedData.clubLimit = 0;
     m_sharedData.reverseCourse = 0;
     m_sharedData.scoreType = ScoreType::Stroke;
+    m_sharedData.teamMode = 0;
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     //set by career menu
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, m_sharedData.weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -4449,6 +4808,7 @@ void MenuState::applyQuickPlayConnection()
     m_sharedData.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
     m_sharedData.holeCount = cro::Util::Random::value(1, 2);
     m_sharedData.gimmeRadius = GimmeSize::Leather; //hmmm should we let the player choose this?
+    m_sharedData.teamMode = 0;
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -4457,6 +4817,7 @@ void MenuState::applyQuickPlayConnection()
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::NightTime, m_sharedData.nightTime, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RandomWind, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);

@@ -86,7 +86,7 @@ void MiniBallSystem::process(float dt)
             if (ball.parent.isValid())
             {
                 auto position = ball.parent.getComponent<cro::Transform>().getPosition();
-                entity.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(position), 0.05f * static_cast<float>(ball.playerID)));
+                entity.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(position), 0.01f * static_cast<float>(ball.playerID)));
             }
         }
         else

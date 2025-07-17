@@ -40,11 +40,11 @@ source distribution.
 #include "CollisionMesh.hpp"
 #include "LeaderboardTexture.hpp"
 #include "CPUGolfer.hpp"
-#include "TerrainDepthmap.hpp"
 #include "MinimapZoom.hpp"
 #include "BallTrail.hpp"
 #include "TextChat.hpp"
 #include "League.hpp"
+#include "AvatarAnimation.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/audio/DynamicAudioStream.hpp>
@@ -64,6 +64,7 @@ source distribution.
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
+#include <crogine/graphics/VideoPlayer.hpp>
 
 #include <array>
 #include <future>
@@ -74,9 +75,6 @@ source distribution.
 //#define PATH_TRACING
 #endif
 
-static constexpr std::uint32_t MaxCascades = 4; //actual value is 1 less this - see ShadowQuality::update()
-static constexpr float MaxShadowFarDistance = 150.f;
-static constexpr float MaxShadowNearDistance = 90.f;
 
 struct BullsEye;
 struct BullHit;
@@ -112,7 +110,7 @@ struct PlayerCallbackData final
 class GolfState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
-    GolfState(cro::StateStack&, cro::State::Context, struct SharedStateData&);
+    GolfState(cro::StateStack&, cro::State::Context, struct SharedStateData&, struct SharedProfileData&);
     ~GolfState();
 
     bool handleEvent(const cro::Event&) override;
@@ -126,19 +124,25 @@ public:
 private:
     cro::ResourceCollection m_resources;
     cro::DynamicAudioStream m_musicStream;
+    cro::VideoPlayer m_billboardVideo;
+    cro::RenderTexture m_billboardLeagueTexture;
 
     bool m_hasSnow; //we hardly ever use this, but have to ttrack it anyway...
     bool m_ntpPro; //hack to display different score in same game mode as NTP
     bool m_hotSeat; //we're playing local hotseat
+    std::int32_t m_baseClubSet; //used when playing with snek
     SharedStateData& m_sharedData;
+    SharedProfileData& m_sharedProfiles;
     cro::Scene m_gameScene;
     cro::Scene m_skyScene;
     cro::Scene m_uiScene;
     cro::Scene m_trophyScene;
-    TerrainDepthmap m_depthMap;
+    cro::Scene m_mapScene;
     cro::Texture m_defaultMaskMap;
 
     TextChat m_textChat;
+    Team::Player m_snekPlayer;
+    std::array<std::array<float, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_ballScales = {};
 
     //fudge to track real time state of buttons
     struct ButtonState final
@@ -239,7 +243,7 @@ private:
     };
     std::array<PostProcess, PostID::Count> m_postProcesses = {};
 
-    //cro::Image m_currentMap;
+
     float m_holeToModelRatio;
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;
@@ -281,7 +285,9 @@ private:
             HairReflect,
             HairGlass,
             Course,
+            Minimap,
             Ball,
+            BallBumped,
             BallSkinned,
             BallNight,
             BallNightSkinned,
@@ -298,6 +304,7 @@ private:
             LensFlare,
             PointFlare,
             Emissive, //self-illum for clubs
+            Hole,
 
             Count
         };
@@ -309,7 +316,6 @@ private:
         enum
         {
             BallShadow,
-            PlayerShadow,
             BullsEye,
             PlayerFallBack,
 
@@ -318,6 +324,17 @@ private:
     };
     std::array<std::unique_ptr<cro::ModelDefinition>, ModelID::Count> m_modelDefs = {};
     std::unordered_map<std::int32_t, std::unique_ptr<cro::ModelDefinition>> m_ballModels;
+
+    struct ShaderPair final
+    {
+        std::uint32_t shader = 0;
+        std::int32_t uniform = -1;
+    };
+    struct BallShadow final
+    {
+        std::vector<cro::Entity> balls;
+        std::array<ShaderPair, 2u> shaders = {};
+    }m_ballShadows;
 
     struct TextureID final
     {
@@ -357,6 +374,9 @@ private:
     void loadMap();
     void initAudio(bool loadTrees, bool loadPlane);
     void updateFlagTexture(bool reloadTexture);
+#ifdef USE_GNS
+    void initBillboardLeagueTexture();
+#endif
 
     void addSystems();
     void buildScene();
@@ -394,16 +414,56 @@ private:
 
     struct ShadowQuality final
     {
-        float shadowNearDistance = MaxShadowNearDistance;
-        float shadowFarDistance = MaxShadowFarDistance;
-        std::uint32_t cascadeCount = MaxCascades - 1;
+        std::uint32_t cascadeCount = 1;
 
-        void update(bool hq)
+        void update(std::int32_t q)
         {
-            cascadeCount = hq ? 3 : 1;
-            float divisor = static_cast<float>(std::pow((MaxCascades - cascadeCount), 2)); //cascade sizes are exponential
-            shadowNearDistance = 90.f / divisor;
-            shadowFarDistance = 150.f / divisor;
+            //somewhat superfluous now, but I'm too lazy to refactor :)
+            cascadeCount = getCascadeCount(q);
+        }
+
+        float getMaxDistance(std::int32_t camID) const
+        {
+            if (cascadeCount == 1)
+            {
+                //assume this is lowQ
+                switch (camID)
+                {
+                //assumes default is freecam which has no ID
+                default: return 11.f;
+                case CameraID::Player:
+                case CameraID::Green: 
+                    return 10.f;
+                case CameraID::Idle:
+                case CameraID::Bystander:
+                    return 14.f;
+                case CameraID::Transition:
+                case CameraID::Sky:
+                case CameraID::Drone:
+                    return 25.f;
+                }
+            }
+            else
+            {
+                //extend these by 50% if using 3 cascades in ultra
+                float val = 90.f;
+                switch (camID)
+                {
+                default: break;;
+                case CameraID::Player:
+                case CameraID::Green:
+                case CameraID::Bystander:
+                case CameraID::Idle:
+                    val = 30.f;
+                    break;
+                case CameraID::Transition:
+                case CameraID::Sky:
+                case CameraID::Drone:
+                    val = 150.f;
+                    break;
+                }
+                return val + ((val / 2.f) * (cascadeCount - 1));
+            }
         }
     }m_shadowQuality;
 
@@ -455,6 +515,7 @@ private:
     void createTransition(const ActivePlayer&, bool = true);
     void startFlyBy();
     void setCameraPosition(glm::vec3, float, float);
+    void sendFreecamToTarget();
 
     //tracks the player positions in group play so we can switch cameras
     //between them while idling (1 for each active group)
@@ -465,6 +526,9 @@ private:
     cro::Entity m_spectateGhost;
     void setGhostPosition(glm::vec3);
     void spectateGroup(std::uint8_t group);
+
+    //look up table so we can find player info based on their team index
+    std::array<Team, ConstVal::MaxPlayers> m_teams = {};
 
     //follows the ball mid-flight
     cro::Entity m_flightCam;
@@ -482,6 +546,7 @@ private:
     void updateHoleScore(std::uint16_t); //< diplays result of a hole win/loss
     void updateLeaderboardScore(bool&, cro::String&); //updates the params with personal best from current leaderboard
     void updateTournament(bool); //if player won the round updates all other CPU for that round, else for the rest of the tournament
+    void updateInventory(std::int32_t); //if the ball went out of bounds did the player lose it?
 
     //UI stuffs - found in GolfStateUI.cpp
     struct SpriteID final
@@ -503,6 +568,7 @@ private:
             SlopeStrength,
             BallSpeed,
             MiniFlag,
+            MiniMapFlag,
             MiniFlagLarge,
             MapFlag,
             MapTarget,
@@ -560,7 +626,6 @@ private:
     cro::Entity m_minimapIndicatorEnt;
     cro::Entity m_miniGreenEnt;
     cro::Entity m_strokeDistanceEnt;
-    cro::Entity m_miniGreenIndicatorEnt;
     cro::Entity m_scoreboardEnt;
     cro::Entity m_nemesisEnt;
     cro::Entity m_droneTextEnt;
@@ -615,7 +680,7 @@ private:
         cro::Entity trophy;
         cro::Entity badge;
         cro::Entity label;
-        cro::Entity avatar;
+        std::array<cro::Entity, 2u> avatars = {};
     };
     std::array<Trophy, 3u> m_trophies = {};
     std::array<cro::Entity, 3u> m_fireworks = {};
@@ -658,10 +723,11 @@ private:
 
     //-----------
 
-    cro::Entity m_mapCam;
     cro::Entity m_mapRoot;
     cro::MultiRenderTexture m_mapTextureMRT; //hack to create images for map explorer
     
+    std::vector<cro::Entity> m_minimapModels;
+
     std::int32_t m_minimapTexturePass;
     static constexpr std::int32_t MaxMinimapPasses = 1;
     void updateMinimapTexture();
@@ -733,6 +799,7 @@ private:
         std::uint8_t client = 0;
         std::uint8_t player = 0;
         std::int32_t score = 0;
+        std::int32_t team = -1;
         float distance = 0.f;
     };
     std::vector<StatBoardEntry> m_statBoardScores;

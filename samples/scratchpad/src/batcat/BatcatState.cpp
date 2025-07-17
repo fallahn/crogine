@@ -121,6 +121,8 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
                 if (ImGui::Begin("Window of funnage"))
                 {
                     auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+                    //ImGui::Text("Visible Shadow Ents: %lu", m_scene.getSystem<cro::ShadowMapRenderer>()->getDrawListSize(cam.getDrawListIndex()));
+
                     float maxShadow = cam.getMaxShadowDistance();
                     if (ImGui::SliderFloat("Shadow Distance", &maxShadow, 1.f, cam.getFarPlane()))
                     {
@@ -131,6 +133,13 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
                     if (ImGui::SliderFloat("Shadow Expansion", &exp, 0.f, 50.f))
                     {
                         cam.setShadowExpansion(exp);
+                    }
+
+                    auto c = static_cast<std::int32_t>(cam.getBlurPassCount());
+                    if (ImGui::InputInt("Blurred Cascades", &c))
+                    {
+                        c = std::clamp(c, 0, static_cast<std::int32_t>(cam.getCascadeCount()));
+                        cam.setBlurPassCount(c);
                     }
 
                     ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
@@ -288,7 +297,7 @@ void BatcatState::createScene()
     entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Run);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
-    entity.getComponent<cro::Model>().setInstanceTransforms(tx);
+    //entity.getComponent<cro::Model>().setInstanceTransforms(tx);
 
     /*for (auto p : tx)
     {
@@ -377,11 +386,16 @@ void BatcatState::createScene()
     //3D camera
     auto ent = m_scene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 50.f });
-    //projection is set in updateView()
-    ent.addComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
-    ent.getComponent<cro::Camera>().resizeCallback = std::bind(&BatcatState::updateView, this, std::placeholders::_1);
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
+    //projection is set in updateView()
+    ent.addComponent<cro::Camera>().shadowMapBuffer.create(1024, 1024);// (2048, 2048);
+    ent.getComponent<cro::Camera>().resizeCallback = std::bind(&BatcatState::updateView, this, std::placeholders::_1);
     updateView(ent.getComponent<cro::Camera>());
+
+    ent.getComponent<cro::Camera>().setMaxShadowDistance(142.f);
+    ent.getComponent<cro::Camera>().setShadowExpansion(17.f);
+    //ent.getComponent<cro::Camera>().setBlurPassCount(1);
+
 
 #ifdef CRO_DEBUG_
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
@@ -637,11 +651,15 @@ void BatcatState::createUI()
     m_smaaRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
     auto weightEnt = ent;
 
-    //non-SMAA
+    //non-SMAA (but with FXAA)
+
+    m_resources.shaders.loadFromString(123, cro::RenderSystem2D::getDefaultVertexShader(),
+        cro::RenderSystem2D::getDefaultFragmentShader(), "#define TEXTURED\n#define FXAA\n");
+
     ent = m_overlayScene.createEntity();
-    ent.addComponent<cro::Transform>();
-    ent.addComponent<cro::Drawable2D>();
-    ent.addComponent<cro::Sprite>(m_sceneTexture.getTexture()/*tex*/);
+    ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    ent.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(123));
+    ent.addComponent<cro::Sprite>(m_sceneTexture.getTexture());
     ent.addComponent<cro::UIElement>().depth = -0.2f;
     ent.getComponent<cro::UIElement>().resizeCallback =
         [](cro::Entity e)
@@ -651,7 +669,23 @@ void BatcatState::createUI()
             e.getComponent<cro::UIElement>().relativePosition = { 0.f, y / size.y };
         };
     
-    registerWindow([&, outputEnt, edgeEnt, weightEnt]() mutable
+
+
+    //auto fxEnt = m_overlayScene.createEntity();
+    //fxEnt.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    //fxEnt.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(123));
+    //fxEnt.addComponent<cro::Sprite>(m_sceneTexture.getTexture());
+    //fxEnt.addComponent<cro::UIElement>().depth = -0.2f;
+    //fxEnt.getComponent<cro::UIElement>().resizeCallback =
+    //    [](cro::Entity e)
+    //    {
+    //        glm::vec2 size(cro::App::getWindow().getSize());
+    //        const auto y = (size.y - ((size.x / 16.f) * 9.f)) / 2.f;
+    //        e.getComponent<cro::UIElement>().relativePosition = { 0.f, y / size.y };
+    //    };
+
+
+    registerWindow([&, outputEnt, edgeEnt, weightEnt, ent]() mutable
         {
             if (ImGui::Begin("SMAA"))
             {
@@ -660,6 +694,7 @@ void BatcatState::createUI()
                 {
                     const auto scale = showSMAA ? 1.f : 0.f;
                     m_smaaRoot.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                    ent.getComponent<cro::Transform>().setScale(glm::vec2(1.f-scale));
                 }
 
                 static int output = 0;
@@ -818,6 +853,8 @@ void BatcatState::updateView(cro::Camera& cam3D)
     size.y = (size.x / 16) * 9;
 
     m_sceneTexture.create(size.x, size.y);
+    m_sceneTexture.setSmooth(false);
+
     m_outputTexture.create(size.x, size.y, false);
     m_smaaPost.create(m_sceneTexture.getTexture()/*m_resources.textures.get("assets/batcat/Unigine01.png")*/, m_outputTexture);
 

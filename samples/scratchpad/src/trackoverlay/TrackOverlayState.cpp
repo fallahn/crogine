@@ -26,6 +26,8 @@
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
 
+#include <fstream>
+
 namespace
 {
     constexpr glm::vec2 ViewSize(1920.f, 220.f);
@@ -452,6 +454,19 @@ void TrackOverlayState::createUI()
                             loadAlbumDirectory();
                         }
                     }
+
+                    if (ImGui::Button("Write Timestamps"))
+                    {
+                        std::ofstream file(m_settings.albumDirectory + "/yt.txt");
+                        for (const auto& [title, artist] : m_textStrings)
+                        {
+                            const auto utf0 = title.toUtf8();
+                            const auto utf1 = artist.toUtf8();
+
+                            file << "00:00 " << utf0.c_str() << " - " << utf1.c_str() << "\n";
+                        }
+                    }
+
 
                     if (ImGui::Button("Close"))
                     {

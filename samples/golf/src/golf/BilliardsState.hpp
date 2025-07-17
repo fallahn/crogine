@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant - 2022
+Matt Marchant - 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -217,6 +217,12 @@ private:
     };
     std::array<std::int32_t, AnimationID::Count> m_faceAnimationIDs = {};
     std::array<std::int32_t, AnimationID::Count> m_snailAnimationIDs = {};
+
+    struct CameraProperties final
+    {
+        float FOVAdjust = 1.f;
+        float farPlane = 5.f;
+    };
 
     void createUI();
     void showReadyNotify(const BilliardsPlayer&);

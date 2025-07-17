@@ -31,7 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "../golf/Path.hpp"
-#include"../golf/CollisionMesh.hpp"
+#include "../golf/CollisionMesh.hpp"
 #include "../golf/Billboard.hpp"
 
 #include <crogine/core/State.hpp>
@@ -44,11 +44,11 @@ source distribution.
 
 #include <array>
 
-struct SharedScrubData;
+struct SharedMinigameData;
 class ScrubBackgroundState final : public cro::State, public cro::GuiClient
 {
 public:
-    ScrubBackgroundState(cro::StateStack&, cro::State::Context, SharedScrubData&);
+    ScrubBackgroundState(cro::StateStack&, cro::State::Context, SharedMinigameData&);
     ~ScrubBackgroundState();
 
     ScrubBackgroundState(const ScrubBackgroundState&) = delete;
@@ -67,7 +67,7 @@ public:
 private:
     cro::Scene m_scene;
     cro::ResourceCollection m_resources;
-    SharedScrubData& m_sharedScrubData;
+    SharedMinigameData& m_sharedScrubData;
 
     cro::RenderTexture m_renderTexture;
     cro::SimpleQuad m_renderQuad;
@@ -93,5 +93,4 @@ private:
     void createScene();
     void loadSpectators();
     void loadClouds();
-    void initFonts();
 };

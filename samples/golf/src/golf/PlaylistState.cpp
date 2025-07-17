@@ -178,16 +178,10 @@ namespace
 
         void operator ()(cro::Entity e, float)
         {
-            auto cropRect = croppingArea;
-            auto localBounds = e.getComponent<cro::Drawable2D>().getLocalBounds();
-            auto pos = e.getComponent<cro::Transform>().getWorldPosition();
-            cropRect.left -= pos.x;
-            cropRect.bottom -= pos.y;
-            cropRect.bottom -= localBounds.bottom + localBounds.height;
-            e.getComponent<cro::Drawable2D>().setCroppingArea(cropRect);
+            const auto pos = e.getComponent<cro::Transform>().getWorldPosition();
+            e.getComponent<cro::Drawable2D>().setCroppingArea(croppingArea, true);
 
             float scale = 1.f;
-            pos.y -= (localBounds.height / 2.f);
             if (!croppingArea.contains(pos))
             {
                 scale = 0.f;
@@ -292,7 +286,7 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
     ctx.mainWindow.setMouseCaptured(false);
 
     ctx.mainWindow.loadResources(
-        [this]() 
+        [&]() 
         {
             addSystems();
             loadAssets();
@@ -742,7 +736,7 @@ void PlaylistState::loadAssets()
     m_materialIDs[MaterialID::BranchShadow] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::BranchShadow]).setProperty("u_noiseTexture", noiseTex);
 
-    std::string alphaClip = m_sharedData.hqShadows ? "#define ALPHA_CLIP\n" : "";
+    std::string alphaClip = m_sharedData.shadowQuality ? "#define ALPHA_CLIP\n" : "";
     m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n #define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
     m_windBuffer.addShader(*shader);
@@ -899,10 +893,11 @@ void PlaylistState::buildScene()
     cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     cam.reflectionBuffer.setSmooth(true);
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+    updateView(cam);
     cam.setMaxShadowDistance(20.f);
+    cam.setBlurPassCount(1);
     cam.setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
     cam.resizeCallback = updateView;
-    updateView(cam);
 
     camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("01");
     camEnt.getComponent<cro::AudioEmitter>().play();
@@ -1432,7 +1427,8 @@ void PlaylistState::buildUI()
 void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuData)
 {
     m_menuEntities[MenuID::Skybox] = m_uiScene.createEntity();
-    rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::Skybox].addComponent<cro::Transform>());
+    m_menuEntities[MenuID::Skybox].addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
+    rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::Skybox].getComponent<cro::Transform>());
 
     m_skyboxes = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + SkyboxPath);
     //TODO we want as good a way as possible to validate the files...
@@ -2142,12 +2138,31 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
         //check if thumb exists and only add if it does.
         //DON'T FORGET YOU HAVE TO MANUALLY GENERATE THE THUMBS!!
         std::vector<std::string> thumbs;
+        std::vector<std::string> pars;
         for (const auto& file : files)
         {
             auto thumb = file.substr(0, file.find_last_of('.')) + ".png";
-            auto thumbPath = cro::FileSystem::getResourcePath() + ThumbPath + dir + "/" + thumb;
+            const auto thumbPath = cro::FileSystem::getResourcePath() + ThumbPath + dir + "/" + thumb;
             if (cro::FileSystem::fileExists(thumbPath))
             {
+                cro::ConfigFile cfg;
+                if (cfg.loadFromFile(cro::FileSystem::getResourcePath() + CoursePath + dir + "/" + file))
+                {
+                    if (const auto* prop = cfg.findProperty("par"); prop != nullptr)
+                    {
+                       pars.push_back(" - Par: " + std::to_string(prop->getValue<std::int32_t>()));
+                    }
+                    else
+                    {
+                        //make sure this aligns the size with thumbs vector
+                        pars.push_back(" ");
+                    }
+                }
+                else
+                {
+                    pars.push_back(" ");
+                }
+
                 thumbs.push_back(thumb);
             }
         }
@@ -2157,9 +2172,10 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
             auto& holeDir = m_holeDirs.emplace_back();
             holeDir.name = dir;
             
-            for (auto& thumb : thumbs)
+            for(auto i = 0u; i < thumbs.size(); ++i)
             {
-                holeDir.holes.emplace_back().name.swap(thumb);
+                holeDir.holes.emplace_back().name.swap(thumbs[i]);
+                holeDir.holes.back().par = pars[i];
             }
         }
     }
@@ -2223,7 +2239,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString(m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name);
+    entity.addComponent<cro::Text>(smallFont).setString(m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name + m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].par);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -2309,7 +2325,8 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(
                             m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].defaultScale);
 
-                        labelEnt.getComponent<cro::Text>().setString(m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name);
+                        const auto str = m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name + m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].par;
+                        labelEnt.getComponent<cro::Text>().setString(str);
                         centreText(labelEnt);
 
                         updateInfo();
@@ -2441,7 +2458,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
-    entity.getComponent<UIElement>().absolutePosition = { -30.f - RootOffset, 16.f + ItemSpacing };
+    entity.getComponent<UIElement>().absolutePosition = { -50.f - RootOffset, 16.f + ItemSpacing };
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto scrollEnt = entity;
 
@@ -2466,7 +2483,9 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
 
                     auto holeCount = m_holeDirs[m_holeDirIndex].holes.size();
                     m_thumbnailIndex = (m_thumbnailIndex + (holeCount - 1)) % holeCount;
-                    labelEnt.getComponent<cro::Text>().setString(m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name);
+
+                    const auto str = m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name + m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].par;
+                    labelEnt.getComponent<cro::Text>().setString(str);
                     centreText(labelEnt);
                     
                     m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(
@@ -2484,7 +2503,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
-    entity.getComponent<UIElement>().absolutePosition = { 21.f - RootOffset, 16.f + ItemSpacing};
+    entity.getComponent<UIElement>().absolutePosition = { 41.f - RootOffset, 16.f + ItemSpacing};
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     scrollEnt = entity;
 
@@ -2508,7 +2527,9 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
 
                     auto holeCount = m_holeDirs[m_holeDirIndex].holes.size();
                     m_thumbnailIndex = (m_thumbnailIndex + 1) % holeCount;
-                    labelEnt.getComponent<cro::Text>().setString(m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name);
+
+                    const auto str = m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name + m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].par;
+                    labelEnt.getComponent<cro::Text>().setString(str);
                     centreText(labelEnt);
 
                     m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(
@@ -3437,7 +3458,7 @@ void PlaylistState::setActiveTab(std::int32_t index)
     cmd.action = [index](cro::Entity e, float)
     {
         e.getComponent<cro::Callback>().active =
-            e.getComponent<cro::UIInput>().getGroup() == index;
+            (e.getComponent<cro::UIInput>().getGroup() & (1 << index)) != 0;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -3716,7 +3737,7 @@ void PlaylistState::loadShrubbery(const std::string& path)
                         shrubbery.treesetEnts[i].getComponent<cro::Model>().setMaterial(idx, material);
 
                         material = m_resources.materials.get(m_materialIDs[MaterialID::LeafShadow]);
-                        if (m_sharedData.hqShadows)
+                        if (m_sharedData.shadowQuality)
                         {
                             material.setProperty("u_diffuseMap", m_resources.textures.get(treesets[i].texturePath));
                         }
@@ -3798,7 +3819,7 @@ void PlaylistState::applyShrubQuality()
     switch (m_sharedData.treeQuality)
     {
     default: break;
-    case SharedStateData::Classic:
+    case SharedStateData::TreeQuality::Classic:
         if (shrubbery.billboardEnts[0].isValid())
         {
             shrubbery.billboardEnts[0].getComponent<cro::Model>().setHidden(true);
@@ -3819,7 +3840,7 @@ void PlaylistState::applyShrubQuality()
             }
         }
         break;
-    case SharedStateData::Low:
+    case SharedStateData::TreeQuality::Low:
         if (shrubbery.billboardEnts[0].isValid())
         {
             shrubbery.billboardEnts[0].getComponent<cro::Model>().setHidden(false);
@@ -3840,7 +3861,7 @@ void PlaylistState::applyShrubQuality()
             }
         }
         break;
-    case SharedStateData::High:
+    case SharedStateData::TreeQuality::High:
         if (shrubbery.billboardEnts[0].isValid())
         {
             shrubbery.billboardEnts[0].getComponent<cro::Model>().setHidden(false);

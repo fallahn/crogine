@@ -147,7 +147,7 @@ struct CollisionEvent final
         Firework,
         FlagPole = 18// TriggerID::FlagStick //ugh including Terrain.hpp breaks compilation
     };
-
+    float velocity = 0.f; //squared
     glm::vec3 position = glm::vec3(0.f);
     std::int32_t terrain = 0;
     std::int32_t clubID = -1;
@@ -172,7 +172,8 @@ struct SystemEvent final
         SubmitOSK, //OSK was closed and there's data in the buffer to be read
         CancelOSK,
         LobbyEntered, //someone other than us joined the lobby
-        LobbyExit
+        LobbyExit,
+        MenuSwitched
     }type = PostProcessToggled;
     std::int32_t data = -1;
 };

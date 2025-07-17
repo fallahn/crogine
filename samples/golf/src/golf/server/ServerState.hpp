@@ -61,6 +61,7 @@ namespace sv
         bool flipped = false; //we don't really care about this on the server, but we do need to forward it to clients.
         bool isCPU = false; //only allow CPU players to request predictions
 
+        std::int32_t teamIndex = -1;
         std::array<glm::vec3, 6u> headwearOffsets = {};
 
         PlayerInfo& operator = (const PlayerData&);
@@ -99,15 +100,21 @@ namespace sv
         std::uint8_t reverseCourse = 0;
         std::uint8_t clubLimit = 0;
         std::uint8_t fastCPU = 1;
+        std::uint8_t snekEnabled = 0;
+        std::uint8_t snekClient = ConstVal::NullValue;
+        std::uint8_t snekPlayer = ConstVal::NullValue;
 
         std::uint8_t randomWind = 0;
         float maxWind = 1.f;
 
+        std::int32_t teamMode = 0;
         std::int32_t groupMode = 0;
         std::array<std::uint8_t, ConstVal::MaxClients> clubLevels = {};
 
-        std::atomic_uint64_t hostID = 0;
         std::atomic_int32_t leagueID = 0;
+        std::atomic_uint64_t hostID = 0;
+
+        std::int32_t bigBalls = 0;
     };
 
     namespace StateID

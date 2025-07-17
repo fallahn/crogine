@@ -492,11 +492,11 @@ void NewsState::buildScene()
                     menuEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
                     auto description = items[0].description.substr(0, 180) + "...";
-                    cro::Util::String::wordWrap(description, 60);
+                    cro::Util::String::wordWrap(description, 70);
 
 
                     ent = m_scene.createEntity();
-                    ent.addComponent<cro::Transform>().setPosition({ -170.f, 74.f, 0.1f });
+                    ent.addComponent<cro::Transform>().setPosition({ -170.f, 76.f, 0.1f });
                     ent.addComponent<cro::Drawable2D>();
                     ent.addComponent<cro::Text>(smallFont).setString(description);
                     ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -515,7 +515,7 @@ void NewsState::buildScene()
                         prev += "---";
 
                         ent = m_scene.createEntity();
-                        ent.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 38.f, 0.2f));
+                        ent.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 36.f, 0.2f));
                         ent.getComponent<cro::Transform>().setOrigin(glm::vec2(188.f, 0.f));
                         ent.addComponent<cro::Drawable2D>();
                         ent.addComponent<cro::Text>(font).setString(prev);
@@ -565,6 +565,9 @@ void NewsState::buildScene()
                 {
                     auto ent = m_scene.createEntity();
                     ent.addComponent<cro::Transform>().setPosition(position);
+#ifdef USE_GNS
+                    ent.getComponent<cro::Transform>().move({ 0.f, 44.f });
+#endif
                     ent.addComponent<cro::Drawable2D>();
                     ent.addComponent<cro::Text>(font).setString("No news found");
                     ent.getComponent<cro::Text>().setFillColour(TextNormalColour);

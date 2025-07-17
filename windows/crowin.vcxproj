@@ -634,6 +634,7 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>4723;5287</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\openal\msvc\x64\debug;$(SolutionDir)extlibs\opus\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -707,6 +708,7 @@
       <PreprocessorDefinitions>GL41;CLIP_SCREENSHOT;_SCL_SECURE_NO_WARNINGS;CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>4723;5287</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

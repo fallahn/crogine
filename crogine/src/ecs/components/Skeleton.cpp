@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -60,7 +60,7 @@ Skeleton::Skeleton()
 
 }
 
-void Skeleton::play(std::size_t idx, float rate, float blendingTime)
+void Skeleton::play(std::size_t idx, float rate, float blendingTime, bool restart)
 {
     CRO_ASSERT(idx < m_animations.size(), "Index out of range");
     CRO_ASSERT(rate >= 0, "");
@@ -72,10 +72,17 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
     }
 
     m_animations[idx].playbackRate = rate;
-    m_animations[idx].currentFrame = m_animations[idx].startFrame;
+
+    if (restart)
+    {
+        m_animations[idx].currentFrame = m_animations[idx].startFrame;
+    }
 
     if (idx != m_currentAnimation)
     {
+        //always restart if this is a new aniamtion
+        m_animations[idx].currentFrame = m_animations[idx].startFrame;
+
         if (blendingTime > 0)
         {
             //blend if we're already playing
@@ -213,7 +220,7 @@ bool Skeleton::addAnimation(const Skeleton& source, std::size_t idx)
     if (auto exists = getAnimationIndex(srcAnim.name); exists != -1)
     {
         removeAnimation(exists);
-        LogI << "Replaced animation " << srcAnim.name << std::endl;
+        //LogI << "Replaced animation " << srcAnim.name << std::endl;
     }
 
     if (m_frameSize == 0)
@@ -295,6 +302,11 @@ float Skeleton::getCurrentFrameTime() const
     CRO_ASSERT(!m_animations.empty(), "");
     CRO_ASSERT(m_animations[m_currentAnimation].frameTime > 0.f, "");
     return m_animations[m_currentAnimation].currentFrameTime / m_animations[m_currentAnimation].frameTime;
+}
+
+float Skeleton::getAnimationProgress() const
+{
+    return (static_cast<float>(m_animations[m_currentAnimation].currentFrame - m_animations[m_currentAnimation].startFrame) + getCurrentFrameTime()) / m_animations[m_currentAnimation].frameCount;
 }
 
 void Skeleton::addNotification(std::size_t frameID, Notification n)
@@ -379,33 +391,55 @@ void Attachment::setParent(std::int32_t parent)
 
 void Attachment::setModel(cro::Entity model)
 {
+    if (model == m_model)
+    {
+        return;
+    }
+
+    if (model.isValid() &&
+        model.getComponent<cro::Transform>().m_attachmentParent != nullptr)
+    {
+        LogW << "Attachment model is already attached to another model and will be removed!" << std::endl;
+        model.getComponent<cro::Transform>().m_attachmentParent->m_model = {};
+        model.getComponent<cro::Transform>().m_attachmentParent = nullptr;
+    }
+
     //reset any existing transform
-    if (m_model != model &&
-        m_model.isValid() &&
+    if (m_model.isValid() &&
         m_model.hasComponent<cro::Transform>())
     {
+        m_model.getComponent<cro::Transform>().m_attachmentParent = nullptr;
         m_model.getComponent<cro::Transform>().m_attachmentTransform = glm::mat4(1.f);
     }
 
     m_model = model;
+
+    //if we have a new model make sure its parent is up to date
+    if (m_model.isValid())
+    {
+        m_model.getComponent<cro::Transform>().m_attachmentParent = this;
+    }
 }
 
 void Attachment::setPosition(glm::vec3 position)
 {
     m_position = position;
-    updateLocalTransform();
+    //updateLocalTransform();
+    m_dirtyTx = true;
 }
 
 void Attachment::setRotation(glm::quat rotation)
 {
     m_rotation = rotation;
-    updateLocalTransform();
+    //updateLocalTransform();
+    m_dirtyTx = true;
 }
 
 void Attachment::setScale(glm::vec3 scale)
 {
     m_scale = scale;
-    updateLocalTransform();
+    //updateLocalTransform();
+    m_dirtyTx = true;
 }
 
 void Attachment::setName(const std::string& name)
@@ -417,9 +451,20 @@ void Attachment::setName(const std::string& name)
     }
 }
 
-void Attachment::updateLocalTransform()
+const glm::mat4& Attachment::getLocalTransform() const
+{
+    if (m_dirtyTx)
+    {
+        updateLocalTransform();
+    }
+    return m_transform;
+}
+
+void Attachment::updateLocalTransform() const
 {
     m_transform = glm::translate(glm::mat4(1.f), m_position);
     m_transform *= glm::toMat4(m_rotation);
     m_transform = glm::scale(m_transform, m_scale);
+
+    m_dirtyTx = false;
 }

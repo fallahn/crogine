@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,9 +29,12 @@ source distribution.
 
 #include "ProgressIcon.hpp"
 #include "League.hpp"
+#include "CommonConsts.hpp"
 
 #include <MonthlyChallenge.hpp>
+#include <AchievementStrings.hpp>
 
+#include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/util/String.hpp>
@@ -122,9 +125,93 @@ ProgressIcon::ProgressIcon(const cro::Font& font)
     m_titleText.setAlignment(cro::SimpleText::Alignment::Centre);
 
     setPosition({ 0.f, -IconSize.y });
+
+    m_rewardEffect.loadFromFile("assets/golf/sound/menu/reward.wav");
+    m_rewardEffect.setVolume(0.5f);
 }
 
 //public
+void ProgressIcon::queueMessage(const ProgressMessage& msg)
+{
+    m_messageQueue.push_back(msg);
+}
+
+void ProgressIcon::update(float dt)
+{
+    static const float Speed = 240.f;
+    if (m_active)
+    {
+        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+        if (m_state == ScrollIn)
+        {
+            move({ 0.f, -Speed * dt });
+            if (getPosition().y < windowSize.y - IconSize.y)
+            {
+                setPosition({ windowSize.x - IconSize.x, windowSize.y - IconSize.y });
+                m_state = Paused;
+            }
+        }
+        else if (m_state == Paused)
+        {
+            m_pauseTime -= dt;
+            if (m_pauseTime < 0)
+            {
+                m_state = ScrollOut;
+            }
+        }
+        else
+        {
+            move({ 0.f, Speed * dt });
+            if (getPosition().y > windowSize.y)
+            {
+                m_active = false;
+            }
+        }
+    }
+    else if (!m_messageQueue.empty())
+    {
+        const auto& msg = m_messageQueue.front();
+        switch (msg.type)
+        {
+        default: break;
+        case ProgressMessage::Message:
+            showMessage(msg.title, msg.message);
+
+            if (msg.audioID == ProgressMessage::Reward)
+            {
+                m_rewardEffect.setVolume(0.25f * cro::AudioMixer::getVolume(MixerChannel::Menu));
+                m_rewardEffect.play();
+            }
+            break;
+        case ProgressMessage::Challenge:
+            showChallenge(msg.index, msg.progress, msg.total);
+            break;
+        case ProgressMessage::League:
+            showLeague(msg.index, msg.progress, msg.total);
+            break;
+        case ProgressMessage::AchievementProgress:
+            showAchievement(msg.index, msg.progress, msg.total);
+            break;
+        }
+
+        m_messageQueue.pop_front();
+    }
+}
+
+void ProgressIcon::draw()
+{
+    if (m_active)
+    {
+        auto tx = getTransform();
+
+        m_background.draw(tx);
+
+        m_text.draw(tx);
+        m_titleText.draw(tx);
+    }
+}
+
+//private
 void ProgressIcon::showChallenge(std::int32_t index, std::int32_t progress, std::int32_t total)
 {
     //rare, but we don't want, say, a league notification clobbering an active challenge
@@ -161,6 +248,36 @@ void ProgressIcon::showChallenge(std::int32_t index, std::int32_t progress, std:
                 m_titleText.setString("CHALLENGE PROGRESS " + str);
             }
         }
+
+        m_active = true;
+        m_state = ScrollIn;
+        m_pauseTime = PauseTime;
+
+        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+        setPosition({ windowSize.x - IconSize.x, windowSize.y });
+    }
+}
+
+void ProgressIcon::showAchievement(std::int32_t index, std::int32_t progress, std::int32_t total)
+{
+    //rare, but we don't want, say, a league notification clobbering an active challenge
+    if (!m_active)
+    {
+        //update progress bar verts
+        float pc = static_cast<float>(progress) / total;
+        auto idx = m_vertexData.size() - 1;
+        const auto pos = (BarSize.x * pc) + BarPos.x;
+        m_vertexData[idx].position.x = pos;
+        m_vertexData[idx - 1].position.x = pos;
+        m_vertexData[idx - 3].position.x = pos;
+        m_background.setVertexData(m_vertexData);
+
+        //update text 
+        auto str = cro::Util::String::wordWrap(AchievementDesc[index].first, 40, 128);
+        m_text.setString(str);
+
+        str = std::to_string(progress) + "/" + std::to_string(total);
+        m_titleText.setString(AchievementLabels[index] + " " + str);
 
         m_active = true;
         m_state = ScrollIn;
@@ -241,52 +358,5 @@ void ProgressIcon::showMessage(const std::string& title, const std::string& msg)
 
         const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
         setPosition({ windowSize.x - IconSize.x, windowSize.y });
-    }
-}
-
-void ProgressIcon::update(float dt)
-{
-    static const float Speed = 240.f;
-    if (m_active)
-    {
-        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
-        if (m_state == ScrollIn)
-        {
-            move({ 0.f, -Speed * dt });
-            if (getPosition().y < windowSize.y - IconSize.y)
-            {
-                setPosition({ windowSize.x - IconSize.x, windowSize.y - IconSize.y });
-                m_state = Paused;
-            }
-        }
-        else if (m_state == Paused)
-        {
-            m_pauseTime -= dt;
-            if (m_pauseTime < 0)
-            {
-                m_state = ScrollOut;
-            }
-        }
-        else
-        {
-            move({ 0.f, Speed * dt });
-            if (getPosition().y > windowSize.y)
-            {
-                m_active = false;
-            }
-        }
-    }
-}
-
-void ProgressIcon::draw()
-{
-    if (m_active)
-    {
-        auto tx = getTransform();
-
-        m_background.draw(tx);
-
-        m_text.draw(tx);
-        m_titleText.draw(tx);
     }
 }

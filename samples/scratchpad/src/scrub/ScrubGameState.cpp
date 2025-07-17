@@ -30,6 +30,51 @@
 
 namespace
 {
+    const std::string PostFrag = 
+R"(
+uniform sampler2D u_texture;
+uniform sampler2D u_normalMap;
+uniform vec3 u_lightDirection;
+
+VARYING_IN vec2 v_texCoord;
+
+OUTPUT
+
+void main()
+{
+        vec3 colour = TEXTURE(u_texture, v_texCoord).rgb;
+        vec3 normal = normalize(TEXTURE(u_normalMap, v_texCoord).rgb);
+
+#if !defined(COLOUR_LEVELS)
+#define COLOUR_LEVELS 2.0
+#define AMOUNT_MIN 0.8
+#define AMOUNT_MAX 0.2
+#else
+#define AMOUNT_MIN 0.8
+#define AMOUNT_MAX 0.2
+#endif
+
+        vec3 lightDirection = normalize(-u_lightDirection);
+        float amount = dot(normal, lightDirection);
+
+        amount *= COLOUR_LEVELS;
+        amount = round(amount);
+        amount /= COLOUR_LEVELS;
+        amount = (amount * AMOUNT_MAX) + AMOUNT_MIN;
+
+
+
+    FRAG_OUT =  vec4(colour * amount, 1.0);
+})";
+
+    struct PostUniforms final
+    {
+        std::uint32_t shaderID = 0;
+        std::int32_t textureUniform = -1;
+        std::int32_t normalUniform = -1;
+        std::int32_t lightUniform = -1;
+    }postUniforms;
+
     constexpr float BallRadius = 0.021f;
     constexpr float StrokeDistance = 0.16f - BallRadius;
     constexpr float BallOffsetPos = 0.2f;
@@ -379,8 +424,13 @@ bool ScrubGameState::simulate(float dt)
 
 void ScrubGameState::render()
 {
+    m_postTexture.clear();
     m_gameScene.render();
-    m_uiScene.render();
+    m_postTexture.display();
+
+    m_postQuad.draw();
+    
+    m_uiScene.render();    
 }
 
 //private
@@ -500,9 +550,13 @@ void ScrubGameState::createScene()
         rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
-    auto resize = [](cro::Camera& cam)
+    auto resize = [&](cro::Camera& cam)
     {
-        glm::vec2 size(cro::App::getWindow().getSize());
+        const auto winsize = cro::App::getWindow().getSize();
+        m_postTexture.create(winsize.x, winsize.x);
+        m_postQuad.setTexture(m_postTexture.getTexture());
+
+        glm::vec2 size(winsize);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 10.f);
     };
@@ -515,6 +569,13 @@ void ScrubGameState::createScene()
     cam.shadowMapBuffer.create(2048, 2048);
     cam.setMaxShadowDistance(2.f);
     cam.setShadowExpansion(0.5f);
+
+
+    m_postShader.loadFromString(cro::SimpleQuad::getDefaultVertexShader(), PostFrag, "#define TEXTURED\n");
+    m_postQuad.setShader(m_postShader);
+    m_postQuad.setUniform("u_texture", cro::TextureID(m_postTexture.getTexture()));
+    m_postQuad.setUniform("u_normalMap", m_postTexture.getTexture(1));
+
 
     //create a path of points, convert them with look-at and the animate the camera along them
     static std::array path =
@@ -567,6 +628,8 @@ void ScrubGameState::createScene()
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -1.2f);
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.6f);
+
+    m_postQuad.setUniform("u_lightDirection", m_gameScene.getSunlight().getComponent<cro::Sunlight>().getDirection());
 }
 
 void ScrubGameState::createUI()

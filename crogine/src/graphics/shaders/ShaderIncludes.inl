@@ -188,21 +188,60 @@ R"(
     VARYING_IN float v_viewDepth;
 )";
 
+//#include CASCADE_SELECTION
+static inline const std::string CascadeSelection =
+R"(
+int getCascadeIndex()
+{
+    for(int i = 0; i < u_cascadeCount; ++i)
+    {
+#if defined (GPU_AMD)
+        if (v_viewDepth > u_frustumSplits[i] - 15.0)
+#else
+        if (v_viewDepth > u_frustumSplits[i])
+#endif
+        {
+            return min(u_cascadeCount - 1, i);
+        }
+    }
+    return 0;//u_cascadeCount - 1;//
+}
+)";
+
+//based on https://fabiensanglard.net/shadowmappingVSM/index.php
+//#include VSM_SHADOWS
+static inline const std::string VSMShadows =
+R"(
+#if defined (PBR)
+float shadowAmount(int cascadeIndex, SurfaceProperties surfProp)
+#else
+float shadowAmount(int cascadeIndex)
+#endif
+{
+    vec4 lightWorldPos = v_lightWorldPosition[cascadeIndex];
+    
+    vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
+    projectionCoords = clamp(projectionCoords * 0.5 + 0.5, 0.0, 1.0);
+    //projectionCoords = projectionCoords * 0.5 + 0.5;
+
+	vec2 moments = texture(u_shadowMap, vec3(projectionCoords.xy, cascadeIndex)).rg;
+
+	float variance = moments.y - (moments.x * moments.x);
+	variance = max(variance, 0.00001); //the bigger this number the more 'feather' we get on the edge
+	
+	float d = projectionCoords.z - moments.x;
+	float pMax = ((variance / ((d * d) + variance)) * 0.5) + 0.5;
+	
+    pMax = smoothstep(0.005, 1.0, pMax); //smooth light bleed
+
+	return mix(1.0, pMax, step(moments.x, projectionCoords.z));
+}
+)";
+
+
 //#include PCF_SHADOWS
 static inline const std::string PCFShadows = 
 R"(
-    int getCascadeIndex()
-    {
-        for(int i = 0; i < u_cascadeCount; ++i)
-        {
-            if (v_viewDepth >= u_frustumSplits[i])
-            {
-                return min(u_cascadeCount - 1, i);
-            }
-        }
-        return u_cascadeCount - 1;
-    }
-
     const vec2 kernel[16] = vec2[](
         vec2(-0.94201624, -0.39906216),
         vec2(0.94558609, -0.76890725),
@@ -282,11 +321,14 @@ R"(
 
 //#include FXAA
 static inline const std::string FXAA = R"(
+#if !defined(NO_RES)
     uniform vec2 u_resolution = vec2(640.0, 480.0);
-
+#else
+    vec2 u_resolution = vec2(0.0);
+#endif
     const vec3 luma = vec3(0.299, 0.587, 0.114);
 
-    vec3 fxaa(sampler2D sampler, vec2 uv)
+    vec4 fxaa(sampler2D sampler, vec2 uv)
     {
         float FXAA_SPAN_MAX = 8.0;
         float FXAA_REDUCE_MUL = 1.0 / 8.0;
@@ -330,7 +372,7 @@ static inline const std::string FXAA = R"(
 
         if ((lumaB < lumaMin) || (lumaB > lumaMax))
         {
-            return rgbA;
+            return vec4(rgbA, 1.0);
         }
-        return rgbB;
+        return vec4(rgbB, 1.0);
     })";

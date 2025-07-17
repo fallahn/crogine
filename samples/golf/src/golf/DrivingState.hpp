@@ -37,6 +37,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "BallTrail.hpp"
 #include "ClubModels.hpp"
+#include "AvatarAnimation.hpp"
 
 #include <crogine/audio/DynamicAudioStream.hpp>
 
@@ -52,6 +53,11 @@ source distribution.
 #include <crogine/graphics/UniformBuffer.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
+
+namespace inv
+{
+    struct Loadout;
+}
 
 //callback data for anim/self destruction
 //of messages / options window
@@ -101,6 +107,7 @@ private:
     SharedStateData& m_sharedData;
     const SharedProfileData& m_profileData;
     InputParser m_inputParser;
+    const inv::Loadout* m_loadout;
 
     cro::DynamicAudioStream m_musicStream;
 
@@ -113,6 +120,7 @@ private:
     cro::RenderTexture m_backgroundTexture;
     cro::CubemapTexture m_reflectionMap;
     cro::Texture m_defaultMaskMap;
+    cro::RenderTexture m_planeTexture;
 
     cro::UniformBuffer<float> m_scaleBuffer;
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
@@ -133,6 +141,7 @@ private:
     {
         enum
         {
+            BallBumped,
             Billboard,
             Cel,
             CelSkinned,

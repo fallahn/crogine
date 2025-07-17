@@ -345,7 +345,7 @@ void GameState::render()
         m_gameScene.setActiveCamera(ent);
 
         auto& cam = ent.getComponent<cro::Camera>();
-        cam.renderFlags = NoPlanes | NoRefract;
+        cam.setRenderFlags(cro::Camera::Pass::Reflection, NoPlanes | NoRefract);
         auto oldVP = cam.viewport;
 
         cam.viewport = { 0.f,0.f,1.f,1.f };
@@ -355,13 +355,13 @@ void GameState::render()
         m_gameScene.render();
         cam.reflectionBuffer.display();
 
-        cam.renderFlags = NoPlanes | NoReflect;
+        cam.setRenderFlags(cro::Camera::Pass::Refraction, NoPlanes | NoReflect);
         cam.setActivePass(cro::Camera::Pass::Refraction);
         cam.refractionBuffer.clear(cro::Colour::Blue);
         m_gameScene.render();
         cam.refractionBuffer.display();
 
-        cam.renderFlags = NoPlanes | PlayerPlanes[i] | NoReflect | NoRefract;
+        cam.setRenderFlags(cro::Camera::Pass::Final, NoPlanes | PlayerPlanes[i] | NoReflect | NoRefract);
         cam.setActivePass(cro::Camera::Pass::Final);
         cam.viewport = oldVP;
     }

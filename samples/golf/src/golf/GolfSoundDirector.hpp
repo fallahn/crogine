@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -90,6 +90,7 @@ public:
             Stone,
             Pole,
             PowerBall,
+            Party,
 
             ScoreAlbatross,
             ScoreBirdie,
@@ -110,6 +111,8 @@ public:
             Applause,
             ApplausePlus,
             Enthusiast,
+            Tee01,
+            Tee02,
 
             TerrainBunker01,
             TerrainBunker02,
@@ -171,6 +174,7 @@ public:
             Poke,
             SkinsWin,
             Snapshot,
+            Switch,
             Toot,
             PlayerQuit,
             Fore,
@@ -218,7 +222,7 @@ private:
     //fudge to stop double sounds
     std::array<cro::Clock, AudioID::Count> m_soundTimers = {};
 
-    void playSoundDelayed(std::int32_t, glm::vec3, float, float = 1.f, std::uint8_t = 1/*MixerChannel::Effects*/);
+    void playSoundDelayed(std::int32_t, glm::vec3, float, float = 1.f, std::uint8_t = 2/*MixerChannel::Effects*/);
     cro::Entity playAvatarSound(std::int32_t, const std::string&, glm::vec3);
     void playAvatarSoundDelayed(std::int32_t, const std::string&, glm::vec3, float, float pitch);
 

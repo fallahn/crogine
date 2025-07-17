@@ -171,7 +171,16 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "beginners_luck",
     "first_rodeo",
     "bigger_shelf",
-    "ahead_of_the_game"
+    "ahead_of_the_game",
+    "upgrade",
+    "custom_kit",
+    "big_spender",
+    "hoarder",
+    "entrepreneur",
+    "fickle",
+    "get_this_over",
+    "another_level",
+    "tag"
 };
 
 //appears on the notification
@@ -301,7 +310,16 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Beginner's Luck",
     "Not My First Rodeo",
     "Gonna Need A Bigger Shelf",
-    "Ahead Of The Game"
+    "Ahead Of The Game",
+    "Upgrade",
+    "Custom Kit",
+    "Big Spender",
+    "Hoarder",
+    "Entrepreneur",
+    "Fickle",
+    "Let's Get This Over With",
+    "Another Level",
+    "Tag!"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -412,9 +430,9 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Finish 9 holes on a full size course with less than 15m in Nearest the Pin", false),
     std::make_pair("Finish 18 holes on a full size course with less than 15m in Nearest the Pin", false),
     std::make_pair("Take at least one screenshot on each course using freecam", false),
-    std::make_pair("Come first in any Career league round using the Novice clubs", false),
-    std::make_pair("Come first in any Career league round using the Expert clubs", false),
-    std::make_pair("Come first in any Career league round using the Pro clubs", false),
+    std::make_pair("Come first in any Career league round on Casual difficulty", false),
+    std::make_pair("Come first in any Career league round on Regular difficulty", false),
+    std::make_pair("Come first in any Career league round on Pro difficulty", false),
     std::make_pair("Hole out with a Punch shot", false),
     std::make_pair("Hole out with a Flop shot", false),
     std::make_pair("Sink a hole from the fringe using a putter", false),
@@ -423,15 +441,24 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Win a round of Nearest The Pin+ with at least 4 players", false),
     std::make_pair("Scrub 40 balls in a single round of Scrub!", false),
     std::make_pair("Play a random 9 holes in Quick Play", false),
-    std::make_pair("Come first in a Quick Play round using Novice clubs", false),
-    std::make_pair("Come first in a Quick Play round using Expert clubs", false),
+    std::make_pair("Come first in a Quick Play round using Casual clubs", false),
+    std::make_pair("Come first in a Quick Play round using Regular clubs", false),
     std::make_pair("Come first in a Quick Play round using Pro clubs", false),
     std::make_pair("Come first in the Dagle-Bunnage Cup", false),
     std::make_pair("Come first in the Sammonfield Championship", false),
-    std::make_pair("Win a tournament using only the Novice clubs", false),
-    std::make_pair("Win a tournament using only the Expert clubs", false),
+    std::make_pair("Win a tournament using only the Casual clubs", false),
+    std::make_pair("Win a tournament using only the Regular clubs", false),
     std::make_pair("Win a tournament using only the Pro clubs", false),
     std::make_pair("Complete the tutorial early with a chip-in", false),
+    std::make_pair("Buy an upgrade at the Equipment Counter", false),
+    std::make_pair("Upgrade one of each club", false),
+    std::make_pair("Spend more than 50k Credits at the Equipment Counter", false),
+    std::make_pair("Buy everything at the Equipment Counter", false),
+    std::make_pair("Sell a piece of gear back to the Equipment Counter", false),
+    std::make_pair("Buy at least one item from each manufacturer at the Equipment Counter", false),
+    std::make_pair("Take a Gimme from a tee shot", false),
+    std::make_pair("Reach Level 2 or higher at Sports Ball", false),
+    std::make_pair("Play a Teams round in Freeplay", false),
 };
 
 //assuming trophies load correctly they are:
@@ -599,6 +626,16 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*123*/TrophyID::SilverFigure,
     /*124*/TrophyID::GoldFigure,
     /*125*/TrophyID::SilverCup,
+
+    /*126*/TrophyID::BronzeCup,
+    /*127*/TrophyID::SilverFigure,
+    /*128*/TrophyID::GoldFigure,
+    /*129*/TrophyID::Platinum,
+    /*130*/TrophyID::BronzeCup,
+    /*131*/TrophyID::GoldCup,
+    /*132*/TrophyID::SilverCup,
+    /*133*/TrophyID::SilverFigure,
+    /*143*/TrophyID::BronzeCup
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
@@ -656,6 +693,12 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "beauchamp_played",
     "unreal_best",
     "beauchamp_best",
+    "average_drive",
+    "longest_drive",
+    "average_putt",
+    "longest_putt",
+    "longest_chip_in",
+    "credits_spent"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -712,6 +755,12 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Number Of Times The Sammonfield Championship Was Played",
     "Best Position In The Dagle-Bunnage Cup",
     "Best Position In The Sammonfield Championship",
+    "Average Drive Distance (metres)",
+    "Longest Drive Distance (metres)",
+    "Average Putt Distance (metres)",
+    "Longest Putt Distance (metres)",
+    "Longest Chip-in (metres)",
+    "Credits Spent At The Equipment Counter"
 };
 
 struct StatType final
@@ -777,12 +826,20 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
     StatType::Integer,
+
+    StatType::Float,
+    StatType::Float,
+    StatType::Float,
+    StatType::Float,
+    StatType::Float,
+    StatType::Integer
 };
 
 struct StatTrigger final
 {
     std::int32_t achID = -1;
     float threshold = std::numeric_limits<float>::max();
+    bool showProgress = true;
 };
 
 static std::array<std::vector<StatTrigger>, StatID::Count> StatTriggers = {};

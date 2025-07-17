@@ -161,7 +161,7 @@ static inline const std::string Vertex = R"(
         #if defined (SUBRECTS)
             v_texCoord0 = u_subrect.xy + (a_texCoord0 * u_subrect.zw);
         #else
-            v_texCoord0 = a_texCoord0;                    
+            v_texCoord0 = a_texCoord0;
         #endif
         #endif
         #if defined(LIGHTMAPPED)
@@ -250,7 +250,7 @@ static inline const std::string Vertex = R"(
 
     #if defined(RX_SHADOWS)
 #include SHADOWMAP_INPUTS
-
+#include CASCADE_SELECTION
 
     #if defined(MOBILE)
     #if defined (GL_FRAGMENT_PRECISION_HIGH)
@@ -280,7 +280,7 @@ static inline const std::string Vertex = R"(
             return (currDepth < depthSample) ? 1.0 : 0.4;
         }
     #else
-#include PCF_SHADOWS
+#include VSM_SHADOWS
     #endif
     #endif               
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -87,11 +87,13 @@ void CameraSystem::process(float)
             //finalPass.drawList.clear();
             //reflectionPass.drawList.clear();
             getScene()->updateDrawLists(entity);
+        }
 
-            if (camera.isStatic)
-            {
-                camera.active = false;
-            }
+        camera.m_lastActive = camera.active;
+        
+        if (camera.isStatic)
+        {
+            camera.active = false;
         }
     }
 }

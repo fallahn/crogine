@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/util/Constants.hpp>
 
 struct FpsCamera final
 {
@@ -47,12 +48,36 @@ struct FpsCamera final
     float fov = MinZoom;
     float zoomProgress = 0.f; //0 - 1
 
+    static constexpr float MaxPitch = 1.4f;
+
     float cameraPitch = 0.f; //used to clamp camera
     float cameraYaw = 0.f; //used to calc forward vector
 
     float moveSpeed = 5.f; //units per second
 
+    //call this to correct the internal pitch value
+    //if manually setting orientation
+    //TODO should update yaw as well but no noticeable
+    //effect is seen unless yaw requries clamping
+    void correctPitch(const glm::quat rot)
+    {
+        static constexpr std::int32_t MaxIter = 6;
 
+        auto pitch = glm::eulerAngles(rot).x;
+        std::int32_t i = 0; //escape counter
+        while (pitch > FpsCamera::MaxPitch
+            && i++ < MaxIter)
+        {
+            pitch -= cro::Util::Const::PI;
+        }
+        i = 0;
+        while (pitch < -FpsCamera::MaxPitch
+            && i++ < MaxIter)
+        {
+            pitch += cro::Util::Const::PI;
+        }
+        cameraPitch = std::clamp(pitch, -MaxPitch, MaxPitch);
+    }
 
     struct State final
     {

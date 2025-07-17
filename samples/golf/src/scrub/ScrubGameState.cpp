@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -113,7 +113,7 @@ namespace
     std::int32_t scoreSumID = 0;
 }
 
-ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedScrubData& sc)
+ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedMinigameData& sc)
     : cro::State            (stack, context),
     m_sharedData            (sd),
     m_sharedScrubData       (sc),
@@ -878,9 +878,10 @@ void ScrubGameState::createScene()
     cam.resizeCallback = resize;
     resize(cam);
 
-    cam.shadowMapBuffer.create(2048, 2048);
+    cam.shadowMapBuffer.create(1024, 1024);
     cam.setMaxShadowDistance(1.f);
     cam.setShadowExpansion(6.f);
+    cam.setBlurPassCount(1);
 
     //callback is set up in resetCamera();
     camera.addComponent<cro::Callback>();

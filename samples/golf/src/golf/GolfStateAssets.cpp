@@ -36,6 +36,7 @@ source distribution.
 #include "PoissonDisk.hpp"
 #include "Career.hpp"
 #include "AvatarRotationSystem.hpp"
+#include "BannerTexture.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
@@ -76,11 +77,9 @@ namespace
 #include "shaders/Blur.inl"
 #include "shaders/LensFlare.inl"
 #include "shaders/EmissiveShader.inl"
+#include "shaders/ShopItems.inl"
+#include "shaders/Hole.inl"
 
-    //NOTE Banner A should be rotated 180 degrees
-    constexpr cro::FloatRect PlaneBannerA = { 12.f, 86.f, 484.f, 66.f };
-    constexpr cro::FloatRect PlaneBannerB = { 12.f, 6.f, 484.f, 66.f };
-    constexpr std::uint32_t BannerTextSize = 16;
     //colour is normal colour with dark shadow
     const std::array BannerStrings =
     {
@@ -89,7 +88,7 @@ namespace
         cro::String("Will You Marry Me?"),
         cro::String("Cats are better than Dogs"),
         cro::String("I can see my house from here"),
-        cro::String("<insert text here>"),
+        cro::String("You Can't Go Wrong\nWith a 50ft Dong."),
         cro::String("Harding's Balls"),
         cro::String("Claire: Have you seen my keys?\nThey're not where I left them"),
         cro::String("To truly find yourself you must\nplay hide and seek alone."),
@@ -267,8 +266,20 @@ void GolfState::loadMap()
     //load the map data
     bool error = false;
     bool hasSpectators = false;
-    auto mapDir = m_sharedData.mapDirectory.toAnsiString();
-    auto mapPath = ConstVal::MapPath + mapDir + "/course.data";
+    const auto mapDir = m_sharedData.mapDirectory.toAnsiString();
+
+    const auto installPaths = Content::getInstallPaths();
+
+    std::string mapPath;
+    for (const auto& dir : installPaths)
+    {
+        mapPath = dir + ConstVal::MapPath + mapDir;
+        if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + mapPath))
+        {
+            break;
+        }
+    }
+    mapPath += +"/course.data";
 
     bool isUser = false;
     if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
@@ -383,7 +394,7 @@ void GolfState::loadMap()
     }
 
     //use old sprites if user so wishes
-    if (m_sharedData.treeQuality == SharedStateData::Classic)
+    if (m_sharedData.treeQuality == SharedStateData::TreeQuality::Classic)
     {
         std::string classicModel;
         std::string classicSprites;
@@ -428,7 +439,21 @@ void GolfState::loadMap()
         cloudRing.getComponent<cro::Model>().setMaterial(0, material);
     }
 
+    
+    if (!materials.showWater)
+    {
+        //the water isn't loaded yet, so we have to send via callback to delay until the scene is updated
+        auto e = m_gameScene.createEntity();
+        e.addComponent<cro::Callback>().active = true;
+        e.getComponent<cro::Callback>().function =
+            [&](cro::Entity f, float)
+            {
+                m_waterEnt.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+                f.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(f);
+            };
 
+    }
     if (!m_sharedData.nightTime)
     {
         m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(materials.sunColour);
@@ -645,6 +670,19 @@ void GolfState::loadMap()
                         prevHoleEntity = holeData.modelEntity;
 
                         holeModelCount++;
+
+                        //duplicate for rendering on minimap
+                        m_minimapModels.emplace_back() = m_mapScene.createEntity();
+                        m_minimapModels.back().addComponent<cro::Transform>();
+                        modelDef.createModel(m_minimapModels.back());
+                        m_minimapModels.back().getComponent<cro::Model>().setHidden(true);
+                        
+                        for (auto m = 0u; m < m_minimapModels.back().getComponent<cro::Model>().getMeshData().submeshCount; ++m)
+                        {
+                            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Minimap]);
+                            applyMaterialData(modelDef, material, m);
+                            m_minimapModels.back().getComponent<cro::Model>().setMaterial(m, material);
+                        }
                     }
                     else
                     {
@@ -659,6 +697,8 @@ void GolfState::loadMap()
                     holeData.modelEntity = prevHoleEntity;
                     duplicate = true;
                     propCount++;
+
+                    m_minimapModels.push_back(m_minimapModels.back());
                 }
             }
             else if (name == "include")
@@ -936,6 +976,43 @@ void GolfState::loadMap()
                                         {
                                             leaderboardProps.push_back(ent);
                                         }
+                                        else if (cro::FileSystem::getFileName(path).find("rotating_billboard") != std::string::npos)
+                                        {
+                                            if (modelDef.hasSkeleton())
+                                            {
+                                                //animation callback
+                                                ent.addComponent<cro::Callback>().setUserData<float>(15.f);
+                                                ent.getComponent<cro::Callback>().function =
+                                                    [](cro::Entity e, float dt)
+                                                    {
+                                                        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                                                        currTime -= dt;
+                                                        if (currTime < 0.f)
+                                                        {
+                                                            currTime += 15.f;
+                                                            e.getComponent<cro::Skeleton>().play(0, 1.f, 0.1f, false);
+                                                            e.getComponent<cro::Callback>().active = false;
+
+                                                            e.getComponent<cro::AudioEmitter>().play();
+                                                        }
+                                                    };
+                                                ent.addComponent<cro::AudioEmitter>() = propAudio.getEmitter("billboard");
+
+                                                if (m_billboardVideo.loadFromFile("assets/golf/video/hardings.mpg"))
+                                                {
+                                                    m_billboardVideo.play();
+                                                    m_billboardVideo.setLooped(true);
+                                                    ent.getComponent<cro::Model>().setMaterialProperty(2, "u_diffuseMap", cro::TextureID(m_billboardVideo.getTexture()));
+                                                }
+#ifdef USE_GNS
+                                                initBillboardLeagueTexture();
+                                                if (m_billboardLeagueTexture.available())
+                                                {
+                                                    ent.getComponent<cro::Model>().setMaterialProperty(3, "u_diffuseMap", cro::TextureID(m_billboardLeagueTexture.getTexture()));
+                                                }
+#endif
+                                            }
+                                        }
 
                                         //add path if it exists
                                         if (curve.size() > 3)
@@ -1149,7 +1226,7 @@ void GolfState::loadMap()
 
                                 if (curve.size() < 4)
                                 {
-                                    for (auto i = 0; i < CrowdDensityCount; ++i)
+                                    for (auto i = 0; i < CrowdDensityCount - 1; ++i) //leave the last set of transforms empty, to hide the crowd
                                     {
                                         if (minDensity <= /*m_sharedData.crowdDensity*/i)
                                         {
@@ -1505,8 +1582,7 @@ void GolfState::loadMap()
             loadSpectators();
         }
 
-        m_depthMap.setModel(m_holeData[0]);
-        m_depthMap.update(-1);
+        m_sharedData.minimapData.mapCentre = m_holeData[0].modelEntity.getComponent<cro::Model>().getMeshData().boundingBox.getCentre();
     }
 
     m_terrainBuilder.create(m_resources, m_gameScene, theme);
@@ -1559,9 +1635,6 @@ void GolfState::loadMap()
         {
             m_currentHole = std::min(holeStrings.size() - 1, std::size_t(holeIndex));
             m_terrainBuilder.applyHoleIndex(m_currentHole);
-
-            m_depthMap.setModel(m_holeData[m_currentHole]);
-            m_depthMap.update(-1);
 
             auto& player = m_sharedData.connectionData[0].playerData[0];
             player.holeScores.swap(scores);
@@ -1671,6 +1744,12 @@ void GolfState::loadMaterials()
     {
         wobble = "#define WOBBLE\n";
     }
+
+    if (m_sharedData.shadowQuality == SharedStateData::ShadowQuality::Classic)
+    {
+        wobble += "#define CLASSIC_SHADOWS\n";
+    }
+
     const std::string FadeDistance = "#define FAR_DISTANCE " + std::to_string(CameraFarPlane) + "\n";
     const std::string FadeDistanceHQ = "#define FAR_DISTANCE " + std::to_string(CameraFarPlane *0.8f) + "\n"; //fade closer for HQ trees before they are culled
 
@@ -1698,6 +1777,10 @@ void GolfState::loadMaterials()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelSkinned] = m_resources.materials.add(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::Hole, HoleVertex, HoleFragment);
+    shader = &m_resources.shaders.get(ShaderID::Hole);
+    m_materialIDs[MaterialID::Hole] = m_resources.materials.add(*shader);
+    
     m_resources.shaders.loadFromString(ShaderID::Flag, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Flag);
     m_scaleBuffer.addShader(*shader);
@@ -1707,10 +1790,19 @@ void GolfState::loadMaterials()
     //we always create this because it's also used on clubs etc even at night
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Ball);
-    m_scaleBuffer.addShader(*shader);
+    m_scaleBuffer.addShader(*shader); //hmm I forget why balls need these UBOs
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Ball]).setProperty("u_ballColour", cro::Colour::White);
+
+    m_resources.shaders.loadFromString(ShaderID::BallBumped, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), ShopFragment, 
+        "#define NO_SUN_COLOUR\n#define VERTEX_COLOUR\n#define BALL_COLOUR\n#define BUMP\n#define TEXTURED\n");
+    shader = &m_resources.shaders.get(ShaderID::BallBumped);
+    //m_scaleBuffer.addShader(*shader);
+    //m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::BallBumped] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::BallBumped]).setProperty("u_ballColour", cro::Colour::White);
+
 
     m_resources.shaders.loadFromString(ShaderID::BallSkinned, CelVertexShader, CelFragmentShader, "#define SKINNED\n#define VERTEX_COLOURED\n#define BALL_COLOUR\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::BallSkinned);
@@ -1780,7 +1872,12 @@ void GolfState::loadMaterials()
 
 
     //this is only used on prop models, in case they are emissive or reflective
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedMaskedNoWind, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SUBRECT\n#define MASK_MAP\n#define TERRAIN_CLIP\n" + wobble);
+    /*std::string rxShadow;
+    if (m_sharedData.hqShadows)
+    {
+        rxShadow = "#define RX_SHADOWS\n";
+    }*/
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedMaskedNoWind, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SUBRECT\n#define MASK_MAP\n#define TERRAIN_CLIP\n" + wobble/* + rxShadow*/);
     shader = &m_resources.shaders.get(ShaderID::CelTexturedMaskedNoWind);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1815,7 +1912,7 @@ void GolfState::loadMaterials()
 
 
     //again, on props only
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinnedMasked, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define SUBRECT\n#define MASK_MAP\n#define TERRAIN_CLIP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinnedMasked, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define SUBRECT\n#define MASK_MAP\n#define TERRAIN_CLIP\n" + wobble /*+ rxShadow*/);
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinnedMasked);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1890,7 +1987,7 @@ void GolfState::loadMaterials()
 
 
 
-    std::string targetDefines = (m_sharedData.scoreType == ScoreType::MultiTarget || Social::getMonth() == 2) ? "#define MULTI_TARGET\n" : "";
+    std::string targetDefines = (m_sharedData.scoreType == ScoreType::MultiTarget || Social::getMonth() == 2) ? "#define MULTI_TARGET\n" : "";// "#define SHOW_CASCADES\n";
 
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n#define TERRAIN_CLIP\n" + wobble + targetDefines);
     shader = &m_resources.shaders.get(ShaderID::Course);
@@ -1909,6 +2006,14 @@ void GolfState::loadMaterials()
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).setProperty("u_angleTex", shaleTex);
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).addCustomSetting(GL_CLIP_DISTANCE1);
 
+    m_resources.shaders.loadFromString(ShaderID::MinimapModel, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n" + targetDefines);
+    shader = &m_resources.shaders.get(ShaderID::MinimapModel);
+    m_materialIDs[MaterialID::Minimap] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Minimap]).setProperty("u_angleTex", shaleTex);
+
+
+    //m_ballShadows.shaders[0].shader = shader->getGLHandle();
+    //m_ballShadows.shaders[0].uniform = shader->getUniformID("u_ballPosition");
 
     m_resources.shaders.loadFromString(ShaderID::CourseGreen, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CourseGreen);
@@ -1920,6 +2025,8 @@ void GolfState::loadMaterials()
     m_gridShaders[0].transparency = shader->getUniformID("u_transparency");
     m_gridShaders[0].holeHeight = shader->getUniformID("u_holePosition");
 
+    //m_ballShadows.shaders[1].shader = shader->getGLHandle();
+    //m_ballShadows.shaders[1].uniform = shader->getUniformID("u_ballPosition");
 
     m_resources.shaders.loadFromString(ShaderID::CourseGrid, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TEXTURED\n#define RX_SHADOWS\n#define CONTOUR\n" + wobble + targetDefines);
     shader = &m_resources.shaders.get(ShaderID::CourseGrid);
@@ -2007,7 +2114,7 @@ void GolfState::loadMaterials()
     m_windBuffer.addShader(*shader);
 
     std::string alphaClip;
-    if (m_sharedData.hqShadows)
+    if (m_sharedData.shadowQuality)
     {
         alphaClip = "#define ALPHA_CLIP\n";
     }
@@ -2064,23 +2171,33 @@ void GolfState::loadMaterials()
 
     //wireframe
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment, "#define USE_MRT\n");
-    m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
+    shader = &m_resources.shaders.get(ShaderID::Wireframe);
+    m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]).blendMode = cro::Material::BlendMode::Alpha;
+    m_resolutionBuffer.addShader(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::WireframeCulled, WireframeVertex, WireframeFragment, "#define CULLED\n#define USE_MRT\n");
-    m_materialIDs[MaterialID::WireFrameCulled] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulled));
+    shader = &m_resources.shaders.get(ShaderID::WireframeCulled);
+    m_materialIDs[MaterialID::WireFrameCulled] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulled]).blendMode = cro::Material::BlendMode::Alpha;
+    m_resolutionBuffer.addShader(*shader);
+
 
     m_resources.shaders.loadFromString(ShaderID::WireframeCulledPoint, WireframeVertex, WireframeFragment, "#define CULLED\n#define USE_MRT\n#define POINT_RADIUS\n");
-    m_materialIDs[MaterialID::WireFrameCulledPoint] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulledPoint));
+    shader = &m_resources.shaders.get(ShaderID::WireframeCulledPoint);
+    m_materialIDs[MaterialID::WireFrameCulledPoint] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulledPoint]).blendMode = cro::Material::BlendMode::Alpha;
-    
+    m_resolutionBuffer.addShader(*shader);
+    m_scaleBuffer.addShader(*shader);
 
 
     m_resources.shaders.loadFromString(ShaderID::BallTrail, WireframeVertex, WireframeFragment, "#define HUE\n#define USE_MRT\n");
-    m_materialIDs[MaterialID::BallTrail] = m_resources.materials.add(m_resources.shaders.get(ShaderID::BallTrail));
+    shader = &m_resources.shaders.get(ShaderID::BallTrail);
+    m_materialIDs[MaterialID::BallTrail] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::BallTrail]).blendMode = cro::Material::BlendMode::Additive;
     m_resources.materials.get(m_materialIDs[MaterialID::BallTrail]).setProperty("u_colourRotation", m_sharedData.beaconColour);
+    m_resolutionBuffer.addShader(*shader);
+
 
     //minimap - green overhead
     if (m_sharedData.weatherType == WeatherType::Rain
@@ -2099,31 +2216,31 @@ void GolfState::loadMaterials()
     m_minimapZoom.shaderID = shader->getGLHandle();
     m_minimapZoom.matrixUniformID = shader->getUniformID("u_coordMatrix");
 
-    //water
-    std::string waterDefines;
+    //water - this is if we ever get the rain splash pattern working
+    //std::string waterDefines;
     //if (m_sharedData.weatherType == WeatherType::Rain
     //    || m_sharedData.weatherType == WeatherType::Showers)
     //{
     //    waterDefines = "#define RAIN\n";
     //}
 
-    static const std::string DepthConsts = "\nconst float ColCount = " + std::to_string(m_depthMap.getGridCount().x) 
+    /*static const std::string DepthConsts = "\nconst float ColCount = " + std::to_string(m_depthMap.getGridCount().x) 
         + ".0;\nconst float MetresPerTexture = "+ std::to_string(m_depthMap.getMetresPerTile())
         + ".0;\nconst float MaxTiles = "
         + std::to_string(m_depthMap.getTileCount() - 1) + ".0;\n";
-    m_resources.shaders.addInclude("DEPTH_CONSTS", DepthConsts.c_str());
+    m_resources.shaders.addInclude("DEPTH_CONSTS", DepthConsts.c_str());*/
 
-    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define USE_MRT\n" + waterDefines);
+    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define NO_DEPTH\n#define USE_MRT\n"/* + waterDefines*/);
     shader = &m_resources.shaders.get(ShaderID::Water);
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(*shader);
-    if (!waterDefines.empty())
-    {
-        auto& waterTex = m_resources.textures.get("assets/golf/images/rain_water.png");
-        m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainTexture", waterTex);
-        m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainAmount", 1.f);
-    }
+    //if (!waterDefines.empty())
+    //{
+    //    auto& waterTex = m_resources.textures.get("assets/golf/images/rain_water.png");
+    //    m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainTexture", waterTex);
+    //    m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainAmount", 1.f);
+    //}
 
  
 
@@ -2165,11 +2282,14 @@ void GolfState::loadSprites()
     m_sprites[SpriteID::PowerBarDoubleInnerHC] = spriteSheet.getSprite("power_bar_inner_double_hc");
     m_sprites[SpriteID::HookBarDouble] = spriteSheet.getSprite("hook_bar_double");
 
+    //most of these are loaded once or not at all so not really sure why
+    //we keep these hanging around in an array ike this
     m_sprites[SpriteID::SlopeStrength] = spriteSheet.getSprite("slope_indicator");
     m_sprites[SpriteID::BallSpeed] = spriteSheet.getSprite("ball_speed");
     m_sprites[SpriteID::MapFlag] = spriteSheet.getSprite("flag03");
     m_sprites[SpriteID::MapTarget] = spriteSheet.getSprite("multitarget");
     m_sprites[SpriteID::MiniFlag] = spriteSheet.getSprite("putt_flag");
+    m_sprites[SpriteID::MiniMapFlag] = spriteSheet.getSprite("map_flag");
     m_sprites[SpriteID::MiniFlagLarge] = spriteSheet.getSprite("putt_flag_large");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::WindSpeed] = spriteSheet.getSprite("wind_speed");
@@ -2217,7 +2337,6 @@ void GolfState::loadModels()
         md = std::make_unique<cro::ModelDefinition>(m_resources);
     }
     m_modelDefs[ModelID::BallShadow]->loadFromFile("assets/golf/models/ball_shadow.cmt");
-    m_modelDefs[ModelID::PlayerShadow]->loadFromFile("assets/golf/models/player_shadow.cmt");
     m_modelDefs[ModelID::BullsEye]->loadFromFile("assets/golf/models/target.cmt"); //TODO we can only load this if challenge month or game mode requires
     m_modelDefs[ModelID::PlayerFallBack]->loadFromFile("assets/golf/models/avatars/default.cmt");
 
@@ -2233,7 +2352,7 @@ void GolfState::loadModels()
     std::unordered_map<std::uint32_t, std::string> audioPaths;
     //list all available audio and put into map
     const auto processPath =
-        [&](const std::string path)
+        [&](const std::string& path)
         {
             auto audioFiles = cro::FileSystem::listFiles(path);
             for (const auto& file : audioFiles)
@@ -2294,6 +2413,12 @@ void GolfState::loadModels()
 
             return 0;// static_cast<std::int32_t>(cro::Util::Random::value(0u, m_sharedData.hairInfo.size() - 1));
         };
+
+    cro::ModelDefinition animations(m_resources);
+    animations.loadFromFile("assets/golf/models/avatars/animations.cmt");
+
+    cro::ModelDefinition defaultAnims(m_resources);
+    defaultAnims.loadFromFile("assets/golf/models/avatars/player_zero.cmt");
 
     //player avatars
     cro::ModelDefinition md(m_resources);
@@ -2437,6 +2562,34 @@ void GolfState::loadModels()
                 if (entity.hasComponent<cro::Skeleton>())
                 {
                     auto& skel = entity.getComponent<cro::Skeleton>();
+                    auto defaultAttachment = -1;
+
+                    if (defaultAnims.hasSkeleton())
+                    {
+                        defaultAttachment = defaultAnims.getSkeleton().getAttachmentIndex("hands");
+                        for (auto s = 0u; s < defaultAnims.getSkeleton().getAnimations().size(); ++s)
+                        {
+                            //hmm this is a bit kludgy, but the models have different celebrate/disappoint
+                            //animations and we probably want to keep these for a bit of variation. This
+                            //also means we still have to embed these anims in workshop models where we
+                            //could have otherwise saved some file-size by not importing anims into the model.
+                            const auto& anim = defaultAnims.getSkeleton().getAnimations()[s];
+                            if (anim.name != "celebrate"
+                                && anim.name != "disappointment"
+                                && anim.name != "impatient")
+                            {
+                                skel.addAnimation(defaultAnims.getSkeleton(), s);
+                            }
+                        }
+                    }
+
+                    if (animations.hasSkeleton())
+                    {
+                        for (auto s = 0u; s < animations.getSkeleton().getAnimations().size(); ++s)
+                        {
+                            skel.addAnimation(animations.getSkeleton(), s);
+                        }
+                    }
 
                     const auto& anims = skel.getAnimations();
                     for (auto k = 0u; k < std::min(anims.size(), static_cast<std::size_t>(AnimationID::Count)); ++k)
@@ -2453,6 +2606,18 @@ void GolfState::loadModels()
                         else if (anims[k].name == "chip")
                         {
                             m_avatars[i][j].animationIDs[AnimationID::Chip] = k;
+                        }
+                        else if (anims[k].name == "chip_idle")
+                        {
+                            m_avatars[i][j].animationIDs[AnimationID::ChipIdle] = k;
+                        }
+                        else if (anims[k].name == "to_chip")
+                        {
+                            m_avatars[i][j].animationIDs[AnimationID::ToChip] = k;
+                        }
+                        else if (anims[k].name == "from_chip")
+                        {
+                            m_avatars[i][j].animationIDs[AnimationID::FromChip] = k;
                         }
                         else if (anims[k].name == "putt")
                         {
@@ -2567,6 +2732,11 @@ void GolfState::loadModels()
                     id = skel.getAttachmentIndex("hands");
                     if (id > -1)
                     {
+                        //if we're using a single set of anims we need to copy the hand attachment to match
+                        if (defaultAttachment != -1)
+                        {
+                            skel.getAttachments()[id] = defaultAnims.getSkeleton().getAttachments()[defaultAttachment];
+                        }
                         m_avatars[i][j].hands = &skel.getAttachments()[id];
                     }
                 }
@@ -2870,6 +3040,12 @@ void GolfState::loadSpectators()
                         }
                     }
 
+                    if (m_sharedData.crowdDensity == (CrowdDensityCount - 1))
+                    {
+                        //set to zero crowd
+                        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                    }
+
                     m_spectatorModels.push_back(entity);
                 }
             }
@@ -2883,7 +3059,6 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
 {
     if (cro::AudioMixer::hasAudioRenderer())
     {
-
         if (m_sharedData.nightTime)
         {
             auto ext = cro::FileSystem::getFileExtension(m_audioPath);
@@ -3004,29 +3179,9 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                         static constexpr std::uint32_t TexSize = 512;
                         m_planeTexture.create(TexSize, TexSize, false);
 
+                        const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
                         const auto tex = cro::TextureID(m->properties.at("u_diffuseMap").second.textureID);
-                        cro::SimpleQuad q;
-                        q.setTexture(tex, { TexSize,TexSize });
-
-                        cro::SimpleText t(m_sharedData.sharedResources->fonts.get(FontID::UI));
-                        t.setCharacterSize(BannerTextSize);
-                        t.setFillColour(TextNormalColour);
-                        t.setShadowColour(LeaderboardTextDark);
-                        t.setShadowOffset({ 2.f, -2.f });
-                        t.setString(BannerStrings[BannerIndex]);
-                        t.setAlignment(cro::SimpleText::Alignment::Centre);
-                        t.setVerticalSpacing(2.f);
-
-                        t.setPosition(glm::vec2(PlaneBannerB.left + (PlaneBannerB.width / 2.f), PlaneBannerB.bottom + (PlaneBannerB.height / 2.f) + (t.getVerticalSpacing() / 2.f)));
-
-                        m_planeTexture.clear(cro::Colour::Transparent);
-                        q.draw();
-                        t.draw();
-                        t.rotate(180.f);
-                        t.move(glm::vec2(0.f, PlaneBannerA.bottom - PlaneBannerB.bottom));
-                        t.move(glm::vec2(0.f, -t.getVerticalSpacing()));
-                        t.draw();
-                        m_planeTexture.display();
+                        updateBannerTexture(font, tex, m_planeTexture, BannerStrings[BannerIndex]);
 
                         material.setProperty("u_diffuseMap", m_planeTexture.getTexture());
                     }
@@ -3337,6 +3492,107 @@ void GolfState::updateFlagTexture(bool reloadTexture)
         };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
+
+#ifdef USE_GNS
+void GolfState::initBillboardLeagueTexture()
+{
+    if (!m_billboardLeagueTexture.available())
+    {
+        /*registerWindow([&]() 
+            {
+                ImGui::Begin("Text");
+                ImGui::Image(m_billboardLeagueTexture.getTexture(), {320.f, 240.f}, {0.f, 1.f}, {1.f, 0.f});
+                ImGui::End();
+            });*/
+
+        m_billboardLeagueTexture.create(640, 480, false);
+        m_billboardLeagueTexture.setSmooth(true);
+        m_billboardLeagueTexture.clear(TextNormalColour);
+
+        cro::SimpleText text(m_sharedData.sharedResources->fonts.get(FontID::UI));
+        text.setFillColour(TextNormalColour);
+        text.setCharacterSize(UITextSize * 4);
+        text.setPosition({ 320.f, 444.f });
+        text.setString("Last Month's\nLeague Champions");
+        text.setAlignment(cro::SimpleText::Alignment::Centre);
+        text.setVerticalSpacing(-2.f);
+        text.draw(); //hacks around the font bug where the texture is messed up the first time a char size is used
+        text.setFillColour(LeaderboardTextDark);
+        text.draw();
+
+        text.setAlignment(cro::SimpleText::Alignment::Left);
+        text.setPosition({ 18.f, 378.f });
+        text.setCharacterSize(UITextSize * 2);
+
+        cro::SimpleQuad av;
+        av.setPosition({ 24.f, 358.f });
+        cro::Texture avTex;
+
+        constexpr float VerticalSpacing = -76.f; //-135.f;
+        constexpr float BGTop = 408.f;
+        constexpr float BGWidth = 640.f;
+
+        constexpr auto c = CD32::Colours[CD32::BeigeMid];
+        cro::SimpleVertexArray arr;
+        arr.setPrimitiveType(GL_TRIANGLES);
+        arr.setVertexData(
+            {
+                cro::Vertex2D(glm::vec2(0.f, BGTop), c),
+                cro::Vertex2D(glm::vec2(0.f, BGTop + VerticalSpacing), c),
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop), c),
+                
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop), c),
+                cro::Vertex2D(glm::vec2(0.f, BGTop + VerticalSpacing), c),
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop + VerticalSpacing), c),
+
+
+                cro::Vertex2D(glm::vec2(0.f, BGTop + (VerticalSpacing * 2.f)), c),
+                cro::Vertex2D(glm::vec2(0.f, BGTop + (VerticalSpacing * 3.f)), c),
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop + (VerticalSpacing * 2.f)), c),
+
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop + (VerticalSpacing * 2.f)), c),
+                cro::Vertex2D(glm::vec2(0.f, BGTop + (VerticalSpacing * 3.f)), c),
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop + (VerticalSpacing * 3.f)), c),
+
+
+                cro::Vertex2D(glm::vec2(0.f, BGTop + (VerticalSpacing * 4.f)), c),
+                cro::Vertex2D(glm::vec2(0.f, BGTop + (VerticalSpacing * 5.f)), c),
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop + (VerticalSpacing * 4.f)), c),
+
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop + (VerticalSpacing * 4.f)), c),
+                cro::Vertex2D(glm::vec2(0.f, BGTop + (VerticalSpacing * 5.f)), c),
+                cro::Vertex2D(glm::vec2(BGWidth, BGTop + (VerticalSpacing * 5.f)), c),
+            });
+        arr.draw();
+
+        const auto& prevWinners = Social::getPreviousLeague();
+        for (const auto& [name, score, handle] : prevWinners)
+        {
+            if (handle != 0)
+            {
+                auto img = Social::getUserIcon(handle);
+                avTex.loadFromImage(img);
+                av.setTexture(avTex);
+                av.setScale({ 0.25f, 0.25f });
+                av.draw();
+                av.move({ 0.f, VerticalSpacing });
+
+                cro::String s("     ");
+                s += name;
+                s += "\n\n\n" + std::to_string(score);
+                text.setString(s);
+                text.setFillColour(TextNormalColour);
+                text.draw();
+                text.setFillColour(LeaderboardTextDark);
+                text.draw();
+                text.move({ 0.f, VerticalSpacing });
+            }
+        }
+
+        m_billboardLeagueTexture.display();
+    }
+}
+#endif
 
 void GolfState::TargetShader::update()
 {

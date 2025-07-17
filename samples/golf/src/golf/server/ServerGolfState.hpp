@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -77,6 +77,8 @@ namespace sv
 
         std::array<std::uint8_t, 2u> m_honour = { 0, 0 };
 
+        std::array<Team, ConstVal::MaxPlayers> m_teams = {};
+
         struct PlayerGroup final
         {
             cro::Clock turnTimer;
@@ -86,7 +88,7 @@ namespace sv
             std::uint8_t id = 0; //this group's ID, save keep measuring it
             std::uint8_t playerCount = 0; //total number of players in the group for all clients
 
-            bool waitingForHole = false; //waiting for other groups to complte the hole
+            bool waitingForHole = false; //waiting for other groups to complete the hole
         };
         std::vector<PlayerGroup> m_playerInfo;
 

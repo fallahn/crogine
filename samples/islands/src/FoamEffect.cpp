@@ -148,12 +148,12 @@ FoamEffect::FoamEffect(cro::ResourceCollection& rc)
 
         if (uniforms.count("u_texture") != 0)
         {
-            m_textureUniform = uniforms.at("u_texture");
+            m_textureUniform = m_shader.getUniformID("u_texture");
         }
 
         if(uniforms.count("u_time") != 0)
         {
-            m_timeUniform = uniforms.at("u_time");
+            m_timeUniform = m_shader.getUniformID("u_time");
         }
     }
 

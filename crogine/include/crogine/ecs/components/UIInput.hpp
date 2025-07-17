@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,10 +30,12 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/detail/Assert.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
 #include <array>
+#include <any>
 
 namespace cro
 {
@@ -69,20 +71,65 @@ namespace cro
         advantageous to activate smaller groups of components
         at a time. Use UISystem::setActiveGroup() to control
         which group of UIInputs currently receive input.
+
+        Use this when adding the component to a single group,
+        or setting the first group of many, as it overwrites
+        any existing groups. Further group assignments should be done
+        with addToGroup()
         \see UISystem::setActiveGroup()
         */
         void setGroup(std::size_t group)
         {
+            CRO_ASSERT(group < 32, "");
             m_previousGroup = m_group;
-            m_group = group;
+            m_group = (1 << group);
             m_updateGroup = true;
         }
 
         /*!
         \brief Returns the ID of the group to which the input is currently assigned
         \see setGroup()
+        Note: since the addition of addToGroup() this will return the group ID flags
+        OR'd together. Test for a specific bit to find out which groups are assigned.
         */
         std::size_t getGroup() const { return m_group; }
+
+        /*!
+        \brief Add this input to one or more groups in the UIInputSystem.
+        This input will become active when UIInputSystem::setActiveGroup()
+        is called with one of the grou IDs to which this input is assigned.
+        */
+        void addToGroup(std::size_t group)
+        {
+            CRO_ASSERT(group < 32, "");
+            
+            //only do this ifwe're not already expecting an update
+            //from, say, setGroup() otherwise we're flagging groups
+            //as assigned when they aren't yet.
+            if (!m_updateGroup)
+            {
+                m_previousGroup = m_group;
+            }
+            m_group |= (1 << group);
+            m_updateGroup = true;
+        }
+
+        /*!
+        \brief Removes this input from a group with the given ID, if it is
+        assigned, else does nothing.
+        \see addToGroup()
+        */
+        void removeFromGroup(std::size_t group)
+        {
+            CRO_ASSERT(group < 32, "");
+            if (!m_updateGroup)
+            {
+                m_previousGroup = m_group;
+            }
+            m_group &= ~(1 << group);
+            m_updateGroup = true;
+        }
+
 
         /*!
         \brief Defines the order in which components in a group are selected.
@@ -138,11 +185,51 @@ namespace cro
             return { m_neighbourIndices[0], m_neighbourIndices[2] };
         }
 
+        /*!
+        \breif If called during a Select or Unselect event returns true if
+        the event was triggered by a mouse enter or exit event
+        */
+        bool wasMouseEvent() const { return m_wasMouseEvent; }
+
+
+
+        
+        /*!
+        \brief Utility to set user data
+        \param Constructor parameters for T
+        NOTE that this OVERWRITES any user data. To modify
+        existing user data use a reference from getUserData()
+        */
+        template <typename T, typename... Args>
+        void setUserData(Args&&... args)
+        {
+            userData = std::make_any<T>(std::forward<Args>(args)...);
+        }
+
+        /*!
+        \brief Returns a reference to stored user data
+        */
+        template <typename T>
+        T& getUserData()
+        {
+            return std::any_cast<T&>(userData);
+        }
+
+        template <typename T>
+        const T& getUserData() const
+        {
+            return std::any_cast<const T&>(userData);
+        }
+
+
     private:
-        std::size_t m_previousGroup = 0;
-        std::size_t m_group = 0;
+        static constexpr auto DefaultGroup = (1 << 0);
+        std::uint32_t m_previousGroup = DefaultGroup;
+        std::uint32_t m_group = DefaultGroup;
         std::size_t m_selectionIndex = 0;
         bool m_updateGroup = true; //do order sorting by default
+
+        bool m_wasMouseEvent = false;
 
         struct Index final
         {
@@ -161,6 +248,9 @@ namespace cro
         };
 
         cro::FloatRect m_worldArea; //cached by transform callback, ie dirty flag optimised
+
+        std::any userData; //optional state, such as ID data etc
+
 
         friend class UISystem;
     };

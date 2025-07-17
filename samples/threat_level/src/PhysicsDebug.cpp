@@ -76,10 +76,9 @@ BulletDebug::BulletDebug()
 {
     if (m_shader.loadFromString(vertex, fragment))
     {
-        const auto& uniforms = m_shader.getUniformMap();
-        if (uniforms.count("u_viewProjectionMatrix") != 0)
+        //if (uniforms.count("u_viewProjectionMatrix") != 0)
         {
-            m_uniformIndex = uniforms.find("u_viewProjectionMatrix")->second;
+            m_uniformIndex = m_shader.getUniformID("u_viewProjectionMatrix");
             m_attribIndices[0] = m_shader.getAttribMap()[Mesh::Attribute::Position];
             m_attribIndices[1] = m_shader.getAttribMap()[Mesh::Attribute::Colour];
 
@@ -90,10 +89,10 @@ BulletDebug::BulletDebug()
             glCheck(glBufferData(GL_ARRAY_BUFFER, m_vertexData.size() * sizeof(float), 0, GL_DYNAMIC_DRAW));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
         }
-        else
+        /*else
         {
             Logger::log("Cannot find matrix uniform in physics debug shader", Logger::Type::Error);
-        }
+        }*/
     }
     else
     {

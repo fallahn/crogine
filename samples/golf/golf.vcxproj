@@ -277,6 +277,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>$(ProjectName)-nosteam</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGNS|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -299,6 +300,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>4723</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -322,7 +324,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\Debug;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Debug;$(SolutionDir)extlibs\react\lib\debug;$(SolutionDir)extlibs\curl\debug\lib;$(SolutionDir)..\libgns\x64\Debug;$(SolutionDir)..\libgns\extlibs\steam\bin;$(SolutionDir)..\libgns\golf_workshop\lib;$(SolutionDir)extlibs\sqlite\bin</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sapi.lib;libcurl_debug.lib;crogine-d.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;LinearMath_Debug.lib;libgns-d.lib;steam_api64.lib;golf_ach-d.lib;workshop-gns-d.lib;sqlite3.lib;reactphysics3d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sapi.lib;libcurl_debug.lib;crogine-d.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;LinearMath_Debug.lib;libgns-d.lib;steam_api64.lib;golf_ach-d.lib;workshop-gns-d.lib;sqlite3.lib;reactphysics3d.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugGNS-Asan|x64'">
@@ -517,6 +519,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\curl\include;$(SolutionDir)extlibs\libgns\include;$(SolutionDir)libsocial\include;$(SolutionDir)extlibs\sqlite\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>4723</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -619,6 +622,7 @@
     <ClCompile Include="src\golf\CloudSystem.cpp" />
     <ClCompile Include="src\golf\ClubhouseState.cpp" />
     <ClCompile Include="src\golf\ClubhouseStateUI.cpp" />
+    <ClCompile Include="src\golf\ClubInfoState.cpp" />
     <ClCompile Include="src\golf\ClubModels.cpp" />
     <ClCompile Include="src\golf\Clubs.cpp" />
     <ClCompile Include="src\golf\CoinSystem.cpp" />
@@ -693,6 +697,7 @@
     <ClCompile Include="src\golf\server\ServerVoice.cpp" />
     <ClCompile Include="src\golf\server\SnookerDirector.cpp" />
     <ClCompile Include="src\golf\SharedStateData.cpp" />
+    <ClCompile Include="src\golf\ShopState.cpp" />
     <ClCompile Include="src\golf\SoundEffectsDirector.cpp" />
     <ClCompile Include="src\golf\SpectatorSystem.cpp" />
     <ClCompile Include="src\golf\spooky2.cpp" />
@@ -774,6 +779,13 @@
     <ClCompile Include="src\sockets\IXWebSocketServer.cpp" />
     <ClCompile Include="src\sockets\IXWebSocketTransport.cpp" />
     <ClCompile Include="src\SplashScreenState.cpp" />
+    <ClCompile Include="src\sportsball\BackgroundPhysicsSystem.cpp" />
+    <ClCompile Include="src\sportsball\SBallAttractState.cpp" />
+    <ClCompile Include="src\sportsball\SBallBackgroundState.cpp" />
+    <ClCompile Include="src\sportsball\SBallGameState.cpp" />
+    <ClCompile Include="src\sportsball\SBallParticleDirector.cpp" />
+    <ClCompile Include="src\sportsball\SBallPhysicsSystem.cpp" />
+    <ClCompile Include="src\sportsball\SBallSoundDirector.cpp" />
     <ClCompile Include="src\sqlite\ProfileDB.cpp" />
     <ClCompile Include="src\sqlite\SqliteState.cpp" />
     <ClCompile Include="src\Sunclock.cpp" />
@@ -781,13 +793,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\Colordome-32.hpp" />
     <ClInclude Include="src\DefaultAchievements.hpp" />
     <ClInclude Include="src\editor\BushState.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
+    <ClInclude Include="src\golf\AvatarAnimation.hpp" />
     <ClInclude Include="src\golf\AvatarRotationSystem.hpp" />
     <ClInclude Include="src\golf\BallAnimationSystem.hpp" />
     <ClInclude Include="src\golf\BallSystem.hpp" />
     <ClInclude Include="src\golf\BallTrail.hpp" />
+    <ClInclude Include="src\golf\BannerTexture.hpp" />
     <ClInclude Include="src\golf\BeaconCallback.hpp" />
     <ClInclude Include="src\golf\Billboard.hpp" />
     <ClInclude Include="src\golf\BilliardsClientCollision.hpp" />
@@ -807,6 +822,7 @@
     <ClInclude Include="src\golf\ClientPacketData.hpp" />
     <ClInclude Include="src\golf\CloudSystem.hpp" />
     <ClInclude Include="src\golf\ClubhouseState.hpp" />
+    <ClInclude Include="src\golf\ClubInfoState.hpp" />
     <ClInclude Include="src\golf\ClubModels.hpp" />
     <ClInclude Include="src\golf\ClubModifiers.hpp" />
     <ClInclude Include="src\golf\Clubs.hpp" />
@@ -896,6 +912,7 @@
     <ClInclude Include="src\golf\SharedCourseData.hpp" />
     <ClInclude Include="src\golf\SharedProfileData.hpp" />
     <ClInclude Include="src\golf\SharedStateData.hpp" />
+    <ClInclude Include="src\golf\ShopState.hpp" />
     <ClInclude Include="src\golf\SoundEffectsDirector.hpp" />
     <ClInclude Include="src\golf\SpectatorAnimCallback.hpp" />
     <ClInclude Include="src\golf\SpectatorSystem.hpp" />
@@ -928,11 +945,13 @@
     <ClInclude Include="src\golf\WeatherAnimationSystem.hpp" />
     <ClInclude Include="src\golf\WeatherDirector.hpp" />
     <ClInclude Include="src\golf\XPAwardStrings.hpp" />
+    <ClInclude Include="src\golf\XPValues.hpp" />
     <ClInclude Include="src\ImTheme.hpp" />
     <ClInclude Include="src\LatLong.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\GolfGame.hpp" />
     <ClInclude Include="src\M3UPlaylist.hpp" />
+    <ClInclude Include="src\PlayerGuide.hpp" />
     <ClInclude Include="src\rss\Newsfeed.hpp" />
     <ClInclude Include="src\rss\pugiconfig.hpp" />
     <ClInclude Include="src\rss\pugixml.hpp" />
@@ -958,6 +977,7 @@
     <ClInclude Include="src\scrub\ScrubPhysicsSystem.hpp" />
     <ClInclude Include="src\scrub\ScrubSharedData.hpp" />
     <ClInclude Include="src\scrub\ScrubSoundDirector.hpp" />
+    <ClInclude Include="src\scrub\TabData.hpp" />
     <ClInclude Include="src\sockets\IXBase64.h" />
     <ClInclude Include="src\sockets\IXBench.h" />
     <ClInclude Include="src\sockets\IXCancellationRequest.h" />
@@ -1009,6 +1029,15 @@
     <ClInclude Include="src\sockets\IXWebSocketTransport.h" />
     <ClInclude Include="src\sockets\IXWebSocketVersion.h" />
     <ClInclude Include="src\SplashScreenState.hpp" />
+    <ClInclude Include="src\sportsball\BackgroundPhysicsSystem.hpp" />
+    <ClInclude Include="src\sportsball\BallType.hpp" />
+    <ClInclude Include="src\sportsball\SBallAttractState.hpp" />
+    <ClInclude Include="src\sportsball\SBallBackgroundState.hpp" />
+    <ClInclude Include="src\sportsball\SBallConsts.hpp" />
+    <ClInclude Include="src\sportsball\SBallGameState.hpp" />
+    <ClInclude Include="src\sportsball\SballParticleDirector.hpp" />
+    <ClInclude Include="src\sportsball\SBallPhysicsSystem.hpp" />
+    <ClInclude Include="src\sportsball\SBallSoundDirector.hpp" />
     <ClInclude Include="src\sqlite\ProfileDB.hpp" />
     <ClInclude Include="src\sqlite\SqliteState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
@@ -1029,6 +1058,7 @@
     <None Include="src\golf\shaders\EmissiveShader.inl" />
     <None Include="src\golf\shaders\Glass.inl" />
     <None Include="src\golf\shaders\GlowShader.inl" />
+    <None Include="src\golf\shaders\Hole.inl" />
     <None Include="src\golf\shaders\Lantern.inl" />
     <None Include="src\golf\shaders\LensFlare.inl" />
     <None Include="src\golf\shaders\MinimapShader.inl" />
@@ -1038,6 +1068,7 @@
     <None Include="src\golf\shaders\RoidShader.inl" />
     <None Include="src\golf\shaders\ShaderIncludes.inl" />
     <None Include="src\golf\shaders\ShadowMapping.inl" />
+    <None Include="src\golf\shaders\ShopItems.inl" />
     <None Include="src\golf\shaders\TerrainShader.inl" />
     <None Include="src\golf\shaders\TransitionShader.inl" />
     <None Include="src\golf\shaders\TreeShader.inl" />
@@ -1047,6 +1078,7 @@
     <None Include="src\golf\shaders\WaterShader.inl" />
     <None Include="src\golf\shaders\Weather.inl" />
     <None Include="src\golf\shaders\WireframeShader.inl" />
+    <None Include="src\golf\ShopEnum.inl" />
     <None Include="src\scrub\Shaders.inl" />
   </ItemGroup>
   <ItemGroup>

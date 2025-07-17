@@ -81,8 +81,8 @@ RenderSystem2D::RenderSystem2D(MessageBus& mb)
     requireComponent<Transform>();
 
     //load default shaders
-    m_colouredShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Coloured);
-    m_texturedShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Textured, "#define TEXTURED\n");
+    m_colouredShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Fragment);
+    m_texturedShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Fragment, "#define TEXTURED\n");
 
 #ifdef CRO_DEBUG_
     addStats([&]() 
@@ -431,6 +431,11 @@ void RenderSystem2D::setSortOrder(DepthAxis sortOrder)
 const std::string& RenderSystem2D::getDefaultVertexShader()
 {
     return Shaders::Sprite::Vertex;
+}
+
+const std::string& RenderSystem2D::getDefaultFragmentShader()
+{
+    return Shaders::Sprite::Fragment;
 }
 
 //private

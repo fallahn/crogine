@@ -62,6 +62,7 @@ Sprite::Sprite(const Texture& texture, Material::BlendMode mode)
 void Sprite::setTexture(const Texture& texture, bool resize)
 {
     if (m_texture != &texture)
+    //if(!m_texture || m_texture->getGLHandle() != texture.getGLHandle())
     {
         m_texture = &texture;
         m_dirtyFlags |= DirtyFlags::Texture;

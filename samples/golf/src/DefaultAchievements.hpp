@@ -61,6 +61,7 @@ public:
     const AchievementData* getAchievement(const std::string&) const override;
     AchievementImage getIcon(const std::string&) const override;
     void setStat(const std::string&, std::int32_t) override;
+    void setStat(const std::string&, float) override;
     float incrementStat(const std::string&, std::int32_t) override;
     float incrementStat(const std::string&, float) override;
     const StatData* getStat(const std::string&) const override;

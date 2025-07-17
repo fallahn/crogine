@@ -95,6 +95,14 @@ namespace
     constexpr std::size_t DebugLevel = 35;
     std::int32_t playerLevel = 0;
 
+    std::int32_t levelOffset(std::int32_t level)
+    {
+        return std::min(2, level + 1); //casual 240, expert/pro 260
+        //return std::max(1, level); //casual/expert 240, pro 260
+        //return level; //default selection
+        //return 2; //always pro distance
+    }
+
     struct ModifierID final
     {
         enum
@@ -169,6 +177,7 @@ std::string Club::getName(bool imperial, float distanceToPin) const
 std::string Club::getDistanceLabel(bool imperial, std::int32_t level) const
 {
     CRO_ASSERT(level > -1 && level < 3, "");
+    //level = levelOffset(level); //don't do this - get targetAtLevel() applies it
 
     auto t = getTargetAtLevel(level);
     if (imperial)
@@ -222,12 +231,12 @@ float Club::getPower(float distanceToPin, bool imperial) const
     }
 
     //check player level and return further distance
-    return ClubStats[m_id].stats[getClubLevel()].power * LevelModifiers[playerLevel][modifierIndex][m_id].powerMultiplier;
+    return ClubStats[m_id].stats[levelOffset(playerLevel)].power * LevelModifiers[levelOffset(playerLevel)][modifierIndex][m_id].powerMultiplier;
 }
 
 float Club::getAngle() const
 {
-    return m_angle + LevelModifiers[playerLevel][modifierIndex][m_id].angle;
+    return m_angle + LevelModifiers[levelOffset(playerLevel)][modifierIndex][m_id].angle;
 }
 
 float Club::getTarget(float distanceToPin) const
@@ -242,12 +251,12 @@ float Club::getTarget(float distanceToPin) const
 
 float Club::getBaseTarget() const
 {
-    return ClubStats[m_id].stats[getClubLevel()].target * LevelModifiers[playerLevel][modifierIndex][m_id].targetMultiplier;
+    return ClubStats[m_id].stats[levelOffset(playerLevel)].target * LevelModifiers[levelOffset(playerLevel)][modifierIndex][m_id].targetMultiplier;
 }
 
 float Club::getTargetAtLevel(std::int32_t level) const
 {
-    return ClubStats[m_id].stats[level].target * LevelModifiers[playerLevel][modifierIndex][m_id].targetMultiplier;
+    return ClubStats[m_id].stats[levelOffset(level)].target * LevelModifiers[levelOffset(playerLevel)][modifierIndex][m_id].targetMultiplier;
 }
 
 float Club::getSideSpinMultiplier() const
@@ -262,7 +271,7 @@ float Club::getTopSpinMultiplier() const
 
 float Club::getDefaultTarget() const
 {
-    return ClubStats[m_id].stats[0].target * LevelModifiers[playerLevel][modifierIndex][m_id].targetMultiplier;
+    return ClubStats[m_id].stats[0].target * LevelModifiers[levelOffset(playerLevel)][modifierIndex][m_id].targetMultiplier;
 }
 
 std::int32_t Club::getClubLevel()
@@ -289,18 +298,33 @@ void Club::setModifierIndex(std::int32_t idx)
     CRO_ASSERT(idx > -1 && idx < 3, "");
 }
 
-//private
-float Club::getScaledValue(float value, float distanceToPin) const
+std::int32_t Club::getScaleIndex(float distanceToPin) const
 {
-    auto target = getBaseTarget();
+    const auto target = getBaseTarget();
     if (distanceToPin < target * ShortRangeThreshold)
     {
         if (distanceToPin < target * TinyRangeThreshold)
         {
-            return value * TinyRange;
+            return 0;
         }
-
-        return value * ShortRange;
+        return 1;
     }
-    return value;
+    return 2;
+}
+
+//private
+float Club::getScaledValue(float value, float distanceToPin) const
+{
+    const auto index = getScaleIndex(distanceToPin);
+
+    switch (index)
+    {
+    default:
+    case 2:
+        return value;
+    case 1:
+        return value * ShortRange;
+    case 0:
+        return value * TinyRange;
+    }
 }

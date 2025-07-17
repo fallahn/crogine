@@ -122,7 +122,7 @@ namespace
         };
     };
 
-    std::size_t courseIndex = 0;
+    //std::size_t courseIndex = 0;
 
     bool showStats = false;
 }
@@ -211,9 +211,9 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
                         *m_activeName = cro::String::fromUtf8(m_nameBuffer.data(), m_nameBuffer.data() + std::strlen(m_nameBuffer.data()));
                         *m_activeName = m_activeName->substr(0, ConstVal::MaxStringChars);
 
-                        if (m_activeName == &m_profileData.playerProfiles[0].name)
+                        if (m_activeName == &m_profileData.playerProfiles[0].playerData.name)
                         {
-                            m_profileData.playerProfiles[0].saveProfile();
+                            m_profileData.playerProfiles[0].playerData.saveProfile();
                             Social::setPlayerName(*m_activeName); //this raises a message to refresh any text which uses the name string
                         }
                         else
@@ -557,7 +557,7 @@ void LeagueState::buildScene()
 
                 if (m_sharedData.baseState == StateID::Clubhouse)
                 {
-                    Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
+                    Social::setStatus(Social::InfoID::Menu, { "In the Clubhouse" });
                 }
             }
             break;
@@ -1030,15 +1030,15 @@ void LeagueState::createInfoTab(cro::Entity parent)
     constexpr float vertPos = 292.f;
     std::string desc = R"(
 Every Monthly Best score on the Steam Leaderboards contributes to the Global League.
-
 The Global League is created from the sum of all Steam players Monthly Best scores and
 the season lasts one calendar month, composed of 36 rounds. Beating an existing personal
 Monthly Best (for the current month) will also improve your existing league score.
 
-Every Stroke Play or Stableford round you play contributes to the Club League. Each Career
-round you play contributes to the selected Career League. These leagues are split into 
-seasons, with 24 rounds played for each Club season, and 6 rounds for each Career season.
-The Club and Career results are entirely offline, and opponents are fictional.
+Every Stroke Play or Stableford round you play in Freeplay contributes to the Club League.
+Each Career round you play contributes to the selected Career League. These leagues are
+split into seasons, with 24 rounds played for each Club season, and 6 rounds for each
+Career season. The Club and Career results are entirely offline, and opponents are
+fictional.
 
 At the end of a round your scores are converted using the Stableford scoring system with
 par being worth 2 points and 1 point extra awarded for each stroke under par. Scores for
@@ -1053,10 +1053,10 @@ decrease. The offline leagues are reset if you reset your player progress at any
 #else
     constexpr float vertPos = 284.f;
     std::string desc = R"(
-Every Stroke Play or Stableford round you play contributes to the Club League. Each
-Career round you play contributes to the selected Career League. The leagues are split
-into seasons, with 24 rounds played for each Club season, and 6 rounds for each Career
-season. At the end of a season the top three players win an award.
+Every Stroke Play or Stableford round you play in Freeplay contributes to the Club League.
+Each Career round you play contributes to the selected Career League. The leagues are
+split into seasons, with 24 rounds played for each Club season, and 6 rounds for each
+Career season. At the end of a season the top three players win an award.
 
 At the end of a round your scores are converted using the Stableford scoring system with
 par being worth 2 points and 1 point extra awarded for each stroke under par. Scores for
@@ -1427,7 +1427,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                     }
                     else
                     {
-                        m_activeName = &m_profileData.playerProfiles[0].name;
+                        m_activeName = &m_profileData.playerProfiles[0].playerData.name;
                     }
 
                     auto utf = m_activeName->toUtf8();
@@ -1446,9 +1446,9 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                                         *m_activeName = cro::String::fromUtf8(buff, buff + std::strlen(buff));
                                         *m_activeName = m_activeName->substr(0, ConstVal::MaxStringChars);
 
-                                        if (m_activeName == &m_profileData.playerProfiles[0].name)
+                                        if (m_activeName == &m_profileData.playerProfiles[0].playerData.name)
                                         {
-                                            m_profileData.playerProfiles[0].saveProfile();
+                                            m_profileData.playerProfiles[0].playerData.saveProfile();
                                             Social::setPlayerName(*m_activeName);
                                         }
                                         else

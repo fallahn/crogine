@@ -81,7 +81,7 @@ namespace cro
         /*!
         \brief Sets the vertical spacing between lines of text
         \param spacing By default the spacing is 0. Negative values
-        can cause lines to overlap or event appear in reverse order.
+        can cause lines to overlap or even appear in reverse order.
         */
         void setVerticalSpacing(float spacing);
 

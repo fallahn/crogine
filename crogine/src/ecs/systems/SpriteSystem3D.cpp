@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -50,8 +50,8 @@ SpriteSystem3D::SpriteSystem3D(MessageBus& mb, float pixelsPerUnit)
     requireComponent<Sprite>();
     requireComponent<Model>();
 
-    m_colouredShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Coloured);
-    m_texturedShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Textured, "#define TEXTURED\n");
+    m_colouredShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Fragment);
+    m_texturedShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Fragment, "#define TEXTURED\n");
 
     m_colouredMaterial = createMaterial(m_colouredShader);
     m_texturedMaterial = createMaterial(m_texturedShader);

@@ -44,8 +44,12 @@ static inline const std::string WireframeVertex = R"(
     uniform mat4 u_worldMatrix;
     uniform mat4 u_worldViewMatrix;
 
-#if defined (CULLED)
+//#if defined (CULLED)
     #include RESOLUTION_BUFFER
+//#endif
+
+#if defined (POINT_RADIUS)
+#include SCALE_BUFFER
 #endif
 
 #if defined (HUE)
@@ -71,14 +75,18 @@ static inline const std::string WireframeVertex = R"(
     }
 #endif
 
-    VARYING_OUT LOW vec4 v_colour;
+    VARYING_OUT vec4 v_colour;
     VARYING_OUT vec2 v_texCoord;
+    VARYING_OUT vec2 v_lineCentre;
 
     void main()
     {
         mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
         vec4 position = a_position;
-        gl_Position = wvp * position;
+        vec4 screenPos = wvp * position;
+
+        gl_Position = screenPos;
+        v_lineCentre = 0.5 * (screenPos.xy + vec2(1.0)) * u_bufferResolution;
 
         vec4 worldPos = u_worldMatrix * position;
 
@@ -106,6 +114,10 @@ float far = 15.0;
 #endif
 
         gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
+
+#if defined (POINT_RADIUS)
+        gl_PointSize = u_pixelScale;
+#endif
     }
 )";
 
@@ -117,9 +129,13 @@ static inline const std::string WireframeFragment = R"(
 #endif
     VARYING_IN vec4 v_colour;
     VARYING_IN vec2 v_texCoord;
+    VARYING_IN vec2 v_lineCentre;
 
     const float TAU = 6.28;
     const float stepPos = (0.499 * 0.499);
+
+    const float LineWidth = 2.0;
+    const float BlendAmount = 2.5;
 
     void main()
     {
@@ -142,6 +158,9 @@ static inline const std::string WireframeFragment = R"(
     vec2 coord = gl_PointCoord - vec2(0.5);
     float pos = dot(coord, coord);
     FRAG_OUT.a *= 1.0 - step(stepPos, pos);
+#else
+    float dist = length(v_lineCentre - gl_FragCoord.xy);
+    //FRAG_OUT.a *= mix(pow((LineWidth - dist) / LineWidth, BlendAmount), 0.0, step(LineWidth, dist));
 #endif
     }
 )";

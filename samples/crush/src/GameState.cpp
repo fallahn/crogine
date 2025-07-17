@@ -579,7 +579,7 @@ void GameState::loadAssets()
         m_resources.materials.get(m_materialIDs[MaterialID::Portal]).setProperty("u_diffuseMap", m_resources.textures.get(TextureID::Portal));
         m_resources.materials.get(m_materialIDs[MaterialID::Portal]).blendMode = cro::Material::BlendMode::Alpha;
         portalShader = m_resources.shaders.get(ShaderID::Portal).getGLHandle();
-        portalUniform = m_resources.shaders.get(ShaderID::Portal).getUniformMap().at("u_time");
+        portalUniform = m_resources.shaders.get(ShaderID::Portal).getUniformID("u_time");
     }
 
     //model defs

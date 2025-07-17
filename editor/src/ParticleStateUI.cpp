@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -347,6 +347,9 @@ void ParticleState::drawInspector()
 
             //colour
             ImGui::ColorEdit4("Colour", m_particleSettings->colour.asArray());
+
+            ImGui::Checkbox("Random Colour", &m_particleSettings->useRandomColour);
+            ImGui::SetItemTooltip("Overrides Colour Property");
 
             //blend mode
             if (ImGui::Combo("Blend Mode", &m_selectedBlendMode, "Alpha\0Add\0Multiply\0\0"))

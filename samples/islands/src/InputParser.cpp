@@ -243,7 +243,7 @@ void InputParser::update()
         //apply to local entity
         player.inputStack[player.nextFreeInput] = input;
         player.nextFreeInput = (player.nextFreeInput + 1) % Player::HistorySize;
-        cro::Console::printStat("Flags", std::to_string(m_inputFlags));
+        //cro::Console::printStat("Flags", std::to_string(m_inputFlags));
 
         //broadcast packet
         InputUpdate update;

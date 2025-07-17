@@ -56,11 +56,14 @@ namespace
 {
     static constexpr float MinWindStrength = 0.1f;
 
+    static constexpr float CupDepth = (Ball::Radius * 2.f) * 2.1f;
+
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
-    static constexpr float FallRadius = Ball::Radius * 0.25f;
+    static constexpr float FallRadius = Ball::Radius * 0.08f;// 0.25f;
     static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
-    static constexpr float AttractRadius = HoleRadius * 1.24f; //1.2f;
+    static constexpr float AttractRadius = HoleRadius * 1.35f;// 1.24f; //1.2f;
     static constexpr float MinAttractRadius = AttractRadius * AttractRadius;
+    static constexpr float AttractStrength = 30.f;
     static constexpr float Margin = 1.02f;
     static constexpr float BallHoleDistance = (HoleRadius * Margin) * (HoleRadius * Margin);
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
@@ -70,12 +73,12 @@ namespace
     static constexpr float BallRollTimeout = -10.f;
     static constexpr float BallTimeoutVelocity = 0.04f;
     static constexpr float MinSpinPower = 0.05f; //min velocity to stop doesn't kick in if there's more than this much top/back spin to apply
-    static constexpr float MinRollSlope = 0.95f; //ball won't stop rolling if the ground is steeper that this
+    static constexpr float MinRollSlope = 0.995f; //ball won't stop rolling if the ground is steeper that this (smaller == stickier)
 
-    static constexpr float MinRollVelocity = -0.25f;
+    static constexpr float MinRollVelocity = -0.15f;// -0.25f; //MUST be negative
     static constexpr float MaxStoneSlope = 0.95f; //dot prod with vertical - ball is OOB if less than this
 
-    static constexpr float MaxRestitutionIncrease = 0.05f; //depending on the angle of the bounce up to this much is added to restitution multiplier
+    static constexpr float MaxRestitutionIncrease = 0.3f;// 0.05f; //depending on the angle of the bounce up to this much is added to restitution multiplier
 
     float getRestitution(glm::vec3 vel, glm::vec3 norm)
     {
@@ -88,9 +91,15 @@ namespace
 
         const float d = glm::dot(-(vel / l), norm);
         //LogI << "Vel: " << l << ", dot: " << d << std::endl;
-        const float amt = 0.1f + (0.9f * glm::smoothstep(0.001f, StartAngle, d));
+        const float amt = std::clamp(0.1f + (0.9f * glm::smoothstep(0.001f, StartAngle, d)), 0.f, 1.f);
         //LogI << amt << std::endl;
-        return (1.f - amt) * MaxRestitutionIncrease;
+
+        /*
+        When punching we get ~0 - 0.3
+        Flops and drives are almost exclusively 0
+        */
+
+        return std::min((1.f - amt)/* * MaxRestitutionIncrease*/, 1.f - Restitution[TerrainID::Stone]);
     }
 
     static constexpr std::array<float, TerrainID::Count> Friction =
@@ -601,6 +610,10 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             {
                 auto attraction = pinDir; //* 0.5f
                 attraction.y = 0.f;
+
+                const float attractMultiplier = 0.05f + std::min(glm::length2(ball.velocity), 0.95f);
+                attraction *= (AttractStrength * attractMultiplier);
+                //LogI << glm::length(attraction) << std::endl;
                 ball.velocity += attraction * dt;
             }
 
@@ -609,7 +622,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //over hole or in the air
 
                 //apply more gravity/push the closer we are to the pin
-                float forceAffect = 1.f - smoothstep(MinFallDistance, MinBallDistance, len2);
+                const float forceAffect = 1.f - smoothstep(MinFallDistance, MinBallDistance, len2);
 
 
                 //gravity
@@ -624,8 +637,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                 //this draws the ball to the pin a little bit to make sure the ball
                 //falls entirely within the radius
-                pinDir.y = 0.f;
-                ball.velocity += pinDir * forceAffect;// dt;
+                pinDir.y = -0.05f;
+                ball.velocity += pinDir * (AttractStrength * 0.15f) * forceAffect;// dt;
 
                 ball.hadAir = true;
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
@@ -781,8 +794,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 && std::abs(ball.spin.y) < MinSpinPower //this might be true when there's still spin to be applied
                 && glm::dot(cro::Transform::Y_AXIS, terrainContact.normal) > MinRollSlope) //and we don't want to stop on a slope                
                 
-                || (terrainContact.penetration > (Ball::Radius * 2.5f)) 
-                || ((ball.delay < BallRollTimeout) && (vel2 < BallTimeoutVelocity))
+                || (terrainContact.penetration > CupDepth) 
+                || ((ball.delay < BallRollTimeout * 1.5f) && (vel2 < BallTimeoutVelocity))
                 || (ball.delay < (BallRollTimeout * 2.f)))
             {
                 ball.velocity = glm::vec3(0.f);
@@ -908,31 +921,40 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //to miss if the terrain is much higher than
                 //the water level.
 
-                glm::vec3 dir = ball.startPoint - ballPos;
-                ballPos.y = ball.startPoint.y;
+                //ACTUALLY the terrain may rise up between the two points
+                //so we need to set this at least as high as the
+                //tallest terrain point (can we use the mesh AABB?)
+
+                //static constexpr float SearchHeight = 15.f;
+
+                auto start = ball.startPoint;
+                //start.y = SearchHeight;
+                ballPos.y = start.y;// SearchHeight;// ball.startPoint.y;
+
+                glm::vec3 dir = start - ballPos;
 
                 auto length = glm::length(dir);
                 dir /= length;
                 std::int32_t maxDist = static_cast<std::int32_t>(length /*- 10.f*/);
 
                 //if we're on a putting course take smaller steps for better accuracy
-                if (m_puttFromTee)
+                /*if (m_puttFromTee)
                 {
                     dir /= 4.f;
                     maxDist *= 4;
-                }
+                }*/
 
                 for (auto i = 0; i < maxDist; ++i)
                 {
                     ballPos += dir;
-                    auto res = getTerrain(ballPos);
+                    auto res = getTerrain(ballPos, -cro::Transform::Y_AXIS, 40.f); //+/- 20.f above below ball pos
                     terrain = res.terrain;
 
                     const auto slope = dot(res.normal, glm::vec3(0.f, 1.f, 0.f));
 
-                    if (terrain != TerrainID::Water
-                        && terrain != TerrainID::Scrub
-                        && terrain != TerrainID::Stone //we're restoring from OOB, so we still don't want to land on stone here
+                    if ((terrain == TerrainID::Rough
+                        || terrain == TerrainID::Fairway
+                        || terrain == TerrainID::Green)
                         && slope > 0.996f)
                     {
                         //move the ball a bit closer so we're not balancing on the edge
@@ -955,7 +977,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 {
                     //this is important else we'll end up trying to drive
                     //down a putting course :facepalm:
-                    terrain = m_puttFromTee ? TerrainID::Green : TerrainID::Fairway;
+                    terrain = /*m_puttFromTee ? TerrainID::Green :*/ TerrainID::Fairway;
                     tx.setPosition(m_holeData->tee);
                 }
             }
@@ -1002,7 +1024,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 msg2->client = ball.client;
 
                 position.x = m_holeData->pin.x;
-                position.y = m_holeData->pin.y - (Ball::Radius * 2.5f);
+                position.y = m_holeData->pin.y - CupDepth;
                 position.z = m_holeData->pin.z;
                 entity.getComponent<cro::Transform>().setPosition(position);
 
@@ -1251,6 +1273,7 @@ void BallSystem::doCollision(cro::Entity entity)
             msg->terrain = terrainResult.terrain;
             msg->position = pos;
             msg->type = CollisionEvent::Begin;
+            msg->velocity = glm::length2(ball.velocity);
 
             ball.lastTerrain = terrainResult.terrain;
 

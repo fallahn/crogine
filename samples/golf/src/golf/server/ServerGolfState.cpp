@@ -36,6 +36,7 @@ source distribution.
 #include "../MessageIDs.hpp"
 #include "../WeatherDirector.hpp"
 #include "../League.hpp"
+#include "../AvatarAnimation.hpp"
 #include "CPUStats.hpp"
 #include "ServerGolfState.hpp"
 #include "ServerMessages.hpp"
@@ -43,6 +44,7 @@ source distribution.
 #include <AchievementIDs.hpp>
 #include <Social.hpp>
 #include <Input.hpp>
+#include <Content.hpp>
 
 #include <crogine/core/Log.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -176,14 +178,35 @@ void GolfState::handleMessage(const cro::Message& msg)
                     }),
                     playerInfo.end());
 
+                //UGH I don't really kow what I was trying to achieve
+                //with this. Groups suck. I'm sure there's an error here
                 if (playerInfo.empty()
                     || wantNewPlayer)
                 {
                     //if this group is empty setNextPlayer() will still
                     //test if we want the next hole if other groups are waiting
-                    setNewPlayer = m_groupAssignments[playerInfo[0].client];
+                    setNewPlayer = m_groupAssignments[data.clientID];
                 }
             }
+
+            if (m_sharedData.teamMode)
+            {
+                for (auto j = 0u; j < m_teams.size(); ++j)
+                {
+                    auto& team = m_teams[j];
+                    for (auto i = 0u; i < team.players.size(); ++i)
+                    {
+                        //if this was the removed client set to the other player
+                        //this just creates an empty team if no players are left
+                        if (team.players[i].client == data.clientID)
+                        {
+                            const auto idx = (i + 1) % 2;
+                            team.players[i] = team.players[idx];
+                        }
+                    }
+                }
+            }
+
 
             if (!m_playerInfo.empty())
             {
@@ -280,6 +303,25 @@ void GolfState::handleMessage(const cro::Message& msg)
                     playerInfo[0].distanceToHole = glm::length(data.position - m_holeData[m_currentHole].pin);
                 }
                 playerInfo[0].terrain = data.terrain;
+
+                //this isn't triggered if the ball is holed
+                //so we can safely just handle this here.
+                //TODO this needs to look at gimme too
+                //if (playerInfo[0].puttCount == 1
+                //    && m_sharedData.snekEnabled)
+                //{
+                //    //update snek if enabled and not already us
+                //    Team::Player current(m_sharedData.snekClient, m_sharedData.snekPlayer);
+                //    Team::Player pl(playerInfo[0].client, playerInfo[0].player);
+                //    if (current != pl)
+                //    {
+                //        m_sharedData.snekClient = playerInfo[0].client;
+                //        m_sharedData.snekPlayer = playerInfo[0].player;
+
+                //        const std::uint16_t d = (m_sharedData.snekClient << 8) | m_sharedData.snekPlayer;
+                //        m_sharedData.host.broadcastPacket(PacketID::SnekUpdate, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                //    }
+                //}
 
                 handleRules(groupID, data);
 
@@ -846,12 +888,17 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
             dir.y = dir.x;
             dir.x = x;
             ball.rotation = glm::dot(dir, glm::normalize(glm::vec2(ball.velocity.x, ball.velocity.z))) + 0.1f;
-
+            
             if (!predict)
             {
                 group.playerInfo[0].previousBallScore = group.playerInfo[0].holeScore[m_currentHole];
                 group.playerInfo[0].holeScore[m_currentHole]++;
                 group.playerInfo[0].prevBallPos = ball.startPoint;
+                //track for snek play
+                if (input.clubID == ClubID::Putter)
+                {
+                    group.playerInfo[0].puttCount++;
+                }
 
                 auto animID = isPutt ? AnimationID::Putt : AnimationID::Swing;
 
@@ -945,6 +992,15 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
 
 void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
 {
+    if (m_sharedData.teamMode && newHole)
+    {
+        //ensure we always alternate team member on the tee
+        for (auto& t : m_teams)
+        {
+            t.currentPlayer = m_currentHole % 2;
+        }
+    }
+
     //each player is sequential (ideally with fewest skins, use connect ID to tie break)
     const auto skinsPredicate = 
         [&](const PlayerStatus& a, const PlayerStatus& b)
@@ -980,6 +1036,53 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
     
         m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance = 0.f;
+
+        if (m_sharedData.bigBalls)
+        {
+            //playerInfo[0].ballScale = std::clamp(playerInfo[0].ballScale + (playerInfo[0].holeScore[m_currentHole] - m_holeData[m_currentHole].par), -5, 5);
+            std::uint32_t data = (((playerInfo[0].client << 8) | playerInfo[0].player) << 16) | std::uint16_t(playerInfo[0].ballScale + 6);
+            m_sharedData.host.broadcastPacket(PacketID::BigBallUpdate, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+
+        if (m_sharedData.teamMode)
+        {
+            //we'll need to send the team mate's score too - this was done
+            //in handleRules()
+            const auto& team = m_teams[m_playerInfo[0].playerInfo[0].teamIndex];
+            const auto& teamMate = team.players[team.currentPlayer];
+            auto& pi = m_playerInfo[0].playerInfo;
+            auto teamMateInfo = std::find_if(pi.begin(), pi.end(),
+                [&teamMate](const PlayerStatus& ps)
+                {
+                    return ps.client == teamMate.client && ps.player == teamMate.player;
+                });
+
+            if (teamMateInfo != pi.end()
+                && !(teamMateInfo->client == playerInfo[0].client //don't do this if it's a one person team
+                    && teamMateInfo->player == playerInfo[0].player))
+            {
+                ScoreUpdate su2;
+                su2.strokeDistance = teamMateInfo->ballEntity.getComponent<Ball>().lastStrokeDistance;
+                su2.client = teamMateInfo->client;
+                su2.player = teamMateInfo->player;
+                su2.score = teamMateInfo->totalScore;
+                su2.stroke = teamMateInfo->holeScore[m_currentHole];
+                su2.distanceScore = teamMateInfo->distanceScore[m_currentHole];
+                su2.matchScore = teamMateInfo->matchWins; //not used in teeamplay but let's be consistent
+                su2.skinsScore = teamMateInfo->skins;
+                su2.hole = m_currentHole;
+
+                m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su2, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                teamMateInfo->ballEntity.getComponent<Ball>().lastStrokeDistance = 0.f;
+
+                if (m_sharedData.bigBalls)
+                {
+                    //teamMateInfo->ballScale = std::clamp(teamMateInfo->ballScale + (teamMateInfo->holeScore[m_currentHole] - m_holeData[m_currentHole].par), -5, 5);
+                    std::uint32_t data = (((teamMateInfo->client << 8) | teamMateInfo->player) << 16) | std::uint16_t(teamMateInfo->ballScale + 6);
+                    m_sharedData.host.broadcastPacket(PacketID::BigBallUpdate, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+            }
+        }
     }
 
     
@@ -1077,8 +1180,13 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             else
             {
                 //sort players by distance
-                const auto predicate = [](const PlayerStatus& a, const PlayerStatus& b)
+                const auto predicate = [&](const PlayerStatus& a, const PlayerStatus& b)
                     {
+                        if (m_sharedData.teamMode
+                            && a.teamIndex == b.teamIndex)
+                        {
+                            return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer] == a;
+                        }
                         return a.distanceToHole > b.distanceToHole;
                     };
 
@@ -1099,6 +1207,11 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             //winner of the last hole goes first - TODO this doesn't work in group play
             const auto predicate = [&](const PlayerStatus& a, const PlayerStatus& b)
                 {
+                    if (m_sharedData.teamMode
+                        && a.teamIndex == b.teamIndex)
+                    {
+                        return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer] == a;
+                    }
                     return a.holeScore[m_currentHole - 1] < b.holeScore[m_currentHole - 1];
                 };
 
@@ -1111,20 +1224,23 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             //but ehhhh no harm in being explicit I guess?
             if (!playerInfo.empty())
             {
-                if (playerInfo[0].client != m_honour[0]
-                    || playerInfo[0].player != m_honour[1])
+                if ((playerInfo[0].client != m_honour[0]
+                    || playerInfo[0].player != m_honour[1]))
                 {
-                    auto r = std::find_if(playerInfo.begin(), playerInfo.end(),
-                        [&](const PlayerStatus& ps)
-                        {
-                            return ps.client == m_honour[0] && ps.player == m_honour[1];
-                        });
-
-                    if (r != playerInfo.end())
+                    if (m_sharedData.teamMode == 0) //in teams we always alternate who tees off
                     {
-                        if (r->holeScore[m_currentHole - 1] == playerInfo[0].holeScore[m_currentHole - 1])
+                        auto r = std::find_if(playerInfo.begin(), playerInfo.end(),
+                            [&](const PlayerStatus& ps)
+                            {
+                                return ps.client == m_honour[0] && ps.player == m_honour[1];
+                            });
+
+                        if (r != playerInfo.end())
                         {
-                            std::swap(playerInfo[std::distance(playerInfo.begin(), r)], playerInfo[0]);
+                            if (r->holeScore[m_currentHole - 1] == playerInfo[0].holeScore[m_currentHole - 1])
+                            {
+                                std::swap(playerInfo[std::distance(playerInfo.begin(), r)], playerInfo[0]);
+                            }
                         }
                     }
                 }
@@ -1241,7 +1357,7 @@ void GolfState::setNextHole()
     }
 
     //update player skins/match scores
-    auto gameFinished = summariseRules();
+    const auto gameFinished = summariseRules();
     
 
     //broadcast all scores to make sure everyone is up to date
@@ -1255,6 +1371,10 @@ void GolfState::setNextHole()
         {
             player.totalScore += player.holeScore[scoreHole];
             player.targetHit = false;
+            player.puttCount = 0;
+            //track this for big balls, though it's only sent to client
+            //on player change (as we might need to do teams updates) see setNextPlayer()
+            player.ballScale = std::clamp(player.ballScale + (m_holeData[scoreHole].par - player.holeScore[scoreHole]), -5, 5);
 
             ScoreUpdate su;
             su.client = player.client;
@@ -1502,8 +1622,21 @@ void GolfState::applyMulligan()
 
 bool GolfState::validateMap()
 {
+    const auto installPaths = Content::getInstallPaths();
+
     auto mapDir = m_sharedData.mapDir.toAnsiString();
-    auto mapPath = ConstVal::MapPath + mapDir + "/course.data";
+
+    //auto mapPath = ConstVal::MapPath + mapDir + "/course.data";
+    std::string mapPath;
+    for (const auto& dir : installPaths)
+    {
+        mapPath = dir + ConstVal::MapPath + mapDir;
+        if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + mapPath))
+        {
+            break;
+        }
+    }
+    mapPath += +"/course.data";
 
     bool isUser = false;
     if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
@@ -1659,6 +1792,16 @@ bool GolfState::validateMap()
 
 void GolfState::initScene()
 {
+    //this is horroible, but at least it's explicit :)
+    if (m_sharedData.scoreType != ScoreType::Stroke
+        && m_sharedData.scoreType != ScoreType::ShortRound
+        && m_sharedData.scoreType != ScoreType::Stableford
+        && m_sharedData.scoreType != ScoreType::StablefordPro
+        && m_sharedData.scoreType != ScoreType::MultiTarget)
+    {
+        m_sharedData.teamMode = 0;
+    }
+
     //make sure to ignore gimme radii on NTP...
     if (m_sharedData.scoreType == ScoreType::NearestThePin)
     {
@@ -1760,6 +1903,11 @@ void GolfState::initScene()
         groupMode = ClientGrouping::None;
     }
 
+    if (groupMode != ClientGrouping::None)
+    {
+        m_sharedData.teamMode = 0;
+    }
+
     if (groupMode == ClientGrouping::Even)
     {
         m_playerInfo.resize(std::min(clientCount, 2));
@@ -1772,6 +1920,7 @@ void GolfState::initScene()
     auto startLives = StartLives;
     clientCount = 0;
     //for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
+    //std::int32_t teamCounter = 0;
     for(const auto& d : clientSortData)
     {
         //if (m_sharedData.clients[d.clientID].connected) //this should always be true if the client made it into the sort data
@@ -1823,6 +1972,27 @@ void GolfState::initScene()
                 player.player = j;
                 player.position = m_holeData[0].tee;
                 player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[0].pin);
+
+                if (m_sharedData.teamMode)
+                {
+                    player.teamIndex = m_sharedData.clients[d.clientID].playerData[j].teamIndex;
+
+                    CRO_ASSERT(player.teamIndex > -1 && player.teamIndex < m_teams.size(), "");
+                    m_teams[player.teamIndex].players[m_teams[player.teamIndex].currentPlayer].client = player.client;
+                    m_teams[player.teamIndex].players[m_teams[player.teamIndex].currentPlayer].player = j;
+
+                    if (m_teams[player.teamIndex].currentPlayer == 0)
+                    {
+                        //duplicate the player into the second slot in case there's
+                        //no second team member - it'll be overwritten with correct data if necessary
+                        m_teams[player.teamIndex].players[1].client = player.client;
+                        m_teams[player.teamIndex].players[1].player = j;
+                    }
+
+                    //increment this so next time we hit the team index the player is put
+                    //in the next slot
+                    m_teams[player.teamIndex].currentPlayer = (m_teams[player.teamIndex].currentPlayer + 1) % 2;
+                }
 
                 startLives = std::max(startLives - 1, 2);
             }
@@ -1879,6 +2049,18 @@ void GolfState::buildWorld()
         [&](std::vector<std::uint8_t>& scores, std::uint64_t holeIndex)
         {
             m_currentHole = std::min(std::size_t(holeIndex), m_holeData.size() - 1);
+
+            /*LogI << "Current hole: " << (int)m_currentHole << std::endl;
+            std::stringstream ss;
+            ss << "Scores: ";
+            for (auto s : scores)
+            {
+                ss << (int)s << ", ";
+            }
+
+            LogI << ss.str() << std::endl;
+            cro::Console::show();*/
+
 
             //if we're here we *should* only have one player...
             auto& player = m_playerInfo[0].playerInfo[0];

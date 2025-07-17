@@ -305,6 +305,7 @@ static inline const std::string CelFragmentShader = R"(
 
 #if defined (TERRAIN)
     uniform float u_morphTime;
+    uniform vec3 u_ballPosition = vec3(0.0);
 #endif
 
 #if defined (TEXTURED)
@@ -361,24 +362,12 @@ static inline const std::string CelFragmentShader = R"(
 
 #if defined(RX_SHADOWS)
 #include SHADOWMAP_INPUTS
+#include CASCADE_SELECTION
 
-//not using PCF so don't bother with include
-    int getCascadeIndex()
-    {
-        for(int i = 0; i < u_cascadeCount; ++i)
-        {
-#if defined (GPU_AMD)
-            if (v_viewDepth > u_frustumSplits[i] - 15.0) //it might be an AMD driver bug. Wait for the next patch.
+//#if defined (TERRAIN) || defined(CONTOUR)
+#if !defined (CLASSIC_SHADOWS)
+#include VSM_SHADOWS
 #else
-            if (v_viewDepth > u_frustumSplits[i])
-#endif
-            {
-                return min(u_cascadeCount - 1, i);
-            }
-        }
-        return 0;//u_cascadeCount - 1;
-    }
-
     const float Bias = 0.001; //0.005
     float shadowAmount(int cascadeIndex)
     {
@@ -396,6 +385,7 @@ static inline const std::string CelFragmentShader = R"(
         float depthSample = TEXTURE(u_shadowMap, vec3(projectionCoords.xy, float(cascadeIndex))).r;
         return (currDepth < depthSample) ? 1.0 : 1.0 - (0.3);
     }
+#endif
 #endif
 
 #if defined (ADD_NOISE)
@@ -548,6 +538,10 @@ static inline const std::string CelFragmentShader = R"(
 #endif
 
 #if defined(TERRAIN)
+        //float ballShadow = smoothstep(0.015, 0.03, length(v_worldPosition - u_ballPosition));
+        //ballShadow = 0.8 + (0.2 * ballShadow);
+        //colour.rgb *= ballShadow;
+
         vec2 texCheck = v_texCoord * 4096.0;
         int texX = int(mod(texCheck.x, MatrixSize));
         int texY = int(mod(texCheck.y, MatrixSize));
@@ -579,19 +573,19 @@ static inline const std::string CelFragmentShader = R"(
         int cascadeIndex = getCascadeIndex();
         float shadow = shadowAmount(cascadeIndex);
         //float shadow = shadowAmountSoft(cascadeIndex);
-        float borderMix = smoothstep(u_frustumSplits[cascadeIndex] + 0.5, u_frustumSplits[cascadeIndex], v_viewDepth);
+        /*float borderMix = smoothstep(u_frustumSplits[cascadeIndex] + 0.5, u_frustumSplits[cascadeIndex], v_viewDepth);
         if (borderMix > 0)
         {
             int nextIndex = min(cascadeIndex + 1, u_cascadeCount - 1);
             shadow = mix(shadow, shadowAmount(nextIndex), borderMix);
-            //shadow = mix(shadow, shadowAmountSoft(nextIndex), borderMix);
-        }
+            shadow = mix(shadow, shadowAmountSoft(nextIndex), borderMix);
+        }*/
 
         FRAG_OUT.rgb *= shadow;
 
 //shows cascade boundries
 #if defined(SHOW_CASCADES)
-        vec3 Colours[MAX_CASCADES] = vec3[MAX_CASCADES](vec3(0.2,0.0,0.0), vec3(0.0,0.2,0.0),vec3(0.0,0.0,0.2));
+        vec3 Colours[MAX_CASCADES] = vec3[MAX_CASCADES](vec3(0.1,0.0,0.0), vec3(0.0,0.1,0.0),vec3(0.0,0.0,0.1));
         FRAG_OUT.rgb += Colours[cascadeIndex];
         for(int i = 0; i < u_cascadeCount; ++i)
         {

@@ -29,6 +29,10 @@ source distribution.
 
 #pragma once
 
+#include <Content.hpp>
+
+#include <crogine/detail/Types.hpp>
+
 #include <cstdint>
 #include <array>
 #include <string>
@@ -37,11 +41,46 @@ namespace inv
 {
     enum ItemType
     {
-        Driver, FiveW, ThreeW, NineI, EightI, SevenI,
-        SixI, FiveI, FourI, PitchWedge, GapWedge,
-        SandWedge, Ball,
+        Driver, ThreeW, FiveW, 
+        FourI, FiveI, SixI, SevenI, EightI, NineI,
+        PitchWedge, GapWedge, SandWedge, Ball,
 
         Count
+    };
+
+    static inline const std::array<std::string, ItemType::Count> ItemStrings =
+    {
+        "Driver", "3 Wood", "5 Wood", 
+        "4 Iron", "5 Iron", "6 Iron", "7 Iron", "8 Iron", "9 Iron",
+        "Pitch Wedge", "Gap Wedge", "Sand Wedge", "Pack Of 10 Balls",
+    };
+
+    struct StatLabel final
+    {
+        std::string stat1;
+        std::string stat2;
+
+        StatLabel(const std::string& s0, const std::string& s1)
+            :stat1(s0), stat2(s1) { }
+    };
+
+    //5 categories in the shop / types of item
+    static inline const std::array<StatLabel, 5u> StatLabels =
+    {
+        StatLabel("Reflex: ",         "Accuracy: "),
+        StatLabel("Reflex: ",         "Accuracy: "),
+        StatLabel("Spin Influence: ", "Accuracy: "),
+        StatLabel("Spin Influence: ", "Accuracy: "),
+        StatLabel("Hook/Slice Reduction: ","")
+    };
+
+    static inline const std::array<StatLabel, 5u> StatDesc =
+    {
+        StatLabel("(Slows Bar Movement)  ",  "(Less Hook/Slice)   "),
+        StatLabel("(Slows Bar Movement)  ",  "(Less Hook/Slice)   "),
+        StatLabel("",                        "(Less Hook/Slice)   "),
+        StatLabel("",                        "(Less Hook/Slice)   "),
+        StatLabel("","")
     };
 
     struct Item final
@@ -64,12 +103,66 @@ namespace inv
         static constexpr std::uint32_t MaxCharBytes = 32;
 
         std::array<std::int32_t, ItemType::Count> items = {};
-        std::array<std::uint8_t, MaxCharBytes> name = {};
+        std::array<std::uint8_t, MaxCharBytes + 1> name = {}; //utf8 string
 
         Loadout()
         {
             std::fill(items.begin(), items.end(), -1);
             std::fill(name.begin(), name.end(), 0);
+        }
+
+        void read(const std::string& profileID)
+        {
+            std::fill(items.begin(), items.end(), -1);
+            const auto loadoutPath = Content::getUserContentPath(Content::UserContent::Profile) + "/" + profileID + "/load.out";
+
+            cro::RaiiRWops file;
+            file.file = SDL_RWFromFile(loadoutPath.c_str(), "rb");
+            if (file.file)
+            {
+                if (!SDL_RWread(file.file, items.data(), sizeof(items), 1))
+                {
+                    LogW << "Failed reading loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
+                }
+                /*else
+                {
+                    LogI << "Read " << loadoutPath << " successfully" << std::endl;
+                }*/
+            }
+            /*else
+            {
+                LogW << "Could not find " << loadoutPath << " for opening" << std::endl;
+            }*/
+        }
+
+        void write(const std::string& profileID) const
+        {
+            auto path = Content::getUserContentPath(Content::UserContent::Profile);
+            if (!cro::FileSystem::directoryExists(path))
+            {
+                cro::FileSystem::createDirectory(path);
+            }
+            path += profileID + "/";
+
+            if (!cro::FileSystem::directoryExists(path))
+            {
+                cro::FileSystem::createDirectory(path);
+            }
+            path += "load.out";
+
+            cro::RaiiRWops file;
+            file.file = SDL_RWFromFile(path.c_str(), "wb");
+            if (file.file)
+            {
+                if (!file.file->write(file.file, items.data(), sizeof(items), 1))
+                {
+                    LogW << "Failed writing loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
+                }
+                /*else
+                {
+                    LogI << "Wrote loadout to " << path << std::endl;
+                }*/
+            }
         }
     };
 
@@ -78,26 +171,86 @@ namespace inv
     struct Inventory final
     {
         static constexpr std::uint32_t MaxLoadouts = 6;
-        std::uint32_t loadoutCount = 2; //number of unlocked loadouts
+        std::uint32_t loadoutCount = 2; //number of unlocked loadouts (unused)
 
-        std::array<Loadout, MaxLoadouts> loadouts = {};
-        std::array<std::int32_t, MaxItems> inventory = {}; //indices of shop-bought items
+        std::array<Loadout, MaxLoadouts> loadouts = {}; //unused - implement this if people like the idea of saving loadouts
+        std::array<std::int32_t, MaxItems> inventory = {}; //qty of shop-bought items, -1 if not owned
 
         std::int32_t balance = 5000;
+
+        std::int32_t manufacturerFlags = 0;
+        std::int32_t itemTypes = 0; //flags used to track buying one of each club
+        static constexpr std::int32_t AllTypes = 0xfff;
+
+        //in case of expansion in the future.
+        /*const */std::array<std::int32_t, 31> Reserved = {};
 
         Inventory()
         {
             std::fill(inventory.begin(), inventory.end(), -1);
+            std::fill(Reserved.begin(), Reserved.end(), 0);
         }
-
-        bool read() { return false; }
-        bool write() { return false; }
     };
 
-    static inline const std::array<std::string, 13u> Manufacturers =
+    static inline bool read(Inventory& dst)
+    {
+        const std::string fileName("equip.inv");
+        const std::string filePath = Content::getBaseContentPath() + fileName;
+
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(filePath.c_str(), "rb");
+        if (file.file)
+        {
+            if (SDL_RWread(file.file, &dst, sizeof(Inventory), 1) == 0)
+            {
+                LogE << "Failed reading " << filePath << ", " << SDL_GetError() << std::endl;
+                return false;
+            }
+
+            dst.balance = std::min(999999, dst.balance);
+            return true;
+        }
+
+        return false;
+    }
+    static inline bool write(const Inventory& src)
+    {
+        const std::string fileName("equip.inv");
+        const std::string filePath = Content::getBaseContentPath() + fileName;
+
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(filePath.c_str(), "wb");
+        if (file.file)
+        {
+            if (SDL_RWwrite(file.file, &src, sizeof(Inventory), 1) < 1)
+            {
+                LogE << "Failed writing " << filePath << ", " << SDL_GetError() << std::endl;
+                return false;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    struct ManufID final
+    {
+        enum
+        {
+            Gallawent, Dong, Fellowcraft, Akrun, Dannis, Clix,
+            BeyTree, TunnelRock, Flaxen, Hardings, Woodgear,
+            BriltonStockley, Default,
+
+            Count,
+
+            AllFlags = 2047// 0b00000000000000000000011111111111
+        };
+    };
+
+    static inline const std::array<std::string, ManufID::Count> Manufacturers =
     {
         "Gallawent", "Dong", "FellowCraft", "Akrun", "Dannis", "Clix",
-        "BeyTree", "Tunnelrock", "Flaxen", "Headings", "Woodgear",
+        "BeyTree", "Tunnelrock", "Flaxen", "Hardings", "Woodgear",
         "Brilton & Stockley",
 
         "Default"
@@ -108,84 +261,88 @@ namespace inv
     {
         //type, stat 1, stat 2, price, manufacturer ID
         
-        //driver-wood stat 1 accuracy
-        //stat 2 distance
-        Item(ItemType::Driver, -4, 4,2300, 0),
-        Item(ItemType::Driver, -2, 3,2400, 1),
-        Item(ItemType::Driver, -1, 2,2500, 2),
-        Item(ItemType::Driver,  1, 0,2550, 3),
-        Item(ItemType::Driver,  3,-1,2600, 4),
-        Item(ItemType::Driver,  5,-3,2750, 5),
-        Item(ItemType::Driver,  8,-6,2800, 6),
+        //driver-wood 
+        //stat 1 distance
+        //stat 2 accuracy
+        Item(ItemType::Driver, 8,-6,2300, 0),
+        Item(ItemType::Driver, 5,-3,2400, 1),
+        Item(ItemType::Driver, 3,-1,2500, 2),
+        Item(ItemType::Driver, 1, 0,2550, 3),
+        Item(ItemType::Driver, -1,2,2600, 4),
+        Item(ItemType::Driver, -2,3,2750, 5),
+        Item(ItemType::Driver, -4,4,2800, 6),
 
-        Item(ItemType::ThreeW, -2, 3,2050, 0),
-        Item(ItemType::ThreeW, -3, 4,2140, 1),
-        Item(ItemType::ThreeW, -1, 2,2200, 2),
-        Item(ItemType::ThreeW,  2,-1,2350, 3),
-        Item(ItemType::ThreeW,  4,-3,2540, 4),
-        Item(ItemType::ThreeW,  3,-4,2600, 5),
-        Item(ItemType::ThreeW,  7,-6,2650, 6),
+        Item(ItemType::ThreeW, 7,-6,2050, 0),
+        Item(ItemType::ThreeW, 3,-4,2140, 1),
+        Item(ItemType::ThreeW, 4,-3,2200, 2),
+        Item(ItemType::ThreeW, 2,-1,2350, 3),
+        Item(ItemType::ThreeW, -1,2,2540, 4),
+        Item(ItemType::ThreeW, -3,4,2600, 5),
+        Item(ItemType::ThreeW, -2,3,2650, 6),
 
-        Item(ItemType::FiveW, -3, 3,2000, 0),
-        Item(ItemType::FiveW, -2, 3,2100, 1),
-        Item(ItemType::FiveW,  0, 1,2250, 2),
+        Item(ItemType::FiveW,  4,-1,2000, 0),
+        Item(ItemType::FiveW,  5,-2,2100, 1),
+        Item(ItemType::FiveW,  3,-1,2250, 2),
         Item(ItemType::FiveW,  2,-1,2280, 3),
-        Item(ItemType::FiveW,  3,-1,2400, 4),
-        Item(ItemType::FiveW,  5,-2,2550, 5),
-        Item(ItemType::FiveW,  4,-1,2700, 6),
+        Item(ItemType::FiveW,  0, 1,2400, 4),
+        Item(ItemType::FiveW,  -2,3,2550, 5),
+        Item(ItemType::FiveW,  -3,3,2700, 6),
         
-        //irons stat1 spin effect - pos more spin,
-        //stat2 increased punch distance
-        Item(ItemType::NineI, -2, 6,720, 0),
-        Item(ItemType::NineI, -2, 5,700, 1),
-        Item(ItemType::NineI, -1, 3,810, 2),
-        Item(ItemType::NineI,  0, 1,780, 3),
-        Item(ItemType::NineI,  1,-1,850, 4),
-        Item(ItemType::NineI,  2,-3,990, 5),
-        Item(ItemType::NineI,  3,-4,920, 6),
-        
-        Item(ItemType::EightI, -2, 5,720, 0),
-        Item(ItemType::EightI, -2, 5,700, 1),
-        Item(ItemType::EightI, -2, 4,810, 2),
-        Item(ItemType::EightI, -1, 2,780, 3),
-        Item(ItemType::EightI,  1, 0,850, 4),
-        Item(ItemType::EightI,  2,-1,990, 5),
-        Item(ItemType::EightI,  3,-5,920, 6),
-        
-        Item(ItemType::SevenI, -2, 5,720, 0),
-        Item(ItemType::SevenI, -4, 6,700, 1),
-        Item(ItemType::SevenI, -2, 4,810, 2),
-        Item(ItemType::SevenI,  0, 1,780, 3),
-        Item(ItemType::SevenI,  1, 0,850, 4),
-        Item(ItemType::SevenI,  3,-3,990, 5),
-        Item(ItemType::SevenI,  5,-6,920, 6),
-        
-        Item(ItemType::SixI, -3, 6,720, 0),
-        Item(ItemType::SixI, -3, 4,700, 1),
-        Item(ItemType::SixI, -2, 3,810, 2),
-        Item(ItemType::SixI, -2, 1,780, 3),
-        Item(ItemType::SixI,  0,-1,850, 4),
-        Item(ItemType::SixI,  1,-3,990, 5),
-        Item(ItemType::SixI,  4,-4,920, 6),
-        
-        Item(ItemType::FiveI, -2, 5,720, 0),
-        Item(ItemType::FiveI, -2, 3,700, 1),
-        Item(ItemType::FiveI, -3, 4,810, 2),
-        Item(ItemType::FiveI, -1, 2,780, 3),
-        Item(ItemType::FiveI,  0, 1,850, 4),
-        Item(ItemType::FiveI,  1,-2,990, 5),
-        Item(ItemType::FiveI,  5,-4,920, 6),
-        
-        Item(ItemType::FourI, -2, 4,720, 0),
-        Item(ItemType::FourI, -3, 5,700, 1),
-        Item(ItemType::FourI, -1, 2,810, 2),
+        //irons
+        //stat1 spin effect - pos more spin
+        //stat2 more accuracy
+        Item(ItemType::FourI,  6,-5,720, 0),
+        Item(ItemType::FourI,  3,-3,700, 1),
+        Item(ItemType::FourI,  2,-1,810, 2),
         Item(ItemType::FourI, -1, 0,780, 3),
-        Item(ItemType::FourI,  2,-1,850, 4),
-        Item(ItemType::FourI,  3,-3,990, 5),
-        Item(ItemType::FourI,  6,-5,920, 6),
+        Item(ItemType::FourI,  -1,2,850, 4),
+        Item(ItemType::FourI,  -3,5,990, 5),
+        Item(ItemType::FourI,  -2,4,920, 6),
+
+        Item(ItemType::FiveI,  5,-4,720, 0),
+        Item(ItemType::FiveI,  1,-2,700, 1),
+        Item(ItemType::FiveI,  0, 1,810, 2),
+        Item(ItemType::FiveI,  -1,2,780, 3),
+        Item(ItemType::FiveI,  -3,4,850, 4),
+        Item(ItemType::FiveI,  -2,3,990, 5),
+        Item(ItemType::FiveI,  -2,5,920, 6),
+
+        Item(ItemType::SixI,  4,-4,720, 0),
+        Item(ItemType::SixI,  1,-3,700, 1),
+        Item(ItemType::SixI,  0,-1,810, 2),
+        Item(ItemType::SixI,  -2,1,780, 3),
+        Item(ItemType::SixI,  -2,3,850, 4),
+        Item(ItemType::SixI,  -3,4,990, 5),
+        Item(ItemType::SixI,  -3,6,920, 6),
+
+        Item(ItemType::SevenI,  5,-6,720, 0),
+        Item(ItemType::SevenI,  3,-3,700, 1),
+        Item(ItemType::SevenI,  1, 0,810, 2),
+        Item(ItemType::SevenI,  0, 1,780, 3),
+        Item(ItemType::SevenI,  -2,4,850, 4),
+        Item(ItemType::SevenI,  -4,6,990, 5),
+        Item(ItemType::SevenI,  -2,5,920, 6),
+
+        Item(ItemType::EightI, 3, -5,720, 0),
+        Item(ItemType::EightI, 2, -1,700, 1),
+        Item(ItemType::EightI, 1,  0,810, 2),
+        Item(ItemType::EightI, -1, 2,780, 3),
+        Item(ItemType::EightI, -2, 4,850, 4),
+        Item(ItemType::EightI, -2, 5,990, 5),
+        Item(ItemType::EightI, -1, 5,920, 6),
+
+        Item(ItemType::NineI,  3,-4,720, 0),
+        Item(ItemType::NineI,  2,-3,700, 1),
+        Item(ItemType::NineI,  1,-1,810, 2),
+        Item(ItemType::NineI,  0, 1,780, 3),
+        Item(ItemType::NineI,  -1,3,850, 4),
+        Item(ItemType::NineI,  -2,5,990, 5),
+        Item(ItemType::NineI,  -2,6,920, 6),
+
         
-        //wedges stat1 increase flop height
-        //stat2 top and back spin have more effect
+        //wedges 
+        //stat1 positive more spin effect
+        //stat2 more accuracy
         Item(ItemType::PitchWedge, 2,0,400, 0),
         Item(ItemType::PitchWedge, 2,1,510, 1),
         Item(ItemType::PitchWedge, 2,2,580, 2),

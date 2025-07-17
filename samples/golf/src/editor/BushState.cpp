@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -465,10 +465,11 @@ void BushState::createScene()
     auto camEnt = m_gameScene.getActiveCamera();
     updateView(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&BushState::updateView, this, std::placeholders::_1);
-    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(1024, 1024);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlagsThumbnail);
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(20.f);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(10.f);
+    camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 6.f });
 
 
@@ -692,7 +693,7 @@ void BushState::drawUI()
 
                     for (auto j = 1u; j < m_models.size(); ++j)
                     {
-                        auto primitiveType = m_sharedData.treeQuality == SharedStateData::High ? GL_POINTS : GL_TRIANGLES;
+                        auto primitiveType = m_sharedData.treeQuality == SharedStateData::TreeQuality::High ? GL_POINTS : GL_TRIANGLES;
 
                         m_models[j].getComponent<cro::Model>().setMaterial(i, m_materials[i].materials[m_materials[i].activeMaterial]);
                         m_models[j].getComponent<cro::Model>().getMeshData().indexData[i].primitiveType =
@@ -979,7 +980,7 @@ void BushState::loadPreset(const std::string& path)
         {
             for (auto i = 0u; i < m_materials.size(); ++i)
             {
-                auto primitiveType = m_sharedData.treeQuality == SharedStateData::High ? GL_POINTS : GL_TRIANGLES;
+                auto primitiveType = m_sharedData.treeQuality == SharedStateData::TreeQuality::High ? GL_POINTS : GL_TRIANGLES;
 
                 m_models[j].getComponent<cro::Model>().setMaterial(i, m_materials[i].materials[m_materials[i].activeMaterial]);
                 m_models[j].getComponent<cro::Model>().getMeshData().indexData[i].primitiveType =

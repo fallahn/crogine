@@ -461,6 +461,32 @@ void App::run(bool resetSettings)
                     Console::print("No Audio Devices Found");
                 }
             }, nullptr);
+
+        Console::addCommand("set_window_size", [&](const std::string& size)
+            {
+                const auto dims = cro::Util::String::tokenize(size, ' ');
+                if (dims.size() != 2)
+                {
+                    Console::print("Usage: set_window_size <x y>");
+                }
+
+                glm::uvec2 newSize(0);
+                try
+                {
+                    newSize.x = std::stoul(dims[0]);
+                }
+                catch (...) { Console::print(dims[0] + ": invalid X value"); }
+
+                try
+                {
+                    newSize.y = std::stoul(dims[1]);
+                }catch (...) { Console::print(dims[1] + ": invalid Y value"); }
+
+                if (newSize.x && newSize.y)
+                {
+                    m_window.setSize(newSize);
+                }
+            }, nullptr);
     }
     else
     {
@@ -790,6 +816,16 @@ void App::handleEvents()
             }
             break;
         case SDL_KEYUP:
+            if (evt.key.keysym.scancode == SDL_SCANCODE_GRAVE)
+            {
+                Console::show();
+                if (!Console::isVisible())
+                {
+                    saveSettings();
+                }
+                return;
+            }
+                
             switch (evt.key.keysym.sym)
             {
             default: break;
@@ -955,7 +991,7 @@ void App::handleMessages()
 void App::doImGui()
 {
     ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplSDL2_NewFrame(m_window.m_window);
+    ImGui_ImplSDL2_NewFrame(/*m_window.m_window*/);
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
 

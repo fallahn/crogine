@@ -40,13 +40,21 @@ static inline const std::string BillboardVertexShader = R"(
 
     ATTRIBUTE MED vec2 a_texCoord0;
 
+//shadow map renderer doesn't have a camera UBO
+#if defined(SHADOW_MAPPING)
+    uniform mat4 u_cameraViewMatrix;
+    uniform mat4 u_viewMatrix;
+    uniform mat4 u_projectionMatrix;
+    uniform vec4 u_clipPlane;
+    uniform vec3 u_cameraWorldPosition;
+
+    VARYING_OUT vec4 v_position;
+#else
 #include CAMERA_UBO
+#endif
     uniform mat4 u_worldMatrix;
     uniform sampler2D u_noiseTexture;
 
-#if defined(SHADOW_MAPPING)
-    uniform mat4 u_cameraViewMatrix;
-#endif
 
 
 #include WIND_BUFFER
@@ -159,7 +167,9 @@ static inline const std::string BillboardVertexShader = R"(
         vertPos.xyz *= vertPos.w;*/
 
         gl_Position = vertPos;
-
+#if defined(SHADOW_MAPPING)
+        v_position = vertPos;
+#endif
         v_texCoord0 = a_texCoord0;
 
 

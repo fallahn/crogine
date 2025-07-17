@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -45,15 +45,25 @@ static constexpr inline glm::vec3 BucketSpawnPosition = glm::vec3(BucketOffset, 
 static constexpr inline float MaxSpriteScale = 4.f; //when view scale returns this (~2kHD) sprites on the HUD are 1:1
 static constexpr inline cro::Colour SoapMeterColour = cro::Colour(0x0207ffff);// cro::Colour(0xadd9b7ff);
 
+//given the ubiquity of this IDK why I keep on redefining it
+struct InputType final
+{
+    enum
+    {
+        Keyboard, PS, XBox
+    };
+};
+
 //xbox
-static constexpr inline std::uint32_t ButtonLT = 0x2196;
-static constexpr inline std::uint32_t ButtonRT = 0x2197;
-static constexpr inline std::uint32_t ButtonLB = 0x2198;
-static constexpr inline std::uint32_t ButtonRB = 0x2199;
-static constexpr inline std::uint32_t ButtonX  = 0x21D0;
-static constexpr inline std::uint32_t ButtonY  = 0x21D1;
-static constexpr inline std::uint32_t ButtonB  = 0x21D2;
-static constexpr inline std::uint32_t ButtonA  = 0x21D3;
+static constexpr inline std::uint32_t ButtonLT    = 0x2196;
+static constexpr inline std::uint32_t ButtonRT    = 0x2197;
+static constexpr inline std::uint32_t ButtonLB    = 0x2198;
+static constexpr inline std::uint32_t ButtonRB    = 0x2199;
+static constexpr inline std::uint32_t ButtonX     = 0x21D0;
+static constexpr inline std::uint32_t ButtonY     = 0x21D1;
+static constexpr inline std::uint32_t ButtonB     = 0x21D2;
+static constexpr inline std::uint32_t ButtonA     = 0x21D3;
+static constexpr inline std::uint32_t ButtonStart = 0x21FB;
 
 
 //ps
@@ -65,8 +75,10 @@ static constexpr inline std::uint32_t ButtonSquare   = 0x21E0;
 static constexpr inline std::uint32_t ButtonTriangle = 0x21E1;
 static constexpr inline std::uint32_t ButtonCircle   = 0x21E2;
 static constexpr inline std::uint32_t ButtonCross    = 0x21E3;
+static constexpr inline std::uint32_t ButtonOption   = 0x21E8;
 
 
+static constexpr inline std::uint32_t LeftStick      = 0x21C4;
 static constexpr inline std::uint32_t RightStick     = 0x21C6;
 static constexpr inline std::uint32_t Warning        = 0x26A0;
 static constexpr inline std::uint32_t EmojiTerminate = 0xFE0F;
@@ -102,6 +114,7 @@ namespace sc
         {
             Title, Body,
 
+            SBTitle, SBBody,
             Count
         };
     };
@@ -121,6 +134,8 @@ namespace sc
         enum
         {
             Bubbles, Splash,
+
+            BallMatch,
 
             Count
         };

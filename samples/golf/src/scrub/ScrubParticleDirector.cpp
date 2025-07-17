@@ -28,7 +28,6 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ScrubParticleDirector.hpp"
-#include "ScrubConsts.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 

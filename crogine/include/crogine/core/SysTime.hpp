@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -56,6 +56,7 @@ namespace cro
             int minutes() const; //!< Minutes after the hour
             int hours() const; //!< Hours after midnight
             int days() const; //!< Day of the month
+            int weekDay() const; //!< Day of the week since Sunday
             int months() const; //!< Months of the year
             int year() const; //!< Current year
 

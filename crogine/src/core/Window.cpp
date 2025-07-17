@@ -215,12 +215,19 @@ void Window::close()
 glm::uvec2 Window::getSize() const
 {
     CRO_ASSERT(m_window, "window not created");
-    std::int32_t x, y;
 #ifdef PLATFORM_MOBILE
-    SDL_GL_GetDrawableSize(m_window, &x, &y);
+    return getScaledSize();
 #else
+    std::int32_t x, y;
     SDL_GetWindowSize(m_window, &x, &y);
+    return { x, y };
 #endif //PLATFORM_MOBILE
+}
+
+glm::uvec2 Window::getScaledSize() const
+{
+    std::int32_t x, y;
+    SDL_GL_GetDrawableSize(m_window, &x, &y);
     return { x, y };
 }
 
@@ -232,6 +239,7 @@ void Window::setSize(glm::uvec2 size)
     SDL_SetWindowSize(m_window, size.x, size.y);
     SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
+    //size = getScaledSize(); //RenderTarget::getView is incorrect for simple drawables elsewise
     setViewport({ 0, 0, static_cast<std::int32_t>(size.x), static_cast<std::int32_t>(size.y) });
     setView(FloatRect(getViewport()));
 
@@ -384,13 +392,14 @@ namespace
             threadData->loadingScreen->draw();
             SDL_GL_SwapWindow(threadData->window);
         }
+        threadData->loadingScreen->quit();
 
         SDL_GL_MakeCurrent(threadData->window, nullptr);
         return 0;
     }
 }
 
-void Window::loadResources(const std::function<void()>& loader)
+void Window::loadResources(const std::function<void()>& loader, bool threaded)
 {
     if (!m_loadingScreen)
     {
@@ -398,7 +407,7 @@ void Window::loadResources(const std::function<void()>& loader)
     }
 
 #ifdef PLATFORM_DESKTOP
-    //macs crashes with loading screens
+    //macs crash with loading screens
 #ifdef __APPLE__
     //if (m_fullscreen)
     {
@@ -416,25 +425,42 @@ void Window::loadResources(const std::function<void()>& loader)
     //else
     {
 
-    //create thread
-    ThreadData data;
-    data.context = m_threadContext;
-    data.window = m_window;
-    data.threadFlag.value = 0;
-    data.loadingScreen = m_loadingScreen.get();
+        if (threaded)
+        {
+            //create thread
+            ThreadData data;
+            data.context = m_threadContext;
+            data.window = m_window;
+            data.threadFlag.value = 0;
+            data.loadingScreen = m_loadingScreen.get();
 
-    SDL_Thread* thread = SDL_CreateThread(loadingDisplayFunc, "Loading Thread", static_cast<void*>(&data));
+            SDL_Thread* thread = SDL_CreateThread(loadingDisplayFunc, "Loading Thread", static_cast<void*>(&data));
 
-    loader();
-    glFinish(); //make sure to wait for gl stuff to finish before continuing
+            loader();
+            glFinish(); //make sure to wait for gl stuff to finish before continuing
 
-    SDL_AtomicIncRef(&data.threadFlag);
+            SDL_AtomicIncRef(&data.threadFlag);
 
-    std::int32_t result = 0;
-    SDL_WaitThread(thread, &result);
+            std::int32_t result = 0;
+            SDL_WaitThread(thread, &result);
 
-    //SDL_GL_MakeCurrent(m_window, m_mainContext);
+            //SDL_GL_MakeCurrent(m_window, m_mainContext);
+        }
+        else
+        {
+            //display once and rely on the loader() func to update the loading screen
+            m_loadingScreen->launch();
+            m_loadingScreen->update();
+            //glCheck(glClear(GL_COLOR_BUFFER_BIT));
+            clear();
+            m_loadingScreen->draw();
+            display();
+            //SDL_GL_SwapWindow(m_window);
 
+            loader();
+
+            m_loadingScreen->quit();
+        }
     }
 #endif
 #else
@@ -452,6 +478,16 @@ void Window::loadResources(const std::function<void()>& loader)
 #endif //PLATFORM_DESKTOP
 
     App::getInstance().resetFrameTime();
+}
+
+void Window::setLoadingProgress(float progress)
+{
+    if (m_loadingScreen)
+    {
+        //glCheck(glClear(GL_COLOR_BUFFER_BIT));
+        m_loadingScreen->setProgress(std::clamp(progress, 0.f, 1.f));
+        //SDL_GL_SwapWindow(m_window);
+    }
 }
 
 void Window::setMouseCaptured(bool captured)

@@ -41,6 +41,7 @@ namespace cro
     struct Callback;
     class UIInput;
     class Drawable2D;
+    class AudioEmitter;
 
     namespace Detail
     {
@@ -71,21 +72,27 @@ namespace cro
         };
 
         template <>
-        struct MaxPoolSize<cro::Callback> final
+        struct MaxPoolSize<cro::AudioEmitter> final
         {
             static constexpr std::size_t value = MinFreeIDs / 3;
+        };
+
+        template <>
+        struct MaxPoolSize<cro::Callback> final
+        {
+            static constexpr std::size_t value = MinFreeIDs / 2;
         };
 
         template <>
         struct MaxPoolSize<cro::UIInput> final
         {
-            static constexpr std::size_t value = MinFreeIDs / 3;
+            static constexpr std::size_t value = MinFreeIDs / 2;
         };
 
         template <>
         struct MaxPoolSize<cro::Drawable2D> final
         {
-            static constexpr std::size_t value = MinFreeIDs / 3;
+            static constexpr std::size_t value = MinFreeIDs / 2;
         };
 
         template <>

@@ -55,6 +55,7 @@ struct ClientCollider final
     std::uint8_t lie = 0; //0 buried, 1 sitting up
     bool active = false;
     bool nearHole = false;
+    bool hidden = false; //hidden in team mode
 };
 
 class ClientCollisionSystem final : public cro::System 

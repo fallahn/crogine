@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -176,6 +176,7 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
     m_viewScale         (2.f),
     m_shaderValueIndex  (0),
     m_zoomScale         (1.f),
+    m_transitionActive  (false),
     m_fingerCount       (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -189,6 +190,20 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
 //public
 bool MapOverviewState::handleEvent(const cro::Event& evt)
 {
+    const auto setControlIcon = [&](bool isController)
+        {
+            if (isController)
+            {
+                m_controlIcon.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                m_controlText.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+            else
+            {
+                m_controlIcon.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_controlText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            }
+        };
+
     if (ImGui::GetIO().WantCaptureKeyboard
         || ImGui::GetIO().WantCaptureMouse
         || m_rootNode.getComponent<cro::Callback>().active)
@@ -211,6 +226,10 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
                 m_shaderValueIndex = (m_shaderValueIndex + (m_shaderValues.size() - 1)) % m_shaderValues.size();
                 refreshMap();
             }
+            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
+            {
+                gotoTarget();
+            }
             break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
@@ -221,6 +240,8 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYDOWN)
     {
+        setControlIcon(false);
+
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -234,6 +255,8 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
+        setControlIcon(true);
+
         cro::App::getWindow().setMouseCaptured(true);
         switch (evt.cbutton.button)
         {
@@ -251,26 +274,39 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             m_shaderValueIndex = (m_shaderValueIndex + (m_shaderValues.size() - 1)) % m_shaderValues.size();
             refreshMap();
             break;
+        case cro::GameController::ButtonRightStick:
+            gotoTarget();
+            break;
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
     {
+        setControlIcon(false);
+
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             quitState();
             return false;
         }
+
+        /*else if (evt.button.button == SDL_BUTTON_MIDDLE)
+        {
+            gotoTarget();
+        }*/
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
         if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
+            setControlIcon(true);
             cro::App::getWindow().setMouseCaptured(true);
         }
         m_thumbsticks.setValue(evt.caxis.axis, evt.caxis.value);
     }
     else if (evt.type == SDL_CONTROLLERTOUCHPADDOWN)
     {
+        setControlIcon(true);
+
         m_fingerCount++;
         if (evt.ctouchpad.finger < MaxFingers)
         {
@@ -291,6 +327,8 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERTOUCHPADMOTION)
     {
+        setControlIcon(true);
+
         if (evt.ctouchpad.finger < MaxFingers)
         {
             glm::vec2 pos({ evt.ctouchpad.x, 1.f - evt.ctouchpad.y });
@@ -300,8 +338,10 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEMOTION)
     {
+        setControlIcon(false);
+
         cro::App::getWindow().setMouseCaptured(false);
-        if (evt.motion.state & SDL_BUTTON_MIDDLE)
+        if (evt.motion.state & (SDL_BUTTON_MIDDLE | SDL_BUTTON_LEFT))
         {
             const float Scale = 1.f / m_mapEnt.getComponent<cro::Transform>().getScale().x;
 
@@ -315,6 +355,8 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEWHEEL)
     {
+        setControlIcon(false);
+
         const auto amount = evt.wheel.preciseY;
         m_zoomScale = std::clamp(m_zoomScale + amount, MinZoom, MaxZoom);
         rescaleMap();
@@ -642,12 +684,12 @@ void MapOverviewState::buildScene()
 
     //menu background
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/overview_controls.spt", m_sharedData.sharedResources->textures);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 1.6f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_sharedData.sharedResources->textures.get("assets/golf/images/overview.png"));
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
     entity.addComponent<UIElement>().relativePosition = {0.f, -0.49f };
@@ -656,7 +698,7 @@ void MapOverviewState::buildScene()
     auto bgNode = entity;
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), 56.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
@@ -667,14 +709,89 @@ void MapOverviewState::buildScene()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_mapText = entity;
 
+
+    //displays the zoom control
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 1.6f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("control_label");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<UIElement>().relativePosition = { -0.5f, 0.5f };
+    entity.getComponent<UIElement>().absolutePosition = { 16.f, -(bounds.height + 16.f) };
+    entity.getComponent<UIElement>().depth = 0.6f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    bgNode = entity;
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 18.f, 8.f, 0.1f });
+    //entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("controller");
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_controlIcon = entity;
+
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 36.f, 23.f, 0.1f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Hello");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (e.getComponent<cro::Transform>().getScale().x != 0)
+            {
+                const auto str = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]);
+                e.getComponent<cro::Text>().setString(str);
+            }
+        };
+    bgNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
+    m_controlText = entity;
+
+
     //draws the slope based on normals
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.3f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);
     entity.getComponent<cro::Drawable2D>().setShader(&m_slopeShader);
 
     m_mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_mapNormals = entity;
+
+
+    //marks approx landing area of ball
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_FAN);
+    entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Alpha);
+
+    std::vector<cro::Vertex2D> verts;
+    auto colour = TextGoldColour;
+    colour.setAlpha(0.5f);
+    verts.emplace_back(glm::vec2(0.f), colour);
+    colour.setAlpha(0.1f);
+    static constexpr float Radius = 120.f;
+    static constexpr float PointCount = 32.f;
+    static constexpr float ArcSize = cro::Util::Const::TAU / PointCount;
+
+    //for (auto i = PointCount; i >= 0; i--)
+    for (auto i = 0.f; i < PointCount + 1; i++)
+    {
+        auto p = glm::vec2(glm::cos(i * ArcSize), glm::sin(i * ArcSize)) * Radius;
+        verts.emplace_back(p, colour);
+    }
+    verts.push_back(verts.front());   
+
+    entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+    m_mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_ballLandingArea = entity;
+
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
@@ -725,20 +842,20 @@ void MapOverviewState::quitState()
 
 void MapOverviewState::recentreMap()
 {
-    glm::vec2 windowSize(cro::App::getWindow().getSize());
-    glm::vec2 mapSize(m_renderBuffer.getSize());
+    const glm::vec2 windowSize(cro::App::getWindow().getSize());
+    const auto centre = toMapCoords(m_sharedData.minimapData.mapCentre);
 
-    m_mapEnt.getComponent<cro::Transform>().setOrigin(mapSize / 2.f);
-    m_mapEnt.getComponent<cro::Transform>().setScale((glm::vec2(windowSize.x / mapSize.x) / m_viewScale.x) * BaseScaleMultiplier);
+    m_mapEnt.getComponent<cro::Transform>().setOrigin(centre);
+    m_mapEnt.getComponent<cro::Transform>().setScale((glm::vec2(windowSize.x / std::round(centre.x * 2.f)) / m_viewScale.x) * BaseScaleMultiplier);
     m_zoomScale = 1.f;
 }
 
 void MapOverviewState::rescaleMap()
 {
-    glm::vec2 windowSize(cro::App::getWindow().getSize());
-    glm::vec2 mapSize(m_renderBuffer.getSize());
+    const glm::vec2 windowSize(cro::App::getWindow().getSize());
+    const auto mapSize = toMapCoords(m_sharedData.minimapData.mapCentre) * 2.f;
 
-    const float baseScale = ((windowSize.x / mapSize.x) / m_viewScale.x) * BaseScaleMultiplier;
+    const float baseScale = ((windowSize.x / std::round(mapSize.x)) / m_viewScale.x) * BaseScaleMultiplier;
     m_mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(baseScale * m_zoomScale));
 
     refreshMap();
@@ -768,13 +885,10 @@ void MapOverviewState::refreshMap()
     glUniform1f(m_shaderUniforms.heatAmount, m_shaderValues[m_shaderValueIndex].second);
     glUniform1f(m_shaderUniforms.gridScale, /*std::ceil(m_zoomScale / 4.f)*/std::round(m_zoomScale));
 
-    const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MapSize.x;
 
-    glm::vec2 teePos = 
-    {
-        std::round(m_sharedData.minimapData.teePos.x),
-        std::round(-m_sharedData.minimapData.teePos.z)
-    };
+
+    const glm::vec2 teePos = toMapCoords(m_sharedData.minimapData.teePos);
+
     //glm::vec2 pinPos =
     //{
     //    std::round(m_sharedData.minimapData.pinPos.x),
@@ -789,9 +903,9 @@ void MapOverviewState::refreshMap()
     m_renderBuffer.clear(cro::Colour::Transparent);
     m_mapQuad.draw();
     m_mapString.setString("T");
-    m_mapString.setPosition(teePos * MapScale);
+    m_mapString.setPosition(teePos);
     m_mapString.draw();
-    //
+    
     //m_mapString.setString("P");
     //m_mapString.setPosition(pinPos * MapScale);
     //m_mapString.draw();
@@ -857,6 +971,11 @@ void MapOverviewState::updateNormals()
     m_mapNormals.getComponent<cro::Drawable2D>().setVertexData(verts);
 }
 
+void MapOverviewState::onCachedPush()
+{
+    m_ballLandingArea.getComponent<cro::Transform>().setPosition(toMapCoords(m_sharedData.minimapData.targetPos));
+}
+
 void MapOverviewState::pan(glm::vec2 movement)
 {
     auto position = m_mapEnt.getComponent<cro::Transform>().getOrigin();
@@ -865,10 +984,73 @@ void MapOverviewState::pan(glm::vec2 movement)
     position.x = std::floor(position.x);
     position.y = std::floor(position.y);
 
-    glm::vec2 bounds(m_renderBuffer.getSize());
+    const glm::vec2 bounds(m_renderBuffer.getSize());
 
     position.x = std::clamp(position.x, 0.f, bounds.x);
     position.y = std::clamp(position.y, 0.f, bounds.y);
 
     m_mapEnt.getComponent<cro::Transform>().setOrigin(position);
+}
+
+glm::vec2 MapOverviewState::toMapCoords(glm::vec3 pos)
+{
+    const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MapSize.x;
+
+    glm::vec2 ret
+    {
+        std::round(pos.x),
+        std::round(-pos.z)
+    };
+
+    return ret * MapScale;
+}
+
+void MapOverviewState::gotoTarget()
+{
+    //check if transition exists and skip this
+    if (m_transitionActive)
+    {
+        return;
+    }
+
+    const auto startPos = glm::vec2(m_mapEnt.getComponent<cro::Transform>().getOrigin());
+    auto endPos = toMapCoords(m_sharedData.minimapData.targetPos);
+    const glm::vec2 bounds(m_renderBuffer.getSize());
+
+    endPos.x = std::clamp(endPos.x, 0.f, bounds.x);
+    endPos.y = std::clamp(endPos.y, 0.f, bounds.y);
+
+    const auto startZ = m_zoomScale;
+
+    cro::Entity entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, startPos, endPos, startZ](cro::Entity e, float dt)
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct = std::min(1.f, ct + dt);
+
+            const auto progress = cro::Util::Easing::easeOutQuint(ct);
+
+            m_mapEnt.getComponent<cro::Transform>().setOrigin(glm::mix(startPos, endPos, progress));
+
+            if (startZ < MaxZoom)
+            {
+                m_zoomScale = glm::mix(startZ, MaxZoom, progress);
+                rescaleMap();
+            }
+
+
+            if (ct == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_scene.destroyEntity(e);
+
+                m_transitionActive = false;
+            }
+        };
+
+
+    m_transitionActive = true;
 }

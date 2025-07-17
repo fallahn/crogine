@@ -73,6 +73,10 @@ LobbyState::LobbyState(SharedData& sd)
 {
     LOG("Entered Server Lobby State", cro::Logger::Type::Info);
 
+    sd.snekEnabled = false;
+    sd.snekClient = ConstVal::NullValue;
+    sd.snekPlayer = ConstVal::NullValue;
+
     //this is client readyness to receive map data
     for (auto& c : sd.clients)
     {
@@ -111,6 +115,40 @@ void LobbyState::netEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default:break;
+        case PacketID::TeamData:
+        {
+            const auto data = evt.packet.as<TeamData>();
+            if (data.client < ConstVal::MaxClients
+                && data.player < ConstVal::MaxPlayers)
+            {
+                //LogI << "[server] Set Team " << data.index << " for " << data.client << ", " << data.player << std::endl;
+                m_sharedData.clients[data.client].playerData[data.player].teamIndex = data.index;
+                m_sharedData.host.broadcastPacket<TeamData>(PacketID::TeamData, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+        }
+            break;
+        case PacketID::RuleMod:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                const std::uint16_t data = evt.packet.as<std::uint16_t>();
+                const auto rule = (data & 0xff00) >> 8;
+                const auto value = data & 0x00ff;
+
+                if (rule == RuleMod::Snek)
+                {
+                    m_sharedData.snekEnabled = value;
+                }
+                else if (rule == RuleMod::BigBalls)
+                {
+                    m_sharedData.bigBalls = value;
+                }
+
+                m_sharedData.host.broadcastPacket(PacketID::RuleMod, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
+        case PacketID::DisplayList:
+            m_sharedData.host.broadcastPacket(PacketID::DisplayList, evt.packet.as<DisplayList>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            break;
         case PacketID::CoinSpawn:
             spawnCoin(evt.packet.as<float>(), evt.peer.getID());
             break;
@@ -121,7 +159,7 @@ void LobbyState::netEvent(const net::NetEvent& evt)
             insertPlayerInfo(evt);
             break;
         case PacketID::NewLobbyReady:
-            m_sharedData.host.broadcastPacket(PacketID::NewLobbyReady, evt.packet.as<std::uint64_t>(), net::NetFlag::Reliable);
+            m_sharedData.host.broadcastPacket(PacketID::NewLobbyReady, evt.packet.as<std::uint64_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
         case PacketID::LobbyReady:
         {
@@ -211,6 +249,13 @@ void LobbyState::netEvent(const net::NetEvent& evt)
             {
                 std::uint8_t v = evt.packet.as<std::uint8_t>();
                 m_sharedData.maxWind = v;
+            }
+            break;
+        case PacketID::TeamMode:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.teamMode = std::clamp(evt.packet.as<std::int32_t>(), 0, 1);
+                m_sharedData.host.broadcastPacket(PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             break;
         case PacketID::GroupMode:
@@ -360,6 +405,7 @@ void LobbyState::broadcastRules()
     m_sharedData.host.broadcastPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::FastCPU, m_sharedData.fastCPU, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket(PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
 
     //check for can and do a delayed spawn

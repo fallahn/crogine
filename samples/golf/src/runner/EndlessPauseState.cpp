@@ -62,11 +62,18 @@ EndlessPauseState::EndlessPauseState(cro::StateStack& stack, cro::State::Context
     m_sharedGameData(esd),
     m_uiScene       (context.appInstance.getMessageBus())
 {
-    context.mainWindow.loadResources([this]() {
+    /*context.mainWindow.loadResources([&]() {
+        context.mainWindow.setLoadingProgress(0.f);
         addSystems();
+        context.mainWindow.setLoadingProgress(0.3f);
         loadAssets();
+        context.mainWindow.setLoadingProgress(0.6f);
         createUI();
-    });
+        context.mainWindow.setLoadingProgress(1.f);
+    });*/
+    addSystems();
+    loadAssets();
+    createUI();
 }
 
 //public

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -142,7 +142,7 @@ namespace cro
         glm::vec3 getPosition() const { return m_position; }
         glm::quat getRotation() const { return m_rotation; }
         glm::vec3 getScale() const { return m_scale; }
-        const glm::mat4& getLocalTransform() const { return m_transform; }
+        const glm::mat4& getLocalTransform() const;
         const std::string& getName() const { return m_name; }
 
         static constexpr std::size_t MaxNameLength = 30;
@@ -153,11 +153,14 @@ namespace cro
         glm::vec3 m_position = glm::vec3(0.f);
         glm::quat m_rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
         glm::vec3 m_scale = glm::vec3(1.f);
-        glm::mat4 m_transform = glm::mat4(1.f);
-
         std::string m_name = "Attachment";
+        
+        //mutable to allow for dirty optimisation
+        mutable glm::mat4 m_transform = glm::mat4(1.f);
+        mutable bool m_dirtyTx = true;
 
-        void updateLocalTransform();
+
+        void updateLocalTransform() const;
     };
 
     /*!
@@ -178,9 +181,10 @@ namespace cro
         \param idx Index of the animation to play
         \param rate A speed multiplier at which to play the animation eg 1 is normal speed
         \param blendTime time in seconds to blend / overlap the new animation
+        \param startFromBeginning Restart the animation from the beginning if idx is the same as the current animation
         with any previously playing animation
         */
-        void play(std::size_t idx, float rate = 1.f, float blendingTime = 0.1f);
+        void play(std::size_t idx, float rate = 1.f, float blendingTime = 0.1f, bool startFromBeginning = true);
 
         /*!
         \brief Steps the current animation to the previous frame if it is not playing
@@ -241,7 +245,7 @@ namespace cro
         If an animation with the name already exists then it is overwritten!
         \param source The skeleton component to copy from
         \param idx The index of the animation to copy. If this is out of range nothing is copied
-        Note that animations in this compnent will be re-indexed so existing indices will be invalid
+        Note that animations in this component will be re-indexed so existing indices will be invalid
         \returns true on success else returns false
         */
         bool addAnimation(const Skeleton& source, std::size_t idx);
@@ -281,6 +285,11 @@ namespace cro
         \brief Returns the current, normalised, time between frames
         */
         float getCurrentFrameTime() const;
+
+        /*!
+        \brief Returns the normalised progress through the current animation
+        */
+        float getAnimationProgress() const;
 
         operator bool() const
         {

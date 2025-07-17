@@ -112,7 +112,7 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     static const std::vector<ImWchar> rangesA = { 0x1, /*0xFFFF*/0xe004, 0 }; //TODO what's the third number? Plane? Terminator?
     
     const auto rp = cro::FileSystem::getResourcePath();
-    fonts->AddFontFromFileTTF((rp + "assets/golf/fonts/ProggyClean.ttf").c_str(), 13.f, &config, rangesA.data());
+    auto* defaultFont = fonts->AddFontFromFileTTF((rp + "assets/golf/fonts/ProggyClean.ttf").c_str(), 13.f, &config, rangesA.data());
     fonts->AddFontFromFileTTF((rp + "assets/golf/fonts/NotoSans-Regular.ttf").c_str(), 10.f, &config, fonts->GetGlyphRangesCyrillic());
     fonts->AddFontFromFileTTF((rp + "assets/golf/fonts/NotoSans-Regular.ttf").c_str(), 10.f, &config, fonts->GetGlyphRangesGreek());
     fonts->AddFontFromFileTTF((rp + "assets/golf/fonts/NotoSans-Regular.ttf").c_str(), 10.f, &config, fonts->GetGlyphRangesVietnamese());
@@ -127,24 +127,46 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     static const std::vector<ImWchar> rangesB = { 0x231a, 0x23fe, 0x256d, 0x2bd1, 0x10000, 0x10FFFF, 0 };
     ImFontConfig configB;
     configB.FontBuilderFlags |= (1 << 8) | (1 << 9);
+
+    std::string emojiFontPath = "C:/Windows/Fonts/seguiemj.ttf";
 #ifdef _WIN32
-    const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
     //const std::string winPath = "assets/golf/fonts/TwemojiCOLRv0.ttf";
-    if (cro::FileSystem::fileExists(winPath))
+    if (cro::FileSystem::fileExists(emojiFontPath))
     {
-        fonts->AddFontFromFileTTF(winPath.c_str(), 10.f, &config, rangesB.data());// ->Scale = 0.5f;
-        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(winPath.c_str(), 32.f, &configB, rangesB.data());
+        fonts->AddFontFromFileTTF(emojiFontPath.c_str(), 10.f, &config, rangesB.data());// ->Scale = 0.5f;
+        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(emojiFontPath.c_str(), 32.f, &configB, rangesB.data());
         sd.chatFonts.buttonHeight = 22.f;
     }
     else
 #endif
     {
-        const std::string path = "assets/golf/fonts/TwemojiCOLRv0.ttf";
+        emojiFontPath = rp + "assets/golf/fonts/TwemojiCOLRv0.ttf";
         //const std::string path = "assets/golf/fonts/NotoEmoji-Regular.ttf";
-        fonts->AddFontFromFileTTF((rp + path).c_str(), 10.f, &config, rangesB.data());
-        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF((rp + path).c_str(), 32.0f, &configB, rangesB.data());
+        fonts->AddFontFromFileTTF(emojiFontPath.c_str(), 10.f, &config, rangesB.data());
+        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(emojiFontPath.c_str(), 32.0f, &configB, rangesB.data());
         sd.chatFonts.buttonHeight = 24.f;// 30.f;
     }
+
+    //fonts used in help screen
+    ImFontConfig configC;
+    configC.FontBuilderFlags |= (1 << 8) | (1 << 9);
+
+    const std::string helpFontPath = rp + "assets/golf/fonts/NotoSans-Regular.ttf";
+
+    sd.helpFonts[0] = defaultFont;/* fonts->AddFontFromFileTTF(helpFontPath.c_str(), 12.f, &configC);
+    configC.MergeMode = true;
+    fonts->AddFontFromFileTTF(emojiFontPath.c_str(), 12.f, &configC, rangesB.data());
+    configC.MergeMode = false;*/
+
+    sd.helpFonts[1] = fonts->AddFontFromFileTTF(helpFontPath.c_str(), 24.f, &configC);
+    configC.MergeMode = true;
+    fonts->AddFontFromFileTTF(emojiFontPath.c_str(), 24.f, &configC, rangesB.data());
+    configC.MergeMode = false;
+
+    sd.helpFonts[2] = fonts->AddFontFromFileTTF(helpFontPath.c_str(), 48.f, &configC);
+    configC.MergeMode = true;
+    fonts->AddFontFromFileTTF(emojiFontPath.c_str(), 48.f, &configC, rangesB.data());
+    configC.MergeMode = false;
 
     fonts->Build();
 }

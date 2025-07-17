@@ -31,6 +31,8 @@ source distribution.
 #include "GameConsts.hpp"
 #include "HoleData.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -91,17 +93,21 @@ namespace
         void main(){FRAG_OUT = vec4(1.0);}
         )";
 
+    bool isDeck = false;
 }
 
 TerrainDepthmap::TerrainDepthmap()
     : m_gridIndex   (0),
     m_srcTexture    (0),
-    m_dstTexture    (1),
+    //m_dstTexture    (1),
     m_scene         (cro::App::getInstance().getMessageBus())
 {
+    isDeck = Social::isSteamdeck();
+    const auto size = isDeck ? 1 : TextureSize;
+
     for (auto& texture : m_textures)
     {
-        if (!texture.create(TextureSize, TextureSize, TextureCount))
+        if (!texture.create(size, size, TextureCount))
         {
             LogE << "Unable to create requested depth texture" << std::endl;
         }
@@ -113,6 +119,11 @@ TerrainDepthmap::TerrainDepthmap()
 //public
 void TerrainDepthmap::setModel(const HoleData& holeData)
 {
+    if (isDeck)
+    {
+        return;
+    }
+
     //handle cases where images don't match map size
     cro::Image img(true);
     img.loadFromFile(holeData.mapPath);
@@ -133,11 +144,16 @@ void TerrainDepthmap::setModel(const HoleData& holeData)
     m_holeEnt.addComponent<cro::Model>(meshData, m_holeMaterial);
 
     m_gridIndex = 0;
-    std::swap(m_srcTexture, m_dstTexture);
+    //std::swap(m_srcTexture, m_dstTexture);
 }
 
 void TerrainDepthmap::update(std::int32_t count)
 {
+    if (isDeck)
+    {
+        return;
+    }
+
     if (count == -1)
     {
         count = TextureCount;
@@ -152,9 +168,11 @@ void TerrainDepthmap::update(std::int32_t count)
         //we need to update the scene to make sure camera settings are updated
         m_scene.simulate(0.1f);
 
-        m_textures[m_dstTexture].clear(m_gridIndex);
+        m_textures[m_srcTexture].clear(m_gridIndex);
+       // m_textures[m_dstTexture].clear(m_gridIndex);
         m_scene.render();
-        m_textures[m_dstTexture].display();
+        m_textures[m_srcTexture].display();
+        //m_textures[m_dstTexture].display();
     }
 }
 
@@ -190,6 +208,16 @@ std::int32_t TerrainDepthmap::getMetresPerTile() const
 //private
 void TerrainDepthmap::buildScene()
 {
+    if (isDeck)
+    {
+        for (auto i = 0u; i < TextureCount; ++i)
+        {
+            m_textures[m_srcTexture].clear(i);
+            m_textures[m_srcTexture].display();
+        }
+        return;
+    }
+
     static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
     m_shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
 

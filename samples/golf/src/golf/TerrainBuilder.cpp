@@ -68,6 +68,7 @@ namespace
 {
 #include "shaders/TerrainShader.inl"
 #include "shaders/CelShader.inl"
+#include "shaders/ShadowMapping.inl"
 
     constexpr glm::vec2 ChunkSize(static_cast<float>(MapSize.x) / ChunkVisSystem::ColCount, static_cast<float>(MapSize.y) / ChunkVisSystem::RowCount);
 
@@ -266,6 +267,11 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         wobble = "#define WOBBLE\n";
     }
 
+    if (m_sharedData.shadowQuality == SharedStateData::ShadowQuality::Classic)
+    {
+        wobble += "#define CLASSIC_SHADOWS\n";
+    }
+
     resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define RX_SHADOWS\n#define ADD_NOISE\n#define TERRAIN\n#define TERRAIN_CLIP\n" + wobble);
     const auto& shader = resources.shaders.get(ShaderID::Terrain);
     m_terrainProperties.morphUniform = shader.getUniformID("u_morphTime");
@@ -278,6 +284,16 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     terrainMat.setProperty("u_noiseColour", theme.grassTint);
     terrainMat.addCustomSetting(GL_CLIP_DISTANCE1);
 
+    //we still have to write to shadow map to receive shadows...
+    resources.shaders.loadFromString(ShaderID::TerrainShadow, TerrainVertexShader, ShadowFragment, "#define SHADOW_MAPPING\n#define TERRAIN\n" + wobble);
+    auto& shadowShader = resources.shaders.get(ShaderID::TerrainShadow);
+    m_terrainProperties.morphUniformShadow = shadowShader.getUniformID("u_morphTime");
+    m_terrainProperties.shaderIDShadow = shadowShader.getGLHandle();
+    materialID = resources.materials.add(shadowShader);
+    auto terrainShadowMat = resources.materials.get(materialID);
+    terrainShadowMat.addCustomSetting(GL_CLIP_DISTANCE1);
+
+
     auto entity = scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, TerrainLevel, 0.f });
     entity.addComponent<cro::Callback>().function =
@@ -286,6 +302,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         m_terrainProperties.morphTime = std::min(1.f, m_terrainProperties.morphTime + dt);
         glCheck(glUseProgram(m_terrainProperties.shaderID));
         glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
+        glCheck(glUseProgram(m_terrainProperties.shaderIDShadow));
+        glCheck(glUniform1f(m_terrainProperties.morphUniformShadow, m_terrainProperties.morphTime));
 
         if (m_terrainProperties.morphTime == 1)
         {
@@ -293,7 +311,9 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         }
     };
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), terrainMat);
+    entity.getComponent<cro::Model>().setShadowMaterial(0, terrainShadowMat);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
+    entity.addComponent<cro::ShadowCaster>();
 
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
     meshData->vertexCount = static_cast<std::uint32_t>(m_terrainBuffer.size());
@@ -489,7 +509,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
                     material = resources.materials.get(leafShadowMaterialID);
-                    if (m_sharedData.hqShadows)
+                    if (m_sharedData.shadowQuality)
                     {
                         material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
                         material.setProperty("u_noiseTexture", noiseTex);
@@ -616,7 +636,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::SlopeIndicator;
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen | RenderFlags::FlightCam | RenderFlags::Reflection));
     entity.getComponent<cro::Model>().setHidden(true);
     entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
     entity.getComponent<cro::Callback>().function =
@@ -783,6 +803,8 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
             m_terrainProperties.morphTime = 0.f;
             glCheck(glUseProgram(m_terrainProperties.shaderID));
             glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
+            glCheck(glUseProgram(m_terrainProperties.shaderIDShadow));
+            glCheck(glUniform1f(m_terrainProperties.morphUniformShadow, m_terrainProperties.morphTime));
             //terrain callback is set active when shrubbery callback switches
         }
         //upload the slope buffer data - this might be different even if the hole model is the same
@@ -827,7 +849,7 @@ void TerrainBuilder::applyTreeQuality()
     std::uint64_t hqFlags = 0;
     std::uint64_t bbFlags = RenderFlags::FlightCam | RenderFlags::Main | RenderFlags::Reflection;
 
-    if (m_sharedData.treeQuality == SharedStateData::High)
+    if (m_sharedData.treeQuality == SharedStateData::TreeQuality::High)
     {
         hqFlags = RenderFlags::Main | RenderFlags::Reflection;
         bbFlags = RenderFlags::FlightCam;
@@ -867,10 +889,17 @@ void TerrainBuilder::applyCrowdDensity()
 
     for (auto i = 0u; i < m_crowdEntities[crowdIndex].size(); ++i)
     {
-        if (m_crowdEntities[crowdIndex][i].isValid()
-            && !positions[i].empty())
+        if (m_crowdEntities[crowdIndex][i].isValid())
         {
-            m_crowdEntities[crowdIndex][i].getComponent<cro::Model>().setInstanceTransforms(positions[i]);
+            if (!positions[i].empty())
+            {
+                m_crowdEntities[crowdIndex][i].getComponent<cro::Model>().setInstanceTransforms(positions[i]);
+                m_crowdEntities[crowdIndex][i].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+            }
+            else
+            {
+                m_crowdEntities[crowdIndex][i].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+            }
         }
     }
 }

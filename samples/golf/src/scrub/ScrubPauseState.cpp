@@ -49,9 +49,8 @@ source distribution.
 
 #include <crogine/graphics/Font.hpp>
 
-ScrubPauseState::ScrubPauseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedScrubData& sc)
+ScrubPauseState::ScrubPauseState(cro::StateStack& ss, cro::State::Context ctx, SharedMinigameData& sc)
     : cro::State        (ss, ctx),
-    m_sharedData        (sd),
     m_sharedScrubData   (sc),
     m_uiScene           (ctx.appInstance.getMessageBus()),
     m_controllerIndex   (0)
@@ -67,6 +66,10 @@ bool ScrubPauseState::handleEvent(const cro::Event& evt)
         {
             requestStackPop();
             requestStackPop();
+
+            //game background states detect this via message
+            //and push their own attract state so we can
+            //recycle the pause state in multple games
         };
 
     if (evt.type == SDL_KEYDOWN)

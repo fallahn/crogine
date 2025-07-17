@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -79,11 +79,14 @@ struct TextAnimCallback final
 //used to animate text on menus (see paused/practice selection)
 struct MenuTextCallback final
 {
+    const float baseScale = 1.f;
+    explicit MenuTextCallback(float bs = 1.f) : baseScale(bs) {}
+
     void operator() (cro::Entity e, float dt)
     {
         data = std::min(1.f, data + (dt * 2.5f));
 
-        float scale = 1.f + (0.2f * (1.f - cro::Util::Easing::easeOutElastic(data)));
+        const float scale = (1.f + (0.2f * (1.f - cro::Util::Easing::easeOutElastic(data)))) * baseScale;
         e.getComponent<cro::Transform>().setScale({ scale, scale });
 
         if (data == 1)

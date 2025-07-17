@@ -41,6 +41,7 @@ source distribution.
 #include "MenuCallbacks.hpp"
 #include "TextChat.hpp"
 #include "VoiceChat.hpp"
+#include "HoleData.hpp"
 
 #include <MatchMaking.hpp>
 
@@ -59,7 +60,7 @@ source distribution.
 #include <crogine/graphics/VideoPlayer.hpp>
 
 #include <array>
-#include <deque>
+#include <queue>
 #include <unordered_map>
 
 static const std::uint32_t BallRenderFlags = (1 << 22);
@@ -124,12 +125,13 @@ private:
         std::vector<std::uint32_t> avatars;
     }m_cosmeticIDs;
 
-    std::deque<cro::String> m_printQueue;
+    std::queue<std::pair<cro::String, cro::Colour>> m_printQueue;
     cro::Clock m_printTimer;
     TextChat m_textChat;
     VoiceChat m_voiceChat;
     MatchMaking m_matchMaking;
     cro::ResourceCollection m_resources;
+    void playMessageSound();
 
     TimeOfDay m_tod;
     cro::RenderTexture m_lightProjectionMap;
@@ -159,6 +161,7 @@ private:
         enum
         {
             Ball,
+            BallBumped,
             BallSkinned,
             Cel,
             CelTextured,
@@ -185,6 +188,11 @@ private:
     cro::UniformBuffer<WindData> m_windBuffer;
 
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
+    std::vector<Team::Player> m_displayOrder; //allows changing the display order of players, which in turn assigns teams
+    std::size_t m_selectedDisplayMember;
+    void moveDisplayMemberUp();
+    void moveDisplayMemberDown();
+    void refreshDisplayMembers();
 
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
     float m_lobbyExpansion; //how much the lobby menu has been stretched to fill the screen in total
@@ -335,7 +343,7 @@ private:
     std::int32_t m_currentRange = Range::Official;
     std::array<Range, Range::Count> m_courseIndices = {};
 
-    void parseCourseDirectory(const std::string&, bool isUser);
+    void parseCourseDirectory(const std::string&, bool isUser, bool appendToRange = false);
 
     cro::Entity m_toolTip;
     void createToolTip();
@@ -436,8 +444,12 @@ private:
     bool applyTextEdit(); //returns true if this consumed event
     void updateLobbyData(const net::NetEvent&);
     void updateRemoteContent(const ConnectionData&);
+    
+    std::int32_t m_avUpdateCount = 0; //TODO test this properly and move to init list
+    std::queue<cro::Command> m_lobbyUpdateBuffer;
     void updateLobbyAvatars();
     void updateLobbyList();
+    void refreshTeams();
     void quitLobby();
     void addCourseSelectButtons();
     void prevRules();
@@ -447,7 +459,7 @@ private:
     void prevCourse();
     void nextCourse();
     void refreshUI();
-    void updateCourseRuleString(bool updateScoreboard );
+    void updateCourseRuleString(bool updateScoreboard);
     void updateUnlockedItems();
 
     void createPreviousScoreCard();

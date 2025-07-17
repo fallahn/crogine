@@ -30,8 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
-#include "PlayerData.hpp"
-#include "PlayerAvatar.hpp"
+#include "SharedProfileData.hpp"
 #include "CommonConsts.hpp"
 #include "MenuConsts.hpp"
 
@@ -56,6 +55,7 @@ struct BallPreview final
     cro::Entity ball;
 
     std::int32_t type = 0;
+    std::int32_t infoIndex = -1;
 };
 
 struct AvatarPreview final
@@ -93,8 +93,12 @@ private:
     SharedStateData& m_sharedData;
     SharedProfileData& m_profileData;
 
-    PlayerData m_activeProfile;
+    SharedProfileData::LocalProfile m_activeProfile;
     cro::String m_previousName; //so we can restore if we cancel an edit
+
+    //compare the previous inventory and only rebuild the menu if
+    //the player bought or sold something previously
+    std::array<std::int32_t, inv::MaxItems> m_previousInv = {};
 
     cro::RenderTexture m_avatarTexture;
     cro::RenderTexture m_ballTexture;
@@ -107,7 +111,7 @@ private:
         enum
         {
             Accept, Back, Select, Snap,
-
+            Nope,
             Count
         };
     };
@@ -126,10 +130,10 @@ private:
 
             BallBrowser,
             HairBrowser,
-            ClubBrowser,
+            ClubBrowser, GearEditor,
             HairEditor, HairHelp, 
             HairPreview, HairColourPreview,
-            SpeechEditor,
+            SpeechEditor, ClubPreview,
 
             Count
         };
@@ -164,12 +168,12 @@ private:
     struct ClubData final
     {
         std::uint32_t uid = 0;
+        std::int32_t man = -1;
         std::string name;
         std::string thumbnail;
         bool userItem = false;
     };
     std::vector<ClubData> m_clubData;
-    cro::Entity m_clubText;
 
     struct PaletteID final
     {
@@ -249,12 +253,14 @@ private:
     std::size_t m_voiceIndex;
     void playPreviewAudio();
 
+
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);
     void createHairEditor(cro::Entity, const CallbackContext&);
+    void createLoadoutEditor(cro::Entity, const CallbackContext&);
     void createSpeechEditor(cro::Entity, const CallbackContext&);
     void createClubBrowser(cro::Entity, const CallbackContext&);
-    cro::FloatRect getHeadwearTextureRect(std::size_t);
+    cro::FloatRect getThumbnailTextureRect(std::size_t);
     std::size_t fetchUIIndexFromColour(std::uint8_t colourIndex, std::int32_t paletteIndex);
     std::pair<cro::Entity, cro::Entity> createBrowserBackground(std::int32_t, const CallbackContext&);
 
@@ -313,6 +319,52 @@ private:
     void refreshNameString();
     void refreshSwatch();
     void refreshBio();
+
+    void onCachedPush() override;
+
+    struct GearID final
+    {
+        enum
+        {
+            Driver, ThreeW, FiveW, FourI,
+            FiveI, SixI, SevenI, EightI,
+            NineI, PitchWedge, GapWedge,
+            SandWedge, Balls,
+
+            Count
+        };
+    };
+
+    struct GearMenu final
+    {
+        cro::Entity background;
+        cro::Entity description;
+
+        //track the menu expansion so we know how must to restore before dynamically resizing it
+        float previousExpansion = 0.f;
+        std::vector<cro::Entity> items;
+    };
+
+    std::uint32_t m_itemSelected;
+    std::uint32_t m_itemUnselected;
+
+    std::uint32_t m_gearIndex; //last selected button so we can return to it
+    std::array<GearMenu, GearID::Count> m_gearMenus = {};
+    void refreshItemLists();
+    
+    void refreshItemDescription(std::uint32_t);
+
+    struct StatBar final
+    {
+        cro::Entity bgEnt;
+        cro::Entity pointer;
+        cro::Entity text;
+    };
+    std::vector<StatBar> m_statBars;
+    cro::Entity m_statTitle;
+    std::vector<cro::String> m_manufacturerText;
+    cro::Entity m_manufacturerInfo;
+    void refreshStat(std::uint32_t catID, std::int32_t invID, bool setPointer);
 
     struct TextEdit final
     {

@@ -41,7 +41,18 @@ static inline const std::string TerrainVertexShader = R"(
     uniform mat3 u_normalMatrix;
     uniform mat4 u_worldMatrix;
 
+//shadow map renderer doesn't have a camera UBO
+#if defined(SHADOW_MAPPING)
+    uniform mat4 u_cameraViewMatrix;
+    uniform mat4 u_viewMatrix;
+    uniform mat4 u_projectionMatrix;
+    uniform vec4 u_clipPlane;
+    uniform vec3 u_cameraWorldPosition;
+
+    VARYING_OUT vec4 v_position;
+#else
 #include CAMERA_UBO
+#endif
 
 #if defined(RX_SHADOWS)
 #include SHADOWMAP_UNIFORMS_VERT
@@ -72,8 +83,12 @@ static inline const std::string TerrainVertexShader = R"(
 
         vec4 position = u_worldMatrix * vec4(mix(a_position.xyz, a_tangent, u_morphTime), 1.0);
         //gl_Position = u_viewProjectionMatrix * position;
-
+#if defined(SHADOW_MAPPING)
+        vec4 vertPos = u_projectionMatrix * u_viewMatrix * position;
+#else
         vec4 vertPos = u_viewProjectionMatrix * position;
+#endif
+
     #if defined (WOBBLE)
         vertPos.xyz /= vertPos.w;
         vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
@@ -97,6 +112,10 @@ static inline const std::string TerrainVertexShader = R"(
         v_colour = a_colour;
         v_worldPosition = position.xyz;
         v_texCoord = vec2(position.x / 100.0, position.z / -62.5);
+
+#if defined(SHADOW_MAPPING)
+        v_position = gl_Position;
+#endif
 
         gl_ClipDistance[0] = dot(position, u_clipPlane);
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,6 +32,11 @@ source distribution.
 #ifdef _WIN32
 #define NOMINMAX
 #include <sapi.h>
+#elif defined __linux__
+#include <thread>
+#include <atomic>
+#include <mutex>
+#include <queue>
 #endif
 
 #include "SharedStateData.hpp"
@@ -161,6 +166,30 @@ private:
                 CoUninitialize();
             }
         }
+    }m_speaker;
+
+#elif defined(__linux__)
+    class TTSSpeaker final
+    {
+    public:
+        enum class Voice
+        {
+            One, Two, Three
+        };
+
+        TTSSpeaker();
+        ~TTSSpeaker();
+
+        void say(const cro::String& line, Voice voice) const;
+
+    private:
+        std::atomic_bool m_threadRunning;
+        std::atomic_bool m_busy;
+        mutable std::mutex m_mutex;
+        mutable std::queue<std::pair<cro::String, Voice>> m_queue;
+
+        std::thread m_thread;
+        void threadFunc();        
     }m_speaker;
 #endif
     bool speak(const cro::String&) const; //returns true if speech was initiated

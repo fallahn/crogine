@@ -45,7 +45,7 @@ struct SharedStateData;
 class GolfParticleDirector final : public ParticleDirector
 {
 public:
-    GolfParticleDirector(cro::TextureResource&, const SharedStateData&);
+    GolfParticleDirector(cro::TextureResource&, const SharedStateData&, bool partyMode = false);
 
     void handleMessage(const cro::Message&) override;
 
@@ -54,6 +54,7 @@ public:
 private:
 
     const SharedStateData& m_sharedData;
+    const bool m_partyMode;
 
     struct ParticleID final
     {
@@ -63,7 +64,7 @@ private:
             Sparkle, HIO, Bird,
             Drone, Explode, Blades, PowerShot,
             Puff, Star, Trail, Firework,
-            Bubbles,
+            Bubbles, Confetti, Balloons,
             Count
         };
     };

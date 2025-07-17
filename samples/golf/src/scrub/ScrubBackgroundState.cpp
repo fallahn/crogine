@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -61,13 +61,13 @@ namespace
     static constexpr std::array Path03 = { glm::vec3(-7.f, 0.f, 30.f),glm::vec3(-7.f, 0.f, 21.f), glm::vec3(-7.f, 0.f, 11.5f), glm::vec3(-7.f, 0.f, 6.5f) };
     //static constexpr std::array Path03 = { glm::vec3(76.f, 0.f, 9.5f), glm::vec3(8.f, 0.f, 9.5f), glm::vec3(-30.f, 0.f, 9.5f),glm::vec3(-70.f, 0.f, 9.5f) };
 
-    namespace Debug
+    /*namespace Debug
     {
         float rotate = 0.f;
-    }
+    }*/
 }
 
-ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Context ctx, SharedScrubData& sd)
+ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Context ctx, SharedMinigameData& sd)
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus()),
     m_sharedScrubData   (sd)
@@ -79,7 +79,7 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
             loadAssets();
             createScene();
 #endif
-            initFonts();
+            sd.initFonts();
 
             cacheState(StateID::ScrubAttract);
             cacheState(StateID::ScrubGame);
@@ -365,7 +365,7 @@ void ScrubBackgroundState::createScene()
     resize(cam);
     cam.resizeCallback = resize;
 
-    cam.shadowMapBuffer.create(2048, 2048);
+    cam.shadowMapBuffer.create(1024, 1024);
 
     auto& camTx = m_scene.getActiveCamera().getComponent<cro::Transform>();
     camTx.setPosition({ 0.f, 7.88f, 39.f });
@@ -548,18 +548,28 @@ void ScrubBackgroundState::loadClouds()
     }
 }
 
-void ScrubBackgroundState::initFonts()
+void SharedMinigameData::initFonts()
 {
-    if (!m_sharedScrubData.fonts)
+    if (!fonts)
     {
-        m_sharedScrubData.fonts = std::make_unique<cro::FontResource>();
-        m_sharedScrubData.fonts->load(sc::FontID::Title, "assets/arcade/scrub/fonts/BowlbyOne-Regular.ttf");
-        auto& titleFont = m_sharedScrubData.fonts->get(sc::FontID::Title);
+        fonts = std::make_unique<cro::FontResource>();
+        fonts->load(sc::FontID::Title, "assets/arcade/scrub/fonts/BowlbyOne-Regular.ttf");
+        auto& titleFont = fonts->get(sc::FontID::Title);
         titleFont.setSmooth(true);
 
-        m_sharedScrubData.fonts->load(sc::FontID::Body, "assets/arcade/scrub/fonts/Candal-Regular.ttf");
-        auto& bodyFont = m_sharedScrubData.fonts->get(sc::FontID::Body);
+        fonts->load(sc::FontID::SBTitle, "assets/arcade/sportsball/fonts/PROMESHStitch-Regular.ttf");
+        auto& titleFont2 = fonts->get(sc::FontID::SBTitle);
+        titleFont2.setSmooth(true);
+
+        fonts->load(sc::FontID::Body, "assets/arcade/scrub/fonts/Candal-Regular.ttf");
+        auto& bodyFont = fonts->get(sc::FontID::Body);
         bodyFont.setSmooth(true);
+
+
+        //hmm we're not sharing between games now - maybe this should be managed on a more fine-grained level?
+        fonts->load(sc::FontID::SBBody, "assets/arcade/sportsball/fonts/Graduate-Regular.ttf");
+        auto& bodyFont2 = fonts->get(sc::FontID::SBBody);
+        bodyFont2.setSmooth(true);
 
 
         //appeand icon font
@@ -570,7 +580,9 @@ void ScrubBackgroundState::initFonts()
         ctx.codepointRange = { 0x2196, 0xE011 };
 
         titleFont.appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
+        titleFont2.appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
         bodyFont.appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
+        bodyFont2.appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
 
         //and emoji fonts
         static constexpr std::array Ranges =
@@ -589,7 +601,9 @@ void ScrubBackgroundState::initFonts()
             {
                 ctx.codepointRange = r;
                 titleFont.appendFromFile(winPath, ctx);
+                titleFont2.appendFromFile(winPath, ctx);
                 bodyFont.appendFromFile(winPath, ctx);
+                bodyFont2.appendFromFile(winPath, ctx);
             }
         }
         else
@@ -601,7 +615,9 @@ void ScrubBackgroundState::initFonts()
             {
                 ctx.codepointRange = r;
                 titleFont.appendFromFile(path, ctx);
+                titleFont2.appendFromFile(path, ctx);
                 bodyFont.appendFromFile(path, ctx);
+                bodyFont2.appendFromFile(path, ctx);
             }
         }
     }

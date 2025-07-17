@@ -58,6 +58,7 @@ public:
             LobbyJoin,
             LobbyExit,
             Title,
+            Switch,
             Woof,
             Fw01,
             Fw02,

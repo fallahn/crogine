@@ -43,39 +43,48 @@ namespace cro::Shaders::Sprite
 
         VARYING_OUT LOW vec4 v_colour;
 
-        #if defined(TEXTURED)
+#if defined(TEXTURED)
         VARYING_OUT MED vec2 v_texCoord;
-        #endif
+#endif
 
         void main()
         {
             gl_Position = u_viewProjectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
             v_colour = a_colour;
-        #if defined(TEXTURED)
+#if defined(TEXTURED)
             v_texCoord = a_texCoord0;
-        #endif
+#endif
         })";
 
-    static inline const std::string Coloured = R"(
+    static inline const std::string Fragment = R"(
+#if defined(TEXTURED)
+        uniform sampler2D u_texture;
+        VARYING_IN MED vec2 v_texCoord;
+#endif
         VARYING_IN LOW vec4 v_colour;
         OUTPUT
-            
+#if defined(TEXTURED)
+
+#if defined(FXAA)
+#include FXAA
         void main()
         {
-            FRAG_OUT = v_colour;
-        })";
-
-    static inline const std::string Textured = R"(
-        uniform sampler2D u_texture;
-
-        VARYING_IN LOW vec4 v_colour;
-        VARYING_IN MED vec2 v_texCoord;
-        OUTPUT
-            
+            FRAG_OUT = fxaa(u_texture, v_texCoord) * v_colour;
+        }
+#else
         void main()
         {
             FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour;
-        })";
+        }
+#endif
+
+#else
+        void main()
+        {
+            FRAG_OUT = v_colour;
+        }
+#endif 
+        )";
 }
 
 namespace cro::Shaders::Text

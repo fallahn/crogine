@@ -52,11 +52,11 @@ source distribution.
 //(player avatar data format changed 1170 -> 1180)
 //(course data changed 1180 -> 1181)
 //(player profile data changed 1190 -> 1200)
-static constexpr std::uint16_t CURRENT_VER = 1200;
+static constexpr std::uint16_t CURRENT_VER = 1210;
 #ifdef __APPLE__
-static const std::string StringVer("1.20.0 (macOS beta)");
+static const std::string StringVer("1.21.0 (macOS beta)");
 #else
-static const std::string StringVer("1.20.0");
+static const std::string StringVer("1.21.0");
 #endif
 
 struct HallEntry final
@@ -74,7 +74,7 @@ class Social final
 public:
     static constexpr std::int32_t ExpertLevel = 10;
     static constexpr std::int32_t ProLevel = 20;
-    static constexpr std::int32_t ClubStepLevel = 3;
+    static constexpr std::int32_t ClubStepLevel = 2;
 
     struct InfoID final
     {
@@ -106,7 +106,8 @@ public:
             AwardsReceived,
             RequestRestart,
             LeagueReceived,
-            ScrubScoresReceived
+            ScrubScoresReceived,
+            SBallScoresReceived,
         }type = StatsReceived;
         std::int32_t index = -1;
         std::int32_t page = -1;
@@ -124,10 +125,13 @@ public:
             PlayerAchievement, //as in we should cheer, not an actual achievement
             MonthlyProgress,
             LeagueProgress,
+            AchievementProgress,
             LobbyUpdated,
-            PlayerNameChanged
+            PlayerNameChanged,
+            CreditsAwarded,
+            NewClubset //an as-yet unpurchased manufacturer was added to available club set models
         }type = LevelUp;
-        std::int32_t level = 0; //if monthly progress then current value
+        std::int32_t level = 0; //if monthly progress then current value, if credits then value
         std::int32_t reason = -1; //if monthly progress then target value
         union
         {
@@ -186,13 +190,15 @@ public:
         };
     };
     static void findLeaderboards(std::int32_t) {}
-    static void setLeaderboardsEnabled(bool) {}
-    static constexpr bool getLeaderboardsEnabled() { return false; }
+    static void setLeaderboardsEnabled(bool);
+    static bool getLeaderboardsEnabled();
     static void insertScore(const std::string&, std::uint8_t, std::int32_t, std::int32_t, const std::vector<std::uint8_t>&);
+    static cro::String getLeader(const std::string&, std::uint8_t);
     static cro::String getTopFive(const std::string& course, std::uint8_t holeCount);
     static void invalidateTopFive(const std::string& course, std::uint8_t holeCount);
-    static std::int32_t getPersonalBest(const std::string&, std::uint8_t) { return -1; }
+    static std::int32_t getPersonalBest(const std::string&, std::uint8_t);
     static std::int32_t getMonthlyBest(const std::string&, std::uint8_t) { return -1; }
+    static std::vector<std::uint8_t> getMonthlyHoleScores(const std::string& course, std::uint8_t holeCount, cro::String& playerName);
     static const std::array<cro::String, 5u>& getMonthlyLeague() { static std::array<cro::String, 5u> fallback = {}; return fallback; }
     static void getRandomBest() {}
     static std::vector<cro::String> getLeaderboardResults(std::int32_t, std::int32_t) { return {}; }
@@ -245,6 +251,11 @@ public:
     static void refreshScrubScore();
     static const cro::String& getScrubScores();
     static std::int32_t getScrubPB();
+
+    static void setSBallScore(std::int32_t);
+    static void refreshSBallScore();
+    static const cro::String& getSBallScores();
+    static std::int32_t getSBallPB();
 
     static void showWebPage(const std::string&) {}
     static void readAllStats();
