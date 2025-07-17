@@ -860,7 +860,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         //    msg->position = m_currentPlayer.position;
         //}
             //m_drawDepthMaps = !m_drawDepthMaps;
-            showCountdown(10);
+            //showCountdown(10);
             break;
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
