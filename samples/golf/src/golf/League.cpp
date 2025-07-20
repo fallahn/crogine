@@ -461,6 +461,15 @@ const cro::String& League::getPreviousResults(const cro::String& playerName) con
     return m_previousResults;
 }
 
+std::int32_t League::getPreviousPosition() const
+{
+    //for some reason this sometimes returns the default
+    //of 17 at the end of a league - which I'm sure is a
+    //deeper bug. This at least displays something in 
+    //the correct range...
+    return m_previousPosition % 16;
+}
+
 void League::readPreviousPlayers() const
 {
     //this reads the previous results into another player table

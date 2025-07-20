@@ -261,7 +261,7 @@ void CareerState::handleMessage(const cro::Message& msg)
             m_playerName.getComponent<cro::Text>().setString(Social::getPlayerName());
             for (auto& table : Career::instance(m_sharedData).getLeagueTables())
             {
-                //this is misleading - it says it's cont however it updates the
+                //this is misleading - it says it's const however it updates the
                 //internal string data with the player's name...
                 table.getPreviousResults(Social::getPlayerName());
             }
