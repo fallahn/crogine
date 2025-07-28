@@ -7169,7 +7169,8 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
 
 void GolfState::EmoteWheel::update(float dt)
 {
-    if (sharedData.gameMode == GameMode::Tutorial)
+    if (sharedData.gameMode == GameMode::Tutorial
+        || sharedData.gameMode == GameMode::Reset) //might be quitting from the menu
     {
         return;
     }
