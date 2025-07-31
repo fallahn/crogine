@@ -1451,6 +1451,11 @@ void ModelState::drawInspector()
                 {
                     applyMaterial = true;
                 }
+                
+                ImGui::Text("Shader String ID");
+                ImGui::SameLine();
+                helpMarker("Model Definitions will search the shader resource for custom shaders with this ID before using the default material type");
+                ImGui::InputText("##str", &matDef.shaderStringID);
                 ImGui::PopItemWidth();
 
 
