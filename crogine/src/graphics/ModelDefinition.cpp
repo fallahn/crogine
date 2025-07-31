@@ -360,6 +360,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
         bool createMipmaps = false;
         bool writeShadows = false; //set to true when rx shadows so it writes to depth map
         std::string materialName;
+        std::string shaderStringID;
         Material::Data::Animation animation;
 
         const auto& properties = mat.getProperties();
@@ -507,6 +508,10 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
             { 
                 materialName = p.getValue<std::string>();
             }
+            else if (name == "shader_string_id")
+            {
+                shaderStringID = p.getValue<std::string>();
+                }
         }
 
         if (lockRotation)
@@ -525,8 +530,27 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
         }
 
         //load the material then check properties again for material properties
-        auto shaderID = m_resources.shaders.loadBuiltIn(shaderType, flags);
-        auto matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+        std::int32_t matID = -1;
+
+        if (shaderStringID.empty())
+        {
+            auto shaderID = m_resources.shaders.loadBuiltIn(shaderType, flags);
+            matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+        }
+        else
+        {
+            if (m_resources.shaders.hasStringID(shaderStringID))
+            {
+                matID = m_resources.materials.add(m_resources.shaders.get(shaderStringID));
+            }
+            else
+            {
+                LogW << "Material requested shader string ID " << shaderStringID << " but it was not found in the shader resource" << std::endl;
+                auto shaderID = m_resources.shaders.loadBuiltIn(shaderType, flags);
+                matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+            }
+        }
+
         auto& material = m_resources.materials.get(matID);
         material.deferred = shaderType == ShaderResource::PBRDeferred;
         material.enableDepthTest = enableDepthTest;
@@ -741,7 +765,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 flags |= ShaderResource::BuiltInFlags::LockScale;
             }
 
-            shaderID = m_resources.shaders.loadBuiltIn(m_billboard ? ShaderResource::BillboardShadowMap : ShaderResource::ShadowMap, flags);
+            auto shaderID = m_resources.shaders.loadBuiltIn(m_billboard ? ShaderResource::BillboardShadowMap : ShaderResource::ShadowMap, flags);
             matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
             m_shadowIDs[m_materialCount] = matID;
             

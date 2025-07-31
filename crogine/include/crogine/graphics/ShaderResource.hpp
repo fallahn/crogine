@@ -278,6 +278,11 @@ namespace cro
         */
         bool mapStringID(const std::string& stringID, std::int32_t shaderID);
 
+        /*!
+        \brief Returns true if the requested mapping is available
+        */
+        bool hasStringID(const std::string& stringID) const { return m_stringMappings.count(stringID); }
+
     private:
 
         Shader m_defaultShader;
