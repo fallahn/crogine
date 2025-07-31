@@ -276,6 +276,32 @@ void BatcatState::loadAssets()
 
 void BatcatState::createScene()
 {
+    const std::string frag = 
+R"(
+OUTPUT
+
+void main()
+{
+    FRAG_OUT = vec4(1.0, 0.0, 0.0, 0.0);
+})";
+
+    if (m_resources.shaders.loadFromString(ShaderID::Holo, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), frag))
+    {
+        m_resources.shaders.mapStringID("holo_shader", ShaderID::Holo);
+    }
+    
+
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/batcat/models/holo.cmt"))
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
+        entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 8.f });
+        md.createModel(entity);
+    }
+
+
+
     std::vector<glm::mat4> tx;
     for (auto i = 0; i < 7; ++i)
     {

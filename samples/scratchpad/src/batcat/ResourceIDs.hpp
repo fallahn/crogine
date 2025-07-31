@@ -79,7 +79,9 @@ namespace ShaderID
     enum
     {
         Background,
-        SMAAPreview
+        SMAAPreview,
+
+        Holo
     };
 }
 
