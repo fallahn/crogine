@@ -101,6 +101,12 @@ namespace
     float fireRate = 0.1f; //rate per second
     glm::vec3 sourcePosition = glm::vec3(-19.f, 10.f, 6.f);
     float sourceRotation = -cro::Util::Const::PI / 2.f;
+
+    struct HoloShader final
+    {
+        std::uint32_t ID = 0;
+        std::int32_t timeUniform = -1;
+    }holoShader;
 }
 
 BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
@@ -209,6 +215,12 @@ void BatcatState::handleMessage(const cro::Message& msg)
 
 bool BatcatState::simulate(float dt)
 {
+    static float accum = 0.f;
+    accum += dt;
+
+    glUseProgram(holoShader.ID);
+    glUniform1f(holoShader.timeUniform, accum);
+
     m_scene.simulate(dt);
     m_overlayScene.simulate(dt);
     return true;
@@ -279,15 +291,46 @@ void BatcatState::createScene()
     const std::string frag = 
 R"(
 OUTPUT
+#include CAMERA_UBO
+
+
+uniform sampler2D u_diffuseMap;
+uniform vec4 u_colour;
+
+uniform float u_time;
+#line 1
+
+VARYING_IN vec2 v_texCoord0;
+VARYING_IN vec3 v_normalVector;
+VARYING_IN vec3 v_worldPosition;
+
+const float LineFreq = 500.0;
+const float FarAmount = 0.3;
+const float NearAmount = 0.6;
 
 void main()
 {
-    FRAG_OUT = vec4(1.0, 0.0, 0.0, 0.0);
+    vec2 uv = v_texCoord0.xy;
+    uv.x += u_time * 0.01;
+
+    vec4 tint = mix(u_colour * FarAmount, u_colour * NearAmount, 
+                    step(0.5, (dot(normalize(u_cameraWorldPosition - v_worldPosition), normalize(v_normalVector)) + 1.0 * 0.5)));
+
+    vec4 colour = TEXTURE(u_diffuseMap, uv) * tint * 0.94;
+
+    float scanline = ((sin((uv.y * LineFreq) + (u_time * 0.3)) + 1.0 * 0.5) * 0.8) + 0.2;
+    colour *= mix(1.0, scanline, step(0.5, uv.y));
+
+    FRAG_OUT = colour;
 })";
 
-    if (m_resources.shaders.loadFromString(ShaderID::Holo, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), frag))
+    if (m_resources.shaders.loadFromString(ShaderID::Holo, 
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), frag, "#define TEXTURED\n#define RIMMING\n"))
     {
         m_resources.shaders.mapStringID("holo_shader", ShaderID::Holo);
+
+        holoShader.ID = m_resources.shaders.get(ShaderID::Holo).getGLHandle();
+        holoShader.timeUniform = m_resources.shaders.get(ShaderID::Holo).getUniformID("u_time");
     }
     
 
