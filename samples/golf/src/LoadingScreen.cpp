@@ -58,7 +58,7 @@ namespace
         "Loading...\n\nDid You Know: Before golf tees players would shape mounds of sand and place the golf ball on top",
         "Loading...\n\nTip: You can find alternative control schemes such as Swingput in the Options menu",
         "Loading...\n\nDid You Know: Apollo 14 astronaut Alan Shepard used a Wilson 6-iron to play golf on the moon",
-        "Loading...\n\nTip: The clubset you choose affects the CPU opponent's difficulty",
+        "Loading...\n\nTip: The clubset you choose also affects the CPU opponent's difficulty",
         "Loading...\n\nDid You Know: An estimated 600 million golf balls are lost or discarded every year\nmore than 100,000 of which are at the bottom of Loch Ness!",
         "Loading...\n\nTip: Make sure to spend some time on the Driving Range, to really learn your clubs",
         "Loading...\n\nDid You Know: There are playable arcade games waiting to be discovered in the Clubhouse",

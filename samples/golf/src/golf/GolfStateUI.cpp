@@ -1572,34 +1572,41 @@ void GolfState::buildUI()
     m_mapRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_mapRoot.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 1);
     m_mapRoot.getComponent<cro::Callback>().function =
-        [l, mapOffset](cro::Entity e, float dt)
+        [&, l, mapOffset](cro::Entity e, float dt)
         {
-            auto& [progress, dir] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
-            if (dir == 0)
+            if (m_sharedData.showMinimap)
             {
-                //bigger
-                progress = std::min(1.f, progress + (dt * 8.f));
-                if (progress == 1)
+                auto& [progress, dir] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+                if (dir == 0)
                 {
-                    e.getComponent<cro::Callback>().active = false;
+                    //bigger
+                    progress = std::min(1.f, progress + (dt * 8.f));
+                    if (progress == 1)
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                    }
                 }
+                else
+                {
+                    progress = std::max(0.f, progress - (dt * 8.f));
+                    if (progress == 0)
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                    }
+                }
+
+                const auto p = cro::Util::Easing::easeOutExpo(progress);
+                auto o = mapOffset * l * p;
+                o.x = std::round(o.x);
+                o.y = std::round(o.y);
+
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f + p));
+                e.getComponent<cro::Transform>().setOrigin(o);
             }
             else
             {
-                progress = std::max(0.f, progress - (dt * 8.f));
-                if (progress == 0)
-                {
-                    e.getComponent<cro::Callback>().active = false;
-                }
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
-            
-            const auto p = cro::Util::Easing::easeOutExpo(progress);
-            auto o = mapOffset * l * p;
-            o.x = std::round(o.x);
-            o.y = std::round(o.y);
-
-            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f + p));
-            e.getComponent<cro::Transform>().setOrigin(o);
         };
 
     infoEnt.getComponent<cro::Transform>().addChild(m_mapRoot.getComponent<cro::Transform>());

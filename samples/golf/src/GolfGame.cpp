@@ -1837,10 +1837,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.showClubUpdate = prop.getValue<bool>();
                     }
-                    /*else if (name == "group_mode")
+                    else if (name == "show_minimap")
                     {
-                        m_sharedData.groupMode = std::clamp(prop.getValue<std::int32_t>(), 0, std::int32_t(ClientGrouping::Four));
-                    }*/
+                        m_sharedData.showMinimap = prop.getValue<bool>();
+                    }
                 }
             }
 
@@ -1998,6 +1998,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("putt_follow").setValue(m_sharedData.puttFollowCam);
     cfg.addProperty("zoom_follow").setValue(m_sharedData.zoomFollowCam);
     cfg.addProperty("club_update").setValue(m_sharedData.showClubUpdate);
+    cfg.addProperty("show_minimap").setValue(m_sharedData.showMinimap);
     cfg.save(path);
 
 

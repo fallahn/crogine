@@ -599,6 +599,12 @@ void GolfState::registerDebugCommands()
             }
         });
 
+    registerCommand("cl_toggle_minimap", [&](const std::string&)
+        {
+            m_sharedData.showMinimap = !m_sharedData.showMinimap;
+            m_mapRoot.getComponent<cro::Callback>().active = true;
+        });
+
     //nasssssty staticses
     static bool showKickWindow = false;
     if (m_sharedData.hosting)

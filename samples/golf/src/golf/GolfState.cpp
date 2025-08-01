@@ -2489,6 +2489,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 
                 m_minimapIndicatorEnt.getComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
+                m_mapRoot.getComponent<cro::Callback>().active = true; //rescales based on whether this should be hidden
 
                 //updates the position of the entities based on bar size
                 auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
