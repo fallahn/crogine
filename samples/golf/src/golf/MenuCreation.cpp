@@ -3650,7 +3650,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto messageEnt = entity;
 
 
-
     //stash this so we can access it from the event handler (escape to ignore etc)
     quitConfirmCallback = [&, confirmEnt, shadeEnt]() mutable
     {
@@ -3750,11 +3749,22 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             messageTitleEnt.getComponent<cro::Text>().setString("Are You Sure?");
             centreText(messageTitleEnt);
             messageEnt.getComponent<cro::Text>().setFillColour(m_sharedData.hosting ? TextNormalColour : cro::Colour::Transparent);
+            messageEnt.getComponent<cro::Text>().setString("This will kick all players.");
+            centreText(messageEnt);
         }
         else
         {
             //continue message
-            messageEnt.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
+            if (m_sharedData.preferredClubSet == 2)
+            {
+                messageEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                messageEnt.getComponent<cro::Text>().setString("Pro clubs can be tough to use!");
+                centreText(messageEnt);
+            }
+            else
+            {
+                messageEnt.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
+            }
 
             messageTitleEnt.getComponent<cro::Text>().setString("Start Game?");
             centreText(messageTitleEnt);
