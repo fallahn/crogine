@@ -5742,8 +5742,10 @@ void GolfState::createTransition()
 
         if (currTime == MaxTime)
         {
-            createWelcomeMessage();
-
+            if (m_sharedData.gameMode != GameMode::Tutorial)
+            {
+                createWelcomeMessage();
+            }
             e.getComponent<cro::Callback>().active = false;
             m_uiScene.destroyEntity(e);
         }
