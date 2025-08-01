@@ -7168,7 +7168,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    if (player.client == m_sharedData.localConnectionData.connectionID)
+    //if (player.client == m_sharedData.localConnectionData.connectionID)
     {
         cmd.targetFlags = CommandID::UI::PinHeight;
         cmd.action =
