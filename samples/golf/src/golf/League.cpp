@@ -34,6 +34,7 @@ source distribution.
 #include "AchievementStrings.hpp"
 #include "XPAwardStrings.hpp"
 #include "SharedStateData.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/App.hpp>
@@ -272,12 +273,11 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
                 case LeagueRoundID::Club:
                     Achievements::incrementStat(StatStrings[StatID::LeagueFirst + i]);
                     Achievements::awardAchievement(AchievementStrings[AchievementID::LeagueChampion]);
+                    awardCredits(1500);
                     break;
                 default:
                     //award XP for each slot above 4th
                     Social::awardXP(XPAmount[i] + (m_id * XPMultiplier[i]), XPStringID::CareerSeasonComplete);
-                    
-                    //TODO award achievement for completion
                     break;
                 }
                 playerPos = i;
