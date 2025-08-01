@@ -1569,6 +1569,7 @@ void GolfState::buildUI()
 
     m_mapRoot = m_uiScene.createEntity();
     m_mapRoot.addComponent<cro::Transform>().setPosition({0.f, 0.f, 0.02f});
+    m_mapRoot.getComponent<cro::Transform>().setScale(glm::vec2(m_sharedData.showMinimap ? 1.f : 0.f));
     m_mapRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_mapRoot.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 1);
     m_mapRoot.getComponent<cro::Callback>().function =

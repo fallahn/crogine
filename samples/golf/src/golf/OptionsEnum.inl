@@ -120,6 +120,7 @@ enum OptionsIndex
     SettShowRival,
     SettPuttFollow,
     SettPuttZoom,
+    SettShowMinimap,
     SettFlagDown,
     SettFlagUp,
     SettFlagLabelDown,

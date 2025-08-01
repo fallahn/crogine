@@ -4646,7 +4646,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            float scale = m_sharedData.remoteContent ? 1.f : 0.f;
+            const float scale = m_sharedData.remoteContent ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -4673,7 +4673,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            float scale = m_sharedData.showRival ? 1.f : 0.f;
+            const float scale = m_sharedData.showRival ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -4701,7 +4701,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            float scale = m_sharedData.puttFollowCam ? 1.f : 0.f;
+            const float scale = m_sharedData.puttFollowCam ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -4710,7 +4710,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity = createHighlight(glm::vec2(12.f, 111.f));
     entity.setLabel("Automatically zoom the follower camera when the ball is in motion");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettPuttZoom);
-    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetCareer);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, SettShowMinimap);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettPuttFollow);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
@@ -4728,7 +4728,34 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            float scale = m_sharedData.zoomFollowCam ? 1.f : 0.f;
+            const float scale = m_sharedData.zoomFollowCam ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+
+
+    //hide minimap
+    entity = createHighlight(glm::vec2(12.f, 95.f));
+    entity.setLabel("Show the Minimap and Range Indicator on the HUD\nDefault to ON");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettShowMinimap);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetHints);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettPuttZoom);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.showMinimap = !m_sharedData.showMinimap;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = createCheckbox(glm::vec2(14.f, 97.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const float scale = m_sharedData.showMinimap ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -5112,7 +5139,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     {
         entity.getComponent<cro::UIInput>().setNextIndex(ResetCareer, WindowAdvanced);
     }
-    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettPuttZoom);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettShowMinimap);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -5142,7 +5169,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Transform>().move(-entity.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setSelectionIndex(ResetCareer);
     entity.getComponent<cro::UIInput>().setNextIndex(ResetStats, WindowHowTo);
-    entity.getComponent<cro::UIInput>().setPrevIndex(ResetHints, SettPuttZoom);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetHints, SettShowMinimap);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
