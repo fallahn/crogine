@@ -2000,7 +2000,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cmd.targetFlags = CommandID::UI::WindHidden;
                 cmd.action = [&](cro::Entity e, float)
                     {
-                        std::int32_t dir = (getClub() > ClubID::PitchWedge) && (glm::length(m_holeData[m_currentHole].pin - m_currentPlayer.position) < 30.f) ? 0 : 1;
+                        std::int32_t dir = ((getClub() > ClubID::PitchWedge) && (glm::length(m_holeData[m_currentHole].pin - m_currentPlayer.position) < 30.f))
+                            || m_currentPlayer.terrain == TerrainID::Green ? 0 : 1;
                         e.getComponent<cro::Callback>().getUserData<WindHideData>().direction = dir;
                         e.getComponent<cro::Callback>().active = true;
                     };
