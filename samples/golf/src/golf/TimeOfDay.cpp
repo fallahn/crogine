@@ -278,7 +278,7 @@ void TimeOfDay::updateLatLon()
     //query web latlon - this async so if we get a callback we update
     //the data then, else for now we try to find a country code and
     //use that to approximate our location
-    Social::getLatLon();
+    //Social::getLatLon();
 
     auto countryCode = getCountryCode();
     cro::Console::print("Set location to " + countryCode);
