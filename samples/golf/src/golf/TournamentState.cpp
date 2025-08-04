@@ -1707,9 +1707,20 @@ void TournamentState::createConfirmMenu(cro::Entity parent)
     confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 44.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Pro clubs can be tough to use!");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    centreText(entity);
+    confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto messageEnt = entity;
+
+
     //displays the message
     enterConfirmCallback = 
-        [&, confirmEnt, shadeEnt, titleEnt, buttonEnt,
+        [&, confirmEnt, shadeEnt, titleEnt, buttonEnt, messageEnt,
         resetMessageEnt, startGameCallback, restartCallback](bool showReset, bool resetTournament) mutable
     {
         m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
@@ -1728,8 +1739,23 @@ void TournamentState::createConfirmMenu(cro::Entity parent)
             buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = startGameCallback;
         }
 
-        const auto scale = showReset ? 1.f : 0.f;
-        resetMessageEnt.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        if (!showReset)
+        {
+            if (m_sharedData.preferredClubSet == 2)
+            {
+                messageEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            }
+            else
+            {
+                messageEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+            resetMessageEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+        else
+        {
+            resetMessageEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            messageEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
 
         m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
     };
