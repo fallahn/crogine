@@ -336,6 +336,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_refreshControllers    (false)
 {
     std::fill(m_controllerScrollAxes.begin(), m_controllerScrollAxes.end(), 0);
+    std::fill(m_controllerState.begin(), m_controllerState.end(), false);
 
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -551,11 +552,16 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
+        const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
         if (std::abs(evt.caxis.value) > cro::GameController::LeftThumbDeadZone)
         {
-            toggleControllerIcon(cro::GameController::controllerID(evt.caxis.which));
-
+            toggleControllerIcon(controllerID);
+            m_controllerState[controllerID] = true;
             cro::App::getWindow().setMouseCaptured(true);
+        }
+        else
+        {
+            m_controllerState[controllerID] = false;
         }
 
         if (evt.caxis.axis == cro::GameController::AxisRightY)
@@ -3508,6 +3514,51 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     parent.getComponent<cro::Transform>().addChild(m_controllerInfoEnt.getComponent<cro::Transform>());
     refreshControllerList();
 
+    //displays any controller activity to help identification
+    const float IconSize = 8.f;
+    const float IconSpacing = -12.f;
+    auto activityEnt = m_scene.createEntity();
+    activityEnt.addComponent<cro::Transform>().setPosition({ -12.f, 0.f });
+    activityEnt.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    std::vector<cro::Vertex2D> verts;
+    
+    for (auto i = 0; i < 4; ++i)
+    {
+        const glm::vec2 offset = glm::vec2(0.f, IconSpacing * i);
+
+        verts.emplace_back(glm::vec2(0.f) + offset, cro::Colour::Black);
+        verts.emplace_back(glm::vec2(0.f, -IconSize) + offset, cro::Colour::Black);
+        verts.emplace_back(glm::vec2(IconSize, 0.f) + offset, cro::Colour::Black);
+
+        verts.emplace_back(glm::vec2(IconSize, 0.f) + offset, cro::Colour::Black);
+        verts.emplace_back(glm::vec2(0.f, -IconSize) + offset, cro::Colour::Black);
+        verts.emplace_back(glm::vec2(IconSize, -IconSize) + offset, cro::Colour::Black);
+    }
+    
+    activityEnt.getComponent<cro::Drawable2D>().setVertexData(verts);
+    activityEnt.addComponent<cro::Callback>().active = true;
+    activityEnt.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Drawable2D>().setFacing(m_controllerInfoEnt.getComponent<cro::Drawable2D>().getFacing());
+            
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            for (auto i = 0; i < 4; ++i)
+            {
+                //if (cro::GameController::isConnected(i))
+                {
+                    const auto start = i * 6;
+                    for (auto j = start; j < start + 6; ++j)
+                    {
+                        verts[j].colour = !m_controllerState[i]
+                            || !cro::GameController::isConnected(i)
+                            ? cro::Colour::Black : cro::Colour::Red;
+                    }
+                }
+            }
+        };
+    m_controllerInfoEnt.getComponent<cro::Transform>().addChild(activityEnt.getComponent<cro::Transform>());
+
     //displays keybind info at top
     auto buttonChangeEnt = m_scene.createEntity();
     buttonChangeEnt.addComponent<cro::Transform>().setPosition(glm::vec3((parentBounds.width / 4.f) * 3.f, 130.f, TextOffset));
@@ -3822,7 +3873,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
 
 
-    //contronller sliders
+    //controller sliders
     auto createText = [&](glm::vec2 position, const std::string& str)
     {
         auto e = m_scene.createEntity();
@@ -6264,11 +6315,11 @@ void OptionsState::refreshDeviceLabel()
 
 void OptionsState::refreshControllerList()
 {
-    if (cro::GameController::getControllerCount() < 2)
+    /*if (cro::GameController::getControllerCount() < 2)
     {
         m_controllerInfoEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
-    else
+    else*/
     {
         cro::String str;
         for (auto i = 0; i < std::max(4, cro::GameController::getControllerCount()); ++i)
