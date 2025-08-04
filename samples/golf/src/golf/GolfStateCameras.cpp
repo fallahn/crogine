@@ -758,28 +758,35 @@ void GolfState::updateCameraHeight(float movement)
         && (m_currentPlayer.terrain == TerrainID::Green
             || getClub() == ClubID::Putter))
     {
-        auto camPos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
+        auto& tx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
+        auto camPos = tx.getPosition();
+
+        auto& lookAt = m_cameras[CameraID::Player].getComponent<TargetInfo>().finalLookAt;
+        const float startRot = glm::dot(glm::normalize(camPos - lookAt), cro::Transform::Y_AXIS) * (cro::Util::Const::PI / 2);
 
         static constexpr float DistanceIncrease = 5.f;
-        float distanceToHole = glm::length(m_holeData[m_currentHole].pin - camPos);
-        float heightMultiplier = std::clamp(distanceToHole - DistanceIncrease, 0.f, DistanceIncrease);
+        const float distanceToHole = glm::length(m_holeData[m_currentHole].pin - camPos);
+        const float heightMultiplier = std::clamp(distanceToHole - DistanceIncrease, 0.f, DistanceIncrease);
 
         const auto MaxOffset = m_cameras[CameraID::Player].getComponent<TargetInfo>().targetHeight + 0.2f;
         const auto TargetHeight = MaxOffset + m_collisionMesh.getTerrain(camPos).height;
 
         camPos.y = std::clamp(camPos.y + movement, TargetHeight - (MaxOffset * 0.5f), TargetHeight + (MaxOffset * 0.6f) + (heightMultiplier / DistanceIncrease));
+        tx.setPosition(camPos);
 
 
         //correct for any target offset that may have been added in transition
         auto& lookAtOffset = m_cameras[CameraID::Player].getComponent<TargetInfo>().finalLookAtOffset;
-        auto movement = lookAtOffset * (1.f / 30.f);
-        lookAtOffset += movement;
+        const auto movement = lookAtOffset * (1.f / 30.f);
+        //lookAtOffset += movement;
+        lookAt -= movement; //I have no idea why I have to do this but it stops the transition camera from jumping
 
-        auto& lookAt = m_cameras[CameraID::Player].getComponent<TargetInfo>().finalLookAt;
-        lookAt -= movement;
+        const float endRot = glm::dot(glm::normalize(camPos - lookAt), cro::Transform::Y_AXIS) * (cro::Util::Const::PI / 2);
 
-        m_cameras[CameraID::Player].getComponent<cro::Transform>().setPosition(camPos);
-        m_cameras[CameraID::Player].getComponent<cro::Transform>().setRotation(lookRotation(camPos, lookAt));
+        auto axis = glm::normalize(glm::cross(cro::Transform::Y_AXIS, tx.getForwardVector()));
+        axis = glm::inverse(tx.getRotation()) * axis;
+
+        tx.rotate(axis, endRot - startRot);
     }
 }
 

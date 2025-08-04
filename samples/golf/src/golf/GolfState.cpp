@@ -2875,14 +2875,20 @@ bool GolfState::simulate(float dt)
             }
         }*/
 
-        float rotation = m_inputParser.getCamRotation() * dt;
-        if (getClub() != ClubID::Putter
-            && rotation != 0)
+        const float rotation = m_inputParser.getCamRotation() * dt;
+        if (/*getClub() != ClubID::Putter
+            && */rotation != 0)
         {
             auto& tx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
 
-            auto axis = glm::inverse(tx.getRotation()) * cro::Transform::Y_AXIS;
+            auto offset = m_currentPlayer.position - tx.getWorldPosition();
+            tx.move(offset);
+
+            const auto axis = glm::inverse(tx.getRotation()) * cro::Transform::Y_AXIS;
             tx.rotate(axis, rotation);
+
+            offset = glm::rotateY(offset, rotation);
+            tx.move(-offset);
 
             auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
             auto lookDir = targetInfo.currentLookAt - tx.getWorldPosition();
