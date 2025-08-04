@@ -531,6 +531,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
 
         //load the material then check properties again for material properties
         std::int32_t matID = -1;
+        bool customShader = false;
 
         if (shaderStringID.empty())
         {
@@ -542,6 +543,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
             if (m_resources.shaders.hasStringID(shaderStringID))
             {
                 matID = m_resources.materials.add(m_resources.shaders.get(shaderStringID));
+                customShader = true;
             }
             else
             {
@@ -557,6 +559,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
         material.doubleSided = doubleSided;
         material.animation = animation;
         material.name = materialName;
+        material.customShader = customShader;
 
         //set a default mask colour - this is overwritten
         //below, if a custom property is found.

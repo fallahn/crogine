@@ -379,6 +379,8 @@ namespace cro
             std::size_t optionalUniformCount = 0;
             std::array<std::int32_t, 10> optionalUniforms{};
 
+            bool customShader = false; //set to true by model def if a custom shader was requested and successfully applied
+
         private:
             std::unordered_map<std::string, bool> m_warnings;
             void exists(const std::string&);
