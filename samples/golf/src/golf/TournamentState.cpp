@@ -1261,6 +1261,16 @@ void TournamentState::buildScene()
             });
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    auto labelEnt = m_scene.createEntity();
+    labelEnt.addComponent<cro::Transform>().setPosition({ 16.f, 13.f });
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(smallFont).setString("Back");
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+    entity.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(labelEnt).width;
 
     //profile editor
     entity = m_scene.createEntity();

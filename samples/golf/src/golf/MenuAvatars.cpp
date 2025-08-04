@@ -1222,7 +1222,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     auto labelEnt = m_uiScene.createEntity();
     labelEnt.addComponent<cro::Transform>().setPosition({ 18.f, 12.f });
     labelEnt.addComponent<cro::Drawable2D>();
-    labelEnt.addComponent<cro::Text>(smallFont).setString("Leave");
+    labelEnt.addComponent<cro::Text>(smallFont).setString("Back");
     labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
