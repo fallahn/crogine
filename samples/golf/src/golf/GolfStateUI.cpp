@@ -2339,7 +2339,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
     if (m_currentHole == 17) //full round
     {
         Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
+        
+        Achievements::setActive(true); //this unlocks the clubhouse so allow even in hotseat
         Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
+        Achievements::setActive(m_allowAchievements);
     }
     if (m_sharedData.scoreType != ScoreType::Skins)
     {

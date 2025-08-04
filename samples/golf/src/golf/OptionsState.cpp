@@ -3521,7 +3521,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     activityEnt.addComponent<cro::Transform>().setPosition({ -12.f, 0.f });
     activityEnt.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     std::vector<cro::Vertex2D> verts;
-    
+
     for (auto i = 0; i < 4; ++i)
     {
         const glm::vec2 offset = glm::vec2(0.f, IconSpacing * i);
