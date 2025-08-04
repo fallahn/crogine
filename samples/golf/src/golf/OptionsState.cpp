@@ -6315,11 +6315,11 @@ void OptionsState::refreshDeviceLabel()
 
 void OptionsState::refreshControllerList()
 {
-    /*if (cro::GameController::getControllerCount() < 2)
+    if (cro::GameController::getControllerCount() < 2)
     {
         m_controllerInfoEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
-    else*/
+    else
     {
         cro::String str;
         for (auto i = 0; i < std::max(4, cro::GameController::getControllerCount()); ++i)
