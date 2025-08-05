@@ -2857,9 +2857,9 @@ bool GolfState::simulate(float dt)
         m_cpuGolfer.update(dt, windVector, m_distanceToHole);
         m_inputParser.update(dt);
 
-        if (float movement = m_inputParser.getCamMotion(); movement != 0)
+        if (float movement = m_inputParser.getCamMotion() * m_sharedData.mouseSpeed; movement != 0)
         {
-            updateCameraHeight(movement * dt);
+            updateCameraHeight(movement* dt);
         }
 
         //if we're CPU or remote player check screen pos of ball and
@@ -2877,7 +2877,7 @@ bool GolfState::simulate(float dt)
             }
         }*/
 
-        const float rotation = m_inputParser.getCamRotation() * dt;
+        const float rotation = m_inputParser.getCamRotation() * m_sharedData.mouseSpeed * dt;
         if (/*getClub() != ClubID::Putter
             && */rotation != 0)
         {

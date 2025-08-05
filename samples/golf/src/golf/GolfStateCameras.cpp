@@ -758,8 +758,15 @@ void GolfState::updateCameraHeight(float movement)
         && (m_currentPlayer.terrain == TerrainID::Green
             || getClub() == ClubID::Putter))
     {
-        const auto& tx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
-        const auto camPos = tx.getPosition();
+        auto& tx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
+        const auto pos = tx.getPosition();
+        const auto groundHeight = std::max(m_collisionMesh.getTerrain(pos).height, WaterLevel);
+
+        auto origin = tx.getOrigin();
+        origin.y = std::clamp(origin.y - movement, -CameraPuttHeight / 2.f, (pos.y - groundHeight) * 0.5f);
+        tx.setOrigin(origin);
+
+        /*const auto camPos = tx.getPosition();
 
         static constexpr float DistanceIncrease = 5.f;
         const float distanceToHole = glm::length(m_holeData[m_currentHole].pin - camPos);
@@ -774,7 +781,7 @@ void GolfState::updateCameraHeight(float movement)
         
         targetInfo.targetHeight = std::clamp(targetInfo.targetHeight + (newY - oldY), 0.1f, CameraStrokeHeight);
         targetInfo.startHeight = targetInfo.targetHeight;
-        setCameraPosition(m_currentPlayer.position, targetInfo.startHeight, targetInfo.startOffset);
+        setCameraPosition(m_currentPlayer.position, targetInfo.startHeight, targetInfo.startOffset);*/
     }
 }
 
@@ -1602,7 +1609,25 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
             }
         };
     }
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto origin = m_cameras[CameraID::Player].getComponent<cro::Transform>().getOrigin();
+            origin.y -= origin.y * (dt * 10.f);
+
+            if (std::abs(origin.y) < 0.001f)
+            {
+                origin.y = 0.f;
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+            m_cameras[CameraID::Player].getComponent<cro::Transform>().setOrigin(origin);
+        };
 }
+
 
 void GolfState::startFlyBy()
 {
@@ -1810,6 +1835,25 @@ void GolfState::startFlyBy()
                 auto pos = interpolate(glm::vec3(data.targets[data.currentTarget][3]), glm::vec3(data.targets[data.currentTarget + 1][3]), data.ease(data.progress));
                 camTx.setPosition(pos);
             }
+        };
+
+
+    //reset any vertical offset of the player camera
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto origin = m_cameras[CameraID::Player].getComponent<cro::Transform>().getOrigin();
+            origin.y -= origin.y * dt;
+
+            if (std::abs(origin.y) < 0.01f)
+            {
+                origin.y = 0.f;
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+            m_cameras[CameraID::Player].getComponent<cro::Transform>().setOrigin(origin);
         };
 
 
