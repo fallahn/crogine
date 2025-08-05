@@ -1601,7 +1601,9 @@ void GolfState::handleMessage(const cro::Message& msg)
                     m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
                     cro::App::postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::PlayerBad;
+                    Achievements::setActive(true);
                     Achievements::awardAchievement(AchievementStrings[AchievementID::BadSport]);
+                    Achievements::setActive(m_allowAchievements);
                 }
             }
 

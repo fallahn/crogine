@@ -1482,6 +1482,13 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
     auto startPos = setNextPlayer ? m_currentPlayer.position : m_lastSpectatePosition;
     if (startPos == playerData.position)
     {
+        if (setNextPlayer)
+        {
+            //previous player may have rotated the camera, so re-align it
+            //to make sure the new player is facing the correct direction...
+            setCameraTarget(playerData);
+        }
+
         //we're already there
         auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
         targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
@@ -1490,6 +1497,10 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
 
         if (setNextPlayer)
         {
+            setCameraPosition(startPos, targetInfo.targetHeight, targetInfo.targetOffset);
+
+            const auto targetDir = targetInfo.currentLookAt - startPos;
+            m_camRotation = std::atan2(-targetDir.z, targetDir.x);
             requestNextPlayer(playerData);
         }
         m_lastSpectatePosition = playerData.position;
@@ -1513,7 +1524,7 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
             auto travel = playerData.position - currPos;
             auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
 
-            auto targetDir = targetInfo.currentLookAt - currPos;
+            const auto targetDir = targetInfo.currentLookAt - currPos;
             m_camRotation = std::atan2(-targetDir.z, targetDir.x);
 
             float minTravel = playerData.terrain == TerrainID::Green ? 0.000001f : 0.005f;
@@ -1776,7 +1787,6 @@ void GolfState::startFlyBy()
 
 
     setActiveCamera(CameraID::Transition);
-
 
     //hide the minimap ball
     cro::Command cmd;
