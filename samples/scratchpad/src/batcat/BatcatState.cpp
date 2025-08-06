@@ -102,11 +102,13 @@ namespace
     glm::vec3 sourcePosition = glm::vec3(-19.f, 10.f, 6.f);
     float sourceRotation = -cro::Util::Const::PI / 2.f;
 
-    struct HoloShader final
+    struct ShaderInfo final
     {
         std::uint32_t ID = 0;
         std::int32_t timeUniform = -1;
-    }holoShader;
+    };
+    ShaderInfo holoShader;
+    ShaderInfo lavaShader;
 }
 
 BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
@@ -221,6 +223,9 @@ bool BatcatState::simulate(float dt)
     glUseProgram(holoShader.ID);
     glUniform1f(holoShader.timeUniform, accum);
 
+    glUseProgram(lavaShader.ID);
+    glUniform1f(lavaShader.timeUniform, accum);
+
     m_scene.simulate(dt);
     m_overlayScene.simulate(dt);
     return true;
@@ -288,7 +293,7 @@ void BatcatState::loadAssets()
 
 void BatcatState::createScene()
 {
-    const std::string frag = 
+    const std::string holoFrag = 
 R"(
 OUTPUT
 #include CAMERA_UBO
@@ -304,33 +309,109 @@ VARYING_IN vec2 v_texCoord0;
 VARYING_IN vec3 v_normalVector;
 VARYING_IN vec3 v_worldPosition;
 
-const float LineFreq = 500.0;
+const float LineFreq = 1000.0;
 const float FarAmount = 0.3;
 const float NearAmount = 0.6;
 
 void main()
 {
     vec2 uv = v_texCoord0.xy;
-    uv.x += u_time * 0.01;
+    uv.x += u_time * 0.02;
+
+float offset = (sin((u_time * 0.5) + (uv.y * 10.0)));
+uv.x += step(0.6, offset) * offset * 0.01;
 
     vec4 tint = mix(u_colour * FarAmount, u_colour * NearAmount, 
                     step(0.5, (dot(normalize(u_cameraWorldPosition - v_worldPosition), normalize(v_normalVector)) + 1.0 * 0.5)));
 
     vec4 colour = TEXTURE(u_diffuseMap, uv) * tint * 0.94;
 
-    float scanline = ((sin((uv.y * LineFreq) + (u_time * 0.3)) + 1.0 * 0.5) * 0.8) + 0.2;
-    colour *= mix(1.0, scanline, step(0.5, uv.y));
+    float scanline = ((sin((uv.y * LineFreq) + (u_time * 30.3)) + 1.0 * 0.5) * 0.4) + 0.6;
+    colour *= mix(1.0, scanline, step(0.58, uv.y)); //arbitrary cut off for texture
+    //flicker
+    colour *= (step(0.95, fract(sin(u_time * 0.01) * 43758.5453123)) * 0.2) + 0.8;
 
     FRAG_OUT = colour;
 })";
 
     if (m_resources.shaders.loadFromString(ShaderID::Holo, 
-        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), frag, "#define TEXTURED\n#define RIMMING\n"))
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), holoFrag, "#define TEXTURED\n#define RIMMING\n"))
     {
         m_resources.shaders.mapStringID("holo_shader", ShaderID::Holo);
 
         holoShader.ID = m_resources.shaders.get(ShaderID::Holo).getGLHandle();
         holoShader.timeUniform = m_resources.shaders.get(ShaderID::Holo).getUniformID("u_time");
+    }
+
+    const std::string lavaFrag = 
+R"(
+OUTPUT
+
+uniform float u_time;
+#line 1
+
+VARYING_IN vec2 v_texCoord0;
+
+vec2 randV2(vec2 coord)
+{
+    coord = vec2(dot(vec2(127.1,311.7), coord), dot(vec2(269.5,183.3), coord));
+    return (2.0 * fract(sin(coord) * 43758.5453123)) - 1.0;
+}
+
+
+//value Noise by Inigo Quilez - iq/2013 (MIT)
+//https://www.shadertoy.com/view/lsf3WH
+float noise(vec2 st)
+{
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+
+    vec2 u = f * f * (3.0 - 2.0 * f);
+
+    return mix(mix(dot(randV2(i + vec2(0.0,0.0)), f - vec2(0.0,0.0)), 
+                     dot(randV2(i + vec2(1.0,0.0)), f - vec2(1.0,0.0)), u.x),
+                mix(dot(randV2(i + vec2(0.0,1.0)), f - vec2(0.0,1.0)), 
+                     dot(randV2(i + vec2(1.0,1.0)), f - vec2(1.0,1.0)), u.x), u.y);
+}
+
+//const vec3 baseColour = vec3(0.949, 0.812, 0.361);
+const vec3 baseColour = vec3(0.925, 0.467, 0.239);
+const vec3 LumConst = vec3(0.2125, 0.7154, 0.0721);
+const float Scale = 2.0;
+const float Speed = 1.0 / 30.0;
+
+void main()
+{
+	vec2 uv = v_texCoord0 / Scale;
+
+    uv.y += (cos(u_time * Speed) * 0.1) + (u_time * Speed);
+    uv.x *= sin(u_time + uv.y * 4.0) * 0.1 + 0.8;
+    uv += noise((uv * 2.25) + (u_time / 5.0));
+
+    vec3 darkColour = baseColour;
+    darkColour.rg += 0.3 * sin((uv.y * 4.0) + u_time) * sin((uv.x * 5.0) + u_time);
+
+    float amt = smoothstep(0.01, 0.3, noise(uv * 3.0))
+        + smoothstep(0.01, 0.3, noise(uv * 6.0 + 0.5))
+        + smoothstep(0.01, 0.4, noise(uv * 7.0 + 0.2));
+
+
+    vec3 finalColour = mix(baseColour, darkColour, vec3(smoothstep(0.0, 1.0, amt)));
+    float luminance = clamp(dot(finalColour, LumConst) * 1.5, 0.0, 1.0);
+
+    //FRAG_OUT.rgb = vec3(luminance);
+    FRAG_OUT.rgb = finalColour;
+    FRAG_OUT.a = 1.0;
+
+})";
+
+    if (m_resources.shaders.loadFromString(ShaderID::Lava,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), lavaFrag, "#define TEXTURED\n"))
+    {
+        m_resources.shaders.mapStringID("lava", ShaderID::Lava);
+
+        lavaShader.ID = m_resources.shaders.get(ShaderID::Lava).getGLHandle();
+        lavaShader.timeUniform = m_resources.shaders.get(ShaderID::Lava).getUniformID("u_time");
     }
     
 
@@ -339,11 +420,17 @@ void main()
     {
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
-        entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 8.f });
+        entity.getComponent<cro::Transform>().setPosition({ 7.f, 0.f, 8.f });
         md.createModel(entity);
     }
 
-
+    if (md.loadFromFile("assets/golf/plane.cmt"))
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
+        entity.getComponent<cro::Transform>().setPosition({ -7.f, 0.f, 8.f });
+        md.createModel(entity);
+    }
 
     std::vector<glm::mat4> tx;
     for (auto i = 0; i < 7; ++i)
