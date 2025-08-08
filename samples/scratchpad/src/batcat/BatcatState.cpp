@@ -346,6 +346,7 @@ uv.x += step(0.6, offset) * offset * 0.01;
     const std::string lavaFrag = 
 R"(
 OUTPUT
+#include CAMERA_UBO
 
 uniform float u_time;
 #line 1

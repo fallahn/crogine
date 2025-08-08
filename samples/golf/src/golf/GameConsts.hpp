@@ -384,7 +384,9 @@ struct ShaderID final
         Tonemapping,
         FlagPreview,
         Emissive,
-        Hole
+        Hole,
+        Hologram,
+        Lava
     };
 };
 

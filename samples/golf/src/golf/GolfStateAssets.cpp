@@ -79,6 +79,8 @@ namespace
 #include "shaders/EmissiveShader.inl"
 #include "shaders/ShopItems.inl"
 #include "shaders/Hole.inl"
+#include "shaders/Hologram.inl"
+#include "shaders/TerrainMaterials.inl"
 
     //colour is normal colour with dark shadow
     const std::array BannerStrings =
@@ -653,9 +655,12 @@ void GolfState::loadMap()
                         holeData.modelEntity.getComponent<cro::Model>().setHidden(true);
                         for (auto m = 0u; m < holeData.modelEntity.getComponent<cro::Model>().getMeshData().submeshCount; ++m)
                         {
-                            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
-                            applyMaterialData(modelDef, material, m);
-                            holeData.modelEntity.getComponent<cro::Model>().setMaterial(m, material);
+                            if (!holeData.modelEntity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Pass::Final, m).customShader)
+                            {
+                                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
+                                applyMaterialData(modelDef, material, m);
+                                holeData.modelEntity.getComponent<cro::Model>().setMaterial(m, material);
+                            }
                         }
                         propCount++;
 
@@ -679,9 +684,12 @@ void GolfState::loadMap()
                         
                         for (auto m = 0u; m < m_minimapModels.back().getComponent<cro::Model>().getMeshData().submeshCount; ++m)
                         {
-                            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Minimap]);
-                            applyMaterialData(modelDef, material, m);
-                            m_minimapModels.back().getComponent<cro::Model>().setMaterial(m, material);
+                            if (!holeData.modelEntity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Pass::Final, m).customShader)
+                            {
+                                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Minimap]);
+                                applyMaterialData(modelDef, material, m);
+                                m_minimapModels.back().getComponent<cro::Model>().setMaterial(m, material);
+                            }
                         }
                     }
                     else
@@ -926,42 +934,45 @@ void GolfState::loadMap()
                                             bool useWind = ((ent.getComponent<cro::Model>().getMeshData().attributeFlags & cro::VertexProperty::Colour) != 0);
                                             for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
                                             {
-                                                auto texMatID = useWind ? MaterialID::CelTextured : MaterialID::CelTexturedNoWind;
-
-                                                if (modelDef.hasTag(i, "glass"))
+                                                if (!ent.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Pass::Final, i).customShader)
                                                 {
-                                                    texMatID = MaterialID::Glass;
-                                                }
+                                                    auto texMatID = useWind ? MaterialID::CelTextured : MaterialID::CelTexturedNoWind;
 
-                                                else if (modelDef.hasTag(i, "wake"))
-                                                {
-                                                    texMatID = MaterialID::Wake;
-                                                    radiusMultiplier = 0.5f;
-                                                }
+                                                    if (modelDef.hasTag(i, "glass"))
+                                                    {
+                                                        texMatID = MaterialID::Glass;
+                                                    }
 
-                                                else if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
-                                                {
-                                                    texMatID = useWind ? MaterialID::CelTexturedMasked : MaterialID::CelTexturedMaskedNoWind;
-                                                }
-                                                auto texturedMat = m_resources.materials.get(m_materialIDs[texMatID]);
+                                                    else if (modelDef.hasTag(i, "wake"))
+                                                    {
+                                                        texMatID = MaterialID::Wake;
+                                                        radiusMultiplier = 0.5f;
+                                                    }
 
-                                                //if this is a wake material we need to set the animation speed
-                                                //based on the speed of the path if the model has one.
-                                                if (texMatID == MaterialID::Wake &&
-                                                    !curve.empty())
-                                                {
-                                                    texturedMat.setProperty("u_speed", loopSpeed / 4.f/*std::clamp(loopSpeed, 0.f, 1.f)*/);
-                                                }
+                                                    else if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
+                                                    {
+                                                        texMatID = useWind ? MaterialID::CelTexturedMasked : MaterialID::CelTexturedMaskedNoWind;
+                                                    }
+                                                    auto texturedMat = m_resources.materials.get(m_materialIDs[texMatID]);
 
-                                                applyMaterialData(modelDef, texturedMat, i);
-                                                ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+                                                    //if this is a wake material we need to set the animation speed
+                                                    //based on the speed of the path if the model has one.
+                                                    if (texMatID == MaterialID::Wake &&
+                                                        !curve.empty())
+                                                    {
+                                                        texturedMat.setProperty("u_speed", loopSpeed / 4.f/*std::clamp(loopSpeed, 0.f, 1.f)*/);
+                                                    }
 
-                                                // only do this if we have vertex animation, else the default will suffice
-                                                if (useWind)
-                                                {
-                                                    auto shadowMat = m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]);
-                                                    applyMaterialData(modelDef, shadowMat);
-                                                    ent.getComponent<cro::Model>().setShadowMaterial(i, shadowMat);
+                                                    applyMaterialData(modelDef, texturedMat, i);
+                                                    ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+
+                                                    // only do this if we have vertex animation, else the default will suffice
+                                                    if (useWind)
+                                                    {
+                                                        auto shadowMat = m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]);
+                                                        applyMaterialData(modelDef, shadowMat);
+                                                        ent.getComponent<cro::Model>().setShadowMaterial(i, shadowMat);
+                                                    }
                                                 }
                                             }
                                         }
@@ -1763,6 +1774,29 @@ void GolfState::loadMaterials()
 
     static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
     m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
+
+
+
+
+    //special prop materials
+    if (m_resources.shaders.loadFromString(ShaderID::Lava,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFrag, "#define TEXTURED\n"))
+    {
+        m_resources.shaders.mapStringID("lava", ShaderID::Lava);
+        auto* shader = &m_resources.shaders.get(ShaderID::Lava);
+        m_windBuffer.addShader(*shader);
+    }
+
+    if (m_resources.shaders.loadFromString(ShaderID::Hologram,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag, "#define TEXTURED\n#define RIMMING\n"))
+    {
+        m_resources.shaders.mapStringID("holo_shader", ShaderID::Hologram);
+        auto* shader = &m_resources.shaders.get(ShaderID::Hologram);
+        m_windBuffer.addShader(*shader);
+    }
+
+
+
 
     //cel shaded material
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define TERRAIN_CLIP\n" + wobble);
