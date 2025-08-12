@@ -36,7 +36,7 @@ source distribution.
 std::vector<std::string> Content::getInstallPaths()
 {
     //TODO check other paths exist and add them here if they do
-    return {"assets/golf/", "dlc/adventurer/"};
+    return {"assets/golf/"};
 }
 
 std::string Content::getBaseContentPath()

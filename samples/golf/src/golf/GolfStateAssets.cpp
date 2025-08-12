@@ -95,7 +95,8 @@ namespace
         cro::String("Claire: Have you seen my keys?\nThey're not where I left them"),
         cro::String("To truly find yourself you must\nplay hide and seek alone."),
         cro::String("There is no angry way to say\nBUBBLES"),
-        cro::String("404")
+        cro::String("404"),
+        cro::String("Remember to wash\nyour balls thoroughly.")
     };
 
     //make this static so throughout the duration of the game we
