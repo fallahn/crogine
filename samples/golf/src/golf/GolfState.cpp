@@ -3545,7 +3545,7 @@ void GolfState::buildScene()
     entity.getComponent<cro::Callback>().function =
         [&, indicatorEnt](cro::Entity e, float dt)
         {
-            const auto hidden = indicatorEnt.getComponent<cro::Model>().isHidden();
+            const auto hidden = indicatorEnt.getComponent<cro::Model>().isHidden() || !m_sharedData.showPuttingPower;
             const float Speed = dt * 4.f;
             auto& currSize = e.getComponent<cro::Callback>().getUserData<float>();
 
