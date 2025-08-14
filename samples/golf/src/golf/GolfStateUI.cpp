@@ -1641,6 +1641,12 @@ void GolfState::buildUI()
     m_strokeDistanceEnt = entity;
 
 
+    //draws a trail on the mini map when the balls are in flight
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.21f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    m_minimapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_minimapTrail = entity;
 
 
     //mini flag icon
@@ -1714,6 +1720,7 @@ void GolfState::buildUI()
 
         auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
         e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
+        m_minimapTrail.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
 
         //when the drawable is cropped the area is transformed by the ent's world tx
         //so we're doing this here purely to visualise
@@ -6283,6 +6290,8 @@ void GolfState::updateMinimapTexture()
     
     if (m_minimapTexturePass == 0)
     {
+        m_minimapTrail.getComponent<cro::Drawable2D>().getVertexData().clear();
+
         m_mapTextureMRT.clear(c);
     }
     else

@@ -728,6 +728,7 @@ private:
     cro::MultiRenderTexture m_mapTextureMRT; //hack to create images for map explorer
     
     std::vector<cro::Entity> m_minimapModels;
+    cro::Entity m_minimapTrail;
 
     std::int32_t m_minimapTexturePass;
     static constexpr std::int32_t MaxMinimapPasses = 1;

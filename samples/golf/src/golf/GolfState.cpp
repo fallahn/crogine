@@ -4818,6 +4818,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<MiniBall>().playerID = depthOffset;
     entity.getComponent<MiniBall>().parent = ballEnt;
     entity.getComponent<MiniBall>().minimap = m_minimapEnt;
+    entity.getComponent<MiniBall>().minitrail = m_minimapTrail;
     //childList.push_back(entity); //the MiniBallSystem tidies up for us as this belongs to a different scene
     m_minimapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -7103,6 +7104,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_idleTime = cro::seconds(90.f);
     m_skipState = {};
     m_strokeDistanceEnt.getComponent<cro::Text>().setString(" ");
+    m_minimapTrail.getComponent<cro::Drawable2D>().getVertexData().clear();
     for (auto& trail : m_ballTrails)
     {
         trail->setNext();

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -39,6 +39,7 @@ struct MiniBall final
     cro::Entity parent;
     
     cro::Entity minimap;
+    cro::Entity minitrail;
 
     enum
     {

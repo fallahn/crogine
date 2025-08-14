@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,12 +30,19 @@ source distribution.
 #include "MiniBallSystem.hpp"
 #include "MinimapZoom.hpp"
 #include "CommonConsts.hpp"
+#include "ClientCollisionSystem.hpp"
+#include "BallSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+
+namespace
+{
+    float vertexTimer = 0.f;
+}
 
 MiniBallSystem::MiniBallSystem(cro::MessageBus& mb, const MinimapZoom& mz)
     : cro::System(mb, typeid(MiniBallSystem)),
@@ -122,6 +129,26 @@ void MiniBallSystem::process(float dt)
                 for (auto& v : verts)
                 {
                     v.colour.setAlpha(alpha);
+                }
+
+                //update the trail if in flight
+                const auto state = ball.parent.getComponent<ClientCollider>().state;
+                if (state == static_cast<std::uint8_t>(Ball::State::Flight)
+                    || state == static_cast<std::uint8_t>(Ball::State::Roll)
+                    || state == static_cast<std::uint8_t>(Ball::State::Putt))
+                {
+                    static constexpr float PointFreq = 0.25f;
+                    static constexpr cro::Colour c(1.f, 1.f, 1.f, 0.5f);
+                    
+                    vertexTimer += dt;
+                    if (vertexTimer > PointFreq)
+                    {
+                        const auto p = glm::vec2(entity.getComponent<cro::Transform>().getPosition());
+                        vertexTimer -= PointFreq;
+
+                        ball.minitrail.getComponent<cro::Drawable2D>().getVertexData().emplace_back(p, c);
+                        ball.minitrail.getComponent<cro::Drawable2D>().updateLocalBounds();
+                    }
                 }
             }
         }
