@@ -1644,7 +1644,22 @@ void GolfState::buildUI()
     //draws a trail on the mini map when the balls are in flight
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.21f });
-    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    entity.addComponent<cro::Callback>().setUserData<float>(1.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct = std::max(0.f, ct - (dt * 8.f));
+
+            if (ct == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                e.getComponent<cro::Drawable2D>().getVertexData().clear();
+                ct = 1.f;
+            }
+            e.getComponent<cro::Transform>().setScale(glm::vec2(ct));
+        };
     m_minimapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_minimapTrail = entity;
 

@@ -6185,6 +6185,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 {
     //hide old debug mesh
     m_collisionMesh.setDebugFlags(0);
+    m_minimapTrail.getComponent<cro::Callback>().active = true; //hides any trail
     
     if (m_photoMode)
     {
@@ -7104,7 +7105,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_idleTime = cro::seconds(90.f);
     m_skipState = {};
     m_strokeDistanceEnt.getComponent<cro::Text>().setString(" ");
-    m_minimapTrail.getComponent<cro::Drawable2D>().getVertexData().clear();
+    m_minimapTrail.getComponent<cro::Callback>().active = true;
     for (auto& trail : m_ballTrails)
     {
         trail->setNext();

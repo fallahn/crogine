@@ -110,7 +110,7 @@ void MiniBallSystem::process(float dt)
 
 
                 //or if in bounds of the mini map
-                auto miniBounds = ball.minimap.getComponent<cro::Transform>().getWorldTransform() * ball.minimap.getComponent<cro::Drawable2D>().getLocalBounds();
+                const auto miniBounds = ball.minimap.getComponent<cro::Transform>().getWorldTransform() * ball.minimap.getComponent<cro::Drawable2D>().getLocalBounds();
                 //auto renderBounds = glm::inverse(entity.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
                 entity.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
 
@@ -144,9 +144,11 @@ void MiniBallSystem::process(float dt)
                     if (vertexTimer > PointFreq)
                     {
                         const auto p = glm::vec2(entity.getComponent<cro::Transform>().getPosition());
+                        constexpr glm::vec2 Offset(0.f, 1.2f);
                         vertexTimer -= PointFreq;
 
-                        ball.minitrail.getComponent<cro::Drawable2D>().getVertexData().emplace_back(p, c);
+                        ball.minitrail.getComponent<cro::Drawable2D>().getVertexData().emplace_back(p - (Offset * m_minimapZoom.mapScale * 2.f), c);
+                        ball.minitrail.getComponent<cro::Drawable2D>().getVertexData().emplace_back(p + (Offset * m_minimapZoom.mapScale * 2.f), c);
                         ball.minitrail.getComponent<cro::Drawable2D>().updateLocalBounds();
                     }
                 }
