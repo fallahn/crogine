@@ -1645,6 +1645,7 @@ void GolfState::buildUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.21f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Additive);
     entity.addComponent<cro::Callback>().setUserData<float>(1.f);
     entity.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
@@ -1658,7 +1659,7 @@ void GolfState::buildUI()
                 e.getComponent<cro::Drawable2D>().getVertexData().clear();
                 ct = 1.f;
             }
-            e.getComponent<cro::Transform>().setScale(glm::vec2(ct));
+            e.getComponent<cro::Transform>().setScale(glm::vec2(ct, 1.f));
         };
     m_minimapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_minimapTrail = entity;

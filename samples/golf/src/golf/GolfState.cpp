@@ -7105,7 +7105,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_idleTime = cro::seconds(90.f);
     m_skipState = {};
     m_strokeDistanceEnt.getComponent<cro::Text>().setString(" ");
-    m_minimapTrail.getComponent<cro::Callback>().active = true;
+    //m_minimapTrail.getComponent<cro::Callback>().active = true; //moved to createTransition()
     for (auto& trail : m_ballTrails)
     {
         trail->setNext();

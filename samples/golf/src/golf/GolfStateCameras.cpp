@@ -1394,6 +1394,7 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
 {
     //float targetDistance = glm::length2(playerData.position - m_currentPlayer.position);
     m_spectateGhost.getComponent<cro::Callback>().getUserData<GhostCallbackData>().direction = GhostCallbackData::Out;
+    m_minimapTrail.getComponent<cro::Callback>().active = true; //hides any existing trail
 
     //set the target zoom on the player camera
     float zoom = 1.f;

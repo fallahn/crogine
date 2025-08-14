@@ -104,8 +104,10 @@ void MiniBallSystem::process(float dt)
                 entity.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(position), 0.05f * static_cast<float>(ball.playerID)));
 
                 //set scale based on height
-                static constexpr float MaxHeight = 40.f;
-                float scale = 1.f + (position.y / MaxHeight);
+                static constexpr float MaxHeight = 30.f;
+                const float heightAboveGround = std::min(1.f, position.y / MaxHeight); //TODO we need to actually subtract the ground level from the position...
+
+                const float scale = 1.f + heightAboveGround;
                 entity.getComponent<cro::Transform>().setScale(glm::vec2(scale) * m_minimapZoom.mapScale * 2.f);
 
 
@@ -137,14 +139,17 @@ void MiniBallSystem::process(float dt)
                     || state == static_cast<std::uint8_t>(Ball::State::Roll)
                     || state == static_cast<std::uint8_t>(Ball::State::Putt))
                 {
-                    static constexpr float PointFreq = 0.25f;
-                    static constexpr cro::Colour c(1.f, 1.f, 1.f, 0.5f);
+                    static constexpr float PointFreq = 0.125f;
+                    //static constexpr cro::Colour c(1.f, 1.f, 1.f, 0.25f);
                     
+                    cro::Colour c(1.f, 1.f - heightAboveGround, /*heightAboveGround / 2.f*/0.f, 0.4f);
+                    //c /= 4.f;
+
                     vertexTimer += dt;
                     if (vertexTimer > PointFreq)
                     {
                         const auto p = glm::vec2(entity.getComponent<cro::Transform>().getPosition());
-                        constexpr glm::vec2 Offset(0.f, 1.2f);
+                        constexpr glm::vec2 Offset(0.f, 0.8f);
                         vertexTimer -= PointFreq;
 
                         ball.minitrail.getComponent<cro::Drawable2D>().getVertexData().emplace_back(p - (Offset * m_minimapZoom.mapScale * 2.f), c);
