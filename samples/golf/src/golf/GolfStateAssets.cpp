@@ -3016,8 +3016,9 @@ void GolfState::loadModels()
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-    m_ballTrail.create(m_gameScene, m_resources, m_materialIDs[MaterialID::BallTrail]);
-    m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
+    /*auto& trail = m_ballTrails.emplace_back(std::make_unique<BallTrail>());
+    trail->create(m_gameScene, m_resources, m_materialIDs[MaterialID::BallTrail]);
+    trail->setUseBeaconColour(m_sharedData.trailBeaconColour);*/
 }
 
 void GolfState::loadSpectators()

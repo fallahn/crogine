@@ -355,7 +355,7 @@ private:
         std::size_t ballMeshID = 0;
         std::size_t shadowMeshID = 0;
     }m_ballResources;
-    BallTrail m_ballTrail;
+    std::vector<std::unique_ptr<BallTrail>> m_ballTrails;
 
     std::string m_audioPath;
     cro::String m_courseTitle;

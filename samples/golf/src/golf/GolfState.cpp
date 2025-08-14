@@ -2443,7 +2443,10 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                 m_emoteWheel.refreshLabels();
-                m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
+                for (auto& trail : m_ballTrails)
+                {
+                    trail->setUseBeaconColour(m_sharedData.trailBeaconColour);
+                }
 
                 //and the power bar
                 cmd.targetFlags = CommandID::UI::BarEnt;
@@ -2677,7 +2680,10 @@ bool GolfState::simulate(float dt)
         holeDir = m_holeData[m_currentHole].target - m_currentPlayer.position;
     }
 
-    m_ballTrail.update();
+    for (auto& trail : m_ballTrails)
+    {
+        trail->update();
+    }
 
     //this gets used a lot so we'll save on some calls to length()
     m_distanceToHole = glm::length(holeDir);
@@ -4392,13 +4398,20 @@ void GolfState::spawnBall(const ActorInfo& info)
     material.setProperty("u_colour", cro::Colour::White);
     //material.blendMode = cro::Material::BlendMode::Multiply; //causes shadow to actually get darker as alpha reaches zero.. duh
 
-    bool showTrail = !(m_sharedData.connectionData[info.clientID].playerData[info.playerID].isCPU && m_sharedData.fastCPU);
-    showTrail = showTrail && (m_serverGroup == info.groupID);
+    const bool showTrail = !(m_sharedData.connectionData[info.clientID].playerData[info.playerID].isCPU && m_sharedData.fastCPU);
+    //showTrail = showTrail && (m_serverGroup == info.groupID);
 
     //point shadow seen from distance
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();// .setPosition(info.position);
     entity.addComponent<cro::Callback>().active = true;
+
+    while (m_ballTrails.size() <= info.groupID)
+    {
+        auto& trail = m_ballTrails.emplace_back(std::make_unique<BallTrail>());
+        trail->create(m_gameScene, m_resources, m_materialIDs[MaterialID::BallTrail]);
+        trail->setUseBeaconColour(m_sharedData.trailBeaconColour);
+    }
 
 
     if (m_sharedData.nightTime)
@@ -4415,10 +4428,10 @@ void GolfState::spawnBall(const ActorInfo& info)
                 {
                     if (showTrail)
                     {
-                        if (m_sharedData.showBallTrail && (info.playerID == m_currentPlayer.player && info.clientID == m_currentPlayer.client)
-                            && ballEnt.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
+                        if (m_sharedData.showBallTrail && /*(info.playerID == m_currentPlayer.player && info.clientID == m_currentPlayer.client)
+                            && */ballEnt.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
                         {
-                            m_ballTrail.addPoint(ballPos);
+                            m_ballTrails[info.groupID]->addPoint(ballPos);
                         }
                     }
                 }
@@ -4453,10 +4466,10 @@ void GolfState::spawnBall(const ActorInfo& info)
 
                     if (showTrail)
                     {
-                        if (m_sharedData.showBallTrail && (info.playerID == m_currentPlayer.player && info.clientID == m_currentPlayer.client)
+                        if (m_sharedData.showBallTrail /*&& (info.playerID == m_currentPlayer.player && info.clientID == m_currentPlayer.client)*/
                             && ballEnt.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
                         {
-                            m_ballTrail.addPoint(ballEnt.getComponent<cro::Transform>().getPosition(), e.getIndex());
+                            m_ballTrails[info.groupID]->addPoint(ballEnt.getComponent<cro::Transform>().getPosition(), e.getIndex());
                         }
                     }
                 }
@@ -7089,8 +7102,11 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_playTimer.restart();
     m_idleTime = cro::seconds(90.f);
     m_skipState = {};
-    m_ballTrail.setNext();
     m_strokeDistanceEnt.getComponent<cro::Text>().setString(" ");
+    for (auto& trail : m_ballTrails)
+    {
+        trail->setNext();
+    }
 
     //close any remaining icons
     cro::Command cmd;
