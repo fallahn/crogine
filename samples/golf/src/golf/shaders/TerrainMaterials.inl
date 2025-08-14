@@ -42,7 +42,7 @@ const float Speed = 1.0 / 30.0;
 
 void main()
 {
-	vec2 uv = v_texCoord0 / Scale;
+    vec2 uv = v_texCoord0 / Scale;
     float time = u_windData.w / 10.0;
 
     uv.y += (cos(time * Speed) * 0.1) + (time * Speed);
@@ -66,4 +66,48 @@ void main()
     FRAG_OUT.rgb = finalColour;
     FRAG_OUT.a = 1.0;
 
+})";
+
+static const inline std::string LavaFragV2 =
+R"(
+#define USE_MRT //for output location
+#include CAMERA_UBO
+#include WIND_BUFFER
+#include OUTPUT_LOCATION
+
+VARYING_IN vec2 v_texCoord0;
+
+const float Speed = 0.15;
+const float Scale = 8.0;
+const int Iterations = 3;
+
+const mat3 Rotation = mat3(-2.0, -1.0, 2.0,
+                            3.0, -2.0, 1.0,
+                            1.0,  2.0, 2.0);
+const float Density = 0.3;
+const float Intensity = 25.0;
+const float Brightness = 0.9;
+
+const vec4 Dark = vec4(1.0, 0.3608, 0.098, 1.0);
+const vec4 Light = vec4(1.0, 0.6275, 0.1725, 1.0);
+
+void main()
+{
+    float time = u_windData.w * Speed;
+
+    vec4 caustic = vec4(vec3(v_texCoord0 * Scale, 0.0), time);
+    caustic.xy += sin(time);
+
+    float accum = 1.0;
+    for (int i = 0; i < Iterations; ++i)
+    {
+        accum = min(accum, length(0.5 - fract(caustic.xyw *= Rotation * Density)));
+    }
+
+    float amt = pow(accum, 7.0) * Intensity;
+    
+    //FRAG_OUT = vec4(clamp(amt + Brightness, 0.0 ,1.0));
+    FRAG_OUT = mix(Dark, Light, amt);
+    LIGHT_OUT = FRAG_OUT;
+    NORM_OUT.a = 1.0 - clamp(amt + Brightness, 0.0 ,1.0);
 })";

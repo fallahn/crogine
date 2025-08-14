@@ -83,7 +83,7 @@ const float Speed = 1.0 / 30.0;
 
 void main()
 {
-	vec2 uv = v_texCoord0 / Scale;
+    vec2 uv = v_texCoord0 / Scale;
 
     uv.y += (cos(u_time * Speed) * 0.1) + (u_time * Speed);
     uv.x *= sin(u_time + uv.y * 4.0) * 0.1 + 0.8;

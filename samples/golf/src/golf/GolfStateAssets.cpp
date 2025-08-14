@@ -1781,7 +1781,7 @@ void GolfState::loadMaterials()
 
     //special prop materials
     if (m_resources.shaders.loadFromString(ShaderID::Lava,
-        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFrag, "#define TEXTURED\n"))
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFragV2, "#define TEXTURED\n"))
     {
         m_resources.shaders.mapStringID("lava", ShaderID::Lava);
         auto* shader = &m_resources.shaders.get(ShaderID::Lava);
