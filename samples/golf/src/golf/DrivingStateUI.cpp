@@ -3157,8 +3157,7 @@ void DrivingState::updateSkipMessage(float dt)
                             f.getComponent<cro::Transform>().setPosition(position + glm::vec3(RangeSize / 4.f, 0.f));
 
                             //set scale based on height
-                            static constexpr float MaxHeight = 30.f;
-                            const auto height = (pos.y / MaxHeight);
+                            const auto height = (pos.y / MaxMinimapHeight);
                             const float scale = 1.f + (height * 2.f);
                             f.getComponent<cro::Transform>().setScale(glm::vec2(scale));
 

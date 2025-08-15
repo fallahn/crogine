@@ -32,6 +32,7 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "ClientCollisionSystem.hpp"
 #include "BallSystem.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -100,15 +101,13 @@ void MiniBallSystem::process(float dt)
         {
             if (ball.parent.isValid())
             {
-
                 auto position = ball.parent.getComponent<cro::Transform>().getPosition();
                 entity.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(position), 0.05f * static_cast<float>(ball.playerID)));
 
                 //set scale based on height
-                static constexpr float MaxHeight = 30.f;
                 const auto& collider = ball.parent.getComponent<ClientCollider>();
                 //it says 'previous' but the scene will have been updated immediately before the UI
-                const float heightAboveGround = std::min(1.f, collider.previousHeight / MaxHeight);
+                const float heightAboveGround = std::min(1.f, collider.previousHeight / MaxMinimapHeight);
 
                 const float scale = 1.f + heightAboveGround;
                 entity.getComponent<cro::Transform>().setScale(glm::vec2(scale) * m_minimapZoom.mapScale * 2.f);
