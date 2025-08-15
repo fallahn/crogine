@@ -1645,7 +1645,6 @@ void GolfState::buildUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.21f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
-    entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Additive);
     entity.addComponent<cro::Callback>().setUserData<float>(1.f);
     entity.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)

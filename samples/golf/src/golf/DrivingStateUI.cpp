@@ -66,6 +66,9 @@ using namespace cl;
 
 namespace
 {
+    //timer for adding new vertices to ball trail
+    float vertexTimer = 0.f;
+
     //used as indices when scrolling through leaderboards
     std::int32_t leaderboardTryCount = 0;
     std::int32_t leaderboardHoleIndex = 0;
@@ -913,6 +916,7 @@ void DrivingState::createUI()
         e.getComponent<cro::Transform>().setScale(miniEnt.getComponent<cro::Transform>().getScale());
     };
 
+
     //ball icon on mini map
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition); //actually hides ball off map until ready to be drawn
@@ -950,6 +954,59 @@ void DrivingState::createUI()
         }
     };
     miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto ballEnt = entity;
+
+    //draws a trail on the mini map when the balls are in flight
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.21f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    entity.addComponent<cro::Callback>().setUserData<MiniTrailData>();
+    entity.getComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [ballEnt](cro::Entity e, float dt)
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<MiniTrailData>();
+
+            switch (ct.state)
+            {
+            default:
+            case MiniTrailData::Idle:
+                break;
+            case MiniTrailData::Reset:
+                ct.progress = std::max(0.f, ct.progress - (dt * 8.f));
+
+                if (ct.progress == 0)
+                {
+                    e.getComponent<cro::Drawable2D>().getVertexData().clear();
+                    ct.progress = 1.f;
+                    ct.state = MiniTrailData::Idle;
+                }
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, ct.progress));
+                break;
+            case MiniTrailData::Follow:
+            {
+                static constexpr float PointFreq = 0.125f;
+
+                vertexTimer += dt;
+                if (vertexTimer > PointFreq)
+                {
+                    const cro::Colour c(1.f, 1.f - ct.height, 0.f, 1.f);
+
+                    const auto p = glm::vec2(ballEnt.getComponent<cro::Transform>().getPosition());
+                    constexpr glm::vec2 Offset(0.5f, 0.f);
+                    vertexTimer -= PointFreq;
+
+                    e.getComponent<cro::Drawable2D>().getVertexData().emplace_back(p - Offset, c);
+                    e.getComponent<cro::Drawable2D>().getVertexData().emplace_back(p + Offset, c);
+                    e.getComponent<cro::Drawable2D>().updateLocalBounds();
+                }
+            }
+                break;
+            }
+        };
+    miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_minimapTrailEnt = entity;
+
 
 
     //stroke indicator
@@ -3090,19 +3147,24 @@ void DrivingState::updateSkipMessage(float dt)
                         cro::Command cmd2;
                         cmd2.targetFlags = CommandID::UI::MiniBall;
                         cmd2.action =
-                            [e](cro::Entity f, float)
+                            [&, e](cro::Entity f, float)
                         {
-                            auto pos = e.getComponent<cro::Transform>().getPosition();
+                            const auto pos = e.getComponent<cro::Transform>().getPosition();
 
-                            auto position = glm::vec3(pos.x, -pos.z, 0.1f) / 2.f;
+                            const auto position = glm::vec3(pos.x, -pos.z, 0.1f) / 2.f;
                             //need to tie into the fact the mini map is 1/2 scale
                             //and has the origin in the centre
                             f.getComponent<cro::Transform>().setPosition(position + glm::vec3(RangeSize / 4.f, 0.f));
 
                             //set scale based on height
-                            static constexpr float MaxHeight = 40.f;
-                            float scale = 1.f + ((pos.y / MaxHeight) * 2.f);
+                            static constexpr float MaxHeight = 30.f;
+                            const auto height = (pos.y / MaxHeight);
+                            const float scale = 1.f + (height * 2.f);
                             f.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+                            auto& data = m_minimapTrailEnt.getComponent<cro::Callback>().getUserData<MiniTrailData>();
+                            data.height = std::min(1.f, height);
+                            data.state = MiniTrailData::Idle;
                         };
                         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd2);
 

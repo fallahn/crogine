@@ -3195,17 +3195,22 @@ void DrivingState::createBall()
             //and mini-ball in overhead map
             cmd.targetFlags = CommandID::UI::MiniBall;
             cmd.action =
-                [pos](cro::Entity e, float)
+                [&, pos](cro::Entity e, float)
             {
-                auto position = glm::vec3(pos.x, -pos.z, 0.1f) / 2.f;
+                const auto position = glm::vec3(pos.x, -pos.z, 0.1f) / 2.f;
                 //need to tie into the fact the mini map is 1/2 scale
                 //and has the origin in the centre
                 e.getComponent<cro::Transform>().setPosition(position + glm::vec3(RangeSize / 4.f, 0.f));
 
                 //set scale based on height
-                static constexpr float MaxHeight = 40.f;
-                float scale = 1.f + ((pos.y / MaxHeight) * 2.f);
+                static constexpr float MaxHeight = 30.f;
+                const auto height = (pos.y / MaxHeight);
+                const float scale = 1.f + (height * 2.f);
                 e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+                auto& data = m_minimapTrailEnt.getComponent<cro::Callback>().getUserData<MiniTrailData>();
+                data.height = std::min(1.f, height);
+                data.state = MiniTrailData::Follow;
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -3811,14 +3816,18 @@ void DrivingState::setHole(std::int32_t index)
     //reset mini ball
     cmd.targetFlags = CommandID::UI::MiniBall;
     cmd.action =
-        [](cro::Entity e, float)
+        [&](cro::Entity e, float)
     {
-        auto pos = glm::vec3(PlayerPosition.x, -PlayerPosition.z, 0.1f);
+        const auto pos = glm::vec3(PlayerPosition.x, -PlayerPosition.z, 0.1f);
         e.getComponent<cro::Transform>().setPosition(pos / 2.f);
         e.getComponent<cro::Transform>().move(RangeSize / 4.f);
 
         //play the callback animation
         e.getComponent<cro::Callback>().active = true;
+
+        auto& data = m_minimapTrailEnt.getComponent<cro::Callback>().getUserData<MiniTrailData>();
+        data.height = 0.f;
+        data.state = MiniTrailData::Reset;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

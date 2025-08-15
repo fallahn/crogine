@@ -100,12 +100,15 @@ void MiniBallSystem::process(float dt)
         {
             if (ball.parent.isValid())
             {
+
                 auto position = ball.parent.getComponent<cro::Transform>().getPosition();
                 entity.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(position), 0.05f * static_cast<float>(ball.playerID)));
 
                 //set scale based on height
                 static constexpr float MaxHeight = 30.f;
-                const float heightAboveGround = std::min(1.f, position.y / MaxHeight); //TODO we need to actually subtract the ground level from the position...
+                const auto& collider = ball.parent.getComponent<ClientCollider>();
+                //it says 'previous' but the scene will have been updated immediately before the UI
+                const float heightAboveGround = std::min(1.f, collider.previousHeight / MaxHeight);
 
                 const float scale = 1.f + heightAboveGround;
                 entity.getComponent<cro::Transform>().setScale(glm::vec2(scale) * m_minimapZoom.mapScale * 2.f);
@@ -134,20 +137,18 @@ void MiniBallSystem::process(float dt)
                 }
 
                 //update the trail if in flight
-                const auto state = ball.parent.getComponent<ClientCollider>().state;
+                const auto state = collider.state;
                 if (state == static_cast<std::uint8_t>(Ball::State::Flight)
                     || state == static_cast<std::uint8_t>(Ball::State::Roll)
                     || state == static_cast<std::uint8_t>(Ball::State::Putt))
                 {
                     static constexpr float PointFreq = 0.125f;
-                    //static constexpr cro::Colour c(1.f, 1.f, 1.f, 0.25f);
-                    
-                    cro::Colour c(1.f, 1.f - heightAboveGround, /*heightAboveGround / 2.f*/0.f, 0.4f);
-                    //c /= 4.f;
 
                     vertexTimer += dt;
                     if (vertexTimer > PointFreq)
                     {
+                        const cro::Colour c(1.f, 1.f - heightAboveGround, 0.f, 1.f);
+                        
                         const auto p = glm::vec2(entity.getComponent<cro::Transform>().getPosition());
                         constexpr glm::vec2 Offset(0.f, 0.8f);
                         vertexTimer -= PointFreq;
