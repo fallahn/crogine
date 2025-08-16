@@ -46,12 +46,14 @@ struct MiniBall final
         Animating,
         Idle
     }state = Idle;
+
+    std::uint8_t groupID = 0;
 };
 
 class MiniBallSystem final : public cro::System
 {
 public:
-    MiniBallSystem(cro::MessageBus&, const MinimapZoom&);
+    MiniBallSystem(cro::MessageBus&, const MinimapZoom&, const std::uint8_t& serverGroup);
 
     void process(float) override;
 
@@ -60,6 +62,7 @@ public:
 
 private:
     const MinimapZoom& m_minimapZoom;
+    const std::uint8_t m_serverGroupID;
     std::int32_t m_activePlayer;
 
 };

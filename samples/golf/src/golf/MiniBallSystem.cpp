@@ -45,10 +45,11 @@ namespace
     float vertexTimer = 0.f;
 }
 
-MiniBallSystem::MiniBallSystem(cro::MessageBus& mb, const MinimapZoom& mz)
-    : cro::System(mb, typeid(MiniBallSystem)),
-    m_minimapZoom(mz),
-    m_activePlayer(0)
+MiniBallSystem::MiniBallSystem(cro::MessageBus& mb, const MinimapZoom& mz, const std::uint8_t& serverGroup)
+    : cro::System   (mb, typeid(MiniBallSystem)),
+    m_minimapZoom   (mz),
+    m_serverGroupID (serverGroup),
+    m_activePlayer  (0)
 {
     requireComponent<cro::Transform>();
     requireComponent<cro::Drawable2D>();
@@ -136,25 +137,28 @@ void MiniBallSystem::process(float dt)
                 }
 
                 //update the trail if in flight
-                const auto state = collider.state;
-                if (state == static_cast<std::uint8_t>(Ball::State::Flight)
-                    || state == static_cast<std::uint8_t>(Ball::State::Roll)
-                    || state == static_cast<std::uint8_t>(Ball::State::Putt))
+                if (ball.groupID == m_serverGroupID)
                 {
-                    static constexpr float PointFreq = 0.125f;
-
-                    vertexTimer += dt;
-                    if (vertexTimer > PointFreq)
+                    const auto state = collider.state;
+                    if (state == static_cast<std::uint8_t>(Ball::State::Flight)
+                        || state == static_cast<std::uint8_t>(Ball::State::Roll)
+                        || state == static_cast<std::uint8_t>(Ball::State::Putt))
                     {
-                        const cro::Colour c(1.f, 1.f - heightAboveGround, 0.f, 1.f);
-                        
-                        const auto p = glm::vec2(entity.getComponent<cro::Transform>().getPosition());
-                        constexpr glm::vec2 Offset(0.f, 0.8f);
-                        vertexTimer -= PointFreq;
+                        static constexpr float PointFreq = 0.125f;
 
-                        ball.minitrail.getComponent<cro::Drawable2D>().getVertexData().emplace_back(p - (Offset * m_minimapZoom.mapScale * 2.f), c);
-                        ball.minitrail.getComponent<cro::Drawable2D>().getVertexData().emplace_back(p + (Offset * m_minimapZoom.mapScale * 2.f), c);
-                        ball.minitrail.getComponent<cro::Drawable2D>().updateLocalBounds();
+                        vertexTimer += dt;
+                        if (vertexTimer > PointFreq)
+                        {
+                            const cro::Colour c(1.f, 1.f - heightAboveGround, 0.f, 1.f);
+
+                            const auto p = glm::vec2(entity.getComponent<cro::Transform>().getPosition());
+                            constexpr glm::vec2 Offset(0.f, 0.8f);
+                            vertexTimer -= PointFreq;
+
+                            ball.minitrail.getComponent<cro::Drawable2D>().getVertexData().emplace_back(p - (Offset * m_minimapZoom.mapScale * 2.f), c);
+                            ball.minitrail.getComponent<cro::Drawable2D>().getVertexData().emplace_back(p + (Offset * m_minimapZoom.mapScale * 2.f), c);
+                            ball.minitrail.getComponent<cro::Drawable2D>().updateLocalBounds();
+                        }
                     }
                 }
             }

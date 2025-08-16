@@ -3273,7 +3273,7 @@ void GolfState::addSystems()
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<NotificationSystem>(mb);
     m_uiScene.addSystem<FloatingTextSystem>(mb);
-    m_uiScene.addSystem<MiniBallSystem>(mb, m_minimapZoom);
+    m_uiScene.addSystem<MiniBallSystem>(mb, m_minimapZoom, m_serverGroup);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::SpriteAnimator>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
@@ -4819,6 +4819,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.getComponent<MiniBall>().parent = ballEnt;
     entity.getComponent<MiniBall>().minimap = m_minimapEnt;
     entity.getComponent<MiniBall>().minitrail = m_minimapTrail;
+    entity.getComponent<MiniBall>().groupID = info.groupID; //don't drawn minimap trails unless this is our client
     //childList.push_back(entity); //the MiniBallSystem tidies up for us as this belongs to a different scene
     m_minimapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
