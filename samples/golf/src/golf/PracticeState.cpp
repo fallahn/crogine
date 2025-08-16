@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -307,9 +307,10 @@ void PracticeState::buildScene()
             e.getComponent<cro::Callback>().active = true;
         });
     auto unselectedID = uiSystem.addCallback(
-        [](cro::Entity e)
+        [helpText](cro::Entity e) mutable
         {
             e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            helpText.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         });
     auto unselectedLockedID = uiSystem.addCallback(
         [helpText](cro::Entity) mutable
@@ -425,7 +426,7 @@ void PracticeState::buildScene()
             uiSystem.addCallback([helpText](cro::Entity e) mutable
             {
                 helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                helpText.getComponent<cro::Text>().setString("Get Join The Club to Unlock");
+                helpText.getComponent<cro::Text>().setString("Achieve Join The Club");
                 centreText(helpText);
 
                 e.getComponent<cro::AudioEmitter>().play();
@@ -454,6 +455,17 @@ void PracticeState::buildScene()
                         requestStackPush(StateID::Playlist);
                     }
                 });
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+            uiSystem.addCallback([helpText](cro::Entity e) mutable
+                {
+                    helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    helpText.getComponent<cro::Text>().setString("Remix The Courses");
+                    centreText(helpText);
+
+                    e.getComponent<cro::AudioEmitter>().play();
+                    e.getComponent<cro::Callback>().setUserData<float>(0.f);
+                    e.getComponent<cro::Callback>().active = true;
+                });
     }
     else
     {
@@ -464,7 +476,7 @@ void PracticeState::buildScene()
             uiSystem.addCallback([helpText](cro::Entity e) mutable
             {
                     helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                    helpText.getComponent<cro::Text>().setString("Get Grand Tour to Unlock");
+                    helpText.getComponent<cro::Text>().setString("Achieve Grand Tour");
                     centreText(helpText);
 
                     e.getComponent<cro::AudioEmitter>().play();
