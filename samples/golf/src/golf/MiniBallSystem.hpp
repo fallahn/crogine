@@ -62,7 +62,7 @@ public:
 
 private:
     const MinimapZoom& m_minimapZoom;
-    const std::uint8_t m_serverGroupID;
+    const std::uint8_t& m_serverGroupID;
     std::int32_t m_activePlayer;
 
 };
