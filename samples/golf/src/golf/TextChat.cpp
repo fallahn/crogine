@@ -367,15 +367,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         }
                         ImGui::PopFont();
                         showToolTip("Applaud - Shortcut: Number 7");
-                        ImGui::SameLine();
-                        ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
-                        if (ImGui::Button(m_buttonStrings.happy.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
-                        {
-                            quickEmote(TextChat::Happy);
-                            //m_visible = false;
-                        }
-                        ImGui::PopFont();
-                        showToolTip("Happy - Shortcut: Number 8");
+
                         ImGui::SameLine();
                         ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
                         if (ImGui::Button(m_buttonStrings.laughing.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
@@ -384,7 +376,18 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                             //m_visible = false;
                         }
                         ImGui::PopFont();
-                        showToolTip("Laughing - Shortcut: Number 9");
+                        showToolTip("Laughing - Shortcut: Number 8");
+
+                        ImGui::SameLine();
+                        ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
+                        if (ImGui::Button(m_buttonStrings.happy.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
+                        {
+                            quickEmote(TextChat::Happy);
+                            //m_visible = false;
+                        }
+                        ImGui::PopFont();
+                        showToolTip("Happy - Shortcut: Number 9");
+
                         ImGui::SameLine();
                         ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
                         if (ImGui::Button(m_buttonStrings.angry.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
