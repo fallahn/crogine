@@ -81,7 +81,7 @@ namespace ShaderID
         Background,
         SMAAPreview,
 
-        Holo, Lava
+        Holo, Lava, LavaFall
     };
 }
 

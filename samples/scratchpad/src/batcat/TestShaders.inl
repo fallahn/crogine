@@ -148,3 +148,25 @@ void main()
     //FRAG_OUT = vec4(clamp(amt + Brightness, 0.0 ,1.0));
     FRAG_OUT = mix(Dark, Light, amt);
 })";
+
+static inline const std::string LavaFallFrag =
+R"(
+OUTPUT
+
+uniform sampler2D u_diffuseMap;
+uniform float u_time;
+
+VARYING_IN vec2 v_texCoord0;
+
+void main()
+{
+    vec2 coord = v_texCoord0;
+    coord.y += (u_time * 0.1);
+
+    float xOffset = sin(u_time) * 0.02;
+    float dir = step(0.5, coord.x) * 2.0 - 1.0;
+
+    coord.x += xOffset * dir;
+
+    FRAG_OUT = TEXTURE(u_diffuseMap, coord);
+})";

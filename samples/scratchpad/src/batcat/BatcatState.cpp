@@ -111,6 +111,7 @@ namespace
     };
     ShaderInfo holoShader;
     ShaderInfo lavaShader;
+    ShaderInfo lavaFallShader;
 }
 
 BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
@@ -228,6 +229,9 @@ bool BatcatState::simulate(float dt)
     glUseProgram(lavaShader.ID);
     glUniform1f(lavaShader.timeUniform, accum);
 
+    glUseProgram(lavaFallShader.ID);
+    glUniform1f(lavaFallShader.timeUniform, accum);
+
     m_scene.simulate(dt);
     m_overlayScene.simulate(dt);
     return true;
@@ -317,15 +321,25 @@ void BatcatState::createScene()
         lavaShader.timeUniform = m_resources.shaders.get(ShaderID::Lava).getUniformID("u_time");
     }
     
+    if (m_resources.shaders.loadFromString(ShaderID::LavaFall,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFallFrag, "#define TEXTURED\n"))
+    {
+        m_resources.shaders.mapStringID("lavafall", ShaderID::LavaFall);
+
+        lavaFallShader.ID = m_resources.shaders.get(ShaderID::LavaFall).getGLHandle();
+        lavaFallShader.timeUniform = m_resources.shaders.get(ShaderID::LavaFall).getUniformID("u_time");
+    }
+
+
 
     cro::ModelDefinition md(m_resources);
-    if (md.loadFromFile("assets/batcat/models/holo.cmt"))
+    /*if (md.loadFromFile("assets/batcat/models/holo.cmt"))
     {
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
         entity.getComponent<cro::Transform>().setPosition({ 7.f, 0.f, 8.f });
         md.createModel(entity);
-    }
+    }*/
 
     if (md.loadFromFile("assets/golf/plane.cmt"))
     {
@@ -334,6 +348,15 @@ void BatcatState::createScene()
         entity.getComponent<cro::Transform>().setPosition({ -7.f, 0.f, 8.f });
         md.createModel(entity);
     }
+
+    if (md.loadFromFile("assets/golf/models/lavafall_small.cmt"))
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
+        entity.getComponent<cro::Transform>().setPosition({ 7.f, 0.f, 8.f });
+        md.createModel(entity);
+    }
+
 
     std::vector<glm::mat4> tx;
     for (auto i = 0; i < 7; ++i)

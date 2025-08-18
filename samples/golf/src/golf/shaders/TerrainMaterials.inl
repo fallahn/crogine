@@ -108,6 +108,31 @@ void main()
     
     //FRAG_OUT = vec4(clamp(amt + Brightness, 0.0 ,1.0));
     FRAG_OUT = mix(Dark, Light, amt);
-    LIGHT_OUT = FRAG_OUT;
+    LIGHT_OUT = vec4(FRAG_OUT.rgb, 1.0);
     NORM_OUT.a = 1.0 - clamp(amt + Brightness, 0.0 ,1.0);
+})";
+
+static inline const std::string LavaFallFrag =
+R"(
+#define USE_MRT //for output location
+#include CAMERA_UBO
+#include WIND_BUFFER
+#include OUTPUT_LOCATION
+
+uniform sampler2D u_diffuseMap;
+VARYING_IN vec2 v_texCoord0;
+
+void main()
+{
+    vec2 coord = v_texCoord0;
+    coord.y += (u_windData.w * 0.1);
+
+    float xOffset = sin(u_windData.w) * 0.02;
+    float dir = step(0.5, coord.x) * 2.0 - 1.0;
+
+    coord.x += xOffset * dir;
+
+    FRAG_OUT = TEXTURE(u_diffuseMap, coord);
+    LIGHT_OUT = vec4(FRAG_OUT.rgb, 1.0);
+    NORM_OUT.a = 0.0;
 })";

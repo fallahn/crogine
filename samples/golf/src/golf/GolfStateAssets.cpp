@@ -1788,6 +1788,14 @@ void GolfState::loadMaterials()
         m_windBuffer.addShader(*shader);
     }
 
+    if (m_resources.shaders.loadFromString(ShaderID::LavaFall,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFallFrag, "#define TEXTURED\n"))
+    {
+        m_resources.shaders.mapStringID("lavafall", ShaderID::LavaFall);
+        auto* shader = &m_resources.shaders.get(ShaderID::LavaFall);
+        m_windBuffer.addShader(*shader);
+    }
+
     if (m_resources.shaders.loadFromString(ShaderID::Hologram,
         cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag, "#define TEXTURED\n#define RIMMING\n"))
     {

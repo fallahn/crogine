@@ -387,7 +387,8 @@ struct ShaderID final
         Emissive,
         Hole,
         Hologram,
-        Lava
+        Lava,
+        LavaFall,
     };
 };
 
