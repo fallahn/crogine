@@ -119,6 +119,10 @@ VARYING_OUT vec4 v_menuProjection;
     VARYING_OUT vec2 v_normalTexCoord;
 #endif
 
+#if defined(INSTANCING)
+flat out int v_instanceID;
+#endif
+
 #include MAP_SIZE
 #include WATER_LEVEL
 
@@ -135,6 +139,7 @@ VARYING_OUT vec4 v_menuProjection;
     {
     #if defined (INSTANCING)
 #include INSTANCE_MATRICES
+v_instanceID = gl_InstanceID;
     #else
         mat4 worldMatrix = u_worldMatrix;
         mat4 worldViewMatrix = u_worldViewMatrix;

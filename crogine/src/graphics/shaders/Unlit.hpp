@@ -98,10 +98,15 @@ static inline const std::string Vertex = R"(
 #include SHADOWMAP_OUTPUTS
     #endif
 
+#if defined(INSTANCING)
+        flat out int v_instanceID;
+#endif
+
         void main()
         {
         #if defined (INSTANCING)
 #include INSTANCE_MATRICES
+        v_instanceID = gl_InstanceID;
         #else
             mat4 worldMatrix = u_worldMatrix;
             mat4 worldViewMatrix = u_worldViewMatrix;

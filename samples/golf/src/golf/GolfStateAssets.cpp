@@ -81,6 +81,7 @@ namespace
 #include "shaders/Hole.inl"
 #include "shaders/Hologram.inl"
 #include "shaders/TerrainMaterials.inl"
+#include "shaders/Weather.inl"
 
     //colour is normal colour with dark shadow
     const std::array BannerStrings =
@@ -1802,6 +1803,14 @@ void GolfState::loadMaterials()
         m_resources.shaders.mapStringID("holo_shader", ShaderID::Hologram);
         auto* shader = &m_resources.shaders.get(ShaderID::Hologram);
         m_windBuffer.addShader(*shader);
+    }
+
+    if (m_resources.shaders.loadFromString(ShaderID::Umbrella, CelVertexShader, UmbrellaFrag,
+        "#define DITHERED\n#define INSTANCING\n#define VERTEX_COLOURED\n#define TERRAIN_CLIP\n" + wobble))
+    {
+        m_resources.shaders.mapStringID("umbrella", ShaderID::Umbrella);
+        auto* shader = &m_resources.shaders.get(ShaderID::Umbrella);
+        m_resolutionBuffer.addShader(*shader);
     }
 
 

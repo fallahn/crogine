@@ -129,6 +129,7 @@ private:
     void onChunkUpdate(const std::vector<std::int32_t>&);
 
     std::array<std::vector<cro::Entity>, 2u> m_crowdEntities = {};
+    std::array<cro::Entity, 2u> m_umbrellaEntities = {};
 
     struct TerrainVertex final
     {

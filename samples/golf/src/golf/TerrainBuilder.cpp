@@ -102,6 +102,7 @@ namespace
         std::array<cro::Entity, 2u> billboardTreeEnts = {}; //low quality trees
         std::array<cro::Entity, 4u> shrubberyEnts; //instanced shrubbery/trees (if HQ)
         std::vector<cro::Entity>* crowdEnts = nullptr;
+        cro::Entity umbrellaEnt;
     };
 
     //callback for swapping shrub ents
@@ -159,6 +160,11 @@ namespace
                             e.getComponent<cro::Model>().setHidden(true);
                         }
                     }
+                }
+
+                if (swapData.umbrellaEnt.isValid())
+                {
+                    swapData.umbrellaEnt.getComponent<cro::Model>().setHidden(true);
                 }
             }
         }
@@ -359,6 +365,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     cro::ModelDefinition billboardDef(resources);
     cro::ModelDefinition shrubDef(resources);
     cro::ModelDefinition crowdDef(resources);
+    cro::ModelDefinition umbrellaDef(resources);
     std::int32_t i = 0;
 
     //TODO scan the directory for definition files?
@@ -582,8 +589,38 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             }
         }
 
+
+        //if rain or showers, load some umbrellas
+        if (m_sharedData.weatherType == WeatherType::Rain
+            || m_sharedData.weatherType == WeatherType::Showers)
+        {
+            if (!umbrellaDef.isLoaded())
+            {
+                umbrellaDef.loadFromFile("assets/golf/models/spectators/umbrella.cmt", true);
+            }
+
+            if (umbrellaDef.isLoaded())
+            {
+                //we're basing the postions from crowd models,
+                //so we need to apply the same offset
+                auto childEnt = scene.createEntity();
+                childEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f });
+                umbrellaDef.createModel(childEnt);
+            
+                childEnt.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Final, 0).addCustomSetting(GL_CLIP_DISTANCE1);
+                childEnt.getComponent<cro::Model>().setHidden(true);
+                childEnt.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
+
+                m_umbrellaEntities[i] = childEnt;
+                entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
+            }
+        }
+
         i++;
     }
+
+
+
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
@@ -747,6 +784,7 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
                 swapData.instancedEnt = m_instancedEntities[second];
                 swapData.shrubberyEnts = m_instancedShrubs[second];
                 swapData.crowdEnts = &m_crowdEntities[second];
+                swapData.umbrellaEnt = m_umbrellaEntities[second];
                 swapData.billboardEnts[0] = m_billboardEntities[second];
                 swapData.billboardEnts[1] = m_billboardEntities[first];
                 swapData.billboardTreeEnts[0] = m_billboardTreeEntities[second];
@@ -777,7 +815,7 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
 
                 //crowd instances
                 //TODO can we move some of this to the thread func (can't set transforms in it though)
-                auto density = m_holeData[m_currentHole].puttFromTee ? std::min(m_sharedData.crowdDensity, 1) : m_sharedData.crowdDensity;
+                const auto density = m_holeData[m_currentHole].puttFromTee ? std::min(m_sharedData.crowdDensity, 1) : m_sharedData.crowdDensity;
                 std::vector<std::vector<glm::mat4>> positions(m_crowdEntities[first].size());
                 for (auto i = 0u; i < m_holeData[m_currentHole].crowdPositions[density].size(); ++i)
                 {
@@ -792,6 +830,12 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
                         m_crowdEntities[first][i].getComponent<cro::Model>().setInstanceTransforms(positions[i]);
                         m_crowdEntities[first][i].getComponent<cro::Model>().setHidden(false);
                     }
+                }
+
+                if (m_umbrellaEntities[first].isValid())
+                {
+                    m_umbrellaEntities[first].getComponent<cro::Model>().setInstanceTransforms(positions[0]);
+                    m_umbrellaEntities[first].getComponent<cro::Model>().setHidden(false);
                 }
             }
 
@@ -900,6 +944,19 @@ void TerrainBuilder::applyCrowdDensity()
             {
                 m_crowdEntities[crowdIndex][i].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
             }
+        }
+    }
+
+    if (m_umbrellaEntities[crowdIndex].isValid())
+    {
+        if (!positions[0].empty())
+        {
+            m_umbrellaEntities[crowdIndex].getComponent<cro::Model>().setInstanceTransforms(positions[0]);
+            m_umbrellaEntities[crowdIndex].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+        }
+        else
+        {
+            m_umbrellaEntities[crowdIndex].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
         }
     }
 }

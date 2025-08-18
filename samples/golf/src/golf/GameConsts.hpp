@@ -389,6 +389,7 @@ struct ShaderID final
         Hologram,
         Lava,
         LavaFall,
+        Umbrella
     };
 };
 
