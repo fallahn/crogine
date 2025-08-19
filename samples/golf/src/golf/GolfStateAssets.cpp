@@ -1817,11 +1817,12 @@ void GolfState::loadMaterials()
 
 
     //cel shaded material
-    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define TERRAIN_CLIP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define TERRAIN_CLIP\n#define BALL_COLOUR\n" + wobble);
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Cel]).setProperty("u_ballColour", cro::Colour::White);
 
     m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define SKINNED\n#define TERRAIN_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelSkinned);
@@ -3049,6 +3050,18 @@ void GolfState::loadSpectators()
         "assets/golf/models/spectators/04.cmt"
     };
 
+    const bool brolly =  m_sharedData.weatherType == WeatherType::Rain
+        || m_sharedData.weatherType == WeatherType::Showers;
+
+    cro::ModelDefinition brollyDef(m_resources);
+    cro::ModelDefinition brollyAnim(m_resources);
+    std::size_t colourIdx = 0;
+    constexpr std::array ColourIndices = { 1,6,8,15,17,25 };
+    if (brolly)
+    {
+        brollyDef.loadFromFile("assets/golf/models/spectators/umbrella_attachment.cmt");
+        brollyAnim.loadFromFile("assets/golf/models/spectators/wet_animation.cmt");
+    }
 
     for (auto i = 0; i < 2; ++i)
     {
@@ -3074,22 +3087,80 @@ void GolfState::loadSpectators()
                         entity.getComponent<cro::Model>().setMaterial(0, material);
 
                         auto& skel = entity.getComponent<cro::Skeleton>();
+                        std::int32_t attachmentIdx = -1;
+
+                        if (brollyAnim.isLoaded()
+                            && brollyAnim.hasSkeleton())
+                        {
+                            const auto& srcSkel = brollyAnim.getSkeleton();
+                            for (auto k = 0u; k < srcSkel.getAnimations().size(); ++k)
+                            {
+                                skel.addAnimation(srcSkel, k);
+                            }
+
+                            if (attachmentIdx = srcSkel.getAttachmentIndex("brolly"); attachmentIdx != -1)
+                            {
+                                skel.addAttachment(srcSkel.getAttachments()[attachmentIdx]);
+
+                                //update with new index as we can't really assume they'll be the same (although probably are)
+                                attachmentIdx = skel.getAttachmentIndex("brolly");
+                            }
+                        }
+
                         if (!skel.getAnimations().empty())
                         {
                             auto& spectator = entity.addComponent<Spectator>();
                             for (auto k = 0u; k < skel.getAnimations().size(); ++k)
                             {
-                                if (skel.getAnimations()[k].name == "Walk")
+                                if (brolly)
                                 {
-                                    spectator.anims[Spectator::AnimID::Walk] = k;
+                                    if (skel.getAnimations()[k].name == "Walk_brolly") //ugh this is mis-named in the file
+                                    {
+                                        spectator.anims[Spectator::AnimID::Walk] = k;
+                                    }
+                                    else if (skel.getAnimations()[k].name == "Idle_Brolly")
+                                    {
+                                        spectator.anims[Spectator::AnimID::Idle] = k;
+                                    }
                                 }
-                                else if (skel.getAnimations()[k].name == "Idle")
+                                else
                                 {
-                                    spectator.anims[Spectator::AnimID::Idle] = k;
+                                    if (skel.getAnimations()[k].name == "Walk")
+                                    {
+                                        spectator.anims[Spectator::AnimID::Walk] = k;
+                                    }
+                                    else if (skel.getAnimations()[k].name == "Idle")
+                                    {
+                                        spectator.anims[Spectator::AnimID::Idle] = k;
+                                    }
                                 }
                             }
-
                             skel.setMaxInterpolationDistance(30.f);
+
+                            //add brolly if attachment point exists
+                            if (attachmentIdx != -1)
+                            {
+                                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+                                material.doubleSided = true;
+
+                                material.setProperty("u_ballColour", CD32::Colours[ColourIndices[colourIdx % ColourIndices.size()]]);
+                                colourIdx++;
+
+                                auto childEnt = m_gameScene.createEntity();
+                                childEnt.addComponent<cro::Transform>();
+                                brollyDef.createModel(childEnt);
+
+                                childEnt.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+                                childEnt.getComponent<cro::Model>().setMaterial(0, material);
+
+                                childEnt.addComponent<cro::Callback>().active = true;
+                                childEnt.getComponent<cro::Callback>().function =
+                                    [entity](cro::Entity e, float)
+                                    {
+                                        e.getComponent<cro::Model>().setHidden(entity.getComponent<cro::Model>().isHidden());
+                                    };
+                                skel.getAttachments()[attachmentIdx].setModel(childEnt);
+                            }
                         }
                     }
 
