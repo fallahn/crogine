@@ -3042,7 +3042,7 @@ void GolfState::loadModels()
 void GolfState::loadSpectators()
 {
     cro::ModelDefinition md(m_resources);
-    std::array modelPaths =
+    const std::array modelPaths =
     {
         "assets/golf/models/spectators/01.cmt",
         "assets/golf/models/spectators/02.cmt",
@@ -3050,7 +3050,7 @@ void GolfState::loadSpectators()
         "assets/golf/models/spectators/04.cmt"
     };
 
-    const bool brolly =  m_sharedData.weatherType == WeatherType::Rain
+    const bool brolly = m_sharedData.weatherType == WeatherType::Rain
         || m_sharedData.weatherType == WeatherType::Showers;
 
     cro::ModelDefinition brollyDef(m_resources);
