@@ -280,6 +280,19 @@ void GolfState::registerDebugCommands()
 {
     //registerWindow([&]() 
     //    {
+    //        ImGui::Begin("Slices");
+    //        for (const auto& arr : m_sliceCounter)
+    //        {
+    //            for (auto i : arr)
+    //            {
+    //                ImGui::Text("Slice count: %d", i);
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
+
+    //registerWindow([&]() 
+    //    {
     //        ImGui::SetNextWindowSize({ 436.f, 144.f });
     //        if (ImGui::Begin("Club Model"))
     //        {

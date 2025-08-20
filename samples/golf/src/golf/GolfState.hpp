@@ -662,6 +662,10 @@ private:
     void showLevelUp(std::uint64_t);
     void toggleQuitReady();
 
+    bool m_sliceTutShown;
+    std::array<std::array<std::int32_t, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_sliceCounter = {};
+    void updateSliceTutorial(const ActivePlayer&); //counts hook/slices and shows a message about difficulty for newer players
+
     SkipState m_skipState;
     void updateSkipMessage(float);
     void refreshUI();

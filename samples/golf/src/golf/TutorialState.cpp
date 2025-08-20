@@ -544,6 +544,9 @@ void TutorialState::buildScene()
     case TutorialID::Spin:
         tutorialSpin(rootNode);
         break;
+    case TutorialID::LowerClubs:
+        tutorialLowerClubs(rootNode);
+        break;
     }
 
     //set up camera / resize callback
@@ -3084,6 +3087,13 @@ void TutorialState::tutorialSpin(cro::Entity root)
 
 
     m_actionCallbacks.push_back([&]() { quitState(); });
+}
+
+void TutorialState::tutorialLowerClubs(cro::Entity root)
+{
+    //displays animation showing power bar and accuracy bar
+
+    //asks if player wishes to set clubs to Casual
 }
 
 void TutorialState::showContinue()

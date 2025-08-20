@@ -5861,6 +5861,27 @@ void GolfState::toggleQuitReady()
     }
 }
 
+void GolfState::updateSliceTutorial(const ActivePlayer& player)
+{
+    if (player.client != m_sharedData.localConnectionData.connectionID)
+    {
+        return;
+    }
+
+    if (Social::getLevel() < 3
+        && !m_sliceTutShown
+        && m_sharedData.clubSet != 0)
+    {
+        if (m_sliceCounter[player.client][player.player] == 3)
+        {
+            m_sharedData.tutorialIndex = TutorialID::LowerClubs;
+            requestStackPush(StateID::Tutorial);
+
+            m_sliceTutShown = true;
+        }
+    }
+}
+
 void GolfState::updateSkipMessage(float dt)
 {
     if (m_skipState.state == static_cast<std::int32_t>(Ball::State::Flight))

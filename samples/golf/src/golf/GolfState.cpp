@@ -228,11 +228,23 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale             (1.f),
     m_scoreColumnCount      (2),
     m_readyQuitFlags        (0),
+    m_sliceTutShown         (false),
     m_courseIndex           (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel            (sd, m_currentPlayer, m_textChat),
     m_minimapTexturePass    (MaxMinimapPasses),
     m_drawDebugMesh         (false)
 {
+    if (Social::getLevel() < 1)
+    {
+        sd.clubSet = 0;
+        sd.preferredClubSet = 0;
+    }
+    
+    for (auto& arr : m_sliceCounter)
+    {
+        std::fill(arr.begin(), arr.end(), 0);
+    }
+
     for (auto& scales : m_ballScales)
     {
         std::fill(scales.begin(), scales.end(), 0.f);
@@ -1548,6 +1560,20 @@ void GolfState::handleMessage(const cro::Message& msg)
                     //m_activeAvatar->ballModel.getComponent<cro::ParticleEmitter>().start();
                 }
 
+                //track the hook/slice count so we can show a help screen if necessary
+                if (isHook)
+                {
+                    if (!isCPU)
+                    {
+                        m_sliceCounter[m_currentPlayer.client][m_currentPlayer.player]++;
+                    }
+                }
+                else
+                {
+                    m_sliceCounter[m_currentPlayer.client][m_currentPlayer.player] = 0;
+                }
+
+
                 //hide the ball briefly to hack around the motion lag
                 //(the callback automatically scales back)
                 if (m_activeAvatar->ballModel.isValid())
@@ -2351,6 +2377,48 @@ void GolfState::handleMessage(const cro::Message& msg)
                 || data.id == StateID::Tutorial)
             {
                 cro::App::getWindow().setMouseCaptured(true);
+
+                if (m_sharedData.tutorialIndex == TutorialID::LowerClubs)
+                {
+                    m_sharedData.tutorialIndex = 0;
+                    
+                    //if the user doesn't press yes the index is reset to 0
+                    m_sharedData.clubSet = 0;
+                    m_sharedData.preferredClubSet = 0;
+                    Club::setClubLevel(m_sharedData.clubSet);
+                    
+                    //fake some key strokes to update the selected club
+                    auto ent = m_uiScene.createEntity();
+                    ent.addComponent<cro::Callback>().active = true;
+                    ent.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
+                    ent.getComponent<cro::Callback>().function =
+                        [&](cro::Entity e, float)
+                        {
+                            auto& idx = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+                            switch (idx)
+                            {
+                            default: case 0:
+                                createKeystroke(m_sharedData.inputBinding.keys[InputBinding::NextClub], true);
+                                break;
+                            case 1:
+                                createKeystroke(m_sharedData.inputBinding.keys[InputBinding::NextClub], false);
+                                break;
+                            case 2:
+                                createKeystroke(m_sharedData.inputBinding.keys[InputBinding::PrevClub], true);
+                                break;
+                            case 3:
+                                createKeystroke(m_sharedData.inputBinding.keys[InputBinding::PrevClub], false);
+                                break;
+                            }
+
+                            idx++;
+                            if (idx == 4)
+                            {
+                                e.getComponent<cro::Callback>().active = false;
+                                m_uiScene.destroyEntity(e);
+                            }
+                        };
+                }
             }
             else if (data.id == StateID::Options)
             {
@@ -7001,19 +7069,10 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
-    /*if (m_sharedData.scoreType == ScoreType::ClubShuffle)
+    if (m_sharedData.gameMode != GameMode::Tutorial)
     {
-        m_sharedData.clubSet = ClubID::getRandomSet();
+        updateSliceTutorial(player);
     }
-    else
-    {
-        m_sharedData.clubSet = m_baseClubSet;
-    }
-
-    if (Team::Player(player.client, player.player) == m_snekPlayer)
-    {
-        m_sharedData.clubSet &= ~ClubID::SnekFlags;
-    }*/
 
     //this might arrive after a client quit
     if (!m_avatars[player.client][player.player].ballModel.isValid())
