@@ -5870,7 +5870,7 @@ void GolfState::updateSliceTutorial(const ActivePlayer& player)
 
     if (Social::getLevel() < 3
         && !m_sliceTutShown
-        && m_sharedData.clubSet != 0)
+        /*&& m_sharedData.clubSet != 0*/) //always show as we might just be misinterpreting the hook bar
     {
         if (m_sliceCounter[player.client][player.player] == 3)
         {

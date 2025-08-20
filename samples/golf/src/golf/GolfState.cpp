@@ -873,6 +873,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         //}
             //m_drawDepthMaps = !m_drawDepthMaps;
             //showCountdown(10);
+
+            //m_sharedData.tutorialIndex = TutorialID::LowerClubs;
+            //requestStackPush(StateID::Tutorial);
             break;
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
@@ -2387,6 +2390,9 @@ void GolfState::handleMessage(const cro::Message& msg)
                     m_sharedData.preferredClubSet = 0;
                     Club::setClubLevel(m_sharedData.clubSet);
                     
+                    m_textChat.printToScreen("Clubset changed to Casual", CD32::Colours[CD32::BlueLight]);
+                    postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;                    
+
                     //fake some key strokes to update the selected club
                     auto ent = m_uiScene.createEntity();
                     ent.addComponent<cro::Callback>().active = true;
