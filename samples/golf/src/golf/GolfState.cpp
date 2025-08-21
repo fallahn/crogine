@@ -875,8 +875,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //m_drawDepthMaps = !m_drawDepthMaps;
             //showCountdown(10);
 
-            m_sharedData.tutorialIndex = TutorialID::LowerClubs;
-            requestStackPush(StateID::Tutorial);
+            //m_sharedData.tutorialIndex = TutorialID::LowerClubs;
+            //requestStackPush(StateID::Tutorial);
             break;
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
