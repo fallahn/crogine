@@ -5871,10 +5871,10 @@ void GolfState::updateProTip(const ActivePlayer& player)
     if (player.terrain == TerrainID::Green)
     {
         const auto puttLimit = m_sharedData.showPuttingPower ? 3 : 2;
-        if (Social::getLevel() < 2
+        if ((Social::getLevel() < 1 || m_sharedData.showInGameTips)
             && !m_puttTutShown)
         {
-            if (m_puttCounter[player.client][player.player] == puttLimit)
+            if (m_puttCounter[player.client][player.player] >= puttLimit)
             {
                 m_sharedData.tutorialIndex = TutorialID::PuttAssist;
                 requestStackPush(StateID::Tutorial);
@@ -5885,10 +5885,10 @@ void GolfState::updateProTip(const ActivePlayer& player)
     }
     else
     {
-        if (Social::getLevel() < 2
+        if ((Social::getLevel() < 1 || m_sharedData.showInGameTips)
             && !m_sliceTutShown)
         {
-            if (m_sliceCounter[player.client][player.player] == 2)
+            if (m_sliceCounter[player.client][player.player] >= 2)
             {
                 m_sharedData.tutorialIndex = TutorialID::LowerClubs;
                 requestStackPush(StateID::Tutorial);

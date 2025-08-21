@@ -1841,6 +1841,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.showMinimap = prop.getValue<bool>();
                     }
+                    else if (name == "show_tips")
+                    {
+                        m_sharedData.showInGameTips = prop.getValue<bool>();
+                    }
                 }
             }
 
@@ -1999,6 +2003,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("zoom_follow").setValue(m_sharedData.zoomFollowCam);
     cfg.addProperty("club_update").setValue(m_sharedData.showClubUpdate);
     cfg.addProperty("show_minimap").setValue(m_sharedData.showMinimap);
+    cfg.addProperty("show_tips").setValue(m_sharedData.showInGameTips);
     cfg.save(path);
 
 

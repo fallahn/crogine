@@ -4788,7 +4788,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity = createHighlight(glm::vec2(12.f, 95.f));
     entity.setLabel("Show the Minimap and Range Indicator on the HUD\nDefault to ON");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettShowMinimap);
-    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetHints);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, SettShowHints);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettPuttZoom);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
@@ -4807,6 +4807,33 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         [&](cro::Entity e, float)
         {
             const float scale = m_sharedData.showMinimap ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+
+
+    //show in-game tips
+    entity = createHighlight(glm::vec2(12.f, 79.f));
+    entity.setLabel("Show how to play pop-ups during game play\nsuch as putting hints.");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettShowHints);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetHints);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettShowMinimap);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.showInGameTips = !m_sharedData.showInGameTips;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = createCheckbox(glm::vec2(14.f, 81.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const float scale = m_sharedData.showInGameTips ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -5190,7 +5217,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     {
         entity.getComponent<cro::UIInput>().setNextIndex(ResetCareer, WindowAdvanced);
     }
-    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettShowMinimap);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettShowHints);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -5199,7 +5226,6 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
                     m_sharedData.showClubUpdate = true;
                     m_sharedData.showRosterTip = true;
                     m_sharedData.showTutorialTip = true;
-                    //m_sharedData.c
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }

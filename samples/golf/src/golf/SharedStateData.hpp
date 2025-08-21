@@ -382,6 +382,7 @@ struct SharedStateData final
     bool zoomFollowCam = false;
     bool showClubUpdate = true;
     bool showMinimap = true;
+    bool showInGameTips = true;
     std::int32_t flagText = 0; //none, black, white
     std::string flagPath;
 
