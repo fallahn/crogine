@@ -663,8 +663,10 @@ private:
     void toggleQuitReady();
 
     bool m_sliceTutShown;
+    bool m_puttTutShown;
     std::array<std::array<std::int32_t, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_sliceCounter = {};
-    void updateSliceTutorial(const ActivePlayer&); //counts hook/slices and shows a message about difficulty for newer players
+    std::array<std::array<std::int32_t, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_puttCounter = {};
+    void updateProTip(const ActivePlayer&); //displays mini-tutorials for low level players if slicing or missing putts a lot
 
     SkipState m_skipState;
     void updateSkipMessage(float);

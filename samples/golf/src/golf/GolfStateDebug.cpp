@@ -281,11 +281,11 @@ void GolfState::registerDebugCommands()
     //registerWindow([&]() 
     //    {
     //        ImGui::Begin("Slices");
-    //        for (const auto& arr : m_sliceCounter)
+    //        for (const auto& arr : m_puttCounter)
     //        {
     //            for (auto i : arr)
     //            {
-    //                ImGui::Text("Slice count: %d", i);
+    //                ImGui::Text("Putt count: %d", i);
     //            }
     //        }
     //        ImGui::End();

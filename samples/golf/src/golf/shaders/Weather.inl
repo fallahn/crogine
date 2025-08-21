@@ -82,6 +82,7 @@ void main()
 
     FRAG_OUT = vec4(colour, 1.0);
     NORM_OUT = vec4(normal, 1.0);
+    LIGHT_OUT = vec4(vec3(0.0), 1.0);
     POS_OUT = vec4(v_worldPosition, 1.0);
 })";
 

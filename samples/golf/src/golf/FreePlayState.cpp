@@ -409,7 +409,7 @@ and All Time best scores.)";
                 break;
             case SelectionIndex::Clubset:
                 helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                helpText.getComponent<cro::Text>().setString("Set the round's difficulty");
+                helpText.getComponent<cro::Text>().setString("Set the round's difficulty\n(Pro Clubs are tough!)");
                 break;
             case SelectionIndex::NightTime:
                 helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));

@@ -270,7 +270,8 @@ struct TutorialID
         One, Two, Three,
         Swing, Spin, Putt,
 
-        LowerClubs = 100 //special case launched for new players who hook / slice
+        LowerClubs = 100, //special case launched for new players who hook / slice
+        PuttAssist
     };
 };
 

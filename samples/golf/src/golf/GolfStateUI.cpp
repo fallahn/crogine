@@ -5861,23 +5861,40 @@ void GolfState::toggleQuitReady()
     }
 }
 
-void GolfState::updateSliceTutorial(const ActivePlayer& player)
+void GolfState::updateProTip(const ActivePlayer& player)
 {
     if (player.client != m_sharedData.localConnectionData.connectionID)
     {
         return;
     }
 
-    if (Social::getLevel() < 3
-        && !m_sliceTutShown
-        /*&& m_sharedData.clubSet != 0*/) //always show as we might just be misinterpreting the hook bar
+    if (player.terrain == TerrainID::Green)
     {
-        if (m_sliceCounter[player.client][player.player] == 3)
+        const auto puttLimit = m_sharedData.showPuttingPower ? 3 : 2;
+        if (Social::getLevel() < 2
+            && !m_puttTutShown)
         {
-            m_sharedData.tutorialIndex = TutorialID::LowerClubs;
-            requestStackPush(StateID::Tutorial);
+            if (m_puttCounter[player.client][player.player] == puttLimit)
+            {
+                m_sharedData.tutorialIndex = TutorialID::PuttAssist;
+                requestStackPush(StateID::Tutorial);
 
-            m_sliceTutShown = true;
+                m_puttTutShown = true;
+            }
+        }
+    }
+    else
+    {
+        if (Social::getLevel() < 2
+            && !m_sliceTutShown)
+        {
+            if (m_sliceCounter[player.client][player.player] == 2)
+            {
+                m_sharedData.tutorialIndex = TutorialID::LowerClubs;
+                requestStackPush(StateID::Tutorial);
+
+                m_sliceTutShown = true;
+            }
         }
     }
 }

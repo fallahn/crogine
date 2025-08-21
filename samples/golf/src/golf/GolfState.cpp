@@ -229,6 +229,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_scoreColumnCount      (2),
     m_readyQuitFlags        (0),
     m_sliceTutShown         (false),
+    m_puttTutShown          (false),
     m_courseIndex           (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel            (sd, m_currentPlayer, m_textChat),
     m_minimapTexturePass    (MaxMinimapPasses),
@@ -874,8 +875,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //m_drawDepthMaps = !m_drawDepthMaps;
             //showCountdown(10);
 
-            //m_sharedData.tutorialIndex = TutorialID::LowerClubs;
-            //requestStackPush(StateID::Tutorial);
+            m_sharedData.tutorialIndex = TutorialID::LowerClubs;
+            requestStackPush(StateID::Tutorial);
             break;
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
@@ -1636,6 +1637,12 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
             }
 
+            //or track out putts (for mini-tut)
+            if (club == ClubID::Putter)
+            {
+                m_puttCounter[m_currentPlayer.client][m_currentPlayer.player]++;
+            }
+
             m_gameScene.setSystemActive<CameraFollowSystem>(!(isCPU && m_sharedData.fastCPU));
 
             //hide current terrain
@@ -2391,7 +2398,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     Club::setClubLevel(m_sharedData.clubSet);
                     
                     m_textChat.printToScreen("Clubset changed to Casual", CD32::Colours[CD32::BlueLight]);
-                    postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;                    
+                    postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
 
                     //fake some key strokes to update the selected club
                     auto ent = m_uiScene.createEntity();
@@ -2424,6 +2431,17 @@ void GolfState::handleMessage(const cro::Message& msg)
                                 m_uiScene.destroyEntity(e);
                             }
                         };
+                }
+                else if (m_sharedData.tutorialIndex == TutorialID::PuttAssist)
+                {
+                    if (!m_sharedData.showPuttingPower)
+                    {
+                        m_textChat.printToScreen("Putting Assist is now enabled", CD32::Colours[CD32::BlueLight]);
+                        postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
+                    }
+
+                    m_sharedData.tutorialIndex = 0;
+                    m_sharedData.showPuttingPower = true;
                 }
             }
             else if (data.id == StateID::Options)
@@ -6262,6 +6280,12 @@ void GolfState::removeClient(std::uint8_t clientID)
 
 void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 {
+    //clear putt counts
+    for (auto& arr : m_puttCounter)
+    {
+        std::fill(arr.begin(), arr.end(), 0);
+    }
+
     //hide old debug mesh
     m_collisionMesh.setDebugFlags(0);
     m_minimapTrail.getComponent<cro::Callback>().active = true; //hides any trail
@@ -7077,7 +7101,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
     if (m_sharedData.gameMode != GameMode::Tutorial)
     {
-        updateSliceTutorial(player);
+        updateProTip(player);
     }
 
     //this might arrive after a client quit
