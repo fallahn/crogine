@@ -11,6 +11,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/audio/BufferedStreamLoader.cpp
   ${PROJECT_DIR}/audio/DynamicAudioStream.cpp
   ${PROJECT_DIR}/audio/Mp3Loader.cpp
+  ${PROJECT_DIR}/audio/MumbleLink.cpp
   ${PROJECT_DIR}/audio/stb_vorbis.c
   ${PROJECT_DIR}/audio/VorbisLoader.cpp
   ${PROJECT_DIR}/audio/WavLoader.cpp

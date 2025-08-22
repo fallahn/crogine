@@ -669,6 +669,8 @@ void GolfGame::simulate(float dt)
 
     Achievements::update();
     m_progressIcon->update(dt);
+
+    m_sharedData.mumLink->update();
 }
 
 void GolfGame::render()
@@ -1244,6 +1246,10 @@ bool GolfGame::initialise()
     }*/
     //Discord::disconnect();
 #endif
+
+    m_sharedData.mumLink = std::make_unique<cro::MumbleLink>(cro::String("Super Video Golf"), cro::String("Owen's Finest."));
+    m_sharedData.mumLink->connect();
+
     return true;
 }
 
