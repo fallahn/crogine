@@ -41,6 +41,7 @@ https://www.mumble.info/documentation/developer/positional-audio/link-plugin/
 #else
 #include <sys/mman.h>
 #include <fcntl.h> /* For O_* constants */
+#include <unistd.h> //getuid()
 #endif // _WIN32
 
 namespace cro
