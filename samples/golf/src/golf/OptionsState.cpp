@@ -4813,7 +4813,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
     //show in-game tips
     entity = createHighlight(glm::vec2(12.f, 79.f));
-    entity.setLabel("Show how to play pop-ups during game play\nsuch as putting hints.");
+    entity.setLabel("Show hints and tips during gameplay.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettShowHints);
     entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetHints);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettShowMinimap);

@@ -443,7 +443,7 @@ void PracticeState::buildScene()
     position.y -= ItemHeight;
 
     //course editor
-    entity = createItem(position, "Course Editor", menuEntity);
+    entity = createItem(position, "Course Remixer", menuEntity);
     if (Achievements::getAchievement(AchievementStrings[AchievementID::GrandTour])->achieved)
     {
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -459,7 +459,7 @@ void PracticeState::buildScene()
             uiSystem.addCallback([helpText](cro::Entity e) mutable
                 {
                     helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                    helpText.getComponent<cro::Text>().setString("Remix The Courses");
+                    helpText.getComponent<cro::Text>().setString("Customise The Courses");
                     centreText(helpText);
 
                     e.getComponent<cro::AudioEmitter>().play();
