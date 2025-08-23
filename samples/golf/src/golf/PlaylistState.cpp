@@ -4922,7 +4922,7 @@ void PlaylistState::quitState()
     title.addComponent<cro::Drawable2D>();
     title.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     title.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    title.getComponent<cro::Text>().setString("Quit Editor");
+    title.getComponent<cro::Text>().setString("Quit Remixer");
     title.addComponent<cro::Callback>().active = true;
     title.getComponent<cro::Callback>().function = destructionCallback;
         

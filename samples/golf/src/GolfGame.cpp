@@ -908,6 +908,18 @@ bool GolfGame::initialise()
                 ImGui::Text("Open a fragment shader from a text file.");
                 ImGui::EndTooltip();
             }
+
+            ImGui::NewLine();
+
+            /*ImVec4 c = m_sharedData.mumLink->connected() ? ImVec4(0.f, 1.f, 0.f, 1.f) : ImVec4(1.f, 0.f, 0.f, 1.f);
+            ImGui::ColorButton("##mumble", c, 0, { 24.f,24.f });
+            ImGui::SameLine();
+            ImGui::Text("Mumble Connection");
+            ImGui::SameLine();
+            if (ImGui::Button("Reconnect"))
+            {
+                m_sharedData.mumLink->connect();
+            }*/
         });
 
     registerCommand("log_benchmark", 
@@ -1248,7 +1260,8 @@ bool GolfGame::initialise()
 #endif
 
     m_sharedData.mumLink = std::make_unique<cro::MumbleLink>(cro::String("Super Video Golf"), cro::String("Owen's Finest."));
-    m_sharedData.mumLink->connect();
+    m_sharedData.mumLink->setIdentity(m_profileData.playerProfiles[0].playerData.name);
+    //m_sharedData.mumLink->connect();
 
     return true;
 }

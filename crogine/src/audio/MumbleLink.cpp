@@ -156,7 +156,7 @@ bool MumbleLink::connect()
         m_fileHandle = OpenFileMappingW(FILE_MAP_ALL_ACCESS, FALSE, L"MumbleLink");
         if (!m_fileHandle)
         {
-            LogE << "MumbleLink: Unable to open file mapping - is the link running?" << std::endl;
+            LogW << "MumbleLink: Unable to open file mapping - Mumble integration is unavailable." << std::endl;
             return false;
         }
 
@@ -164,7 +164,7 @@ bool MumbleLink::connect()
 
         if (!m_output)
         {
-            LogE << "MumbleLink: Unable to obtain mapped memory" << std::endl;
+            LogE << "MumbleLink: Unable to obtain mapped memory - Mumble integration is unavailable." << std::endl;
             CloseHandle(m_fileHandle);
             m_fileHandle = nullptr;
 
@@ -177,7 +177,7 @@ bool MumbleLink::connect()
 
         if (shmfd < 0)
         {
-            LogE << "MumbleLink: Unable to open file mapping - is the link running?" << std::endl;
+            LogE << "MumbleLink: Unable to open file mapping  - Mumble integration is unavailable." << std::endl;
             return false;
         }
 
@@ -185,7 +185,7 @@ bool MumbleLink::connect()
 
         if (m_output == (void*)(-1))
         {
-            LogE << "MumbleLink: Unable to obtain mapped memory" << std::endl;
+            LogE << "MumbleLink: Unable to obtain mapped memory - Mumble integration is unavailable." << std::endl;
             shm_unlink(m_memname);
             m_output = nullptr;
 
