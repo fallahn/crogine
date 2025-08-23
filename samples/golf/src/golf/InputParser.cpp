@@ -866,6 +866,12 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
             ballStat = inv::Items[m_activeLoadout->items[inv::Ball]].stat01;
         }
 
+        //hack  to make regular clubs less slicey
+        if (clubLevel == 1)
+        {
+            ballStat = std::max(ballStat, 2);
+        }
+
         if (club != ClubID::Putter
             && m_activeLoadout->items[club] != -1)
         {

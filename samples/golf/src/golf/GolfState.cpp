@@ -2393,44 +2393,51 @@ void GolfState::handleMessage(const cro::Message& msg)
                     m_sharedData.tutorialIndex = 0;
                     
                     //if the user doesn't press yes the index is reset to 0
-                    m_sharedData.clubSet = 0;
-                    m_sharedData.preferredClubSet = 0;
-                    Club::setClubLevel(m_sharedData.clubSet);
+                    const auto old = m_sharedData.clubSet;
+                    m_sharedData.clubSet = std::max(1, old - 1);
                     
-                    m_textChat.printToScreen("Clubset changed to Casual", CD32::Colours[CD32::BlueLight]);
-                    postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
+                    if (m_sharedData.clubSet != old)
+                    {
+                        m_sharedData.preferredClubSet = m_sharedData.clubSet;
+                        Club::setClubLevel(m_sharedData.clubSet);
 
-                    //fake some key strokes to update the selected club
-                    auto ent = m_uiScene.createEntity();
-                    ent.addComponent<cro::Callback>().active = true;
-                    ent.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
-                    ent.getComponent<cro::Callback>().function =
-                        [&](cro::Entity e, float)
-                        {
-                            auto& idx = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
-                            switch (idx)
-                            {
-                            default: case 0:
-                                createKeystroke(m_sharedData.inputBinding.keys[InputBinding::NextClub], true);
-                                break;
-                            case 1:
-                                createKeystroke(m_sharedData.inputBinding.keys[InputBinding::NextClub], false);
-                                break;
-                            case 2:
-                                createKeystroke(m_sharedData.inputBinding.keys[InputBinding::PrevClub], true);
-                                break;
-                            case 3:
-                                createKeystroke(m_sharedData.inputBinding.keys[InputBinding::PrevClub], false);
-                                break;
-                            }
+                        m_textChat.printToScreen("Clubset changed to Regular", CD32::Colours[CD32::BlueLight]);
+                        postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
 
-                            idx++;
-                            if (idx == 4)
+
+                        //fake some key strokes to update the selected club
+                        auto ent = m_uiScene.createEntity();
+                        ent.addComponent<cro::Callback>().active = true;
+                        ent.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
+                        ent.getComponent<cro::Callback>().function =
+                            [&](cro::Entity e, float)
                             {
-                                e.getComponent<cro::Callback>().active = false;
-                                m_uiScene.destroyEntity(e);
-                            }
-                        };
+                                auto& idx = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+                                switch (idx)
+                                {
+                                default: case 0:
+                                    createKeystroke(m_sharedData.inputBinding.keys[InputBinding::NextClub], true);
+                                    break;
+                                case 1:
+                                    createKeystroke(m_sharedData.inputBinding.keys[InputBinding::NextClub], false);
+                                    break;
+                                case 2:
+                                    createKeystroke(m_sharedData.inputBinding.keys[InputBinding::PrevClub], true);
+                                    break;
+                                case 3:
+                                    createKeystroke(m_sharedData.inputBinding.keys[InputBinding::PrevClub], false);
+                                    break;
+                                }
+
+                                idx++;
+                                if (idx == 4)
+                                {
+                                    e.getComponent<cro::Callback>().active = false;
+                                    m_uiScene.destroyEntity(e);
+                                }
+                            };
+
+                    }
                 }
                 else if (m_sharedData.tutorialIndex == TutorialID::PuttAssist)
                 {

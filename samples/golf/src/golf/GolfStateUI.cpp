@@ -5888,7 +5888,7 @@ void GolfState::updateProTip(const ActivePlayer& player)
         if ((Social::getLevel() < 1 || m_sharedData.showInGameTips)
             && !m_sliceTutShown)
         {
-            if (m_sliceCounter[player.client][player.player] >= 2)
+            if (m_sliceCounter[player.client][player.player] >= 3)
             {
                 m_sharedData.tutorialIndex = TutorialID::LowerClubs;
                 requestStackPush(StateID::Tutorial);
