@@ -3332,7 +3332,7 @@ void TutorialState::tutorialLowerClubs(cro::Entity root)
             }
         };
 
-    //asks if player wishes to set clubs to Casual
+    //info message
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
@@ -3349,14 +3349,14 @@ void TutorialState::tutorialLowerClubs(cro::Entity root)
 
     if (m_sharedData.clubSet != 0)
     {
-        entity.getComponent<cro::Text>().setString("Switching to Casual clubs will make the ball easier to hit.\nFull details available in Options -> How to Play.");
+        entity.getComponent<cro::Text>().setString("Switching to a lower clubset will make the ball easier to hit.\nFull details available in Options -> How to Play.\nYou can disable these in-game tips in the Options menu.");
     }
     else
     {
         //regular continue
         m_sharedData.tutorialIndex = 0;
 
-        entity.getComponent<cro::Text>().setString("Full details available in Options -> How to Play.");
+        entity.getComponent<cro::Text>().setString("Full details available in Options -> How to Play.\nYou can disable these in-game tips in the Options menu.");
     }
 
 
@@ -3525,6 +3525,21 @@ void TutorialState::tutorialPuttAssist(cro::Entity root)
             }
         };
 
+
+    //info message
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("You can disable these in-game tips in the Options menu.");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setVerticalSpacing(2.f);
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, 0.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.2f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //time delay to show continue button

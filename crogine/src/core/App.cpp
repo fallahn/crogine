@@ -744,13 +744,26 @@ void App::handleEvents()
 
         //update the count first because handling
         //the event below might query getControllerCount()
+
+        //HMMM so connecting or disconnecting bluetooth devices (eg PS5)
+        //raises both disconnect AND reconnect events, and multiple numbers
+        //of those events, which severely puts this out.
+        //we probably should have been using SDL_NumJoysticks() all along
+        //howvever this can report *more* than there are connected if a
+        //device counts as a jojystick but not a game controller *sigh*
         if (evt.type == SDL_CONTROLLERDEVICEADDED)
         {
-            m_controllerCount++;
+            //m_controllerCount++;
+            m_controllerCount = SDL_NumJoysticks();
+
+            //LogI << "Controller added, count now " << m_controllerCount << std::endl;
         }
         else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
         {
-            m_controllerCount--;
+            //m_controllerCount--;
+            m_controllerCount = SDL_NumJoysticks();
+
+            //LogI << "Controller removed, count now " << m_controllerCount << std::endl;
         }
 
         //HOWEVER
