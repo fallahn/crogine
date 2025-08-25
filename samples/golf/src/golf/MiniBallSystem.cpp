@@ -155,9 +155,15 @@ void MiniBallSystem::process(float dt)
                             constexpr glm::vec2 Offset(0.f, 0.8f);
                             vertexTimer -= PointFreq;
 
-                            ball.minitrail.getComponent<cro::Drawable2D>().getVertexData().emplace_back(p - (Offset * m_minimapZoom.mapScale * 2.f), c);
-                            ball.minitrail.getComponent<cro::Drawable2D>().getVertexData().emplace_back(p + (Offset * m_minimapZoom.mapScale * 2.f), c);
-                            ball.minitrail.getComponent<cro::Drawable2D>().updateLocalBounds();
+                            auto& trailVerts = ball.minitrail.getComponent<cro::Drawable2D>().getVertexData();
+                            
+                            //arbitrary limit on vertices (normally the high counts are when we get a slow roll)
+                            if (trailVerts.size() < 200)
+                            {
+                                trailVerts.emplace_back(p - (Offset * m_minimapZoom.mapScale * 2.f), c);
+                                trailVerts.emplace_back(p + (Offset * m_minimapZoom.mapScale * 2.f), c);
+                                ball.minitrail.getComponent<cro::Drawable2D>().updateLocalBounds();
+                            }
                         }
                     }
                 }
