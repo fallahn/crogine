@@ -4346,7 +4346,7 @@ void GolfState::createDrone()
 
             //make sure the interpolated height is also above ground level (the target height is clamped when set)
             const auto groundHeight = m_collisionMesh.getTerrain(pos).height;
-            pos.y = std::max(pos.y, groundHeight + /*MinDroneHeight*/1.f);
+            pos.y = std::max(pos.y, groundHeight + /*MinDroneHeight*/6.f);
 
             e.getComponent<cro::Transform>().setPosition(pos);
             //--------------
