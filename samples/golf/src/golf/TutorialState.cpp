@@ -3233,7 +3233,7 @@ void TutorialState::tutorialLowerClubs(cro::Entity root)
     entity.getComponent<cro::Text>().setString("Match the power to the Range Indicator\nGet the accuracy bar to hit the centre");
     entity.getComponent<cro::Text>().setVerticalSpacing(88.f);
     outer.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto textEnt = entity;
+
 
     //entity to update the animation
     struct TutAnimData final

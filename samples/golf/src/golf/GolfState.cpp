@@ -1340,7 +1340,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     m_skyScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
     m_trophyScene.forwardEvent(evt);
-
+    
     return true;
 }
 
@@ -4316,7 +4316,8 @@ void GolfState::createDrone()
             static constexpr float MinRadius = MoveSpeed * MoveSpeed;
             //static constexpr float AccelerationRadius = 7.f;// 40.f;
 
-            auto movement = target.getComponent<cro::Transform>().getPosition() - oldPos;
+            const auto targetPos = target.getComponent<cro::Transform>().getPosition();
+            const auto movement = targetPos - oldPos;
             if (auto len2 = glm::length2(movement); len2 > MinRadius)
             {
                 //const float len = std::sqrt(len2);
@@ -4341,7 +4342,12 @@ void GolfState::createDrone()
             
             //---------------
             static glm::vec3 vel(0.f);
-            auto pos = cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), target.getComponent<cro::Transform>().getPosition(), vel, 3.f, dt, 24.f);
+            auto pos = cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), targetPos, vel, 3.f, dt, 24.f);
+
+            //make sure the interpolated height is also above ground level (the target height is clamped when set)
+            const auto groundHeight = m_collisionMesh.getTerrain(pos).height;
+            pos.y = std::max(pos.y, groundHeight + /*MinDroneHeight*/1.f);
+
             e.getComponent<cro::Transform>().setPosition(pos);
             //--------------
 
@@ -7672,11 +7678,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         if (m_drone.isValid())
         {
-            auto t = m_collisionMesh.getTerrain(pos);
-            if (pos.y - t.height < MinDroneHeight)
+            const auto t = m_collisionMesh.getTerrain(pos);
+            pos.y = std::max(pos.y, t.height + MinDroneHeight);
+            /*if (pos.y - t.height < MinDroneHeight)
             {
                 pos.y = t.height + MinDroneHeight;
-            }
+            }*/
 
             auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
             data.target.getComponent<cro::Transform>().setPosition(pos);

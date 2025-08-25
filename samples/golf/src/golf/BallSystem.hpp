@@ -156,7 +156,7 @@ public:
         glm::vec3 intersection = glm::vec3(0.f);
         float penetration = 0.f; //positive values are down into the ground
     };
-    TerrainResult getTerrain(glm::vec3 position, glm::vec3 forward = glm::vec3(0.f, -1.f, 0.f), float rayLength = 20.f) const;
+    TerrainResult getTerrain(glm::vec3 position, glm::vec3 forward = glm::vec3(0.f, -1.f, 0.f), float rayLength = 50.f) const;
 
     bool getPuttFromTee() const { return m_puttFromTee; }
 
