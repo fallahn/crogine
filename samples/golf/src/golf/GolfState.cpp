@@ -6536,6 +6536,12 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
                         {
                             lightEnt.addComponent<LightAnimation>().setPattern(lightData.animation);
                         }
+                        else if (!lightData.lensFlare)
+                        {
+                            //this is a hacky work-around in updateLensFlare() where lights
+                            //with animations are ignored for lens flares
+                            lightEnt.addComponent<LightAnimation>().pattern.clear();
+                        }
 
                         m_lightVolumeDefinition.createModel(lightEnt);
                         lightEnt.getComponent<cro::Model>().setHidden(true);

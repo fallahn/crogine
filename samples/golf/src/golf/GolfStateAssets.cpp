@@ -257,6 +257,10 @@ void GolfState::loadMap()
                     {
                         preset.animation = prop.getValue<std::string>();
                     }
+                    else if (name == "lens_flare")
+                    {
+                        preset.lensFlare = prop.getValue<bool>();
+                    }
                 }
 
                 if (preset.radius > 0.01f)
@@ -768,6 +772,8 @@ void GolfState::loadMap()
                                 //presets take precedence, except for animation
                                 lightData.colour = p.colour;
                                 lightData.radius = p.radius;
+                                lightData.lensFlare = p.lensFlare;
+
                                 if (lightData.animation.empty())
                                 {
                                     lightData.animation = p.animation;

@@ -568,11 +568,11 @@ float InputParser::getCamRotation() const
     {
         if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateLeft))
         {
-            return 1.f;
+            return 0.5f;
         }
         if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateRight))
         {
-            return -1.f;
+            return -0.5f;
         }
 
         const auto x = -getAxisPosition(cro::GameController::AxisRightX);

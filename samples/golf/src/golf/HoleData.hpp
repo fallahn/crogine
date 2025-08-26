@@ -93,11 +93,12 @@ static inline std::int32_t getCourseIndex(const std::string& name)
 
 struct LightData final
 {
+    cro::Entity parent;
     float radius = 0.f;
     glm::vec3 position = glm::vec3(0.f);
     cro::Colour colour = cro::Colour::White;
     std::string animation;
-    cro::Entity parent;
+    bool lensFlare = true;
 };
 
 struct HoleData final
