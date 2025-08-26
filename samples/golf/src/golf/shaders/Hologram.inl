@@ -63,20 +63,26 @@ void main()
     float offset = (sin((u_windData.w * 0.5) + (uv.y * 10.0)));
     uv.x += step(0.6, offset) * offset * 0.01;
 
-    vec4 tint = mix(u_colour * FarAmount, u_colour * NearAmount, 
-                    step(0.5, (dot(normalize(u_cameraWorldPosition - v_worldPosition), normalize(v_normalVector)) + 1.0 * 0.5)));
+    vec3 viewDir = u_cameraWorldPosition - v_worldPosition;
 
-    vec4 colour = TEXTURE(u_diffuseMap, uv) * tint * 0.94;
+    vec4 tint = mix(u_colour * FarAmount, u_colour * NearAmount, 
+                    step(0.5, (dot(normalize(viewDir), normalize(v_normalVector)) + 1.0 * 0.5)));
+
+    vec4 strength = TEXTURE(u_diffuseMap, uv);
+    vec4 colour = strength * tint * 0.94;
 
     float scanline = ((sin((uv.y * LineFreq) + (u_windData.w * 30.0)) + 1.0 * 0.5) * 0.4) + 0.6;
+
+    scanline = mix(scanline, 1.0, clamp(length(viewDir) / 5.0, 0.0, 1.0)); //reduce scanline up to 5 metres
     colour *= mix(1.0, scanline, step(0.58, uv.y)); //arbitrary cut off for texture
 
     //flicker
     colour *= (step(0.95, fract(sin(u_windData.w * 0.01) * 43758.5453123)) * 0.2) + 0.8;
     FRAG_OUT = colour;
+    FRAG_OUT.rgb *= 4.0;
 
     float luminance = clamp(dot(colour.rgb, LumConst) * 1.5, 0.0, 1.0);
 
-    //LIGHT_OUT = vec4(colour.rgb, 1.0);
-    //NORM_OUT.a = 1.0 - luminance;
+    //LIGHT_OUT = vec4(colour.rgb * luminance, 1.0);
+    //NORM_OUT.a = luminance;
 })";
