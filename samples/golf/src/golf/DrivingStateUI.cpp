@@ -2332,6 +2332,13 @@ will be given a score based on your overall accuracy. Good Luck!
     cmd.targetFlags = CommandID::UI::DrivingBoard;
     cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Callback>().active = true; };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
+
+    //registerWindow([&]() 
+    //    {
+    //        ImGui::Begin("sdfg");
+    //        ImGui::Text("%d, %3.3f", Club::getClubLevel(), m_inputParser.getEstimatedDistance());
+    //        ImGui::End();
+    //    });
 }
 
 void DrivingState::createSummary()
