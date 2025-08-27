@@ -336,6 +336,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_BACKSPACE:
+        case SDLK_ESCAPE:
             quitState();
             return false;
         case SDLK_1:
@@ -350,11 +351,11 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
         case SDLK_4:
             setActiveTab(MenuID::FileSystem);
             break;
-        case SDLK_p:
+        /*case SDLK_p:
         case SDLK_PAUSE:
-        case SDLK_ESCAPE:
-            requestStackPush(StateID::Pause);
-            break;
+        case SDLK_ESCAPE:*/
+            //requestStackPush(StateID::Pause);
+            //break;
 #ifdef CRO_DEBUG_
         case SDLK_F9:
             requestStackPush(StateID::Bush);
@@ -398,7 +399,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             setActiveTab(m_currentTab);
             break;
         case cro::GameController::ButtonStart:
-            requestStackPush(StateID::Pause);
+            //requestStackPush(StateID::Pause);
             break;
         }
     }
