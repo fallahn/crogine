@@ -280,6 +280,19 @@ void GolfState::registerDebugCommands()
 {
     //registerWindow([&]() 
     //    {
+    //        ImGui::Begin("Slices");
+    //        for (const auto& arr : m_puttCounter)
+    //        {
+    //            for (auto i : arr)
+    //            {
+    //                ImGui::Text("Putt count: %d", i);
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
+
+    //registerWindow([&]() 
+    //    {
     //        ImGui::SetNextWindowSize({ 436.f, 144.f });
     //        if (ImGui::Begin("Club Model"))
     //        {
@@ -597,6 +610,12 @@ void GolfState::registerDebugCommands()
             {
                 cro::Console::print("Usage: cl_clubset <0|2> where 0 is Casual, 1 is Expert and 2 is Pro. This will also disable all achievements.");
             }
+        });
+
+    registerCommand("cl_toggle_minimap", [&](const std::string&)
+        {
+            m_sharedData.showMinimap = !m_sharedData.showMinimap;
+            m_mapRoot.getComponent<cro::Callback>().active = true;
         });
 
     //nasssssty staticses

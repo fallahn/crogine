@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -39,18 +39,21 @@ struct MiniBall final
     cro::Entity parent;
     
     cro::Entity minimap;
+    cro::Entity minitrail;
 
     enum
     {
         Animating,
         Idle
     }state = Idle;
+
+    std::uint8_t groupID = 0;
 };
 
 class MiniBallSystem final : public cro::System
 {
 public:
-    MiniBallSystem(cro::MessageBus&, const MinimapZoom&);
+    MiniBallSystem(cro::MessageBus&, const MinimapZoom&, const std::uint8_t& serverGroup);
 
     void process(float) override;
 
@@ -59,6 +62,7 @@ public:
 
 private:
     const MinimapZoom& m_minimapZoom;
+    const std::uint8_t& m_serverGroupID;
     std::int32_t m_activePlayer;
 
 };

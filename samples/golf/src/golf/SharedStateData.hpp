@@ -38,6 +38,7 @@ source distribution.
 #include "Inventory.hpp"
 #include "server/Server.hpp"
 
+#include <crogine/audio/MumbleLink.hpp>
 #include <crogine/audio/sound_system/Playlist.hpp>
 #include <crogine/core/String.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -108,6 +109,8 @@ enum class GameMode
 struct SharedCourseData;
 struct SharedStateData final
 {
+    std::unique_ptr<cro::MumbleLink> mumLink;
+
     inv::Inventory inventory;
     //which loadout to display in the editor, else display shop if == inv::MaxLoadouts
     std::uint32_t activeLoadout = inv::Inventory::MaxLoadouts;
@@ -381,6 +384,8 @@ struct SharedStateData final
     bool puttFollowCam = false;
     bool zoomFollowCam = false;
     bool showClubUpdate = true;
+    bool showMinimap = true;
+    bool showInGameTips = true;
     std::int32_t flagText = 0; //none, black, white
     std::string flagPath;
 

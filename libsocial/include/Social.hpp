@@ -52,11 +52,11 @@ source distribution.
 //(player avatar data format changed 1170 -> 1180)
 //(course data changed 1180 -> 1181)
 //(player profile data changed 1190 -> 1200)
-static constexpr std::uint16_t CURRENT_VER = 1210;
+static constexpr std::uint16_t CURRENT_VER = 1211;
 #ifdef __APPLE__
-static const std::string StringVer("1.21.0 (macOS beta)");
+static const std::string StringVer("1.21.1 (macOS beta)");
 #else
-static const std::string StringVer("1.21.0");
+static const std::string StringVer("1.21.1");
 #endif
 
 struct HallEntry final

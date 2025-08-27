@@ -79,6 +79,9 @@ namespace
 #include "shaders/EmissiveShader.inl"
 #include "shaders/ShopItems.inl"
 #include "shaders/Hole.inl"
+#include "shaders/Hologram.inl"
+#include "shaders/TerrainMaterials.inl"
+#include "shaders/Weather.inl"
 
     //colour is normal colour with dark shadow
     const std::array BannerStrings =
@@ -93,7 +96,8 @@ namespace
         cro::String("Claire: Have you seen my keys?\nThey're not where I left them"),
         cro::String("To truly find yourself you must\nplay hide and seek alone."),
         cro::String("There is no angry way to say\nBUBBLES"),
-        cro::String("404")
+        cro::String("404"),
+        cro::String("Remember to wash\nyour balls thoroughly.")
     };
 
     //make this static so throughout the duration of the game we
@@ -252,6 +256,10 @@ void GolfState::loadMap()
                     else if (name == "animation")
                     {
                         preset.animation = prop.getValue<std::string>();
+                    }
+                    else if (name == "lens_flare")
+                    {
+                        preset.lensFlare = prop.getValue<bool>();
                     }
                 }
 
@@ -653,9 +661,12 @@ void GolfState::loadMap()
                         holeData.modelEntity.getComponent<cro::Model>().setHidden(true);
                         for (auto m = 0u; m < holeData.modelEntity.getComponent<cro::Model>().getMeshData().submeshCount; ++m)
                         {
-                            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
-                            applyMaterialData(modelDef, material, m);
-                            holeData.modelEntity.getComponent<cro::Model>().setMaterial(m, material);
+                            if (!holeData.modelEntity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Pass::Final, m).customShader)
+                            {
+                                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
+                                applyMaterialData(modelDef, material, m);
+                                holeData.modelEntity.getComponent<cro::Model>().setMaterial(m, material);
+                            }
                         }
                         propCount++;
 
@@ -679,9 +690,12 @@ void GolfState::loadMap()
                         
                         for (auto m = 0u; m < m_minimapModels.back().getComponent<cro::Model>().getMeshData().submeshCount; ++m)
                         {
-                            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Minimap]);
-                            applyMaterialData(modelDef, material, m);
-                            m_minimapModels.back().getComponent<cro::Model>().setMaterial(m, material);
+                            if (!holeData.modelEntity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Pass::Final, m).customShader)
+                            {
+                                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Minimap]);
+                                applyMaterialData(modelDef, material, m);
+                                m_minimapModels.back().getComponent<cro::Model>().setMaterial(m, material);
+                            }
                         }
                     }
                     else
@@ -758,6 +772,8 @@ void GolfState::loadMap()
                                 //presets take precedence, except for animation
                                 lightData.colour = p.colour;
                                 lightData.radius = p.radius;
+                                lightData.lensFlare = p.lensFlare;
+
                                 if (lightData.animation.empty())
                                 {
                                     lightData.animation = p.animation;
@@ -926,42 +942,45 @@ void GolfState::loadMap()
                                             bool useWind = ((ent.getComponent<cro::Model>().getMeshData().attributeFlags & cro::VertexProperty::Colour) != 0);
                                             for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
                                             {
-                                                auto texMatID = useWind ? MaterialID::CelTextured : MaterialID::CelTexturedNoWind;
-
-                                                if (modelDef.hasTag(i, "glass"))
+                                                if (!ent.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Pass::Final, i).customShader)
                                                 {
-                                                    texMatID = MaterialID::Glass;
-                                                }
+                                                    auto texMatID = useWind ? MaterialID::CelTextured : MaterialID::CelTexturedNoWind;
 
-                                                else if (modelDef.hasTag(i, "wake"))
-                                                {
-                                                    texMatID = MaterialID::Wake;
-                                                    radiusMultiplier = 0.5f;
-                                                }
+                                                    if (modelDef.hasTag(i, "glass"))
+                                                    {
+                                                        texMatID = MaterialID::Glass;
+                                                    }
 
-                                                else if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
-                                                {
-                                                    texMatID = useWind ? MaterialID::CelTexturedMasked : MaterialID::CelTexturedMaskedNoWind;
-                                                }
-                                                auto texturedMat = m_resources.materials.get(m_materialIDs[texMatID]);
+                                                    else if (modelDef.hasTag(i, "wake"))
+                                                    {
+                                                        texMatID = MaterialID::Wake;
+                                                        radiusMultiplier = 0.5f;
+                                                    }
 
-                                                //if this is a wake material we need to set the animation speed
-                                                //based on the speed of the path if the model has one.
-                                                if (texMatID == MaterialID::Wake &&
-                                                    !curve.empty())
-                                                {
-                                                    texturedMat.setProperty("u_speed", loopSpeed / 4.f/*std::clamp(loopSpeed, 0.f, 1.f)*/);
-                                                }
+                                                    else if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
+                                                    {
+                                                        texMatID = useWind ? MaterialID::CelTexturedMasked : MaterialID::CelTexturedMaskedNoWind;
+                                                    }
+                                                    auto texturedMat = m_resources.materials.get(m_materialIDs[texMatID]);
 
-                                                applyMaterialData(modelDef, texturedMat, i);
-                                                ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+                                                    //if this is a wake material we need to set the animation speed
+                                                    //based on the speed of the path if the model has one.
+                                                    if (texMatID == MaterialID::Wake &&
+                                                        !curve.empty())
+                                                    {
+                                                        texturedMat.setProperty("u_speed", loopSpeed / 4.f/*std::clamp(loopSpeed, 0.f, 1.f)*/);
+                                                    }
 
-                                                // only do this if we have vertex animation, else the default will suffice
-                                                if (useWind)
-                                                {
-                                                    auto shadowMat = m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]);
-                                                    applyMaterialData(modelDef, shadowMat);
-                                                    ent.getComponent<cro::Model>().setShadowMaterial(i, shadowMat);
+                                                    applyMaterialData(modelDef, texturedMat, i);
+                                                    ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+
+                                                    // only do this if we have vertex animation, else the default will suffice
+                                                    if (useWind)
+                                                    {
+                                                        auto shadowMat = m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]);
+                                                        applyMaterialData(modelDef, shadowMat);
+                                                        ent.getComponent<cro::Model>().setShadowMaterial(i, shadowMat);
+                                                    }
                                                 }
                                             }
                                         }
@@ -1764,12 +1783,52 @@ void GolfState::loadMaterials()
     static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
     m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
 
+
+
+
+    //special prop materials
+    if (m_resources.shaders.loadFromString(ShaderID::Lava,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFragV2, "#define TEXTURED\n"))
+    {
+        m_resources.shaders.mapStringID("lava", ShaderID::Lava);
+        auto* shader = &m_resources.shaders.get(ShaderID::Lava);
+        m_windBuffer.addShader(*shader);
+    }
+
+    if (m_resources.shaders.loadFromString(ShaderID::LavaFall,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFallFrag, "#define TEXTURED\n"))
+    {
+        m_resources.shaders.mapStringID("lavafall", ShaderID::LavaFall);
+        auto* shader = &m_resources.shaders.get(ShaderID::LavaFall);
+        m_windBuffer.addShader(*shader);
+    }
+
+    if (m_resources.shaders.loadFromString(ShaderID::Hologram,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag, "#define TEXTURED\n#define RIMMING\n"))
+    {
+        m_resources.shaders.mapStringID("holo_shader", ShaderID::Hologram);
+        auto* shader = &m_resources.shaders.get(ShaderID::Hologram);
+        m_windBuffer.addShader(*shader);
+    }
+
+    if (m_resources.shaders.loadFromString(ShaderID::Umbrella, CelVertexShader, UmbrellaFrag,
+        "#define DITHERED\n#define INSTANCING\n#define VERTEX_COLOURED\n#define TERRAIN_CLIP\n" + wobble))
+    {
+        m_resources.shaders.mapStringID("umbrella", ShaderID::Umbrella);
+        auto* shader = &m_resources.shaders.get(ShaderID::Umbrella);
+        m_resolutionBuffer.addShader(*shader);
+    }
+
+
+
+
     //cel shaded material
-    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define TERRAIN_CLIP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define TERRAIN_CLIP\n#define BALL_COLOUR\n" + wobble);
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Cel]).setProperty("u_ballColour", cro::Colour::White);
 
     m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define SKINNED\n#define TERRAIN_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelSkinned);
@@ -2981,14 +3040,15 @@ void GolfState::loadModels()
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-    m_ballTrail.create(m_gameScene, m_resources, m_materialIDs[MaterialID::BallTrail]);
-    m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
+    /*auto& trail = m_ballTrails.emplace_back(std::make_unique<BallTrail>());
+    trail->create(m_gameScene, m_resources, m_materialIDs[MaterialID::BallTrail]);
+    trail->setUseBeaconColour(m_sharedData.trailBeaconColour);*/
 }
 
 void GolfState::loadSpectators()
 {
     cro::ModelDefinition md(m_resources);
-    std::array modelPaths =
+    const std::array modelPaths =
     {
         "assets/golf/models/spectators/01.cmt",
         "assets/golf/models/spectators/02.cmt",
@@ -2996,6 +3056,18 @@ void GolfState::loadSpectators()
         "assets/golf/models/spectators/04.cmt"
     };
 
+    const bool brolly = m_sharedData.weatherType == WeatherType::Rain
+        || m_sharedData.weatherType == WeatherType::Showers;
+
+    cro::ModelDefinition brollyDef(m_resources);
+    cro::ModelDefinition brollyAnim(m_resources);
+    std::size_t colourIdx = 0;
+    constexpr std::array ColourIndices = { 1,6,8,15,17,25 };
+    if (brolly)
+    {
+        brollyDef.loadFromFile("assets/golf/models/spectators/umbrella_attachment.cmt");
+        brollyAnim.loadFromFile("assets/golf/models/spectators/wet_animation.cmt");
+    }
 
     for (auto i = 0; i < 2; ++i)
     {
@@ -3021,22 +3093,80 @@ void GolfState::loadSpectators()
                         entity.getComponent<cro::Model>().setMaterial(0, material);
 
                         auto& skel = entity.getComponent<cro::Skeleton>();
+                        std::int32_t attachmentIdx = -1;
+
+                        if (brollyAnim.isLoaded()
+                            && brollyAnim.hasSkeleton())
+                        {
+                            const auto& srcSkel = brollyAnim.getSkeleton();
+                            for (auto k = 0u; k < srcSkel.getAnimations().size(); ++k)
+                            {
+                                skel.addAnimation(srcSkel, k);
+                            }
+
+                            if (attachmentIdx = srcSkel.getAttachmentIndex("brolly"); attachmentIdx != -1)
+                            {
+                                skel.addAttachment(srcSkel.getAttachments()[attachmentIdx]);
+
+                                //update with new index as we can't really assume they'll be the same (although probably are)
+                                attachmentIdx = skel.getAttachmentIndex("brolly");
+                            }
+                        }
+
                         if (!skel.getAnimations().empty())
                         {
                             auto& spectator = entity.addComponent<Spectator>();
                             for (auto k = 0u; k < skel.getAnimations().size(); ++k)
                             {
-                                if (skel.getAnimations()[k].name == "Walk")
+                                if (brolly)
                                 {
-                                    spectator.anims[Spectator::AnimID::Walk] = k;
+                                    if (skel.getAnimations()[k].name == "Walk_brolly") //ugh this is mis-named in the file
+                                    {
+                                        spectator.anims[Spectator::AnimID::Walk] = k;
+                                    }
+                                    else if (skel.getAnimations()[k].name == "Idle_Brolly")
+                                    {
+                                        spectator.anims[Spectator::AnimID::Idle] = k;
+                                    }
                                 }
-                                else if (skel.getAnimations()[k].name == "Idle")
+                                else
                                 {
-                                    spectator.anims[Spectator::AnimID::Idle] = k;
+                                    if (skel.getAnimations()[k].name == "Walk")
+                                    {
+                                        spectator.anims[Spectator::AnimID::Walk] = k;
+                                    }
+                                    else if (skel.getAnimations()[k].name == "Idle")
+                                    {
+                                        spectator.anims[Spectator::AnimID::Idle] = k;
+                                    }
                                 }
                             }
-
                             skel.setMaxInterpolationDistance(30.f);
+
+                            //add brolly if attachment point exists
+                            if (attachmentIdx != -1)
+                            {
+                                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+                                material.doubleSided = true;
+
+                                material.setProperty("u_ballColour", CD32::Colours[ColourIndices[colourIdx % ColourIndices.size()]]);
+                                colourIdx++;
+
+                                auto childEnt = m_gameScene.createEntity();
+                                childEnt.addComponent<cro::Transform>();
+                                brollyDef.createModel(childEnt);
+
+                                childEnt.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+                                childEnt.getComponent<cro::Model>().setMaterial(0, material);
+
+                                childEnt.addComponent<cro::Callback>().active = true;
+                                childEnt.getComponent<cro::Callback>().function =
+                                    [entity](cro::Entity e, float)
+                                    {
+                                        e.getComponent<cro::Model>().setHidden(entity.getComponent<cro::Model>().isHidden());
+                                    };
+                                skel.getAttachments()[attachmentIdx].setModel(childEnt);
+                            }
                         }
                     }
 

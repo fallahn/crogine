@@ -133,7 +133,7 @@ public:
     const LeaguePlayer& getPlayer(std::int32_t nameIndex) const;
 
     const cro::String& getPreviousResults(const cro::String& playerName) const;
-    std::int32_t getPreviousPosition() const { return m_previousPosition; }
+    std::int32_t getPreviousPosition() const;
 
     std::int32_t getMaxIterations() const { return m_maxIterations; }
     std::int32_t reward(std::int32_t position) const;

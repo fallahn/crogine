@@ -1059,6 +1059,7 @@
     <None Include="src\golf\shaders\Glass.inl" />
     <None Include="src\golf\shaders\GlowShader.inl" />
     <None Include="src\golf\shaders\Hole.inl" />
+    <None Include="src\golf\shaders\Hologram.inl" />
     <None Include="src\golf\shaders\Lantern.inl" />
     <None Include="src\golf\shaders\LensFlare.inl" />
     <None Include="src\golf\shaders\MinimapShader.inl" />
@@ -1069,6 +1070,7 @@
     <None Include="src\golf\shaders\ShaderIncludes.inl" />
     <None Include="src\golf\shaders\ShadowMapping.inl" />
     <None Include="src\golf\shaders\ShopItems.inl" />
+    <None Include="src\golf\shaders\TerrainMaterials.inl" />
     <None Include="src\golf\shaders\TerrainShader.inl" />
     <None Include="src\golf\shaders\TransitionShader.inl" />
     <None Include="src\golf\shaders\TreeShader.inl" />

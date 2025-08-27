@@ -616,5 +616,8 @@
     <None Include="src\swingput\Hole.inl">
       <Filter>Header Files\swingput</Filter>
     </None>
+    <None Include="src\batcat\TestShaders.inl">
+      <Filter>Header Files\batcat</Filter>
+    </None>
   </ItemGroup>
 </Project>

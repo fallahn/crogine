@@ -261,7 +261,7 @@ void CareerState::handleMessage(const cro::Message& msg)
             m_playerName.getComponent<cro::Text>().setString(Social::getPlayerName());
             for (auto& table : Career::instance(m_sharedData).getLeagueTables())
             {
-                //this is misleading - it says it's cont however it updates the
+                //this is misleading - it says it's const however it updates the
                 //internal string data with the player's name...
                 table.getPreviousResults(Social::getPlayerName());
             }
@@ -1145,6 +1145,18 @@ void CareerState::buildScene()
             });
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    
+    auto labelEnt = m_scene.createEntity();
+    labelEnt.addComponent<cro::Transform>().setPosition({ 16.f, 13.f });
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(smallFont).setString("Back");
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+    entity.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(labelEnt).width;
+
 
     //profile editor
     entity = m_scene.createEntity();
@@ -1523,9 +1535,31 @@ void CareerState::createConfirmMenu(cro::Entity parent)
     confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 44.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Pro clubs can be tough to use!");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    centreText(entity);
+    confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto messageEnt = entity;
+
+
     //displays the message
-    enterConfirmCallback = [&, confirmEnt, shadeEnt]() mutable
+    enterConfirmCallback = [&, confirmEnt, messageEnt, shadeEnt]() mutable
     {
+        if (m_sharedData.preferredClubSet == 2
+            && m_sharedData.showInGameTips)
+        {
+            messageEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        }
+        else
+        {
+            messageEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+
         m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
         confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::In;
         confirmEnt.getComponent<cro::Callback>().active = true;

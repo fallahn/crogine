@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -322,6 +322,16 @@ Shader& ShaderResource::get(std::int32_t ID)
     return m_shaders.at(ID);// .second;
 }
 
+Shader& ShaderResource::get(const std::string& stringID)
+{
+    if (m_stringMappings.count(stringID))
+    {
+        return get(m_stringMappings.at(stringID));
+    }
+    LogW << "Could not find shader with string mapping " << stringID << std::endl;
+    return m_defaultShader;
+}
+
 bool ShaderResource::hasShader(std::int32_t shaderID) const
 {
     return m_shaders.count(shaderID) != 0;
@@ -334,6 +344,24 @@ void ShaderResource::addInclude(const std::string& include, const char* src)
         LogW << include << " already exists in shader resource and has been overwritten." << std::endl;
     }
     m_includes.insert(std::make_pair(include, src));
+}
+
+bool ShaderResource::mapStringID(const std::string& stringID, std::int32_t shaderID)
+{
+    if (m_shaders.count(shaderID) == 0)
+    {
+        LogE << "Failed to map " << stringID << " to " << shaderID << ": shader not loaded." << std::endl;
+        return false;
+    }
+
+    if (m_stringMappings.count(stringID))
+    {
+        LogE << "Could not map " << stringID << " to " << shaderID << ": already mapped to " << m_stringMappings.at(stringID) << std::endl;
+        return false;
+    }
+
+    m_stringMappings.insert(std::make_pair(stringID, shaderID));
+    return true;
 }
 
 //private

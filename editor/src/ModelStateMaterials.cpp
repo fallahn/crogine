@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -376,6 +376,11 @@ void ModelState::exportMaterial() const
             file.addProperty("lightmap").setValue(getTextureName(matDef.textureIDs[MaterialDefinition::Lightmap]));
         }
 
+        if (!matDef.shaderStringID.empty())
+        {
+            file.addProperty("shader_string_id").setValue(matDef.shaderStringID);
+        }
+
         if(!matDef.tags.empty())
         {
             auto* o = file.addObject("tags");
@@ -737,6 +742,10 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
         else if (name == "use_mipmaps")
         {
             matDef.useMipmaps = prop.getValue<bool>();
+        }
+        else if (name == "shader_string_id")
+        {
+            matDef.shaderStringID = prop.getValue<std::string>();
         }
     }
 

@@ -60,6 +60,8 @@ struct MaterialDefinition final
     };
     std::array<std::uint32_t, TextureID::Size> textureIDs = {};
 
+    std::string shaderStringID; //used for overriding the material type shader with a custom one
+
     cro::Colour colour = glm::vec4(1.f, 1.f, 1.f, 1.f);
     cro::Colour maskColour = glm::vec4(1.f, 1.f, 0.f, 1.f);
     cro::Colour rimlightColour = glm::vec4(1.f);

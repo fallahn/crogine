@@ -31,6 +31,61 @@ source distribution.
 
 #include <string>
 
+static const inline std::string UmbrellaFrag = R"(
+#define USE_MRT
+#include OUTPUT_LOCATION
+#include HSV
+#include BAYER_MATRIX
+#include LIGHT_UBO
+#include LIGHT_COLOUR
+
+VARYING_IN vec3 v_worldPosition;
+VARYING_IN float v_ditherAmount;
+VARYING_IN vec3 v_normal;
+VARYING_IN vec4 v_colour;
+flat in int v_instanceID;
+
+void main()
+{
+    vec3 colour = getLightColour().rgb;
+
+    vec3 c = rgb2hsv(v_colour.rgb);
+    c.r += 0.15 * v_instanceID;
+    c = hsv2rgb(c);
+
+    colour *= c;
+
+
+#define COLOUR_LEVELS 2.0
+#define AMOUNT_MIN 0.8
+#define AMOUNT_MAX 0.2
+
+    vec3 normal = normalize(v_normal);
+    vec3 lightDirection = normalize(-u_lightDirection);
+    float amount = dot(normal, lightDirection);
+
+    amount *= COLOUR_LEVELS;
+    amount = round(amount);
+    amount /= COLOUR_LEVELS;
+    amount = (amount * AMOUNT_MAX) + AMOUNT_MIN;
+
+    colour *= amount;
+
+
+    vec2 xy = gl_FragCoord.xy;
+    int x = int(mod(xy.x, MatrixSize));
+    int y = int(mod(xy.y, MatrixSize));
+
+    float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+
+    if(alpha < 0.1) discard;
+
+    FRAG_OUT = vec4(colour, 1.0);
+    NORM_OUT = vec4(normal, 1.0);
+    LIGHT_OUT = vec4(vec3(0.0), 1.0);
+    POS_OUT = vec4(v_worldPosition, 1.0);
+})";
+
 static const inline std::string WeatherVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;

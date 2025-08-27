@@ -1569,37 +1569,45 @@ void GolfState::buildUI()
 
     m_mapRoot = m_uiScene.createEntity();
     m_mapRoot.addComponent<cro::Transform>().setPosition({0.f, 0.f, 0.02f});
+    m_mapRoot.getComponent<cro::Transform>().setScale(glm::vec2(m_sharedData.showMinimap ? 1.f : 0.f));
     m_mapRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_mapRoot.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 1);
     m_mapRoot.getComponent<cro::Callback>().function =
-        [l, mapOffset](cro::Entity e, float dt)
+        [&, l, mapOffset](cro::Entity e, float dt)
         {
-            auto& [progress, dir] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
-            if (dir == 0)
+            if (m_sharedData.showMinimap)
             {
-                //bigger
-                progress = std::min(1.f, progress + (dt * 8.f));
-                if (progress == 1)
+                auto& [progress, dir] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+                if (dir == 0)
                 {
-                    e.getComponent<cro::Callback>().active = false;
+                    //bigger
+                    progress = std::min(1.f, progress + (dt * 8.f));
+                    if (progress == 1)
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                    }
                 }
+                else
+                {
+                    progress = std::max(0.f, progress - (dt * 8.f));
+                    if (progress == 0)
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                    }
+                }
+
+                const auto p = cro::Util::Easing::easeOutExpo(progress);
+                auto o = mapOffset * l * p;
+                o.x = std::round(o.x);
+                o.y = std::round(o.y);
+
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f + p));
+                e.getComponent<cro::Transform>().setOrigin(o);
             }
             else
             {
-                progress = std::max(0.f, progress - (dt * 8.f));
-                if (progress == 0)
-                {
-                    e.getComponent<cro::Callback>().active = false;
-                }
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
-            
-            const auto p = cro::Util::Easing::easeOutExpo(progress);
-            auto o = mapOffset * l * p;
-            o.x = std::round(o.x);
-            o.y = std::round(o.y);
-
-            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f + p));
-            e.getComponent<cro::Transform>().setOrigin(o);
         };
 
     infoEnt.getComponent<cro::Transform>().addChild(m_mapRoot.getComponent<cro::Transform>());
@@ -1633,6 +1641,27 @@ void GolfState::buildUI()
     m_strokeDistanceEnt = entity;
 
 
+    //draws a trail on the mini map when the balls are in flight
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.21f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    entity.addComponent<cro::Callback>().setUserData<float>(1.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct = std::max(0.f, ct - (dt * 8.f));
+
+            if (ct == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                e.getComponent<cro::Drawable2D>().getVertexData().clear();
+                ct = 1.f;
+            }
+            e.getComponent<cro::Transform>().setScale(glm::vec2(ct, 1.f));
+        };
+    m_minimapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_minimapTrail = entity;
 
 
     //mini flag icon
@@ -1706,6 +1735,7 @@ void GolfState::buildUI()
 
         auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
         e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
+        m_minimapTrail.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
 
         //when the drawable is cropped the area is transformed by the ent's world tx
         //so we're doing this here purely to visualise
@@ -2331,7 +2361,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
     if (m_currentHole == 17) //full round
     {
         Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
+        
+        Achievements::setActive(true); //this unlocks the clubhouse so allow even in hotseat
         Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
+        Achievements::setActive(m_allowAchievements);
     }
     if (m_sharedData.scoreType != ScoreType::Skins)
     {
@@ -5742,8 +5775,10 @@ void GolfState::createTransition()
 
         if (currTime == MaxTime)
         {
-            createWelcomeMessage();
-
+            if (m_sharedData.gameMode != GameMode::Tutorial)
+            {
+                createWelcomeMessage();
+            }
             e.getComponent<cro::Callback>().active = false;
             m_uiScene.destroyEntity(e);
         }
@@ -5822,6 +5857,44 @@ void GolfState::toggleQuitReady()
                 e.getComponent<cro::Callback>().getUserData<float>() = 0.f;
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+    }
+}
+
+void GolfState::updateProTip(const ActivePlayer& player)
+{
+    if (player.client != m_sharedData.localConnectionData.connectionID)
+    {
+        return;
+    }
+
+    if (player.terrain == TerrainID::Green)
+    {
+        const auto puttLimit = m_sharedData.showPuttingPower ? 3 : 2;
+        if ((Social::getLevel() < 1 || m_sharedData.showInGameTips)
+            && !m_puttTutShown)
+        {
+            if (m_puttCounter[player.client][player.player] >= puttLimit)
+            {
+                m_sharedData.tutorialIndex = TutorialID::PuttAssist;
+                requestStackPush(StateID::Tutorial);
+
+                m_puttTutShown = true;
+            }
+        }
+    }
+    else
+    {
+        if ((Social::getLevel() < 1 || m_sharedData.showInGameTips)
+            && !m_sliceTutShown)
+        {
+            if (m_sliceCounter[player.client][player.player] >= 3)
+            {
+                m_sharedData.tutorialIndex = TutorialID::LowerClubs;
+                requestStackPush(StateID::Tutorial);
+
+                m_sliceTutShown = true;
+            }
         }
     }
 }
@@ -6270,6 +6343,8 @@ void GolfState::updateMinimapTexture()
     
     if (m_minimapTexturePass == 0)
     {
+        m_minimapTrail.getComponent<cro::Drawable2D>().getVertexData().clear();
+
         m_mapTextureMRT.clear(c);
     }
     else
@@ -7169,7 +7244,8 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
 
 void GolfState::EmoteWheel::update(float dt)
 {
-    if (sharedData.gameMode == GameMode::Tutorial)
+    if (sharedData.gameMode == GameMode::Tutorial
+        || sharedData.gameMode == GameMode::Reset) //might be quitting from the menu
     {
         return;
     }

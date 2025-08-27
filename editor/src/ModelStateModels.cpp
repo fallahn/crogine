@@ -470,6 +470,11 @@ void ModelState::saveModel(const std::string& path)
             obj->addProperty("skinned").setValue(true);
         }
 
+        if (!mat.shaderStringID.empty())
+        {
+            obj->addProperty("shader_string_id").setValue(mat.shaderStringID);
+        }
+
         if (!mat.tags.empty())
         {
             auto* tags = obj->addObject("tags");

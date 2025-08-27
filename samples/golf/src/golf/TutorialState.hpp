@@ -98,6 +98,9 @@ private:
     void tutorialSwing(cro::Entity);
     void tutorialSpin(cro::Entity);
 
+    void tutorialLowerClubs(cro::Entity);
+    void tutorialPuttAssist(cro::Entity);
+
     void showContinue();
     void doCurrentAction();
 

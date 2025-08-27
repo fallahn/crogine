@@ -52,13 +52,13 @@ source distribution.
 
 namespace
 {
-    const std::array<std::string, 18> TipStrings  =
+    const std::array<std::string, 19> TipStrings  =
     {
         std::string("Loading...\n\nTip: Click on an opponent's name in the League Browser to change it"),
         "Loading...\n\nDid You Know: Before golf tees players would shape mounds of sand and place the golf ball on top",
         "Loading...\n\nTip: You can find alternative control schemes such as Swingput in the Options menu",
         "Loading...\n\nDid You Know: Apollo 14 astronaut Alan Shepard used a Wilson 6-iron to play golf on the moon",
-        "Loading...\n\nTip: The clubset you choose affects the CPU opponent's difficulty",
+        "Loading...\n\nTip: The clubset you choose also affects the CPU opponent's difficulty",
         "Loading...\n\nDid You Know: An estimated 600 million golf balls are lost or discarded every year\nmore than 100,000 of which are at the bottom of Loch Ness!",
         "Loading...\n\nTip: Make sure to spend some time on the Driving Range, to really learn your clubs",
         "Loading...\n\nDid You Know: There are playable arcade games waiting to be discovered in the Clubhouse",
@@ -72,6 +72,7 @@ namespace
         "Loading...\n\nDid You Know: There are exactly 336 dimples on a regulation golf ball,\nand they must weigh no more than 45.93 grammes (including logo paint!)",
         "Loading...\n\nTip: You can check out the lie of the green or the fairway ahead at any time!\nUse D-pad Down or Keyboard \"2\" to manually control the drone",
         "Loading...\n\nTip: If you find putting a little too tricky, try enabling Putting Assist in the Options menu.",
+        "Loading...\n\nTip: A fresh pack of balls from the Equipment Counter can go a long way to fixing your slice!",
     };
     std::size_t stringIndex = cro::Util::Random::value(0u, TipStrings.size() - 1);
 }

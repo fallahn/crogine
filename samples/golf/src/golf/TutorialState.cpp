@@ -544,6 +544,12 @@ void TutorialState::buildScene()
     case TutorialID::Spin:
         tutorialSpin(rootNode);
         break;
+    case TutorialID::LowerClubs:
+        tutorialLowerClubs(rootNode);
+        break;
+    case TutorialID::PuttAssist:
+        tutorialPuttAssist(rootNode);
+        break;
     }
 
     //set up camera / resize callback
@@ -1310,7 +1316,7 @@ void TutorialState::tutorialThree(cro::Entity root)
 
 
     //range indicator ent
-    const auto barBounds = uiSprites.getSprite("power_bar").getTextureBounds();
+    const auto barBounds = uiSprites.getSprite("power_bar_wide").getTextureBounds();
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, -102.f });
@@ -1502,7 +1508,7 @@ void TutorialState::tutorialThree(cro::Entity root)
 
     //hook/slice indicator
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.25f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = uiSprites.getSprite("hook_bar");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1531,6 +1537,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         auto& tx = e.getComponent<cro::Transform>();
         auto position = tx.getPosition();
         position.x = data.Width * data.currentTime;
+        position.z = 0.25f;
         tx.setPosition(position);
 
         if (prev && current)
@@ -1669,7 +1676,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.f, 0.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f,0.f,0.f,0.f });
-    entity.addComponent<cro::Sprite>() = uiSprites.getSprite("power_bar_inner");
+    entity.addComponent<cro::Sprite>() = uiSprites.getSprite("power_bar_inner_wide");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::Callback>().setUserData<std::pair<float, float>>(0.f, 1.f);
     entity.getComponent<cro::Callback>().function =
@@ -1869,7 +1876,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({-40.f, 0.f});
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = uiSprites.getSprite("power_bar");
+    entity.addComponent<cro::Sprite>() = uiSprites.getSprite("power_bar_wide");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     
@@ -3082,6 +3089,476 @@ void TutorialState::tutorialSpin(cro::Entity root)
             infoEnt.getComponent<cro::Callback>().active = true;
         });
 
+
+    m_actionCallbacks.push_back([&]() { quitState(); });
+}
+
+void TutorialState::tutorialLowerClubs(cro::Entity root)
+{
+    //displays animation showing power bar and accuracy bar
+    cro::SpriteSheet uiSprites;
+    uiSprites.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
+
+
+    //power bar graphic - other parts of this are parented to this
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(cro::App::getWindow().getSize() / 2u) / m_viewScale);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = uiSprites.getSprite("power_bar_double");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto outer = entity;
+
+    bounds.width += 6.f;
+    bounds.height += 18.f;
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setOrigin({ 3.f, 9.f, 0.05f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, bounds.height), CD32::Colours[CD32::GreenMid]),
+            cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::GreenMid]),
+            cro::Vertex2D(glm::vec2(bounds.width, bounds.height), CD32::Colours[CD32::GreenMid]),
+            cro::Vertex2D(glm::vec2(bounds.width, 0.f), CD32::Colours[CD32::GreenMid])
+        });
+    outer.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //power pointer
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, bounds.height - 8.f, 0.2f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(2.f));
+    entity.getComponent<cro::Transform>().setRotation(cro::Util::Const::PI);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = uiSprites.getSprite("slope_indicator");
+    entity.addComponent<cro::SpriteAnimation>().play(3);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ 8.f, 0.f });
+    outer.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto powerPointer = entity;
+
+
+    //power level graphic
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 11.f, 0.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f,0.f,0.f,0.f });
+    entity.addComponent<cro::Sprite>() = uiSprites.getSprite("power_bar_inner_double");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    outer.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto inner = entity;
+
+    //hook bar graphic
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = uiSprites.getSprite("hook_bar_double");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    outer.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto hookBar = entity;
+    bounds = outer.getComponent<cro::Sprite>().getTextureBounds();
+    hookBar.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f });
+
+
+    //hook bar pointer
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), -8.f, 0.2f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(2.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = uiSprites.getSprite("slope_indicator");
+    entity.addComponent<cro::SpriteAnimation>().play(2);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::ceil(bounds.width / 2.f), 6.f });
+    outer.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto hookPointer = entity;
+
+
+    //range indicator
+    static constexpr float IndicatorLength = 180.f;
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setScale({ IndicatorLength * 2.f, 1.f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(getStrokeIndicatorVerts(false));
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    auto indEnt = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(2.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = uiSprites.getSprite("slope_indicator");
+    entity.addComponent<cro::SpriteAnimation>().play(3);
+    auto rangePointer = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -6.f, -14.f, -0.05f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 24.f), CD32::Colours[CD32::GreenMid]),
+            cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::GreenMid]),
+            cro::Vertex2D(glm::vec2(IndicatorLength + 8.f, 24.f), CD32::Colours[CD32::GreenMid]),
+            cro::Vertex2D(glm::vec2(IndicatorLength + 8.f, 0.f), CD32::Colours[CD32::GreenMid])
+        });
+    auto bgEnt = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setRotation(cro::Util::Const::PI / 2.f);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            auto size = glm::vec2(GolfGame::getActiveTarget()->getSize()) / m_viewScale;
+            size.x = std::round(size.x * 0.8f);
+            size.y = std::round(size.y * 0.3f);
+
+            e.getComponent<cro::Transform>().setPosition(size);
+        };
+    entity.getComponent<cro::Transform>().addChild(indEnt.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(rangePointer.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //help text
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ outer.getComponent<cro::Transform>().getOrigin().x, 70.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setString("Match the power to the Range Indicator\nGet the accuracy bar to hit the centre");
+    entity.getComponent<cro::Text>().setVerticalSpacing(88.f);
+    outer.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //entity to update the animation
+    struct TutAnimData final
+    {
+        enum
+        {
+            Power, Hook, Pause
+        }state = Power;
+
+        float currTime = 0.f;
+        float direction = 1.f;
+
+        //float flashTime = 0.f;
+    };
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<TutAnimData>();
+    entity.getComponent<cro::Callback>().function =
+        [&, outer, inner, powerPointer, rangePointer, hookBar, hookPointer](cro::Entity e, float dt) mutable
+        {
+            const auto size = glm::vec2(GolfGame::getActiveTarget()->getSize()) / m_viewScale;
+            outer.getComponent<cro::Transform>().setPosition(size / 2.f);
+
+            auto& [state, ct, dir/*, flash*/] = e.getComponent<cro::Callback>().getUserData<TutAnimData>();
+
+            switch (state)
+            {
+            default: break;
+            case TutAnimData::Power:
+            {
+                ct = std::min(1.f, ct + (dt * 0.5f));
+
+                const auto val = cro::Util::Easing::easeOutCubic(ct);
+                auto bounds = inner.getComponent<cro::Sprite>().getTextureBounds();
+                bounds.width *= val;
+                inner.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+
+                if (val >= 0.85f)
+                {
+                    state = TutAnimData::Hook;
+                    ct = 0.f;
+                }
+
+                auto pos = powerPointer.getComponent<cro::Transform>().getPosition();
+                pos.x = bounds.width;
+                powerPointer.getComponent<cro::Transform>().setPosition(pos);
+                rangePointer.getComponent<cro::Transform>().setPosition({ IndicatorLength * val, -18.f });
+                hookPointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+                break;
+            case TutAnimData::Hook:
+            {
+                ct = std::min(ct + ((dt * 1.5f) * dir), 1.f);
+                if (ct == 1)
+                {
+                    dir = -1.f;
+                }
+
+                ct = std::max(0.f, ct);
+                if (ct == 0)
+                {
+                    state = TutAnimData::Pause;
+                    dir = 1.f;
+                }
+
+                const auto bounds = outer.getComponent<cro::Sprite>().getTextureBounds();
+                const auto halfWidth = std::round(bounds.width / 2.f);
+                hookBar.getComponent<cro::Transform>().setPosition({ halfWidth + (halfWidth * ct), bounds.height / 2.f});
+                
+                hookPointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            }
+                break;
+            case TutAnimData::Pause:
+                ct = std::min(1.f, ct + dt);
+
+                /*static constexpr float FlashTime = 0.125f;
+                flash += dt;
+                if (flash > FlashTime)
+                {
+                    flash -= FlashTime;
+
+                    const auto facing = hookPointer.getComponent<cro::Drawable2D>().getFacing() == cro::Drawable2D::Facing::Front ?
+                        cro::Drawable2D::Facing::Back : cro::Drawable2D::Facing::Front;
+
+                    hookPointer.getComponent<cro::Drawable2D>().setFacing(facing);
+                }*/
+
+                if (ct == 1.f)
+                {
+                    ct = 0.f;
+                    state = TutAnimData::Power;
+                }
+
+                break;
+            }
+        };
+
+    //info message
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setVerticalSpacing(2.f);
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, 0.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.2f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    if (m_sharedData.clubSet != 0)
+    {
+        entity.getComponent<cro::Text>().setString("Switching to a lower clubset will make the ball easier to hit.\nFull details available in Options -> How to Play.\nYou can disable these in-game tips in the Options menu.");
+    }
+    else
+    {
+        //regular continue
+        m_sharedData.tutorialIndex = 0;
+
+        entity.getComponent<cro::Text>().setString("Full details available in Options -> How to Play.\nYou can disable these in-game tips in the Options menu.");
+    }
+
+
+    //time delay to show continue button
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(5.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct -= dt;
+
+            if (ct < 0.f)
+            {
+                showContinue();
+                e.getComponent<cro::Callback>().active = false;
+                m_scene.destroyEntity(e);
+            }
+        };
+
+    m_actionCallbacks.push_back([&]() { quitState(); });
+}
+
+void TutorialState::tutorialPuttAssist(cro::Entity root)
+{
+    cro::SpriteSheet uiSprites;
+    uiSprites.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
+
+    //power bar graphic - other parts of this are parented to this
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(cro::App::getWindow().getSize() / 2u) / m_viewScale);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = uiSprites.getSprite("power_bar_double");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto outer = entity;
+
+    bounds.width += 32.f;
+    bounds.height += 20.f;
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setOrigin({ 2.f, 2.f, 0.05f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, bounds.height), CD32::Colours[CD32::GreenMid]),
+            cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::GreenMid]),
+            cro::Vertex2D(glm::vec2(bounds.width, bounds.height), CD32::Colours[CD32::GreenMid]),
+            cro::Vertex2D(glm::vec2(bounds.width, 0.f), CD32::Colours[CD32::GreenMid])
+        });
+    outer.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //range text
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width - 28.f, 24.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("3m");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize * 2);
+    outer.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto rangeEnt = entity;
+
+    //range text pointer
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 10.f, 30.f, 0.2f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(2.f));
+    entity.getComponent<cro::Transform>().setRotation(cro::Util::Const::PI);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = uiSprites.getSprite("slope_indicator");
+    entity.addComponent<cro::SpriteAnimation>().play(2);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::ceil(bounds.width / 2.f), -6.f });
+    rangeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //power level graphic
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 11.f, 0.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f,0.f,0.f,0.f });
+    entity.addComponent<cro::Sprite>() = uiSprites.getSprite("power_bar_inner_double");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    outer.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto inner = entity;
+
+
+    //flag icon
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 156.f, 30.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = uiSprites.getSprite("putt_flag_large");
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    outer.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //help text
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();// .setPosition({ outer.getComponent<cro::Transform>().getOrigin().x, 86.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setString("Quickly toggle Putt Assist with the \"Next Club\" Button.\nUse the Flag icon to determine how much power you need.\n\n\n\n\n\n\n\n\nPay attention the range of the putter!\n\n\n\nFull details available in Options -> How to Play.");
+    entity.getComponent<cro::Text>().setVerticalSpacing(2.f);
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto textEnt = entity;
+
+    //entity to update the animation
+    struct TutAnimData final
+    {
+        enum
+        {
+            Power, Pause
+        }state = Power;
+
+        float currTime = 0.f;
+        float direction = 1.f;
+    };
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<TutAnimData>();
+    entity.getComponent<cro::Callback>().function =
+        [&, outer, inner, textEnt](cro::Entity e, float dt) mutable
+        {
+            const auto size = glm::vec2(GolfGame::getActiveTarget()->getSize()) / m_viewScale;
+            outer.getComponent<cro::Transform>().setPosition(size / 2.f);
+            outer.getComponent<cro::Transform>().move({ -20.f, -8.f });
+
+            textEnt.getComponent<cro::Transform>().setPosition(size / 2.f);
+            textEnt.getComponent<cro::Transform>().move({ 0.f, 58.f });
+
+            auto& [state, ct, dir] = e.getComponent<cro::Callback>().getUserData<TutAnimData>();
+
+            switch (state)
+            {
+            default: break;
+            case TutAnimData::Power:
+            {
+                ct = std::min(1.f, ct + (dt * 0.5f));
+
+                const auto val = cro::Util::Easing::easeOutCubic(ct);
+                auto bounds = inner.getComponent<cro::Sprite>().getTextureBounds();
+                bounds.width *= val;
+                inner.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+
+                if (val >= 0.85f)
+                {
+                    state = TutAnimData::Pause;
+                    ct = 0.f;
+                }
+            }
+            break;
+
+            case TutAnimData::Pause:
+                ct = std::min(1.f, ct + dt);
+
+                if (ct == 1.f)
+                {
+                    ct = 0.f;
+                    state = TutAnimData::Power;
+                }
+
+                break;
+            }
+        };
+
+
+    //info message
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("You can disable these in-game tips in the Options menu.");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setVerticalSpacing(2.f);
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, 0.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.2f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //time delay to show continue button
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(5.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct -= dt;
+
+            if (ct < 0.f)
+            {
+                showContinue();
+                e.getComponent<cro::Callback>().active = false;
+                m_scene.destroyEntity(e);
+            }
+        };
 
     m_actionCallbacks.push_back([&]() { quitState(); });
 }

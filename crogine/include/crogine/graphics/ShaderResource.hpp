@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -233,6 +233,12 @@ namespace cro
         Shader& get(std::int32_t ID);
 
         /*!
+        \brief Returns the shader mapped to the given string ID, if it exists, else the default system shader
+        \see mapStringID()
+        */
+        Shader& get(const std::string& stringID);
+
+        /*!
         \brief Returns true if a shader has already been assigned the given ID
         */
         bool hasShader(std::int32_t shaderID) const;
@@ -254,11 +260,36 @@ namespace cro
         */
         void addInclude(const std::string& inc, const char* source);
 
+
+        /*!
+        \brief Maps the given string to the given shader ID.
+        Material definition files can optionally contain a property
+        named "shader_string_id". When loaded via a ModelDefinition
+        instance the shader resource is searched to see if this string
+        ID is mapped to a loaded shader and that shader is preferred
+        over the default shader for the materialtype. In which case
+        custom shaders should be first loaded into the resource then
+        mapped to a string ID with this function before loading the
+        model with the ModelDefinition instance.
+        \param stringID the string to search from the model definition
+        \param shaderID the already loaded shader ID to map to the string ID
+        \returns true if successfully mapped else false if the string is
+        already mapped to a shader or the shader with the given ID doesn't exist
+        */
+        bool mapStringID(const std::string& stringID, std::int32_t shaderID);
+
+        /*!
+        \brief Returns true if the requested mapping is available
+        */
+        bool hasStringID(const std::string& stringID) const { return m_stringMappings.count(stringID); }
+
     private:
 
         Shader m_defaultShader;
         std::unordered_map<std::int32_t, Shader> m_shaders;
         std::unordered_map<std::string, const char*> m_includes;
+
+        std::unordered_map<std::string, std::int32_t> m_stringMappings;
 
         std::string parseIncludes(const std::string& src) const;
     };

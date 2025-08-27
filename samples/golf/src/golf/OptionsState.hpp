@@ -157,6 +157,7 @@ private:
 
     cro::Entity m_layoutEnt; //controller layouts
     cro::Entity m_controllerInfoEnt; //displays controller names (when connected)
+    std::array<bool, 4u> m_controllerState = {};
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;

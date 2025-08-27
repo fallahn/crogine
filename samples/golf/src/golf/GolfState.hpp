@@ -355,7 +355,7 @@ private:
         std::size_t ballMeshID = 0;
         std::size_t shadowMeshID = 0;
     }m_ballResources;
-    BallTrail m_ballTrail;
+    std::vector<std::unique_ptr<BallTrail>> m_ballTrails;
 
     std::string m_audioPath;
     cro::String m_courseTitle;
@@ -515,6 +515,7 @@ private:
     void createTransition(const ActivePlayer&, bool = true);
     void startFlyBy();
     void setCameraPosition(glm::vec3, float, float);
+    bool m_cameraJumpActive = false;
     void sendFreecamToTarget();
 
     //tracks the player positions in group play so we can switch cameras
@@ -661,6 +662,12 @@ private:
     void showLevelUp(std::uint64_t);
     void toggleQuitReady();
 
+    bool m_sliceTutShown;
+    bool m_puttTutShown;
+    std::array<std::array<std::int32_t, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_sliceCounter = {};
+    std::array<std::array<std::int32_t, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_puttCounter = {};
+    void updateProTip(const ActivePlayer&); //displays mini-tutorials for low level players if slicing or missing putts a lot
+
     SkipState m_skipState;
     void updateSkipMessage(float);
     void refreshUI();
@@ -727,6 +734,7 @@ private:
     cro::MultiRenderTexture m_mapTextureMRT; //hack to create images for map explorer
     
     std::vector<cro::Entity> m_minimapModels;
+    cro::Entity m_minimapTrail;
 
     std::int32_t m_minimapTexturePass;
     static constexpr std::int32_t MaxMinimapPasses = 1;

@@ -93,6 +93,8 @@ source distribution.
 
 namespace
 {
+#include "TestShaders.inl"
+
     //cro::UISystem* uiSystem = nullptr;
     cro::CommandSystem* commandSystem = nullptr;
 
@@ -101,6 +103,15 @@ namespace
     float fireRate = 0.1f; //rate per second
     glm::vec3 sourcePosition = glm::vec3(-19.f, 10.f, 6.f);
     float sourceRotation = -cro::Util::Const::PI / 2.f;
+
+    struct ShaderInfo final
+    {
+        std::uint32_t ID = 0;
+        std::int32_t timeUniform = -1;
+    };
+    ShaderInfo holoShader;
+    ShaderInfo lavaShader;
+    ShaderInfo lavaFallShader;
 }
 
 BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
@@ -209,6 +220,18 @@ void BatcatState::handleMessage(const cro::Message& msg)
 
 bool BatcatState::simulate(float dt)
 {
+    static float accum = 0.f;
+    accum += dt;
+
+    glUseProgram(holoShader.ID);
+    glUniform1f(holoShader.timeUniform, accum);
+
+    glUseProgram(lavaShader.ID);
+    glUniform1f(lavaShader.timeUniform, accum);
+
+    glUseProgram(lavaFallShader.ID);
+    glUniform1f(lavaFallShader.timeUniform, accum);
+
     m_scene.simulate(dt);
     m_overlayScene.simulate(dt);
     return true;
@@ -276,6 +299,65 @@ void BatcatState::loadAssets()
 
 void BatcatState::createScene()
 {
+    
+
+    if (m_resources.shaders.loadFromString(ShaderID::Holo, 
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag, "#define TEXTURED\n#define RIMMING\n"))
+    {
+        m_resources.shaders.mapStringID("holo_shader", ShaderID::Holo);
+
+        holoShader.ID = m_resources.shaders.get(ShaderID::Holo).getGLHandle();
+        holoShader.timeUniform = m_resources.shaders.get(ShaderID::Holo).getUniformID("u_time");
+    }
+
+    
+
+    if (m_resources.shaders.loadFromString(ShaderID::Lava,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFragV2, "#define TEXTURED\n"))
+    {
+        m_resources.shaders.mapStringID("lava", ShaderID::Lava);
+
+        lavaShader.ID = m_resources.shaders.get(ShaderID::Lava).getGLHandle();
+        lavaShader.timeUniform = m_resources.shaders.get(ShaderID::Lava).getUniformID("u_time");
+    }
+    
+    if (m_resources.shaders.loadFromString(ShaderID::LavaFall,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFallFrag, "#define TEXTURED\n"))
+    {
+        m_resources.shaders.mapStringID("lavafall", ShaderID::LavaFall);
+
+        lavaFallShader.ID = m_resources.shaders.get(ShaderID::LavaFall).getGLHandle();
+        lavaFallShader.timeUniform = m_resources.shaders.get(ShaderID::LavaFall).getUniformID("u_time");
+    }
+
+
+
+    cro::ModelDefinition md(m_resources);
+    /*if (md.loadFromFile("assets/batcat/models/holo.cmt"))
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
+        entity.getComponent<cro::Transform>().setPosition({ 7.f, 0.f, 8.f });
+        md.createModel(entity);
+    }*/
+
+    if (md.loadFromFile("assets/golf/plane.cmt"))
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
+        entity.getComponent<cro::Transform>().setPosition({ -7.f, 0.f, 8.f });
+        md.createModel(entity);
+    }
+
+    if (md.loadFromFile("assets/golf/models/lavafall_small.cmt"))
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
+        entity.getComponent<cro::Transform>().setPosition({ 7.f, 0.f, 8.f });
+        md.createModel(entity);
+    }
+
+
     std::vector<glm::mat4> tx;
     for (auto i = 0; i < 7; ++i)
     {

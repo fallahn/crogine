@@ -4325,7 +4325,37 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         }
             break;
         case PacketID::GroupMode:
+        {
+            const auto old = m_sharedData.groupMode;
             m_sharedData.groupMode = std::min(std::int32_t(ClientGrouping::Four), evt.packet.as<std::int32_t>());
+
+            if (old != m_sharedData.groupMode)
+            {
+                switch (m_sharedData.groupMode)
+                {
+                default: break;
+                case ClientGrouping::One:
+                    m_textChat.printToScreen("Host set group mode to One", CD32::Colours[CD32::BlueLight]);
+                    break;
+                case ClientGrouping::Two:
+                    m_textChat.printToScreen("Host set group mode to Two", CD32::Colours[CD32::BlueLight]);
+                    break;
+                case ClientGrouping::Three:
+                    m_textChat.printToScreen("Host set group mode to Three", CD32::Colours[CD32::BlueLight]);
+                    break;
+                case ClientGrouping::Four:
+                    m_textChat.printToScreen("Host set group mode to Four", CD32::Colours[CD32::BlueLight]);
+                    break;
+                case ClientGrouping::Even:
+                    m_textChat.printToScreen("Host set group mode to Even", CD32::Colours[CD32::BlueLight]);
+                    break;
+                case ClientGrouping::None:
+                    m_textChat.printToScreen("Host set group mode to None", CD32::Colours[CD32::BlueLight]);
+                    break;
+                }
+                playMessageSound();
+            }
+        }
             break;
         case PacketID::TeamMode:
             m_sharedData.teamMode = evt.packet.as<std::int32_t>();

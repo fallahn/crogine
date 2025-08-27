@@ -927,13 +927,12 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                 //static constexpr float SearchHeight = 15.f;
 
-                auto start = ball.startPoint;
+                const auto start = ball.startPoint;
                 //start.y = SearchHeight;
                 ballPos.y = start.y;// SearchHeight;// ball.startPoint.y;
-
                 glm::vec3 dir = start - ballPos;
 
-                auto length = glm::length(dir);
+                const auto length = glm::length(dir);
                 dir /= length;
                 std::int32_t maxDist = static_cast<std::int32_t>(length /*- 10.f*/);
 
@@ -947,7 +946,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 for (auto i = 0; i < maxDist; ++i)
                 {
                     ballPos += dir;
-                    auto res = getTerrain(ballPos, -cro::Transform::Y_AXIS, 40.f); //+/- 20.f above below ball pos
+                    auto res = getTerrain(ballPos, -cro::Transform::Y_AXIS, 60.f); //+/- 30.f above below ball pos
                     terrain = res.terrain;
 
                     const auto slope = dot(res.normal, glm::vec3(0.f, 1.f, 0.f));
@@ -962,7 +961,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                         if (res.terrain != TerrainID::Green)
                         {
                             ballPos += dir * 1.5f;
-                            res = getTerrain(ballPos);
+                            res = getTerrain(ballPos, -cro::Transform::Y_AXIS, 60.f);
                         }
 
                         ballPos = res.intersection;

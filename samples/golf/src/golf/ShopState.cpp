@@ -239,7 +239,6 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
     m_buyString         (cro::String::fromUtf8(BuyStr.begin(), BuyStr.end())),
     m_sellString        (cro::String::fromUtf8(SellStr.begin(), SellStr.end()))
 {
-
 #ifdef CRO_DEBUG_
     registerCommand("add_balance", 
         [&](const std::string& val)

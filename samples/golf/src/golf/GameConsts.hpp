@@ -100,6 +100,7 @@ static constexpr std::uint32_t MapSizeMultiplier = 8u;// 4u; //increases the tex
 static constexpr glm::vec2 MapSizeRatio = glm::vec2(MiniMapSize) / MapSizeFloat;
 
 static constexpr float WaterRadius = 240.f;
+static constexpr float MaxMinimapHeight = 30.f; //for scale / colouring on minimap trails
 
 static constexpr float CameraStrokeHeight = 2.f;
 static constexpr float CameraPuttHeight = 0.6f;// 0.3f;
@@ -177,6 +178,20 @@ static constexpr std::uint32_t ShadowMapLowest = 512;
 static constexpr std::uint32_t ShadowMapLow = 2048;
 static constexpr std::uint32_t ShadowMapHigh = 3072;
 
+static inline void createKeystroke(std::int32_t key, bool down)
+{
+    SDL_Event evt;
+    evt.type = SDL_KEYDOWN;
+    evt.key.keysym.mod = 0; //must zero out else we get phantom keypresses
+    evt.key.keysym.sym = key;
+    evt.key.keysym.scancode = SDL_GetScancodeFromKey(key);
+    evt.key.timestamp = 0;
+    evt.key.repeat = 0;
+    evt.key.windowID = 0;
+    evt.key.state = down ? SDL_PRESSED : SDL_RELEASED;
+
+    SDL_PushEvent(&evt);
+};
 
 static inline std::uint32_t getShadowResolution(const SharedStateData& sd)
 {
@@ -253,7 +268,10 @@ struct TutorialID
     enum
     {
         One, Two, Three,
-        Swing, Spin, Putt
+        Swing, Spin, Putt,
+
+        LowerClubs = 100, //special case launched for new players who hook / slice
+        PuttAssist
     };
 };
 
@@ -384,7 +402,11 @@ struct ShaderID final
         Tonemapping,
         FlagPreview,
         Emissive,
-        Hole
+        Hole,
+        Hologram,
+        Lava,
+        LavaFall,
+        Umbrella
     };
 };
 

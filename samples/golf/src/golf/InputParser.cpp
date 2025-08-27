@@ -568,11 +568,11 @@ float InputParser::getCamRotation() const
     {
         if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateLeft))
         {
-            return 1.f;
+            return 0.5f;
         }
         if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateRight))
         {
-            return -1.f;
+            return -0.5f;
         }
 
         const auto x = -getAxisPosition(cro::GameController::AxisRightX);
@@ -866,6 +866,12 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
             ballStat = inv::Items[m_activeLoadout->items[inv::Ball]].stat01;
         }
 
+        //hack  to make regular clubs less slicey
+        if (clubLevel == 1)
+        {
+            ballStat = std::max(ballStat, 1);
+        }
+
         if (club != ClubID::Putter
             && m_activeLoadout->items[club] != -1)
         {
@@ -1028,10 +1034,10 @@ float InputParser::getEstimatedDistance() const
 {
     float ret = m_estimatedDistance;
 
-    if (m_sharedData.decimatePowerBar)
-    {
-        ret = Clubs[m_currentClub].getTargetAtLevel(/*Club::getClubLevel()*/2);// *1.08f;
-    }
+    //if (m_sharedData.decimatePowerBar)
+    //{
+    //    ret = Clubs[m_currentClub].getTargetAtLevel(Club::getClubLevel());// *1.08f;
+    //}
 
     switch (m_terrain)
     {
@@ -1108,9 +1114,12 @@ void InputParser::updateDistanceEstimation()
 
 
     //correction of the average difference of club rating (we're only using this for the range indicator)
+    //UGH this got missed when rearranging the clubs - so clearly a poor way to do this, we should be using
+    //the level adjustment func from Clubs.cpp
     static constexpr std::array<float, 3u> VisualAdjust =
     {
-        1.08f, 1.025f, 1.045f
+        1.025f, 1.045f, 1.045f //240,260,260
+        //1.08f, 1.025f, 1.045f //220,240,260
     };
 
     m_estimatedDistance = glm::length(endPos) * VisualAdjust[Club::getClubLevel()];

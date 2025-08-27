@@ -669,6 +669,8 @@ void GolfGame::simulate(float dt)
 
     Achievements::update();
     m_progressIcon->update(dt);
+
+    m_sharedData.mumLink->update();
 }
 
 void GolfGame::render()
@@ -906,6 +908,18 @@ bool GolfGame::initialise()
                 ImGui::Text("Open a fragment shader from a text file.");
                 ImGui::EndTooltip();
             }
+
+            ImGui::NewLine();
+
+            /*ImVec4 c = m_sharedData.mumLink->connected() ? ImVec4(0.f, 1.f, 0.f, 1.f) : ImVec4(1.f, 0.f, 0.f, 1.f);
+            ImGui::ColorButton("##mumble", c, 0, { 24.f,24.f });
+            ImGui::SameLine();
+            ImGui::Text("Mumble Connection");
+            ImGui::SameLine();
+            if (ImGui::Button("Reconnect"))
+            {
+                m_sharedData.mumLink->connect();
+            }*/
         });
 
     registerCommand("log_benchmark", 
@@ -1244,6 +1258,11 @@ bool GolfGame::initialise()
     }*/
     //Discord::disconnect();
 #endif
+
+    m_sharedData.mumLink = std::make_unique<cro::MumbleLink>(cro::String("Super Video Golf"), cro::String("Owen's Finest."));
+    m_sharedData.mumLink->setIdentity(m_profileData.playerProfiles[0].playerData.name);
+    //m_sharedData.mumLink->connect();
+
     return true;
 }
 
@@ -1837,10 +1856,14 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.showClubUpdate = prop.getValue<bool>();
                     }
-                    /*else if (name == "group_mode")
+                    else if (name == "show_minimap")
                     {
-                        m_sharedData.groupMode = std::clamp(prop.getValue<std::int32_t>(), 0, std::int32_t(ClientGrouping::Four));
-                    }*/
+                        m_sharedData.showMinimap = prop.getValue<bool>();
+                    }
+                    else if (name == "show_tips")
+                    {
+                        m_sharedData.showInGameTips = prop.getValue<bool>();
+                    }
                 }
             }
 
@@ -1998,6 +2021,8 @@ void GolfGame::savePreferences()
     cfg.addProperty("putt_follow").setValue(m_sharedData.puttFollowCam);
     cfg.addProperty("zoom_follow").setValue(m_sharedData.zoomFollowCam);
     cfg.addProperty("club_update").setValue(m_sharedData.showClubUpdate);
+    cfg.addProperty("show_minimap").setValue(m_sharedData.showMinimap);
+    cfg.addProperty("show_tips").setValue(m_sharedData.showInGameTips);
     cfg.save(path);
 
 

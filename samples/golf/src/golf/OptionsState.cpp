@@ -336,6 +336,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_refreshControllers    (false)
 {
     std::fill(m_controllerScrollAxes.begin(), m_controllerScrollAxes.end(), 0);
+    std::fill(m_controllerState.begin(), m_controllerState.end(), false);
 
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -551,11 +552,16 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
+        const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
         if (std::abs(evt.caxis.value) > cro::GameController::LeftThumbDeadZone)
         {
-            toggleControllerIcon(cro::GameController::controllerID(evt.caxis.which));
-
+            toggleControllerIcon(controllerID);
+            m_controllerState[controllerID] = true;
             cro::App::getWindow().setMouseCaptured(true);
+        }
+        else
+        {
+            m_controllerState[controllerID] = false;
         }
 
         if (evt.caxis.axis == cro::GameController::AxisRightY)
@@ -3508,6 +3514,51 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     parent.getComponent<cro::Transform>().addChild(m_controllerInfoEnt.getComponent<cro::Transform>());
     refreshControllerList();
 
+    //displays any controller activity to help identification
+    const float IconSize = 8.f;
+    const float IconSpacing = -12.f;
+    auto activityEnt = m_scene.createEntity();
+    activityEnt.addComponent<cro::Transform>().setPosition({ -12.f, 0.f });
+    activityEnt.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    std::vector<cro::Vertex2D> verts;
+
+    for (auto i = 0; i < 4; ++i)
+    {
+        const glm::vec2 offset = glm::vec2(0.f, IconSpacing * i);
+
+        verts.emplace_back(glm::vec2(0.f) + offset, cro::Colour::Black);
+        verts.emplace_back(glm::vec2(0.f, -IconSize) + offset, cro::Colour::Black);
+        verts.emplace_back(glm::vec2(IconSize, 0.f) + offset, cro::Colour::Black);
+
+        verts.emplace_back(glm::vec2(IconSize, 0.f) + offset, cro::Colour::Black);
+        verts.emplace_back(glm::vec2(0.f, -IconSize) + offset, cro::Colour::Black);
+        verts.emplace_back(glm::vec2(IconSize, -IconSize) + offset, cro::Colour::Black);
+    }
+    
+    activityEnt.getComponent<cro::Drawable2D>().setVertexData(verts);
+    activityEnt.addComponent<cro::Callback>().active = true;
+    activityEnt.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Drawable2D>().setFacing(m_controllerInfoEnt.getComponent<cro::Drawable2D>().getFacing());
+            
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            for (auto i = 0; i < 4; ++i)
+            {
+                //if (cro::GameController::isConnected(i))
+                {
+                    const auto start = i * 6;
+                    for (auto j = start; j < start + 6; ++j)
+                    {
+                        verts[j].colour = !m_controllerState[i]
+                            || !cro::GameController::isConnected(i)
+                            ? cro::Colour::Black : cro::Colour::Red;
+                    }
+                }
+            }
+        };
+    m_controllerInfoEnt.getComponent<cro::Transform>().addChild(activityEnt.getComponent<cro::Transform>());
+
     //displays keybind info at top
     auto buttonChangeEnt = m_scene.createEntity();
     buttonChangeEnt.addComponent<cro::Transform>().setPosition(glm::vec3((parentBounds.width / 4.f) * 3.f, 130.f, TextOffset));
@@ -3822,7 +3873,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
 
 
-    //contronller sliders
+    //controller sliders
     auto createText = [&](glm::vec2 position, const std::string& str)
     {
         auto e = m_scene.createEntity();
@@ -4646,7 +4697,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            float scale = m_sharedData.remoteContent ? 1.f : 0.f;
+            const float scale = m_sharedData.remoteContent ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -4673,7 +4724,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            float scale = m_sharedData.showRival ? 1.f : 0.f;
+            const float scale = m_sharedData.showRival ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -4701,7 +4752,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            float scale = m_sharedData.puttFollowCam ? 1.f : 0.f;
+            const float scale = m_sharedData.puttFollowCam ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -4710,7 +4761,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity = createHighlight(glm::vec2(12.f, 111.f));
     entity.setLabel("Automatically zoom the follower camera when the ball is in motion");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettPuttZoom);
-    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetCareer);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, SettShowMinimap);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettPuttFollow);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
@@ -4728,7 +4779,61 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            float scale = m_sharedData.zoomFollowCam ? 1.f : 0.f;
+            const float scale = m_sharedData.zoomFollowCam ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+
+
+    //hide minimap
+    entity = createHighlight(glm::vec2(12.f, 95.f));
+    entity.setLabel("Show the Minimap and Range Indicator on the HUD\nDefault to ON");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettShowMinimap);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, SettShowHints);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettPuttZoom);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.showMinimap = !m_sharedData.showMinimap;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = createCheckbox(glm::vec2(14.f, 97.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const float scale = m_sharedData.showMinimap ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+
+
+    //show in-game tips
+    entity = createHighlight(glm::vec2(12.f, 79.f));
+    entity.setLabel("Show hints and tips during gameplay.");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettShowHints);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetHints);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettShowMinimap);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.showInGameTips = !m_sharedData.showInGameTips;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = createCheckbox(glm::vec2(14.f, 81.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const float scale = m_sharedData.showInGameTips ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -5112,7 +5217,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     {
         entity.getComponent<cro::UIInput>().setNextIndex(ResetCareer, WindowAdvanced);
     }
-    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettPuttZoom);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettShowHints);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -5121,7 +5226,6 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
                     m_sharedData.showClubUpdate = true;
                     m_sharedData.showRosterTip = true;
                     m_sharedData.showTutorialTip = true;
-                    //m_sharedData.c
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
@@ -5142,7 +5246,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Transform>().move(-entity.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setSelectionIndex(ResetCareer);
     entity.getComponent<cro::UIInput>().setNextIndex(ResetStats, WindowHowTo);
-    entity.getComponent<cro::UIInput>().setPrevIndex(ResetHints, SettPuttZoom);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetHints, SettShowMinimap);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {

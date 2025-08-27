@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,6 +30,9 @@ source distribution.
 #include "MiniBallSystem.hpp"
 #include "MinimapZoom.hpp"
 #include "CommonConsts.hpp"
+#include "ClientCollisionSystem.hpp"
+#include "BallSystem.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -37,10 +40,16 @@ source distribution.
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
-MiniBallSystem::MiniBallSystem(cro::MessageBus& mb, const MinimapZoom& mz)
-    : cro::System(mb, typeid(MiniBallSystem)),
-    m_minimapZoom(mz),
-    m_activePlayer(0)
+namespace
+{
+    float vertexTimer = 0.f;
+}
+
+MiniBallSystem::MiniBallSystem(cro::MessageBus& mb, const MinimapZoom& mz, const std::uint8_t& serverGroup)
+    : cro::System   (mb, typeid(MiniBallSystem)),
+    m_minimapZoom   (mz),
+    m_serverGroupID (serverGroup),
+    m_activePlayer  (0)
 {
     requireComponent<cro::Transform>();
     requireComponent<cro::Drawable2D>();
@@ -97,13 +106,16 @@ void MiniBallSystem::process(float dt)
                 entity.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(position), 0.05f * static_cast<float>(ball.playerID)));
 
                 //set scale based on height
-                static constexpr float MaxHeight = 40.f;
-                float scale = 1.f + (position.y / MaxHeight);
+                const auto& collider = ball.parent.getComponent<ClientCollider>();
+                //it says 'previous' but the scene will have been updated immediately before the UI
+                const float heightAboveGround = std::min(1.f, collider.previousHeight / MaxMinimapHeight);
+
+                const float scale = 1.f + heightAboveGround;
                 entity.getComponent<cro::Transform>().setScale(glm::vec2(scale) * m_minimapZoom.mapScale * 2.f);
 
 
                 //or if in bounds of the mini map
-                auto miniBounds = ball.minimap.getComponent<cro::Transform>().getWorldTransform() * ball.minimap.getComponent<cro::Drawable2D>().getLocalBounds();
+                const auto miniBounds = ball.minimap.getComponent<cro::Transform>().getWorldTransform() * ball.minimap.getComponent<cro::Drawable2D>().getLocalBounds();
                 //auto renderBounds = glm::inverse(entity.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
                 entity.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
 
@@ -122,6 +134,38 @@ void MiniBallSystem::process(float dt)
                 for (auto& v : verts)
                 {
                     v.colour.setAlpha(alpha);
+                }
+
+                //update the trail if in flight
+                if (ball.groupID == m_serverGroupID)
+                {
+                    const auto state = collider.state;
+                    if (state == static_cast<std::uint8_t>(Ball::State::Flight)
+                        || state == static_cast<std::uint8_t>(Ball::State::Roll)
+                        || state == static_cast<std::uint8_t>(Ball::State::Putt))
+                    {
+                        static constexpr float PointFreq = 0.125f;
+
+                        vertexTimer += dt;
+                        if (vertexTimer > PointFreq)
+                        {
+                            const cro::Colour c(1.f, 1.f - heightAboveGround, 0.f, 1.f);
+
+                            const auto p = glm::vec2(entity.getComponent<cro::Transform>().getPosition());
+                            constexpr glm::vec2 Offset(0.f, 0.8f);
+                            vertexTimer -= PointFreq;
+
+                            auto& trailVerts = ball.minitrail.getComponent<cro::Drawable2D>().getVertexData();
+                            
+                            //arbitrary limit on vertices (normally the high counts are when we get a slow roll)
+                            if (trailVerts.size() < 200)
+                            {
+                                trailVerts.emplace_back(p - (Offset * m_minimapZoom.mapScale * 2.f), c);
+                                trailVerts.emplace_back(p + (Offset * m_minimapZoom.mapScale * 2.f), c);
+                                ball.minitrail.getComponent<cro::Drawable2D>().updateLocalBounds();
+                            }
+                        }
+                    }
                 }
             }
         }

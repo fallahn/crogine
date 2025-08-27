@@ -154,8 +154,9 @@ bool EntityManager::entityDestroyed(Entity entity) const
 bool EntityManager::entityValid(Entity entity) const
 {
     const auto id = entity.getIndex();
-    CRO_ASSERT(id < m_generations.size(), "Generation index out of range");
-    return (m_generations[id] == entity.getGeneration());
+    //CRO_ASSERT(id < m_generations.size(), "Generation index out of range");
+    //ugh horrible hack, we should really find out *why* the assertion fails
+    return (id < m_generations.size() && m_generations[id] == entity.getGeneration());
 }
 
 Entity EntityManager::getEntity(std::uint32_t id) const

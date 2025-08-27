@@ -758,28 +758,30 @@ void GolfState::updateCameraHeight(float movement)
         && (m_currentPlayer.terrain == TerrainID::Green
             || getClub() == ClubID::Putter))
     {
-        auto camPos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
+        auto& tx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
+        const auto pos = tx.getPosition();
+        const auto groundHeight = std::max(m_collisionMesh.getTerrain(pos).height, WaterLevel);
+
+        auto origin = tx.getOrigin();
+        origin.y = std::clamp(origin.y - movement, -CameraPuttHeight / 2.f, (pos.y - groundHeight) * 0.5f);
+        tx.setOrigin(origin);
+
+        /*const auto camPos = tx.getPosition();
 
         static constexpr float DistanceIncrease = 5.f;
-        float distanceToHole = glm::length(m_holeData[m_currentHole].pin - camPos);
-        float heightMultiplier = std::clamp(distanceToHole - DistanceIncrease, 0.f, DistanceIncrease);
+        const float distanceToHole = glm::length(m_holeData[m_currentHole].pin - camPos);
+        const float heightMultiplier = std::clamp(distanceToHole - DistanceIncrease, 0.f, DistanceIncrease);
 
-        const auto MaxOffset = m_cameras[CameraID::Player].getComponent<TargetInfo>().targetHeight + 0.2f;
+        auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
+        const auto MaxOffset = targetInfo.targetHeight + 0.2f;
         const auto TargetHeight = MaxOffset + m_collisionMesh.getTerrain(camPos).height;
 
-        camPos.y = std::clamp(camPos.y + movement, TargetHeight - (MaxOffset * 0.5f), TargetHeight + (MaxOffset * 0.6f) + (heightMultiplier / DistanceIncrease));
-
-
-        //correct for any target offset that may have been added in transition
-        auto& lookAtOffset = m_cameras[CameraID::Player].getComponent<TargetInfo>().finalLookAtOffset;
-        auto movement = lookAtOffset * (1.f / 30.f);
-        lookAtOffset += movement;
-
-        auto& lookAt = m_cameras[CameraID::Player].getComponent<TargetInfo>().finalLookAt;
-        lookAt -= movement;
-
-        m_cameras[CameraID::Player].getComponent<cro::Transform>().setPosition(camPos);
-        m_cameras[CameraID::Player].getComponent<cro::Transform>().setRotation(lookRotation(camPos, lookAt));
+        const auto oldY = camPos.y;
+        const auto newY = std::clamp(camPos.y + movement, TargetHeight - (MaxOffset * 0.5f), TargetHeight + (MaxOffset * 0.6f) + (heightMultiplier / DistanceIncrease));
+        
+        targetInfo.targetHeight = std::clamp(targetInfo.targetHeight + (newY - oldY), 0.1f, CameraStrokeHeight);
+        targetInfo.startHeight = targetInfo.targetHeight;
+        setCameraPosition(m_currentPlayer.position, targetInfo.startHeight, targetInfo.startOffset);*/
     }
 }
 
@@ -1392,6 +1394,7 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
 {
     //float targetDistance = glm::length2(playerData.position - m_currentPlayer.position);
     m_spectateGhost.getComponent<cro::Callback>().getUserData<GhostCallbackData>().direction = GhostCallbackData::Out;
+    m_minimapTrail.getComponent<cro::Callback>().active = true; //hides any existing trail
 
     //set the target zoom on the player camera
     float zoom = 1.f;
@@ -1475,6 +1478,13 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
     auto startPos = setNextPlayer ? m_currentPlayer.position : m_lastSpectatePosition;
     if (startPos == playerData.position)
     {
+        if (setNextPlayer)
+        {
+            //previous player may have rotated the camera, so re-align it
+            //to make sure the new player is facing the correct direction...
+            setCameraTarget(playerData);
+        }
+
         //we're already there
         auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
         targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
@@ -1483,7 +1493,50 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
 
         if (setNextPlayer)
         {
+            const auto currRotation = m_camRotation;
+            const auto targetDir = targetInfo.currentLookAt - startPos;
+            m_camRotation = std::atan2(-targetDir.z, targetDir.x);
             requestNextPlayer(playerData);
+
+            const auto targRotation = m_camRotation;
+            const auto startRotation = currRotation;
+
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<float>(currRotation);
+            entity.getComponent<cro::Callback>().function =
+                [&, targRotation, startRotation](cro::Entity e, float dt)
+                {
+                    auto& tx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
+                    auto& camRotation = e.getComponent<cro::Callback>().getUserData<float>();
+                    const float rotation = cro::Util::Maths::shortestRotation(camRotation, targRotation) * (dt * 10.f);
+
+                    auto offset = m_currentPlayer.position - tx.getWorldPosition();
+                    tx.move(offset);
+
+                    const auto axis = glm::inverse(tx.getRotation()) * cro::Transform::Y_AXIS;
+                    tx.rotate(axis, rotation);
+
+                    offset = glm::rotateY(offset, rotation);
+                    tx.move(-offset);
+
+                    camRotation += rotation;
+
+                    //LogI << targRotation - camRotation << std::endl;
+                    if (std::abs(targRotation - camRotation) < 0.0001f)
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                        m_gameScene.destroyEntity(e);
+
+                        m_camRotation = camRotation;
+                        
+                        /*auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
+                        auto lookDir = targetInfo.currentLookAt - tx.getWorldPosition();
+                        lookDir = glm::rotate(lookDir, camRotation - startRotation, axis);
+                        targetInfo.currentLookAt = tx.getWorldPosition() + lookDir;
+                        targetInfo.targetLookAt = targetInfo.currentLookAt;*/
+                    }
+                };
         }
         m_lastSpectatePosition = playerData.position;
         setGhostPosition(playerData.position);
@@ -1506,7 +1559,7 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
             auto travel = playerData.position - currPos;
             auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
 
-            auto targetDir = targetInfo.currentLookAt - currPos;
+            const auto targetDir = targetInfo.currentLookAt - currPos;
             m_camRotation = std::atan2(-targetDir.z, targetDir.x);
 
             float minTravel = playerData.terrain == TerrainID::Green ? 0.000001f : 0.005f;
@@ -1544,8 +1597,8 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
 
                 targetInfo.currentLookAt = targetInfo.prevLookAt + ((targetInfo.targetLookAt - targetInfo.prevLookAt) * percent);
 
-                auto height = targetInfo.targetHeight - targetInfo.startHeight;
-                auto offset = targetInfo.targetOffset - targetInfo.startOffset;
+                const auto height = targetInfo.targetHeight - targetInfo.startHeight;
+                const auto offset = targetInfo.targetOffset - targetInfo.startOffset;
 
                 static constexpr float Speed = 4.f;
                 e.getComponent<cro::Transform>().move(travel * Speed * dt);
@@ -1557,7 +1610,25 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
             }
         };
     }
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto origin = m_cameras[CameraID::Player].getComponent<cro::Transform>().getOrigin();
+            origin.y -= origin.y * (dt * 10.f);
+
+            if (std::abs(origin.y) < 0.001f)
+            {
+                origin.y = 0.f;
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+            m_cameras[CameraID::Player].getComponent<cro::Transform>().setOrigin(origin);
+        };
 }
+
 
 void GolfState::startFlyBy()
 {
@@ -1768,8 +1839,26 @@ void GolfState::startFlyBy()
         };
 
 
-    setActiveCamera(CameraID::Transition);
+    //reset any vertical offset of the player camera
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto origin = m_cameras[CameraID::Player].getComponent<cro::Transform>().getOrigin();
+            origin.y -= origin.y * dt;
 
+            if (std::abs(origin.y) < 0.01f)
+            {
+                origin.y = 0.f;
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+            m_cameras[CameraID::Player].getComponent<cro::Transform>().setOrigin(origin);
+        };
+
+
+    setActiveCamera(CameraID::Transition);
 
     //hide the minimap ball
     cro::Command cmd;
@@ -1857,25 +1946,24 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     auto& targetInfo = camEnt.getComponent<TargetInfo>();
     auto target = targetInfo.currentLookAt - position;
 
-    auto dist = glm::length(target);
-    float distNorm = std::min(1.f, (dist - MinDist) / DistDiff);
+    const auto dist = glm::length(target);
+    const float distNorm = std::min(1.f, (dist - MinDist) / DistDiff);
     heightMultiplier -= (2.f * distNorm);
 
     target *= 1.f - ((1.f - 0.08f) * distNorm);
     target += position;
 
-    auto result = m_collisionMesh.getTerrain(position);
-
+    const auto result = m_collisionMesh.getTerrain(position);
     camEnt.getComponent<cro::Transform>().setPosition({ position.x, result.height + height, position.z });
 
 
-    auto currentCamTarget = glm::vec3(target.x, result.height + (height * heightMultiplier), target.z);
+    const auto currentCamTarget = glm::vec3(target.x, result.height + (height * heightMultiplier), target.z);
     camEnt.getComponent<TargetInfo>().finalLookAt = currentCamTarget;
 
-    auto oldPos = camEnt.getComponent<cro::Transform>().getPosition();
+    const auto oldPos = camEnt.getComponent<cro::Transform>().getPosition();
     camEnt.getComponent<cro::Transform>().setRotation(lookRotation(oldPos, currentCamTarget));
 
-    auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
+    const auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
     camEnt.getComponent<cro::Transform>().move(offset * viewOffset);
 
     //clamp above ground height and hole radius
@@ -1884,8 +1972,8 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     static constexpr float MinRad = 0.6f + CameraPuttOffset;
     static constexpr float MinRadSqr = MinRad * MinRad;
 
-    auto holeDir = m_holeData[m_currentHole].pin - newPos;
-    auto holeDist = glm::length2(holeDir);
+    const auto holeDir = m_holeData[m_currentHole].pin - newPos;
+    const auto holeDist = glm::length2(holeDir);
     /*if (holeDist < MinRadSqr)
     {
         auto len = std::sqrt(holeDist);
@@ -1902,7 +1990,7 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
         heightMultiplier *= CameraTeeMultiplier;
     }
 
-    auto groundHeight = std::max(m_collisionMesh.getTerrain(newPos).height, WaterLevel);
+    const auto groundHeight = std::max(m_collisionMesh.getTerrain(newPos).height, WaterLevel);
     newPos.y = std::max(groundHeight + (CameraPuttHeight * heightMultiplier), newPos.y);
 
     camEnt.getComponent<cro::Transform>().setPosition(newPos);
@@ -1922,11 +2010,7 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
 void GolfState::sendFreecamToTarget()
 {
-    //hack to test if transition is already active to prevent
-    //multiple button presses, while keeping vars local...
-    static cro::Entity entity;
-
-    if (entity.isValid())
+    if (m_cameraJumpActive)
     {
         return;
     }
@@ -1983,7 +2067,7 @@ void GolfState::sendFreecamToTarget()
         m_gameScene.setSystemActive<FpsCameraSystem>(false);
 
 
-        entity = m_gameScene.createEntity();
+        auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<MoveData>();
         entity.getComponent<cro::Callback>().function =
@@ -2003,8 +2087,12 @@ void GolfState::sendFreecamToTarget()
 
                     m_gameScene.setSystemActive<FpsCameraSystem>(true);
                     m_freeCam.getComponent<FpsCamera>().correctPitch(targetRot);
+
+                    m_cameraJumpActive = false;
                 }
             };
+
+        m_cameraJumpActive = true;
     }
 }
 
