@@ -1550,7 +1550,8 @@ void CareerState::createConfirmMenu(cro::Entity parent)
     //displays the message
     enterConfirmCallback = [&, confirmEnt, messageEnt, shadeEnt]() mutable
     {
-        if (m_sharedData.preferredClubSet == 2)
+        if (m_sharedData.preferredClubSet == 2
+            && m_sharedData.showInGameTips)
         {
             messageEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         }

@@ -1751,7 +1751,8 @@ void TournamentState::createConfirmMenu(cro::Entity parent)
 
         if (!showReset)
         {
-            if (m_sharedData.preferredClubSet == 2)
+            if (m_sharedData.preferredClubSet == 2
+                && m_sharedData.showInGameTips)
             {
                 messageEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }

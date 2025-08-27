@@ -3755,7 +3755,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         else
         {
             //continue message
-            if (m_sharedData.preferredClubSet == 2)
+            if (m_sharedData.preferredClubSet == 2
+                && m_sharedData.showInGameTips)
             {
                 messageEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
                 messageEnt.getComponent<cro::Text>().setString("Pro clubs can be tough to use!");
