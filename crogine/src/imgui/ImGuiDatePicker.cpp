@@ -18,6 +18,11 @@
 #define SET_MONTH(timePoint, month) timePoint.tm_mon = month - 1
 #define SET_YEAR(timePoint, year) timePoint.tm_year = year - 1900
 
+//hax
+#ifndef _WIN32
+#define gmtime_s(x,y) gmtime_r(y,x)
+#endif
+
 namespace ImGui
 {
     static const std::vector<std::string> MONTHS =
