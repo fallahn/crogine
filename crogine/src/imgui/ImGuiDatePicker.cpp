@@ -7,6 +7,7 @@
 #include <vector>
 #include <unordered_map>
 
+#include <time.h>
 
 #define GET_DAY(timePoint) int(timePoint.tm_mday)
 #define GET_MONTH_UNSCALED(timePoint) timePoint.tm_mon
