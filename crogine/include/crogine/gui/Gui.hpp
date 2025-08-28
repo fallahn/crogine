@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,7 @@ source distribution.
 #include "detail/imgui_stdlib.h"
 #include "detail/ImGuizmo.h"
 #include "detail/imfilebrowser.h"
+#include "detail/ImGuiDatePicker.hpp"
 
 #include <crogine/Config.hpp>
 #include <crogine/graphics/MaterialData.hpp>

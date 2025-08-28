@@ -348,6 +348,9 @@
     <ClCompile Include="src\batcat\SMAAPost.cpp">
       <Filter>Source Files\batcat</Filter>
     </ClCompile>
+    <ClCompile Include="src\Aer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -574,6 +577,9 @@
     </ClInclude>
     <ClInclude Include="src\batcat\SMAAPost.hpp">
       <Filter>Header Files\batcat</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Aer.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

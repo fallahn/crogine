@@ -171,6 +171,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/imgui/imgui_stdlib.cpp
   ${PROJECT_DIR}/imgui/imgui_tables.cpp
   ${PROJECT_DIR}/imgui/imgui_widgets.cpp
+  ${PROJECT_DIR}/imgui/ImGuiDatePicker.cpp
   ${PROJECT_DIR}/imgui/ImGuizmo.cpp
   ${PROJECT_DIR}/imgui/implot.cpp
   ${PROJECT_DIR}/imgui/implot_demo.cpp

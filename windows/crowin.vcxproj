@@ -197,6 +197,7 @@
     <ClInclude Include="..\crogine\include\crogine\gui\detail\imfilebrowser.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGradient.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\imgui.h" />
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGuiDatePicker.hpp" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGuizmo.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImSequencer.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImZoomSlider.h" />
@@ -418,6 +419,7 @@
     <ClCompile Include="..\crogine\src\imgui\imfilebrowser.cpp" />
     <ClCompile Include="..\crogine\src\imgui\ImGradient.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui.cpp" />
+    <ClCompile Include="..\crogine\src\imgui\ImGuiDatePicker.cpp" />
     <ClCompile Include="..\crogine\src\imgui\ImGuizmo.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_draw.cpp" />

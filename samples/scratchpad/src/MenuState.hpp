@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "StateIDs.hpp"
+#include "Aer.hpp"
 #include <crogine/graphics/VideoPlayer.hpp>
 #include <crogine/audio/sound_system/MusicPlayer.hpp>
 
@@ -66,6 +67,8 @@ namespace sp
         std::string m_musicName;
 
         ImGui::FileBrowser m_fileBrowser;
+
+        Aer m_aer;
 
         void addSystems();
         void loadAssets();

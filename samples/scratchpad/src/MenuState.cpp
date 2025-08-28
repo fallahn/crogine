@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -593,6 +593,11 @@ void MenuState::createUI()
                     if (ImGui::MenuItem("CSV To map"))
                     {
                         CSVToMap();
+                    }
+
+                    if (ImGui::MenuItem("AER Caluclator"))
+                    {
+                        m_aer.setVisible(!m_aer.getVisible());
                     }
 
                     ImGui::EndMenu();
