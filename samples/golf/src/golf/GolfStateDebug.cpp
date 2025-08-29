@@ -281,13 +281,10 @@ void GolfState::registerDebugCommands()
     //registerWindow([&]() 
     //    {
     //        ImGui::Begin("Slices");
-    //        for (const auto& arr : m_puttCounter)
-    //        {
-    //            for (auto i : arr)
-    //            {
-    //                ImGui::Text("Putt count: %d", i);
-    //            }
-    //        }
+    //        
+    //        glm::vec2 s(MapSize);
+    //        ImGui::Image(m_speakerDebug.getTexture(), { s.x, s.y }, { 0.f, 1.f }, { 1.f, 0.f });
+
     //        ImGui::End();
     //    });
 

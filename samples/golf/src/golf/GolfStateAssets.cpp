@@ -3200,13 +3200,16 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
             }
         }
 
+        //7 evenly spaced points with ambient audio
+        constexpr auto envOffset = glm::vec2(MapSize) / 2.f;
+        constexpr auto radius = envOffset.y;// (envOffset.y / 2.f) + (envOffset.y / 4.f);
+        static constexpr float height = 8.f;
 
-        //6 evenly spaced points with ambient audio
-        auto envOffset = glm::vec2(MapSize) / 3.f;
         cro::AudioScape as;
         if (as.loadFromFile(m_audioPath, m_resources.audio))
         {
-            std::array emitterNames =
+            std::size_t currIdx = 0;
+            const std::array emitterNames =
             {
                 std::string("01"),
                 std::string("02"),
@@ -3218,13 +3221,41 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                 std::string("04"),
             };
 
-            for (auto i = 0; i < 2; ++i)
+            for (auto i = 0; i < 6; ++i)
+            {
+                static constexpr float Arc = cro::Util::Const::TAU / 6.f;
+                glm::vec2 pos = glm::vec2(std::sin((i * Arc) + (Arc/2.f)), std::cos((i * Arc) + (Arc / 2.f)));
+                pos *= radius;
+                pos += envOffset;
+
+                if (as.hasEmitter(emitterNames[currIdx]))
+                {
+                    auto entity = m_gameScene.createEntity();
+                    entity.addComponent<cro::Transform>().setPosition({pos.x, height, -pos.y});
+                    entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[currIdx]);
+                    entity.getComponent<cro::AudioEmitter>().play();
+                    entity.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(5.f));
+                }
+
+                currIdx = (currIdx + 1) % emitterNames.size();
+            }
+
+            if (as.hasEmitter(emitterNames[currIdx]))
+            {
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({ envOffset.x, height, -envOffset.y });
+                entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[currIdx]);
+                entity.getComponent<cro::AudioEmitter>().play();
+                entity.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(5.f));
+            }
+
+            /*for (auto i = 0; i < 2; ++i)
             {
                 for (auto j = 0; j < 2; ++j)
                 {
-                    static constexpr float height = 4.f;
                     glm::vec3 position(envOffset.x * (i + 1), height, -envOffset.y * (j + 1));
-
+                    txt.setPosition({ position.x, -position.z });
+                    txt.draw();
                     auto idx = i * 2 + j;
 
                     if (as.hasEmitter(emitterNames[idx + 4]))
@@ -3237,6 +3268,8 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                     }
 
                     position = { i * MapSize.x, height, -static_cast<float>(MapSize.y) * j };
+                    txt.setPosition({ position.x, -position.z });
+                    txt.draw();
 
                     if (as.hasEmitter(emitterNames[idx]))
                     {
@@ -3246,7 +3279,7 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                         entity.getComponent<cro::AudioEmitter>().play();
                     }
                 }
-            }
+            }*/
 
             //random incidental audio
             if (as.hasEmitter("incidental01")
