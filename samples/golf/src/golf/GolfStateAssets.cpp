@@ -1804,7 +1804,7 @@ void GolfState::loadMaterials()
     }
 
     if (m_resources.shaders.loadFromString(ShaderID::Hologram,
-        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag, "#define TEXTURED\n#define RIMMING\n"))
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag, "#define TEXTURED\n#define RIMMING\n#define PASS_SCALE\n"))
     {
         m_resources.shaders.mapStringID("holo_shader", ShaderID::Hologram);
         auto* shader = &m_resources.shaders.get(ShaderID::Hologram);
