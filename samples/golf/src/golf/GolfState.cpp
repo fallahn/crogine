@@ -1670,6 +1670,16 @@ void GolfState::handleMessage(const cro::Message& msg)
                 };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+            //hides the elevation when putting - else this is done
+            //when we receive the swing animation packet
+            cmd.targetFlags = CommandID::UI::PinHeight;
+            cmd.action =
+                [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
             //restore the ball origin if buried
             if (m_activeAvatar->ballModel.isValid()) //may have disconnected mid-swing
             {
@@ -5927,11 +5937,23 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             if (m_activeAvatar)
             {
                 auto animID = evt.packet.as<std::uint8_t>();
-                if (animID == AnimationID::Swing
-                    && getClub() > ClubID::PitchWedge)
+                if (animID == AnimationID::Swing)
                 {
-                    //we don't know the club server side to send correct animation *sigh*
-                    animID = AnimationID::Chip;
+                    if (getClub() > ClubID::PitchWedge)
+                    {
+                        //we don't know the club server side to send correct animation *sigh*
+                        animID = AnimationID::Chip;
+                    }
+
+                    //hide the elevation display
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::UI::PinHeight;
+                    cmd.action =
+                        [](cro::Entity e, float)
+                        {
+                            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        };
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                 }
 
                 //TODO scale club model to zero if not idle or swing
@@ -7903,14 +7925,14 @@ void GolfState::hitBall()
         };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    //hide height to pin
-    cmd.targetFlags = CommandID::UI::PinHeight;
+    //hide height to pin - moved to animation event handler so it happens on all clients, not just active
+    /*cmd.targetFlags = CommandID::UI::PinHeight;
     cmd.action =
         [](cro::Entity e, float)
         {
             e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
 
     if (m_currentCamera == CameraID::Bystander
         && cro::Util::Random::value(0,1) == 0)
