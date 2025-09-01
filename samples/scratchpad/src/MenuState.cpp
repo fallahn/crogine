@@ -89,13 +89,14 @@ namespace
     bool showMusicPlayer = false;
     bool showBoilerplate = false;
     bool showQuantizer = false;
+    bool showMoonPhase = true;
 
     cro::ConfigFile testFile;
 
     const std::string QuantizeFrag =
 R"(
 uniform sampler2D u_texture;
-uniform int u_levels;
+uniform int u_levels = 3;
 
 VARYING_IN vec2 v_texCoord;
 
@@ -112,11 +113,19 @@ void main()
     FRAG_OUT = vec4(colour.rgb, colour.a);
 })";
 
+    const std::string MoonFrag =
+R"(
+
+)";
+
     struct ShaderUniform final
     {
         std::uint32_t shaderID = 0;
         std::int32_t levels = -1;
+        float phase = 0.f;
     }quantizeUniform;
+
+    ShaderUniform moonUniform;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp& app)
@@ -245,6 +254,13 @@ void MenuState::render()
         m_quantizeQuad.draw();
         m_quantizeOutput.display();
     }
+
+    if (m_moonOutput.available())
+    {
+        m_moonOutput.clear();
+        m_moonQuad.draw();
+        m_moonOutput.display();
+    }
 }
 
 //private
@@ -266,6 +282,12 @@ void MenuState::loadAssets()
     {
         quantizeUniform.shaderID = m_quantizeShader.getGLHandle();
         quantizeUniform.levels = m_quantizeShader.getUniformID("u_levels");
+    }
+
+    if (m_moonShader.loadFromString(cro::SimpleDrawable::getDefaultVertexShader(), MoonFrag, "#define TEXTURED\n"))
+    {
+        moonUniform.shaderID = m_moonShader.getGLHandle();
+        moonUniform.phase = 0.f;
     }
 }
 
@@ -637,6 +659,16 @@ void MenuState::createUI()
                         CSVToMap();
                     }
 
+                    if (ImGui::MenuItem("Image Quantizer"))
+                    {
+                        showQuantizer = !showQuantizer;
+                    }
+
+                    if (ImGui::MenuItem("Moon Phase"))
+                    {
+                        showMoonPhase = !showMoonPhase;
+                    }
+
                     if (ImGui::MenuItem("AER Caluclator"))
                     {
                         m_aer.setVisible(!m_aer.getVisible());
@@ -810,6 +842,11 @@ void MenuState::createUI()
             if (showQuantizer)
             {
                 imageQuantizer();
+            }
+
+            if (showMoonPhase)
+            {
+                moonPhase();
             }
 
             if (m_fileBrowser.HasSelected())
@@ -1225,4 +1262,9 @@ void MenuState::imageQuantizer()
         }
     }
     ImGui::End();
+}
+
+void MenuState::moonPhase()
+{
+
 }

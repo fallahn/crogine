@@ -87,5 +87,11 @@ namespace sp
         cro::SimpleQuad m_quantizeQuad;
         cro::Shader m_quantizeShader;
         void imageQuantizer();
+
+        cro::Texture m_moonInput;
+        cro::RenderTexture m_moonOutput;
+        cro::SimpleQuad m_moonQuad;
+        cro::Shader m_moonShader;
+        void moonPhase();
     };
 }
