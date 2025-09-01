@@ -51,6 +51,8 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/String.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
+
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -86,8 +88,35 @@ namespace
     bool showVideoPlayer = false;
     bool showMusicPlayer = false;
     bool showBoilerplate = false;
+    bool showQuantizer = false;
 
     cro::ConfigFile testFile;
+
+    const std::string QuantizeFrag =
+R"(
+uniform sampler2D u_texture;
+uniform int u_levels;
+
+VARYING_IN vec2 v_texCoord;
+
+OUTPUT
+
+void main()
+{
+    vec4 colour = TEXTURE(u_texture, v_texCoord);
+
+    colour.rgb *= u_levels;
+    colour.rgb = round(colour.rgb);
+    colour.rgb /= u_levels;
+
+    FRAG_OUT = vec4(colour.rgb, colour.a);
+})";
+
+    struct ShaderUniform final
+    {
+        std::uint32_t shaderID = 0;
+        std::int32_t levels = -1;
+    }quantizeUniform;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp& app)
@@ -209,6 +238,13 @@ void MenuState::render()
 {
     //draw any renderable systems
     m_scene.render();
+
+    if (m_quantizeOutput.available())
+    {
+        m_quantizeOutput.clear();
+        m_quantizeQuad.draw();
+        m_quantizeOutput.display();
+    }
 }
 
 //private
@@ -225,6 +261,12 @@ void MenuState::addSystems()
 void MenuState::loadAssets()
 {
     m_font.loadFromFile("assets/fonts/VeraMono.ttf");
+
+    if (m_quantizeShader.loadFromString(cro::SimpleDrawable::getDefaultVertexShader(), QuantizeFrag, "#define TEXTURED\n"))
+    {
+        quantizeUniform.shaderID = m_quantizeShader.getGLHandle();
+        quantizeUniform.levels = m_quantizeShader.getUniformID("u_levels");
+    }
 }
 
 void MenuState::createScene()
@@ -765,6 +807,11 @@ void MenuState::createUI()
                 ImGui::End();
             }
 
+            if (showQuantizer)
+            {
+                imageQuantizer();
+            }
+
             if (m_fileBrowser.HasSelected())
             {
                 const auto inpath = m_fileBrowser.GetSelected().string();
@@ -1132,4 +1179,50 @@ void MenuState::CSVToMap()
 
         LogI << "Wrote file successfully" << std::endl;
     }
+}
+
+void MenuState::imageQuantizer()
+{
+    if (ImGui::Begin("Quantizer", &showQuantizer))
+    {
+        if (ImGui::Button("Open"))
+        {
+            const auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
+            if (!path.empty())
+            {
+                if (m_quantizeInput.loadFromFile(path))
+                {
+                    m_quantizeQuad.setTexture(m_quantizeInput);
+                    m_quantizeQuad.setShader(m_quantizeShader);
+                    m_quantizeOutput.create(m_quantizeInput.getSize().x, m_quantizeInput.getSize().y, false);
+                }
+            }
+        }
+
+        if (m_quantizeOutput.available())
+        {
+            ImGui::SameLine();
+            if (ImGui::Button("Save"))
+            {
+                const auto path = cro::FileSystem::saveFileDialogue("", "png");
+                if (!path.empty())
+                {
+                    m_quantizeOutput.getTexture().saveToFile(path);
+                }
+            }
+            
+            static std::int32_t levels = 3;
+            if (ImGui::SliderInt("Levels", &levels, 1, 10))
+            {
+                levels = std::clamp(levels, 1, 10);
+                glUseProgram(quantizeUniform.shaderID);
+                glUniform1i(quantizeUniform.levels, levels);
+            }
+
+            const glm::vec2 size(m_quantizeOutput.getSize());
+            ImGui::Image(m_quantizeOutput.getTexture(), { size.x, size.y }, { 0.f,1.f }, { 1.f,0.f });
+
+        }
+    }
+    ImGui::End();
 }

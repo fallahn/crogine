@@ -37,6 +37,9 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/Font.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/Shader.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/gui/Gui.hpp>
 
@@ -78,5 +81,11 @@ namespace sp
         bool createStub(const std::string&) const;
         void fileToByteArray(const std::string&, const std::string&) const;
         void CSVToMap();
+
+        cro::Texture m_quantizeInput;
+        cro::RenderTexture m_quantizeOutput;
+        cro::SimpleQuad m_quantizeQuad;
+        cro::Shader m_quantizeShader;
+        void imageQuantizer();
     };
 }
