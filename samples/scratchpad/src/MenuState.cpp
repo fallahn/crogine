@@ -52,6 +52,7 @@ source distribution.
 #include <crogine/util/String.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/detail/glm/gtc/type_ptr.hpp>
 
 #include <fstream>
 #include <iomanip>
@@ -116,6 +117,7 @@ void main()
     const std::string MoonFrag =
 R"(
 uniform sampler2D u_texture;
+uniform mat2 u_rotation = mat2(1.0);
 uniform vec3 u_lightDir;
 
 VARYING_IN vec2 v_texCoord;
@@ -124,6 +126,10 @@ OUTPUT
 
 vec3 sphericalNormal(vec2 coord)
 {
+//hack cos moon png is 1/4 size actual texture
+coord *= 2.0;
+coord -= 0.5;
+
     coord = clamp(coord, 0.0, 1.0);
 
     float dx  = ( coord.x - 0.5 ) * 2.0;
@@ -138,9 +144,13 @@ const vec3 skyColour = vec3(0.01, 0.001, 0.1);
 
 void main()
 {
-    vec4 colour = TEXTURE(u_texture, v_texCoord);
+    vec2 coord = v_texCoord - 0.5;
+    coord = u_rotation * coord;
+    coord += 0.5;
 
-    vec3 normal = sphericalNormal(v_texCoord);
+    vec4 colour = TEXTURE(u_texture, coord);
+
+    vec3 normal = sphericalNormal(coord);
     float amount = dot(normal, u_lightDir);
 
     amount *= Levels;
@@ -157,6 +167,7 @@ void main()
     {
         std::uint32_t shaderID = 0;
         std::int32_t levels = -1;
+        std::int32_t rotation = -1;
     }quantizeUniform;
 
     ShaderUniform moonUniform;
@@ -327,8 +338,9 @@ void MenuState::loadAssets()
     {
         moonUniform.shaderID = m_moonShader.getGLHandle();
         moonUniform.levels = m_moonShader.getUniformID("u_lightDir");
+        moonUniform.rotation = m_moonShader.getUniformID("u_rotation");
 
-        if (m_moonInput.loadFromFile("assets/golf/images/skybox/sun_high.png"))
+        if (m_moonInput.loadFromFile("assets/golf/images/skybox/moon.png"))
         {
             m_moonQuad.setTexture(m_moonInput);
             m_moonQuad.setShader(m_moonShader);
@@ -1314,6 +1326,25 @@ void MenuState::moonPhase()
 {
     if (ImGui::Begin("Moon Phase", &showMoonPhase))
     {
+        static float latitude = 0.f; //degrees, positive is north
+
+        if (ImGui::SliderFloat("Latitude", &latitude, -90.f, 90.f))
+        {
+            latitude = std::clamp(latitude, -90.f, 90.f);
+
+            if (m_moonOutput.available())
+            {
+                //rotate the tex coords to simulate latitude
+                glm::vec2 rot = glm::vec2(std::sin(-latitude * cro::Util::Const::degToRad), std::cos(-latitude * cro::Util::Const::degToRad));
+                glm::mat2 rMat = glm::mat2(1.f);
+                rMat[0] = glm::vec2(rot.y, -rot.x);
+                rMat[1] = rot;
+
+                glUseProgram(moonUniform.shaderID);
+                glUniformMatrix2fv(moonUniform.rotation, 1, GL_FALSE, glm::value_ptr(rMat));
+            }
+        }
+
         if (ImGui::DatePicker("Date", m_timePicker))
         {
             const auto t = std::mktime(&m_timePicker);
@@ -1323,14 +1354,11 @@ void MenuState::moonPhase()
             {
                 //rotate a light direction then set that as the uniform
                 const auto rotateAmount = (m_moonPhase.getPhase() * 2.f - 1.f) * cro::Util::Const::PI;
-                glm::quat rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, rotateAmount, cro::Transform::Y_AXIS);
+                glm::quat rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, rotateAmount, cro::Transform::X_AXIS);
                 glm::vec3 lightDir = rotation * cro::Transform::Z_AXIS;                
-
-                //TODO also rotate this with latitude? Probably want to rotate the tex coords
 
                 glUseProgram(moonUniform.shaderID);
                 glUniform3f(moonUniform.levels, lightDir.x, lightDir.y, lightDir.z);
-
             }
         }
 

@@ -862,6 +862,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_textChat.toggleWindow(false, true, false);
             break;
         case SDLK_F6:
+        {
+            //hack to see if this fixes the black screen in simultaneous play
+            auto& cam = m_cameras[CameraID::Player].getComponent<cro::Camera>();
+            cam.resizeCallback(cam);
+        }
+
             //cro::Console::doCommand("build_cubemaps");
         //    //logCSV();
         //{
