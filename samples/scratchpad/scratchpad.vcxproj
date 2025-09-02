@@ -329,6 +329,7 @@
     <ClCompile Include="src\log\LogState.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
+    <ClCompile Include="src\moonphase\MoonPhase.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\pathfollow\PathFollowSystem.cpp" />
     <ClCompile Include="src\pseuthe\PseutheBackgroundState.cpp" />
@@ -404,6 +405,7 @@
     <ClInclude Include="src\log\LogState.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
+    <ClInclude Include="src\moonphase\MoonPhase.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\pathfollow\PathFollowSystem.hpp" />
     <ClInclude Include="src\pseuthe\PseutheBackgroundState.hpp" />

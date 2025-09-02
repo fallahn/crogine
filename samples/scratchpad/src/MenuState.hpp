@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -31,6 +31,7 @@ source distribution.
 
 #include "StateIDs.hpp"
 #include "Aer.hpp"
+#include "moonphase/MoonPhase.hpp"
 #include <crogine/graphics/VideoPlayer.hpp>
 #include <crogine/audio/sound_system/MusicPlayer.hpp>
 
@@ -88,6 +89,8 @@ namespace sp
         cro::Shader m_quantizeShader;
         void imageQuantizer();
 
+        MoonPhase m_moonPhase;
+        tm m_timePicker;
         cro::Texture m_moonInput;
         cro::RenderTexture m_moonOutput;
         cro::SimpleQuad m_moonQuad;

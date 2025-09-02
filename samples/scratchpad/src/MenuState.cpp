@@ -115,14 +115,48 @@ void main()
 
     const std::string MoonFrag =
 R"(
+uniform sampler2D u_texture;
+uniform vec3 u_lightDir;
 
+VARYING_IN vec2 v_texCoord;
+
+OUTPUT
+
+vec3 sphericalNormal(vec2 coord)
+{
+    coord = clamp(coord, 0.0, 1.0);
+
+    float dx  = ( coord.x - 0.5 ) * 2.0;
+    float dy  = ( coord.y - 0.5 ) * 2.0;
+    float distSqr = (dx * dx) + (dy * dy);
+         
+    return normalize(vec3(dx, dy, 1.0 - distSqr));
+}
+
+const float Levels = 20.0;
+const vec3 skyColour = vec3(0.01, 0.001, 0.1);
+
+void main()
+{
+    vec4 colour = TEXTURE(u_texture, v_texCoord);
+
+    vec3 normal = sphericalNormal(v_texCoord);
+    float amount = dot(normal, u_lightDir);
+
+    amount *= Levels;
+    amount = floor(amount);
+    amount /= Levels;
+
+    amount = 0.05 + (0.95 * amount);
+
+    FRAG_OUT = vec4(mix(skyColour, colour.rgb, amount), colour.a);
+}
 )";
 
     struct ShaderUniform final
     {
         std::uint32_t shaderID = 0;
         std::int32_t levels = -1;
-        float phase = 0.f;
     }quantizeUniform;
 
     ShaderUniform moonUniform;
@@ -131,9 +165,14 @@ R"(
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp& app)
     : cro::State    (stack, context),
     m_gameInstance  (app),
-    m_scene         (context.appInstance.getMessageBus())
+    m_scene         (context.appInstance.getMessageBus()),
+    m_timePicker    ()
 {
     app.unloadPlugin();
+
+    const auto t = std::time(nullptr);
+    m_timePicker = *std::gmtime(&t);
+    m_moonPhase.update(t);
 
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -287,7 +326,14 @@ void MenuState::loadAssets()
     if (m_moonShader.loadFromString(cro::SimpleDrawable::getDefaultVertexShader(), MoonFrag, "#define TEXTURED\n"))
     {
         moonUniform.shaderID = m_moonShader.getGLHandle();
-        moonUniform.phase = 0.f;
+        moonUniform.levels = m_moonShader.getUniformID("u_lightDir");
+
+        if (m_moonInput.loadFromFile("assets/golf/images/skybox/sun_high.png"))
+        {
+            m_moonQuad.setTexture(m_moonInput);
+            m_moonQuad.setShader(m_moonShader);
+            m_moonOutput.create(m_moonInput.getSize().x, m_moonInput.getSize().y, false);
+        }
     }
 }
 
@@ -1266,5 +1312,35 @@ void MenuState::imageQuantizer()
 
 void MenuState::moonPhase()
 {
+    if (ImGui::Begin("Moon Phase", &showMoonPhase))
+    {
+        if (ImGui::DatePicker("Date", m_timePicker))
+        {
+            const auto t = std::mktime(&m_timePicker);
+            m_moonPhase.update(t);
 
+            if (m_moonOutput.available())
+            {
+                //rotate a light direction then set that as the uniform
+                const auto rotateAmount = (m_moonPhase.getPhase() * 2.f - 1.f) * cro::Util::Const::PI;
+                glm::quat rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, rotateAmount, cro::Transform::Y_AXIS);
+                glm::vec3 lightDir = rotation * cro::Transform::Z_AXIS;                
+
+                //TODO also rotate this with latitude? Probably want to rotate the tex coords
+
+                glUseProgram(moonUniform.shaderID);
+                glUniform3f(moonUniform.levels, lightDir.x, lightDir.y, lightDir.z);
+
+            }
+        }
+
+        ImGui::Text("Phase: %s, Percent: %3.2f, Day: %3.1f", m_moonPhase.getPhaseName().c_str(), m_moonPhase.getPhase(), m_moonPhase.getCycle());
+
+        if (m_moonOutput.available())
+        {
+            const auto size = glm::vec2(m_moonOutput.getSize());
+            ImGui::Image(m_moonOutput.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+        }
+    }
+    ImGui::End();
 }

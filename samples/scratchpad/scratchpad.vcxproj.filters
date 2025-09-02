@@ -172,6 +172,12 @@
     <Filter Include="Header Files\batcat\smaa shaders">
       <UniqueIdentifier>{3fb6e4e0-c6d1-4fe8-95a9-1452a82b36b5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\moon phase">
+      <UniqueIdentifier>{9bab28bd-7e36-4b94-84e8-67ebd522b307}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\moon phase">
+      <UniqueIdentifier>{55d7affa-e295-42f7-bdfe-5e8e5f6494a4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -350,6 +356,9 @@
     </ClCompile>
     <ClCompile Include="src\Aer.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\moonphase\MoonPhase.cpp">
+      <Filter>Source Files\moon phase</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -580,6 +589,9 @@
     </ClInclude>
     <ClInclude Include="src\Aer.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\moonphase\MoonPhase.hpp">
+      <Filter>Header Files\moon phase</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
