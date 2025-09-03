@@ -406,7 +406,8 @@ struct ShaderID final
         Hologram,
         Lava,
         LavaFall,
-        Umbrella
+        Umbrella,
+        Moon
     };
 };
 
@@ -1363,13 +1364,18 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
             md.createModel(entity);
 
             std::int32_t matID = -1;
-            if (model.useSunlight && materials.horizonSun != -1)
+            if (model.useSunlight 
+                && materials.horizonSun != -1)
             {
                 matID = materials.horizonSun;
             }
             else
             {
-                matID = materials.horizon;
+                //might have a moon shader
+                if (!entity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Final, 0).customShader)
+                {
+                    matID = materials.horizon;
+                }
             }
 
             if (matID > -1)

@@ -127,7 +127,7 @@ private:
     cro::VideoPlayer m_billboardVideo;
     cro::RenderTexture m_billboardLeagueTexture;
 
-    bool m_hasSnow; //we hardly ever use this, but have to ttrack it anyway...
+    bool m_hasSnow; //we hardly ever use this, but have to track it anyway...
     bool m_ntpPro; //hack to display different score in same game mode as NTP
     bool m_hotSeat; //we're playing local hotseat
     std::int32_t m_baseClubSet; //used when playing with snek
@@ -490,6 +490,7 @@ private:
     struct LensFlare final
     {
         glm::vec3 sunPos = glm::vec3(0.f);
+        float attenuation = 1.f; //at night we attenuate based on moon phase
 
         std::uint32_t shaderID = 0;
         std::int32_t positionUniform = -1;

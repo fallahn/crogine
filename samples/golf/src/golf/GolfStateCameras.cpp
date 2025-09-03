@@ -2242,7 +2242,7 @@ void GolfState::updateLensFlare(cro::Entity e, float)
 
             //use length of screenPos to calc brightness / set vert colour
             const float Brightness = (cro::Util::Easing::easeOutCubic(1.f - std::min(1.f, glm::length(screenPos))) * 0.15f) + 0.05f;
-            cro::Colour c = cro::Colour(Brightness * 0.2f, 1.f, 1.f, 1.f);
+            cro::Colour c = cro::Colour(Brightness * m_lensFlare.attenuation * 0.2f, 1.f, 1.f, 1.f);
             std::int32_t i = 0;
 
             //create the quads

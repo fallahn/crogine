@@ -31,6 +31,70 @@ source distribution.
 
 #include <string>
 
+static inline const std::string MoonFrag =
+R"(
+//we can use compile time constants instead of uniforms
+
+#ifndef ROTATION
+#define ROTATION u_rotation
+#endif
+
+#ifndef DIRECTION
+#define DIRECTION u_lightDir
+#endif
+
+uniform sampler2D u_diffuseMap;
+
+uniform mat2 u_rotation = mat2(1.0);
+uniform vec3 u_lightDir = vec3(0.0, 0.0, 1.0);
+
+VARYING_IN vec2 v_texCoord0;
+VARYING_IN vec4 v_colour;
+
+OUTPUT
+
+vec3 sphericalNormal(vec2 coord)
+{
+//hack cos moon png is 1/4 size actual texture
+coord *= 2.0;
+coord -= 0.5;
+
+    coord = clamp(coord, 0.0, 1.0);
+
+    float dx  = ( coord.x - 0.5 ) * 2.0;
+    float dy  = ( coord.y - 0.5 ) * 2.0;
+    float distSqr = (dx * dx) + (dy * dy);
+         
+    return normalize(vec3(dx, dy, 1.0 - distSqr));
+}
+
+const float Levels = 20.0;
+const vec3 skyColour = vec3(0.0039, 0.0353, 0.1059);
+const vec3 WaterColour = vec3(0.02, 0.078, 0.578);
+
+void main()
+{
+    vec2 coord = v_texCoord0 - 0.5;
+    coord = ROTATION * coord;
+    coord += 0.5;
+
+    vec4 colour = TEXTURE(u_diffuseMap, coord);
+
+    vec3 normal = sphericalNormal(coord);
+    float amount = dot(normal, DIRECTION);
+
+    amount *= Levels;
+    amount = floor(amount);
+    amount /= Levels;
+
+    amount = 0.1 + (0.9 * amount);
+
+    if(colour.a< 0.35) discard;
+
+    colour.rgb = mix(skyColour, colour.rgb, amount);
+    FRAG_OUT = vec4(mix(WaterColour, colour.rgb, v_colour.g), 1.0);
+})";
+
 static const inline std::string UmbrellaFrag = R"(
 #define USE_MRT
 #include OUTPUT_LOCATION

@@ -160,8 +160,7 @@ void main()
     amount = 0.05 + (0.95 * amount);
 
     FRAG_OUT = vec4(mix(skyColour, colour.rgb, amount), colour.a);
-}
-)";
+})";
 
     struct ShaderUniform final
     {
@@ -1335,7 +1334,7 @@ void MenuState::moonPhase()
             if (m_moonOutput.available())
             {
                 //rotate the tex coords to simulate latitude
-                glm::vec2 rot = glm::vec2(std::sin(-latitude * cro::Util::Const::degToRad), std::cos(-latitude * cro::Util::Const::degToRad));
+                const glm::vec2 rot = glm::vec2(std::sin(-latitude * cro::Util::Const::degToRad), std::cos(-latitude * cro::Util::Const::degToRad));
                 glm::mat2 rMat = glm::mat2(1.f);
                 rMat[0] = glm::vec2(rot.y, -rot.x);
                 rMat[1] = rot;
@@ -1354,8 +1353,8 @@ void MenuState::moonPhase()
             {
                 //rotate a light direction then set that as the uniform
                 const auto rotateAmount = (m_moonPhase.getPhase() * 2.f - 1.f) * cro::Util::Const::PI;
-                glm::quat rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, rotateAmount, cro::Transform::X_AXIS);
-                glm::vec3 lightDir = rotation * cro::Transform::Z_AXIS;                
+                const glm::quat rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, rotateAmount, cro::Transform::X_AXIS);
+                const glm::vec3 lightDir = rotation * cro::Transform::Z_AXIS;
 
                 glUseProgram(moonUniform.shaderID);
                 glUniform3f(moonUniform.levels, lightDir.x, lightDir.y, lightDir.z);
