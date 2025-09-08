@@ -122,9 +122,13 @@ void Achievements::setAvgStat(const std::string& s, float value, float)
     CRO_ASSERT(m_impl, "Achievements have not been initialised!");
     static constexpr float alpha = 0.9f; //the bigger this is the smaller the window
 
-    auto stat = m_impl->getStat(s)->value;
-    stat = (alpha * value) + (1.f - alpha) * stat;
-    m_impl->setStat(s, stat);
+    auto* stat = m_impl->getStat(s);
+    if (stat)
+    {
+        auto v = stat->value;
+        v = (alpha * value) + (1.f - alpha) * v;
+        m_impl->setStat(s, v);
+    }
 }
 
 void Achievements::setActive(bool active)

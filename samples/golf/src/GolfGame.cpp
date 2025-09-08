@@ -2329,9 +2329,18 @@ void GolfGame::loadMusic()
                 const auto files = cro::FileSystem::listFiles(path);
                 for (const auto& file : files)
                 {
-                    //this checks the file has a valid extension
-                    //and limits the number of files loaded
-                    m3uPlaylist.addTrack(root + file);
+                    //horrible hack to skip menu music
+#ifdef USE_GNS
+                    if (file.find("101") == std::string::npos
+                        && file.find("201") == std::string::npos
+                        && file.find("104") == std::string::npos
+                        && file.find("204") == std::string::npos)
+#endif
+                    {
+                        //this checks the file has a valid extension
+                        //and limits the number of files loaded
+                        m3uPlaylist.addTrack(root + file);
+                    }
                 }
                 m3uPlaylist.shuffle();
             };

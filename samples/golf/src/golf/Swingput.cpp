@@ -39,9 +39,11 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Maths.hpp>
 
+#define SWING_DEBUG
+
 namespace
 {
-#ifdef CRO_DEBUG_
+#ifdef SWING_DEBUG
     struct DebugInfo final
     {
         float distance = 0.f;
@@ -86,27 +88,27 @@ Swingput::Swingput(const SharedStateData& sd)
     m_humanCount            (1),
     m_activeControllerID    (-1)
 {
-#ifdef CRO_DEBUG_
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Swingput"))
-    //        {
-    //            ImGui::Text("Active Input %d", m_enabled);
-    //            ImGui::Text("State: %s", StateStrings[m_state].c_str());
+#ifdef SWING_DEBUG
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Swingput"))
+            {
+                ImGui::Text("Active Input %d", m_enabled);
+                ImGui::Text("State: %s", StateStrings[m_state].c_str());
 
-    //            ImGui::Text("Distance: %3.3f", debugOutput.distance);
-    //            ImGui::Text("Velocity: %3.3f", debugOutput.velocity);
-    //            ImGui::Text("Accuracy: %3.3f", debugOutput.accuracy);
+                //ImGui::Text("Distance: %3.3f", debugOutput.distance);
+                //ImGui::Text("Velocity: %3.3f", debugOutput.velocity);
+                //ImGui::Text("Accuracy: %3.3f", debugOutput.accuracy);
 
-    //            ImGui::Text("Power: %3.3f", m_power);
-    //            ImGui::Text("Hook: %3.3f", m_hook);
+                //ImGui::Text("Power: %3.3f", m_power);
+                ImGui::Text("Hook: %3.3f", (m_hook * 2.f) - 1.f);
 
-    //            ImGui::Text("Active Point %3.3f, %3.3f", m_activePoint.x, m_activePoint.y);
-    //            ImGui::Text("Back Point %3.3f, %3.3f", m_backPoint.x, m_backPoint.y);
-    //            ImGui::Text("Front Point %3.3f, %3.3f", m_frontPoint.x, m_frontPoint.y);
-    //        }
-    //        ImGui::End();
-    //    });
+                //ImGui::Text("Active Point %3.3f, %3.3f", m_activePoint.x, m_activePoint.y);
+                //ImGui::Text("Back Point %3.3f, %3.3f", m_backPoint.x, m_backPoint.y);
+                //ImGui::Text("Front Point %3.3f, %3.3f", m_frontPoint.x, m_frontPoint.y);
+            }
+            ImGui::End();
+        });
 #endif
 }
 
@@ -274,7 +276,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
 
                             const float t = m_tempoTimer.restart();
                             const float timingError = ((0.033f - std::min(t, 0.066f)) / 3.f);
-                            m_hook = 0.5f + timingError;
+                            //m_hook = 0.5f + timingError;
 
                             const auto timing = std::floor(t * 1000.f);
                             if (timing == 33.f)
@@ -292,8 +294,8 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                             //we want to make sure any timing error is 'complimented'
                             //by inaccuracy, else a hooked shot can actually correct for poor
                             //timing, which isn't the idea...
-                            if (cro::Util::Maths::sgn(timingError) == cro::Util::Maths::sgn(xAmount)
-                                || timing == 33.f) //we had perfect timing but still want direction error
+                            //if (cro::Util::Maths::sgn(timingError) == cro::Util::Maths::sgn(xAmount)
+                            //    || timing == 33.f) //we had perfect timing but still want direction error
                             {
                                 m_hook += (xAmount * 0.31f);
                             }
