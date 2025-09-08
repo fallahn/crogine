@@ -276,7 +276,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
 
                             const float t = m_tempoTimer.restart();
                             const float timingError = ((0.033f - std::min(t, 0.066f)) / 3.f);
-                            //m_hook = 0.5f + timingError;
+                            m_hook = 0.5f + timingError;
 
                             const auto timing = std::floor(t * 1000.f);
                             if (timing == 33.f)
