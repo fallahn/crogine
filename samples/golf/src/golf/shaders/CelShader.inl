@@ -507,7 +507,7 @@ static inline const std::string CelFragmentShader = R"(
 
         //TODO most of these comp shade materials don't need this
         //so would be nice to be able to skip the pointless lookups
-        if(u_maskColour.b < 0.95)
+        if (u_maskColour.b < 0.95)
         {
             vec3 blend = vec3(abs(normal.x), abs(normal.y), abs(normal.z));
             float blendSum = blend.r + blend.g + blend.b;
@@ -517,6 +517,12 @@ static inline const std::string CelFragmentShader = R"(
             vec3 zCol = TEXTURE(u_angleTex, v_worldPosition.xy * 0.03).r * colour.rgb;
             vec3 result = vec3((xCol * blend.x) + (colour.rgb * blend.y) + (zCol * blend.z));
             colour.rgb = mix(colour.rgb, result, 1.0 - u_maskColour.b);
+
+vec3 fragDir = v_worldPosition - v_cameraWorldPosition;
+float fragDist = dot(fragDir, fragDir);
+float fragDistAmt = 1.0 - ((clamp(fragDist / (20.0 * 20.0), 0.0, 1.0) * 0.15) * (1.0 - u_maskColour.b));
+colour.rgb *= fragDistAmt;
+
         }
 
 #else
