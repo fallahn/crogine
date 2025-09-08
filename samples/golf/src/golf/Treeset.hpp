@@ -43,6 +43,7 @@ struct Treeset final
     glm::vec3 colour = glm::vec3(1.f);
     float randomness = 0.2f;
     float leafSize = 0.2f;
+    float colourRotation = 0.25f;
 
     //indices of sub meshes with branch material
     std::vector<std::uint32_t> branchIndices;
@@ -82,6 +83,10 @@ struct Treeset final
             else if (name == "colour")
             {
                 colour = p.getValue<glm::vec3>();
+            }
+            else if (name == "colour_rotation")
+            {
+                colourRotation = std::clamp(p.getValue<float>(), 0.f, 1.f);
             }
             else if (name == "randomness")
             {

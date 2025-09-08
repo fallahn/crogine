@@ -511,6 +511,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     material.setProperty("u_leafSize", theme.treesets[j].leafSize);
                     material.setProperty("u_randAmount", theme.treesets[j].randomness);
                     material.setProperty("u_colour", theme.treesets[j].colour);
+                    material.setProperty("u_rotation", theme.treesets[j].colourRotation);
                     material.setProperty("u_noiseTexture", noiseTex);
                     material.addCustomSetting(GL_CLIP_DISTANCE1);
                     childEnt.getComponent<cro::Model>().setMaterial(idx, material);

@@ -65,7 +65,6 @@ namespace
         };
     };
 
-
     //TODO tidy all these up
     std::int32_t bushMaterial = -1;
     std::int32_t branchMaterial = -1;
@@ -74,6 +73,7 @@ namespace
     {
         float leafSize = 0.25f; //metres
         float randomAmount = 0.2f;
+        float colourRotation = 0.25f;
         glm::vec3 colour = glm::vec3(1.f);
 
         std::string modelPath;
@@ -90,6 +90,7 @@ namespace
         std::int32_t randomness = -1;
         std::int32_t colour = -1;
         std::int32_t targetHeight = -1;
+        std::int32_t colourRotation = -1;
     }shaderUniform;
 
     float rotation = 0.f;
@@ -343,6 +344,7 @@ void BushState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_scaleBuffer.addShader(*shader);
 
+
     auto& texture = m_resources.textures.get("assets/golf/treesets/leaf06.png");
     texture.setSmooth(false);
     leafTexture = &texture;
@@ -361,6 +363,7 @@ void BushState::loadAssets()
     shaderUniform.size = shader->getUniformID("u_leafSize");
     shaderUniform.colour = shader->getUniformID("u_colour");
     shaderUniform.targetHeight = shader->getUniformID("u_targetHeight");
+    shaderUniform.colourRotation = shader->getUniformID("u_rotation");
 
     m_resources.shaders.loadFromString(BushShaderID::Branch, BranchVertex, BranchFragment, "#define INSTANCING\n#define ALPHA_CLIP\n");
     shader = &m_resources.shaders.get(BushShaderID::Branch);
@@ -607,6 +610,12 @@ void BushState::drawUI()
         {
             glUseProgram(shaderUniform.shaderID);
             glUniform1f(shaderUniform.randomness, treeset.randomAmount);
+        }
+
+        if(ImGui::SliderFloat("Colour Rotation", &treeset.colourRotation, 0.f, 1.f))
+        { 
+            glUseProgram(shaderUniform.shaderID);
+            glUniform1f(shaderUniform.colourRotation, treeset.colourRotation);
         }
 
         if (ImGui::ColorEdit3("Colour", &treeset.colour[0]))
@@ -937,6 +946,10 @@ void BushState::loadPreset(const std::string& path)
                     treeset.colour[i] = std::min(1.f, std::max(0.f, treeset.colour[i]));
                 }
             }
+            else if (name == "colour_rotation")
+            {
+                treeset.colourRotation = std::clamp(p.getValue<float>(), 0.f, 1.f);
+            }
             else if (name == "randomness")
             {
                 treeset.randomAmount = std::max(0.02f, std::min(1.f, p.getValue<float>()));
@@ -993,6 +1006,7 @@ void BushState::loadPreset(const std::string& path)
         glUniform1f(shaderUniform.randomness, treeset.randomAmount);
         glUniform1f(shaderUniform.size, treeset.leafSize);
         glUniform3f(shaderUniform.colour, treeset.colour.r, treeset.colour.g, treeset.colour.b);
+        glUniform1f(shaderUniform.colourRotation, treeset.colourRotation);
 
         lastTreeset = path;
     }
@@ -1004,6 +1018,7 @@ void BushState::savePreset(const std::string& path)
     cfg.addProperty("model").setValue(treeset.modelPath);
     cfg.addProperty("texture").setValue(treeset.texturePath);
     cfg.addProperty("colour").setValue(treeset.colour);
+    cfg.addProperty("colour_rotation").setValue(treeset.colourRotation);
     cfg.addProperty("randomness").setValue(treeset.randomAmount);
     cfg.addProperty("leaf_size").setValue(treeset.leafSize);
 
