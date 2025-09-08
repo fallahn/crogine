@@ -39,7 +39,7 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Maths.hpp>
 
-#define SWING_DEBUG
+//#define SWING_DEBUG
 
 namespace
 {
