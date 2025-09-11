@@ -1796,31 +1796,31 @@ void GolfState::loadMaterials()
         auto* shader = &m_resources.shaders.get(ShaderID::Lava);
         m_windBuffer.addShader(*shader);
 
-        auto shaderID = shader->getGLHandle();
-        auto lightID = shader->getUniformID("Light");
-        auto darkID = shader->getUniformID("Dark");
+        //auto shaderID = shader->getGLHandle();
+        //auto lightID = shader->getUniformID("Light");
+        //auto darkID = shader->getUniformID("Dark");
 
-        /*registerWindow([shaderID, lightID, darkID]()
-            {
-                ImGui::Begin("Light");
-                
-                static std::array<float, 4u> light = { 1.f, 0.6275f, 0.1725f, 1.f };
+        //registerWindow([shaderID, lightID, darkID]()
+        //    {
+        //        ImGui::Begin("Light");
+        //        
+        //        static std::array<float, 4u> light = { 1.f, 0.6275f, 0.1725f, 1.f };
 
-                if (ImGui::ColorEdit4("Light", light.data()))
-                {
-                    glUseProgram(shaderID);
-                    glUniform4f(lightID, light[0], light[1], light[2], light[3]);
-                }
+        //        if (ImGui::ColorEdit4("Light", light.data()))
+        //        {
+        //            glUseProgram(shaderID);
+        //            glUniform4f(lightID, light[0], light[1], light[2], light[3]);
+        //        }
 
-                static std::array<float, 4u> dark = { 1.f, 0.3608f, 0.098f, 1.f };
-                if (ImGui::ColorEdit4("Dark", dark.data()))
-                {
-                    glUseProgram(shaderID);
-                    glUniform4f(darkID, dark[0], dark[1], dark[2], dark[3]);
-                }
+        //        static std::array<float, 4u> dark = { 1.f, 0.3608f, 0.098f, 1.f };
+        //        if (ImGui::ColorEdit4("Dark", dark.data()))
+        //        {
+        //            glUseProgram(shaderID);
+        //            glUniform4f(darkID, dark[0], dark[1], dark[2], dark[3]);
+        //        }
 
-                ImGui::End();
-            });*/
+        //        ImGui::End();
+        //    });
     }
 
     if (m_resources.shaders.loadFromString(ShaderID::LavaFall,
