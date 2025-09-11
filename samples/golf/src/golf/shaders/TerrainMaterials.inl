@@ -88,8 +88,11 @@ const float Density = 0.3;
 const float Intensity = 25.0;
 const float Brightness = 0.9;
 
-const vec4 Dark = vec4(1.0, 0.3608, 0.098, 1.0);
-const vec4 Light = vec4(1.0, 0.6275, 0.1725, 1.0);
+//const vec4 Dark = vec4(1.0, 0.3608, 0.098, 1.0);
+//const vec4 Light = vec4(1.0, 0.6275, 0.1725, 1.0);
+
+uniform vec4 Dark = vec4(1.0, 0.3608, 0.098, 1.0);
+uniform vec4 Light = vec4(1.0, 0.6275, 0.1725, 1.0);
 
 void main()
 {
