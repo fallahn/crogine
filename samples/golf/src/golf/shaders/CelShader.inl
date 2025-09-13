@@ -518,10 +518,15 @@ static inline const std::string CelFragmentShader = R"(
             vec3 result = vec3((xCol * blend.x) + (colour.rgb * blend.y) + (zCol * blend.z));
             colour.rgb = mix(colour.rgb, result, 1.0 - u_maskColour.b);
 
-float rim = 1.0 - dot(normalize(vec3(normal.x, 0.0, normal.z)), normalize(vec3(viewDirection.x, 0.0, viewDirection.z)));
-rim = 1.0 - smoothstep(0.6, 1.0, rim);
-vec3 rimColour = colour.rgb * (0.6 + (rim * 0.4));
-colour.rgb = mix(rimColour, colour.rgb, step(0.95, dot(normal, vec3(0.0, 1.0, 0.0))));
+            float rim = 1.0 - dot(normalize(vec3(normal.x, 0.0, normal.z)), normalize(vec3(viewDirection.x, 0.0, viewDirection.z)));
+            rim = 1.0 - smoothstep(0.6, 1.0, rim);
+
+            rim *= COLOUR_LEVELS;
+            rim = round(rim);
+            rim /= COLOUR_LEVELS;
+
+            vec3 rimColour = colour.rgb * (0.6 + (rim * 0.4));
+            colour.rgb = mix(rimColour, colour.rgb, smoothstep(0.75, 0.9, dot(normal, vec3(0.0, 1.0, 0.0))));
         }
 
 #else
