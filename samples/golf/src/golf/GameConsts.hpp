@@ -407,7 +407,8 @@ struct ShaderID final
         Lava,
         LavaFall,
         Umbrella,
-        Moon
+        Moon,
+        Earth
     };
 };
 

@@ -55,9 +55,11 @@ OUTPUT
 
 vec3 sphericalNormal(vec2 coord)
 {
+#if defined(MOON)
 //hack cos moon png is 1/4 size actual texture
 coord *= 2.0;
 coord -= 0.5;
+#endif
 
     coord = clamp(coord, 0.0, 1.0);
 

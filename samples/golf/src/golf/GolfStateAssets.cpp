@@ -1848,19 +1848,31 @@ void GolfState::loadMaterials()
     }
 
     //create compile time constants from moon phase data
+    const MoonPhase mp(std::time(nullptr));
+    const auto rotateAmount = (mp.getPhase() * 2.f - 1.f) * cro::Util::Const::PI;
+    const glm::quat rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, rotateAmount, cro::Transform::X_AXIS);
+    const glm::vec3 lightDir = rotation * cro::Transform::Z_AXIS;
+
+    std::string earthDefs = "#define DIRECTION vec3(" + std::to_string(-lightDir.x) + "," + std::to_string(-lightDir.y) + "," + std::to_string(-lightDir.z) + ")\n";
+
+    TimeOfDay tod;
+    const auto latitude = tod.getLatLon().x;
+    const glm::vec2 rot = glm::vec2(std::sin(-latitude * cro::Util::Const::degToRad), std::cos(-latitude * cro::Util::Const::degToRad));
+
+    earthDefs += "#define ROTATION mat2(vec2(" + std::to_string(rot.y) + "," + std::to_string(-rot.x) + "), vec2(" + std::to_string(rot.x) + "," + std::to_string(rot.y) + "))\n";
+
+    //TODO - like all the others, only load this if necessary...
+    if (m_resources.shaders.loadFromString(ShaderID::Earth,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), MoonFrag, "#define TEXTURED\n#define VERTEX_COLOUR\n" + earthDefs))
+    {
+        m_resources.shaders.mapStringID("earth", ShaderID::Earth);
+    }
+
     if (m_sharedData.nightTime)
     {
-        const MoonPhase mp(std::time(nullptr));
-        const auto rotateAmount = (mp.getPhase() * 2.f - 1.f) * cro::Util::Const::PI;
-        const glm::quat rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, rotateAmount, cro::Transform::X_AXIS);
-        const glm::vec3 lightDir = rotation * cro::Transform::Z_AXIS;
-
         m_lensFlare.attenuation = std::clamp(1.f - std::abs(std::pow(rotateAmount, 10.f)), 0.f, 1.f);
-        std::string moonDefs = "#define DIRECTION vec3(" + std::to_string(lightDir.x) + "," + std::to_string(lightDir.y) + "," + std::to_string(lightDir.z) + ")\n";
+        std::string moonDefs = "#define MOON\n#define DIRECTION vec3(" + std::to_string(lightDir.x) + "," + std::to_string(lightDir.y) + "," + std::to_string(lightDir.z) + ")\n";
 
-        TimeOfDay tod;
-        const auto latitude = tod.getLatLon().x;
-        const glm::vec2 rot = glm::vec2(std::sin(-latitude * cro::Util::Const::degToRad), std::cos(-latitude * cro::Util::Const::degToRad));
         moonDefs += "#define ROTATION mat2(vec2(" + std::to_string(rot.y) + "," + std::to_string(-rot.x) + "), vec2(" + std::to_string(rot.x) + "," + std::to_string(rot.y) + "))\n";
 
         if (m_resources.shaders.loadFromString(ShaderID::Moon,
