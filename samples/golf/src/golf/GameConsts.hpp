@@ -64,9 +64,9 @@ source distribution.
 #include <iomanip>
 #include <array>
 
-static constexpr float ToYards = 1.09361f;
-static constexpr float ToFeet = 3.281f;
-static constexpr float ToInches = 12.f;
+static inline constexpr float ToYards = 1.09361f;
+static inline constexpr float ToFeet = 3.281f;
+static inline constexpr float ToInches = 12.f;
 
 static inline constexpr std::int32_t CrowdDensityCount = 5;
 //decreased for each additional player to a minimum of 2
@@ -101,6 +101,9 @@ static constexpr glm::vec2 MapSizeRatio = glm::vec2(MiniMapSize) / MapSizeFloat;
 
 static constexpr float WaterRadius = 240.f;
 static constexpr float MaxMinimapHeight = 30.f; //for scale / colouring on minimap trails
+
+static inline constexpr std::int32_t MinBullDiametre = 8;
+static inline constexpr std::int32_t MaxBullDiametre = 12;
 
 static constexpr float CameraStrokeHeight = 2.f;
 static constexpr float CameraPuttHeight = 0.6f;// 0.3f;
