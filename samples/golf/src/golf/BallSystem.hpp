@@ -73,7 +73,6 @@ struct Ball final
 
     static const std::array<std::string, 5> StateStrings;
 
-    std::uint8_t resetCount = 0; //counts consecutive resets
     std::uint8_t terrain = TerrainID::Fairway;
     std::uint8_t lie = 0; //0 buried, 1 sitting up
     bool checkGimme = false; //used in pause delay to not insta-gimme

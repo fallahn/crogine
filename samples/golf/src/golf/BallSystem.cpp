@@ -528,12 +528,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             msg->terrain = ball.terrain;
             msg->position = newPos;
             msg->client = ball.client;
-
-            if (terrain != TerrainID::Water
-                && terrain != TerrainID::Scrub)
-            {
-                ball.resetCount = 0;
-            }
         };
 
         //check if we rolled onto the green
@@ -819,7 +813,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 else
                 {
                     ball.state = Ball::State::Paused;
-                    ball.resetCount = 0;
                 }
 
                 ball.delay = BallTurnDelay;
@@ -916,56 +909,56 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 pos.y = getTerrain(pos).intersection.y;
                 tx.setPosition(pos);
             }
-            else if (ball.resetCount == 1)
-            {
-                //this is probably a CPU player melting down
-                //so move to the nearest target
-                auto pos = tx.getPosition();
+            //else if (ball.resetCount == 1)
+            //{
+            //    //this is probably a CPU player melting down
+            //    //so move to the nearest target
+            //    auto pos = tx.getPosition();
 
-                //if target is closer than tee check if target
-                if (glm::length2(pos - m_holeData->target) < glm::length2(pos - m_holeData->tee))
-                {
-                    //or sub-target is closer (default sub-target is miles away)
-                    if (glm::length2(pos - m_holeData->subtarget) < glm::length2(pos - m_holeData->target))
-                    {
-                        tx.setPosition(m_holeData->subtarget);
-                    }
-                    else
-                    {
-                        //we also have to move away in case we're in multi-target mode
-                        tx.setPosition(m_holeData->target);
+            //    //if target is closer than tee check if target
+            //    if (glm::length2(pos - m_holeData->target) < glm::length2(pos - m_holeData->tee))
+            //    {
+            //        //or sub-target is closer (default sub-target is miles away)
+            //        if (glm::length2(pos - m_holeData->subtarget) < glm::length2(pos - m_holeData->target))
+            //        {
+            //            tx.setPosition(m_holeData->subtarget);
+            //        }
+            //        else
+            //        {
+            //            //we also have to move away in case we're in multi-target mode
+            //            tx.setPosition(m_holeData->target);
 
-                        //TODO we probably only want to do this in multi-target mode
-                        //but unfortunately we don't know what the game mode is here...
-                        constexpr float Radius = static_cast<float>(MaxBullDiametre / 2) + 0.5f;
-                        glm::vec3 testDir = glm::normalize(m_holeData->tee - m_holeData->target) * Radius;
-                        auto testTerrain = getTerrain(m_holeData->target + testDir);
-                        if (testTerrain.terrain == TerrainID::Scrub
-                            || testTerrain.terrain == TerrainID::Water)
-                        {
-                            //move the other way
-                            testDir = glm::normalize(m_holeData->pin - m_holeData->target) * Radius;
+            //            //TODO we probably only want to do this in multi-target mode
+            //            //but unfortunately we don't know what the game mode is here...
+            //            constexpr float Radius = static_cast<float>(MaxBullDiametre / 2) + 0.5f;
+            //            glm::vec3 testDir = glm::normalize(m_holeData->tee - m_holeData->target) * Radius;
+            //            auto testTerrain = getTerrain(m_holeData->target + testDir);
+            //            if (testTerrain.terrain == TerrainID::Scrub
+            //                || testTerrain.terrain == TerrainID::Water)
+            //            {
+            //                //move the other way
+            //                testDir = glm::normalize(m_holeData->pin - m_holeData->target) * Radius;
 
-                            //hmm this is unlikely, but if we're still in the water
-                            //we probably want to fall back to the tee?
-                        }
-                        tx.move(testDir);
-                    }
-                }
-                //else move to tee
-                else
-                {
-                    tx.setPosition(m_holeData->tee);
-                }
+            //                //hmm this is unlikely, but if we're still in the water
+            //                //we probably want to fall back to the tee?
+            //            }
+            //            tx.move(testDir);
+            //        }
+            //    }
+            //    //else move to tee
+            //    else
+            //    {
+            //        tx.setPosition(m_holeData->tee);
+            //    }
 
-                pos = tx.getPosition();
-                const auto terrainInf = getTerrain(pos);
-                terrain = terrainInf.terrain;
-                pos.y = terrainInf.intersection.y;
-                tx.setPosition(pos);
+            //    pos = tx.getPosition();
+            //    const auto terrainInf = getTerrain(pos);
+            //    terrain = terrainInf.terrain;
+            //    pos.y = terrainInf.intersection.y;
+            //    tx.setPosition(pos);
 
-                ball.resetCount = 0;
-            }
+            //    ball.resetCount = 0;
+            //}
             else
             {
 
@@ -983,6 +976,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //static constexpr float SearchHeight = 15.f;
 
                 const auto start = ball.startPoint;
+                const auto ballLandingPos = ballPos; //used if we get reset to where we started, below
+
                 //start.y = SearchHeight;
                 ballPos.y = start.y;// SearchHeight;// ball.startPoint.y;
                 glm::vec3 dir = start - ballPos;
@@ -1036,9 +1031,55 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 }
 
                 //only count this if we reset to the same (or near to) the position we started
-                if (glm::length2(tx.getPosition() - ball.startPoint) < 25.f)
+                else if (glm::length2(tx.getPosition() - ball.startPoint) < 64.f)
                 {
-                    ball.resetCount++;
+                    //this is probably a CPU player melting down
+                    //so move to the nearest target
+                    //auto pos = tx.getPosition();
+
+                    //if target is closer than tee check if target
+                    if (glm::length2(ballLandingPos - m_holeData->target) < glm::length2(ballLandingPos - m_holeData->tee))
+                    {
+                        //or sub-target is closer (default sub-target is miles away)
+                        if (glm::length2(ballLandingPos - m_holeData->subtarget) < glm::length2(ballLandingPos - m_holeData->target))
+                        {
+                            tx.setPosition(m_holeData->subtarget);
+                        }
+                        else
+                        {
+                            //we also have to move away in case we're in multi-target mode
+                            tx.setPosition(m_holeData->target);
+
+                            //TODO we probably only want to do this in multi-target mode
+                            //but unfortunately we don't know what the game mode is here...
+                            constexpr float Radius = static_cast<float>(MaxBullDiametre / 2) + 0.5f;
+                            glm::vec3 testDir = glm::normalize(m_holeData->tee - m_holeData->target) * Radius;
+                            auto testTerrain = getTerrain(m_holeData->target + testDir);
+                            if (testTerrain.terrain == TerrainID::Scrub
+                                || testTerrain.terrain == TerrainID::Water)
+                            {
+                                //move the other way
+                                testDir = glm::normalize(m_holeData->pin - m_holeData->target) * Radius;
+
+                                //hmm this is unlikely, but if we're still in the water
+                                //we probably want to fall back to the tee?
+                            }
+                            tx.move(testDir);
+                        }
+                    }
+                    //else move to tee
+                    else
+                    {
+                        tx.setPosition(m_holeData->tee);
+                    }
+
+                    auto pos = tx.getPosition();
+                    const auto terrainInf = getTerrain(pos);
+                    terrain = terrainInf.terrain;
+                    pos.y = terrainInf.intersection.y;
+                    tx.setPosition(pos);
+
+                    //TODO we could do one final check to see if we're in water and replace at tee anyway
                 }
             }
 
@@ -1203,12 +1244,6 @@ void BallSystem::doCollision(cro::Entity entity)
         msg->terrain = ball.terrain;
         msg->position = tx.getPosition();
         msg->client = ball.client;
-
-        if (terrain != TerrainID::Water
-            && terrain != TerrainID::Scrub)
-        {
-            ball.resetCount = 0;
-        }
     };
     const auto startRoll = [](Ball::State state, Ball& ball)
     {
