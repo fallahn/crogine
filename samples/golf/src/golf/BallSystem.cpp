@@ -889,8 +889,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         if (ball.delay < 0)
         {
             ball.spin = { 0.f,0.f };
-            ball.resetCount++;
-
+            
             std::uint8_t terrain = TerrainID::Water;
             if (m_puttFromTee)
             {
@@ -917,7 +916,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 pos.y = getTerrain(pos).intersection.y;
                 tx.setPosition(pos);
             }
-            else if (ball.resetCount == 2)
+            else if (ball.resetCount == 1)
             {
                 //this is probably a CPU player melting down
                 //so move to the nearest target
@@ -1034,6 +1033,12 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                     //down a putting course :facepalm:
                     terrain = /*m_puttFromTee ? TerrainID::Green :*/ TerrainID::Fairway;
                     tx.setPosition(m_holeData->tee);
+                }
+
+                //only count this if we reset to the same (or near to) the position we started
+                if (glm::length2(tx.getPosition() - ball.startPoint) < 25.f)
+                {
+                    ball.resetCount++;
                 }
             }
 
