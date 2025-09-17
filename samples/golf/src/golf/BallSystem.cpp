@@ -986,13 +986,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 dir /= length;
                 std::int32_t maxDist = static_cast<std::int32_t>(length /*- 10.f*/);
 
-                //if we're on a putting course take smaller steps for better accuracy
-                /*if (m_puttFromTee)
-                {
-                    dir /= 4.f;
-                    maxDist *= 4;
-                }*/
-
                 for (auto i = 0; i < maxDist; ++i)
                 {
                     ballPos += dir;
@@ -1026,7 +1019,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 {
                     //this is important else we'll end up trying to drive
                     //down a putting course :facepalm:
-                    terrain = /*m_puttFromTee ? TerrainID::Green :*/ TerrainID::Fairway;
+                    terrain = TerrainID::Fairway;
                     tx.setPosition(m_holeData->tee);
                 }
 
@@ -1035,7 +1028,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 {
                     //this is probably a CPU player melting down
                     //so move to the nearest target
-                    //auto pos = tx.getPosition();
+
 
                     //if target is closer than tee check if target
                     if (glm::length2(ballLandingPos - m_holeData->target) < glm::length2(ballLandingPos - m_holeData->tee))
