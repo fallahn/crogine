@@ -3004,7 +3004,7 @@ bool GolfState::simulate(float dt)
             }
         }*/
 
-        const float rotation = m_inputParser.getCamRotation() * m_sharedData.mouseSpeed * dt;
+        const float rotation = m_inputParser.getCamRotation() * dt;
         if (/*getClub() != ClubID::Putter
             && */rotation != 0)
         {

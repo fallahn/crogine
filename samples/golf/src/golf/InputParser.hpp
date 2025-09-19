@@ -147,6 +147,7 @@ private:
     float m_holeDirection; //radians
     float m_rotation; //+- max rads
     float m_maxRotation;
+    float m_aimRotation; //rotate the camera when aiming
 
     float m_power;
     float m_hook;

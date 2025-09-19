@@ -100,6 +100,7 @@ InputParser::InputParser(SharedStateData& sd, cro::Scene* s)
     m_holeDirection     (0.f),
     m_rotation          (0.f),
     m_maxRotation       (MaxRotation),
+    m_aimRotation       (0.f),
     m_power             (0.f),
     m_hook              (0.5f),
     m_powerbarDirection (1.f),
@@ -124,12 +125,12 @@ InputParser::InputParser(SharedStateData& sd, cro::Scene* s)
     //registerWindow([&]() 
     //    {
     //        ImGui::Begin("Controller");
-    //        const auto xPos = getAxisPosition(cro::GameController::AxisLeftX);
+    //        /*const auto xPos = getAxisPosition(cro::GameController::AxisLeftX);
     //        const std::int32_t deadzone = cro::GameController::LeftThumbDeadZone;
 
     //        ImGui::Text("Position : %d, Deadzones: %d, %d", xPos, -deadzone, deadzone);
-    //        ImGui::Text("Offset: %d", cro::GameController::LeftThumbDeadZone.getOffset());
-
+    //        ImGui::Text("Offset: %d", cro::GameController::LeftThumbDeadZone.getOffset());*/
+    //        ImGui::Text("Aim %3.2f", m_aimRotation);
     //        ImGui::End();
     //    });
 }
@@ -564,22 +565,28 @@ float InputParser::getCamRotation() const
 {
     if (m_active 
         && m_state == State::Aim
-        && (m_inputFlags & ~(InputFlag::Up | InputFlag::Down)) == 0) //ignore these as right stick might set them
+        /*&& (m_inputFlags & ~(InputFlag::Up | InputFlag::Down)) == 0*/) //ignore these as right stick might set them
     {
+        //aiming overrides
+        if (m_aimRotation != 0)
+        {
+            return m_aimRotation;
+        }
+
         if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateLeft))
         {
-            return 0.5f;
+            return 0.5f * m_sharedData.mouseSpeed;
         }
         if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateRight))
         {
-            return -0.5f;
+            return -0.5f * m_sharedData.mouseSpeed;
         }
 
         const auto x = -getAxisPosition(cro::GameController::AxisRightX);
         const auto dz = cro::GameController::LeftThumbDeadZone / 4;
         if (x < -dz || x > dz)
         {
-            return std::pow(static_cast<float>(x) / cro::GameController::AxisMax, 5.f);
+            return std::pow(static_cast<float>(x) / cro::GameController::AxisMax, 5.f) * m_sharedData.mouseSpeed;
         }
     }
 
@@ -1198,19 +1205,31 @@ void InputParser::updateStroke(float dt)
             m_camMotion *= m_analogueAmount;
 
 
-            //rotation
-            const float rotation = RotationSpeed * FineTune * m_maxRotation * m_analogueAmount * dt;
+            //rotation - aim rotation is multiplied by dt AFTER it's returned.
+            const float rotation = RotationSpeed * FineTune * m_maxRotation * m_analogueAmount;
 
             if (m_inputFlags & InputFlag::Left)
             {
-                rotate(rotation);
+                m_aimRotation = rotation;
+                rotate(rotation * dt);
                 beginIcon();
             }
 
             if (m_inputFlags & InputFlag::Right)
             {
-                rotate(-rotation);
+                m_aimRotation = -rotation;
+                rotate(-rotation * dt);
                 beginIcon();
+            }
+
+            //stop rotation if input stops
+            if (((m_prevFlags & InputFlag::Left)
+                && (m_inputFlags & InputFlag::Left) == 0)
+                ||
+                ((m_prevFlags & InputFlag::Right)
+                    && (m_inputFlags & InputFlag::Right) == 0))
+            {
+                m_aimRotation = 0.f;
             }
 
             if (m_inputFlags & InputFlag::Action)
