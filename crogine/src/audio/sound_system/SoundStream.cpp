@@ -27,6 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include <crogine/audio/AudioMixer.hpp>
+
 #include <crogine/audio/sound_system/SoundStream.hpp>
 #include <crogine/core/Log.hpp>
 #include <crogine/detail/Assert.hpp>
@@ -109,6 +111,12 @@ void SoundStream::play()
     if (m_format == 0)
     {
         LogE << "OpenAL: Stream not yet initialised - call initialise() first" << std::endl;
+        return;
+    }
+
+    if (!cro::AudioMixer::hasAudioRenderer())
+    {
+        LogE << "No available AudioRenderer to play SoundStream" << std::endl;
         return;
     }
 
