@@ -318,6 +318,7 @@ private:
             BallShadow,
             BullsEye,
             PlayerFallBack,
+            MeasureWidget,
 
             Count
         };
@@ -816,6 +817,10 @@ private:
     void updateLeague();
     void updateLeagueHole();
     void setUIHidden(bool hidden);
+    
+    glm::vec3 m_measurePosition;
+    void showMeasureWidget();
+    void hideMeasureWidget();
 
     struct GamepadNotify final
     {
@@ -855,7 +860,7 @@ private:
     void registerDebugCommands();
     void registerDebugWindows();
 
-    bool m_drawDepthMaps = false; //TODO remove me when done
+    //bool m_drawDepthMaps = false; //TODO remove me when done
     bool m_drawDebugMesh;
 
     struct NetworkDebugContext final

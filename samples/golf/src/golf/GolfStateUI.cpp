@@ -6804,6 +6804,103 @@ void GolfState::setUIHidden(bool hidden)
     }
 }
 
+void GolfState::showMeasureWidget()
+{
+    const auto startPos = glm::length2(m_measurePosition) == 0 ?
+        m_currentPlayer.position + m_cameras[CameraID::Player].getComponent<cro::Transform>().getForwardVector()
+        : m_measurePosition;
+
+    auto ent = m_gameScene.createEntity();
+    ent.addComponent<cro::Transform>().setPosition(startPos);
+
+    //as we're recycling a model we have to hack the original offset so that it touches the ground
+    ent.getComponent<cro::Transform>().setOrigin({ 0.f, 0.096f, 0.f });
+
+    m_modelDefs[ModelID::MeasureWidget]->createModel(ent);
+
+    auto beaconMat = m_resources.materials.get(m_materialIDs[MaterialID::Beacon]);
+    applyMaterialData(*m_modelDefs[ModelID::MeasureWidget], beaconMat);
+
+    ent.getComponent<cro::Model>().setMaterial(0, beaconMat);
+    ent.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
+    ent.addComponent<cro::CommandTarget>().ID = CommandID::MeasureWidget | CommandID::BeaconColour;
+    ent.addComponent<cro::Callback>().active = true;
+    ent.getComponent<cro::Callback>().setUserData<glm::vec3>(0.f);
+    ent.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+
+            auto& movement = e.getComponent<cro::Callback>().getUserData<glm::vec3>();
+            if (auto len2 = glm::length2(movement);
+                len2 != 0.f)
+            {
+                //input parser already made sure we're the correct length
+                //we just need to rotate in the correct direction
+                movement = glm::rotate(cro::Transform::QUAT_IDENTITY, m_camRotation - (cro::Util::Const::PI / 2.f), cro::Transform::Y_AXIS) * movement;
+                pos += movement * dt;
+
+                movement = glm::vec3(0.f);
+            }
+
+            pos.y = m_collisionMesh.getTerrain(pos).height;
+            e.getComponent<cro::Transform>().setPosition(pos);
+        };
+
+    auto measureEnt = ent;
+    ent = m_uiScene.createEntity();
+    ent.addComponent<cro::Transform>().setOrigin({ 0.f, 0.f, -0.3f });
+    ent.addComponent<cro::Drawable2D>();
+    ent.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Label));
+    ent.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    ent.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    ent.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    ent.addComponent<cro::Callback>().active = true;
+    ent.getComponent<cro::Callback>().function =
+        [&,measureEnt](cro::Entity e, float)
+        {
+            //if (!measureEnt.destroyed())
+            {
+                const auto position = measureEnt.getComponent<cro::Transform>().getPosition();
+                formatDistanceString(glm::length(position - m_currentPlayer.position), e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, true);
+
+                const auto labelPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position + glm::vec3(0.f, 0.3f, 0.f), m_renderTarget.getSize());
+                e.getComponent<cro::Transform>().setPosition(labelPos);
+
+                const float scale = m_sharedData.pixelScale ? 1.f : m_viewScale.x;
+                e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+            }
+        };
+    ent.addComponent<cro::CommandTarget>().ID = CommandID::UI::MeasureText;
+    m_courseEnt.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+}
+
+void GolfState::hideMeasureWidget()
+{
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::MeasureWidget;
+    cmd.action =
+        [&](cro::Entity e, float)
+        {
+            m_measurePosition = e.getComponent<cro::Transform>().getPosition();
+
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::UI::MeasureText;
+    cmd.action =
+        [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+}
+
 void MinimapZoom::updateShader()
 {
     CRO_ASSERT(glm::length2(textureSize) != 0, "");

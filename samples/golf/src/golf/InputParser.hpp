@@ -161,7 +161,7 @@ private:
     enum class State
     {
         Aim, Power, Stroke,
-        Flight, Drone
+        Flight, Drone, Measure
     }m_state;
 
     std::int32_t m_currentClub;
@@ -200,4 +200,9 @@ private:
     bool m_iconActive;
     void beginIcon();
     void endIcon();
+
+
+    void showMeasureWidget();
+    void hideMeasureWidget();
+    void updateMeasure();
 };

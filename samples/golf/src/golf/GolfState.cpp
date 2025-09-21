@@ -233,6 +233,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_courseIndex           (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel            (sd, m_currentPlayer, m_textChat),
     m_minimapTexturePass    (MaxMinimapPasses),
+    m_measurePosition       (0.f),
     m_drawDebugMesh         (false)
 {
     if (Social::getLevel() < 1)
@@ -1757,6 +1758,12 @@ void GolfState::handleMessage(const cro::Message& msg)
         switch(data.type)
         {
         default: break;
+        case SceneEvent::ShowMeasureWidget:
+            showMeasureWidget();
+            break;
+        case SceneEvent::HideMeasureWidget:
+            hideMeasureWidget();
+            break;
         case SceneEvent::RequestToggleFreecam:
             if (!m_textChat.isVisible())
             {
@@ -4858,7 +4865,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         auto position = ballEnt.getComponent<cro::Transform>().getPosition();
         position.y += Ball::Radius * 3.f;
 
-        auto labelPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position, m_renderTarget.getSize());
+        const auto labelPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position, m_renderTarget.getSize());
         const float halfWidth = m_renderTarget.getSize().x / 2.f;
 
         e.getComponent<cro::Transform>().setPosition(labelPos);
@@ -4921,7 +4928,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         }
 
 
-        float scale = m_sharedData.pixelScale ? 1.f : m_viewScale.x;
+        const float scale = m_sharedData.pixelScale ? 1.f : m_viewScale.x;
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
     //childList.push_back(entity); //don't do this it belongs to a different scene
@@ -6323,6 +6330,8 @@ void GolfState::removeClient(std::uint8_t clientID)
 
 void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 {
+    m_measurePosition = glm::vec3(0.f);
+
     //clear putt counts
     for (auto& arr : m_puttCounter)
     {
@@ -7148,6 +7157,8 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    m_measurePosition = glm::vec3(0.f);
+
     if (m_sharedData.gameMode != GameMode::Tutorial)
     {
         updateProTip(player);
