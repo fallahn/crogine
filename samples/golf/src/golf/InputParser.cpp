@@ -593,7 +593,8 @@ float InputParser::getCamRotation() const
         /*&& (m_inputFlags & ~(InputFlag::Up | InputFlag::Down)) == 0*/) //ignore these as right stick might set them
     {
         //aiming overrides
-        if (m_aimRotation != 0)
+        if (m_sharedData.rotateCamera
+            && m_aimRotation != 0)
         {
             return m_aimRotation;
         }

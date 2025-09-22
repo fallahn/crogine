@@ -4761,7 +4761,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity = createHighlight(glm::vec2(12.f, 111.f));
     entity.setLabel("Automatically zoom the follower camera when the ball is in motion");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettPuttZoom);
-    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, SettShowMinimap);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, SettRotateCam);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettPuttFollow);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
@@ -4784,12 +4784,40 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         };
 
 
-    //hide minimap
+
+    //rotate camera
     entity = createHighlight(glm::vec2(12.f, 95.f));
+    entity.setLabel("Automatically rotate the camera when aiming\nDefault to ON");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettRotateCam);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, SettShowMinimap);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettPuttZoom);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.rotateCamera = !m_sharedData.rotateCamera;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = createCheckbox(glm::vec2(14.f, 97.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const float scale = m_sharedData.rotateCamera ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+
+
+    //hide minimap
+    entity = createHighlight(glm::vec2(12.f, 79.f));
     entity.setLabel("Show the Minimap and Range Indicator on the HUD\nDefault to ON");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettShowMinimap);
     entity.getComponent<cro::UIInput>().setNextIndex(SettPost, SettShowHints);
-    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettPuttZoom);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettRotateCam);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
         {
@@ -4802,7 +4830,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
             }
         });
 
-    entity = createCheckbox(glm::vec2(14.f, 97.f));
+    entity = createCheckbox(glm::vec2(14.f, 81.f));
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
@@ -4812,7 +4840,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
 
     //show in-game tips
-    entity = createHighlight(glm::vec2(12.f, 79.f));
+    entity = createHighlight(glm::vec2(12.f, 63.f));
     entity.setLabel("Show hints and tips during gameplay.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettShowHints);
     entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetHints);
@@ -4829,7 +4857,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
             }
         });
 
-    entity = createCheckbox(glm::vec2(14.f, 81.f));
+    entity = createCheckbox(glm::vec2(14.f, 65.f));
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {

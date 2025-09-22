@@ -384,6 +384,7 @@ struct SharedStateData final
     bool puttFollowCam = false;
     bool zoomFollowCam = false;
     bool showClubUpdate = true;
+    bool rotateCamera = true;
     bool showMinimap = true;
     bool showInGameTips = true;
     std::int32_t flagText = 0; //none, black, white

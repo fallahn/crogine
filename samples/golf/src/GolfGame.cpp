@@ -1856,6 +1856,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.showClubUpdate = prop.getValue<bool>();
                     }
+                    else if (name == "rotate_camera")
+                    {
+                        m_sharedData.rotateCamera = prop.getValue<bool>();
+                    }
                     else if (name == "show_minimap")
                     {
                         m_sharedData.showMinimap = prop.getValue<bool>();
@@ -2021,6 +2025,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("putt_follow").setValue(m_sharedData.puttFollowCam);
     cfg.addProperty("zoom_follow").setValue(m_sharedData.zoomFollowCam);
     cfg.addProperty("club_update").setValue(m_sharedData.showClubUpdate);
+    cfg.addProperty("rotate_camera").setValue(m_sharedData.rotateCamera);
     cfg.addProperty("show_minimap").setValue(m_sharedData.showMinimap);
     cfg.addProperty("show_tips").setValue(m_sharedData.showInGameTips);
     cfg.save(path);
