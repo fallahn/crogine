@@ -7300,7 +7300,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     m_puttViewState.isEnabled = true;
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
-    m_inputParser.setActive(localPlayer && !m_photoMode, m_currentPlayer.terrain, l, isCPU, lie);
+    m_inputParser.setActive(localPlayer && !m_photoMode, /*m_currentPlayer.terrain*/player.terrain, l, isCPU, lie);
     m_inputParser.setDistanceToHole(glm::length(m_holeData[m_currentHole].pin - player.position));
     m_restoreInput = localPlayer; //if we're in photo mode should we restore input parser?
     Achievements::setActive(localPlayer && !isCPU && m_allowAchievements);
