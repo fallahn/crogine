@@ -542,7 +542,7 @@ void GolfState::handleWeatherChange(std::uint8_t v)
         FogShader composite;
         FogShader compositeDOF;
         FogShader minimap;
-        auto skyColour = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
+        const auto skyColour = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
 
         auto* shader = &m_resources.shaders.get(ShaderID::Composite);
         composite.id = shader->getGLHandle();

@@ -436,6 +436,7 @@ void GolfState::loadMap()
     materials.glass = m_materialIDs[MaterialID::Glass];
 
     auto cloudRing = loadSkybox(skyboxPath, m_skyScene, m_resources, materials);
+    m_baseSkyColour = m_skyScene.getSkyboxColours().top; //used to dim the sky if it rains
     if (cloudRing.isValid()
         && cloudRing.hasComponent<cro::Model>())
     {
