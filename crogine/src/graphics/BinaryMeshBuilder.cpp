@@ -271,7 +271,37 @@ Mesh::Data BinaryMeshBuilder::build() const
                 meshData.indexData[i].primitiveType = meshData.primitiveType;
                 meshData.indexData[i].indexCount = static_cast<std::uint32_t>(indexData[i].size());
 
-                createIBO(meshData, indexData[i].data(), i, sizeof(std::uint32_t));
+                //if (meshData.vertexCount < std::numeric_limits<std::uint8_t>::max())
+                //{
+                //    LogI << "Optimising for byte size indices" << std::endl;
+                //    
+                //    //we can use bytes for indexing
+                //    meshData.indexData[i].format = GL_UNSIGNED_BYTE;
+                //    std::vector<std::uint8_t> temp(indexData[i].size());
+                //    for (auto j = 0u; j < temp.size(); ++j)
+                //    {
+                //        temp[j] = indexData[i][j];
+                //    }
+                //    createIBO(meshData, temp.data(), i, sizeof(std::uint8_t));
+                //}
+                //else if (meshData.vertexCount < std::numeric_limits<std::uint16_t>::max())
+                //{
+                //    //use shorts
+                //    LogI << "Optimising for short size indices" << std::endl;
+
+                //    meshData.indexData[i].format = GL_UNSIGNED_SHORT;
+                //    std::vector<std::uint16_t> temp(indexData[i].size());
+                //    for (auto j = 0u; j < temp.size(); ++j)
+                //    {
+                //        temp[j] = indexData[i][j];
+                //    }
+                //    createIBO(meshData, temp.data(), i, sizeof(std::uint16_t));
+                //}
+                //else
+                {
+                    //LogI << "Using default size indices" << std::endl;
+                    createIBO(meshData, indexData[i].data(), i, sizeof(std::uint32_t));
+                }
             }
 
             //boundingbox / sphere
