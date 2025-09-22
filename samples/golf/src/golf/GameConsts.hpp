@@ -272,6 +272,7 @@ struct TutorialID
     {
         One, Two, Three,
         Swing, Spin, Putt,
+        PuttMeasure,
 
         LowerClubs = 100, //special case launched for new players who hook / slice
         PuttAssist

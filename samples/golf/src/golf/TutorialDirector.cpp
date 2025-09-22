@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -111,8 +111,9 @@ void TutorialDirector::handleMessage(const cro::Message& msg)
                 }
                 break;
             case TutorialID::Spin:
+            case TutorialID::PuttMeasure:
             {
-                //we must have come from swingput so show spin immediately;
+                //we want to show these immediately
                 auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
                 msg2->data = StateID::Tutorial;
                 msg2->type = SystemEvent::StateRequest;

@@ -868,7 +868,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
             auto& cam = m_cameras[CameraID::Player].getComponent<cro::Camera>();
             cam.resizeCallback(cam);
         }
-
+        break;
+        case SDLK_F7:
             //cro::Console::doCommand("build_cubemaps");
         //    //logCSV();
         //{
@@ -882,7 +883,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //m_drawDepthMaps = !m_drawDepthMaps;
             //showCountdown(10);
 
-            /*m_sharedData.tutorialIndex = TutorialID::PuttAssist;
+            /*m_sharedData.tutorialIndex = TutorialID::PuttMeasure;
             requestStackPush(StateID::Tutorial);*/
             break;
         case SDLK_F8:
