@@ -4298,7 +4298,7 @@ void GolfState::createDrone()
         entity.getComponent<cro::Transform>().setPosition({ MapSizeFloat.x / 2.f, 1.f, -MapSizeFloat.y / 2.f });
         md.createModel(entity);
 
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMasked]);
         applyMaterialData(md, material);
         entity.getComponent<cro::Model>().setMaterial(0, material);
 

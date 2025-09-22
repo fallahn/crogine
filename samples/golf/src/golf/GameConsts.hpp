@@ -1620,7 +1620,15 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
         if (distance > 5)
         {
             auto dist = static_cast<std::int32_t>(std::round(distance));
-            target.setString(Prefix + std::to_string(dist) + "m");
+
+            if (!onGreen)
+            {
+                target.setString(Prefix + std::to_string(dist) + "m");
+            }
+            else
+            {
+                target.setString("Distance: " + std::to_string(dist) + "m");
+            }
         }
         else
         {

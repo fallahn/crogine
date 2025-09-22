@@ -6866,7 +6866,9 @@ void GolfState::showMeasureWidget()
                 const auto position = measureEnt.getComponent<cro::Transform>().getPosition();
                 formatDistanceString(glm::length(position - m_currentPlayer.position), e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, true);
 
-                const auto labelPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position + glm::vec3(0.f, 0.3f, 0.f), m_renderTarget.getSize());
+                auto labelPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position + glm::vec3(0.f, 0.3f, 0.f), m_renderTarget.getSize());
+                labelPos.x = std::round(labelPos.x);
+                labelPos.y = std::round(labelPos.y);
                 e.getComponent<cro::Transform>().setPosition(labelPos);
 
                 const float scale = m_sharedData.pixelScale ? 1.f : m_viewScale.x;
