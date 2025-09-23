@@ -332,12 +332,6 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser, bo
         {
             m_sharedCourseData.videoPaths.insert(std::make_pair(dir, courseFile));
         }
-
-        //TODO remove me - this prevents parsing the incomplete course for now
-        /*if (courseNumber == 10)
-        {
-            break;
-        }*/
     }
 }
 

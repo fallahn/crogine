@@ -426,39 +426,55 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         if (ball.delay < 0)
         {
             auto& tx = entity.getComponent<cro::Transform>();
-            
-            //add gravity
-            ball.velocity += Gravity * dt;
 
-            const auto t = getTerrain(tx.getPosition(), glm::vec3(0.f, -1.f, 0.f), 60.f);
-            const auto height = std::clamp(-t.penetration, 0.f, 60.f);
+            //helps prevent tunnelling through cliffs/flag pole
+            //TODO this is mostly wasted when we're high up, so we could make the iteration count dynamic
+            static constexpr std::int32_t Iterations = 3;
+            dt /= Iterations;
 
-            //add wind
-            const auto multiplier = getWindMultiplier(/*tx.getPosition().y - ball.startPoint.y*/height, glm::length(m_holeData->pin - tx.getPosition())) * 1.36f;
-            ball.velocity += m_windDirection * m_windStrength * multiplier * dt;
-            ball.windEffect = m_windStrength * multiplier;
+            for (auto f = 0; f < Iterations; ++f)
+            {
+                //add gravity
+                ball.velocity += Gravity * dt;
 
-            //add spin
-            ball.velocity += ball.initialSideVector * ball.spin.x * SideSpinInfluence * dt;
+                const auto t = getTerrain(tx.getPosition(), glm::vec3(0.f, -1.f, 0.f), 60.f);
+                const auto height = std::clamp(-t.penetration, 0.f, 60.f);
 
+                //add wind
+                const auto multiplier = getWindMultiplier(/*tx.getPosition().y - ball.startPoint.y*/height, glm::length(m_holeData->pin - tx.getPosition())) * 1.36f;
+                ball.velocity += m_windDirection * m_windStrength * multiplier * dt;
+                ball.windEffect = m_windStrength * multiplier;
 
-            //move by velocity
-            tx.move(ball.velocity * dt);
-
-            //rotate based on velocity
-            auto vel2 = glm::length2(ball.velocity);
-            static constexpr float MaxVel = 20.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
-            static constexpr float MaxRotation = 5.f;
-            float r = cro::Util::Const::TAU * (vel2 / MaxVel) * ball.rotation;// *ball.spin.x;
-            r = std::clamp(r, -MaxRotation, MaxRotation);
+                //add spin
+                ball.velocity += ball.initialSideVector * ball.spin.x * SideSpinInfluence * dt;
 
 
-            tx.rotate(cro::Transform::Y_AXIS, r * dt);
+                //move by velocity
+                tx.move(ball.velocity * dt);
 
-            //test collision
-            doCollision(entity);
-            //doBallCollision(entity);
+                //rotate based on velocity
+                auto vel2 = glm::length2(ball.velocity);
+                static constexpr float MaxVel = 20.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
+                static constexpr float MaxRotation = 5.f;
+                float r = cro::Util::Const::TAU * (vel2 / MaxVel) * ball.rotation;// *ball.spin.x;
+                r = std::clamp(r, -MaxRotation, MaxRotation);
 
+
+                tx.rotate(cro::Transform::Y_AXIS, r * dt);
+
+                //test collision
+                doCollision(entity);
+                //doBallCollision(entity);
+
+                if (ball.state != Ball::State::Flight)
+                {
+                    //TODO this might skip 1 Fth of dt here
+                    //is this a problem when switching states?
+                    //it ought to be added to the iteration
+                    //time of whichever state we switched to...
+                    break;
+                }
+            }
             CRO_ASSERT(!std::isnan(tx.getPosition().x), "");
             CRO_ASSERT(!std::isnan(ball.velocity.x), "");
         }

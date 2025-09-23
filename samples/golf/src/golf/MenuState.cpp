@@ -3573,7 +3573,7 @@ void MenuState::launchQuickPlay()
         }
         static std::size_t indexIndex = 0;
         indexIndex = (indexIndex + 1) % indices.size();
-
+        LogI << indices.size() << std::endl;
         m_sharedData.courseIndex = indices[indexIndex];
         m_sharedData.mapDirectory = m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
 
