@@ -2510,6 +2510,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
             if (CourseIDs.count(m_sharedData.mapDirectory) != 0)
             {
                 Achievements::awardAchievement(AchievementStrings[CourseIDs.at(m_sharedData.mapDirectory)]);
+                
                 if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
                 {
                     auto type = m_sharedData.scoreType;

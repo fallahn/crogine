@@ -66,7 +66,7 @@ static inline bool operator != (const Team::Player& a, const Team::Player& b)
     return !(a == b);
 }
 
-static inline const std::array<std::string, 12u> CourseNames =
+static inline const std::array<std::string, 13u> CourseNames =
 {
     "course_01",
     "course_02",
@@ -80,6 +80,9 @@ static inline const std::array<std::string, 12u> CourseNames =
     "course_10",
     "course_11",
     "course_12",
+
+    //dlc from here
+    "course_13"
 };
 
 static inline std::int32_t getCourseIndex(const std::string& name)

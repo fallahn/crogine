@@ -97,10 +97,10 @@ bool ProfileDB::open(const std::string& path)
 
 bool ProfileDB::insertCourseRecord(const CourseRecord& record)
 {
-    CRO_ASSERT(record.courseIndex >= MinCourse && record.courseIndex <= MaxCourse, "");
+    //CRO_ASSERT(record.courseIndex >= MinCourse && record.courseIndex <= MaxCourse, "");
     if (record.courseIndex < MinCourse || record.courseIndex > MaxCourse)
     {
-        LogE << "ProfileDB (INSERT) - " << record.courseIndex << ": out of range course index" << std::endl;
+        LogW << "ProfileDB (INSERT) - " << record.courseIndex << ": out of range course index" << std::endl;
         return false;
     }
     
