@@ -44,6 +44,7 @@ source distribution.
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/ConsoleClient.hpp>
+#include <crogine/core/Cursor.hpp>
 #include <crogine/core/StateStack.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
@@ -64,7 +65,8 @@ public:
 
     void setSafeModeEnabled(bool sm);
 private:
-    
+    //cro::Cursor m_cursor;
+
     SharedStateData m_sharedData;
     SharedProfileData m_profileData;
     SharedMinigameData m_minigameData;

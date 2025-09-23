@@ -187,6 +187,13 @@ bool Window::getMultisamplingEnabled() const
 
 void Window::clear()
 {
+    //hmm appears that this is a bug i nSDL and seems awfully hacky...
+    //if (m_cursor
+    //    && !getMouseCaptured())
+    //{
+    //    SDL_SetCursor(m_cursor->m_cursor);
+    //}
+
     //we don't need to call RenderTarget::setActive()
     //for the window as it is automatically set to be
     //the bottom most target in the stack.

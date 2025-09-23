@@ -215,8 +215,9 @@ namespace
 cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
 
 GolfGame::GolfGame()
-    : m_stateStack      ({*this, getWindow()}),
-    m_activeIndex       (0)
+    : m_stateStack  ({*this, getWindow()}),
+    //m_cursor        (/*cro::SystemCursor::Hand*/"assets/images/cursor.png", 0, 0),
+    m_activeIndex   (0)
 {
     //must be set before anything, else cfg is still loaded from default path
     setApplicationStrings("Trederia", "golf");
@@ -1262,6 +1263,8 @@ bool GolfGame::initialise()
     m_sharedData.mumLink = std::make_unique<cro::MumbleLink>(cro::String("Super Video Golf"), cro::String("Owen's Finest."));
     m_sharedData.mumLink->setIdentity(m_profileData.playerProfiles[0].playerData.name);
     //m_sharedData.mumLink->connect();
+
+    //cro::App::getWindow().setCursor(&m_cursor);
 
     return true;
 }
