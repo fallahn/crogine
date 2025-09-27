@@ -594,6 +594,7 @@ float InputParser::getCamRotation() const
     {
         //aiming overrides
         if (m_sharedData.rotateCamera
+            && !m_isCPU
             && m_aimRotation != 0)
         {
             return m_aimRotation;

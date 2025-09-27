@@ -1047,33 +1047,59 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
 
                     //if target is closer than tee check if target
-                    if (glm::length2(ballLandingPos - m_holeData->target) < glm::length2(ballLandingPos - m_holeData->tee))
+                    const auto targetDir = m_holeData->target - ballLandingPos;
+                    const auto teeDir = m_holeData->tee - ballLandingPos;
+
+                    if (glm::length2(targetDir) < glm::length2(teeDir))
                     {
                         //or sub-target is closer (default sub-target is miles away)
-                        if (glm::length2(ballLandingPos - m_holeData->subtarget) < glm::length2(ballLandingPos - m_holeData->target))
+                        if (glm::length2(m_holeData->subtarget - ballLandingPos) < glm::length2(targetDir))
                         {
                             tx.setPosition(m_holeData->subtarget);
                         }
                         else
                         {
-                            //we also have to move away in case we're in multi-target mode
-                            tx.setPosition(m_holeData->target);
-
-                            //TODO we probably only want to do this in multi-target mode
-                            //but unfortunately we don't know what the game mode is here...
-                            constexpr float Radius = static_cast<float>(MaxBullDiametre / 2) + 0.5f;
-                            glm::vec3 testDir = glm::normalize(m_holeData->tee - m_holeData->target) * Radius;
-                            auto testTerrain = getTerrain(m_holeData->target + testDir);
-                            if (testTerrain.terrain == TerrainID::Scrub
-                                || testTerrain.terrain == TerrainID::Water)
+                            //in some cases where the target is behind the OOB we're only going backwards to repeat the 
+                            //same mistake over and over - so we want to move towards the pin instead...
+                            if (glm::dot(targetDir, m_holeData->pin - ballLandingPos) < 0)
                             {
-                                //move the other way
-                                testDir = glm::normalize(m_holeData->pin - m_holeData->target) * Radius;
+                                auto newPos = m_holeData->pin;
+                                //obviously we don't want to land right in it
 
-                                //hmm this is unlikely, but if we're still in the water
-                                //we probably want to fall back to the tee?
+                                auto terrain = getTerrain(newPos + dir).terrain;
+                                const auto dir = glm::normalize(m_holeData->target - newPos);
+                                std::int32_t steps = 0;
+
+                                while ((terrain != TerrainID::Scrub && terrain != TerrainID::Water) && steps < 10)
+                                {
+                                    newPos += dir;
+                                    terrain = getTerrain(newPos + dir).terrain;
+                                    steps++;
+                                }
+
+                                tx.setPosition(newPos);
                             }
-                            tx.move(testDir);
+                            else
+                            {
+                                //we also have to move away in case we're in multi-target mode
+                                tx.setPosition(m_holeData->target);
+
+                                //TODO we probably only want to do this in multi-target mode
+                                //but unfortunately we don't know what the game mode is here...
+                                constexpr float Radius = static_cast<float>(MaxBullDiametre / 2) + 0.5f;
+                                glm::vec3 testDir = glm::normalize(m_holeData->tee - m_holeData->target) * Radius;
+                                auto testTerrain = getTerrain(m_holeData->target + testDir);
+                                if (testTerrain.terrain == TerrainID::Scrub
+                                    || testTerrain.terrain == TerrainID::Water)
+                                {
+                                    //move the other way
+                                    testDir = glm::normalize(m_holeData->pin - m_holeData->target) * Radius;
+
+                                    //hmm this is unlikely, but if we're still in the water
+                                    //we probably want to fall back to the tee?
+                                }
+                                tx.move(testDir);
+                            }
                         }
                     }
                     //else move to tee
