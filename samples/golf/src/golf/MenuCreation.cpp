@@ -3869,7 +3869,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     else
                     {
                         //toggle readyness but only if the selected course is locally available
-                        if (!/*m_sharedData.mapDirectory.empty()*/
+                        if (/*!m_sharedData.mapDirectory.empty()*/
                             m_serverMapAvailable)
                         {
                             //this waits for the ready state to come back from the server
@@ -3891,7 +3891,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                         else
                         {
                             LogI << "Shared Data Map Directory Is Empty" << std::endl;
-                            //send a map info packet with 0 to request server resend current info
+
+                            m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
+                            
+                            //send a map info packet with 0 to request server resend current info - I can't actually remember what this was supposed to do, but it was breaking stuff.
                             //m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                         }
                     }

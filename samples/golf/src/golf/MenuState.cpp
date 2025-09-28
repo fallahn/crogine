@@ -4025,7 +4025,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     cmd.targetFlags = CommandID::Menu::CourseTitle;
                     cmd.action = [course](cro::Entity e, float)
                     {
-                        if (MissingCourses.count(course) == 0)
+                        if (MissingCourses.count(course) != 0)
                         {
                             e.getComponent<cro::Text>().setString(MissingCourses.at(course));
                         }
