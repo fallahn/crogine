@@ -4058,6 +4058,11 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString(" ");
                     }
 
+#ifdef USE_GNS
+                    //hide the completion count
+                    m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+#endif
+
                     //un-ready the client to prevent the host launching
                     //if we don't have this course
                     if (!m_sharedData.hosting) //this should be implicit, but hey
