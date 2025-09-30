@@ -83,7 +83,7 @@ void main()
     vec4 colour = TEXTURE(u_diffuseMap, coord);
 
     vec3 normal = sphericalNormal(coord);
-    float amount = dot(normal, DIRECTION);
+    float amount = smoothstep(-0.1, 0.1, dot(normal, DIRECTION));
 
     amount *= Levels;
     amount = floor(amount);
@@ -91,7 +91,7 @@ void main()
 
     amount = 0.1 + (0.9 * amount);
 
-    if(colour.a< 0.35) discard;
+    if(colour.a < 0.35) discard;
 
     colour.rgb = mix(skyColour, colour.rgb, amount);
     FRAG_OUT = vec4(mix(WaterColour, colour.rgb, v_colour.g), 1.0);

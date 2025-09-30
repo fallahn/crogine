@@ -553,11 +553,19 @@ void GolfGame::handleMessage(const cro::Message& msg)
             m.type = ProgressMessage::Challenge;
             m_progressIcon->queueMessage(m);
 
-            if (data.challengeID > -1 &&
-                data.level == data.reason)
+            if (data.challengeID > -1)
             {
-                Social::awardXP(1000, XPStringID::ChallengeComplete);
-                Achievements::awardAchievement(AchievementStrings[AchievementID::UpForTheChallenge]);
+                if(data.level == data.reason)
+                {
+                    Social::awardXP(1000, XPStringID::ChallengeComplete);
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::UpForTheChallenge]);
+                }
+                else
+                {
+                    //hmm we don't know what type the challenge is here - we probably want
+                    //to award different values based on whether it's a counter or not
+                    Social::awardXP(/*data.type == Challenge::Counter ? 2 : 10*/2, XPStringID::MonthlyChallenge);
+                }
             }
         }
         else if (data.type == Social::SocialEvent::LeagueProgress)

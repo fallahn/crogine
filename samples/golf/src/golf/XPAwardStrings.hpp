@@ -65,6 +65,7 @@ struct XPStringID final
         Par,
         ParAssist,
 
+        MonthlyChallenge,
         ChallengeComplete,
         BullsEyeHit,
         Survivor,
@@ -114,6 +115,7 @@ static inline const std::array<std::string, XPStringID::Count> XPStrings =
     "Par (No Assist)",
     "Par",
 
+    "Challenge Progress",
     "Challenge Completed",
     "Target Hit",
     "Survivor",

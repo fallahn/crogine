@@ -151,7 +151,7 @@ void main()
     vec4 colour = TEXTURE(u_texture, coord);
 
     vec3 normal = sphericalNormal(coord);
-    float amount = dot(normal, u_lightDir);
+    float amount = smoothstep(-0.1, 0.1, dot(normal, u_lightDir));
 
     amount *= Levels;
     amount = floor(amount);
