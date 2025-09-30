@@ -205,6 +205,16 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_serverMapAvailable    (true),
     m_avUpdateCount         (0)
 {
+    //registerWindow([]()
+    //    {
+    //        ImGui::Begin("Moon");
+    //        static float moon = -1.f;
+    //        ImGui::Text("%3.2f", moon);
+    //        ImGui::SliderFloat("M", &moon, -1.f, 1.f);
+    //        const float brightness = std::clamp(1.f - std::pow(std::abs(moon), 10.f), 0.f, 1.f);;
+    //        ImGui::Text("Brightness: %3.2f", brightness);
+    //        ImGui::End();
+    //    });
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     Timeline::setTimelineDesc("Main Menu");
 

@@ -1850,7 +1850,8 @@ void GolfState::loadMaterials()
 
     //create compile time constants from moon phase data
     const MoonPhase mp(std::time(nullptr));
-    const auto rotateAmount = (mp.getPhase() * 2.f - 1.f) * cro::Util::Const::PI;
+    const auto normalisedPhase = ((mp.getPhase() * 2.f) - 1.f);
+    const auto rotateAmount = normalisedPhase * cro::Util::Const::PI;
     const glm::quat rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, rotateAmount, cro::Transform::X_AXIS);
     const glm::vec3 lightDir = rotation * cro::Transform::Z_AXIS;
 
@@ -1871,7 +1872,7 @@ void GolfState::loadMaterials()
 
     if (m_sharedData.nightTime)
     {
-        m_lensFlare.attenuation = std::clamp(1.f - std::abs(std::pow(rotateAmount, 10.f)), 0.f, 1.f);
+        m_lensFlare.attenuation = std::clamp(1.f - std::pow(std::abs(normalisedPhase), 10.f), 0.f, 1.f);
         std::string moonDefs = "#define MOON\n#define DIRECTION vec3(" + std::to_string(lightDir.x) + "," + std::to_string(lightDir.y) + "," + std::to_string(lightDir.z) + ")\n";
 
         moonDefs += "#define ROTATION mat2(vec2(" + std::to_string(rot.y) + "," + std::to_string(-rot.x) + "), vec2(" + std::to_string(rot.x) + "," + std::to_string(rot.y) + "))\n";
