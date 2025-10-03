@@ -2499,7 +2499,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
         }
 
         if (m_statBoardScores.size() > 3 //this assumes 4 players or more... is this right?
-            && m_courseIndex != -1)
+            && m_courseIndex != -1
+            && m_courseIndex < 12) //and not DLC
         {
             Social::getMonthlyChallenge().updateChallenge(ChallengeID::Four, m_courseIndex);
         }
@@ -5176,7 +5177,8 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                     {
                         m_achievementTracker.birdieChallenge++;
                         if (m_achievementTracker.birdieChallenge == 4
-                            && m_courseIndex != -1)
+                            && m_courseIndex != -1
+                            && m_courseIndex < 12)
                         {
                             Social::getMonthlyChallenge().updateChallenge(ChallengeID::Nine, m_courseIndex);
                         }
@@ -5194,7 +5196,8 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                         || m_currentHole > 8)
                     {
                         if (m_achievementTracker.eagles == 1
-                            && m_courseIndex != -1)
+                            && m_courseIndex != -1
+                            && m_courseIndex < 12)
                         {
                             Social::getMonthlyChallenge().updateChallenge(ChallengeID::Ten, m_courseIndex);
                         }

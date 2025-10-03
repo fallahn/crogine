@@ -84,8 +84,8 @@ static const std::array<std::string, ChallengeID::Count> ChallengeDescriptions =
     "Get 99% or better on each target on the Driving Range",
     "Take 50 gimmes resulting from a Near Miss",
     "Make 250 shots with Great Accuracy",
-    "Score 4 Birdies in one round on the front 9 of each course",
-    "Score 1 Eagle on the back 9 of each course",
+    "Score 4 Birdies in one round on the front 9 of each non-DLC course",
+    "Score 1 Eagle on the back 9 of each non-DLC course",
     "Hit the flag stick 50 times"
 };
 
