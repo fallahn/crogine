@@ -215,8 +215,9 @@ namespace
 cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
 
 GolfGame::GolfGame()
-    : m_stateStack      ({*this, getWindow()}),
-    m_activeIndex       (0)
+    : m_stateStack  ({*this, getWindow()}),
+    //m_cursor        (/*cro::SystemCursor::Hand*/"assets/images/cursor.png", 0, 0),
+    m_activeIndex   (0)
 {
     //must be set before anything, else cfg is still loaded from default path
     setApplicationStrings("Trederia", "golf");
@@ -552,11 +553,19 @@ void GolfGame::handleMessage(const cro::Message& msg)
             m.type = ProgressMessage::Challenge;
             m_progressIcon->queueMessage(m);
 
-            if (data.challengeID > -1 &&
-                data.level == data.reason)
+            if (data.challengeID > -1)
             {
-                Social::awardXP(1000, XPStringID::ChallengeComplete);
-                Achievements::awardAchievement(AchievementStrings[AchievementID::UpForTheChallenge]);
+                if(data.level == data.reason)
+                {
+                    Social::awardXP(1000, XPStringID::ChallengeComplete);
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::UpForTheChallenge]);
+                }
+                else
+                {
+                    //hmm we don't know what type the challenge is here - we probably want
+                    //to award different values based on whether it's a counter or not
+                    Social::awardXP(/*data.type == Challenge::Counter ? 2 : 10*/2, XPStringID::MonthlyChallenge);
+                }
             }
         }
         else if (data.type == Social::SocialEvent::LeagueProgress)
@@ -1263,6 +1272,8 @@ bool GolfGame::initialise()
     m_sharedData.mumLink->setIdentity(m_profileData.playerProfiles[0].playerData.name);
     //m_sharedData.mumLink->connect();
 
+    //cro::App::getWindow().setCursor(&m_cursor);
+
     return true;
 }
 
@@ -1856,6 +1867,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.showClubUpdate = prop.getValue<bool>();
                     }
+                    else if (name == "rotate_camera")
+                    {
+                        m_sharedData.rotateCamera = prop.getValue<bool>();
+                    }
                     else if (name == "show_minimap")
                     {
                         m_sharedData.showMinimap = prop.getValue<bool>();
@@ -2021,6 +2036,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("putt_follow").setValue(m_sharedData.puttFollowCam);
     cfg.addProperty("zoom_follow").setValue(m_sharedData.zoomFollowCam);
     cfg.addProperty("club_update").setValue(m_sharedData.showClubUpdate);
+    cfg.addProperty("rotate_camera").setValue(m_sharedData.rotateCamera);
     cfg.addProperty("show_minimap").setValue(m_sharedData.showMinimap);
     cfg.addProperty("show_tips").setValue(m_sharedData.showInGameTips);
     cfg.save(path);
@@ -2329,9 +2345,18 @@ void GolfGame::loadMusic()
                 const auto files = cro::FileSystem::listFiles(path);
                 for (const auto& file : files)
                 {
-                    //this checks the file has a valid extension
-                    //and limits the number of files loaded
-                    m3uPlaylist.addTrack(root + file);
+                    //horrible hack to skip menu music
+#ifdef USE_GNS
+                    if (file.find("101") == std::string::npos
+                        && file.find("201") == std::string::npos
+                        && file.find("104") == std::string::npos
+                        && file.find("204") == std::string::npos)
+#endif
+                    {
+                        //this checks the file has a valid extension
+                        //and limits the number of files loaded
+                        m3uPlaylist.addTrack(root + file);
+                    }
                 }
                 m3uPlaylist.shuffle();
             };

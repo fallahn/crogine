@@ -66,7 +66,7 @@ static inline bool operator != (const Team::Player& a, const Team::Player& b)
     return !(a == b);
 }
 
-static inline const std::array<std::string, 12u> CourseNames =
+static inline const std::array<std::string, 13u> CourseNames =
 {
     "course_01",
     "course_02",
@@ -80,6 +80,9 @@ static inline const std::array<std::string, 12u> CourseNames =
     "course_10",
     "course_11",
     "course_12",
+
+    //dlc from here
+    "course_13"
 };
 
 static inline std::int32_t getCourseIndex(const std::string& name)
@@ -105,7 +108,7 @@ struct HoleData final
 {
     glm::vec3 tee = glm::vec3(0.f);
     glm::vec3 target = glm::vec3(1.f);
-    glm::vec3 subtarget = glm::vec3(std::numeric_limits<float>::max());
+    glm::vec3 subtarget = glm::vec3(std::numeric_limits<float>::max() / 2.f);
     glm::vec3 pin = glm::vec3(0.f);
     float distanceToPin = 0.f;
     std::int32_t par = 0;

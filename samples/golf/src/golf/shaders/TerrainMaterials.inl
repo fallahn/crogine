@@ -88,8 +88,14 @@ const float Density = 0.3;
 const float Intensity = 25.0;
 const float Brightness = 0.9;
 
-const vec4 Dark = vec4(1.0, 0.3608, 0.098, 1.0);
-const vec4 Light = vec4(1.0, 0.6275, 0.1725, 1.0);
+//const vec4 Dark = vec4(0.949,0.4784,0.2471, 1.0);
+//const vec4 Light = vec4(0.9451,0.8471,0.5255, 1.0);
+
+const vec4 Dark = vec4(0.9255,0.4667,0.2392, 1.0);
+const vec4 Light = vec4(0.949,0.8118,0.3608, 1.0);
+
+//uniform vec4 Dark = vec4(1.0, 0.3608, 0.098, 1.0);
+//uniform vec4 Light = vec4(1.0, 0.6275, 0.1725, 1.0);
 
 void main()
 {
@@ -122,6 +128,10 @@ R"(
 uniform sampler2D u_diffuseMap;
 VARYING_IN vec2 v_texCoord0;
 
+//TODO make these an include for all lava shaders
+const vec4 Dark = vec4(0.9255,0.4667,0.2392, 1.0);
+const vec4 Light = vec4(0.949,0.8118,0.3608, 1.0);
+
 void main()
 {
     vec2 coord = v_texCoord0;
@@ -132,7 +142,7 @@ void main()
 
     coord.x += xOffset * dir;
 
-    FRAG_OUT = TEXTURE(u_diffuseMap, coord);
+    FRAG_OUT = mix(Dark, Light,TEXTURE(u_diffuseMap, coord));
     LIGHT_OUT = vec4(FRAG_OUT.rgb, 1.0);
     NORM_OUT.a = 0.0;
 })";

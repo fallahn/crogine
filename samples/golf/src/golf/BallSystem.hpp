@@ -93,6 +93,8 @@ struct Ball final
     std::uint8_t client = 0; //needs to be tracked when sending multiplayer messages
     std::uint8_t lastTerrain = ConstVal::NullValue; //set on a collision begin event, reset once set to interp
 
+
+
     //used to clone the ball info when playing team play
     void clone(Ball& dst) const
     {
@@ -113,7 +115,7 @@ struct Ball final
     }
 
     //used for wall collision when putting
-    btPairCachingGhostObject* collisionObject = nullptr;
+    //btPairCachingGhostObject* collisionObject = nullptr;
 };
 
 class BallSystem final : public cro::System

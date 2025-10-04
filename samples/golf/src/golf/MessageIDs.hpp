@@ -122,7 +122,9 @@ struct SceneEvent
         PlayerEliminated,
         PlayerLifeLost,
         PlayerLifeGained,
-        SpectateApplaud
+        SpectateApplaud,
+        ShowMeasureWidget,
+        HideMeasureWidget,
     }type = TransitionComplete;
 
     //union

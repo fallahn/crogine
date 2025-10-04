@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -520,6 +520,7 @@ void TutorialState::buildScene()
     //tutorialPutt(rootNode);
     //tutorialSpin(rootNode);
     //tutorialThree(rootNode);
+    //tutorialPuttMeasure(rootNode);
     
     switch (m_sharedData.tutorialIndex)
     {
@@ -540,6 +541,9 @@ void TutorialState::buildScene()
         break;
     case TutorialID::Putt:
         tutorialPutt(rootNode);
+        break;
+    case TutorialID::PuttMeasure:
+        tutorialPuttMeasure(rootNode);
         break;
     case TutorialID::Spin:
         tutorialSpin(rootNode);
@@ -603,7 +607,7 @@ void TutorialState::buildScene()
 void TutorialState::tutorialOne(cro::Entity root)
 {
     //set up layout
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     
 
     //second tip text
@@ -3559,6 +3563,129 @@ void TutorialState::tutorialPuttAssist(cro::Entity root)
                 m_scene.destroyEntity(e);
             }
         };
+
+    m_actionCallbacks.push_back([&]() { quitState(); });
+}
+
+void TutorialState::tutorialPuttMeasure(cro::Entity root)
+{
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    //first text
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
+    entity.addComponent<cro::Text>(font).setString("Press \"1\" or Up on the D-Pad to activate the measure tool.");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    centreText(entity);
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, 96.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    float width = cro::Text::getLocalBounds(entity).width;
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, width](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::min(1.f, currTime + (dt * 3.f));
+            cro::FloatRect area(0.f, 0.f, width * currTime, -14.f);
+            e.getComponent<cro::Drawable2D>().setCroppingArea(area);
+
+            if (currTime == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                showContinue();
+            }
+        };
+    entity.getComponent<cro::Callback>().active = true;
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //image
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_sharedData.sharedResources->textures.get("assets/golf/images/tutorial/measure_putt.png"));
+    const auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });;
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, 0.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::min(1.f, currTime + dt);
+
+            glm::vec2 scale(1.f, cro::Util::Easing::easeInQuint(currTime));
+            e.getComponent<cro::Transform>().setScale(scale);
+
+            if (currTime == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
+
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //second text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
+    entity.addComponent<cro::Text>(font).setString("Use the Aim keys or Left Thumb-stick to move it around the green.");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    centreText(entity);
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -86.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    width = cro::Text::getLocalBounds(entity).width;
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, width](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::min(1.f, currTime + (dt * 3.f));
+            cro::FloatRect area(0.f, 0.f, width * currTime, -14.f);
+            e.getComponent<cro::Drawable2D>().setCroppingArea(area);
+
+            if (currTime == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                showContinue();
+            }
+        };
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    
+    m_actionCallbacks.push_back([entity]() mutable
+        { 
+            //display second text
+            entity.getComponent<cro::Callback>().active = true;
+        });
+
+    //time delay to show continue button
+    //entity = m_scene.createEntity();
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().setUserData<float>(5.f);
+    //entity.getComponent<cro::Callback>().function =
+    //    [&](cro::Entity e, float dt)
+    //    {
+    //        auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+    //        ct -= dt;
+
+    //        if (ct < 0.f)
+    //        {
+    //            showContinue();
+    //            e.getComponent<cro::Callback>().active = false;
+    //            m_scene.destroyEntity(e);
+    //        }
+    //    };
 
     m_actionCallbacks.push_back([&]() { quitState(); });
 }

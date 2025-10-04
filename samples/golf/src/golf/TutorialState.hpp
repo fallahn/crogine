@@ -100,6 +100,7 @@ private:
 
     void tutorialLowerClubs(cro::Entity);
     void tutorialPuttAssist(cro::Entity);
+    void tutorialPuttMeasure(cro::Entity);
 
     void showContinue();
     void doCurrentAction();

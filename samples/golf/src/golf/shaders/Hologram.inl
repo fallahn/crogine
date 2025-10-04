@@ -48,6 +48,7 @@ uniform vec4 u_colour;
 VARYING_IN vec2 v_texCoord0;
 VARYING_IN vec3 v_normalVector;
 VARYING_IN vec3 v_worldPosition;
+VARYING_IN vec3 v_worldScale;
 
 const float LineFreq = 1000.0;
 const float FarAmount = 0.3;
@@ -73,7 +74,7 @@ void main()
 
     float scanline = ((sin((uv.y * LineFreq) + (u_windData.w * 30.0)) + 1.0 * 0.5) * 0.4) + 0.6;
 
-    scanline = mix(scanline, 1.0, clamp(length(viewDir) / 5.0, 0.0, 1.0)); //reduce scanline up to 5 metres
+    scanline = mix(scanline, 1.0, clamp(length(viewDir) / ((4.9 * v_worldScale.x) + 0.1), 0.0, 1.0)); //reduce scanline up to 5 metres
     colour *= mix(1.0, scanline, step(0.58, uv.y)); //arbitrary cut off for texture
 
     //flicker

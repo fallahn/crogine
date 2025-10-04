@@ -98,6 +98,10 @@ static inline const std::string Vertex = R"(
 #include SHADOWMAP_OUTPUTS
     #endif
 
+#if defined(PASS_SCALE)
+        VARYING_OUT vec3 v_worldScale;
+#endif
+
 #if defined(INSTANCING)
         flat out int v_instanceID;
 #endif
@@ -112,6 +116,10 @@ static inline const std::string Vertex = R"(
             mat4 worldViewMatrix = u_worldViewMatrix;
             mat3 normalMatrix = u_normalMatrix;
         #endif
+
+#if defined (PASS_SCALE)
+            v_worldScale = vec3(worldMatrix[0][0],worldMatrix[1][1],worldMatrix[2][2]);
+#endif
 
             mat4 wvp = u_projectionMatrix * worldViewMatrix;
             vec4 position = a_position;

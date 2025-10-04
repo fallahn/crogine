@@ -33,10 +33,27 @@ source distribution.
 
 #include <cassert>
 
+namespace
+{
+    const std::array SearchPaths =
+    {
+        std::string("dlc/adventurer/")
+    };
+}
+
 std::vector<std::string> Content::getInstallPaths()
 {
-    //TODO check other paths exist and add them here if they do
-    return {"assets/golf/"};
+    std::vector<std::string> ret = { "assets/golf/" };
+
+    for (const auto& path : SearchPaths)
+    {
+        if (cro::FileSystem::directoryExists(path))
+        {
+            ret.push_back(path);
+        }
+    }
+
+    return ret;
 }
 
 std::string Content::getBaseContentPath()

@@ -128,6 +128,7 @@ CPUGolfer::CPUGolfer(InputParser& ip, const ActivePlayer& ap, const CollisionMes
     m_wantsPrediction   (false),
     m_predictionResult  (0.f),
     m_predictionCount   (0),
+    m_OOBCount          (0),
     m_puttingPower      (0.f),
     m_skillIndex        (0),
     m_clubID            (ClubID::Driver),
@@ -360,7 +361,7 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
             case TerrainID::Water:
             case TerrainID::Scrub:
             case TerrainID::Stone:
-                if (cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood])
+                //if (cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood])
                 {
                     m_baseTarget = m_target = fallback;
                 }
@@ -379,7 +380,7 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
             case TerrainID::Scrub:
             case TerrainID::Bunker:
             case TerrainID::Stone:
-                if (cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood])
+                //if (cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood])
                 {
                     m_baseTarget = m_target = fallback;
                 }
@@ -393,6 +394,7 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
         m_prevClubID = m_clubID;
         m_wantsPrediction = false;
         m_predictionCount = 0;
+        m_OOBCount = 0;
 
         m_offsetRotation++; //causes the offset calc to pick a new number each time a player is selected
 
@@ -506,6 +508,13 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
         }
     }
 
+    //LogI << "Predicted " << TerrainStrings[terrain] << std::endl;
+
+    const bool outOfBounds = (terrain == TerrainID::Water || terrain == TerrainID::Scrub);
+    if (outOfBounds)
+    {
+        m_OOBCount++;
+    }
 
     //TODO should we be compensating for overshoot?
     if (auto& count = failCounts[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]; count != 0)
@@ -531,6 +540,19 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
         //LogI << "Falling back - fail count was " << (count + 1) << std::endl;
     }
 
+    //if we had multiple OOB just accept the first non-OOB result
+    else if (m_OOBCount > 3
+        && !outOfBounds)
+    {
+        //LogI << "Accepting first non-OOB result" << std::endl;
+
+        m_retargetCount = 100;
+        m_predictionCount = MaxPredictions;
+
+        m_predictionResult = result + (glm::vec3(getOffsetValue(), 0.f, -getOffsetValue()) * 0.001f);
+        m_predictionUpdated = true;
+        return;
+    }
 
     else if (m_retargetCount < (MaxRetargets - (MaxRetargets - getSkillIndex())) &&
         (terrain == TerrainID::Water
@@ -540,7 +562,7 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
         const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
 
         //retarget
-        if ((cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood] && terrain != TerrainID::Bunker)
+        if (/*(cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood] &&*/ terrain != TerrainID::Bunker/*)*/
             /*|| (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood] && terrain == TerrainID::Bunker)*/) //more likely to hit bunker 
         {
             if (m_retargetCount < 2)
@@ -886,7 +908,11 @@ void CPUGolfer::pickClubDynamic(float dt)
     else
     {
         float targetDistance = glm::length(m_target - m_activePlayer.position);
+        //LogI << "Elevation of target: " << (m_target.y - m_activePlayer.position.y) << std::endl;
 
+        //increase the target distance a bit if we have a steep climb
+        //this makes us choose a longer club if necessary
+        targetDistance += std::max(0.f, (m_target.y - m_activePlayer.position.y) / 9.f);
 
         //if we're on the green putter should be auto selected
         if (m_activePlayer.terrain == TerrainID::Green)
@@ -917,8 +943,8 @@ void CPUGolfer::pickClubDynamic(float dt)
         const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
 
         auto club = m_inputParser.getClub();
-        float clubDistance = Clubs[club].getTargetAtLevel(Stat[CPUStat::Skill]);
-        float diff = targetDistance - clubDistance;
+        const float clubDistance = Clubs[club].getTargetAtLevel(Stat[CPUStat::Skill]);
+        const float diff = targetDistance - clubDistance;
 
         const auto acceptClub = [&]()
         {
@@ -1046,9 +1072,11 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         auto w = glm::normalize(glm::vec2(windVector.x, -windVector.z));
         auto t = glm::normalize(glm::vec2(targetDir.x, -targetDir.z));
 
+        const auto maxRot = cro::Util::Const::PI;// m_inputParser.getMaxRotation();
+
         //max rotation (percent of InputParser::MaxRotation) to apply for wind.
         //rotation is good ~ 0.1 rads, so this values is 0.1/InputParser::MaxRotation
-        const float MaxCompensation = 0.12f / m_inputParser.getMaxRotation();
+        const float MaxCompensation = 0.12f / maxRot;
         float dot = glm::dot(w, t);
         float windComp = (1.f - std::abs(dot)) * MaxCompensation;
 
@@ -1059,9 +1087,9 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         windComp *= windVector.y; //reduce with wind strength
         windComp *= greenCompensation;
 
-        float targetAngle = m_aimAngle + (m_inputParser.getMaxRotation() * windComp);
+        float targetAngle = m_aimAngle + (maxRot * windComp);
         targetAngle += slopeCompensation;
-        targetAngle = std::min(m_aimAngle + m_inputParser.getMaxRotation(), std::max(m_aimAngle - m_inputParser.getMaxRotation(), targetAngle));
+        targetAngle = std::min(m_aimAngle + maxRot, std::max(m_aimAngle - maxRot, targetAngle));
         targetAngle *= 0.99f;
 
 #ifdef CRO_DEBUG_
@@ -1170,7 +1198,9 @@ void CPUGolfer::aimDynamic(float dt)
         //or refine based on prediction
         else
         {
-            m_targetAngle = std::clamp(m_targetAngle + (Deviance[devianceOffset] * 0.1f), m_aimAngle - (m_inputParser.getMaxRotation() * 0.9f), m_aimAngle + (m_inputParser.getMaxRotation() * 0.9f));
+            m_targetAngle = std::clamp(m_targetAngle + (Deviance[devianceOffset] * 0.1f), 
+                m_aimAngle - (/*m_inputParser.getMaxRotation()*/(cro::Util::Const::PI / 2.f) * 0.9f),
+                m_aimAngle + (/*m_inputParser.getMaxRotation()*/(cro::Util::Const::PI / 2.f) * 0.9f));
 
             //update input parser
             if (auto diff = std::abs(m_inputParser.getYaw() - m_targetAngle); diff > 0.05f
@@ -1264,17 +1294,19 @@ void CPUGolfer::updatePrediction(float dt)
 #ifdef CRO_DEBUG_
             debug.targetDot = dot;
 #endif
+            const auto maxRot = cro::Util::Const::PI / 2.f; //m_inputParser.getMaxRotation();
+
             if (m_predictionCount++ < MaxPredictions &&
                 ((dot < -tolerance
-                && m_targetAngle < ((m_aimAngle + m_inputParser.getMaxRotation()) - Epsilon))
+                && m_targetAngle < ((m_aimAngle + maxRot) - Epsilon))
             || (dot > tolerance
-                && m_targetAngle > ((m_aimAngle - m_inputParser.getMaxRotation()) + Epsilon))))
+                && m_targetAngle > ((m_aimAngle - maxRot) + Epsilon))))
             {
                 float skew = getOffsetValue() / 1000.f;
                 skew += (Deviance[devianceOffset] * 0.06f) * devianceMultiplier;
 
-                m_targetAngle = std::min(m_aimAngle + m_inputParser.getMaxRotation(), 
-                    std::max(m_aimAngle - m_inputParser.getMaxRotation(),
+                m_targetAngle = std::min(m_aimAngle + maxRot, 
+                    std::max(m_aimAngle - maxRot,
                         m_targetAngle + ((cro::Util::Const::PI / 2.f) * dot) + skew));
 
                 m_state = State::Aiming;
@@ -1292,8 +1324,8 @@ void CPUGolfer::updatePrediction(float dt)
                     precision = (precision / 2.f) + ((precision / 2.f) * std::min(1.f, glm::length(targetDir) / 200.f));
                 }
 
-                float precSqr = precision * precision;
-                if (float resultPrecision = glm::length2(predictDir - targetDir);
+                const float precSqr = precision * precision;
+                if (const float resultPrecision = glm::length2(predictDir - targetDir);
                     resultPrecision > precSqr && m_targetPower < 1.f)
                 {
                     const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];

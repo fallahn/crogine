@@ -130,6 +130,11 @@ namespace
         MenuSky(glm::vec3(0.505335f,0.629320f,0.590418f),    cro::Colour(0.473237f,0.403427f,0.799020f,1.f), cro::Colour(0.710784f,0.546615f,0.400687f,1.f), cro::Colour(0.877451f,0.742618f,0.288182f,1.f), 0.252f)
     };
 
+    const std::unordered_map<std::string, std::string> MissingCourses =
+    {
+        std::make_pair("course_13", "Requires Adventurer DLC")
+    };
+
     bool checkCommandLine = true;
 
     /*ImVec4 C(1.f, 1.f, 1.f, 1.f);
@@ -196,8 +201,20 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_currentMenu           (MenuID::Main),
     m_prevMenu              (MenuID::Main),
     m_viewScale             (1.f),
-    m_scrollSpeed           (1.f)
+    m_scrollSpeed           (1.f),
+    m_serverMapAvailable    (true),
+    m_avUpdateCount         (0)
 {
+    //registerWindow([]()
+    //    {
+    //        ImGui::Begin("Moon");
+    //        static float moon = -1.f;
+    //        ImGui::Text("%3.2f", moon);
+    //        ImGui::SliderFloat("M", &moon, -1.f, 1.f);
+    //        const float brightness = std::clamp(1.f - std::pow(std::abs(moon), 10.f), 0.f, 1.f);;
+    //        ImGui::Text("Brightness: %3.2f", brightness);
+    //        ImGui::End();
+    //    });
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     Timeline::setTimelineDesc("Main Menu");
 
@@ -4018,7 +4035,14 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     cmd.targetFlags = CommandID::Menu::CourseTitle;
                     cmd.action = [course](cro::Entity e, float)
                     {
-                        e.getComponent<cro::Text>().setString(course);
+                        if (MissingCourses.count(course) != 0)
+                        {
+                            e.getComponent<cro::Text>().setString(MissingCourses.at(course));
+                        }
+                        else
+                        {
+                            e.getComponent<cro::Text>().setString(course);
+                        }
                         centreText(e);
                     };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -4027,7 +4051,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     cmd.action = [](cro::Entity e, float)
                     {
                         e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
-                        e.getComponent<cro::Text>().setString("Course Data Not Found");
+                        e.getComponent<cro::Text>().setString("Course Data Not Installed");
                         centreText(e);
                     };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -4041,13 +4065,20 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
                     if (m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
                     {
-                        m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString("");
+                        m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString(" ");
                     }
+
+#ifdef USE_GNS
+                    //hide the completion count
+                    m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+#endif
 
                     //un-ready the client to prevent the host launching
                     //if we don't have this course
                     if (!m_sharedData.hosting) //this should be implicit, but hey
                     {
+                        m_serverMapAvailable = false;
+
                         //m_readyState is updated when we get this back from the server
                         std::uint8_t ready = 0;
                         m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady,
@@ -4055,6 +4086,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                             net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     }
                 };
+
+                //assume the map is  available until told otherwise
+                m_serverMapAvailable = true;
 
                 if (auto data = std::find_if(m_sharedCourseData.courseData.cbegin(), m_sharedCourseData.courseData.cend(),
                     [&course](const SharedCourseData::CourseData& cd)

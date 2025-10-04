@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Maths.hpp>
 
 #include <iomanip>
 
@@ -291,6 +292,28 @@ void TimeOfDay::updateLatLon()
         if (countryCode.find(name) != std::string::npos)
         {
             m_latlon = val;
+
+            //estimate an offset based on time diff to utc
+            //and compare it (helps narrow down larger countries)
+            const auto t = std::time(nullptr);
+            const auto* gm = std::gmtime(&t);
+            const auto* tm = std::localtime(&t);
+
+            const auto utc = ((gm->tm_hour - gm->tm_isdst) + 24) % 24;
+            const auto local = ((tm->tm_hour - tm->tm_isdst) + 24) % 24;
+            const auto offset = local - utc;
+
+            constexpr float DegreesPerZone = 15.f;
+            const auto estimate = offset * DegreesPerZone;
+            const auto diff = m_latlon.y - estimate;
+
+            if (std::abs(diff) > DegreesPerZone)
+            {
+                const auto old = m_latlon.y;
+                m_latlon.y -= cro::Util::Maths::sgn(diff) * DegreesPerZone;
+                LogI << "Updated estimated longitude from " << old << " to " << m_latlon.y << std::endl;
+            }
+
             break;
         }
     }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -30,12 +30,17 @@ source distribution.
 #pragma once
 
 #include "StateIDs.hpp"
+#include "Aer.hpp"
+#include "moonphase/MoonPhase.hpp"
 #include <crogine/graphics/VideoPlayer.hpp>
 #include <crogine/audio/sound_system/MusicPlayer.hpp>
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/Font.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/Shader.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/gui/Gui.hpp>
 
@@ -67,6 +72,8 @@ namespace sp
 
         ImGui::FileBrowser m_fileBrowser;
 
+        Aer m_aer;
+
         void addSystems();
         void loadAssets();
         void createScene();
@@ -75,5 +82,19 @@ namespace sp
         bool createStub(const std::string&) const;
         void fileToByteArray(const std::string&, const std::string&) const;
         void CSVToMap();
+
+        cro::Texture m_quantizeInput;
+        cro::RenderTexture m_quantizeOutput;
+        cro::SimpleQuad m_quantizeQuad;
+        cro::Shader m_quantizeShader;
+        void imageQuantizer();
+
+        MoonPhase m_moonPhase;
+        tm m_timePicker;
+        cro::Texture m_moonInput;
+        cro::RenderTexture m_moonOutput;
+        cro::SimpleQuad m_moonQuad;
+        cro::Shader m_moonShader;
+        void moonPhase();
     };
 }

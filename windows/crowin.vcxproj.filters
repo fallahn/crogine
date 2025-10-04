@@ -552,16 +552,7 @@
     <ClInclude Include="..\crogine\include\crogine\core\Mouse.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImCurveEdit.h">
-      <Filter>Header Files\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGradient.h">
-      <Filter>Header Files\imgui</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGuizmo.h">
-      <Filter>Header Files\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImSequencer.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImZoomSlider.h">
@@ -702,9 +693,6 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\ImageArray.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\src\imgui\implot_internal.h">
-      <Filter>Header Files\imgui</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\src\audio\Mp3Loader.hpp">
       <Filter>Header Files\audio\ecs</Filter>
     </ClInclude>
@@ -779,6 +767,9 @@
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\audio\MumbleLink.hpp">
       <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGuiDatePicker.hpp">
+      <Filter>Header Files\imgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1112,16 +1103,7 @@
     <ClCompile Include="..\crogine\src\core\Cursor.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\imgui\ImCurveEdit.cpp">
-      <Filter>Source Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\imgui\ImGradient.cpp">
-      <Filter>Source Files\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\imgui\ImGuizmo.cpp">
-      <Filter>Source Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\imgui\ImSequencer.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\components\Skeleton.cpp">
@@ -1250,15 +1232,6 @@
     <ClCompile Include="..\crogine\src\audio\AudioSource.cpp">
       <Filter>Source Files\audio\ecs</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\imgui\implot.cpp">
-      <Filter>Source Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\imgui\implot_demo.cpp">
-      <Filter>Source Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\imgui\implot_items.cpp">
-      <Filter>Source Files\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\audio\Mp3Loader.cpp">
       <Filter>Source Files\audio\ecs</Filter>
     </ClCompile>
@@ -1330,6 +1303,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\audio\MumbleLink.cpp">
       <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\ImGuiDatePicker.cpp">
+      <Filter>Source Files\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

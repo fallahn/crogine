@@ -268,29 +268,34 @@ void LeaderboardState::parseCourseDirectory()
 {
     m_resources.textures.setFallbackColour(cro::Colour::Transparent);
 
-    const std::string coursePath = cro::FileSystem::getResourcePath() + "assets/golf/courses/";
-    auto dirs = cro::FileSystem::listDirectories(coursePath);
+    const auto installed = Content::getInstallPaths();
 
-    std::sort(dirs.begin(), dirs.end());
-
-    for (const auto& dir : dirs)
+    for (const auto& installPath : installed)
     {
-        if (dir.find("course_") != std::string::npos)
+        const std::string coursePath = cro::FileSystem::getResourcePath() + installPath + "courses/";
+        auto dirs = cro::FileSystem::listDirectories(coursePath);
+
+        std::sort(dirs.begin(), dirs.end());
+
+        for (const auto& dir : dirs)
         {
-            auto filePath = coursePath + dir + "/course.data";
-            if (cro::FileSystem::fileExists(filePath))
+            if (dir.find("course_") != std::string::npos)
             {
-                cro::ConfigFile cfg;
-                cfg.loadFromFile(filePath, false);
-                if (auto* prop = cfg.findProperty("title"); prop != nullptr)
+                auto filePath = coursePath + dir + "/course.data";
+                if (cro::FileSystem::fileExists(filePath))
                 {
-                    const auto courseTitle = prop->getValue<std::string>();
-                    m_courseStrings.emplace_back(std::make_pair(dir, cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
+                    cro::ConfigFile cfg;
+                    cfg.loadFromFile(filePath, false);
+                    if (auto* prop = cfg.findProperty("title"); prop != nullptr)
+                    {
+                        const auto courseTitle = prop->getValue<std::string>();
+                        m_courseStrings.emplace_back(std::make_pair(dir, cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
 
 
-                    filePath = /*coursePath*/"assets/golf/courses/" + dir + "/preview.png";
-                    //if this fails we still need the fallback to pad the vector
-                    m_courseThumbs.push_back(&m_resources.textures.get(filePath));
+                        filePath = installPath + "courses/" + dir + "/preview.png";
+                        //if this fails we still need the fallback to pad the vector
+                        m_courseThumbs.push_back(&m_resources.textures.get(filePath));
+                    }
                 }
             }
         }

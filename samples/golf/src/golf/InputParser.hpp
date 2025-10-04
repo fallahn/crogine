@@ -147,6 +147,7 @@ private:
     float m_holeDirection; //radians
     float m_rotation; //+- max rads
     float m_maxRotation;
+    float m_aimRotation; //rotate the camera when aiming
 
     float m_power;
     float m_hook;
@@ -160,7 +161,7 @@ private:
     enum class State
     {
         Aim, Power, Stroke,
-        Flight, Drone
+        Flight, Drone, Measure
     }m_state;
 
     std::int32_t m_currentClub;
@@ -199,4 +200,9 @@ private:
     bool m_iconActive;
     void beginIcon();
     void endIcon();
+
+
+    void showMeasureWidget();
+    void hideMeasureWidget();
+    void updateMeasure();
 };

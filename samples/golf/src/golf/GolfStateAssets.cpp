@@ -37,6 +37,8 @@ source distribution.
 #include "Career.hpp"
 #include "AvatarRotationSystem.hpp"
 #include "BannerTexture.hpp"
+#include "MoonPhase.hpp"
+#include "TimeOfDay.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
@@ -434,6 +436,7 @@ void GolfState::loadMap()
     materials.glass = m_materialIDs[MaterialID::Glass];
 
     auto cloudRing = loadSkybox(skyboxPath, m_skyScene, m_resources, materials);
+    m_baseSkyColour = m_skyScene.getSkyboxColours().top; //used to dim the sky if it rains
     if (cloudRing.isValid()
         && cloudRing.hasComponent<cro::Model>())
     {
@@ -1793,6 +1796,32 @@ void GolfState::loadMaterials()
         m_resources.shaders.mapStringID("lava", ShaderID::Lava);
         auto* shader = &m_resources.shaders.get(ShaderID::Lava);
         m_windBuffer.addShader(*shader);
+
+        //auto shaderID = shader->getGLHandle();
+        //auto lightID = shader->getUniformID("Light");
+        //auto darkID = shader->getUniformID("Dark");
+
+        //registerWindow([shaderID, lightID, darkID]()
+        //    {
+        //        ImGui::Begin("Light");
+        //        
+        //        static std::array<float, 4u> light = { 1.f, 0.6275f, 0.1725f, 1.f };
+
+        //        if (ImGui::ColorEdit4("Light", light.data()))
+        //        {
+        //            glUseProgram(shaderID);
+        //            glUniform4f(lightID, light[0], light[1], light[2], light[3]);
+        //        }
+
+        //        static std::array<float, 4u> dark = { 1.f, 0.3608f, 0.098f, 1.f };
+        //        if (ImGui::ColorEdit4("Dark", dark.data()))
+        //        {
+        //            glUseProgram(shaderID);
+        //            glUniform4f(darkID, dark[0], dark[1], dark[2], dark[3]);
+        //        }
+
+        //        ImGui::End();
+        //    });
     }
 
     if (m_resources.shaders.loadFromString(ShaderID::LavaFall,
@@ -1804,7 +1833,7 @@ void GolfState::loadMaterials()
     }
 
     if (m_resources.shaders.loadFromString(ShaderID::Hologram,
-        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag, "#define TEXTURED\n#define RIMMING\n"))
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag, "#define TEXTURED\n#define RIMMING\n#define PASS_SCALE\n"))
     {
         m_resources.shaders.mapStringID("holo_shader", ShaderID::Hologram);
         auto* shader = &m_resources.shaders.get(ShaderID::Hologram);
@@ -1819,8 +1848,41 @@ void GolfState::loadMaterials()
         m_resolutionBuffer.addShader(*shader);
     }
 
+    //create compile time constants from moon phase data
+    const MoonPhase mp(std::time(nullptr));
+    const auto normalisedPhase = ((mp.getPhase() * 2.f) - 1.f);
+    const auto rotateAmount = normalisedPhase * cro::Util::Const::PI;
+    const glm::quat rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, rotateAmount, cro::Transform::X_AXIS);
+    const glm::vec3 lightDir = rotation * cro::Transform::Z_AXIS;
 
+    std::string earthDefs = "#define DIRECTION vec3(" + std::to_string(-lightDir.x) + "," + std::to_string(-lightDir.y) + "," + std::to_string(-lightDir.z) + ")\n";
 
+    TimeOfDay tod;
+    const auto latitude = tod.getLatLon().x;
+    const glm::vec2 rot = glm::vec2(std::sin(-latitude * cro::Util::Const::degToRad), std::cos(-latitude * cro::Util::Const::degToRad));
+
+    earthDefs += "#define ROTATION mat2(vec2(" + std::to_string(rot.y) + "," + std::to_string(-rot.x) + "), vec2(" + std::to_string(rot.x) + "," + std::to_string(rot.y) + "))\n";
+
+    //TODO - like all the others, only load this if necessary...
+    if (m_resources.shaders.loadFromString(ShaderID::Earth,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), MoonFrag, "#define TEXTURED\n#define VERTEX_COLOUR\n" + earthDefs))
+    {
+        m_resources.shaders.mapStringID("earth", ShaderID::Earth);
+    }
+
+    if (m_sharedData.nightTime)
+    {
+        m_lensFlare.attenuation = std::clamp(1.f - std::pow(std::abs(normalisedPhase), 10.f), 0.f, 1.f);
+        std::string moonDefs = "#define MOON\n#define DIRECTION vec3(" + std::to_string(lightDir.x) + "," + std::to_string(lightDir.y) + "," + std::to_string(lightDir.z) + ")\n";
+
+        moonDefs += "#define ROTATION mat2(vec2(" + std::to_string(rot.y) + "," + std::to_string(-rot.x) + "), vec2(" + std::to_string(rot.x) + "," + std::to_string(rot.y) + "))\n";
+
+        if (m_resources.shaders.loadFromString(ShaderID::Moon,
+            cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), MoonFrag, "#define TEXTURED\n#define VERTEX_COLOUR\n" + moonDefs))
+        {
+            m_resources.shaders.mapStringID("moon", ShaderID::Moon);
+        }
+    }
 
     //cel shaded material
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define TERRAIN_CLIP\n#define BALL_COLOUR\n" + wobble);
@@ -2398,6 +2460,7 @@ void GolfState::loadModels()
     m_modelDefs[ModelID::BallShadow]->loadFromFile("assets/golf/models/ball_shadow.cmt");
     m_modelDefs[ModelID::BullsEye]->loadFromFile("assets/golf/models/target.cmt"); //TODO we can only load this if challenge month or game mode requires
     m_modelDefs[ModelID::PlayerFallBack]->loadFromFile("assets/golf/models/avatars/default.cmt");
+    m_modelDefs[ModelID::MeasureWidget]->loadFromFile("assets/golf/models/hole_arrow.cmt");
 
     //ball models - the menu should never have let us get this far if it found no ball files
     for (const auto& info : m_sharedData.ballInfo)
@@ -3200,13 +3263,26 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
             }
         }
 
+        //evenly spaced points with ambient audio
+        constexpr auto envOffset = glm::vec2(MapSize) / 2.f;
+        const auto radius = glm::length(envOffset);
+        static constexpr float height = 8.f;
 
-        //6 evenly spaced points with ambient audio
-        auto envOffset = glm::vec2(MapSize) / 3.f;
+        auto rootEnt = m_gameScene.createEntity();
+        rootEnt.addComponent<cro::Transform>();
+        rootEnt.addComponent<cro::Callback>().active = true;
+        rootEnt.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+            {
+                const auto dir = m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().getPosition() - e.getComponent<cro::Transform>().getPosition();
+                e.getComponent<cro::Transform>().move(dir * 10.f * dt);
+            };
+
         cro::AudioScape as;
         if (as.loadFromFile(m_audioPath, m_resources.audio))
         {
-            std::array emitterNames =
+            std::size_t currIdx = 0;
+            const std::array emitterNames =
             {
                 std::string("01"),
                 std::string("02"),
@@ -3218,13 +3294,35 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                 std::string("04"),
             };
 
-            for (auto i = 0; i < 2; ++i)
+            for (auto i = 0; i < 6; ++i)
+            {
+                static constexpr float Arc = cro::Util::Const::TAU / 6.f;
+                glm::vec2 pos = glm::vec2(std::sin((i * Arc) + (Arc/2.f)), std::cos((i * Arc) + (Arc / 2.f)));
+                pos *= radius;
+                //pos += envOffset;
+
+                if (as.hasEmitter(emitterNames[currIdx]))
+                {
+                    auto entity = m_gameScene.createEntity();
+                    entity.addComponent<cro::Transform>().setPosition({pos.x, height, -pos.y});
+                    entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[currIdx]);
+                    entity.getComponent<cro::AudioEmitter>().play();
+                    entity.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(i));
+
+                    rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                }
+
+                currIdx = (currIdx + 1) % emitterNames.size();
+            }
+
+
+            /*for (auto i = 0; i < 2; ++i)
             {
                 for (auto j = 0; j < 2; ++j)
                 {
-                    static constexpr float height = 4.f;
                     glm::vec3 position(envOffset.x * (i + 1), height, -envOffset.y * (j + 1));
-
+                    txt.setPosition({ position.x, -position.z });
+                    txt.draw();
                     auto idx = i * 2 + j;
 
                     if (as.hasEmitter(emitterNames[idx + 4]))
@@ -3237,6 +3335,8 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                     }
 
                     position = { i * MapSize.x, height, -static_cast<float>(MapSize.y) * j };
+                    txt.setPosition({ position.x, -position.z });
+                    txt.draw();
 
                     if (as.hasEmitter(emitterNames[idx]))
                     {
@@ -3246,7 +3346,7 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                         entity.getComponent<cro::AudioEmitter>().play();
                     }
                 }
-            }
+            }*/
 
             //random incidental audio
             if (as.hasEmitter("incidental01")

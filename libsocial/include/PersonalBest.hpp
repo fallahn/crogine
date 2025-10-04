@@ -62,5 +62,5 @@ private:
     };
 
     //hmmm shouldn't we have this const somewhere?
-    std::array<ScoreEntry, 12 * 3> m_entries = {};
+    std::array<ScoreEntry, 13 * 3> m_entries = {};
 };

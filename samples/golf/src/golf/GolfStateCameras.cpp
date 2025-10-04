@@ -173,7 +173,7 @@ void GolfState::createCameras()
             }
 
             //fetch this explicitly so the transition cam also gets the correct zoom
-            float zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().fov;
+            const float zoom = std::max(m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().fov, 0.0001f);
             cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad * zoom, texSize.x / texSize.y, 0.1f, CameraFarPlane /** 1.25f*/, m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
@@ -2242,7 +2242,7 @@ void GolfState::updateLensFlare(cro::Entity e, float)
 
             //use length of screenPos to calc brightness / set vert colour
             const float Brightness = (cro::Util::Easing::easeOutCubic(1.f - std::min(1.f, glm::length(screenPos))) * 0.15f) + 0.05f;
-            cro::Colour c = cro::Colour(Brightness * 0.2f, 1.f, 1.f, 1.f);
+            cro::Colour c = cro::Colour(Brightness * m_lensFlare.attenuation * 0.2f, 1.f, 1.f, 1.f);
             std::int32_t i = 0;
 
             //create the quads

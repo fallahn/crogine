@@ -85,6 +85,7 @@ private:
     bool m_wantsPrediction;
     glm::vec3 m_predictionResult;
     std::int32_t m_predictionCount;
+    std::int32_t m_OOBCount; //number of times prediction returned OOB
     float m_puttingPower; //how much power is predicted by the power bar flag
 
     std::array<std::int32_t, ConstVal::MaxClients * ConstVal::MaxPlayers> m_cpuProfileIndices = {};

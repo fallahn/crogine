@@ -159,9 +159,9 @@ set(PROJECT_SRC
 
   ${PROJECT_DIR}/imgui/Gui.cpp
   ${PROJECT_DIR}/imgui/GuiClient.cpp
-  ${PROJECT_DIR}/imgui/ImCurveEdit.cpp
+  #${PROJECT_DIR}/imgui/ImCurveEdit.cpp
   ${PROJECT_DIR}/imgui/imfilebrowser.cpp
-  ${PROJECT_DIR}/imgui/ImGradient.cpp
+  #${PROJECT_DIR}/imgui/ImGradient.cpp
   ${PROJECT_DIR}/imgui/imgui.cpp
   ${PROJECT_DIR}/imgui/imgui_demo.cpp
   ${PROJECT_DIR}/imgui/imgui_draw.cpp
@@ -171,11 +171,12 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/imgui/imgui_stdlib.cpp
   ${PROJECT_DIR}/imgui/imgui_tables.cpp
   ${PROJECT_DIR}/imgui/imgui_widgets.cpp
+  ${PROJECT_DIR}/imgui/ImGuiDatePicker.cpp
   ${PROJECT_DIR}/imgui/ImGuizmo.cpp
-  ${PROJECT_DIR}/imgui/implot.cpp
-  ${PROJECT_DIR}/imgui/implot_demo.cpp
-  ${PROJECT_DIR}/imgui/implot_items.cpp
-  ${PROJECT_DIR}/imgui/ImSequencer.cpp
+  #${PROJECT_DIR}/imgui/implot.cpp
+  #${PROJECT_DIR}/imgui/implot_demo.cpp
+  #${PROJECT_DIR}/imgui/implot_items.cpp
+  #${PROJECT_DIR}/imgui/ImSequencer.cpp
 
   ${PROJECT_DIR}/network/NetClient.cpp
   ${PROJECT_DIR}/network/NetConf.cpp

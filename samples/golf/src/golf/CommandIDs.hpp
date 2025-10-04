@@ -52,7 +52,8 @@ struct CommandID final
         DroneCam        = 0x10000,
         HoleRing        = 0x20000,
         BullsEye        = 0x40000,
-        Ghost           = 0x80000
+        Ghost           = 0x80000, //20
+        MeasureWidget   = 0x100000
     };
 
     struct UI final
@@ -94,6 +95,7 @@ struct CommandID final
             static constexpr std::uint64_t PowerBarInner        = 0x100000000;
             static constexpr std::uint64_t BarEntLarge          = 0x200000000;
             static constexpr std::uint64_t PowerBarInnerLarge   = 0x400000000;
+            static constexpr std::uint64_t MeasureText          = 0x800000000; //displays distance when measuring a putt
 
             static constexpr std::uint64_t GarbageCollect = 0x1; //this is the same as the first entry! we're just renaming it for use in the Scrub game
         //}

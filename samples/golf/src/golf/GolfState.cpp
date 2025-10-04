@@ -233,6 +233,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_courseIndex           (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel            (sd, m_currentPlayer, m_textChat),
     m_minimapTexturePass    (MaxMinimapPasses),
+    m_measurePosition       (0.f),
     m_drawDebugMesh         (false)
 {
     if (Social::getLevel() < 1)
@@ -862,6 +863,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_textChat.toggleWindow(false, true, false);
             break;
         case SDLK_F6:
+        {
+            //hack to see if this fixes the black screen in simultaneous play
+            auto& cam = m_cameras[CameraID::Player].getComponent<cro::Camera>();
+            cam.resizeCallback(cam);
+        }
+        break;
+        case SDLK_F7:
             //cro::Console::doCommand("build_cubemaps");
         //    //logCSV();
         //{
@@ -875,7 +883,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //m_drawDepthMaps = !m_drawDepthMaps;
             //showCountdown(10);
 
-            /*m_sharedData.tutorialIndex = TutorialID::PuttAssist;
+            /*m_sharedData.tutorialIndex = TutorialID::PuttMeasure;
             requestStackPush(StateID::Tutorial);*/
             break;
         case SDLK_F8:
@@ -1670,6 +1678,16 @@ void GolfState::handleMessage(const cro::Message& msg)
                 };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+            //hides the elevation when putting - else this is done
+            //when we receive the swing animation packet
+            cmd.targetFlags = CommandID::UI::PinHeight;
+            cmd.action =
+                [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
             //restore the ball origin if buried
             if (m_activeAvatar->ballModel.isValid()) //may have disconnected mid-swing
             {
@@ -1741,6 +1759,12 @@ void GolfState::handleMessage(const cro::Message& msg)
         switch(data.type)
         {
         default: break;
+        case SceneEvent::ShowMeasureWidget:
+            showMeasureWidget();
+            break;
+        case SceneEvent::HideMeasureWidget:
+            hideMeasureWidget();
+            break;
         case SceneEvent::RequestToggleFreecam:
             if (!m_textChat.isVisible())
             {
@@ -2988,7 +3012,7 @@ bool GolfState::simulate(float dt)
             }
         }*/
 
-        const float rotation = m_inputParser.getCamRotation() * m_sharedData.mouseSpeed * dt;
+        const float rotation = m_inputParser.getCamRotation() * dt;
         if (/*getClub() != ClubID::Putter
             && */rotation != 0)
         {
@@ -4275,7 +4299,7 @@ void GolfState::createDrone()
         entity.getComponent<cro::Transform>().setPosition({ MapSizeFloat.x / 2.f, 1.f, -MapSizeFloat.y / 2.f });
         md.createModel(entity);
 
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMasked]);
         applyMaterialData(md, material);
         entity.getComponent<cro::Model>().setMaterial(0, material);
 
@@ -4842,7 +4866,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         auto position = ballEnt.getComponent<cro::Transform>().getPosition();
         position.y += Ball::Radius * 3.f;
 
-        auto labelPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position, m_renderTarget.getSize());
+        const auto labelPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position, m_renderTarget.getSize());
         const float halfWidth = m_renderTarget.getSize().x / 2.f;
 
         e.getComponent<cro::Transform>().setPosition(labelPos);
@@ -4905,7 +4929,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         }
 
 
-        float scale = m_sharedData.pixelScale ? 1.f : m_viewScale.x;
+        const float scale = m_sharedData.pixelScale ? 1.f : m_viewScale.x;
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
     //childList.push_back(entity); //don't do this it belongs to a different scene
@@ -5927,11 +5951,23 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             if (m_activeAvatar)
             {
                 auto animID = evt.packet.as<std::uint8_t>();
-                if (animID == AnimationID::Swing
-                    && getClub() > ClubID::PitchWedge)
+                if (animID == AnimationID::Swing)
                 {
-                    //we don't know the club server side to send correct animation *sigh*
-                    animID = AnimationID::Chip;
+                    if (getClub() > ClubID::PitchWedge)
+                    {
+                        //we don't know the club server side to send correct animation *sigh*
+                        animID = AnimationID::Chip;
+                    }
+
+                    //hide the elevation display
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::UI::PinHeight;
+                    cmd.action =
+                        [](cro::Entity e, float)
+                        {
+                            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        };
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                 }
 
                 //TODO scale club model to zero if not idle or swing
@@ -6295,6 +6331,8 @@ void GolfState::removeClient(std::uint8_t clientID)
 
 void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 {
+    m_measurePosition = glm::vec3(0.f);
+
     //clear putt counts
     for (auto& arr : m_puttCounter)
     {
@@ -7120,6 +7158,8 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    m_measurePosition = glm::vec3(0.f);
+
     if (m_sharedData.gameMode != GameMode::Tutorial)
     {
         updateProTip(player);
@@ -7260,7 +7300,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     m_puttViewState.isEnabled = true;
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
-    m_inputParser.setActive(localPlayer && !m_photoMode, m_currentPlayer.terrain, l, isCPU, lie);
+    m_inputParser.setActive(localPlayer && !m_photoMode, /*m_currentPlayer.terrain*/player.terrain, l, isCPU, lie);
     m_inputParser.setDistanceToHole(glm::length(m_holeData[m_currentHole].pin - player.position));
     m_restoreInput = localPlayer; //if we're in photo mode should we restore input parser?
     Achievements::setActive(localPlayer && !isCPU && m_allowAchievements);
@@ -7903,14 +7943,14 @@ void GolfState::hitBall()
         };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    //hide height to pin
-    cmd.targetFlags = CommandID::UI::PinHeight;
+    //hide height to pin - moved to animation event handler so it happens on all clients, not just active
+    /*cmd.targetFlags = CommandID::UI::PinHeight;
     cmd.action =
         [](cro::Entity e, float)
         {
             e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
 
     if (m_currentCamera == CameraID::Bystander
         && cro::Util::Random::value(0,1) == 0)

@@ -4872,6 +4872,12 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
         }
     }
 
+    if (m_voices.empty())
+    {
+        //possibly because no audio hardware was found
+        m_voices.emplace_back();
+    }
+
     //actual menu
     static constexpr std::size_t IndexClose     = 20000;
     static constexpr std::size_t IndexVoiceDown = 20001;

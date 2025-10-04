@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -51,6 +51,9 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/String.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
+#include <crogine/detail/glm/gtc/type_ptr.hpp>
+
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -86,16 +89,100 @@ namespace
     bool showVideoPlayer = false;
     bool showMusicPlayer = false;
     bool showBoilerplate = false;
+    bool showQuantizer = false;
+    bool showMoonPhase = true;
 
     cro::ConfigFile testFile;
+
+    const std::string QuantizeFrag =
+R"(
+uniform sampler2D u_texture;
+uniform int u_levels = 3;
+
+VARYING_IN vec2 v_texCoord;
+
+OUTPUT
+
+void main()
+{
+    vec4 colour = TEXTURE(u_texture, v_texCoord);
+
+    colour.rgb *= u_levels;
+    colour.rgb = round(colour.rgb);
+    colour.rgb /= u_levels;
+
+    FRAG_OUT = vec4(colour.rgb, colour.a);
+})";
+
+    const std::string MoonFrag =
+R"(
+uniform sampler2D u_texture;
+uniform mat2 u_rotation = mat2(1.0);
+uniform vec3 u_lightDir;
+
+VARYING_IN vec2 v_texCoord;
+
+OUTPUT
+
+vec3 sphericalNormal(vec2 coord)
+{
+//hack cos moon png is 1/4 size actual texture
+coord *= 2.0;
+coord -= 0.5;
+
+    coord = clamp(coord, 0.0, 1.0);
+
+    float dx  = ( coord.x - 0.5 ) * 2.0;
+    float dy  = ( coord.y - 0.5 ) * 2.0;
+    float distSqr = (dx * dx) + (dy * dy);
+         
+    return normalize(vec3(dx, dy, 1.0 - distSqr));
+}
+
+const float Levels = 20.0;
+const vec3 skyColour = vec3(0.01, 0.001, 0.1);
+
+void main()
+{
+    vec2 coord = v_texCoord - 0.5;
+    coord = u_rotation * coord;
+    coord += 0.5;
+
+    vec4 colour = TEXTURE(u_texture, coord);
+
+    vec3 normal = sphericalNormal(coord);
+    float amount = smoothstep(-0.1, 0.1, dot(normal, u_lightDir));
+
+    amount *= Levels;
+    amount = floor(amount);
+    amount /= Levels;
+
+    amount = 0.05 + (0.95 * amount);
+
+    FRAG_OUT = vec4(mix(skyColour, colour.rgb, amount), colour.a);
+})";
+
+    struct ShaderUniform final
+    {
+        std::uint32_t shaderID = 0;
+        std::int32_t levels = -1;
+        std::int32_t rotation = -1;
+    }quantizeUniform;
+
+    ShaderUniform moonUniform;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp& app)
     : cro::State    (stack, context),
     m_gameInstance  (app),
-    m_scene         (context.appInstance.getMessageBus())
+    m_scene         (context.appInstance.getMessageBus()),
+    m_timePicker    ()
 {
     app.unloadPlugin();
+
+    const auto t = std::time(nullptr);
+    m_timePicker = *std::gmtime(&t);
+    m_moonPhase.update(t);
 
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -209,6 +296,20 @@ void MenuState::render()
 {
     //draw any renderable systems
     m_scene.render();
+
+    if (m_quantizeOutput.available())
+    {
+        m_quantizeOutput.clear();
+        m_quantizeQuad.draw();
+        m_quantizeOutput.display();
+    }
+
+    if (m_moonOutput.available())
+    {
+        m_moonOutput.clear();
+        m_moonQuad.draw();
+        m_moonOutput.display();
+    }
 }
 
 //private
@@ -225,6 +326,26 @@ void MenuState::addSystems()
 void MenuState::loadAssets()
 {
     m_font.loadFromFile("assets/fonts/VeraMono.ttf");
+
+    if (m_quantizeShader.loadFromString(cro::SimpleDrawable::getDefaultVertexShader(), QuantizeFrag, "#define TEXTURED\n"))
+    {
+        quantizeUniform.shaderID = m_quantizeShader.getGLHandle();
+        quantizeUniform.levels = m_quantizeShader.getUniformID("u_levels");
+    }
+
+    if (m_moonShader.loadFromString(cro::SimpleDrawable::getDefaultVertexShader(), MoonFrag, "#define TEXTURED\n"))
+    {
+        moonUniform.shaderID = m_moonShader.getGLHandle();
+        moonUniform.levels = m_moonShader.getUniformID("u_lightDir");
+        moonUniform.rotation = m_moonShader.getUniformID("u_rotation");
+
+        if (m_moonInput.loadFromFile("assets/golf/images/skybox/moon.png"))
+        {
+            m_moonQuad.setTexture(m_moonInput);
+            m_moonQuad.setShader(m_moonShader);
+            m_moonOutput.create(m_moonInput.getSize().x, m_moonInput.getSize().y, false);
+        }
+    }
 }
 
 void MenuState::createScene()
@@ -595,6 +716,21 @@ void MenuState::createUI()
                         CSVToMap();
                     }
 
+                    if (ImGui::MenuItem("Image Quantizer"))
+                    {
+                        showQuantizer = !showQuantizer;
+                    }
+
+                    if (ImGui::MenuItem("Moon Phase"))
+                    {
+                        showMoonPhase = !showMoonPhase;
+                    }
+
+                    if (ImGui::MenuItem("AER Caluclator"))
+                    {
+                        m_aer.setVisible(!m_aer.getVisible());
+                    }
+
                     ImGui::EndMenu();
                 }
 
@@ -758,6 +894,16 @@ void MenuState::createUI()
                     }
                 }
                 ImGui::End();
+            }
+
+            if (showQuantizer)
+            {
+                imageQuantizer();
+            }
+
+            if (showMoonPhase)
+            {
+                moonPhase();
             }
 
             if (m_fileBrowser.HasSelected())
@@ -1127,4 +1273,101 @@ void MenuState::CSVToMap()
 
         LogI << "Wrote file successfully" << std::endl;
     }
+}
+
+void MenuState::imageQuantizer()
+{
+    if (ImGui::Begin("Quantizer", &showQuantizer))
+    {
+        if (ImGui::Button("Open"))
+        {
+            const auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
+            if (!path.empty())
+            {
+                if (m_quantizeInput.loadFromFile(path))
+                {
+                    m_quantizeQuad.setTexture(m_quantizeInput);
+                    m_quantizeQuad.setShader(m_quantizeShader);
+                    m_quantizeOutput.create(m_quantizeInput.getSize().x, m_quantizeInput.getSize().y, false);
+                }
+            }
+        }
+
+        if (m_quantizeOutput.available())
+        {
+            ImGui::SameLine();
+            if (ImGui::Button("Save"))
+            {
+                const auto path = cro::FileSystem::saveFileDialogue("", "png");
+                if (!path.empty())
+                {
+                    m_quantizeOutput.getTexture().saveToFile(path);
+                }
+            }
+            
+            static std::int32_t levels = 3;
+            if (ImGui::SliderInt("Levels", &levels, 1, 10))
+            {
+                levels = std::clamp(levels, 1, 10);
+                glUseProgram(quantizeUniform.shaderID);
+                glUniform1i(quantizeUniform.levels, levels);
+            }
+
+            const glm::vec2 size(m_quantizeOutput.getSize());
+            ImGui::Image(m_quantizeOutput.getTexture(), { size.x, size.y }, { 0.f,1.f }, { 1.f,0.f });
+
+        }
+    }
+    ImGui::End();
+}
+
+void MenuState::moonPhase()
+{
+    if (ImGui::Begin("Moon Phase", &showMoonPhase))
+    {
+        static float latitude = 0.f; //degrees, positive is north
+
+        if (ImGui::SliderFloat("Latitude", &latitude, -90.f, 90.f))
+        {
+            latitude = std::clamp(latitude, -90.f, 90.f);
+
+            if (m_moonOutput.available())
+            {
+                //rotate the tex coords to simulate latitude
+                const glm::vec2 rot = glm::vec2(std::sin(-latitude * cro::Util::Const::degToRad), std::cos(-latitude * cro::Util::Const::degToRad));
+                glm::mat2 rMat = glm::mat2(1.f);
+                rMat[0] = glm::vec2(rot.y, -rot.x);
+                rMat[1] = rot;
+
+                glUseProgram(moonUniform.shaderID);
+                glUniformMatrix2fv(moonUniform.rotation, 1, GL_FALSE, glm::value_ptr(rMat));
+            }
+        }
+
+        if (ImGui::DatePicker("Date", m_timePicker))
+        {
+            const auto t = std::mktime(&m_timePicker);
+            m_moonPhase.update(t);
+
+            if (m_moonOutput.available())
+            {
+                //rotate a light direction then set that as the uniform
+                const auto rotateAmount = (m_moonPhase.getPhase() * 2.f - 1.f) * cro::Util::Const::PI;
+                const glm::quat rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, rotateAmount, cro::Transform::X_AXIS);
+                const glm::vec3 lightDir = rotation * cro::Transform::Z_AXIS;
+
+                glUseProgram(moonUniform.shaderID);
+                glUniform3f(moonUniform.levels, lightDir.x, lightDir.y, lightDir.z);
+            }
+        }
+
+        ImGui::Text("Phase: %s, Percent: %3.2f, Day: %3.1f", m_moonPhase.getPhaseName().c_str(), m_moonPhase.getPhase(), m_moonPhase.getCycle());
+
+        if (m_moonOutput.available())
+        {
+            const auto size = glm::vec2(m_moonOutput.getSize());
+            ImGui::Image(m_moonOutput.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+        }
+    }
+    ImGui::End();
 }

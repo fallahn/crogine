@@ -341,11 +341,13 @@ R"(
 #include BAYER_MATRIX
 #include LIGHT_COLOUR
 
+uniform float u_rotation = 0.25;
+
 #include HSV
     vec3 complementaryColour(vec3 c)
     {
         vec3 a = rgb2hsv(c);
-        a.x += 0.25;
+        a.x += u_rotation;// 0.25;
         a.z *= 0.5;
         c = hsv2rgb(a);
         return c;

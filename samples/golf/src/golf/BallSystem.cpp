@@ -298,7 +298,7 @@ void BallSystem::setGimmeRadius(std::uint8_t rad)
 const BullsEye& BallSystem::spawnBullsEye()
 {
     //TODO how do we decide on a radius?
-    m_bullsEye.diametre = static_cast<float>(cro::Util::Random::value(8, 12));
+    m_bullsEye.diametre = static_cast<float>(cro::Util::Random::value(MinBullDiametre, MaxBullDiametre));
     if (m_puttFromTee)
     {
         m_bullsEye.diametre *= 0.032f;
@@ -426,39 +426,55 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         if (ball.delay < 0)
         {
             auto& tx = entity.getComponent<cro::Transform>();
-            
-            //add gravity
-            ball.velocity += Gravity * dt;
 
-            const auto t = getTerrain(tx.getPosition(), glm::vec3(0.f, -1.f, 0.f), 60.f);
-            const auto height = std::clamp(-t.penetration, 0.f, 60.f);
+            //helps prevent tunnelling through cliffs/flag pole
+            //TODO this is mostly wasted when we're high up, so we could make the iteration count dynamic
+            static constexpr std::int32_t Iterations = 3;
+            dt /= Iterations;
 
-            //add wind
-            const auto multiplier = getWindMultiplier(/*tx.getPosition().y - ball.startPoint.y*/height, glm::length(m_holeData->pin - tx.getPosition())) * 1.36f;
-            ball.velocity += m_windDirection * m_windStrength * multiplier * dt;
-            ball.windEffect = m_windStrength * multiplier;
+            for (auto f = 0; f < Iterations; ++f)
+            {
+                //add gravity
+                ball.velocity += Gravity * dt;
 
-            //add spin
-            ball.velocity += ball.initialSideVector * ball.spin.x * SideSpinInfluence * dt;
+                const auto t = getTerrain(tx.getPosition(), glm::vec3(0.f, -1.f, 0.f), 60.f);
+                const auto height = std::clamp(-t.penetration, 0.f, 60.f);
 
+                //add wind
+                const auto multiplier = getWindMultiplier(/*tx.getPosition().y - ball.startPoint.y*/height, glm::length(m_holeData->pin - tx.getPosition())) * 1.36f;
+                ball.velocity += m_windDirection * m_windStrength * multiplier * dt;
+                ball.windEffect = m_windStrength * multiplier;
 
-            //move by velocity
-            tx.move(ball.velocity * dt);
-
-            //rotate based on velocity
-            auto vel2 = glm::length2(ball.velocity);
-            static constexpr float MaxVel = 20.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
-            static constexpr float MaxRotation = 5.f;
-            float r = cro::Util::Const::TAU * (vel2 / MaxVel) * ball.rotation;// *ball.spin.x;
-            r = std::clamp(r, -MaxRotation, MaxRotation);
+                //add spin
+                ball.velocity += ball.initialSideVector * ball.spin.x * SideSpinInfluence * dt;
 
 
-            tx.rotate(cro::Transform::Y_AXIS, r * dt);
+                //move by velocity
+                tx.move(ball.velocity * dt);
 
-            //test collision
-            doCollision(entity);
-            //doBallCollision(entity);
+                //rotate based on velocity
+                auto vel2 = glm::length2(ball.velocity);
+                static constexpr float MaxVel = 20.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
+                static constexpr float MaxRotation = 5.f;
+                float r = cro::Util::Const::TAU * (vel2 / MaxVel) * ball.rotation;// *ball.spin.x;
+                r = std::clamp(r, -MaxRotation, MaxRotation);
 
+
+                tx.rotate(cro::Transform::Y_AXIS, r * dt);
+
+                //test collision
+                doCollision(entity);
+                //doBallCollision(entity);
+
+                if (ball.state != Ball::State::Flight)
+                {
+                    //TODO this might skip 1 Fth of dt here
+                    //is this a problem when switching states?
+                    //it ought to be added to the iteration
+                    //time of whichever state we switched to...
+                    break;
+                }
+            }
             CRO_ASSERT(!std::isnan(tx.getPosition().x), "");
             CRO_ASSERT(!std::isnan(ball.velocity.x), "");
         }
@@ -882,8 +898,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         if (ball.delay < 0)
         {
             ball.spin = { 0.f,0.f };
-
-
+            
             std::uint8_t terrain = TerrainID::Water;
             if (m_puttFromTee)
             {
@@ -907,10 +922,59 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                 }
                 auto pos = tx.getPosition();
-                auto height = getTerrain(pos).intersection.y;
-                pos.y = height;
+                pos.y = getTerrain(pos).intersection.y;
                 tx.setPosition(pos);
             }
+            //else if (ball.resetCount == 1)
+            //{
+            //    //this is probably a CPU player melting down
+            //    //so move to the nearest target
+            //    auto pos = tx.getPosition();
+
+            //    //if target is closer than tee check if target
+            //    if (glm::length2(pos - m_holeData->target) < glm::length2(pos - m_holeData->tee))
+            //    {
+            //        //or sub-target is closer (default sub-target is miles away)
+            //        if (glm::length2(pos - m_holeData->subtarget) < glm::length2(pos - m_holeData->target))
+            //        {
+            //            tx.setPosition(m_holeData->subtarget);
+            //        }
+            //        else
+            //        {
+            //            //we also have to move away in case we're in multi-target mode
+            //            tx.setPosition(m_holeData->target);
+
+            //            //TODO we probably only want to do this in multi-target mode
+            //            //but unfortunately we don't know what the game mode is here...
+            //            constexpr float Radius = static_cast<float>(MaxBullDiametre / 2) + 0.5f;
+            //            glm::vec3 testDir = glm::normalize(m_holeData->tee - m_holeData->target) * Radius;
+            //            auto testTerrain = getTerrain(m_holeData->target + testDir);
+            //            if (testTerrain.terrain == TerrainID::Scrub
+            //                || testTerrain.terrain == TerrainID::Water)
+            //            {
+            //                //move the other way
+            //                testDir = glm::normalize(m_holeData->pin - m_holeData->target) * Radius;
+
+            //                //hmm this is unlikely, but if we're still in the water
+            //                //we probably want to fall back to the tee?
+            //            }
+            //            tx.move(testDir);
+            //        }
+            //    }
+            //    //else move to tee
+            //    else
+            //    {
+            //        tx.setPosition(m_holeData->tee);
+            //    }
+
+            //    pos = tx.getPosition();
+            //    const auto terrainInf = getTerrain(pos);
+            //    terrain = terrainInf.terrain;
+            //    pos.y = terrainInf.intersection.y;
+            //    tx.setPosition(pos);
+
+            //    ball.resetCount = 0;
+            //}
             else
             {
 
@@ -928,6 +992,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //static constexpr float SearchHeight = 15.f;
 
                 const auto start = ball.startPoint;
+                const auto ballLandingPos = ballPos; //used if we get reset to where we started, below
+
                 //start.y = SearchHeight;
                 ballPos.y = start.y;// SearchHeight;// ball.startPoint.y;
                 glm::vec3 dir = start - ballPos;
@@ -935,13 +1001,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 const auto length = glm::length(dir);
                 dir /= length;
                 std::int32_t maxDist = static_cast<std::int32_t>(length /*- 10.f*/);
-
-                //if we're on a putting course take smaller steps for better accuracy
-                /*if (m_puttFromTee)
-                {
-                    dir /= 4.f;
-                    maxDist *= 4;
-                }*/
 
                 for (auto i = 0; i < maxDist; ++i)
                 {
@@ -976,13 +1035,88 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 {
                     //this is important else we'll end up trying to drive
                     //down a putting course :facepalm:
-                    terrain = /*m_puttFromTee ? TerrainID::Green :*/ TerrainID::Fairway;
+                    terrain = TerrainID::Fairway;
                     tx.setPosition(m_holeData->tee);
                 }
+
+                //only count this if we reset to the same (or near to) the position we started
+                else if (glm::length2(tx.getPosition() - ball.startPoint) < 64.f)
+                {
+                    //this is probably a CPU player melting down
+                    //so move to the nearest target
+
+
+                    //if target is closer than tee check if target
+                    const auto targetDir = m_holeData->target - ballLandingPos;
+                    const auto teeDir = m_holeData->tee - ballLandingPos;
+
+                    if (glm::length2(targetDir) < glm::length2(teeDir))
+                    {
+                        //or sub-target is closer (default sub-target is miles away)
+                        if (glm::length2(m_holeData->subtarget - ballLandingPos) < glm::length2(targetDir))
+                        {
+                            tx.setPosition(m_holeData->subtarget);
+                        }
+                        else
+                        {
+                            //in some cases where the target is behind the OOB we're only going backwards to repeat the 
+                            //same mistake over and over - so we want to move towards the pin instead...
+                            if (glm::dot(targetDir, m_holeData->pin - ballLandingPos) < 0)
+                            {
+                                auto newPos = m_holeData->pin;
+                                //obviously we don't want to land right in it
+
+                                auto terrain = getTerrain(newPos + dir).terrain;
+                                const auto dir = glm::normalize(m_holeData->target - newPos);
+                                std::int32_t steps = 0;
+
+                                while ((terrain != TerrainID::Scrub && terrain != TerrainID::Water) && steps < 10)
+                                {
+                                    newPos += dir;
+                                    terrain = getTerrain(newPos + dir).terrain;
+                                    steps++;
+                                }
+
+                                tx.setPosition(newPos);
+                            }
+                            else
+                            {
+                                //we also have to move away in case we're in multi-target mode
+                                tx.setPosition(m_holeData->target);
+
+                                //TODO we probably only want to do this in multi-target mode
+                                //but unfortunately we don't know what the game mode is here...
+                                constexpr float Radius = static_cast<float>(MaxBullDiametre / 2) + 0.5f;
+                                glm::vec3 testDir = glm::normalize(m_holeData->tee - m_holeData->target) * Radius;
+                                auto testTerrain = getTerrain(m_holeData->target + testDir);
+                                if (testTerrain.terrain == TerrainID::Scrub
+                                    || testTerrain.terrain == TerrainID::Water)
+                                {
+                                    //move the other way
+                                    testDir = glm::normalize(m_holeData->pin - m_holeData->target) * Radius;
+
+                                    //hmm this is unlikely, but if we're still in the water
+                                    //we probably want to fall back to the tee?
+                                }
+                                tx.move(testDir);
+                            }
+                        }
+                    }
+                    //else move to tee
+                    else
+                    {
+                        tx.setPosition(m_holeData->tee);
+                    }
+
+                    auto pos = tx.getPosition();
+                    const auto terrainInf = getTerrain(pos);
+                    terrain = terrainInf.terrain;
+                    pos.y = terrainInf.intersection.y;
+                    tx.setPosition(pos);
+
+                    //TODO we could do one final check to see if we're in water and replace at tee anyway
+                }
             }
-
-
-
 
 
             //raise message to say player should be penalised
@@ -1066,7 +1200,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             ball.lastStrokeDistance = glm::length(ball.startPoint - position);
             msg->distance = ball.lastStrokeDistance;
             ball.state = Ball::State::Idle;
-
 
             //changed this so we force update wind change when hole changes.
             if (m_processFlags != ProcessFlags::Predicting)

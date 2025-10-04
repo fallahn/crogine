@@ -127,7 +127,7 @@ private:
     cro::VideoPlayer m_billboardVideo;
     cro::RenderTexture m_billboardLeagueTexture;
 
-    bool m_hasSnow; //we hardly ever use this, but have to ttrack it anyway...
+    bool m_hasSnow; //we hardly ever use this, but have to track it anyway...
     bool m_ntpPro; //hack to display different score in same game mode as NTP
     bool m_hotSeat; //we're playing local hotseat
     std::int32_t m_baseClubSet; //used when playing with snek
@@ -318,6 +318,7 @@ private:
             BallShadow,
             BullsEye,
             PlayerFallBack,
+            MeasureWidget,
 
             Count
         };
@@ -490,6 +491,7 @@ private:
     struct LensFlare final
     {
         glm::vec3 sunPos = glm::vec3(0.f);
+        float attenuation = 1.f; //at night we attenuate based on moon phase
 
         std::uint32_t shaderID = 0;
         std::int32_t positionUniform = -1;
@@ -497,6 +499,7 @@ private:
     }m_lensFlare;
     void updateLensFlare(cro::Entity, float); //bound as a callback to the lens flare entity
     void updatePointFlares(cro::Entity, float); //bound as a callback to UI entity if night time
+    cro::Colour m_baseSkyColour;
 
     void setIdleGroup(std::uint8_t);
 
@@ -815,6 +818,10 @@ private:
     void updateLeague();
     void updateLeagueHole();
     void setUIHidden(bool hidden);
+    
+    glm::vec3 m_measurePosition;
+    void showMeasureWidget();
+    void hideMeasureWidget();
 
     struct GamepadNotify final
     {
@@ -854,7 +861,7 @@ private:
     void registerDebugCommands();
     void registerDebugWindows();
 
-    bool m_drawDepthMaps = false; //TODO remove me when done
+    //bool m_drawDepthMaps = false; //TODO remove me when done
     bool m_drawDebugMesh;
 
     struct NetworkDebugContext final

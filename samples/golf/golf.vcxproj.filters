@@ -681,6 +681,9 @@
     <ClCompile Include="src\sportsball\BackgroundPhysicsSystem.cpp">
       <Filter>Source Files\sportsball</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\MoonPhase.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">

@@ -445,7 +445,8 @@ private:
     void updateLobbyData(const net::NetEvent&);
     void updateRemoteContent(const ConnectionData&);
     
-    std::int32_t m_avUpdateCount = 0; //TODO test this properly and move to init list
+    bool m_serverMapAvailable; //false if the server chooses a map we don't have, eg DLC
+    std::int32_t m_avUpdateCount;
     std::queue<cro::Command> m_lobbyUpdateBuffer;
     void updateLobbyAvatars();
     void updateLobbyList();

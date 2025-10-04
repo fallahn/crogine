@@ -668,6 +668,7 @@
     <ClCompile Include="src\golf\MenuStateCan.cpp" />
     <ClCompile Include="src\golf\MessageOverlayState.cpp" />
     <ClCompile Include="src\golf\MiniBallSystem.cpp" />
+    <ClCompile Include="src\golf\MoonPhase.cpp" />
     <ClCompile Include="src\golf\NameScrollSystem.cpp" />
     <ClCompile Include="src\golf\NewsState.cpp" />
     <ClCompile Include="src\golf\NotificationSystem.cpp" />

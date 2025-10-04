@@ -1747,6 +1747,13 @@ bool GolfState::validateMap()
                 holeData.target.z = glm::clamp(holeData.target.z, -MapSizeFloat.y, 0.f);
                 propCount++;
             }
+            else if (name == "subtarget")
+            {
+                holeData.subtarget = holeProp.getValue<glm::vec3>();
+                holeData.subtarget.x = glm::clamp(holeData.subtarget.x, 0.f, MapSizeFloat.x);
+                holeData.subtarget.z = glm::clamp(holeData.subtarget.z, -MapSizeFloat.y, 0.f);
+                //this is optional so we don't count this as a property
+            }
             else if (name == "par")
             {
                 holeData.par = holeProp.getValue<std::int32_t>();
@@ -1792,7 +1799,7 @@ bool GolfState::validateMap()
 
 void GolfState::initScene()
 {
-    //this is horroible, but at least it's explicit :)
+    //this is horrible, but at least it's explicit :)
     if (m_sharedData.scoreType != ScoreType::Stroke
         && m_sharedData.scoreType != ScoreType::ShortRound
         && m_sharedData.scoreType != ScoreType::Stableford

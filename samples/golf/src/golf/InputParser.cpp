@@ -100,6 +100,7 @@ InputParser::InputParser(SharedStateData& sd, cro::Scene* s)
     m_holeDirection     (0.f),
     m_rotation          (0.f),
     m_maxRotation       (MaxRotation),
+    m_aimRotation       (0.f),
     m_power             (0.f),
     m_hook              (0.5f),
     m_powerbarDirection (1.f),
@@ -124,12 +125,12 @@ InputParser::InputParser(SharedStateData& sd, cro::Scene* s)
     //registerWindow([&]() 
     //    {
     //        ImGui::Begin("Controller");
-    //        const auto xPos = getAxisPosition(cro::GameController::AxisLeftX);
+    //        /*const auto xPos = getAxisPosition(cro::GameController::AxisLeftX);
     //        const std::int32_t deadzone = cro::GameController::LeftThumbDeadZone;
 
     //        ImGui::Text("Position : %d, Deadzones: %d, %d", xPos, -deadzone, deadzone);
-    //        ImGui::Text("Offset: %d", cro::GameController::LeftThumbDeadZone.getOffset());
-
+    //        ImGui::Text("Offset: %d", cro::GameController::LeftThumbDeadZone.getOffset());*/
+    //        ImGui::Text("Aim %3.2f", m_aimRotation);
     //        ImGui::End();
     //    });
 }
@@ -143,22 +144,36 @@ void InputParser::handleEvent(const cro::Event& evt)
         if (m_gameScene != nullptr //we don't do this on the driving range
             && (m_inputFlags & InputFlag::SpinMenu) == 0) 
         {
-            if (m_state == State::Aim)
+            switch (m_state)
             {
-                m_state = State::Drone;
-                auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
-                msg->type = SceneEvent::RequestSwitchCamera;
-                msg->data = CameraID::Drone;
+            default: break;
+            case State::Aim:
+                if (m_terrain == TerrainID::Green)
+                {
+                    showMeasureWidget();
+                }
+                else
+                {
+                    m_state = State::Drone;
+                    auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+                    msg->type = SceneEvent::RequestSwitchCamera;
+                    msg->data = CameraID::Drone;
 
-                Achievements::awardAchievement(AchievementStrings[AchievementID::BirdsEyeView]);
-            }
-            else if (m_state == State::Drone)
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::BirdsEyeView]);
+                }
+                break;
+            case State::Measure:
+                hideMeasureWidget();
+                break;
+            case State::Drone:
             {
                 m_state = State::Aim;
                 auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
                 msg->type = SceneEvent::RequestSwitchCamera;
                 msg->data = CameraID::Player;
             }
+                break;
+            }            
         }
     };
 
@@ -320,13 +335,20 @@ void InputParser::handleEvent(const cro::Event& evt)
 
                 else if (evt.cbutton.button == cro::GameController::DPadLeft)
                 {
-                    m_inputFlags |= InputFlag::Left;
-                    FineTune = FineTuneAmount;
+                    //such hax
+                    if (m_state != State::Measure)
+                    {
+                        m_inputFlags |= InputFlag::Left;
+                        FineTune = FineTuneAmount;
+                    }
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadRight)
                 {
-                    m_inputFlags |= InputFlag::Right;
-                    FineTune = FineTuneAmount;
+                    if (m_state != State::Measure)
+                    {
+                        m_inputFlags |= InputFlag::Right;
+                        FineTune = FineTuneAmount;
+                    }
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadUp)
                 {
@@ -345,7 +367,7 @@ void InputParser::handleEvent(const cro::Event& evt)
                     {
                         m_inputFlags |= InputFlag::Down;
                     }
-                    else//if (!isSpinputActive())
+                    else if (m_state != State::Measure)
                     {
                         //toggles freecam
                         auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
@@ -393,6 +415,10 @@ void InputParser::handleEvent(const cro::Event& evt)
                         auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
                         msg->type = SceneEvent::RequestSwitchCamera;
                         msg->data = CameraID::Player;
+                    }
+                    else if (m_state == State::Measure)
+                    {
+                        hideMeasureWidget();
                     }
                 }
                 else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::SpinMenu])
@@ -564,22 +590,30 @@ float InputParser::getCamRotation() const
 {
     if (m_active 
         && m_state == State::Aim
-        && (m_inputFlags & ~(InputFlag::Up | InputFlag::Down)) == 0) //ignore these as right stick might set them
+        /*&& (m_inputFlags & ~(InputFlag::Up | InputFlag::Down)) == 0*/) //ignore these as right stick might set them
     {
+        //aiming overrides
+        if (m_sharedData.rotateCamera
+            && !m_isCPU
+            && m_aimRotation != 0)
+        {
+            return m_aimRotation;
+        }
+
         if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateLeft))
         {
-            return 0.5f;
+            return 0.5f * m_sharedData.mouseSpeed;
         }
         if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateRight))
         {
-            return -0.5f;
+            return -0.5f * m_sharedData.mouseSpeed;
         }
 
         const auto x = -getAxisPosition(cro::GameController::AxisRightX);
         const auto dz = cro::GameController::LeftThumbDeadZone / 4;
         if (x < -dz || x > dz)
         {
-            return std::pow(static_cast<float>(x) / cro::GameController::AxisMax, 5.f);
+            return std::pow(static_cast<float>(x) / cro::GameController::AxisMax, 5.f) * m_sharedData.mouseSpeed;
         }
     }
 
@@ -797,6 +831,10 @@ void InputParser::update(float dt)
     {
         updateDroneCam(dt);
     }
+    else if (m_state == State::Measure)
+    {
+        updateMeasure();
+    }
     else
     {
         //if the stick is held, toggle the mini map
@@ -817,7 +855,8 @@ void InputParser::update(float dt)
     m_prevFlags = m_inputFlags;
 
     if (m_state == State::Aim
-        || m_state == State::Drone)
+        || m_state == State::Drone
+        || m_state == State::Measure)
     {
         m_bunkerTableIndex = (m_bunkerTableIndex + 1) % m_bunkerWavetable.size();
         m_roughTableIndex = (m_roughTableIndex + 1) % m_roughWavetable.size();
@@ -1198,19 +1237,31 @@ void InputParser::updateStroke(float dt)
             m_camMotion *= m_analogueAmount;
 
 
-            //rotation
-            const float rotation = RotationSpeed * FineTune * m_maxRotation * m_analogueAmount * dt;
+            //rotation - aim rotation is multiplied by dt AFTER it's returned.
+            const float rotation = RotationSpeed * FineTune * m_maxRotation * m_analogueAmount;
 
             if (m_inputFlags & InputFlag::Left)
             {
-                rotate(rotation);
+                m_aimRotation = rotation;
+                rotate(rotation * dt);
                 beginIcon();
             }
 
             if (m_inputFlags & InputFlag::Right)
             {
-                rotate(-rotation);
+                m_aimRotation = -rotation;
+                rotate(-rotation * dt);
                 beginIcon();
+            }
+
+            //stop rotation if input stops
+            if (((m_prevFlags & InputFlag::Left)
+                && (m_inputFlags & InputFlag::Left) == 0)
+                ||
+                ((m_prevFlags & InputFlag::Right)
+                    && (m_inputFlags & InputFlag::Right) == 0))
+            {
+                m_aimRotation = 0.f;
             }
 
             if (m_inputFlags & InputFlag::Action)
@@ -1627,8 +1678,14 @@ void InputParser::checkControllerInput()
     }
 
 
-    //this isn't really analogue, it just moves the camera so do it separately
-    yPos = getAxisPosition(cro::GameController::AxisRightY);
+    //if we're in measure mode we want the y input from
+    //the left stick, else overwrite it with right stick
+    if (m_state != State::Measure)
+    {
+        //this isn't really analogue, it just moves the camera so do it separately
+        yPos = getAxisPosition(cro::GameController::AxisRightY);
+    }
+
 
     if (yPos > (cro::GameController::LeftThumbDeadZone))
     {
@@ -1789,4 +1846,61 @@ void InputParser::endIcon()
     }
 
     m_iconActive = false;
+}
+
+void InputParser::showMeasureWidget()
+{
+    auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+    msg->type = SceneEvent::ShowMeasureWidget;
+
+    m_state = State::Measure;
+    beginIcon();
+}
+
+void InputParser::hideMeasureWidget()
+{
+    auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+    msg->type = SceneEvent::HideMeasureWidget;
+
+    m_state = State::Aim;
+    endIcon();
+}
+
+void InputParser::updateMeasure()
+{
+    checkControllerInput(); //updates the analogue amount
+
+    glm::vec3 v(0.f);
+    if (m_inputFlags & InputFlag::Left)
+    {
+        v.x -= 1.f;
+    }
+    if (m_inputFlags & InputFlag::Right)
+    {
+        v.x += 1.f;
+    }
+
+    if (m_inputFlags & InputFlag::Up)
+    {
+        v.z -= 1.f;
+    }
+    if (m_inputFlags & InputFlag::Down)
+    {
+        v.z += 1.f;
+    }
+
+    if (const auto l2 = glm::length2(v);
+        l2 != 0)
+    {
+        v /= std::sqrt(l2);
+        v *= m_analogueAmount;
+
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::MeasureWidget;
+        cmd.action = [v](cro::Entity e, float)
+            {
+                e.getComponent<cro::Callback>().setUserData<glm::vec3>(v);
+            };
+        m_gameScene->getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
 }
