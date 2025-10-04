@@ -79,7 +79,7 @@ static const std::array<std::string, ChallengeID::Count> ChallengeDescriptions =
     "Make 50 Nice Putts",
     "Hit 25 random bull's eyes",
     "Play a full 18 (or 12) hole round in every game mode in Free Play",
-    "Play 9 holes on each course against at least 3 human or CPU players",
+    "Play 9 holes on each non-DLC course against at least 3 human or CPU players",
     "Get the equivalent of 10 Boomerang achievements",
     "Get 99% or better on each target on the Driving Range",
     "Take 50 gimmes resulting from a Near Miss",

@@ -536,7 +536,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
 
     //monthly challenge status
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 49.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 49.f, 0.2f }); //TODO set this to 18 and re-arrange the number of days string
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(Social::getMonthlyChallenge().getProgressString());
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -558,7 +558,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     auto textEnt = entity;
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 11.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 11.f, 0.1f }); //TODO set this to 46
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Bonus Challenge! (1000xp)");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -578,7 +578,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
         std::vector<cro::Vertex2D> verts;
 
         entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, -24.f,-0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -24.f,-0.1f }); //TODO set this to 11
         entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
 
         if (flags != std::numeric_limits<std::uint32_t>::max())
