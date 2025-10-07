@@ -92,7 +92,15 @@ namespace cro
         void onEntityRemoved(Entity) override;
         void flushEntity(Entity) override;
 
-        std::vector<float> m_dataBuffer;
+        struct VertexLayout final
+        {
+            static constexpr std::int16_t DecimalShift = 1000;
+            std::array<float, 3> position = {};
+            std::array<std::uint8_t, 4> colour = {};
+            std::array<std::int16_t, 3> normal = {}; //we multiply by 1000 for 4 decimal places of precision
+        };
+
+        std::vector<VertexLayout> m_dataBuffer;
         std::vector<std::uint32_t> m_vboIDs;
         std::vector<std::uint32_t> m_vaoIDs; //< used on desktop
         std::size_t m_nextBuffer;
@@ -132,8 +140,11 @@ namespace cro
             struct AttribData final
             {
                 std::int32_t index = 0;
-                std::int32_t attribSize = 0;
+                std::int32_t size = 0;
                 std::int32_t offset = 0;
+
+                std::uint32_t glType = 0; //GL_FLOAT, UBYTE etc
+                std::uint32_t glNormalised = 0; //GL_FALSE
             };
             std::array<AttribData, 3u> attribData;
             std::uint32_t id = 0;

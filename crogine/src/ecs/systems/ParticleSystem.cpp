@@ -93,18 +93,25 @@ namespace
         VARYING_OUT LOW float v_currentFrame;
         VARYING_OUT HIGH float v_depth;
 
+#if !defined(DEC_SHIFT)
+#define DEC_SHIFT 1000.0
+#endif
+
         void main()
         {
             v_colour = a_colour;
 
-            vec2 rot = vec2(sin(a_normal.x), cos(a_normal.x));
+            //these are sent as 16 bit integers
+            vec3 normal = a_normal / DEC_SHIFT;
+
+            vec2 rot = vec2(sin(normal.x), cos(normal.x));
             v_rotation[0] = vec2(rot.y, -rot.x);
             v_rotation[1]= rot;
 
-            v_currentFrame = a_normal.z;
+            v_currentFrame = normal.z;
 
             gl_Position = u_viewProjection * a_position;
-            gl_PointSize = u_viewportHeight * u_projection[1][1] / gl_Position.w * u_particleSize * a_normal.y;
+            gl_PointSize = u_viewportHeight * u_projection[1][1] / gl_Position.w * u_particleSize * normal.y;
 
             v_depth = gl_Position.z / gl_Position.w;
 
@@ -203,9 +210,7 @@ LIGHT_OUT = vec4(vec3(0.0), 1.0);
     constexpr std::size_t MaxVertData = ParticleEmitter::MaxParticles * (3 + 4 + 3); //pos, colour, rotation/scale vert attribs
     const std::size_t MaxParticleSystems = 128; //max number of VBOs - must be divisible by min count
     const std::size_t MinParticleSystems = 4; //min amount before resizing - this many added on resize (so don't make too large!!)
-    const std::size_t VertexSize = 10 * sizeof(float); //pos, colour, rotation/scale vert attribs
-
-
+    
     bool inFrustum(const Frustum& frustum, const ParticleEmitter& emitter)
     {
         bool visible = true;
@@ -247,6 +252,8 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
         "#define SUNLIGHT\n", "#define BLEND_ADD\n", "#define BLEND_MULTIPLY\n"
     };
 
+    const std::string DecShift = "#define DEC_SHIFT " + std::to_string(VertexLayout::DecimalShift) + "\n";
+
     for (auto i = 0; i < ShaderID::Count; ++i)
     {
         auto& shader = m_shaders.emplace_back(std::make_unique<Shader>());
@@ -256,7 +263,7 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
         //ATTRIB MAPPING RELIES ON ALL VARIANTS USING THE SAME VERTEX SHADER
         //so please avoid changing this if you can...
         std::fill(handle.uniformIDs.begin(), handle.uniformIDs.end(), -1);
-        if (!shader->loadFromString(vertex, fragment, Defines[i]))
+        if (!shader->loadFromString(vertex, fragment, Defines[i] + DecShift))
         {
             Logger::log("Failed to compile Particle shader", Logger::Type::Error);
         }
@@ -287,16 +294,22 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
             //map attributes
             const auto& attribMap = shader->getAttribMap();
             handle.attribData[0].index = attribMap[Mesh::Position];
-            handle.attribData[0].attribSize = 3;
+            handle.attribData[0].size = 3;
             handle.attribData[0].offset = 0;
+            handle.attribData[0].glNormalised = GL_FALSE;
+            handle.attribData[0].glType = GL_FLOAT;
 
             handle.attribData[1].index = attribMap[Mesh::Colour];
-            handle.attribData[1].attribSize = 4;
-            handle.attribData[1].offset = 3 * sizeof(float);
+            handle.attribData[1].size = 4;
+            handle.attribData[1].offset = 3 * sizeof(float); //this is size of previous attrib
+            handle.attribData[1].glNormalised = GL_TRUE;
+            handle.attribData[1].glType = GL_UNSIGNED_BYTE;
 
             handle.attribData[2].index = attribMap[Mesh::Normal]; //actually rotation/scale just using the existing naming convention
-            handle.attribData[2].attribSize = 3;
-            handle.attribData[2].offset = (3 + 4) * sizeof(float);
+            handle.attribData[2].size = 3;
+            handle.attribData[2].offset = handle.attribData[1].offset + (4 * sizeof(std::uint8_t));
+            handle.attribData[2].glNormalised = GL_FALSE;
+            handle.attribData[2].glType = GL_SHORT;
         }
     }
     cro::Image img;
@@ -642,29 +655,28 @@ void ParticleSystem::process(float dt)
 #endif
 
         //update VBO
-        std::size_t idx = 0;
         for (auto i = 0u; i < emitter.m_nextFreeParticle; ++i)
         {
             const auto& p = emitter.m_particles[i];
 
             //position
-            m_dataBuffer[idx++] = p.position.x;
-            m_dataBuffer[idx++] = p.position.y;
-            m_dataBuffer[idx++] = p.position.z;
+            m_dataBuffer[i].position[0] = p.position.x;
+            m_dataBuffer[i].position[1] = p.position.y;
+            m_dataBuffer[i].position[2] = p.position.z;
 
             //colour
-            m_dataBuffer[idx++] = p.colour.getRed();
-            m_dataBuffer[idx++] = p.colour.getGreen();
-            m_dataBuffer[idx++] = p.colour.getBlue();
-            m_dataBuffer[idx++] = p.colour.getAlpha();
+            m_dataBuffer[i].colour[0] = p.colour.getRedByte();
+            m_dataBuffer[i].colour[1] = p.colour.getGreenByte();
+            m_dataBuffer[i].colour[2] = p.colour.getBlueByte();
+            m_dataBuffer[i].colour[3] = p.colour.getAlphaByte();
 
             //rotation/size/animation
-            m_dataBuffer[idx++] = p.rotation * Util::Const::degToRad;
-            m_dataBuffer[idx++] = p.scale;
-            m_dataBuffer[idx++] = static_cast<float>(p.frameID);
+            m_dataBuffer[i].normal[0] = static_cast<std::int16_t>((p.rotation * Util::Const::degToRad) * VertexLayout::DecimalShift);
+            m_dataBuffer[i].normal[1] = static_cast<std::int16_t>(p.scale * VertexLayout::DecimalShift);
+            m_dataBuffer[i].normal[2] = static_cast<std::int16_t>(p.frameID * VertexLayout::DecimalShift);
         }
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
-        glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, idx * sizeof(float), m_dataBuffer.data()));
+        glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, emitter.m_nextFreeParticle * sizeof(VertexLayout), m_dataBuffer.data()));
     }
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -886,13 +898,14 @@ void ParticleSystem::allocateBuffer()
     glCheck(glBufferData(GL_ARRAY_BUFFER, MaxVertData * sizeof(float), nullptr, GL_DYNAMIC_DRAW));
 
 #ifdef PLATFORM_DESKTOP
-    //HMMMMMMM this only works because all the shaders use the same vertex shader
-    for(auto [index, attribSize, offset] : m_shaderHandles[0].attribData)
+    //HMMMMMMM this only works because all the particle shaders use the same vertex shader
+    //for(auto [index, attribSize, offset] : m_shaderHandles[0].attribData)
+    for(const auto& attrib : m_shaderHandles[0].attribData)
     {
-        glCheck(glEnableVertexAttribArray(index));
-        glCheck(glVertexAttribPointer(index, attribSize,
-            GL_FLOAT, GL_FALSE, VertexSize,
-            reinterpret_cast<void*>(static_cast<intptr_t>(offset))));
+        glCheck(glEnableVertexAttribArray(attrib.index));
+        glCheck(glVertexAttribPointer(attrib.index, attrib.size,
+            attrib.glType, attrib.glNormalised, sizeof(VertexLayout),
+            reinterpret_cast<void*>(static_cast<intptr_t>(attrib.offset))));
     }
 
     glCheck(glBindVertexArray(0));
