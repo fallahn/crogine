@@ -51,8 +51,10 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Wavetable.hpp>
+#include <crogine/util/Maths.hpp>
 
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/Vertex2D.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/detail/OpenGL.hpp>
 
@@ -166,6 +168,19 @@ AnimBlendState::AnimBlendState(cro::StateStack& stack, cro::State::Context conte
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus())
 {
+    const auto rem = [](float v)
+        {
+            const auto s = cro::Util::Maths::sgn(v);
+            const auto vNorm = s * v;
+            v = ((vNorm) - std::floor(vNorm))* s;
+            LogI << v << std::endl;
+        };
+    rem(23423.567f);
+    rem(-43.765f);
+
+    LogI << cro::Detail::normaliseTo<std::int16_t>(0.5f) << std::endl;
+    LogI << cro::Detail::normaliseTo<std::int16_t>(-0.25f) << std::endl;
+
     context.mainWindow.loadResources([this]() {
         addSystems();
         loadAssets();

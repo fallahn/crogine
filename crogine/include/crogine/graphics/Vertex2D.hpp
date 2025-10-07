@@ -31,12 +31,71 @@ source distribution.
 
 #include <crogine/Config.hpp>
 
+#include <crogine/detail/Assert.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/graphics/Colour.hpp>
 
+#include <crogine/util/Maths.hpp>
+
+#include <limits>
+
 namespace cro
 {
+    namespace Detail
+    {
+        //the real question is will all this processing
+        //actually offset the advantage of smaller vertices?
+
+        template <typename T> 
+        constexpr T normaliseTo(float v)
+        {
+            static_assert(std::is_pod<T>::value, "");
+            const auto s = Util::Maths::sgn(v);
+
+            if constexpr (std::is_unsigned<T>::value)
+            {
+                CRO_ASSERT(s >= 0, "");
+            }
+
+            const auto vs = v * s;
+            v = (vs - std::floor(vs));
+
+            return static_cast<T>(static_cast<float>(std::numeric_limits<T>::max()) * v) * s;
+        }
+    }
+
+    /*!
+    \brief Store normalised UV coordinates
+    as 16 bit integers.
+    */
+    struct CRO_EXPORT_API VertexUV final
+    {
+        std::int16_t u = 0;
+        std::int16_t v = 0;
+
+        constexpr VertexUV() = default;
+        constexpr VertexUV(float x, float y)
+            : u (Detail::normaliseTo<std::int16_t>(x)),
+            v   (Detail::normaliseTo<std::int16_t>(y))
+        {
+
+        }
+        constexpr VertexUV(glm::vec2 uv)
+            : u (Detail::normaliseTo<std::int16_t>(uv.x)),
+            v   (Detail::normaliseTo<std::int16_t>(uv.y))
+        {
+
+        }
+
+        VertexUV& operator = (glm::vec2 uv)
+        {
+            u = Detail::normaliseTo<std::uint16_t>(uv.x);
+            v = Detail::normaliseTo<std::uint16_t>(uv.y);
+            return *this;
+        }
+    };
+
     /*!
     \brief 2D vertex data struct
     Used to describe the layout of 2D drawable vertices

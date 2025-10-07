@@ -71,7 +71,7 @@ namespace cro
             if it has no value.
             */
             template <typename T>
-            std::int32_t sgn(T val)
+            constexpr std::int32_t sgn(T val)
             {
                 static_assert(std::is_convertible<T, std::int32_t>::value);
                 return (T(0) < val) - (val < T(0));
