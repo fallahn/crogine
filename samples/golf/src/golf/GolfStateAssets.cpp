@@ -1068,6 +1068,18 @@ void GolfState::loadMap()
                                                 pEnt.getComponent<cro::ParticleEmitter>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
                                                 pEnt.addComponent<cro::CommandTarget>().ID = CommandID::ParticleEmitter;
                                                 ent.getComponent<cro::Transform>().addChild(pEnt.getComponent<cro::Transform>());
+                                                
+                                                //TODO deactivate this when particles stop
+                                                ent.addComponent<cro::Callback>().active = true;
+                                                ent.getComponent<cro::Callback>().setUserData<glm::vec3>(ent.getComponent<cro::Transform>().getPosition());
+                                                ent.getComponent<cro::Callback>().function =
+                                                    [pEnt](cro::Entity e, float dt) mutable
+                                                    {
+                                                        auto prevPos = e.getComponent<cro::Callback>().getUserData<glm::vec3>();
+                                                        auto pos = e.getComponent<cro::Transform>().getPosition();
+                                                        pEnt.getComponent<cro::ParticleEmitter>().parentVelocity = (pos - prevPos) * (1.f / dt);
+                                                        e.getComponent<cro::Callback>().setUserData<glm::vec3>(pos);
+                                                    };
                                                 holeData.particleEntities.push_back(pEnt);
                                             }
                                         }
@@ -1170,7 +1182,7 @@ void GolfState::loadMap()
                                 glm::vec3 position(0.f);
                                 std::string path;
 
-                                for (auto particleProp : particleProps)
+                                for (const auto& particleProp : particleProps)
                                 {
                                     auto propName = particleProp.getName();
                                     if (propName == "path")

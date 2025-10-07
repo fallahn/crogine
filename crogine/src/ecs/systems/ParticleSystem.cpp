@@ -531,7 +531,7 @@ void ParticleSystem::process(float dt)
                         randRot = glm::rotate(randRot, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::Z_AXIS);
 
 
-                        p.velocity = randRot * settings.initialVelocity;
+                        p.velocity = (randRot * settings.initialVelocity) + emitter.parentVelocity;
                         p.rotation = (settings.randomInitialRotation) ? Util::Random::value(-Util::Const::PI, Util::Const::PI) : 0.f;
                         p.scale = EmitterScale;
                         p.acceleration = settings.acceleration;

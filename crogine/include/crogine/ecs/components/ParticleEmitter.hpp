@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -165,6 +165,10 @@ namespace cro
 
         static const std::uint32_t MaxParticles = 10000u;
         EmitterSettings settings;
+
+        //added to settings velocity when spawning particle
+        //this should be in world space
+        glm::vec3 parentVelocity = glm::vec3(0.f);
 
 #ifdef CRO_DEBUG_
         bool wasCulledLastFrame() const { return m_culledLastFrame; }
