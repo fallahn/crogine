@@ -316,50 +316,95 @@ void Scene::enableSkybox()
         {
             //only using positions - remember we looking from
             //the inside so wind the verts accordingly...
-            std::array<float, 108> verts = {
-                 //far
-                -0.5f,  0.5f, -0.5f,
-                -0.5f, -0.5f, -0.5f,
-                 0.5f, -0.5f, -0.5f,
-                 0.5f, -0.5f, -0.5f,
-                 0.5f,  0.5f, -0.5f,
-                -0.5f,  0.5f, -0.5f,
-                 //left
-                -0.5f, -0.5f,  0.5f,
-                -0.5f, -0.5f, -0.5f,
-                -0.5f,  0.5f, -0.5f,
-                -0.5f,  0.5f, -0.5f,
-                -0.5f,  0.5f,  0.5f,
-                -0.5f, -0.5f,  0.5f,
-                 //right
-                 0.5f, -0.5f, -0.5f,
-                 0.5f, -0.5f,  0.5f,
-                 0.5f,  0.5f,  0.5f,
-                 0.5f,  0.5f,  0.5f,
-                 0.5f,  0.5f, -0.5f,
-                 0.5f, -0.5f, -0.5f,
-                 //front
-                -0.5f, -0.5f,  0.5f,
-                -0.5f,  0.5f,  0.5f,
-                 0.5f,  0.5f,  0.5f,
-                 0.5f,  0.5f,  0.5f,
-                 0.5f, -0.5f,  0.5f,
-                -0.5f, -0.5f,  0.5f,
-                 //top
-                -0.5f,  0.5f, -0.5f,
-                 0.5f,  0.5f, -0.5f,
-                 0.5f,  0.5f,  0.5f,
-                 0.5f,  0.5f,  0.5f,
-                -0.5f,  0.5f,  0.5f,
-                -0.5f,  0.5f, -0.5f,
-                 //bottom
-                -0.5f, -0.5f, -0.5f,
-                -0.5f, -0.5f,  0.5f,
-                 0.5f, -0.5f, -0.5f,
-                 0.5f, -0.5f, -0.5f,
-                -0.5f, -0.5f,  0.5f,
-                 0.5f, -0.5f,  0.5f
+            std::array<std::int8_t, 108> verts = {
+               //far
+               -63,  63, -63,
+               -63, -63, -63,
+                63, -63, -63,
+                63, -63, -63,
+                63,  63, -63,
+               -63,  63, -63,
+               //left
+               -63, -63,  63,
+               -63, -63, -63,
+               -63,  63, -63,
+               -63,  63, -63,
+               -63,  63,  63,
+               -63, -63,  63,
+               //right
+                63, -63, -63,
+                63, -63,  63,
+                63,  63,  63,
+                63,  63,  63,
+                63,  63, -63,
+                63, -63, -63,
+               //front
+               -63, -63,  63,
+               -63,  63,  63,
+                63,  63,  63,
+                63,  63,  63,
+                63, -63,  63,
+               -63, -63,  63,
+               //top
+               -63,  63, -63,
+                63,  63, -63,
+                63,  63,  63,
+                63,  63,  63,
+               -63,  63,  63,
+               -63,  63, -63,
+               //bottom
+               -63, -63, -63,
+               -63, -63,  63,
+                63, -63, -63,
+                63, -63, -63,
+               -63, -63,  63,
+                63, -63,  63
             };
+
+            //std::array<float, 108> verts = {
+            //     //far
+            //    -0.5f,  0.5f, -0.5f,
+            //    -0.5f, -0.5f, -0.5f,
+            //     0.5f, -0.5f, -0.5f,
+            //     0.5f, -0.5f, -0.5f,
+            //     0.5f,  0.5f, -0.5f,
+            //    -0.5f,  0.5f, -0.5f,
+            //     //left
+            //    -0.5f, -0.5f,  0.5f,
+            //    -0.5f, -0.5f, -0.5f,
+            //    -0.5f,  0.5f, -0.5f,
+            //    -0.5f,  0.5f, -0.5f,
+            //    -0.5f,  0.5f,  0.5f,
+            //    -0.5f, -0.5f,  0.5f,
+            //     //right
+            //     0.5f, -0.5f, -0.5f,
+            //     0.5f, -0.5f,  0.5f,
+            //     0.5f,  0.5f,  0.5f,
+            //     0.5f,  0.5f,  0.5f,
+            //     0.5f,  0.5f, -0.5f,
+            //     0.5f, -0.5f, -0.5f,
+            //     //front
+            //    -0.5f, -0.5f,  0.5f,
+            //    -0.5f,  0.5f,  0.5f,
+            //     0.5f,  0.5f,  0.5f,
+            //     0.5f,  0.5f,  0.5f,
+            //     0.5f, -0.5f,  0.5f,
+            //    -0.5f, -0.5f,  0.5f,
+            //     //top
+            //    -0.5f,  0.5f, -0.5f,
+            //     0.5f,  0.5f, -0.5f,
+            //     0.5f,  0.5f,  0.5f,
+            //     0.5f,  0.5f,  0.5f,
+            //    -0.5f,  0.5f,  0.5f,
+            //    -0.5f,  0.5f, -0.5f,
+            //     //bottom
+            //    -0.5f, -0.5f, -0.5f,
+            //    -0.5f, -0.5f,  0.5f,
+            //     0.5f, -0.5f, -0.5f,
+            //     0.5f, -0.5f, -0.5f,
+            //    -0.5f, -0.5f,  0.5f,
+            //     0.5f, -0.5f,  0.5f
+            //};
 
 #ifdef PLATFORM_DESKTOP
             glCheck(glGenVertexArrays(1, &m_skybox.vao));
@@ -367,12 +412,12 @@ void Scene::enableSkybox()
 #endif
             glCheck(glGenBuffers(1, &m_skybox.vbo));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
-            glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
+            glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size(), verts.data(), GL_STATIC_DRAW));
 
 #ifdef PLATFORM_DESKTOP
             const auto& attribs = m_skyboxShaders[SkyboxType::Coloured].getAttribMap();
             glCheck(glEnableVertexAttribArray(attribs[0]));
-            glCheck(glVertexAttribPointer(attribs[0], 3, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(3 * sizeof(float)), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
+            glCheck(glVertexAttribPointer(attribs[0], 3, GL_BYTE, GL_TRUE, 0, reinterpret_cast<void*>(static_cast<intptr_t>(0))));
             glCheck(glEnableVertexAttribArray(0));
 
             glCheck(glBindVertexArray(0));
