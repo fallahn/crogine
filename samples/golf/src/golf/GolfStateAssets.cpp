@@ -3252,6 +3252,8 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
 {
     if (cro::AudioMixer::hasAudioRenderer())
     {
+        std::string planePath = "assets/golf/models/plane.cmt";
+
         if (m_sharedData.nightTime)
         {
             auto ext = cro::FileSystem::getFileExtension(m_audioPath);
@@ -3261,6 +3263,8 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
             {
                 m_audioPath = nightPath;
             }
+
+            planePath = "assets/golf/models/plane_night.cmt";
         }
 
         //evenly spaced points with ambient audio
@@ -3367,7 +3371,7 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                 cro::ModelDefinition md(m_resources);
                 cro::Entity planeEnt;
                 if (loadPlane &&
-                    md.loadFromFile("assets/golf/models/plane.cmt"))
+                    md.loadFromFile(planePath))
                 {
                     static constexpr glm::vec3 Start(-32.f, 60.f, 20.f);
                     static constexpr glm::vec3 End(352.f, 60.f, -220.f);
@@ -3399,7 +3403,7 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                             }
                         };
 
-                    auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+                    auto material = m_resources.materials.get(m_materialIDs[m_sharedData.nightTime ? MaterialID::CelTexturedMaskedNoWind : MaterialID::CelTextured]);
                     applyMaterialData(md, material);
 
                     //TODO we should be reading the texture size from the model...

@@ -144,9 +144,9 @@ namespace
     {
         //TODO HMMMMMM the stat IDs aren't in order for non-gns
 #ifdef USE_GNS
-        std::int32_t MaxStat = StatID::Course12Complete;
+        contexpr std::int32_t MaxStat = StatID::Course12Complete;
 #else
-        std::int32_t MaxStat = StatID::Course10Complete;
+        constexpr std::int32_t MaxStat = StatID::Course10Complete;
 #endif
         bool awarded = true;
         for (std::int32_t i = StatID::Course01Complete; i < MaxStat + 1; ++i)
