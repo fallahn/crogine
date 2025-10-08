@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -131,25 +131,25 @@ void cro::Colour::setAlpha(float alpha)
     a = alpha;
 }
 
-constexpr std::uint8_t cro::Colour::getRedByte() const
-{
-    return static_cast<std::uint8_t>(255.f * r);
-}
-
-constexpr std::uint8_t cro::Colour::getGreenByte() const
-{
-    return static_cast<std::uint8_t>(255.f * g);
-}
-
-constexpr std::uint8_t cro::Colour::getBlueByte() const
-{
-    return static_cast<std::uint8_t>(255.f * b);
-}
-
-constexpr std::uint8_t cro::Colour::getAlphaByte() const
-{
-    return static_cast<std::uint8_t>(255.f * a);
-}
+//constexpr std::uint8_t cro::Colour::getRedByte() const
+//{
+//    return static_cast<std::uint8_t>(255.f * r);
+//}
+//
+//constexpr std::uint8_t cro::Colour::getGreenByte() const
+//{
+//    return static_cast<std::uint8_t>(255.f * g);
+//}
+//
+//constexpr std::uint8_t cro::Colour::getBlueByte() const
+//{
+//    return static_cast<std::uint8_t>(255.f * b);
+//}
+//
+//constexpr std::uint8_t cro::Colour::getAlphaByte() const
+//{
+//    return static_cast<std::uint8_t>(255.f * a);
+//}
 
 float cro::Colour::getRed() const
 {
