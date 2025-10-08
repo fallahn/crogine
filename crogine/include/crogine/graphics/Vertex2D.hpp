@@ -65,6 +65,10 @@ namespace cro
             }
         }
 
+        /*
+        Low Precision Colour
+        Helper class to enable normalised integer values in Vertex2D
+        */
         struct ColourLowP final
         {
             std::uint8_t r = 0;
@@ -140,7 +144,6 @@ namespace cro
 
         glm::vec2 position = glm::vec2(0.f);
         glm::vec2 UV = glm::vec2(0.f);
-        //Colour colour = Colour(Detail::White);
         Detail::ColourLowP colour = Colour(Detail::White);
     };
 }
