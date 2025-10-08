@@ -480,7 +480,7 @@ void SimpleDrawable::updateVAO(const Shader& shader)
         glCheck(glBindVertexArray(m_vao));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
 
-        constexpr auto stride = 8 * static_cast<std::uint32_t>(sizeof(float)); //size of a vert
+        constexpr auto stride = sizeof(Vertex2D); //size of a vert
 
         const auto& attribs = shader.getAttribMap();
         
@@ -502,7 +502,7 @@ void SimpleDrawable::updateVAO(const Shader& shader)
         //colour
         if (attribs[Mesh::Colour] > -1)
         {
-            glCheck(glVertexAttribPointer(attribs[Mesh::Colour], 4, GL_FLOAT, GL_FALSE, stride, (void*)(4 * sizeof(float))));
+            glCheck(glVertexAttribPointer(attribs[Mesh::Colour], 4, GL_UNSIGNED_BYTE, GL_TRUE, stride, (void*)(4 * sizeof(float))));
             glCheck(glEnableVertexAttribArray(2));
         }
         glCheck(glBindVertexArray(0));

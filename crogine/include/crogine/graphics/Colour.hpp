@@ -148,22 +148,22 @@ namespace cro
         /*!
         \brief Returns the red channel value as a byte
         */
-        std::uint8_t getRedByte() const;
+        constexpr std::uint8_t getRedByte() const;
 
         /*!
         \brief Returns the green channel value as a byte
         */
-        std::uint8_t getGreenByte() const;
+        constexpr std::uint8_t getGreenByte() const;
 
         /*!
         \brief Returns the blue channel value as a byte
         */
-        std::uint8_t getBlueByte() const;
+        constexpr std::uint8_t getBlueByte() const;
 
         /*!
         \brief Returns the alpha channel value as a byte
         */
-        std::uint8_t getAlphaByte() const;
+        constexpr std::uint8_t getAlphaByte() const;
 
         /*!
         \brief Returns the red channel as a normalised value

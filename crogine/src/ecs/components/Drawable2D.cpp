@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -360,6 +360,8 @@ void Drawable2D::applyShader()
             data.id = attribs[Mesh::Attribute::Position];
             data.size = 2;
             data.offset = 0;
+            data.glType = GL_FLOAT;
+            data.glNormalised = GL_FALSE;
         }
 
         if (attribs[Mesh::Attribute::Colour] == -1)
@@ -374,6 +376,8 @@ void Drawable2D::applyShader()
             data.id = attribs[Mesh::Attribute::Colour];
             data.size = 4;
             data.offset = 4 * sizeof(float); //last after 2 position and 2 UV
+            data.glType = GL_UNSIGNED_BYTE;
+            data.glNormalised = GL_TRUE;
         }
 
         if (m_textureInfo.textureID.textureID)
@@ -388,7 +392,9 @@ void Drawable2D::applyShader()
                 AttribData& data = m_vertexAttributes.emplace_back();
                 data.id = attribs[Mesh::Attribute::UV0];
                 data.size = 2;
-                data.offset = 2 * sizeof(float);
+                data.offset = 2 * sizeof(float); //after position x/y
+                data.glType = GL_FLOAT;
+                data.glNormalised = GL_FALSE;
             }
         }
 
@@ -414,11 +420,11 @@ void Drawable2D::applyShader()
         glCheck(glBindVertexArray(m_vao));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
 
-        for (const auto& [id, size, offset] : m_vertexAttributes)
+        for (const auto& [id, size, offset, type, normalised] : m_vertexAttributes)
         {
             glCheck(glEnableVertexAttribArray(id));
             glCheck(glVertexAttribPointer(id, size,
-                                            GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
+                                            type, normalised, static_cast<GLsizei>(sizeof(Vertex2D)),
                                             reinterpret_cast<void*>(static_cast<intptr_t>(offset))));
         }
 

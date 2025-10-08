@@ -62,6 +62,9 @@ source distribution.
 #include "gk/GKGameState.hpp"
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
+
+#include <memory>
 
 namespace
 {
@@ -79,6 +82,7 @@ namespace
     {
         return getBasePath() + "content/";
     }
+    std::unique_ptr<cro::ResourceCollection> sharedResources;
 }
 
 MyApp::MyApp()
@@ -184,7 +188,9 @@ bool MyApp::initialise()
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Scratchpad Browser");
 
-    m_stateStack.registerState<sp::MenuState>(States::ScratchPad::MainMenu, *this);
+    sharedResources = std::make_unique<cro::ResourceCollection>();
+
+    m_stateStack.registerState<sp::MenuState>(States::ScratchPad::MainMenu, *this, *sharedResources);
     m_stateStack.registerState<BatcatState>(States::ScratchPad::BatCat);
     m_stateStack.registerState<BilliardsState>(States::ScratchPad::Billiards);
     m_stateStack.registerState<BushState>(States::ScratchPad::Bush);
@@ -219,7 +225,7 @@ bool MyApp::initialise()
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(States::ScratchPad::TrackOverlay);
     //m_stateStack.pushState(States::ScratchPad::BatCat);
-    m_stateStack.pushState(States::ScratchPad::AnimBlend);
+    m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
     m_stateStack.pushState(States::ScratchPad::BatCat);
@@ -233,5 +239,6 @@ void MyApp::finalise()
     m_stateStack.clearStates();
     m_stateStack.simulate(0.f);
 
+    sharedResources.reset();
     cro::App::unloadPlugin(m_stateStack);
 }

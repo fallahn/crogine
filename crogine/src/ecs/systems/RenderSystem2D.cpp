@@ -213,7 +213,7 @@ void RenderSystem2D::process(float)
         {
             //bind VBO and upload data
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));
-            glCheck(glBufferData(GL_ARRAY_BUFFER, drawable.m_vertices.size() * Vertex2D::Size, drawable.m_vertices.data(), GL_DYNAMIC_DRAW));
+            glCheck(glBufferData(GL_ARRAY_BUFFER, drawable.m_vertices.size() * sizeof(Vertex2D), drawable.m_vertices.data(), GL_DYNAMIC_DRAW));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
             drawable.m_updateBufferData = false;

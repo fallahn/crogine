@@ -131,22 +131,22 @@ void cro::Colour::setAlpha(float alpha)
     a = alpha;
 }
 
-std::uint8_t cro::Colour::getRedByte() const
+constexpr std::uint8_t cro::Colour::getRedByte() const
 {
     return static_cast<std::uint8_t>(255.f * r);
 }
 
-std::uint8_t cro::Colour::getGreenByte() const
+constexpr std::uint8_t cro::Colour::getGreenByte() const
 {
     return static_cast<std::uint8_t>(255.f * g);
 }
 
-std::uint8_t cro::Colour::getBlueByte() const
+constexpr std::uint8_t cro::Colour::getBlueByte() const
 {
     return static_cast<std::uint8_t>(255.f * b);
 }
 
-std::uint8_t cro::Colour::getAlphaByte() const
+constexpr std::uint8_t cro::Colour::getAlphaByte() const
 {
     return static_cast<std::uint8_t>(255.f * a);
 }

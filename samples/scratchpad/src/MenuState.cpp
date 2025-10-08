@@ -172,12 +172,16 @@ void main()
     ShaderUniform moonUniform;
 }
 
-MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp& app)
+MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp& app, cro::ResourceCollection& rc)
     : cro::State    (stack, context),
     m_gameInstance  (app),
+    m_resources     (rc),
     m_scene         (context.appInstance.getMessageBus()),
     m_timePicker    ()
 {
+    LogI << cro::Detail::normaliseTo<std::int16_t>(0.5f) << std::endl;
+    LogI << cro::Detail::normaliseTo<std::int16_t>(-0.25f) << std::endl;
+
     app.unloadPlugin();
 
     const auto t = std::time(nullptr);
@@ -296,6 +300,8 @@ void MenuState::render()
 {
     //draw any renderable systems
     m_scene.render();
+    /*m_simpleQuad.draw();
+    m_simpleText.draw();*/
 
     if (m_quantizeOutput.available())
     {
@@ -325,7 +331,8 @@ void MenuState::addSystems()
 
 void MenuState::loadAssets()
 {
-    m_font.loadFromFile("assets/fonts/VeraMono.ttf");
+    m_resources.fonts.load(0, "assets/fonts/VeraMono.ttf");
+    const auto& font = m_resources.fonts.get(0);
 
     if (m_quantizeShader.loadFromString(cro::SimpleDrawable::getDefaultVertexShader(), QuantizeFrag, "#define TEXTURED\n"))
     {
@@ -346,6 +353,11 @@ void MenuState::loadAssets()
             m_moonOutput.create(m_moonInput.getSize().x, m_moonInput.getSize().y, false);
         }
     }
+
+    //m_simpleQuad.setTexture(m_resources.textures.get("assets/strawman_preview.png"));
+
+    //m_simpleText.setFont(font);
+    //m_simpleText.setString("Simple Text");
 }
 
 void MenuState::createScene()
@@ -363,12 +375,13 @@ void MenuState::createScene()
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
  
 
+    const auto& font = m_resources.fonts.get(0);
 
     //menu
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(200.f, 960.f));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Scratchpad");
+    entity.addComponent<cro::Text>(font).setString("Scratchpad");
     entity.getComponent<cro::Text>().setCharacterSize(80);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::Green, 4);
@@ -417,7 +430,7 @@ void MenuState::createScene()
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(position);
         e.addComponent<cro::Drawable2D>();
-        e.addComponent<cro::Text>(m_font).setString(label);
+        e.addComponent<cro::Text>(font).setString(label);
         e.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
         e.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
         e.getComponent<cro::Text>().setOutlineThickness(1.f);

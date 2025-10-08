@@ -46,55 +46,75 @@ namespace cro
     {
         //the real question is will all this processing
         //actually offset the advantage of smaller vertices?
-
         template <typename T> 
         constexpr T normaliseTo(float v)
         {
             static_assert(std::is_pod<T>::value, "");
-            const auto s = Util::Maths::sgn(v);
-
             if constexpr (std::is_unsigned<T>::value)
             {
-                CRO_ASSERT(s >= 0, "");
+                CRO_ASSERT(v >= 0, "");
+                return static_cast<T>(static_cast<float>(std::numeric_limits<T>::max()) * v);
+            }
+            else
+            {
+                const auto s = Util::Maths::sgn(v);
+
+                const auto vs = v * s;
+                v = (vs - std::floor(vs));
+                return static_cast<T>(static_cast<float>(std::numeric_limits<T>::max()) * v) * s;
+            }
+        }
+
+        struct ColourLowP final
+        {
+            std::uint8_t r = 0;
+            std::uint8_t g = 0;
+            std::uint8_t b = 0;
+            std::uint8_t a = 255;
+
+            ColourLowP() = default;
+            constexpr ColourLowP(const Colour& c)
+                : r(c.getRedByte()), g(c.getGreenByte()),
+                b(c.getBlueByte()), a(c.getAlphaByte())
+            {
+
             }
 
-            const auto vs = v * s;
-            v = (vs - std::floor(vs));
+            constexpr ColourLowP& operator = (Colour& c)
+            {
+                r = c.getRedByte();
+                g = c.getBlueByte();
+                b = c.getGreenByte();
+                a = c.getAlphaByte();
 
-            return static_cast<T>(static_cast<float>(std::numeric_limits<T>::max()) * v) * s;
-        }
+                return *this;
+            }
+
+            constexpr ColourLowP& operator = (glm::vec4 c)
+            {
+                setRed(c.r);
+                setGreen(c.g);
+                setBlue(c.b);
+                setAlpha(c.a);
+                return *this;
+            }
+
+            constexpr void setRed(std::uint8_t v) { r = v; }
+            constexpr void setGreen(std::uint8_t v) { g = v; }
+            constexpr void setBlue(std::uint8_t v) { b = v; }
+            constexpr void setAlpha(std::uint8_t v) { a = v; }
+
+            constexpr void setRed(float v) { r = static_cast<std::uint8_t>(v * 255.f); }
+            constexpr void setGreen(float v) { g = static_cast<std::uint8_t>(v * 255.f); }
+            constexpr void setBlue(float v) { b = static_cast<std::uint8_t>(v * 255.f); }
+            constexpr void setAlpha(float v) { a = static_cast<std::uint8_t>(v * 255.f); }
+
+            float getRed() const { return static_cast<float>(r) / 255.f; }
+            float getGreen() const { return static_cast<float>(g) / 255.f; }
+            float getBlue() const { return static_cast<float>(b) / 255.f; }
+            float getAlpha() const { return static_cast<float>(a) / 255.f; }
+        };
     }
-
-    /*!
-    \brief Store normalised UV coordinates
-    as 16 bit integers.
-    */
-    struct CRO_EXPORT_API VertexUV final
-    {
-        std::int16_t u = 0;
-        std::int16_t v = 0;
-
-        constexpr VertexUV() = default;
-        constexpr VertexUV(float x, float y)
-            : u (Detail::normaliseTo<std::int16_t>(x)),
-            v   (Detail::normaliseTo<std::int16_t>(y))
-        {
-
-        }
-        constexpr VertexUV(glm::vec2 uv)
-            : u (Detail::normaliseTo<std::int16_t>(uv.x)),
-            v   (Detail::normaliseTo<std::int16_t>(uv.y))
-        {
-
-        }
-
-        VertexUV& operator = (glm::vec2 uv)
-        {
-            u = Detail::normaliseTo<std::uint16_t>(uv.x);
-            v = Detail::normaliseTo<std::uint16_t>(uv.y);
-            return *this;
-        }
-    };
 
     /*!
     \brief 2D vertex data struct
@@ -120,8 +140,7 @@ namespace cro
 
         glm::vec2 position = glm::vec2(0.f);
         glm::vec2 UV = glm::vec2(0.f);
-        cro::Colour colour = cro::Colour(cro::Detail::White);
-
-        static constexpr std::size_t Size = (sizeof(float) * 4) + sizeof(cro::Colour);
+        //Colour colour = Colour(Detail::White);
+        Detail::ColourLowP colour = Colour(Detail::White);
     };
 }

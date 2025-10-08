@@ -349,6 +349,9 @@ namespace cro
             std::int32_t id = -1;
             std::uint32_t size = 0;
             std::uint32_t offset = 0;
+
+            std::uint32_t glType = 0; //GL_FLOAT etc
+            std::uint32_t glNormalised = 0; //GL_TRUE / GL_FALSE
         };
         std::vector<AttribData> m_vertexAttributes;
 

@@ -869,7 +869,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             cam.resizeCallback(cam);
         }
         break;
-        case SDLK_F7:
+        //case SDLK_F7:
             //cro::Console::doCommand("build_cubemaps");
         //    //logCSV();
         //{

@@ -38,8 +38,10 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/Font.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/SimpleText.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -50,7 +52,7 @@ namespace sp
     class MenuState final : public cro::State, public cro::GuiClient
     {
     public:
-        MenuState(cro::StateStack&, cro::State::Context, MyApp&);
+        MenuState(cro::StateStack&, cro::State::Context, MyApp&, cro::ResourceCollection&);
         ~MenuState() = default;
 
         cro::StateID getStateID() const override { return States::ScratchPad::MainMenu; }
@@ -63,8 +65,12 @@ namespace sp
     private:
         MyApp& m_gameInstance;
 
+        cro::ResourceCollection& m_resources;
+
+        //cro::SimpleQuad m_simpleQuad;
+        //cro::SimpleText m_simpleText;
+
         cro::Scene m_scene;
-        cro::Font m_font;
 
         cro::VideoPlayer m_video;
         cro::MusicPlayer m_music;
