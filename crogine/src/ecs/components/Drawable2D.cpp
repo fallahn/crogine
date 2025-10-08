@@ -345,7 +345,7 @@ void Drawable2D::applyShader()
         //store available attribs so we can also use this on mobile
         m_vertexAttributes.clear();
 
-        auto attribs = m_shader->getAttribMap();
+        const auto& attribs = m_shader->getAttribMap();
         if (attribs[Mesh::Attribute::Position] == -1)
         {
             Logger::log("Position attribute missing from Drawable2D shader", Logger::Type::Error);
@@ -397,17 +397,25 @@ void Drawable2D::applyShader()
                 data.glNormalised = GL_FALSE;
             }
         }
+        updateVAO();
+    }
+}
 
-
+void Drawable2D::updateVAO()
+{
+    {
 #ifdef PLATFORM_DESKTOP
         //only update the vao on desktop
-        if (m_vao != 0)
+        /*if (m_vao != 0)
         {
             glCheck(glDeleteVertexArrays(1, &m_vao));
             m_vao = 0;
-        }
+        }*/
 
-        glCheck(glGenVertexArrays(1, &m_vao));
+        if (!m_vao)
+        {
+            glCheck(glGenVertexArrays(1, &m_vao));
+        }
 
         //this might be done before the system has
         //a chance to create it, ie when setting a custom shader immediately
@@ -433,4 +441,14 @@ void Drawable2D::applyShader()
 
 #endif //PLATFORM
     }
+}
+
+void Drawable2D::updateVBO()
+{
+    //bind VBO and upload data
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertex2D), m_vertices.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    m_updateBufferData = false;
 }

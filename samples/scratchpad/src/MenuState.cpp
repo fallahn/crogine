@@ -36,6 +36,8 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
@@ -44,9 +46,13 @@ source distribution.
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+
+#include <crogine/graphics/SpriteSheet.hpp>
 
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/String.hpp>
@@ -64,6 +70,7 @@ using namespace sp;
 namespace
 {
     constexpr glm::vec2 ViewSize(1920.f, 1080.f);
+    //constexpr glm::vec2 ViewSize(1280.f, 720.f);
     constexpr float MenuSpacing = 40.f;
 
     bool activated(const cro::ButtonEvent& evt)
@@ -324,6 +331,8 @@ void MenuState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::TextSystem>(mb);
+    m_scene.addSystem<cro::SpriteSystem2D>(mb);
+    m_scene.addSystem<cro::SpriteAnimator>(mb);
     m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
@@ -657,6 +666,15 @@ void MenuState::createScene()
                 }
             });
 
+
+    cro::SpriteSheet sheet;
+    sheet.loadFromFile("assets/golf/sprites/rockit.spt", m_resources.textures);
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 600.f, 400.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = sheet.getSprite("rockit");
+    entity.addComponent<cro::SpriteAnimation>().play(0);
 
     //camera
     auto updateCam = [&](cro::Camera& cam)

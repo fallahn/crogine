@@ -211,12 +211,7 @@ void RenderSystem2D::process(float)
         //check data flag and update buffer if needed
         if (drawable.m_updateBufferData)
         {
-            //bind VBO and upload data
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));
-            glCheck(glBufferData(GL_ARRAY_BUFFER, drawable.m_vertices.size() * sizeof(Vertex2D), drawable.m_vertices.data(), GL_DYNAMIC_DRAW));
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-            drawable.m_updateBufferData = false;
+            drawable.updateVBO();
         }
 
         const auto& tx = entity.getComponent<Transform>();

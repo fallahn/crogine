@@ -442,5 +442,7 @@ namespace cro
         friend class RenderSystem2D;
 
         void applyShader();
+        void updateVAO();
+        void updateVBO(); //tells the drawable to re-upload its data to the VBO
     };
 }
