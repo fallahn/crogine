@@ -676,6 +676,21 @@ void MenuState::createScene()
     entity.addComponent<cro::Sprite>() = sheet.getSprite("rockit");
     entity.addComponent<cro::SpriteAnimation>().play(0);
 
+    const std::string f = 
+        R"(
+OUTPUT
+uniform sampler2D u_texture;
+VARYING_IN vec2 v_texCoord;
+VARYING_IN vec4 v_colour;
+
+void main()
+{
+FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour + vec4(1.0, 0.0, 0.0, 0.0);
+})";
+
+    m_resources.shaders.loadFromString(0, cro::RenderSystem2D::getDefaultVertexShader(), f, "#define TEXTURED\n");
+    entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(0));
+
     //camera
     auto updateCam = [&](cro::Camera& cam)
     {

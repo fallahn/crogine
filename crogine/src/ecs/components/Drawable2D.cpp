@@ -57,7 +57,8 @@ Drawable2D::Drawable2D()
     m_cropped               (false),
     m_absoluteCrop          (false),
     m_wasCulledLastFrame    (true),
-    m_sortCriteria          (0)
+    m_sortCriteria          (0),
+    m_vboAllocator          (nullptr)
 {
 
 }
@@ -83,6 +84,8 @@ bool Drawable2D::setTexture(const Texture* texture)
 
         m_applyDefaultShader = !m_customShader;
 
+        //TODO we need to defer this to processing in the
+        //system when we know the VBO is prepared.
         applyShader();
         return true;
     }
@@ -102,6 +105,8 @@ void Drawable2D::setTexture(TextureID textureID, glm::uvec2 size)
 
         m_applyDefaultShader = !m_customShader;
 
+        //TODO we need to defer this to processing in the
+        //system when we know the VBO is prepared.
         applyShader();
     }
 }
@@ -127,6 +132,8 @@ void Drawable2D::setShader(Shader* shader)
 
     m_vertexAttributes.clear();
 
+    //TODO we need to defer this to processing in the
+    //system when we know the VBO is prepared.
     applyShader();
 }
 
@@ -445,6 +452,12 @@ void Drawable2D::updateVAO()
 
 void Drawable2D::updateVBO()
 {
+    if (m_vboAllocation.blockCount < m_vboAllocator->getBlockCount(m_vertices.size()))
+    {
+        m_vboAllocation = m_vboAllocator->newAllocation(m_vertices.size());
+        updateVAO();
+    }
+
     //bind VBO and upload data
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertex2D), m_vertices.data(), GL_DYNAMIC_DRAW));

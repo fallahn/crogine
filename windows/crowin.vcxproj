@@ -88,6 +88,7 @@
     <ClInclude Include="..\crogine\include\crogine\detail\SDLResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\StackDump.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Types.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\detail\VBOAllocation.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Component.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\ComponentPool.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\AudioListener.hpp" />
@@ -325,6 +326,7 @@
     <ClCompile Include="..\crogine\src\detail\StackDump.cpp" />
     <ClCompile Include="..\crogine\src\detail\StaticMeshFile.cpp" />
     <ClCompile Include="..\crogine\src\detail\TextConstruction.cpp" />
+    <ClCompile Include="..\crogine\src\detail\VBOAllocation.cpp" />
     <ClCompile Include="..\crogine\src\ecs\Component.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\AudioEmitter.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Camera.cpp" />

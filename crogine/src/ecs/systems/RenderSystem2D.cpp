@@ -75,7 +75,8 @@ RenderSystem2D::RenderSystem2D(MessageBus& mb)
     : System        (mb, typeid(RenderSystem2D)),
     m_sortOrder     (DepthAxis::Z),
     m_needsSort     (true),
-    m_drawLists     (1)
+    m_drawLists     (1),
+    m_vboAllocator  (4u, sizeof(Vertex2D))
 {
     requireComponent<Drawable2D>();
     requireComponent<Transform>();
@@ -479,6 +480,8 @@ void RenderSystem2D::onEntityAdded(Entity entity)
         glCheck(glGenBuffers(1, &drawable.m_vbo));
     }
 
+    drawable.m_vboAllocator = &m_vboAllocator;
+
     entity.getComponent<cro::Transform>().addCallback(
         [&]()
         {
@@ -528,6 +531,8 @@ void RenderSystem2D::resetDrawable(Entity entity)
     {
         glCheck(glDeleteVertexArrays(1, &drawable.m_vao));
     }
+
+    m_vboAllocator.freeAllocation(drawable.m_vboAllocation);
 
 #endif //PLATFORM
 }

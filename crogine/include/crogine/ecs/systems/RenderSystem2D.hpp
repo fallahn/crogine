@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/detail/QuadTree.hpp>
+#include <crogine/detail/VBOAllocation.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/matrix.hpp>
 
@@ -156,6 +157,8 @@ namespace cro
 
         void applyBlendMode(Material::BlendMode);
         glm::ivec2 mapCoordsToPixel(glm::vec2, const glm::mat4& viewProjMat, IntRect) const;
+
+        Detail::VBOAllocator m_vboAllocator;
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;

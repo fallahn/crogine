@@ -35,6 +35,8 @@ source distribution.
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/Shader.hpp>
 
+#include <crogine/detail/VBOAllocation.hpp>
+
 #include <vector>
 
 namespace cro
@@ -440,6 +442,9 @@ namespace cro
         }
 
         friend class RenderSystem2D;
+
+        Detail::VBOAllocator* m_vboAllocator;
+        Detail::VBOAllocation m_vboAllocation;
 
         void applyShader();
         void updateVAO();
