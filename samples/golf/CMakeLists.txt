@@ -74,6 +74,9 @@ if(NOT TARGET crogine)
 endif()
 
 
+#glm wants this now
+add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
+
 if(USE_STEAM)
 
   add_compile_definitions(USE_GNS USE_WORKSHOP)

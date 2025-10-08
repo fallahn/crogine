@@ -47,6 +47,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-potentially-evaluated-expression")
 endif()
 
+#glm wants this now
+add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
+
 if(USE_OPENAL)
   add_definitions(-DAL_AUDIO)
 else()
