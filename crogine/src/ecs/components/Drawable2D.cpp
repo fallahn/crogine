@@ -473,9 +473,10 @@ void Drawable2D::updateVBO()
 
     //bind VBO and upload data
     //glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+    //glCheck(glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertex2D), m_vertices.data(), GL_DYNAMIC_DRAW));
+
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vboAllocation.vboID));
     assert(m_vboAllocation.vboID != 0);
-    //glCheck(glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertex2D), m_vertices.data(), GL_DYNAMIC_DRAW));
     glCheck(glBufferSubData(GL_ARRAY_BUFFER, static_cast<GLintptr>(m_vboAllocation.offset), m_vertices.size() * sizeof(Vertex2D), m_vertices.data()));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

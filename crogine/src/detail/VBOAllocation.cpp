@@ -74,6 +74,7 @@ VBOAllocator::VBOAllocator(std::uint32_t blockSize, std::uint32_t vertexSize)
             if (ImGui::Begin("VBO Allocation"))
             {
                 ImGui::Text("Allocated VBO Size: %d bytes (%d blocks)", m_finalOffset, m_finalOffset / m_blockSizeBytes);
+                ImGui::Text("Max VBO Size: %d bytes (%d blocks)", m_vboAllocationSize, m_vboAllocationSize / m_blockSizeBytes);
 
                 std::vector<bool> blockCells(m_finalOffset / m_blockSizeBytes);
                 std::fill(blockCells.begin(), blockCells.end(), true);
@@ -209,13 +210,16 @@ VBOAllocation VBOAllocator::newAllocation(std::size_t vertexCount)
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
         glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, 0, m_vboAllocationSize, oldData.data()));
 
-        m_vboAllocationSize += MinBufferSize * m_blockSizeBytes;
+        do
+        {
+            m_vboAllocationSize += MinBufferSize * m_blockSizeBytes;
+        } while (m_vboAllocationSize <= m_finalOffset);
 
         glCheck(glBufferData(GL_ARRAY_BUFFER, m_vboAllocationSize, nullptr, GL_DYNAMIC_DRAW));
         glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, oldData.size(), oldData.data()));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-        LogI << "Resized Drawable2D VBO to " << m_vboAllocationSize << " bytes (" << (m_vboAllocationSize/m_blockSizeBytes) << " blocks)" << std::endl;
+        //LogI << "Resized VBO to " << m_vboAllocationSize << " bytes (" << (m_vboAllocationSize/m_blockSizeBytes) << " blocks)" << std::endl;
     }
 
     //LogI << "Allocated " << blocks << " VBO blocks at: " << ret.offset << std::endl;

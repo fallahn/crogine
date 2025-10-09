@@ -612,7 +612,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        cro::Colour c = m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex].isCPU ? TextGoldColour : cro::Colour::Transparent;
+        const cro::Colour c = m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex].isCPU ? TextGoldColour : cro::Colour::Transparent;
         auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
         for (auto& v : verts)
         {
