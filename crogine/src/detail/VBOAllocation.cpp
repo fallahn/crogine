@@ -71,7 +71,8 @@ VBOAllocator::VBOAllocator(std::uint32_t blockSize, std::uint32_t vertexSize)
     registerWindow(
         [&]()
         {
-            if (ImGui::Begin("VBO Allocation"))
+            const auto title = "VBO Allocation " + m_debugString;
+            if (ImGui::Begin(title.c_str()))
             {
                 ImGui::Text("Allocated VBO Size: %d bytes (%d blocks)", m_finalOffset, m_finalOffset / m_blockSizeBytes);
                 ImGui::Text("Max VBO Size: %d bytes (%d blocks)", m_vboAllocationSize, m_vboAllocationSize / m_blockSizeBytes);

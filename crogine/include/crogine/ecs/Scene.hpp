@@ -446,7 +446,7 @@ namespace cro
         void setTitle(const std::string& s);
 
         /*!
-        \brief Returns the title strign set for the Scene, if any
+        \brief Returns the title string set for the Scene, if any
         */
         const std::string& getTitle() const { return m_debugTitle; }
 

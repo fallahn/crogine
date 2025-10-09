@@ -36,6 +36,7 @@ source distribution.
 #endif
 
 #include <vector>
+#include <string>
 
 namespace cro::Detail
 {
@@ -84,6 +85,8 @@ namespace cro::Detail
         VBOAllocation newAllocation(std::size_t vertexCount);
         void freeAllocation(VBOAllocation);
 
+        //used for the debug display window
+        void setDebugString(const std::string& s) { m_debugString = s; }
     private:
         //number of *verts* in a block
         const std::uint32_t m_blockSize;
@@ -117,5 +120,8 @@ namespace cro::Detail
         //blocks are allocated from the end of the VBO @
         //m_finalOffset
         std::vector<FreeBlock> m_freeBlocks;
+
+
+        std::string m_debugString;
     };
 }

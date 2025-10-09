@@ -27,6 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -493,6 +494,13 @@ void RenderSystem2D::onEntityAdded(Entity entity)
             m_needsSort = true;
         });
     m_needsSort = true;
+
+#ifdef CRO_DEBUG_
+    //we don't really need to do this more than once, but
+    //the scene pointer isn't set when this is constructed
+    const std::string t = getScene()->getTitle() + " (" + std::to_string(getScene()->getInstanceID()) + ") - RenderSystem2D";
+    m_vboAllocator.setDebugString(t);
+#endif
 }
 
 void RenderSystem2D::onEntityRemoved(Entity entity)
