@@ -765,7 +765,7 @@ FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour + vec4(1.0, 0.0, 0.0, 0.0);
 
             if (ct < 0)
             {
-                ct += cro::Util::Random::value(1, 3);
+                ct += cro::Util::Random::value(0.25f, 0.5f);
                 spawnRandom();
             }
         };

@@ -484,6 +484,7 @@ void RenderSystem2D::onEntityAdded(Entity entity)
     //{
     //    glCheck(glGenBuffers(1, &drawable.m_vbo));
     //}
+    drawable.m_vao = m_vaoAllocator.requestVAO();
 
     drawable.m_vboAllocator = &m_vboAllocator;
     drawable.updateVBO();
@@ -542,7 +543,8 @@ void RenderSystem2D::resetDrawable(Entity entity)
 
     if (drawable.m_vao != 0)
     {
-        glCheck(glDeleteVertexArrays(1, &drawable.m_vao));
+        //glCheck(glDeleteVertexArrays(1, &drawable.m_vao));
+        m_vaoAllocator.freeVAO(drawable.m_vao);
     }
 
     m_vboAllocator.freeAllocation(drawable.m_vboAllocation);

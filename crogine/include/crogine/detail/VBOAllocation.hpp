@@ -124,4 +124,28 @@ namespace cro::Detail
 
         std::string m_debugString;
     };
+
+    class VAOAllocator final
+    {
+    public:
+        VAOAllocator();
+        ~VAOAllocator();
+
+        VAOAllocator(const VAOAllocator&) = delete;
+        VAOAllocator(VAOAllocator&&) = delete;
+
+        VAOAllocator& operator = (const VAOAllocator&) = delete;
+        VAOAllocator& operator = (VAOAllocator&&) = delete;
+
+        std::uint32_t requestVAO();
+        void freeVAO(std::uint32_t);
+
+    private:
+
+        //handles which are assigned and need deleting on shutdown
+        std::vector<std::uint32_t> m_activeVAOs;
+
+        //handles which have been returned and can be reused
+        std::vector<std::uint32_t> m_freeVAOs;
+    };
 }

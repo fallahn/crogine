@@ -159,6 +159,7 @@ namespace cro
         glm::ivec2 mapCoordsToPixel(glm::vec2, const glm::mat4& viewProjMat, IntRect) const;
 
         Detail::VBOAllocator m_vboAllocator;
+        Detail::VAOAllocator m_vaoAllocator;
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;

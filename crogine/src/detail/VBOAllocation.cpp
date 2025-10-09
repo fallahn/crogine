@@ -268,3 +268,48 @@ void VBOAllocator::freeAllocation(VBOAllocation allocation)
         //LogI << "Freed " << allocation.blockCount << " VBO blocks at: " << allocation.offset << std::endl;
     }
 }
+
+
+VAOAllocator::VAOAllocator()
+{
+    //just allocate some up front
+    m_activeVAOs.resize(10);
+    glCheck(glGenVertexArrays(m_activeVAOs.size(), m_activeVAOs.data()));
+
+    m_freeVAOs = m_activeVAOs;
+}
+
+VAOAllocator::~VAOAllocator()
+{
+    if (!m_activeVAOs.empty())
+    {
+        glCheck(glDeleteVertexArrays(m_activeVAOs.size(), m_activeVAOs.data()));
+    }
+}
+
+//public
+std::uint32_t VAOAllocator::requestVAO()
+{
+    if (m_freeVAOs.empty())
+    {
+        //LogI << "Generated new VAO" << std::endl;
+        std::uint32_t vao = 0;
+        glCheck(glGenVertexArrays(1, &vao));
+        m_activeVAOs.push_back(vao);
+        return vao;
+    }
+
+    const auto vao = m_freeVAOs.back();
+    m_freeVAOs.pop_back();
+
+    //LogI << "Reused VAO " << vao << std::endl;
+    return vao;
+}
+
+void VAOAllocator::freeVAO(std::uint32_t vao)
+{
+    CRO_ASSERT(vao != 0, "");
+
+    //LogI << "Freed VAO " << vao << std::endl;
+    m_freeVAOs.push_back(vao);
+}

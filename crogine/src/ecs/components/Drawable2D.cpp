@@ -425,10 +425,11 @@ void Drawable2D::updateVAO()
             m_vao = 0;
         }*/
 
-        if (!m_vao)
+        /*if (!m_vao)
         {
             glCheck(glGenVertexArrays(1, &m_vao));
-        }
+        }*/
+        assert(m_vao != 0);
 
         //this might be done before the system has
         //a chance to create it, ie when setting a custom shader immediately
