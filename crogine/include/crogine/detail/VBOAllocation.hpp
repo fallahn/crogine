@@ -107,10 +107,12 @@ namespace cro::Detail
         {
             //bytes from the beginning of the VBO to the start of the free block
             std::size_t offset = 0;
-            //number of blocks which are free (block bytes size = m_vertexSize * m_blockSize)
-            std::size_t blockCount = 0;
             //total size in bytes of free blocks
             std::size_t totalSize = 0;
+            //offset in blocks from the beginning
+            std::size_t blockIndex = 0;
+            //number of blocks which are free (block bytes size = m_vertexSize * m_blockSize)
+            std::size_t blockCount = 0;
 
             bool eraseMe = false; //for remove_if
         };
@@ -125,6 +127,9 @@ namespace cro::Detail
         std::string m_debugString;
     };
 
+    /*
+    Recycle VAOs when needed rather than delete/create
+    */
     class VAOAllocator final
     {
     public:

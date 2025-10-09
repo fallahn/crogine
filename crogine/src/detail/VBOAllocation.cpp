@@ -92,8 +92,7 @@ VBOAllocator::VBOAllocator(std::uint32_t blockSize, std::uint32_t vertexSize)
                     {
                         blockCount += fb.blockCount;
 
-                        const auto index = fb.offset / m_blockSizeBytes;
-                        for (auto j = index; j < index + fb.blockCount; ++j)
+                        for (auto j = fb.blockIndex; j < fb.blockIndex + fb.blockCount; ++j)
                         {
                             //if green channel is set we're good, else we must
                             //be set to something else and are overlapping...
@@ -113,16 +112,42 @@ VBOAllocator::VBOAllocator(std::uint32_t blockSize, std::uint32_t vertexSize)
                     ImGui::Button(label.c_str(), { 8.f, 10.f });
                     ImGui::PopStyleColor();
 
-                    if (i % 32 != 0)
+                    //if (i % 32 != 0)
                     {
                         ImGui::SameLine();
                     }
                 }
 
                 ImGui::NewLine();
+                int k = 0;
                 for (const auto& fb : m_freeBlocks)
                 {
-                    ImGui::Text("Free block at %d, size %d blocks", fb.offset, fb.blockCount);
+                    ImGui::Text("Free block at %d, size %d blocks", fb.blockIndex, fb.blockCount);
+
+                    blockCells.clear();
+                    blockCells.resize(m_finalOffset / m_blockSizeBytes);
+                    std::fill(blockCells.begin(), blockCells.end(), ImVec4(0.f, 1.f, 0.f, 1.f));
+
+                    for (auto j = fb.blockIndex; j < fb.blockIndex + fb.blockCount; ++j)
+                    {
+                        blockCells[j] = ImVec4(1.f, 0.5f, 1.f, 1.f);
+                    }
+
+                    i = 10000 * ++k;
+                    for (const auto& b : blockCells)
+                    {
+                        ImGui::PushStyleColor(ImGuiCol_Button, b);
+
+                        const std::string label = "##" + std::to_string(i++);
+                        ImGui::Button(label.c_str(), { 8.f, 10.f });
+                        ImGui::PopStyleColor();
+
+                        //if (i % 32 != 0)
+                        {
+                            ImGui::SameLine();
+                        }
+                    }
+                    ImGui::NewLine();
                 }
             }
             ImGui::End();
@@ -176,8 +201,10 @@ VBOAllocation VBOAllocator::newAllocation(std::size_t vertexCount)
                 //we fit here
                 ret.offset = m_freeBlocks[i].offset;
 
+                m_freeBlocks[i].blockIndex += blocks;
                 m_freeBlocks[i].blockCount -= blocks;
                 m_freeBlocks[i].offset += blocks * m_blockSizeBytes;
+                m_freeBlocks[i].totalSize -= blocks * m_blockSizeBytes;
 
                 removeIndex = i;
                 break;
@@ -234,6 +261,7 @@ void VBOAllocator::freeAllocation(VBOAllocation allocation)
         auto& fb = m_freeBlocks.emplace_back();
         fb.blockCount = allocation.blockCount;
         fb.offset = allocation.offset;
+        fb.blockIndex = fb.offset / m_blockSizeBytes;
         fb.totalSize = allocation.blockCount * m_blockSizeBytes;
 
         std::sort(m_freeBlocks.begin(), m_freeBlocks.end(), 
@@ -242,14 +270,13 @@ void VBOAllocator::freeAllocation(VBOAllocation allocation)
         if (m_freeBlocks.size() > 1)
         {
             //then merge any contiguous blocks
-            //TODO there's a bug here causing allocations to overlap...
             for (auto i = m_freeBlocks.size()-1; i > 0; --i)
             {
                 auto& current = m_freeBlocks[i];
                 auto& prev = m_freeBlocks[i - 1];
 
-                if (current.offset ==
-                    prev.offset + prev.totalSize)
+                if (current.blockIndex ==
+                    prev.blockIndex + prev.blockCount)
                 {
                     //LogI << "Merging..." << std::endl;
                     prev.blockCount += current.blockCount;

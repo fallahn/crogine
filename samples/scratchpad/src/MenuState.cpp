@@ -102,6 +102,8 @@ namespace
 
     cro::ConfigFile testFile;
 
+    bool spawnActive = true;
+
     const std::string QuantizeFrag =
 R"(
 uniform sampler2D u_texture;
@@ -285,6 +287,17 @@ bool MenuState::handleEvent(const cro::Event& evt)
         return true;
     }
 
+    if (evt.type == SDL_KEYDOWN)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_p:
+            spawnActive = !spawnActive;
+            break;
+        }
+    }
+
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
 
     m_scene.forwardEvent(evt);
@@ -384,6 +397,9 @@ void MenuState::createScene()
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
  
+    cro::SpriteSheet sheet;
+    sheet.loadFromFile("assets/golf/sprites/rockit.spt", m_resources.textures);
+
 
     const auto& font = m_resources.fonts.get(0);
 
@@ -423,7 +439,7 @@ void MenuState::createScene()
                 e.getComponent<cro::Text>().setFillColour(cro::Colour::Green, 1 + idx);
             }
         };
-
+    /*
     auto* uiSystem = m_scene.getSystem<cro::UISystem>();
     auto selected = uiSystem->addCallback([](cro::Entity e)
         {
@@ -668,8 +684,6 @@ void MenuState::createScene()
             });
 
 
-    cro::SpriteSheet sheet;
-    sheet.loadFromFile("assets/golf/sprites/rockit.spt", m_resources.textures);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 600.f, 400.f });
@@ -691,6 +705,9 @@ FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour + vec4(1.0, 0.0, 0.0, 0.0);
 
     m_resources.shaders.loadFromString(0, cro::RenderSystem2D::getDefaultVertexShader(), f, "#define TEXTURED\n");
     entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(0));
+
+*/
+
 
     //camera
     auto updateCam = [&](cro::Camera& cam)
@@ -730,6 +747,8 @@ FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour + vec4(1.0, 0.0, 0.0, 0.0);
             e.getComponent<cro::Callback>().function =
                 [&](cro::Entity f, float dt)
                 {
+                    if (!spawnActive) return;
+
                     auto& vel = f.getComponent<cro::Callback>().getUserData<glm::vec2>();
                     f.getComponent<cro::Transform>().move(vel * dt);
                     vel.y -= 900.f * dt;
@@ -760,6 +779,8 @@ FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour + vec4(1.0, 0.0, 0.0, 0.0);
     entity.getComponent<cro::Callback>().function =
         [spawnRandom](cro::Entity e, float dt)
         {
+            if (!spawnActive) return;
+
             auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
             ct -= dt;
 

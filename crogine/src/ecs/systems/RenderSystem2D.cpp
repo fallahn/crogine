@@ -545,9 +545,14 @@ void RenderSystem2D::resetDrawable(Entity entity)
     {
         //glCheck(glDeleteVertexArrays(1, &drawable.m_vao));
         m_vaoAllocator.freeVAO(drawable.m_vao);
+        drawable.m_vao = 0;
     }
 
-    m_vboAllocator.freeAllocation(drawable.m_vboAllocation);
+    if (drawable.m_vboAllocation.vboID != 0)
+    {
+        m_vboAllocator.freeAllocation(drawable.m_vboAllocation);
+        drawable.m_vboAllocation.vboID = 0;
+    }
 
 #endif //PLATFORM
 }
