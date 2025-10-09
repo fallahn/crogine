@@ -208,6 +208,10 @@ void RenderSystem2D::process(float)
             drawable.m_applyDefaultShader = false;
             drawable.applyShader();
         }
+        else if (drawable.m_shaderNeedsUpdate)
+        {
+            drawable.applyShader();
+        }
 
         //check data flag and update buffer if needed
         if (drawable.m_updateBufferData)
@@ -475,12 +479,13 @@ void RenderSystem2D::onEntityAdded(Entity entity)
 {
     //create the VBO (VAO is applied when shader is set)
     auto& drawable = entity.getComponent<Drawable2D>();
-    if (drawable.m_vbo == 0) //setting a custom shader may have already created this
-    {
-        glCheck(glGenBuffers(1, &drawable.m_vbo));
-    }
+    //if (drawable.m_vbo == 0) //setting a custom shader may have already created this
+    //{
+    //    glCheck(glGenBuffers(1, &drawable.m_vbo));
+    //}
 
     drawable.m_vboAllocator = &m_vboAllocator;
+    drawable.updateVBO();
 
     entity.getComponent<cro::Transform>().addCallback(
         [&]()
@@ -520,10 +525,10 @@ void RenderSystem2D::flushEntity(Entity e)
 void RenderSystem2D::resetDrawable(Entity entity)
 {
     auto& drawable = entity.getComponent<Drawable2D>();
-    if (drawable.m_vbo != 0)
+    /*if (drawable.m_vbo != 0)
     {
         glCheck(glDeleteBuffers(1, &drawable.m_vbo));
-    }
+    }*/
 
 #ifdef PLATFORM_DESKTOP
 

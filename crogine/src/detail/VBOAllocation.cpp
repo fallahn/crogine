@@ -37,22 +37,36 @@ source distribution.
 
 using namespace cro::Detail;
 
+namespace
+{
+    //minimum number of blocks before resizing
+    constexpr std::size_t MinBufferSize = 1000;
+}
+
 VBOAllocator::VBOAllocator(std::uint32_t blockSize, std::uint32_t vertexSize)
-    : m_blockSize   (blockSize),
-    m_vertexSize    (vertexSize),
-    m_blockSizeBytes(blockSize * vertexSize),
-    m_vbo           (0),
-    m_finalOffset   (0)
+    : m_blockSize       (blockSize),
+    m_vertexSize        (vertexSize),
+    m_blockSizeBytes    (blockSize * vertexSize),
+    m_vbo               (0),
+    m_finalOffset       (0),
+    m_vboAllocationSize (m_blockSizeBytes*MinBufferSize)
 {
     CRO_ASSERT(blockSize != 0, "");
     CRO_ASSERT(vertexSize != 0, "");
 
     glCheck(glGenBuffers(1, &m_vbo));
-
     if (!m_vbo)
     {
         LogE << "Failed to create VBO for allocation" << std::endl;
     }
+    else
+    {
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, m_vboAllocationSize, nullptr, GL_DYNAMIC_DRAW));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    }
+
+
 #ifdef CRO_DEBUG_
     registerWindow(
         [&]()
@@ -173,7 +187,7 @@ VBOAllocation VBOAllocator::newAllocation(std::size_t vertexCount)
 
         if (removeIndex == std::numeric_limits<std::size_t>::max())
         {
-            //we didn't find space to allocate at the end
+            //we didn't find space so allocate at the end
             ret.offset = m_finalOffset;
             m_finalOffset += blocks * m_blockSizeBytes;
         }
@@ -187,13 +201,31 @@ VBOAllocation VBOAllocator::newAllocation(std::size_t vertexCount)
         }
     }
 
-    LogI << "Allocated " << blocks << " VBO blocks at: " << ret.offset << std::endl;
+    if (m_finalOffset >= m_vboAllocationSize)
+    {
+        //we need to resize the buffer (maintaining the existing data...)
+        std::vector<std::uint8_t> oldData(m_vboAllocationSize);
+
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+        glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, 0, m_vboAllocationSize, oldData.data()));
+
+        m_vboAllocationSize += MinBufferSize * m_blockSizeBytes;
+
+        glCheck(glBufferData(GL_ARRAY_BUFFER, m_vboAllocationSize, nullptr, GL_DYNAMIC_DRAW));
+        glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, oldData.size(), oldData.data()));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+        LogI << "Resized Drawable2D VBO to " << m_vboAllocationSize << " bytes (" << (m_vboAllocationSize/m_blockSizeBytes) << " blocks)" << std::endl;
+    }
+
+    //LogI << "Allocated " << blocks << " VBO blocks at: " << ret.offset << std::endl;
     return ret;
 }
 
 void VBOAllocator::freeAllocation(VBOAllocation allocation)
 {
     //TODO make sure we're not somehow double freeing (probably wants to throw in which case)
+    
     if (allocation.vboID == m_vbo
         && allocation.blockCount != 0)
     {
@@ -213,7 +245,7 @@ void VBOAllocator::freeAllocation(VBOAllocation allocation)
                 if (m_freeBlocks[i].offset ==
                     m_freeBlocks[i - 1].offset + m_freeBlocks[i - 1].totalSize)
                 {
-                    LogI << "Merging..." << std::endl;
+                    //LogI << "Merging..." << std::endl;
                     m_freeBlocks[i - 1].blockCount += m_freeBlocks[i].blockCount;
                     m_freeBlocks[i - 1].totalSize = m_freeBlocks[i - 1].blockCount * m_blockSizeBytes;
 
@@ -228,6 +260,6 @@ void VBOAllocator::freeAllocation(VBOAllocation allocation)
                 }),
                 m_freeBlocks.end());
         }
-        LogI << "Freed " << allocation.blockCount << " VBO blocks at: " << allocation.offset << std::endl;
+        //LogI << "Freed " << allocation.blockCount << " VBO blocks at: " << allocation.offset << std::endl;
     }
 }

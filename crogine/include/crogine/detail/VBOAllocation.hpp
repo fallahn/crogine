@@ -97,6 +97,9 @@ namespace cro::Detail
         //offset to the end of allocated space (in bytes)
         std::size_t m_finalOffset;
 
+        //amount currently allocated to VBO - once we hit this re need to resize the buffer
+        std::size_t m_vboAllocationSize;
+
         struct FreeBlock final
         {
             //bytes from the beginning of the VBO to the start of the free block

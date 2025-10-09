@@ -329,6 +329,7 @@ namespace cro
         Shader* m_shader;
         bool m_customShader;
         bool m_applyDefaultShader;
+        bool m_shaderNeedsUpdate; //shader/texture was changed and we need to apply the VAO
         bool m_autoCrop;
         std::int32_t m_textureUniform;
         std::int32_t m_worldUniform;
@@ -342,7 +343,7 @@ namespace cro
         std::uint32_t m_primitiveType;
         std::vector<Vertex2D> m_vertices;
 
-        std::uint32_t m_vbo;
+        //std::uint32_t m_vbo;
         std::uint32_t m_vao; //!< only used in desktop builds
         bool m_updateBufferData;
 

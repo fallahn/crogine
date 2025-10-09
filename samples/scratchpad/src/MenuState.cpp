@@ -440,7 +440,7 @@ void MenuState::createScene()
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(position);
         e.addComponent<cro::Drawable2D>();
-        e.addComponent<cro::Text>(font).setString(/*label*/"a");
+        e.addComponent<cro::Text>(font).setString(label);
         e.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
         e.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
         e.getComponent<cro::Text>().setOutlineThickness(1.f);

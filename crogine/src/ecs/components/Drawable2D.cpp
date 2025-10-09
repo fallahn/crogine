@@ -39,6 +39,7 @@ Drawable2D::Drawable2D()
     : m_shader              (nullptr),
     m_customShader          (false),
     m_applyDefaultShader    (true),
+    m_shaderNeedsUpdate     (true),
     m_autoCrop              (true),
     m_textureUniform        (-1),
     m_worldUniform          (-1),
@@ -48,7 +49,7 @@ Drawable2D::Drawable2D()
     m_doubleSided           (false),
     m_blendMode             (Material::BlendMode::Alpha),
     m_primitiveType         (GL_TRIANGLE_STRIP),
-    m_vbo                   (0),
+    //m_vbo                   (0),
     m_vao                   (0),
     m_updateBufferData      (false),
     m_renderFlags           (DefaultRenderFlag),
@@ -86,7 +87,8 @@ bool Drawable2D::setTexture(const Texture* texture)
 
         //TODO we need to defer this to processing in the
         //system when we know the VBO is prepared.
-        applyShader();
+        //applyShader();
+        m_shaderNeedsUpdate = true;
         return true;
     }
     return false;
@@ -107,7 +109,8 @@ void Drawable2D::setTexture(TextureID textureID, glm::uvec2 size)
 
         //TODO we need to defer this to processing in the
         //system when we know the VBO is prepared.
-        applyShader();
+        //applyShader();
+        m_shaderNeedsUpdate = true;
     }
 }
 
@@ -134,7 +137,8 @@ void Drawable2D::setShader(Shader* shader)
 
     //TODO we need to defer this to processing in the
     //system when we know the VBO is prepared.
-    applyShader();
+    //applyShader();
+    m_shaderNeedsUpdate = true;
 }
 
 void Drawable2D::setBlendMode(Material::BlendMode mode)
@@ -404,6 +408,8 @@ void Drawable2D::applyShader()
                 data.glNormalised = GL_FALSE;
             }
         }
+        m_shaderNeedsUpdate = false;
+
         updateVAO();
     }
 }
@@ -427,20 +433,26 @@ void Drawable2D::updateVAO()
         //this might be done before the system has
         //a chance to create it, ie when setting a custom shader immediately
         //upon component creation.
-        if (m_vbo == 0)
+        /*if (m_vbo == 0)
         {
             glCheck(glGenBuffers(1, &m_vbo));
+        }*/
+
+        if (m_vboAllocation.vboID == 0)
+        {
+            m_vboAllocation = m_vboAllocator->newAllocation(m_vertices.size());
         }
 
         glCheck(glBindVertexArray(m_vao));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
-
+        //glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vboAllocation.vboID));
+        assert(m_vboAllocation.vboID != 0);
         for (const auto& [id, size, offset, type, normalised] : m_vertexAttributes)
         {
             glCheck(glEnableVertexAttribArray(id));
             glCheck(glVertexAttribPointer(id, size,
                                             type, normalised, static_cast<GLsizei>(sizeof(Vertex2D)),
-                                            reinterpret_cast<void*>(static_cast<intptr_t>(offset))));
+                                            reinterpret_cast<void*>(static_cast<intptr_t>(offset + m_vboAllocation.offset))));
         }
 
         glCheck(glBindVertexArray(0));
@@ -452,15 +464,19 @@ void Drawable2D::updateVAO()
 
 void Drawable2D::updateVBO()
 {
-    if (m_vboAllocation.blockCount < m_vboAllocator->getBlockCount(m_vertices.size()))
+    if (m_vboAllocation.vboID == 0 ||
+        m_vboAllocation.blockCount < m_vboAllocator->getBlockCount(m_vertices.size()))
     {
-        m_vboAllocation = m_vboAllocator->newAllocation(m_vertices.size());
+        m_vboAllocation = m_vboAllocator->newAllocation(m_vertices.size());        
         updateVAO();
     }
 
     //bind VBO and upload data
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertex2D), m_vertices.data(), GL_DYNAMIC_DRAW));
+    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vboAllocation.vboID));
+    assert(m_vboAllocation.vboID != 0);
+    //glCheck(glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertex2D), m_vertices.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBufferSubData(GL_ARRAY_BUFFER, static_cast<GLintptr>(m_vboAllocation.offset), m_vertices.size() * sizeof(Vertex2D), m_vertices.data()));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     m_updateBufferData = false;
