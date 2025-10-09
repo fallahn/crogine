@@ -55,6 +55,7 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Random.hpp>
 #include <crogine/util/String.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
@@ -439,7 +440,7 @@ void MenuState::createScene()
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(position);
         e.addComponent<cro::Drawable2D>();
-        e.addComponent<cro::Text>(font).setString(label);
+        e.addComponent<cro::Text>(font).setString(/*label*/"a");
         e.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
         e.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
         e.getComponent<cro::Text>().setOutlineThickness(1.f);
@@ -718,6 +719,57 @@ FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour + vec4(1.0, 0.0, 0.0, 0.0);
             cam.viewport.bottom = (1.f - cam.viewport.height) / 2.f;
         }
     };
+
+    const auto spawnRandom = 
+        [&, sheet]()
+        {
+            auto e = m_scene.createEntity();
+            e.addComponent<cro::Transform>().setPosition(ViewSize / 2.f);
+            e.addComponent<cro::Callback>().active = true;
+            e.getComponent<cro::Callback>().setUserData<glm::vec2>(cro::Util::Random::value(100,200), 0);
+            e.getComponent<cro::Callback>().function =
+                [&](cro::Entity f, float dt)
+                {
+                    auto& vel = f.getComponent<cro::Callback>().getUserData<glm::vec2>();
+                    f.getComponent<cro::Transform>().move(vel * dt);
+                    vel.y -= 900.f * dt;
+
+                    if (f.getComponent<cro::Transform>().getPosition().y < 0)
+                    {
+                        f.getComponent<cro::Callback>().active = false;
+                        m_scene.destroyEntity(f);
+                    }
+                };
+
+            e.addComponent<cro::Drawable2D>();
+
+            if (cro::Util::Random::value(0, 1) == 0)
+            {
+                const auto& font = m_resources.fonts.get(0);
+                e.addComponent<cro::Text>(font).setString("CLEFT");
+            }
+            else
+            {
+                e.addComponent<cro::Sprite>() = sheet.getSprite("rockit");
+            }
+        };
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(4.f);
+    entity.getComponent<cro::Callback>().function =
+        [spawnRandom](cro::Entity e, float dt)
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct -= dt;
+
+            if (ct < 0)
+            {
+                ct += cro::Util::Random::value(1, 3);
+                spawnRandom();
+            }
+        };
+
 
     auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = updateCam;

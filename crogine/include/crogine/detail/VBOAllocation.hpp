@@ -35,14 +35,18 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #endif
 
+#include <vector>
+
 namespace cro::Detail
 {
-    //returned after allocation, contains the
-    //offset (in bytes) into the VBO and number
-    //of blocks allocated. This must be used by
-    //the requestee (ie Drawable2D) when returning
-    //memory to the allocator so that it can be
-    //marked free
+    /*
+    Returned after allocation, contains the
+    offset (in bytes) into the VBO and number
+    of blocks allocated. This must be used by
+    the requestee (ie Drawable2D) when returning
+    memory to the allocator so that it can be
+    marked free
+    */
     struct VBOAllocation final
     {
         std::size_t offset = 0;
@@ -56,7 +60,6 @@ namespace cro::Detail
     Drawable2D components request blocks of 4 vertices at a time, each vertex
     sized to Vertex2D.
     */
-
     class VBOAllocator final : public SDLResource
 #ifdef CRO_DEBUG_
         , public GuiClient
@@ -82,8 +85,34 @@ namespace cro::Detail
         void freeAllocation(VBOAllocation);
 
     private:
-        std::uint32_t m_blockSize;
-        std::uint32_t m_vertexSize;
+        //number of *verts* in a block
+        const std::uint32_t m_blockSize;
+        //size of vertex in *bytes*
+        const std::uint32_t m_vertexSize;
+
+        const std::uint32_t m_blockSizeBytes;
+
         std::uint32_t m_vbo;
+
+        //offset to the end of allocated space (in bytes)
+        std::size_t m_finalOffset;
+
+        struct FreeBlock final
+        {
+            //bytes from the beginning of the VBO to the start of the free block
+            std::size_t offset = 0;
+            //number of blocks which are free (block bytes size = m_vertexSize * m_blockSize)
+            std::size_t blockCount = 0;
+            //total size in bytes of free blocks
+            std::size_t totalSize = 0;
+
+            bool eraseMe = false; //for remove_if
+        };
+
+        //free blocks which can be re-assigned. Ordered by
+        //offset, starting nearest zero. If this is empty
+        //blocks are allocated from the end of the VBO @
+        //m_finalOffset
+        std::vector<FreeBlock> m_freeBlocks;
     };
 }
