@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -78,7 +78,7 @@ namespace cro
             }
 
 
-            /*
+            /*!
             \brief Smoothly interpolate two vectors over the given time
             from Game Programming Gems 4 Chapter 1.10
             \param src The current value to start from
@@ -124,6 +124,29 @@ namespace cro
                 const T temp = (currVel + (diff * omega)) * dt;
                 currVel = (currVel - (temp * omega)) * exp;
                 return dst + (diff + temp) * exp;
+            }
+
+            /*!
+            \brief Converts the given floating point value to a normalised integer
+            Note that this removes any whole part and works on the truncated fraction
+            */
+            template <typename T>
+            constexpr T normaliseTo(float v)
+            {
+                static_assert(std::is_pod<T>::value, "");
+                if constexpr (std::is_unsigned<T>::value)
+                {
+                    CRO_ASSERT(v >= 0, "");
+                    return static_cast<T>(static_cast<float>(std::numeric_limits<T>::max()) * v);
+                }
+                else
+                {
+                    const auto s = Util::Maths::sgn(v);
+
+                    const auto vs = v * s;
+                    v = (vs - std::floor(vs));
+                    return static_cast<T>(static_cast<float>(std::numeric_limits<T>::max()) * v) * s;
+                }
             }
         }
     }

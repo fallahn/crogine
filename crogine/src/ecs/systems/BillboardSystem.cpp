@@ -37,6 +37,21 @@ source distribution.
 
 using namespace cro;
 
+namespace
+{
+    //TODO move this to the BillboardBuilder
+    //TODO update the shader to match? Rename Normal to Root?
+    struct VertexLayout final
+    {
+        glm::vec3 pos = glm::vec3(0.f);
+        Detail::ColourLowP colour;
+        glm::vec3 rootPos = glm::vec3(0.f);
+        std::uint32_t uvCoords = 0; //pack with glm::packSnorm2x16()
+        //glm::vec2 size = glm::vec2(0.f); //TODO think about how we can pack this into un-normalised shorts
+        std::uint32_t size = 0;
+    };
+}
+
 BillboardSystem::BillboardSystem(MessageBus& mb)
     : System(mb, typeid(BillboardSystem))
 {
@@ -54,7 +69,7 @@ void BillboardSystem::process(float)
         {
             //update the model data
             std::vector<float> vertexData;
-            std::vector<std::uint32_t> indexData;
+            std::vector<std::uint16_t> indexData;
             auto& meshData = entity.getComponent<cro::Model>().getMeshData();
 
             //boundingbox
@@ -207,7 +222,6 @@ void BillboardSystem::process(float)
                 indexData.push_back(baseIndex + 2);
                 indexData.push_back(baseIndex);
                 indexData.push_back(baseIndex + 1);
-
             }
 
             meshData.vertexCount = vertexData.size() / (meshData.vertexSize / sizeof(float));
@@ -215,12 +229,13 @@ void BillboardSystem::process(float)
             glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
+            meshData.indexData[0].format = GL_UNSIGNED_SHORT;
             meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indexData.size());
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo));
-            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(std::uint32_t), indexData.data(), GL_DYNAMIC_DRAW));
+            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(std::uint16_t), indexData.data(), GL_DYNAMIC_DRAW));
 
             //update bounding sphere
-            auto rad = (meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f;
+            const auto rad = (meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f;
             meshData.boundingSphere.centre = meshData.boundingBox[0] + rad;
             meshData.boundingSphere.radius = glm::length(rad);
 
