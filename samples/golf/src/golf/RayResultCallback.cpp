@@ -106,13 +106,31 @@ RayResultCallback::FaceData RayResultCallback::getFaceData(const btCollisionWorl
         &vertices, numVertices, verticesType, vertexStride, &indices, indicesStride, numFaces, indicesType, rayResult.m_localShapeInfo->m_shapePart
     );
 
-    const auto* index = reinterpret_cast<const int*>(indices + rayResult.m_localShapeInfo->m_triangleIndex * indicesStride);
-    btVector3 va = vertex(*index);
-    btVector3 vb = vertex(*(index + 1));
-    btVector3 vc = vertex(*(index + 2));
+    //ugh different meshes have different strides TODO fix collision detection in BallSystem
+    //std::array<std::uint32_t, 3u> ind = {};
+    //if (indicesType == PHY_SHORT)
+    //{
+        const auto* i = reinterpret_cast<const std::uint16_t*>(indices + rayResult.m_localShapeInfo->m_triangleIndex * indicesStride);
+        const std::array<std::uint32_t, 3u> ind =
+        {
+            *i,
+            *(i + 1),
+            *(i + 2)
+        };
+    //}
+    //else
+    //{
+    //    const auto* i = reinterpret_cast<const std::uint32_t*>(indices + rayResult.m_localShapeInfo->m_triangleIndex * indicesStride);
+    //    ind[0] = *i;
+    //    ind[1] = *(i + 1);
+    //    ind[2] = *(i + 2);
+    //}
+    btVector3 va = vertex(ind[0]);
+    btVector3 vb = vertex(ind[1]);
+    btVector3 vc = vertex(ind[2]);
     btVector3 normal = (vb - va).cross(vc - va).normalized();
 
-    std::int32_t collisionType = colour(*index);
+    std::int32_t collisionType = colour(ind[0]);
 
     triangleMesh->unLockReadOnlyVertexBase(rayResult.m_localShapeInfo->m_shapePart);
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,6 +31,7 @@ source distribution.
 #include "RayResultCallback.hpp"
 #include "GameConsts.hpp"
 
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/mat4x4.hpp>
 
 namespace
@@ -51,8 +52,27 @@ CollisionMesh::~CollisionMesh()
 //public
 void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
 {
+    if (meshData.indexData[0].format != GL_UNSIGNED_SHORT)
+    {
+        LogW << "[Collision Mesh] Mesh data does not use 16 bit indices!" << std::endl;
+    }
+
+    //std::vector<std::vector<std::uint16_t>> temp;
+
     clearCollisionObjects();
     cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
+
+    //UGH there's some kind of bug in bullet which causes it to crash
+    //with 16 bit data even though it's supposed to support it
+    /*m_indexData.clear();
+    for (const auto& t : temp)
+    {
+        auto& i = m_indexData.emplace_back();
+        for (auto x : t)
+        {
+            i.push_back(x);
+        }
+    }*/
 
     std::int32_t colourOffset = 0;
     for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
@@ -75,9 +95,9 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
 
         groundMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
         groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
-        groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
+        groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint16_t); //this has to match the index format!
 
-        m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh);
+        m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh, PHY_SHORT);
         m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
         m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
         m_groundObjects.back()->setUserIndex(colourOffset); //used by RayResultCallback to read the terrain type

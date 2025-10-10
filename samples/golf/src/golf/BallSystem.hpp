@@ -222,7 +222,7 @@ private:
     std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_groundVertices;
 
     std::vector<float> m_vertexData;
-    std::vector<std::vector<std::uint32_t>> m_indexData;
+    std::vector<std::vector<std::uint16_t>> m_indexData;
 
 #ifdef CRO_DEBUG_
     std::unique_ptr<BulletDebug> m_debugDraw;

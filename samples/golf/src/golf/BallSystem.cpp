@@ -1605,15 +1605,25 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
 {
     clearCollisionObjects();
 
-    cro::Mesh::Data meshData = cro::Detail::ModelBinary::read(modelPath, m_vertexData, m_indexData);
+    std::vector<std::vector<std::uint32_t>> temp;
+    cro::Mesh::Data meshData = cro::Detail::ModelBinary::read(modelPath, m_vertexData, temp);
+
+    //the mesh collision callback expects 16 bit indices - as this is mostly running
+    //in it's own thread a quick conversion here shouldn't hurt...
+    for (const auto& t : temp)
+    {
+        auto& i = m_indexData.emplace_back();
+        for (auto x : t)
+        {
+            i.push_back(x);
+        }
+    }
 
     if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
     {
         LogE << "No colour property found in collision mesh" << std::endl;
         return false;
     }
-
-
 
     std::int32_t colourOffset = 0;
     for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
@@ -1633,13 +1643,11 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
         groundMesh.m_numVertices = static_cast<int>(meshData.vertexCount);
         groundMesh.m_vertexStride = static_cast<int>(meshData.vertexSize);
 
-        
         groundMesh.m_numTriangles = /*meshData.indexData[i].indexCount*/id.size() / 3;
         groundMesh.m_triangleIndexBase = reinterpret_cast<const std::uint8_t*>(id.data());
-        groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
+        groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint16_t);
 
-
-        m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh);
+        m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh, PHY_SHORT);
         m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
         m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
         m_groundObjects.back()->setUserIndex(colourOffset); //use to read the terrain type in RayResult
