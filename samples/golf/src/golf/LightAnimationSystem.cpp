@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -57,7 +57,7 @@ void LightAnimationSystem::process(float dt)
             
             if (!anim.pattern.empty())
             {
-                float multiplier = anim.pattern[anim.currentIndex];
+                const float multiplier = anim.pattern[anim.currentIndex];
                 anim.currentIndex = (anim.currentIndex + 1) % anim.pattern.size();
 
                 entity.getComponent<cro::LightVolume>().colour = anim.baseColour * multiplier;

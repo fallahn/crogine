@@ -39,9 +39,11 @@ source distribution.
 #include "BannerTexture.hpp"
 #include "MoonPhase.hpp"
 #include "TimeOfDay.hpp"
+#include "LightAnimationSystem.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
+#include <crogine/ecs/components/LightVolume.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -105,6 +107,33 @@ namespace
     //make this static so throughout the duration of the game we
     //cycle without repetition (until we reach the end)
     static std::int32_t BannerIndex = cro::Util::Random::value(0, static_cast<std::int32_t>(BannerStrings.size()) - 1);
+
+    void loadLightPreset(LightData& out, const std::string file)
+    {
+        cro::ConfigFile cfg;
+        cfg.loadFromFile("assets/golf/lights/" + file);
+        const auto& props = cfg.getProperties();
+        for (const auto& prop : props)
+        {
+            const auto& name = prop.getName();
+            if (name == "colour")
+            {
+                out.colour = prop.getValue<cro::Colour>();
+            }
+            else if (name == "radius")
+            {
+                out.radius = prop.getValue<float>();
+            }
+            else if (name == "animation")
+            {
+                out.animation = prop.getValue<std::string>();
+            }
+            else if (name == "lens_flare")
+            {
+                out.lensFlare = prop.getValue<bool>();
+            }
+        }
+    }
 }
 
 void GolfState::loadAssets()
@@ -240,30 +269,7 @@ void GolfState::loadMap()
             if (ext == ".lgt")
             {
                 LightData preset;
-
-                cro::ConfigFile cfg;
-                cfg.loadFromFile("assets/golf/lights/" + file);
-                const auto& props = cfg.getProperties();
-                for (const auto& prop : props)
-                {
-                    const auto& name = prop.getName();
-                    if (name == "colour")
-                    {
-                        preset.colour = prop.getValue<cro::Colour>();
-                    }
-                    else if (name == "radius")
-                    {
-                        preset.radius = prop.getValue<float>();
-                    }
-                    else if (name == "animation")
-                    {
-                        preset.animation = prop.getValue<std::string>();
-                    }
-                    else if (name == "lens_flare")
-                    {
-                        preset.lensFlare = prop.getValue<bool>();
-                    }
-                }
+                loadLightPreset(preset, file);
 
                 if (preset.radius > 0.01f)
                 {
@@ -3440,6 +3446,25 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                     {
                         entity.getComponent<cro::AudioEmitter>() = as.getEmitter("plane");
                         entity.getComponent<cro::AudioEmitter>().setLooped(false);
+                    }
+
+                    //attach flashing light
+                    if (m_sharedData.nightTime)
+                    {
+                        LightData ld;
+                        loadLightPreset(ld, "plane.lgt");
+
+                        auto e = m_gameScene.createEntity();
+                        e.addComponent<cro::Transform>().setPosition({ 0.f, -0.5f, 0.f });
+                        e.getComponent<cro::Transform>().setScale(glm::vec3(ld.radius));
+                        e.addComponent<cro::LightVolume>().colour = ld.colour;
+                        e.getComponent<cro::LightVolume>().radius = ld.radius;
+                        e.getComponent<cro::LightVolume>().maxVisibilityDistance = 160.f * 160.f;
+                        e.addComponent<LightAnimation>().setPattern(ld.animation);
+                        m_lightVolumeDefinition.createModel(e);
+                        e.getComponent<cro::Model>().setHidden(true);
+                        e.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::Reflection));
+                        entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
                     }
 
                     planeEnt = entity;
