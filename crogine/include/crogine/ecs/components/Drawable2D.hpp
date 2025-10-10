@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -343,7 +343,6 @@ namespace cro
         std::uint32_t m_primitiveType;
         std::vector<Vertex2D> m_vertices;
 
-        //std::uint32_t m_vbo;
         std::uint32_t m_vao; //!< only used in desktop builds
         bool m_updateBufferData;
 
@@ -444,11 +443,14 @@ namespace cro
 
         friend class RenderSystem2D;
 
+        //used by RenderSystem2D to tell this drawble
+        //to update its vertex data to the VBO and to
+        //release the VBO assignment when it's done.
         Detail::VBOAllocator* m_vboAllocator;
         Detail::VBOAllocation m_vboAllocation;
 
-        void applyShader();
-        void updateVAO();
+        void applyShader(); //update the vertex attribute data based on shader requirements
+        void updateVAO(); //binds the attribute data to the VAO
         void updateVBO(); //tells the drawable to re-upload its data to the VBO
     };
 }

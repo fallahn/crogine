@@ -67,11 +67,12 @@ namespace cro::Detail
 #endif
     {
     public: 
-        /*
+        /*!
+        \brief Constructor
         \param blockSize Number of vertices per block
         \param vertexSize Size of a vertex in bytes
         */
-        VBOAllocator(std::uint32_t blockSize, std::uint32_t vertexSize);
+        explicit VBOAllocator(std::uint32_t blockSize, std::uint32_t vertexSize);
         ~VBOAllocator();
 
         VBOAllocator(const VBOAllocator&) = delete;
@@ -79,14 +80,36 @@ namespace cro::Detail
         VBOAllocator& operator = (const VBOAllocator&) = delete;
         VBOAllocator& operator = (VBOAllocator&&) = delete;
 
-        //calculates the blocks required for the given numberof verts
+        /*!
+        \brief Calculates the blocks required for the given number of verts
+        Rounds up to the nearest whole block.
+        \param vertexCount The number of vertices for which blocks
+        should be assigned.
+        */
         std::size_t getBlockCount(std::size_t vertexCount) const;
 
+        /*!
+        \brief Requests an allocation from the current VBO for
+        the given number of vertices.
+        \param vertexCount The number of vertices for which
+        VBO space is required.
+        \returns An Allocation containingthe VBO id and offset
+        into the buffer in bytes. This should be kept for use
+        when returning the memory to the VBO pool.
+        */
         VBOAllocation newAllocation(std::size_t vertexCount);
-        void freeAllocation(VBOAllocation);
+
+        /*!
+        \brief Frees a previously allocated chunk of VBO space.
+        \param allocation A VBOAllocation struct containing the
+        details of a previously allocated chunk of VBO space to
+        return to the pool.
+        */
+        void freeAllocation(VBOAllocation allocation);
 
         //used for the debug display window
         void setDebugString(const std::string& s) { m_debugString = s; }
+
     private:
         //number of *verts* in a block
         const std::uint32_t m_blockSize;
@@ -100,15 +123,13 @@ namespace cro::Detail
         //offset to the end of allocated space (in bytes)
         std::size_t m_finalOffset;
 
-        //amount currently allocated to VBO - once we hit this re need to resize the buffer
+        //amount currently allocated to VBO - once we hit this we need to resize the buffer
         std::size_t m_vboAllocationSize;
 
         struct FreeBlock final
         {
             //bytes from the beginning of the VBO to the start of the free block
             std::size_t offset = 0;
-            //total size in bytes of free blocks
-            std::size_t totalSize = 0;
             //offset in blocks from the beginning
             std::size_t blockIndex = 0;
             //number of blocks which are free (block bytes size = m_vertexSize * m_blockSize)
@@ -119,7 +140,7 @@ namespace cro::Detail
 
         //free blocks which can be re-assigned. Ordered by
         //offset, starting nearest zero. If this is empty
-        //blocks are allocated from the end of the VBO @
+        //blocks are allocated from the end of the VBO at
         //m_finalOffset
         std::vector<FreeBlock> m_freeBlocks;
 
@@ -127,13 +148,19 @@ namespace cro::Detail
         std::string m_debugString;
     };
 
-    /*
-    Recycle VAOs when needed rather than delete/create
+    /*!
+    \brief Recycle VAOs when needed rather than delete/create
     */
     class VAOAllocator final
     {
     public:
-        VAOAllocator();
+        /*!
+        \brief Constructor.
+        \param initialPoolSize Number of VAOs to create on construction.
+        If more VAOs are requested then they are created on the fly if
+        none are available in the pool
+        */
+        explicit VAOAllocator(std::size_t initialPoolSize = 0);
         ~VAOAllocator();
 
         VAOAllocator(const VAOAllocator&) = delete;
@@ -142,8 +169,20 @@ namespace cro::Detail
         VAOAllocator& operator = (const VAOAllocator&) = delete;
         VAOAllocator& operator = (VAOAllocator&&) = delete;
 
+        /*!
+        \brief Requests a VAO form the pool, creating a new one
+        if necessary.
+        \returns Handle to the VAO.
+        */
         std::uint32_t requestVAO();
-        void freeVAO(std::uint32_t);
+
+        /*!
+        \brief Returns the given VAO to the pool
+        \param vao The handle to return. Once returned
+        any VAOs with this handle should be considered
+        invalid, as it will eventually be recycled.
+        */
+        void freeVAO(std::uint32_t vao);
 
     private:
 

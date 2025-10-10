@@ -77,7 +77,8 @@ RenderSystem2D::RenderSystem2D(MessageBus& mb)
     m_sortOrder     (DepthAxis::Z),
     m_needsSort     (true),
     m_drawLists     (1),
-    m_vboAllocator  (4u, sizeof(Vertex2D))
+    m_vboAllocator  (4u, sizeof(Vertex2D)),
+    m_vaoAllocator  (10)
 {
     requireComponent<Drawable2D>();
     requireComponent<Transform>();
@@ -382,7 +383,10 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));
 
                 //bind attribs
-                //const auto& attribs = drawable.m_vertexAttribs;
+                //TODO mobile support has pretty much been abandoned, but anyone
+                //looking to use it will need to update this to the new Attribute
+                //struct which contains the gl type and whether it's normalised.
+                //see Drawable2D::applyShader() for these.
                 for (const auto& [id, size, offset] : drawable.m_vertexAttributes)
                 {
                     glCheck(glEnableVertexAttribArray(id));
@@ -399,7 +403,6 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 {
                     glCheck(glDisableVertexAttribArray(attrib.id));
                 }
-
 #endif //PLATFORM 
                 if (drawable.m_doubleSided)
                 {
@@ -480,12 +483,8 @@ void RenderSystem2D::onEntityAdded(Entity entity)
 {
     //create the VBO (VAO is applied when shader is set)
     auto& drawable = entity.getComponent<Drawable2D>();
-    //if (drawable.m_vbo == 0) //setting a custom shader may have already created this
-    //{
-    //    glCheck(glGenBuffers(1, &drawable.m_vbo));
-    //}
     drawable.m_vao = m_vaoAllocator.requestVAO();
-
+    //drawable needs to track this so it can update its own vertex data
     drawable.m_vboAllocator = &m_vboAllocator;
     drawable.updateVBO();
 
@@ -534,27 +533,20 @@ void RenderSystem2D::flushEntity(Entity e)
 void RenderSystem2D::resetDrawable(Entity entity)
 {
     auto& drawable = entity.getComponent<Drawable2D>();
-    /*if (drawable.m_vbo != 0)
-    {
-        glCheck(glDeleteBuffers(1, &drawable.m_vbo));
-    }*/
-
 #ifdef PLATFORM_DESKTOP
 
     if (drawable.m_vao != 0)
     {
-        //glCheck(glDeleteVertexArrays(1, &drawable.m_vao));
         m_vaoAllocator.freeVAO(drawable.m_vao);
         drawable.m_vao = 0;
     }
+#endif //PLATFORM
 
     if (drawable.m_vboAllocation.vboID != 0)
     {
         m_vboAllocator.freeAllocation(drawable.m_vboAllocation);
         drawable.m_vboAllocation.vboID = 0;
     }
-
-#endif //PLATFORM
 }
 
 #ifdef PARALLEL_DISABLE

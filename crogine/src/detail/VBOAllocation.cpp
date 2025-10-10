@@ -204,7 +204,6 @@ VBOAllocation VBOAllocator::newAllocation(std::size_t vertexCount)
                 m_freeBlocks[i].blockIndex += blocks;
                 m_freeBlocks[i].blockCount -= blocks;
                 m_freeBlocks[i].offset += blocks * m_blockSizeBytes;
-                m_freeBlocks[i].totalSize -= blocks * m_blockSizeBytes;
 
                 removeIndex = i;
                 break;
@@ -262,7 +261,6 @@ void VBOAllocator::freeAllocation(VBOAllocation allocation)
         fb.blockCount = allocation.blockCount;
         fb.offset = allocation.offset;
         fb.blockIndex = fb.offset / m_blockSizeBytes;
-        fb.totalSize = allocation.blockCount * m_blockSizeBytes;
 
         std::sort(m_freeBlocks.begin(), m_freeBlocks.end(), 
             [](const FreeBlock& a, const FreeBlock& b) {return a.offset < b.offset; });
@@ -280,8 +278,6 @@ void VBOAllocator::freeAllocation(VBOAllocation allocation)
                 {
                     //LogI << "Merging..." << std::endl;
                     prev.blockCount += current.blockCount;
-                    prev.totalSize = prev.blockCount * m_blockSizeBytes;
-
                     current.eraseMe = true;
                 }
             }
@@ -298,13 +294,16 @@ void VBOAllocator::freeAllocation(VBOAllocation allocation)
 }
 
 
-VAOAllocator::VAOAllocator()
+VAOAllocator::VAOAllocator(std::size_t initialPoolSize)
 {
     //just allocate some up front
-    m_activeVAOs.resize(10);
-    glCheck(glGenVertexArrays(m_activeVAOs.size(), m_activeVAOs.data()));
+    if (initialPoolSize)
+    {
+        m_activeVAOs.resize(initialPoolSize);
+        glCheck(glGenVertexArrays(m_activeVAOs.size(), m_activeVAOs.data()));
 
-    m_freeVAOs = m_activeVAOs;
+        m_freeVAOs = m_activeVAOs;
+    }
 }
 
 VAOAllocator::~VAOAllocator()

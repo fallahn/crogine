@@ -397,9 +397,6 @@ void MenuState::createScene()
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
  
-    cro::SpriteSheet sheet;
-    sheet.loadFromFile("assets/golf/sprites/rockit.spt", m_resources.textures);
-
 
     const auto& font = m_resources.fonts.get(0);
 
@@ -439,7 +436,7 @@ void MenuState::createScene()
                 e.getComponent<cro::Text>().setFillColour(cro::Colour::Green, 1 + idx);
             }
         };
-    /*
+
     auto* uiSystem = m_scene.getSystem<cro::UISystem>();
     auto selected = uiSystem->addCallback([](cro::Entity e)
         {
@@ -684,29 +681,32 @@ void MenuState::createScene()
             });
 
 
+    //test custom shader assignment
+//    cro::SpriteSheet sheet;
+//    sheet.loadFromFile("assets/golf/sprites/rockit.spt", m_resources.textures);
+//
+//    entity = m_scene.createEntity();
+//    entity.addComponent<cro::Transform>().setPosition({ 600.f, 400.f });
+//    entity.addComponent<cro::Drawable2D>();
+//    entity.addComponent<cro::Sprite>() = sheet.getSprite("rockit");
+//    entity.addComponent<cro::SpriteAnimation>().play(0);
+//
+//    const std::string f = 
+//        R"(
+//OUTPUT
+//uniform sampler2D u_texture;
+//VARYING_IN vec2 v_texCoord;
+//VARYING_IN vec4 v_colour;
+//
+//void main()
+//{
+//FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour + vec4(1.0, 0.0, 0.0, 0.0);
+//})";
+//
+//    m_resources.shaders.loadFromString(0, cro::RenderSystem2D::getDefaultVertexShader(), f, "#define TEXTURED\n");
+//    entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(0));
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 600.f, 400.f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = sheet.getSprite("rockit");
-    entity.addComponent<cro::SpriteAnimation>().play(0);
 
-    const std::string f = 
-        R"(
-OUTPUT
-uniform sampler2D u_texture;
-VARYING_IN vec2 v_texCoord;
-VARYING_IN vec4 v_colour;
-
-void main()
-{
-FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour + vec4(1.0, 0.0, 0.0, 0.0);
-})";
-
-    m_resources.shaders.loadFromString(0, cro::RenderSystem2D::getDefaultVertexShader(), f, "#define TEXTURED\n");
-    entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(0));
-
-*/
 
 
     //camera
@@ -737,7 +737,8 @@ FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour + vec4(1.0, 0.0, 0.0, 0.0);
         }
     };
 
-    const auto spawnRandom = 
+    //spawns random stuff to test Drawable2D (re)allocation of vertex data
+    /*const auto spawnRandom = 
         [&, sheet]()
         {
             auto e = m_scene.createEntity();
@@ -789,7 +790,7 @@ FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour + vec4(1.0, 0.0, 0.0, 0.0);
                 ct += cro::Util::Random::value(0.25f, 0.5f);
                 spawnRandom();
             }
-        };
+        };*/
 
 
     auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();

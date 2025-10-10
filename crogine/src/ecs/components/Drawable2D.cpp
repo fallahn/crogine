@@ -49,7 +49,6 @@ Drawable2D::Drawable2D()
     m_doubleSided           (false),
     m_blendMode             (Material::BlendMode::Alpha),
     m_primitiveType         (GL_TRIANGLE_STRIP),
-    //m_vbo                   (0),
     m_vao                   (0),
     m_updateBufferData      (false),
     m_renderFlags           (DefaultRenderFlag),
@@ -85,9 +84,8 @@ bool Drawable2D::setTexture(const Texture* texture)
 
         m_applyDefaultShader = !m_customShader;
 
-        //TODO we need to defer this to processing in the
-        //system when we know the VBO is prepared.
-        //applyShader();
+        //we need to defer this to processing in the
+        //render system when we know the VBO is prepared.
         m_shaderNeedsUpdate = true;
         return true;
     }
@@ -107,9 +105,8 @@ void Drawable2D::setTexture(TextureID textureID, glm::uvec2 size)
 
         m_applyDefaultShader = !m_customShader;
 
-        //TODO we need to defer this to processing in the
-        //system when we know the VBO is prepared.
-        //applyShader();
+        //we need to defer this to processing in the
+        //render system when we know the VBO is prepared.
         m_shaderNeedsUpdate = true;
     }
 }
@@ -135,9 +132,8 @@ void Drawable2D::setShader(Shader* shader)
 
     m_vertexAttributes.clear();
 
-    //TODO we need to defer this to processing in the
-    //system when we know the VBO is prepared.
-    //applyShader();
+    //we need to defer this to processing in the
+    //render system when we know the VBO is prepared.
     m_shaderNeedsUpdate = true;
 }
 
@@ -417,35 +413,19 @@ void Drawable2D::applyShader()
 void Drawable2D::updateVAO()
 {
     {
-#ifdef PLATFORM_DESKTOP
         //only update the vao on desktop
-        /*if (m_vao != 0)
-        {
-            glCheck(glDeleteVertexArrays(1, &m_vao));
-            m_vao = 0;
-        }*/
-
-        /*if (!m_vao)
-        {
-            glCheck(glGenVertexArrays(1, &m_vao));
-        }*/
+#ifdef PLATFORM_DESKTOP
         assert(m_vao != 0);
 
         //this might be done before the system has
         //a chance to create it, ie when setting a custom shader immediately
         //upon component creation.
-        /*if (m_vbo == 0)
-        {
-            glCheck(glGenBuffers(1, &m_vbo));
-        }*/
-
         if (m_vboAllocation.vboID == 0)
         {
             m_vboAllocation = m_vboAllocator->newAllocation(m_vertices.size());
         }
 
         glCheck(glBindVertexArray(m_vao));
-        //glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vboAllocation.vboID));
         assert(m_vboAllocation.vboID != 0);
         for (const auto& [id, size, offset, type, normalised] : m_vertexAttributes)
@@ -473,11 +453,8 @@ void Drawable2D::updateVBO()
     }
 
     //bind VBO and upload data
-    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
-    //glCheck(glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertex2D), m_vertices.data(), GL_DYNAMIC_DRAW));
-
+    assert(m_vboAllocation.vboID != 0); //the above should preclude this, but still...
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vboAllocation.vboID));
-    assert(m_vboAllocation.vboID != 0);
     glCheck(glBufferSubData(GL_ARRAY_BUFFER, static_cast<GLintptr>(m_vboAllocation.offset), m_vertices.size() * sizeof(Vertex2D), m_vertices.data()));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
