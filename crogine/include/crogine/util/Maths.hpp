@@ -35,6 +35,7 @@ source distribution.
 
 #include "Constants.hpp"
 #include <crogine/util/Spline.hpp>
+#include <crogine/detail/Assert.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
 #include <type_traits>
