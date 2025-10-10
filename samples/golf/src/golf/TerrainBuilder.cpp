@@ -1145,7 +1145,7 @@ void TerrainBuilder::threadFunc()
                         }
                     }
                 }
-                
+
                 for (auto [x, y] : trees)
                 {
                     auto [terrain, height] = readMap(mapImage, x, y);
@@ -1503,7 +1503,7 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
     for (auto i = 0u; i < vaos.size(); ++i)
     {
         glCheck(glBindVertexArray(vaos[i]));
-        glCheck(glDrawElements(GL_TRIANGLES, meshData.indexData[i].indexCount, GL_UNSIGNED_INT, 0));
+        glCheck(glDrawElements(GL_TRIANGLES, meshData.indexData[i].indexCount, meshData.indexData[i].format, 0));
     }
     m_normalMap.display();
 
