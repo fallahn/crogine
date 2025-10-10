@@ -186,7 +186,7 @@ bool MeshBatch::addMesh(const std::string& path, const std::vector<glm::mat4>& t
 void MeshBatch::updateMeshData(Mesh::Data& data) const
 {
     CRO_ASSERT(data.attributeFlags == m_flags, "Flags do not match!");
-    CRO_ASSERT(data.vbo != 0, "Not a valid vertex buffer. Must be created with a MeshResource first");
+    CRO_ASSERT(data.vboAllocation.vboID != 0, "Not a valid vertex buffer. Must be created with a MeshResource first");
     CRO_ASSERT(data.submeshCount > 0, "Not a valid mesh");
 
     if (data.attributeFlags == m_flags)
@@ -194,7 +194,7 @@ void MeshBatch::updateMeshData(Mesh::Data& data) const
         //upload to vbo/ibo
         data.vertexCount = m_vertexData.size() / (data.vertexSize / sizeof(float));
         
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vbo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vboAllocation.vboID));
         glCheck(glBufferData(GL_ARRAY_BUFFER, data.vertexSize * data.vertexCount, m_vertexData.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

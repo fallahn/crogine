@@ -361,7 +361,7 @@ void AnimBlendState::loadAssets()
 
     auto vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = static_cast<std::uint32_t>(vertData.size());
-    (glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    (glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.vboID));
     (glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, vertData.data(), GL_STATIC_DRAW));
     (glBindBuffer(GL_ARRAY_BUFFER, 0));
 

@@ -183,7 +183,7 @@ Q3BspSystem::Q3BspSystem(cro::MessageBus& mb)
 Q3BspSystem::~Q3BspSystem()
 {
     //delete opengl stuffs
-    if (m_meshes[MeshData::Brush].mesh.vbo)
+    if (m_meshes[MeshData::Brush].mesh.vboAllocation.vboID)
     {
         for (auto& [ibo, mat] : m_meshes[MeshData::Brush].submeshes)
         {
@@ -193,7 +193,7 @@ Q3BspSystem::~Q3BspSystem()
             glCheck(glDeleteBuffers(1, &ibo.ibo));
         }
 
-        glCheck(glDeleteBuffers(1, &m_meshes[MeshData::Brush].mesh.vbo));
+        glCheck(glDeleteBuffers(1, &m_meshes[MeshData::Brush].mesh.vboAllocation.vboID));
     }
 }
 
@@ -820,7 +820,7 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
         glCheck(glGenVertexArrays(1, &submesh.vao[0]));
 
         glCheck(glBindVertexArray(submesh.vao[0]));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Brush].mesh.vbo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Brush].mesh.vboAllocation.vboID));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
 
         const auto& attribs = m_material.attribs;
@@ -839,11 +839,11 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
     };
 
     //check we don't already have a buffer before creating a new one
-    if (!m_meshes[MeshData::Brush].mesh.vbo)
+    if (!m_meshes[MeshData::Brush].mesh.vboAllocation.vboID)
     {
         //create new buffers
         CRO_ASSERT(m_meshes[MeshData::Brush].submeshes.empty(), "ibos not empty!");
-        glCheck(glGenBuffers(1, &m_meshes[MeshData::Brush].mesh.vbo));
+        glCheck(glGenBuffers(1, &m_meshes[MeshData::Brush].mesh.vboAllocation.vboID));
 
         m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Position] = 3;
         m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Colour] = 4;
@@ -899,7 +899,7 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
     m_meshes[MeshData::Brush].mesh.vertexCount = vertexData.size() / (m_meshes[MeshData::Brush].mesh.vertexSize / sizeof(float));
 
     //upload vert data
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Brush].mesh.vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Brush].mesh.vboAllocation.vboID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_meshes[MeshData::Brush].mesh.vertexSize * m_meshes[MeshData::Brush].mesh.vertexCount, vertexData.data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
@@ -918,7 +918,7 @@ void Q3BspSystem::createPatchMesh(const std::vector<float>& vertices)
         glCheck(glGenVertexArrays(1, &submesh.vao[0]));
 
         glCheck(glBindVertexArray(submesh.vao[0]));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Patch].mesh.vbo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Patch].mesh.vboAllocation.vboID));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
 
         const auto& attribs = m_material.attribs;
@@ -937,11 +937,11 @@ void Q3BspSystem::createPatchMesh(const std::vector<float>& vertices)
     };
 
     //check we don't already have a buffer before creating a new one
-    if (!m_meshes[MeshData::Patch].mesh.vbo)
+    if (!m_meshes[MeshData::Patch].mesh.vboAllocation.vboID)
     {
         //create new buffers
         CRO_ASSERT(m_meshes[MeshData::Patch].submeshes.empty(), "ibos not empty!");
-        glCheck(glGenBuffers(1, &m_meshes[MeshData::Patch].mesh.vbo));
+        glCheck(glGenBuffers(1, &m_meshes[MeshData::Patch].mesh.vboAllocation.vboID));
 
         m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Position] = 3;
         m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Colour] = 4;
@@ -967,7 +967,7 @@ void Q3BspSystem::createPatchMesh(const std::vector<float>& vertices)
 
     //upload vert data
     m_meshes[MeshData::Patch].mesh.vertexCount = vertices.size() / (m_meshes[MeshData::Patch].mesh.vertexSize / sizeof(float));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Patch].mesh.vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Patch].mesh.vboAllocation.vboID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_meshes[MeshData::Patch].mesh.vertexSize * m_meshes[MeshData::Patch].mesh.vertexCount, vertices.data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }

@@ -204,7 +204,7 @@ bool RollingState::simulate(float dt)
         }
 
         auto& meshData = m_debugMesh.getComponent<cro::Model>().getMeshData();
-        glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID);
         glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(Vertex), verts.data(), GL_DYNAMIC_DRAW);
 
         auto* submesh = &meshData.indexData[0];

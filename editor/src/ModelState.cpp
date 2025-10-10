@@ -426,7 +426,7 @@ void ModelState::createScene()
     entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::DefaultShadow]));
     auto* mesh = &entity.getComponent<cro::Model>().getMeshData();
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh->vboAllocation.vboID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -471,7 +471,7 @@ void ModelState::createScene()
     verts = { 0.f,0.f,0.f, 0.f,1.f,1.f,1.f };
     indices = { 0 };
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh->vboAllocation.vboID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -849,7 +849,7 @@ void ModelState::updateGridMesh(cro::Mesh::Data& meshData, std::optional<cro::Sp
 
 
     meshData.vertexCount = verts.size() / vertStride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

@@ -51,8 +51,8 @@ namespace
 
         destVerts.clear();
         destVerts.resize(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-        glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, 0, meshData.vertexCount * meshData.vertexSize, destVerts.data()));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
+        glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, meshData.vertexCount * meshData.vertexSize, destVerts.data()));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
         destIndices.clear();

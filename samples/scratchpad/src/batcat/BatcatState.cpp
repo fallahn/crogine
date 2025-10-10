@@ -299,8 +299,6 @@ void BatcatState::loadAssets()
 
 void BatcatState::createScene()
 {
-    
-
     if (m_resources.shaders.loadFromString(ShaderID::Holo, 
         cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag, "#define TEXTURED\n#define RIMMING\n"))
     {
@@ -341,7 +339,7 @@ void BatcatState::createScene()
         md.createModel(entity);
     }*/
 
-    if (md.loadFromFile("assets/golf/plane.cmt"))
+    /*if (md.loadFromFile("assets/golf/plane.cmt"))
     {
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
@@ -355,7 +353,7 @@ void BatcatState::createScene()
         entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
         entity.getComponent<cro::Transform>().setPosition({ 7.f, 0.f, 8.f });
         md.createModel(entity);
-    }
+    }*/
 
 
     std::vector<glm::mat4> tx;

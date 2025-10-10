@@ -501,8 +501,8 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
     out.vertexCount = header.vertexCount;
     out.vertexSize = vertexSize * sizeof(float);
     
-    glCheck(glGenBuffers(1, &out.vbo));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, out.vbo));
+    glCheck(glGenBuffers(1, &out.vboAllocation.vboID));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, out.vboAllocation.vboID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, out.vertexSize * out.vertexCount, vertexData.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }

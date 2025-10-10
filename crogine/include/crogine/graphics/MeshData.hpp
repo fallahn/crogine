@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/Spatial.hpp>
 
+#include <crogine/detail/VBOAllocation.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 #include <cctype>
@@ -105,9 +106,12 @@ namespace cro
         */
         struct CRO_EXPORT_API Data final
         {
+            //it's up to a specific MeshBuilder implementation
+            //to use this - 0 block allocations have a unique
+            //VBO (if the ID is valid) rather than a shared one
+            Detail::VBOAllocation vboAllocation;
             std::size_t vertexCount = 0;
             std::size_t vertexSize = 0; //!< size of a single vertex *in bytes*
-            std::uint32_t vbo = 0;
             std::uint32_t primitiveType = 0;
             std::array<std::size_t, Mesh::Attribute::Total> attributes{}; //!< size of attribute if it exists
             std::uint32_t attributeFlags = 0; //!< bitmask of VertexProperty flags indicating the current properties of the vertex data.

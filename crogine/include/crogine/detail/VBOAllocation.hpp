@@ -48,10 +48,14 @@ namespace cro::Detail
     memory to the allocator so that it can be
     marked free
     */
-    struct VBOAllocation final
+    struct CRO_EXPORT_API VBOAllocation final
     {
+        //offset in bytes into the VBO
         std::size_t offset = 0;
-        std::size_t blockCount = 0; //remains 0 if allocation failed for some reason
+        //number of blocks allocation (0 if failed
+        //of if the vboID is a handle to a unique VBO)
+        std::size_t blockCount = 0;
+        //handle to the allocated VBO
         std::uint32_t vboID = 0;
     };
 

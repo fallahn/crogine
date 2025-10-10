@@ -224,8 +224,8 @@ bool MyApp::initialise()
 
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(States::ScratchPad::TrackOverlay);
-    //m_stateStack.pushState(States::ScratchPad::BatCat);
-    m_stateStack.pushState(States::ScratchPad::MainMenu);
+    m_stateStack.pushState(States::ScratchPad::BatCat);
+    //m_stateStack.pushState(States::ScratchPad::Retro);
 #else
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
     m_stateStack.pushState(States::ScratchPad::BatCat);

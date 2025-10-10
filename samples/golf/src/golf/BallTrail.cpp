@@ -208,7 +208,7 @@ void BallTrail::update()
 
                 //TODO we could sub buffer this and only add what's new
                 trail.meshData->vertexCount = trail.indices.size();
-                glCheck(glBindBuffer(GL_ARRAY_BUFFER, trail.meshData->vbo));
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, trail.meshData->vboAllocation.vboID));
                 glCheck(glBufferData(GL_ARRAY_BUFFER, trail.meshData->vertexSize * trail.meshData->vertexCount, trail.vertexData.data(), GL_DYNAMIC_DRAW));
                 glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

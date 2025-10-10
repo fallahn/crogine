@@ -752,7 +752,7 @@ void VoxelState::updateTerrainMesh(cro::IntRect region)
     }
 
     auto* meshData = &m_layers[Layer::Terrain].getComponent<cro::Model>().getMeshData();
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.vboID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
@@ -866,7 +866,7 @@ void VoxelState::updateVoxelMesh(const pv::Region& region)
             meshData->boundingBox[1] = glm::vec3(Voxel::ChunkSize);
             meshData->boundingSphere = meshData->boundingBox;
 
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.vboID));
             glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::PreviewVertex) * meshData->vertexCount, mesh.getVertexData().data(), GL_DYNAMIC_DRAW));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

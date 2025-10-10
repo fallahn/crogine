@@ -165,7 +165,7 @@ void SpriteSystem3D::process(float)
 
             auto& meshData = entity.getComponent<Model>().getMeshData();
             meshData.vertexCount = verts.size() / (meshData.vertexSize / sizeof(float));
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
             glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_DYNAMIC_DRAW));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -191,7 +191,7 @@ void SpriteSystem3D::process(float)
 //private
 void SpriteSystem3D::onEntityAdded(Entity entity)
 {
-    CRO_ASSERT(entity.getComponent<Model>().getMeshData().vbo == 0, "Model data already exists!");
+    CRO_ASSERT(entity.getComponent<Model>().getMeshData().vboAllocation.vboID == 0, "Model data already exists!");
 
     //TODO take a hash of the sprite and recycle mesh data if it already exists
     //init the Model component with the mesh and corresponding material.
@@ -273,9 +273,9 @@ void SpriteSystem3D::onEntityRemoved(Entity entity)
 #endif
     }
     //delete vertex buffer
-    if (meshData.vbo)
+    if (meshData.vboAllocation.vboID)
     {
-        glCheck(glDeleteBuffers(1, &meshData.vbo));
+        glCheck(glDeleteBuffers(1, &meshData.vboAllocation.vboID));
     }
 }
 

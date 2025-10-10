@@ -559,7 +559,7 @@ void VatsState::createNormalTexture()
             img.loadFromMemory(positionBuffer.data(), meshData.vertexCount, 1, cro::ImageFormat::RGB);
             m_positionTexture.loadFromImage(img);
 
-            glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+            glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID);
             glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
         }

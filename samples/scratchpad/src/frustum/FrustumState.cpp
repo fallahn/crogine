@@ -806,7 +806,7 @@ void FrustumState::updateFrustumVis(glm::mat4 worldMat, const std::array<glm::ve
     auto* indices = meshData.primitiveType == GL_LINES ? &lineIndices : &triangleIndices;
 
     meshData.vertexCount = vertices.size();
-    glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID);
     glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, vertices.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 

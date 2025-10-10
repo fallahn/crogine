@@ -211,7 +211,7 @@ void BillboardSystem::process(float)
             }
 
             meshData.vertexCount = vertexData.size() / (meshData.vertexSize / sizeof(float));
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
             glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

@@ -88,7 +88,7 @@ Mesh::Data DynamicMeshBuilder::build() const
     meshData.vertexCount = 0;
 
     //create vbo
-    glCheck(glGenBuffers(1, &meshData.vbo));
+    glCheck(glGenBuffers(1, &meshData.vboAllocation.vboID));
 
     meshData.submeshCount = m_submeshCount;
     for (auto i = 0; i < m_submeshCount; ++i)

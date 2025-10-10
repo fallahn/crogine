@@ -3295,7 +3295,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                             const auto& verts = m_backgroundScene.getSystem<RopeSystem>()->getNodePositions(ropeID);
 
                             meshData->vertexCount = verts.size();
-                            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+                            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.vboID));
                             glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_DYNAMIC_DRAW));
                             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
                         };
@@ -3434,7 +3434,7 @@ void MenuState::createSnow()
     }
 
     meshData->vertexCount = points.size() / stride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.vboID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

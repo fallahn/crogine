@@ -458,7 +458,7 @@ void GKGameState::createChunk(const std::vector<float>& verts, const std::vector
     auto* meshData = &m_resources.meshes.getMesh(meshID);
 
     meshData->vertexCount = vertexCount;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.vboID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

@@ -299,7 +299,7 @@ void TerrainDepthmap::buildScene()
     meshData->boundingSphere.centre = { MaxBounds[0] / 2.f, 0.f, -MaxBounds[1] / 2.f };
     meshData->boundingSphere.radius = glm::length(meshData->boundingSphere.centre);
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.vboID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * terrainBuffer.size(), terrainBuffer.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

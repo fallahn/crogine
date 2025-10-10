@@ -327,7 +327,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     meshData->boundingBox[1] = glm::vec3(MaxBounds[0], 10.f, -MaxBounds[1]);
     meshData->boundingSphere.centre = { MaxBounds[0] / 2.f, 0.f, -MaxBounds[1] / 2.f };
     meshData->boundingSphere.radius = glm::length(meshData->boundingSphere.centre);
-    m_terrainProperties.vbo = meshData->vbo;
+    m_terrainProperties.vbo = meshData->vboAllocation.vboID;
     //vert data is uploaded to vbo via update()
 
     auto* submesh = &meshData->indexData[0];
@@ -853,7 +853,7 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
             //terrain callback is set active when shrubbery callback switches
         }
         //upload the slope buffer data - this might be different even if the hole model is the same
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_slopeProperties.meshData->vbo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_slopeProperties.meshData->vboAllocation.vboID));
         glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(SlopeVertex) * m_slopeBuffer.size(), m_slopeBuffer.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -1484,7 +1484,7 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
     for (auto i = 0u; i < vaos.size(); ++i)
     {
         glCheck(glBindVertexArray(vaos[i]));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
         glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Position]));
         glCheck(glVertexAttribPointer(attribs[cro::Mesh::Position], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), 0));
         glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Normal]));
