@@ -33,7 +33,7 @@ source distribution.
 
 using namespace cro;
 
-std::size_t MeshBuilder::getAttributeSize(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib)
+std::size_t MeshBuilder::getComponentCount(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib)
 {
     std::size_t size = 0;
     for (const auto& a : attrib)
@@ -48,7 +48,7 @@ std::size_t MeshBuilder::getVertexSize(const std::array<Mesh::Attribute, Mesh::A
     std::size_t total = 0;
     for (const auto& a : attrib)
     {
-        total += a.sizeInBytes();
+        total += a.getSize();
     }
 
     return total;

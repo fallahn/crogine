@@ -108,8 +108,10 @@ namespace cro
                 Total
             };
 
-            //TODO we probably only want to calc this once when the attribute is set
-            std::uint32_t sizeInBytes() const;
+            /*!
+            \brief returns the size of the Attribute in bytes
+            */
+            std::uint32_t getSize() const;
         };
 
         /*!

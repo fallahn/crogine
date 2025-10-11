@@ -502,7 +502,7 @@ void Model::bindMaterial(Material::Data& material)
         }
 
         //count the offset regardless as the mesh may have more attributes than material
-        pointerOffset += m_meshData.attributes[i].sizeInBytes();
+        pointerOffset += m_meshData.attributes[i].getSize();
     }
 
     //sort by size

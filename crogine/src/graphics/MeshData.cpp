@@ -68,7 +68,7 @@ namespace
     }
 }
 
-std::uint32_t Attribute::sizeInBytes() const
+std::uint32_t Attribute::getSize() const
 {
     switch (glType)
     {

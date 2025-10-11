@@ -125,7 +125,7 @@ Mesh::Data GridMeshBuilder::build() const
     meshData.attributeFlags |= (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
 
     meshData.primitiveType = GL_TRIANGLE_STRIP;
-    meshData.vertexCount = verts.size() / getAttributeSize(meshData.attributes);
+    meshData.vertexCount = verts.size() / getComponentCount(meshData.attributes);
     meshData.vertexSize = getVertexSize(meshData.attributes);
     createVBO(meshData, verts);
 
