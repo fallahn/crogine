@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/MeshBuilder.hpp>
 
 namespace cro
@@ -38,7 +39,6 @@ namespace cro
     Used by the ModelDefinition class when creating billboard meshes
     from and asset file loaded from disk.
     */
-
     class CRO_EXPORT_API BillboardMeshBuilder final : public cro::MeshBuilder
     {
     public:
@@ -52,6 +52,30 @@ namespace cro
         This always returns 0 which means each instance of a mesh created with this builder is unique.
         */
         std::size_t getUID() const override { return 0; }
+
+
+        /*!
+        \brief Vertex layout description
+        */
+
+        //struct VertexLayout final
+        //{
+        //    glm::vec3 pos = glm::vec3(0.f);
+        //    Detail::ColourLowP colour;
+        //    glm::vec3 rootPos = glm::vec3(0.f);
+        //    std::uint32_t uvCoords = 0; //pack with glm::packSnorm2x16()
+        //    //glm::vec2 size = glm::vec2(0.f); //TODO think about how we can pack this into un-normalised shorts
+        //    std::uint32_t size = 0;
+        //};
+
+        struct VertexLayout final
+        {
+            glm::vec3 pos = glm::vec3(0.f);
+            cro::Colour colour = cro::Colour::White;
+            glm::vec3 rootPos = glm::vec3(0.f);
+            glm::vec2 uvCoords = glm::vec2(0.f);
+            glm::vec2 size = glm::vec2(0.f);
+        };
     private:
 
 

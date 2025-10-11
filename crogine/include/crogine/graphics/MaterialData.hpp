@@ -180,7 +180,11 @@ namespace cro
             {
                 Index = 0,
                 Size,
-                Offset
+                GLType,
+                GLNormalised,
+                Offset,
+
+                Count
             };
 
             /*!
@@ -364,12 +368,12 @@ namespace cro
 
             /*
             Here be dragons! Don't modify these variables as they are configured
-            by the above function. These values should be considered read-only
+            by the setShader(). These values should be considered read-only
             */
 
             std::uint32_t shader = 0;
             //maps attrib location to attrib size between shader and mesh - index, size, pointer offset
-            std::array<std::array<std::int32_t, 3u>, Shader::AttributeID::Count> attribs{};
+            std::array<std::array<std::int32_t, Data::Count>, Shader::AttributeID::Count> attribs{};
             std::size_t attribCount = 0; //< count of attributes successfully mapped
             //maps uniform locations by indexing via Uniform enum
             std::array<std::int32_t, Uniform::Total> uniforms{-1,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};

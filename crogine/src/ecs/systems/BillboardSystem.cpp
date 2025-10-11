@@ -35,6 +35,8 @@ source distribution.
 
 #include <crogine/detail/OpenGL.hpp>
 
+#include <crogine/graphics/BillboardMeshBuilder.hpp>
+
 using namespace cro;
 
 namespace
@@ -58,7 +60,7 @@ void BillboardSystem::process(float)
         if (bbc.m_dirty)
         {
             //update the model data
-            std::vector<float> vertexData;
+            std::vector<BillboardMeshBuilder::VertexLayout> vertexData;
             std::vector<std::uint16_t> indexData;
             auto& meshData = entity.getComponent<cro::Model>().getMeshData();
 
@@ -71,109 +73,80 @@ void BillboardSystem::process(float)
             {
                 //the base position of the quad is stored in the vertex Normal data
                 //rather than any actual normal data.
-                auto baseIndex = static_cast<std::uint32_t>(vertexData.size() / (meshData.vertexSize / sizeof(float)));
 
-                //position
-                vertexData.push_back(-quad.origin.x);
-                vertexData.push_back(-quad.origin.y);
-                vertexData.push_back(0.f);
+                auto& v1 = vertexData.emplace_back();
+                v1.pos =
+                {
+                    -quad.origin.x,
+                    -quad.origin.y,
+                    0.f
+                };
+                v1.colour = quad.colour;                
+                v1.rootPos = quad.position;
+                v1.uvCoords =
+                {
+                    quad.textureRect.left,
+                    quad.textureRect.bottom
+                };
+                v1.size = quad.size;
 
-                //colour
-                vertexData.push_back(quad.colour.getRed());
-                vertexData.push_back(quad.colour.getGreen());
-                vertexData.push_back(quad.colour.getBlue());
-                vertexData.push_back(quad.colour.getAlpha());
-
-                //normal (actually root position)
-                vertexData.push_back(quad.position.x);
-                vertexData.push_back(quad.position.y);
-                vertexData.push_back(quad.position.z);
-
-                //tex coords
-                vertexData.push_back(quad.textureRect.left);
-                vertexData.push_back(quad.textureRect.bottom);
-
-                //quad size (used when billboards are fixed to screen size)
-                vertexData.push_back(quad.size.x);
-                vertexData.push_back(quad.size.y);
 
                 //--------------------
 
-                //position
-                vertexData.push_back(-quad.origin.x + quad.size.x);
-                vertexData.push_back(-quad.origin.y);
-                vertexData.push_back(0.f);
-
-                //colour
-                vertexData.push_back(quad.colour.getRed());
-                vertexData.push_back(quad.colour.getGreen());
-                vertexData.push_back(quad.colour.getBlue());
-                vertexData.push_back(quad.colour.getAlpha());
-
-                //normal (actually root position)
-                vertexData.push_back(quad.position.x);
-                vertexData.push_back(quad.position.y);
-                vertexData.push_back(quad.position.z);
-
-                //tex coords
-                vertexData.push_back(quad.textureRect.left + quad.textureRect.width);
-                vertexData.push_back(quad.textureRect.bottom);
-
-                //quad size (used when billboards are fixed to screen size)
-                vertexData.push_back(quad.size.x);
-                vertexData.push_back(quad.size.y);
+                auto& v2 = vertexData.emplace_back();
+                v2.pos =
+                {
+                    -quad.origin.x + quad.size.x,
+                    -quad.origin.y,
+                    0.f
+                };
+                v2.colour = quad.colour;
+                v2.rootPos = quad.position;
+                v2.uvCoords =
+                {
+                    quad.textureRect.left + quad.textureRect.width,
+                    quad.textureRect.bottom
+                };
+                v2.size = quad.size;
 
                 //--------------------
 
-                //position
-                vertexData.push_back(-quad.origin.x + quad.size.x);
-                vertexData.push_back(-quad.origin.y + quad.size.y);
-                vertexData.push_back(0.f);
+                auto& v3 = vertexData.emplace_back();
+                v3.pos =
+                {
+                    -quad.origin.x + quad.size.x,
+                    -quad.origin.y + quad.size.y,
+                    0.f
+                };
+                v3.colour = quad.colour;
+                v3.rootPos = quad.position;
+                v3.uvCoords =
+                {
+                    quad.textureRect.left + quad.textureRect.width,
+                    quad.textureRect.bottom + quad.textureRect.height
+                };
+                v3.size = quad.size;
 
-                //colour
-                vertexData.push_back(quad.colour.getRed());
-                vertexData.push_back(quad.colour.getGreen());
-                vertexData.push_back(quad.colour.getBlue());
-                vertexData.push_back(quad.colour.getAlpha());
-
-                //normal (actually root position)
-                vertexData.push_back(quad.position.x);
-                vertexData.push_back(quad.position.y);
-                vertexData.push_back(quad.position.z);
-
-                //tex coords
-                vertexData.push_back(quad.textureRect.left + quad.textureRect.width);
-                vertexData.push_back(quad.textureRect.bottom + quad.textureRect.height);
-
-                //quad size (used when billboards are fixed to screen size)
-                vertexData.push_back(quad.size.x);
-                vertexData.push_back(quad.size.y);
 
                 //-------------------
 
-                //position
-                vertexData.push_back(-quad.origin.x);
-                vertexData.push_back(-quad.origin.y + quad.size.y);
-                vertexData.push_back(0.f);
+                auto& v4 = vertexData.emplace_back();
+                v4.pos =
+                {
+                    -quad.origin.x,
+                    -quad.origin.y + quad.size.y,
+                    0.f
+                };
+                v4.colour = quad.colour;
+                v4.rootPos = quad.position;
+                v4.uvCoords =
+                {
+                    quad.textureRect.left,
+                    quad.textureRect.bottom + quad.textureRect.height
+                };
+                v4.size = quad.size;
 
-                //colour
-                vertexData.push_back(quad.colour.getRed());
-                vertexData.push_back(quad.colour.getGreen());
-                vertexData.push_back(quad.colour.getBlue());
-                vertexData.push_back(quad.colour.getAlpha());
 
-                //normal (actually root position)
-                vertexData.push_back(quad.position.x);
-                vertexData.push_back(quad.position.y);
-                vertexData.push_back(quad.position.z);
-
-                //tex coords
-                vertexData.push_back(quad.textureRect.left);
-                vertexData.push_back(quad.textureRect.bottom + quad.textureRect.height);
-
-                //quad size (used when billboards are fixed to screen size)
-                vertexData.push_back(quad.size.x);
-                vertexData.push_back(quad.size.y);
 
                 //min point - not strictly accurate but enough to encompass the bounds
                 if (meshData.boundingBox[0].x > quad.position.x - quad.size.x)
@@ -204,6 +177,8 @@ void BillboardSystem::process(float)
                 }
 
 
+                const auto baseIndex = static_cast<std::uint32_t>(vertexData.size());
+
                 //two tris
                 indexData.push_back(baseIndex);
                 indexData.push_back(baseIndex + 2);
@@ -214,12 +189,11 @@ void BillboardSystem::process(float)
                 indexData.push_back(baseIndex + 1);
             }
 
-            meshData.vertexCount = vertexData.size() / (meshData.vertexSize / sizeof(float));
+            meshData.vertexCount = vertexData.size();
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
-            glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW));
+            glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(BillboardMeshBuilder::VertexLayout), vertexData.data(), GL_DYNAMIC_DRAW));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-            meshData.indexData[0].format = GL_UNSIGNED_SHORT;
             meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indexData.size());
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo));
             glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(std::uint16_t), indexData.data(), GL_DYNAMIC_DRAW));

@@ -1000,8 +1000,8 @@ void Q3BspSystem::initMaterial()
 
     //sort by size
     std::sort(std::begin(m_material.attribs), std::end(m_material.attribs),
-        [](const std::array<std::int32_t, 3>& ip,
-            const std::array<std::int32_t, 3>& op)
+        [](const std::array<std::int32_t, cro::Material::Data::Count>& ip,
+            const std::array<std::int32_t, cro::Material::Data::Count>& op)
         {
             return ip[cro::Material::Data::Size] > op[cro::Material::Data::Size];
         });
