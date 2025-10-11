@@ -83,12 +83,12 @@ void BillboardSystem::process(float)
                 };
                 v1.colour = quad.colour;                
                 v1.rootPos = quad.position;
-                v1.uvCoords =
+                v1.uvCoords = glm::packSnorm2x16(
                 {
                     quad.textureRect.left,
                     quad.textureRect.bottom
-                };
-                v1.size = quad.size;
+                });
+                v1.size = glm::packHalf2x16(quad.size);
 
 
                 //--------------------
@@ -102,12 +102,12 @@ void BillboardSystem::process(float)
                 };
                 v2.colour = quad.colour;
                 v2.rootPos = quad.position;
-                v2.uvCoords =
+                v2.uvCoords = glm::packSnorm2x16(
                 {
                     quad.textureRect.left + quad.textureRect.width,
                     quad.textureRect.bottom
-                };
-                v2.size = quad.size;
+                });
+                v2.size = glm::packHalf2x16(quad.size);
 
                 //--------------------
 
@@ -120,12 +120,12 @@ void BillboardSystem::process(float)
                 };
                 v3.colour = quad.colour;
                 v3.rootPos = quad.position;
-                v3.uvCoords =
+                v3.uvCoords = glm::packSnorm2x16(
                 {
                     quad.textureRect.left + quad.textureRect.width,
                     quad.textureRect.bottom + quad.textureRect.height
-                };
-                v3.size = quad.size;
+                });
+                v3.size = glm::packHalf2x16(quad.size);
 
 
                 //-------------------
@@ -139,12 +139,12 @@ void BillboardSystem::process(float)
                 };
                 v4.colour = quad.colour;
                 v4.rootPos = quad.position;
-                v4.uvCoords =
+                v4.uvCoords = glm::packSnorm2x16(
                 {
                     quad.textureRect.left,
                     quad.textureRect.bottom + quad.textureRect.height
-                };
-                v4.size = quad.size;
+                });
+                v4.size = glm::packHalf2x16(quad.size);
 
 
 
@@ -191,6 +191,8 @@ void BillboardSystem::process(float)
 
             meshData.vertexCount = vertexData.size();
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
+            //TODO if we switch to VBO allocator we need to resize if larger than previous
+            //TODO if we switch to VBO allocator this needs to be SubData
             glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(BillboardMeshBuilder::VertexLayout), vertexData.data(), GL_DYNAMIC_DRAW));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

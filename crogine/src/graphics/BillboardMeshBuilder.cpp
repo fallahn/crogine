@@ -50,10 +50,19 @@ Mesh::Data BillboardMeshBuilder::build() const
     meshData.attributeFlags = VertexProperty::Position | VertexProperty::Normal | VertexProperty::Colour | VertexProperty::UV0 | VertexProperty::UV1;
 
     meshData.attributes[Mesh::Attribute::Position].size = 3;
+    
     meshData.attributes[Mesh::Attribute::Colour].size = 4;
-    meshData.attributes[Mesh::Attribute::Normal].size = 3;
+    meshData.attributes[Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
+    meshData.attributes[Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+
+    meshData.attributes[Mesh::Attribute::Normal].size = 3; //stores the root position so we can't really compress this
+    
     meshData.attributes[Mesh::Attribute::UV0].size = 2;
+    meshData.attributes[Mesh::Attribute::UV0].glType = GL_SHORT;
+    meshData.attributes[Mesh::Attribute::UV0].glNormalised = GL_TRUE;
+    
     meshData.attributes[Mesh::Attribute::UV1].size = 2;
+    meshData.attributes[Mesh::Attribute::UV1].glType = GL_HALF_FLOAT;
 
     meshData.primitiveType = GL_TRIANGLES;
     meshData.vertexSize = getVertexSize(meshData.attributes);

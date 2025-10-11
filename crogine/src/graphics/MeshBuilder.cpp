@@ -48,27 +48,7 @@ std::size_t MeshBuilder::getVertexSize(const std::array<Mesh::Attribute, Mesh::A
     std::size_t total = 0;
     for (const auto& a : attrib)
     {
-        switch (a.glType)
-        {
-        default: 
-            LogW << "getVertexSize(): " << a.glType << " - unhandled data type" << std::endl;
-            break;
-        case GL_UNSIGNED_BYTE:
-        case GL_BYTE:
-            total += a.size;
-            break;
-        case GL_UNSIGNED_SHORT:
-        case GL_SHORT:
-            total += a.size * 2;
-            break;
-        case GL_UNSIGNED_INT:
-        case GL_INT:
-        case GL_UNSIGNED_INT_10_10_10_2:
-        case GL_UNSIGNED_INT_2_10_10_10_REV:
-        case GL_FLOAT:
-            total += a.size * 4;
-            break;
-        }
+        total += a.sizeInBytes();
     }
 
     return total;

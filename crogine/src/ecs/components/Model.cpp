@@ -483,13 +483,13 @@ void Model::bindMaterial(Material::Data& material)
     {
         if (material.attribs[i][Material::Data::Index] > -1)
         {
-            //attrib exists in shader so map its size
+            //attrib exists in shader so map its size/type
             material.attribs[i][Material::Data::Size] = static_cast<std::int32_t>(m_meshData.attributes[i].size);
             material.attribs[i][Material::Data::GLType] = static_cast<std::int32_t>(m_meshData.attributes[i].glType);
             material.attribs[i][Material::Data::GLNormalised] = static_cast<std::int32_t>(m_meshData.attributes[i].glNormalised);
 
             //calc the pointer offset for each attrib
-            material.attribs[i][Material::Data::Offset] = static_cast<std::int32_t>(pointerOffset * sizeof(float));
+            material.attribs[i][Material::Data::Offset] = static_cast<std::int32_t>(pointerOffset);
         }
         else
         {
@@ -500,7 +500,9 @@ void Model::bindMaterial(Material::Data& material)
             material.attribs[i][Material::Data::GLNormalised] = GL_FALSE;
             material.attribs[i][Material::Data::Offset] = 0;
         }
-        pointerOffset += m_meshData.attributes[i].size; //count the offset regardless as the mesh may have more attributes than material
+
+        //count the offset regardless as the mesh may have more attributes than material
+        pointerOffset += m_meshData.attributes[i].sizeInBytes();
     }
 
     //sort by size

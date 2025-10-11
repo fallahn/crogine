@@ -110,9 +110,9 @@ namespace cro
         */
         virtual Mesh::Data build() const = 0;
 
-        //returns the total number of components in a given set of attributes
+        //returns the total number of components in a given set of attributes - TODO rename this
         static std::size_t getAttributeSize(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib);
-        //returns the size of the attribute layout in bytes
+        //returns the size of the vertex layout in bytes
         static std::size_t getVertexSize(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib);
         static void createVBO(Mesh::Data& meshData, const std::vector<float>& vertexData);
         static void createIBO(Mesh::Data& meshData, const void* idxData, std::size_t idx, std::int32_t dataSize);

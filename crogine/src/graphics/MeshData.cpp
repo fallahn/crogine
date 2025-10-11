@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -68,6 +68,28 @@ namespace
     }
 }
 
+std::uint32_t Attribute::sizeInBytes() const
+{
+    switch (glType)
+    {
+    default:
+        LogW << "getVertexSize(): " << glType << " - unhandled data type" << std::endl;
+        return 0;
+    case GL_UNSIGNED_BYTE:
+    case GL_BYTE:
+        return size;
+    case GL_UNSIGNED_SHORT:
+    case GL_SHORT:
+    case GL_HALF_FLOAT:
+        return size * 2;
+    case GL_UNSIGNED_INT:
+    case GL_INT:
+    case GL_UNSIGNED_INT_10_10_10_2:
+    case GL_UNSIGNED_INT_2_10_10_10_REV:
+    case GL_FLOAT:
+        return size * 4;
+    }
+}
 
 void cro::Mesh::readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint8_t>>& destIndices)
 {

@@ -57,25 +57,15 @@ namespace cro
         /*!
         \brief Vertex layout description
         */
-
-        //struct VertexLayout final
-        //{
-        //    glm::vec3 pos = glm::vec3(0.f);
-        //    Detail::ColourLowP colour;
-        //    glm::vec3 rootPos = glm::vec3(0.f);
-        //    std::uint32_t uvCoords = 0; //pack with glm::packSnorm2x16()
-        //    //glm::vec2 size = glm::vec2(0.f); //TODO think about how we can pack this into un-normalised shorts
-        //    std::uint32_t size = 0;
-        //};
-
         struct VertexLayout final
         {
             glm::vec3 pos = glm::vec3(0.f);
-            cro::Colour colour = cro::Colour::White;
+            Detail::ColourLowP colour;
             glm::vec3 rootPos = glm::vec3(0.f);
-            glm::vec2 uvCoords = glm::vec2(0.f);
-            glm::vec2 size = glm::vec2(0.f);
+            std::uint32_t uvCoords = 0; //packed with glm::packSnorm2x16()
+            std::uint32_t size = 0; //packed into GL_HALF_FLOAT with glm::packHalf2x16();
         };
+
     private:
 
 
