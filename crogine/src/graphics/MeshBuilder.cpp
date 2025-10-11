@@ -38,7 +38,7 @@ std::size_t MeshBuilder::getComponentCount(const std::array<Mesh::Attribute, Mes
     std::size_t size = 0;
     for (const auto& a : attrib)
     {
-        size += a.size;
+        size += a.componentCount;
     }
     return size;
 }

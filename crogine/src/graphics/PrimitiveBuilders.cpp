@@ -74,11 +74,11 @@ Mesh::Data QuadBuilder::build() const
         halfSizeX, -halfSizeY, 0.f,   0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     m_textureRect.left + m_textureRect.width, m_textureRect.bottom
     };
 
-    meshData.attributes[Mesh::Attribute::Position].size = 3;
-    meshData.attributes[Mesh::Attribute::Normal].size = 3;
-    meshData.attributes[Mesh::Attribute::Tangent].size = 3;
-    meshData.attributes[Mesh::Attribute::Bitangent].size = 3;
-    meshData.attributes[Mesh::Attribute::UV0].size = 2;
+    meshData.attributes[Mesh::Attribute::Position].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Normal].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Tangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Bitangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::UV0].componentCount = 2;
     meshData.attributeFlags = (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
     meshData.primitiveType = GL_TRIANGLE_STRIP;
     meshData.vertexCount = 4;
@@ -158,11 +158,11 @@ Mesh::Data CubeBuilder::build() const
         dim.x, -dim.y, -dim.z,   0.f,-1.f,0.f,   -1.f,0.f,0.f,   0.f,0.f,-1.f,     1.f, 0.f
     };
 
-    meshData.attributes[Mesh::Attribute::Position].size = 3;
-    meshData.attributes[Mesh::Attribute::Normal].size = 3;
-    meshData.attributes[Mesh::Attribute::Tangent].size = 3;
-    meshData.attributes[Mesh::Attribute::Bitangent].size = 3;
-    meshData.attributes[Mesh::Attribute::UV0].size = 2;
+    meshData.attributes[Mesh::Attribute::Position].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Normal].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Tangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Bitangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::UV0].componentCount = 2;
     meshData.attributeFlags = (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
     meshData.primitiveType = GL_TRIANGLES;
     meshData.vertexCount = 24;
@@ -317,11 +317,11 @@ Mesh::Data SphereBuilder::build() const
     buildFace(rotation, { 0.f, v }); //Y+
 
 
-    meshData.attributes[Mesh::Attribute::Position].size = 3;
-    meshData.attributes[Mesh::Attribute::Normal].size = 3;
-    meshData.attributes[Mesh::Attribute::Tangent].size = 3;
-    meshData.attributes[Mesh::Attribute::Bitangent].size = 3;
-    meshData.attributes[Mesh::Attribute::UV0].size = 2;
+    meshData.attributes[Mesh::Attribute::Position].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Normal].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Tangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Bitangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::UV0].componentCount = 2;
     meshData.attributeFlags = (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
     meshData.primitiveType = GL_TRIANGLE_STRIP;
     

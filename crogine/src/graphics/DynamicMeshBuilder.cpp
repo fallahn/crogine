@@ -48,39 +48,39 @@ Mesh::Data DynamicMeshBuilder::build() const
     Mesh::Data meshData;
     meshData.attributeFlags = m_flags;
 
-    meshData.attributes[Mesh::Attribute::Position].size = 3;
+    meshData.attributes[Mesh::Attribute::Position].componentCount = 3;
     if (m_flags & VertexProperty::Colour)
     {
-        meshData.attributes[Mesh::Attribute::Colour].size = 4;
+        meshData.attributes[Mesh::Attribute::Colour].componentCount = 4;
     }
 
     if (m_flags & VertexProperty::Normal)
     {
-        meshData.attributes[Mesh::Attribute::Normal].size = 3;
+        meshData.attributes[Mesh::Attribute::Normal].componentCount = 3;
     }
 
     if (m_flags & (VertexProperty::Tangent | VertexProperty::Bitangent))
     {
-        meshData.attributes[Mesh::Attribute::Tangent].size = 3;
-        meshData.attributes[Mesh::Attribute::Bitangent].size = 3;
+        meshData.attributes[Mesh::Attribute::Tangent].componentCount = 3;
+        meshData.attributes[Mesh::Attribute::Bitangent].componentCount = 3;
     }
 
     if (m_flags & VertexProperty::UV0)
     {
-        meshData.attributes[Mesh::Attribute::UV0].size = 2;
+        meshData.attributes[Mesh::Attribute::UV0].componentCount = 2;
     }
     if (m_flags & VertexProperty::UV1)
     {
-        meshData.attributes[Mesh::Attribute::UV1].size = 2;
+        meshData.attributes[Mesh::Attribute::UV1].componentCount = 2;
     }
 
     if (m_flags & VertexProperty::BlendIndices)
     {
-        meshData.attributes[Mesh::Attribute::BlendIndices].size = 4;
+        meshData.attributes[Mesh::Attribute::BlendIndices].componentCount = 4;
     }
     if (m_flags & VertexProperty::BlendWeights)
     {
-        meshData.attributes[Mesh::Attribute::BlendWeights].size = 4;
+        meshData.attributes[Mesh::Attribute::BlendWeights].componentCount = 4;
     }
 
     meshData.primitiveType = m_primitiveType;

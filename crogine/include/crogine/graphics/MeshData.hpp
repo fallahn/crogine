@@ -88,7 +88,7 @@ namespace cro
         */
         struct CRO_EXPORT_API Attribute final
         {
-            std::uint32_t size = 0; //number of components - TODO rename this
+            std::uint32_t componentCount = 0; //number of components
             std::uint32_t glType = 0x1406; //GL_FLOAT;
             std::uint32_t glNormalised = 0; // GL_FALSE;
 

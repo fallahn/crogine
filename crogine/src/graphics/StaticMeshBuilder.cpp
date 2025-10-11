@@ -56,35 +56,35 @@ Mesh::Data StaticMeshBuilder::build() const
         CRO_ASSERT(meshFile.flags && (meshFile.flags & VertexProperty::Position), "Invalid flag value");
 
         Mesh::Data meshData;
-        meshData.attributes[Mesh::Attribute::Position].size = 3;
+        meshData.attributes[Mesh::Attribute::Position].componentCount = 3;
         meshData.attributeFlags = VertexProperty::Position;
         if (meshFile.flags & VertexProperty::Colour)
         {
-            meshData.attributes[Mesh::Attribute::Colour].size = 3;
+            meshData.attributes[Mesh::Attribute::Colour].componentCount = 3;
             meshData.attributeFlags |= VertexProperty::Colour;
         }
 
         if (meshFile.flags & VertexProperty::Normal)
         {
-            meshData.attributes[Mesh::Attribute::Normal].size = 3;
+            meshData.attributes[Mesh::Attribute::Normal].componentCount = 3;
             meshData.attributeFlags |= VertexProperty::Normal;
         }
 
         if (meshFile.flags & (VertexProperty::Tangent | VertexProperty::Bitangent))
         {
-            meshData.attributes[Mesh::Attribute::Tangent].size = 3;
-            meshData.attributes[Mesh::Attribute::Bitangent].size = 3;
+            meshData.attributes[Mesh::Attribute::Tangent].componentCount = 3;
+            meshData.attributes[Mesh::Attribute::Bitangent].componentCount = 3;
             meshData.attributeFlags |= VertexProperty::Tangent | VertexProperty::Bitangent;
         }
 
         if (meshFile.flags & VertexProperty::UV0)
         {
-            meshData.attributes[Mesh::Attribute::UV0].size = 2;
+            meshData.attributes[Mesh::Attribute::UV0].componentCount = 2;
             meshData.attributeFlags |= VertexProperty::UV0;
         }
         if (meshFile.flags & VertexProperty::UV1)
         {
-            meshData.attributes[Mesh::Attribute::UV1].size = 2;
+            meshData.attributes[Mesh::Attribute::UV1].componentCount = 2;
             meshData.attributeFlags |= VertexProperty::UV1;
         }
 

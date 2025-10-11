@@ -110,18 +110,18 @@ Mesh::Data GridMeshBuilder::build() const
 
 
     Mesh::Data meshData;
-    meshData.attributes[Mesh::Attribute::Position].size = 3;
+    meshData.attributes[Mesh::Attribute::Position].componentCount = 3;
 
     if (m_colouredVerts)
     {
-        meshData.attributes[Mesh::Attribute::Colour].size = 4;
+        meshData.attributes[Mesh::Attribute::Colour].componentCount = 4;
         meshData.attributeFlags = VertexProperty::Colour;
     }
 
-    meshData.attributes[Mesh::Attribute::Normal].size = 3;
-    meshData.attributes[Mesh::Attribute::Tangent].size = 3;
-    meshData.attributes[Mesh::Attribute::Bitangent].size = 3;
-    meshData.attributes[Mesh::Attribute::UV0].size = 2;
+    meshData.attributes[Mesh::Attribute::Normal].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Tangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Bitangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::UV0].componentCount = 2;
     meshData.attributeFlags |= (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
 
     meshData.primitiveType = GL_TRIANGLE_STRIP;

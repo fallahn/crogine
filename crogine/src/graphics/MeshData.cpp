@@ -77,17 +77,17 @@ std::uint32_t Attribute::getSize() const
         return 0;
     case GL_UNSIGNED_BYTE:
     case GL_BYTE:
-        return size;
+        return componentCount;
     case GL_UNSIGNED_SHORT:
     case GL_SHORT:
     case GL_HALF_FLOAT:
-        return size * 2;
+        return componentCount * 2;
     case GL_UNSIGNED_INT:
     case GL_INT:
     case GL_UNSIGNED_INT_10_10_10_2:
     case GL_UNSIGNED_INT_2_10_10_10_REV:
     case GL_FLOAT:
-        return size * 4;
+        return componentCount * 4;
     }
 }
 

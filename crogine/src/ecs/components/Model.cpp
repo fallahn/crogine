@@ -484,7 +484,7 @@ void Model::bindMaterial(Material::Data& material)
         if (material.attribs[i][Material::Data::Index] > -1)
         {
             //attrib exists in shader so map its size/type
-            material.attribs[i][Material::Data::Size] = static_cast<std::int32_t>(m_meshData.attributes[i].size);
+            material.attribs[i][Material::Data::Size] = static_cast<std::int32_t>(m_meshData.attributes[i].componentCount);
             material.attribs[i][Material::Data::GLType] = static_cast<std::int32_t>(m_meshData.attributes[i].glType);
             material.attribs[i][Material::Data::GLNormalised] = static_cast<std::int32_t>(m_meshData.attributes[i].glNormalised);
 

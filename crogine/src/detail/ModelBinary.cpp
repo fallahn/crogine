@@ -112,12 +112,12 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
 
         for (auto i = 0u; i < meshData.attributes.size(); ++i)
         {
-            if (meshData.attributes[i].size != 0)
+            if (meshData.attributes[i].componentCount != 0)
             {
                 offsets[i] = vertStride;
                 meshHeader.flags |= (1 << i);
             }
-            vertStride += meshData.attributes[i].size;
+            vertStride += meshData.attributes[i].componentCount;
         }
         CRO_ASSERT(vertexData.size() % vertStride == 0, "");
         //reset the bitan flag because setting it is misleading
@@ -151,7 +151,7 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
                         outVertexData.push_back(vertexData[i + offsets[j]]);
                         outVertexData.push_back(vertexData[i + offsets[j] + 1]);
                         outVertexData.push_back(vertexData[i + offsets[j] + 2]);
-                        if (meshData.attributes[Mesh::Attribute::Colour].size == 3)
+                        if (meshData.attributes[Mesh::Attribute::Colour].componentCount == 3)
                         {
                             //set alpha to one
                             outVertexData.push_back(1.f);
@@ -165,7 +165,7 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
                 case Mesh::Attribute::Tangent:
                     if (meshHeader.flags & (1 << j))
                     {
-                        CRO_ASSERT(meshData.attributes[Mesh::Attribute::Normal].size != 0, "");
+                        CRO_ASSERT(meshData.attributes[Mesh::Attribute::Normal].componentCount != 0, "");
                         glm::vec3 normal =
                         {
                             vertexData[i + offsets[Mesh::Attribute::Normal]],
@@ -411,26 +411,26 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
                         break;
                     case cro::Mesh::Attribute::Position:
                         vertStride += 3;
-                        meshData.attributes[i].size = 3;
+                        meshData.attributes[i].componentCount = 3;
                         break;
                     case cro::Mesh::Attribute::Colour:
                         vertStride += 4;
-                        meshData.attributes[i].size = 4;
+                        meshData.attributes[i].componentCount = 4;
                         break;
                     case cro::Mesh::Attribute::Normal:
                         vertStride += 3;
-                        meshData.attributes[i].size = 3;
+                        meshData.attributes[i].componentCount = 3;
                         break;
                     case cro::Mesh::Attribute::UV0:
                     case cro::Mesh::Attribute::UV1:
                         vertStride += 2;
-                        meshData.attributes[i].size = 2;
+                        meshData.attributes[i].componentCount = 2;
                         break;
                     case cro::Mesh::Attribute::Tangent:
                     case cro::Mesh::Attribute::BlendIndices:
                     case cro::Mesh::Attribute::BlendWeights:
                         vertStride += 4;
-                        meshData.attributes[i].size = 4;
+                        meshData.attributes[i].componentCount = 4;
                         break;
                     }
                 }
@@ -455,7 +455,7 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
 
             for (const auto& a : meshData.attributes)
             {
-                meshData.vertexSize += a.size;
+                meshData.vertexSize += a.componentCount;
             }
             meshData.vertexSize *= sizeof(float);
             meshData.vertexCount = dstVert.size() / (meshData.vertexSize / sizeof(float));

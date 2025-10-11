@@ -2287,7 +2287,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     std::size_t normalOffset = 0;
     for (auto i = 0u; i < cro::Mesh::Attribute::Normal; ++i)
     {
-        normalOffset += meshData.attributes[i].size;
+        normalOffset += meshData.attributes[i].componentCount;
     }
 
     cro::Shader normalShader;

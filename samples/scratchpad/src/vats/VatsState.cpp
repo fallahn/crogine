@@ -505,7 +505,7 @@ void VatsState::createNormalTexture()
         std::vector<std::vector<std::uint32_t>> indices;
         cro::Mesh::readVertexData(meshData, verts, indices);
 
-        if (meshData.attributes[cro::Mesh::Attribute::UV1].size != 0)
+        if (meshData.attributes[cro::Mesh::Attribute::UV1].componentCount != 0)
         {
             std::vector<std::uint8_t> positionBuffer(meshData.vertexCount * 3);
             std::vector<std::uint8_t> normalBuffer(meshData.vertexCount * 3);
@@ -514,13 +514,13 @@ void VatsState::createNormalTexture()
             std::size_t normalOffset = 0;
             for (auto i = 0u; i < cro::Mesh::Attribute::Normal; ++i)
             {
-                normalOffset += meshData.attributes[i].size;
+                normalOffset += meshData.attributes[i].componentCount;
             }
 
             std::size_t uv1Offset = 0;
             for (auto i = 0u; i < cro::Mesh::Attribute::UV1; ++i)
             {
-                uv1Offset += meshData.attributes[i].size;
+                uv1Offset += meshData.attributes[i].componentCount;
             }
 
             const auto unsign = [](float v)

@@ -44,27 +44,27 @@ cro::Mesh::Data NormalVisMeshBuilder::build() const
 
     //calculate the offset index into a single vertex which points
     //to any normal / tan / bitan values
-    if (m_sourceData.attributes[cro::Mesh::Attribute::Normal].size != 0)
+    if (m_sourceData.attributes[cro::Mesh::Attribute::Normal].componentCount != 0)
     {
         for (auto i = 0; i < cro::Mesh::Attribute::Normal; ++i)
         {
-            normalOffset += m_sourceData.attributes[i].size;
+            normalOffset += m_sourceData.attributes[i].componentCount;
         }
     }
 
-    if (m_sourceData.attributes[cro::Mesh::Attribute::Tangent].size != 0)
+    if (m_sourceData.attributes[cro::Mesh::Attribute::Tangent].componentCount != 0)
     {
         for (auto i = 0; i < cro::Mesh::Attribute::Tangent; ++i)
         {
-            tanOffset += m_sourceData.attributes[i].size;
+            tanOffset += m_sourceData.attributes[i].componentCount;
         }
     }
 
-    if (m_sourceData.attributes[cro::Mesh::Attribute::Bitangent].size != 0)
+    if (m_sourceData.attributes[cro::Mesh::Attribute::Bitangent].componentCount != 0)
     {
         for (auto i = 0; i < cro::Mesh::Attribute::Bitangent; ++i)
         {
-            bitanOffset += m_sourceData.attributes[i].size;
+            bitanOffset += m_sourceData.attributes[i].componentCount;
         }
     }
 
@@ -117,8 +117,8 @@ cro::Mesh::Data NormalVisMeshBuilder::build() const
     }
 
     cro::Mesh::Data meshData;
-    meshData.attributes[cro::Mesh::Attribute::Position].size = 3;
-    meshData.attributes[cro::Mesh::Attribute::Colour].size = 3;
+    meshData.attributes[cro::Mesh::Attribute::Position].componentCount = 3;
+    meshData.attributes[cro::Mesh::Attribute::Colour].componentCount = 3;
     meshData.attributeFlags = cro::VertexProperty::Position | cro::VertexProperty::Colour;
     meshData.primitiveType = GL_LINES;
     meshData.vertexSize = getVertexSize(meshData.attributes);
