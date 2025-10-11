@@ -774,6 +774,9 @@
     <ClInclude Include="..\crogine\include\crogine\detail\VBOAllocation.hpp">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\BillboardMeshBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1312,6 +1315,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\detail\VBOAllocation.cpp">
       <Filter>Source Files\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\BillboardMeshBuilder.cpp">
+      <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

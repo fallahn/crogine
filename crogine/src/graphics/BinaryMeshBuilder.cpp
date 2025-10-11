@@ -128,30 +128,30 @@ Mesh::Data BinaryMeshBuilder::build() const
                         break;
                     case Mesh::Attribute::Position:
                         vertStride += 3;
-                        meshData.attributes[i] = 3;
+                        meshData.attributes[i].size = 3;
                         break;
                     case Mesh::Attribute::Colour:
                         vertStride += 4;
-                        meshData.attributes[i] = 4;
+                        meshData.attributes[i].size = 4;
                         break;
                     case Mesh::Attribute::Normal:
                         vertStride += 3;
-                        meshData.attributes[i] = 3;
+                        meshData.attributes[i].size = 3;
                         break;
                     case Mesh::Attribute::Tangent:
-                        meshData.attributes[i] = 3;
-                        meshData.attributes[Mesh::Attribute::Bitangent] = 3;
+                        meshData.attributes[i].size = 3;
+                        meshData.attributes[Mesh::Attribute::Bitangent].size = 3;
                         vertStride += 4; //we'll be decoding tangents
                         break;
                     case Mesh::Attribute::UV0:
                     case Mesh::Attribute::UV1:
                         vertStride += 2;
-                        meshData.attributes[i] = 2;
+                        meshData.attributes[i].size = 2;
                         break;
                     case Mesh::Attribute::BlendIndices:
                     case Mesh::Attribute::BlendWeights:
                         vertStride += 4;
-                        meshData.attributes[i] = 4;
+                        meshData.attributes[i].size = 4;
                         break;
                     }
                 }

@@ -920,14 +920,14 @@ void ModelState::bakeLightmap()
 
     for (auto i = 0u; i < meshData.attributes.size(); ++i)
     {
-        if (i < cro::Mesh::Normal)
+        if (i < cro::Mesh::Attribute::Normal)
         {
-            normalOffset += meshData.attributes[i];
+            normalOffset += meshData.attributes[i].size;
         }
 
-        if (i < cro::Mesh::UV0)
+        if (i < cro::Mesh::Attribute::UV0)
         {
-            uvOffset += meshData.attributes[i];
+            uvOffset += meshData.attributes[i].size;
         }
     }
     normalOffset *= sizeof(float);

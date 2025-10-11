@@ -659,7 +659,7 @@ void ModelState::buildUI()
                 ImGui::Begin("AO Baker##0", &m_showBakingWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
                 const auto& meshData = m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
-                if (meshData.attributes[cro::Mesh::UV1] > 0)
+                if (meshData.attributes[cro::Mesh::Attribute::UV1].size > 0)
                 {
                     //TODO show combo to select which UV coords to use
                 }
@@ -967,7 +967,7 @@ void ModelState::drawInspector()
                     for (auto i = 0u; i < meshData.attributes.size(); ++i)
                     {
                         auto colour = ImGui::GetStyle().Colors[ImGuiCol_TextDisabled];
-                        if (meshData.attributes[i] > 0)
+                        if (meshData.attributes[i].size > 0)
                         {
 
                             colour = ImGui::GetStyle().Colors[ImGuiCol_Text];
@@ -1173,7 +1173,7 @@ void ModelState::drawInspector()
                     if (m_entities[EntityID::ActiveModel].isValid())
                     {
                         const auto& meshData = m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
-                        if (meshData.attributes[cro::Mesh::UV1] == 0)
+                        if (meshData.attributes[cro::Mesh::Attribute::UV1].size == 0)
                         {
                             ImGui::SameLine();
                             ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 0.f, 0.f, 1.f });

@@ -68,90 +68,90 @@ VBOAllocator::VBOAllocator(std::uint32_t blockSize, std::uint32_t vertexSize)
 
 
 #ifdef CRO_DEBUG_
-    registerWindow(
-        [&]()
-        {
-            const auto title = "VBO Allocation " + m_debugString;
-            if (ImGui::Begin(title.c_str()))
-            {
-                ImGui::Text("Allocated VBO Size: %d bytes (%d blocks)", m_finalOffset, m_finalOffset / m_blockSizeBytes);
-                ImGui::Text("Max VBO Size: %d bytes (%d blocks)", m_vboAllocationSize, m_vboAllocationSize / m_blockSizeBytes);
+    //registerWindow(
+    //    [&]()
+    //    {
+    //        const auto title = "VBO Allocation " + m_debugString;
+    //        if (ImGui::Begin(title.c_str()))
+    //        {
+    //            ImGui::Text("Allocated VBO Size: %d bytes (%d blocks)", m_finalOffset, m_finalOffset / m_blockSizeBytes);
+    //            ImGui::Text("Max VBO Size: %d bytes (%d blocks)", m_vboAllocationSize, m_vboAllocationSize / m_blockSizeBytes);
 
-                std::vector<ImVec4> blockCells(m_finalOffset / m_blockSizeBytes);
-                std::fill(blockCells.begin(), blockCells.end(), ImVec4(0.f, 1.f, 0.f, 1.f));
+    //            std::vector<ImVec4> blockCells(m_finalOffset / m_blockSizeBytes);
+    //            std::fill(blockCells.begin(), blockCells.end(), ImVec4(0.f, 1.f, 0.f, 1.f));
 
-                if (m_freeBlocks.empty())
-                {
-                    ImGui::Text("No free blocks");
-                }
-                else
-                {
-                    std::size_t blockCount = 0;
+    //            if (m_freeBlocks.empty())
+    //            {
+    //                ImGui::Text("No free blocks");
+    //            }
+    //            else
+    //            {
+    //                std::size_t blockCount = 0;
 
-                    for (const auto& fb : m_freeBlocks)
-                    {
-                        blockCount += fb.blockCount;
+    //                for (const auto& fb : m_freeBlocks)
+    //                {
+    //                    blockCount += fb.blockCount;
 
-                        for (auto j = fb.blockIndex; j < fb.blockIndex + fb.blockCount; ++j)
-                        {
-                            //if green channel is set we're good, else we must
-                            //be set to something else and are overlapping...
-                            blockCells[j] = blockCells[j].x == 1 ? ImVec4(1.f, 0.f, 0.f, 1.f) : ImVec4(1.f, 0.5f, 1.f, 1.f);
-                        }
-                    }
+    //                    for (auto j = fb.blockIndex; j < fb.blockIndex + fb.blockCount; ++j)
+    //                    {
+    //                        //if green channel is set we're good, else we must
+    //                        //be set to something else and are overlapping...
+    //                        blockCells[j] = blockCells[j].x == 1 ? ImVec4(1.f, 0.f, 0.f, 1.f) : ImVec4(1.f, 0.5f, 1.f, 1.f);
+    //                    }
+    //                }
 
-                    ImGui::Text("Free blocks: %d", blockCount);
-                }
+    //                ImGui::Text("Free blocks: %d", blockCount);
+    //            }
 
-                int i = 0;
-                for (const auto& b : blockCells)
-                {
-                    ImGui::PushStyleColor(ImGuiCol_Button, b);
+    //            int i = 0;
+    //            for (const auto& b : blockCells)
+    //            {
+    //                ImGui::PushStyleColor(ImGuiCol_Button, b);
 
-                    const std::string label = "##" + std::to_string(i++);
-                    ImGui::Button(label.c_str(), { 8.f, 10.f });
-                    ImGui::PopStyleColor();
+    //                const std::string label = "##" + std::to_string(i++);
+    //                ImGui::Button(label.c_str(), { 8.f, 10.f });
+    //                ImGui::PopStyleColor();
 
-                    //if (i % 32 != 0)
-                    {
-                        ImGui::SameLine();
-                    }
-                }
+    //                //if (i % 32 != 0)
+    //                {
+    //                    ImGui::SameLine();
+    //                }
+    //            }
 
-                ImGui::NewLine();
-                int k = 0;
-                for (const auto& fb : m_freeBlocks)
-                {
-                    ImGui::Text("Free block at %d, size %d blocks", fb.blockIndex, fb.blockCount);
+    //            ImGui::NewLine();
+    //            int k = 0;
+    //            for (const auto& fb : m_freeBlocks)
+    //            {
+    //                ImGui::Text("Free block at %d, size %d blocks", fb.blockIndex, fb.blockCount);
 
-                    blockCells.clear();
-                    blockCells.resize(m_finalOffset / m_blockSizeBytes);
-                    std::fill(blockCells.begin(), blockCells.end(), ImVec4(0.f, 1.f, 0.f, 1.f));
+    //                blockCells.clear();
+    //                blockCells.resize(m_finalOffset / m_blockSizeBytes);
+    //                std::fill(blockCells.begin(), blockCells.end(), ImVec4(0.f, 1.f, 0.f, 1.f));
 
-                    for (auto j = fb.blockIndex; j < fb.blockIndex + fb.blockCount; ++j)
-                    {
-                        blockCells[j] = ImVec4(1.f, 0.5f, 1.f, 1.f);
-                    }
+    //                for (auto j = fb.blockIndex; j < fb.blockIndex + fb.blockCount; ++j)
+    //                {
+    //                    blockCells[j] = ImVec4(1.f, 0.5f, 1.f, 1.f);
+    //                }
 
-                    i = 10000 * ++k;
-                    for (const auto& b : blockCells)
-                    {
-                        ImGui::PushStyleColor(ImGuiCol_Button, b);
+    //                i = 10000 * ++k;
+    //                for (const auto& b : blockCells)
+    //                {
+    //                    ImGui::PushStyleColor(ImGuiCol_Button, b);
 
-                        const std::string label = "##" + std::to_string(i++);
-                        ImGui::Button(label.c_str(), { 8.f, 10.f });
-                        ImGui::PopStyleColor();
+    //                    const std::string label = "##" + std::to_string(i++);
+    //                    ImGui::Button(label.c_str(), { 8.f, 10.f });
+    //                    ImGui::PopStyleColor();
 
-                        //if (i % 32 != 0)
-                        {
-                            ImGui::SameLine();
-                        }
-                    }
-                    ImGui::NewLine();
-                }
-            }
-            ImGui::End();
-        });
+    //                    //if (i % 32 != 0)
+    //                    {
+    //                        ImGui::SameLine();
+    //                    }
+    //                }
+    //                ImGui::NewLine();
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
 
 #endif
 }

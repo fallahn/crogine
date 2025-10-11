@@ -203,9 +203,9 @@ void SpriteSystem3D::onEntityAdded(Entity entity)
     Material::Data material = entity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Final, 0);
     const auto& sprite = entity.getComponent<Sprite>();
     bool attribsOK = 
-    (material.attribs[Mesh::Position][1] == 2 &&
-    material.attribs[Mesh::Colour][1] == 4 &&
-    material.attribs[Mesh::UV0][1] == 2);
+    (material.attribs[Mesh::Attribute::Position][1] == 2 &&
+    material.attribs[Mesh::Attribute::Colour][1] == 4 &&
+    material.attribs[Mesh::Attribute::UV0][1] == 2);
 
     if (material.shader == 0 //no custom shader added to model
         || !attribsOK) //or the vert attribs are wrong size for our data

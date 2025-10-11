@@ -143,6 +143,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\UIElementSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\UISystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\ArrayTexture.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\BillboardMeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\BinaryMeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\BoundingBox.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\CircleMeshBuilder.hpp" />
@@ -367,6 +368,7 @@
     <ClCompile Include="..\crogine\src\ecs\systems\TextSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\UIElementSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\UISystem.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\BillboardMeshBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\BinaryMeshBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\BoundingBox.cpp" />
     <ClCompile Include="..\crogine\src\graphics\CircleMeshBuilder.cpp" />

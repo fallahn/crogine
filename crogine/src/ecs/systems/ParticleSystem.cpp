@@ -293,19 +293,19 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
 
             //map attributes
             const auto& attribMap = shader->getAttribMap();
-            handle.attribData[0].index = attribMap[Mesh::Position];
+            handle.attribData[0].index = attribMap[Mesh::Attribute::Position];
             handle.attribData[0].size = 3;
             handle.attribData[0].offset = 0;
             handle.attribData[0].glNormalised = GL_FALSE;
             handle.attribData[0].glType = GL_FLOAT;
 
-            handle.attribData[1].index = attribMap[Mesh::Colour];
+            handle.attribData[1].index = attribMap[Mesh::Attribute::Colour];
             handle.attribData[1].size = 4;
             handle.attribData[1].offset = 3 * sizeof(float); //this is size of previous attrib
             handle.attribData[1].glNormalised = GL_TRUE;
             handle.attribData[1].glType = GL_UNSIGNED_BYTE;
 
-            handle.attribData[2].index = attribMap[Mesh::Normal]; //actually rotation/scale just using the existing naming convention
+            handle.attribData[2].index = attribMap[Mesh::Attribute::Normal]; //actually rotation/scale just using the existing naming convention
             handle.attribData[2].size = 3;
             handle.attribData[2].offset = handle.attribData[1].offset + (4 * sizeof(std::uint8_t));
             handle.attribData[2].glNormalised = GL_FALSE;

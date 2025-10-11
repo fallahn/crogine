@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,17 +33,17 @@ source distribution.
 
 using namespace cro;
 
-std::size_t MeshBuilder::getAttributeSize(const std::array<std::size_t, Mesh::Attribute::Total>& attrib)
+std::size_t MeshBuilder::getAttributeSize(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib)
 {
     std::size_t size = 0;
     for (const auto& a : attrib)
     {
-        size += a;
+        size += a.size;
     }
     return size;
 }
 
-std::size_t MeshBuilder::getVertexSize(const std::array<std::size_t, Mesh::Attribute::Total>& attrib)
+std::size_t MeshBuilder::getVertexSize(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib)
 {
     return getAttributeSize(attrib) * sizeof(float);
 }

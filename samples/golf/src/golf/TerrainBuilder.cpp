@@ -1470,9 +1470,9 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
     //hmmm is there some of this we can pre-process to save doing it here?
     const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
     std::size_t normalOffset = 0;
-    for (auto i = 0u; i < cro::Mesh::Normal; ++i)
+    for (auto i = 0u; i < cro::Mesh::Attribute::Normal; ++i)
     {
-        normalOffset += meshData.attributes[i];
+        normalOffset += meshData.attributes[i].size;
     }
 
     const auto& attribs = m_normalShader.getAttribMap();
@@ -1485,10 +1485,10 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
     {
         glCheck(glBindVertexArray(vaos[i]));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
-        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Position]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Position], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), 0));
-        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Normal]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Normal], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), (void*)(normalOffset * sizeof(float))));
+        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Position]));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Position], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), 0));
+        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Normal]));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Normal], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), (void*)(normalOffset * sizeof(float))));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
     }
     

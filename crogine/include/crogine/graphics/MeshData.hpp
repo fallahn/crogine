@@ -58,24 +58,6 @@ namespace cro
             Count
         };
 
-        /*!
-        \brief used to map vertex attributes to shader input
-        */
-        enum Attribute
-        {
-            Invalid = -1,
-            Position = 0,
-            Colour,
-            Normal,
-            Tangent,
-            Bitangent,
-            UV0,
-            UV1,
-            BlendIndices,
-            BlendWeights,
-
-            Total
-        };
 
         /*!
         \brief Index data for sub-mesh
@@ -102,6 +84,32 @@ namespace cro
         };
 
         /*!
+        \brief Contains the size and type of a vertex attribute if it exists.
+        */
+        struct CRO_EXPORT_API Attribute final
+        {
+            std::uint32_t size = 0; //number of components
+            std::uint32_t glType = 0x1406; //GL_FLOAT;
+            std::uint32_t glNormalised = 0; // GL_FALSE;
+
+            enum
+            {
+                Invalid = -1,
+                Position = 0,
+                Colour,
+                Normal,
+                Tangent,
+                Bitangent,
+                UV0,
+                UV1,
+                BlendIndices,
+                BlendWeights,
+
+                Total
+            };
+        };
+
+        /*!
         \brief Struct of mesh data used by Model components
         */
         struct CRO_EXPORT_API Data final
@@ -113,12 +121,12 @@ namespace cro
             std::size_t vertexCount = 0;
             std::size_t vertexSize = 0; //!< size of a single vertex *in bytes*
             std::uint32_t primitiveType = 0;
-            std::array<std::size_t, Mesh::Attribute::Total> attributes{}; //!< size of attribute if it exists
+            std::array<Attribute, Attribute::Total> attributes{}; //!< size of attribute if it exists
             std::uint32_t attributeFlags = 0; //!< bitmask of VertexProperty flags indicating the current properties of the vertex data.
 
             //index arrays
             std::size_t submeshCount = 0;
-            std::array<Mesh::IndexData, Mesh::IndexData::MaxBuffers> indexData{};
+            std::array<IndexData, IndexData::MaxBuffers> indexData{};
 
             //spatial bounds
             Box boundingBox;

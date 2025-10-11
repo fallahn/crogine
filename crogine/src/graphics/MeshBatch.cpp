@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -81,14 +81,14 @@ bool MeshBatch::addMesh(const std::string& path, const std::vector<glm::mat4>& t
 
     //check the vertex size
     std::uint32_t stride = 0;
-    for (auto i = 0u; i < Mesh::UV0; ++i)
+    for (auto i = 0u; i < Mesh::Attribute::UV0; ++i)
     {
         if (meshFile.flags & (1 << i))
         {
             stride += 3;
         }
     }
-    for (auto i = static_cast<std::int32_t>(Mesh::UV0); i < Mesh::UV1; ++i)
+    for (auto i = static_cast<std::int32_t>(Mesh::Attribute::UV0); i < Mesh::Attribute::UV1; ++i)
     {
         if (meshFile.flags & (1 << i))
         {

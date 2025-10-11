@@ -1628,7 +1628,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
     std::int32_t colourOffset = 0;
     for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
     {
-        colourOffset += static_cast<std::int32_t>(meshData.attributes[i]);
+        colourOffset += static_cast<std::int32_t>(meshData.attributes[i].size);
     }
 
     //we have to create a specific object for each sub mesh

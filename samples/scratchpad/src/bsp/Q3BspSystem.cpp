@@ -845,16 +845,16 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
         CRO_ASSERT(m_meshes[MeshData::Brush].submeshes.empty(), "ibos not empty!");
         glCheck(glGenBuffers(1, &m_meshes[MeshData::Brush].mesh.vboAllocation.vboID));
 
-        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Position] = 3;
-        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Colour] = 4;
-        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Normal] = 3;
-        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::UV0] = 2;
+        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Attribute::Position].size = 3;
+        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Attribute::Colour].size = 4;
+        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Attribute::Normal].size = 3;
+        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Attribute::UV0].size = 2;
         m_meshes[MeshData::Brush].mesh.attributeFlags = (cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0);
 
         m_meshes[MeshData::Brush].mesh.primitiveType = GL_TRIANGLES;
         for (auto a : m_meshes[MeshData::Brush].mesh.attributes)
         {
-            m_meshes[MeshData::Brush].mesh.vertexSize += a;
+            m_meshes[MeshData::Brush].mesh.vertexSize += a.size;
         }
         m_meshes[MeshData::Brush].mesh.vertexSize *= sizeof(float);
         
@@ -943,16 +943,16 @@ void Q3BspSystem::createPatchMesh(const std::vector<float>& vertices)
         CRO_ASSERT(m_meshes[MeshData::Patch].submeshes.empty(), "ibos not empty!");
         glCheck(glGenBuffers(1, &m_meshes[MeshData::Patch].mesh.vboAllocation.vboID));
 
-        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Position] = 3;
-        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Colour] = 4;
-        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Normal] = 3;
-        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::UV0] = 2;
+        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Attribute::Position].size = 3;
+        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Attribute::Colour].size = 4;
+        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Attribute::Normal].size = 3;
+        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Attribute::UV0].size = 2;
         m_meshes[MeshData::Patch].mesh.attributeFlags = (cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0);
 
         m_meshes[MeshData::Patch].mesh.primitiveType = GL_TRIANGLE_STRIP;
         for (auto a : m_meshes[MeshData::Patch].mesh.attributes)
         {
-            m_meshes[MeshData::Patch].mesh.vertexSize += a;
+            m_meshes[MeshData::Patch].mesh.vertexSize += a.size;
         }
         m_meshes[MeshData::Patch].mesh.vertexSize *= sizeof(float);
 
@@ -990,12 +990,12 @@ void Q3BspSystem::initMaterial()
         if (m_material.attribs[i][cro::Material::Data::Index] > -1)
         {
             //attrib exists in shader so map its size
-            m_material.attribs[i][cro::Material::Data::Size] = static_cast<std::int32_t>(m_meshes[MeshData::Brush].mesh.attributes[i]);
+            m_material.attribs[i][cro::Material::Data::Size] = static_cast<std::int32_t>(m_meshes[MeshData::Brush].mesh.attributes[i].size);
 
             //calc the pointer offset for each attrib
             m_material.attribs[i][cro::Material::Data::Offset] = static_cast<std::int32_t>(pointerOffset * sizeof(float));
         }
-        pointerOffset += m_meshes[MeshData::Brush].mesh.attributes[i]; //count the offset regardless as the mesh may have more attributes than material
+        pointerOffset += m_meshes[MeshData::Brush].mesh.attributes[i].size; //count the offset regardless as the mesh may have more attributes than material
     }
 
     //sort by size

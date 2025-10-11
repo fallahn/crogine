@@ -250,7 +250,7 @@ void RollingState::addSystems()
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
-    ShaderIDs[ShaderID::Wireframe] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::Mesh::Position | cro::Mesh::Colour);
+    ShaderIDs[ShaderID::Wireframe] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::Mesh::Attribute::Position | cro::Mesh::Attribute::Colour);
     MaterialIDs[MaterialID::Wireframe] = m_resources.materials.add(m_resources.shaders.get(ShaderIDs[ShaderID::Wireframe]));
 }
 

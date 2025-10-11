@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -194,15 +194,15 @@ SimpleDrawable::~SimpleDrawable()
 bool SimpleDrawable::setShader(const Shader& shader)
 {
     const auto& attribs = shader.getAttribMap();
-    if (attribs[Mesh::Position] == -1)
+    if (attribs[Mesh::Attribute::Position] == -1)
     {
         LogE << "No position attribute was found in shader" << std::endl;
         LogI << "SimpleDrawable expects vec2 a_position" << std::endl;
         return false;
     }
 
-    if (attribs[Mesh::Colour] == -1
-        && attribs[Mesh::UV0] == -1)
+    if (attribs[Mesh::Attribute::Colour] == -1
+        && attribs[Mesh::Attribute::UV0] == -1)
     {
         LogE << "No colour attribute or UV attribute was found in shader" << std::endl;
         LogI << "SimpleDrawable expects at least vec4 a_colour OR vec a_texCoord0 (or both)" << std::endl;
@@ -485,24 +485,24 @@ void SimpleDrawable::updateVAO(const Shader& shader)
         const auto& attribs = shader.getAttribMap();
         
         //pos
-        if (attribs[Mesh::Position] > -1)
+        if (attribs[Mesh::Attribute::Position] > -1)
         {
-            glCheck(glVertexAttribPointer(attribs[Mesh::Position], 2, GL_FLOAT, GL_FALSE, stride, (void*)0));
+            glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Position], 2, GL_FLOAT, GL_FALSE, stride, (void*)0));
             glCheck(glEnableVertexAttribArray(0));
         }
         //else warn?
          
         //uv
-        if (attribs[Mesh::UV0] > -1)
+        if (attribs[Mesh::Attribute::UV0] > -1)
         {
-            glCheck(glVertexAttribPointer(attribs[Mesh::UV0], 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float))));
+            glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::UV0], 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float))));
             glCheck(glEnableVertexAttribArray(1));
         }
 
         //colour
-        if (attribs[Mesh::Colour] > -1)
+        if (attribs[Mesh::Attribute::Colour] > -1)
         {
-            glCheck(glVertexAttribPointer(attribs[Mesh::Colour], 4, GL_UNSIGNED_BYTE, GL_TRUE, stride, (void*)(4 * sizeof(float))));
+            glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Colour], 4, GL_UNSIGNED_BYTE, GL_TRUE, stride, (void*)(4 * sizeof(float))));
             glCheck(glEnableVertexAttribArray(2));
         }
         glCheck(glBindVertexArray(0));

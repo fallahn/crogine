@@ -455,39 +455,39 @@ bool Shader::fillAttribMap()
                 std::string name(attribName.data());
                 if (name == "a_position")
                 {
-                    m_attribMap[Mesh::Position] = attribLocation;
+                    m_attribMap[Mesh::Attribute::Position] = attribLocation;
                 }
                 else if (name == "a_colour")
                 {
-                    m_attribMap[Mesh::Colour] = attribLocation;
+                    m_attribMap[Mesh::Attribute::Colour] = attribLocation;
                 }
                 else if (name == "a_normal")
                 {
-                    m_attribMap[Mesh::Normal] = attribLocation;
+                    m_attribMap[Mesh::Attribute::Normal] = attribLocation;
                 }
                 else if (name == "a_tangent")
                 {
-                    m_attribMap[Mesh::Tangent] = attribLocation;
+                    m_attribMap[Mesh::Attribute::Tangent] = attribLocation;
                 }
                 else if (name == "a_bitangent")
                 {
-                    m_attribMap[Mesh::Bitangent] = attribLocation;
+                    m_attribMap[Mesh::Attribute::Bitangent] = attribLocation;
                 }
                 else if (name == "a_texCoord0")
                 {
-                    m_attribMap[Mesh::UV0] = attribLocation;
+                    m_attribMap[Mesh::Attribute::UV0] = attribLocation;
                 }
                 else if (name == "a_texCoord1")
                 {
-                    m_attribMap[Mesh::UV1] = attribLocation;
+                    m_attribMap[Mesh::Attribute::UV1] = attribLocation;
                 }
                 else if (name == "a_boneIndices")
                 {
-                    m_attribMap[Mesh::BlendIndices] = attribLocation;
+                    m_attribMap[Mesh::Attribute::BlendIndices] = attribLocation;
                 }
                 else if (name == "a_boneWeights")
                 {
-                    m_attribMap[Mesh::BlendWeights] = attribLocation;
+                    m_attribMap[Mesh::Attribute::BlendWeights] = attribLocation;
                 }
                 else if (name == "a_instanceWorldMatrix")
                 {

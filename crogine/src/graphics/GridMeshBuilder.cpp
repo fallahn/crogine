@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -110,18 +110,18 @@ Mesh::Data GridMeshBuilder::build() const
 
 
     Mesh::Data meshData;
-    meshData.attributes[Mesh::Position] = 3;
+    meshData.attributes[Mesh::Attribute::Position].size = 3;
 
     if (m_colouredVerts)
     {
-        meshData.attributes[Mesh::Colour] = 4;
+        meshData.attributes[Mesh::Attribute::Colour].size = 4;
         meshData.attributeFlags = VertexProperty::Colour;
     }
 
-    meshData.attributes[Mesh::Normal] = 3;
-    meshData.attributes[Mesh::Tangent] = 3;
-    meshData.attributes[Mesh::Bitangent] = 3;
-    meshData.attributes[Mesh::UV0] = 2;
+    meshData.attributes[Mesh::Attribute::Normal].size = 3;
+    meshData.attributes[Mesh::Attribute::Tangent].size = 3;
+    meshData.attributes[Mesh::Attribute::Bitangent].size = 3;
+    meshData.attributes[Mesh::Attribute::UV0].size = 2;
     meshData.attributeFlags |= (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
 
     meshData.primitiveType = GL_TRIANGLE_STRIP;

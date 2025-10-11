@@ -2285,9 +2285,9 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     //TODO this is lifted from TerrainBuilder and can probably be shared between both with a refactor
     const auto& meshData = terrainEnt.getComponent<cro::Model>().getMeshData();
     std::size_t normalOffset = 0;
-    for (auto i = 0u; i < cro::Mesh::Normal; ++i)
+    for (auto i = 0u; i < cro::Mesh::Attribute::Normal; ++i)
     {
-        normalOffset += meshData.attributes[i];
+        normalOffset += meshData.attributes[i].size;
     }
 
     cro::Shader normalShader;
@@ -2308,10 +2308,10 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     {
         glCheck(glBindVertexArray(vaos[i]));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
-        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Position]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Position], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), 0));
-        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Normal]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Normal], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), (void*)(normalOffset * sizeof(float))));
+        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Position]));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Position], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), 0));
+        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Normal]));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Normal], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), (void*)(normalOffset * sizeof(float))));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
     }
 
@@ -2333,7 +2333,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     for (auto i = 0u; i < vaos.size(); ++i)
     {
         glCheck(glBindVertexArray(vaos[i]));
-        glCheck(glDrawElements(GL_TRIANGLES, meshData.indexData[i].indexCount, GL_UNSIGNED_INT, 0));
+        glCheck(glDrawElements(GL_TRIANGLES, meshData.indexData[i].indexCount, meshData.indexData[i].format, 0));
     }
     normalMap.display();
 

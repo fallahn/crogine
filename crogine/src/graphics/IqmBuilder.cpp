@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -193,50 +193,50 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
         case Iqm::POSITION:
             positions.resize(header.vertexCount * Iqm::positionSize);
             std::memcpy(positions.data(), dataStart + vertArray.offset, sizeof(float) * positions.size());
-            out.attributes[Mesh::Position] = Iqm::positionSize;
+            out.attributes[Mesh::Attribute::Position].size = Iqm::positionSize;
             out.attributeFlags |= VertexProperty::Position;
             vertexSize += Iqm::positionSize;
             break;
         case Iqm::NORMAL:
             normals.resize(header.vertexCount * Iqm::normalSize);
             std::memcpy(normals.data(), dataStart + vertArray.offset, sizeof(float) * normals.size());
-            out.attributes[Mesh::Normal] = Iqm::normalSize;
+            out.attributes[Mesh::Attribute::Normal].size = Iqm::normalSize;
             out.attributeFlags |= VertexProperty::Normal;
             vertexSize += Iqm::normalSize;
             break;
         case Iqm::TANGENT:
             tangents.resize(header.vertexCount * (Iqm::normalSize + 1));
             std::memcpy(tangents.data(), dataStart + vertArray.offset, sizeof(float) * tangents.size());
-            out.attributes[Mesh::Tangent] = Iqm::normalSize;
-            out.attributes[Mesh::Bitangent] = Iqm::normalSize;
+            out.attributes[Mesh::Attribute::Tangent].size = Iqm::normalSize;
+            out.attributes[Mesh::Attribute::Bitangent].size = Iqm::normalSize;
             out.attributeFlags |= (VertexProperty::Tangent | VertexProperty::Bitangent);
             vertexSize += (Iqm::normalSize * 2);
             break;
         case Iqm::TEXCOORD:
             texCoords.resize(header.vertexCount * Iqm::uvSize);
             std::memcpy(texCoords.data(), dataStart + vertArray.offset, sizeof(float) * texCoords.size());
-            out.attributes[Mesh::UV0] = Iqm::uvSize;
+            out.attributes[Mesh::Attribute::UV0].size = Iqm::uvSize;
             out.attributeFlags |= VertexProperty::UV0;
             vertexSize += Iqm::uvSize;
             break;
         case Iqm::BLENDINDICES:
             blendIndices.resize(header.vertexCount * Iqm::blendIndexSize);
             std::memcpy(blendIndices.data(), dataStart + vertArray.offset, blendIndices.size());
-            out.attributes[Mesh::BlendIndices] = Iqm::blendIndexSize;
+            out.attributes[Mesh::Attribute::BlendIndices].size = Iqm::blendIndexSize;
             out.attributeFlags |= VertexProperty::BlendIndices;
             vertexSize += Iqm::blendIndexSize;
             break;
         case Iqm::BLENDWEIGHTS:
             blendWeights.resize(header.vertexCount * Iqm::blendWeightSize);
             std::memcpy(blendWeights.data(), dataStart + vertArray.offset, blendWeights.size());
-            out.attributes[Mesh::BlendWeights] = Iqm::blendWeightSize;
+            out.attributes[Mesh::Attribute::BlendWeights].size = Iqm::blendWeightSize;
             out.attributeFlags |= VertexProperty::BlendWeights;
             vertexSize += Iqm::blendWeightSize;
             break;
         case Iqm::COLOUR:
             colours.resize(header.vertexCount * Iqm::colourSize);
             std::memcpy(colours.data(), dataStart + vertArray.offset, colours.size());
-            out.attributes[Mesh::Colour] = Iqm::colourSize;
+            out.attributes[Mesh::Attribute::Colour].size = Iqm::colourSize;
             out.attributeFlags |= VertexProperty::Colour;
             vertexSize += Iqm::colourSize;
             break;
@@ -311,8 +311,8 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
     }
     else
     {
-        out.attributes[Mesh::Tangent] = Iqm::normalSize;
-        out.attributes[Mesh::Bitangent] = Iqm::normalSize;
+        out.attributes[Mesh::Attribute::Tangent].size = Iqm::normalSize;
+        out.attributes[Mesh::Attribute::Bitangent].size = Iqm::normalSize;
         vertexSize += (Iqm::normalSize * 2);
 
         //calc from UV coords and face normals

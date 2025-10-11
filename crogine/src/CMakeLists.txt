@@ -112,6 +112,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/UIElementSystem.cpp
   ${PROJECT_DIR}/ecs/systems/UISystem.cpp
 
+  ${PROJECT_DIR}/graphics/BillboardMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/BinaryMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/BoundingBox.cpp
   ${PROJECT_DIR}/graphics/CircleMeshBuilder.cpp

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -110,8 +110,8 @@ namespace cro
         */
         virtual Mesh::Data build() const = 0;
 
-        static std::size_t getAttributeSize(const std::array<std::size_t, Mesh::Attribute::Total>& attrib);
-        static std::size_t getVertexSize(const std::array<std::size_t, Mesh::Attribute::Total>& attrib);
+        static std::size_t getAttributeSize(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib);
+        static std::size_t getVertexSize(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib);
         static void createVBO(Mesh::Data& meshData, const std::vector<float>& vertexData);
         static void createIBO(Mesh::Data& meshData, const void* idxData, std::size_t idx, std::int32_t dataSize);
     };

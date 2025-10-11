@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -56,35 +56,35 @@ Mesh::Data StaticMeshBuilder::build() const
         CRO_ASSERT(meshFile.flags && (meshFile.flags & VertexProperty::Position), "Invalid flag value");
 
         Mesh::Data meshData;
-        meshData.attributes[Mesh::Position] = 3;
+        meshData.attributes[Mesh::Attribute::Position].size = 3;
         meshData.attributeFlags = VertexProperty::Position;
         if (meshFile.flags & VertexProperty::Colour)
         {
-            meshData.attributes[Mesh::Colour] = 3;
+            meshData.attributes[Mesh::Attribute::Colour].size = 3;
             meshData.attributeFlags |= VertexProperty::Colour;
         }
 
         if (meshFile.flags & VertexProperty::Normal)
         {
-            meshData.attributes[Mesh::Normal] = 3;
+            meshData.attributes[Mesh::Attribute::Normal].size = 3;
             meshData.attributeFlags |= VertexProperty::Normal;
         }
 
         if (meshFile.flags & (VertexProperty::Tangent | VertexProperty::Bitangent))
         {
-            meshData.attributes[Mesh::Tangent] = 3;
-            meshData.attributes[Mesh::Bitangent] = 3;
+            meshData.attributes[Mesh::Attribute::Tangent].size = 3;
+            meshData.attributes[Mesh::Attribute::Bitangent].size = 3;
             meshData.attributeFlags |= VertexProperty::Tangent | VertexProperty::Bitangent;
         }
 
         if (meshFile.flags & VertexProperty::UV0)
         {
-            meshData.attributes[Mesh::UV0] = 2;
+            meshData.attributes[Mesh::Attribute::UV0].size = 2;
             meshData.attributeFlags |= VertexProperty::UV0;
         }
         if (meshFile.flags & VertexProperty::UV1)
         {
-            meshData.attributes[Mesh::UV1] = 2;
+            meshData.attributes[Mesh::Attribute::UV1].size = 2;
             meshData.attributeFlags |= VertexProperty::UV1;
         }
 

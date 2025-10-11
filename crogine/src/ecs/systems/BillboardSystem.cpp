@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -39,17 +39,7 @@ using namespace cro;
 
 namespace
 {
-    //TODO move this to the BillboardBuilder
-    //TODO update the shader to match? Rename Normal to Root?
-    struct VertexLayout final
-    {
-        glm::vec3 pos = glm::vec3(0.f);
-        Detail::ColourLowP colour;
-        glm::vec3 rootPos = glm::vec3(0.f);
-        std::uint32_t uvCoords = 0; //pack with glm::packSnorm2x16()
-        //glm::vec2 size = glm::vec2(0.f); //TODO think about how we can pack this into un-normalised shorts
-        std::uint32_t size = 0;
-    };
+
 }
 
 BillboardSystem::BillboardSystem(MessageBus& mb)

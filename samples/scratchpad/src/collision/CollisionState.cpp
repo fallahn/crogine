@@ -294,7 +294,7 @@ void CollisionState::addCollisionMesh(const cro::Mesh::Data& meshData, glm::mat4
     std::int32_t colourOffset = 0;
     for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
     {
-        colourOffset += meshData.attributes[i];
+        colourOffset += meshData.attributes[i].size;
     }
 
     btTransform transform;

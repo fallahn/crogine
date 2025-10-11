@@ -1115,27 +1115,27 @@ void ModelState::applyImportTransform(std::vector<float>& vertexData)
 
         //calculate the offset index into a single vertex which points
         //to any normal / tan / bitan values
-        if (meshData.attributes[cro::Mesh::Attribute::Normal] != 0)
+        if (meshData.attributes[cro::Mesh::Attribute::Normal].size != 0)
         {
             for (auto i = 0; i < cro::Mesh::Attribute::Normal; ++i)
             {
-                normalOffset += meshData.attributes[i];
+                normalOffset += meshData.attributes[i].size;
             }
         }
 
-        if (meshData.attributes[cro::Mesh::Attribute::Tangent] != 0)
+        if (meshData.attributes[cro::Mesh::Attribute::Tangent].size != 0)
         {
             for (auto i = 0; i < cro::Mesh::Attribute::Tangent; ++i)
             {
-                tanOffset += meshData.attributes[i];
+                tanOffset += meshData.attributes[i].size;
             }
         }
 
-        if (meshData.attributes[cro::Mesh::Attribute::Bitangent] != 0)
+        if (meshData.attributes[cro::Mesh::Attribute::Bitangent].size != 0)
         {
             for (auto i = 0; i < cro::Mesh::Attribute::Bitangent; ++i)
             {
-                bitanOffset += meshData.attributes[i];
+                bitanOffset += meshData.attributes[i].size;
             }
         }
 
@@ -1199,9 +1199,9 @@ void ModelState::flipNormals()
 
         auto stride = meshData.vertexSize / sizeof(float);
         auto offset = 0u;
-        for (auto i = 0u; i < cro::Mesh::Normal; ++i)
+        for (auto i = 0u; i < cro::Mesh::Attribute::Normal; ++i)
         {
-            offset += meshData.attributes[i];
+            offset += meshData.attributes[i].size;
         }
 
         for (auto i = offset; i < verts.size(); i += stride)

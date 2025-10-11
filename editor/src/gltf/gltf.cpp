@@ -578,35 +578,35 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
             else if (name == "TANGENT")
             {
                 flags |= cro::VertexProperty::Tangent | cro::VertexProperty::Bitangent;
-                attribIndices[cro::Mesh::Tangent] = idx;
+                attribIndices[cro::Mesh::Attribute::Tangent] = idx;
             }
             else if (name == "TEXCOORD_0")
             {
                 flags |= cro::VertexProperty::UV0;
-                attribIndices[cro::Mesh::UV0] = idx;
+                attribIndices[cro::Mesh::Attribute::UV0] = idx;
             }
             else if (name == "TEXCOORD_1"
                 && !skipSecondUV)
             {
                 flags |= cro::VertexProperty::UV1;
-                attribIndices[cro::Mesh::UV1] = idx;
+                attribIndices[cro::Mesh::Attribute::UV1] = idx;
             }
             else if (name == "COLOR_0")
             {
                 flags |= cro::VertexProperty::Colour;
-                attribIndices[cro::Mesh::Colour] = idx;
+                attribIndices[cro::Mesh::Attribute::Colour] = idx;
             }
             else if (name == "JOINTS_0"
                 && loadAnims)
             {
                 flags |= cro::VertexProperty::BlendIndices;
-                attribIndices[cro::Mesh::BlendIndices] = idx;
+                attribIndices[cro::Mesh::Attribute::BlendIndices] = idx;
             }
             else if (name == "WEIGHTS_0"
                 && loadAnims)
             {
                 flags |= cro::VertexProperty::BlendWeights;
-                attribIndices[cro::Mesh::BlendWeights] = idx;
+                attribIndices[cro::Mesh::Attribute::BlendWeights] = idx;
             }
         }
 
@@ -797,7 +797,7 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
                     continue;
                 }
 
-                if (j == cro::Mesh::Normal)
+                if (j == cro::Mesh::Attribute::Normal)
                 {
                     auto index = i * size;
                     glm::vec3 normal(data[index], data[index + 1], data[index + 2]);
@@ -807,7 +807,7 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
                     vertices.push_back(normal.y);
                     vertices.push_back(normal.z);
                 }
-                else if (j == cro::Mesh::Tangent)
+                else if (j == cro::Mesh::Attribute::Tangent)
                 {
                     //if (!data.empty())
                     {
@@ -815,7 +815,7 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
                         //NOTE we flip the sign because we also flip the UV
                         auto index = i * size;
                         auto normalIndex = i * (size - 1); //tangents have extra component containing sign
-                        const auto& normalData = tempData[cro::Mesh::Normal].first;
+                        const auto& normalData = tempData[cro::Mesh::Attribute::Normal].first;
 
                         glm::vec3 normal(normalData[normalIndex], normalData[normalIndex + 1], normalData[normalIndex + 2]);
                         glm::vec3 tan(data[index], data[index + 1], data[index + 2]);
@@ -836,8 +836,8 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
                         vertices.push_back(bitan.z);
                     }
                 }
-                else if (j == cro::Mesh::UV0
-                    || (j == cro::Mesh::UV1 && !skipSecondUV))
+                else if (j == cro::Mesh::Attribute::UV0
+                    || (j == cro::Mesh::Attribute::UV1 && !skipSecondUV))
                 {
                     //flip the V
                     auto index = i * size;
@@ -846,7 +846,7 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
                     vertices.push_back(uv.s);
                     vertices.push_back(uv.t);
                 }
-                else if (j == cro::Mesh::Colour)
+                else if (j == cro::Mesh::Attribute::Colour)
                 {
                     //blender converts colour to sRGB space
                     //and we mostly want linear (at least, I do :) )

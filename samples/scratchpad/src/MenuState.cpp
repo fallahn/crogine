@@ -189,9 +189,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
     m_scene         (context.appInstance.getMessageBus()),
     m_timePicker    ()
 {
-    LogI << cro::Detail::normaliseTo<std::int16_t>(0.5f) << std::endl;
-    LogI << cro::Detail::normaliseTo<std::int16_t>(-0.25f) << std::endl;
-
     app.unloadPlugin();
 
     const auto t = std::time(nullptr);

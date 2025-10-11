@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/CircleMeshBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/graphics/BillboardMeshBuilder.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 
 #include <crogine/core/ConfigFile.hpp>
@@ -235,8 +236,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
     }
     else if (Util::String::toLower(meshValue) == "billboard")
     {
-        auto flags = VertexProperty::Position | VertexProperty::Normal | VertexProperty::Colour | VertexProperty::UV0 | VertexProperty::UV1;
-        meshBuilder = std::make_unique<DynamicMeshBuilder>(flags, 1, GL_TRIANGLES);
+        meshBuilder = std::make_unique<BillboardMeshBuilder>();
         m_billboard = true;
 
 #ifdef CRO_DEBUG_

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -48,39 +48,39 @@ Mesh::Data DynamicMeshBuilder::build() const
     Mesh::Data meshData;
     meshData.attributeFlags = m_flags;
 
-    meshData.attributes[Mesh::Position] = 3;
+    meshData.attributes[Mesh::Attribute::Position].size = 3;
     if (m_flags & VertexProperty::Colour)
     {
-        meshData.attributes[Mesh::Colour] = 4;
+        meshData.attributes[Mesh::Attribute::Colour].size = 4;
     }
 
     if (m_flags & VertexProperty::Normal)
     {
-        meshData.attributes[Mesh::Normal] = 3;
+        meshData.attributes[Mesh::Attribute::Normal].size = 3;
     }
 
     if (m_flags & (VertexProperty::Tangent | VertexProperty::Bitangent))
     {
-        meshData.attributes[Mesh::Tangent] = 3;
-        meshData.attributes[Mesh::Bitangent] = 3;
+        meshData.attributes[Mesh::Attribute::Tangent].size = 3;
+        meshData.attributes[Mesh::Attribute::Bitangent].size = 3;
     }
 
     if (m_flags & VertexProperty::UV0)
     {
-        meshData.attributes[Mesh::UV0] = 2;
+        meshData.attributes[Mesh::Attribute::UV0].size = 2;
     }
     if (m_flags & VertexProperty::UV1)
     {
-        meshData.attributes[Mesh::UV1] = 2;
+        meshData.attributes[Mesh::Attribute::UV1].size = 2;
     }
 
     if (m_flags & VertexProperty::BlendIndices)
     {
-        meshData.attributes[Mesh::BlendIndices] = 4;
+        meshData.attributes[Mesh::Attribute::BlendIndices].size = 4;
     }
     if (m_flags & VertexProperty::BlendWeights)
     {
-        meshData.attributes[Mesh::BlendWeights] = 4;
+        meshData.attributes[Mesh::Attribute::BlendWeights].size = 4;
     }
 
     meshData.primitiveType = m_primitiveType;
