@@ -827,7 +827,7 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
         for (auto j = 0u; j < m_material.attribCount; ++j)
         {
             glCheck(glEnableVertexAttribArray(attribs[j][cro::Material::Data::Index]));
-            glCheck(glVertexAttribPointer(attribs[j][cro::Material::Data::Index], attribs[j][cro::Material::Data::Size],
+            glCheck(glVertexAttribPointer(attribs[j][cro::Material::Data::Index], attribs[j][cro::Material::Data::ComponentCount],
                 GL_FLOAT, GL_FALSE, static_cast<GLsizei>(m_meshes[MeshData::Brush].mesh.vertexSize),
                 reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][cro::Material::Data::Offset]))));
         }
@@ -925,7 +925,7 @@ void Q3BspSystem::createPatchMesh(const std::vector<float>& vertices)
         for (auto j = 0u; j < m_material.attribCount; ++j)
         {
             glCheck(glEnableVertexAttribArray(attribs[j][cro::Material::Data::Index]));
-            glCheck(glVertexAttribPointer(attribs[j][cro::Material::Data::Index], attribs[j][cro::Material::Data::Size],
+            glCheck(glVertexAttribPointer(attribs[j][cro::Material::Data::Index], attribs[j][cro::Material::Data::ComponentCount],
                 GL_FLOAT, GL_FALSE, static_cast<GLsizei>(m_meshes[MeshData::Patch].mesh.vertexSize),
                 reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][cro::Material::Data::Offset]))));
         }
@@ -990,7 +990,7 @@ void Q3BspSystem::initMaterial()
         if (m_material.attribs[i][cro::Material::Data::Index] > -1)
         {
             //attrib exists in shader so map its size
-            m_material.attribs[i][cro::Material::Data::Size] = static_cast<std::int32_t>(m_meshes[MeshData::Brush].mesh.attributes[i].componentCount);
+            m_material.attribs[i][cro::Material::Data::ComponentCount] = static_cast<std::int32_t>(m_meshes[MeshData::Brush].mesh.attributes[i].componentCount);
 
             //calc the pointer offset for each attrib
             m_material.attribs[i][cro::Material::Data::Offset] = static_cast<std::int32_t>(pointerOffset * sizeof(float));
@@ -1003,12 +1003,12 @@ void Q3BspSystem::initMaterial()
         [](const std::array<std::int32_t, cro::Material::Data::Count>& ip,
             const std::array<std::int32_t, cro::Material::Data::Count>& op)
         {
-            return ip[cro::Material::Data::Size] > op[cro::Material::Data::Size];
+            return ip[cro::Material::Data::ComponentCount] > op[cro::Material::Data::ComponentCount];
         });
 
     //count attribs with size > 0
     int i = 0;
-    while (m_material.attribs[i++][cro::Material::Data::Size] != 0)
+    while (m_material.attribs[i++][cro::Material::Data::ComponentCount] != 0)
     {
         m_material.attribCount++;
     }

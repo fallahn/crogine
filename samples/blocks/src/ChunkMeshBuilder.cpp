@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -40,10 +40,10 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
 {
     cro::Mesh::Data data;
 
-    data.attributes[cro::Mesh::Position] = 3;
-    data.attributes[cro::Mesh::Colour] = 4;
-    data.attributes[cro::Mesh::Normal] = 3;
-    data.attributes[cro::Mesh::UV0] = 2;
+    data.attributes[cro::Mesh::Attribute::Position].componentCount = 3;
+    data.attributes[cro::Mesh::Attribute::Colour].componentCount = 4;
+    data.attributes[cro::Mesh::Attribute::Normal].componentCount = 3;
+    data.attributes[cro::Mesh::Attribute::UV0].componentCount = 2;
     data.attributeFlags = (cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0);
 
     m_componentCount = 12; //this is important! update this if modifying above
@@ -52,7 +52,7 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     data.vertexSize = getVertexSize(data.attributes);
     data.vertexCount = 0;
     
-    glCheck(glGenBuffers(1, &data.vbo));
+    glCheck(glGenBuffers(1, &data.vboAllocation.vboID));
     /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vbo));
     glCheck(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/

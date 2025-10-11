@@ -176,10 +176,11 @@ namespace cro
         */
         struct CRO_EXPORT_API Data final
         {
+            //maps vertex attributes to the material data
             enum
             {
                 Index = 0,
-                Size,
+                ComponentCount,
                 GLType,
                 GLNormalised,
                 Offset,

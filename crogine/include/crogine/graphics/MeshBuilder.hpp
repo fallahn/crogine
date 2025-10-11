@@ -108,7 +108,7 @@ namespace cro
         and return a Mesh::Data struct. Automatically called by the
         MeshResource class
         */
-        virtual Mesh::Data build() const = 0;
+        virtual Mesh::Data build(class AllocationResource*) const = 0;
 
         //returns the total number of components in a given set of attributes
         static std::size_t getComponentCount(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib);

@@ -48,7 +48,7 @@ StaticMeshBuilder::StaticMeshBuilder(const std::string& path)
 
 
 //private
-Mesh::Data StaticMeshBuilder::build() const
+Mesh::Data StaticMeshBuilder::build(AllocationResource*) const
 {
     Detail::MeshFile meshFile;
     if (Detail::readCMF(m_path, meshFile))

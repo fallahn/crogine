@@ -43,7 +43,7 @@ DynamicMeshBuilder::DynamicMeshBuilder(std::uint32_t flags, std::uint8_t submesh
 }
 
 //private
-Mesh::Data DynamicMeshBuilder::build() const
+Mesh::Data DynamicMeshBuilder::build(AllocationResource*) const
 {
     Mesh::Data meshData;
     meshData.attributeFlags = m_flags;

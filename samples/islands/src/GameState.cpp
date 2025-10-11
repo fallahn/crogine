@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -355,7 +355,7 @@ void GameState::render()
         m_gameScene.render();
         cam.reflectionBuffer.display();
 
-        cam.setRenderFlags(cro::Camera::Pass::Refraction, NoPlanes | NoReflect);
+        cam.setRenderFlags(/*cro::Camera::Pass::Refraction*/0, NoPlanes | NoReflect); //refract and final share a pass
         cam.setActivePass(cro::Camera::Pass::Refraction);
         cam.refractionBuffer.clear(cro::Colour::Blue);
         m_gameScene.render();
@@ -980,7 +980,7 @@ void GameState::updateIslandVerts(const std::vector<float>& heightmap)
     CRO_ASSERT(verts.size() == meshData.vertexCount, "Incorrect vertex count");
     CRO_ASSERT(sizeof(Vertex) == meshData.vertexSize, "Incorrect vertex size");
 
-    glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID);
     glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(Vertex), verts.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

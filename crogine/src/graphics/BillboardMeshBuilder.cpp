@@ -27,6 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include <crogine/detail/VBOAllocation.hpp>
 #include <crogine/graphics/BillboardMeshBuilder.hpp>
 
 #include "../detail/GLCheck.hpp"
@@ -44,8 +45,10 @@ BillboardMeshBuilder::BillboardMeshBuilder()
 }
 
 //private
-Mesh::Data BillboardMeshBuilder::build() const
+Mesh::Data BillboardMeshBuilder::build(AllocationResource* resource) const
 {
+    auto* vboAllocator = resource->getAllocator(4, sizeof(VertexLayout));
+
     Mesh::Data meshData;
     meshData.attributeFlags = VertexProperty::Position | VertexProperty::Normal | VertexProperty::Colour | VertexProperty::UV0 | VertexProperty::UV1;
 

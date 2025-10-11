@@ -73,7 +73,7 @@ Skeleton BinaryMeshBuilder::getSkeleton() const
     return m_skeleton;
 }
 
-Mesh::Data BinaryMeshBuilder::build() const
+Mesh::Data BinaryMeshBuilder::build(AllocationResource*) const
 {
     Mesh::Data meshData;
 

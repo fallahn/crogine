@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -94,6 +94,6 @@ namespace cro
     private:
         std::string m_path;
         std::size_t m_uid;
-        Mesh::Data build() const override;
+        Mesh::Data build(AllocationResource*) const override;
     };
 }

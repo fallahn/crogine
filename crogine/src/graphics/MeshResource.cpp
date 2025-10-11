@@ -62,7 +62,7 @@ bool MeshResource::loadMesh(std::size_t ID, const MeshBuilder& mb)
         return false;
     }
 
-    auto meshData = mb.build();
+    auto meshData = mb.build(&m_allocationResource);
     if (meshData.vboAllocation.vboID > 0 && meshData.submeshCount > 0)
     {
         m_meshData.insert(std::make_pair(ID, meshData));

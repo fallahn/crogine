@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -37,18 +37,20 @@ cro::Mesh::Data ChunkBuilder::build() const
 {
     cro::Mesh::Data data;
 
-    data.attributes[cro::Mesh::Position] = 2;
-    data.attributes[cro::Mesh::Colour] = 3;
+    data.attributes[cro::Mesh::Attribute::Position].componentCount = 2;
+    data.attributes[cro::Mesh::Attribute::Colour].componentCount = 3;
     data.attributeFlags |= (cro::VertexProperty::Position | cro::VertexProperty::Colour);
 
     data.primitiveType = GL_TRIANGLE_STRIP;
     data.submeshCount = 2;
     data.vertexCount = TerrainChunk::PointCount * 2;
-    data.vertexSize = (data.attributes[cro::Mesh::Position] + data.attributes[cro::Mesh::Colour] + data.attributes[cro::Mesh::Normal]) * sizeof(float);
+    data.vertexSize = (data.attributes[cro::Mesh::Attribute::Position].componentCount 
+        + data.attributes[cro::Mesh::Attribute::Colour].componentCount 
+        + data.attributes[cro::Mesh::Attribute::Normal].componentCount) * sizeof(float);
     //fill with empty data so we don't accidentally render any garbage
     std::vector<char> vertData(data.vertexCount * data.vertexSize);
-    glCheck(glGenBuffers(1, &data.vbo));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vbo));
+    glCheck(glGenBuffers(1, &data.vboAllocation.vboID));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vboAllocation.vboID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, data.vertexCount * data.vertexSize, vertData.data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     

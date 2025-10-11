@@ -60,6 +60,6 @@ namespace cro
         std::uint32_t m_subDivisions;
         glm::vec2 m_uvMultiplier;
         bool m_colouredVerts;
-        Mesh::Data build() const override;
+        Mesh::Data build(AllocationResource*) const override;
     };
 }

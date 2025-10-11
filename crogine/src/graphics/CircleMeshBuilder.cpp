@@ -43,7 +43,7 @@ CircleMeshBuilder::CircleMeshBuilder(float radius, std::uint32_t pointCount)
 }
 
 //private
-Mesh::Data CircleMeshBuilder::build() const
+Mesh::Data CircleMeshBuilder::build(AllocationResource*) const
 {
     const float step = cro::Util::Const::TAU / m_pointCount;
     std::vector<glm::vec2> points;

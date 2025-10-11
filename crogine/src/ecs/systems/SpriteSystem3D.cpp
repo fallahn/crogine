@@ -195,7 +195,7 @@ void SpriteSystem3D::onEntityAdded(Entity entity)
 
     //TODO take a hash of the sprite and recycle mesh data if it already exists
     //init the Model component with the mesh and corresponding material.
-    auto meshData = m_meshBuilder->build();
+    auto meshData = m_meshBuilder->build(nullptr);
 
     //we want to make sure we copy this so it has
     //its own parameters

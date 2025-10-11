@@ -83,7 +83,7 @@ std::size_t IqmBuilder::getUID() const
 }
 
 //private
-cro::Mesh::Data IqmBuilder::build() const
+cro::Mesh::Data IqmBuilder::build(AllocationResource*) const
 {
     cro::Mesh::Data returnData;
     returnData.primitiveType = GL_TRIANGLES;

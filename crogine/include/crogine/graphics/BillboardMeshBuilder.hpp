@@ -69,6 +69,6 @@ namespace cro
     private:
 
 
-        Mesh::Data build() const override;
+        Mesh::Data build(AllocationResource*) const override;
     };
 }

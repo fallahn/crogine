@@ -44,7 +44,7 @@ GridMeshBuilder::GridMeshBuilder(glm::vec2 size, std::uint32_t subDivisions, glm
 }
 
 //private
-Mesh::Data GridMeshBuilder::build() const
+Mesh::Data GridMeshBuilder::build(AllocationResource*) const
 {
     glm::vec2 stride = m_size / static_cast<float>(m_subDivisions);
 

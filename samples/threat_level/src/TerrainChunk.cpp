@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -244,7 +244,7 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
     mesh.boundingSphere.radius = chunkWidth / 2.f; //else this will be culled from the scene
 
     //cro::Logger::log("Updating verts");
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vboAllocation.vboID));
     glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, mesh.vertexCount * mesh.vertexSize, vertData.data()));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }

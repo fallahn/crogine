@@ -53,6 +53,6 @@ namespace cro
     private:
         float m_radius;
         std::uint32_t m_pointCount;
-        Mesh::Data build() const override;
+        Mesh::Data build(AllocationResource*) const override;
     };
 }

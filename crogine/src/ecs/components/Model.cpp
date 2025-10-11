@@ -484,7 +484,7 @@ void Model::bindMaterial(Material::Data& material)
         if (material.attribs[i][Material::Data::Index] > -1)
         {
             //attrib exists in shader so map its size/type
-            material.attribs[i][Material::Data::Size] = static_cast<std::int32_t>(m_meshData.attributes[i].componentCount);
+            material.attribs[i][Material::Data::ComponentCount] = static_cast<std::int32_t>(m_meshData.attributes[i].componentCount);
             material.attribs[i][Material::Data::GLType] = static_cast<std::int32_t>(m_meshData.attributes[i].glType);
             material.attribs[i][Material::Data::GLNormalised] = static_cast<std::int32_t>(m_meshData.attributes[i].glNormalised);
 
@@ -495,7 +495,7 @@ void Model::bindMaterial(Material::Data& material)
         {
             //reset the values in case we're re-mapping an existing material
             //with a new shader
-            material.attribs[i][Material::Data::Size] = 0;
+            material.attribs[i][Material::Data::ComponentCount] = 0;
             material.attribs[i][Material::Data::GLType] = GL_FLOAT;
             material.attribs[i][Material::Data::GLNormalised] = GL_FALSE;
             material.attribs[i][Material::Data::Offset] = 0;
@@ -510,13 +510,13 @@ void Model::bindMaterial(Material::Data& material)
         [](const std::array<std::int32_t, Material::Data::Count>& ip,
             const std::array<std::int32_t, Material::Data::Count>& op)
         {
-            return ip[Material::Data::Size] > op[Material::Data::Size];
+            return ip[Material::Data::ComponentCount] > op[Material::Data::ComponentCount];
         });
 
     //count attribs with size > 0
     std::int32_t i = 0;
     material.attribCount = 0;
-    while (material.attribs[i++][Material::Data::Size] != 0)
+    while (material.attribs[i++][Material::Data::ComponentCount] != 0)
     {
         material.attribCount++;
     }
@@ -569,7 +569,7 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
     for (auto j = 0u; j < m_materials[passIndex][idx].attribCount; ++j)
     {
         glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
-        glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],
+        glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::ComponentCount],
             attribs[j][Material::Data::GLType], attribs[j][Material::Data::GLNormalised],
             static_cast<GLsizei>(m_meshData.vertexSize),
             reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));

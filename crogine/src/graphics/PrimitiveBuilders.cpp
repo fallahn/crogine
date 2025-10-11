@@ -60,7 +60,7 @@ QuadBuilder::QuadBuilder(glm::vec2 size, FloatRect textureRect)
     m_uid = hashIt(std::to_string(size.x) + std::to_string(size.y) + std::to_string(textureRect.left) + std::to_string(textureRect.height));
 }
 
-Mesh::Data QuadBuilder::build() const
+Mesh::Data QuadBuilder::build(AllocationResource*) const
 {
     Mesh::Data meshData;
 
@@ -118,7 +118,7 @@ CubeBuilder::CubeBuilder(glm::vec3 dimensions)
     m_uid = x << 32 | y << 16 | z;
 }
 
-Mesh::Data CubeBuilder::build() const
+Mesh::Data CubeBuilder::build(AllocationResource*) const
 {
     Mesh::Data meshData;
 
@@ -208,7 +208,7 @@ SphereBuilder::SphereBuilder(float radius, std::size_t resolution)
     m_uid = hashIt(std::to_string(radius) + std::to_string(resolution));
 }
 
-Mesh::Data SphereBuilder::build() const
+Mesh::Data SphereBuilder::build(AllocationResource*) const
 {
     Mesh::Data meshData;
     std::vector<float> vertexData;
