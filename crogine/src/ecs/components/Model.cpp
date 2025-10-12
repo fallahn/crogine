@@ -544,6 +544,23 @@ void Model::updateBounds()
     m_boundingSphere = m_boundingBox;
 }
 
+void Model::refreshVAO()
+{
+#ifdef PLATFORM_DESKTOP
+
+    for (auto i = 0u; i < m_meshData.submeshCount; ++i)
+    {
+        updateVAO(i, Mesh::IndexData::Final);
+
+        const auto instanceAttrib = m_materials[Mesh::IndexData::Shadow][i].attribs[Mesh::Attribute::Position][Material::Data::Index];
+        if (instanceAttrib != -1)
+        {
+            updateVAO(i, Mesh::IndexData::Shadow);
+        }
+    }
+#endif //DESKTOP
+}
+
     //if we're on desktop core opengl profile requires VAOs
 #ifdef PLATFORM_DESKTOP
 void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
@@ -552,16 +569,28 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
     auto& vaoPair = m_vaos[idx];
 
     //I guess we have to remove any old binding
-    //if there's an existing material
-    if (vaoPair[passIndex] != 0)
+    //if there's an existing material, else it can get
+    //re-bound to a different model (and things just get *weird*)
+    //if (vaoPair[passIndex] != 0)
+    //{
+    //    glCheck(glDeleteVertexArrays(1, &vaoPair[passIndex]));
+    //    vaoPair[passIndex] = 0;
+    //}
+
+    if (vaoPair[passIndex] == 0)
     {
-        glCheck(glDeleteVertexArrays(1, &vaoPair[passIndex]));
-        vaoPair[passIndex] = 0;
+        glCheck(glGenVertexArrays(1, &vaoPair[passIndex]));
     }
 
-    glCheck(glGenVertexArrays(1, &vaoPair[passIndex]));
-
     glCheck(glBindVertexArray(vaoPair[passIndex]));
+    //disable all the existing attrib arrays in case the material changed
+    //(this prevents us having to delete and create a new one)
+    for (auto i = 0; i < Shader::AttributeID::Count; ++i)
+    {
+        glCheck(glDisableVertexAttribArray(i));
+    }
+
+
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vboAllocation.vboID));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
 
@@ -572,7 +601,7 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
         glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::ComponentCount],
             attribs[j][Material::Data::GLType], attribs[j][Material::Data::GLNormalised],
             static_cast<GLsizei>(m_meshData.vertexSize),
-            reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
+            reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset] + m_meshData.vboAllocation.offset))));
     }
     
     //bind instance buffers if they exist

@@ -47,8 +47,6 @@ BillboardMeshBuilder::BillboardMeshBuilder()
 //private
 Mesh::Data BillboardMeshBuilder::build(AllocationResource* resource) const
 {
-    auto* vboAllocator = resource->getAllocator(4, sizeof(VertexLayout));
-
     Mesh::Data meshData;
     meshData.attributeFlags = VertexProperty::Position | VertexProperty::Normal | VertexProperty::Colour | VertexProperty::UV0 | VertexProperty::UV1;
 
@@ -72,7 +70,9 @@ Mesh::Data BillboardMeshBuilder::build(AllocationResource* resource) const
     meshData.vertexCount = 0;
 
     //create vbo
-    glCheck(glGenBuffers(1, &meshData.vboAllocation.vboID));
+    auto* vboAllocator = resource->getAllocator(4, sizeof(VertexLayout));
+    meshData.vboAllocator = vboAllocator;
+    meshData.vboAllocation = vboAllocator->newAllocation(0);
 
     meshData.submeshCount = 1;
 

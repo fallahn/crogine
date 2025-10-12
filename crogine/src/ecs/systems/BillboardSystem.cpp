@@ -48,6 +48,7 @@ BillboardSystem::BillboardSystem(MessageBus& mb)
     : System(mb, typeid(BillboardSystem))
 {
     requireComponent<BillboardCollection>();
+    requireComponent<Model>();
 }
 
 //public
@@ -190,10 +191,19 @@ void BillboardSystem::process(float)
             }
 
             meshData.vertexCount = vertexData.size();
+
+            //we need to resize if larger than previous
+            if (meshData.vboAllocator->getBlockCount(vertexData.size() >
+                meshData.vboAllocation.blockCount))
+            {
+                meshData.vboAllocator->freeAllocation(meshData.vboAllocation);
+                meshData.vboAllocation = meshData.vboAllocator->newAllocation(vertexData.size());
+
+                entity.getComponent<cro::Model>().refreshVAO();
+            }
+
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
-            //TODO if we switch to VBO allocator we need to resize if larger than previous
-            //TODO if we switch to VBO allocator this needs to be SubData
-            glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(BillboardMeshBuilder::VertexLayout), vertexData.data(), GL_DYNAMIC_DRAW));
+            glCheck(glBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, vertexData.size() * sizeof(BillboardMeshBuilder::VertexLayout), vertexData.data()));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
             meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indexData.size());

@@ -260,6 +260,11 @@ namespace cro
         */
         std::int32_t getDrawlistCount() const { return m_drawlistCount; }
 
+        /*!
+        \brief Refreshes the VAO bindings (call this if the VBO was updated with an allocator)
+        */
+        void refreshVAO();
+
     private:
 
         mutable std::int32_t m_drawlistCount;

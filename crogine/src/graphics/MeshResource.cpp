@@ -169,6 +169,13 @@ void MeshResource::deleteMesh(Mesh::Data md)
     //delete vertex buffer
     if (md.vboAllocation.vboID)
     {
-        glCheck(glDeleteBuffers(1, &md.vboAllocation.vboID));
+        if (md.vboAllocator)
+        {
+            md.vboAllocator->freeAllocation(md.vboAllocation);
+        }
+        else
+        {
+            glCheck(glDeleteBuffers(1, &md.vboAllocation.vboID));
+        }
     }
 }

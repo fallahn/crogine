@@ -123,6 +123,7 @@ namespace cro
             //to use this - 0 block allocations have a unique
             //VBO (if the ID is valid) rather than a shared one
             Detail::VBOAllocation vboAllocation;
+            Detail::VBOAllocator* vboAllocator = nullptr;
             std::size_t vertexCount = 0;
             std::size_t vertexSize = 0; //!< size of a single vertex *in bytes*
             std::uint32_t primitiveType = 0;

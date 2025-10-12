@@ -337,6 +337,13 @@ void VAOAllocator::freeVAO(std::uint32_t vao)
 {
     CRO_ASSERT(vao != 0, "");
 
+    //make sure to reset ALL the existing bindings
+    glCheck(glBindVertexArray(vao));
+    for (auto i = 0; i < Shader::AttributeID::Count; ++i)
+    {
+        glCheck(glDisableVertexAttribArray(i));
+    }
+
     //LogI << "Freed VAO " << vao << std::endl;
     m_freeVAOs.push_back(vao);
 }
