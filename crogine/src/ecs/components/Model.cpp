@@ -571,11 +571,11 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
     //I guess we have to remove any old binding
     //if there's an existing material, else it can get
     //re-bound to a different model (and things just get *weird*)
-    //if (vaoPair[passIndex] != 0)
-    //{
-    //    glCheck(glDeleteVertexArrays(1, &vaoPair[passIndex]));
-    //    vaoPair[passIndex] = 0;
-    //}
+    if (vaoPair[passIndex] != 0)
+    {
+        glCheck(glDeleteVertexArrays(1, &vaoPair[passIndex]));
+        vaoPair[passIndex] = 0;
+    }
 
     if (vaoPair[passIndex] == 0)
     {
@@ -585,10 +585,12 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
     glCheck(glBindVertexArray(vaoPair[passIndex]));
     //disable all the existing attrib arrays in case the material changed
     //(this prevents us having to delete and create a new one)
-    for (auto i = 0; i < Shader::AttributeID::Count; ++i)
+    //TODO doesn't quite work - need to figure out what else needs resetting
+    //but at ths point the hit from deleting a VAO is negligable
+    /*for (auto i = 0; i < Shader::AttributeID::Count; ++i)
     {
         glCheck(glDisableVertexAttribArray(i));
-    }
+    }*/
 
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vboAllocation.vboID));

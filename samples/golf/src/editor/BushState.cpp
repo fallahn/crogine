@@ -74,6 +74,7 @@ namespace
         float leafSize = 0.25f; //metres
         float randomAmount = 0.2f;
         float colourRotation = 0.25f;
+        float scale = 1.f;
         glm::vec3 colour = glm::vec3(1.f);
 
         std::string modelPath;
@@ -108,6 +109,8 @@ namespace
     const glm::uvec2 BillboardTargetSize(640, 448);
     float billboardScaleMultiplier = 0.46f;
 
+
+    constexpr float MinModelScale = 0.1f;
 
     std::uint64_t RenderFlagsBillboard = 1;
     std::uint64_t RenderFlagsThumbnail = 2;
@@ -612,6 +615,18 @@ void BushState::drawUI()
             glUniform1f(shaderUniform.randomness, treeset.randomAmount);
         }
 
+        if (ImGui::SliderFloat("Scale", &treeset.scale, MinModelScale, 3.f))
+        {
+            treeset.scale = std::max(MinModelScale, treeset.scale);
+            for (auto e : m_models)
+            {
+                if (e.isValid())
+                {
+                    e.getComponent<cro::Transform>().setScale(glm::vec3(treeset.scale));
+                }
+            }
+        }
+
         if(ImGui::SliderFloat("Colour Rotation", &treeset.colourRotation, 0.f, 1.f))
         { 
             glUseProgram(shaderUniform.shaderID);
@@ -869,7 +884,7 @@ void BushState::loadModel(const std::string& path)
         for (auto i = 1u; i < m_models.size(); ++i)
         {
             entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::Transform>().setScale(glm::vec3(treeset.scale));
             md.createModel(entity);
             entity.getComponent<cro::Model>().setRenderFlags(~RenderFlagsThumbnail);
 
@@ -917,6 +932,7 @@ void BushState::loadModel(const std::string& path)
 void BushState::loadPreset(const std::string& path)
 {
     auto workingDir = cro::FileSystem::getFilePath(path);
+    treeset.scale = 1.f;
 
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path))
@@ -965,6 +981,10 @@ void BushState::loadPreset(const std::string& path)
             else if (name == "leaf_index")
             {
                 leafIndices.push_back(p.getValue<std::uint32_t>());
+            }
+            else if (name == "scale")
+            {
+                treeset.scale = std::max(MinModelScale, p.getValue<float>());
             }
         }
 
@@ -1021,6 +1041,7 @@ void BushState::savePreset(const std::string& path)
     cfg.addProperty("colour_rotation").setValue(treeset.colourRotation);
     cfg.addProperty("randomness").setValue(treeset.randomAmount);
     cfg.addProperty("leaf_size").setValue(treeset.leafSize);
+    cfg.addProperty("scale").setValue(treeset.scale);
 
     for (auto i = 0u; i < m_materials.size(); ++i)
     {

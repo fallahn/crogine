@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -40,5 +40,5 @@ private:
     cro::Mesh::Data m_sourceData;
     const std::vector<float>& m_sourceBuffer;
 
-    cro::Mesh::Data build() const override;
+    cro::Mesh::Data build(cro::AllocationResource*) const override;
 };

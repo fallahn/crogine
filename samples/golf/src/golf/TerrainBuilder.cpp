@@ -485,7 +485,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             if (shrubDef.loadFromFile(theme.treesets[j].modelPath, true))
             {
                 auto childEnt = scene.createEntity();
-                childEnt.addComponent<cro::Transform>();
+                childEnt.addComponent<cro::Transform>();// .setScale(glm::vec3(theme.treesets[j].scale));
                 shrubDef.createModel(childEnt);
 
                 for (auto idx : theme.treesets[j].branchIndices)

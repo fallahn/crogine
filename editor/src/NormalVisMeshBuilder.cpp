@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -34,7 +34,7 @@ source distribution.
 NormalVisMeshBuilder::NormalVisMeshBuilder(cro::Mesh::Data data, const std::vector<float>& vbo)
     : m_sourceData(data), m_sourceBuffer(vbo){}
 
-cro::Mesh::Data NormalVisMeshBuilder::build() const
+cro::Mesh::Data NormalVisMeshBuilder::build(cro::AllocationResource*) const
 {
     auto vertexSize = m_sourceData.vertexSize / sizeof(float);
 
