@@ -36,7 +36,7 @@ source distribution.
 
 std::size_t ChunkMeshBuilder::m_componentCount = 0;
 
-cro::Mesh::Data ChunkMeshBuilder::build() const
+cro::Mesh::Data ChunkMeshBuilder::build(cro::AllocationResource*) const
 {
     cro::Mesh::Data data;
 
@@ -63,7 +63,7 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     data.indexData[SubMeshID::Solid].primitiveType = GL_TRIANGLES;
     data.indexData[SubMeshID::Solid].indexCount = 0;
 
-    glCheck(glGenBuffers(1, &data.indexData[SubMeshID::Solid].ibo));
+    glCheck(glGenBuffers(1, &data.indexData[SubMeshID::Solid].iboAllocation.bufferID));
     /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[SubMeshID::Solid].ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
@@ -73,7 +73,7 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     data.indexData[SubMeshID::Foliage].primitiveType = GL_TRIANGLES;
     data.indexData[SubMeshID::Foliage].indexCount = 0;
 
-    glCheck(glGenBuffers(1, &data.indexData[SubMeshID::Foliage].ibo));
+    glCheck(glGenBuffers(1, &data.indexData[SubMeshID::Foliage].iboAllocation.bufferID));
     /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[SubMeshID::Foliage].ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
@@ -83,7 +83,7 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     data.indexData[SubMeshID::Water].primitiveType = GL_TRIANGLES;
     data.indexData[SubMeshID::Water].indexCount = 0;
 
-    glCheck(glGenBuffers(1, &data.indexData[SubMeshID::Water].ibo));
+    glCheck(glGenBuffers(1, &data.indexData[SubMeshID::Water].iboAllocation.bufferID));
     /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[SubMeshID::Water].ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/

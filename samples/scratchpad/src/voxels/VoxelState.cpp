@@ -872,7 +872,7 @@ void VoxelState::updateVoxelMesh(const pv::Region& region)
 
             auto* submesh = &meshData->indexData[0];
             submesh->indexCount = static_cast<std::uint32_t>(mesh.getIndexData().size());
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
             glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), mesh.getIndexData().data(), GL_DYNAMIC_DRAW));
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 

@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/Spatial.hpp>
 
+#include <crogine/detail/IBOAllocation.hpp>
 #include <crogine/detail/VBOAllocation.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
@@ -64,7 +65,8 @@ namespace cro
         */
         struct CRO_EXPORT_API IndexData final
         {
-            std::uint32_t ibo = 0;
+            //std::uint32_t ibo = 0;
+            Detail::IBOAllocation iboAllocation;
             enum Pass
             {
                 Final, Shadow, Count
@@ -130,7 +132,8 @@ namespace cro
             std::array<Attribute, Attribute::Total> attributes{}; //!< size of attribute if it exists
             std::uint32_t attributeFlags = 0; //!< bitmask of VertexProperty flags indicating the current properties of the vertex data.
 
-            //index arrays
+            Detail::IBOAllocator* iboAllocator = nullptr;
+
             std::size_t submeshCount = 0;
             std::array<IndexData, IndexData::MaxBuffers> indexData{};
 

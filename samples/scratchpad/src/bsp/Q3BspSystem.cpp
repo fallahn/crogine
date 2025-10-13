@@ -190,7 +190,7 @@ Q3BspSystem::~Q3BspSystem()
 #ifdef PLATFORM_DESKTOP
             glCheck(glDeleteVertexArrays(1, &ibo.vao[0]));
 #endif
-            glCheck(glDeleteBuffers(1, &ibo.ibo));
+            glCheck(glDeleteBuffers(1, &ibo.iboAllocation.bufferID));
         }
 
         glCheck(glDeleteBuffers(1, &m_meshes[MeshData::Brush].mesh.vboAllocation.bufferID));
@@ -325,7 +325,7 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
         }
 
         submesh.indexCount = static_cast<std::uint32_t>(indexData.size());
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indexData.data(), GL_DYNAMIC_DRAW));
         m_meshes[MeshData::Brush].activeSubmeshCount++;
     }
@@ -360,7 +360,7 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
         indexData.pop_back();
 
         submesh.indexCount = static_cast<std::uint32_t>(indexData.size());
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indexData.data(), GL_DYNAMIC_DRAW));
         m_meshes[MeshData::Patch].activeSubmeshCount++;
     }
@@ -814,14 +814,14 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
         submesh.format = GL_UNSIGNED_INT;
         submesh.primitiveType = GL_TRIANGLES;
 
-        glCheck(glGenBuffers(1, &submesh.ibo));
+        glCheck(glGenBuffers(1, &submesh.iboAllocation.bufferID));
 
 #ifdef PLATFORM_DESKTOP
         glCheck(glGenVertexArrays(1, &submesh.vao[0]));
 
         glCheck(glBindVertexArray(submesh.vao[0]));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Brush].mesh.vboAllocation.bufferID));
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID));
 
         const auto& attribs = m_material.attribs;
         for (auto j = 0u; j < m_material.attribCount; ++j)
@@ -912,14 +912,14 @@ void Q3BspSystem::createPatchMesh(const std::vector<float>& vertices)
         submesh.format = GL_UNSIGNED_INT;
         submesh.primitiveType = GL_TRIANGLE_STRIP;
 
-        glCheck(glGenBuffers(1, &submesh.ibo));
+        glCheck(glGenBuffers(1, &submesh.iboAllocation.bufferID));
 
 #ifdef PLATFORM_DESKTOP
         glCheck(glGenVertexArrays(1, &submesh.vao[0]));
 
         glCheck(glBindVertexArray(submesh.vao[0]));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Patch].mesh.vboAllocation.bufferID));
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID));
 
         const auto& attribs = m_material.attribs;
         for (auto j = 0u; j < m_material.attribCount; ++j)

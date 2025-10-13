@@ -281,8 +281,8 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
         out.indexData[i].indexCount = static_cast<std::uint32_t>(indices.size());
         out.submeshCount++;
 
-        glCheck(glGenBuffers(1, &out.indexData[i].ibo));
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, out.indexData[i].ibo));
+        glCheck(glGenBuffers(1, &out.indexData[i].iboAllocation.bufferID));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, out.indexData[i].iboAllocation.bufferID));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, out.indexData[i].indexCount * sizeof(std::uint16_t), indices.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
     }

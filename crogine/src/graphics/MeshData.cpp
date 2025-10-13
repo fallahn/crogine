@@ -61,7 +61,7 @@ namespace
         for (auto i = 0u; i < meshData.submeshCount; ++i)
         {
             destIndices[i].resize(meshData.indexData[i].indexCount);
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
             glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount * sizeof(T), destIndices[i].data()));
         }
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));

@@ -2809,7 +2809,7 @@ void GolfState::loadModels()
 
                                 //apply any profile specific transforms
                                 const auto rot = pd.headwearOffsets[PlayerData::HeadwearOffset::HairRot + transformIndexOffset] * cro::Util::Const::PI;
-                                ent.getComponent<cro::Transform>().setPosition(pd.headwearOffsets[PlayerData::HeadwearOffset::HairTx + transformIndexOffset]);
+                                ent.getComponent<cro::Transform>().setPosition(pd.headwearOffsets[PlayerData::HeadwearOffset::HairTx + transformIndexOffset] + glm::vec3(0.f, 0.002f, 0.f));
                                 ent.getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
                                 ent.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
                                 ent.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
@@ -3101,7 +3101,7 @@ void GolfState::loadModels()
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = 1;
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
@@ -3117,7 +3117,7 @@ void GolfState::loadModels()
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = 1;
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 

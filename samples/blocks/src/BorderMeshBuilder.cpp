@@ -35,7 +35,7 @@ source distribution.
 
 using namespace WorldConst;
 
-cro::Mesh::Data BorderMeshBuilder::build() const
+cro::Mesh::Data BorderMeshBuilder::build(cro::AllocationResource*) const
 {
 
     std::vector<float> verts =

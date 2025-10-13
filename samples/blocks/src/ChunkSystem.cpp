@@ -356,7 +356,7 @@ void ChunkSystem::process(float dt)
             }
 
             auto& meshData = model.getMeshData();
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[SubMeshID::Water].ibo));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[SubMeshID::Water].iboAllocation.bufferID));
             glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
         }
     }
@@ -473,15 +473,15 @@ void ChunkSystem::updateMesh()
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
         meshData.indexData[SubMeshID::Solid].indexCount = static_cast<std::uint32_t>(vertexOutput.solidIndices.size());
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[SubMeshID::Solid].ibo));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[SubMeshID::Solid].iboAllocation.bufferID));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.solidIndices.size() * sizeof(std::uint32_t), vertexOutput.solidIndices.data(), GL_DYNAMIC_DRAW));
 
         meshData.indexData[SubMeshID::Water].indexCount = static_cast<std::uint32_t>(vertexOutput.waterIndices.size());
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[SubMeshID::Water].ibo));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[SubMeshID::Water].iboAllocation.bufferID));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.waterIndices.size() * sizeof(std::uint32_t), vertexOutput.waterIndices.data(), GL_DYNAMIC_DRAW));
 
         meshData.indexData[SubMeshID::Foliage].indexCount = static_cast<std::uint32_t>(vertexOutput.detailIndices.size());
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[SubMeshID::Foliage].ibo));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[SubMeshID::Foliage].iboAllocation.bufferID));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.detailIndices.size() * sizeof(std::uint32_t), vertexOutput.detailIndices.data(), GL_DYNAMIC_DRAW));
 
         

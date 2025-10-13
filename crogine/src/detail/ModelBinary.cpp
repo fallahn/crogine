@@ -70,7 +70,7 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
         for (auto i = 0u; i < meshData.submeshCount; ++i)
         {
             indexData[i].resize(meshData.indexData[i].indexCount);
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
 
             //fudgy kludge for different index types
             switch (meshData.indexData[i].format)

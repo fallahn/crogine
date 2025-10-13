@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -29,17 +29,32 @@ source distribution.
 
 #pragma once
 
-#include "ResourceIDs.hpp"
+#include <crogine/detail/BufferAllocation.hpp>
 
-#include <crogine/graphics/MeshBuilder.hpp>
-
-class BorderMeshBuilder final : public cro::MeshBuilder
+namespace cro::Detail
 {
-public:
+    struct IBOAllocation : public BufferAllocation
+    {
+        //used by glDrawElementsBaseVertex for index offset
+        std::int32_t baseVertex = 0;
 
-    std::size_t getUID() const override { return MeshID::Border; }
+        IBOAllocation& operator = (const BufferAllocation& r)
+        {
+            blockCount = r.blockCount;
+            bufferID = r.bufferID;
+            offset = r.offset;
+            return *this;
+        }
+    };
 
-private:
-
-    cro::Mesh::Data build(cro::AllocationResource*) const override;
-};
+    class IBOAllocator final : public BufferAllocator
+    {
+    public:
+        /*!
+        \brief Constructor
+        \param blocksSize Number of dataSize entries in a block, eg: 3 for triangles
+        \param dataSize Size of the index data in bytes eg 2 for short ir 4 for int
+        */
+        explicit IBOAllocator(std::uint32_t blockSize, std::uint32_t dataSize);
+    };
+}

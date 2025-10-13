@@ -170,7 +170,7 @@ void SpriteSystem3D::process(float)
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
             meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indexData.size());
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].iboAllocation.bufferID));
             glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(std::uint32_t), indexData.data(), GL_DYNAMIC_DRAW));
 
 
@@ -257,9 +257,9 @@ void SpriteSystem3D::onEntityRemoved(Entity entity)
     //delete index buffers
     for (auto& id : meshData.indexData)
     {
-        if (id.ibo)
+        if (id.iboAllocation.bufferID)
         {
-            glCheck(glDeleteBuffers(1, &id.ibo));
+            glCheck(glDeleteBuffers(1, &id.iboAllocation.bufferID));
         }
 
 #ifdef PLATFORM_DESKTOP

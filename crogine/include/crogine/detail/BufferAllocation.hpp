@@ -37,8 +37,6 @@ source distribution.
 
 #include <vector>
 #include <string>
-#include <memory>
-#include <unordered_map>
 
 namespace cro::Detail
 {
@@ -50,7 +48,7 @@ namespace cro::Detail
     memory to the allocator so that it can be
     marked free
     */
-    struct CRO_EXPORT_API BufferAllocation final
+    struct CRO_EXPORT_API BufferAllocation
     {
         //offset in bytes into the buffer
         std::size_t offset = 0;
@@ -156,38 +154,5 @@ namespace cro::Detail
 
 
         std::string m_debugString;
-    };
-}
-
-namespace cro
-{
-    namespace Detail
-    {
-        class VBOAllocator;
-    }
-
-    /*!
-    \brief Collection of allocators which can be passed
-    via a resource manager to a factory object such as MeshBuilder
-    */
-    class CRO_EXPORT_API AllocationResource final
-    {
-    public:
-        Detail::VBOAllocator* getVBOAllocator(std::uint32_t blockSize, std::uint32_t vertexSize)
-        {
-            std::uint64_t uid = blockSize;
-            uid <<= 32;
-            uid |= vertexSize;
-
-            if (m_vboAllocators.count(uid) == 0)
-            {
-                m_vboAllocators.insert(std::make_pair(uid, std::make_unique<Detail::VBOAllocator>(blockSize, vertexSize)));
-            }
-            return m_vboAllocators.at(uid).get();
-        }
-
-    private:
-        //for some reason I can't use a unique_ptr??
-        std::unordered_map<std::uint64_t, std::shared_ptr<Detail::VBOAllocator>> m_vboAllocators;
     };
 }

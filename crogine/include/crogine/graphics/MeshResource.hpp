@@ -32,7 +32,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/SDLResource.hpp>
-#include <crogine/detail/VBOAllocation.hpp>
+#include <crogine/detail/AllocationResource.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
 
@@ -40,7 +40,7 @@ source distribution.
 #include <array>
 
 namespace cro
-{    
+{
     class MeshBuilder;
 
     /*!

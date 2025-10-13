@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -27,19 +27,11 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "GLCheck.hpp"
 
-#include "ResourceIDs.hpp"
+#include <crogine/detail/IBOAllocation.hpp>
 
-#include <crogine/graphics/MeshBuilder.hpp>
+using namespace cro::Detail;
 
-class BorderMeshBuilder final : public cro::MeshBuilder
-{
-public:
-
-    std::size_t getUID() const override { return MeshID::Border; }
-
-private:
-
-    cro::Mesh::Data build(cro::AllocationResource*) const override;
-};
+IBOAllocator::IBOAllocator(std::uint32_t blockSize, std::uint32_t dataSize)
+    : BufferAllocator(blockSize, dataSize, GL_ELEMENT_ARRAY_BUFFER) {}

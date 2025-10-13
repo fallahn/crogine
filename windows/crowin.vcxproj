@@ -76,12 +76,14 @@
     <ClInclude Include="..\crogine\include\crogine\core\Utf.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Wavetable.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Window.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\detail\AllocationResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Assert.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\BalancedTree.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\BufferAllocation.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Detail.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\GlobalConsts.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\HashCombine.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\detail\IBOAllocation.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\ModelBinary.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\NoResize.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\PoolLog.hpp" />
@@ -322,6 +324,7 @@
     <ClCompile Include="..\crogine\src\detail\enet\protocol.c" />
     <ClCompile Include="..\crogine\src\detail\enet\win32.c" />
     <ClCompile Include="..\crogine\src\detail\glad.c" />
+    <ClCompile Include="..\crogine\src\detail\IBOAllocation.cpp" />
     <ClCompile Include="..\crogine\src\detail\ModelBinary.cpp" />
     <ClCompile Include="..\crogine\src\detail\PoolLog.cpp" />
     <ClCompile Include="..\crogine\src\detail\QuadTree.cpp" />

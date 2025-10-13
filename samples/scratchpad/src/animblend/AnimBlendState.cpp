@@ -367,7 +367,7 @@ void AnimBlendState::loadAssets()
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indexData.size());
-    (glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    (glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
     (glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indexData.data(), GL_STATIC_DRAW));
     (glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }

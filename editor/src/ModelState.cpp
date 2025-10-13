@@ -430,7 +430,7 @@ void ModelState::createScene()
     glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexData[0].ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexData[0].iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
@@ -475,7 +475,7 @@ void ModelState::createScene()
     glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexData[0].ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexData[0].iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
@@ -855,7 +855,7 @@ void ModelState::updateGridMesh(cro::Mesh::Data& meshData, std::optional<cro::Sp
 
     auto& submesh = meshData.indexData[0];
     submesh.indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }

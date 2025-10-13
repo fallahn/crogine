@@ -809,9 +809,9 @@ void ModelState::importIQM(const std::string& path)
     //tidy up the temo VBO/VAO/IBO we used for loading
     for (auto& sub : meshData.indexData)
     {
-        if (sub.ibo)
+        if (sub.iboAllocation.bufferID)
         {
-            glCheck(glDeleteBuffers(1, &sub.ibo));
+            glCheck(glDeleteBuffers(1, &sub.iboAllocation.bufferID));
         }
 
         for (auto& vao : sub.vao)
@@ -876,7 +876,7 @@ void ModelState::updateImportNode(CMFHeader header, std::vector<float>& imported
         for (auto i = 0u; i < meshData.submeshCount; ++i)
         {
             meshData.indexData[i].indexCount = static_cast<std::uint32_t>(m_importedIndexArrays[i].size());
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
             glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].indexCount * sizeof(std::uint32_t), m_importedIndexArrays[i].data(), GL_STATIC_DRAW));
         }
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
@@ -994,7 +994,7 @@ void ModelState::buildSkeleton()
 
                 auto& submesh = meshData.indexData[0];
                 submesh.indexCount = static_cast<std::uint32_t>(indices.size());
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID));
                 glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
                 glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
@@ -1007,7 +1007,7 @@ void ModelState::buildSkeleton()
                 auto& submesh2 = meshData.indexData[1];
                 submesh2.indexCount = static_cast<std::uint32_t>(indices.size());
                 submesh2.primitiveType = GL_POINTS;
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh2.ibo));
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh2.iboAllocation.bufferID));
                 glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh2.indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
                 glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
             }
@@ -1231,7 +1231,7 @@ void ModelState::readBackVertexData(cro::Mesh::Data meshData, std::vector<float>
     for (auto i = 0u; i < meshData.submeshCount; ++i)
     {
         destIndices[i].resize(meshData.indexData[i].indexCount);
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
 
         //fudgy kludge for different index types
         switch (meshData.indexData[i].format)

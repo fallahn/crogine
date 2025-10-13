@@ -3275,7 +3275,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
                     auto* submesh = &meshData->indexData[0];
                     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
                     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
                     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
                     
@@ -3440,7 +3440,7 @@ void MenuState::createSnow()
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 

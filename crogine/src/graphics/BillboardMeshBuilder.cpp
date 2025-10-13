@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/detail/VBOAllocation.hpp>
+#include <crogine/detail/AllocationResource.hpp>
 #include <crogine/graphics/BillboardMeshBuilder.hpp>
 
 #include "../detail/GLCheck.hpp"
@@ -81,7 +81,10 @@ Mesh::Data BillboardMeshBuilder::build(AllocationResource* resource) const
     meshData.indexData[0].indexCount = 0;
 
     //create IBO
-    glCheck(glGenBuffers(1, &meshData.indexData[0].ibo));
+    //glCheck(glGenBuffers(1, &meshData.indexData[0].ibo));
+    auto* iboAllocator = resource->getIBOAllocator(3, sizeof(std::uint16_t));
+    meshData.iboAllocator = iboAllocator;
+    meshData.indexData[0].iboAllocation = iboAllocator->newAllocation(0);
 
     return meshData;
 }

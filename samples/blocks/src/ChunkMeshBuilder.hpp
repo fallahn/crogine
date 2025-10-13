@@ -69,5 +69,5 @@ private:
 
     static std::size_t m_componentCount;
 
-    cro::Mesh::Data build() const override;
+    cro::Mesh::Data build(cro::AllocationResource*) const override;
 };

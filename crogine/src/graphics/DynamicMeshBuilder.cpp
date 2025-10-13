@@ -98,7 +98,7 @@ Mesh::Data DynamicMeshBuilder::build(AllocationResource*) const
         meshData.indexData[i].indexCount = 0;
 
         //create IBO
-        glCheck(glGenBuffers(1, &meshData.indexData[i].ibo));
+        glCheck(glGenBuffers(1, &meshData.indexData[i].iboAllocation.bufferID));
     }
 
     return meshData;

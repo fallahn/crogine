@@ -594,7 +594,7 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
 
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vboAllocation.bufferID));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID));
 
     const auto& attribs = m_materials[passIndex][idx].attribs;
     for (auto j = 0u; j < m_materials[passIndex][idx].attribCount; ++j)
@@ -647,14 +647,16 @@ void Model::DrawSingle::operator()(std::int32_t matID, std::int32_t pass) const
 {
     const auto& indexData = m_model.m_meshData.indexData[matID];
     glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
-    glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), NULL));
+    glCheck(glDrawElementsBaseVertex(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount,
+        static_cast<GLenum>(indexData.format), NULL, indexData.iboAllocation.baseVertex));
 }
 
 void Model::DrawInstanced::operator()(std::int32_t matID, std::int32_t pass) const
 {
     const auto& indexData = m_model.m_meshData.indexData[matID];
     glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
-    glCheck(glDrawElementsInstanced(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), NULL, m_model.m_instanceBuffers.instanceCount));
+    glCheck(glDrawElementsInstancedBaseVertex(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount,
+        static_cast<GLenum>(indexData.format), NULL, m_model.m_instanceBuffers.instanceCount, indexData.iboAllocation.baseVertex));
 }
 
 #endif //DESKTOP

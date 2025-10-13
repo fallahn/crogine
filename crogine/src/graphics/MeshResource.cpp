@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -149,11 +149,19 @@ void MeshResource::flush()
 void MeshResource::deleteMesh(Mesh::Data md)
 {
     //delete index buffers
+
     for (auto& id : md.indexData)
     {
-        if (id.ibo)
+        if (id.iboAllocation.bufferID)
         {
-            glCheck(glDeleteBuffers(1, &id.ibo));
+            if (md.iboAllocator)
+            {
+                md.iboAllocator->freeAllocation(id.iboAllocation);
+            }
+            else
+            {
+                glCheck(glDeleteBuffers(1, &id.iboAllocation.bufferID));
+            }
         }
 
 #ifdef PLATFORM_DESKTOP
@@ -166,6 +174,7 @@ void MeshResource::deleteMesh(Mesh::Data md)
         }
 #endif
     }
+
     //delete vertex buffer
     if (md.vboAllocation.bufferID)
     {

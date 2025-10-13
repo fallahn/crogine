@@ -209,13 +209,13 @@ bool RollingState::simulate(float dt)
 
         auto* submesh = &meshData.indexData[0];
         submesh->indexCount = static_cast<std::uint32_t>(indices[0].size());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices[0].data(), GL_DYNAMIC_DRAW);
 
         submesh = &meshData.indexData[1];
         //submesh->primitiveType = GL_TRIANGLES;
         submesh->indexCount = static_cast<std::uint32_t>(indices[1].size());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices[1].data(), GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }

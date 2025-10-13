@@ -202,7 +202,7 @@ void MeshBatch::updateMeshData(Mesh::Data& data) const
         {
             data.indexData[i].indexCount = static_cast<std::uint32_t>(m_indexData[i].size());
             
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[i].ibo));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[i].iboAllocation.bufferID));
             glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.indexData[i].indexCount * sizeof(std::uint32_t), m_indexData[i].data(), GL_STATIC_DRAW));
         }
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));

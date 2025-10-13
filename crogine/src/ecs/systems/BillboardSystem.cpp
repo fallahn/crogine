@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/detail/AllocationResource.hpp>
 
 #include <crogine/graphics/BillboardMeshBuilder.hpp>
 
@@ -207,8 +208,9 @@ void BillboardSystem::process(float)
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
             meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indexData.size());
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo));
-            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(std::uint16_t), indexData.data(), GL_DYNAMIC_DRAW));
+            meshData.indexData[0].iboAllocation.baseVertex = meshData.indexData[0].iboAllocation.offset / sizeof(std::uint16_t);
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].iboAllocation.bufferID));
+            glCheck(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].iboAllocation.offset, indexData.size() * sizeof(std::uint16_t), indexData.data()));
 
             //update bounding sphere
             const auto rad = (meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f;

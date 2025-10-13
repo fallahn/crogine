@@ -186,7 +186,7 @@ void BallTrail::update()
 
                 auto* submesh = &trail.meshData->indexData[0];
                 submesh->indexCount = static_cast<std::uint32_t>(trail.indices.size() - trail.front);
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
                 glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
                 glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
@@ -214,7 +214,7 @@ void BallTrail::update()
 
                 auto* submesh = &trail.meshData->indexData[0];
                 submesh->indexCount = static_cast<std::uint32_t>(trail.indices.size() - trail.front);
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
                 glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), trail.indices.data() + trail.front, GL_DYNAMIC_DRAW));
                 glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
             }
