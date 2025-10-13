@@ -647,16 +647,16 @@ void Model::DrawSingle::operator()(std::int32_t matID, std::int32_t pass) const
 {
     const auto& indexData = m_model.m_meshData.indexData[matID];
     glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
-    glCheck(glDrawElementsBaseVertex(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount,
-        static_cast<GLenum>(indexData.format), NULL, indexData.iboAllocation.baseVertex));
+    glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount,
+        static_cast<GLenum>(indexData.format), reinterpret_cast<void*>(indexData.iboAllocation.offset)));
 }
 
 void Model::DrawInstanced::operator()(std::int32_t matID, std::int32_t pass) const
 {
     const auto& indexData = m_model.m_meshData.indexData[matID];
     glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
-    glCheck(glDrawElementsInstancedBaseVertex(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount,
-        static_cast<GLenum>(indexData.format), NULL, m_model.m_instanceBuffers.instanceCount, indexData.iboAllocation.baseVertex));
+    glCheck(glDrawElementsInstanced(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount,
+        static_cast<GLenum>(indexData.format), reinterpret_cast<void*>(indexData.iboAllocation.offset), m_model.m_instanceBuffers.instanceCount));
 }
 
 #endif //DESKTOP

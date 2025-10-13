@@ -215,17 +215,9 @@ void BillboardSystem::process(float)
                 meshData.iboAllocator->freeAllocation(meshData.indexData[0].iboAllocation);
                 meshData.indexData[0].iboAllocation = meshData.iboAllocator->newAllocation(indexData.size());
                 //entity.getComponent<cro::Model>().refreshVAO();
-                LogI << "Resized block count to " << meshData.indexData[0].iboAllocation.blockCount << std::endl;
             }
 
             meshData.indexData[0].iboAllocation.baseVertex = meshData.indexData[0].iboAllocation.offset / sizeof(std::uint16_t);
-            {
-                const auto& a = meshData.indexData[0].iboAllocation;
-                LogI << "Offset: " << a.offset << std::endl;
-                LogI << "Base Vert: " << a.baseVertex << std::endl;
-                LogI << "Block Count: " << a.blockCount << std::endl;
-                LogI << "ID: " << a.bufferID << std::endl;
-            }
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].iboAllocation.bufferID));
             glCheck(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].iboAllocation.offset, indexData.size() * sizeof(std::uint16_t), indexData.data()));
 
