@@ -194,8 +194,8 @@ void BillboardSystem::process(float)
             meshData.vertexCount = vertexData.size();
 
             //we need to resize if larger than previous
-            if (meshData.vboAllocator->getBlockCount(vertexData.size() >
-                meshData.vboAllocation.blockCount))
+            if (meshData.vboAllocator->getBlockCount(vertexData.size()) >
+                meshData.vboAllocation.blockCount)
             {
                 meshData.vboAllocator->freeAllocation(meshData.vboAllocation);
                 meshData.vboAllocation = meshData.vboAllocator->newAllocation(vertexData.size());
@@ -207,8 +207,25 @@ void BillboardSystem::process(float)
             glCheck(glBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, vertexData.size() * sizeof(BillboardMeshBuilder::VertexLayout), vertexData.data()));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
+            //resize IBO if needed
             meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indexData.size());
+            if (meshData.iboAllocator->getBlockCount(indexData.size()) >
+                meshData.indexData[0].iboAllocation.blockCount)
+            {
+                meshData.iboAllocator->freeAllocation(meshData.indexData[0].iboAllocation);
+                meshData.indexData[0].iboAllocation = meshData.iboAllocator->newAllocation(indexData.size());
+                //entity.getComponent<cro::Model>().refreshVAO();
+                LogI << "Resized block count to " << meshData.indexData[0].iboAllocation.blockCount << std::endl;
+            }
+
             meshData.indexData[0].iboAllocation.baseVertex = meshData.indexData[0].iboAllocation.offset / sizeof(std::uint16_t);
+            {
+                const auto& a = meshData.indexData[0].iboAllocation;
+                LogI << "Offset: " << a.offset << std::endl;
+                LogI << "Base Vert: " << a.baseVertex << std::endl;
+                LogI << "Block Count: " << a.blockCount << std::endl;
+                LogI << "ID: " << a.bufferID << std::endl;
+            }
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].iboAllocation.bufferID));
             glCheck(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].iboAllocation.offset, indexData.size() * sizeof(std::uint16_t), indexData.data()));
 

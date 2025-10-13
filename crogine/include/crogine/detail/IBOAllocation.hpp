@@ -43,6 +43,7 @@ namespace cro::Detail
             blockCount = r.blockCount;
             bufferID = r.bufferID;
             offset = r.offset;
+            baseVertex = 0;
             return *this;
         }
     };
