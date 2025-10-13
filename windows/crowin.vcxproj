@@ -78,6 +78,7 @@
     <ClInclude Include="..\crogine\include\crogine\core\Window.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Assert.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\BalancedTree.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\detail\BufferAllocation.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Detail.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\GlobalConsts.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\HashCombine.hpp" />
@@ -305,6 +306,7 @@
     <ClCompile Include="..\crogine\src\core\Window.cpp" />
     <ClCompile Include="..\crogine\src\detail\backward.cpp" />
     <ClCompile Include="..\crogine\src\detail\BalancedTree.cpp" />
+    <ClCompile Include="..\crogine\src\detail\BufferAllocation.cpp" />
     <ClCompile Include="..\crogine\src\detail\clipboard\clip.cpp" />
     <ClCompile Include="..\crogine\src\detail\clipboard\clip_win.cpp" />
     <ClCompile Include="..\crogine\src\detail\clipboard\clip_win_bmp.cpp" />

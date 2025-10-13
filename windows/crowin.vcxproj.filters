@@ -780,6 +780,9 @@
     <ClInclude Include="..\crogine\include\crogine\detail\VAOAllocation.hpp">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\BufferAllocation.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1323,6 +1326,9 @@
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\detail\VAOAllocation.cpp">
+      <Filter>Source Files\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\BufferAllocation.cpp">
       <Filter>Source Files\detail</Filter>
     </ClCompile>
   </ItemGroup>

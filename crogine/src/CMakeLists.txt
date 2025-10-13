@@ -49,6 +49,7 @@ set(PROJECT_SRC
 
   ${PROJECT_DIR}/detail/backward.cpp
   ${PROJECT_DIR}/detail/BalancedTree.cpp
+  ${PROJECT_DIR}/detail/BufferAllocation.cpp
   ${PROJECT_DIR}/detail/DistanceField.cpp
   #${PROJECT_DIR}/detail/glad.c
   ${PROJECT_DIR}/detail/ModelBinary.cpp
