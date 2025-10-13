@@ -153,51 +153,6 @@ namespace cro::Detail
 
         std::string m_debugString;
     };
-
-    /*!
-    \brief Recycle VAOs when needed rather than delete/create
-    */
-    class VAOAllocator final
-    {
-    public:
-        /*!
-        \brief Constructor.
-        \param initialPoolSize Number of VAOs to create on construction.
-        If more VAOs are requested then they are created on the fly if
-        none are available in the pool
-        */
-        explicit VAOAllocator(std::size_t initialPoolSize = 0);
-        ~VAOAllocator();
-
-        VAOAllocator(const VAOAllocator&) = delete;
-        VAOAllocator(VAOAllocator&&) = delete;
-
-        VAOAllocator& operator = (const VAOAllocator&) = delete;
-        VAOAllocator& operator = (VAOAllocator&&) = delete;
-
-        /*!
-        \brief Requests a VAO form the pool, creating a new one
-        if necessary.
-        \returns Handle to the VAO.
-        */
-        std::uint32_t requestVAO();
-
-        /*!
-        \brief Returns the given VAO to the pool
-        \param vao The handle to return. Once returned
-        any VAOs with this handle should be considered
-        invalid, as it will eventually be recycled.
-        */
-        void freeVAO(std::uint32_t vao);
-
-    private:
-
-        //handles which are assigned and need deleting on shutdown
-        std::vector<std::uint32_t> m_activeVAOs;
-
-        //handles which have been returned and can be reused
-        std::vector<std::uint32_t> m_freeVAOs;
-    };
 }
 
 namespace cro

@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/detail/QuadTree.hpp>
+#include <crogine/detail/VAOAllocation.hpp>
 #include <crogine/detail/VBOAllocation.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/matrix.hpp>
