@@ -822,9 +822,9 @@ void ModelState::importIQM(const std::string& path)
             }
         }
     }
-    if (meshData.vboAllocation.vboID)
+    if (meshData.vboAllocation.bufferID)
     {
-        glCheck(glDeleteBuffers(1, &meshData.vboAllocation.vboID));
+        glCheck(glDeleteBuffers(1, &meshData.vboAllocation.bufferID));
     }
 
     savePrefs();
@@ -869,7 +869,7 @@ void ModelState::updateImportNode(CMFHeader header, std::vector<float>& imported
         meshData.submeshCount = std::min(MaxSubMeshes, header.arrayCount);
 
         //update the buffers
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
         glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexCount * meshData.vertexSize, m_importedVBO.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -976,7 +976,7 @@ void ModelState::buildSkeleton()
                 meshData.vertexSize = vertStride * sizeof(float);
                 meshData.vertexCount = verts.size() / vertStride;
 
-                glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
                 glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, verts.data(), GL_DYNAMIC_DRAW));
                 glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -1180,7 +1180,7 @@ void ModelState::applyImportTransform(std::vector<float>& vertexData)
         }
 
         //upload the data to the preview model
-        glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID);
+        glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID);
         glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, vertexData.data(), GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         m_importedTransform = {};
@@ -1211,7 +1211,7 @@ void ModelState::flipNormals()
             verts[i+2] *= -1.f;
         }
 
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
         glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexCount * meshData.vertexSize, verts.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     }
@@ -1221,7 +1221,7 @@ void ModelState::readBackVertexData(cro::Mesh::Data meshData, std::vector<float>
 {
     destVerts.clear();
     destVerts.resize(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
     glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, meshData.vertexCount * meshData.vertexSize, destVerts.data()));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

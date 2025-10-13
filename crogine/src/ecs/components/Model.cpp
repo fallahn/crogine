@@ -237,7 +237,7 @@ void Model::setMaterial(std::size_t idx, Material::Data data)
 {
     CRO_ASSERT(idx < m_materials[Mesh::IndexData::Final].size(), "Index out of range");
     
-    if (m_meshData.vboAllocation.vboID)
+    if (m_meshData.vboAllocation.bufferID)
     {
         //remove any existing animations
         m_animations.erase(std::remove_if(m_animations.begin(), m_animations.end(),
@@ -593,7 +593,7 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
     }*/
 
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vboAllocation.vboID));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vboAllocation.bufferID));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
 
     const auto& attribs = m_materials[passIndex][idx].attribs;

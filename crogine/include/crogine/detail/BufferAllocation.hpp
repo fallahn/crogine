@@ -58,21 +58,21 @@ namespace cro::Detail
         //of if the ID is a handle to a unique buffer)
         std::size_t blockCount = 0;
         //handle to the allocated buffer
-        std::uint32_t vboID = 0;
+        std::uint32_t bufferID = 0;
     };
 
     /*
     Creates a buffer and allocates blocks of N chunks to allow multiple
     items to share a single buffer. Can be inherited from for specific
     targets, mostly because I already implemented this as VBO specific
-    and I reall can't cope with renaming all the symbols *yet again*
+    and I really can't cope with renaming all the symbols *yet again*
     */
     class BufferAllocator : public SDLResource
 #ifdef CRO_DEBUG_
         , public GuiClient
 #endif
     {
-    public:
+    protected:
         /*!
         \brief Constructor
         \param blockSize Number of vertices per block
@@ -87,6 +87,7 @@ namespace cro::Detail
         BufferAllocator& operator = (const BufferAllocator&) = delete;
         BufferAllocator& operator = (BufferAllocator&&) = delete;
 
+    public:
         /*!
         \brief Calculates the blocks required for the given number of chunks
         Rounds up to the nearest whole block.
@@ -172,7 +173,7 @@ namespace cro
     class CRO_EXPORT_API AllocationResource final
     {
     public:
-        Detail::VBOAllocator* getAllocator(std::uint32_t blockSize, std::uint32_t vertexSize)
+        Detail::VBOAllocator* getVBOAllocator(std::uint32_t blockSize, std::uint32_t vertexSize)
         {
             std::uint64_t uid = blockSize;
             uid <<= 32;

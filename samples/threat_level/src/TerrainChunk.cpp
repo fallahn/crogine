@@ -244,7 +244,7 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
     mesh.boundingSphere.radius = chunkWidth / 2.f; //else this will be culled from the scene
 
     //cro::Logger::log("Updating verts");
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vboAllocation.vboID));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vboAllocation.bufferID));
     glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, mesh.vertexCount * mesh.vertexSize, vertData.data()));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }

@@ -49,8 +49,8 @@ cro::Mesh::Data ChunkBuilder::build() const
         + data.attributes[cro::Mesh::Attribute::Normal].componentCount) * sizeof(float);
     //fill with empty data so we don't accidentally render any garbage
     std::vector<char> vertData(data.vertexCount * data.vertexSize);
-    glCheck(glGenBuffers(1, &data.vboAllocation.vboID));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vboAllocation.vboID));
+    glCheck(glGenBuffers(1, &data.vboAllocation.bufferID));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, data.vertexCount * data.vertexSize, vertData.data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     

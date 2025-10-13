@@ -61,7 +61,7 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
         std::vector<std::vector<std::uint32_t>> indexData;
 
         vertexData.resize(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
         glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, meshData.vertexCount * meshData.vertexSize, vertexData.data()));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

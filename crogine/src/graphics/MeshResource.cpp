@@ -63,7 +63,7 @@ bool MeshResource::loadMesh(std::size_t ID, const MeshBuilder& mb)
     }
 
     auto meshData = mb.build(&m_allocationResource);
-    if (meshData.vboAllocation.vboID > 0 && meshData.submeshCount > 0)
+    if (meshData.vboAllocation.bufferID > 0 && meshData.submeshCount > 0)
     {
         m_meshData.insert(std::make_pair(ID, meshData));
 
@@ -167,7 +167,7 @@ void MeshResource::deleteMesh(Mesh::Data md)
 #endif
     }
     //delete vertex buffer
-    if (md.vboAllocation.vboID)
+    if (md.vboAllocation.bufferID)
     {
         if (md.vboAllocator)
         {
@@ -175,7 +175,7 @@ void MeshResource::deleteMesh(Mesh::Data md)
         }
         else
         {
-            glCheck(glDeleteBuffers(1, &md.vboAllocation.vboID));
+            glCheck(glDeleteBuffers(1, &md.vboAllocation.bufferID));
         }
     }
 }

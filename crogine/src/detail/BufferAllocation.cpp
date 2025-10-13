@@ -182,7 +182,7 @@ BufferAllocation BufferAllocator::newAllocation(std::size_t chunkCount)
 
     BufferAllocation ret;
     ret.blockCount = blocks;
-    ret.vboID = m_bufferID;
+    ret.bufferID = m_bufferID;
 
     if (m_freeBlocks.empty())
     {
@@ -255,7 +255,7 @@ void BufferAllocator::freeAllocation(BufferAllocation allocation)
 {
     //TODO make sure we're not somehow double freeing (probably wants to throw in which case)
 
-    if (allocation.vboID == m_bufferID
+    if (allocation.bufferID == m_bufferID
         && allocation.blockCount != 0)
     {
         auto& fb = m_freeBlocks.emplace_back();

@@ -468,7 +468,7 @@ void ChunkSystem::updateMesh()
         auto& meshData = entity.getComponent<cro::Model>().getMeshData();
 
         meshData.vertexCount = vertexOutput.vertexData.size() / (meshData.vertexSize / sizeof(float));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
         glCheck(glBufferData(GL_ARRAY_BUFFER, vertexOutput.vertexData.size() * sizeof(float), vertexOutput.vertexData.data(), GL_DYNAMIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

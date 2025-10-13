@@ -616,7 +616,7 @@ void GameState::loadAssets()
     };
     const std::size_t vertComponentCount = 5;
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vboAllocation.vboID));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -1053,7 +1053,7 @@ void GameState::loadMap()
 
             auto& mesh = entity.getComponent<cro::Model>().getMeshData();
 
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vboAllocation.vboID));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vboAllocation.bufferID));
             glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

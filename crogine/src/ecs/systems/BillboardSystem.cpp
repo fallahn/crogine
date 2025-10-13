@@ -202,7 +202,7 @@ void BillboardSystem::process(float)
                 entity.getComponent<cro::Model>().refreshVAO();
             }
 
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
             glCheck(glBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, vertexData.size() * sizeof(BillboardMeshBuilder::VertexLayout), vertexData.data()));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

@@ -420,14 +420,14 @@ void Drawable2D::updateVAO()
         //this might be done before the system has
         //a chance to create it, ie when setting a custom shader immediately
         //upon component creation.
-        if (m_vboAllocation.vboID == 0)
+        if (m_vboAllocation.bufferID == 0)
         {
             m_vboAllocation = m_vboAllocator->newAllocation(m_vertices.size());
         }
 
         glCheck(glBindVertexArray(m_vao));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vboAllocation.vboID));
-        assert(m_vboAllocation.vboID != 0);
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vboAllocation.bufferID));
+        assert(m_vboAllocation.bufferID != 0);
         for (const auto& [id, size, offset, type, normalised] : m_vertexAttributes)
         {
             glCheck(glEnableVertexAttribArray(id));
@@ -445,7 +445,7 @@ void Drawable2D::updateVAO()
 
 void Drawable2D::updateVBO()
 {
-    if (m_vboAllocation.vboID == 0 ||
+    if (m_vboAllocation.bufferID == 0 ||
         m_vboAllocation.blockCount < m_vboAllocator->getBlockCount(m_vertices.size()))
     {
         m_vboAllocation = m_vboAllocator->newAllocation(m_vertices.size());        
@@ -453,8 +453,8 @@ void Drawable2D::updateVBO()
     }
 
     //bind VBO and upload data
-    assert(m_vboAllocation.vboID != 0); //the above should preclude this, but still...
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vboAllocation.vboID));
+    assert(m_vboAllocation.bufferID != 0); //the above should preclude this, but still...
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vboAllocation.bufferID));
     glCheck(glBufferSubData(GL_ARRAY_BUFFER, static_cast<GLintptr>(m_vboAllocation.offset), m_vertices.size() * sizeof(Vertex2D), m_vertices.data()));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

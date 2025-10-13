@@ -70,7 +70,7 @@ Mesh::Data BillboardMeshBuilder::build(AllocationResource* resource) const
     meshData.vertexCount = 0;
 
     //create vbo
-    auto* vboAllocator = resource->getAllocator(4, sizeof(VertexLayout));
+    auto* vboAllocator = resource->getVBOAllocator(4, sizeof(VertexLayout));
     meshData.vboAllocator = vboAllocator;
     meshData.vboAllocation = vboAllocator->newAllocation(0);
 

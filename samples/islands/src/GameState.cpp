@@ -980,7 +980,7 @@ void GameState::updateIslandVerts(const std::vector<float>& heightmap)
     CRO_ASSERT(verts.size() == meshData.vertexCount, "Incorrect vertex count");
     CRO_ASSERT(sizeof(Vertex) == meshData.vertexSize, "Incorrect vertex size");
 
-    glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID);
+    glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID);
     glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(Vertex), verts.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

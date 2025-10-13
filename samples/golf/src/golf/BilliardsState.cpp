@@ -1088,7 +1088,7 @@ void BilliardsState::buildScene()
 
     auto vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = verts.size() / vertStride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.vboID));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -1142,7 +1142,7 @@ void BilliardsState::buildScene()
 
         auto vertStride = (meshData->vertexSize / sizeof(float));
         meshData->vertexCount = vertexData.size() / vertStride;
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.vboID));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
         glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, vertexData.data(), GL_DYNAMIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

@@ -3095,7 +3095,7 @@ void GolfState::loadModels()
     };
 
     meshData->vertexCount = 1;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.vboID));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -3111,7 +3111,7 @@ void GolfState::loadModels()
         0.f, 0.f, 0.f,    0.f, 0.f, 0.f, 0.25f,
     };
     meshData->vertexCount = 1;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.vboID));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

@@ -52,7 +52,7 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     data.vertexSize = getVertexSize(data.attributes);
     data.vertexCount = 0;
     
-    glCheck(glGenBuffers(1, &data.vboAllocation.vboID));
+    glCheck(glGenBuffers(1, &data.vboAllocation.bufferID));
     /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vbo));
     glCheck(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/

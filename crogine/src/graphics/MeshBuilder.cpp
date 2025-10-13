@@ -56,8 +56,8 @@ std::size_t MeshBuilder::getVertexSize(const std::array<Mesh::Attribute, Mesh::A
 
 void MeshBuilder::createVBO(Mesh::Data& meshData, const std::vector<float>& vertexData)
 {
-    glCheck(glGenBuffers(1, &meshData.vboAllocation.vboID));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.vboID));
+    glCheck(glGenBuffers(1, &meshData.vboAllocation.bufferID));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, vertexData.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }

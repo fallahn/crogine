@@ -542,10 +542,10 @@ void RenderSystem2D::resetDrawable(Entity entity)
     }
 #endif //PLATFORM
 
-    if (drawable.m_vboAllocation.vboID != 0)
+    if (drawable.m_vboAllocation.bufferID != 0)
     {
         m_vboAllocator.freeAllocation(drawable.m_vboAllocation);
-        drawable.m_vboAllocation.vboID = 0;
+        drawable.m_vboAllocation.bufferID = 0;
     }
 }
 
