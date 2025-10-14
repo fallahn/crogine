@@ -71,6 +71,7 @@ ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap,
     : m_resources   (rc),
     m_envMap        (envMap),
     m_workingDir    (workingDir),
+    m_optimiseOnLoad(true),
     m_materialCount (0),
     m_castShadows   (false),
     m_billboard     (false),
@@ -172,7 +173,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
     {
         //binary model
         updateLocalPath(meshValue);
-        meshBuilder = std::make_unique<BinaryMeshBuilder>(meshValue);
+        meshBuilder = std::make_unique<BinaryMeshBuilder>(meshValue, m_optimiseOnLoad);
     }
     else if (ext == ".iqm")
     {

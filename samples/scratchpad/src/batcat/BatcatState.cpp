@@ -286,6 +286,7 @@ void BatcatState::loadAssets()
     for (auto& md : m_modelDefs)
     {
         md = std::make_unique<cro::ModelDefinition>(m_resources);
+        //md->optimiseOnLoad(false);
     }
 
     m_modelDefs[GameModelID::BatCat]->loadFromFile("assets/batcat/models/batcat02.cmt", true);

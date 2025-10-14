@@ -29,7 +29,6 @@ source distribution.
 
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/detail/AllocationResource.hpp>
-#include <crogine/detail/ModelBinary.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/graphics/BinaryMeshBuilder.hpp>
 
@@ -37,9 +36,10 @@ source distribution.
 
 using namespace cro;
 
-BinaryMeshBuilder::BinaryMeshBuilder(const std::string& path)
-    : m_path    (path),
-    m_uid       (0)
+BinaryMeshBuilder::BinaryMeshBuilder(const std::string& path, bool optimiseOnLoad)
+    : m_path            (path),
+    m_optimiseOnLoad    (optimiseOnLoad),
+    m_uid               (0)
 {
 
 #ifdef __APPLE__
@@ -75,6 +75,15 @@ Skeleton BinaryMeshBuilder::getSkeleton() const
 }
 
 Mesh::Data BinaryMeshBuilder::build(AllocationResource* allocationResource) const
+{
+    if (m_optimiseOnLoad)
+    {
+        return buildOptimised(allocationResource);
+    }
+    return buildDefault();
+}
+
+Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResource) const
 {
     Mesh::Data meshData;
 
@@ -170,7 +179,7 @@ Mesh::Data BinaryMeshBuilder::build(AllocationResource* allocationResource) cons
                 SDL_RWread(file.file, indexData[i].data(), sizes[i] * sizeof(std::uint32_t), 1);
             }
 
-            //process vertex data
+            //process vertex data - TODO keep this around so we can use it to calculate the bounding sphere, below (or use tempVerts?)
             std::vector<float> vertData;
             for (auto i = 0u; i < tempVerts.size(); i += vertStride)
             {
@@ -281,8 +290,6 @@ Mesh::Data BinaryMeshBuilder::build(AllocationResource* allocationResource) cons
 
                 if (meshData.vertexCount < std::numeric_limits<std::uint8_t>::max())
                 {
-                    //LogI << "Optimising for byte size indices" << std::endl;
-                    
                     //we can use bytes for indexing
                     meshData.indexData[i].format = GL_UNSIGNED_BYTE;
                     std::vector<std::uint8_t> temp(indexData[i].size());
@@ -297,13 +304,10 @@ Mesh::Data BinaryMeshBuilder::build(AllocationResource* allocationResource) cons
                     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
                     glCheck(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.offset,
                         temp.size(), temp.data()));
-                    //createIBO(meshData, temp.data(), i, sizeof(std::uint8_t));
                 }
                 else if (meshData.vertexCount < std::numeric_limits<std::uint16_t>::max())
                 {
                     //use shorts
-                    //LogI << "Optimising for short size indices" << std::endl;
-
                     meshData.indexData[i].format = GL_UNSIGNED_SHORT;
                     std::vector<std::uint16_t> temp(indexData[i].size());
                     for (auto j = 0u; j < temp.size(); ++j)
@@ -316,147 +320,24 @@ Mesh::Data BinaryMeshBuilder::build(AllocationResource* allocationResource) cons
                     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
                     glCheck(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.offset,
                         temp.size() * sizeof(std::uint16_t), temp.data()));
-                    //createIBO(meshData, temp.data(), i, sizeof(std::uint16_t));
                 }
                 else
                 {
-                    //LogI << "Using default size indices" << std::endl;
                     meshData.iboAllocator = allocationResource->getIBOAllocator(3, sizeof(std::uint32_t));
                     meshData.indexData[i].iboAllocation = meshData.iboAllocator->newAllocation(indexData[i].size());
                     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
                     glCheck(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.offset,
                         indexData[i].size() * sizeof(std::uint32_t), indexData[i].data()));
-                    //createIBO(meshData, indexData[i].data(), i, sizeof(std::uint32_t));
                 }
             }
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
             //boundingbox / sphere
-            meshData.boundingBox[0] = glm::vec3(std::numeric_limits<float>::max());
-            meshData.boundingBox[1] = glm::vec3(std::numeric_limits<float>::lowest());
-            for (std::size_t i = 0; i < vertData.size(); i += (meshData.vertexSize / sizeof(float)))
-            {
-                //min point
-                if (meshData.boundingBox[0].x > vertData[i])
-                {
-                    meshData.boundingBox[0].x = vertData[i];
-                }
-                if (meshData.boundingBox[0].y > vertData[i + 1])
-                {
-                    meshData.boundingBox[0].y = vertData[i + 1];
-                }
-                if (meshData.boundingBox[0].z > vertData[i + 2])
-                {
-                    meshData.boundingBox[0].z = vertData[i + 2];
-                }
-
-                //maxpoint
-                if (meshData.boundingBox[1].x < vertData[i])
-                {
-                    meshData.boundingBox[1].x = vertData[i];
-                }
-                if (meshData.boundingBox[1].y < vertData[i + 1])
-                {
-                    meshData.boundingBox[1].y = vertData[i + 1];
-                }
-                if (meshData.boundingBox[1].z < vertData[i + 2])
-                {
-                    meshData.boundingBox[1].z = vertData[i + 2];
-                }
-            }
-            const auto rad = (meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f;
-            meshData.boundingSphere.centre = meshData.boundingBox[0] + rad;
-            //radius should fit the mesh as tightly as possible
-            for (auto i = 0; i < 3; ++i)
-            {
-                auto l = std::abs(rad[i]);
-                if (l > meshData.boundingSphere.radius)
-                {
-                    meshData.boundingSphere.radius = l;
-                }
-            }
+            calcBounds(meshData, vertData);
         }
 
         m_skeleton = {};
-        if (header.skeletonOffset)
-        {
-            if (header.version < 2)
-            {
-                LogW << m_path <<  "\nSkeletal animation requires version 2 or greater. Please re-export the model" << std::endl;
-            }
-
-            else if (SDL_RWseek(file.file, header.skeletonOffset, RW_SEEK_SET) > -1)
-            {
-                Detail::ModelBinary::SkeletonHeaderV2 skelHeader;
-                SDL_RWread(file.file, &skelHeader, sizeof(skelHeader), 1);
-                m_skeleton.setRootTransform(glm::make_mat4(skelHeader.rootTransform));
-
-                std::vector<Joint> inFrames(skelHeader.frameCount * skelHeader.frameSize);
-                std::vector<Detail::ModelBinary::SerialAnimation> inAnims(skelHeader.animationCount);
-                std::vector<Detail::ModelBinary::SerialNotification> inNotifications(skelHeader.notificationCount);
-                std::vector<Detail::ModelBinary::SerialAttachment> inAttachments(skelHeader.attachmentCount);
-                std::vector<float> inverseBindPose(skelHeader.frameSize * 16);
-
-                SDL_RWread(file.file, inFrames.data(), sizeof(Joint), inFrames.size());
-                SDL_RWread(file.file, inAnims.data(), sizeof(Detail::ModelBinary::SerialAnimation), inAnims.size());
-                SDL_RWread(file.file, inNotifications.data(), sizeof(Detail::ModelBinary::SerialNotification), inNotifications.size());
-                SDL_RWread(file.file, inAttachments.data(), sizeof(Detail::ModelBinary::SerialAttachment), inAttachments.size());
-                SDL_RWread(file.file, inverseBindPose.data(), sizeof(float), inverseBindPose.size());
-
-
-                CRO_ASSERT(inFrames.size() % skelHeader.frameSize == 0, "");
-                for (auto i = 0u; i < skelHeader.frameCount; ++i)
-                {
-                    std::vector<Joint> frame;
-                    for (auto j = i * skelHeader.frameSize; j < (i * skelHeader.frameSize) + skelHeader.frameSize; ++j)
-                    {
-                        frame.push_back(inFrames[j]);
-                    }
-
-                    m_skeleton.addFrame(frame);
-                }
-
-                for (const auto& inAnim : inAnims)
-                {
-                    SkeletalAnim anim;
-                    anim.frameCount = inAnim.frameCount;
-                    anim.frameRate = inAnim.frameRate;
-                    anim.startFrame = inAnim.startFrame;
-                    anim.name = inAnim.name;
-                    anim.looped = inAnim.looped != 0;
-
-                    m_skeleton.addAnimation(anim);
-                }
-
-                for (auto [frameID, jointID, userID, name] : inNotifications)
-                {
-                    m_skeleton.addNotification(frameID, { jointID, userID, name });
-                }
-
-                for (const auto& [rotation, translation, scale, parent, name] : inAttachments)
-                {
-                    Attachment ap;
-                    ap.setParent(parent);
-                    ap.setPosition(translation);
-                    ap.setRotation(rotation);
-                    ap.setScale(scale);
-                    ap.setName(name);
-
-                    m_skeleton.addAttachment(ap);
-                }
-
-                std::vector<glm::mat4> invBindMatrices(skelHeader.frameSize);
-                for (auto i = 0u; i < inverseBindPose.size(); i += 16)
-                {
-                    std::memcpy(&invBindMatrices[i / 16][0][0], inverseBindPose.data() + i, sizeof(glm::mat4));
-                }
-                m_skeleton.setInverseBindPose(invBindMatrices);
-            }
-            else
-            {
-                LogE << "Failed to seek to skeleton offset, incorrect value provided" << std::endl;
-            }
-        }
+        parseSkeleton(file, header);
     }
     else
     {
@@ -464,4 +345,383 @@ Mesh::Data BinaryMeshBuilder::build(AllocationResource* allocationResource) cons
     }
 
     return meshData;
+}
+
+Mesh::Data BinaryMeshBuilder::buildDefault() const
+{
+    Mesh::Data meshData;
+
+    RaiiRWops file;
+    file.file = SDL_RWFromFile(m_path.c_str(), "rb");
+    if (file.file)
+    {
+        Detail::ModelBinary::Header header;
+        auto len = SDL_RWseek(file.file, 0, RW_SEEK_END);
+        if (len < sizeof(header))
+        {
+            LogE << "Unable to open " << m_path << ": invalid file size" << std::endl;
+            return {};
+        }
+
+        SDL_RWseek(file.file, 0, RW_SEEK_SET);
+        SDL_RWread(file.file, &header, sizeof(header), 1);
+
+        if (header.magic != Detail::ModelBinary::MAGIC
+            && header.magic != Detail::ModelBinary::MAGIC_V1)
+        {
+            LogE << "Invalid header found" << std::endl;
+            return {};
+        }
+
+        if (header.meshOffset)
+        {
+            Detail::ModelBinary::MeshHeader meshHeader;
+            SDL_RWread(file.file, &meshHeader, sizeof(meshHeader), 1);
+
+            if ((meshHeader.flags & VertexProperty::Position) == 0)
+            {
+                LogE << "No position data in mesh" << std::endl;
+                return {};
+            }
+
+            std::vector<float> tempVerts;
+            std::vector<std::uint32_t> sizes(meshHeader.indexArrayCount);
+            std::vector<std::vector<std::uint32_t>> indexData(meshHeader.indexArrayCount);
+
+            SDL_RWread(file.file, sizes.data(), meshHeader.indexArrayCount * sizeof(std::uint32_t), 1);
+
+            std::uint32_t vertStride = 0;
+            for (auto i = 0u; i < Mesh::Attribute::Total; ++i)
+            {
+                if (meshHeader.flags & (1 << i))
+                {
+                    switch (i)
+                    {
+                    default:
+                    case Mesh::Attribute::Bitangent:
+                        break;
+                    case Mesh::Attribute::Position:
+                        vertStride += 3;
+                        meshData.attributes[i].componentCount = 3;
+                        break;
+                    case Mesh::Attribute::Colour:
+                        vertStride += 4;
+                        meshData.attributes[i].componentCount = 4;
+                        break;
+                    case Mesh::Attribute::Normal:
+                        vertStride += 3;
+                        meshData.attributes[i].componentCount = 3;
+                        break;
+                    case Mesh::Attribute::Tangent:
+                        meshData.attributes[i].componentCount = 3;
+                        meshData.attributes[Mesh::Attribute::Bitangent].componentCount = 3;
+                        vertStride += 4; //we'll be decoding tangents
+                        break;
+                    case Mesh::Attribute::UV0:
+                    case Mesh::Attribute::UV1:
+                        vertStride += 2;
+                        meshData.attributes[i].componentCount = 2;
+                        break;
+                    case Mesh::Attribute::BlendIndices:
+                    case Mesh::Attribute::BlendWeights:
+                        vertStride += 4;
+                        meshData.attributes[i].componentCount = 4;
+                        break;
+                    }
+                }
+            }
+
+            auto pos = SDL_RWtell(file.file);
+            auto vertSize = meshHeader.indexArrayOffset - pos;
+            tempVerts.resize(vertSize / sizeof(float));
+            SDL_RWread(file.file, tempVerts.data(), vertSize, 1);
+            CRO_ASSERT(tempVerts.size() % vertStride == 0, "");
+
+            for (auto i = 0u; i < meshHeader.indexArrayCount; ++i)
+            {
+                indexData[i].resize(sizes[i]);
+                SDL_RWread(file.file, indexData[i].data(), sizes[i] * sizeof(std::uint32_t), 1);
+            }
+
+            //process vertex data
+            std::vector<float> vertData;
+            for (auto i = 0u; i < tempVerts.size(); i += vertStride)
+            {
+                std::uint32_t offset = 0;
+                glm::vec3 normal = glm::vec3(0.f);
+                for (auto j = 0u; j < Mesh::Attribute::Total; ++j)
+                {
+                    if (meshHeader.flags & (1 << j))
+                    {
+                        switch (j)
+                        {
+                        default:
+                        case Mesh::Attribute::Bitangent:
+                            break;
+                        case Mesh::Attribute::Position:
+                            vertData.push_back(tempVerts[i + offset]);
+                            vertData.push_back(tempVerts[i + offset + 1]);
+                            vertData.push_back(tempVerts[i + offset + 2]);
+
+                            offset += 3;
+                            break;
+                        case Mesh::Attribute::Colour:
+                            vertData.push_back(tempVerts[i + offset]);
+                            vertData.push_back(tempVerts[i + offset + 1]);
+                            vertData.push_back(tempVerts[i + offset + 2]);
+                            vertData.push_back(tempVerts[i + offset + 3]);
+
+                            offset += 4;
+                            break;
+                        case Mesh::Attribute::Normal:
+                            vertData.push_back(tempVerts[i + offset]);
+                            vertData.push_back(tempVerts[i + offset + 1]);
+                            vertData.push_back(tempVerts[i + offset + 2]);
+
+                            normal =
+                            {
+                                tempVerts[i + offset],
+                                tempVerts[i + offset + 1],
+                                tempVerts[i + offset + 2],
+                            };
+
+                            offset += 3;
+                            break;
+                        case Mesh::Attribute::Tangent:
+                        {
+                            glm::vec3 tan =
+                            {
+                                (tempVerts[i + offset]),
+                                (tempVerts[i + offset + 1]),
+                                (tempVerts[i + offset + 2])
+                            };
+
+                            auto sign = (tempVerts[i + offset + 3]);
+                            CRO_ASSERT(glm::length2(normal) != 0, "");
+
+                            auto bitan = glm::cross(normal, tan) * sign;
+
+                            vertData.push_back(tan.x);
+                            vertData.push_back(tan.y);
+                            vertData.push_back(tan.z);
+
+                            vertData.push_back(bitan.x);
+                            vertData.push_back(bitan.y);
+                            vertData.push_back(bitan.z);
+                        }
+                        offset += 4;
+                        break;
+                        case Mesh::Attribute::UV0:
+                        case Mesh::Attribute::UV1:
+                            vertData.push_back(tempVerts[i + offset]);
+                            vertData.push_back(tempVerts[i + offset + 1]);
+
+                            offset += 2;
+                            break;
+                        case Mesh::Attribute::BlendIndices:
+                        case Mesh::Attribute::BlendWeights:
+                            vertData.push_back(tempVerts[i + offset]);
+                            vertData.push_back(tempVerts[i + offset + 1]);
+                            vertData.push_back(tempVerts[i + offset + 2]);
+                            vertData.push_back(tempVerts[i + offset + 3]);
+
+                            offset += 4;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            meshData.attributeFlags = meshHeader.flags;
+            meshData.primitiveType = GL_TRIANGLES;
+            meshData.vertexSize = getVertexSize(meshData.attributes);
+            meshData.vertexCount = vertData.size() / (meshData.vertexSize / sizeof(float));
+
+            createVBO(meshData, vertData);
+
+            meshData.submeshCount = meshHeader.indexArrayCount;
+            for (auto i = 0u; i < meshData.submeshCount; ++i)
+            {
+                meshData.indexData[i].format = GL_UNSIGNED_INT;
+                meshData.indexData[i].primitiveType = meshData.primitiveType;
+                meshData.indexData[i].indexCount = static_cast<std::uint32_t>(indexData[i].size());
+
+                if (meshData.vertexCount < std::numeric_limits<std::uint8_t>::max())
+                {
+                    //LogI << "Optimising for byte size indices" << std::endl;
+
+                    //we can use bytes for indexing
+                    meshData.indexData[i].format = GL_UNSIGNED_BYTE;
+                    std::vector<std::uint8_t> temp(indexData[i].size());
+                    for (auto j = 0u; j < temp.size(); ++j)
+                    {
+                        temp[j] = indexData[i][j];
+                    }
+
+                    createIBO(meshData, temp.data(), i, sizeof(std::uint8_t));
+                }
+                else if (meshData.vertexCount < std::numeric_limits<std::uint16_t>::max())
+                {
+                    //use shorts
+                    //LogI << "Optimising for short size indices" << std::endl;
+
+                    meshData.indexData[i].format = GL_UNSIGNED_SHORT;
+                    std::vector<std::uint16_t> temp(indexData[i].size());
+                    for (auto j = 0u; j < temp.size(); ++j)
+                    {
+                        temp[j] = indexData[i][j];
+                    }
+                    createIBO(meshData, temp.data(), i, sizeof(std::uint16_t));
+                }
+                else
+                {
+                    //LogI << "Using default size indices" << std::endl;
+                    createIBO(meshData, indexData[i].data(), i, sizeof(std::uint32_t));
+                }
+            }
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+            //boundingbox / sphere
+            calcBounds(meshData, vertData);
+        }
+
+        m_skeleton = {};
+        parseSkeleton(file, header);
+    }
+    else
+    {
+        LogE << "SDL: " << m_path << ": " << SDL_GetError() << std::endl;
+    }
+
+    return meshData;
+}
+
+void BinaryMeshBuilder::calcBounds(Mesh::Data& meshData, const std::vector<float>& vertData) const
+{
+    meshData.boundingBox[0] = glm::vec3(std::numeric_limits<float>::max());
+    meshData.boundingBox[1] = glm::vec3(std::numeric_limits<float>::lowest());
+    for (std::size_t i = 0; i < vertData.size(); i += (meshData.vertexSize / sizeof(float)))
+    {
+        //min point
+        if (meshData.boundingBox[0].x > vertData[i])
+        {
+            meshData.boundingBox[0].x = vertData[i];
+        }
+        if (meshData.boundingBox[0].y > vertData[i + 1])
+        {
+            meshData.boundingBox[0].y = vertData[i + 1];
+        }
+        if (meshData.boundingBox[0].z > vertData[i + 2])
+        {
+            meshData.boundingBox[0].z = vertData[i + 2];
+        }
+
+        //maxpoint
+        if (meshData.boundingBox[1].x < vertData[i])
+        {
+            meshData.boundingBox[1].x = vertData[i];
+        }
+        if (meshData.boundingBox[1].y < vertData[i + 1])
+        {
+            meshData.boundingBox[1].y = vertData[i + 1];
+        }
+        if (meshData.boundingBox[1].z < vertData[i + 2])
+        {
+            meshData.boundingBox[1].z = vertData[i + 2];
+        }
+    }
+    const auto rad = (meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f;
+    meshData.boundingSphere.centre = meshData.boundingBox[0] + rad;
+    //radius should fit the mesh as tightly as possible
+    for (auto i = 0; i < 3; ++i)
+    {
+        auto l = std::abs(rad[i]);
+        if (l > meshData.boundingSphere.radius)
+        {
+            meshData.boundingSphere.radius = l;
+        }
+    }
+}
+
+void BinaryMeshBuilder::parseSkeleton(RaiiRWops& file, const Detail::ModelBinary::Header& header) const
+{
+    if (header.skeletonOffset)
+    {
+        if (header.version < 2)
+        {
+            LogW << m_path << "\nSkeletal animation requires version 2 or greater. Please re-export the model" << std::endl;
+        }
+
+        else if (SDL_RWseek(file.file, header.skeletonOffset, RW_SEEK_SET) > -1)
+        {
+            Detail::ModelBinary::SkeletonHeaderV2 skelHeader;
+            SDL_RWread(file.file, &skelHeader, sizeof(skelHeader), 1);
+            m_skeleton.setRootTransform(glm::make_mat4(skelHeader.rootTransform));
+
+            std::vector<Joint> inFrames(skelHeader.frameCount * skelHeader.frameSize);
+            std::vector<Detail::ModelBinary::SerialAnimation> inAnims(skelHeader.animationCount);
+            std::vector<Detail::ModelBinary::SerialNotification> inNotifications(skelHeader.notificationCount);
+            std::vector<Detail::ModelBinary::SerialAttachment> inAttachments(skelHeader.attachmentCount);
+            std::vector<float> inverseBindPose(skelHeader.frameSize * 16);
+
+            SDL_RWread(file.file, inFrames.data(), sizeof(Joint), inFrames.size());
+            SDL_RWread(file.file, inAnims.data(), sizeof(Detail::ModelBinary::SerialAnimation), inAnims.size());
+            SDL_RWread(file.file, inNotifications.data(), sizeof(Detail::ModelBinary::SerialNotification), inNotifications.size());
+            SDL_RWread(file.file, inAttachments.data(), sizeof(Detail::ModelBinary::SerialAttachment), inAttachments.size());
+            SDL_RWread(file.file, inverseBindPose.data(), sizeof(float), inverseBindPose.size());
+
+
+            CRO_ASSERT(inFrames.size() % skelHeader.frameSize == 0, "");
+            for (auto i = 0u; i < skelHeader.frameCount; ++i)
+            {
+                std::vector<Joint> frame;
+                for (auto j = i * skelHeader.frameSize; j < (i * skelHeader.frameSize) + skelHeader.frameSize; ++j)
+                {
+                    frame.push_back(inFrames[j]);
+                }
+
+                m_skeleton.addFrame(frame);
+            }
+
+            for (const auto& inAnim : inAnims)
+            {
+                SkeletalAnim anim;
+                anim.frameCount = inAnim.frameCount;
+                anim.frameRate = inAnim.frameRate;
+                anim.startFrame = inAnim.startFrame;
+                anim.name = inAnim.name;
+                anim.looped = inAnim.looped != 0;
+
+                m_skeleton.addAnimation(anim);
+            }
+
+            for (auto [frameID, jointID, userID, name] : inNotifications)
+            {
+                m_skeleton.addNotification(frameID, { jointID, userID, name });
+            }
+
+            for (const auto& [rotation, translation, scale, parent, name] : inAttachments)
+            {
+                Attachment ap;
+                ap.setParent(parent);
+                ap.setPosition(translation);
+                ap.setRotation(rotation);
+                ap.setScale(scale);
+                ap.setName(name);
+
+                m_skeleton.addAttachment(ap);
+            }
+
+            std::vector<glm::mat4> invBindMatrices(skelHeader.frameSize);
+            for (auto i = 0u; i < inverseBindPose.size(); i += 16)
+            {
+                std::memcpy(&invBindMatrices[i / 16][0][0], inverseBindPose.data() + i, sizeof(glm::mat4));
+            }
+            m_skeleton.setInverseBindPose(invBindMatrices);
+        }
+        else
+        {
+            LogE << "Failed to seek to skeleton offset, incorrect value provided" << std::endl;
+        }
+    }
 }
