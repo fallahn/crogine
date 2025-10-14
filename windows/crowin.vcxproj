@@ -189,6 +189,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\SimpleVertexArray.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Spatial.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\SphereBuilder.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\SpriteMeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\SpriteSheet.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\StaticMeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Texture.hpp" />
@@ -412,6 +413,7 @@
     <ClCompile Include="..\crogine\src\graphics\SimpleText.cpp" />
     <ClCompile Include="..\crogine\src\graphics\SimpleVertexArray.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Spatial.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\SpriteMeshBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\SpriteSheet.cpp" />
     <ClCompile Include="..\crogine\src\graphics\StaticMeshBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Texture.cpp" />

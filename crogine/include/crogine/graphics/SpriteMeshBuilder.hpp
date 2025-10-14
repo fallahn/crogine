@@ -1,0 +1,72 @@
+/*-----------------------------------------------------------------------
+
+Matt Marchant 2025
+http://trederia.blogspot.com
+
+crogine - Zlib license.
+
+This software is provided 'as-is', without any express or
+implied warranty.In no event will the authors be held
+liable for any damages arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute
+it freely, subject to the following restrictions :
+
+1. The origin of this software must not be misrepresented;
+you must not claim that you wrote the original software.
+If you use this software in a product, an acknowledgment
+in the product documentation would be appreciated but
+is not required.
+
+2. Altered source versions must be plainly marked as such,
+and must not be misrepresented as being the original software.
+
+3. This notice may not be removed or altered from any
+source distribution.
+
+-----------------------------------------------------------------------*/
+
+#pragma once
+
+#include <crogine/graphics/Colour.hpp>
+#include <crogine/graphics/MeshBuilder.hpp>
+
+namespace cro
+{
+    /*!
+    \brief Creates Sprite3D meshes with an optimised vertex layout.
+    Used by the Sprite3D class when creating meshes.
+    */
+    class CRO_EXPORT_API SpriteMeshBuilder final : public cro::MeshBuilder
+    {
+    public:
+        /*!
+        \brief Constructor
+        */
+        SpriteMeshBuilder();
+
+        /*!
+        \brief UID used by MeshResource class.
+        This always returns 0 which means each instance of a mesh created with this builder is unique.
+        //TODO chances are many sprites are actually *the same* so we should be able to optimise here.
+        */
+        std::size_t getUID() const override { return 0; }
+
+
+        /*!
+        \brief Vertex layout description
+        */
+        struct VertexLayout final
+        {
+            glm::vec3 pos = glm::vec3(0.f);
+            Detail::ColourLowP colour;
+            std::uint32_t uvCoords = 0; //packed with glm::packSnorm2x16()
+        };
+
+    private:
+
+
+        Mesh::Data build(AllocationResource*) const override;
+    };
+}

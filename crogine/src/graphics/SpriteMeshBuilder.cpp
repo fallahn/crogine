@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -28,7 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/detail/AllocationResource.hpp>
-#include <crogine/graphics/BillboardMeshBuilder.hpp>
+#include <crogine/graphics/SpriteMeshBuilder.hpp>
 
 #include "../detail/GLCheck.hpp"
 
@@ -39,31 +39,26 @@ namespace
 
 }
 
-BillboardMeshBuilder::BillboardMeshBuilder()
+SpriteMeshBuilder::SpriteMeshBuilder()
 {
 
 }
 
 //private
-Mesh::Data BillboardMeshBuilder::build(AllocationResource* resource) const
+Mesh::Data SpriteMeshBuilder::build(AllocationResource* resource) const
 {
     Mesh::Data meshData;
-    meshData.attributeFlags = VertexProperty::Position | VertexProperty::Normal | VertexProperty::Colour | VertexProperty::UV0 | VertexProperty::UV1;
+    meshData.attributeFlags = VertexProperty::Position | VertexProperty::Colour | VertexProperty::UV0;
 
     meshData.attributes[Mesh::Attribute::Position].componentCount = 3;
-    
+
     meshData.attributes[Mesh::Attribute::Colour].componentCount = 4;
     meshData.attributes[Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
     meshData.attributes[Mesh::Attribute::Colour].glNormalised = GL_TRUE;
 
-    meshData.attributes[Mesh::Attribute::Normal].componentCount = 3; //stores the root position so we can't really compress this
-    
     meshData.attributes[Mesh::Attribute::UV0].componentCount = 2;
     meshData.attributes[Mesh::Attribute::UV0].glType = GL_SHORT;
     meshData.attributes[Mesh::Attribute::UV0].glNormalised = GL_TRUE;
-    
-    meshData.attributes[Mesh::Attribute::UV1].componentCount = 2;
-    meshData.attributes[Mesh::Attribute::UV1].glType = GL_HALF_FLOAT;
 
     meshData.primitiveType = GL_TRIANGLES;
     meshData.vertexSize = getVertexSize(meshData.attributes);
@@ -76,12 +71,12 @@ Mesh::Data BillboardMeshBuilder::build(AllocationResource* resource) const
 
     meshData.submeshCount = 1;
 
-    meshData.indexData[0].format = GL_UNSIGNED_SHORT;
+    meshData.indexData[0].format = GL_UNSIGNED_BYTE; //we'll always have 4 verts
     meshData.indexData[0].primitiveType = meshData.primitiveType;
     meshData.indexData[0].indexCount = 0;
 
     //create IBO
-    auto* iboAllocator = resource->getIBOAllocator(3, sizeof(std::uint16_t));
+    auto* iboAllocator = resource->getIBOAllocator(3, sizeof(std::uint8_t));
     meshData.iboAllocator = iboAllocator;
     meshData.indexData[0].iboAllocation = iboAllocator->newAllocation(0);
 

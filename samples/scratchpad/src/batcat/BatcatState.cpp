@@ -53,6 +53,8 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/ProjectionMapSystem.hpp>
+#include <crogine/ecs/systems/SpriteSystem3D.hpp>
+#include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
@@ -73,6 +75,7 @@ source distribution.
 #include <crogine/ecs/components/Skeleton.hpp>
 #include <crogine/ecs/components/ProjectionMap.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
@@ -257,6 +260,8 @@ void BatcatState::addSystems()
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::BillboardSystem>(mb);
+    m_scene.addSystem<cro::SpriteAnimator>(mb);
+    m_scene.addSystem<cro::SpriteSystem3D>(mb, 32.f);
     m_scene.addSystem<TerrainSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
@@ -561,18 +566,34 @@ void BatcatState::createScene()
     m_scene.setActiveCamera(ent);
     m_scene.setActiveListener(ent);
 
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/rockit.spt", m_resources.textures);
+    auto sprite = spriteSheet.getSprite("rockit");
+
+    //shadow material fo 3D sprites
+    const auto flags = cro::ShaderResource::DepthMap | cro::ShaderResource::AlphaClip | cro::ShaderResource::DiffuseMap;
+    const auto sID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, flags);
+    const auto matID = m_resources.materials.add(m_resources.shaders.get(sID));
+    auto shadowMat = m_resources.materials.get(matID);
+    shadowMat.setProperty("u_alphaClip", 0.5f);
 
     //function for creating sound ents
-    auto launchEnt = [&]()
+    auto launchEnt = [&, sprite, shadowMat]()
     {
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(sourcePosition);
-        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, sourceRotation);
-        m_modelDefs[GameModelID::Cube]->createModel(e);
+        //e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, sourceRotation);
+        //m_modelDefs[GameModelID::Cube]->createModel(e);
+
+        e.addComponent<cro::Sprite>() = sprite;
+        e.addComponent<cro::SpriteAnimation>().play(0);
+        e.addComponent<cro::Model>().setShadowMaterial(0, shadowMat);
+        e.addComponent<cro::ShadowCaster>();
 
         static const float Speed = 35.f;
 
-        auto velocity = e.getComponent<cro::Transform>().getForwardVector() * Speed;
+        //auto velocity = e.getComponent<cro::Transform>().getForwardVector() * Speed;
+        auto velocity = glm::vec3(25.f, 0.f, 0.f);
         e.addComponent<cro::Callback>().active = true;
         e.getComponent<cro::Callback>().setUserData<std::pair<float, glm::vec3>>(0.f, velocity);
         e.getComponent<cro::Callback>().function =

@@ -34,8 +34,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/graphics/Texture.hpp>
-
-#include <crogine/detail/OpenGL.hpp>
+#include <crogine/graphics/SpriteMeshBuilder.hpp>
 
 #include "../../graphics/shaders/Sprite.hpp"
 
@@ -44,7 +43,7 @@ using namespace cro;
 SpriteSystem3D::SpriteSystem3D(MessageBus& mb, float pixelsPerUnit)
     : System            (mb, typeid(SpriteSystem3D)),
     m_pixelsPerUnit     (pixelsPerUnit),
-    m_meshBuilder       (std::make_unique<DynamicMeshBuilder>(VertexProperty::Position | VertexProperty::Colour | VertexProperty::UV0, 1, GL_TRIANGLES))
+    m_meshBuilder       (std::make_unique<SpriteMeshBuilder>())
 {
     CRO_ASSERT(pixelsPerUnit > 0, "Must be positive value");
     requireComponent<Sprite>();
@@ -84,81 +83,72 @@ void SpriteSystem3D::process(float)
             subRect.width /= m_pixelsPerUnit;
             subRect.height /= m_pixelsPerUnit;
 
-            std::vector<float> verts;
+            //std::vector<float> verts;
+            std::vector<SpriteMeshBuilder::VertexLayout> verts;
 
             //0------3
             //|      |
             //|      |
             //1------2
 
-            //postion
-            verts.push_back(0.f);
-            verts.push_back(subRect.height);
-            verts.push_back(0.f);
-
-            //colour
-            verts.push_back(sprite.getColour().getRed());
-            verts.push_back(sprite.getColour().getGreen());
-            verts.push_back(sprite.getColour().getBlue());
-            verts.push_back(sprite.getColour().getAlpha());
-
-            //UV
-            verts.push_back(textureRect.left);
-            verts.push_back(textureRect.bottom + textureRect.height);
+            auto& v1 = verts.emplace_back();
+            v1.pos =
+            {
+                0.f, subRect.height, 0.f
+            };
+            v1.colour = sprite.getColour();
+            v1.uvCoords = glm::packSnorm2x16(
+            {
+                textureRect.left,
+                textureRect.bottom + textureRect.height
+            });
 
             //------------------------
 
-            //postion
-            verts.push_back(0.f);
-            verts.push_back(0.f);
-            verts.push_back(0.f);
-
-            //colour
-            verts.push_back(sprite.getColour().getRed());
-            verts.push_back(sprite.getColour().getGreen());
-            verts.push_back(sprite.getColour().getBlue());
-            verts.push_back(sprite.getColour().getAlpha());
-
-            //UV
-            verts.push_back(textureRect.left);
-            verts.push_back(textureRect.bottom);
+            auto& v2 = verts.emplace_back();
+            v2.pos =
+            {
+                0.f, 0.f, 0.f
+            };
+            v2.colour = sprite.getColour();
+            v2.uvCoords = glm::packSnorm2x16(
+                {
+                    textureRect.left,
+                    textureRect.bottom
+                });
 
             //------------------------
 
-           //postion
-            verts.push_back(subRect.width);
-            verts.push_back(0.f);
-            verts.push_back(0.f);
+            auto& v3 = verts.emplace_back();
+            v3.pos =
+            {
+                subRect.width, 0.f, 0.f
+            };
+            v3.colour = sprite.getColour();
+            v3.uvCoords = glm::packSnorm2x16(
+                {
+                    textureRect.left + textureRect.width,
+                    textureRect.bottom
+                });
 
-            //colour
-            verts.push_back(sprite.getColour().getRed());
-            verts.push_back(sprite.getColour().getGreen());
-            verts.push_back(sprite.getColour().getBlue());
-            verts.push_back(sprite.getColour().getAlpha());
-
-            //UV
-            verts.push_back(textureRect.left + textureRect.width);
-            verts.push_back(textureRect.bottom);
 
             //------------------------
 
-           //postion
-            verts.push_back(subRect.width);
-            verts.push_back(subRect.height);
-            verts.push_back(0.f);
+            auto& v4 = verts.emplace_back();
+            v4.pos =
+            {
+                subRect.width, subRect.height, 0.f
+            };
+            v4.colour = sprite.getColour();
+            v4.uvCoords = glm::packSnorm2x16(
+                {
+                    textureRect.left + textureRect.width,
+                    textureRect.bottom + textureRect.height
+                });
 
-            //colour
-            verts.push_back(sprite.getColour().getRed());
-            verts.push_back(sprite.getColour().getGreen());
-            verts.push_back(sprite.getColour().getBlue());
-            verts.push_back(sprite.getColour().getAlpha());
-
-            //UV
-            verts.push_back(textureRect.left + textureRect.width);
-            verts.push_back(textureRect.bottom + textureRect.height);
 
             //update index array
-            std::vector<std::uint32_t> indexData =
+            const std::vector<std::uint8_t> indexData =
             {
                 0, 1, 3,  3, 1, 2
             };
@@ -166,13 +156,13 @@ void SpriteSystem3D::process(float)
             auto& meshData = entity.getComponent<Model>().getMeshData();
             meshData.vertexCount = verts.size() / (meshData.vertexSize / sizeof(float));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
-            glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_DYNAMIC_DRAW));
+            glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(SpriteMeshBuilder::VertexLayout), verts.data(), GL_DYNAMIC_DRAW));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
             meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indexData.size());
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].iboAllocation.bufferID));
-            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(std::uint32_t), indexData.data(), GL_DYNAMIC_DRAW));
-
+            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size(), indexData.data(), GL_DYNAMIC_DRAW));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
             //update bounding box
             meshData.boundingBox[0] = { 0.f, 0.f, 0.1f };
@@ -195,7 +185,7 @@ void SpriteSystem3D::onEntityAdded(Entity entity)
 
     //TODO take a hash of the sprite and recycle mesh data if it already exists
     //init the Model component with the mesh and corresponding material.
-    auto meshData = m_meshBuilder->build(nullptr);
+    auto meshData = m_meshBuilder->build(&m_allocationResource);
 
     //we want to make sure we copy this so it has
     //its own parameters
@@ -259,7 +249,8 @@ void SpriteSystem3D::onEntityRemoved(Entity entity)
     {
         if (id.iboAllocation.bufferID)
         {
-            glCheck(glDeleteBuffers(1, &id.iboAllocation.bufferID));
+            //glCheck(glDeleteBuffers(1, &id.iboAllocation.bufferID));
+            meshData.iboAllocator->freeAllocation(id.iboAllocation);
         }
 
 #ifdef PLATFORM_DESKTOP
@@ -275,7 +266,8 @@ void SpriteSystem3D::onEntityRemoved(Entity entity)
     //delete vertex buffer
     if (meshData.vboAllocation.bufferID)
     {
-        glCheck(glDeleteBuffers(1, &meshData.vboAllocation.bufferID));
+        meshData.vboAllocator->freeAllocation(meshData.vboAllocation);
+        //glCheck(glDeleteBuffers(1, &meshData.vboAllocation.bufferID));
     }
 }
 
@@ -318,5 +310,6 @@ Material::Data SpriteSystem3D::createMaterial(const Shader& shader)
             data.properties.insert(std::make_pair(uniform, std::make_pair(handle.first, Material::Property())));
         }
     }
+    //data.doubleSided = true;
     return data;
 }
