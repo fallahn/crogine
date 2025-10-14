@@ -1483,12 +1483,16 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
 
     for (auto i = 0u; i < vaos.size(); ++i)
     {
+        //oh boy are these some ugly casts
         glCheck(glBindVertexArray(vaos[i]));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
         glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Position]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Position], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), 0));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Position], 3, GL_FLOAT, GL_FALSE, 
+            static_cast<std::int32_t>(meshData.vertexSize), reinterpret_cast<void*>(meshData.vboAllocation.offset)));
         glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Normal]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Normal], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), (void*)(normalOffset * sizeof(float))));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Normal], 3, GL_FLOAT, GL_FALSE, 
+            static_cast<std::int32_t>(meshData.vertexSize), 
+            (void*)(meshData.vboAllocation.offset + (normalOffset * sizeof(float)))));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
     }
     
@@ -1499,11 +1503,14 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
     //clear the alpha to 0 so unrendered areas have zero height
     //then the heightmap image can be compared and highest value used
     static const cro::Colour ClearColour(0x7f7fff00);
+    //static const cro::Colour ClearColour(0x7f7fffff);
     m_normalMap.clear(ClearColour);
     for (auto i = 0u; i < vaos.size(); ++i)
     {
         glCheck(glBindVertexArray(vaos[i]));
-        glCheck(glDrawElements(GL_TRIANGLES, meshData.indexData[i].indexCount, meshData.indexData[i].format, 0));
+        glCheck(glDrawElements(meshData.indexData[i].primitiveType,
+            meshData.indexData[i].indexCount, meshData.indexData[i].format, 
+            reinterpret_cast<void*>(meshData.indexData[i].iboAllocation.offset)));
     }
     m_normalMap.display();
 

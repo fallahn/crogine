@@ -27,10 +27,11 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/graphics/BinaryMeshBuilder.hpp>
+#include <crogine/core/FileSystem.hpp>
+#include <crogine/detail/AllocationResource.hpp>
 #include <crogine/detail/ModelBinary.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
-#include <crogine/core/FileSystem.hpp>
+#include <crogine/graphics/BinaryMeshBuilder.hpp>
 
 #include "../detail/GLCheck.hpp"
 
@@ -73,7 +74,7 @@ Skeleton BinaryMeshBuilder::getSkeleton() const
     return m_skeleton;
 }
 
-Mesh::Data BinaryMeshBuilder::build(AllocationResource*) const
+Mesh::Data BinaryMeshBuilder::build(AllocationResource* allocationResource) const
 {
     Mesh::Data meshData;
 
@@ -262,7 +263,14 @@ Mesh::Data BinaryMeshBuilder::build(AllocationResource*) const
             meshData.primitiveType = GL_TRIANGLES;
             meshData.vertexSize = getVertexSize(meshData.attributes);
             meshData.vertexCount = vertData.size() / (meshData.vertexSize / sizeof(float));
-            createVBO(meshData, vertData);
+            
+            meshData.vboAllocator = allocationResource->getVBOAllocator(4, meshData.vertexSize);
+            meshData.vboAllocation = meshData.vboAllocator->newAllocation(meshData.vertexCount);
+            
+            //createVBO(meshData, vertData);
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
+            glCheck(glBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, vertData.size() * sizeof(float), vertData.data()));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
             meshData.submeshCount = meshHeader.indexArrayCount;
             for (auto i = 0u; i < meshData.submeshCount; ++i)
@@ -282,7 +290,14 @@ Mesh::Data BinaryMeshBuilder::build(AllocationResource*) const
                     {
                         temp[j] = indexData[i][j];
                     }
-                    createIBO(meshData, temp.data(), i, sizeof(std::uint8_t));
+
+                    //this is a bit pointless doing it every submesh as it should always return the same one
+                    meshData.iboAllocator = allocationResource->getIBOAllocator(3, sizeof(std::uint8_t));
+                    meshData.indexData[i].iboAllocation = meshData.iboAllocator->newAllocation(indexData[i].size());
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
+                    glCheck(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.offset,
+                        temp.size(), temp.data()));
+                    //createIBO(meshData, temp.data(), i, sizeof(std::uint8_t));
                 }
                 else if (meshData.vertexCount < std::numeric_limits<std::uint16_t>::max())
                 {
@@ -295,14 +310,26 @@ Mesh::Data BinaryMeshBuilder::build(AllocationResource*) const
                     {
                         temp[j] = indexData[i][j];
                     }
-                    createIBO(meshData, temp.data(), i, sizeof(std::uint16_t));
+                    meshData.iboAllocator = allocationResource->getIBOAllocator(3, sizeof(std::uint16_t));
+                    meshData.indexData[i].iboAllocation = meshData.iboAllocator->newAllocation(indexData[i].size());
+                    
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
+                    glCheck(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.offset,
+                        temp.size() * sizeof(std::uint16_t), temp.data()));
+                    //createIBO(meshData, temp.data(), i, sizeof(std::uint16_t));
                 }
                 else
                 {
                     //LogI << "Using default size indices" << std::endl;
-                    createIBO(meshData, indexData[i].data(), i, sizeof(std::uint32_t));
+                    meshData.iboAllocator = allocationResource->getIBOAllocator(3, sizeof(std::uint32_t));
+                    meshData.indexData[i].iboAllocation = meshData.iboAllocator->newAllocation(indexData[i].size());
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
+                    glCheck(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.offset,
+                        indexData[i].size() * sizeof(std::uint32_t), indexData[i].data()));
+                    //createIBO(meshData, indexData[i].data(), i, sizeof(std::uint32_t));
                 }
             }
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
             //boundingbox / sphere
             meshData.boundingBox[0] = glm::vec3(std::numeric_limits<float>::max());
