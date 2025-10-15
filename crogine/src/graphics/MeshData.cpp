@@ -33,6 +33,7 @@ source distribution.
 #include "../detail/GLCheck.hpp"
 
 #include <type_traits>
+#include <cstring>
 
 /*
 OK So this is basically esoteric template specialisation
