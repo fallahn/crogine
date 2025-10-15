@@ -372,13 +372,14 @@ void RollingState::parseStaticMesh(cro::Entity entity)
     //needs updating if the model changes or more models are added.
 
     const auto& meshData = entity.getComponent<cro::Model>().getMeshData();
-    cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
+    const auto vertSize = cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
 
     //this makes my whiskers itch.
     m_triangleVerts = std::make_unique<rp::TriangleVertexArray>(
         static_cast<std::uint32_t>(m_vertexData.size()),
         (void*)m_vertexData.data(),
-        static_cast<std::uint32_t>(meshData.vertexSize),
+        //static_cast<std::uint32_t>(meshData.vertexSize),
+        vertSize,
         static_cast<std::uint32_t>(m_indexData[0].size() / 3),
         (void*)m_indexData[0].data(),
         static_cast<std::uint32_t>(3 * sizeof(std::uint32_t)),

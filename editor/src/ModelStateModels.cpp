@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -92,6 +92,7 @@ void ModelState::openModelAtPath(const std::string& path)
     closeModel();
 
     cro::ModelDefinition def(m_resources, &m_environmentMap, m_sharedData.workingDirectory);
+    def.optimiseOnLoad(false);
     if (def.loadFromFile(path, m_useDeferred))
     {
         m_currentFilePath = path;

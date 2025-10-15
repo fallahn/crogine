@@ -57,22 +57,8 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
         LogW << "[Collision Mesh] Mesh data does not use 16 bit indices!" << std::endl;
     }
 
-    //std::vector<std::vector<std::uint16_t>> temp;
-
     clearCollisionObjects();
-    cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
-
-    //UGH there's some kind of bug in bullet which causes it to crash
-    //with 16 bit data even though it's supposed to support it
-    /*m_indexData.clear();
-    for (const auto& t : temp)
-    {
-        auto& i = m_indexData.emplace_back();
-        for (auto x : t)
-        {
-            i.push_back(x);
-        }
-    }*/
+    const auto vertStride = cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
 
     std::int32_t colourOffset = 0;
     for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
@@ -91,7 +77,8 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
         btIndexedMesh groundMesh;
         groundMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
         groundMesh.m_numVertices = static_cast<int>(meshData.vertexCount);
-        groundMesh.m_vertexStride = static_cast<int>(meshData.vertexSize);
+        //readVertexData unpacks everything to float so vert size is larger than meshData believes
+        groundMesh.m_vertexStride = static_cast<int>(/*meshData.vertexSize*/vertStride); 
 
         groundMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
         groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());

@@ -126,7 +126,8 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
 
             SDL_RWread(file.file, sizes.data(), meshHeader.indexArrayCount * sizeof(std::uint32_t), 1);
 
-            std::uint32_t vertStride = 0;
+            std::uint32_t vertStride = 0; //uncompressed stride
+            std::uint32_t byteOffset = 0;
             for (auto i = 0u; i < Mesh::Attribute::Total; ++i)
             {
                 if (meshHeader.flags & (1 << i))
@@ -139,29 +140,44 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                     case Mesh::Attribute::Position:
                         vertStride += 3;
                         meshData.attributes[i].componentCount = 3;
+                        meshData.attributes[i].byteOffset = byteOffset;
+                        byteOffset += 3 * sizeof(float);
                         break;
                     case Mesh::Attribute::Colour:
                         vertStride += 4;
                         meshData.attributes[i].componentCount = 4;
+                        meshData.attributes[i].glNormalised = GL_TRUE;
+                        meshData.attributes[i].glType = GL_UNSIGNED_BYTE;
+                        meshData.attributes[i].byteOffset = byteOffset;
+                        byteOffset += 4;
                         break;
                     case Mesh::Attribute::Normal:
                         vertStride += 3;
                         meshData.attributes[i].componentCount = 3;
+                        meshData.attributes[i].byteOffset = byteOffset;
+                        byteOffset += 3 * sizeof(float);
                         break;
                     case Mesh::Attribute::Tangent:
                         meshData.attributes[i].componentCount = 3;
                         meshData.attributes[Mesh::Attribute::Bitangent].componentCount = 3;
                         vertStride += 4; //we'll be decoding tangents
+
+                        meshData.attributes[i].byteOffset = byteOffset;
+                        byteOffset += 6 * sizeof(float); //this is the final offset including bitan
                         break;
                     case Mesh::Attribute::UV0:
                     case Mesh::Attribute::UV1:
                         vertStride += 2;
                         meshData.attributes[i].componentCount = 2;
+                        meshData.attributes[i].byteOffset = byteOffset;
+                        byteOffset += 2 * sizeof(float);
                         break;
                     case Mesh::Attribute::BlendIndices:
                     case Mesh::Attribute::BlendWeights:
                         vertStride += 4;
                         meshData.attributes[i].componentCount = 4;
+                        meshData.attributes[i].byteOffset = byteOffset;
+                        byteOffset += 4 * sizeof(float);
                         break;
                     }
                 }
@@ -179,8 +195,21 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                 SDL_RWread(file.file, indexData[i].data(), sizes[i] * sizeof(std::uint32_t), 1);
             }
 
-            //process vertex data - TODO keep this around so we can use it to calculate the bounding sphere, below (or use tempVerts?)
-            std::vector<float> vertData;
+            std::vector<float> positions; //used to calculate bounds
+
+            //process vertex data - we separate it out to optimise its
+            //size first, then re-interleave. Should be stored in the model
+            //file like this really, but we haven't updated the exporter yet :)
+
+            //interleave the attributes
+            std::vector<std::uint8_t> interleavedData;
+            const auto insertData =
+                [&](const void* data, std::size_t size)
+                {
+                    std::vector<std::uint8_t> temp(size);
+                    std::memcpy(temp.data(), data, temp.size());
+                    interleavedData.insert(interleavedData.end(), temp.begin(), temp.end());
+                };
             for (auto i = 0u; i < tempVerts.size(); i += vertStride)
             {
                 std::uint32_t offset = 0;
@@ -195,24 +224,44 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                         case Mesh::Attribute::Bitangent:
                             break;
                         case Mesh::Attribute::Position:
-                            vertData.push_back(tempVerts[i + offset]);
-                            vertData.push_back(tempVerts[i + offset + 1]);
-                            vertData.push_back(tempVerts[i + offset + 2]);
+                        {
+                            std::vector<float> p;
+                            p.push_back(tempVerts[i + offset]);
+                            p.push_back(tempVerts[i + offset + 1]);
+                            p.push_back(tempVerts[i + offset + 2]);
+                            insertData(p.data(), meshData.attributes[j].getSize());
 
+                            positions.push_back(tempVerts[i + offset]);
+                            positions.push_back(tempVerts[i + offset + 1]);
+                            positions.push_back(tempVerts[i + offset + 2]);
+                        }
                             offset += 3;
                             break;
                         case Mesh::Attribute::Colour:
-                            vertData.push_back(tempVerts[i + offset]);
-                            vertData.push_back(tempVerts[i + offset + 1]);
-                            vertData.push_back(tempVerts[i + offset + 2]);
-                            vertData.push_back(tempVerts[i + offset + 3]);
+                        {
+                            /*std::vector<float> colour;
+                            colour.push_back(tempVerts[i + offset]);
+                            colour.push_back(tempVerts[i + offset + 1]);
+                            colour.push_back(tempVerts[i + offset + 2]);
+                            colour.push_back(tempVerts[i + offset + 3]);*/
 
+                            const glm::vec4 colour =
+                            {
+                                tempVerts[i + offset],
+                                tempVerts[i + offset + 1],
+                                tempVerts[i + offset + 2],
+                                tempVerts[i + offset + 3],
+                            };
+                            const auto c = glm::packUnorm4x8(colour);
+                            insertData(&c, meshData.attributes[j].getSize());
                             offset += 4;
+                        }
                             break;
                         case Mesh::Attribute::Normal:
-                            vertData.push_back(tempVerts[i + offset]);
-                            vertData.push_back(tempVerts[i + offset + 1]);
-                            vertData.push_back(tempVerts[i + offset + 2]);
+                        {
+                            /*vertData.normal.push_back(tempVerts[i + offset]);
+                            vertData.normal.push_back(tempVerts[i + offset + 1]);
+                            vertData.normal.push_back(tempVerts[i + offset + 2]);*/
 
                             normal =
                             {
@@ -220,67 +269,129 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                                 tempVerts[i + offset + 1],
                                 tempVerts[i + offset + 2],
                             };
-
+                            insertData(&normal, meshData.attributes[j].getSize());
+                        }
                             offset += 3;
                             break;
                         case Mesh::Attribute::Tangent:
                         {
-                            glm::vec3 tan =
+                            //TODO we should be sending this as a vec4
+                            //and calculating bitan on the GPU
+                            const glm::vec3 tangent =
                             {
                                 (tempVerts[i + offset]),
                                 (tempVerts[i + offset + 1]),
                                 (tempVerts[i + offset + 2])
                             };
 
-                            auto sign = (tempVerts[i + offset + 3]);
+                            const auto sign = (tempVerts[i + offset + 3]);
                             CRO_ASSERT(glm::length2(normal) != 0, "");
 
-                            auto bitan = glm::cross(normal, tan) * sign;
+                            const auto bitan = glm::cross(normal, tangent) * sign;
 
-                            vertData.push_back(tan.x);
-                            vertData.push_back(tan.y);
-                            vertData.push_back(tan.z);
+                            insertData(&tangent, meshData.attributes[j].getSize());
+                            insertData(&bitan, meshData.attributes[j].getSize());
+
+                            /*vertData.tangent.push_back(tan.x);
+                            vertData.tangent.push_back(tan.y);
+                            vertData.tangent.push_back(tan.z);
                             
-                            vertData.push_back(bitan.x);
-                            vertData.push_back(bitan.y);
-                            vertData.push_back(bitan.z);
+                            vertData.bitan.push_back(bitan.x);
+                            vertData.bitan.push_back(bitan.y);
+                            vertData.bitan.push_back(bitan.z);*/
                         }
                             offset += 4;
                             break;
                         case Mesh::Attribute::UV0:
+                        {
+                            std::vector<float> uv0;
+                            uv0.push_back(tempVerts[i + offset]);
+                            uv0.push_back(tempVerts[i + offset + 1]);
+                            insertData(uv0.data(), meshData.attributes[j].getSize());
+                        }
+                            offset += 2;
+                            break;
                         case Mesh::Attribute::UV1:
-                            vertData.push_back(tempVerts[i + offset]);
-                            vertData.push_back(tempVerts[i + offset + 1]);
-
+                        {
+                            std::vector<float> uv1;
+                            uv1.push_back(tempVerts[i + offset]);
+                            uv1.push_back(tempVerts[i + offset + 1]);
+                            insertData(uv1.data(), meshData.attributes[j].getSize());
+                        }
                             offset += 2;
                             break;
                         case Mesh::Attribute::BlendIndices:
+                        {
+                            std::vector<float> blendIndex;
+                            blendIndex.push_back(tempVerts[i + offset]);
+                            blendIndex.push_back(tempVerts[i + offset + 1]);
+                            blendIndex.push_back(tempVerts[i + offset + 2]);
+                            blendIndex.push_back(tempVerts[i + offset + 3]);
+                            insertData(blendIndex.data(), meshData.attributes[j].getSize());
+                        }
+                            offset += 4;
+                            break;
                         case Mesh::Attribute::BlendWeights:
-                            vertData.push_back(tempVerts[i + offset]);
-                            vertData.push_back(tempVerts[i + offset + 1]);
-                            vertData.push_back(tempVerts[i + offset + 2]);
-                            vertData.push_back(tempVerts[i + offset + 3]);
-
+                        {
+                            std::vector<float> blendWeight;
+                            blendWeight.push_back(tempVerts[i + offset]);
+                            blendWeight.push_back(tempVerts[i + offset + 1]);
+                            blendWeight.push_back(tempVerts[i + offset + 2]);
+                            blendWeight.push_back(tempVerts[i + offset + 3]);
+                            insertData(blendWeight.data(), meshData.attributes[j].getSize());
+                        }
                             offset += 4;
                             break;
                         }
                     }
                 }
             }
+            //const std::size_t estimatedVertCount = vertData.position.size() / 3;
 
+            //TODO we need to assert the non-empty vectors all have the same vertex count
+            //based on their data size
+
+            //for (auto i = 0u; i < estimatedVertCount; ++i)
+            //{
+            //    //also note the order here must match Mesh::Attribute
+            //    if (!vertData.position.empty())
+            //    {
+            //        const auto index = meshData.attributes[Mesh::Attribute::Position].componentCount * i;
+            //        insertData(&vertData.position[index], meshData.attributes[Mesh::Attribute::Position].getSize());
+            //    }
+            //    if (!vertData.colour.empty())
+            //    {
+            //        const auto index = meshData.attributes[Mesh::Attribute::Colour].componentCount * i;
+            //        insertData(&vertData.colour[index], meshData.attributes[Mesh::Attribute::Colour].getSize());
+            //    }
+            //    if (!vertData.normal.empty())
+            //    {
+            //        const auto index = meshData.attributes[Mesh::Attribute::Normal].componentCount * i;
+            //        insertData(&vertData.normal[index], meshData.attributes[Mesh::Attribute::Normal].getSize());
+            //    }
+            //    if (!vertData.tangent.empty()) {}
+            //    if (!vertData.bitan.empty()) {}
+            //    if (!vertData.uv0.empty()) {}
+            //    if (!vertData.uv1.empty()) {}
+            //    if (!vertData.blendIndex.empty()) {}
+            //    if (!vertData.blendWeight.empty()) {}
+            //}
+
+            //set the vertex data
             meshData.attributeFlags = meshHeader.flags;
             meshData.primitiveType = GL_TRIANGLES;
             meshData.vertexSize = getVertexSize(meshData.attributes);
-            meshData.vertexCount = vertData.size() / (meshData.vertexSize / sizeof(float));
+            meshData.vertexCount = interleavedData.size() / meshData.vertexSize;
+            //CRO_ASSERT(estimatedVertCount == meshData.vertexCount, "");
             
             meshData.vboAllocator = allocationResource->getVBOAllocator(4, meshData.vertexSize);
             meshData.vboAllocation = meshData.vboAllocator->newAllocation(meshData.vertexCount);
             
-            //createVBO(meshData, vertData);
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
-            glCheck(glBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, vertData.size() * sizeof(float), vertData.data()));
+            glCheck(glBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, interleavedData.size(), interleavedData.data()));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
+            //generate the index arrays
             meshData.submeshCount = meshHeader.indexArrayCount;
             for (auto i = 0u; i < meshData.submeshCount; ++i)
             {
@@ -333,7 +444,7 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
             //boundingbox / sphere
-            calcBounds(meshData, vertData);
+            calcBounds(meshData, positions);
         }
 
         m_skeleton = {};
@@ -444,6 +555,7 @@ Mesh::Data BinaryMeshBuilder::buildDefault() const
             }
 
             //process vertex data
+            std::vector<float> positions; //used to calculate bounds
             std::vector<float> vertData;
             for (auto i = 0u; i < tempVerts.size(); i += vertStride)
             {
@@ -462,6 +574,10 @@ Mesh::Data BinaryMeshBuilder::buildDefault() const
                             vertData.push_back(tempVerts[i + offset]);
                             vertData.push_back(tempVerts[i + offset + 1]);
                             vertData.push_back(tempVerts[i + offset + 2]);
+
+                            positions.push_back(tempVerts[i + offset]);
+                            positions.push_back(tempVerts[i + offset + 1]);
+                            positions.push_back(tempVerts[i + offset + 2]);
 
                             offset += 3;
                             break;
@@ -582,7 +698,7 @@ Mesh::Data BinaryMeshBuilder::buildDefault() const
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
             //boundingbox / sphere
-            calcBounds(meshData, vertData);
+            calcBounds(meshData, positions);
         }
 
         m_skeleton = {};
@@ -600,7 +716,7 @@ void BinaryMeshBuilder::calcBounds(Mesh::Data& meshData, const std::vector<float
 {
     meshData.boundingBox[0] = glm::vec3(std::numeric_limits<float>::max());
     meshData.boundingBox[1] = glm::vec3(std::numeric_limits<float>::lowest());
-    for (std::size_t i = 0; i < vertData.size(); i += (meshData.vertexSize / sizeof(float)))
+    for (std::size_t i = 0u; i < vertData.size(); i += 3u /*(meshData.vertexSize / sizeof(float))*/)
     {
         //min point
         if (meshData.boundingBox[0].x > vertData[i])

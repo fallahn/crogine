@@ -503,13 +503,13 @@ void VatsState::createNormalTexture()
 
         std::vector<float> verts;
         std::vector<std::vector<std::uint32_t>> indices;
-        cro::Mesh::readVertexData(meshData, verts, indices);
+        const auto vertSize = cro::Mesh::readVertexData(meshData, verts, indices);
 
         if (meshData.attributes[cro::Mesh::Attribute::UV1].componentCount != 0)
         {
             std::vector<std::uint8_t> positionBuffer(meshData.vertexCount * 3);
             std::vector<std::uint8_t> normalBuffer(meshData.vertexCount * 3);
-            const auto stride = meshData.vertexSize / sizeof(float);
+            const auto stride = /*meshData.vertexSize*/vertSize / sizeof(float);
 
             std::size_t normalOffset = 0;
             for (auto i = 0u; i < cro::Mesh::Attribute::Normal; ++i)

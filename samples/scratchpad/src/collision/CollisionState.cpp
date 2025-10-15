@@ -283,7 +283,7 @@ void CollisionState::addCollisionMesh(const cro::Mesh::Data& meshData, glm::mat4
 
     auto& vertexData = m_vertexData.emplace_back();
     auto& indexData = m_indexData.emplace_back();
-    cro::Mesh::readVertexData(meshData, vertexData, indexData);
+    const auto vertSize = cro::Mesh::readVertexData(meshData, vertexData, indexData);
 
     if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
     {
@@ -307,14 +307,14 @@ void CollisionState::addCollisionMesh(const cro::Mesh::Data& meshData, glm::mat4
         btIndexedMesh groundMesh;
         groundMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(vertexData.data());
         groundMesh.m_numVertices = meshData.vertexCount;
-        groundMesh.m_vertexStride = meshData.vertexSize;
+        groundMesh.m_vertexStride = /*meshData.vertexSize*/vertSize;
 
         groundMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
         groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(indexData[i].data());
         groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
 
         
-        float terrain = vertexData[(indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset] * 255.f;
+        float terrain = vertexData[(indexData[i][0] * (/*meshData.vertexSize*/vertSize / sizeof(float))) + colourOffset] * 255.f;
         terrain = std::floor(terrain / 10.f);
 
         m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh);

@@ -93,6 +93,7 @@ namespace cro
             std::uint32_t componentCount = 0; //number of components
             std::uint32_t glType = 0x1406; //GL_FLOAT;
             std::uint32_t glNormalised = 0; // GL_FALSE;
+            std::uint32_t byteOffset = 0; //offset into the vertex
 
             enum
             {
@@ -144,9 +145,14 @@ namespace cro
 
         /*!
         \brief Utility to read back vertex data and index data
+        As this may unpack model data to floats it returns the vertex
+        size in bytes, which MAY BE BIGGER than stated in meshData
         */
-        void CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint8_t>>& destIndices);
-        void CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint16_t>>& destIndices);
-        void CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint32_t>>& destIndices);
+        [[nodiscard]]
+        std::uint32_t CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint8_t>>& destIndices);
+        [[nodiscard]]
+        std::uint32_t CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint16_t>>& destIndices);
+        [[nodiscard]]
+        std::uint32_t CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint32_t>>& destIndices);
     }
 }
