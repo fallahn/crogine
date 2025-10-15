@@ -2308,10 +2308,22 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     {
         glCheck(glBindVertexArray(vaos[i]));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
+        
+        
         glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Position]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Position], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), 0));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Position], 3, 
+            GL_FLOAT, GL_FALSE, 
+            static_cast<std::int32_t>(meshData.vertexSize),
+            reinterpret_cast<void*>(meshData.vboAllocation.offset)));
+        
+        
         glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Normal]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Normal], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), (void*)(normalOffset * sizeof(float))));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Normal], 3, 
+            meshData.attributes[cro::Mesh::Attribute::Normal].glType,
+            meshData.attributes[cro::Mesh::Attribute::Normal].glNormalised,
+            static_cast<std::int32_t>(meshData.vertexSize),
+            (void*)(meshData.vboAllocation.offset + (normalOffset * sizeof(float)))));
+        
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
     }
 
@@ -2333,7 +2345,9 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     for (auto i = 0u; i < vaos.size(); ++i)
     {
         glCheck(glBindVertexArray(vaos[i]));
-        glCheck(glDrawElements(GL_TRIANGLES, meshData.indexData[i].indexCount, meshData.indexData[i].format, 0));
+        glCheck(glDrawElements(meshData.indexData[i].primitiveType,
+            meshData.indexData[i].indexCount, meshData.indexData[i].format,
+            reinterpret_cast<void*>(meshData.indexData[i].iboAllocation.offset)));
     }
     normalMap.display();
 

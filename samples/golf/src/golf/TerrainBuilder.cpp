@@ -1486,13 +1486,21 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
         //oh boy are these some ugly casts
         glCheck(glBindVertexArray(vaos[i]));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
+        
         glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Position]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Position], 3, GL_FLOAT, GL_FALSE, 
-            static_cast<std::int32_t>(meshData.vertexSize), reinterpret_cast<void*>(meshData.vboAllocation.offset)));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Position], 3, 
+            GL_FLOAT, GL_FALSE, 
+            static_cast<std::int32_t>(meshData.vertexSize), 
+            reinterpret_cast<void*>(meshData.vboAllocation.offset)));
+        
+        
         glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Normal]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Normal], 3, GL_FLOAT, GL_FALSE, 
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Normal], 3,
+            meshData.attributes[cro::Mesh::Attribute::Normal].glType, 
+            meshData.attributes[cro::Mesh::Attribute::Normal].glNormalised,
             static_cast<std::int32_t>(meshData.vertexSize), 
             (void*)(meshData.vboAllocation.offset + (normalOffset * sizeof(float)))));
+
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
     }
     

@@ -185,7 +185,12 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                         vertStride += 4;
                         meshData.attributes[i].componentCount = 4;
                         meshData.attributes[i].byteOffset = byteOffset;
-                        byteOffset += 4 * sizeof(float);
+                        //byteOffset += 4 * sizeof(float);
+
+                        meshData.attributes[i].glNormalised = GL_TRUE;
+                        meshData.attributes[i].glType = GL_UNSIGNED_BYTE;
+                        byteOffset += 4;
+
                         break;
                     }
                 }
@@ -252,7 +257,7 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                                 tempVerts[i + offset],
                                 tempVerts[i + offset + 1],
                                 tempVerts[i + offset + 2],
-                                tempVerts[i + offset + 3],
+                                tempVerts[i + offset + 3]
                             };
                             const auto c = glm::packUnorm4x8(colour);
                             insertData(&c, meshData.attributes[j].getSize());
@@ -277,9 +282,9 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                             //and calculating bitan on the GPU
                             const glm::vec3 tangent =
                             {
-                                (tempVerts[i + offset]),
-                                (tempVerts[i + offset + 1]),
-                                (tempVerts[i + offset + 2])
+                                tempVerts[i + offset],
+                                tempVerts[i + offset + 1],
+                                tempVerts[i + offset + 2]
                             };
 
                             const auto sign = (tempVerts[i + offset + 3]);
@@ -327,14 +332,17 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                             break;
                         case Mesh::Attribute::BlendWeights:
                         {
-                            std::vector<float> blendWeight;
-                            blendWeight.push_back(tempVerts[i + offset]);
-                            blendWeight.push_back(tempVerts[i + offset + 1]);
-                            blendWeight.push_back(tempVerts[i + offset + 2]);
-                            blendWeight.push_back(tempVerts[i + offset + 3]);
-                            insertData(blendWeight.data(), meshData.attributes[j].getSize());
-                        }
+                            const glm::vec4 weights =
+                            {
+                                tempVerts[i + offset],
+                                tempVerts[i + offset + 1],
+                                tempVerts[i + offset + 2],
+                                tempVerts[i + offset + 3]
+                            };
+                            const auto c = glm::packUnorm4x8(weights);
+                            insertData(&c, meshData.attributes[j].getSize());
                             offset += 4;
+                        }
                             break;
                         }
                     }

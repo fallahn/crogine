@@ -80,15 +80,9 @@ namespace
                         std::uint32_t c = 0;
                         std::memcpy(&c, &byteData[idx + meshData.attributes[j].byteOffset], sizeof(c));
 
-                        if (j == Attribute::Colour)
+                        switch (j)
                         {
-                            const auto v = glm::unpackUnorm4x8(c);
-                            for (auto k = 0; k < 4; ++k)
-                            {
-                                destVerts.push_back(static_cast<float>(v[k]));
-                            }
-                        }
-                        else
+                        default:
                         {
                             //blend indices
                             destVerts.push_back(static_cast<float>(c & 0x000000ff));
@@ -96,6 +90,18 @@ namespace
                             destVerts.push_back(static_cast<float>((c & 0x00ff0000) >> 16));
                             destVerts.push_back(static_cast<float>((c & 0xff000000) >> 24));
                         }
+                            break;
+                        case Attribute::Colour:
+                        case Attribute::BlendWeights:
+                        {
+                            const auto v = glm::unpackUnorm4x8(c);
+                            for (auto k = 0; k < 4; ++k)
+                            {
+                                destVerts.push_back(static_cast<float>(v[k]));
+                            }
+                        }
+                            break;
+                        }                        
                     }
                         break;
                     case GL_BYTE:
