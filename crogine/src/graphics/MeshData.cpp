@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/detail/glm/gtc/packing.hpp>
+#include <crogine/detail/glm/packing.hpp>
 #include <crogine/graphics/MeshData.hpp>
 
 #include "../detail/GLCheck.hpp"
@@ -64,7 +64,6 @@ namespace
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
         destVerts.clear();
-        //destVerts.resize(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
         for (auto i = 0u; i < meshData.vertexCount; ++i)
         {
             const auto idx = i * meshData.vertexSize;
@@ -76,15 +75,26 @@ namespace
                     {
                     default:break;
                     case GL_UNSIGNED_BYTE:
-                        //hmm we should really check which attribute we're unpacking here
-                        //though for now we'll assume it's colour
+
                     {
                         std::uint32_t c = 0;
                         std::memcpy(&c, &byteData[idx + meshData.attributes[j].byteOffset], sizeof(c));
-                        const auto v = glm::unpackUint4x8(c);
-                        for (auto k = 0; k < 4; ++k)
+
+                        if (j == Attribute::Colour)
                         {
-                            destVerts.push_back(static_cast<float>(v[k]) / 255.f);
+                            const auto v = glm::unpackUnorm4x8(c);
+                            for (auto k = 0; k < 4; ++k)
+                            {
+                                destVerts.push_back(static_cast<float>(v[k]));
+                            }
+                        }
+                        else
+                        {
+                            //blend indices
+                            destVerts.push_back(static_cast<float>(c & 0x000000ff));
+                            destVerts.push_back(static_cast<float>((c & 0x0000ff00) >> 8));
+                            destVerts.push_back(static_cast<float>((c & 0x00ff0000) >> 16));
+                            destVerts.push_back(static_cast<float>((c & 0xff000000) >> 24));
                         }
                     }
                         break;
@@ -98,10 +108,22 @@ namespace
 
                         break;
                     case GL_HALF_FLOAT:
+                    {
+                        //TODO again need to check which attrib this is as we currently assume it UV0/1
+                        std::uint32_t uv = 0;
+                        std::memcpy(&uv, &byteData[idx + meshData.attributes[j].byteOffset], sizeof(uv));
 
+                        const auto v = glm::unpackHalf2x16(uv);
+                        for (auto k = 0; k < 2; ++k)
+                        {
+                            destVerts.push_back(static_cast<float>(v[k]));
+                        }
+                    }
                         break;
                     case GL_UNSIGNED_INT:
+                    {
 
+                    }
                         break;
                     case GL_INT:
 

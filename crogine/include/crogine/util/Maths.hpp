@@ -127,6 +127,18 @@ namespace cro
                 return dst + (diff + temp) * exp;
             }
 
+            /*
+            \brief Takes normalised values outside of the -1 to 1 range
+            and wraps them to fit.
+            */
+            static inline float wrapNormal(float v)
+            {
+                /*const auto s = Util::Maths::sgn(v);
+                const auto vs = v * s;
+                return (vs - std::floor(vs)) * s;*/
+                return v - std::floor(v);
+            }
+
             /*!
             \brief Converts the given floating point value to a normalised integer
             Note that this removes any whole part and works on the truncated fraction
@@ -143,9 +155,9 @@ namespace cro
                 else
                 {
                     const auto s = Util::Maths::sgn(v);
-
                     const auto vs = v * s;
                     v = (vs - std::floor(vs));
+
                     return static_cast<T>(static_cast<float>(std::numeric_limits<T>::max()) * v) * s;
                 }
             }

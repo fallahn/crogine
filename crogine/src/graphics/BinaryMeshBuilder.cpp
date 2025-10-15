@@ -31,6 +31,7 @@ source distribution.
 #include <crogine/detail/AllocationResource.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/graphics/BinaryMeshBuilder.hpp>
+#include <crogine/util/Maths.hpp>
 
 #include "../detail/GLCheck.hpp"
 
@@ -169,10 +170,17 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                     case Mesh::Attribute::UV1:
                         vertStride += 2;
                         meshData.attributes[i].componentCount = 2;
+                        meshData.attributes[i].glType = GL_HALF_FLOAT;
                         meshData.attributes[i].byteOffset = byteOffset;
-                        byteOffset += 2 * sizeof(float);
+                        byteOffset += 2 * sizeof(std::uint16_t);
                         break;
                     case Mesh::Attribute::BlendIndices:
+                        vertStride += 4;
+                        meshData.attributes[i].componentCount = 4;
+                        meshData.attributes[i].byteOffset = byteOffset;
+                        meshData.attributes[i].glType = GL_UNSIGNED_BYTE;
+                        byteOffset += 4;
+                        break;
                     case Mesh::Attribute::BlendWeights:
                         vertStride += 4;
                         meshData.attributes[i].componentCount = 4;
@@ -239,12 +247,6 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                             break;
                         case Mesh::Attribute::Colour:
                         {
-                            /*std::vector<float> colour;
-                            colour.push_back(tempVerts[i + offset]);
-                            colour.push_back(tempVerts[i + offset + 1]);
-                            colour.push_back(tempVerts[i + offset + 2]);
-                            colour.push_back(tempVerts[i + offset + 3]);*/
-
                             const glm::vec4 colour =
                             {
                                 tempVerts[i + offset],
@@ -259,10 +261,6 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                             break;
                         case Mesh::Attribute::Normal:
                         {
-                            /*vertData.normal.push_back(tempVerts[i + offset]);
-                            vertData.normal.push_back(tempVerts[i + offset + 1]);
-                            vertData.normal.push_back(tempVerts[i + offset + 2]);*/
-
                             normal =
                             {
                                 tempVerts[i + offset],
@@ -291,32 +289,21 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
 
                             insertData(&tangent, meshData.attributes[j].getSize());
                             insertData(&bitan, meshData.attributes[j].getSize());
-
-                            /*vertData.tangent.push_back(tan.x);
-                            vertData.tangent.push_back(tan.y);
-                            vertData.tangent.push_back(tan.z);
-                            
-                            vertData.bitan.push_back(bitan.x);
-                            vertData.bitan.push_back(bitan.y);
-                            vertData.bitan.push_back(bitan.z);*/
                         }
                             offset += 4;
                             break;
                         case Mesh::Attribute::UV0:
-                        {
-                            std::vector<float> uv0;
-                            uv0.push_back(tempVerts[i + offset]);
-                            uv0.push_back(tempVerts[i + offset + 1]);
-                            insertData(uv0.data(), meshData.attributes[j].getSize());
-                        }
-                            offset += 2;
-                            break;
                         case Mesh::Attribute::UV1:
                         {
-                            std::vector<float> uv1;
-                            uv1.push_back(tempVerts[i + offset]);
-                            uv1.push_back(tempVerts[i + offset + 1]);
-                            insertData(uv1.data(), meshData.attributes[j].getSize());
+                            const glm::vec2 uv =
+                            {
+                                tempVerts[i + offset],
+                                tempVerts[i + offset + 1]
+                            };
+
+                            //const auto uvPacked = glm::packSnorm2x16(uv);
+                            const auto uvPacked = glm::packHalf2x16(uv);
+                            insertData(&uvPacked, meshData.attributes[j].getSize());
                         }
                             offset += 2;
                             break;
@@ -327,7 +314,14 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                             blendIndex.push_back(tempVerts[i + offset + 1]);
                             blendIndex.push_back(tempVerts[i + offset + 2]);
                             blendIndex.push_back(tempVerts[i + offset + 3]);
-                            insertData(blendIndex.data(), meshData.attributes[j].getSize());
+
+                            //ennnnnndianness
+                            const std::uint32_t indices =
+                                std::uint8_t(blendIndex[3]) << 24 |
+                                std::uint8_t(blendIndex[2]) << 16 |
+                                std::uint8_t(blendIndex[1]) << 8 |
+                                std::uint8_t(blendIndex[0]);
+                            insertData(&indices, meshData.attributes[j].getSize());
                         }
                             offset += 4;
                             break;
@@ -346,43 +340,13 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                     }
                 }
             }
-            //const std::size_t estimatedVertCount = vertData.position.size() / 3;
-
-            //TODO we need to assert the non-empty vectors all have the same vertex count
-            //based on their data size
-
-            //for (auto i = 0u; i < estimatedVertCount; ++i)
-            //{
-            //    //also note the order here must match Mesh::Attribute
-            //    if (!vertData.position.empty())
-            //    {
-            //        const auto index = meshData.attributes[Mesh::Attribute::Position].componentCount * i;
-            //        insertData(&vertData.position[index], meshData.attributes[Mesh::Attribute::Position].getSize());
-            //    }
-            //    if (!vertData.colour.empty())
-            //    {
-            //        const auto index = meshData.attributes[Mesh::Attribute::Colour].componentCount * i;
-            //        insertData(&vertData.colour[index], meshData.attributes[Mesh::Attribute::Colour].getSize());
-            //    }
-            //    if (!vertData.normal.empty())
-            //    {
-            //        const auto index = meshData.attributes[Mesh::Attribute::Normal].componentCount * i;
-            //        insertData(&vertData.normal[index], meshData.attributes[Mesh::Attribute::Normal].getSize());
-            //    }
-            //    if (!vertData.tangent.empty()) {}
-            //    if (!vertData.bitan.empty()) {}
-            //    if (!vertData.uv0.empty()) {}
-            //    if (!vertData.uv1.empty()) {}
-            //    if (!vertData.blendIndex.empty()) {}
-            //    if (!vertData.blendWeight.empty()) {}
-            //}
+            
 
             //set the vertex data
             meshData.attributeFlags = meshHeader.flags;
             meshData.primitiveType = GL_TRIANGLES;
             meshData.vertexSize = getVertexSize(meshData.attributes);
             meshData.vertexCount = interleavedData.size() / meshData.vertexSize;
-            //CRO_ASSERT(estimatedVertCount == meshData.vertexCount, "");
             
             meshData.vboAllocator = allocationResource->getVBOAllocator(4, meshData.vertexSize);
             meshData.vboAllocation = meshData.vboAllocator->newAllocation(meshData.vertexCount);
