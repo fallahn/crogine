@@ -89,6 +89,11 @@ namespace
     //MUST be even and should be 2,4 or 8 as 1 will cause a div0!
     static constexpr std::int32_t NormalMapMultiplier = 8; 
 
+    constexpr glm::uvec2 getNormalMapSize()
+    {
+        return { MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier };
+    }
+
     //callback data
     struct SwapData final
     {
@@ -713,18 +718,16 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     //create and update the initial normal map
     m_normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
-    glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
-    glm::vec2 mapSize(MapSize);
-    glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -40.f, 40.f);
-    auto normalViewProj = projMat * viewMat;
+    constexpr glm::vec2 mapSize(MapSize);
+    const glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
+    const glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -40.f, 40.f);
+    const auto normalViewProj = projMat * viewMat;
 
     //we can set this once so we don't need to store the matrix
     glCheck(glUseProgram(m_normalShader.getGLHandle()));
     glCheck(glUniformMatrix4fv(m_normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
     glCheck(glUseProgram(0));
 
-    m_normalMap.setPrecision(cro::TexturePrecision::Low);
-    m_normalMap.create(MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier, 2);
     if (m_currentHole < m_holeData.size())
     {
         renderNormalMap();
@@ -1007,7 +1010,7 @@ void TerrainBuilder::threadFunc()
 {
     const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
     {
-        auto size = m_normalMap.getSize();
+        constexpr auto size = getNormalMapSize();
         x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
         y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
 
@@ -1017,7 +1020,7 @@ void TerrainBuilder::threadFunc()
 
     const auto readNormal = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
     {
-        auto size = m_normalMap.getSize();
+        constexpr auto size = getNormalMapSize();
         x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
         y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
 
@@ -1467,7 +1470,13 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
     }
 
     const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
-    renderToNormalMap(meshData, m_normalShader, m_normalMap);
+    cro::MultiRenderTexture normalMap; //if we create this locally actually frees up ~200mb vram during play
+    normalMap.setPrecision(cro::TexturePrecision::Low);
+    //TODO not sure why we're creating 2 layers (or even using an MRT) - regular render textures
+    //support float values now and could be used to reduce (peak) ram usage further - although
+    //current testing deomnstrates that the putting grid breaks.
+    normalMap.create(getNormalMapSize().x, getNormalMapSize().y, 2);
+    renderToNormalMap(meshData, m_normalShader, normalMap);
 
     //hmmm is there some of this we can pre-process to save doing it here?
     //const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
@@ -1529,7 +1538,8 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
 
 
     //copy the texture to an array we can query
-    m_normalMapValues.resize(m_normalMap.getSize().x * m_normalMap.getSize().y * 4);
-    glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture(1).textureID);
+    m_normalMapValues.resize(getNormalMapSize().x * getNormalMapSize().y * 4);
+    glBindTexture(GL_TEXTURE_2D, normalMap.getTexture(1).textureID);
+    //glBindTexture(GL_TEXTURE_2D, normalMap.getTexture().getGLHandle());
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, m_normalMapValues.data());
 }

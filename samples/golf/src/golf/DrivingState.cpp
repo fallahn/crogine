@@ -2291,13 +2291,13 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
     glUseProgram(normalShader.getGLHandle());
 
-    glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
-    glm::vec2 mapSize(280.f, 290.f);
-    glm::mat4 projMat = glm::ortho(-mapSize.x / 2.f, mapSize.x / 2.f, -125.f, mapSize.y - 125.f, -10.f, 20.f);
-    auto normalViewProj = projMat * viewMat;
+    constexpr glm::vec2 mapSize(280.f, 290.f);
+    const glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
+    const glm::mat4 projMat = glm::ortho(-mapSize.x / 2.f, mapSize.x / 2.f, -125.f, mapSize.y - 125.f, -10.f, 20.f);
+    const auto normalViewProj = projMat * viewMat;
 
-    float holeBottom = std::min(meshData.boundingBox[0].y, meshData.boundingBox[1].y);
-    float holeHeight = std::max(meshData.boundingBox[0].y, meshData.boundingBox[1].y) - holeBottom;
+    const float holeBottom = std::min(meshData.boundingBox[0].y, meshData.boundingBox[1].y);
+    const float holeHeight = std::max(meshData.boundingBox[0].y, meshData.boundingBox[1].y) - holeBottom;
     glCheck(glUniform1f(normalShader.getUniformID("u_lowestPoint"), holeBottom));
     glCheck(glUniform1f(normalShader.getUniformID("u_maxHeight"), holeHeight));
     glCheck(glUniformMatrix4fv(normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
