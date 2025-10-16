@@ -1470,13 +1470,15 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
     }
 
     const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
-    cro::MultiRenderTexture normalMap; //if we create this locally actually frees up ~200mb vram during play
-    normalMap.setPrecision(cro::TexturePrecision::Low);
+    //if we create this locally actually frees up ~200mb vram during play, however there's an irritating
+    //pause while this gets created each transtition...
+    //cro::MultiRenderTexture normalMap; 
+    m_normalMap.setPrecision(cro::TexturePrecision::Low);
     //TODO not sure why we're creating 2 layers (or even using an MRT) - regular render textures
     //support float values now and could be used to reduce (peak) ram usage further - although
     //current testing deomnstrates that the putting grid breaks.
-    normalMap.create(getNormalMapSize().x, getNormalMapSize().y, 2);
-    renderToNormalMap(meshData, m_normalShader, normalMap);
+    m_normalMap.create(getNormalMapSize().x, getNormalMapSize().y, 2);
+    renderToNormalMap(meshData, m_normalShader, m_normalMap);
 
     //hmmm is there some of this we can pre-process to save doing it here?
     //const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
@@ -1539,7 +1541,7 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
 
     //copy the texture to an array we can query
     m_normalMapValues.resize(getNormalMapSize().x * getNormalMapSize().y * 4);
-    glBindTexture(GL_TEXTURE_2D, normalMap.getTexture(1).textureID);
+    glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture(1).textureID);
     //glBindTexture(GL_TEXTURE_2D, normalMap.getTexture().getGLHandle());
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, m_normalMapValues.data());
 }

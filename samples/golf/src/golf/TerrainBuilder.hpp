@@ -183,7 +183,8 @@ private:
 
     void threadFunc();
 
-    //cro::MultiRenderTexture m_normalMap;
+
+    cro::MultiRenderTexture m_normalMap;
     cro::Shader m_normalShader;
     std::vector<float> m_normalMapValues;
 
