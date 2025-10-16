@@ -528,6 +528,8 @@ static inline std::int32_t activeControllerID(std::int32_t bestMatch)
 }
 
 bool hasPSLayout(std::int32_t controllerID);
+namespace cro { class MultiRenderTexture; }
+void renderToNormalMap(const cro::Mesh::Data, cro::Shader&, cro::MultiRenderTexture&);
 
 template <typename T>
 constexpr T interpolate(T a, T b, float t)

@@ -2282,77 +2282,81 @@ void DrivingState::createScene()
 void DrivingState::createFoliage(cro::Entity terrainEnt)
 {
     //render a heightmap from the hole mesh
-    //TODO this is lifted from TerrainBuilder and can probably be shared between both with a refactor
     const auto& meshData = terrainEnt.getComponent<cro::Model>().getMeshData();
-    std::size_t normalOffset = 0;
-    for (auto i = 0u; i < cro::Mesh::Attribute::Normal; ++i)
-    {
-        normalOffset += meshData.attributes[i].componentCount;
-    }
-
+    
+    cro::MultiRenderTexture normalMap;
+    normalMap.create(280, 290); //course size + borders
+    
     cro::Shader normalShader;
     normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
+    glUseProgram(normalShader.getGLHandle());
 
     glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
     glm::vec2 mapSize(280.f, 290.f);
     glm::mat4 projMat = glm::ortho(-mapSize.x / 2.f, mapSize.x / 2.f, -125.f, mapSize.y - 125.f, -10.f, 20.f);
     auto normalViewProj = projMat * viewMat;
 
-    const auto& attribs = normalShader.getAttribMap();
-    auto vaoCount = static_cast<std::int32_t>(meshData.submeshCount);
-
-    std::vector<std::uint32_t> vaos(vaoCount);
-    glCheck(glGenVertexArrays(vaoCount, vaos.data()));
-
-    for (auto i = 0u; i < vaos.size(); ++i)
-    {
-        glCheck(glBindVertexArray(vaos[i]));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
-        
-        
-        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Position]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Position], 3, 
-            GL_FLOAT, GL_FALSE, 
-            static_cast<std::int32_t>(meshData.vertexSize),
-            reinterpret_cast<void*>(meshData.vboAllocation.offset)));
-        
-        
-        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Normal]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Normal], 3, 
-            meshData.attributes[cro::Mesh::Attribute::Normal].glType,
-            meshData.attributes[cro::Mesh::Attribute::Normal].glNormalised,
-            static_cast<std::int32_t>(meshData.vertexSize),
-            (void*)(meshData.vboAllocation.offset + (normalOffset * sizeof(float)))));
-        
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
-    }
-
-    glCheck(glUseProgram(normalShader.getGLHandle()));
-    glCheck(glDisable(GL_CULL_FACE));
-
     float holeBottom = std::min(meshData.boundingBox[0].y, meshData.boundingBox[1].y);
     float holeHeight = std::max(meshData.boundingBox[0].y, meshData.boundingBox[1].y) - holeBottom;
     glCheck(glUniform1f(normalShader.getUniformID("u_lowestPoint"), holeBottom));
     glCheck(glUniform1f(normalShader.getUniformID("u_maxHeight"), holeHeight));
     glCheck(glUniformMatrix4fv(normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
+    
+    renderToNormalMap(meshData, normalShader, normalMap);
 
-    cro::MultiRenderTexture normalMap;
-    normalMap.create(280, 290); //course size + borders
+    //std::size_t normalOffset = 0;
+    //for (auto i = 0u; i < cro::Mesh::Attribute::Normal; ++i)
+    //{
+    //    normalOffset += meshData.attributes[i].componentCount;
+    //}
 
-    //clear the alpha to 0 so unrendered areas have zero height
-    static const cro::Colour ClearColour = cro::Colour(0x7f7fff00);
-    normalMap.clear(ClearColour);
-    for (auto i = 0u; i < vaos.size(); ++i)
-    {
-        glCheck(glBindVertexArray(vaos[i]));
-        glCheck(glDrawElements(meshData.indexData[i].primitiveType,
-            meshData.indexData[i].indexCount, meshData.indexData[i].format,
-            reinterpret_cast<void*>(meshData.indexData[i].iboAllocation.offset)));
-    }
-    normalMap.display();
+    //const auto& attribs = normalShader.getAttribMap();
+    //auto vaoCount = static_cast<std::int32_t>(meshData.submeshCount);
 
-    glCheck(glBindVertexArray(0));
-    glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
+    //std::vector<std::uint32_t> vaos(vaoCount);
+    //glCheck(glGenVertexArrays(vaoCount, vaos.data()));
+
+    //for (auto i = 0u; i < vaos.size(); ++i)
+    //{
+    //    glCheck(glBindVertexArray(vaos[i]));
+    //    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
+    //    
+    //    
+    //    glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Position]));
+    //    glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Position], 3, 
+    //        GL_FLOAT, GL_FALSE, 
+    //        static_cast<std::int32_t>(meshData.vertexSize),
+    //        reinterpret_cast<void*>(meshData.vboAllocation.offset)));
+    //    
+    //    
+    //    glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Normal]));
+    //    glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Normal], 3, 
+    //        meshData.attributes[cro::Mesh::Attribute::Normal].glType,
+    //        meshData.attributes[cro::Mesh::Attribute::Normal].glNormalised,
+    //        static_cast<std::int32_t>(meshData.vertexSize),
+    //        (void*)(meshData.vboAllocation.offset + (normalOffset * sizeof(float)))));
+    //    
+    //    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
+    //}
+
+    //glCheck(glUseProgram(normalShader.getGLHandle()));
+    //glCheck(glDisable(GL_CULL_FACE));
+
+
+    ////clear the alpha to 0 so unrendered areas have zero height
+    //static const cro::Colour ClearColour = cro::Colour(0x7f7fff00);
+    //normalMap.clear(ClearColour);
+    //for (auto i = 0u; i < vaos.size(); ++i)
+    //{
+    //    glCheck(glBindVertexArray(vaos[i]));
+    //    glCheck(glDrawElements(meshData.indexData[i].primitiveType,
+    //        meshData.indexData[i].indexCount, meshData.indexData[i].format,
+    //        reinterpret_cast<void*>(meshData.indexData[i].iboAllocation.offset)));
+    //}
+    //normalMap.display();
+
+    //glCheck(glBindVertexArray(0));
+    //glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
 
 
     std::vector<float> normalMapValues(normalMap.getSize().x * normalMap.getSize().y * 4);
