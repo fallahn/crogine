@@ -157,11 +157,13 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                         meshData.attributes[i].componentCount = 3;
                         meshData.attributes[i].byteOffset = byteOffset;
                         byteOffset += 3 * sizeof(float);
+                        //meshData.attributes[i].glType = GL_HALF_FLOAT;// GL_INT_2_10_10_10_REV;
+                        //byteOffset += 4 * sizeof(std::uint16_t);
                         break;
                     case Mesh::Attribute::Tangent:
                         meshData.attributes[i].componentCount = 3;
                         meshData.attributes[Mesh::Attribute::Bitangent].componentCount = 3;
-                        vertStride += 4; //we'll be decoding tangents
+                        vertStride += 4; //we'll be decoding tangents, so include sign float
 
                         meshData.attributes[i].byteOffset = byteOffset;
                         byteOffset += 6 * sizeof(float); //this is the final offset including bitan
@@ -273,6 +275,16 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                                 tempVerts[i + offset + 2],
                             };
                             insertData(&normal, meshData.attributes[j].getSize());
+
+                            //hmm the 2x10x10x10 format seems to be a dark art no one wants
+                            //to talk about anf half precision normals affect the height map too much
+                            //const auto n = Detail::packInt2x10x10x10xRev(glm::vec4(normal, 0.f));
+                            /*const std::array<std::uint32_t, 2u> n =
+                            {
+                                glm::packHalf2x16({normal.x, normal.y}),
+                                glm::packHalf2x16({normal.z, 0.f})
+                            };
+                            insertData(&n, meshData.attributes[j].getSize());*/
                         }
                             offset += 3;
                             break;

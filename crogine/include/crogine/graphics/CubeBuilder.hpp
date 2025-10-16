@@ -35,6 +35,8 @@ namespace cro
 {
     /*!
     \brief Creates a 1x1x1 cube mesh with texture coordinates
+    TODO needs shared buffer optimsation
+    TODO needs vertex size optimisation
     */
     class CRO_EXPORT_API CubeBuilder final : public MeshBuilder
     {

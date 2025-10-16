@@ -75,6 +75,9 @@ namespace cro
 
     Be Aware: binary files are little endian (intel) by default.
 
+    TODO this is deprecated in favour of the cmb/BinaryMesh
+    TODO needs shared buffer optimisation
+    TODO needs vertex size optimisation
     */
 
     class CRO_EXPORT_API StaticMeshBuilder final : public MeshBuilder

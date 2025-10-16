@@ -57,6 +57,9 @@ namespace cro
     Remember when updating the vertex buffer and index arrays to also
     update the Mesh::Data with the new vertex count and new index count.
 
+    TODO needs shared buffer optimisation
+    TODO needs vertex size optimisation
+
     */
 
     class CRO_EXPORT_API DynamicMeshBuilder final : public cro::MeshBuilder

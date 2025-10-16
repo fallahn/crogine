@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -37,7 +37,9 @@ namespace cro
 {
     /*!
     \brief Creates a texturable grid mesh formed of a triangle strip
-    UV coordinates are mapped from 0,0 at the bottom left to 1,1 at the top right
+    UV coordinates are mapped from 0,0 at the bottom left to 1,1 at the top right.
+    TODO needs shared buffer optimisation
+    TODO needs vertex size optimisation
     */
     class CRO_EXPORT_API GridMeshBuilder final : public MeshBuilder
     {

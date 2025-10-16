@@ -35,6 +35,9 @@ namespace cro
 {
     /*!
     \brief Creates a spherical mesh with cube-mapped texture coordinates.
+    TODO index creation is incorrect
+    TODO requires shared buffer optimisation
+    TODO requires vertex size optimisation
     */
     class CRO_EXPORT_API SphereBuilder final : public MeshBuilder
     {

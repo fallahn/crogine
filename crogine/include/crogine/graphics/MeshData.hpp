@@ -43,6 +43,31 @@ source distribution.
 
 namespace cro
 {
+    namespace Detail
+    {
+        //normal packing functions - these are different depending on GL version
+#ifdef GL41
+        static inline std::uint32_t packInt2x10x10x10xRev(glm::vec4 v)
+        {
+            //generate sign bits
+            const std::uint32_t xs = v.x < 0;
+            const std::uint32_t ys = v.y < 0;
+            const std::uint32_t zs = v.z < 0;
+            const std::uint32_t ws = v.w < 0;
+            
+            //shift and OR results
+            const std::uint32_t ret =
+                ws << 31 | ((std::uint32_t)(v.w + (ws << 1)) & 1) << 30 |
+                zs << 29 | ((std::uint32_t)(v.z * 511 + (zs << 9)) & 511) << 20 |
+                ys << 19 | ((std::uint32_t)(v.y * 511 + (ys << 9)) & 511) << 10 |
+                xs << 9 |  ((std::uint32_t)(v.x * 511 + (xs << 9)) & 511);
+            return ret;
+        }
+#else
+
+#endif
+    }
+
     namespace Mesh
     {
         /*!

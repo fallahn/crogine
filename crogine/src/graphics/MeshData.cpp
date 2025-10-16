@@ -72,6 +72,13 @@ namespace
             {
                 if ((meshData.attributeFlags & (1 << j)) != 0)
                 {
+                    if (j != 0)
+                    {
+                        //if this is 0 we haven't updated the mesh
+                        //builder used for the mesh we're downloading!
+                        assert(meshData.attributes[j].byteOffset);
+                    }
+
                     switch (meshData.attributes[j].glType)
                     {
                     default:break;
@@ -116,14 +123,36 @@ namespace
                         break;
                     case GL_HALF_FLOAT:
                     {
-                        //TODO again need to check which attrib this is as we currently assume it UV0/1
-                        std::uint32_t uv = 0;
-                        std::memcpy(&uv, &byteData[idx + meshData.attributes[j].byteOffset], sizeof(uv));
-
-                        const auto v = glm::unpackHalf2x16(uv);
-                        for (auto k = 0; k < 2; ++k)
+                        switch (j)
                         {
-                            destVerts.push_back(static_cast<float>(v[k]));
+                        default: break;
+                        case Attribute::UV0:
+                        case Attribute::UV1:
+                        {
+                            std::uint32_t uv = 0;
+                            std::memcpy(&uv, &byteData[idx + meshData.attributes[j].byteOffset], sizeof(uv));
+
+                            const auto v = glm::unpackHalf2x16(uv);
+                            for (auto k = 0; k < 2; ++k)
+                            {
+                                destVerts.push_back(static_cast<float>(v[k]));
+                            }
+                        }
+                        break;
+                        case Attribute::Normal:
+                        {
+                            std::array<std::uint32_t, 2> norm = { 0,0 };
+                            std::memcpy(norm.data(), &byteData[idx + meshData.attributes[j].byteOffset], sizeof(norm));
+
+                            //hm, output mesh only expect 3 components
+                            auto v = glm::unpackHalf2x16(norm[0]);
+                            destVerts.push_back(static_cast<float>(v[0]));
+                            destVerts.push_back(static_cast<float>(v[1]));
+
+                            v = glm::unpackHalf2x16(norm[1]);
+                            destVerts.push_back(static_cast<float>(v[0]));
+                        }
+                            break;
                         }
                     }
                         break;
@@ -140,6 +169,15 @@ namespace
                         break;
                     case GL_UNSIGNED_INT_2_10_10_10_REV:
 
+                        break;
+                    case GL_INT_2_10_10_10_REV:
+                    {
+                        //OK this is apparently a dark art so I'm just going to use half floats instead
+                        //normal/tan/bitan
+                        //std::uint32_t c = 0;
+                        //std::memcpy(&c, &byteData[idx + meshData.attributes[j].byteOffset], sizeof(c));
+                        //const auto v = 
+                    }
                         break;
                     case GL_FLOAT:
                     {
@@ -213,6 +251,7 @@ std::uint32_t Attribute::getSize() const
     case GL_INT:
     case GL_UNSIGNED_INT_10_10_10_2:
     case GL_UNSIGNED_INT_2_10_10_10_REV:
+    case GL_INT_2_10_10_10_REV:
     case GL_FLOAT:
         return componentCount * 4;
     }

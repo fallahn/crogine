@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,7 +35,9 @@ namespace cro
 {
     /*!
     \brief Creates a texturable circular mesh formed of a triangle strip.
-    The vertices are positioned around the centre of the circle
+    The vertices are positioned around the centre of the circle.
+    TODO needs shared buffer optimisation
+    TODO needs vertex size optimisation
     */
     class CRO_EXPORT_API CircleMeshBuilder final : public MeshBuilder
     {

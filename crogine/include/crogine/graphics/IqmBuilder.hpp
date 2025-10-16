@@ -43,6 +43,8 @@ namespace cro
     they do not support secondary UV coordinates for lightmapping - in
     which case cmf mesh (via the StaticMeshBuilder) should be preferred.
     <a href="http://sauerbraten.org/iqm/">IQM File Format</a>
+    TODO needs shared buffer optimisation
+    TODO needs vertex size optimisation
     */
     class CRO_EXPORT_API IqmBuilder final : public MeshBuilder
     {
