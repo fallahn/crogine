@@ -1855,7 +1855,9 @@ void GolfState::buildUI()
         //m_mapTextureMRT.setPrecision(cro::TexturePrecision::Low);
         m_mapTextureMRT.setPrecision(MRTIndex::Normal, cro::TexturePrecision::Low);
         m_mapTextureMRT.setPrecision(MRTIndex::Light, cro::TexturePrecision::Default); //unused for some reason so set it as low as possible
+        m_mapTextureMRT.setChannelCount(MRTIndex::Light, 1);
         m_mapTextureMRT.setPrecision(MRTIndex::Count, cro::TexturePrecision::Default);
+        m_mapTextureMRT.setChannelCount(MRTIndex::Count, 1);
 
         //TODO remove the position, figure out where we use it and recreate using depth buffer
         //TODO set the channel on MRT targets if the mask is only using one channel
