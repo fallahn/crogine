@@ -551,5 +551,5 @@ static inline const std::string BranchFragment = R"(
         alpha *= colour.a;// * step(WaterLevel - 0.001, v_worldPosition.y);
 #endif
 
-        if (alpha < 0.1) discard;
+        if (alpha < 0.3) discard;
     })";

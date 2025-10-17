@@ -130,6 +130,7 @@ void LoadingScreen::launch()
         "assets/images/loading/04.png",
         "assets/images/loading/05.png",
         "assets/images/loading/06.png",
+        "assets/images/loading/07.png",
     };
 
     const auto screenIndex = cro::Util::Random::value(0u, imagePaths.size() - 1);

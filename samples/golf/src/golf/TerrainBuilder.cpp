@@ -1480,65 +1480,7 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
     m_normalMap.create(getNormalMapSize().x, getNormalMapSize().y, 2);
     renderToNormalMap(meshData, m_normalShader, m_normalMap);
 
-    //hmmm is there some of this we can pre-process to save doing it here?
-    //const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
-    //std::size_t normalOffset = 0;
-    //for (auto i = 0u; i < cro::Mesh::Attribute::Normal; ++i)
-    //{
-    //    normalOffset += meshData.attributes[i].componentCount;
-    //}
-
-    //const auto& attribs = m_normalShader.getAttribMap();
-    //auto vaoCount = static_cast<std::int32_t>(meshData.submeshCount);
-
-    //std::vector<std::uint32_t> vaos(vaoCount);
-    //glCheck(glGenVertexArrays(vaoCount, vaos.data()));
-
-    //for (auto i = 0u; i < vaos.size(); ++i)
-    //{
-    //    //oh boy are these some ugly casts
-    //    glCheck(glBindVertexArray(vaos[i]));
-    //    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
-    //    
-    //    glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Position]));
-    //    glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Position], 3, 
-    //        GL_FLOAT, GL_FALSE, 
-    //        static_cast<std::int32_t>(meshData.vertexSize), 
-    //        reinterpret_cast<void*>(meshData.vboAllocation.offset)));
-    //    
-    //    
-    //    glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Normal]));
-    //    glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Normal], 3,
-    //        meshData.attributes[cro::Mesh::Attribute::Normal].glType, 
-    //        meshData.attributes[cro::Mesh::Attribute::Normal].glNormalised,
-    //        static_cast<std::int32_t>(meshData.vertexSize), 
-    //        (void*)(meshData.vboAllocation.offset + (normalOffset * sizeof(float)))));
-
-    //    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
-    //}
-    //
-    //glCheck(glUseProgram(m_normalShader.getGLHandle()));
-    //glCheck(glDisable(GL_CULL_FACE));
-
-
-    ////clear the alpha to 0 so unrendered areas have zero height
-    ////then the heightmap image can be compared and highest value used
-    //static const cro::Colour ClearColour(0x7f7fff00);
-    ////static const cro::Colour ClearColour(0x7f7fffff);
-    //m_normalMap.clear(ClearColour);
-    //for (auto i = 0u; i < vaos.size(); ++i)
-    //{
-    //    glCheck(glBindVertexArray(vaos[i]));
-    //    glCheck(glDrawElements(meshData.indexData[i].primitiveType,
-    //        meshData.indexData[i].indexCount, meshData.indexData[i].format, 
-    //        reinterpret_cast<void*>(meshData.indexData[i].iboAllocation.offset)));
-    //}
-    //m_normalMap.display();
-
-    //glCheck(glBindVertexArray(0));
-    //glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
-
-
+    
     //copy the texture to an array we can query
     m_normalMapValues.resize(getNormalMapSize().x * getNormalMapSize().y * 4);
     glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture(1).textureID);

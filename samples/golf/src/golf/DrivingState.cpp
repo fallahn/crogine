@@ -2304,61 +2304,6 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     
     renderToNormalMap(meshData, normalShader, normalMap);
 
-    //std::size_t normalOffset = 0;
-    //for (auto i = 0u; i < cro::Mesh::Attribute::Normal; ++i)
-    //{
-    //    normalOffset += meshData.attributes[i].componentCount;
-    //}
-
-    //const auto& attribs = normalShader.getAttribMap();
-    //auto vaoCount = static_cast<std::int32_t>(meshData.submeshCount);
-
-    //std::vector<std::uint32_t> vaos(vaoCount);
-    //glCheck(glGenVertexArrays(vaoCount, vaos.data()));
-
-    //for (auto i = 0u; i < vaos.size(); ++i)
-    //{
-    //    glCheck(glBindVertexArray(vaos[i]));
-    //    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
-    //    
-    //    
-    //    glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Position]));
-    //    glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Position], 3, 
-    //        GL_FLOAT, GL_FALSE, 
-    //        static_cast<std::int32_t>(meshData.vertexSize),
-    //        reinterpret_cast<void*>(meshData.vboAllocation.offset)));
-    //    
-    //    
-    //    glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Attribute::Normal]));
-    //    glCheck(glVertexAttribPointer(attribs[cro::Mesh::Attribute::Normal], 3, 
-    //        meshData.attributes[cro::Mesh::Attribute::Normal].glType,
-    //        meshData.attributes[cro::Mesh::Attribute::Normal].glNormalised,
-    //        static_cast<std::int32_t>(meshData.vertexSize),
-    //        (void*)(meshData.vboAllocation.offset + (normalOffset * sizeof(float)))));
-    //    
-    //    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
-    //}
-
-    //glCheck(glUseProgram(normalShader.getGLHandle()));
-    //glCheck(glDisable(GL_CULL_FACE));
-
-
-    ////clear the alpha to 0 so unrendered areas have zero height
-    //static const cro::Colour ClearColour = cro::Colour(0x7f7fff00);
-    //normalMap.clear(ClearColour);
-    //for (auto i = 0u; i < vaos.size(); ++i)
-    //{
-    //    glCheck(glBindVertexArray(vaos[i]));
-    //    glCheck(glDrawElements(meshData.indexData[i].primitiveType,
-    //        meshData.indexData[i].indexCount, meshData.indexData[i].format,
-    //        reinterpret_cast<void*>(meshData.indexData[i].iboAllocation.offset)));
-    //}
-    //normalMap.display();
-
-    //glCheck(glBindVertexArray(0));
-    //glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
-
-
     std::vector<float> normalMapValues(normalMap.getSize().x * normalMap.getSize().y * 4);
     glBindTexture(GL_TEXTURE_2D, normalMap.getTexture(1).textureID);
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, normalMapValues.data());
