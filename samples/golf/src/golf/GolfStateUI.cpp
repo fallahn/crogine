@@ -1852,7 +1852,13 @@ void GolfState::buildUI()
     auto updateMiniView = [&, mapEnt](cro::Camera& miniCam) mutable
     {
         constexpr glm::uvec2 texSize = MapSize * MapSizeMultiplier;
-        m_mapTextureMRT.setPrecision(cro::TexturePrecision::Low);
+        //m_mapTextureMRT.setPrecision(cro::TexturePrecision::Low);
+        m_mapTextureMRT.setPrecision(MRTIndex::Normal, cro::TexturePrecision::Low);
+        m_mapTextureMRT.setPrecision(MRTIndex::Light, cro::TexturePrecision::Default); //unused for some reason so set it as low as possible
+        m_mapTextureMRT.setPrecision(MRTIndex::Count, cro::TexturePrecision::Default);
+
+        //TODO remove the position, figure out where we use it and recreate using depth buffer
+        //TODO set the channel on MRT targets if the mask is only using one channel
         m_mapTextureMRT.create(texSize.x, texSize.y, MRTIndex::Count + 1); //colour, pos, normal, *unused - sigh*, terrain mask
         m_mapTextureMRT.setBorderColour(cro::Colour::Transparent);
         m_sharedData.minimapData.mrt = &m_mapTextureMRT;
@@ -1894,7 +1900,9 @@ void GolfState::buildUI()
         /*std::uint32_t samples = m_sharedData.pixelScale ? 0 :
             m_sharedData.antialias ? m_sharedData.multisamples : 0;*/
 
-        m_overheadBuffer.setPrecision(m_sharedData.lightmapQuality);
+        //m_overheadBuffer.setPrecision(m_sharedData.lightmapQuality);
+        m_overheadBuffer.setPrecision(MRTIndex::Normal, cro::TexturePrecision::Default);
+        m_overheadBuffer.setPrecision(MRTIndex::Light, cro::TexturePrecision::Default);
         m_overheadBuffer.create(texSize, texSize, MRTIndex::Count); //yes, it's square
 
         if (m_sharedData.nightTime)

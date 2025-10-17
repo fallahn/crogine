@@ -35,13 +35,15 @@ source distribution.
 using namespace cro;
 
 MultiRenderTexture::MultiRenderTexture()
-    : m_precision       (GL_RGBA32F),
+    : //m_precision       (GL_RGBA32F),
     m_fboID             (0),
     m_maxAttachments    (-1),
     m_depthTextureID    (0),
     m_size              (0, 0)
 {
-
+    getMaxAttachments(); //just updates the attachment count if not init
+    m_texturePrecision.resize(m_maxAttachments);
+    std::fill(m_texturePrecision.begin(), m_texturePrecision.end(), GL_RGBA32F);
 }
 
 MultiRenderTexture::~MultiRenderTexture()
@@ -117,7 +119,6 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
         return true;
     }
 
-    getMaxAttachments(); //just updates the attachment count if not init
     CRO_ASSERT(colourCount > 0 && colourCount < m_maxAttachments, "Out of Range");
 
     if (m_maxAttachments == 0)
@@ -167,7 +168,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
         for(auto i = 1u; i < m_textureIDs.size(); ++i)
         {
             glBindTexture(GL_TEXTURE_2D, m_textureIDs[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, m_precision, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+            glTexImage2D(GL_TEXTURE_2D, 0, m_texturePrecision[i], width, height, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
         }
 
         glCheck(glBindTexture(GL_TEXTURE_2D, m_depthTextureID));
@@ -189,7 +190,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
                 std::uint32_t id = 0;
                 glCheck(glGenTextures(1, &id));
                 glCheck(glBindTexture(GL_TEXTURE_2D, id));
-                glCheck(glTexImage2D(GL_TEXTURE_2D, 0, m_precision, width, height, 0, GL_RGBA, GL_HALF_FLOAT, NULL));
+                glCheck(glTexImage2D(GL_TEXTURE_2D, 0, m_texturePrecision[i], width, height, 0, GL_RGBA, GL_HALF_FLOAT, NULL));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
@@ -325,18 +326,37 @@ void MultiRenderTexture::setBorderColour(Colour colour)
     m_defaultTexture.setBorderColour(colour);
 }
 
-void MultiRenderTexture::setPrecision(std::uint32_t precision)
+void MultiRenderTexture::setPrecision(std::uint32_t index, std::uint32_t precision)
 {
-    auto old = m_precision;
-    m_precision = precision == 0 ? GL_RGBA32F : GL_RGBA16F;
-
-    //update existing textures
-    if (old != m_precision)
+    //we can still set the precision up front
+    if (index < m_texturePrecision.size())
     {
-        for (auto id : m_textureIDs)
+        static constexpr std::array PrecisionTypes =
         {
-            glCheck(glBindTexture(GL_TEXTURE_2D, id));
-            glCheck(glTexImage2D(GL_TEXTURE_2D, 0, m_precision, m_size.x, m_size.y, 0, GL_RGBA, GL_HALF_FLOAT, NULL));
+            GL_RGBA32F, GL_RGBA16F, GL_RGBA8
+        };
+
+        if (precision < PrecisionTypes.size())
+        {
+            auto old = m_texturePrecision[index];
+            m_texturePrecision[index] = PrecisionTypes[precision];
+
+            //update existing texture
+            if (old != m_texturePrecision[index]
+                && index < m_textureIDs.size())
+            {
+                glCheck(glBindTexture(GL_TEXTURE_2D, m_textureIDs[index]));
+                glCheck(glTexImage2D(GL_TEXTURE_2D, 0, m_texturePrecision[index], m_size.x, m_size.y, 0, GL_RGBA, GL_HALF_FLOAT, NULL));
+            }
+            LogI << "Set MRT texture at " << index << " to precision " << precision << std::endl;
         }
+        else
+        {
+            LogW << precision << ": invalid precision type." << std::endl;
+        }
+    }
+    else
+    {
+        LogW << index << ": invalid MRT index for precision setting" << std::endl;
     }
 }

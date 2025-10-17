@@ -100,7 +100,10 @@ void GolfState::createCameras()
 
                 if (m_sharedData.nightTime)
                 {
-                    m_gameSceneMRTexture.setPrecision(m_sharedData.lightmapQuality);
+                    //m_gameSceneMRTexture.setPrecision(m_sharedData.lightmapQuality);
+                    //TODO remove position buffer and reconstruct from depth
+                    m_gameSceneMRTexture.setPrecision(MRTIndex::Normal, cro::TexturePrecision::Default);
+                    m_gameSceneMRTexture.setPrecision(MRTIndex::Light, cro::TexturePrecision::Default);
 
                     glm::uvec2 usize(texSize);
                     m_sharedData.antialias =

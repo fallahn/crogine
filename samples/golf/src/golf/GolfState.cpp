@@ -2631,11 +2631,12 @@ void GolfState::handleMessage(const cro::Message& msg)
 
                 Club::setFixedPuttingDistance(m_sharedData.fixedPuttingRange);
 
-                if (m_sharedData.nightTime)
+                //this option ought to be deprecated
+                /*if (m_sharedData.nightTime)
                 {
                     m_gameSceneMRTexture.setPrecision(m_sharedData.lightmapQuality);
                 }
-                m_overheadBuffer.setPrecision(m_sharedData.lightmapQuality);
+                m_overheadBuffer.setPrecision(m_sharedData.lightmapQuality);*/
 
                 updateFlagTexture(true);
             }

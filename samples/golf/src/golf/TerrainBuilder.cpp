@@ -1473,10 +1473,10 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
     //if we create this locally actually frees up ~200mb vram during play, however there's an irritating
     //pause while this gets created each transtition...
     //cro::MultiRenderTexture normalMap; 
-    m_normalMap.setPrecision(cro::TexturePrecision::Low);
+    m_normalMap.setPrecision(1,cro::TexturePrecision::Low); //unfortunately default precision is too low for drawing the grid
     //TODO not sure why we're creating 2 layers (or even using an MRT) - regular render textures
     //support float values now and could be used to reduce (peak) ram usage further - although
-    //current testing deomnstrates that the putting grid breaks.
+    //current testing demonstrates that the putting grid breaks.
     m_normalMap.create(getNormalMapSize().x, getNormalMapSize().y, 2);
     renderToNormalMap(meshData, m_normalShader, m_normalMap);
 
