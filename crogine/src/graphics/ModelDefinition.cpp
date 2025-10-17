@@ -592,7 +592,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 auto filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
 
-                auto& tex = m_resources.textures.get(filepath, createMipmaps);
+                auto& tex = m_resources.textures.get(filepath, createMipmaps/*, true*/);
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_diffuseMap", tex);
@@ -604,7 +604,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 auto filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
 
-                auto& tex = m_resources.textures.get(filepath, createMipmaps);
+                auto& tex = m_resources.textures.get(filepath, createMipmaps/*, true*/);
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_maskMap", tex);
@@ -613,7 +613,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
             {
                 auto filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
-
+                //TODO normal maps require specific compression
                 auto& tex = m_resources.textures.get(filepath, createMipmaps);
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);

@@ -65,19 +65,21 @@ Texture::Texture()
     m_type          (GL_UNSIGNED_BYTE),
     m_smooth        (false),
     m_repeated      (false),
-    m_hasMipMaps    (false)
+    m_hasMipMaps    (false),
+    m_useCompression(false)
 {
 
 }
 
 Texture::Texture(Texture&& other) noexcept
-    : m_size    (other.m_size),
-    m_format    (other.m_format),
-    m_handle    (other.m_handle),
-    m_type      (other.m_type),
-    m_smooth    (other.m_smooth),
-    m_repeated  (other.m_repeated),
-    m_hasMipMaps(other.m_hasMipMaps)
+    : m_size            (other.m_size),
+    m_format            (other.m_format),
+    m_handle            (other.m_handle),
+    m_type              (other.m_type),
+    m_smooth            (other.m_smooth),
+    m_repeated          (other.m_repeated),
+    m_hasMipMaps        (other.m_hasMipMaps),
+    m_useCompression    (other.m_useCompression)
 {
     other.m_size = glm::uvec2(0);
     other.m_format = ImageFormat::None;
@@ -86,6 +88,7 @@ Texture::Texture(Texture&& other) noexcept
     other.m_smooth = false;
     other.m_repeated = false;
     other.m_hasMipMaps = false;
+    other.m_useCompression = false;
 }
 
 Texture& Texture::operator=(Texture&& other) noexcept
@@ -102,6 +105,7 @@ Texture& Texture::operator=(Texture&& other) noexcept
         m_smooth = other.m_smooth;
         m_repeated = other.m_repeated;
         m_hasMipMaps = other.m_hasMipMaps;
+        m_useCompression = other.m_useCompression;
 
         other.m_size = glm::uvec2(0);
         other.m_format = ImageFormat::None;
@@ -110,6 +114,7 @@ Texture& Texture::operator=(Texture&& other) noexcept
         other.m_smooth = false;
         other.m_repeated = false;
         other.m_hasMipMaps = false;
+        other.m_useCompression = false;
     }
     return *this;
 }
@@ -146,23 +151,21 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
     auto wrap = m_repeated ? GL_REPEAT : GL_CLAMP_TO_EDGE;
     auto smooth = m_smooth ? GL_LINEAR : GL_NEAREST;
-    //GLint texFormat = GL_RGB8;
+
     GLint uploadFormat = GL_RGB;
-    GLint internalFormat = GL_RGB16F;
+    GLint internalFormat = m_useCompression ? GL_COMPRESSED_RGB : GL_RGB16F; //we supply this as an arg if the floating point option is set
 
     std::int32_t pixelSize = 3;
     if (format == ImageFormat::RGBA)
     {
-        //texFormat = GL_RGBA8;
         uploadFormat = GL_RGBA;
-        internalFormat = GL_RGBA16F;
+        internalFormat = m_useCompression ? GL_COMPRESSED_RGBA : GL_RGBA16F;
         pixelSize = 4;
     }
     else if(format == ImageFormat::A)
     {
-        //texFormat = GL_R8;
         uploadFormat = GL_RED;
-        internalFormat = GL_R16F;
+        internalFormat = m_useCompression ? GL_COMPRESSED_RED : GL_R16F;
         pixelSize = 1;
     }
 
@@ -173,7 +176,7 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
     glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
 //#ifdef GL41
-    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, floatingPoint ? internalFormat : uploadFormat, width, height, 0, uploadFormat, m_type, buffer.data()));
+    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, (floatingPoint || m_useCompression) ? internalFormat : uploadFormat, width, height, 0, uploadFormat, m_type, buffer.data()));
 //#else
 //    glCheck(glTexStorage2D(GL_TEXTURE_2D, 1, texFormat, width, height));
 //    glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
@@ -186,7 +189,7 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
     glCheck(glBindTexture(GL_TEXTURE_2D, 0));
 }
 
-bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps)
+bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool useCompression)
 {
     std::filesystem::path p(filePath);
     auto path = FileSystem::getResourcePath();
@@ -205,7 +208,8 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps)
     if (arr.loadFromFile(path, true))
     {
         m_type = GL_UNSIGNED_BYTE;
-
+        m_useCompression = useCompression;
+        if (useCompression) LogI << "Compressing texture..." << std::endl;
         auto size = arr.getDimensions();
         CRO_ASSERT(size.x * size.y * arr.getChannels() == arr.size(), "");
         create(size.x, size.y, arr.getFormat());

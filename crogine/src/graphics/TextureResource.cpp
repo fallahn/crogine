@@ -44,7 +44,7 @@ TextureResource::TextureResource()
 }
 
 //public
-bool TextureResource::load(std::uint32_t id, const std::string& path, bool createMipMaps)
+bool TextureResource::load(std::uint32_t id, const std::string& path, bool createMipMaps, bool useCompression)
 {
     if (m_textures.count(id) == 0)
     {
@@ -98,7 +98,7 @@ Texture& TextureResource::getByHandle(std::uint32_t handle)
     return getFallbackTexture();
 }
 
-Texture& TextureResource::get(const std::string& path, bool useMipMaps)
+Texture& TextureResource::get(const std::string& path, bool useMipMaps, bool useCompression)
 {
     auto result = std::find_if(m_textures.begin(), m_textures.end(), 
         [&path](const auto& pair)
@@ -109,7 +109,7 @@ Texture& TextureResource::get(const std::string& path, bool useMipMaps)
     if (result == m_textures.end())
     {
         auto tex = std::make_unique<Texture>();
-        if (!tex->loadFromFile(path, useMipMaps))
+        if (!tex->loadFromFile(path, useMipMaps, useCompression))
         {
             return getFallbackTexture();
         }

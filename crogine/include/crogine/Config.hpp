@@ -78,6 +78,7 @@ static_assert(false, "Mobile support is currently deprecated.");
 #pragma warning(disable: 4251)
 //error on nodiscard - use std::ignore to properly discard return values.
 #pragma warning(error: 4834)
+
 #endif //_MSC_VER
 
 #else //linux, FreeBSD, Mac OS X

@@ -78,9 +78,10 @@ namespace cro
         \brief Attempts to load the file in the given file path.
         \param path Path to file to load. The image file should have pow2 dimensions on mobile platforms
         \param createMipMaps Set true to automatically create mipmap levels for this texture
+        \param useCompression Applies default compression (driver dependent) to the texture. YMMV
         \returns true on success, else false
         */
-        bool loadFromFile(const std::string& path, bool createMipMaps = false);
+        bool loadFromFile(const std::string& path, bool createMipMaps = false, bool useCompression = false);
 
         /*!
         \brief Attempts to create the texture from a given Image.
@@ -206,6 +207,8 @@ namespace cro
         bool m_smooth;
         bool m_repeated;
         bool m_hasMipMaps;
+
+        bool m_useCompression;
 
         bool update(const void* pixels, bool createMipMaps, URect area);
         void generateMipMaps();
