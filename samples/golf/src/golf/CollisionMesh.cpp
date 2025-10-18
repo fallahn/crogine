@@ -52,11 +52,6 @@ CollisionMesh::~CollisionMesh()
 //public
 void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
 {
-    if (meshData.indexData[0].format != GL_UNSIGNED_SHORT)
-    {
-        LogW << "[Collision Mesh] Mesh data does not use 16 bit indices!" << std::endl;
-    }
-
     clearCollisionObjects();
     const auto vertStride = cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
 
@@ -80,11 +75,27 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
         //readVertexData unpacks everything to float so vert size is larger than meshData believes
         groundMesh.m_vertexStride = static_cast<int>(/*meshData.vertexSize*/vertStride); 
 
+        std::int32_t stride = 3;
+        PHY_ScalarType indexType = PHY_UCHAR;
+        switch (meshData.indexData[0].format)
+        {
+        default: break;
+        case GL_UNSIGNED_SHORT:
+            stride *= 2;
+            indexType = PHY_SHORT;
+            break;
+        case GL_UNSIGNED_INT:
+            stride *= 4;
+            indexType = PHY_INTEGER;
+            LogW << "Found integer indexing in collision mesh" << std::endl;
+            break;
+        }
+
         groundMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
         groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
-        groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint16_t); //this has to match the index format!
+        groundMesh.m_triangleIndexStride = stride;
 
-        m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh, PHY_SHORT);
+        m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh, indexType);
         m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
         m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
         m_groundObjects.back()->setUserIndex(colourOffset); //used by RayResultCallback to read the terrain type

@@ -63,6 +63,18 @@ btScalar RayResultCallback::addSingleResult(btCollisionWorld::LocalRayResult& ra
     return rayResult.m_hitFraction;
 }
 
+template <typename T>
+std::array<std::uint32_t, 3u> getIndices(const std::uint8_t* data)
+{
+    const auto* i = reinterpret_cast<const T*>(data);
+    return //const std::array<std::uint32_t, 3u> ind =
+    {
+        *i,
+        *(i + 1),
+        *(i + 2)
+    };
+}
+
 RayResultCallback::FaceData RayResultCallback::getFaceData(const btCollisionWorld::LocalRayResult& rayResult, std::int32_t colourOffset) const
 {
     /*
@@ -106,31 +118,28 @@ RayResultCallback::FaceData RayResultCallback::getFaceData(const btCollisionWorl
         &vertices, numVertices, verticesType, vertexStride, &indices, indicesStride, numFaces, indicesType, rayResult.m_localShapeInfo->m_shapePart
     );
 
-    //ugh different meshes have different strides TODO fix collision detection in BallSystem
-    //std::array<std::uint32_t, 3u> ind = {};
-    //if (indicesType == PHY_SHORT)
-    //{
-        const auto* i = reinterpret_cast<const std::uint16_t*>(indices + rayResult.m_localShapeInfo->m_triangleIndex * indicesStride);
-        const std::array<std::uint32_t, 3u> ind =
-        {
-            *i,
-            *(i + 1),
-            *(i + 2)
-        };
-    //}
-    //else
-    //{
-    //    const auto* i = reinterpret_cast<const std::uint32_t*>(indices + rayResult.m_localShapeInfo->m_triangleIndex * indicesStride);
-    //    ind[0] = *i;
-    //    ind[1] = *(i + 1);
-    //    ind[2] = *(i + 2);
-    //}
-    btVector3 va = vertex(ind[0]);
-    btVector3 vb = vertex(ind[1]);
-    btVector3 vc = vertex(ind[2]);
-    btVector3 normal = (vb - va).cross(vc - va).normalized();
+    //ugh different meshes have different strides
+    std::array<std::uint32_t, 3u> ind = {};    
+    switch (indicesStride)
+    {
+    default: break;
+    case 3:
+        ind = getIndices<std::uint8_t>(indices + rayResult.m_localShapeInfo->m_triangleIndex * indicesStride);
+        break;
+    case 6:
+        ind = getIndices<std::uint16_t>(indices + rayResult.m_localShapeInfo->m_triangleIndex * indicesStride);
+        break;
+    case 12:
+        ind = getIndices<std::uint32_t>(indices + rayResult.m_localShapeInfo->m_triangleIndex * indicesStride);
+        break;
+    }
 
-    std::int32_t collisionType = colour(ind[0]);
+    const btVector3 va = vertex(ind[0]);
+    const btVector3 vb = vertex(ind[1]);
+    const btVector3 vc = vertex(ind[2]);
+    const btVector3 normal = (vb - va).cross(vc - va).normalized();
+
+    const std::int32_t collisionType = colour(ind[0]);
 
     triangleMesh->unLockReadOnlyVertexBase(rayResult.m_localShapeInfo->m_shapePart);
 
