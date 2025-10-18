@@ -170,7 +170,137 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
                 ImGui::End();
             });
 
+
+        const std::vector<std::string> searchPaths =
+        {
+            "assets/golf/images/particles/",
+            //"assets/golf/images/billboards/",
+            //"assets/golf/images/props/",
+            //"assets/golf/images/terrain/",
+            //"assets/golf/images/ui/",
+        };
+
+        std::vector<std::vector<std::string>> searchResults;
+        for(const auto& path : searchPaths)
+        { 
+            searchResults.push_back(cro::FileSystem::listFiles(path));
+        }
+
+        const auto searchModels = [&](const std::string& src)
+            {
+                const auto files = cro::FileSystem::listFiles(src);
+
+                for (const auto& file : files)
+                {
+                    if (cro::FileSystem::getFileExtension(file) == ".cmt")
+                    {
+                        bool cfgModified = false;
+
+                        cro::ConfigFile cfg;
+                        if (cfg.loadFromFile(src + file))
+                        {
+                            for (auto& obj : cfg.getObjects())
+                            {
+                                if (obj.getName() == "material")
+                                {
+                                    for (auto& prop : obj.getProperties())
+                                    {
+                                        const auto& name = prop.getName();
+                                        if (name == "mask" || name == "diffuse")
+                                        {
+                                            auto imagePath = prop.getValue<std::string>();
+                                            if (!cro::FileSystem::fileExists(imagePath))
+                                            {
+                                                auto imageFile = cro::FileSystem::getFileName(imagePath);
+                                                for (auto i = 0u; i < searchResults.size(); ++i)
+                                                {
+                                                    if (auto result = std::find(searchResults[i].begin(), searchResults[i].end(), imageFile);
+                                                        result != searchResults[i].end())
+                                                    {
+                                                        imagePath = searchPaths[i] + imageFile;
+                                                        LogI << "Found new path for " << imagePath << std::endl;
+
+                                                        prop.setValue(imagePath);
+                                                        cfgModified = true;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (cfgModified)
+                            {
+                                cfg.save(src + file);
+                            }
+                        }
+                    }
+                }
+            };
+
+        //const std::string modelDir = "dlc/adventurer/models/";
+        const std::string modelDir = "assets/golf/models/";
+        const auto& dirs = cro::FileSystem::listDirectories(modelDir);
+        for (const auto& dir : dirs)
+        {
+            searchModels(modelDir + dir + "/");
+        }
+        searchModels(modelDir);
+
+        const auto searchSprites =
+            [&](const std::string& src) 
+            {
+                const auto files = cro::FileSystem::listFiles(src);
+
+                for (const auto& file : files)
+                {
+                    if (cro::FileSystem::getFileExtension(file) == ".spt"
+                        || cro::FileSystem::getFileExtension(file) == ".cps")
+                    {
+                        bool cfgModified = false;
+
+                        cro::ConfigFile cfg;
+                        if (cfg.loadFromFile(src + file))
+                        {
+                            for (auto& prop : cfg.getProperties())
+                            {
+                                const auto& name = prop.getName();
+                                if (name == "src")
+                                {
+                                    auto imagePath = prop.getValue<std::string>();
+                                    if (!cro::FileSystem::fileExists(imagePath))
+                                    {
+                                        auto imageFile = cro::FileSystem::getFileName(imagePath);
+                                        for (auto i = 0u; i < searchResults.size(); ++i)
+                                        {
+                                            if (auto result = std::find(searchResults[i].begin(), searchResults[i].end(), imageFile);
+                                                result != searchResults[i].end())
+                                            {
+                                                imagePath = searchPaths[i] + imageFile;
+                                                LogI << "Found new path for " << imagePath << std::endl;
+
+                                                prop.setValue(imagePath);
+                                                cfgModified = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (cfgModified)
+                            {
+                                cfg.save(src + file);
+                            }
+                        }
+                    }
+                }
+            };
+
+        searchSprites("assets/golf/particles/");
     });
+
+
 
     auto* msg = getContext().appInstance.getMessageBus().post<GameEvent>(MessageID::GameMessage);
     msg->type = GameEvent::RoundStart;

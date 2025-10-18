@@ -496,7 +496,7 @@ void ShopState::loadAssets()
     //load up the three-patch data for the button textures
     //TODO if we use this excessively then create a cfg format
 
-    m_threePatchTexture = &m_resources.textures.get("assets/golf/images/shop_buttons.png");
+    m_threePatchTexture = &m_resources.textures.get("assets/golf/images/ui/shop_buttons.png");
     m_threePatchTexture->setRepeated(true);
     const auto texSize = glm::vec2(m_threePatchTexture->getSize());
     

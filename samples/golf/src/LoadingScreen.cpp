@@ -148,9 +148,10 @@ void LoadingScreen::launch()
     const std::array audioPaths =
     {
         "assets/sound/loading01.ogg",
+        "assets/sound/loading01.ogg",
+        "assets/sound/loading02.ogg",
         "assets/sound/loading02.ogg",
         "assets/sound/loading03.ogg",
-        "assets/sound/loading04.ogg",
         "assets/sound/loading04.ogg",
         "assets/sound/loading04.ogg",
     };

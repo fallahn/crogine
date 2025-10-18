@@ -320,7 +320,7 @@ void FreePlayState::buildScene()
     //cro::SpriteSheet spriteSheet;
     //spriteSheet.loadFromFile("assets/golf/sprites/facilities_menu.spt", m_sharedData.sharedResources->textures);
 
-    const auto& tex = m_sharedData.sharedResources->textures.get("assets/golf/images/freeplay_menu.png");
+    const auto& tex = m_sharedData.sharedResources->textures.get("assets/golf/images/ui/freeplay_menu.png");
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });

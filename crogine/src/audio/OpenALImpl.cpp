@@ -310,7 +310,7 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     else
     {
         stream.streamID = -1;
-        Logger::log(ext + ": Unsupported file type.", Logger::Type::Error);
+        Logger::log("[OpenAL] - " + FileSystem::getFileName(path) + ": Unsupported file type.", Logger::Type::Error);
         return -1;
     }
     

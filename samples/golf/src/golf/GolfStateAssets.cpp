@@ -2092,7 +2092,7 @@ void GolfState::loadMaterials()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Wake] = m_resources.materials.add(*shader);
     auto& wakeMat = m_resources.materials.get(m_materialIDs[MaterialID::Wake]);
-    wakeMat.setProperty("u_texture", m_resources.textures.get("assets/golf/images/wake.png"));
+    wakeMat.setProperty("u_texture", m_resources.textures.get("assets/golf/images/props/wake.png"));
     wakeMat.setProperty("u_speed", 0.f); //default to zero so if the prop has no path the wake isn't visible
     wakeMat.doubleSided = true;
     wakeMat.blendMode = cro::Material::BlendMode::Alpha;
@@ -2140,7 +2140,7 @@ void GolfState::loadMaterials()
         m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
         m_targetShader.update();
     }
-    auto& shaleTex = m_resources.textures.get("assets/golf/images/shale.png", true);
+    auto& shaleTex = m_resources.textures.get("assets/golf/images/props/shale.png", true);
     shaleTex.setRepeated(true);
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).setProperty("u_angleTex", shaleTex);
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).addCustomSetting(GL_CLIP_DISTANCE1);

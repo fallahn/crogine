@@ -1271,7 +1271,7 @@ void DrivingState::createGameOptions()
 
 
     //background
-    auto& tex = m_resources.textures.get("assets/golf/images/driving_range_menu.png");
+    auto& tex = m_resources.textures.get("assets/golf/images/ui/driving_range_menu.png");
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
@@ -2395,7 +2395,7 @@ void DrivingState::createSummary()
     //background
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
-    auto bgSprite = cro::Sprite(m_resources.textures.get("assets/golf/images/driving_range_menu.png"));
+    auto bgSprite = cro::Sprite(m_resources.textures.get("assets/golf/images/ui/driving_range_menu.png"));
 
     auto bounds = bgSprite.getTextureBounds();
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());

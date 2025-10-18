@@ -384,7 +384,7 @@ void TournamentState::loadAssets()
     m_treeText.setFillColour(TextNormalColour);
     m_treeText.setShadowColour(LeaderboardTextDark);
 
-    m_bracketTexture.loadFromFile("assets/golf/images/bracket.png");
+    m_bracketTexture.loadFromFile("assets/golf/images/ui/bracket.png");
     m_treeQuad.setTexture(m_bracketTexture);
 }
 

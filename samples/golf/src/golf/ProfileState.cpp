@@ -3024,7 +3024,7 @@ void ProfileState::createItemThumbs()
     m_modelScene.setActiveCamera(m_cameras[CameraID::Ball]);
     m_modelScene.simulate(0.f);
 
-    const auto& ident = m_resources.textures.get("assets/golf/images/ident.png");
+    const auto& ident = m_resources.textures.get("assets/golf/images/ui/ident.png");
     cro::SimpleQuad keyIcon(ident);
     cro::SimpleQuad spannerIcon(ident);
 

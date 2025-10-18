@@ -937,7 +937,7 @@ void PlaylistState::buildUI()
     auto ninePatch = m_uiScene.createEntity();
     ninePatch.addComponent<cro::Transform>().setPosition({0.f, 0.f, -0.5f});
     ninePatch.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-    ninePatch.getComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get("assets/golf/images/tab_patch.png"));
+    ninePatch.getComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get("assets/golf/images/ui/tab_patch.png"));
     rootNode.getComponent<cro::Transform>().addChild(ninePatch.getComponent<cro::Transform>());
 
     //used as the pop-up background, buttons are added and removed by relevant callbacks

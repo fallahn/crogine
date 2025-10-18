@@ -97,7 +97,7 @@ bool MusicPlayer::loadFromFile(const std::string& path)
     }
     else
     {
-        Logger::log(ext + ": Unsupported file type.", Logger::Type::Error);
+        Logger::log("[Music Player] - " + FileSystem::getFileName(path) + ": Unsupported file type.", Logger::Type::Error);
         return false;
     }
 
