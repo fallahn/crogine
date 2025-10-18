@@ -39,6 +39,8 @@ source distribution.
 #include "../detail/SDLImageRead.hpp"
 #include <SDL_rwops.h>
 
+#include <ktx.h>
+
 #include <algorithm>
 #include <filesystem>
 
@@ -209,7 +211,7 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool
     {
         m_type = GL_UNSIGNED_BYTE;
         m_useCompression = useCompression;
-        if (useCompression) LogI << "Compressing texture..." << std::endl;
+
         auto size = arr.getDimensions();
         CRO_ASSERT(size.x * size.y * arr.getChannels() == arr.size(), "");
         create(size.x, size.y, arr.getFormat());

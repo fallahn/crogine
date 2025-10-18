@@ -3,7 +3,7 @@ model batcat02
     mesh = "assets/batcat/models/batcat02.cmb"
     cast_shadows = true
 
-    material Unlit
+    material VertexLit
     {
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
@@ -14,6 +14,8 @@ model batcat02
         rx_shadows = true
         blendmode = "none"
         diffuse = "assets/batcat/textures/batcat_diffuse.png"
+        mask = "assets/batcat/textures/batcat_mask.png"
+        normal = "assets/batcat/textures/batcat_normal.png"
         skinned = true
 
     }
