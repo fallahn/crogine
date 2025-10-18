@@ -121,10 +121,24 @@ elseif(LINUX)
   endif()
 endif()
 
+
+#ktx texture compression
+set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "Build KTX as a static library" FORCE)
+FetchContent_Declare(
+        fetch_ktx
+        GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
+        GIT_TAG        v4.4.2
+)
+FetchContent_MakeAvailable(fetch_ktx)
+
+#target_include_directories(${MY_TARGET} PRIVATE ${fetch_ktx_SOURCE_DIR}/include)
+
+
 include_directories(
   ${SDL2_INCLUDE_DIR}  
   ${FREETYPE_INCLUDE_DIRS} 
   ${OPUS_INCLUDE_DIRS}
+  ${fetch_ktx_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/crogine/include)
   
 if(MSVC)
@@ -179,7 +193,8 @@ if(NOT TARGET crogine)
     ${SDL2_LIBRARY} 
     ${FREETYPE_LIBRARIES}
     ${OPUS_LIBRARIES}
-    ${OPENGL_LIBRARIES})
+    ${OPENGL_LIBRARIES}
+    ktx)
 
   if(USE_OPENAL)
     target_link_libraries(${PROJECT_NAME} ${OPENAL_LIBRARY})
