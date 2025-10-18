@@ -123,6 +123,7 @@ endif()
 
 
 #ktx texture compression
+include(FetchContent)
 set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "Build KTX as a static library" FORCE)
 FetchContent_Declare(
         fetch_ktx
