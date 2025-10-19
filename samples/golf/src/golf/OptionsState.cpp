@@ -4873,6 +4873,12 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     auto flags = cro::FileSystem::listFiles(flagDir);
     std::vector<std::pair<std::string, std::string>> mappedFlags;
 
+    flags.erase(std::remove_if(flags.begin(), flags.end(), 
+        [](const std::string& f)
+        {
+            return f.find(".png") == std::string::npos;
+        }), flags.end());
+
     if (auto pos = std::find(flags.begin(), flags.end(), "flag.png");
         pos != flags.end() && pos != flags.begin())
     {

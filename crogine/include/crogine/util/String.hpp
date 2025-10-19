@@ -233,19 +233,22 @@ namespace cro::Util::String
     \brief Replace all instances of s with r
     https://stackoverflow.com/a/3418285/6740859
     */
-    static inline void replace(std::string& str, const std::string& s, const std::string& r)
+    static inline bool replace(std::string& str, const std::string& s, const std::string& r)
     {
         if (s.empty())
         {
-            return;
+            return false;
         }
 
         std::size_t startPos = 0;
+        bool replaced = false;
         while ((startPos = str.find(s, startPos)) != std::string::npos) 
         {
             str.replace(startPos, s.length(), r);
             startPos += r.length();
+            replaced = true;
         }
+        return replaced;
     }
 
     static inline void replace(cro::String& str, const cro::String& s, const cro::String& r)
