@@ -132,8 +132,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fetch_ktx)
 
-#target_include_directories(${MY_TARGET} PRIVATE ${fetch_ktx_SOURCE_DIR}/include)
-
 
 include_directories(
   ${SDL2_INCLUDE_DIR}  

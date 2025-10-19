@@ -58,6 +58,31 @@ namespace
     //    return pow2;*/
     //    return size; //TODO this needs to not exlude combination resolutions such as 768
     //}
+
+    bool ktxFunctionsLoaded = false;
+    const std::array<std::string, ktx_error_code_e::KTX_ERROR_MAX_ENUM + 1> KTXError =
+    {
+        "Operation was successful.",
+        "The data in the file is inconsistent with the spec.",
+        "The file is a pipe or named pipe.",
+        "The target file could not be opened.",
+        "The operation would exceed the max file size.",
+        "An error occurred while reading from the file.",
+        "An error occurred while seeking in the file.",
+        "File does not have enough data to satisfy request.",
+        "An error occurred while writing to the file.",
+        "GL operations resulted in an error.",
+        "The operation is not allowed in the current state.",
+        "A parameter value was not valid.",
+        "Requested metadata key or required dynamically loaded GPU function was not found.",
+        "Not enough memory to complete the operation.",
+        "Transcoding of block compressed texture failed.",
+        "The file not a KTX file",
+        "The KTX file specifies an unsupported texture type.",
+        "Feature not included in in-use library or not yet implemented.",
+        "Library dependency (OpenGL or Vulkan) not linked into application.",
+        "Decompressed byte count does not match expected byte size",
+    };
 }
 
 Texture::Texture()
@@ -123,7 +148,7 @@ Texture& Texture::operator=(Texture&& other) noexcept
 
 Texture::~Texture()
 {
-    if(m_handle)
+    if (m_handle)
     {
         glCheck(glDeleteTextures(1, &m_handle));
     }
@@ -205,6 +230,63 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool
     {
         path = filePath;
     }
+
+    if (FileSystem::getFileExtension(path).find("ktx") != std::string::npos)
+    {
+        if (!ktxFunctionsLoaded)
+        {
+            if (const auto result = ktxLoadOpenGL((PFNGLGETPROCADDRESS)SDL_GL_GetProcAddress);
+                result != 0)
+            {
+                LogE << "[KTX] Failed to load OpenGL functions: " << KTXError[result] << std::endl;
+                return false;
+            }
+            ktxFunctionsLoaded = true;
+        }
+
+        ktxTexture* kTex = nullptr;
+        if (const auto result = ktxTexture_CreateFromNamedFile(path.c_str(), KTX_TEXTURE_CREATE_NO_FLAGS, &kTex);
+            result != 0)
+        {
+            LogE << "[KTX] Failed to create ktx texture: " << KTXError[result] << std::endl;
+            return false;
+        }
+
+        if (m_handle)
+        {
+            glCheck(glDeleteTextures(1, &m_handle));
+        }
+        glCheck(glGenTextures(1, &m_handle));
+
+        GLenum target = 0;
+        GLenum error = 0;
+        if (const auto result = ktxTexture_GLUpload(kTex, &m_handle, &target, &error);
+            result != 0)
+        {
+            ktxTexture_Destroy(kTex);
+
+            LogE << "[KTX] Failed to upload ktx texture: " << KTXError[result] << std::endl;
+            return false;
+        }
+        m_size = { kTex->baseWidth, kTex->baseHeight };
+
+        CRO_ASSERT(target == GL_TEXTURE_2D, "TODO we need to handle array textures differently");
+        ktxTexture_Destroy(kTex);
+
+        //best way I can find to detect the depth is to readback the channel sizes
+        //TODO improve this so we can detect other channel counts
+        std::int32_t out = 0;
+        glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
+        glCheck(glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_ALPHA_SIZE, &out));
+        glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+
+        m_format = out == 0 ? ImageFormat::RGB : ImageFormat::RGBA;
+
+        setSmooth(m_smooth);
+        setRepeated(m_repeated);
+        return true;
+    }
+
 
     ImageArray<std::uint8_t> arr;
     if (arr.loadFromFile(path, true))

@@ -13,9 +13,11 @@ model batcat02
         double_sided = false
         rx_shadows = true
         blendmode = "none"
-        diffuse = "assets/batcat/textures/batcat_diffuse.png"
+        diffuse = "assets/batcat/textures/cat_diffuse.ktx2"
+        //diffuse = "assets/batcat/textures/batcat_diffuse.png"
         mask = "assets/batcat/textures/batcat_mask.png"
-        normal = "assets/batcat/textures/batcat_normal.png"
+        //mask = "assets/batcat/textures/cat_mask.ktx2"
+        //normal = "assets/batcat/textures/batcat_normal.png"
         skinned = true
 
     }
