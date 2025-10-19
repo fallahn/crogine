@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -31,6 +31,7 @@ source distribution.
 #include "UIConsts.hpp"
 #include "SharedStateData.hpp"
 #include "Palettiser.hpp"
+#include "CompressTexture.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -185,6 +186,14 @@ void WorldState::drawMenuBar()
 
         if (ImGui::BeginMenu("Tools"))
         {
+            if (ImGui::MenuItem("Compress Textures"))
+            {
+                m_showTextureCompressor = !m_showTextureCompressor;
+            }
+            ImGui::SameLine();
+            //one day I'll get around to the fact that I've defined this function at least 3 different times...
+            uiConst::showToolTip("Compress a directory of pngs to DXT1/5 ktx textures.\nRequires Nvidia Texture Tools to be installed");
+
             if (ImGui::MenuItem("Convert Icon"))
             {
                 auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
@@ -262,6 +271,11 @@ void WorldState::drawMenuBar()
     if (m_showPreferences)
     {
         drawOptions();
+    }
+
+    if (m_showTextureCompressor)
+    {
+        compressTextureWindow(m_sharedData);
     }
 }
 

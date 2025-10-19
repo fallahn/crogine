@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2025
 http://trederia.blogspot.com
 
-crogine editor - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -29,13 +29,4 @@ source distribution.
 
 #pragma once
 
-#include <string>
-
-struct SharedStateData final
-{
-    std::string workingDirectory;
-    std::string skymapTexture;
-
-    std::string nvttPath;
-    std::string compressionDirectory;
-};
+void compressTextureWindow(struct SharedStateData&);

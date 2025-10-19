@@ -92,18 +92,6 @@ namespace
         std::make_pair(glm::vec2(0.f), glm::vec2(0.f))
     };
 
-    void helpMarker(const char* desc)
-    {
-        ImGui::TextDisabled("(?)");
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::BeginTooltip();
-            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-            ImGui::TextUnformatted(desc);
-            ImGui::PopTextWrapPos();
-            ImGui::EndTooltip();
-        }
-    }
 
     void toolTip(const char* desc)
     {
@@ -116,6 +104,23 @@ namespace
             ImGui::EndTooltip();
         }
     }
+
+
+    void helpMarker(const char* desc)
+    {
+        ImGui::TextDisabled("(?)");
+        toolTip(desc);
+        //if (ImGui::IsItemHovered())
+        //{
+        //    ImGui::BeginTooltip();
+        //    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        //    ImGui::TextUnformatted(desc);
+        //    ImGui::PopTextWrapPos();
+        //    ImGui::EndTooltip();
+        //}
+    }
+
+
 
     //returns true if texture was changed
     bool drawTextureSlot(const std::string label, std::uint32_t& dest, std::uint32_t thumbnail)

@@ -149,6 +149,16 @@ void MyApp::loadPrefs()
                 sharedData.skymapTexture = prop.getValue<std::string>();
                 std::replace(sharedData.skymapTexture.begin(), sharedData.skymapTexture.end(), '\\', '/');
             }
+            else if (name == "nvtt_path")
+            {
+                sharedData.nvttPath = prop.getValue<std::string>();
+                std::replace(sharedData.nvttPath.begin(), sharedData.nvttPath.end(), '\\', '/');
+            }
+            else if (name == "compress_path")
+            {
+                sharedData.compressionDirectory = prop.getValue<std::string>();
+                std::replace(sharedData.compressionDirectory.begin(), sharedData.compressionDirectory.end(), '\\', '/');
+            }
         }
     }
 }
@@ -158,6 +168,8 @@ void MyApp::savePrefs()
     cro::ConfigFile prefsOut;
     prefsOut.addProperty("working_dir").setValue(sharedData.workingDirectory);
     prefsOut.addProperty("skybox").setValue(sharedData.skymapTexture);
+    prefsOut.addProperty("nvtt_path").setValue(sharedData.nvttPath);
+    prefsOut.addProperty("compress_path").setValue(sharedData.compressionDirectory);
 
     prefsOut.save(cro::App::getPreferencePath() + "global.cfg");
 }

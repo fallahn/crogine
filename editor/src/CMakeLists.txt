@@ -1,5 +1,6 @@
 
 set(PROJECT_SRC
+  ${PROJECT_DIR}/CompressTexture.cpp
   ${PROJECT_DIR}/EditorWindow.cpp
   ${PROJECT_DIR}/FileHistory.cpp
   ${PROJECT_DIR}/FpsCameraSystem.cpp

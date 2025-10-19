@@ -126,6 +126,9 @@
     <ClCompile Include="src\Palettiser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\CompressTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -210,6 +213,9 @@
       <Filter>Header Files\sprite editor</Filter>
     </ClInclude>
     <ClInclude Include="src\Palettiser.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CompressTexture.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

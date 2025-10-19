@@ -296,6 +296,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\CompressTexture.cpp" />
     <ClCompile Include="src\EditorWindow.cpp" />
     <ClCompile Include="src\FileHistory.cpp" />
     <ClCompile Include="src\FpsCameraSystem.cpp" />
@@ -323,6 +324,7 @@
     <ClCompile Include="src\WorldStateUI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\CompressTexture.hpp" />
     <ClInclude Include="src\EditorWindow.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\FileHistory.hpp" />
