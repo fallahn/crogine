@@ -594,7 +594,7 @@ void NewsState::buildScene()
     entity.addComponent<cro::Transform>().setPosition({ -6.f, -77.f, 0.1f });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.25f));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_sharedData.sharedResources->textures.get("assets/golf/images/news_thumbs.png"));
+    entity.addComponent<cro::Sprite>(m_sharedData.sharedResources->textures.get("assets/golf/images/ui/news_thumbs.png"));
     bounds = entity.getComponent<cro::Sprite>().getTextureRect();
     bounds.height /= 2.f;
     entity.getComponent<cro::Sprite>().setTextureRect(bounds);
