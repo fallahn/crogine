@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -49,6 +49,16 @@ namespace cro
             A
         };
     }
+
+    struct TexturePrecision final
+    {
+        //32bit Float
+        static constexpr std::uint32_t High = 0;
+        //16bit Float
+        static constexpr std::uint32_t Low = 1;
+        //8bit unsigned int
+        static constexpr std::uint32_t Default = 2;
+    };
 
     //used to automatically close RWops files
     struct RaiiRWops final

@@ -42,16 +42,6 @@ source distribution.
 
 namespace cro
 {
-    struct TexturePrecision final
-    {
-        //32bit Float
-        static constexpr std::uint32_t High = 0;
-        //16bit Float
-        static constexpr std::uint32_t Low = 1;
-        //8bit unsigned int
-        static constexpr std::uint32_t Default = 2;
-    };
-
     /*!
     \brief Template class for creating array textures
 

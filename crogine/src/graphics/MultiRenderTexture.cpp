@@ -29,7 +29,6 @@ source distribution.
 
 #include <crogine/core/App.hpp>
 #include <crogine/graphics/MultiRenderTexture.hpp>
-#include <crogine/graphics/ArrayTexture.hpp>
 
 #include "../detail/GLCheck.hpp"
 
