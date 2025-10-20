@@ -101,6 +101,14 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
                     {
                         texPath = texPath.substr(1);
                     }
+                    auto compressedPath = texPath;
+                    const auto ext = cro::FileSystem::getFileExtension(texPath);
+                    cro::Util::String::replace(compressedPath, ext, ".ktx2");
+                    if (cro::FileSystem::fileExists(compressedPath))
+                    {
+                        texPath.swap(compressedPath);
+                    }
+
                     texturePath = texPath;
                     textureID = textures.get(texPath).getGLHandle();
                     textureSize = textures.get(texPath).getSize();  

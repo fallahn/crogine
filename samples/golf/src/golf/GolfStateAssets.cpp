@@ -3712,22 +3712,28 @@ void GolfState::updateFlagTexture(bool reloadTexture)
 
     if (reloadTexture)
     {
+        const auto findTexturePath =
+            [&]()->std::string
+            {
+                //I mean, the actual flag is a render texture so compressed
+                //textures here are kinda moot - espesically if they have unused mips
+                auto compressedPath = m_sharedData.flagPath;
+                cro::Util::String::replace(compressedPath, ".png", ".ktx2");
+                if (cro::FileSystem::fileExists(compressedPath))
+                {
+                    return compressedPath;
+                }
+                return m_sharedData.flagPath;
+            };
+
         if (!m_resources.textures.loaded(TextureID::Flag))
         {
-            m_resources.textures.load(TextureID::Flag, m_sharedData.flagPath);
-            /*if (m_resources.textures.load(TextureID::Flag, m_sharedData.flagPath))
-                LogI << "loaded flag texture from " << m_sharedData.flagPath << std::endl;
-            else
-                LogI << "failed loading flag texture " << m_sharedData.flagPath << std::endl;*/
+            m_resources.textures.load(TextureID::Flag, findTexturePath());
         }
         else
         {
             //overwrite existing to recycle the handle.
-            m_resources.textures.get(TextureID::Flag).loadFromFile(m_sharedData.flagPath);
-            /*if (m_resources.textures.get(TextureID::Flag).loadFromFile(m_sharedData.flagPath))
-                LogI << "reloaded flag texture from " << m_sharedData.flagPath << std::endl;
-            else
-                LogI << "failed reloading flag texture " << m_sharedData.flagPath << std::endl;*/
+            m_resources.textures.get(TextureID::Flag).loadFromFile(findTexturePath());
         }
         m_flagQuad.setTexture(m_resources.textures.get(TextureID::Flag));
 
