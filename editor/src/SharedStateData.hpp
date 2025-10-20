@@ -38,4 +38,5 @@ struct SharedStateData final
 
     std::string nvttPath;
     std::string compressionDirectory;
+    bool compressMips = false; //create mipmaps on DXT5 textures?
 };

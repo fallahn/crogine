@@ -47,6 +47,7 @@ namespace
     const std::string binName = "/nvtt_export.exe\"";
     const std::string dxt1 = "/assets/compression_presets/ktx2_export_dxt1_no_alpha.dpf";
     const std::string dxt5 = "/assets/compression_presets/ktx2_export_dxt5_alpha.dpf";
+    const std::string dxt5_nomip = "/assets/compression_presets/ktx2_export_dxt5_alpha_no_mips.dpf";
 
     constexpr std::size_t MaxLogEntries = 50;
     std::deque<std::string> logOutput;
@@ -56,6 +57,7 @@ namespace
         std::string binPath;
         std::string outputPath;
         std::string workingDirectory;
+        bool createMips = false;
 
         std::atomic_bool running = false;
         std::mutex mutex;
@@ -132,7 +134,7 @@ static inline void threadFunc()
 
                         if (useDXT5)
                         {
-                            compressDXT(file, dxt5);
+                            compressDXT(file, compressor.createMips ? dxt5 : dxt5_nomip);
                         }
                         else
                         {
@@ -196,12 +198,16 @@ void compressTextureWindow(SharedStateData& sharedData)
         browseDirectory(sharedData.compressionDirectory, "##1");
         toolTip("Path to directory of images to compress");
 
+        ImGui::Checkbox("Create Mipmaps", &sharedData.compressMips);
+        toolTip("Create mipmaps for alpha blended textures.\nMay cause black outlining");
+        ImGui::SameLine();
         if (ImGui::Button("Compress")
             && !compressor.running)
         {
             compressor.binPath = "\"" + sharedData.nvttPath + binName;
             compressor.outputPath = sharedData.compressionDirectory;
             compressor.workingDirectory = cro::FileSystem::getCurrentDirectory();
+            compressor.createMips = sharedData.compressMips;
 
             compressor.running = true;
             compressor.thread = std::make_unique<std::thread>(threadFunc);

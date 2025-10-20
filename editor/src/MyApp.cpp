@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -159,6 +159,10 @@ void MyApp::loadPrefs()
                 sharedData.compressionDirectory = prop.getValue<std::string>();
                 std::replace(sharedData.compressionDirectory.begin(), sharedData.compressionDirectory.end(), '\\', '/');
             }
+            else if (name == "compress_mips")
+            {
+                sharedData.compressMips = prop.getValue<bool>();
+            }
         }
     }
 }
@@ -170,6 +174,7 @@ void MyApp::savePrefs()
     prefsOut.addProperty("skybox").setValue(sharedData.skymapTexture);
     prefsOut.addProperty("nvtt_path").setValue(sharedData.nvttPath);
     prefsOut.addProperty("compress_path").setValue(sharedData.compressionDirectory);
+    prefsOut.addProperty("compress_mips").setValue(sharedData.compressMips);
 
     prefsOut.save(cro::App::getPreferencePath() + "global.cfg");
 }

@@ -269,7 +269,7 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool
             return false;
         }
         m_size = { kTex->baseWidth, kTex->baseHeight };
-
+        m_hasMipMaps = kTex->numLevels > 1;
         CRO_ASSERT(target == GL_TEXTURE_2D, "TODO we need to handle array textures differently");
         ktxTexture_Destroy(kTex);
 
@@ -282,8 +282,14 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool
 
         m_format = out == 0 ? ImageFormat::RGB : ImageFormat::RGBA;
 
-        setSmooth(m_smooth);
-        setRepeated(m_repeated);
+        //to force a refresh of this setting we flip what it currently thinks it is internally
+        const auto smooth = m_smooth;
+        m_smooth = !m_smooth;
+        setSmooth(smooth);
+
+        const auto repeated = m_repeated;
+        m_repeated = !m_repeated;
+        setRepeated(repeated);
         return true;
     }
 
