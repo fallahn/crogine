@@ -304,9 +304,9 @@ void BilliardsState::createUI()
         ent.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float)
         {
-            auto red = m_inputParser.getPower();
-            auto green = 1.f - red;
-            cro::Colour c(red, green, 0.f);
+            const auto red = m_inputParser.getPower();
+            const auto green = 1.f - red;
+            cro::Colour c(std::min(red*2.f, 1.f), std::min(green*2.f, 1.f), 0.f, 1.f);
 
             auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
             for (auto& v : verts)

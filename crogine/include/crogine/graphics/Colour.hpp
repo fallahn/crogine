@@ -301,8 +301,8 @@ namespace cro
             constexpr ColourLowP& operator = (Colour& c)
             {
                 r = c.getRedByte();
-                g = c.getBlueByte();
-                b = c.getGreenByte();
+                g = c.getGreenByte();
+                b = c.getBlueByte();
                 a = c.getAlphaByte();
 
                 return *this;
