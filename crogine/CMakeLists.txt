@@ -125,6 +125,8 @@ endif()
 #ktx texture compression
 include(FetchContent)
 set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "Build KTX as a static library" FORCE)
+set(ASTCENC_ISA_AVX2 OFF CACHE BOOL "Use AVX2 extensions" FORCE)
+set(ASTCENC_ISA_NONE ON CACHE BOOL "Use No extensions" FORCE)
 FetchContent_Declare(
         fetch_ktx
         GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
