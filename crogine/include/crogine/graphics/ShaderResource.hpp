@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/Shader.hpp>
 
+#include <crogine/gui/GuiClient.hpp>
+
 #include <string>
 #include <unordered_map>
 
@@ -149,6 +151,7 @@ namespace cro
 
     */
     class CRO_EXPORT_API ShaderResource final : public Detail::SDLResource
+        , public GuiClient
     {
     public:
         enum BuiltIn

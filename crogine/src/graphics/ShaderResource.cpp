@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/graphics/ShaderResource.hpp>
+#include <crogine/gui/Gui.hpp>
 
 #include "shaders/Default.hpp"
 #include "shaders/Unlit.hpp"
@@ -51,6 +52,20 @@ namespace
 
 ShaderResource::ShaderResource()
 {
+    //registerWindow(
+    //    [&]()
+    //    {
+    //        if (ImGui::Begin("Shader Resource"))
+    //        {
+    //            ImGui::Text("%ul Shaders loaded", m_shaders.size());
+    //            for (const auto& [id, shader] : m_shaders)
+    //            {
+    //                ImGui::Text("Shader %d", id);
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
+
     if (!m_defaultShader.loadFromString(Shaders::Default::Vertex, Shaders::Default::Fragment))
     {
         Logger::log("FAILED LOADING DEFAULT SHADER, SHADER RESOURCE INVALID STATE", Logger::Type::Error);
