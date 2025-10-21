@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -213,9 +213,6 @@ Scene::Scene(MessageBus& mb, std::size_t initialPoolSize, std::uint32_t infoFlag
     m_sunlight.addComponent<Transform>();
     m_sunlight.addComponent<Sunlight>();
 
-    using namespace std::placeholders;
-    currentRenderPath = std::bind(&Scene::defaultRenderPath, this, _1, _2, _3);
-
     std::fill(m_skyColourUniforms.begin(), m_skyColourUniforms.end(), -1);
 }
 
@@ -257,10 +254,6 @@ void Scene::simulate(float dt)
     m_destroyedEntities.clear();
 
     m_systemManager.process(dt);
-    for (auto& p : m_postEffects)
-    {
-        p->process(dt);
-    }
 }
 
 Entity Scene::createEntity()
@@ -278,22 +271,6 @@ void Scene::destroyEntity(Entity entity)
 Entity Scene::getEntity(std::uint32_t id) const
 {
     return m_entityManager.getEntity(id);
-}
-
-void Scene::setPostEnabled(bool enabled)
-{
-    using namespace std::placeholders;
-
-    if (enabled && !m_postEffects.empty())
-    {
-        currentRenderPath = std::bind(&Scene::postRenderPath, this, _1, _2, _3);
-        auto size = App::getWindow().getSize();
-        resizeBuffers(size);
-    }
-    else
-    {       
-        currentRenderPath = std::bind(&Scene::defaultRenderPath, this, _1, _2, _3);
-    }
 }
 
 void Scene::setSunlight(Entity sunlight)
@@ -314,7 +291,7 @@ void Scene::enableSkybox()
         if (m_skyboxShaders[SkyboxType::Coloured].getGLHandle() ||
             m_skyboxShaders[SkyboxType::Coloured].loadFromString(skyboxVertex, skyboxFrag))
         {
-            //only using positions - remember we looking from
+            //only using positions - remember we're looking from
             //the inside so wind the verts accordingly...
             std::array<std::int8_t, 108> verts = {
                //far
@@ -360,51 +337,6 @@ void Scene::enableSkybox()
                -63, -63,  63,
                 63, -63,  63
             };
-
-            //std::array<float, 108> verts = {
-            //     //far
-            //    -0.5f,  0.5f, -0.5f,
-            //    -0.5f, -0.5f, -0.5f,
-            //     0.5f, -0.5f, -0.5f,
-            //     0.5f, -0.5f, -0.5f,
-            //     0.5f,  0.5f, -0.5f,
-            //    -0.5f,  0.5f, -0.5f,
-            //     //left
-            //    -0.5f, -0.5f,  0.5f,
-            //    -0.5f, -0.5f, -0.5f,
-            //    -0.5f,  0.5f, -0.5f,
-            //    -0.5f,  0.5f, -0.5f,
-            //    -0.5f,  0.5f,  0.5f,
-            //    -0.5f, -0.5f,  0.5f,
-            //     //right
-            //     0.5f, -0.5f, -0.5f,
-            //     0.5f, -0.5f,  0.5f,
-            //     0.5f,  0.5f,  0.5f,
-            //     0.5f,  0.5f,  0.5f,
-            //     0.5f,  0.5f, -0.5f,
-            //     0.5f, -0.5f, -0.5f,
-            //     //front
-            //    -0.5f, -0.5f,  0.5f,
-            //    -0.5f,  0.5f,  0.5f,
-            //     0.5f,  0.5f,  0.5f,
-            //     0.5f,  0.5f,  0.5f,
-            //     0.5f, -0.5f,  0.5f,
-            //    -0.5f, -0.5f,  0.5f,
-            //     //top
-            //    -0.5f,  0.5f, -0.5f,
-            //     0.5f,  0.5f, -0.5f,
-            //     0.5f,  0.5f,  0.5f,
-            //     0.5f,  0.5f,  0.5f,
-            //    -0.5f,  0.5f,  0.5f,
-            //    -0.5f,  0.5f, -0.5f,
-            //     //bottom
-            //    -0.5f, -0.5f, -0.5f,
-            //    -0.5f, -0.5f,  0.5f,
-            //     0.5f, -0.5f, -0.5f,
-            //     0.5f, -0.5f, -0.5f,
-            //    -0.5f, -0.5f,  0.5f,
-            //     0.5f, -0.5f,  0.5f
-            //};
 
 #ifdef PLATFORM_DESKTOP
             glCheck(glGenVertexArrays(1, &m_skybox.vao));
@@ -579,40 +511,16 @@ void Scene::forwardMessage(const Message& msg)
     {
         d->handleMessage(msg);
     }
-
-    if (msg.id == Message::WindowMessage)
-    {
-        const auto& data = msg.getData<Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-        {
-            //resizes the post effect buffer if it is in use
-            resizeBuffers({ data.data0, data.data1 });
-        }
-    }
 }
 
-void Scene::render(bool doPost)
+void Scene::render()
 {
-    if (doPost)
-    {
-        currentRenderPath(*RenderTarget::getActiveTarget(), &m_activeCamera, 1);
-    }
-    else
-    {
-        defaultRenderPath(*RenderTarget::getActiveTarget(), &m_activeCamera, 1);
-    }
+    defaultRenderPath(*RenderTarget::getActiveTarget(), &m_activeCamera, 1);
 }
 
-void Scene::render(const std::vector<Entity>& cameras, bool doPost)
+void Scene::render(const std::vector<Entity>& cameras)
 {
-    if (doPost)
-    {
-        currentRenderPath(*RenderTarget::getActiveTarget(), cameras.data(), cameras.size());
-    }
-    else
-    {
-        defaultRenderPath(*RenderTarget::getActiveTarget(), cameras.data(), cameras.size());
-    }
+    defaultRenderPath(*RenderTarget::getActiveTarget(), cameras.data(), cameras.size());
 }
 
 std::pair<const float*, std::size_t> Scene::getActiveProjectionMaps() const
@@ -756,27 +664,6 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
     glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
 }
 
-void Scene::postRenderPath(const RenderTarget&, const Entity* cameraList, std::size_t cameraCount)
-{
-    m_sceneBuffer.clear(Colour::Transparent);
-    defaultRenderPath(m_sceneBuffer, cameraList, cameraCount);
-    m_sceneBuffer.display();
-
-    RenderTexture* inTex = &m_sceneBuffer;
-    RenderTexture* outTex = nullptr;
-
-    for (auto i = 0u; i < m_postEffects.size() - 1; ++i)
-    {
-        outTex = &m_postBuffers[i % 2];
-        outTex->clear();
-        m_postEffects[i]->apply(*inTex);
-        outTex->display();
-        inTex = outTex;
-    }
-
-    m_postEffects.back()->apply(*inTex);
-}
-
 void Scene::destroySkybox()
 {
     if (m_skybox.vao)
@@ -795,29 +682,4 @@ void Scene::destroySkybox()
     }
 
     m_skybox = {};
-}
-
-void Scene::resizeBuffers(glm::uvec2 size)
-{
-    if (size != m_sceneBuffer.getSize())
-    {
-        if (m_sceneBuffer.available())
-        {
-            m_sceneBuffer.create(size.x, size.y);
-            for (auto& p : m_postEffects)
-            {
-                p->resizeBuffer(size.x, size.y);
-            }
-        }
-
-        if (m_postBuffers[0].available())
-        {
-            m_postBuffers[0].create(size.x, size.y, false);
-        }
-
-        if (m_postBuffers[1].available())
-        {
-            m_postBuffers[1].create(size.x, size.y, false);
-        }
-    }
 }

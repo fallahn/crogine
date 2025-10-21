@@ -312,7 +312,13 @@ const BullsEye& BallSystem::spawnBullsEye()
 BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos, glm::vec3 forward, float rayLength) const
 {
     CRO_ASSERT(glm::length2(forward) != 0, "");
-    //TODO how do we assert forward is a normal vec without normalising?
+    
+    //normalised vecs share a normalised length squared
+    //assuming no fp error...
+    if (glm::length2(forward) != 1.f)
+    {
+        forward = glm::normalize(forward);
+    }
 
     TerrainResult retVal;
 
@@ -429,10 +435,12 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             //helps prevent tunnelling through cliffs/flag pole
             //TODO this is mostly wasted when we're high up, so we could make the iteration count dynamic
-            static constexpr std::int32_t Iterations = 3;
-            dt /= Iterations;
+            //static constexpr std::int32_t Iterations = 1;// 3;
+            //dt /= Iterations;
 
-            for (auto f = 0; f < Iterations; ++f)
+            //currently disabled in favour of velocity vector raycasting
+
+            //for (auto f = 0; f < Iterations; ++f)
             {
                 //add gravity
                 ball.velocity += Gravity * dt;
@@ -1289,7 +1297,9 @@ void BallSystem::doCollision(cro::Entity entity)
         ball.delay = 0.f;
     };
 
-    auto terrainResult = getTerrain(pos);
+    auto& ball = entity.getComponent<Ball>();
+    const auto testDir = ball.state == Ball::State::Flight ? ball.velocity : glm::vec3(0.f, -1.f, 0.f);
+    auto terrainResult = getTerrain(pos,testDir);
 
     if (terrainResult.penetration > 0)
     {
@@ -1298,7 +1308,6 @@ void BallSystem::doCollision(cro::Entity entity)
         pos = terrainResult.intersection;
         tx.setPosition(pos);
 
-        auto& ball = entity.getComponent<Ball>();
         ball.lie = terrainResult.penetration > BallPenetrationAvg ? 0 : 1;
         CRO_ASSERT(!std::isnan(pos.x), "");
         CRO_ASSERT(!std::isnan(ball.velocity.x), "");

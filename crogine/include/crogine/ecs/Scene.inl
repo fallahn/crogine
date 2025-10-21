@@ -102,42 +102,6 @@ T* Scene::getDirector()
     return static_cast<T*>(result->get());
 }
 
-template <typename T, typename... Args>
-T& Scene::addPostProcess(Args&&... args)
-{
-    static_assert(std::is_base_of<PostProcess, T>::value, "Must be a post process type");
-    auto size = App::getWindow().getSize();
-    if (!m_sceneBuffer.available())
-    {
-        if (m_sceneBuffer.create(size.x, size.y))
-        {
-            //set render path
-            using namespace std::placeholders;
-            currentRenderPath = std::bind(&Scene::postRenderPath, this, _1, _2, _3);
-        }
-        else
-        {
-            Logger::log("Failed settings scene render buffer - post process is disabled", Logger::Type::Error, Logger::Output::All);
-        }
-    }
-    m_postEffects.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
-    m_postEffects.back()->resizeBuffer(size.x, size.y);
-
-    //create intermediate buffers if needed
-    switch (m_postEffects.size())
-    {
-    case 2:
-        m_postBuffers[0].create(size.x, size.y, false);
-        break;
-    case 3:
-        m_postBuffers[1].create(size.x, size.y, false);
-        break;
-    default: break;
-    }
-
-    return *dynamic_cast<T*>(m_postEffects.back().get());
-}
-
 template <typename T>
 T* Scene::postMessage(cro::Message::ID id)
 {

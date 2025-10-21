@@ -176,22 +176,6 @@ namespace cro
 
 
         /*!
-        \brief Adds a post process effect to the scene.
-        Any post processes added to the scene are performed on the *entire* output.
-        To add post processes to a portion of the scene such as only 3D parts then
-        a second scene should be created to draw overlays such as the UI
-        */
-        template <typename T, typename... Args>
-        T& addPostProcess(Args&&... args);
-
-
-        /*!
-        \brief Enables or disables any added post processes added to the scene
-        */
-        void setPostEnabled(bool);
-
-
-        /*!
         \brief Sets the active Sunlight object.
         \param sun An entity which has at least a Transform component and
         Sunlight component
@@ -379,11 +363,9 @@ namespace cro
         /*!
         \brief Draws any renderable systems in this scene, in the order in which they were added
         using the currently active camera, to the current active RenderTarget
-        \param doPost If post process effects have been added to the Scene setting this to false
-        will ignore them. Useful for rendering multi-pass effects, for example a reflection buffer
         \see setActiveCamera()
         */
-        void render(bool doPost = true);
+        void render(/*bool doPost = true*/);
 
 
         /*!
@@ -391,10 +373,8 @@ namespace cro
         using the given list of camera entities to the current RenderTarget. Useful for split
         screen views for example
         \param cameras Vector of camera entities to draw the Scene with
-        \param doPost If post process effects have been added to the Scene setting this to false
-        will ignore them. Useful for rendering multi-pass effects, for example a reflection buffer
         */
-        void render(const std::vector<Entity>& cameras, bool doPost = true);
+        void render(const std::vector<Entity>& cameras);
 
 
         /*!
@@ -478,10 +458,6 @@ namespace cro
 
         float m_waterLevel;
 
-        RenderTexture m_sceneBuffer;
-        std::array<RenderTexture, 2u> m_postBuffers;
-        std::vector<std::unique_ptr<PostProcess>> m_postEffects;
-
         cro::CubemapTexture m_skyboxCubemap;
         struct Skybox final
         {
@@ -528,12 +504,8 @@ namespace cro
         //we use a pointer here so we can create an array of just one
         //camera without having to create a vector from it
         void defaultRenderPath(const RenderTarget&, const Entity* cameraList, std::size_t cameraCount);
-        void postRenderPath(const RenderTarget&, const Entity* cameraList, std::size_t cameraCount);
-        std::function<void(const RenderTarget&, const Entity*, std::size_t)> currentRenderPath;
 
         void destroySkybox();
-
-        void resizeBuffers(glm::uvec2);
     };
 
 #include "Scene.inl"

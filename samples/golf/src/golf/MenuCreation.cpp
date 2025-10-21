@@ -5596,7 +5596,7 @@ void MenuState::createPreviousScoreCard()
     static constexpr float OffscreenPos = -360.f;
 
     //background image
-    auto& tex = m_resources.textures.get("assets/golf/images/lobby_scoreboard.png");
+    auto& tex = m_resources.textures.get("assets/golf/images/ui/lobby_scoreboard.png");
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();

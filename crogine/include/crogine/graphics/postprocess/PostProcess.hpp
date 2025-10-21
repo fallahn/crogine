@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -53,9 +53,6 @@ namespace cro
     \brief Post Process interface.
     Post processes take a reference to an input buffer to which they
     apply a given effect, before drawing it to the currently active buffer.
-    A post process effect can be added to a scene and is applied to the entire
-    output, so to prevent a particular process affecting the UI for example then
-    a separate scene should be created for 2D elements.
 
     When creating custom shaders for a post process it is recommended to use the
     vertex shader (or at least copy the attribute layout) in graphics/shaders/PostVertex.hpp
@@ -80,14 +77,13 @@ namespace cro
         /*!
         \brief Applies the Post Process to the source texture and
         renders it to the current active buffer.
-        Called automatically by the scene to which this effect belongs
+
         \param source The source texture to process
         */
         virtual void apply(const RenderTexture& source) = 0;
 
         /*
-        \brief Used by crogine to update the post process should the buffer be resized.
-        This should not be called by the user.
+        \brief Use this in a window resize callback to update the internal buffer
         */
         void resizeBuffer(std::int32_t w, std::int32_t h);
 
