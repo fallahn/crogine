@@ -57,6 +57,8 @@ namespace cro
     created by the MeshResource class. Once the data has been applied to a mesh
     this class can safely be destroyed, usually by letting it drop out of scope.
 
+    TODO this needs to be updated for the complex vertex layouts which aren't flat float
+
     */
 
     class CRO_EXPORT_API MeshBatch final
@@ -68,6 +70,7 @@ namespace cro
         vertex attributes this batch should expect. If a given mesh does not
         match these flags then it will not be added to the batch.
         */
+        [[deprecated("Not actually deprecated just pending vertex layout optimisation")]]
         explicit MeshBatch(std::uint32_t flags);
 
         /*!

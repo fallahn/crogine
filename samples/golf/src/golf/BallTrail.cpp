@@ -186,9 +186,10 @@ void BallTrail::update()
 
                 auto* submesh = &trail.meshData->indexData[0];
                 submesh->indexCount = static_cast<std::uint32_t>(trail.indices.size() - trail.front);
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
+
+                /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
                 glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
                 //TODO track parent entity and set to hidden.
             }
@@ -208,15 +209,17 @@ void BallTrail::update()
 
                 //TODO we could sub buffer this and only add what's new
                 trail.meshData->vertexCount = trail.indices.size();
-                glCheck(glBindBuffer(GL_ARRAY_BUFFER, trail.meshData->vboAllocation.bufferID));
+                cro::DynamicMeshBuilder::setVertexData(*trail.meshData, { reinterpret_cast<float*>(trail.vertexData.data()), trail.vertexData.size() * (sizeof(BallTrail::Vertex) / sizeof(float)) });
+                /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, trail.meshData->vboAllocation.bufferID));
                 glCheck(glBufferData(GL_ARRAY_BUFFER, trail.meshData->vertexSize * trail.meshData->vertexCount, trail.vertexData.data(), GL_DYNAMIC_DRAW));
-                glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
                 auto* submesh = &trail.meshData->indexData[0];
                 submesh->indexCount = static_cast<std::uint32_t>(trail.indices.size() - trail.front);
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
+                cro::DynamicMeshBuilder::setIndexData(*trail.meshData, { cro::DataArray<std::uint32_t>(trail.indices.data() + trail.front, submesh->indexCount) });
+                /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
                 glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), trail.indices.data() + trail.front, GL_DYNAMIC_DRAW));
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
             }
         }
     }

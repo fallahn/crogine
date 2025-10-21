@@ -93,15 +93,17 @@ void GolfState::createWeather(std::int32_t weatherType)
     }
 
     meshData->vertexCount = points.size() / stride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
+    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
+    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
     meshData->boundingBox[0] = { WeatherAnimationSystem::AreaStart[0], WeatherAnimationSystem::AreaStart[1], WeatherAnimationSystem::AreaStart[2] };
     meshData->boundingBox[1] = { WeatherAnimationSystem::AreaEnd[0], WeatherAnimationSystem::AreaEnd[1], WeatherAnimationSystem::AreaEnd[2] };

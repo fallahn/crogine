@@ -645,7 +645,18 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
 //draw functions
 void Model::DrawSingle::operator()(std::int32_t matID, std::int32_t pass) const
 {
+    /*const auto& md = m_model.getMeshData();
+    if (md.vboAllocator && md.vboAllocation.blockCount == 0)
+    {
+        throw("Did you forget to assign a VBO block to a Dynamic Mesh?");
+    }*/
+
     const auto& indexData = m_model.m_meshData.indexData[matID];
+    /*if (md.iboAllocator && indexData.iboAllocation.blockCount == 0)
+    {
+        throw("Did you forget to assign an IBO block to a Dynamic Mesh?");
+    }*/
+
     glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
     glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount,
         static_cast<GLenum>(indexData.format), reinterpret_cast<void*>(indexData.iboAllocation.offset)));

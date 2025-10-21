@@ -3275,9 +3275,10 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
                     auto* submesh = &meshData->indexData[0];
                     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
+                    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
+                    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
                     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
-                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
                     
                     //just has to pass culling
                     meshData->boundingBox = { glm::vec3(-15.f), glm::vec3(15.f) };
@@ -3295,9 +3296,10 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                             const auto& verts = m_backgroundScene.getSystem<RopeSystem>()->getNodePositions(ropeID);
 
                             meshData->vertexCount = verts.size();
-                            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
+                            cro::DynamicMeshBuilder::setVertexData(*meshData, { &verts[0][0], verts.size() * 3});
+                            /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
                             glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_DYNAMIC_DRAW));
-                            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+                            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
                         };
                 };
 
@@ -3434,15 +3436,17 @@ void MenuState::createSnow()
     }
 
     meshData->vertexCount = points.size() / stride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
+    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
+    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
     meshData->boundingBox[0] = { AreaStart[0], AreaStart[1], AreaStart[2] };
     meshData->boundingBox[1] = { AreaEnd[0], AreaEnd[1], AreaEnd[2] };

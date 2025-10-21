@@ -90,7 +90,10 @@ namespace cro
         */
         struct CRO_EXPORT_API IndexData final
         {
-            //std::uint32_t ibo = 0;
+            //if the iboAllocation bufferID is valid but the
+            //ibo allocator in the MeshData is nullptr, IBOs
+            //need to be deleted manually, else the allocator
+            //will automatically tidy up for us.
             Detail::IBOAllocation iboAllocation;
             enum Pass
             {
@@ -148,8 +151,9 @@ namespace cro
         struct CRO_EXPORT_API Data final
         {
             //it's up to a specific MeshBuilder implementation
-            //to use this - 0 block allocations have a unique
-            //VBO (if the ID is valid) rather than a shared one
+            //to use this - if vboAllocator is nullptr
+            //block allocations have a unique VBO (if the ID 
+            //is valid) rather than a shared one
             Detail::VBOAllocation vboAllocation;
             Detail::VBOAllocator* vboAllocator = nullptr;
             std::size_t vertexCount = 0;

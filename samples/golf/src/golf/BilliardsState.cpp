@@ -1088,9 +1088,10 @@ void BilliardsState::buildScene()
 
     auto vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = verts.size() / vertStride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
+    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_DYNAMIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     std::vector<std::uint32_t> indices =
     {
@@ -1099,9 +1100,10 @@ void BilliardsState::buildScene()
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
+    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -1142,9 +1144,10 @@ void BilliardsState::buildScene()
 
         auto vertStride = (meshData->vertexSize / sizeof(float));
         meshData->vertexCount = vertexData.size() / vertStride;
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
+        cro::DynamicMeshBuilder::setVertexData(*meshData, { vertexData.data(), vertexData.size() });
+        /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
         glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, vertexData.data(), GL_DYNAMIC_DRAW));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
         e.getComponent<cro::Callback>().active = !e.getComponent<cro::Model>().isHidden();
     };
