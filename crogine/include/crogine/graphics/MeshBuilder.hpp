@@ -100,6 +100,11 @@ namespace cro
         */
         virtual Skeleton getSkeleton() const { return {}; }
 
+        //returns the total number of components in a given set of attributes
+        static std::size_t getComponentCount(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib);
+        //returns the size of the vertex layout in bytes
+        static std::size_t getVertexSize(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib);
+
     protected:
         friend class MeshResource;
         friend class SpriteSystem3D;
@@ -110,10 +115,6 @@ namespace cro
         */
         virtual Mesh::Data build(class AllocationResource*) const = 0;
 
-        //returns the total number of components in a given set of attributes
-        static std::size_t getComponentCount(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib);
-        //returns the size of the vertex layout in bytes
-        static std::size_t getVertexSize(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib);
         static void createVBO(Mesh::Data& meshData, const std::vector<float>& vertexData);
         static void createIBO(Mesh::Data& meshData, const void* idxData, std::size_t idx, std::int32_t dataSize);
     };

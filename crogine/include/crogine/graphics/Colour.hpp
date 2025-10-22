@@ -298,6 +298,14 @@ namespace cro
 
             }
 
+            constexpr ColourLowP(glm::vec4 c)
+            {
+                setRed(c.r);
+                setGreen(c.g);
+                setBlue(c.b);
+                setAlpha(c.a);
+            }
+
             constexpr ColourLowP& operator = (Colour& c)
             {
                 r = c.getRedByte();

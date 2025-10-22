@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -40,15 +40,13 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 
-#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 
 #include "../ErrorCheck.hpp"
 
 namespace
 {
-    const std::uint32_t VertexSize = 7; //num floats
-
     //std::size_t insertedIndex = 0;
     //std::size_t insertCount = 0;
 
@@ -112,8 +110,13 @@ void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, st
 
     for (auto i = 0u; i < BufferCount; ++i)
     {
-        auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP, GL_UNSIGNED_SHORT));
+        const auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP, GL_UNSIGNED_SHORT));
         auto meshData = resources.meshes.getMesh(meshID);
+        meshData.attributes[cro::Mesh::Attribute::Colour].componentCount = 4;
+        meshData.attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
+        meshData.attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+        meshData.vertexSize = cro::MeshBuilder::getVertexSize(meshData.attributes);
+
         meshData.boundingBox = boundingBox;
         meshData.boundingSphere = meshData.boundingBox;
 
@@ -150,7 +153,6 @@ void BallTrail::setNext()
 void BallTrail::addPoint(glm::vec3 position, std::uint32_t callerIndex)
 {
     m_trails[m_bufferIndex].vertexData.emplace_back(position, m_baseColour);
-
     m_trails[m_bufferIndex].indices.push_back(static_cast<std::uint32_t>(m_trails[m_bufferIndex].indices.size()));
 
     if (m_trails[m_bufferIndex].indices.size() > 120)
@@ -186,10 +188,6 @@ void BallTrail::update()
 
                 auto* submesh = &trail.meshData->indexData[0];
                 submesh->indexCount = static_cast<std::uint32_t>(trail.indices.size() - trail.front);
-
-                /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-                glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
                 //TODO track parent entity and set to hidden.
             }
