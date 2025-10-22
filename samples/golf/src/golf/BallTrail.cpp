@@ -112,7 +112,6 @@ void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, st
     {
         const auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP, GL_UNSIGNED_SHORT));
         auto meshData = resources.meshes.getMesh(meshID);
-        meshData.attributes[cro::Mesh::Attribute::Colour].componentCount = 4;
         meshData.attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
         meshData.attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
         meshData.vertexSize = cro::MeshBuilder::getVertexSize(meshData.attributes);

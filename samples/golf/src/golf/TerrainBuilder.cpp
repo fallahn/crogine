@@ -304,6 +304,10 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto terrainShadowMat = resources.materials.get(materialID);
     terrainShadowMat.addCustomSetting(GL_CLIP_DISTANCE1);
 
+    auto& terrainMeshData = resources.meshes.getMesh(meshID);
+    terrainMeshData.attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+    terrainMeshData.attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
+    terrainMeshData.vertexSize = cro::MeshBuilder::getVertexSize(terrainMeshData.attributes);
 
     auto entity = scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, TerrainLevel, 0.f });
@@ -321,7 +325,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             e.getComponent<cro::Callback>().active = false;
         }
     };
-    entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), terrainMat);
+    entity.addComponent<cro::Model>(terrainMeshData, terrainMat);
     entity.getComponent<cro::Model>().setShadowMaterial(0, terrainShadowMat);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
     entity.addComponent<cro::ShadowCaster>();

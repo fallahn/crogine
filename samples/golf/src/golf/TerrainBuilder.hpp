@@ -131,11 +131,12 @@ private:
     std::array<std::vector<cro::Entity>, 2u> m_crowdEntities = {};
     std::array<cro::Entity, 2u> m_umbrellaEntities = {};
 
+    //TODO find a good way to compress normals
     struct TerrainVertex final
     {
         glm::vec3 position = glm::vec3(0.f);
         //glm::vec4 colour = glm::vec4(0.1f, 0.117f, 0.176f, 1.f);
-        glm::vec4 colour = glm::vec4(0.1568f, 0.305f, 0.2627f, 1.f);
+        cro::Detail::ColourLowP colour = glm::vec4(0.1568f, 0.305f, 0.2627f, 1.f);
         glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
 
         //these actually get attached to tan/bitan attribs in the shader
