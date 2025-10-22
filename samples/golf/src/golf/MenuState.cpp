@@ -3413,22 +3413,32 @@ void MenuState::createSnow()
 
     const auto points = pd::PoissonDiskSampling(2.3f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
 
-    const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_BYTE));
+    const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_SHORT));
+
+    //TODO this is just repeated from Weather.cpp so we can do some code reuse here instead.
+    struct Vertex final
+    {
+        glm::vec3 position = glm::vec3(0.f);
+        cro::Detail::ColourLowP colour = cro::Colour::White;
+
+        Vertex() = default;
+        Vertex(float x, float y, float z)
+            : position(x, y, z) {
+        }
+    };
 
     auto* meshData = &m_resources.meshes.getMesh(meshID);
-    std::vector<float> verts;
-    std::vector<std::uint8_t> indices;
+    meshData->attributes[cro::Mesh::Attribute::Colour].componentCount = 4;
+    meshData->attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
+    meshData->attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+    meshData->vertexSize = cro::MeshBuilder::getVertexSize(meshData->attributes);
+
+    std::vector<Vertex> verts;
+    std::vector<std::uint16_t> indices;
     const std::uint32_t stride = 1;
     for (auto i = 0u; i < points.size(); i += stride)
     {
-        verts.push_back(points[i][0]);
-        verts.push_back(points[i][1]);
-        verts.push_back(points[i][2]);
-        verts.push_back(1.f);
-        verts.push_back(1.f);
-        verts.push_back(1.f);
-        verts.push_back(1.f);
-
+        verts.emplace_back(points[i][0], points[i][1], points[i][2]);
         indices.push_back(i);
     }
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -74,19 +74,30 @@ void GolfState::createWeather(std::int32_t weatherType)
 
     const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_SHORT));
 
+    //TODO we've used this vertex layout multiple times, eg BallTrail
+    //so we could re-use this struct instead of redefining it
+    struct Vertex final
+    {
+        glm::vec3 position = glm::vec3(0.f);
+        cro::Detail::ColourLowP colour = cro::Colour::White;
+
+        Vertex() = default;
+        Vertex(float x, float y, float z)
+            : position(x,y,z){ }
+    };
+
     auto* meshData = &m_resources.meshes.getMesh(meshID);
-    std::vector<float> verts;
+    meshData->attributes[cro::Mesh::Attribute::Colour].componentCount = 4;
+    meshData->attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
+    meshData->attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+    meshData->vertexSize = cro::MeshBuilder::getVertexSize(meshData->attributes);
+
+    std::vector<Vertex> verts;
     std::vector<std::uint16_t> indices;
     const std::uint32_t stride = weatherType == WeatherType::Snow ? 1 : 2;
     for (auto i = 0u; i < points.size(); i += stride)
     {
-        verts.push_back(points[i][0]);
-        verts.push_back(points[i][1]);
-        verts.push_back(points[i][2]);
-        verts.push_back(1.f);
-        verts.push_back(1.f);
-        verts.push_back(1.f);
-        verts.push_back(1.f);
+        verts.emplace_back(points[i][0], points[i][1], points[i][2]);
 
         indices.push_back(i);
     }
