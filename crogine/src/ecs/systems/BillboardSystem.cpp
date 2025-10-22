@@ -73,6 +73,18 @@ void BillboardSystem::process(float)
             const auto& quads = bbc.m_billboards;
             for (const auto& quad : quads)
             {
+                //do this first else we'll be off by one quad...
+                const auto baseIndex = static_cast<std::uint32_t>(vertexData.size());
+
+                //two tris
+                indexData.push_back(baseIndex);
+                indexData.push_back(baseIndex + 2);
+                indexData.push_back(baseIndex + 3);
+
+                indexData.push_back(baseIndex + 2);
+                indexData.push_back(baseIndex);
+                indexData.push_back(baseIndex + 1);
+
                 //the base position of the quad is stored in the vertex Normal data
                 //rather than any actual normal data.
 
@@ -177,21 +189,14 @@ void BillboardSystem::process(float)
                 {
                     meshData.boundingBox[1].z = quad.position.z;
                 }
-
-
-                const auto baseIndex = static_cast<std::uint32_t>(vertexData.size());
-
-                //two tris
-                indexData.push_back(baseIndex);
-                indexData.push_back(baseIndex + 2);
-                indexData.push_back(baseIndex + 3);
-
-                indexData.push_back(baseIndex + 2);
-                indexData.push_back(baseIndex);
-                indexData.push_back(baseIndex + 1);
             }
 
             meshData.vertexCount = vertexData.size();
+
+            if (meshData.vertexCount > std::numeric_limits<std::uint16_t>::max())
+            {
+                LogW << "More vertices were added to billboard mesh than can be indexed" << std::endl;
+            }
 
             //we need to resize if larger than previous
             if (meshData.vboAllocator->getBlockCount(vertexData.size()) >
