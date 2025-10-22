@@ -435,12 +435,10 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             //helps prevent tunnelling through cliffs/flag pole
             //TODO this is mostly wasted when we're high up, so we could make the iteration count dynamic
-            //static constexpr std::int32_t Iterations = 1;// 3;
-            //dt /= Iterations;
+            static constexpr std::int32_t Iterations = 1;// 3;
+            dt /= Iterations;
 
-            //currently disabled in favour of velocity vector raycasting
-
-            //for (auto f = 0; f < Iterations; ++f)
+            for (auto f = 0; f < Iterations; ++f)
             {
                 //add gravity
                 ball.velocity += Gravity * dt;
@@ -1298,8 +1296,20 @@ void BallSystem::doCollision(cro::Entity entity)
     };
 
     auto& ball = entity.getComponent<Ball>();
-    const auto testDir = ball.state == Ball::State::Flight ? ball.velocity : glm::vec3(0.f, -1.f, 0.f);
-    auto terrainResult = getTerrain(pos,testDir);
+
+    auto testDir = glm::vec3(0.f, -1.f, 0.f);
+    //nice idea but causes rubber banding
+    //if (ball.state == Ball::State::Flight)
+    //{
+    //    //if the ball isn't travelling towards the ground in flight
+    //    //use the velocity vector to test what's in front
+    //    const auto dir = glm::normalize(ball.velocity);
+    //    if (glm::dot(dir, cro::Transform::Y_AXIS) > -0.5f)
+    //    {
+    //        testDir = dir;
+    //    }
+    //}
+    auto terrainResult = getTerrain(pos, testDir);
 
     if (terrainResult.penetration > 0)
     {

@@ -2914,7 +2914,7 @@ void DrivingState::createPlayer()
     };
     //entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
 
-    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP, GL_UNSIGNED_BYTE));
     material = m_resources.materials.get(m_materialIDs[MaterialID::Wireframe]);
     material.blendMode = cro::Material::BlendMode::Additive;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
@@ -2927,7 +2927,7 @@ void DrivingState::createPlayer()
         0.f, Ball::Radius, -5.f,    1.f * IndicatorDarkness, 0.97f * IndicatorDarkness, 0.88f * IndicatorDarkness, 0.2f,
         0.f, Ball::Radius, 0.005f,  1.f * IndicatorLightness, 0.97f * IndicatorLightness, 0.88f * IndicatorLightness, 1.f
     };
-    std::vector<std::uint32_t> indices =
+    std::vector<std::uint8_t> indices =
     {
         0,1,2
     };
@@ -2936,23 +2936,18 @@ void DrivingState::createPlayer()
     auto vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = verts.size() / vertStride;
     cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
-    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
     cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
-    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
+
 
     entity.getComponent<cro::Model>().setHidden(true);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
     auto indicatorEnt = entity;
 
     //a 'fan' which shows max rotation
-    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_FAN));
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_FAN, GL_UNSIGNED_BYTE));
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeArc;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
@@ -3033,16 +3028,10 @@ void DrivingState::createPlayer()
     };
     meshData->vertexCount = verts.size() / vertStride;
     cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
-    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
     cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
-    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
     m_inputParser.setHoleDirection(-PlayerPosition);
 }
@@ -3054,29 +3043,26 @@ void DrivingState::createBall()
     //glCheck(glPointSize(BallPointSize)); - this is set in resize callback based on the buffer resolution/pixel scale
 
     auto ballMaterialID = m_materialIDs[MaterialID::WireframeCulledPoint];
-    auto ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
-    auto shadowMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+    auto ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_BYTE));
+    auto shadowMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_BYTE));
 
     auto* meshData = &m_resources.meshes.getMesh(ballMeshID);
     std::vector<float> verts =
     {
         0.f, 0.f, 0.f,   1.f, 1.f, 1.f, 1.f
     };
-    std::vector<std::uint32_t> indices =
+    std::vector<std::uint8_t> indices =
     {
         0
     };
 
     meshData->vertexCount = 1;
     cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
-    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = 1;
-    /*cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
+    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
@@ -3087,16 +3073,10 @@ void DrivingState::createBall()
     };
     meshData->vertexCount = 1;
     cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
-    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = 1;
     cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
-    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
 
 

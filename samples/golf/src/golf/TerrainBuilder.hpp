@@ -165,7 +165,7 @@ private:
         glm::vec2 texCoord = glm::vec2(0.f);
     };
     std::vector<SlopeVertex> m_slopeBuffer;
-    std::vector<std::uint32_t> m_slopeIndices;
+    std::vector<std::uint16_t> m_slopeIndices;
     struct SlopeProperties final
     {
         cro::Mesh::Data* meshData = nullptr;

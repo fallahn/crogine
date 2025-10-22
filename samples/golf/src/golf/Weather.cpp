@@ -68,16 +68,15 @@ namespace
 void GolfState::createWeather(std::int32_t weatherType)
 {
     //cro::Clock clock;
-    auto points = pd::PoissonDiskSampling(2.3f, WeatherAnimationSystem::AreaStart, WeatherAnimationSystem::AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
-
+    const auto points = pd::PoissonDiskSampling(2.3f, WeatherAnimationSystem::AreaStart, WeatherAnimationSystem::AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
     //auto t = static_cast<float>(clock.elapsed().asMilliseconds()) / 1000.f;
     //LogI << "Generated " << points.size() << " in " << t << " seconds" << std::endl;
 
-    const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+    const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_SHORT));
 
     auto* meshData = &m_resources.meshes.getMesh(meshID);
     std::vector<float> verts;
-    std::vector<std::uint32_t> indices;
+    std::vector<std::uint16_t> indices;
     const std::uint32_t stride = weatherType == WeatherType::Snow ? 1 : 2;
     for (auto i = 0u; i < points.size(); i += stride)
     {
@@ -94,16 +93,10 @@ void GolfState::createWeather(std::int32_t weatherType)
 
     meshData->vertexCount = points.size() / stride;
     cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
-    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
     cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
-    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
     meshData->boundingBox[0] = { WeatherAnimationSystem::AreaStart[0], WeatherAnimationSystem::AreaStart[1], WeatherAnimationSystem::AreaStart[2] };
     meshData->boundingBox[1] = { WeatherAnimationSystem::AreaEnd[0], WeatherAnimationSystem::AreaEnd[1], WeatherAnimationSystem::AreaEnd[2] };

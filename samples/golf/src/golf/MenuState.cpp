@@ -3257,7 +3257,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                     //position only, triangle strip
                     auto entity = m_backgroundScene.createEntity();
                     entity.addComponent<cro::Transform>().setPosition(pos);
-                    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP));
+                    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP, GL_UNSIGNED_BYTE));
                     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
 
                     if (timeOfDay != TimeOfDay::Night)
@@ -3267,7 +3267,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                     }
 
                     //indices are fixed at nodecount + 2 for anchors
-                    std::vector<std::uint32_t> indices;
+                    std::vector<std::uint8_t> indices;
                     for (auto i = 0; i < NodeCount + 2; ++i)
                     {
                         indices.push_back(i);
@@ -3297,9 +3297,6 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
 
                             meshData->vertexCount = verts.size();
                             cro::DynamicMeshBuilder::setVertexData(*meshData, { &verts[0][0], verts.size() * 3});
-                            /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-                            glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_DYNAMIC_DRAW));
-                            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
                         };
                 };
 
@@ -3414,13 +3411,13 @@ void MenuState::createSnow()
     const std::array<float, 3u> AreaStart = { -30.f, 0.f, -10.f };
     const std::array<float, 3u> AreaEnd = { 30.f, 50.f, 30.f }; //NOTE the height has to be set as a shader define, below
 
-    auto points = pd::PoissonDiskSampling(2.3f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
+    const auto points = pd::PoissonDiskSampling(2.3f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
 
-    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+    const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_BYTE));
 
     auto* meshData = &m_resources.meshes.getMesh(meshID);
     std::vector<float> verts;
-    std::vector<std::uint32_t> indices;
+    std::vector<std::uint8_t> indices;
     const std::uint32_t stride = 1;
     for (auto i = 0u; i < points.size(); i += stride)
     {
@@ -3437,16 +3434,10 @@ void MenuState::createSnow()
 
     meshData->vertexCount = points.size() / stride;
     cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
-    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
     cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
-    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
     meshData->boundingBox[0] = { AreaStart[0], AreaStart[1], AreaStart[2] };
     meshData->boundingBox[1] = { AreaEnd[0], AreaEnd[1], AreaEnd[2] };

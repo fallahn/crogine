@@ -592,14 +592,15 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 auto filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
 
-                auto temp = filepath;
-                if (cro::Util::String::replace(temp, ".png", ".ktx2")
-                 && cro::FileSystem::fileExists(temp))
-                {
-                    //try using compressed texture instead
-                    filepath.swap(temp);
-                    //LogI << "found " << filepath << std::endl;
-                }
+                //TODO this actually makes textures look worse
+                //and the extra mipmaps use more vram
+                //auto temp = filepath;
+                //if (cro::Util::String::replace(temp, ".png", ".ktx2")
+                // && cro::FileSystem::fileExists(temp))
+                //{
+                //    //try using compressed texture instead
+                //    filepath.swap(temp);
+                //}
 
                 auto& tex = m_resources.textures.get(filepath, createMipmaps/*, true*/);
                 tex.setSmooth(smoothTextures);
@@ -613,13 +614,13 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 auto filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
 
-                auto temp = filepath;
-                if (cro::Util::String::replace(temp, ".png", ".ktx2")
-                    && cro::FileSystem::fileExists(temp))
-                {
-                    //try using compressed texture instead
-                    filepath.swap(temp);
-                }
+                //auto temp = filepath;
+                //if (cro::Util::String::replace(temp, ".png", ".ktx2")
+                //    && cro::FileSystem::fileExists(temp))
+                //{
+                //    //try using compressed texture instead
+                //    filepath.swap(temp);
+                //}
 
                 auto& tex = m_resources.textures.get(filepath, createMipmaps/*, true*/);
                 tex.setSmooth(smoothTextures);

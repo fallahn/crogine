@@ -74,7 +74,7 @@ private:
     struct Trail final
     {
         std::vector<Vertex> vertexData;
-        std::vector<std::uint32_t> indices;
+        std::vector<std::uint16_t> indices;
         std::size_t front = 0;
         bool active = false;
         cro::Mesh::Data* meshData = nullptr;

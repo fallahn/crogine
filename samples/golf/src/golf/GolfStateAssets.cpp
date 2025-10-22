@@ -3081,35 +3081,26 @@ void GolfState::loadModels()
     //at a distance, and as a model when closer
     //glCheck(glPointSize(BallPointSize)); - this is set in resize callback based on the buffer resolution/pixel scale
     m_ballResources.materialID = m_materialIDs[MaterialID::WireFrameCulledPoint];
-    m_ballResources.ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
-    m_ballResources.shadowMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+    m_ballResources.ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_BYTE));
+    m_ballResources.shadowMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_BYTE));
 
     auto* meshData = &m_resources.meshes.getMesh(m_ballResources.ballMeshID);
     std::vector<float> verts =
     {
         0.f, 0.f, 0.f,   1.f, 1.f, 1.f, 1.f
     };
-    std::vector<std::uint32_t> indices =
+    std::vector<std::uint8_t> indices =
     {
         0
     };
 
     meshData->vertexCount = 1;
     cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
-    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = 1;
     
-    //TODO make this less crap
-    std::vector<cro::DataArray<std::uint32_t>> indexArray = { cro::DataArray<std::uint32_t>(indices.data(), indices.size()) };
-    cro::DynamicMeshBuilder::setIndexData(*meshData, indexArray);
-    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
-
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { { cro::DataArray(indices.data(), indices.size()) } });
     meshData = &m_resources.meshes.getMesh(m_ballResources.shadowMeshID);
     verts =
     {
@@ -3123,7 +3114,7 @@ void GolfState::loadModels()
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = 1;
-    cro::DynamicMeshBuilder::setIndexData(*meshData, indexArray);
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { { cro::DataArray(indices.data(), indices.size()) } });
     /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/

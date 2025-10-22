@@ -1070,7 +1070,7 @@ void BilliardsState::buildScene()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
 
-    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::UV0, 1, GL_LINE_STRIP));
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::UV0, 1, GL_LINE_STRIP, GL_UNSIGNED_BYTE));
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     entity.getComponent<cro::Model>().setHidden(true);
@@ -1089,11 +1089,8 @@ void BilliardsState::buildScene()
     auto vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = verts.size() / vertStride;
     cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
-    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_DYNAMIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
-    std::vector<std::uint32_t> indices =
+    std::vector<std::uint8_t> indices =
     {
         0,1
     };
@@ -1101,9 +1098,7 @@ void BilliardsState::buildScene()
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
     cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
-    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
+
 
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -1145,9 +1140,6 @@ void BilliardsState::buildScene()
         auto vertStride = (meshData->vertexSize / sizeof(float));
         meshData->vertexCount = vertexData.size() / vertStride;
         cro::DynamicMeshBuilder::setVertexData(*meshData, { vertexData.data(), vertexData.size() });
-        /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-        glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, vertexData.data(), GL_DYNAMIC_DRAW));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
         e.getComponent<cro::Callback>().active = !e.getComponent<cro::Model>().isHidden();
     };

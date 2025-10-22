@@ -340,10 +340,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    cro::DynamicMeshBuilder::setIndexData(*meshData, { cro::DataArray<std::uint32_t>(indices.data(), indices.size()) });
-    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { cro::DataArray(indices.data(), indices.size()) });
 
     //parent the shrubbery so they always stay the same relative height
     m_terrainEntity = entity;
@@ -652,7 +649,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     //create a mesh to display the slope data
     flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0;
-    meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_LINES));
+    meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_LINES, GL_UNSIGNED_SHORT));
     resources.shaders.loadFromString(ShaderID::Slope, SlopeVertexShader, SlopeFragmentShader);
     auto& slopeShader = resources.shaders.get(ShaderID::Slope);
     m_slopeProperties.positionUniform = slopeShader.getUniformID("u_centrePosition");
@@ -862,16 +859,11 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
         //upload the slope buffer data - this might be different even if the hole model is the same
         cro::DynamicMeshBuilder::setVertexData(*m_slopeProperties.meshData,
             {reinterpret_cast<float*>(m_slopeBuffer.data()), m_slopeBuffer.size() * (sizeof(SlopeVertex) / sizeof(float))});
-        /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_slopeProperties.meshData->vboAllocation.bufferID));
-        glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(SlopeVertex) * m_slopeBuffer.size(), m_slopeBuffer.data(), GL_STATIC_DRAW));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
+
 
         auto* submesh = &m_slopeProperties.meshData->indexData[0];
         submesh->indexCount = static_cast<std::uint32_t>(m_slopeIndices.size());
-        cro::DynamicMeshBuilder::setIndexData(*m_slopeProperties.meshData, { cro::DataArray<std::uint32_t>(m_slopeIndices.data(), m_slopeIndices.size()) });
-        /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), m_slopeIndices.data(), GL_STATIC_DRAW));
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
+        cro::DynamicMeshBuilder::setIndexData(*m_slopeProperties.meshData, { cro::DataArray(m_slopeIndices.data(), m_slopeIndices.size()) });
         
         m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
 

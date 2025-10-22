@@ -112,7 +112,7 @@ void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, st
 
     for (auto i = 0u; i < BufferCount; ++i)
     {
-        auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+        auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP, GL_UNSIGNED_SHORT));
         auto meshData = resources.meshes.getMesh(meshID);
         meshData.boundingBox = boundingBox;
         meshData.boundingSphere = meshData.boundingBox;
@@ -210,16 +210,10 @@ void BallTrail::update()
                 //TODO we could sub buffer this and only add what's new
                 trail.meshData->vertexCount = trail.indices.size();
                 cro::DynamicMeshBuilder::setVertexData(*trail.meshData, { reinterpret_cast<float*>(trail.vertexData.data()), trail.vertexData.size() * (sizeof(BallTrail::Vertex) / sizeof(float)) });
-                /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, trail.meshData->vboAllocation.bufferID));
-                glCheck(glBufferData(GL_ARRAY_BUFFER, trail.meshData->vertexSize * trail.meshData->vertexCount, trail.vertexData.data(), GL_DYNAMIC_DRAW));
-                glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
                 auto* submesh = &trail.meshData->indexData[0];
                 submesh->indexCount = static_cast<std::uint32_t>(trail.indices.size() - trail.front);
-                cro::DynamicMeshBuilder::setIndexData(*trail.meshData, { cro::DataArray<std::uint32_t>(trail.indices.data() + trail.front, submesh->indexCount) });
-                /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-                glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), trail.indices.data() + trail.front, GL_DYNAMIC_DRAW));
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
+                cro::DynamicMeshBuilder::setIndexData(*trail.meshData, { cro::DataArray(trail.indices.data() + trail.front, submesh->indexCount) });
             }
         }
     }

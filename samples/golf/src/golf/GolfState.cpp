@@ -3628,7 +3628,7 @@ void GolfState::buildScene()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator /*| CommandID::BeaconColour*/;
 
     //we use line strip because we can AA with glLineSmooth (TODO use a shader instead)
-    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP, GL_UNSIGNED_BYTE));
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame/*BallTrail*/]);
     material.blendMode = cro::Material::BlendMode::Additive;
     material.enableDepthTest = false;
@@ -3643,7 +3643,7 @@ void GolfState::buildScene()
         5.f,             Ball::Radius, 0.f,    c.r * IndicatorDarkness,  c.g * IndicatorDarkness,  c.b * IndicatorDarkness,  1.f,
         0.1f,            Ball::Radius, -0.005f,c.r * IndicatorLightness, c.g * IndicatorLightness, c.b * IndicatorLightness, 1.f
     };
-    std::vector<std::uint32_t> indices =
+    std::vector<std::uint8_t> indices =
     {
         0,1,2
     };
@@ -3653,16 +3653,11 @@ void GolfState::buildScene()
     auto vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = verts.size() / vertStride;
     cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
-    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-    //glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    cro::DynamicMeshBuilder::setIndexData(*meshData, { cro::DataArray<std::uint32_t>(indices.data(), indices.size()) });
-    //glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-    //glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    //glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { cro::DataArray(indices.data(), indices.size()) });
+
 
     entity.getComponent<cro::Model>().setHidden(true);
     //entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
@@ -3674,7 +3669,7 @@ void GolfState::buildScene()
     //a second indicator drawn only on the overview camera
     static constexpr float IndicatorLength = 10.f;
     static constexpr float IndicatorWidth = 0.02f;
-    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_STRIP));
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_STRIP, GL_UNSIGNED_BYTE));
 
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
@@ -3737,16 +3732,11 @@ void GolfState::buildScene()
     vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = verts.size() / vertStride;
     cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
-    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize* meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    cro::DynamicMeshBuilder::setIndexData(*meshData, { cro::DataArray<std::uint32_t>(indices.data(), indices.size()) });
-    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { cro::DataArray(indices.data(), indices.size()) });
+
 
     entity.getComponent<cro::Model>().setHidden(true);
     entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::MiniGreen);
@@ -3757,7 +3747,7 @@ void GolfState::buildScene()
     material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
     material.blendMode = cro::Material::BlendMode::Additive;
     material.enableDepthTest = false;
-    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_FAN));
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_FAN, GL_UNSIGNED_BYTE));
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeArc;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
@@ -3810,16 +3800,11 @@ void GolfState::buildScene()
 
     meshData->vertexCount = verts.size() / vertStride;
     cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
-    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    cro::DynamicMeshBuilder::setIndexData(*meshData, { cro::DataArray<std::uint32_t>(indices.data(), indices.size()) });
-    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { cro::DataArray(indices.data(), indices.size()) });
+
 
 
     //ring effect when holing par or under
@@ -3827,7 +3812,7 @@ void GolfState::buildScene()
     material.enableDepthTest = true;
     material.doubleSided = true;
     material.setProperty("u_colourRotation", m_sharedData.beaconColour);
-    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_STRIP));
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_STRIP, GL_UNSIGNED_BYTE));
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::HoleRing | CommandID::BeaconColour;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
@@ -3895,16 +3880,11 @@ void GolfState::buildScene()
 
     meshData->vertexCount = verts.size() / vertStride;
     cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
-    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    cro::DynamicMeshBuilder::setIndexData(*meshData, { cro::DataArray<std::uint32_t>(indices.data(), indices.size()) });
-    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { cro::DataArray(indices.data(), indices.size()) });
+
     meshData->boundingBox = { glm::vec3(-7.f, 0.2f, -0.7f), glm::vec3(7.f, 0.f, 7.f) };
     meshData->boundingSphere = meshData->boundingBox;
     auto ringEntity = entity;
@@ -3913,7 +3893,7 @@ void GolfState::buildScene()
     //seen from a distance - hole and model are also attached to this
     material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulled]);
     material.setProperty("u_colour", cro::Colour::White);
-    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP, GL_UNSIGNED_BYTE));
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Hole;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
@@ -3951,16 +3931,10 @@ void GolfState::buildScene()
     };
     meshData->vertexCount = verts.size() / vertStride;
     cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
-    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    cro::DynamicMeshBuilder::setIndexData(*meshData, { cro::DataArray<std::uint32_t>(indices.data(), indices.size()) });
-    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { cro::DataArray(indices.data(), indices.size()) });
 
 
 
