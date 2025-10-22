@@ -160,9 +160,9 @@ private:
     struct SlopeVertex final
     {
         glm::vec3 position = glm::vec3(0.f);
-        glm::vec4 colour = glm::vec4(glm::vec3(1.f), 0.7f);
+        cro::Detail::ColourLowP colour = glm::vec4(glm::vec3(1.f), 0.7f);
         glm::vec3 normal = glm::vec3(0.f);
-        glm::vec2 texCoord = glm::vec2(0.f);
+        std::uint32_t texCoord = 0;
     };
     std::vector<SlopeVertex> m_slopeBuffer;
     std::vector<std::uint16_t> m_slopeIndices;

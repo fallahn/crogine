@@ -674,12 +674,18 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //        ImGui::End();
     //    });
 
+    //cusomise the vertex properties
+    auto& slopeMeshData = resources.meshes.getMesh(meshID);
+    slopeMeshData.attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+    slopeMeshData.attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
+    slopeMeshData.attributes[cro::Mesh::Attribute::UV0].glType = GL_HALF_FLOAT;
 
+    slopeMeshData.vertexSize = cro::MeshBuilder::getVertexSize(slopeMeshData.attributes);
 
     entity = scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::SlopeIndicator;
-    entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
+    entity.addComponent<cro::Model>(slopeMeshData, resources.materials.get(materialID));
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen | RenderFlags::FlightCam | RenderFlags::Reflection));
     entity.getComponent<cro::Model>().setHidden(true);
     entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
@@ -1096,10 +1102,10 @@ void TerrainBuilder::threadFunc()
                 }
 
                 //recreate the distribution(s)
-                auto seed = static_cast<std::uint32_t>(std::time(nullptr));
-                auto grass = pd::PoissonDiskSampling(GrassDensity, MinBounds, MaxBounds, 30u, seed);
-                auto trees = pd::PoissonDiskSampling(TreeDensity, MinBounds, MaxBounds);
-                auto flowers = pd::PoissonDiskSampling(TreeDensity * 0.5f, MinBounds, MaxBounds, 30u, seed / 2);
+                const auto seed = static_cast<std::uint32_t>(std::time(nullptr));
+                const auto grass = pd::PoissonDiskSampling(GrassDensity, MinBounds, MaxBounds, 30u, seed);
+                const auto trees = pd::PoissonDiskSampling(TreeDensity, MinBounds, MaxBounds);
+                const auto flowers = pd::PoissonDiskSampling(TreeDensity * 0.5f, MinBounds, MaxBounds, 30u, seed / 2);
 
                 //filter distribution by map area
                 m_billboardBuffer.clear();
@@ -1360,7 +1366,7 @@ void TerrainBuilder::threadFunc()
 
                             //this is the number of times the 'dashes' repeat if enabled in the shader
                             //and the speed/direction based on height difference
-                            vert.texCoord = { 0.f, 0.f };
+                            vert.texCoord = glm::packHalf2x16({ 0.f, 0.f });
 
                             glm::vec3 offset(GridSpacing, 0.f, 0.f);
                             height = (readHeightMap(worldX + 1, worldY, GridDensity) - pinPos.y);
@@ -1374,10 +1380,11 @@ void TerrainBuilder::threadFunc()
                             vert2.position = vert.position + offset;
                             vert2.position.y = height;
                             vert2.normal = readNormal(worldX + 1, worldY, GridDensity);
-                            vert2.texCoord = { vert2.position.x * DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
-                            vert.texCoord.x = vert.position.x * DashCount;
-                            vert.texCoord.y = vert2.texCoord.y; //must be constant across segment
-                            
+
+                            const glm::vec2 uv2 = { vert2.position.x * DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
+                            const glm::vec2 uv1 = { vert.position.x * DashCount, uv2.y }; //must be constant across segment
+                            vert2.texCoord = glm::packHalf2x16(uv2);
+                            vert.texCoord = glm::packHalf2x16(uv1);
 
                             //we have to copy first vert as the tex coords will be different
                             //shame we can't just recycle the index...
@@ -1393,9 +1400,11 @@ void TerrainBuilder::threadFunc()
                             vert4.position = vert.position + offset;
                             vert4.position.y = height;
                             vert4.normal = readNormal(worldX, worldY + 1, GridDensity);
-                            vert4.texCoord = { vert4.position.z * DashCount, std::min(-glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
-                            vert3.texCoord.x = vert3.position.z * DashCount;
-                            vert3.texCoord.y = vert4.texCoord.y;
+
+                            const glm::vec2 uv4 = { vert4.position.z * DashCount, std::min(-glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
+                            const glm::vec2 uv3 = { vert3.position.z * DashCount, uv4.y };
+                            vert4.texCoord = glm::packHalf2x16(uv4);
+                            vert3.texCoord = glm::packHalf2x16(uv3);
 
                             vert.position += vert.normal * SurfaceOffset;
                             vert2.position += vert2.normal * SurfaceOffset;
