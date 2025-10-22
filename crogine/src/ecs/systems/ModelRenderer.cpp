@@ -73,11 +73,12 @@ namespace
 
 
 ModelRenderer::ModelRenderer(MessageBus& mb)
-    : System                (mb, typeid(ModelRenderer)),
-    m_drawLists             (),
-    m_pass                  (Mesh::IndexData::Final),
-    m_lightUBO              ("LightUniforms")/*,
-    m_tree          (1.f),
+    : System                    (mb, typeid(ModelRenderer)),
+    m_drawLists                 (),
+    m_pass                      (Mesh::IndexData::Final),
+    m_lightUBO                  ("LightUniforms")/*,
+    m_instanceNormalAllocator   (9, sizeof(float))*/
+    /*m_tree          (1.f),
     m_useTreeQueries(false)*/
 {
     requireComponent<Transform>();
@@ -508,6 +509,7 @@ void ModelRenderer::onEntityAdded(Entity entity)
 {
     auto& model = entity.getComponent<Model>();
     model.updateBounds();
+    //model.m_instanceBuffers.normalAllocator = &m_instanceNormalAllocator;
 
     //model.m_treeID = m_tree.addToTree(entity, model.getAABB());
 

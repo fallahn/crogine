@@ -130,6 +130,8 @@ Model::~Model()
 
     if (m_instanceBuffers.instanceCount != 0)
     {
+        //m_instanceBuffers.normalAllocator->freeAllocation(m_instanceBuffers.normalBuffer);
+
         glCheck(glDeleteBuffers(1, &m_instanceBuffers.normalBuffer));
         glCheck(glDeleteBuffers(1, &m_instanceBuffers.transformBuffer));
         m_instanceBuffers.instanceCount = 0;
@@ -210,6 +212,8 @@ Model& Model::operator=(Model&& other) noexcept
 
         if (m_instanceBuffers.instanceCount != 0)
         {
+            //m_instanceBuffers.normalAllocator->freeAllocation(m_instanceBuffers.normalBuffer);
+
             glCheck(glDeleteBuffers(1, &m_instanceBuffers.normalBuffer));
             glCheck(glDeleteBuffers(1, &m_instanceBuffers.transformBuffer));
             m_instanceBuffers.instanceCount = 0;
@@ -353,6 +357,8 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
     //create VBOs if needed
     if (m_instanceBuffers.instanceCount == 0)
     {
+        //m_instanceBuffers.normalBuffer = m_instanceBuffers.normalAllocator->newAllocation(transforms.size());
+
         glCheck(glGenBuffers(1, &m_instanceBuffers.normalBuffer));
         glCheck(glGenBuffers(1, &m_instanceBuffers.transformBuffer));
     }
@@ -380,7 +386,9 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
     m_boundingSphere = m_boundingBox;
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
+    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_instanceBuffers.instanceCount * sizeof(glm::mat3), normalMatrices.data(), GL_STATIC_DRAW));
+    //glCheck(glBufferSubData(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.offset, m_instanceBuffers.instanceCount * sizeof(glm::mat3), normalMatrices.data()));
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -428,10 +436,11 @@ void Model::updateInstanceTransforms(const std::vector<const std::vector<glm::ma
 
     offset = 0;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
+    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.bufferID));
     for (const auto& v : normalMatrices)
     {
         auto size = v->size() * sizeof(glm::mat3);
-        glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset, size, v->data()));
+        glCheck(glBufferSubData(GL_ARRAY_BUFFER, /*m_instanceBuffers.normalBuffer.offset +*/ offset, size, v->data()));
 
         offset += size;
     }
@@ -614,11 +623,14 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
         //attribs are labelled as mat3/4 in shader but are actually 3*vec3 and 4*vec4
         if (attribIndex != -1)
         {
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer/*.bufferID*/));
             for (auto j = 0u; j < 3u; ++j)
             {
                 glCheck(glEnableVertexAttribArray(attribIndex + j));
-                glCheck(glVertexAttribPointer(attribIndex + j, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec3), reinterpret_cast<void*>(static_cast<intptr_t>(j * sizeof(glm::vec3)))));
+                glCheck(glVertexAttribPointer(attribIndex + j, 
+                    3, GL_FLOAT, GL_FALSE,
+                    3 * sizeof(glm::vec3),
+                    reinterpret_cast<void*>(static_cast<intptr_t>((j * sizeof(glm::vec3)/* + m_instanceBuffers.normalBuffer.offset*/)))));
                 glCheck(glVertexAttribDivisor(attribIndex + j, 1));
             }
         }

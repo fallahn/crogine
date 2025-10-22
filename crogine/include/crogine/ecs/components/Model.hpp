@@ -311,6 +311,9 @@ namespace cro
 
         struct InstanceBuffers final
         {
+            /*Detail::VBOAllocator* normalAllocator = nullptr;
+            Detail::VBOAllocation normalBuffer;*/
+
             std::uint32_t transformBuffer = 0;
             std::uint32_t normalBuffer = 0;
             std::uint32_t instanceCount = 0;

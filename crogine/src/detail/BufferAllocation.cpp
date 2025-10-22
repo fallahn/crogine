@@ -40,13 +40,13 @@ using namespace cro::Detail;
 namespace
 {
     //minimum number of blocks before resizing
-    constexpr std::size_t MinBufferSize = 1000;
+    constexpr std::size_t MinBufferSize = 500; //hmm this was 1000 but as we use this for instance matrices we don't want to allocate that many up front...
 }
 
 BufferAllocator::BufferAllocator(std::uint32_t blockSize, std::uint32_t vertexSize, std::uint32_t target)
     : m_blockSize           (blockSize),
     m_dataSize              (vertexSize),
-    m_blockSizeBytes        (blockSize* vertexSize),
+    m_blockSizeBytes        (blockSize * vertexSize),
     m_target                (target),
     m_bufferID              (0),
     m_finalOffset           (0),
