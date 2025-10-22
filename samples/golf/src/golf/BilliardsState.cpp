@@ -1088,7 +1088,7 @@ void BilliardsState::buildScene()
 
     auto vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = verts.size() / vertStride;
-    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     std::vector<std::uint8_t> indices =
     {
@@ -1139,7 +1139,7 @@ void BilliardsState::buildScene()
 
         auto vertStride = (meshData->vertexSize / sizeof(float));
         meshData->vertexCount = vertexData.size() / vertStride;
-        cro::DynamicMeshBuilder::setVertexData(*meshData, { vertexData.data(), vertexData.size() });
+        cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(vertexData.data(), vertexData.size()));
 
         e.getComponent<cro::Callback>().active = !e.getComponent<cro::Model>().isHidden();
     };

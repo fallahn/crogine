@@ -92,7 +92,7 @@ void GolfState::createWeather(std::int32_t weatherType)
     }
 
     meshData->vertexCount = points.size() / stride;
-    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());

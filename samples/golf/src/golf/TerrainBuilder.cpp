@@ -336,7 +336,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //vert data is uploaded to vbo via update()
 
     //we'll do this first to allocate enough buffer space
-    cro::DynamicMeshBuilder::setVertexData(*meshData, { reinterpret_cast<float*>(m_terrainBuffer.data()), m_terrainBuffer.size() * (sizeof(TerrainVertex) / sizeof(float)) });
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(m_terrainBuffer.data(), m_terrainBuffer.size()));
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
@@ -857,8 +857,7 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
             //terrain callback is set active when shrubbery callback switches
         }
         //upload the slope buffer data - this might be different even if the hole model is the same
-        cro::DynamicMeshBuilder::setVertexData(*m_slopeProperties.meshData,
-            {reinterpret_cast<float*>(m_slopeBuffer.data()), m_slopeBuffer.size() * (sizeof(SlopeVertex) / sizeof(float))});
+        cro::DynamicMeshBuilder::setVertexData(*m_slopeProperties.meshData, cro::DataArray(m_slopeBuffer.data(), m_slopeBuffer.size()));
 
 
         auto* submesh = &m_slopeProperties.meshData->indexData[0];

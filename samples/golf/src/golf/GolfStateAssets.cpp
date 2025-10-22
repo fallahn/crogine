@@ -3095,7 +3095,7 @@ void GolfState::loadModels()
     };
 
     meshData->vertexCount = 1;
-    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = 1;
@@ -3107,19 +3107,11 @@ void GolfState::loadModels()
         0.f, 0.f, 0.f,    0.f, 0.f, 0.f, 0.25f,
     };
     meshData->vertexCount = 1;
-    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
-    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = 1;
     cro::DynamicMeshBuilder::setIndexData(*meshData, { { cro::DataArray(indices.data(), indices.size()) } });
-    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
-
-
 }
 
 void GolfState::loadSpectators()

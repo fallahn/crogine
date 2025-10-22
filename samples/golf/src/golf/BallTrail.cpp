@@ -209,7 +209,7 @@ void BallTrail::update()
 
                 //TODO we could sub buffer this and only add what's new
                 trail.meshData->vertexCount = trail.indices.size();
-                cro::DynamicMeshBuilder::setVertexData(*trail.meshData, { reinterpret_cast<float*>(trail.vertexData.data()), trail.vertexData.size() * (sizeof(BallTrail::Vertex) / sizeof(float)) });
+                cro::DynamicMeshBuilder::setVertexData(*trail.meshData, cro::DataArray(trail.vertexData.data(), trail.vertexData.size()));
 
                 auto* submesh = &trail.meshData->indexData[0];
                 submesh->indexCount = static_cast<std::uint32_t>(trail.indices.size() - trail.front);

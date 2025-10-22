@@ -149,7 +149,21 @@ Mesh::Data DynamicMeshBuilder::build(AllocationResource* allocationResource) con
     return meshData;
 }
 
-void DynamicMeshBuilder::setVertexData(Mesh::Data& dst, const DataArray<float>& vertData)
+void DynamicMeshBuilder::setIndexData(Mesh::Data& dst, const std::vector<DataArray<std::uint8_t>>& indexData)
+{
+    setIndexDataForT(dst, indexData);
+}
+void DynamicMeshBuilder::setIndexData(Mesh::Data& dst, const std::vector<DataArray<std::uint16_t>>& indexData)
+{
+    setIndexDataForT(dst, indexData);
+}
+void DynamicMeshBuilder::setIndexData(Mesh::Data& dst, const std::vector<DataArray<std::uint32_t>>& indexData)
+{
+    setIndexDataForT(dst, indexData);
+}
+
+//private
+void DynamicMeshBuilder::setVertexData(Mesh::Data& dst, /*const DataArray<std::uint8_t>& vertData*/const std::uint8_t* data, std::size_t size)
 {
     //CRO_ASSERT(dst.vertexCount != 0, "");
     //CRO_ASSERT(dst.vertexCount <= (vertData.size() / (dst.vertexSize / sizeof(float))), "");
@@ -164,19 +178,6 @@ void DynamicMeshBuilder::setVertexData(Mesh::Data& dst, const DataArray<float>& 
     //dst.vboAllocation = dst.vboAllocator->newAllocation(dst.vertexCount);
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, dst.vboAllocation.bufferID));
     //glCheck(glBufferSubData(GL_ARRAY_BUFFER, dst.vboAllocation.offset, vertData.size * sizeof(float), vertData.data));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, vertData.size * sizeof(float), vertData.data, GL_DYNAMIC_DRAW));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-}
-
-void DynamicMeshBuilder::setIndexData(Mesh::Data& dst, const std::vector<DataArray<std::uint8_t>>& indexData)
-{
-    setIndexDataForT(dst, indexData);
-}
-void DynamicMeshBuilder::setIndexData(Mesh::Data& dst, const std::vector<DataArray<std::uint16_t>>& indexData)
-{
-    setIndexDataForT(dst, indexData);
-}
-void DynamicMeshBuilder::setIndexData(Mesh::Data& dst, const std::vector<DataArray<std::uint32_t>>& indexData)
-{
-    setIndexDataForT(dst, indexData);
 }

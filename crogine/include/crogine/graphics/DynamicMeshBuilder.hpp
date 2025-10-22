@@ -100,9 +100,13 @@ namespace cro
 
         /*!
         \brief Helper func to update DynamicMesh created Mesh::Data to ensure
-        correct use of VBO allocation. TODO update for optimsed vertex layout
+        correct use of VBO allocation.
         */
-        static void setVertexData(Mesh::Data& dst, const DataArray<float>& vertData);
+        template <typename T>
+        static void setVertexData(Mesh::Data& dst, const DataArray<T>& vertData)
+        {
+            setVertexData(dst, reinterpret_cast<const std::uint8_t*>(vertData.data), vertData.size * sizeof(T));
+        }
 
         /*!
         \brief Helper func to update DynamicMesh created Mesh::Data to ensure
@@ -120,5 +124,7 @@ namespace cro
         std::uint32_t m_indexFormat;
 
         Mesh::Data build(AllocationResource*) const override;
+
+        static void setVertexData(Mesh::Data& dst, const std::uint8_t* data, std::size_t size);
     };
 }

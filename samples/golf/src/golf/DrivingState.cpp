@@ -2935,7 +2935,7 @@ void DrivingState::createPlayer()
 
     auto vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = verts.size() / vertStride;
-    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
@@ -3027,7 +3027,7 @@ void DrivingState::createPlayer()
         0,1,2,3,4,5,6
     };
     meshData->vertexCount = verts.size() / vertStride;
-    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
@@ -3057,7 +3057,7 @@ void DrivingState::createBall()
     };
 
     meshData->vertexCount = 1;
-    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = 1;
@@ -3072,7 +3072,7 @@ void DrivingState::createBall()
         0.f, 0.f, 0.f,    0.5f, 0.5f, 0.5f, 1.f,
     };
     meshData->vertexCount = 1;
-    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = 1;

@@ -3652,7 +3652,7 @@ void GolfState::buildScene()
 
     auto vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = verts.size() / vertStride;
-    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
@@ -3731,7 +3731,7 @@ void GolfState::buildScene()
 
     vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = verts.size() / vertStride;
-    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
@@ -3799,7 +3799,7 @@ void GolfState::buildScene()
     }
 
     meshData->vertexCount = verts.size() / vertStride;
-    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
@@ -3879,7 +3879,7 @@ void GolfState::buildScene()
     meshData = &entity.getComponent<cro::Model>().getMeshData();
 
     meshData->vertexCount = verts.size() / vertStride;
-    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
@@ -3930,7 +3930,7 @@ void GolfState::buildScene()
         0,1,2,3,4,5,6,7,8,9,10,11,12
     };
     meshData->vertexCount = verts.size() / vertStride;
-    cro::DynamicMeshBuilder::setVertexData(*meshData, { verts.data(), verts.size() });
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
