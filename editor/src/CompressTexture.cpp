@@ -45,7 +45,7 @@ source distribution.
 namespace
 {
     const std::string binName = "/nvtt_export.exe\"";
-    const std::string dxt1 = "/assets/compression_presets/ktx2_export_dxt1_no_alpha.dpf";
+    const std::string dxt1 = "/assets/compression_presets/ktx2_export_dxt1_no_alpha_no_mips.dpf";
     const std::string dxt5 = "/assets/compression_presets/ktx2_export_dxt5_alpha.dpf";
     const std::string dxt5_nomip = "/assets/compression_presets/ktx2_export_dxt5_alpha_no_mips.dpf";
 
@@ -84,7 +84,6 @@ static inline void threadFunc()
         [](const std::string& file, const std::string& presetPath)
         {
             const std::string preset = " -p \"" + compressor.workingDirectory + presetPath + "\"";
-            //const std::string preset = " --format bc3 --quality production --mips --mip-filter box --no-mip-gamma-correct --save-flip-y --zcmp 5 --serialized-effects-v1 \"1 20 0 \"";
             const std::string input = " \"" + compressor.outputPath + "/" + file + "\"";
             std::string output = " -o" + input;
             cro::Util::String::replace(output, ".png", ".ktx2");
