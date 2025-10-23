@@ -39,6 +39,10 @@ source distribution.
 
 #include <functional>
 
+//use shared VBOs for instanced transforms
+//TODO currently bugged.
+//#define SHARED_TRANSFORMS
+
 namespace cro
 {
     class CRO_EXPORT_API Model final
@@ -311,11 +315,16 @@ namespace cro
 
         struct InstanceBuffers final
         {
-            /*Detail::VBOAllocator* normalAllocator = nullptr;
-            Detail::VBOAllocation normalBuffer;*/
+#ifdef SHARED_TRANSFORMS
+            Detail::VBOAllocator* transformAllocator = nullptr;
+            Detail::VBOAllocation transformBuffer;
 
+            Detail::VBOAllocator* normalAllocator = nullptr;
+            Detail::VBOAllocation normalBuffer;
+#else
             std::uint32_t transformBuffer = 0;
             std::uint32_t normalBuffer = 0;
+#endif
             std::uint32_t instanceCount = 0;
         }m_instanceBuffers;
 
@@ -339,5 +348,6 @@ namespace cro
         friend class ModelRenderer;
         friend class ShadowMapRenderer;
         friend class DeferredRenderSystem;
+        friend class ModelDefinition; //TODO if we prove this works use a proper setter and remove this
     };
 }

@@ -130,10 +130,13 @@ Model::~Model()
 
     if (m_instanceBuffers.instanceCount != 0)
     {
-        //m_instanceBuffers.normalAllocator->freeAllocation(m_instanceBuffers.normalBuffer);
-
+#ifdef SHARED_TRANSFORMS
+        m_instanceBuffers.normalAllocator->freeAllocation(m_instanceBuffers.normalBuffer);
+        m_instanceBuffers.transformAllocator->freeAllocation(m_instanceBuffers.transformBuffer);
+#else
         glCheck(glDeleteBuffers(1, &m_instanceBuffers.normalBuffer));
         glCheck(glDeleteBuffers(1, &m_instanceBuffers.transformBuffer));
+#endif
         m_instanceBuffers.instanceCount = 0;
     }
 }
@@ -212,10 +215,13 @@ Model& Model::operator=(Model&& other) noexcept
 
         if (m_instanceBuffers.instanceCount != 0)
         {
-            //m_instanceBuffers.normalAllocator->freeAllocation(m_instanceBuffers.normalBuffer);
-
+#ifdef SHARED_TRANSFORMS
+            m_instanceBuffers.normalAllocator->freeAllocation(m_instanceBuffers.normalBuffer);
+            m_instanceBuffers.transformAllocator->freeAllocation(m_instanceBuffers.transformBuffer);
+#else
             glCheck(glDeleteBuffers(1, &m_instanceBuffers.normalBuffer));
             glCheck(glDeleteBuffers(1, &m_instanceBuffers.transformBuffer));
+#endif
             m_instanceBuffers.instanceCount = 0;
         }
         m_instanceBuffers = other.m_instanceBuffers;
@@ -355,18 +361,35 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
     }
 
     //create VBOs if needed
-    if (m_instanceBuffers.instanceCount == 0)
+    if (m_instanceBuffers.instanceCount < transforms.size())
     {
-        //m_instanceBuffers.normalBuffer = m_instanceBuffers.normalAllocator->newAllocation(transforms.size());
+#ifdef SHARED_TRANSFORMS
+        if (m_instanceBuffers.instanceCount != 0)
+        {
+            //if this is nullptr remember to set the allocator in ModelDefinition 856
 
+            //resize
+            m_instanceBuffers.normalAllocator->freeAllocation(m_instanceBuffers.normalBuffer);
+            m_instanceBuffers.transformAllocator->freeAllocation(m_instanceBuffers.transformBuffer);
+        }
+
+        m_instanceBuffers.normalBuffer = m_instanceBuffers.normalAllocator->newAllocation(transforms.size());
+        m_instanceBuffers.transformBuffer = m_instanceBuffers.transformAllocator->newAllocation(transforms.size());
+#else
         glCheck(glGenBuffers(1, &m_instanceBuffers.normalBuffer));
         glCheck(glGenBuffers(1, &m_instanceBuffers.transformBuffer));
+#endif
     }
     m_instanceBuffers.instanceCount = static_cast<std::uint32_t>(transforms.size());
 
     //upload transform data
+#ifdef SHARED_TRANSFORMS
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer.bufferID));
+    glCheck(glBufferSubData(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer.offset, m_instanceBuffers.instanceCount * sizeof(glm::mat4), transforms.data()));
+#else
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_instanceBuffers.instanceCount * sizeof(glm::mat4), transforms.data(), GL_STATIC_DRAW));
+#endif
 
     auto bb = m_meshData.boundingBox;
     cro::Box newBB;
@@ -385,11 +408,13 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
     assertAABB(m_boundingBox);
     m_boundingSphere = m_boundingBox;
 
+#ifdef SHARED_TRANSFORMS
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.bufferID));
+    glCheck(glBufferSubData(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.offset, m_instanceBuffers.instanceCount * sizeof(glm::mat3), normalMatrices.data()));
+#else
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
-    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_instanceBuffers.instanceCount * sizeof(glm::mat3), normalMatrices.data(), GL_STATIC_DRAW));
-    //glCheck(glBufferSubData(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.offset, m_instanceBuffers.instanceCount * sizeof(glm::mat3), normalMatrices.data()));
-
+#endif
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     //update VAOs if material is set
@@ -416,31 +441,51 @@ void Model::updateInstanceTransforms(const std::vector<const std::vector<glm::ma
     //as this is intended for speed we'll assert rather than conditional
     CRO_ASSERT(!transforms.empty() && transforms.size() == normalMatrices.size(), "Invalid transform data");
     CRO_ASSERT(m_instanceBuffers.normalBuffer && m_instanceBuffers.transformBuffer, "setInstanceTransforms() must be used at least once");
-    //CRO_ASSERT(transforms.size() <= initialInstanceCount, "We're using sub-data so no resizing!");
+
+#ifdef SHARED_TRANSFORMS
+    //hmmmmmm I'd prefer to make sure to fully allocate up front, but this is less simple with shared VBOs
+
+
+#endif
+
 
     //TODO we could double buffer and swap this
-
     std::uint32_t offset = 0;
     std::uint32_t instanceCount = 0;
 
     //upload transform data
+#ifdef SHARED_TRANSFORMS
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer.bufferID));
+#else
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
+#endif
     for (const auto* v : transforms)
     {
         auto size = v->size() * sizeof(glm::mat4);
+#ifdef SHARED_TRANSFORMS
+        glCheck(glBufferSubData(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer.offset + offset, size, v->data()));
+#else
         glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset, size, v->data()));
+#endif
 
         offset += size;
         instanceCount += v->size();
     }
 
     offset = 0;
+#ifdef SHARED_TRANSFORMS
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.bufferID));
+#else
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
-    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.bufferID));
+#endif
     for (const auto& v : normalMatrices)
     {
         auto size = v->size() * sizeof(glm::mat3);
-        glCheck(glBufferSubData(GL_ARRAY_BUFFER, /*m_instanceBuffers.normalBuffer.offset +*/ offset, size, v->data()));
+#ifdef SHARED_TRANSFORMS
+        glCheck(glBufferSubData(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.offset + offset, size, v->data()));
+#else
+        glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset, size, v->data()));
+#endif
 
         offset += size;
     }
@@ -621,26 +666,58 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
         auto attribIndex = attribs[Shader::AttributeID::InstanceNormal][Material::Data::Index];
 
         //attribs are labelled as mat3/4 in shader but are actually 3*vec3 and 4*vec4
+        //TODO can we shave a vec4 off the transforms?
         if (attribIndex != -1)
         {
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer/*.bufferID*/));
+#ifdef SHARED_TRANSFORMS
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.bufferID));
+#else
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
+#endif
             for (auto j = 0u; j < 3u; ++j)
             {
+#ifdef SHARED_TRANSFORMS
                 glCheck(glEnableVertexAttribArray(attribIndex + j));
                 glCheck(glVertexAttribPointer(attribIndex + j, 
                     3, GL_FLOAT, GL_FALSE,
                     3 * sizeof(glm::vec3),
-                    reinterpret_cast<void*>(static_cast<intptr_t>((j * sizeof(glm::vec3)/* + m_instanceBuffers.normalBuffer.offset*/)))));
+                    reinterpret_cast<void*>(static_cast<intptr_t>((j * sizeof(glm::vec3) + m_instanceBuffers.normalBuffer.offset)))));
+
                 glCheck(glVertexAttribDivisor(attribIndex + j, 1));
+#else
+                glCheck(glEnableVertexAttribArray(attribIndex + j));
+                glCheck(glVertexAttribPointer(attribIndex + j,
+                    3, GL_FLOAT, GL_FALSE,
+                    3 * sizeof(glm::vec3),
+                    reinterpret_cast<void*>(static_cast<intptr_t>((j * sizeof(glm::vec3))))));
+
+                glCheck(glVertexAttribDivisor(attribIndex + j, 1));
+#endif
             }
         }
 
+#ifdef SHARED_TRANSFORMS
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer.bufferID));
+#else
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
+#endif
         for (auto j = 0u; j < 4u; ++j)
         {
+#ifdef SHARED_TRANSFORMS
             glCheck(glEnableVertexAttribArray(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j));
-            glCheck(glVertexAttribPointer(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), reinterpret_cast<void*>(static_cast<intptr_t>(j * sizeof(glm::vec4)))));
+            glCheck(glVertexAttribPointer(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j,
+                4, GL_FLOAT, GL_FALSE,
+                4 * sizeof(glm::vec4),
+                reinterpret_cast<void*>(static_cast<intptr_t>((j * sizeof(glm::vec4)) + m_instanceBuffers.transformBuffer.offset))));
             glCheck(glVertexAttribDivisor(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j, 1));
+#else
+            glCheck(glEnableVertexAttribArray(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j));
+            glCheck(glVertexAttribPointer(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j,
+                4, GL_FLOAT, GL_FALSE,
+                4 * sizeof(glm::vec4),
+                reinterpret_cast<void*>(static_cast<intptr_t>((j * sizeof(glm::vec4))))));
+            glCheck(glVertexAttribDivisor(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j, 1));
+#endif
         }
         draw = DrawInstanced(*this);
     }

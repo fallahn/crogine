@@ -106,6 +106,11 @@ namespace cro
         */
         void flush();
 
+        /*!
+        \brief Returns a refrence to the AllocationResource used for allocating shared buffers
+        */
+        AllocationResource& getAllocationResource() { return m_allocationResource; }
+
     private:
         AllocationResource m_allocationResource;
         

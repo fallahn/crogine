@@ -35,11 +35,13 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/graphics/BoundingBox.hpp>
+#include <crogine/graphics/SimpleVertexArray.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 #include <array>
 
 class TerrainBuilder;
-class ChunkVisSystem final : public cro::System
+class ChunkVisSystem final : public cro::System, public cro::GuiClient
 {
 public:
     ChunkVisSystem(cro::MessageBus&, glm::vec2 Mapsize, TerrainBuilder*);
@@ -50,9 +52,8 @@ public:
     //let's make this variable so we can update it on model change
     void setWorldHeight(float);
 
-
     //unique index created by ORing together visible indices
-    std::int32_t getIndex() const { return m_currentIndex; }
+    std::uint64_t getIndex() const { return m_currentIndex; }
 
     //list of indices currently visible
     std::vector<std::int32_t> getIndexList() const { return m_indexList; }
@@ -61,6 +62,7 @@ public:
 
     static constexpr std::int32_t ColCount = MapSize.x / 55;
     static constexpr std::int32_t RowCount = MapSize.y / 50;
+    static_assert(ColCount * RowCount < 64, "This will break bit flags");
 
 #ifdef CRO_DEBUG_
     //checks all boxes against frustum
@@ -70,10 +72,16 @@ public:
 private:
     TerrainBuilder* m_terrainBuilder;
     glm::vec2 m_chunkSize;
-    std::int32_t m_currentIndex;
+    std::uint64_t m_currentIndex;
     std::vector<std::int32_t> m_indexList; //TODO would a fixed size array be faster?
 
     std::array<cro::Box, RowCount* ColCount> m_boundingBoxes = {};
+    float m_chunkCullRadius;
+
+    cro::RenderTexture m_debugTexture;
+    cro::SimpleVertexArray m_debugVerts;
+    cro::SimpleVertexArray m_debugFrustum;
+    void updateDebug(cro::Entity);
 
 #ifdef CRO_DEBUG_
     cro::ProfileTimer<30> m_narrowphaseTimer;

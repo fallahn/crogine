@@ -509,7 +509,6 @@ void ModelRenderer::onEntityAdded(Entity entity)
 {
     auto& model = entity.getComponent<Model>();
     model.updateBounds();
-    //model.m_instanceBuffers.normalAllocator = &m_instanceNormalAllocator;
 
     //model.m_treeID = m_tree.addToTree(entity, model.getAABB());
 

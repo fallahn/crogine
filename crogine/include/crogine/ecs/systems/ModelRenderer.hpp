@@ -197,8 +197,6 @@ namespace cro
         std::vector<BenchSamples> m_benchmarks;
 #endif
 
-        //Detail::VBOAllocator m_instanceNormalAllocator;
-
         void flushEntity(Entity) override;
         void updateDrawListDefault(Entity);
         void updateDrawListBalancedTree(Entity);

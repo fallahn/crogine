@@ -853,6 +853,9 @@ bool ModelDefinition::createModel(Entity entity) const
                 glm::mat4(1.f)
             };
 
+            //entity.getComponent<cro::Model>().m_instanceBuffers.transformAllocator = m_resources.meshes.getAllocationResource().getVBOAllocator(16, sizeof(float));
+            //entity.getComponent<cro::Model>().m_instanceBuffers.normalAllocator = m_resources.meshes.getAllocationResource().getVBOAllocator(9, sizeof(float));
+
             entity.getComponent<cro::Model>().setInstanceTransforms(tx);
         }
 
