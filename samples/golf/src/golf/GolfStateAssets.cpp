@@ -1808,17 +1808,10 @@ void GolfState::loadMaterials()
 
 
     //special prop materials
-    /*if (m_resources.shaders.loadFromString(ShaderID::Lava,
-        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFragV2, "#define TEXTURED\n"))
-    {
-        m_resources.shaders.mapStringID("lava", ShaderID::Lava);
-        auto* shader = &m_resources.shaders.get(ShaderID::Lava);
-        m_windBuffer.addShader(*shader);
-    }*/
 
     //this is only called the first time the shader is requested
     //so shaders aren't loaded unnecessarily
-    const auto lazyLavaLoad = 
+    const auto lazyLoad1 = 
         [&](cro::ShaderResource& shaders)
         {
             if (shaders.loadFromString(ShaderID::Lava,
@@ -1827,32 +1820,46 @@ void GolfState::loadMaterials()
                 m_windBuffer.addShader(shaders.get(ShaderID::Lava));
             }
         };
-    m_resources.shaders.addLazyLoader(ShaderID::Lava, lazyLavaLoad);
+    m_resources.shaders.addLazyLoader(ShaderID::Lava, lazyLoad1);
     m_resources.shaders.mapStringID("lava", ShaderID::Lava);
 
-    if (m_resources.shaders.loadFromString(ShaderID::LavaFall,
-        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFallFrag, "#define TEXTURED\n"))
-    {
-        m_resources.shaders.mapStringID("lavafall", ShaderID::LavaFall);
-        auto* shader = &m_resources.shaders.get(ShaderID::LavaFall);
-        m_windBuffer.addShader(*shader);
-    }
+    const auto lazyLoad2 =
+        [&](cro::ShaderResource& shaders)
+        {
+            if (shaders.loadFromString(ShaderID::LavaFall,
+                cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFallFrag, "#define TEXTURED\n"))
+            {
+                m_windBuffer.addShader(shaders.get(ShaderID::LavaFall));
+            }
+        };
+    m_resources.shaders.addLazyLoader(ShaderID::LavaFall, lazyLoad2);
+    m_resources.shaders.mapStringID("lavafall", ShaderID::LavaFall);
 
-    if (m_resources.shaders.loadFromString(ShaderID::Hologram,
-        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag, "#define TEXTURED\n#define RIMMING\n#define PASS_SCALE\n"))
-    {
-        m_resources.shaders.mapStringID("holo_shader", ShaderID::Hologram);
-        auto* shader = &m_resources.shaders.get(ShaderID::Hologram);
-        m_windBuffer.addShader(*shader);
-    }
 
-    if (m_resources.shaders.loadFromString(ShaderID::Umbrella, CelVertexShader, UmbrellaFrag,
-        "#define DITHERED\n#define INSTANCING\n#define VERTEX_COLOURED\n#define TERRAIN_CLIP\n" + wobble))
-    {
-        m_resources.shaders.mapStringID("umbrella", ShaderID::Umbrella);
-        auto* shader = &m_resources.shaders.get(ShaderID::Umbrella);
-        m_resolutionBuffer.addShader(*shader);
-    }
+    const auto lazyLoad3 =
+        [&](cro::ShaderResource& shaders)
+        {
+            if (shaders.loadFromString(ShaderID::Hologram,
+                cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag, "#define TEXTURED\n#define RIMMING\n#define PASS_SCALE\n"))
+            {
+                m_windBuffer.addShader(shaders.get(ShaderID::Hologram));
+            }
+        };
+    m_resources.shaders.addLazyLoader(ShaderID::Hologram, lazyLoad3);
+    m_resources.shaders.mapStringID("holo_shader", ShaderID::Hologram);
+
+
+    const auto lazyLoad4 =
+        [&](cro::ShaderResource& shaders)
+        {
+            if (shaders.loadFromString(ShaderID::Umbrella, CelVertexShader, UmbrellaFrag,
+                "#define DITHERED\n#define INSTANCING\n#define VERTEX_COLOURED\n#define TERRAIN_CLIP\n" + wobble))
+            {
+                m_resolutionBuffer.addShader(shaders.get(ShaderID::Umbrella));
+            }
+        };
+    m_resources.shaders.addLazyLoader(ShaderID::Umbrella, lazyLoad4);
+    m_resources.shaders.mapStringID("umbrella", ShaderID::Umbrella);
 
     //create compile time constants from moon phase data
     const MoonPhase mp(std::time(nullptr));
@@ -1869,12 +1876,14 @@ void GolfState::loadMaterials()
 
     earthDefs += "#define ROTATION mat2(vec2(" + std::to_string(rot.y) + "," + std::to_string(-rot.x) + "), vec2(" + std::to_string(rot.x) + "," + std::to_string(rot.y) + "))\n";
 
-    //TODO - like all the others, only load this if necessary...
-    if (m_resources.shaders.loadFromString(ShaderID::Earth,
-        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), MoonFrag, "#define TEXTURED\n#define VERTEX_COLOUR\n" + earthDefs))
-    {
-        m_resources.shaders.mapStringID("earth", ShaderID::Earth);
-    }
+    const auto lazyLoadEarth =
+        [&, earthDefs](cro::ShaderResource& shaders)
+        {
+            shaders.loadFromString(ShaderID::Earth,
+                cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), MoonFrag, "#define TEXTURED\n#define VERTEX_COLOUR\n" + earthDefs);
+        };
+    m_resources.shaders.addLazyLoader(ShaderID::Earth, lazyLoadEarth);
+    m_resources.shaders.mapStringID("earth", ShaderID::Earth);
 
     if (m_sharedData.nightTime)
     {
@@ -1883,11 +1892,14 @@ void GolfState::loadMaterials()
 
         moonDefs += "#define ROTATION mat2(vec2(" + std::to_string(rot.y) + "," + std::to_string(-rot.x) + "), vec2(" + std::to_string(rot.x) + "," + std::to_string(rot.y) + "))\n";
 
-        if (m_resources.shaders.loadFromString(ShaderID::Moon,
-            cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), MoonFrag, "#define TEXTURED\n#define VERTEX_COLOUR\n" + moonDefs))
-        {
-            m_resources.shaders.mapStringID("moon", ShaderID::Moon);
-        }
+        const auto lazyLoadMoon =
+            [&, moonDefs](cro::ShaderResource& shaders)
+            {
+                shaders.loadFromString(ShaderID::Moon,
+                    cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), MoonFrag, "#define TEXTURED\n#define VERTEX_COLOUR\n" + moonDefs);
+            };
+        m_resources.shaders.addLazyLoader(ShaderID::Moon, lazyLoadMoon);
+        m_resources.shaders.mapStringID("moon", ShaderID::Moon);
     }
 
     //cel shaded material
