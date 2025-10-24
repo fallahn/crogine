@@ -1054,6 +1054,7 @@
     <None Include="src\golf\shaders\BillboardShader.inl" />
     <None Include="src\golf\shaders\Blur.inl" />
     <None Include="src\golf\shaders\CelShader.inl" />
+    <None Include="src\golf\shaders\ClothShader.inl" />
     <None Include="src\golf\shaders\CloudShader.inl" />
     <None Include="src\golf\shaders\CompositeShader.inl" />
     <None Include="src\golf\shaders\EmissiveShader.inl" />

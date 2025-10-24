@@ -113,6 +113,7 @@ namespace
 {
 #include "shaders/CelShader.inl"
 #include "shaders/BillboardShader.inl"
+#include "shaders/ClothShader.inl"
 #include "shaders/CloudShader.inl"
 #include "shaders/Glass.inl"
 #include "shaders/ShaderIncludes.inl"
@@ -2123,6 +2124,16 @@ void MenuState::loadAssets()
     m_lightProjectionMap.create(LightMapSize.x, LightMapSize.y, false);
     m_lightProjectionMap.setBorderColour(cro::Colour::Black);
 
+
+    /*{
+        m_resources.shaders.loadFromString(ShaderID::Cloth, ClothVertex, ClothFragment);
+        auto& shader = m_resources.shaders.get(ShaderID::Cloth);
+        m_windBuffer.addShader(shader);
+        m_resolutionBuffer.addShader(shader);
+        m_materialIDs[MaterialID::Cloth] = m_resources.materials.add(shader);
+    }*/
+
+
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -2161,6 +2172,8 @@ void MenuState::loadAssets()
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]).setProperty("u_menuTexture", m_lightProjectionMap.getTexture());
     m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]).setProperty("u_noiseTexture", noiseTex);
+    
+    //m_resources.materials.get(m_materialIDs[MaterialID::Cloth]).setProperty("u_noiseTexture", noiseTex);
 
     shader = &m_resources.shaders.get(ShaderID::CelTexturedMasked);
     m_scaleBuffer.addShader(*shader);
@@ -2703,6 +2716,7 @@ void MenuState::createScene()
     }
 
     if (md.loadFromFile("assets/golf/models/sign_post.cmt"))
+    //if (md.loadFromFile("assets/golf/models/rowboat.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ -10.f, 0.f, 12.f });
@@ -2712,6 +2726,10 @@ void MenuState::createScene()
         auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+
+        /*auto clothMat = m_resources.materials.get(m_materialIDs[MaterialID::Cloth]);
+        applyMaterialData(md, clothMat, 1);
+        entity.getComponent<cro::Model>().setMaterial(1, clothMat);*/
     }
 
     if (md.loadFromFile("assets/golf/models/skybox/horizon01.cmt"))

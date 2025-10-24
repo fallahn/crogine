@@ -44,6 +44,10 @@ static inline const std::string CelVertexShader = R"(
 
 #if defined(INSTANCING)
 #include INSTANCE_ATTRIBS
+#else
+//#define worldMatrix u_worldMatrix;
+//#define worldViewMatrix u_worldViewMatrix;
+//#define normalMatrix u_normalMatrix;
 #endif
 
 #if defined(SKINNED)
@@ -139,7 +143,7 @@ flat out int v_instanceID;
     {
     #if defined (INSTANCING)
 #include INSTANCE_MATRICES
-v_instanceID = gl_InstanceID;
+        v_instanceID = gl_InstanceID;
     #else
         mat4 worldMatrix = u_worldMatrix;
         mat4 worldViewMatrix = u_worldViewMatrix;

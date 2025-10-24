@@ -176,6 +176,7 @@ private:
             Trophy,
             Lantern,
             Glass,
+            Cloth,
 
             Count
         };
