@@ -113,7 +113,7 @@ namespace
 {
 #include "shaders/CelShader.inl"
 #include "shaders/BillboardShader.inl"
-#include "shaders/ClothShader.inl"
+//#include "shaders/ClothShader.inl"
 #include "shaders/CloudShader.inl"
 #include "shaders/Glass.inl"
 #include "shaders/ShaderIncludes.inl"

@@ -512,7 +512,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
             else if (name == "shader_string_id")
             {
                 shaderStringID = p.getValue<std::string>();
-                }
+            }
         }
 
         if (lockRotation)
