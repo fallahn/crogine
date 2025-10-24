@@ -112,7 +112,7 @@ namespace
             vec2 texCoord = gl_FragCoord.xy / u_targetSize;
 
             vec4 normalSample = TEXTURE(u_normalMap, texCoord);
-            vec3 normal = normalize(normalSample.rgb); //normalSample.a is self-illum mask
+            vec3 normal = normalize(normalSample.rgb * 2.0 - 1.0); //normalSample.a is self-illum mask
             vec3 position = TEXTURE(u_positionMap, texCoord).rgb;
 
 #if defined(WORLD_SPACE)

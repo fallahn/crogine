@@ -199,8 +199,8 @@ R"(
 
         vec4 colour = vec4(c, v_heightData.x);
 
-        colour.a *= u_alpha;
         colour = mix(vec4(DotColour, (0.35 + (0.5 * u_alpha)) * v_heightData.x), colour, alpha);
+        colour.a *= u_alpha;
 
 //colour.rgb *= 0.1; //additive blending
 //colour.rgb *= colour.a; //additive blending
@@ -208,7 +208,7 @@ R"(
 
         FRAG_OUT = colour;
         LIGHT_OUT = vec4(vec3(0.0), 1.0);
-        NORM_OUT.a = FRAG_OUT.a;
+        NORM_OUT.a = 0.0;//FRAG_OUT.a;
     }
 )";
 

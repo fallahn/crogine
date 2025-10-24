@@ -3111,6 +3111,7 @@ MenuState::PropFileData MenuState::getPropPath() const
     {
         ret.propFilePath = "spooky.bgd";
         ret.timeOfDay = TimeOfDay::Night;
+        ret.fireworks = day == 24;
         m_sharedData.menuSky = Skies[TimeOfDay::Night];
         return ret;
     }
