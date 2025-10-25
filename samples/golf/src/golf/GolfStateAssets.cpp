@@ -86,6 +86,7 @@ namespace
 #include "shaders/Hologram.inl"
 #include "shaders/TerrainMaterials.inl"
 #include "shaders/Weather.inl"
+#include "shaders/ClothShader.inl"
 
     //colour is normal colour with dark shadow
     const std::array BannerStrings =
@@ -1805,8 +1806,6 @@ void GolfState::loadMaterials()
     m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
 
 
-
-
     //special prop materials
 
     //this is only called the first time the shader is requested
@@ -1860,6 +1859,18 @@ void GolfState::loadMaterials()
         };
     m_resources.shaders.addLazyLoader(ShaderID::Umbrella, lazyLoad4);
     m_resources.shaders.mapStringID("umbrella", ShaderID::Umbrella);
+
+    const auto lazyLoad5 =
+        [&](cro::ShaderResource& shaders)
+        {
+            if (shaders.loadFromString(ShaderID::Cloth, ClothVertex, ClothFragment))
+            {
+                m_windBuffer.addShader(shaders.get(ShaderID::Cloth));
+                m_resolutionBuffer.addShader(shaders.get(ShaderID::Cloth));
+            }
+        };
+    m_resources.shaders.addLazyLoader(ShaderID::Cloth, lazyLoad5);
+    m_resources.shaders.mapStringID("sail", ShaderID::Cloth);
 
     //create compile time constants from moon phase data
     const MoonPhase mp(std::time(nullptr));
@@ -1978,9 +1989,11 @@ void GolfState::loadMaterials()
     m_materialIDs[MaterialID::Trophy] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
 
+
     auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
     noiseTex.setRepeated(true);
     noiseTex.setSmooth(true);
+
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define SUBRECT\n#define TERRAIN_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
