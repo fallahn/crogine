@@ -787,10 +787,11 @@ bool GolfGame::initialise()
 
     loadAvatars(); //this relies on steam being initialised
 
-    /*if (Social::isSteamdeck())
+    if (Social::isSteamdeck())
     {
-        getWindow().setVsyncEnabled(true);
-    }*/
+        //don't interfere with deck's built-in limiter
+        getWindow().setFramerateLimit(0.f);
+    }
 
 #ifdef CRO_DEBUG_
 #ifndef USE_GNS

@@ -58,6 +58,7 @@ Window::Window()
     : m_window              (nullptr),
     m_threadContext         (nullptr),
     m_mainContext           (nullptr),
+    m_framerateLimit        (1.f/240.f),
     m_fullscreen            (false),
     m_exclusiveFullScreen   (false),
     m_multisamplingEnabled  (false),
@@ -162,6 +163,18 @@ void Window::setVsyncEnabled(bool enabled)
 bool Window::getVsyncEnabled() const
 {
     return SDL_GL_GetSwapInterval() != 0;
+}
+
+void Window::setFramerateLimit(float fps)
+{
+    if (fps > 0)
+    {
+        m_framerateLimit = 1.f / fps;
+    }
+    else
+    {
+        m_framerateLimit = 0.f;
+    }
 }
 
 void Window::setMultisamplingEnabled(bool enabled)

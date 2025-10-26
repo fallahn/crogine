@@ -89,6 +89,17 @@ namespace cro
         bool getVsyncEnabled() const;
 
         /*!
+        \brief Sets the target frame limit in FPS when VSync is disabled
+        \param fps The frames per second to attempt to limit to. Set to zero to disable limiting
+        */
+        void setFramerateLimit(float fps);
+
+        /*!
+        \brief Returns the *normalised* frame rate limit
+        */
+        float getFramerateLimit() const { return m_framerateLimit; }
+
+        /*!
         \brief Attempts to enable or disable MSAA if multisampling is available on the current platform
         */
         void setMultisamplingEnabled(bool);
@@ -283,6 +294,8 @@ namespace cro
         std::unique_ptr<LoadingScreen> m_loadingScreen;
 
         mutable std::vector<glm::uvec2> m_resolutions;
+
+        float m_framerateLimit;
 
         bool m_fullscreen;
         bool m_exclusiveFullScreen;

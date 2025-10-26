@@ -412,6 +412,7 @@ void App::run(bool resetSettings)
         m_window.setExclusiveFullscreen(settings.exclusive);
         m_window.setFullScreen(settings.fullscreen);
         m_window.setVsyncEnabled(settings.vsync);
+        m_window.setFramerateLimit(settings.framelimit);
         m_window.setMultisamplingEnabled(settings.useMultisampling);
         Console::init();
 
@@ -487,6 +488,25 @@ void App::run(bool resetSettings)
                     m_window.setSize(newSize);
                 }
             }, nullptr);
+
+        Console::addCommand("r_framelimit", [&](const std::string& limit)
+            {
+                try
+                {
+                    const auto limitVal = std::max(0.f, std::stof(limit.c_str()));
+                    m_window.setFramerateLimit(limitVal);
+                    Console::print("Frame limit set to " + std::to_string(limitVal));
+                }
+                catch (...)
+                {
+                    if (!limit.empty())
+                    {
+                        Console::print(limit + ": invalid value.");
+                    }
+                    Console::print("Usage: r_frameLimit <max_frames>. Note setting this to zero removes all limit.");
+                    Console::print("Limit is only approximate, and only applies when v-sync is disabled.");
+                }
+            }, nullptr);
     }
     else
     {
@@ -499,6 +519,9 @@ void App::run(bool resetSettings)
     HiResTimer frameClock;
     m_frameClock = &frameClock;
     m_running = initialise();
+
+    //HiResTimer limiterClock;
+    //constexpr float frameLimit = 1.f / 240.f;
 
     if (!m_running)
     {
@@ -535,6 +558,11 @@ void App::run(bool resetSettings)
             render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             m_window.display();
+
+            //if (!m_window.getVsyncEnabled())
+            //{
+            //    std::this_thread::sleep_for(std::chrono::duration<float>(/*m_window.getFramerateLimit()*/frameLimit - limiterClock.restart()));
+            //}
         }
     }
 
@@ -1112,6 +1140,10 @@ App::WindowSettings App::loadSettings() const
             {
                 settings.vsync = prop.getValue<bool>();
             }
+            else if (prop.getName() == "framelimit")
+            {
+                settings.framelimit = std::max(0.f, prop.getValue<float>());
+            }
             else if (prop.getName() == "multisample")
             {
                 settings.useMultisampling = prop.getValue<bool>();
@@ -1192,6 +1224,7 @@ void App::saveSettings()
     saveSettings.addProperty("fullscreen").setValue(m_window.isFullscreen());
     saveSettings.addProperty("exclusive").setValue(m_window.getExclusiveFullscreen());
     saveSettings.addProperty("vsync").setValue(m_window.getVsyncEnabled());
+    saveSettings.addProperty("framelimit").setValue(m_window.getFramerateLimit());
     saveSettings.addProperty("multisample").setValue(m_window.getMultisamplingEnabled());
     saveSettings.addProperty("window_size").setValue(m_window.getWindowedSize());
     saveSettings.addProperty("left_deadzone").setValue(cro::GameController::LeftThumbDeadZone.getOffset());

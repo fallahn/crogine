@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -384,6 +384,13 @@ void Console::draw()
                     {
                         App::getWindow().setVsyncEnabled(vsync);
                     }
+
+                    /*float frameLimit = 1.f / App::getWindow().getFramerateLimit();
+                    if (ImGui::InputFloat("Frame Limit", &frameLimit))
+                    {
+                        frameLimit = std::clamp(frameLimit, 0.f, 1000.f);
+                        App::getWindow().setFramerateLimit(frameLimit);
+                    }*/
 
                     bool aa = App::getWindow().getMultisamplingEnabled();
                     if (ImGui::Checkbox("Multisampling", &aa))
