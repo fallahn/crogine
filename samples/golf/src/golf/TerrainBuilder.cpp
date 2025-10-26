@@ -907,8 +907,8 @@ void TerrainBuilder::applyTreeQuality()
 
     if (m_sharedData.treeQuality == SharedStateData::TreeQuality::High)
     {
-        hqFlags = RenderFlags::Main | RenderFlags::Reflection;
-        bbFlags = RenderFlags::FlightCam;
+        hqFlags = RenderFlags::Main;
+        bbFlags = RenderFlags::FlightCam | RenderFlags::Reflection;
     }
     
     for (const auto& ents : m_instancedShrubs)
