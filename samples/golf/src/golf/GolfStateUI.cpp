@@ -1851,16 +1851,17 @@ void GolfState::buildUI()
     //see minimapZoom
     auto updateMiniView = [&, mapEnt](cro::Camera& miniCam) mutable
     {
+        //TODO this assumes we're using the default cel shader for the minimap - if
+        //we replace it with a custom shader we can drop both the Light target 
+        //AND the final target in favour of moving it to the normal alpha channel
         constexpr glm::uvec2 texSize = MapSize * MapSizeMultiplier;
-        //m_mapTextureMRT.setPrecision(cro::TexturePrecision::Low);
-        m_mapTextureMRT.setPrecision(MRTIndex::Normal, cro::TexturePrecision::Low);
+        m_mapTextureMRT.setPrecision(MRTIndex::Normal, cro::TexturePrecision::Default);
         m_mapTextureMRT.setPrecision(MRTIndex::Light, cro::TexturePrecision::Default); //unused for some reason so set it as low as possible
         m_mapTextureMRT.setChannelCount(MRTIndex::Light, 1);
         m_mapTextureMRT.setPrecision(MRTIndex::Count, cro::TexturePrecision::Default);
         m_mapTextureMRT.setChannelCount(MRTIndex::Count, 1);
 
         //TODO remove the position, figure out where we use it and recreate using depth buffer
-        //TODO set the channel on MRT targets if the mask is only using one channel
         m_mapTextureMRT.create(texSize.x, texSize.y, MRTIndex::Count + 1); //colour, pos, normal, *unused - sigh*, terrain mask
         m_mapTextureMRT.setBorderColour(cro::Colour::Transparent);
         m_sharedData.minimapData.mrt = &m_mapTextureMRT;

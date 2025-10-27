@@ -127,7 +127,7 @@ float contourAmount = smoothstep(1.0 - (0.12 / u_gridScale), 1.0 - (0.1 / u_grid
 contourAmount *= texture(u_maskMap, v_texCoord).r;
 
 //stops contours 'spreading' over almost flat areas
-vec3 normal = texture(u_normalMap, v_texCoord).rgb;
+vec3 normal = texture(u_normalMap, v_texCoord).rgb * 2.0 - 1.0;
 contourAmount *= 1.0 - step(0.995, dot(vec3(0.0, 1.0, 0.0), normal));
 
 FRAG_OUT = colour + (gridColour * contourAmount * u_gridAmount);
@@ -916,34 +916,41 @@ void MapOverviewState::refreshMap()
 void MapOverviewState::updateNormals()
 {
     const auto imageSize = m_renderBuffer.getSize();
+    constexpr auto Components = 4;
 
     //so much for doing this all in the shader...
-    std::vector<float> image(imageSize.x * imageSize.y * 4);
+    std::vector<std::uint8_t> image(imageSize.x * imageSize.y * Components);
     glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Normal).textureID);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, image.data());
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
 
     //TODO we already have an image mask stored from which we could get the terrain
-    std::vector<float> mask(imageSize.x * imageSize.y);
+    //TODO move this to the alpha channel of the normal map
+    std::vector<std::uint8_t> mask(imageSize.x * imageSize.y);
     glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Count).textureID);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, mask.data());
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, mask.data());
 
 
     const auto PixelsPerMetre = (imageSize.x / MapSize.x) * 2;
-    const auto Stride = 4 * PixelsPerMetre;
+    const auto Stride = Components * PixelsPerMetre;
 
     //TODO remind ourself how to do the vert building with std::async
     std::vector<cro::Vertex2D> verts;
     for (auto y = 0u; y < imageSize.y; y += PixelsPerMetre)
     {
-        for (auto x = 0u; x < (imageSize.x * 4); x += Stride)
+        for (auto x = 0u; x < (imageSize.x * Components); x += Stride)
         {
-            const auto index = y * (imageSize.x * 4) + x;
+            const auto index = y * (imageSize.x * Components) + x;
 
-            if (mask[index / 4] > 0.5f &&
-                image[index + 1] < 0.9999f) //more than this we kinda assume the normal is vertical and skip it
+            if (mask[index / 4] > 126
+                /* && image[index + 1] < 0.9999f*/) //more than this we kinda assume the normal is vertical and skip it
             {
-                glm::vec2 normal = glm::vec2(image[index], -image[index + 2]) * 50.f;
-                glm::vec2 position(x / 4, y);
+                glm::vec3 n = glm::vec3(image[index], image[index + 1], image[index + 2]);
+                n /= 255.f;
+                n *= 2.f;
+                n -= 1.f;
+
+                glm::vec2 normal = glm::vec2(n.x,-n.z) * 50.f;
+                const glm::vec2 position(x / 4, y);
 
                 //TODO how do we clamp the length without normalising?
 
