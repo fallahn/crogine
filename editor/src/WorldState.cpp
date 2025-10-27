@@ -64,7 +64,7 @@ WorldState::WorldState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     m_fov                   (DefaultFOV),
     m_gizmoMode             (ImGuizmo::TRANSLATE),
     m_showPreferences       (false),
-    m_showTextureCompressor (true),
+    m_showTextureCompressor (false),
     m_selectedModel         (0)
 {
     ctx.mainWindow.loadResources([this]() {

@@ -875,8 +875,11 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 break;
             case Uniform::Texture:
             {
-                const auto& t = m_resources.textures.get(uniform.strValue);
-                material.setProperty(uniform.name, t);
+                if (material.properties.count(uniform.name) != 0)
+                {
+                    const auto& t = m_resources.textures.get(uniform.strValue);
+                    material.setProperty(uniform.name, t);
+                }
             }
                 break;
             }
