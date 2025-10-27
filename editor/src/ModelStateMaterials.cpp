@@ -849,8 +849,6 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
                 uniform.stringValue = strValue;
                 break;
             }
-
-            LogI << "Found uniform " << uniform.name << " with value " << uniform.stringValue << std::endl;
         }
     }
 }
