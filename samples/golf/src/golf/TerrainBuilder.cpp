@@ -1481,20 +1481,22 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
     }
 
     const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
-    //if we create this locally actually frees up ~200mb vram during play, however there's an irritating
-    //pause while this gets created each transtition...
-    //cro::MultiRenderTexture normalMap; 
-    m_normalMap.setPrecision(1,cro::TexturePrecision::Low); //unfortunately default precision is too low for drawing the grid
-    //TODO not sure why we're creating 2 layers (or even using an MRT) - regular render textures
-    //support float values now and could be used to reduce (peak) ram usage further - although
-    //current testing demonstrates that the putting grid breaks.
-    m_normalMap.create(getNormalMapSize().x, getNormalMapSize().y, 2);
+    //so... we're technically only using a single target here HOWEVER using a regulsr render texture
+    //even in floating point doesn't render the grid correctly. Even weirder still if I set this to create
+    //only one target the rendering breaks COMPLETELY despite the removal of a completely unused target...
+    if (!m_normalMap.available())
+    {
+        m_normalMap.setPrecision(1, cro::TexturePrecision::Default);
+        m_normalMap.setChannelCount(1, 1);
+        m_normalMap.create(getNormalMapSize().x, getNormalMapSize().y, 2, true);
+    }
+    //m_normalMap.create(getNormalMapSize().x, getNormalMapSize().y, false, false, 0, true);
     renderToNormalMap(meshData, m_normalShader, m_normalMap);
 
     
     //copy the texture to an array we can query
     m_normalMapValues.resize(getNormalMapSize().x * getNormalMapSize().y * 4);
-    glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture(1).textureID);
-    //glBindTexture(GL_TEXTURE_2D, normalMap.getTexture().getGLHandle());
+    //glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture(1).textureID);
+    glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture().getGLHandle());
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, m_normalMapValues.data());
 }

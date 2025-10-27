@@ -2305,7 +2305,8 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     renderToNormalMap(meshData, normalShader, normalMap);
 
     std::vector<float> normalMapValues(normalMap.getSize().x * normalMap.getSize().y * 4);
-    glBindTexture(GL_TEXTURE_2D, normalMap.getTexture(1).textureID);
+    //glBindTexture(GL_TEXTURE_2D, normalMap.getTexture(1).textureID);
+    glBindTexture(GL_TEXTURE_2D, normalMap.getTexture().getGLHandle());
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, normalMapValues.data());
 
 

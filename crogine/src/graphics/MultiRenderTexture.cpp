@@ -193,7 +193,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
     }
 
     //automatically resizes if already created
-    m_defaultTexture.create(width, height, ImageFormat::RGBA/*, floatingPoint*/);
+    m_defaultTexture.create(width, height, ImageFormat::RGBA, floatingPoint);
     if (m_textureIDs.empty())
     {
         //store this so the handles align to indices correctly
