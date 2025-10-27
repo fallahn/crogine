@@ -1813,6 +1813,7 @@ void GolfState::loadMaterials()
     const auto lazyLoad1 = 
         [&](cro::ShaderResource& shaders)
         {
+            //TODO these lava shaders are using the default vert shader so miss out on vertex snapping
             if (shaders.loadFromString(ShaderID::Lava,
                 cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFragV2, "#define TEXTURED\n"))
             {
@@ -1839,7 +1840,8 @@ void GolfState::loadMaterials()
         [&](cro::ShaderResource& shaders)
         {
             if (shaders.loadFromString(ShaderID::Hologram,
-                cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag, "#define TEXTURED\n#define RIMMING\n#define PASS_SCALE\n"))
+                cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag,
+                "#define TEXTURED\n#define RIMMING\n#define PASS_SCALE\n"))
             {
                 m_windBuffer.addShader(shaders.get(ShaderID::Hologram));
             }
@@ -1849,7 +1851,7 @@ void GolfState::loadMaterials()
 
 
     const auto lazyLoad4 =
-        [&](cro::ShaderResource& shaders)
+        [&, wobble](cro::ShaderResource& shaders)
         {
             if (shaders.loadFromString(ShaderID::Umbrella, CelVertexShader, UmbrellaFrag,
                 "#define DITHERED\n#define INSTANCING\n#define VERTEX_COLOURED\n#define TERRAIN_CLIP\n" + wobble))
@@ -1861,9 +1863,9 @@ void GolfState::loadMaterials()
     m_resources.shaders.mapStringID("umbrella", ShaderID::Umbrella);
 
     const auto lazyLoad5 =
-        [&](cro::ShaderResource& shaders)
+        [&, wobble](cro::ShaderResource& shaders)
         {
-            if (shaders.loadFromString(ShaderID::Cloth, ClothVertex, ClothFragment))
+            if (shaders.loadFromString(ShaderID::Cloth, ClothVertex, ClothFragment, wobble))
             {
                 m_windBuffer.addShader(shaders.get(ShaderID::Cloth));
                 m_resolutionBuffer.addShader(shaders.get(ShaderID::Cloth));

@@ -72,6 +72,7 @@ void main()
     vec4 position = a_position;
 #include SHADOWMAP_VERTEX_PROC
 
+#if !defined(WOBBLE)
     //red low freq, green high freq, blue direction amount
 
     WindResult windResult = getWindData(position.xz, worldMatrix[3].xz);
@@ -87,11 +88,22 @@ void main()
     //multiply wind direction by wind strength
     vec3 windDir = vec3(u_windData.x, 0.0, u_windData.z) * windResult.strength * vertexStrength.b;
     //wind dir is added in world space (below)
+#endif
 
     vec4 worldPosition = worldMatrix * position;
+#if !defined(WOBBLE)
     worldPosition.xyz += windDir;
+#endif
     vec4 vertPos = u_projectionMatrix * u_viewMatrix * worldPosition;
-    //TODO vertex snapping would go here.
+
+#if defined(WOBBLE)
+        vertPos.xyz /= vertPos.w;
+        vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
+        vertPos.xy = floor(vertPos.xy);
+        vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
+        vertPos.xyz *= vertPos.w;
+#endif
+
     gl_Position = vertPos;
 
     gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
