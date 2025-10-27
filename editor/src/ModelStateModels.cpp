@@ -363,6 +363,8 @@ void ModelState::saveModel(const std::string& path)
     };
 
     //add all the active materials
+    //TODO this is duplicating the code in exportMaterial()
+    //we want to move it all to a single place.
     for (auto i : m_activeMaterials)
     {
         auto* obj = newCfg.addObject("material");
@@ -482,6 +484,31 @@ void ModelState::saveModel(const std::string& path)
             for (const auto& t : mat.tags)
             {
                 tags->addProperty("tag").setValue(t);
+            }
+        }
+
+        for (const auto& uniform : mat.uniformValues)
+        {
+            auto* o = obj->addObject("uniform");
+            o->addProperty("name").setValue(uniform.name);
+            o->addProperty("type").setValue(uniform.type);
+            switch (uniform.type)
+            {
+            default:
+                o->addProperty("value").setValue(uniform.stringValue);
+                break;
+            case MaterialDefinition::Uniform::Float1:
+                o->addProperty("value").setValue(uniform.value[0]);
+                break;
+            case MaterialDefinition::Uniform::Float2:
+                o->addProperty("value").setValue(glm::vec2(uniform.value[0], uniform.value[1]));
+                break;
+            case MaterialDefinition::Uniform::Float3:
+                o->addProperty("value").setValue(glm::vec3(uniform.value[0], uniform.value[1], uniform.value[2]));
+                break;
+            case MaterialDefinition::Uniform::Float4:
+                o->addProperty("value").setValue(glm::vec4(uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]));
+                break;
             }
         }
     }

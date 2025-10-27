@@ -390,6 +390,31 @@ void ModelState::exportMaterial() const
             }
         }
 
+        for (const auto& uniform : matDef.uniformValues)
+        {
+            auto* o = file.addObject("uniform");
+            o->addProperty("name").setValue(uniform.name);
+            o->addProperty("type").setValue(uniform.type);
+            switch (uniform.type)
+            {
+            default:
+                o->addProperty("value").setValue(uniform.stringValue);
+                break;
+            case MaterialDefinition::Uniform::Float1:
+                o->addProperty("value").setValue(uniform.value[0]);
+                break;
+            case MaterialDefinition::Uniform::Float2:
+                o->addProperty("value").setValue(glm::vec2(uniform.value[0], uniform.value[1]));
+                break;
+            case MaterialDefinition::Uniform::Float3:
+                o->addProperty("value").setValue(glm::vec3(uniform.value[0], uniform.value[1], uniform.value[2]));
+                break;
+            case MaterialDefinition::Uniform::Float4:
+                o->addProperty("value").setValue(glm::vec4(uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]));
+                break;
+            }
+        }
+
         file.save(path);
     }
 }
@@ -763,6 +788,69 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
                     matDef.tags.push_back(sp.getValue<std::string>());
                 }
             }
+        }
+        else if (so.getName() == "uniform")
+        {
+            auto& uniform = matDef.uniformValues.emplace_back();
+
+            //only one of these will be valid but we
+            //don't know which until the type property
+            //has be properly parsed..
+            std::string strValue;
+            float fValue = 0.f;
+            glm::vec2 v2Value = glm::vec2(0.f);
+            glm::vec3 v3Value = glm::vec3(0.f);
+            glm::vec4 v4Value = glm::vec4(0.f);
+
+            for (const auto& p : so.getProperties())
+            {
+                if (p.getName() == "type")
+                {
+                    uniform.type = p.getValue<std::int32_t>();
+                    uniform.type = std::clamp(uniform.type, 0, MaterialDefinition::Uniform::MaxType - 1);
+                }
+                else if (p.getName() == "name")
+                {
+                    uniform.name = p.getValue<std::string>();
+                }
+                else if (p.getName() == "value")
+                {
+                    strValue = p.getValue<std::string>();
+                    fValue = p.getValue<float>();
+                    v2Value = p.getValue<glm::vec2>();
+                    v3Value = p.getValue<glm::vec3>();
+                    v4Value = p.getValue<glm::vec4>();
+                }
+            }
+
+
+            switch (uniform.type)
+            {
+            default: break;
+            case MaterialDefinition::Uniform::Float1:
+                uniform.value[0] = fValue;
+                break;
+            case MaterialDefinition::Uniform::Float2:
+                uniform.value[0] = v2Value.x;
+                uniform.value[1] = v2Value.y;
+                break;
+            case MaterialDefinition::Uniform::Float3:
+                uniform.value[0] = v3Value.x;
+                uniform.value[1] = v3Value.y;
+                uniform.value[2] = v3Value.z;
+                break;
+            case MaterialDefinition::Uniform::Float4:
+                uniform.value[0] = v4Value.x;
+                uniform.value[1] = v4Value.y;
+                uniform.value[2] = v4Value.z;
+                uniform.value[3] = v4Value.w;
+                break;
+            case MaterialDefinition::Uniform::Texture:
+                uniform.stringValue = strValue;
+                break;
+            }
+
+            LogI << "Found uniform " << uniform.name << " with value " << uniform.stringValue << std::endl;
         }
     }
 }
