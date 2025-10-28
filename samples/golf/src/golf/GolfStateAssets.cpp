@@ -1884,8 +1884,8 @@ void GolfState::loadMaterials()
     std::string earthDefs = "#define DIRECTION vec3(" + std::to_string(-lightDir.x) + "," + std::to_string(-lightDir.y) + "," + std::to_string(-lightDir.z) + ")\n";
 
     TimeOfDay tod;
-    const auto latitude = tod.getLatLon().x;
-    const glm::vec2 rot = glm::vec2(std::sin(-latitude * cro::Util::Const::degToRad), std::cos(-latitude * cro::Util::Const::degToRad));
+    const auto latitude = -tod.getLatLon().x - 90.f;
+    const glm::vec2 rot = glm::vec2(std::sin(latitude * cro::Util::Const::degToRad), std::cos(latitude * cro::Util::Const::degToRad));
 
     earthDefs += "#define ROTATION mat2(vec2(" + std::to_string(rot.y) + "," + std::to_string(-rot.x) + "), vec2(" + std::to_string(rot.x) + "," + std::to_string(rot.y) + "))\n";
 
