@@ -473,9 +473,11 @@ static inline const std::string CelFragmentShader = R"(
         vec3 normal = normalize(v_normal);
 #endif
         NORM_OUT = vec4((normal + 1.0) / 2.0, 1.0); //8 bit target (note STILL IN WORLD SPACE)
+#if defined(VIEW_POS)        
+        POS_OUT.r = v_viewPosition.z;
+#else
         POS_OUT = vec4(v_worldPosition, 1.0);
-        //POS_OUT.r = v_viewPosition.z;
-
+#endif
         float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
 
         o_terrain = vec4(vec3(greenTerrain), 1.0);

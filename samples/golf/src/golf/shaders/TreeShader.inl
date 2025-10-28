@@ -63,8 +63,11 @@ R"(
         mat2 rotation;
         vec4 colour;
         vec3 normal;
-        //vec3 viewPos;
+#if defined(VIEW_POS)
+        vec3 viewPos;
+#else
         vec3 worldPos;
+#endif
         float darkenAmount;
         float ditherAmount;
     }v_data;
@@ -239,8 +242,11 @@ v_data.ditherAmount *= 1.0 - clamp((distance - FarFadeDistance) / fadeDistance, 
 
         gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
 
-        //v_data.viewPos = (u_viewMatrix * worldPosition).xyz;
+#if defined(VIEW_POS)
+        v_data.viewPos = (u_viewMatrix * worldPosition).xyz;
+#else
         v_data.worldPos = worldPosition.xyz;
+#endif
 
         gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
     })";
@@ -335,8 +341,11 @@ R"(
         mat2 rotation;
         vec4 colour;
         vec3 normal;
-        //vec3 viewPos;
+#if defined(VIEW_POS)
+        vec3 viewPos;
+#else
         vec3 worldPos;
+#endif
         float darkenAmount;
         float ditherAmount;
     }v_data;
@@ -396,8 +405,11 @@ uniform float u_rotation = 0.25;
 
 #if defined(USE_MRT)
         NORM_OUT = vec4(normal * 0.5 + 0.5, 1.0);
-        //POS_OUT = vec4(v_data.viewPos.r, 1.0);
+#if defined(VIEW_POS)
+        POS_OUT.r = v_data.viewPos.z;
+#else
         POS_OUT = vec4(v_data.worldPos, 1.0);
+#endif
         LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 
@@ -519,8 +531,11 @@ static inline const std::string BranchFragment = R"(
     VARYING_IN float v_ditherAmount;
     VARYING_IN vec2 v_texCoord;
     VARYING_IN vec3 v_normal;
-    //VARYING_IN vec3 v_viewPosition;
+#if defined(VIEW_POS)
+    VARYING_IN vec3 v_viewPosition;
+#else
     VARYING_IN vec3 v_worldPosition;
+#endif
     VARYING_IN float v_darkenAmount;
 
 #include BAYER_MATRIX
@@ -544,8 +559,11 @@ static inline const std::string BranchFragment = R"(
 
 #if defined(USE_MRT)
         NORM_OUT = vec4(normal * 0.5 + 0.5, 1.0);
-        //POS_OUT.r = v_viewPosition.z;
+#if defined(VIEW_POS)
+        POS_OUT.r = v_viewPosition.z;
+#else
         POS_OUT = vec4(v_worldPosition, 1.0);
+#endif
         LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 

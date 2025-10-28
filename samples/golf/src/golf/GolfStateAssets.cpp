@@ -1785,6 +1785,11 @@ void GolfState::loadMaterials()
     {
         wobble = "#define WOBBLE\n";
     }
+    std::string lightingDefs;
+#ifdef VIEW_SPACE_LIGHTING
+    lightingDefs = "#define VIEW_POS\n";
+    wobble += lightingDefs;
+#endif
 
     if (m_sharedData.shadowQuality == SharedStateData::ShadowQuality::Classic)
     {
@@ -1966,12 +1971,12 @@ void GolfState::loadMaterials()
 
     if (m_sharedData.nightTime)
     {
-        m_resources.shaders.loadFromString(ShaderID::BallNight, GlowVertex, GlowFragment);
+        m_resources.shaders.loadFromString(ShaderID::BallNight, GlowVertex, GlowFragment, lightingDefs);
         shader = &m_resources.shaders.get(ShaderID::BallNight);
         m_materialIDs[MaterialID::BallNight] = m_resources.materials.add(*shader);
         m_resources.materials.get(m_materialIDs[MaterialID::BallNight]).setProperty("u_ballColour", cro::Colour::White);
 
-        m_resources.shaders.loadFromString(ShaderID::BallNightSkinned, GlowVertex, GlowFragment, "#define SKINNED\n");
+        m_resources.shaders.loadFromString(ShaderID::BallNightSkinned, GlowVertex, GlowFragment, "#define SKINNED\n" + lightingDefs);
         shader = &m_resources.shaders.get(ShaderID::BallNightSkinned);
         m_materialIDs[MaterialID::BallNightSkinned] = m_resources.materials.add(*shader);
         m_resources.materials.get(m_materialIDs[MaterialID::BallNightSkinned]).setProperty("u_ballColour", cro::Colour::White);
@@ -2053,7 +2058,7 @@ void GolfState::loadMaterials()
     m_windBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Leaderboard, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SUBRECT\n#define TERRAIN_CLIP\n");
+    m_resources.shaders.loadFromString(ShaderID::Leaderboard, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SUBRECT\n#define TERRAIN_CLIP\n" + lightingDefs);
     shader = &m_resources.shaders.get(ShaderID::Leaderboard);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Leaderboard] = m_resources.materials.add(*shader);
@@ -2200,7 +2205,7 @@ void GolfState::loadMaterials()
 
     if (m_sharedData.nightTime)
     {
-        m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader, "#define USE_MRT\n" + FadeDistance);
+        m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader, "#define USE_MRT\n" + FadeDistance + lightingDefs);
     }
     else
     {
@@ -2215,7 +2220,7 @@ void GolfState::loadMaterials()
 
 
     //shaders used by terrain
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define INSTANCING\n#define TERRAIN_CLIP\n");
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define INSTANCING\n#define TERRAIN_CLIP\n" + lightingDefs);
     shader = &m_resources.shaders.get(ShaderID::CelTexturedInstanced);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -2226,7 +2231,7 @@ void GolfState::loadMaterials()
     m_windBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define TEXTURED\n#define TERRAIN_CLIP\n");
+    m_resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define TEXTURED\n#define TERRAIN_CLIP\n" + lightingDefs);
     shader = &m_resources.shaders.get(ShaderID::Crowd);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -2234,7 +2239,7 @@ void GolfState::loadMaterials()
     m_resources.shaders.loadFromString(ShaderID::CrowdShadow, ShadowVertex, ShadowFragment, "#define DITHERED\n#define INSTANCING\n#define VATS\n");
     m_resolutionBuffer.addShader(m_resources.shaders.get(ShaderID::CrowdShadow));
 
-    m_resources.shaders.loadFromString(ShaderID::CrowdArray, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define TEXTURED\n#define ARRAY_MAPPING\n#define TERRAIN_CLIP\n");
+    m_resources.shaders.loadFromString(ShaderID::CrowdArray, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define TEXTURED\n#define ARRAY_MAPPING\n#define TERRAIN_CLIP\n" + lightingDefs);
     shader = &m_resources.shaders.get(ShaderID::CrowdArray);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -2384,7 +2389,7 @@ void GolfState::loadMaterials()
         + std::to_string(m_depthMap.getTileCount() - 1) + ".0;\n";
     m_resources.shaders.addInclude("DEPTH_CONSTS", DepthConsts.c_str());*/
 
-    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define NO_DEPTH\n#define USE_MRT\n"/* + waterDefines*/);
+    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define NO_DEPTH\n#define USE_MRT\n" + lightingDefs/* + waterDefines*/);
     shader = &m_resources.shaders.get(ShaderID::Water);
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);

@@ -74,7 +74,7 @@ source distribution.
 #ifdef CRO_DEBUG_
 //#define PATH_TRACING
 #endif
-
+//#define VIEW_SPACE_LIGHTING
 
 struct BullsEye;
 struct BullHit;

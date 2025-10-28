@@ -157,7 +157,9 @@ static inline const std::string BillboardVertexShader = R"(
 
         v_worldPosition = position.xyz;
 #if defined(USE_MRT)
+#if defined (VIEW_POS)
         v_viewPosition = (viewMatrix * vec4(position, 1.0)).xyz;
+#endif
         v_normalVector = cross(camRight, camUp);
 #endif
 
@@ -222,8 +224,11 @@ static inline const std::string BillboardFragmentShader = R"(
     void main()
     {
 #if defined(USE_MRT)
+#if defined (VIEW_POS)
+    POS_OUT.r = v_viewPosition.z;
+#else
     POS_OUT = vec4(v_worldPosition, 1.0);
-    //POS_OUT.r = v_viewPosition.z;
+#endif
     NORM_OUT = vec4(normalize(v_normalVector) * 0.5 + 0.5, 1.0);
     LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
