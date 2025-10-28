@@ -94,7 +94,8 @@ void main()
     vec3 normal = normalize(v_normal);
 
     NORM_OUT = vec4(normal * 0.5 + 0.5, 0.0);
-    POS_OUT = vec4(v_viewPosition, 1.0);
+    //POS_OUT.r = v_viewPosition.z;
+    POS_OUT = vec4(v_worldPosition, 1.0);
 
     vec3 viewDist = u_cameraWorldPosition - v_worldPosition;
     

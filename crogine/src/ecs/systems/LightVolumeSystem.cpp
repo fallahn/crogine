@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/graphics/Spatial.hpp>
+#include <crogine/util/Constants.hpp>
 #include "../../detail/GLCheck.hpp"
 
 
@@ -97,12 +98,22 @@ namespace
 
         uniform sampler2D u_normalMap;
         uniform sampler2D u_positionMap;
-uniform mat4 u_viewMatrix;
+        
+        uniform mat4 u_viewMatrix;
         uniform float u_lightRadiusSqr;
         uniform vec3 u_lightColour = vec3(1.0, 1.0, 0.0);
 
         uniform vec3 u_lightPos;
         uniform vec2 u_targetSize = vec2(640.0, 480.0);
+
+        uniform vec2 u_fov;
+
+        vec3 calcViewPos(vec2 uv, float depth) 
+        {
+            vec2 ndc = vec2(0.5) - uv; 
+            return vec3(ndc * u_fov * depth, depth);
+        }
+
 
 #if defined (WORLD_SPACE)
         VARYING_IN vec3 v_lightPosition;
@@ -116,13 +127,16 @@ uniform mat4 u_viewMatrix;
 
             vec4 normalSample = TEXTURE(u_normalMap, texCoord);
             vec3 normal = normalize(normalSample.rgb * 2.0 - 1.0); //normalSample.a is self-illum mask
-            vec3 position = TEXTURE(u_positionMap, texCoord).rgb;
 
 #if defined(WORLD_SPACE)
+            vec3 position = TEXTURE(u_positionMap, texCoord).rgb;
             vec3 lightDir = v_lightPosition - position;
 #else
+            //reconstruct the position from view space depth
+            vec3 position = calcViewPos(texCoord, TEXTURE(u_positionMap, texCoord).r);
             vec3 lightDir = u_lightPos - position;
-            normal = mat3(u_viewMatrix) * normal; //do this here rather than into the gbuffer as there are likely to be far fewer fragments executing this
+            //do this here rather than into the gbuffer as there are likely to be far fewer fragments executing this            
+            normal = mat3(u_viewMatrix) * normal;
 #endif
             
             float amount = dot(normal, normalize(lightDir));
@@ -135,6 +149,11 @@ uniform mat4 u_viewMatrix;
             lightColour *= attenuation;
             FRAG_OUT = vec4(lightColour, 1.0);
         })";
+
+    inline float hFov(float vFov, float ratio)
+    {
+        return 2.f * std::atan(std::tan(vFov/2.f) * ratio);
+    }
 }
 
 LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
@@ -166,6 +185,7 @@ LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
         m_uniformIDs[UniformID::World] = m_shader.getUniformID("u_worldMatrix");
         m_uniformIDs[UniformID::View] = m_shader.getUniformID("u_viewMatrix");
         m_uniformIDs[UniformID::ViewProjection] = m_shader.getUniformID("u_viewProjectionMatrix");
+        m_uniformIDs[UniformID::FOV] = m_shader.getUniformID("u_fov");
 
         m_uniformIDs[UniformID::NormalMap] = m_shader.getUniformID("u_normalMap");
         m_uniformIDs[UniformID::PositionMap] = m_shader.getUniformID("u_positionMap");
@@ -306,6 +326,7 @@ void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
     //const auto& camTx = camera.getComponent<Transform>();
     //const auto cameraPosition = camTx.getWorldPosition();
 
+
     CRO_ASSERT(camComponent.getDrawListIndex() < m_drawLists.size(), "Can't call this before having updated draw lists");
     const auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
 
@@ -328,6 +349,15 @@ void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
     glCheck(glUniform1i(m_uniformIDs[UniformID::PositionMap], 1));
     glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::View], 1, GL_FALSE, &pass.viewMatrix[0][0]));
     glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::ViewProjection], 1, GL_FALSE, &viewProj[0][0]));
+
+    if (m_spaceIndex == LightVolume::ViewSpace)
+    {
+        const auto y = std::tan(camComponent.getFOV() / 2.f);
+        const auto x = y * camComponent.getAspectRatio();
+        const glm::vec2 fov = glm::vec2(x, y) * 2.f;
+        glCheck(glUniform2f(m_uniformIDs[UniformID::FOV], fov.x, fov.y));
+    }
+
 
     //if there are multiple lights blend additively
     //TODO we probably want to sort back to front when culling

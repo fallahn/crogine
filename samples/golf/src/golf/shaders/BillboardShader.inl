@@ -222,8 +222,8 @@ static inline const std::string BillboardFragmentShader = R"(
     void main()
     {
 #if defined(USE_MRT)
-    //POS_OUT = vec4(v_worldPosition, 1.0);
-    POS_OUT = vec4(v_viewPosition, 1.0);
+    POS_OUT = vec4(v_worldPosition, 1.0);
+    //POS_OUT.r = v_viewPosition.z;
     NORM_OUT = vec4(normalize(v_normalVector) * 0.5 + 0.5, 1.0);
     LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif

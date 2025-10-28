@@ -105,7 +105,8 @@ static const inline std::string UmbrellaFrag = R"(
 #include LIGHT_UBO
 #include LIGHT_COLOUR
 
-VARYING_IN vec3 v_viewPosition;
+//VARYING_IN vec3 v_viewPosition;
+VARYING_IN vec3 v_worldPosition;
 VARYING_IN float v_ditherAmount;
 VARYING_IN vec3 v_normal;
 VARYING_IN vec4 v_colour;
@@ -149,7 +150,8 @@ void main()
     FRAG_OUT = vec4(colour, 1.0);
     NORM_OUT = vec4(normal * 0.5 + 0.5, 1.0);
     LIGHT_OUT = vec4(vec3(0.0), 1.0);
-    POS_OUT = vec4(v_viewPosition, 1.0);
+    //POS_OUT.r = v_viewPosition.z;
+    POS_OUT = vec4(v_worldPosition, 1.0);
 })";
 
 static const inline std::string WeatherVertex = R"(

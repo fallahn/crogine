@@ -70,7 +70,7 @@ static inline const std::string WaterVertex = R"(
 
         v_worldPosition = position.xyz;
 #if defined (USE_MRT)
-        v_viewPosition = (u_viewMatrix * position).xyz;
+        //v_viewPosition = (u_viewMatrix * position).xyz;
 #endif
         v_reflectionPosition = u_reflectionMatrix * position;
         v_refractionPosition = gl_Position;
@@ -184,7 +184,8 @@ uniform sampler2DArray u_depthMap;
 
 #if defined (USE_MRT)
         NORM_OUT = vec4(normal * 0.5 + 0.5, 1.0);
-        POS_OUT = vec4(v_viewPosition, 1.0);
+        //POS_OUT.r = v_viewPosition.z;
+        POS_OUT = vec4(v_worldPosition, 1.0);
         LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 

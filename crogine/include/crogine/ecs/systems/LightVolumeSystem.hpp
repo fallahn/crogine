@@ -147,6 +147,7 @@ namespace cro
                 World,
                 View,
                 ViewProjection,
+                FOV,
 
                 PositionMap,
                 NormalMap,

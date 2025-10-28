@@ -38,7 +38,8 @@ R"(
 
 VARYING_IN vec3 v_normal;
 VARYING_IN vec4 v_colour;
-VARYING_IN vec3 v_viewPosition;
+//VARYING_IN vec3 v_viewPosition;
+VARYING_IN vec3 v_worldPosition;
 
 #define USE_MRT
 #include OUTPUT_LOCATION
@@ -48,5 +49,6 @@ void main()
     FRAG_OUT = v_colour;
     LIGHT_OUT = v_colour;
     NORM_OUT = vec4(normalize(v_normal) * 0.5 + 0.5, 0.0);
-    POS_OUT = vec4(v_viewPosition, 1.0);
+    //POS_OUT.r = v_viewPosition.z;
+    POS_OUT = vec4(v_worldPosition, 1.0);
 })";

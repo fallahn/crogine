@@ -3371,7 +3371,7 @@ void GolfState::addSystems()
 
     if (m_sharedData.nightTime)
     {
-        m_gameScene.addSystem<cro::LightVolumeSystem>(mb, cro::LightVolume::/*WorldSpace*/ViewSpace);
+        m_gameScene.addSystem<cro::LightVolumeSystem>(mb, cro::LightVolume::WorldSpace/*ViewSpace*/);
     }
 
     //m_gameScene.setSystemActive<InterpolationSystem<InterpolationType::Linear>>(false);
