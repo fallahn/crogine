@@ -76,6 +76,7 @@ namespace
         ATTRIBUTE vec4 a_position;
 
         uniform mat4 u_worldMatrix;
+//       uniform mat4 u_viewMatrix;
         uniform mat4 u_viewProjectionMatrix;
 #if defined (WORLD_SPACE)
         VARYING_OUT vec3 v_lightPosition;
@@ -85,6 +86,8 @@ namespace
             gl_Position = u_viewProjectionMatrix * u_worldMatrix * a_position;
 #if defined (WORLD_SPACE)
             v_lightPosition = vec3(u_worldMatrix[3]);
+//#else
+//            v_lightPosition = vec3(u_viewMatrix * u_worldMatrix[3]);
 #endif
         })";
 
@@ -94,7 +97,7 @@ namespace
 
         uniform sampler2D u_normalMap;
         uniform sampler2D u_positionMap;
-
+uniform mat4 u_viewMatrix;
         uniform float u_lightRadiusSqr;
         uniform vec3 u_lightColour = vec3(1.0, 1.0, 0.0);
 
@@ -119,13 +122,10 @@ namespace
             vec3 lightDir = v_lightPosition - position;
 #else
             vec3 lightDir = u_lightPos - position;
+            normal = mat3(u_viewMatrix) * normal; //do this here rather than into the gbuffer as there are likely to be far fewer fragments executing this
 #endif
             
             float amount = dot(normal, normalize(lightDir));
-
-            /*amount *= ColourSteps;
-            amount = round(amount);
-            amount /= ColourSteps;*/
 
             vec3 lightColour = u_lightColour * max(amount, 0.0) * normalSample.a;
 
@@ -164,7 +164,7 @@ LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
     if (loaded)
     {
         m_uniformIDs[UniformID::World] = m_shader.getUniformID("u_worldMatrix");
-        //m_uniformIDs[UniformID::View] = m_shader.getUniformID("u_viewMatrix");
+        m_uniformIDs[UniformID::View] = m_shader.getUniformID("u_viewMatrix");
         m_uniformIDs[UniformID::ViewProjection] = m_shader.getUniformID("u_viewProjectionMatrix");
 
         m_uniformIDs[UniformID::NormalMap] = m_shader.getUniformID("u_normalMap");
@@ -326,7 +326,7 @@ void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
     glCheck(glUniform2f(m_uniformIDs[UniformID::TargetSize], size.x, size.y));
     glCheck(glUniform1i(m_uniformIDs[UniformID::NormalMap], 0));
     glCheck(glUniform1i(m_uniformIDs[UniformID::PositionMap], 1));
-    //glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::View], 1, GL_FALSE, &pass.viewMatrix[0][0]));
+    glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::View], 1, GL_FALSE, &pass.viewMatrix[0][0]));
     glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::ViewProjection], 1, GL_FALSE, &viewProj[0][0]));
 
     //if there are multiple lights blend additively
@@ -349,7 +349,7 @@ void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
 
             if (m_spaceIndex == LightVolume::ViewSpace)
             {
-                const auto viewPos = glm::vec3(pass.viewMatrix * glm::vec4(tx.getWorldPosition(), 1.f));
+                const auto viewPos = /*glm::vec3*/(pass.viewMatrix * glm::vec4(tx.getWorldPosition(), 1.f));
                 glCheck(glUniform3f(m_uniformIDs[UniformID::LightPosition], viewPos.x, viewPos.y, viewPos.z));
             }
 

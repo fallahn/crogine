@@ -65,8 +65,11 @@ static inline const std::string BillboardVertexShader = R"(
 
     VARYING_OUT float v_ditherAmount;
 
-    VARYING_OUT vec3 v_normalVector;
     VARYING_OUT vec3 v_worldPosition;
+#if defined(USE_MRT)
+    VARYING_OUT vec3 v_viewPosition;
+    VARYING_OUT vec3 v_normalVector;
+#endif
 
 #include WIND_CALC
 #include WATER_LEVEL
@@ -154,6 +157,7 @@ static inline const std::string BillboardVertexShader = R"(
 
         v_worldPosition = position.xyz;
 #if defined(USE_MRT)
+        v_viewPosition = (viewMatrix * vec4(position, 1.0)).xyz;
         v_normalVector = cross(camRight, camUp);
 #endif
 
@@ -204,8 +208,11 @@ static inline const std::string BillboardFragmentShader = R"(
     VARYING_IN MED vec2 v_texCoord0;
 
     VARYING_IN float v_ditherAmount;
-    VARYING_IN vec3 v_normalVector;
     VARYING_IN vec3 v_worldPosition;
+#if defined(USE_MRT)
+    VARYING_IN vec3 v_viewPosition;
+    VARYING_IN vec3 v_normalVector;
+#endif
 
 #include BAYER_MATRIX
 #include LIGHT_COLOUR
@@ -215,8 +222,9 @@ static inline const std::string BillboardFragmentShader = R"(
     void main()
     {
 #if defined(USE_MRT)
-    POS_OUT = vec4(v_worldPosition, 1.0);
-    NORM_OUT = vec4(normalize(v_normalVector), 1.0);
+    //POS_OUT = vec4(v_worldPosition, 1.0);
+    POS_OUT = vec4(v_viewPosition, 1.0);
+    NORM_OUT = vec4(normalize(v_normalVector) * 0.5 + 0.5, 1.0);
     LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 

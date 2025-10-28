@@ -63,7 +63,7 @@ R"(
         mat2 rotation;
         vec4 colour;
         vec3 normal;
-        vec3 worldPos;
+        vec3 viewPos;
         float darkenAmount;
         float ditherAmount;
     }v_data;
@@ -238,7 +238,7 @@ v_data.ditherAmount *= 1.0 - clamp((distance - FarFadeDistance) / fadeDistance, 
 
         gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
 
-        v_data.worldPos = worldPosition.xyz;
+        v_data.viewPos = (u_viewMatrix * worldPosition).xyz;
 
         gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
     })";
@@ -333,7 +333,7 @@ R"(
         mat2 rotation;
         vec4 colour;
         vec3 normal;
-        vec3 worldPos;
+        vec3 viewPos;
         float darkenAmount;
         float ditherAmount;
     }v_data;
@@ -392,8 +392,8 @@ uniform float u_rotation = 0.25;
         textureColour.rgb *= v_data.darkenAmount;
 
 #if defined(USE_MRT)
-        NORM_OUT = vec4(normal, 1.0);
-        POS_OUT = vec4(v_data.worldPos, 1.0);
+        NORM_OUT = vec4(normal * 0.5 + 0.5, 1.0);
+        POS_OUT = vec4(v_data.viewPos, 1.0);
         LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 
@@ -425,7 +425,7 @@ static inline const std::string BranchVertex = R"(
     VARYING_OUT float v_ditherAmount;
     VARYING_OUT vec2 v_texCoord;
     VARYING_OUT vec3 v_normal;
-    VARYING_OUT vec3 v_worldPosition;
+    VARYING_OUT vec3 v_viewPosition;
     VARYING_OUT float v_darkenAmount;
 
 #include WIND_CALC
@@ -480,7 +480,7 @@ static inline const std::string BranchVertex = R"(
 #else
         gl_Position = u_viewProjectionMatrix * worldPosition;
 #endif
-        v_worldPosition = worldPosition.xyz;
+        v_viewPosition = (u_viewMatrix * worldPosition).xyz;
 
         gl_ClipDistance[0] = dot(u_clipPlane, worldPosition);
 
@@ -513,7 +513,7 @@ static inline const std::string BranchFragment = R"(
     VARYING_IN float v_ditherAmount;
     VARYING_IN vec2 v_texCoord;
     VARYING_IN vec3 v_normal;
-    VARYING_IN vec3 v_worldPosition;
+    VARYING_IN vec3 v_viewPosition;
     VARYING_IN float v_darkenAmount;
 
 #include BAYER_MATRIX
@@ -536,8 +536,8 @@ static inline const std::string BranchFragment = R"(
         FRAG_OUT = colour * getLightColour();
 
 #if defined(USE_MRT)
-        NORM_OUT = vec4(normal, 1.0);
-        POS_OUT = vec4(v_worldPosition, 1.0);
+        NORM_OUT = vec4(normal * 0.5 + 0.5, 1.0);
+        POS_OUT = vec4(v_viewPosition, 1.0);
         LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 

@@ -47,6 +47,9 @@ static inline const std::string WaterVertex = R"(
     VARYING_OUT vec2 v_texCoord;
 
     VARYING_OUT vec3 v_worldPosition;
+#if defined (USE_MRT)
+    VARYING_OUT vec3 v_viewPosition;
+#endif
     VARYING_OUT vec4 v_reflectionPosition;
     VARYING_OUT vec4 v_refractionPosition;
     VARYING_OUT LOW vec4 v_lightWorldPosition;
@@ -66,6 +69,9 @@ static inline const std::string WaterVertex = R"(
         v_texCoord += vec2(1.0); //remove negative value up to -1,-1
 
         v_worldPosition = position.xyz;
+#if defined (USE_MRT)
+        v_viewPosition = (u_viewMatrix * position).xyz;
+#endif
         v_reflectionPosition = u_reflectionMatrix * position;
         v_refractionPosition = gl_Position;
         v_lightWorldPosition = u_lightViewProjectionMatrix * position;
@@ -100,6 +106,9 @@ uniform sampler2DArray u_depthMap;
     VARYING_IN vec3 v_normal;
     VARYING_IN vec2 v_texCoord;
 
+#if defined (USE_MRT)
+    VARYING_IN vec3 v_viewPosition;
+#endif
     VARYING_IN vec3 v_worldPosition;
     VARYING_IN vec4 v_reflectionPosition;
     VARYING_IN vec4 v_refractionPosition;
@@ -174,8 +183,8 @@ uniform sampler2DArray u_depthMap;
         vec3 normal = normalize(v_normal);
 
 #if defined (USE_MRT)
-        NORM_OUT = vec4(normal, 1.0);
-        POS_OUT = vec4(v_worldPosition, 1.0);
+        NORM_OUT = vec4(normal * 0.5 + 0.5, 1.0);
+        POS_OUT = vec4(v_viewPosition, 1.0);
         LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 

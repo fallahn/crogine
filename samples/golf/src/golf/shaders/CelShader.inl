@@ -109,6 +109,7 @@ VARYING_OUT vec4 v_menuProjection;
     VARYING_OUT vec4 v_colour;
     VARYING_OUT vec3 v_cameraWorldPosition;
     VARYING_OUT vec3 v_worldPosition;
+    VARYING_OUT vec3 v_viewPosition;
     //VARYING_OUT float v_perspectiveScale;
 
 #if defined (TEXTURED)
@@ -148,7 +149,6 @@ flat out int v_instanceID;
         mat4 worldMatrix = u_worldMatrix;
         mat4 worldViewMatrix = u_worldViewMatrix;
         mat3 normalMatrix = u_normalMatrix;
-        //mat3 normalMatrix = transpose(inverse(mat3(u_worldMatrix)));
     #endif
 
     #if defined (VATS)
@@ -202,11 +202,15 @@ flat out int v_instanceID;
 #if !defined(WOBBLE)
         worldPosition.xyz += windDir;
 #endif
-        vec4 vertPos = u_projectionMatrix * u_viewMatrix * worldPosition;
+        //vec4 vertPos = u_projectionMatrix * u_viewMatrix * worldPosition;
+        vec4 viewPosition = u_viewMatrix * worldPosition;
 #else
-        vec4 vertPos = u_projectionMatrix * worldViewMatrix * position;
+        //vec4 vertPos = u_projectionMatrix * worldViewMatrix * position;
+        vec4 viewPosition = worldViewMatrix * position;
 #endif
+        vec4 vertPos = u_projectionMatrix * viewPosition;
         v_worldPosition = worldPosition.xyz;
+        v_viewPosition = viewPosition.xyz;
 
 #if defined(WOBBLE)
         vertPos.xyz /= vertPos.w;
@@ -352,6 +356,7 @@ static inline const std::string CelFragmentShader = R"(
     VARYING_IN float v_ditherAmount;
     VARYING_IN vec3 v_cameraWorldPosition;
     VARYING_IN vec3 v_worldPosition;
+    VARYING_IN vec3 v_viewPosition;
     VARYING_IN vec2 v_texCoord;
     //VARYING_IN float v_perspectiveScale;
 
@@ -467,8 +472,9 @@ static inline const std::string CelFragmentShader = R"(
 #else
         vec3 normal = normalize(v_normal);
 #endif
-        NORM_OUT = vec4((normal + 1.0) / 2.0, 1.0); //8 bit target
-        POS_OUT = vec4(v_worldPosition, 1.0);
+        NORM_OUT = vec4((normal + 1.0) / 2.0, 1.0); //8 bit target (note STILL IN WORLD SPACE)
+        //POS_OUT = vec4(v_worldPosition, 1.0);
+        POS_OUT = vec4(v_viewPosition, 1.0);
 
         float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
 

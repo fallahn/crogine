@@ -111,7 +111,11 @@ void GolfState::createCameras()
                         && m_sharedData.multisamples != 0
                         && !m_sharedData.pixelScale;
 
-                    m_renderTarget.clear = [&](cro::Colour c) { m_gameSceneMRTexture.clear(c); };
+                    m_renderTarget.clear = 
+                        [&](cro::Colour c)
+                        {
+                            m_gameSceneMRTexture.clear(c); 
+                        };
                     m_renderTarget.display = std::bind(&cro::MultiRenderTexture::display, &m_gameSceneMRTexture);
                     m_renderTarget.getSize = std::bind(&cro::MultiRenderTexture::getSize, &m_gameSceneMRTexture);
 

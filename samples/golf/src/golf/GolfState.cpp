@@ -3222,7 +3222,8 @@ void GolfState::render()
     {
         glUseProgram(m_gridShaders[0].shaderID);
         glUniform1f(m_gridShaders[0].transparency, m_sharedData.gridTransparency * (1.f - m_terrainBuilder.getSlopeAlpha()));
-    }    
+    }
+
     m_renderTarget.clear(cro::Colour::Black);
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -3292,6 +3293,7 @@ void GolfState::render()
         lightVolSystem.setSourceBuffer(m_gameSceneMRTexture.getTexture(MRTIndex::Normal), cro::LightVolumeSystem::BufferID::Normal);
         lightVolSystem.setSourceBuffer(m_gameSceneMRTexture.getTexture(MRTIndex::Position), cro::LightVolumeSystem::BufferID::Position);
         lightVolSystem.updateTarget(m_gameScene.getActiveCamera(), m_lightMaps[LightMapID::Scene]);
+
 
         m_lightBlurTextures[LightMapID::Scene].clear();
         m_lightBlurQuads[LightMapID::Scene].draw();
@@ -3369,7 +3371,7 @@ void GolfState::addSystems()
 
     if (m_sharedData.nightTime)
     {
-        m_gameScene.addSystem<cro::LightVolumeSystem>(mb, cro::LightVolume::WorldSpace);
+        m_gameScene.addSystem<cro::LightVolumeSystem>(mb, cro::LightVolume::/*WorldSpace*/ViewSpace);
     }
 
     //m_gameScene.setSystemActive<InterpolationSystem<InterpolationType::Linear>>(false);
