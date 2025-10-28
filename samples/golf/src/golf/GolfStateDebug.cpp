@@ -282,7 +282,7 @@ void GolfState::registerDebugCommands()
     //    {
     //        ImGui::Begin("Cloud Cover");
     //        
-    //        auto light = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour();
+    //        /*auto light = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour();
     //        ImGui::Text("%3.2f, %3.2f, %3.2f", light.getRed(), light.getGreen(), light.getBlue());
 
     //        static float t = 1.f;
@@ -298,8 +298,12 @@ void GolfState::registerDebugCommands()
     //            auto skyColours = m_skyScene.getSkyboxColours();
     //            skyColours.top = glm::mix(darkSky.getVec4(), m_baseSkyColour.getVec4(), t);
     //            m_skyScene.setSkyboxColours(skyColours);
-    //        }
-
+    //        }*/
+    //        /*if (m_gameSceneMRTexture.available())
+    //        {
+    //            glm::vec2 s(m_gameSceneMRTexture.getSize() / 4u);
+    //            ImGui::Image(m_gameSceneMRTexture.getTexture(2), { s.x, s.y }, { 0.f,1.f }, { 1.f, 0.f });
+    //        }*/
     //        ImGui::End();
     //    });
 

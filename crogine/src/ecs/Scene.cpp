@@ -79,7 +79,8 @@ namespace
     const std::string skyboxFrag = 
         R"(
         OUTPUT
-
+layout (location = 1) out vec4 POS_OUT;
+layout (location = 2) out vec4 NORM_OUT;
         uniform LOW vec3 u_darkColour;
         uniform LOW vec3 u_midColour;
         uniform LOW vec3 u_lightColour;
@@ -140,7 +141,8 @@ namespace
             vec3 viewDirection = normalize(v_texCoords);
             float stars = pow(clamp(noise(viewDirection * 200.0), 0.0f, 1.0f), Threshold) * Exposure;
             stars *= mix(0.4, 1.4, noise(viewDirection * 100.0));
-
+NORM_OUT = vec4(0.5,0.5,0.0,1.0);
+POS_OUT.r = 10000.0;//hack to make the sky distance a long way away
             FRAG_OUT.rgb = mix(FRAG_OUT.rgb, vec3(1.0), stars * amount * u_starsAmount);
 
         })";

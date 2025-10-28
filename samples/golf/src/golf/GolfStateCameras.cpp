@@ -100,10 +100,13 @@ void GolfState::createCameras()
 
                 if (m_sharedData.nightTime)
                 {
-                    //m_gameSceneMRTexture.setPrecision(m_sharedData.lightmapQuality);
                     //TODO remove position buffer and reconstruct from depth
                     m_gameSceneMRTexture.setPrecision(MRTIndex::Normal, cro::TexturePrecision::Default);
                     m_gameSceneMRTexture.setPrecision(MRTIndex::Light, cro::TexturePrecision::Default);
+#ifdef VIEW_SPACE_LIGHTING
+                    m_gameSceneMRTexture.setPrecision(MRTIndex::Position, cro::TexturePrecision::Low);
+                    m_gameSceneMRTexture.setChannelCount(MRTIndex::Position, 1);
+#endif // VIEW_SPACE_LIGHTING
 
                     glm::uvec2 usize(texSize);
                     m_sharedData.antialias =
@@ -111,11 +114,7 @@ void GolfState::createCameras()
                         && m_sharedData.multisamples != 0
                         && !m_sharedData.pixelScale;
 
-                    m_renderTarget.clear = 
-                        [&](cro::Colour c)
-                        {
-                            m_gameSceneMRTexture.clear(c); 
-                        };
+                    m_renderTarget.clear = [&](cro::Colour c){ m_gameSceneMRTexture.clear(c); };
                     m_renderTarget.display = std::bind(&cro::MultiRenderTexture::display, &m_gameSceneMRTexture);
                     m_renderTarget.getSize = std::bind(&cro::MultiRenderTexture::getSize, &m_gameSceneMRTexture);
 

@@ -51,7 +51,8 @@ uniform vec3 u_lightDir = vec3(0.0, 0.0, 1.0);
 VARYING_IN vec2 v_texCoord0;
 VARYING_IN vec4 v_colour;
 
-OUTPUT
+#define USE_MRT
+#include OUTPUT_LOCATION
 
 vec3 sphericalNormal(vec2 coord)
 {
@@ -95,6 +96,9 @@ void main()
 
     colour.rgb = mix(skyColour, colour.rgb, amount);
     FRAG_OUT = vec4(mix(WaterColour, colour.rgb, v_colour.g), 1.0);
+
+NORM_OUT = vec4(0.5, 0.5, 0.0, 1.0);
+POS_OUT.r = 10000.0;
 })";
 
 static const inline std::string UmbrellaFrag = R"(

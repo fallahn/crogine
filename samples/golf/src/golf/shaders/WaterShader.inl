@@ -263,7 +263,9 @@ uniform sampler2DArray u_depthMap;
 
     static inline const std::string HorizonFrag = 
         R"(
-    OUTPUT
+    //OUTPUT
+#define USE_MRT
+#include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
     uniform vec4 u_lightColour = vec4(1.0);
@@ -281,6 +283,7 @@ uniform sampler2DArray u_depthMap;
         vec4 colour = TEXTURE(u_diffuseMap, v_texCoord);
 #endif
         FRAG_OUT = vec4(mix(WaterColour, colour.rgb, v_colour.g), 1.0);
-
+NORM_OUT = vec4(0.5,0.5,0.0,1.0);
+POS_OUT.r = 10000.0;
         if(colour.a < 0.1) discard;
     })";
