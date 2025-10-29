@@ -441,7 +441,9 @@ static inline const std::string BranchVertex = R"(
     VARYING_OUT float v_ditherAmount;
     VARYING_OUT vec2 v_texCoord;
     VARYING_OUT vec3 v_normal;
-    //VARYING_OUT vec3 v_viewPosition;
+#if defined(VIEW_POS)    
+    VARYING_OUT vec3 v_viewPosition;
+#endif
     VARYING_OUT vec3 v_worldPosition;
     VARYING_OUT float v_darkenAmount;
 
@@ -497,7 +499,9 @@ static inline const std::string BranchVertex = R"(
 #else
         gl_Position = u_viewProjectionMatrix * worldPosition;
 #endif
-        //v_viewPosition = (u_viewMatrix * worldPosition).xyz;
+#if defined (VIEW_POS)        
+        v_viewPosition = (u_viewMatrix * worldPosition).xyz;
+#endif
         v_worldPosition = worldPosition.xyz;
 
         gl_ClipDistance[0] = dot(u_clipPlane, worldPosition);

@@ -76,6 +76,9 @@ static inline const std::string Vertex = R"(
     #endif
                 
         VARYING_OUT vec3 v_worldPosition;
+    #if defined (VIEW_POS)
+        VARYING_OUT vec3 v_viewPosition;
+    #endif
     #if defined (VERTEX_COLOUR)
         VARYING_OUT LOW vec4 v_colour;
     #endif
@@ -127,7 +130,12 @@ static inline const std::string Vertex = R"(
 #include SHADOWMAP_VERTEX_PROC
         #endif
 
-            v_worldPosition = (worldMatrix * position).xyz;
+            vec4 worldPos = worldMatrix * position;
+            v_worldPosition = worldPos.xyz;
+        #if defined (VIEW_POS)
+            v_viewPosition = (u_viewMatrix * worldPos).xyz;
+        #endif
+
         #if defined(VERTEX_COLOUR)
             v_colour = a_colour;
         #endif

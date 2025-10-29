@@ -33,7 +33,7 @@ source distribution.
 
 static inline const std::string GlassFragment =
 R"(
-OUTPUT
+#include OUTPUT_LOCATION
 
 #include CAMERA_UBO
 
@@ -48,6 +48,9 @@ uniform vec4 u_maskColour = vec4(0.0, 0.0, 0.0, 0.5);
 
 VARYING_IN vec3 v_normalVector;
 VARYING_IN vec3 v_worldPosition;
+#if defined(VIEW_POS)
+VARYING_IN vec3 v_viewPosition;
+#endif
 
 void main()
 {
@@ -64,6 +67,15 @@ void main()
     colour.rgb = mix(reflectColour, colour.rgb, u_maskColour.a);
 
     FRAG_OUT = colour;
+#if defined (USE_MRT)
+    NORM_OUT = vec4(normal * 0.5 + 0.5, 0.5);
+#if defined(VIEW_POS)
+    POS_OUT.r = v_viewPosition.z;
+#else
+    POS_OUT = v_worldPosition;
+#endif
+#endif
+
 })";
 
 static inline const std::string WakeFragment =

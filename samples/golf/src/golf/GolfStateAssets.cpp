@@ -447,7 +447,12 @@ void GolfState::loadMap()
     if (cloudRing.isValid()
         && cloudRing.hasComponent<cro::Model>())
     {
-        m_resources.shaders.loadFromString(ShaderID::CloudRing, CloudOverheadVertex, CloudOverheadFragment, "#define REFLECTION\n#define POINT_LIGHT\n");
+        std::string cloudDefs = "#define REFLECTION\n#define POINT_LIGHT\n";
+        if (m_sharedData.nightTime)
+        {
+            cloudDefs += "#define USE_MRT\n";
+        }
+        m_resources.shaders.loadFromString(ShaderID::CloudRing, CloudOverheadVertex, CloudOverheadFragment, cloudDefs);
         auto& shader = m_resources.shaders.get(ShaderID::CloudRing);
 
         auto matID = m_resources.materials.add(shader);
@@ -1791,6 +1796,12 @@ void GolfState::loadMaterials()
     wobble += lightingDefs;
 #endif
 
+    std::string mrt;
+    if (m_sharedData.nightTime)
+    {
+        mrt = "#define USE_MRT\n";
+    }
+
     if (m_sharedData.shadowQuality == SharedStateData::ShadowQuality::Classic)
     {
         wobble += "#define CLASSIC_SHADOWS\n";
@@ -1868,9 +1879,9 @@ void GolfState::loadMaterials()
     m_resources.shaders.mapStringID("umbrella", ShaderID::Umbrella);
 
     const auto lazyLoad5 =
-        [&, wobble](cro::ShaderResource& shaders)
+        [&, wobble, mrt](cro::ShaderResource& shaders)
         {
-            if (shaders.loadFromString(ShaderID::Cloth, ClothVertex, ClothFragment, wobble))
+            if (shaders.loadFromString(ShaderID::Cloth, ClothVertex, ClothFragment, wobble + mrt))
             {
                 m_windBuffer.addShader(shaders.get(ShaderID::Cloth));
                 m_resolutionBuffer.addShader(shaders.get(ShaderID::Cloth));
@@ -2088,7 +2099,7 @@ void GolfState::loadMaterials()
     m_resources.materials.get(m_materialIDs[MaterialID::BallWasher]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
 
 
-    m_resources.shaders.loadFromString(ShaderID::Glass, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), GlassFragment);
+    m_resources.shaders.loadFromString(ShaderID::Glass, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), GlassFragment, mrt + lightingDefs);
     shader = &m_resources.shaders.get(ShaderID::Glass);
     m_materialIDs[MaterialID::Glass] = m_resources.materials.add(*shader);
     auto& glassMat = m_resources.materials.get(m_materialIDs[MaterialID::Glass]);
@@ -2098,7 +2109,7 @@ void GolfState::loadMaterials()
 
 
     m_resources.shaders.loadFromString(ShaderID::HairGlass,
-        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), GlassFragment, "#define USER_COLOUR\n");
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), GlassFragment, "#define USER_COLOUR\n" + mrt + lightingDefs);
     shader = &m_resources.shaders.get(ShaderID::HairGlass);
     m_materialIDs[MaterialID::HairGlass] = m_resources.materials.add(*shader);
     auto& glassHairMat = m_resources.materials.get(m_materialIDs[MaterialID::HairGlass]);
@@ -2107,7 +2118,7 @@ void GolfState::loadMaterials()
     glassHairMat.blendMode = cro::Material::BlendMode::Alpha;
 
 
-    m_resources.shaders.loadFromString(ShaderID::Wake, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), WakeFragment, "#define TEXTURED\n");
+    m_resources.shaders.loadFromString(ShaderID::Wake, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), WakeFragment, "#define TEXTURED\n" + mrt);
     shader = &m_resources.shaders.get(ShaderID::Wake);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Wake] = m_resources.materials.add(*shader);
@@ -2249,12 +2260,6 @@ void GolfState::loadMaterials()
 
 
     //HQ tree shaders - wasted if the whole game is LQ, but we want to be able to swap mid-game...
-    std::string mrt;
-    if (m_sharedData.nightTime)
-    {
-        mrt = "#define USE_MRT\n";
-    }
-
     m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define ALPHA_CLIP\n#define INSTANCING\n" + wobble + mrt + FadeDistanceHQ);
     shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
     m_scaleBuffer.addShader(*shader);
@@ -2402,13 +2407,18 @@ void GolfState::loadMaterials()
     //}
 
  
+    //std::string horizonDefs;
+    //if (m_sharedData.nightTime)
+    //{
+    //    horizonDefs = "#define USE_MRT\n";
+    //}
 
     //this version is affected by the sunlight colour of the scene
-    m_resources.shaders.loadFromString(ShaderID::HorizonSun, HorizonVert, HorizonFrag, "#define SUNLIGHT\n");
+    m_resources.shaders.loadFromString(ShaderID::HorizonSun, HorizonVert, HorizonFrag, "#define SUNLIGHT\n" + mrt);
     shader = &m_resources.shaders.get(ShaderID::HorizonSun);
     m_materialIDs[MaterialID::HorizonSun] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag);
+    m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag, mrt);
     shader = &m_resources.shaders.get(ShaderID::Horizon);
     m_materialIDs[MaterialID::Horizon] = m_resources.materials.add(*shader);
 

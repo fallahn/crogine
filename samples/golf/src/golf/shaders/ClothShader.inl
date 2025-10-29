@@ -55,12 +55,15 @@ uniform sampler2D u_noiseTexture;
 #include WIND_CALC
 #include RESOLUTION_BUFFER
 
+#if defined(VIEW_POS)
+VARYING_OUT vec3 v_viewPosition;
+#else
+VARYING_OUT vec3 v_worldPosition;
+#endif
 VARYING_OUT float v_ditherAmount;
 VARYING_OUT vec2 v_texCoord;
 
 const float FarFadeDistance = 360.f;
-
-//#define worldMatrix u_worldMatrix;
 
 void main()
 {
@@ -94,7 +97,13 @@ void main()
 #if !defined(WOBBLE)
     worldPosition.xyz += windDir;
 #endif
-    vec4 vertPos = u_projectionMatrix * u_viewMatrix * worldPosition;
+    vec4 viewPos = u_viewMatrix * worldPosition;
+    vec4 vertPos = u_projectionMatrix * viewPos;
+#if defined(VIEW_POS)
+    v_viewPosition = viewPos.xyz;
+#else
+    v_worldPosition = worldPosition.xyz;
+#endif
 
 #if defined(WOBBLE)
         vertPos.xyz /= vertPos.w;
@@ -119,7 +128,6 @@ void main()
 
 static inline const std::string ClothFragment =
 R"(
-#define USE_MRT
 #include OUTPUT_LOCATION
 
 uniform sampler2D u_diffuseMap;
@@ -127,6 +135,11 @@ uniform sampler2D u_diffuseMap;
 #include LIGHT_UBO
 #include SHADOWMAP_UNIFORMS_FRAG
 
+#if defined(VIEW_POS)
+VARYING_IN vec3 v_viewPosition;
+#else
+VARYING_IN vec3 v_worldPosition;
+#endif
 VARYING_IN float v_ditherAmount;
 VARYING_IN vec2 v_texCoord;
 
@@ -174,4 +187,13 @@ void main()
     if(alpha < 0.5) discard;
 
     FRAG_OUT = colour;
+#if defined USE_MRT
+    //hmm we have to fake some normals just to pick up some flat lighting
+    NORM_OUT = vec4(0.5, 0.5, 1.f, 0.4);
+#if defined(VIEW_POS)
+    POS_OUT.r = v_viewPosition.z;
+#else
+    POS_OUT = v_worldPosition;
+#endif
+#endif
 })";
