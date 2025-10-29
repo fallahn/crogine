@@ -77,7 +77,7 @@ namespace
         R"(
             uniform sampler2D u_texture;
             uniform sampler2D u_worldPos;
-            uniform sampler2D u_maskMap;
+            //uniform sampler2D u_maskMap;
             uniform sampler2D u_normalMap;
 
             uniform float u_heatAmount = 0.0;
@@ -89,8 +89,8 @@ namespace
 
             OUTPUT
 
-#define TAU 6.283185
-const float ContourSpacing = 2.0 * TAU;
+            #define TAU 6.283185
+            const float ContourSpacing = 2.0 * TAU;
 
             const vec3 BaseHeatColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion
             vec3 hsv2rgb(vec3 c)
@@ -105,12 +105,12 @@ const float ContourSpacing = 2.0 * TAU;
             void main()
             {
                 vec4 colour = texture(u_texture, v_texCoord) * v_colour;
-                vec3 pos = texture(u_worldPos, v_texCoord).rgb;
+                float pos = texture(u_worldPos, v_texCoord).r;
 
-float heightIntensity = smoothstep(0.1, 5.0, pos.y);
-heightIntensity = 0.05 + (0.95 * heightIntensity);
+                float heightIntensity = smoothstep(0.1, 5.0, pos);
+                heightIntensity = 0.05 + (0.95 * heightIntensity);
 
-vec4 gridColour = vec4(vec3(0.8, 0.7, 0.2) * heightIntensity, colour.a);
+                vec4 gridColour = vec4(vec3(0.8, 0.7, 0.2) * heightIntensity, colour.a);
 
 
 
@@ -121,21 +121,22 @@ vec4 gridColour = vec4(vec3(0.8, 0.7, 0.2) * heightIntensity, colour.a);
 //vec2 grid = fract(v_texCoord * gridRes);
 //float gridAmount = 1.0 - (step(gridThickness, grid.x) * step(gridThickness, grid.y));
 
+                vec4 normalSample = texture(u_normalMap, v_texCoord);
 
+                float contourAmount = smoothstep(1.0 - (0.12 / u_gridScale), 1.0 - (0.1 / u_gridScale), fract(pos * u_gridScale));
+                //contourAmount *= texture(u_maskMap, v_texCoord).r;
+                contourAmount *= normalSample.a;
 
-float contourAmount = smoothstep(1.0 - (0.12 / u_gridScale), 1.0 - (0.1 / u_gridScale), fract(pos.y * u_gridScale));
-contourAmount *= texture(u_maskMap, v_texCoord).r;
+                //stops contours 'spreading' over almost flat areas
+                vec3 normal = normalSample.rgb * 2.0 - 1.0;
+                contourAmount *= 1.0 - step(0.995, dot(vec3(0.0, 1.0, 0.0), normal));
 
-//stops contours 'spreading' over almost flat areas
-vec3 normal = texture(u_normalMap, v_texCoord).rgb * 2.0 - 1.0;
-contourAmount *= 1.0 - step(0.995, dot(vec3(0.0, 1.0, 0.0), normal));
-
-FRAG_OUT = colour + (gridColour * contourAmount * u_gridAmount);
+                FRAG_OUT = colour + (gridColour * contourAmount * u_gridAmount);
 
 
 
                 vec3 c = BaseHeatColour;
-                c.x += mod(pos.y / (8.0 - (u_gridScale / 3.0)), 1.0); //6.0 is MaxZoom, 8.0 is just a magic number
+                c.x += mod(pos / (8.0 - (u_gridScale / 3.0)), 1.0); //6.0 is MaxZoom, 8.0 is just a magic number
                 c = hsv2rgb(c);
 
                 c *= clamp(dot(colour.rgb, vec3(0.299, 0.587, 0.114)) * 3.0, 0.0, 1.0); //luma of colour
@@ -923,13 +924,6 @@ void MapOverviewState::updateNormals()
     glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Normal).textureID);
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
 
-    //TODO we already have an image mask stored from which we could get the terrain
-    //TODO move this to the alpha channel of the normal map
-    std::vector<std::uint8_t> mask(imageSize.x * imageSize.y);
-    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Count).textureID);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, mask.data());
-
-
     const auto PixelsPerMetre = (imageSize.x / MapSize.x) * 2;
     const auto Stride = Components * PixelsPerMetre;
 
@@ -941,7 +935,7 @@ void MapOverviewState::updateNormals()
         {
             const auto index = y * (imageSize.x * Components) + x;
 
-            if (mask[index / 4] > 126
+            if (image[index + 3] > 126
                 /* && image[index + 1] < 0.9999f*/) //more than this we kinda assume the normal is vertical and skip it
             {
                 glm::vec3 n = glm::vec3(image[index], image[index + 1], image[index + 2]);

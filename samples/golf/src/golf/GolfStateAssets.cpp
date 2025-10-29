@@ -2166,12 +2166,14 @@ void GolfState::loadMaterials()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
+
     if (!targetDefines.empty())
     {
         m_targetShader.shaderID = shader->getGLHandle();
         m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
         m_targetShader.update();
     }
+
     auto& shaleTex = m_resources.textures.get("assets/golf/images/props/shale.png", true);
     shaleTex.setRepeated(true);
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).setProperty("u_angleTex", shaleTex);
@@ -2181,9 +2183,6 @@ void GolfState::loadMaterials()
     m_resources.shaders.loadFromString(ShaderID::MinimapModel, MinimapModelVertex, MinimapModelFragment, targetDefines);
     shader = &m_resources.shaders.get(ShaderID::MinimapModel);
     m_materialIDs[MaterialID::Minimap] = m_resources.materials.add(*shader);
-    //TODO u_targetViewProjectionMatrix needs to be set in this shader.
-    //m_resources.materials.get(m_materialIDs[MaterialID::Minimap]).setProperty("u_angleTex", shaleTex);
-
 
     //m_ballShadows.shaders[0].shader = shader->getGLHandle();
     //m_ballShadows.shaders[0].uniform = shader->getUniformID("u_ballPosition");
@@ -3901,6 +3900,7 @@ void GolfState::TargetShader::update()
     projMat = glm::ortho(-s, s, -s, s, -20.f, 20.f);
     viewMat = glm::translate(RotMat, -position );
 
+    const auto viewProj = projMat * viewMat;
     glCheck(glUseProgram(shaderID));
-    glCheck(glUniformMatrix4fv(vpUniform, 1, GL_FALSE, glm::value_ptr(projMat * viewMat)));
+    glCheck(glUniformMatrix4fv(vpUniform, 1, GL_FALSE, glm::value_ptr(viewProj)));
 }

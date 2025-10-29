@@ -72,7 +72,7 @@ static const inline std::string MinimapModelFragment =
 R"(
 #define USE_MRT
 #include OUTPUT_LOCATION
-layout (location = 4) out vec4 o_terrain;
+
 uniform sampler2D u_diffuseMap;
 
 VARYING_IN vec4 v_colour;
@@ -87,11 +87,11 @@ VARYING_IN vec2 v_texCoord;
 void main()
 {
     FRAG_OUT = TEXTURE(u_diffuseMap, v_texCoord);
-    NORM_OUT = vec4(normalize(v_normal) * 0.5 + 0.5, 1.0); //TODO move mask here
-    POS_OUT = vec4(v_worldPosition, 1.0);
+    NORM_OUT = vec4(normalize(v_normal) * 0.5 + 0.5, 1.0);
+    POS_OUT.r = v_worldPosition.y;
     
     float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
-    o_terrain = vec4(vec3(greenTerrain), 1.0);
+    NORM_OUT.a = greenTerrain;
 
 #if defined(MULTI_TARGET)
     //this is effectively clip-space so +/- 1 is perfect for circles
