@@ -144,7 +144,7 @@ static inline const std::string MinimapFragment = R"(
 
 #if defined (LIGHT_COLOUR)
             vec3 lightColour = TEXTURE(u_lightTexture, coord).rgb;
-            colour.rgb += lightColour;
+            colour.rgb += lightColour * step(d, 0.99);
 
             maskAmount = (0.95 * maskAmount) + 0.05;
 
