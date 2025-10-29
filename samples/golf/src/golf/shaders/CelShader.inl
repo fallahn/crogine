@@ -472,7 +472,7 @@ static inline const std::string CelFragmentShader = R"(
 #else
         vec3 normal = normalize(v_normal);
 #endif
-        NORM_OUT = vec4((normal + 1.0) / 2.0, 1.0); //8 bit target (note STILL IN WORLD SPACE)
+        NORM_OUT = vec4(normal * 0.5 + 0.5, 1.0); //8 bit target (note STILL IN WORLD SPACE)
 #if defined(VIEW_POS)        
         POS_OUT.r = v_viewPosition.z;
 #else

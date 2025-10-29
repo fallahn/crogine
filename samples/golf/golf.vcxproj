@@ -1064,6 +1064,7 @@
     <None Include="src\golf\shaders\Hologram.inl" />
     <None Include="src\golf\shaders\Lantern.inl" />
     <None Include="src\golf\shaders\LensFlare.inl" />
+    <None Include="src\golf\shaders\MinimapModel.inl" />
     <None Include="src\golf\shaders\MinimapShader.inl" />
     <None Include="src\golf\shaders\PaletteSwap.inl" />
     <None Include="src\golf\shaders\PointLightShader.inl" />

@@ -87,6 +87,7 @@ namespace
 #include "shaders/TerrainMaterials.inl"
 #include "shaders/Weather.inl"
 #include "shaders/ClothShader.inl"
+#include "shaders/MinimapModel.inl"
 
     //colour is normal colour with dark shadow
     const std::array BannerStrings =
@@ -2157,7 +2158,7 @@ void GolfState::loadMaterials()
 
 
 
-    std::string targetDefines = (m_sharedData.scoreType == ScoreType::MultiTarget || Social::getMonth() == 2) ? "#define MULTI_TARGET\n" : "";// "#define SHOW_CASCADES\n";
+    const std::string targetDefines = (m_sharedData.scoreType == ScoreType::MultiTarget || Social::getMonth() == 2) ? "#define MULTI_TARGET\n" : "";// "#define SHOW_CASCADES\n";
 
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n#define TERRAIN_CLIP\n" + wobble + targetDefines);
     shader = &m_resources.shaders.get(ShaderID::Course);
@@ -2176,10 +2177,12 @@ void GolfState::loadMaterials()
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).setProperty("u_angleTex", shaleTex);
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).addCustomSetting(GL_CLIP_DISTANCE1);
 
-    m_resources.shaders.loadFromString(ShaderID::MinimapModel, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n" + targetDefines);
+    //m_resources.shaders.loadFromString(ShaderID::MinimapModel, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n" + targetDefines);
+    m_resources.shaders.loadFromString(ShaderID::MinimapModel, MinimapModelVertex, MinimapModelFragment, targetDefines);
     shader = &m_resources.shaders.get(ShaderID::MinimapModel);
     m_materialIDs[MaterialID::Minimap] = m_resources.materials.add(*shader);
-    m_resources.materials.get(m_materialIDs[MaterialID::Minimap]).setProperty("u_angleTex", shaleTex);
+    //TODO u_targetViewProjectionMatrix needs to be set in this shader.
+    //m_resources.materials.get(m_materialIDs[MaterialID::Minimap]).setProperty("u_angleTex", shaleTex);
 
 
     //m_ballShadows.shaders[0].shader = shader->getGLHandle();

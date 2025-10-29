@@ -100,9 +100,9 @@ void GolfState::createCameras()
 
                 if (m_sharedData.nightTime)
                 {
-                    //TODO remove position buffer and reconstruct from depth
                     m_gameSceneMRTexture.setPrecision(MRTIndex::Normal, cro::TexturePrecision::Default);
                     m_gameSceneMRTexture.setPrecision(MRTIndex::Light, cro::TexturePrecision::Default);
+                    m_gameSceneMRTexture.setChannelCount(MRTIndex::Light, 3);
 #ifdef VIEW_SPACE_LIGHTING
                     m_gameSceneMRTexture.setPrecision(MRTIndex::Position, cro::TexturePrecision::Low);
                     m_gameSceneMRTexture.setChannelCount(MRTIndex::Position, 1);
