@@ -170,13 +170,14 @@ void main()
 
 #if defined(LIGHT_COLOUR)
     vec3 lightColour = TEXTURE(u_lightTexture, v_texCoord).rgb;
-    colour.rgb += lightColour;
-
+    //mask off anything in the far distance ie the skybox from receiving light.    
+    colour.rgb += lightColour * step(d, 0.99);
     maskAmount = (0.9 * maskAmount) + 0.1;
 
     vec3 blurColour = TEXTURE(u_blurTexture, v_texCoord).rgb * (1.0 - ((d * 0.9) + 0.1));
     colour.rgb = (blurColour * maskAmount * 0.65) + colour.rgb;
 #endif
+
 
     FRAG_OUT = vec4(colour.rgb, 1.0);
     //FRAG_OUT = mix(vec4(colour.rgb, 1.0), vec4(d,d,d,1.0), 0.99);

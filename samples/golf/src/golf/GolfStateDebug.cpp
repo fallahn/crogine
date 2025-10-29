@@ -302,7 +302,7 @@ void GolfState::registerDebugCommands()
     //        /*if (m_gameSceneMRTexture.available())
     //        {
     //            glm::vec2 s(m_gameSceneMRTexture.getSize() / 4u);
-    //            ImGui::Image(m_gameSceneMRTexture.getTexture(2), { s.x, s.y }, { 0.f,1.f }, { 1.f, 0.f });
+    //            ImGui::Image(m_gameSceneMRTexture.getDepthTexture(), {s.x, s.y}, {0.f,1.f}, {1.f, 0.f});
     //        }*/
     //        ImGui::End();
     //    });

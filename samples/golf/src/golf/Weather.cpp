@@ -275,7 +275,12 @@ void GolfState::createClouds()
         std::string wobble = "#define MAX_RADIUS " + std::to_string(MapSizeFloat.x / 2.f) + "\n";
         if (m_sharedData.vertexSnap)
         {
-            wobble = "#define WOBBLE\n";
+            wobble += "#define WOBBLE\n";
+        }
+
+        if (m_sharedData.nightTime)
+        {
+            wobble += "#define USE_MRT\n";
         }
 
         m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define FEATHER_EDGE\n" + wobble);
