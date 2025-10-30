@@ -2704,8 +2704,13 @@ void GolfState::handleMessage(const cro::Message& msg)
 
         if (data.type == CollisionEvent::NearMiss)
         {
-            m_achievementTracker.nearMissChallenge = true;
-            Social::awardXP(2, XPStringID::NearMiss);
+            //TODO we need to check who raised this - it might
+            //not be us if we're playing in groups.
+            if (m_sharedData.groupMode == ClientGrouping::None)
+            {
+                m_achievementTracker.nearMissChallenge = true;
+                Social::awardXP(2, XPStringID::NearMiss);
+            }
         }
     }
         break;
@@ -7554,7 +7559,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         m_activeAvatar->model.getComponent<AvatarRotation>().targetRotation = playerRotation;
         m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;
         m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().scale = 0.f;
-        m_activeAvatar->model.getComponent<cro::Callback>().active = true;
+        m_activeAvatar->model.getComponent<cro::Callback>().active = !m_puttViewState.isPuttView;// true; //don't scale up if we remotely switched to putt view already
 
         if (m_activeAvatar->hands)
         {
