@@ -7354,6 +7354,15 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
 
+    //this gets stuck visible sometimes so hidefor extra suredness
+    cmd.targetFlags = CommandID::UI::FastForward;
+    cmd.action = [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Callback>().getUserData<SkipCallbackData>().direction = 0;
+            e.getComponent<cro::Callback>().active = true;
+        };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
     cmd.targetFlags = CommandID::UI::MiniBall;
     cmd.action =
         [&,player](cro::Entity e, float)
