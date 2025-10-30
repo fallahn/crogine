@@ -3763,7 +3763,8 @@ void GolfState::buildScene()
     entity.getComponent<cro::Callback>().function = 
         [&](cro::Entity e, float)
     {
-        float scale = m_currentPlayer.terrain != TerrainID::Green ? 1.f : 0.f;
+        float scale = ((m_currentPlayer.terrain != TerrainID::Green)
+            && !m_sharedData.rotateCamera)? 1.f : 0.f;
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getDirection());
