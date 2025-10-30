@@ -900,6 +900,16 @@ float TerrainBuilder::getSlopeAlpha() const
     return m_slopeProperties.currentAlpha;
 }
 
+void TerrainBuilder::setSlopeVisible(bool v)
+{
+    m_slopeProperties.entity.getComponent<cro::Model>().setHidden(!v);
+}
+
+bool TerrainBuilder::getSlopeVisible() const
+{
+    return !m_slopeProperties.entity.getComponent<cro::Model>().isHidden();
+}
+
 void TerrainBuilder::applyTreeQuality()
 {
     std::uint64_t hqFlags = 0;

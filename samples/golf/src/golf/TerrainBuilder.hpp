@@ -92,6 +92,10 @@ public:
 
     float getSlopeAlpha() const;
 
+    void setSlopeVisible(bool);
+
+    bool getSlopeVisible() const;
+
     void applyTreeQuality();
 
     void applyCrowdDensity();
