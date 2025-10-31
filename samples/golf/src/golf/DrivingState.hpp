@@ -38,6 +38,7 @@ source distribution.
 #include "BallTrail.hpp"
 #include "ClubModels.hpp"
 #include "AvatarAnimation.hpp"
+#include "CollisionMesh.hpp"
 
 #include <crogine/audio/DynamicAudioStream.hpp>
 
@@ -256,6 +257,7 @@ private:
     cro::Entity m_courseEntity;
     cro::Shader m_saturationShader;
     std::int32_t m_saturationUniform;
+    CollisionMesh m_collisionMesh;
 
     cro::RenderTexture m_mapTexture;
     cro::Entity m_mapCam;
@@ -265,6 +267,7 @@ private:
     void createPowerBars(cro::Entity);
     void createGameOptions();
     void createSummary();
+    glm::vec2 toMinimapCoords(glm::vec3 p) const;
     void updateMinimap();
     void updateWindDisplay(glm::vec3);    
     void showMessage(float);

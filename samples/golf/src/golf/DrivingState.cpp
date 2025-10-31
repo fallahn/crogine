@@ -1985,6 +1985,9 @@ void DrivingState::createScene()
     }
     entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::MiniMap);
 
+    //we also hae a collision mesh we an query to create the ball arc on the mini map
+    m_collisionMesh.updateCollisionMesh(entity.getComponent<cro::Model>().getMeshData());
+
 
     //create the billboards
     createFoliage(entity);
@@ -3149,10 +3152,8 @@ void DrivingState::createBall()
             cmd.action =
                 [&, pos](cro::Entity e, float)
             {
-                const auto position = glm::vec3(pos.x, -pos.z, 0.1f) / 2.f;
-                //need to tie into the fact the mini map is 1/2 scale
-                //and has the origin in the centre
-                e.getComponent<cro::Transform>().setPosition(position + glm::vec3(RangeSize / 4.f, 0.f));
+                const auto position = glm::vec3(toMinimapCoords(pos), 0.1f);
+                e.getComponent<cro::Transform>().setPosition(position);
 
                 //set scale based on height
                 const auto height = (pos.y / MaxMinimapHeight);
@@ -3164,7 +3165,7 @@ void DrivingState::createBall()
                 data.state = MiniTrailData::Follow;
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
+            
             //following cameras
             cmd.targetFlags = CommandID::SpectatorCam;
             cmd.action = [&, ent](cro::Entity e, float)

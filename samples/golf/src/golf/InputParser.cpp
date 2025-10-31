@@ -886,7 +886,7 @@ void InputParser::setMaxRotation(float rotation)
 
 InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t facing, float distanceToHole) const
 {
-    auto pitch = Clubs[club].getAngle();
+    const auto pitch = Clubs[club].getAngle();
     auto yaw = getYaw();
     auto power = Clubs[club].getPower(distanceToHole, m_sharedData.imperialMeasurements);
 
@@ -1057,16 +1057,41 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     power *= (1.f - (SideSpinReduction * std::abs(spin.x)));
 
-    glm::vec3 impulse(1.f, 0.f, 0.f);
-    auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
-    rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
-    impulse = glm::toMat3(rotation) * impulse;
-
-    impulse *= power;
+    const auto impulse = getImpulse(pitch, yaw) * power;
 
     m_lastCalculatedHook = hook;
     m_activeLoadout = nullptr;
     return { impulse, spin, hook };
+}
+
+std::vector<glm::vec3> InputParser::getImpulseForArc() const
+{
+    const auto pitch = Clubs[m_currentClub].getAngle();
+    const auto yaw = getYaw();
+    const auto power = Clubs[m_currentClub].getPower(m_distanceToHole, m_sharedData.imperialMeasurements);
+
+    std::vector<glm::vec3> ret;
+
+    const auto generateImpulse =
+        [&](std::int32_t stepCount)
+        {
+            const auto step = 1.f / stepCount;
+            for (auto i = 1; i < stepCount; ++i)
+            {
+                const auto p = cro::Util::Easing::easeOutSine(step * i);
+                ret.push_back(getImpulse(pitch, yaw) * power * p);
+            }
+        };
+
+    if (m_sharedData.decimatePowerBar)
+    {
+        generateImpulse(10);
+    }
+    else
+    {
+        generateImpulse(8);
+    }
+    return ret;
 }
 
 float InputParser::getEstimatedDistance() const
@@ -1114,6 +1139,14 @@ std::int32_t InputParser::getLastActiveController() const
 }
 
 //private
+glm::vec3 InputParser::getImpulse(float pitch, float yaw) const
+{
+    glm::vec3 impulse(1.f, 0.f, 0.f);
+    auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
+    rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
+    return glm::toMat3(rotation) * impulse;
+}
+
 void InputParser::updateDistanceEstimation()
 {
     //https://www.iforce2d.net/b2dtut/projected-trajectory
@@ -1140,7 +1173,7 @@ void InputParser::updateDistanceEstimation()
 
     static constexpr float dt = 1.f / 60.f; //I'm sure we're redefining this...
     const auto stepVel = impulse * dt;
-    constexpr auto stepGrav = BallSystem::Gravity * dt * dt;
+    constexpr auto stepGrav = Gravity * dt * dt;
 
     glm::vec3 endPos(1.f);
     //run the estimation until we get a time where the final result has a height < 0 again

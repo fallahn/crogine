@@ -131,26 +131,6 @@ void cro::Colour::setAlpha(float alpha)
     a = alpha;
 }
 
-float cro::Colour::getRed() const
-{
-    return r;
-}
-
-float cro::Colour::getGreen() const
-{
-    return g;
-}
-
-float cro::Colour::getBlue() const
-{
-    return b;
-}
-
-float cro::Colour::getAlpha() const
-{
-    return a;
-}
-
 std::uint32_t cro::Colour::getPacked() const
 {
     return (getRedByte() << 24 | getGreenByte() << 16 | getBlueByte() << 8 | getAlphaByte());

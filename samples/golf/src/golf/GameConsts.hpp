@@ -532,6 +532,9 @@ bool hasPSLayout(std::int32_t controllerID);
 namespace cro { class MultiRenderTexture; }
 void renderToNormalMap(const cro::Mesh::Data, cro::Shader&, cro::MultiRenderTexture&);
 
+static constexpr glm::vec3 Gravity = glm::vec3(0.f, -9.8f, 0.f);
+glm::vec3 getImpactPoint(glm::vec3 startPos, glm::vec3 impulse, class CollisionMesh&, float dt = 1.f / 30.f);
+
 template <typename T>
 constexpr T interpolate(T a, T b, float t)
 {
@@ -727,6 +730,7 @@ static inline void toggleAntialiasing(SharedStateData& sharedData, bool on, std:
 //    cfg.save(path);
 //}
 
+//old version
 static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated)
 {
     auto endColour = TextGoldColour;
@@ -987,6 +991,8 @@ static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated)
         cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
     };
 }
+
+std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2>& points);
 
 static inline void createSwingputMeter(cro::Entity entity, InputParser& inputParser)
 {

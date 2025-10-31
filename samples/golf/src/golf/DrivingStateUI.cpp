@@ -250,6 +250,41 @@ void DrivingState::createUI()
         });
 #endif
 
+    auto temp = m_uiScene.createEntity();
+    temp.addComponent<cro::Transform>().setPosition({ 50.f, 0.f, 0.1f });
+    temp.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    temp.addComponent<cro::Callback>().active = true;
+    temp.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const auto impulses = m_inputParser.getImpulseForArc();
+            std::vector<glm::vec3> points;
+            for (const auto& i : impulses)
+            {
+                points.push_back(getImpactPoint(PlayerPosition, i, m_collisionMesh));
+            }
+
+            std::vector<glm::vec2> mapPoints;
+            const auto playerMapPos = toMinimapCoords(PlayerPosition);
+            mapPoints.push_back(glm::vec2(0.f));
+            for (const auto& p : points)
+            {
+                //put these in relative to player space
+                //so we can rotate the entity on the map without deformation
+                auto mapPos = toMinimapCoords(p);
+                mapPos -= playerMapPos;
+                mapPos = (glm::rotate(glm::mat4(1.f), -m_inputParser.getYaw() + (cro::Util::Const::PI / 2.f), cro::Transform::Z_AXIS) * glm::vec4(mapPos, 0.f, 0.f));
+                mapPoints.push_back(mapPos);
+            }
+
+            const auto verts = strokeIndicatorFromPoints(mapPoints);
+            e.getComponent<cro::Drawable2D>().setVertexData(verts);
+
+            //TODO remove this offset by correctly calcing the verts horizontally
+            e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() - (cro::Util::Const::PI / 2.f));
+        };
+
+
     //displays the game scene
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -954,6 +989,7 @@ void DrivingState::createUI()
         }
     };
     miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    miniEnt.getComponent<cro::Transform>().addChild(temp.getComponent<cro::Transform>());
     auto ballEnt = entity;
 
     //draws a trail on the mini map when the balls are in flight
@@ -1013,6 +1049,7 @@ void DrivingState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ PlayerPosition.x / 2.f, -PlayerPosition.z / 2.f, 0.01f });
     entity.getComponent<cro::Transform>().move(RangeSize / 4.f);
+    entity.getComponent<cro::Transform>().move({-10.f, 0.f});
     auto endColour = TextGoldColour;
     endColour.setAlpha(0.f);
     entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
@@ -2649,6 +2686,15 @@ void DrivingState::createSummary()
     m_summaryScreen.root = bgEntity;
 }
 
+glm::vec2 DrivingState::toMinimapCoords(glm::vec3 p) const
+{
+    //need to tie into the fact the mini map is 1/2 scale
+    //and has the origin in the centre
+    glm::vec2 r = glm::vec2(p.x, -p.z) / 2.f;
+    r += (RangeSize / 4.f);
+    return r;
+}
+
 void DrivingState::updateMinimap()
 {
     auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
@@ -2656,9 +2702,8 @@ void DrivingState::updateMinimap()
     m_mapTexture.clear(TextNormalColour);
     m_gameScene.render();
 
-    auto holePos = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin / 2.f;
-    m_flagQuad.setPosition({ holePos.x, -holePos.z });
-    m_flagQuad.move(RangeSize / 4.f);
+    auto holePos = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin;
+    m_flagQuad.setPosition(toMinimapCoords(holePos));
     m_flagQuad.draw();
 
     m_mapTexture.display();

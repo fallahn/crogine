@@ -107,6 +107,10 @@ public:
     };
     StrokeResult getStroke(std::int32_t club, std::int32_t facing, float holeDistance) const; //facing is -1 or 1 to decide on slice/hook
 
+    //returns a series of impulse vectors for the current club
+    //for each power setting along the prediction curve, ie 8 or 10
+    std::vector<glm::vec3> getImpulseForArc() const;
+
     float getEstimatedDistance() const; //projected magnitude of distance vector of the current club with the current spin setting
 
     static constexpr std::uint32_t CPU_ID = 1337u;
@@ -178,7 +182,7 @@ private:
     float m_estimatedDistance;
     void updateDistanceEstimation();
 
-
+    glm::vec3 getImpulse(float pitch, float yaw) const;
     void updateStroke(float);
     void updateDroneCam(float);
     void updateSpin(float);

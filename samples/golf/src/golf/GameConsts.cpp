@@ -29,6 +29,7 @@ source distribution.
 
 #include "GameConsts.hpp"
 #include "Social.hpp"
+#include "CollisionMesh.hpp"
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/graphics/MeshData.hpp>
@@ -110,4 +111,80 @@ void renderToNormalMap(const cro::Mesh::Data meshData, cro::Shader& normalShader
 
     glCheck(glBindVertexArray(0));
     glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
+}
+
+glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3 impulse, CollisionMesh& collisionMesh, float dt)
+{
+    float groundHeight = -1.f;
+    do
+    {
+        pos += impulse * dt;
+        impulse += Gravity * dt;
+        groundHeight = collisionMesh.getTerrain(pos).height;
+    } while (pos.y > groundHeight);
+    return pos;
+}
+
+//assumes the 2D points are already in map-space
+std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2>& points)
+{
+    static const std::array col = { cro::Colour::DarkGrey, cro::Colour::Black };
+    static constexpr float OffsetX = 0.5f;
+    static constexpr float OffsetY = 1.25f;
+
+    //assumes we're using line segments
+    CRO_ASSERT(!points.empty(), "");
+    std::vector<cro::Vertex2D> ret;
+    for (auto i = 0u; i < points.size() - 1; ++i)
+    {
+        ret.emplace_back(points[i] + glm::vec2(-OffsetX, OffsetY), TextGoldColour);
+        ret.emplace_back(points[i] + glm::vec2(OffsetX, OffsetY), TextGoldColour);
+        
+        ret.emplace_back(points[i+1] + glm::vec2(-OffsetX, -OffsetY), TextGoldColour);
+        ret.emplace_back(points[i+1] + glm::vec2(OffsetX, -OffsetY), TextGoldColour);
+
+        const auto colIndex = i%2;
+        ret.emplace_back(points[i + 1] + glm::vec2(-OffsetX, -OffsetY), col[colIndex]);
+        ret.emplace_back(points[i + 1] + glm::vec2(OffsetX, -OffsetY), col[colIndex]);
+
+        ret.emplace_back(points[i+1] + glm::vec2(-OffsetX, OffsetY), col[colIndex]);
+        ret.emplace_back(points[i+1] + glm::vec2(OffsetX, OffsetY), col[colIndex]);
+    }
+
+    //add a tail
+    const auto dir = points.back() - points[points.size() - 2];
+    const auto tail = points.back() + dir;
+    constexpr auto TailColour = 
+        cro::Colour(TextGoldColour.getRed(), TextGoldColour.getGreen(), TextGoldColour.getBlue(), 0.f);
+
+    ret.emplace_back(points.back() + glm::vec2(-OffsetX, OffsetY), TextGoldColour);
+    ret.emplace_back(points.back() + glm::vec2(OffsetX, OffsetY), TextGoldColour);
+
+    ret.emplace_back(tail + glm::vec2(-OffsetX, -OffsetY), TailColour);
+    ret.emplace_back(tail + glm::vec2(OffsetX, -OffsetY), TailColour);
+
+
+    //create the background first
+    //const auto& end = points.back();
+    //const auto& start = points.front();
+
+    //ret.emplace_back(tail + glm::vec2(-OffsetX, OffsetY), TailColour);
+    //ret.emplace_back(end + glm::vec2(-OffsetX, 0.f), TextGoldColour);
+    //ret.emplace_back(tail + glm::vec2(OffsetX, OffsetY), TailColour);
+    //
+    //ret.emplace_back(tail + glm::vec2(OffsetX, OffsetY), TailColour);
+    //ret.emplace_back(end + glm::vec2(-OffsetX, 0.f), TextGoldColour);
+    //ret.emplace_back(end + glm::vec2(OffsetX, 0.f), TextGoldColour);
+
+    //ret.emplace_back(end + glm::vec2(-OffsetX, 0.f), TextGoldColour);
+    //ret.emplace_back(start + glm::vec2(-OffsetX, 0.f), TextGoldColour);
+    //ret.emplace_back(end + glm::vec2(OffsetX, 0.f), TextGoldColour);
+
+    //ret.emplace_back(end + glm::vec2(OffsetX, 0.f), TextGoldColour);
+    //ret.emplace_back(start + glm::vec2(-OffsetX, 0.f), TextGoldColour);
+    //ret.emplace_back(start + glm::vec2(OffsetX, 0.f), TextGoldColour);
+
+    //then add points along it
+
+    return ret;
 }

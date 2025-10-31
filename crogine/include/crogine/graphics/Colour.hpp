@@ -180,19 +180,19 @@ namespace cro
         /*!
         \brief Returns the red channel as a normalised value
         */
-        float getRed() const;
+        constexpr float getRed() const { return r; }
         /*!
         \brief Returns the green channel as a normalised value
         */
-        float getGreen() const;
+        constexpr float getGreen() const { return g; }
         /*!
         \brief Returns the blue channels as a normalised value
         */
-        float getBlue() const;
+        constexpr float getBlue() const { return b; }
         /*!
         \brief Returns the alpha channel as a normalised value
         */
-        float getAlpha() const;
+        constexpr float getAlpha() const { return a; }
 
         /*!
         \brief Returns the colour as a RGBA packed 32bit integer
