@@ -128,27 +128,31 @@ glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3 impulse, CollisionMesh& collis
 //assumes the 2D points are already in map-space
 std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2>& points)
 {
-    static const std::array col = { cro::Colour::DarkGrey, cro::Colour::Black };
-    static constexpr float OffsetX = 0.5f;
-    static constexpr float OffsetY = 1.25f;
+    //SIGH ofc these colours are the wrong way around when we switch to decimated...
+    static constexpr std::array col = { cro::Colour(0.419f, 0.435f, 0.447f), cro::Colour(0.f,0.f,0.f)};
+    const std::atomic_size_t ColourOffset = (points.size() - 8) / 2;
 
-    //assumes we're using line segments
+    static constexpr float OffsetX = 1.f;
+    static constexpr float OffsetY = 0.5f;
+
+    //assumes we're using triangle strip
     CRO_ASSERT(!points.empty(), "");
     std::vector<cro::Vertex2D> ret;
     for (auto i = 0u; i < points.size() - 1; ++i)
     {
-        ret.emplace_back(points[i] + glm::vec2(-OffsetX, OffsetY), TextGoldColour);
         ret.emplace_back(points[i] + glm::vec2(OffsetX, OffsetY), TextGoldColour);
+        ret.emplace_back(points[i] + glm::vec2(OffsetX, -OffsetY), TextGoldColour);
         
-        ret.emplace_back(points[i+1] + glm::vec2(-OffsetX, -OffsetY), TextGoldColour);
-        ret.emplace_back(points[i+1] + glm::vec2(OffsetX, -OffsetY), TextGoldColour);
+        ret.emplace_back(points[i + 1] + glm::vec2(-OffsetX, OffsetY), TextGoldColour);
+        ret.emplace_back(points[i + 1] + glm::vec2(-OffsetX, -OffsetY), TextGoldColour);
+        
 
-        const auto colIndex = i%2;
+        const auto colIndex = (i + ColourOffset)%2;
+        ret.emplace_back(points[i + 1] + glm::vec2(-OffsetX, OffsetY), col[colIndex]);
         ret.emplace_back(points[i + 1] + glm::vec2(-OffsetX, -OffsetY), col[colIndex]);
-        ret.emplace_back(points[i + 1] + glm::vec2(OffsetX, -OffsetY), col[colIndex]);
 
-        ret.emplace_back(points[i+1] + glm::vec2(-OffsetX, OffsetY), col[colIndex]);
         ret.emplace_back(points[i+1] + glm::vec2(OffsetX, OffsetY), col[colIndex]);
+        ret.emplace_back(points[i+1] + glm::vec2(OffsetX, -OffsetY), col[colIndex]);
     }
 
     //add a tail
@@ -157,34 +161,11 @@ std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2
     constexpr auto TailColour = 
         cro::Colour(TextGoldColour.getRed(), TextGoldColour.getGreen(), TextGoldColour.getBlue(), 0.f);
 
-    ret.emplace_back(points.back() + glm::vec2(-OffsetX, OffsetY), TextGoldColour);
     ret.emplace_back(points.back() + glm::vec2(OffsetX, OffsetY), TextGoldColour);
+    ret.emplace_back(points.back() + glm::vec2(OffsetX, -OffsetY), TextGoldColour);
 
-    ret.emplace_back(tail + glm::vec2(-OffsetX, -OffsetY), TailColour);
+    ret.emplace_back(tail + glm::vec2(OffsetX, OffsetY), TailColour);
     ret.emplace_back(tail + glm::vec2(OffsetX, -OffsetY), TailColour);
-
-
-    //create the background first
-    //const auto& end = points.back();
-    //const auto& start = points.front();
-
-    //ret.emplace_back(tail + glm::vec2(-OffsetX, OffsetY), TailColour);
-    //ret.emplace_back(end + glm::vec2(-OffsetX, 0.f), TextGoldColour);
-    //ret.emplace_back(tail + glm::vec2(OffsetX, OffsetY), TailColour);
-    //
-    //ret.emplace_back(tail + glm::vec2(OffsetX, OffsetY), TailColour);
-    //ret.emplace_back(end + glm::vec2(-OffsetX, 0.f), TextGoldColour);
-    //ret.emplace_back(end + glm::vec2(OffsetX, 0.f), TextGoldColour);
-
-    //ret.emplace_back(end + glm::vec2(-OffsetX, 0.f), TextGoldColour);
-    //ret.emplace_back(start + glm::vec2(-OffsetX, 0.f), TextGoldColour);
-    //ret.emplace_back(end + glm::vec2(OffsetX, 0.f), TextGoldColour);
-
-    //ret.emplace_back(end + glm::vec2(OffsetX, 0.f), TextGoldColour);
-    //ret.emplace_back(start + glm::vec2(-OffsetX, 0.f), TextGoldColour);
-    //ret.emplace_back(start + glm::vec2(OffsetX, 0.f), TextGoldColour);
-
-    //then add points along it
 
     return ret;
 }

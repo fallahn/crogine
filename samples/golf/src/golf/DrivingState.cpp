@@ -1036,7 +1036,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
                     }
                 }
 
-                m_minimapIndicatorEnt.getComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
+                //m_minimapIndicatorEnt.getComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
 
                 //updates the position of the entities based on bar size
                 auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();

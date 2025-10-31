@@ -250,41 +250,6 @@ void DrivingState::createUI()
         });
 #endif
 
-    auto temp = m_uiScene.createEntity();
-    temp.addComponent<cro::Transform>().setPosition({ 50.f, 0.f, 0.1f });
-    temp.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
-    temp.addComponent<cro::Callback>().active = true;
-    temp.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-        {
-            const auto impulses = m_inputParser.getImpulseForArc();
-            std::vector<glm::vec3> points;
-            for (const auto& i : impulses)
-            {
-                points.push_back(getImpactPoint(PlayerPosition, i, m_collisionMesh));
-            }
-
-            std::vector<glm::vec2> mapPoints;
-            const auto playerMapPos = toMinimapCoords(PlayerPosition);
-            mapPoints.push_back(glm::vec2(0.f));
-            for (const auto& p : points)
-            {
-                //put these in relative to player space
-                //so we can rotate the entity on the map without deformation
-                auto mapPos = toMinimapCoords(p);
-                mapPos -= playerMapPos;
-                mapPos = (glm::rotate(glm::mat4(1.f), -m_inputParser.getYaw() + (cro::Util::Const::PI / 2.f), cro::Transform::Z_AXIS) * glm::vec4(mapPos, 0.f, 0.f));
-                mapPoints.push_back(mapPos);
-            }
-
-            const auto verts = strokeIndicatorFromPoints(mapPoints);
-            e.getComponent<cro::Drawable2D>().setVertexData(verts);
-
-            //TODO remove this offset by correctly calcing the verts horizontally
-            e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() - (cro::Util::Const::PI / 2.f));
-        };
-
-
     //displays the game scene
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -989,7 +954,7 @@ void DrivingState::createUI()
         }
     };
     miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    miniEnt.getComponent<cro::Transform>().addChild(temp.getComponent<cro::Transform>());
+
     auto ballEnt = entity;
 
     //draws a trail on the mini map when the balls are in flight
@@ -1046,42 +1011,101 @@ void DrivingState::createUI()
 
 
     //stroke indicator
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ PlayerPosition.x / 2.f, -PlayerPosition.z / 2.f, 0.01f });
-    entity.getComponent<cro::Transform>().move(RangeSize / 4.f);
-    entity.getComponent<cro::Transform>().move({-10.f, 0.f});
-    auto endColour = TextGoldColour;
-    endColour.setAlpha(0.f);
-    entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
-    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
+    auto temp = m_uiScene.createEntity();
+    temp.addComponent<cro::Transform>().setPosition({ 50.f, 0.f, 0.1f });
+    temp.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    temp.addComponent<cro::Callback>().active = true;
+    temp.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
-    {
-        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
-        float scale = e.getComponent<cro::Transform>().getScale().x;
-
-        //more magic numbers than Ken Dodd's tax return.
-        if (m_inputParser.getActive())
         {
-            const auto targetScale = m_inputParser.getEstimatedDistance();
-            if (scale < targetScale)
+            const auto impulses = m_inputParser.getImpulseForArc();
+            std::vector<glm::vec3> points;
+            for (const auto& i : impulses)
             {
-                scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
+                points.push_back(getImpactPoint(PlayerPosition, i, m_collisionMesh));
+            }
+
+            std::vector<glm::vec2> mapPoints;
+            const auto playerMapPos = toMinimapCoords(PlayerPosition);
+            mapPoints.push_back(glm::vec2(0.f));
+            for (const auto& p : points)
+            {
+                //put these in relative to player space
+                //so we can rotate the entity on the map without deformation
+                auto mapPos = toMinimapCoords(p);
+                mapPos -= playerMapPos;
+                mapPos = (glm::rotate(glm::mat4(1.f), -m_inputParser.getYaw(), cro::Transform::Z_AXIS) * glm::vec4(mapPos, 0.f, 0.f));
+                mapPoints.push_back(mapPos);
+            }
+
+            const auto verts = strokeIndicatorFromPoints(mapPoints);
+            e.getComponent<cro::Drawable2D>().setVertexData(verts);
+            e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
+
+
+            //scales the show/hide
+            //TODO we lose the animation when switching clubs because we're always updating :(
+            float scale = e.getComponent<cro::Transform>().getScale().x;
+
+            //TODO can we not skrink until the ball has landed so we can see how the path traces over the top?
+            if (m_inputParser.getActive())
+            {
+                const auto targetScale = 1.f;
+                if (scale < targetScale)
+                {
+                    scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
+                }
+                else
+                {
+                    scale = std::max(targetScale, scale - ((scale * dt) * 2.f));
+                }
             }
             else
             {
-                scale = std::max(targetScale, scale - ((scale * dt) * 2.f));
+                scale = std::max(0.f, scale - ((scale * dt) * 8.f));
             }
-        }
-        else
-        {
-            scale = std::max(0.f, scale - ((scale * dt) * 8.f));
-        }
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
-    };
-    miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_minimapIndicatorEnt = entity;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+        };
+    miniEnt.getComponent<cro::Transform>().addChild(temp.getComponent<cro::Transform>());
+    
+    
+    
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition({ PlayerPosition.x / 2.f, -PlayerPosition.z / 2.f, 0.01f });
+    //entity.getComponent<cro::Transform>().move(RangeSize / 4.f);
+    //entity.getComponent<cro::Transform>().move({-10.f, 0.f});
+    //auto endColour = TextGoldColour;
+    //endColour.setAlpha(0.f);
+    //entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
+    //entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().function =
+    //    [&](cro::Entity e, float dt)
+    //{
+    //    e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
+    //    float scale = e.getComponent<cro::Transform>().getScale().x;
+
+    //    //more magic numbers than Ken Dodd's tax return.
+    //    if (m_inputParser.getActive())
+    //    {
+    //        const auto targetScale = m_inputParser.getEstimatedDistance();
+    //        if (scale < targetScale)
+    //        {
+    //            scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
+    //        }
+    //        else
+    //        {
+    //            scale = std::max(targetScale, scale - ((scale * dt) * 2.f));
+    //        }
+    //    }
+    //    else
+    //    {
+    //        scale = std::max(0.f, scale - ((scale * dt) * 8.f));
+    //    }
+    //    e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+    //};
+    //miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //m_minimapIndicatorEnt = entity;
 
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
