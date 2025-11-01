@@ -130,7 +130,7 @@ std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2
 {
     //SIGH ofc these colours are the wrong way around when we switch to decimated...
     static constexpr std::array col = { cro::Colour(0.419f, 0.435f, 0.447f), cro::Colour(0.f,0.f,0.f)};
-    const std::atomic_size_t ColourOffset = (points.size() - 8) / 2;
+    const std::size_t ColourOffset = (points.size() - 9) / 2; //so we hack around by looking at size diff
 
     const float OffsetX = 1.f * offsetScale;
     const float OffsetY = 0.5f * offsetScale;
@@ -138,7 +138,7 @@ std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2
     //assumes we're using triangle strip
     CRO_ASSERT(!points.empty(), "");
     std::vector<cro::Vertex2D> ret;
-    for (auto i = 0u; i < points.size() - 1; ++i)
+    for (auto i = 0u; i < points.size() - 2; ++i)
     {
         ret.emplace_back(points[i] + glm::vec2(OffsetX, OffsetY), TextGoldColour);
         ret.emplace_back(points[i] + glm::vec2(OffsetX, -OffsetY), TextGoldColour);
@@ -156,16 +156,16 @@ std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2
     }
 
     //add a tail
-    const auto dir = points.back() - points[points.size() - 2];
-    const auto tail = points.back() + dir;
+    /*const auto dir = points.back() - points[points.size() - 2];
+    const auto tail = points.back() + dir;*/
     constexpr auto TailColour = 
         cro::Colour(TextGoldColour.getRed(), TextGoldColour.getGreen(), TextGoldColour.getBlue(), 0.f);
 
-    ret.emplace_back(points.back() + glm::vec2(OffsetX, OffsetY), TextGoldColour);
-    ret.emplace_back(points.back() + glm::vec2(OffsetX, -OffsetY), TextGoldColour);
+    ret.emplace_back(points[points.size() - 2] + glm::vec2(OffsetX, OffsetY), TextGoldColour);
+    ret.emplace_back(points[points.size() - 2] + glm::vec2(OffsetX, -OffsetY), TextGoldColour);
 
-    ret.emplace_back(tail + glm::vec2(OffsetX, OffsetY), TailColour);
-    ret.emplace_back(tail + glm::vec2(OffsetX, -OffsetY), TailColour);
+    ret.emplace_back(points.back() + glm::vec2(0.f, OffsetY), TailColour);
+    ret.emplace_back(points.back() + glm::vec2(0.f, -OffsetY), TailColour);
 
     return ret;
 }

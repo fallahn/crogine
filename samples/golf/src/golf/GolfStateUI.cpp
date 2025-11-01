@@ -1697,36 +1697,9 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&, mapEnt](cro::Entity e, float dt)
         {
-            const auto impulses = m_inputParser.getImpulseForArc();
-            std::vector<glm::vec3> points;
-            for (const auto& i : impulses)
-            {
-                points.push_back(getImpactPoint(m_currentPlayer.position, i, m_collisionMesh));
-            }
-            
-            std::vector<glm::vec2> mapPoints;
-            const auto playerMapPos = m_minimapZoom.toMapCoords(m_currentPlayer.position);
-            mapPoints.push_back(glm::vec2(0.f));
-            for (const auto& p : points)
-            {
-                //put these in relative to player space
-                //so we can rotate the entity on the map without deformation
-                auto mapPos = m_minimapZoom.toMapCoords(p);
-                mapPos -= playerMapPos;
-                mapPos = (glm::rotate(glm::mat4(1.f), -(m_inputParser.getYaw() + m_minimapZoom.tilt), cro::Transform::Z_AXIS) * glm::vec4(mapPos, 0.f, 0.f));
-                mapPoints.push_back(mapPos);
-            }
-
-            const auto InverseScale = (1.f / mapEnt.getComponent<cro::Transform>().getScale().x);
-            const auto verts = strokeIndicatorFromPoints(mapPoints, InverseScale);
-            e.getComponent<cro::Drawable2D>().setVertexData(verts);
-            e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() + m_minimapZoom.tilt);
-            e.getComponent<cro::Transform>().setPosition(playerMapPos);
-
-
             auto& [scale, targetScale] = e.getComponent<cro::Callback>().getUserData<StrokeData>();
             //wild attempt at an animation
-            const float scaleSpeed = dt * 4.f;
+            const float scaleSpeed = dt * 2.f;
             if (targetScale < 1)
             {
                 targetScale = std::min(1.f, targetScale + scaleSpeed);
@@ -1744,6 +1717,34 @@ void GolfState::buildUI()
             }
             else
             {
+                //onlu update the arc if it's active on screen
+                const auto impulses = m_inputParser.getImpulseForArc();
+                std::vector<glm::vec3> points;
+                for (const auto& i : impulses)
+                {
+                    points.push_back(getImpactPoint(m_currentPlayer.position, i, m_collisionMesh, dt));
+                }
+
+                std::vector<glm::vec2> mapPoints;
+                const auto playerMapPos = m_minimapZoom.toMapCoords(m_currentPlayer.position);
+                mapPoints.push_back(glm::vec2(0.f));
+                for (const auto& p : points)
+                {
+                    //put these in relative to player space
+                    //so we can rotate the entity on the map without deformation
+                    auto mapPos = m_minimapZoom.toMapCoords(p);
+                    mapPos -= playerMapPos;
+                    mapPos = (glm::rotate(glm::mat4(1.f), -(m_inputParser.getYaw() + m_minimapZoom.tilt), cro::Transform::Z_AXIS) * glm::vec4(mapPos, 0.f, 0.f));
+                    mapPoints.push_back(mapPos);
+                }
+
+                const auto InverseScale = (1.f / mapEnt.getComponent<cro::Transform>().getScale().x);
+                const auto verts = strokeIndicatorFromPoints(mapPoints, InverseScale);
+                e.getComponent<cro::Drawable2D>().setVertexData(verts);
+                e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() + m_minimapZoom.tilt);
+                e.getComponent<cro::Transform>().setPosition(playerMapPos);
+
+
                 const auto club = getClub();
                 if (club == ClubID::Putter)
                 {
@@ -1751,7 +1752,6 @@ void GolfState::buildUI()
                 }
                 else
                 {
-                    //const float targetScale = m_inputParser.getEstimatedDistance() * m_minimapZoom.zoom;
                     if (scale < targetScale)
                     {
                         scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);

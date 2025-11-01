@@ -112,7 +112,7 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
 
 TerrainResult CollisionMesh::getTerrain(glm::vec3 position) const
 {
-    static const btVector3 RayLength(0.f, -50.f, 0.f);
+    static const btVector3 RayLength(0.f, -60.f, 0.f);
     auto worldPos = glmToBt(position);
     worldPos -= (RayLength / 2.f);
 
