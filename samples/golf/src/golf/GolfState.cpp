@@ -1931,7 +1931,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             }
             else if (m_inputParser.getClub() < data.club)
             {
-                m_minimapIndicatorEnt.getComponent<cro::Callback>().getUserData<StrokeData>().targetScale = 1.3f;
+                m_minimapIndicatorEnt.getComponent<cro::Callback>().getUserData<StrokeData>().targetScale = 1.4f;
             }
 
             //update the player with correct club

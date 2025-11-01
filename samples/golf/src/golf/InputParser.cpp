@@ -1088,7 +1088,7 @@ std::vector<glm::vec3> InputParser::getImpulseForArc() const
             for (auto i = 1; i < (stepCount + 1); ++i)
             {
                 const auto p = cro::Util::Easing::easeOutSine(step * i);
-                ret.push_back(getImpulse(pitch, yaw) * power * p);
+                ret.push_back(getImpulse(pitch, yaw) * power * p * Dampening[m_terrain] * LieDampening[m_terrain][m_lie]);
             }
         };
 
