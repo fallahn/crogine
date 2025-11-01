@@ -849,15 +849,27 @@ void DrivingState::handleMessage(const cro::Message& msg)
             break;
         case GolfEvent::ClubChanged:
         {
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::StrokeIndicator;
-            cmd.action = [&](cro::Entity e, float)
+            //crude animation for indicator
+            if (m_inputParser.getClub() > data.club)
             {
-                //distance is zero because we should never select a putter here.
-                float scale = Clubs[m_inputParser.getClub()].getPower(0.f, m_sharedData.imperialMeasurements) / Clubs[ClubID::Driver].getPower(0.f, m_sharedData.imperialMeasurements);
-                e.getComponent<cro::Transform>().setScale({ scale, 1.f });
-            };
-            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                m_minimapIndicatorEnt.getComponent<cro::Callback>().getUserData<float>() = 0.7f;
+            }
+            else if (m_inputParser.getClub() < data.club)
+            {
+                m_minimapIndicatorEnt.getComponent<cro::Callback>().getUserData<float>() = 1.3f;
+            }
+
+            cro::Command cmd;
+
+            //TODO doesn't look like we're using this any more
+            //cmd.targetFlags = CommandID::StrokeIndicator;
+            //cmd.action = [&](cro::Entity e, float)
+            //{
+            //    //distance is zero because we should never select a putter here.
+            //    /*float scale = Clubs[m_inputParser.getClub()].getPower(0.f, m_sharedData.imperialMeasurements) / Clubs[ClubID::Driver].getPower(0.f, m_sharedData.imperialMeasurements);
+            //    e.getComponent<cro::Transform>().setScale({ scale, 1.f });*/
+            //};
+            //m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             //update club text colour based on distance
             cmd.targetFlags = CommandID::UI::ClubName;

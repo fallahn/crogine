@@ -99,6 +99,7 @@ struct GolfEvent final
     };
     union
     {
+        //this is the previous club in a club changed event so we know if we went up or down
         std::uint8_t club = 0;
         std::uint8_t client;
     };

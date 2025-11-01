@@ -126,14 +126,14 @@ glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3 impulse, CollisionMesh& collis
 }
 
 //assumes the 2D points are already in map-space
-std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2>& points)
+std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2>& points, float offsetScale)
 {
     //SIGH ofc these colours are the wrong way around when we switch to decimated...
     static constexpr std::array col = { cro::Colour(0.419f, 0.435f, 0.447f), cro::Colour(0.f,0.f,0.f)};
     const std::atomic_size_t ColourOffset = (points.size() - 8) / 2;
 
-    static constexpr float OffsetX = 1.f;
-    static constexpr float OffsetY = 0.5f;
+    const float OffsetX = 1.f * offsetScale;
+    const float OffsetY = 0.5f * offsetScale;
 
     //assumes we're using triangle strip
     CRO_ASSERT(!points.empty(), "");

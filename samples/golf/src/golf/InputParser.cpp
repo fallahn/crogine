@@ -519,6 +519,8 @@ void InputParser::setHoleDirection(glm::vec3 dir)
 
 void InputParser::setClub(float dist)
 {
+    const auto oldClub = m_currentClub;
+
     //assume each club can go a little further than its rating
     m_currentClub = ClubID::SandWedge;
     while ((Clubs[m_currentClub].getTarget(dist) * 1.04f) < dist
@@ -550,6 +552,7 @@ void InputParser::setClub(float dist)
 
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
+    msg->club = oldClub;
 
     if (m_terrain == TerrainID::Stone
         && (ClubShot[m_currentClub] & ShotType::Punch))
@@ -565,10 +568,12 @@ void InputParser::setClub(float dist)
 
 void InputParser::syncClub(std::int32_t club)
 {
+    const auto oldClub = m_currentClub;
     m_currentClub = club;
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
     msg->score = 0; //pretends to be CPU so we don't get sound effect played
+    msg->club = oldClub;
 }
 
 float InputParser::getYaw() const
@@ -757,11 +762,13 @@ void InputParser::setMaxClub(float dist, bool atTee)
     {
         m_firstClub = std::max(0, m_firstClub - 1);
     }
+    const auto oldClub = m_currentClub;
     m_currentClub = m_firstClub;
     m_clubOffset = 0;
 
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
+    msg->club = oldClub;
 
     if (m_terrain == TerrainID::Stone
         && (ClubShot[m_currentClub] & ShotType::Punch))
@@ -786,11 +793,13 @@ void InputParser::setMaxClub(std::int32_t clubID)
         m_firstClub++;
     }
 
+    const auto oldClub = m_currentClub;
     m_currentClub = m_firstClub;
     m_clubOffset = 0;
 
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
+    msg->club = oldClub;
 
     if (m_terrain == TerrainID::Stone
         && (ClubShot[m_currentClub] & ShotType::Punch))
@@ -1310,6 +1319,8 @@ void InputParser::updateStroke(float dt)
                 const auto MinClub = m_terrain == TerrainID::Fairway && m_distanceToHole < 11.f ? 
                     ClubID::Count : ClubID::Putter;
 
+                const auto oldClub = m_currentClub;
+
                 do
                 {
                     auto clubCount = MinClub - m_firstClub;
@@ -1333,6 +1344,7 @@ void InputParser::updateStroke(float dt)
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = m_isCPU ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
+                msg->club = oldClub;
 
                 //if we're on the green toggle putt assist
                 if (m_terrain == TerrainID::Green)
@@ -1349,6 +1361,8 @@ void InputParser::updateStroke(float dt)
             {
                 const auto MinClub = m_terrain == TerrainID::Fairway && m_distanceToHole < 11.f ?
                     ClubID::Count : ClubID::Putter;
+
+                const auto oldClub = m_currentClub;
 
                 do
                 {
@@ -1371,6 +1385,7 @@ void InputParser::updateStroke(float dt)
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = m_isCPU? 0 : 1;
+                msg->club = oldClub;
                 
                 if (m_terrain == TerrainID::Green)
                 {
@@ -1592,6 +1607,8 @@ void InputParser::updateDroneCam(float dt)
 
 void InputParser::updateSpin(float dt)
 {
+    const auto oldClub = m_currentClub;
+
     if ((m_inputFlags & InputFlag::PrevClub)
         && ((m_prevFlags & InputFlag::PrevClub) == 0))
     {
@@ -1605,6 +1622,7 @@ void InputParser::updateSpin(float dt)
             auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
             msg->type = GolfEvent::ClubChanged;
             msg->score = m_isCPU ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
+            msg->club = oldClub;
         }
     }
     if ((m_inputFlags & InputFlag::NextClub)
@@ -1619,6 +1637,7 @@ void InputParser::updateSpin(float dt)
             auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
             msg->type = GolfEvent::ClubChanged;
             msg->score = m_isCPU ? 0 : 1;
+            msg->club = oldClub;
         }
     }
 

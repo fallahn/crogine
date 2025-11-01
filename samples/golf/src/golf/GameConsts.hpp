@@ -992,7 +992,7 @@ static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated)
     };
 }
 
-std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2>& points);
+std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2>& points, float offsetScale = 1.f);
 
 static inline void createSwingputMeter(cro::Entity entity, InputParser& inputParser)
 {

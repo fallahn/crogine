@@ -140,7 +140,7 @@ private:
 
     cro::Clock m_idleTimer;
     BallTrail m_ballTrail;
-    //cro::Entity m_minimapIndicatorEnt;
+    cro::Entity m_minimapIndicatorEnt;
     cro::Entity m_minimapTrailEnt;
 
     struct WindUpdate final

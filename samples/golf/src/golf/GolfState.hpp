@@ -107,6 +107,13 @@ struct PlayerCallbackData final
     float scale = 0.f;
 };
 
+//animation for strok indicator
+struct StrokeData final
+{
+    float scale = 1.f;
+    float targetScale = 1.f;
+};
+
 class GolfState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:

@@ -1011,11 +1011,12 @@ void DrivingState::createUI()
 
 
     //stroke indicator
-    auto temp = m_uiScene.createEntity();
-    temp.addComponent<cro::Transform>().setPosition({ 50.f, 0.f, 0.1f });
-    temp.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
-    temp.addComponent<cro::Callback>().active = true;
-    temp.getComponent<cro::Callback>().function =
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 50.f, 0.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+    entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
             const auto impulses = m_inputParser.getImpulseForArc();
@@ -1044,13 +1045,22 @@ void DrivingState::createUI()
 
 
             //scales the show/hide
-            //TODO we lose the animation when switching clubs because we're always updating :(
             float scale = e.getComponent<cro::Transform>().getScale().x;
+            //wild attempt at an animation
+            float& targetScale = e.getComponent<cro::Callback>().getUserData<float>();
+            const float scaleSpeed = dt * 4.f;
+            if (targetScale < 1)
+            {
+                targetScale = std::min(1.f, targetScale + scaleSpeed);
+            }
+            else if (targetScale > 1)
+            {
+                targetScale = std::max(1.f, targetScale - scaleSpeed);
+            }
 
             //TODO can we not skrink until the ball has landed so we can see how the path traces over the top?
             if (m_inputParser.getActive())
             {
-                const auto targetScale = 1.f;
                 if (scale < targetScale)
                 {
                     scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
@@ -1066,8 +1076,8 @@ void DrivingState::createUI()
             }
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
         };
-    miniEnt.getComponent<cro::Transform>().addChild(temp.getComponent<cro::Transform>());
-    
+    miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_minimapIndicatorEnt = entity;
     
     
     //entity = m_uiScene.createEntity();

@@ -1680,7 +1680,6 @@ void GolfState::buildUI()
         e.getComponent<cro::Transform>().setScale(((m_minimapZoom.mapScale * 1.8f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f) * (glm::vec2(1.f) / MapSizeRatio));
 
         auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
-        //auto flagBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
         e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1691,69 +1690,158 @@ void GolfState::buildUI()
 
     //stroke indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
-    entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
-    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.03f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().setUserData<StrokeData>();
     entity.getComponent<cro::Callback>().function =
-        [&, mapEnt/*, dbEnt*/](cro::Entity e, float dt) mutable
-    {
-        e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_currentPlayer.position), 0.01f));
-        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() + m_minimapZoom.tilt);
+        [&, mapEnt](cro::Entity e, float dt)
+        {
+            const auto impulses = m_inputParser.getImpulseForArc();
+            std::vector<glm::vec3> points;
+            for (const auto& i : impulses)
+            {
+                points.push_back(getImpactPoint(m_currentPlayer.position, i, m_collisionMesh));
+            }
+            
+            std::vector<glm::vec2> mapPoints;
+            const auto playerMapPos = m_minimapZoom.toMapCoords(m_currentPlayer.position);
+            mapPoints.push_back(glm::vec2(0.f));
+            for (const auto& p : points)
+            {
+                //put these in relative to player space
+                //so we can rotate the entity on the map without deformation
+                auto mapPos = m_minimapZoom.toMapCoords(p);
+                mapPos -= playerMapPos;
+                mapPos = (glm::rotate(glm::mat4(1.f), -(m_inputParser.getYaw() + m_minimapZoom.tilt), cro::Transform::Z_AXIS) * glm::vec4(mapPos, 0.f, 0.f));
+                mapPoints.push_back(mapPos);
+            }
 
-        float& scale = e.getComponent<cro::Callback>().getUserData<float>();
-        if (!m_inputParser.getActive()
-            || m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
-        {
-            scale = std::max(0.f, scale - ((scale * dt) * 8.f));
-        }
-        else
-        {
-            auto club = getClub();
-            if (club == ClubID::Putter
-                /*&& !m_sharedData.showPuttingPower*/)
+            const auto InverseScale = (1.f / mapEnt.getComponent<cro::Transform>().getScale().x);
+            const auto verts = strokeIndicatorFromPoints(mapPoints, InverseScale);
+            e.getComponent<cro::Drawable2D>().setVertexData(verts);
+            e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() + m_minimapZoom.tilt);
+            e.getComponent<cro::Transform>().setPosition(playerMapPos);
+
+
+            auto& [scale, targetScale] = e.getComponent<cro::Callback>().getUserData<StrokeData>();
+            //wild attempt at an animation
+            const float scaleSpeed = dt * 4.f;
+            if (targetScale < 1)
+            {
+                targetScale = std::min(1.f, targetScale + scaleSpeed);
+            }
+            else if (targetScale > 1)
+            {
+                targetScale = std::max(1.f, targetScale - scaleSpeed);
+            }
+
+            //scales the show/hide
+            if (!m_inputParser.getActive()
+                || m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
             {
                 scale = std::max(0.f, scale - ((scale * dt) * 8.f));
             }
             else
             {
-                const float targetScale = m_inputParser.getEstimatedDistance() * m_minimapZoom.zoom;
-                if (scale < targetScale)
+                const auto club = getClub();
+                if (club == ClubID::Putter)
                 {
-                    scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
+                    scale = std::max(0.f, scale - ((scale * dt) * 8.f));
                 }
                 else
                 {
-                    scale = std::max(targetScale, scale - ((scale * dt) * 2.f));
+                    //const float targetScale = m_inputParser.getEstimatedDistance() * m_minimapZoom.zoom;
+                    if (scale < targetScale)
+                    {
+                        scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
+                    }
+                    else
+                    {
+                        scale = std::max(targetScale, scale - ((scale * dt) * 2.f));
+                    }
                 }
             }
-        }
 
-        const auto InverseScale = (1.f / mapEnt.getComponent<cro::Transform>().getScale().x);
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * InverseScale);
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
 
-        auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
-        e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
-        m_minimapTrail.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
 
-        //when the drawable is cropped the area is transformed by the ent's world tx
-        //so we're doing this here purely to visualise
-        //miniBounds = miniBounds.transform(e.getComponent<cro::Transform>().getWorldTransform());
-
-        /*std::vector<cro::Vertex2D> verts =
-        {
-            cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom), cro::Colour::Magenta),
-            cro::Vertex2D(glm::vec2(miniBounds.left + miniBounds.width, miniBounds.bottom), cro::Colour::Magenta),
-            cro::Vertex2D(glm::vec2(miniBounds.left + miniBounds.width, miniBounds.bottom + miniBounds.height), cro::Colour::Magenta),
-            cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom + miniBounds.height), cro::Colour::Magenta),
-            cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom), cro::Colour::Magenta),
+            //crop drawable to map bounds
+            auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
+            e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
+            m_minimapTrail.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
         };
-        dbEnt.getComponent<cro::Drawable2D>().setVertexData(verts);*/
-
-    };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_minimapIndicatorEnt = entity;
+
+
+
+
+
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
+    //entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
+    //entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    //entity.getComponent<cro::Callback>().function =
+    //    [&, mapEnt/*, dbEnt*/](cro::Entity e, float dt) mutable
+    //{
+    //    e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_currentPlayer.position), 0.01f));
+    //    e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() + m_minimapZoom.tilt);
+
+    //    float& scale = e.getComponent<cro::Callback>().getUserData<float>();
+    //    if (!m_inputParser.getActive()
+    //        || m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
+    //    {
+    //        scale = std::max(0.f, scale - ((scale * dt) * 8.f));
+    //    }
+    //    else
+    //    {
+    //        auto club = getClub();
+    //        if (club == ClubID::Putter
+    //            /*&& !m_sharedData.showPuttingPower*/)
+    //        {
+    //            scale = std::max(0.f, scale - ((scale * dt) * 8.f));
+    //        }
+    //        else
+    //        {
+    //            const float targetScale = m_inputParser.getEstimatedDistance() * m_minimapZoom.zoom;
+    //            if (scale < targetScale)
+    //            {
+    //                scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
+    //            }
+    //            else
+    //            {
+    //                scale = std::max(targetScale, scale - ((scale * dt) * 2.f));
+    //            }
+    //        }
+    //    }
+
+    //    const auto InverseScale = (1.f / mapEnt.getComponent<cro::Transform>().getScale().x);
+    //    e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * InverseScale);
+
+    //    auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
+    //    e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
+    //    m_minimapTrail.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
+
+    //    //when the drawable is cropped the area is transformed by the ent's world tx
+    //    //so we're doing this here purely to visualise
+    //    //miniBounds = miniBounds.transform(e.getComponent<cro::Transform>().getWorldTransform());
+
+    //    /*std::vector<cro::Vertex2D> verts =
+    //    {
+    //        cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom), cro::Colour::Magenta),
+    //        cro::Vertex2D(glm::vec2(miniBounds.left + miniBounds.width, miniBounds.bottom), cro::Colour::Magenta),
+    //        cro::Vertex2D(glm::vec2(miniBounds.left + miniBounds.width, miniBounds.bottom + miniBounds.height), cro::Colour::Magenta),
+    //        cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom + miniBounds.height), cro::Colour::Magenta),
+    //        cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom), cro::Colour::Magenta),
+    //    };
+    //    dbEnt.getComponent<cro::Drawable2D>().setVertexData(verts);*/
+
+    //};
+    //mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //m_minimapIndicatorEnt = entity;
 
 
     auto greenEntRoot = m_uiScene.createEntity();

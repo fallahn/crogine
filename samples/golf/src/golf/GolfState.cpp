@@ -1924,6 +1924,16 @@ void GolfState::handleMessage(const cro::Message& msg)
         break;
         case GolfEvent::ClubChanged:
         {
+            //crude animation for indicator
+            if (m_inputParser.getClub() > data.club)
+            {
+                m_minimapIndicatorEnt.getComponent<cro::Callback>().getUserData<StrokeData>().targetScale = 0.7f;
+            }
+            else if (m_inputParser.getClub() < data.club)
+            {
+                m_minimapIndicatorEnt.getComponent<cro::Callback>().getUserData<StrokeData>().targetScale = 1.3f;
+            }
+
             //update the player with correct club
             //this includes remote player changes
             if (m_activeAvatar
