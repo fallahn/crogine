@@ -840,7 +840,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::PlayerAvatar;
             cmd.action = [&](cro::Entity e, float)
             {
-                e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[m_inputParser.getClub() > ClubID::PitchWedge ? AnimationID::Chip : AnimationID::Swing]);
+                e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[m_inputParser.getClub() >= ClubID::PitchWedge ? AnimationID::Chip : AnimationID::Swing]);
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -901,7 +901,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
             //and change the stance
             const auto current = m_avatar.model.getComponent<cro::Skeleton>().getCurrentAnimation();
             std::int32_t next = current;
-            if (club > ClubID::PitchWedge)
+            if (club >= ClubID::PitchWedge)
             {
                 if (current == m_avatar.animationIDs[AnimationID::Idle])
                 {

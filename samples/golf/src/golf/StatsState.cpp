@@ -962,7 +962,14 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         statNode.getComponent<cro::Transform>().addChild(barEnt.getComponent<cro::Transform>());
     };
 
-    for (auto i = 0; i < ClubID::Putter; ++i)
+    //hack because we can't fit all the clubs on screen
+#ifdef LOB_WEDGE
+    const auto MaxClub = ClubID::SandWedge;
+#else
+    const auto MaxClub = ClubID::Putter;
+#endif
+
+    for (auto i = 0; i < MaxClub; ++i)
     {
         createStat(i);
     }

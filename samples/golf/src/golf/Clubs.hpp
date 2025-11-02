@@ -38,6 +38,8 @@ source distribution.
 #include <array>
 #include <cstdint>
 
+#define LOB_WEDGE
+
 struct ClubID final
 {
     enum
@@ -45,7 +47,10 @@ struct ClubID final
         Driver, ThreeWood, FiveWood,
         FourIron, FiveIron, SixIron,
         SevenIron, EightIron, NineIron,
-        PitchWedge, /*LobWedge,*/
+        PitchWedge,
+#ifdef LOB_WEDGE
+        LobWedge,
+#endif
         GapWedge, SandWedge,
         Putter,
 
@@ -57,7 +62,10 @@ struct ClubID final
         (1<<Driver),     (1<<ThreeWood), (1<<FiveWood),
         (1<<FourIron),   (1<<FiveIron),  (1<<SixIron),
         (1<<SevenIron),  (1<<EightIron), (1<<NineIron),
-        (1<<PitchWedge), /*(1<<LobWedge),*/
+        (1<<PitchWedge),
+#ifdef LOB_WEDGE
+        (1<<LobWedge),
+#endif
         (1<<GapWedge),   (1<<SandWedge),
         (1<<Putter)
     };
@@ -82,11 +90,17 @@ struct ClubID final
 
     static constexpr std::int32_t DefaultSet =
         Flags[Driver]    | Flags[ThreeWood]  | Flags[FiveIron] |
-        Flags[EightIron] | Flags[PitchWedge] | /*Flags[LobWedge] |*/
+        Flags[EightIron] | Flags[PitchWedge] |
+#ifdef LOB_WEDGE
+        Flags[LobWedge] |
+#endif
         Flags[GapWedge]  | Flags[SandWedge] | Flags[Putter];
 
-    //static constexpr std::int32_t FullSet = 0x3FFF; //with lob wedge
+#ifdef LOB_WEDGE
+    static constexpr std::int32_t FullSet = 0x3FFF; //with lob wedge
+#else
     static constexpr std::int32_t FullSet = 0x1FFF;
+#endif
 
     //these are disabled while the player has the snek
     static constexpr std::int32_t SnekFlags =
@@ -184,7 +198,9 @@ static constexpr std::array<std::int32_t, ClubID::Count> ClubShot =
     ShotType::Regular | ShotType::Punch,
     ShotType::Regular | ShotType::Punch | ShotType::Flop,
     ShotType::Regular | ShotType::Flop, //wedge
-    //ShotType::Regular | ShotType::Flop, //lob
+#ifdef LOB_WEDGE
+    ShotType::Regular | ShotType::Flop, //lob
+#endif
     ShotType::Regular | ShotType::Flop,
     ShotType::Regular | ShotType::Flop,
     ShotType::Regular, //putter
@@ -225,7 +241,9 @@ static inline const std::array<Club, ClubID::Count> Clubs =
     Club(ClubID::EightIron, "8 Iron ", 35.924f, 0.750f, 0.850f),
     Club(ClubID::NineIron,  "9 Iron ", 35.523f, 0.800f, 0.850f),
     Club(ClubID::PitchWedge, "Pitch Wedge ", 56.895f, 0.050f, 0.900f),
-    //Club(ClubID::LobWedge,   "Lob Wedge ",   /*59.452f*/52.f, 0.050f, 0.910f),
+#ifdef LOB_WEDGE
+    Club(ClubID::LobWedge,   "Lob Wedge ",   52.f, 0.050f, 0.910f),
+#endif
     Club(ClubID::GapWedge,   "Gap Wedge ",   62.452f, 0.050f, 0.930f),
     Club(ClubID::SandWedge,  "Sand Wedge ",  60.000f, 0.050f, 0.950f),
     Club(ClubID::Putter,     "Putter ",      0.000f, 0.000f, 0.000f),

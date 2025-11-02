@@ -1947,7 +1947,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
                 const auto current = m_activeAvatar->model.getComponent<cro::Skeleton>().getCurrentAnimation();
                 std::int32_t next = current;
-                if (club > ClubID::PitchWedge)
+                if (club >= ClubID::PitchWedge)
                 {
                     if (current == m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::Idle])
                     {
@@ -5946,7 +5946,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 auto animID = evt.packet.as<std::uint8_t>();
                 if (animID == AnimationID::Swing)
                 {
-                    if (getClub() > ClubID::PitchWedge)
+                    if (getClub() >= ClubID::PitchWedge)
                     {
                         //we don't know the club server side to send correct animation *sigh*
                         animID = AnimationID::Chip;

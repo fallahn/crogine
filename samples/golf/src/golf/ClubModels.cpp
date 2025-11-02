@@ -147,6 +147,12 @@ bool ClubModels::loadFromFile(const std::string& path, cro::ResourceCollection& 
             {
                 indices[ClubID::PitchWedge] = std::clamp(p.getValue<std::int32_t>(), 0, ModelCount);
             }
+#ifdef LOB_WEDGE
+            else if (pName == "lob_wedge")
+            {
+                indices[ClubID::LobWedge] = std::clamp(p.getValue<std::int32_t>(), 0, ModelCount);
+            }
+#endif
             else if (pName == "gap_wedge")
             {
                 indices[ClubID::GapWedge] = std::clamp(p.getValue<std::int32_t>(), 0, ModelCount);
@@ -156,6 +162,14 @@ bool ClubModels::loadFromFile(const std::string& path, cro::ResourceCollection& 
                 indices[ClubID::SandWedge] = std::clamp(p.getValue<std::int32_t>(), 0, ModelCount);
             }
         }
+
+#ifdef LOB_WEDGE
+        if (indices[ClubID::LobWedge] == 0)
+        {
+            //this was and older layout and there was no model assigned
+            indices[ClubID::LobWedge] = indices[ClubID::PitchWedge];
+        }
+#endif
 
 #ifdef USE_GNS
         //check to see if we can get a workshop ID from the path
