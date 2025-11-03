@@ -30,7 +30,6 @@ source distribution.
 #include "BallTrail.hpp"
 #include "CommandIDs.hpp"
 #include "Terrain.hpp"
-#include "GameConsts.hpp"
 
 #include <crogine/gui/Gui.hpp>
 

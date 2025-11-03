@@ -59,10 +59,68 @@ namespace
 #include "shaders/CloudShader.inl"
 #include "shaders/Weather.inl"
 #include "shaders/RoidShader.inl"
+#include "shaders/SwarmShader.inl"
 
 
     constexpr std::int32_t GridX = 3;
     constexpr std::int32_t GridY = 3;
+}
+
+void GolfState::createSwarm(std::int32_t, glm::vec3 position)
+{
+    static constexpr float AreaSize = 5.f;
+
+    //TODO different types eg butterfly/bees etc
+    const auto points = pd::PoissonDiskSampling(0.6f, WeatherAnimationSystem::AreaStart, { {AreaSize,AreaSize,AreaSize} }, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
+    const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_SHORT));
+
+    auto* meshData = &m_resources.meshes.getMesh(meshID);
+    meshData->attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
+    meshData->attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+    meshData->vertexSize = cro::MeshBuilder::getVertexSize(meshData->attributes);
+
+    std::vector<Vertex> verts;
+    std::vector<std::uint16_t> indices;
+
+    //verts have a base position with offset radius in red, offset rotation in green and movements speed in blue
+    for (auto i = 0u; i < points.size(); ++i)
+    {
+        auto& v = verts.emplace_back(points[i][0], points[i][1], points[i][2]);
+        //radius
+        v.colour.setRed(0.2f + (static_cast<float>(cro::Util::Random::value(0, 7)) / 10.f));
+        //rotation offset
+        v.colour.setGreen(static_cast<float>(cro::Util::Random::value(0, 9)) / 10.f);
+        //speed (normalised multiplier)
+        v.colour.setBlue(0.2f + (static_cast<float>(cro::Util::Random::value(0, 7)) / 10.f));
+
+        indices.push_back(i);
+    }
+
+    meshData->vertexCount = points.size();
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
+
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
+
+    meshData->boundingBox[1] = glm::vec3(AreaSize);
+    meshData->boundingSphere.centre = meshData->boundingBox[0] + ((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
+    meshData->boundingSphere.radius = glm::length((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
+
+
+    m_resources.shaders.loadFromString(ShaderID::Swarm, SwarmVertex, SwarmFragment);
+    const auto& shader = m_resources.shaders.get(ShaderID::Swarm);
+    m_windBuffer.addShader(shader); //time input
+
+    const auto materialID = m_resources.materials.add(shader);
+    auto material = m_resources.materials.get(materialID);
+    //TODO set noise texture on material
+    //TODO set visual texture eg butterfly
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::FlightCam));
 }
 
 void GolfState::createWeather(std::int32_t weatherType)
@@ -73,18 +131,6 @@ void GolfState::createWeather(std::int32_t weatherType)
     //LogI << "Generated " << points.size() << " in " << t << " seconds" << std::endl;
 
     const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_SHORT));
-
-    //TODO we've used this vertex layout multiple times, eg BallTrail
-    //so we could re-use this struct instead of redefining it
-    struct Vertex final
-    {
-        glm::vec3 position = glm::vec3(0.f);
-        cro::Detail::ColourLowP colour = cro::Colour::White;
-
-        Vertex() = default;
-        Vertex(float x, float y, float z)
-            : position(x,y,z){ }
-    };
 
     auto* meshData = &m_resources.meshes.getMesh(meshID);
     meshData->attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;

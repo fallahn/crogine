@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "GameConsts.hpp"
+
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/MeshData.hpp>
@@ -61,16 +63,6 @@ public:
     void setUseBeaconColour(bool);
 
 private:
-
-    struct Vertex final
-    {
-        glm::vec3 p = glm::vec3(0.f);
-        cro::Detail::ColourLowP c = cro::Colour::White;
-
-        Vertex() = default;
-        Vertex(glm::vec3 pos, cro::Detail::ColourLowP colour) :p(pos), c(colour) {}
-    };
-
 
     struct Trail final
     {

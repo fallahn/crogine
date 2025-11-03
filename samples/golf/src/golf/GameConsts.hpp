@@ -181,6 +181,16 @@ static constexpr std::uint32_t ShadowMapLowest = 512;
 static constexpr std::uint32_t ShadowMapLow = 2048;
 static constexpr std::uint32_t ShadowMapHigh = 3072;
 
+struct Vertex final
+{
+    glm::vec3 position = glm::vec3(0.f);
+    cro::Detail::ColourLowP colour = cro::Colour::White;
+
+    Vertex() = default;
+    Vertex(glm::vec3 pos, cro::Detail::ColourLowP c) : position(pos), colour(c) {}
+    Vertex(float x, float y, float z) : position(x, y, z) {}
+};
+
 static inline void createKeystroke(std::int32_t key, bool down)
 {
     SDL_Event evt;
@@ -376,6 +386,7 @@ struct ShaderID final
         WireframeCulled,
         WireframeCulledPoint,
         Weather,
+        Swarm,
         Transition,
         Trophy,
         Beacon,
