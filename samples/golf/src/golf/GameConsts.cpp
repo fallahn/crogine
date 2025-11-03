@@ -113,14 +113,20 @@ void renderToNormalMap(const cro::Mesh::Data meshData, cro::Shader& normalShader
     glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
 }
 
-glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3 impulse, CollisionMesh& collisionMesh, float dt)
+glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3 impulse, glm::vec3 windVec, glm::vec3 pin, CollisionMesh& collisionMesh, float dt)
 {
     float groundHeight = -1.f;
     do
     {
+        groundHeight = collisionMesh.getTerrain(pos).height;
+
+        //TODO this is lifted from the BallSystem - would prefer not to replicate.
+        const auto windHeight = std::clamp(groundHeight, 0.f, 60.f);
+        const auto windMultiplier = getWindMultiplier(windHeight, glm::length(pin - pos)) * 1.36f;
+
         pos += impulse * dt;
         impulse += Gravity * dt;
-        groundHeight = collisionMesh.getTerrain(pos).height;
+        impulse += windVec * windMultiplier * dt;
     } while (pos.y > groundHeight);
     return pos;
 }

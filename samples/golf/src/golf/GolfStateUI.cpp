@@ -1717,12 +1717,16 @@ void GolfState::buildUI()
             }
             else
             {
-                //onlu update the arc if it's active on screen
+                auto windDir = m_windUpdate.windVector;
+                windDir *= windDir.y;
+                windDir.y = 0.f;
+
+                //only update the arc if it's active on screen
                 const auto impulses = m_inputParser.getImpulseForArc();
                 std::vector<glm::vec3> points;
                 for (const auto& i : impulses)
                 {
-                    points.push_back(getImpactPoint(m_currentPlayer.position, i, m_collisionMesh, dt));
+                    points.push_back(getImpactPoint(m_currentPlayer.position, i, windDir, m_holeData[m_currentHole].pin, m_collisionMesh, dt));
                 }
 
                 std::vector<glm::vec2> mapPoints;

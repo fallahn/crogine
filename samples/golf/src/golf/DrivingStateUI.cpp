@@ -1020,10 +1020,14 @@ void DrivingState::createUI()
         [&](cro::Entity e, float dt)
         {
             const auto impulses = m_inputParser.getImpulseForArc();
+            auto windDir = m_gameScene.getSystem<BallSystem>()->getWindDirection();
+            windDir *= windDir.y;
+            windDir.y = 0.f;
+
             std::vector<glm::vec3> points;
             for (const auto& i : impulses)
             {
-                points.push_back(getImpactPoint(PlayerPosition, i, m_collisionMesh));
+                points.push_back(getImpactPoint(PlayerPosition, i, windDir, m_holeData[m_targetIndex].pin, m_collisionMesh));
             }
 
             std::vector<glm::vec2> mapPoints;
@@ -1058,7 +1062,6 @@ void DrivingState::createUI()
                 targetScale = std::max(1.f, targetScale - scaleSpeed);
             }
 
-            //TODO can we not skrink until the ball has landed so we can see how the path traces over the top?
             if (m_inputParser.getActive())
             {
                 if (scale < targetScale)
@@ -1077,9 +1080,9 @@ void DrivingState::createUI()
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
         };
     miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_minimapIndicatorEnt = entity;
+    //m_minimapIndicatorEnt = entity;
     
-    
+    //TODO make this an option for 'low accuracy'
     //entity = m_uiScene.createEntity();
     //entity.addComponent<cro::Transform>().setPosition({ PlayerPosition.x / 2.f, -PlayerPosition.z / 2.f, 0.01f });
     //entity.getComponent<cro::Transform>().move(RangeSize / 4.f);
