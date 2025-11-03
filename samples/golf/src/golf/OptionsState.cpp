@@ -4843,7 +4843,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity = createHighlight(glm::vec2(12.f, 63.f));
     entity.setLabel("Show hints and tips during gameplay.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettShowHints);
-    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetHints);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, SettCalcRange);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettShowMinimap);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
@@ -4862,6 +4862,33 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         [&](cro::Entity e, float)
         {
             const float scale = m_sharedData.showInGameTips ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+
+
+    //use calculated range indicator
+    entity = createHighlight(glm::vec2(12.f, 47.f));
+    entity.setLabel("Calculate range of impact based on terrain elevation and wind\ninstead of estimating based on club strength and direction.");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettCalcRange);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetHints);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettShowHints);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.calculateRange = !m_sharedData.calculateRange;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = createCheckbox(glm::vec2(14.f, 49.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const float scale = m_sharedData.calculateRange ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -5251,7 +5278,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     {
         entity.getComponent<cro::UIInput>().setNextIndex(ResetCareer, WindowAdvanced);
     }
-    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettShowHints);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettCalcRange);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {

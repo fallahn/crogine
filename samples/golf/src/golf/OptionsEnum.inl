@@ -123,6 +123,7 @@ enum OptionsIndex
     SettRotateCam,
     SettShowMinimap,
     SettShowHints,
+    SettCalcRange,
     SettFlagDown,
     SettFlagUp,
     SettFlagLabelDown,
