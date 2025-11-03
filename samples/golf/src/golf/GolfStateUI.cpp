@@ -1690,7 +1690,7 @@ void GolfState::buildUI()
 
     //stroke indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.015f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.01f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<StrokeData>();
@@ -1803,7 +1803,7 @@ void GolfState::buildUI()
             return;
         }
 
-        e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_currentPlayer.position), 0.015f));
+        e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_currentPlayer.position), 0.01f));
         e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() + m_minimapZoom.tilt);
 
         float& scale = e.getComponent<cro::Callback>().getUserData<float>();

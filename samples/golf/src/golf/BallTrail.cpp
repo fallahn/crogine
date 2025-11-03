@@ -199,7 +199,7 @@ void BallTrail::update()
                 for (auto i = 0u; i < (end - start); ++i)
                 {
                     float a = static_cast<float>(i) / (end - start);
-                    trail.vertexData[start + i].c = m_baseColour * a;
+                    trail.vertexData[start + i].colour = m_baseColour * a;
                 }
 
 
