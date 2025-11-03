@@ -850,14 +850,14 @@ void DrivingState::handleMessage(const cro::Message& msg)
         case GolfEvent::ClubChanged:
         {
             //crude animation for indicator
-            if (m_inputParser.getClub() > data.club)
+            /*if (m_inputParser.getClub() > data.club)
             {
                 m_minimapIndicatorEnt.getComponent<cro::Callback>().getUserData<float>() = 0.7f;
             }
             else if (m_inputParser.getClub() < data.club)
             {
                 m_minimapIndicatorEnt.getComponent<cro::Callback>().getUserData<float>() = 1.3f;
-            }
+            }*/
 
             cro::Command cmd;
 

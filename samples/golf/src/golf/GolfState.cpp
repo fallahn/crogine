@@ -1490,7 +1490,10 @@ void GolfState::handleMessage(const cro::Message& msg)
                 && (!isCPU || (isCPU && !m_sharedData.fastCPU)))
             {
                 //calculated hook is the result of the previous call to InputParser::getStroke()
-                auto hook = m_inputParser.getCalculatedHook() * m_activeAvatar->model.getComponent<cro::Transform>().getScale().x;
+                //so this is going to be wrong for remote players
+                auto hook = m_currentPlayer.client == m_sharedData.localConnectionData.connectionID ?
+                    m_inputParser.getCalculatedHook() * m_activeAvatar->model.getComponent<cro::Transform>().getScale().x
+                    : 0.f;
                 const auto hookDivisor = 1.f + Club::getClubLevel();
 
                 bool isHook = false;
@@ -1925,14 +1928,14 @@ void GolfState::handleMessage(const cro::Message& msg)
         case GolfEvent::ClubChanged:
         {
             //crude animation for indicator
-            if (m_inputParser.getClub() > data.club)
+            /*if (m_inputParser.getClub() > data.club)
             {
                 m_minimapIndicatorEnt.getComponent<cro::Callback>().getUserData<StrokeData>().targetScale = 0.7f;
             }
             else if (m_inputParser.getClub() < data.club)
             {
                 m_minimapIndicatorEnt.getComponent<cro::Callback>().getUserData<StrokeData>().targetScale = 1.4f;
-            }
+            }*/
 
             //update the player with correct club
             //this includes remote player changes

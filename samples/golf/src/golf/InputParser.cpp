@@ -658,6 +658,11 @@ float InputParser::getHook() const
     return hook * 2.f - 1.f;
 }
 
+float InputParser::getCalculatedHook() const
+{
+    return m_lastCalculatedHook;
+}
+
 std::int32_t InputParser::getClub() const
 {
     return m_currentClub;
