@@ -1019,6 +1019,12 @@ void DrivingState::createUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
+            if (!m_sharedData.calculateRange)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                return;
+            }
+
             const auto impulses = m_inputParser.getImpulseForArc();
             auto windDir = m_gameScene.getSystem<BallSystem>()->getWindDirection();
             windDir *= windDir.y;
@@ -1083,42 +1089,47 @@ void DrivingState::createUI()
     //m_minimapIndicatorEnt = entity;
     
     //TODO make this an option for 'low accuracy'
-    //entity = m_uiScene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition({ PlayerPosition.x / 2.f, -PlayerPosition.z / 2.f, 0.01f });
-    //entity.getComponent<cro::Transform>().move(RangeSize / 4.f);
-    //entity.getComponent<cro::Transform>().move({-10.f, 0.f});
-    //auto endColour = TextGoldColour;
-    //endColour.setAlpha(0.f);
-    //entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
-    //entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-    //entity.addComponent<cro::Callback>().active = true;
-    //entity.getComponent<cro::Callback>().function =
-    //    [&](cro::Entity e, float dt)
-    //{
-    //    e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
-    //    float scale = e.getComponent<cro::Transform>().getScale().x;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ PlayerPosition.x / 2.f, -PlayerPosition.z / 2.f, 0.01f });
+    entity.getComponent<cro::Transform>().move(RangeSize / 4.f);
+    auto endColour = TextGoldColour;
+    endColour.setAlpha(0.f);
+    entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        if (m_sharedData.calculateRange)
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            return;
+        }
 
-    //    //more magic numbers than Ken Dodd's tax return.
-    //    if (m_inputParser.getActive())
-    //    {
-    //        const auto targetScale = m_inputParser.getEstimatedDistance();
-    //        if (scale < targetScale)
-    //        {
-    //            scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
-    //        }
-    //        else
-    //        {
-    //            scale = std::max(targetScale, scale - ((scale * dt) * 2.f));
-    //        }
-    //    }
-    //    else
-    //    {
-    //        scale = std::max(0.f, scale - ((scale * dt) * 8.f));
-    //    }
-    //    e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
-    //};
-    //miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    //m_minimapIndicatorEnt = entity;
+        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
+        float scale = e.getComponent<cro::Transform>().getScale().x;
+
+        //more magic numbers than Ken Dodd's tax return.
+        if (m_inputParser.getActive())
+        {
+            const auto targetScale = m_inputParser.getEstimatedDistance();
+            if (scale < targetScale)
+            {
+                scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
+            }
+            else
+            {
+                scale = std::max(targetScale, scale - ((scale * dt) * 2.f));
+            }
+        }
+        else
+        {
+            scale = std::max(0.f, scale - ((scale * dt) * 8.f));
+        }
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+    };
+    miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_minimapIndicatorEnt = entity;
 
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.

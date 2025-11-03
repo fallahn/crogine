@@ -1880,6 +1880,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.showInGameTips = prop.getValue<bool>();
                     }
+                    else if (name == "calculate_range")
+                    {
+                        m_sharedData.calculateRange = prop.getValue<bool>();
+                    }
                 }
             }
 
@@ -2040,6 +2044,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("rotate_camera").setValue(m_sharedData.rotateCamera);
     cfg.addProperty("show_minimap").setValue(m_sharedData.showMinimap);
     cfg.addProperty("show_tips").setValue(m_sharedData.showInGameTips);
+    cfg.addProperty("calculate_range").setValue(m_sharedData.calculateRange);
     cfg.save(path);
 
 
