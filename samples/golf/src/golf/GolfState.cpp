@@ -2066,11 +2066,14 @@ void GolfState::handleMessage(const cro::Message& msg)
                     {
                         std::int32_t dir = ((getClub() > ClubID::PitchWedge) && (glm::length(m_holeData[m_currentHole].pin - m_currentPlayer.position) < 30.f))
                             || m_currentPlayer.terrain == TerrainID::Green ? 0 : 1;
+
+                        //never shrink for remote players
+                        dir = m_currentPlayer.client == m_sharedData.localConnectionData.connectionID ? dir : 1;
+
                         e.getComponent<cro::Callback>().getUserData<WindHideData>().direction = dir;
                         e.getComponent<cro::Callback>().active = true;
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
 
                 /*if (m_currentPlayer.terrain != TerrainID::Green
                     && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)

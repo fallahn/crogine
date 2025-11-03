@@ -3696,6 +3696,7 @@ void DrivingState::setHole(std::int32_t index)
 {
     m_gameScene.getSystem<BallSystem>()->setHoleData(m_holeData[index], false);
     m_inputParser.resetPower();
+    Club::setModifierIndex(0); //reset punch/flop
     //activated when flag anim finishes
 
 
