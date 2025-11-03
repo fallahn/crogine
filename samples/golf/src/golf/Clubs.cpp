@@ -137,9 +137,9 @@ Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin
 }
 
 //public
-std::string Club::getName(bool imperial, float distanceToPin) const
+std::string Club::getName(bool imperial, float distanceToPin, float dampening) const
 {
-    auto t = getTarget(distanceToPin);
+    auto t = getTarget(distanceToPin) * dampening;
     
     const auto getSuffix = []()
         {

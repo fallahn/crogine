@@ -125,7 +125,7 @@ public:
 
     Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin);
 
-    std::string getName(bool imperial, float distanceToPin) const;
+    std::string getName(bool imperial, float distanceToPin, float dampening = 1.f) const;
 
     std::string getLabel() const { return m_name; } //doesn't include distance
 

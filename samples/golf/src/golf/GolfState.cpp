@@ -1992,7 +1992,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     {
                         if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                         {
-                            e.getComponent<cro::Text>().setString(Clubs[getClub()].getName(m_sharedData.imperialMeasurements, m_distanceToHole));
+                            e.getComponent<cro::Text>().setString(Clubs[getClub()].getName(m_sharedData.imperialMeasurements, m_distanceToHole, getDampening()));
 
                             auto dist = m_distanceToHole * 1.67f;
                             if (getClub() < ClubID::NineIron &&
@@ -2511,7 +2511,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                     {
-                        e.getComponent<cro::Text>().setString(Clubs[getClub()].getName(m_sharedData.imperialMeasurements, m_distanceToHole));
+                        e.getComponent<cro::Text>().setString(Clubs[getClub()].getName(m_sharedData.imperialMeasurements, m_distanceToHole, getDampening()));
                     }
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -8250,6 +8250,11 @@ std::int32_t GolfState::getClub() const
     }
 }
 
+float GolfState::getDampening() const
+{
+    return Dampening[m_currentPlayer.terrain] * LieDampening[m_currentPlayer.terrain][m_inputParser.getLie()];
+}
+
 void GolfState::gamepadNotify(std::int32_t type)
 {
     if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID
@@ -8433,3 +8438,4 @@ void GolfState::sendWebsocketGameInfo() const
         }
     }
 }
+

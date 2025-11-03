@@ -418,6 +418,7 @@ private:
     void remoteRotation(std::uint32_t); //rotates the avatar based on remote player input
     float getGroundRotation(glm::vec3 playerPos, float yRot, bool flipped) const; //rotates the player to reduce feet clipping/floating
     std::int32_t getClub() const;
+    float getDampening() const;
 
 
     struct ShadowQuality final
