@@ -166,7 +166,7 @@ namespace
     constexpr float MaxRotation = 0.3f;// 0.13f;
     constexpr float MaxPuttRotation = 0.4f;// 0.24f;
 
-    bool recordCam = false;
+    //bool recordCam = false;
 
     bool isFastCPU(const SharedStateData& sd, const ActivePlayer& activePlayer)
     {

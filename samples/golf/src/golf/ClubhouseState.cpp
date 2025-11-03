@@ -1855,6 +1855,9 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
                 break;
             case MessageType::VersionMismatch:
                 err += "Client/Server Mismatch";
+#ifdef USE_GNS
+                err += "\nEnsure all players are on the\nsame branch in Steam";
+#endif
                 break;
             }
             LogE << err << std::endl;
