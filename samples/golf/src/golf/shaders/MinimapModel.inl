@@ -87,6 +87,11 @@ VARYING_IN vec2 v_texCoord;
 void main()
 {
     FRAG_OUT = TEXTURE(u_diffuseMap, v_texCoord);
+    if (FRAG_OUT.a < 0.5)
+    {
+        discard; //else alpha effects create holes in the map
+    }
+
     NORM_OUT = vec4(normalize(v_normal) * 0.5 + 0.5, 1.0);
     POS_OUT.r = v_worldPosition.y;
     
