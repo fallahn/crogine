@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2025
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -100,7 +100,8 @@ struct TournamentIndex final
     enum
     {
         NullVal = -1,
-        A, B
+        A, B,
+        Custom
     };
 };
 

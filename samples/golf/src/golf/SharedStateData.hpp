@@ -399,6 +399,6 @@ struct SharedStateData final
     std::vector<std::string> resolutionStrings;
 
     LeagueNames leagueNames;
-    std::array<Tournament, 2u> tournaments;
+    std::array<Tournament, 3u> tournaments;
     std::int32_t activeTournament = -1;
 };
