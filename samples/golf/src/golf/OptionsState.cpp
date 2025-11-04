@@ -4814,7 +4814,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
     //hide minimap
     entity = createHighlight(glm::vec2(12.f, 79.f));
-    entity.setLabel("Show the Minimap and Range Indicator on the HUD\nDefault to ON");
+    entity.setLabel("Reduces the UI to a minimum for a more sim-like feel\nDefault to OFF");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettShowMinimap);
     entity.getComponent<cro::UIInput>().setNextIndex(SettPost, SettShowHints);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettRotateCam);
@@ -4834,7 +4834,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            const float scale = m_sharedData.showMinimap ? 1.f : 0.f;
+            const float scale = m_sharedData.showMinimap ? 0.f : 1.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 

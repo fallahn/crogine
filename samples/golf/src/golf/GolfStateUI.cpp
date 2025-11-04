@@ -607,8 +607,9 @@ void GolfState::buildUI()
     nameEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole distance
+    const auto uiScale = m_sharedData.showMinimap ? 1.f : 0.f;
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(uiScale));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PinDistance | CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
     entity.getComponent<UIElement>().depth = 0.05f;
@@ -631,17 +632,24 @@ void GolfState::buildUI()
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [&](cro::Entity e, float dt)
         {
-            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-            currTime = std::min(1.f, currTime + (dt * 3.f));
-            
-            e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeInOutSine(currTime), 1.f });
-
-            if(currTime == 1)
+            if (m_sharedData.showMinimap)
             {
-                currTime = 0.f;
-                e.getComponent<cro::Callback>().active = false;
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime = std::min(1.f, currTime + (dt * 3.f));
+
+                e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeInOutSine(currTime), 1.f });
+
+                if (currTime == 1)
+                {
+                    currTime = 0.f;
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
         };
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

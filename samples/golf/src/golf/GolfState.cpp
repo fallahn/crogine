@@ -2552,6 +2552,9 @@ void GolfState::handleMessage(const cro::Message& msg)
                     auto bounds = cro::Text::getLocalBounds(e);
                     bounds.width = std::floor(bounds.width / 2.f);
                     e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+
+                    const auto s = m_sharedData.showMinimap ? 1.f : 0.f;
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(s));
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -2559,6 +2562,16 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cmd.action =
                     [&](cro::Entity e, float)
                     {   
+                        if (m_sharedData.showMinimap)
+                        {
+                            e.getComponent<cro::Callback>().active = true;
+                        }
+                        else
+                        {
+                            //might be mid-transition
+                            e.getComponent<cro::Callback>().active = false;
+                            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        }
                         formatElevationString((m_holeData[m_currentHole].pin.y - m_currentPlayer.position.y), e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance);
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
