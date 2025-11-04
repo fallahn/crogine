@@ -195,6 +195,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_humanCount            (0),
     m_wantsGameState        (true),
     m_groupIdle             (false),
+    m_fastPlayerSwitch      (false),
     m_serverGroup           (0),
     m_allowAchievements     (false),
     m_deferredGameState     (-1),
@@ -501,6 +502,12 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                     m_friendlyPlayers->addRival(player, scores);
                 }
             }
+        }
+
+        if (playerCount == 1)
+        {
+            //if we're playing solo enable skipping the message between turns
+            m_fastPlayerSwitch = true;
         }
     }
 
@@ -7151,9 +7158,16 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
     {
         m_currentPlayer = player;
 
-        setActiveCamera(CameraID::Player);
-        showMessageBoard(MessageBoardID::PlayerName);
-        showScoreboard(false);
+        if (!m_fastPlayerSwitch)
+        {
+            setActiveCamera(CameraID::Player);
+            showMessageBoard(MessageBoardID::PlayerName);
+            showScoreboard(false);
+        }
+        else
+        {
+            setCurrentPlayer(player);
+        }
     }
     else
     {

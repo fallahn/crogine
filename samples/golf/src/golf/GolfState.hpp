@@ -169,6 +169,7 @@ private:
 
     bool m_wantsGameState;
     bool m_groupIdle; //in group play we're waiting for other clients to finish
+    bool m_fastPlayerSwitch; //in solo play we skip the player name message between turns
     std::uint8_t m_serverGroup;
     bool m_allowAchievements;
     cro::Clock m_readyClock; //pings ready state until ack'd
