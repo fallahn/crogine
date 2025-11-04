@@ -391,7 +391,7 @@ private:
     void buildScene();
 
     //weather.cpp
-    void createSwarm(std::int32_t, glm::vec3 pos); //butterflies etc
+    cro::Entity createSwarm(std::int32_t, glm::vec3 pos); //butterflies etc
     void createWeather(std::int32_t);
     void setFog(float density);
     void createClouds();

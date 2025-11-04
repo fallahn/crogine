@@ -46,12 +46,14 @@ void main(){FRAG_OUT = texture(u_texture, vec3(v_texCoord, u_textureIndex)) * v_
 )";
 
 //dirX, strength, dirZ, elapsedTime
+//#include WIND_BUFFER
 static inline const std::string WindBuffer = R"(
     layout (std140) uniform WindValues
     {
         vec4 u_windData;
     };)";
 
+//#include RESOLUTION_BUFFER
 static inline const std::string ResolutionBuffer = R"(
     layout (std140) uniform ScaledResolution
     {

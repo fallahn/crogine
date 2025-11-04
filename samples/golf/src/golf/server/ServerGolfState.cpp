@@ -1903,17 +1903,18 @@ void GolfState::initScene()
             return a.playerCount > b.playerCount;
         });
 
-    auto groupMode = m_sharedData.groupMode;
+    auto groupMode = m_sharedData.groupMode; //hmm, why do we copy this?
     if (m_sharedData.scoreType == ScoreType::Skins
-        || m_sharedData.scoreType == ScoreType::Match)
+        || m_sharedData.scoreType == ScoreType::Match
+        || m_sharedData.teamMode)
     {
         groupMode = ClientGrouping::None;
     }
 
-    if (groupMode != ClientGrouping::None)
-    {
-        m_sharedData.teamMode = 0;
-    }
+    //if (groupMode != ClientGrouping::None)
+    //{
+    //    m_sharedData.teamMode = 0;
+    //}
 
     if (groupMode == ClientGrouping::Even)
     {

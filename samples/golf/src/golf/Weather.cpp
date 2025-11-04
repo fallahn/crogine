@@ -66,12 +66,15 @@ namespace
     constexpr std::int32_t GridY = 3;
 }
 
-void GolfState::createSwarm(std::int32_t, glm::vec3 position)
+cro::Entity GolfState::createSwarm(std::int32_t, glm::vec3 position)
 {
-    static constexpr float AreaSize = 5.f;
+    static constexpr float AreaSize = 2.5f;
+    static constexpr std::array<float, 3U> AreaStart = {-AreaSize, 0.f, -AreaSize};
+    static constexpr std::array<float, 3U> AreaEnd = {AreaSize, AreaSize, AreaSize};
+
 
     //TODO different types eg butterfly/bees etc
-    const auto points = pd::PoissonDiskSampling(0.6f, WeatherAnimationSystem::AreaStart, { {AreaSize,AreaSize,AreaSize} }, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
+    const auto points = pd::PoissonDiskSampling(1.f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
     const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_SHORT));
 
     auto* meshData = &m_resources.meshes.getMesh(meshID);
@@ -85,15 +88,22 @@ void GolfState::createSwarm(std::int32_t, glm::vec3 position)
     //verts have a base position with offset radius in red, offset rotation in green and movements speed in blue
     for (auto i = 0u; i < points.size(); ++i)
     {
-        auto& v = verts.emplace_back(points[i][0], points[i][1], points[i][2]);
-        //radius
-        v.colour.setRed(0.2f + (static_cast<float>(cro::Util::Random::value(0, 7)) / 10.f));
-        //rotation offset
-        v.colour.setGreen(static_cast<float>(cro::Util::Random::value(0, 9)) / 10.f);
-        //speed (normalised multiplier)
-        v.colour.setBlue(0.2f + (static_cast<float>(cro::Util::Random::value(0, 7)) / 10.f));
+        const glm::vec3 p = glm::vec3(points[i][0], points[i][1], points[i][2]);
 
-        indices.push_back(i);
+        if (glm::length2(p) < (AreaSize * AreaSize))
+        {
+            indices.push_back(static_cast<std::uint16_t>(verts.size()));
+
+            auto& v = verts.emplace_back(p.x, p.y, p.z);
+            //radius
+            v.colour.setRed(0.2f + (static_cast<float>(cro::Util::Random::value(0, 7)) / 10.f));
+            //rotation offset
+            v.colour.setGreen(static_cast<float>(cro::Util::Random::value(0, 9)) / 10.f);
+            //speed (normalised multiplier)
+            v.colour.setBlue(0.6f + (static_cast<float>(cro::Util::Random::value(0, 2)) / 10.f));
+            //animation frame offset
+            v.colour.setAlpha(static_cast<float>(cro::Util::Random::value(0, 3)) / 3.f);
+        }
     }
 
     meshData->vertexCount = points.size();
@@ -103,24 +113,37 @@ void GolfState::createSwarm(std::int32_t, glm::vec3 position)
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
     cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
 
-    meshData->boundingBox[1] = glm::vec3(AreaSize);
+    meshData->boundingBox[0] = glm::vec3(AreaStart[0], AreaStart[1], AreaStart[2]);
+    meshData->boundingBox[1] = glm::vec3(AreaEnd[0], AreaEnd[1], AreaEnd[2]);
     meshData->boundingSphere.centre = meshData->boundingBox[0] + ((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
     meshData->boundingSphere.radius = glm::length((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
 
-
-    m_resources.shaders.loadFromString(ShaderID::Swarm, SwarmVertex, SwarmFragment);
+    const std::string sizeDef = "#define AREA_SIZE " + std::to_string(AreaSize) + "\n";
+    //TODO define ILLUM for self illuminating eg glowflies
+    //TODO define FRAME_RATE and FRAME_COUNT if needed
+    m_resources.shaders.loadFromString(ShaderID::Swarm, SwarmVertex, SwarmFragment, sizeDef);
     const auto& shader = m_resources.shaders.get(ShaderID::Swarm);
     m_windBuffer.addShader(shader); //time input
+    m_resolutionBuffer.addShader(shader); //viewport size
 
     const auto materialID = m_resources.materials.add(shader);
     auto material = m_resources.materials.get(materialID);
-    //TODO set noise texture on material
-    //TODO set visual texture eg butterfly
+    //used for vertical offset
+    auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
+    material.setProperty("u_noiseTexture", noiseTex);
+
+    //TODO set visual texture based on type param
+    auto& tex = m_resources.textures.get("assets/golf/images/particles/butterfly.png");
+    tex.setSmooth(false);
+    material.setProperty("u_texture", tex);
+
 
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition(position);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::FlightCam));
+
+    return entity;
 }
 
 void GolfState::createWeather(std::int32_t weatherType)

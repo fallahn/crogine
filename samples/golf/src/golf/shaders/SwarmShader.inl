@@ -34,77 +34,93 @@ source distribution.
 static inline const std::string SwarmVertex =
 R"(
         ATTRIBUTE vec4 a_position;
-        ATTRIBUTE vec4 a_colour; //radius, rotation offset and speed
+        ATTRIBUTE vec4 a_colour; //radius, rotation offset, speed and animation offset
 
-        uniform mat4 u_projection; //TODO is this available in the UBO (and should particle system be using it?)
-        uniform mat4 u_viewProjection;
-        uniform vec4 u_clipPlane;
-        uniform float u_viewportHeight;
+        uniform sampler2D u_noiseTexture;
+#include CAMERA_UBO
+        uniform mat4 u_worldMatrix;
+#include RESOLUTION_BUFFER
 
-        VARYING_OUT LOW vec4 v_colour;
-        VARYING_OUT LOW float v_currentFrame;
-        VARYING_OUT HIGH float v_depth;
+//time is in u_windData.w
+#include WIND_BUFFER
 
-        const float particleSize = 10.0;
-//TODO include wind data
+        VARYING_OUT float v_currentFrame;
+
+        const float particleSize = 28.0;
+        const float PI = 3.141;
+#if !defined(AREA_SIZE)
+#define AREA_SIZE 2.5
+#endif
+
+#if !defined(FRAME_COUNT)
+#define FRAME_COUNT 4.0
+#endif
+
+#if !defined(FRAME_RATE)
+#define FRAME_RATE (1.0/18.0)
+#endif
+
+
         void main()
         {
-            v_colour = a_colour;
+            v_currentFrame = mod(round(u_windData.w/FRAME_RATE) + round(a_colour.a * FRAME_COUNT), FRAME_COUNT);
 
-            v_currentFrame = 0.0;
+            vec4 worldPos = u_worldMatrix * a_position;
 
-            gl_Position = u_viewProjection * a_position;
-            gl_PointSize = u_viewportHeight * u_projection[1][1] / gl_Position.w * particleSize;
+            //offset by radius
+            float time = (u_windData.w) + (a_colour.g * PI);
+            float speed = a_colour.b * 2.0 - 1.0;
+            vec2 offset = vec2(sin(time * speed) * a_colour.r,
+                                cos(time * speed) * a_colour.r);
+            worldPos.xz += offset;
 
-            v_depth = gl_Position.z / gl_Position.w;
+            vec2 uv = (a_position.xz + offset) / AREA_SIZE;
+            worldPos.y += (TEXTURE(u_noiseTexture, uv).b * 2.0 - 1.0) * a_colour.b * 0.5;
 
-            gl_ClipDistance[0] = dot(a_position, u_clipPlane);
+
+            gl_Position = u_viewProjectionMatrix * worldPos;
+             //this would also be multiplied by normlised viewport height if anything other than 1
+            float size = particleSize * (u_bufferResolution.y / 480.0); //TODO account for pixel scale too
+            gl_PointSize = u_projectionMatrix[1][1] / gl_Position.w * size;
+//TODO also u_nearFadeDistance?
+            gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
         }
 )";
 
 static inline const std::string SwarmFragment =
 R"(
         uniform sampler2D u_texture;
-        uniform float u_frameCount = 6.0;
-        uniform vec2 u_textureSize;
-        uniform vec2 u_cameraRange;
-
-#if defined (SUNLIGHT)
         uniform vec4 u_lightColour;
-#endif
+#include LIGHT_COLOUR
 
-        VARYING_IN LOW vec4 v_colour;
-        VARYING_IN LOW float v_currentFrame;
-        VARYING_IN HIGH float v_depth;
+        VARYING_IN float v_currentFrame;
+
         OUTPUT
 
-layout (location = 3) out vec4 LIGHT_OUT;
+        layout (location = 3) out vec4 LIGHT_OUT;
 
+#if !defined(FRAME_COUNT)
+#define FRAME_COUNT 4.0
+#endif
 
         void main()
         {
-            float frameWidth = 1.0 / u_frameCount;
+            float frameWidth = 1.0 / FRAME_COUNT;
             vec2 coord = vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y);
             coord.x *= frameWidth;
             coord.x += v_currentFrame * frameWidth;
-            //vec2 centreOffset = vec2((v_currentFrame * frameWidth) + (frameWidth / 2.f), 0.5);
 
-            //convert to texture space
-            //coord *= u_textureSize;
-            //centreOffset *= u_textureSize;
+            FRAG_OUT = TEXTURE(u_texture, coord);
+            if (FRAG_OUT.a < 0.5) discard;
 
-            //rotate
-            //coord = v_rotation * (coord - centreOffset);
-            //coord += centreOffset;
+#if !defined(ILLUM)
+            LIGHT_OUT = vec4(vec3(0.0), 1.0);
+            FRAG_OUT *= getLightColour();
+#else
+            LIGHT_OUT = vec4(FRAG_OUT.rgb, 1.0);
+#endif
 
-            //and back to UV space
-            //coord /= u_textureSize;
-
-            FRAG_OUT = vec4(1.0);// v_colour * TEXTURE(u_texture, coord);
-
-        #if defined (SUNLIGHT)
-            FRAG_OUT *= u_lightColour;
-        #endif
+//TODO also fog colour?
 
         #if defined (BLEND_ADD)
             FRAG_OUT.rgb *= v_colour.a;
@@ -113,9 +129,4 @@ layout (location = 3) out vec4 LIGHT_OUT;
         #if defined (BLEND_MULTIPLY)
             FRAG_OUT.rgb += (vec3(1.0) - FRAG_OUT.rgb) * (1.0 - FRAG_OUT.a);
         #endif
-
-
-LIGHT_OUT = vec4(vec3(0.0), 1.0);
-
-        }
-)";
+})";
