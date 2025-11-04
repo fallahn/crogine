@@ -441,7 +441,7 @@ private:
                 switch (camID)
                 {
                 //assumes default is freecam which has no ID
-                default: return 11.f;
+                default: return 20.f;
                 case CameraID::Player:
                 case CameraID::Green: 
                     return 10.f;
@@ -460,7 +460,7 @@ private:
                 float val = 90.f;
                 switch (camID)
                 {
-                default: break;;
+                default: break;
                 case CameraID::Player:
                 case CameraID::Green:
                 case CameraID::Bystander:
