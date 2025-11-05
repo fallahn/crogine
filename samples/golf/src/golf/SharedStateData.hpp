@@ -401,4 +401,8 @@ struct SharedStateData final
     LeagueNames leagueNames;
     std::array<Tournament, 3u> tournaments;
     std::int32_t activeTournament = -1;
+
+    //we have to copy these now depending on the active tournament
+    //as we might have a custom one where the values vary
+    HoleScores tournamentPars = {};
 };

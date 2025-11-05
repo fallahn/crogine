@@ -73,6 +73,7 @@ source distribution.
 #include "golf/UnlockItems.hpp"
 #include "golf/Clubs.hpp"
 #include "golf/ClubInfoState.hpp"
+#include "golf/EditTournamentState.hpp"
 #include "golf/XPAwardStrings.hpp"
 
 #include "editor/BushState.hpp"
@@ -257,6 +258,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<EndlessDrivingState>(StateID::EndlessRunner, m_sharedData, elsShared);
     m_stateStack.registerState<EndlessPauseState>(StateID::EndlessPause, m_sharedData, elsShared);
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
+    m_stateStack.registerState<EditTournamentState>(StateID::EditTournament, m_sharedData);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
     m_stateStack.registerState<GCState>(StateID::GC);
 

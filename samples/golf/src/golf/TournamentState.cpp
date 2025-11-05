@@ -247,9 +247,10 @@ bool TournamentState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
-        /*case SDLK_l:
-            m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = ScrollID::Reset;
-            break;*/
+        case SDLK_l:
+            //m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = ScrollID::Reset;
+            requestStackPush(StateID::EditTournament);
+            break;
         case SDLK_UP:
         case SDLK_DOWN:
         case SDLK_LEFT:
@@ -2466,6 +2467,7 @@ void TournamentState::refreshTree()
     if (t.winner == -2)
     {
         cro::String courseName;
+        if (tournamentID == TournamentIndex::Custom) abort(); //TODO set the custom course list!
         const auto& p = TournamentCourses[tournamentID][t.round];
         const auto& courseData = m_sharedData.courseData->courseData;
         if (const auto res = std::find_if(courseData.begin(), courseData.end(), [&](const SharedCourseData::CourseData& cd) 

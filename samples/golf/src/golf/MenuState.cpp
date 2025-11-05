@@ -271,6 +271,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Practice);
         cacheState(StateID::Career);
         cacheState(StateID::Tournament);
+        cacheState(StateID::EditTournament);
         cacheState(StateID::FreePlay);
         cacheState(StateID::Keyboard);
         cacheState(StateID::Leaderboard);
@@ -3667,6 +3668,8 @@ void MenuState::launchTournament(std::int32_t tournamentID)
     m_sharedData.hosting = true;
     m_sharedData.gameMode = GameMode::Tournament; //ensures leaderboards are disabled and we return to correct menu
     m_sharedData.activeTournament = tournamentID;
+    if(tournamentID == TournamentIndex::Custom)abort(); //TODO we need to copy the correct par values!
+    m_sharedData.tournamentPars = TierPars[m_sharedData.activeTournament][m_sharedData.tournaments[m_sharedData.activeTournament].round];
     m_sharedData.localConnectionData.playerCount = 1;
     m_sharedData.localConnectionData.playerData[0].isCPU = false;
 
@@ -3680,6 +3683,7 @@ void MenuState::launchTournament(std::int32_t tournamentID)
     //start a local server and connect
     if (quickConnect(m_sharedData))
     {
+        if (tournamentID == TournamentIndex::Custom)abort(); //TODO we need to copy the correct course list!
         m_sharedData.mapDirectory = TournamentCourses[m_sharedData.tournaments[tournamentID].id][m_sharedData.tournaments[tournamentID].round];
         auto res = std::find_if(m_sharedCourseData.courseData.begin(), m_sharedCourseData.courseData.end(),
             [&](const SharedCourseData::CourseData& d)

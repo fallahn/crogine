@@ -44,6 +44,7 @@ struct StateID final
         Practice,
         Career,
         Tournament,
+        EditTournament,
         DrivingRange,
         PuttingRange,
         Clubhouse,

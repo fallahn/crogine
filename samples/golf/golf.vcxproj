@@ -633,6 +633,7 @@
     <ClCompile Include="src\golf\DrivingRangeDirector.cpp" />
     <ClCompile Include="src\golf\DrivingState.cpp" />
     <ClCompile Include="src\golf\DrivingStateUI.cpp" />
+    <ClCompile Include="src\golf\EditTournamentState.cpp" />
     <ClCompile Include="src\golf\ErrorState.cpp" />
     <ClCompile Include="src\golf\FireworksSystem.cpp" />
     <ClCompile Include="src\golf\FloatingTextSystem.cpp" />
@@ -836,6 +837,7 @@
     <ClInclude Include="src\golf\DebugDraw.hpp" />
     <ClInclude Include="src\golf\DrivingRangeDirector.hpp" />
     <ClInclude Include="src\golf\DrivingState.hpp" />
+    <ClInclude Include="src\golf\EditTournamentState.hpp" />
     <ClInclude Include="src\golf\ErrorState.hpp" />
     <ClInclude Include="src\golf\EventOverlay.hpp" />
     <ClInclude Include="src\golf\FireworksSystem.hpp" />

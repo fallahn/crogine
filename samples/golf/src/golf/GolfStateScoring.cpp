@@ -266,7 +266,8 @@ void GolfState::updateTournament(bool playerWon)
                             else
                             {
                                 const auto hole = j + (cpuOffset * 9);
-                                const auto par = TierPars[m_sharedData.activeTournament][tournament.round][hole];
+                                //const auto par = TierPars[m_sharedData.activeTournament][tournament.round][hole];
+                                const auto par = m_sharedData.tournamentPars[hole];
                                 scoreCalc.calculate(player0, hole, par, false, scores0);
                                 scoreCalc.calculate(player1, hole, par, false, scores1);
 
