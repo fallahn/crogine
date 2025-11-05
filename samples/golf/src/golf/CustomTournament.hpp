@@ -29,29 +29,30 @@ source distribution.
 
 #pragma once
 
-#include <cstdint>
+#include <crogine/core/String.hpp>
 
-#include <vector>
 #include <string>
+#include <array>
 
-class Content final
+class CustomTournament final
 {
 public:
-    static std::vector<std::string> getInstallPaths();
+    CustomTournament();
 
-    struct UserContent final
-    {
-        enum
-        {
-            Ball, Hair, Course, Flag,
-            Profile, Avatar, Career,
-            Clubs, Voice, Tournament,
+    void load(const std::string&);
+    void save(const std::string&);
 
-            Count
-        };
-    };
-    //returns the content path for the current user
-    static std::string getBaseContentPath();
-    //returns the ubase content path plus the given user content dir
-    static std::string getUserContentPath(std::int32_t);
+    void setCourse(std::size_t tier, const std::string& course);
+    void setTitle(const cro::String& t) { m_title = t; }
+
+    const cro::String& getTitle() const { return m_title; }
+
+    const std::array<std::string, 4u>& getCourses() const { return m_courses; }
+    const std::array<std::array<std::int32_t, 18>, 4u>& getParValues() const { return m_parValues; }
+
+private:
+
+    cro::String m_title;
+    std::array<std::string, 4u> m_courses = {};
+    std::array<std::array<std::int32_t, 18>, 4u> m_parValues = {};
 };

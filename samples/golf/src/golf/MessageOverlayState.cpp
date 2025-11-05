@@ -276,7 +276,7 @@ void MessageOverlayState::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
 
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
 
     auto selectedID = uiSystem.addCallback(

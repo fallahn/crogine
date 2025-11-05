@@ -86,5 +86,7 @@ std::string Content::getUserContentPath(std::int32_t contentType)
         return getBaseContentPath() + "clubs/";
     case Content::UserContent::Voice:
         return getBaseContentPath() + "voice/";
+    case Content::UserContent::Tournament:
+        return getBaseContentPath() + "tournaments/";
     }
 }

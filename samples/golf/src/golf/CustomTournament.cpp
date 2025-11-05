@@ -27,31 +27,31 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "CustomTournament.hpp"
 
-#include <cstdint>
-
-#include <vector>
-#include <string>
-
-class Content final
+CustomTournament::CustomTournament()
+    : m_title("Untitled")
 {
-public:
-    static std::vector<std::string> getInstallPaths();
 
-    struct UserContent final
+}
+
+//public
+void CustomTournament::load(const std::string& path)
+{
+
+}
+
+void CustomTournament::save(const std::string& path)
+{
+
+}
+
+void CustomTournament::setCourse(std::size_t idx, const std::string& course)
+{
+    if (idx < m_courses.size())
     {
-        enum
-        {
-            Ball, Hair, Course, Flag,
-            Profile, Avatar, Career,
-            Clubs, Voice, Tournament,
+        m_courses[idx] = course;
 
-            Count
-        };
-    };
-    //returns the content path for the current user
-    static std::string getBaseContentPath();
-    //returns the ubase content path plus the given user content dir
-    static std::string getUserContentPath(std::int32_t);
-};
+        //TODO load course data and find pars (or cache this somewhere?)
+    }
+}

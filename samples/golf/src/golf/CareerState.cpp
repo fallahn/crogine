@@ -2018,7 +2018,7 @@ void CareerState::selectLeague(std::size_t idx)
     else if (sharedCourseData.courseThumbs.count(courseData.directory) != 0)
     {
         m_leagueDetails.thumbnail.getComponent<cro::Sprite>().setTexture(*m_sharedData.courseData->courseThumbs.at(courseData.directory));
-        auto scale = CourseThumbnailSize / glm::vec2(m_sharedData.courseData->courseThumbs.at(courseData.directory)->getSize());
+        const auto scale = CourseThumbnailSize / glm::vec2(m_sharedData.courseData->courseThumbs.at(courseData.directory)->getSize());
         m_leagueDetails.thumbnail.getComponent<cro::Transform>().setScale(scale);
     }
     else

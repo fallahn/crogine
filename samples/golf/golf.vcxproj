@@ -629,6 +629,7 @@
     <ClCompile Include="src\golf\CollisionMesh.cpp" />
     <ClCompile Include="src\golf\CPUGolfer.cpp" />
     <ClCompile Include="src\golf\CreditsState.cpp" />
+    <ClCompile Include="src\golf\CustomTournament.cpp" />
     <ClCompile Include="src\golf\DebugDraw.cpp" />
     <ClCompile Include="src\golf\DrivingRangeDirector.cpp" />
     <ClCompile Include="src\golf\DrivingState.cpp" />
@@ -834,6 +835,7 @@
     <ClInclude Include="src\golf\CommonConsts.hpp" />
     <ClInclude Include="src\golf\CPUGolfer.hpp" />
     <ClInclude Include="src\golf\CreditsState.hpp" />
+    <ClInclude Include="src\golf\CustomTournament.hpp" />
     <ClInclude Include="src\golf\DebugDraw.hpp" />
     <ClInclude Include="src\golf\DrivingRangeDirector.hpp" />
     <ClInclude Include="src\golf\DrivingState.hpp" />

@@ -76,7 +76,19 @@ source distribution.
 
 namespace
 {
-
+    struct ButtonID final
+    {
+        enum
+        {
+            //don't change this order, callbacks depend on it!!
+            T1Down = 100, T1Up,
+            T2Down,       T2Up,
+            T3Down,       T3Up,
+            T4Down,       T4Up,
+            //these are OK to change
+            Name, Save, Cancel
+        };
+    };
 }
 
 EditTournamentState::EditTournamentState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -88,6 +100,9 @@ EditTournamentState::EditTournamentState(cro::StateStack& ss, cro::State::Contex
     ctx.mainWindow.setMouseCaptured(false);
 
     buildScene();
+    loadCourseInfo();
+
+    std::fill(m_tierIndices.begin(), m_tierIndices.end(), 0);
 }
 
 //public
@@ -140,6 +155,11 @@ bool EditTournamentState::handleEvent(const cro::Event& evt)
             cro::App::getWindow().setMouseCaptured(true);
             break;
         }
+    }
+
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
     }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -262,7 +282,7 @@ void EditTournamentState::buildScene()
    
     //background
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/tournament_editor.spt", m_sharedData.sharedResources->textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/tournament_editor.spt", m_textures);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
@@ -272,15 +292,220 @@ void EditTournamentState::buildScene()
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
 
-    auto menuEntity = m_scene.createEntity();
+    auto bgEnt = entity;
+
+    /*auto menuEntity = m_scene.createEntity();
     menuEntity.addComponent<cro::Transform>();
-    rootNode.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
+    rootNode.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());*/
 
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
 
+    const auto selected = uiSystem.addCallback([&](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::Callback>().active = true;
+            e.getComponent<cro::AudioEmitter>().play();
+
+            const auto idx = (e.getComponent<cro::UIInput>().getSelectionIndex() - ButtonID::T1Down) / 2;
+            if (idx < m_tierIndices.size())
+            {
+                updatePreview(m_tierIndices[idx]);
+            }
+        });
+    const auto unselected = uiSystem.addCallback([](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+
+    const auto nextCourse = uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                const auto idx = (e.getComponent<cro::UIInput>().getSelectionIndex() - ButtonID::T1Down) / 2;
+                m_tierIndices[idx] = (m_tierIndices[idx] + 1) % m_courseInfo.size();
+                updatePreview(m_tierIndices[idx]);
+            }
+        });
+    const auto prevCourse = uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                const auto idx = (e.getComponent<cro::UIInput>().getSelectionIndex() - ButtonID::T1Down) / 2;
+                m_tierIndices[idx] = (m_tierIndices[idx] + (m_courseInfo.size() - 1)) % m_courseInfo.size();
+                updatePreview(m_tierIndices[idx]);
+            }
+        });
+
+    const auto createButton =
+        [&](glm::vec2 pos, const std::string& sprName)
+        {
+            auto e = m_scene.createEntity();
+            e.addComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.1f));
+            e.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+            e.addComponent<cro::Drawable2D>();
+            e.addComponent<cro::Sprite>() = spriteSheet.getSprite(sprName);
+            auto bounds = e.getComponent<cro::Sprite>().getTextureBounds();
+            e.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+            e.addComponent<cro::Callback>().function = MenuTextCallback();
+
+            e.addComponent<cro::UIInput>().area = bounds;
+            e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
+            e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+
+            return e;
+        };
+
+
+    entity = createButton({ 14.f, 115.f }, "small_highlight");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T1Down);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T1Up, ButtonID::T2Down);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T1Up, ButtonID::Save);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = prevCourse;
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createButton({ 130.f, 115.f }, "small_highlight");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T1Up);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T1Down, ButtonID::T2Up);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T1Down, ButtonID::Cancel);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = nextCourse;
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createButton({ 14.f, 99.f }, "small_highlight");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T2Down);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T2Up, ButtonID::T3Down);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T2Up, ButtonID::T1Down);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = prevCourse;
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createButton({ 130.f, 99.f }, "small_highlight");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T2Up);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T2Down, ButtonID::T3Up);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T2Down, ButtonID::T1Up);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = nextCourse;
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createButton({ 14.f, 83.f }, "small_highlight");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T3Down);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T3Up, ButtonID::T4Down);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T3Up, ButtonID::T2Down);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = prevCourse;
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createButton({ 130.f, 83.f }, "small_highlight");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T3Up);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T3Down, ButtonID::T4Up);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T3Down, ButtonID::T2Up);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = nextCourse;
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createButton({ 14.f, 67.f }, "small_highlight");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T4Down);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T4Up, ButtonID::Name);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T4Up, ButtonID::T3Down);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = prevCourse;
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createButton({ 130.f, 67.f }, "small_highlight");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T4Up);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T4Down, ButtonID::Name);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T4Down, ButtonID::T3Up);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = nextCourse;
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 72.f, 35.f, 0.3f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Buns");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
+    entity = createButton({ 72.f, 31.f }, "large_highlight");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Name);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::Cancel, ButtonID::Save);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T4Down, ButtonID::T4Up);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    //TODO check this is what we do elsewhere to be consistent
+                    if (cro::GameController::getControllerCount() != 0)
+                    {
+                        if (Social::isSteamdeck()) //TODO how do we check big picture mode?
+                        {
+                            //OSK
+                        }
+                        else
+                        {
+                            requestStackPush(StateID::Keyboard);
+                        }
+                    }
+                    else
+                    {
+                        //show ImGuiWindow
+                    }
+                }
+            });
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
+    entity = createButton({ 44.f, 9.f }, "medium_highlight");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Save);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::Cancel, ButtonID::T1Down);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Cancel, ButtonID::Name);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    //TODO actually save
+                    quitState();
+                }
+            });
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createButton({ 100.f, 9.f }, "medium_highlight");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Cancel);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::Save, ButtonID::T1Up);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Save, ButtonID::Name);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    quitState();
+                }
+            });
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    //thumbnail
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 3.f, 149.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>();
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_preview.thumbnail = entity;
+
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 72.f, 143.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(LabelTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_preview.title = entity;
 
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
@@ -319,6 +544,59 @@ void EditTournamentState::buildScene()
     updateView(entity.getComponent<cro::Camera>());
 }
 
+void EditTournamentState::loadCourseInfo()
+{
+    const auto installPaths = Content::getInstallPaths();
+    for (const auto& path : installPaths)
+    {
+        const auto coursePath = path + "courses/";
+        if (cro::FileSystem::directoryExists(coursePath))
+        {
+            auto courseDirs = cro::FileSystem::listDirectories(coursePath);
+            //this might necessarily be in alphabetical order
+            std::sort(courseDirs.begin(), courseDirs.end());
+            courseDirs.erase(std::remove_if(courseDirs.begin(), courseDirs.end(), 
+                [](const std::string& s)
+                {
+                    return s.find("course_") == std::string::npos;
+                }), courseDirs.end());
+
+            for (const auto& dir : courseDirs)
+            {
+                const auto dataPath = coursePath + dir + "/course.data";
+                if (cro::FileSystem::fileExists(dataPath))
+                {
+                    cro::ConfigFile cfg;
+                    if (cfg.loadFromFile(dataPath))
+                    {
+                        if (const auto* t = cfg.findProperty("title"); t != nullptr)
+                        {
+                            auto& inf = m_courseInfo.emplace_back();
+                            inf.dir = dir;
+                            inf.displayName = t->getValue<cro::String>();
+                            inf.texture = &m_textures.get(coursePath + dir + "/preview.png");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (!m_courseInfo.empty())
+    {
+        updatePreview(0);
+    }
+}
+
+void EditTournamentState::updatePreview(std::size_t index)
+{
+    const auto scale = CourseThumbnailSize / glm::vec2(m_courseInfo[index].texture->getSize());
+    m_preview.thumbnail.getComponent<cro::Transform>().setScale(scale);
+    m_preview.thumbnail.getComponent<cro::Sprite>().setTexture(*m_courseInfo[index].texture);
+
+    m_preview.title.getComponent<cro::Text>().setString(m_courseInfo[index].displayName);
+}
+
 void EditTournamentState::quitState()
 {
     m_rootNode.getComponent<cro::Callback>().active = true;
@@ -328,4 +606,13 @@ void EditTournamentState::quitState()
 void EditTournamentState::onCachedPush()
 {
     m_rootNode.getComponent<cro::Callback>().active = true;
+
+    //TODO check if there's an existing tournament in the shared
+    //data and load it ready for editing
+
+    //TODO set tournament title string
+    //TODO set tier indices from loaded tournament
+
+    updatePreview(m_tierIndices[0]);
+    m_scene.getSystem<cro::UISystem>()->selectByIndex(ButtonID::T1Down);
 }

@@ -30,10 +30,12 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "CustomTournament.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/TextureResource.hpp>
 
 struct SharedStateData;
 
@@ -71,9 +73,28 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
+
+    struct CourseInfo final
+    {
+        std::string dir;
+        cro::String displayName;
+        cro::Texture* texture = nullptr;
+    };
+    std::vector<CourseInfo> m_courseInfo;
+    cro::TextureResource m_textures;
+    
+    struct Preview final
+    {
+        cro::Entity thumbnail;
+        cro::Entity title;
+    }m_preview;
+
+    CustomTournament m_tournamentInfo;
+    std::array<std::size_t, 4u> m_tierIndices = {};
+
     void buildScene();
-
+    void loadCourseInfo();
+    void updatePreview(std::size_t);
     void quitState();
-
     void onCachedPush() override;
 };
