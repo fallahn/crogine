@@ -74,7 +74,7 @@ static inline const std::array<std::array<HoleScores, 4>, 2> TierPars =
 //so any changes in the future must be via the reserved bytes
 struct Tournament final
 {
-    std::int32_t id = 0; //0 or 1 used to choose the course data array
+    std::int32_t id = -1; //TournamentIndex used to choose the course data array
     std::int32_t round = 0; //current active round used to index into the array chosen by the above
     std::int32_t mulliganCount = 1; //remaining mulligans this round
     LeaguePlayer opponentStats; //current opponent used to set FriendlyPlayer in GolfState
@@ -118,7 +118,7 @@ std::int32_t getTournamentOpponent(const Tournament&);
 void resetTournament(Tournament&);
 
 //write progress file
-void writeTournamentData(const Tournament&);
+void writeTournamentData(const Tournament&, const char* = nullptr);
 
 //read progress file
-void readTournamentData(Tournament&);
+void readTournamentData(Tournament&, const char* = nullptr);

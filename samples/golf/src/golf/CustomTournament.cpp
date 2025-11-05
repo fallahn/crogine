@@ -29,8 +29,10 @@ source distribution.
 
 #include "CustomTournament.hpp"
 
+#include <crogine/core/ConfigFile.hpp>
+
 CustomTournament::CustomTournament()
-    : m_title("Untitled")
+    : m_title ("Untitled")
 {
 
 }
@@ -43,7 +45,9 @@ void CustomTournament::load(const std::string& path)
 
 void CustomTournament::save(const std::string& path)
 {
-
+    cro::ConfigFile cfg("course_list");
+    cfg.addProperty("test").setValue("property");
+    cfg.save(path + "selection.crs");
 }
 
 void CustomTournament::setCourse(std::size_t idx, const std::string& course)

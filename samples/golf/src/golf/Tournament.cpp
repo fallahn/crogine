@@ -161,25 +161,43 @@ static inline std::string getFilePath(std::int32_t index)
     return basePath + ss.str();
 }
 
-void writeTournamentData(const Tournament& src)
+void writeTournamentData(const Tournament& src, const char* p)
 {
-    auto path = getFilePath(src.id);
     cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(path.c_str(), "wb");
+    if (!p)
+    {
+        auto path = getFilePath(src.id);
+        file.file = SDL_RWFromFile(path.c_str(), "wb");
+    }
+    else
+    {
+        //custom tournament
+        file.file = SDL_RWFromFile(p, "wb");
+    }
     if (file.file)
     {
         SDL_RWwrite(file.file, &src, sizeof(src), 1);
     }
 }
 
-void readTournamentData(Tournament& dst)
+void readTournamentData(Tournament& dst, const char* p)
 {
-    auto path = getFilePath(dst.id);
+    std::string path;
+
+    //assumes p is only set by custom tournaments
+    if (p)
+    {
+        path = p;
+    }
+    else
+    {
+        path = getFilePath(dst.id);
+    }
 
     if (!cro::FileSystem::fileExists(path))
     {
         resetTournament(dst);
-        writeTournamentData(dst);
+        writeTournamentData(dst, p);
         //LogI << "Created tournament " << cro::FileSystem::getFileName(path) << std::endl;
     }
     else

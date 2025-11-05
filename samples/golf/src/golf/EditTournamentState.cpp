@@ -27,6 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+//TODO a bunch of these includes aren't needed
 #include "EditTournamentState.hpp"
 #include "SharedStateData.hpp"
 #include "CommonConsts.hpp"
@@ -38,6 +39,7 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "Career.hpp"
 #include "Tournament.hpp"
+#include "spooky2.hpp"
 #include "../GolfGame.hpp"
 
 #include <Achievements.hpp>
@@ -294,11 +296,6 @@ void EditTournamentState::buildScene()
 
     auto bgEnt = entity;
 
-    /*auto menuEntity = m_scene.createEntity();
-    menuEntity.addComponent<cro::Transform>();
-    rootNode.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());*/
-
-
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
 
     const auto selected = uiSystem.addCallback([&](cro::Entity e)
@@ -467,7 +464,28 @@ void EditTournamentState::buildScene()
             {
                 if (activated(evt))
                 {
-                    //TODO actually save
+                    //actually save
+                    if (m_sharedData.tournamentPath.empty())
+                    {
+                        //this must be new so create a new directory
+                        //the seed creates unique values when using the same name
+                        const auto str = m_tournamentInfo.getTitle().toUtf8();
+                        const auto h = SpookyHash::Hash32(str.data(), str.size(), std::time(nullptr));
+                        m_sharedData.tournamentPath = Content::getUserContentPath(Content::UserContent::Tournament) + std::to_string(h) + "/";
+                        if (!cro::FileSystem::directoryExists(m_sharedData.tournamentPath))
+                        {
+                            cro::FileSystem::createDirectory(m_sharedData.tournamentPath);
+                        }
+
+                        const auto filePath = m_sharedData.tournamentPath + "data.tmt";
+
+                        Tournament newTournament;
+                        newTournament.id = TournamentIndex::Custom;
+                        resetTournament(newTournament);
+                        writeTournamentData(newTournament, filePath.c_str());
+                    }
+
+                    m_tournamentInfo.save(m_sharedData.tournamentPath);
                     quitState();
                 }
             });
@@ -607,11 +625,23 @@ void EditTournamentState::onCachedPush()
 {
     m_rootNode.getComponent<cro::Callback>().active = true;
 
-    //TODO check if there's an existing tournament in the shared
+    //check if there's an existing tournament in the shared
     //data and load it ready for editing
+    if (!m_sharedData.tournamentPath.empty())
+    {
+        m_tournamentInfo.load(m_sharedData.tournamentPath);
 
-    //TODO set tournament title string
-    //TODO set tier indices from loaded tournament
+        //TODO set tournament title string
+        //TODO set tier indices from loaded tournament
+    }
+    else
+    {
+        //make sure to clear out existing data
+        m_tournamentInfo = {};
+        std::fill(m_tierIndices.begin(), m_tierIndices.end(), 0);
+
+        //TODO set tournament title string to default
+    }
 
     updatePreview(m_tierIndices[0]);
     m_scene.getSystem<cro::UISystem>()->selectByIndex(ButtonID::T1Down);

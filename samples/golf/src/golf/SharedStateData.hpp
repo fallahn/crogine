@@ -405,4 +405,5 @@ struct SharedStateData final
     //we have to copy these now depending on the active tournament
     //as we might have a custom one where the values vary
     HoleScores tournamentPars = {};
+    std::string tournamentPath; //empty if creatinga new tournament, else tells the editor which to load/save to
 };
