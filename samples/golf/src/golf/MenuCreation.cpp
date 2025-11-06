@@ -5556,7 +5556,8 @@ void MenuState::updateUnlockedItems()
     }
 
     //hmm this is kind of doubling what we did above...
-    if (m_sharedData.gameMode == GameMode::Tournament)
+    if (m_sharedData.gameMode == GameMode::Tournament
+        && m_sharedData.activeTournament != TournamentIndex::Custom)
     {
         //this should still be set from the previous round
         const auto& t = m_sharedData.tournaments[m_sharedData.activeTournament];

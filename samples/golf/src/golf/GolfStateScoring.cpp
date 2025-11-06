@@ -351,7 +351,8 @@ void GolfState::updateTournament(bool playerWon)
                     {
                         tournament.currentBest = tournament.winner == -1 ? 1 : 2;
 
-                        if (tournament.currentBest == 1)
+                        if (tournament.currentBest == 1
+                            && m_sharedData.activeTournament != TournamentIndex::Custom)
                         {
                             Achievements::awardAchievement(AchievementStrings[AchievementID::Unreal + m_sharedData.activeTournament]);
                             Achievements::incrementStat(StatStrings[StatID::UnrealWon + m_sharedData.activeTournament]);
