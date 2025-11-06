@@ -129,7 +129,8 @@ namespace
     const std::string ConfigFile("career.cfg");
 
     std::int32_t tournamentID = 0;
-    const std::array<std::string, 2u> TournamentNames = { std::string("Dagle-Bunnage Cup"), "Sammonfield Championship" };
+    std::int32_t maxTournaments = 2;
+    std::array<cro::String, 3u> TournamentNames = { cro::String("Dagle-Bunnage Cup"), "Sammonfield Championship", "Untitled"};
 
     constexpr glm::uvec2 TreeTexSize(1280, 110);
     constexpr glm::vec2 TreeTexSizeF(TreeTexSize);
@@ -747,7 +748,7 @@ void TournamentState::buildScene()
             if (activated(evt))
             {
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                tournamentID = (tournamentID + 1) % 2;
+                tournamentID = (tournamentID + (maxTournaments - 1)) % maxTournaments;
                 refreshTree();
             }
         }
@@ -775,7 +776,7 @@ void TournamentState::buildScene()
             if (activated(evt))
             {
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                tournamentID = (tournamentID + 1) % 2;
+                tournamentID = (tournamentID + 1) % maxTournaments;
                 refreshTree();
             }
         }
@@ -2481,8 +2482,8 @@ void TournamentState::refreshTree()
     if (t.winner == -2)
     {
         cro::String courseName;
-        if (tournamentID == TournamentIndex::Custom) abort(); //TODO set the custom course list!
-        const auto& p = TournamentCourses[tournamentID][t.round];
+
+        const auto& p = (tournamentID == TournamentIndex::Custom) ? m_customTournament.getCourse(t.round) : TournamentCourses[tournamentID][t.round];
         const auto& courseData = m_sharedData.courseData->courseData;
         if (const auto res = std::find_if(courseData.begin(), courseData.end(), [&](const SharedCourseData::CourseData& cd) 
             {return cd.directory == p;}); res != courseData.end())
@@ -2561,6 +2562,7 @@ void TournamentState::refreshClubsetWarning()
 
 void TournamentState::refreshCustomList()
 {
+    const auto oldSize = m_customPaths.size();
     m_customPaths.clear();
 
     const auto basePath = Content::getUserContentPath(Content::UserContent::Tournament);
@@ -2588,6 +2590,28 @@ void TournamentState::refreshCustomList()
     else if (m_customIndex >= m_customPaths.size())
     {
         m_customIndex = m_customPaths.size() - 1;
+    }
+
+    if (!m_customPaths.empty())
+    {
+        if (oldSize < m_customPaths.size())
+        {
+            //there's probably a new tournament
+            //and we want to auto-select it. Trouble
+            //is we're not in any particular order
+            //due to folders having UIDs and we
+            //can't assume the new one is at the
+            //back of the list of custom paths...
+        }
+
+        readTournamentData(m_sharedData.tournaments[TournamentIndex::Custom], (m_customPaths[m_customIndex] + "data.tmt").c_str());
+        m_customTournament = {};
+        m_customTournament.load(m_customPaths[m_customIndex]);
+
+        maxTournaments = 3;
+        TournamentNames[2] = m_customTournament.getTitle();
+
+        refreshTree();
     }
 }
 
