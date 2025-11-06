@@ -329,7 +329,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
             if (m_drawWindow)
             {
                 //used to detect if we had any input
-                auto buffSize = m_inputBuffer.size();
+                const auto buffSize = m_inputBuffer.size();
 
                 const auto viewScale = getViewScale();
                 const glm::vec2 OutputSize = glm::vec2(cro::App::getWindow().getSize());

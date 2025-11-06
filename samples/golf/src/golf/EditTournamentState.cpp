@@ -94,15 +94,18 @@ namespace
 }
 
 EditTournamentState::EditTournamentState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State(ss, ctx),
-    m_scene     (ctx.appInstance.getMessageBus()),
-    m_sharedData(sd),
-    m_viewScale (2.f)
+    : cro::State        (ss, ctx),
+    m_scene             (ctx.appInstance.getMessageBus()),
+    m_sharedData        (sd),
+    m_viewScale         (2.f),
+    m_showOSK           (false),
+    m_showImguiInput    (false)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
     buildScene();
     loadCourseInfo();
+    registerWindow(std::bind(&EditTournamentState::imguiWindow, this));
 
     std::fill(m_tierIndices.begin(), m_tierIndices.end(), 0);
 }
@@ -113,6 +116,12 @@ bool EditTournamentState::handleEvent(const cro::Event& evt)
     if (ImGui::GetIO().WantCaptureKeyboard
         || ImGui::GetIO().WantCaptureMouse
         || m_rootNode.getComponent<cro::Callback>().active)
+    {
+        return false;
+    }
+
+    if (m_showImguiInput
+        || m_showOSK)
     {
         return false;
     }
@@ -171,6 +180,22 @@ bool EditTournamentState::handleEvent(const cro::Event& evt)
 
 void EditTournamentState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped
+            && data.id == StateID::Keyboard)
+        {
+            if (!m_sharedData.OSKBuffer.empty())
+            {
+                m_tournamentNameEntity.getComponent<cro::Text>().setString(m_sharedData.OSKBuffer);
+                m_tournamentInfo.setTitle(m_sharedData.OSKBuffer);
+            }
+            m_sharedData.useOSKBuffer = false;
+            m_showOSK = false;
+        }
+    }
+
     m_scene.forwardMessage(msg);
 }
 
@@ -186,6 +211,54 @@ void EditTournamentState::render()
 }
 
 //private
+void EditTournamentState::imguiWindow()
+{
+    if (m_showImguiInput)
+    {
+        const float viewScale = getViewScale();
+
+        const auto size = glm::vec2(cro::App::getWindow().getSize());
+        const glm::vec2 WindowSize = glm::vec2(200.f, 80.f) * viewScale;
+        const auto WindowPos = (size - WindowSize) / 2.f;
+
+        ImGui::SetNextWindowSize({ WindowSize.x, WindowSize.y });
+        ImGui::SetNextWindowPos({ WindowPos.x, WindowPos.y });
+
+        ImGui::GetFont()->Scale *= viewScale;
+        ImGui::PushFont(ImGui::GetFont());
+
+        ImGui::Begin("Tournament Name", &m_showImguiInput, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+        ImGui::SetNextItemWidth(-1.f);
+        if (ImGui::InputText("##input", &m_imguiBuffer))
+        {
+            static constexpr std::size_t MaxChars = ConstVal::MaxStringChars;
+            if (m_imguiBuffer.length() > MaxChars)
+            {
+                m_imguiBuffer = m_imguiBuffer.substr(0, MaxChars);
+            }
+        }
+        if (ImGui::Button("OK", {(WindowSize.x / 2.f) - 12.f, 0.f}))
+        {
+            cro::String s = cro::String::fromUtf8(m_imguiBuffer.begin(), m_imguiBuffer.end());
+            m_tournamentNameEntity.getComponent<cro::Text>().setString(s);
+            m_tournamentInfo.setTitle(s);
+
+            m_imguiBuffer.clear();
+            m_showImguiInput = false;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", {-1.f, 0.f}))
+        {
+            m_imguiBuffer.clear();
+            m_showImguiInput = false;
+        }
+        ImGui::End();
+
+        ImGui::GetFont()->Scale = 1.f;
+        ImGui::PopFont();
+    }
+}
+
 void EditTournamentState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
@@ -356,56 +429,56 @@ void EditTournamentState::buildScene()
         };
 
 
-    entity = createButton({ 14.f, 115.f }, "small_highlight");
+    entity = createButton({ 110.f, 115.f }, "small_highlight");
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T1Down);
     entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T1Up, ButtonID::T2Down);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T1Up, ButtonID::Save);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = prevCourse;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    entity = createButton({ 130.f, 115.f }, "small_highlight");
+    entity = createButton({ 226.f, 115.f }, "small_highlight");
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T1Up);
     entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T1Down, ButtonID::T2Up);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T1Down, ButtonID::Cancel);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = nextCourse;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    entity = createButton({ 14.f, 99.f }, "small_highlight");
+    entity = createButton({ 110.f, 99.f }, "small_highlight");
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T2Down);
     entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T2Up, ButtonID::T3Down);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T2Up, ButtonID::T1Down);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = prevCourse;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    entity = createButton({ 130.f, 99.f }, "small_highlight");
+    entity = createButton({ 226.f, 99.f }, "small_highlight");
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T2Up);
     entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T2Down, ButtonID::T3Up);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T2Down, ButtonID::T1Up);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = nextCourse;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    entity = createButton({ 14.f, 83.f }, "small_highlight");
+    entity = createButton({ 110.f, 83.f }, "small_highlight");
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T3Down);
     entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T3Up, ButtonID::T4Down);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T3Up, ButtonID::T2Down);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = prevCourse;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    entity = createButton({ 130.f, 83.f }, "small_highlight");
+    entity = createButton({ 226.f, 83.f }, "small_highlight");
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T3Up);
     entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T3Down, ButtonID::T4Up);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T3Down, ButtonID::T2Up);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = nextCourse;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    entity = createButton({ 14.f, 67.f }, "small_highlight");
+    entity = createButton({ 110.f, 67.f }, "small_highlight");
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T4Down);
     entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T4Up, ButtonID::Name);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T4Up, ButtonID::T3Down);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = prevCourse;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    entity = createButton({ 130.f, 67.f }, "small_highlight");
+    entity = createButton({ 226.f, 67.f }, "small_highlight");
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::T4Up);
     entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::T4Down, ButtonID::Name);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T4Down, ButtonID::T3Up);
@@ -415,15 +488,16 @@ void EditTournamentState::buildScene()
 
     const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 72.f, 35.f, 0.3f });
+    entity.addComponent<cro::Transform>().setPosition({ 168.f, 38.f, 0.3f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setString("Buns");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_tournamentNameEntity = entity;
     
-    entity = createButton({ 72.f, 31.f }, "large_highlight");
+    entity = createButton({ 168.f, 34.f }, "large_highlight");
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Name);
     entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::Cancel, ButtonID::Save);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::T4Down, ButtonID::T4Up);
@@ -435,18 +509,39 @@ void EditTournamentState::buildScene()
                     //TODO check this is what we do elsewhere to be consistent
                     if (cro::GameController::getControllerCount() != 0)
                     {
-                        if (Social::isSteamdeck()) //TODO how do we check big picture mode?
+#ifdef USE_GNS
+                        if (Social::isSteamdeck())
                         {
                             //OSK
+                            const auto cb =
+                                [&](bool submitted, const char* buffer)
+                                {
+                                    if (submitted)
+                                    {
+                                        auto str = cro::String::fromUtf8(buffer, buffer + std::strlen(buffer));
+                                        m_tournamentNameEntity.getComponent<cro::Text>().setString(str);
+                                        m_tournamentInfo.setTitle(str);
+                                    }
+                                };
+
+                            //this only shows the overlay as Steam takes care of dismissing it
+                            const auto utf = m_tournamentInfo.getTitle().toUtf8();
+                            Social::showTextInput(cb, "Tournament Name", ConstVal::MaxStringChars * 2, reinterpret_cast<const char*>(utf.data()));
                         }
                         else
+#endif
                         {
+                            m_showOSK = true;
+                            m_sharedData.useOSKBuffer = true;
+                            m_sharedData.OSKBuffer = m_tournamentInfo.getTitle();
                             requestStackPush(StateID::Keyboard);
                         }
                     }
                     else
                     {
                         //show ImGuiWindow
+                        m_imguiBuffer.clear(); //TODO we should really be setting this from the utf8 string from the current title
+                        m_showImguiInput = true;
                     }
                 }
             });
@@ -455,7 +550,7 @@ void EditTournamentState::buildScene()
 
 
 
-    entity = createButton({ 44.f, 9.f }, "medium_highlight");
+    entity = createButton({ 140.f, 12.f }, "medium_highlight");
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Save);
     entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::Cancel, ButtonID::T1Down);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Cancel, ButtonID::Name);
@@ -491,7 +586,7 @@ void EditTournamentState::buildScene()
             });
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    entity = createButton({ 100.f, 9.f }, "medium_highlight");
+    entity = createButton({ 196.f, 12.f }, "medium_highlight");
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Cancel);
     entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::Save, ButtonID::T1Up);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Save, ButtonID::Name);
@@ -509,17 +604,17 @@ void EditTournamentState::buildScene()
 
     //thumbnail
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 3.f, 149.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 99.f, 149.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>();
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_preview.thumbnail = entity;
 
-    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    //const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 72.f, 143.f, 0.f });
+    entity.addComponent<cro::Transform>().setPosition({ 168.f, 142.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(LabelTextSize);
+    entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -630,8 +725,6 @@ void EditTournamentState::onCachedPush()
     if (!m_sharedData.tournamentPath.empty())
     {
         m_tournamentInfo.load(m_sharedData.tournamentPath);
-
-        //TODO set tournament title string
         //TODO set tier indices from loaded tournament
     }
     else
@@ -639,10 +732,9 @@ void EditTournamentState::onCachedPush()
         //make sure to clear out existing data
         m_tournamentInfo = {};
         std::fill(m_tierIndices.begin(), m_tierIndices.end(), 0);
-
-        //TODO set tournament title string to default
     }
 
+    m_tournamentNameEntity.getComponent<cro::Text>().setString(m_tournamentInfo.getTitle());
     updatePreview(m_tierIndices[0]);
     m_scene.getSystem<cro::UISystem>()->selectByIndex(ButtonID::T1Down);
 }

@@ -387,7 +387,7 @@ struct SharedStateData final
     bool rotateCamera = true;
     bool showMinimap = true;
     bool showInGameTips = true;
-    bool calculateRange = true; //calculate or estimate the range indicator
+    bool calculateRange = false; //calculate or estimate the range indicator
     std::int32_t flagText = 0; //none, black, white
     std::string flagPath;
 

@@ -32,14 +32,15 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "CustomTournament.hpp"
 
-#include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
+#include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/TextureResource.hpp>
 
 struct SharedStateData;
 
-class EditTournamentState final : public cro::State
+class EditTournamentState final : public cro::State, public cro::GuiClient
 {
 public:
     EditTournamentState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -91,6 +92,13 @@ private:
 
     CustomTournament m_tournamentInfo;
     std::array<std::size_t, 4u> m_tierIndices = {};
+
+    cro::Entity m_tournamentNameEntity;
+
+    bool m_showOSK;
+    bool m_showImguiInput;
+    std::string m_imguiBuffer;
+    void imguiWindow();
 
     void buildScene();
     void loadCourseInfo();
