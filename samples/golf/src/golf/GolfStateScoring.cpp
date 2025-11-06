@@ -397,7 +397,16 @@ void GolfState::updateTournament(bool playerWon)
         std::fill(tournament.scores.begin(), tournament.scores.end(), 0);
         std::fill(tournament.opponentScores.begin(), tournament.opponentScores.end(), 0);
         tournament.mulliganCount = 1;
-        writeTournamentData(tournament);
+
+        if (m_sharedData.activeTournament == TournamentIndex::Custom)
+        {
+            const auto path = m_sharedData.tournamentPath + TournamentDataFile;
+            writeTournamentData(tournament, path.c_str());
+        }
+        else
+        {
+            writeTournamentData(tournament);
+        }
     }
     /*else
     {

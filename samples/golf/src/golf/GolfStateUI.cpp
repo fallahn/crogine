@@ -6897,7 +6897,16 @@ void GolfState::updateLeagueHole()
                     //and player score
                     m_sharedData.tournaments[m_sharedData.activeTournament].scores[m_currentHole] 
                         = m_sharedData.connectionData[0].playerData[0].holeScores[m_currentHole];
-                    writeTournamentData(m_sharedData.tournaments[m_sharedData.activeTournament]);
+                    //I wish there was a better way to determine the path globally...
+                    if (m_sharedData.activeTournament == TournamentIndex::Custom)
+                    {
+                        const auto path = m_sharedData.tournamentPath + TournamentDataFile;
+                        writeTournamentData(m_sharedData.tournaments[m_sharedData.activeTournament], path.c_str());
+                    }
+                    else
+                    {
+                        writeTournamentData(m_sharedData.tournaments[m_sharedData.activeTournament]);
+                    }
                 }
             }
         }

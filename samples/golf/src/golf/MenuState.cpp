@@ -3646,7 +3646,7 @@ void MenuState::launchTournament(std::int32_t tournamentID)
         resetTournament(m_sharedData.tournaments[tournamentID]);
         //load the path if we have a custom tourny
         const char* path = tournamentID == TournamentIndex::Custom ?
-            m_sharedData.tournamentPath.c_str() : nullptr;
+            (m_sharedData.tournamentPath + TournamentDataFile).c_str() : nullptr;
         writeTournamentData(m_sharedData.tournaments[tournamentID], path);
     }
 

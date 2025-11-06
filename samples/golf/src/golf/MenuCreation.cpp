@@ -5512,7 +5512,7 @@ void MenuState::updateUnlockedItems()
     }
 
 
-    //tournament unlocks
+    //tournament unlocks - ignores any custom tournament
     for (auto i = 0; i < 2; ++i)
     {
         if (m_sharedData.tournaments[i].currentBest <

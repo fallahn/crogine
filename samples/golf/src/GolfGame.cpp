@@ -1908,6 +1908,7 @@ void GolfGame::loadPreferences()
 
         m_sharedData.tournaments[0].id = 0;
         m_sharedData.tournaments[1].id = 1;
+        m_sharedData.tournaments[2].id = 2;
         readTournamentData(m_sharedData.tournaments[0]);
         readTournamentData(m_sharedData.tournaments[1]);
     }

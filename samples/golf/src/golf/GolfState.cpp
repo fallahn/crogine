@@ -1891,7 +1891,16 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (m_sharedData.gameMode == GameMode::Tournament)
             {
                 m_sharedData.tournaments[m_sharedData.activeTournament].mulliganCount = 0;
-                writeTournamentData(m_sharedData.tournaments[m_sharedData.activeTournament]);
+                
+                if (m_sharedData.activeTournament == TournamentIndex::Custom)
+                {
+                    const auto path = m_sharedData.tournamentPath + TournamentDataFile;
+                    writeTournamentData(m_sharedData.tournaments[m_sharedData.activeTournament], path.c_str());
+                }
+                else
+                {
+                    writeTournamentData(m_sharedData.tournaments[m_sharedData.activeTournament]);
+                }
             }
 
             Achievements::awardAchievement(AchievementStrings[AchievementID::TryTryAgain]);

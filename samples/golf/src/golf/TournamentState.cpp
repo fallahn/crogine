@@ -1710,7 +1710,16 @@ void TournamentState::createConfirmMenu(cro::Entity parent)
                 //m_sharedData.tournaments[tournamentID] = {}; //don't do this it erases the ID
                 //m_sharedData.tournaments[tournamentID].id = tournamentID;
                 resetTournament(m_sharedData.tournaments[tournamentID]);
-                writeTournamentData(m_sharedData.tournaments[tournamentID]);
+                
+                if (tournamentID == TournamentIndex::Custom)
+                {
+                    const auto path = m_sharedData.tournamentPath + TournamentDataFile;
+                    writeTournamentData(m_sharedData.tournaments[tournamentID], path.c_str());
+                }
+                else
+                {
+                    writeTournamentData(m_sharedData.tournaments[tournamentID]);
+                }
 
                 //trigger animation
                 m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = ScrollID::Reset;
@@ -2619,6 +2628,7 @@ void TournamentState::loadCustomTournament()
     
     m_sharedData.customTournament = {};
     m_sharedData.customTournament.load(m_customPaths[m_customIndex]);
+    m_sharedData.tournamentPath = m_customPaths[m_customIndex];
 
     maxTournaments = 3;
     TournamentNames[2] = m_sharedData.customTournament.getTitle();
