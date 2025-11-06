@@ -45,6 +45,7 @@ public:
     void setCourse(std::size_t tier, const std::string& course);
     void setTitle(const cro::String& t) { m_title = t; }
 
+    const std::string& getCourse(std::size_t i) const { return m_courses[i]; }
     const cro::String& getTitle() const { return m_title; }
 
     const std::array<std::string, 4u>& getCourses() const { return m_courses; }

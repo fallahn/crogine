@@ -52,6 +52,6 @@ public:
     };
     //returns the content path for the current user
     static std::string getBaseContentPath();
-    //returns the ubase content path plus the given user content dir
+    //returns the base content path plus the given user content dir
     static std::string getUserContentPath(std::int32_t);
 };

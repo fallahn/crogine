@@ -580,6 +580,10 @@ void EditTournamentState::buildScene()
                         writeTournamentData(newTournament, filePath.c_str());
                     }
 
+                    for (auto i = 0u; i < 4u; ++i)
+                    {
+                        m_tournamentInfo.setCourse(i, m_courseInfo[m_tierIndices[i]].dir);
+                    }
                     m_tournamentInfo.save(m_sharedData.tournamentPath);
                     quitState();
                 }
@@ -725,7 +729,18 @@ void EditTournamentState::onCachedPush()
     if (!m_sharedData.tournamentPath.empty())
     {
         m_tournamentInfo.load(m_sharedData.tournamentPath);
-        //TODO set tier indices from loaded tournament
+        
+        //map the courses to their indices
+        for (auto i = 0; i < 4; ++i)
+        {
+            const auto result = std::find_if(m_courseInfo.cbegin(), m_courseInfo.cend(),
+                [&](const CourseInfo& c) {return c.dir == m_tournamentInfo.getCourse(i); });
+
+            if (result != m_courseInfo.cend())
+            {
+                m_tierIndices[i] = std::distance(m_courseInfo.cbegin(), result);
+            }
+        }
     }
     else
     {

@@ -185,13 +185,15 @@ TournamentState::TournamentState(cro::StateStack& ss, cro::State::Context ctx, S
     m_sharedData    (sd),
     m_viewScale     (2.f),
     m_axisPosition  (0.f),
-    m_currentMenu   (MenuID::Career)
+    m_currentMenu   (MenuID::Career),
+    m_customIndex   (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
     loadAssets();
     addSystems();
     buildScene();
+    refreshCustomList();
 }
 
 TournamentState::~TournamentState()
@@ -249,6 +251,14 @@ bool TournamentState::handleEvent(const cro::Event& evt)
         default: break;
         case SDLK_l:
             //m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = ScrollID::Reset;
+            if (!m_customPaths.empty())
+            {
+                m_sharedData.tournamentPath = m_customPaths[m_customIndex];
+            }
+            else
+            {
+                m_sharedData.tournamentPath = {};
+            }
             requestStackPush(StateID::EditTournament);
             break;
         case SDLK_UP:
@@ -344,6 +354,10 @@ void TournamentState::handleMessage(const cro::Message& msg)
             else if (data.id == StateID::Profile)
             {
                 refreshTree(); // may have changed profile name
+            }
+            else if (data.id == StateID::EditTournament)
+            {
+                refreshCustomList();
             }
         }
     }
@@ -2542,6 +2556,38 @@ void TournamentState::refreshClubsetWarning()
                 && m_sharedData.tournaments[tournamentID].initialClubSet != m_sharedData.preferredClubSet) ? (1/m_viewScale.x) : 0.f;
 
         m_warningString.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    }
+}
+
+void TournamentState::refreshCustomList()
+{
+    m_customPaths.clear();
+
+    const auto basePath = Content::getUserContentPath(Content::UserContent::Tournament);
+    if (cro::FileSystem::directoryExists(basePath))
+    {
+        const auto dirs = cro::FileSystem::listDirectories(basePath);
+        for (const auto& d : dirs)
+        {
+            const auto dirPath = basePath + d + "/";
+            if (cro::FileSystem::directoryExists(dirPath))
+            {
+                if (cro::FileSystem::fileExists(dirPath + "selection.crs")
+                    && cro::FileSystem::fileExists(dirPath + "data.tmt"))
+                {
+                    m_customPaths.push_back(dirPath);
+                }
+            }
+        }
+    }
+
+    if (m_customPaths.empty())
+    {
+        m_customIndex = 0;
+    }
+    else if (m_customIndex >= m_customPaths.size())
+    {
+        m_customIndex = m_customPaths.size() - 1;
     }
 }
 

@@ -28,8 +28,15 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "CustomTournament.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/detail/Assert.hpp>
+
+namespace
+{
+    const std::string FileName = "selection.crs";
+}
 
 CustomTournament::CustomTournament()
     : m_title ("Untitled")
@@ -40,14 +47,67 @@ CustomTournament::CustomTournament()
 //public
 void CustomTournament::load(const std::string& path)
 {
+    CRO_ASSERT(path.back() == '/', "");
 
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile(path + FileName, false))
+    {
+        for (const auto& p : cfg.getProperties())
+        {
+            const auto& name = p.getName();
+            if (name == "title")
+            {
+                m_title = p.getValue<cro::String>();
+            }
+            else if (name == "tier_0")
+            {
+                m_courses[0] = p.getValue<std::string>();
+            }
+            else if (name == "tier_1")
+            {
+                m_courses[1] = p.getValue<std::string>();
+            }
+            else if (name == "tier_2")
+            {
+                m_courses[2] = p.getValue<std::string>();
+            }
+            else if (name == "tier_3")
+            {
+                m_courses[3] = p.getValue<std::string>();
+            }
+        }
+    }
+
+    if (m_title.size() > ConstVal::MaxStringChars)
+    {
+        m_title = m_title.substr(0, ConstVal::MaxStringChars);
+    }
+    else if (m_title.empty())
+    {
+        m_title = "Untitled";
+    }
+
+    //replace any invalid strings with something semi-sane
+    for (auto& c : m_courses)
+    {
+        if (c.find("course_") == std::string::npos)
+        {
+            c = "course_01";
+        }
+    }
 }
 
 void CustomTournament::save(const std::string& path)
 {
     cro::ConfigFile cfg("course_list");
-    cfg.addProperty("test").setValue("property");
-    cfg.save(path + "selection.crs");
+    cfg.addProperty("title").setValue(m_title);
+
+    for (auto i = 0; i < 4; ++i)
+    {
+        cfg.addProperty("tier_" + std::to_string(i)).setValue(m_courses[i]);
+    }
+
+    cfg.save(path + FileName);
 }
 
 void CustomTournament::setCourse(std::size_t idx, const std::string& course)
