@@ -281,9 +281,13 @@ bool TournamentState::handleEvent(const cro::Event& evt)
             return false;
             break;
         case cro::GameController::ButtonLeftShoulder:
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            tournamentID = (tournamentID + (maxTournaments - 1)) % maxTournaments;
+            refreshTree();
+            break;
         case cro::GameController::ButtonRightShoulder:
             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-            tournamentID = (tournamentID + 1) % 2;
+            tournamentID = (tournamentID + 1) % maxTournaments;
             refreshTree();
             break;
         }

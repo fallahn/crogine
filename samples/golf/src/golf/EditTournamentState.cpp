@@ -395,6 +395,8 @@ void EditTournamentState::buildScene()
                 const auto idx = (e.getComponent<cro::UIInput>().getSelectionIndex() - ButtonID::T1Down) / 2;
                 m_tierIndices[idx] = (m_tierIndices[idx] + 1) % m_courseInfo.size();
                 updatePreview(m_tierIndices[idx]);
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
     const auto prevCourse = uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
@@ -404,6 +406,8 @@ void EditTournamentState::buildScene()
                 const auto idx = (e.getComponent<cro::UIInput>().getSelectionIndex() - ButtonID::T1Down) / 2;
                 m_tierIndices[idx] = (m_tierIndices[idx] + (m_courseInfo.size() - 1)) % m_courseInfo.size();
                 updatePreview(m_tierIndices[idx]);
+
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         });
 
