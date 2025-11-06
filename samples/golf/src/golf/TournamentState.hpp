@@ -30,7 +30,6 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
-#include "CustomTournament.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
@@ -117,7 +116,6 @@ private:
 
     std::vector<std::string> m_customPaths;
     std::size_t m_customIndex;
-    CustomTournament m_customTournament;
 
     void loadAssets();
     void addSystems();
@@ -132,6 +130,7 @@ private:
     void refreshClubsetWarning();
 
     void refreshCustomList();
+    void loadCustomTournament();
 
     void quitState();
 

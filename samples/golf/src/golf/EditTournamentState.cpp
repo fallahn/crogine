@@ -572,7 +572,7 @@ void EditTournamentState::buildScene()
                             cro::FileSystem::createDirectory(m_sharedData.tournamentPath);
                         }
 
-                        const auto filePath = m_sharedData.tournamentPath + "data.tmt";
+                        const auto filePath = m_sharedData.tournamentPath + TournamentDataFile;
 
                         Tournament newTournament;
                         newTournament.id = TournamentIndex::Custom;

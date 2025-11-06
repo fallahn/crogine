@@ -82,7 +82,7 @@ public:
             Wedge,
 
             Hole,
-            NearHole,
+            //NearHole,
             NearMiss,
             Water,
             Ground,

@@ -3635,7 +3635,7 @@ void MenuState::launchQuickPlay()
 
 void MenuState::launchTournament(std::int32_t tournamentID)
 {
-    CRO_ASSERT(tournamentID == 0 || tournamentID == 1, "");
+    CRO_ASSERT(tournamentID == 0 || tournamentID == 1 || tournamentID == 2, "");
 
     if (m_sharedData.tournaments[tournamentID].winner != -2)
     {
@@ -3644,7 +3644,10 @@ void MenuState::launchTournament(std::int32_t tournamentID)
         //m_sharedData.tournaments[tournamentID] = {}; //don't do this, it erases the id
         //m_sharedData.tournaments[tournamentID].id = tournamentID;
         resetTournament(m_sharedData.tournaments[tournamentID]);
-        writeTournamentData(m_sharedData.tournaments[tournamentID]);
+        //load the path if we have a custom tourny
+        const char* path = tournamentID == TournamentIndex::Custom ?
+            m_sharedData.tournamentPath.c_str() : nullptr;
+        writeTournamentData(m_sharedData.tournaments[tournamentID], path);
     }
 
 
@@ -3668,8 +3671,24 @@ void MenuState::launchTournament(std::int32_t tournamentID)
     m_sharedData.hosting = true;
     m_sharedData.gameMode = GameMode::Tournament; //ensures leaderboards are disabled and we return to correct menu
     m_sharedData.activeTournament = tournamentID;
-    if(tournamentID == TournamentIndex::Custom)abort(); //TODO we need to copy the correct par values!
-    m_sharedData.tournamentPars = TierPars[m_sharedData.activeTournament][m_sharedData.tournaments[m_sharedData.activeTournament].round];
+
+    const auto& course = m_sharedData.customTournament.getCourse(m_sharedData.tournaments[m_sharedData.activeTournament].round);
+    auto c = std::find_if(m_sharedCourseData.courseData.cbegin(), m_sharedCourseData.courseData.cend(),
+        [&course](const SharedCourseData::CourseData& cd) 
+        {
+            return cd.directory == course;
+        });
+    if (c != m_sharedCourseData.courseData.cend())
+    {
+        for (auto i = 0u; i < m_sharedData.tournamentPars.size() && i < c->parVals.size(); ++i)
+        {
+            m_sharedData.tournamentPars[i] = c->parVals[i];
+        }
+
+        /*m_sharedData.tournamentPars = tournamentID == TournamentIndex::Custom
+            ? m_sharedData.customTournament.getParValues()[m_sharedData.tournaments[m_sharedData.activeTournament].round]
+            : TierPars[m_sharedData.activeTournament][m_sharedData.tournaments[m_sharedData.activeTournament].round];*/
+    }
     m_sharedData.localConnectionData.playerCount = 1;
     m_sharedData.localConnectionData.playerData[0].isCPU = false;
 
@@ -3683,8 +3702,9 @@ void MenuState::launchTournament(std::int32_t tournamentID)
     //start a local server and connect
     if (quickConnect(m_sharedData))
     {
-        if (tournamentID == TournamentIndex::Custom)abort(); //TODO we need to copy the correct course list!
-        m_sharedData.mapDirectory = TournamentCourses[m_sharedData.tournaments[tournamentID].id][m_sharedData.tournaments[tournamentID].round];
+        m_sharedData.mapDirectory = tournamentID == TournamentIndex::Custom
+            ? m_sharedData.customTournament.getCourse(m_sharedData.tournaments[tournamentID].round)
+             : TournamentCourses[m_sharedData.tournaments[tournamentID].id][m_sharedData.tournaments[tournamentID].round];
         auto res = std::find_if(m_sharedCourseData.courseData.begin(), m_sharedCourseData.courseData.end(),
             [&](const SharedCourseData::CourseData& d)
             {
@@ -4957,6 +4977,7 @@ bool quickConnect(SharedStateData& sharedData)
 
         sharedData.serverInstance.setHostID(sharedData.clientConnection.netClient.getPeer().getID());
         sharedData.serverInstance.setLeagueID(sharedData.leagueRoundID);
+        sharedData.serverInstance.setCustomTournament(sharedData.tournamentPath + TournamentDataFile);
     }
     return true;
 }

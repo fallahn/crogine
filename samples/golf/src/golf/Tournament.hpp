@@ -52,6 +52,9 @@ static inline const std::array<std::array<std::string, 4u>, 2u> TournamentCourse
 //to save loading the actual file data - this means it may get outdated at
 //some point, however as the results are purely virtual (the player has
 //already lost at this point) some innaccuracy is acceptable.
+
+//TODO this is no longer used - we copy out the data loaded by the main
+//menu when it parses all the course files :)
 static inline const std::array<std::array<HoleScores, 4>, 2> TierPars =
 {
     std::array<HoleScores, 4u>{

@@ -115,7 +115,5 @@ void CustomTournament::setCourse(std::size_t idx, const std::string& course)
     if (idx < m_courses.size())
     {
         m_courses[idx] = course;
-
-        //TODO load course data and find pars (or cache this somewhere?)
     }
 }

@@ -47,13 +47,9 @@ public:
 
     const std::string& getCourse(std::size_t i) const { return m_courses[i]; }
     const cro::String& getTitle() const { return m_title; }
-
-    const std::array<std::string, 4u>& getCourses() const { return m_courses; }
-    const std::array<std::array<std::int32_t, 18>, 4u>& getParValues() const { return m_parValues; }
-
+    
 private:
 
     cro::String m_title;
     std::array<std::string, 4u> m_courses = {};
-    std::array<std::array<std::int32_t, 18>, 4u> m_parValues = {};
 };

@@ -70,6 +70,9 @@ public:
     //in the case of tournaments it's set to (int32 max - tournamentID)
     void setLeagueID(std::int32_t id);
 
+    //sets the path for custom tournaments
+    void setCustomTournament(const std::string&);
+
     //note this is not atomic!
     void setPreferredIP(const std::string& ip) { m_preferredIP = ip; }
     const std::string& getPreferredIP() const { return m_preferredIP; }

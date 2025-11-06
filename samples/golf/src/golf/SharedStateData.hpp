@@ -35,6 +35,7 @@ source distribution.
 #include "PlayerData.hpp"
 #include "LeagueNames.hpp"
 #include "Tournament.hpp"
+#include "CustomTournament.hpp"
 #include "Inventory.hpp"
 #include "server/Server.hpp"
 
@@ -405,5 +406,6 @@ struct SharedStateData final
     //we have to copy these now depending on the active tournament
     //as we might have a custom one where the values vary
     HoleScores tournamentPars = {};
-    std::string tournamentPath; //empty if creatinga new tournament, else tells the editor which to load/save to
+    std::string tournamentPath; //empty if creating a new tournament, else tells the editor which to load/save to
+    CustomTournament customTournament; //set by the tournament menu
 };

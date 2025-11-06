@@ -52,6 +52,8 @@ struct MixerChannel final
     };
 };
 
+static const std::string TournamentDataFile = "data.tmt";
+
 namespace ConstVal
 {
     static constexpr float MinMouseSpeed = 0.5f;

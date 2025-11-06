@@ -2100,11 +2100,20 @@ void GolfState::buildWorld()
         if (m_sharedData.leagueID > LeagueRoundID::Count)
         {
             const auto tournamentID = std::numeric_limits<std::int32_t>::max() - m_sharedData.leagueID;
-            CRO_ASSERT(tournamentID < 2, "");
+            CRO_ASSERT(tournamentID < 3, "");
 
             Tournament t;
             t.id = tournamentID;
-            readTournamentData(t);
+
+            if (tournamentID == TournamentIndex::Custom)
+            {
+                std::scoped_lock lock(m_sharedData.mutex);
+                readTournamentData(t, m_sharedData.customTournament.c_str());
+            }
+            else
+            {
+                readTournamentData(t);
+            }
 
             std::fill(scores.begin(), scores.end(), 0);
 

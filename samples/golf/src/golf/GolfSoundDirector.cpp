@@ -101,7 +101,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/ball/wedge01.wav",
 
         "assets/golf/sound/ball/holed.wav",
-        "assets/golf/sound/ball/near_holed.wav",
+        //"assets/golf/sound/ball/near_holed.wav",
         "assets/golf/sound/ball/near_miss.wav",
         "assets/golf/sound/ball/splash.wav",
         "assets/golf/sound/ball/drop.wav",

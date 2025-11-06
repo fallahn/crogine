@@ -1691,6 +1691,7 @@ void TournamentState::createConfirmMenu(cro::Entity parent)
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                 m_sharedData.activeTournament = tournamentID;
+                m_sharedData.tournamentPath = m_customPaths[m_customIndex];
 
                 auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                 msg->type = SystemEvent::MenuRequest;
@@ -2483,7 +2484,7 @@ void TournamentState::refreshTree()
     {
         cro::String courseName;
 
-        const auto& p = (tournamentID == TournamentIndex::Custom) ? m_customTournament.getCourse(t.round) : TournamentCourses[tournamentID][t.round];
+        const auto& p = (tournamentID == TournamentIndex::Custom) ? m_sharedData.customTournament.getCourse(t.round) : TournamentCourses[tournamentID][t.round];
         const auto& courseData = m_sharedData.courseData->courseData;
         if (const auto res = std::find_if(courseData.begin(), courseData.end(), [&](const SharedCourseData::CourseData& cd) 
             {return cd.directory == p;}); res != courseData.end())
@@ -2575,7 +2576,7 @@ void TournamentState::refreshCustomList()
             if (cro::FileSystem::directoryExists(dirPath))
             {
                 if (cro::FileSystem::fileExists(dirPath + "selection.crs")
-                    && cro::FileSystem::fileExists(dirPath + "data.tmt"))
+                    && cro::FileSystem::fileExists(dirPath + TournamentDataFile))
                 {
                     m_customPaths.push_back(dirPath);
                 }
@@ -2592,27 +2593,37 @@ void TournamentState::refreshCustomList()
         m_customIndex = m_customPaths.size() - 1;
     }
 
+    //load custom content if available
     if (!m_customPaths.empty())
     {
         if (oldSize < m_customPaths.size())
         {
             //there's probably a new tournament
-            //and we want to auto-select it. Trouble
-            //is we're not in any particular order
-            //due to folders having UIDs and we
-            //can't assume the new one is at the
-            //back of the list of custom paths...
+            //so find the index of that path
+            const auto result = std::find(m_customPaths.cbegin(), m_customPaths.cend(), m_sharedData.tournamentPath);
+            if (result != m_customPaths.cend())
+            {
+                m_customIndex = std::distance(m_customPaths.cbegin(), result);
+            }
         }
 
-        readTournamentData(m_sharedData.tournaments[TournamentIndex::Custom], (m_customPaths[m_customIndex] + "data.tmt").c_str());
-        m_customTournament = {};
-        m_customTournament.load(m_customPaths[m_customIndex]);
-
-        maxTournaments = 3;
-        TournamentNames[2] = m_customTournament.getTitle();
-
-        refreshTree();
+        loadCustomTournament();
     }
+}
+
+void TournamentState::loadCustomTournament()
+{
+    m_sharedData.tournaments[TournamentIndex::Custom] = {};
+    m_sharedData.tournaments[TournamentIndex::Custom].id = TournamentIndex::Custom;
+    readTournamentData(m_sharedData.tournaments[TournamentIndex::Custom], (m_customPaths[m_customIndex] + TournamentDataFile).c_str());
+    
+    m_sharedData.customTournament = {};
+    m_sharedData.customTournament.load(m_customPaths[m_customIndex]);
+
+    maxTournaments = 3;
+    TournamentNames[2] = m_sharedData.customTournament.getTitle();
+
+    refreshTree();
 }
 
 void TournamentState::quitState()
