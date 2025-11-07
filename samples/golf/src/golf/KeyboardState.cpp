@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -314,7 +314,6 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             case cro::GameController::ButtonLeftShoulder:
             case cro::GameController::ButtonBack:
             {
-                //raises a message to say we want to accept the buffer (if buffered)
                 auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                 msg->type = SystemEvent::CancelOSK;
             }
@@ -375,7 +374,7 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
                 }
             }
             return false;
-#ifdef CRO_DEBUG_
+//#ifdef CRO_DEBUG_
         case SDL_KEYDOWN:
             switch (evt.key.keysym.sym)
             {
@@ -418,16 +417,29 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             case SDLK_TAB:
                 return false;
             case SDLK_ESCAPE:
+            {
+                auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                msg->type = SystemEvent::CancelOSK;
+            }
+                quitState();
+                return false;
+            case SDLK_KP_ENTER:
+            {
+                auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                msg->type = SystemEvent::SubmitOSK;
+            }
                 quitState();
                 return false;
             }
             break;
-#endif
+//#endif
         }
     }
 
     if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
     {
+        auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+        msg->type = SystemEvent::CancelOSK;
         quitState();
     }
 
@@ -702,6 +714,7 @@ void KeyboardState::buildScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>().setSource(m_sharedData.sharedResources->audio.get(audioID));
     entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+    entity.getComponent<cro::AudioEmitter>().setVolume(0.5f);
     m_audioEnts[AudioID::Select] = entity;
 
 
@@ -711,6 +724,7 @@ void KeyboardState::buildScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>().setSource(m_sharedData.sharedResources->audio.get(audioID));
     entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+    entity.getComponent<cro::AudioEmitter>().setVolume(0.5f);
     m_audioEnts[AudioID::Move] = entity;
 
 
@@ -720,6 +734,7 @@ void KeyboardState::buildScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>().setSource(m_sharedData.sharedResources->audio.get(audioID));
     entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+    entity.getComponent<cro::AudioEmitter>().setVolume(0.5f);
     m_audioEnts[AudioID::Space] = entity;
 }
 
@@ -1096,4 +1111,12 @@ void KeyboardState::sendSpace()
     m_buttonEnts[ButtonID::Space].getComponent<cro::Callback>().setUserData<float>(1.f);
 
     m_audioEnts[AudioID::Space].getComponent<cro::AudioEmitter>().play();
+}
+
+void KeyboardState::onCachedPush()
+{
+    if (m_sharedData.useOSKBuffer)
+    {
+        m_inputBuffer.string.getComponent<cro::Text>().setString(m_sharedData.OSKBuffer);
+    }
 }

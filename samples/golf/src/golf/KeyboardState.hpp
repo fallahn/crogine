@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -52,6 +52,7 @@ public:
     void render() override;
 
     cro::StateID getStateID() const override { return StateID::Keyboard; }
+
 
 private:
 
@@ -130,4 +131,5 @@ private:
     void sendKeystroke(std::int32_t);
     void sendBackspace(); //have to make this separate to be compatible with callbacks...
     void sendSpace();
+    void onCachedPush() override;
 };
