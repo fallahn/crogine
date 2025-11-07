@@ -115,6 +115,8 @@ namespace
         CareerProfile,
         CareerReset,
         CareerStart,
+        CareerNew,
+        CareerEdit,
         CareerStats,
         CareerInfo,
 
@@ -252,7 +254,7 @@ bool TournamentState::handleEvent(const cro::Event& evt)
         default: break;
         case SDLK_l:
             //m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = ScrollID::Reset;
-            if (!m_customPaths.empty())
+            /*if (!m_customPaths.empty())
             {
                 m_sharedData.tournamentPath = m_customPaths[m_customIndex];
             }
@@ -260,7 +262,7 @@ bool TournamentState::handleEvent(const cro::Event& evt)
             {
                 m_sharedData.tournamentPath = {};
             }
-            requestStackPush(StateID::EditTournament);
+            requestStackPush(StateID::EditTournament);*/
             break;
         case SDLK_UP:
         case SDLK_DOWN:
@@ -362,10 +364,19 @@ void TournamentState::handleMessage(const cro::Message& msg)
             }
             else if (data.id == StateID::EditTournament)
             {
-                refreshCustomList();
+                if (!m_customPaths.empty()
+                    && m_sharedData.tournamentPath.empty())
+                {
+                    m_sharedData.tournamentPath = m_customPaths[m_customIndex];
+                }
 
-                tournamentID = TournamentIndex::Custom;
-                refreshTree();
+                if (!m_sharedData.tournamentPath.empty())
+                {
+                    refreshCustomList();
+
+                    tournamentID = TournamentIndex::Custom;
+                    refreshTree();
+                }
             }
         }
     }
@@ -1016,6 +1027,77 @@ void TournamentState::buildScene()
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+
+    //new tourn highlight
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 475.f, 88.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("info_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CareerNew);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerTournPrev, CareerEdit);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerTournNext, CareerOptions);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_scene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.tournamentPath = {};
+                    requestStackPush(StateID::EditTournament);
+                }
+            });
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //edit tourn highlight
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 475.f, 69.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("info_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CareerEdit);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerClubStats, CareerStats);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerTournNext, CareerNew);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_scene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    if (!m_customPaths.empty())
+                    {
+                        m_sharedData.tournamentPath = m_customPaths[m_customIndex];
+                    }
+                    else
+                    {
+                        m_sharedData.tournamentPath = {};
+                    }
+                    requestStackPush(StateID::EditTournament);
+                }
+            });
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
+
     //stats button highlight
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 475.f, 50.f, 0.1f });
@@ -1030,7 +1112,7 @@ void TournamentState::buildScene()
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerStats);
     entity.getComponent<cro::UIInput>().setNextIndex(CareerClubStats, CareerInfo);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerWeather, CareerOptions);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerWeather, CareerEdit);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1086,7 +1168,7 @@ void TournamentState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerOptions);
-    entity.getComponent<cro::UIInput>().setNextIndex(CareerScrollPrev, CareerStats);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerScrollPrev, CareerNew);
     entity.getComponent<cro::UIInput>().setPrevIndex(CareerScrollNext, CareerReset);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
