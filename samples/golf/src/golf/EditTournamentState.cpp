@@ -77,6 +77,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 #include <filesystem>
+#include <cstring>
 
 namespace
 {
@@ -550,7 +551,12 @@ void EditTournamentState::buildScene()
                     else
                     {
                         //show ImGuiWindow
-                        m_imguiBuffer.clear(); //TODO we should really be setting this from the utf8 string from the current title
+                        cro::App::getWindow().setMouseCaptured(false);
+                        const auto utf = m_tournamentNameEntity.getComponent<cro::Text>().getString().toUtf8();
+                        //baahhhhhhhh
+                        m_imguiBuffer.resize(utf.size());
+                        std::memcpy(m_imguiBuffer.data(), utf.data(), utf.size());
+
                         m_showImguiInput = true;
                     }
                 }
