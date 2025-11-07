@@ -260,6 +260,7 @@ namespace ul
 
             TournComplete01,
             TournComplete02,
+            TournComplete03, //custom tournament
             TournLadder,
 
             Count
@@ -335,6 +336,7 @@ namespace ul
 
         { ModelID::TournamentTrophy01,  "First Place!",   "XP" },
         { ModelID::TournamentTrophy02,  "First Place!",   "XP" },
+        { ModelID::CareerFirst,         "First Place!",   "XP" },
         { ModelID::TournamentLadder,    "Round Won!",     "XP" },
     };
 }

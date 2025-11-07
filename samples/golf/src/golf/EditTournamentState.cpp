@@ -42,6 +42,7 @@ source distribution.
 #include "Tournament.hpp"
 #include "spooky2.hpp"
 #include "../GolfGame.hpp"
+#include "../WebsocketServer.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -283,7 +284,6 @@ void EditTournamentState::buildScene()
     m_audioEnts[AudioID::Back] = m_scene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
-    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
     struct RootCallbackData final
     {
@@ -517,7 +517,7 @@ void EditTournamentState::buildScene()
                 if (activated(evt))
                 {
                     //TODO check this is what we do elsewhere to be consistent
-                    if (cro::GameController::getControllerCount() != 0)
+                    if (/*cro::GameController::getControllerCount() != 0*/evt.type == SDL_CONTROLLERBUTTONDOWN)
                     {
 #ifdef USE_GNS
                         if (Social::isSteamdeck())
@@ -728,6 +728,8 @@ void EditTournamentState::quitState()
 {
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+    WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Choosing a Tournament" }));
 }
 
 void EditTournamentState::onCachedPush()
@@ -762,4 +764,8 @@ void EditTournamentState::onCachedPush()
     m_tournamentNameEntity.getComponent<cro::Text>().setString(m_tournamentInfo.getTitle());
     updatePreview(m_tierIndices[0]);
     m_scene.getSystem<cro::UISystem>()->selectByIndex(ButtonID::T1Down);
+
+    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+    WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Customising a Tournament" }));
 }

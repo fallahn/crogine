@@ -5556,8 +5556,7 @@ void MenuState::updateUnlockedItems()
     }
 
     //hmm this is kind of doubling what we did above...
-    if (m_sharedData.gameMode == GameMode::Tournament
-        && m_sharedData.activeTournament != TournamentIndex::Custom)
+    if (m_sharedData.gameMode == GameMode::Tournament)
     {
         //this should still be set from the previous round
         const auto& t = m_sharedData.tournaments[m_sharedData.activeTournament];
@@ -5569,8 +5568,12 @@ void MenuState::updateUnlockedItems()
             item.xp = 1000;
             Social::awardXP(item.xp);
 
-            Achievements::incrementStat(StatStrings[StatID::UnrealPlayed + m_sharedData.activeTournament]);
-            Achievements::setStat(StatStrings[StatID::UnrealBest + m_sharedData.activeTournament], 3);
+            if (m_sharedData.activeTournament != TournamentIndex::Custom)
+            {
+                Achievements::incrementStat(StatStrings[StatID::UnrealPlayed + m_sharedData.activeTournament]);
+                Achievements::setStat(StatStrings[StatID::UnrealBest + m_sharedData.activeTournament], 3);
+            }
+            //TODO store custom stats in the active tournament dir
         }
         else if (t.winner == -2)
         {
@@ -5585,8 +5588,12 @@ void MenuState::updateUnlockedItems()
         else
         {
             //the tournament has ended with a CPU victory
-            Achievements::incrementStat(StatStrings[StatID::UnrealPlayed + m_sharedData.activeTournament]);
-            Achievements::setStat(StatStrings[StatID::UnrealBest + m_sharedData.activeTournament], std::min(t.round, 2));
+            if (m_sharedData.activeTournament != TournamentIndex::Custom)
+            {
+                Achievements::incrementStat(StatStrings[StatID::UnrealPlayed + m_sharedData.activeTournament]);
+                Achievements::setStat(StatStrings[StatID::UnrealBest + m_sharedData.activeTournament], std::min(t.round, 2));
+            }
+            //TODO update custom stats
         }
     }
 

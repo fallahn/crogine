@@ -363,6 +363,9 @@ void TournamentState::handleMessage(const cro::Message& msg)
             else if (data.id == StateID::EditTournament)
             {
                 refreshCustomList();
+
+                tournamentID = TournamentIndex::Custom;
+                refreshTree();
             }
         }
     }
@@ -2194,22 +2197,29 @@ void TournamentState::createStatMenu(cro::Entity parent)
             confirmEnt.getComponent<cro::Callback>().active = true;
             shadeEnt.getComponent<cro::Callback>().active = true;
 
-            const auto entered = static_cast<std::int32_t>(Achievements::getStat(StatStrings[StatID::UnrealPlayed + tournamentID])->value);
-            const auto won = static_cast<std::int32_t>(Achievements::getStat(StatStrings[StatID::UnrealWon + tournamentID])->value);
-            const auto tier = static_cast<std::int32_t>(Achievements::getStat(StatStrings[StatID::UnrealBest + tournamentID])->value);
-
-            std::string s = "Number of times completed: " + std::to_string(entered);
-            s += "\nNumber of times won: " + std::to_string(won);
-            if (tier >  2) //somewhere along the line tier was getting set to 5, so hack around it
+            if (tournamentID != TournamentIndex::Custom)
             {
-                s += "\nBest rank: Winner!";
+                const auto entered = static_cast<std::int32_t>(Achievements::getStat(StatStrings[StatID::UnrealPlayed + tournamentID])->value);
+                const auto won = static_cast<std::int32_t>(Achievements::getStat(StatStrings[StatID::UnrealWon + tournamentID])->value);
+                const auto tier = static_cast<std::int32_t>(Achievements::getStat(StatStrings[StatID::UnrealBest + tournamentID])->value);
+
+                std::string s = "Number of times completed: " + std::to_string(entered);
+                s += "\nNumber of times won: " + std::to_string(won);
+                if (tier > 2) //somewhere along the line tier was getting set to 5, so hack around it
+                {
+                    s += "\nBest rank: Winner!";
+                }
+                else
+                {
+                    s += "\nBest tier rating: " + std::to_string(tier + 1);
+                }
+
+                textEnt.getComponent<cro::Text>().setString(s);
             }
             else
             {
-                s += "\nBest tier rating: " + std::to_string(tier + 1);
+                textEnt.getComponent<cro::Text>().setString("Not Available\nFor Custom Tournaments");
             }
-
-            textEnt.getComponent<cro::Text>().setString(s);
 
             m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
         };
