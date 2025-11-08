@@ -30,6 +30,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "Social.hpp"
 #include "CollisionMesh.hpp"
+#include "Terrain.hpp"
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/graphics/MeshData.hpp>
@@ -113,12 +114,14 @@ void renderToNormalMap(const cro::Mesh::Data meshData, cro::Shader& normalShader
     glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
 }
 
-glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3 impulse, glm::vec3 windVec, glm::vec3 pin, CollisionMesh& collisionMesh, float dt)
+glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3& impulse, glm::vec3 windVec, glm::vec3 pin, CollisionMesh& collisionMesh, float dt)
 {
     float groundHeight = -1.f;
+    TerrainResult t;
     do
     {
-        groundHeight = collisionMesh.getTerrain(pos).height;
+        t = collisionMesh.getTerrain(pos);
+        groundHeight = t.height;
 
         //TODO this is lifted from the BallSystem - would prefer not to replicate.
         const auto windHeight = std::clamp(groundHeight, 0.f, 60.f);
@@ -128,6 +131,8 @@ glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3 impulse, glm::vec3 windVec, gl
         impulse += Gravity * dt;
         impulse += windVec * windMultiplier * dt;
     } while (pos.y > groundHeight);
+    
+    impulse = glm::reflect(impulse, t.normal) * Restitution[t.terrain];
     return pos;
 }
 
@@ -159,6 +164,12 @@ std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2
 
         ret.emplace_back(points[i+1] + glm::vec2(OffsetX, OffsetY), col[colIndex]);
         ret.emplace_back(points[i+1] + glm::vec2(OffsetX, -OffsetY), col[colIndex]);
+    }
+
+    //hack to hide the confusing last impact point
+    for (auto i = 1; i < 5; ++i)
+    {
+        ret[ret.size() - i].colour = TextHighlightColour;
     }
 
     //add a tail

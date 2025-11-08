@@ -1736,12 +1736,14 @@ void GolfState::buildUI()
                 windDir.y = 0.f;
 
                 //only update the arc if it's active on screen
-                const auto impulses = m_inputParser.getImpulseForArc();
+                auto impulses = m_inputParser.getImpulseForArc();
                 std::vector<glm::vec3> points;
-                for (const auto& i : impulses)
+                for (auto& i : impulses)
                 {
+                    //after this is called the impulse contains the reflected vector of the impact
                     points.push_back(getImpactPoint(m_currentPlayer.position, i, windDir, m_holeData[m_currentHole].pin, m_collisionMesh, dt));
                 }
+                points.push_back(points.back() + (impulses.back() /*/ 2.f*/)); //so we can use it to draw a tail
 
                 std::vector<glm::vec2> mapPoints;
                 const auto playerMapPos = m_minimapZoom.toMapCoords(m_currentPlayer.position);

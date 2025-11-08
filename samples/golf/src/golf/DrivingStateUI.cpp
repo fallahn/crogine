@@ -1025,16 +1025,17 @@ void DrivingState::createUI()
                 return;
             }
 
-            const auto impulses = m_inputParser.getImpulseForArc();
+            auto impulses = m_inputParser.getImpulseForArc();
             auto windDir = m_gameScene.getSystem<BallSystem>()->getWindDirection();
             windDir *= windDir.y;
             windDir.y = 0.f;
 
             std::vector<glm::vec3> points;
-            for (const auto& i : impulses)
+            for (auto& i : impulses)
             {
                 points.push_back(getImpactPoint(PlayerPosition, i, windDir, m_holeData[m_targetIndex].pin, m_collisionMesh));
             }
+            points.push_back(points.back() + (impulses.back()/* / 2.f*/)); //the impulses are converted to reflected vectors
 
             std::vector<glm::vec2> mapPoints;
             const auto playerMapPos = toMinimapCoords(PlayerPosition);
