@@ -99,7 +99,7 @@ static void winFPE(int)
 #define DEBUG_NO_CONTROLLER
 #endif // CRO_DEBUG_
 
-#define DEBUG_NO_CONTROLLER
+//#define DEBUG_NO_CONTROLLER
 
 using namespace cro;
 
