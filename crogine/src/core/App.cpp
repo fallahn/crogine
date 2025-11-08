@@ -99,6 +99,8 @@ static void winFPE(int)
 #define DEBUG_NO_CONTROLLER
 #endif // CRO_DEBUG_
 
+#define DEBUG_NO_CONTROLLER
+
 using namespace cro;
 
 cro::App* App::m_instance = nullptr;
@@ -264,6 +266,7 @@ App::App(std::uint32_t styleFlags)
 #ifdef DEBUG_NO_CONTROLLER
     //urg sometimes some USB driver or something crashes and causes SDL_Init to hang
     //until the PC is restarted - this hacks around it while debugging (but disables controllers)
+    //LogW << "Controller input is disabled" << std::endl;
 #define INIT_FLAGS SDL_INIT_EVERYTHING & ~(SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK)
 #else
 #define INIT_FLAGS SDL_INIT_EVERYTHING

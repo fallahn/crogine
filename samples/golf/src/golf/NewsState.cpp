@@ -140,6 +140,7 @@ bool NewsState::handleEvent(const cro::Event& evt)
     {
         if (evt.key.keysym.sym == SDLK_BACKSPACE
             || evt.key.keysym.sym == SDLK_ESCAPE
+            || evt.key.keysym.sym == SDLK_SPACE
             || evt.key.keysym.sym == SDLK_p)
         {
             quitState();

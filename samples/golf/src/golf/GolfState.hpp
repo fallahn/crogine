@@ -391,7 +391,15 @@ private:
     void buildScene();
 
     //weather.cpp
-    cro::Entity createSwarm(std::int32_t, glm::vec3 pos); //butterflies etc
+    struct Swarm final
+    {
+        std::string texture;
+        std::int32_t frameCount = 1;
+        std::int32_t frameRate = 18;
+        glm::vec3 position;
+    };
+    std::size_t m_swarmMesh;
+    cro::Entity createSwarm(const Swarm&); //butterflies etc
     void createWeather(std::int32_t);
     void setFog(float density);
     void createClouds();

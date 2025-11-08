@@ -52,6 +52,7 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 namespace
 {
@@ -66,82 +67,136 @@ namespace
     constexpr std::int32_t GridY = 3;
 }
 
-cro::Entity GolfState::createSwarm(std::int32_t, glm::vec3 position)
+cro::Entity GolfState::createSwarm(const GolfState::Swarm& info)
 {
     static constexpr float AreaSize = 2.5f;
     static constexpr std::array<float, 3U> AreaStart = {-AreaSize, 0.f, -AreaSize};
     static constexpr std::array<float, 3U> AreaEnd = {AreaSize, AreaSize, AreaSize};
 
-
-    //TODO different types eg butterfly/bees etc
-    const auto points = pd::PoissonDiskSampling(1.f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
-    const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_SHORT));
-
-    auto* meshData = &m_resources.meshes.getMesh(meshID);
-    meshData->attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
-    meshData->attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
-    meshData->vertexSize = cro::MeshBuilder::getVertexSize(meshData->attributes);
-
-    std::vector<Vertex> verts;
-    std::vector<std::uint16_t> indices;
-
-    //verts have a base position with offset radius in red, offset rotation in green and movements speed in blue
-    for (auto i = 0u; i < points.size(); ++i)
+    if (m_swarmMesh == 0)
     {
-        const glm::vec3 p = glm::vec3(points[i][0], points[i][1], points[i][2]);
+        const auto points = pd::PoissonDiskSampling(1.f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
+        const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_SHORT));
 
-        if (glm::length2(p) < (AreaSize * AreaSize))
+        auto* meshData = &m_resources.meshes.getMesh(meshID);
+        meshData->attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
+        meshData->attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+        meshData->vertexSize = cro::MeshBuilder::getVertexSize(meshData->attributes);
+
+        std::vector<Vertex> verts;
+        std::vector<std::uint16_t> indices;
+
+        //verts have a base position with offset radius in red, offset rotation in green and movements speed in blue
+        for (auto i = 0u; i < points.size(); ++i)
         {
-            indices.push_back(static_cast<std::uint16_t>(verts.size()));
+            const glm::vec3 p = glm::vec3(points[i][0], points[i][1], points[i][2]);
 
-            auto& v = verts.emplace_back(p.x, p.y, p.z);
-            //radius
-            v.colour.setRed(0.2f + (static_cast<float>(cro::Util::Random::value(0, 7)) / 10.f));
-            //rotation offset
-            v.colour.setGreen(static_cast<float>(cro::Util::Random::value(0, 9)) / 10.f);
-            //speed (normalised multiplier)
-            v.colour.setBlue(0.6f + (static_cast<float>(cro::Util::Random::value(0, 2)) / 10.f));
-            //animation frame offset
-            v.colour.setAlpha(static_cast<float>(cro::Util::Random::value(0, 3)) / 3.f);
+            if (glm::length2(p) < (AreaSize * AreaSize))
+            {
+                indices.push_back(static_cast<std::uint16_t>(verts.size()));
+
+                auto& v = verts.emplace_back(p.x, p.y, p.z);
+                //radius
+                v.colour.setRed(0.2f + (static_cast<float>(cro::Util::Random::value(0, 7)) / 10.f));
+                //rotation offset
+                v.colour.setGreen(static_cast<float>(cro::Util::Random::value(0, 9)) / 10.f);
+                //speed (normalised multiplier)
+                v.colour.setBlue(0.6f + (static_cast<float>(cro::Util::Random::value(0, 2)) / 10.f));
+                //animation frame offset
+                v.colour.setAlpha(static_cast<float>(cro::Util::Random::value(0, 3)) / 3.f);
+            }
         }
+
+        meshData->vertexCount = points.size();
+        cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
+
+        auto* submesh = &meshData->indexData[0];
+        submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+        cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
+
+        meshData->boundingBox[0] = glm::vec3(AreaStart[0], AreaStart[1], AreaStart[2]);
+        meshData->boundingBox[1] = glm::vec3(AreaEnd[0], AreaEnd[1], AreaEnd[2]);
+        meshData->boundingSphere.centre = meshData->boundingBox[0] + ((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
+        meshData->boundingSphere.radius = glm::length((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
+
+        m_swarmMesh = meshID;
     }
 
-    meshData->vertexCount = points.size();
-    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
-    auto* submesh = &meshData->indexData[0];
-    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
+    const auto shaderID = (info.frameCount << 16) | (info.frameRate << 8) | ShaderID::Swarm;
 
-    meshData->boundingBox[0] = glm::vec3(AreaStart[0], AreaStart[1], AreaStart[2]);
-    meshData->boundingBox[1] = glm::vec3(AreaEnd[0], AreaEnd[1], AreaEnd[2]);
-    meshData->boundingSphere.centre = meshData->boundingBox[0] + ((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
-    meshData->boundingSphere.radius = glm::length((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
+    if (!m_resources.shaders.hasShader(shaderID))
+    {
+        const std::string sizeDef = "#define AREA_SIZE " + std::to_string(AreaSize) + "\n";
+        //TODO define ILLUM for self illuminating eg glowflies
+        const std::string frameDefs = "#define FRAME_RATE " + std::to_string(1.f / info.frameRate) + "\n#define FRAME_COUNT " + std::to_string(info.frameCount) + "\n";
 
-    const std::string sizeDef = "#define AREA_SIZE " + std::to_string(AreaSize) + "\n";
-    //TODO define ILLUM for self illuminating eg glowflies
-    //TODO define FRAME_RATE and FRAME_COUNT if needed
-    m_resources.shaders.loadFromString(ShaderID::Swarm, SwarmVertex, SwarmFragment, sizeDef);
-    const auto& shader = m_resources.shaders.get(ShaderID::Swarm);
-    m_windBuffer.addShader(shader); //time input
-    m_resolutionBuffer.addShader(shader); //viewport size
+        m_resources.shaders.loadFromString(shaderID, SwarmVertex, SwarmFragment, sizeDef + frameDefs);
+        const auto& shader = m_resources.shaders.get(shaderID);
+        m_windBuffer.addShader(shader); //time input
+        m_resolutionBuffer.addShader(shader); //viewport size
+    }
 
-    const auto materialID = m_resources.materials.add(shader);
+    //hmmm we *could* recycle materials based on unique shaders (although they may have different textures)
+    const auto materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
     auto material = m_resources.materials.get(materialID);
     //used for vertical offset
     auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
     material.setProperty("u_noiseTexture", noiseTex);
 
-    //TODO set visual texture based on type param
-    auto& tex = m_resources.textures.get("assets/golf/images/particles/butterfly.png");
+    auto& tex = m_resources.textures.get(info.texture);
     tex.setSmooth(false);
     material.setProperty("u_texture", tex);
 
-
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(position);
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    entity.addComponent<cro::Transform>().setPosition(info.position);
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_swarmMesh), material);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::FlightCam));
+
+    //add some movement to the swarm
+    struct MovementData final
+    {
+        //y'know this may as well be a functor...
+        glm::vec3 basePos = glm::vec3(0.f);
+        std::vector<float> wavetable;
+        std::size_t tableIndex = 0;
+
+        float interp = 0.f;
+
+        explicit MovementData(glm::vec3 p)
+            : basePos(p)
+        {
+            wavetable = cro::Util::Wavetable::sine(1.f);
+            tableIndex = cro::Util::Random::value(0u, wavetable.size() - 1);
+        }
+    };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<MovementData>(info.position);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& data = e.getComponent<cro::Callback>().getUserData<MovementData>();
+
+            data.interp += dt;
+            if (data.interp > 1)
+            {
+                data.interp -= 1.f;
+                data.tableIndex = (data.tableIndex + 1) % data.wavetable.size();
+            }
+
+            auto next = (data.tableIndex + 1) % data.wavetable.size();
+
+            const float x = glm::mix(data.wavetable[data.tableIndex], data.wavetable[next], data.interp);
+
+            const auto cIndex = (data.tableIndex + (data.wavetable.size() / 4)) % data.wavetable.size();
+            next = (cIndex + 1) % data.wavetable.size();
+
+            const float z = glm::mix(data.wavetable[cIndex], data.wavetable[next], data.interp);
+
+
+            e.getComponent<cro::Transform>().setPosition(data.basePos + glm::vec3(x, 0.5f, z));
+
+        };
 
     return entity;
 }

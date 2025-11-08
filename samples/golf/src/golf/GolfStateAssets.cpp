@@ -1336,52 +1336,35 @@ void GolfState::loadMap()
                             else if (name == "light")
                             {
                                 parseLightData(obj);
-                                //if (m_sharedData.nightTime)
-                                //{
-                                //    auto& lightData = holeData.lightData.emplace_back();
-                                //    std::string preset;
+                            }
+                            else if (name == "swarm")
+                            {
+                                Swarm swarmSettings;
+                                for (const auto& sp : obj.getProperties())
+                                {
+                                    const auto spName = sp.getName();
+                                    if (spName == "diffuse")
+                                    {
+                                        swarmSettings.texture = sp.getValue<std::string>();
+                                    }
+                                    else if (spName == "position")
+                                    {
+                                        swarmSettings.position = sp.getValue<glm::vec3>();
+                                    }
+                                    else if (spName == "frame_rate")
+                                    {
+                                        swarmSettings.frameRate = sp.getValue<std::int32_t>();
+                                    }
+                                    else if (spName == "frame_count")
+                                    {
+                                        swarmSettings.frameCount = sp.getValue<std::int32_t>();
+                                    }
+                                }
 
-                                //    const auto& lightProps = obj.getProperties();
-                                //    for (const auto& lightProp : lightProps)
-                                //    {
-                                //        const auto& propName = lightProp.getName();
-                                //        if (propName == "radius")
-                                //        {
-                                //            lightData.radius = std::clamp(lightProp.getValue<float>(), 0.1f, 20.f);
-                                //        }
-                                //        else if (propName == "colour")
-                                //        {
-                                //            lightData.colour = lightProp.getValue<cro::Colour>();
-                                //        }
-                                //        else if (propName == "position")
-                                //        {
-                                //            lightData.position = lightProp.getValue<glm::vec3>();
-                                //            lightData.position.y += 0.01f;
-                                //        }
-                                //        else if (propName == "animation")
-                                //        {
-                                //            auto str = lightProp.getValue<std::string>();
-                                //            auto len = std::min(std::size_t(20), str.length());
-                                //            lightData.animation = str.substr(0, len);
-                                //        }
-                                //        else if (propName == "preset")
-                                //        {
-                                //            preset = lightProp.getValue<std::string>();
-                                //        }
-                                //    }
-
-                                //    if (!preset.empty() && lightPresets.count(preset) != 0)
-                                //    {
-                                //        const auto& p = lightPresets.at(preset);
-                                //        //presets take precedence, except for animation
-                                //        lightData.colour = p.colour;
-                                //        lightData.radius = p.radius;
-                                //        if (lightData.animation.empty())
-                                //        {
-                                //            lightData.animation = p.animation;
-                                //        }
-                                //    }
-                                //}
+                                auto ent = createSwarm(swarmSettings);
+                                ent.getComponent<cro::Model>().setHidden(true);
+                                holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+                                holeData.propEntities.push_back(ent);
                             }
                         }
                     };

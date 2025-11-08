@@ -46,7 +46,7 @@ R"(
 
         VARYING_OUT float v_currentFrame;
 
-        const float particleSize = 28.0;
+        const float particleSize = 32.0;
         const float PI = 3.141;
 #if !defined(AREA_SIZE)
 #define AREA_SIZE 2.5

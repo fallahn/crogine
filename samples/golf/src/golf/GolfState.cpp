@@ -213,6 +213,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_mulliganCount         (0),
     m_terrainBuilder        (sd, m_holeData),
     m_audioPath             ("assets/golf/sound/ambience.xas"),
+    m_swarmMesh             (0),
     m_currentCamera         (CameraID::Player),
     m_idleTime              (cro::seconds(180.f)),
     m_idleCameraIndex       (0),
