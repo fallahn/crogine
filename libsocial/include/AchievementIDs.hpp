@@ -195,6 +195,7 @@ namespace AchievementID
         GetThisOver,
         AnotherLevel,
         Tag,
+        PartyPlanner,
 
         Count
     };

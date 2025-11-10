@@ -594,6 +594,7 @@ void EditTournamentState::buildScene()
                         newTournament.id = TournamentIndex::Custom;
                         resetTournament(newTournament);
                         writeTournamentData(newTournament, filePath.c_str());
+
                     }
 
                     for (auto i = 0u; i < 4u; ++i)
@@ -601,6 +602,8 @@ void EditTournamentState::buildScene()
                         m_tournamentInfo.setCourse(i, m_courseInfo[m_tierIndices[i]].dir);
                     }
                     m_tournamentInfo.save(m_sharedData.tournamentPath);
+
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::PartyPlanner]);
                     quitState();
                 }
             });
@@ -630,7 +633,6 @@ void EditTournamentState::buildScene()
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_preview.thumbnail = entity;
 
-    //const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 168.f, 142.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
