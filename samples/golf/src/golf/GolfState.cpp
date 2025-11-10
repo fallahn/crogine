@@ -2564,14 +2564,20 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cmd.action =
                     [&](cro::Entity e, float)
                 {
-                    formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, m_currentPlayer.terrain == TerrainID::Green);
-
+                    if (m_sharedData.showMinimap)
+                    {
+                        formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, m_currentPlayer.terrain == TerrainID::Green);
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Text>().setString("Score: " + m_uiScores[m_currentPlayer.client][m_currentPlayer.player]);
+                    }
                     auto bounds = cro::Text::getLocalBounds(e);
                     bounds.width = std::floor(bounds.width / 2.f);
                     e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
 
-                    const auto s = m_sharedData.showMinimap ? 1.f : 0.f;
-                    e.getComponent<cro::Transform>().setScale(glm::vec2(s));
+                    /*const auto s = m_sharedData.showMinimap ? 1.f : 0.f;
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(s));*/
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -3010,8 +3016,14 @@ bool GolfState::simulate(float dt)
             cmd.targetFlags = CommandID::UI::PinDistance;
             cmd.action = [&, ballDist, isMultiTarget](cro::Entity e, float)
                 {
-                    formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, false, isMultiTarget);
-
+                    if (m_sharedData.showMinimap)
+                    {
+                        formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, false, isMultiTarget);
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Text>().setString("Score: " + m_uiScores[m_currentPlayer.client][m_currentPlayer.player]);
+                    }
                     auto bounds = cro::Text::getLocalBounds(e);
                     bounds.width = std::floor(bounds.width / 2.f);
                     e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
@@ -7378,8 +7390,14 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.action =
         [&](cro::Entity e, float)
     {
-        formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, player.terrain == TerrainID::Green);
-
+        if (m_sharedData.showMinimap)
+        {
+            formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, player.terrain == TerrainID::Green);
+        }
+        else
+        {
+            e.getComponent<cro::Text>().setString("Score: " + m_uiScores[m_currentPlayer.client][m_currentPlayer.player]);
+        }
         auto bounds = cro::Text::getLocalBounds(e);
         bounds.width = std::floor(bounds.width / 2.f);
         e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
@@ -8136,9 +8154,15 @@ void GolfState::updateActor(const ActorInfo& update)
         cmd.targetFlags = CommandID::UI::PinDistance;
         cmd.action = [&, ballDist, terrain, isMultiTarget](cro::Entity e, float)
         {
-            //hmmm this is actually wrong, because it doesn't use the current (lagged) output of the interpolation
-            formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, terrain == TerrainID::Green, isMultiTarget);
-
+            if (m_sharedData.showMinimap)
+            {
+                //hmmm this is actually wrong, because it doesn't use the current (lagged) output of the interpolation
+                formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, terrain == TerrainID::Green, isMultiTarget);
+            }
+            else
+            {
+                e.getComponent<cro::Text>().setString("Score: " + m_uiScores[m_currentPlayer.client][m_currentPlayer.player]);
+            }
             auto bounds = cro::Text::getLocalBounds(e);
             bounds.width = std::floor(bounds.width / 2.f);
             e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });

@@ -833,6 +833,9 @@ private:
     };
     std::vector<StatBoardEntry> m_statBoardScores;
 
+    //for displaying player score on the UI
+    std::array<std::array<std::string, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_uiScores = {};
+
     void updateLeague();
     void updateLeagueHole();
     void setUIHidden(bool hidden);

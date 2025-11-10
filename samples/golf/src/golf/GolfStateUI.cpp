@@ -609,7 +609,7 @@ void GolfState::buildUI()
     //hole distance
     const auto uiScale = m_sharedData.showMinimap ? 1.f : 0.f;
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setScale(glm::vec2(uiScale));
+    entity.addComponent<cro::Transform>();// .setScale(glm::vec2(uiScale));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PinDistance | CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
     entity.getComponent<UIElement>().depth = 0.05f;
@@ -4547,11 +4547,13 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     padCount++;
                 }
             }
-            totalString += "\n" + formatDistance(distScore);
+            m_uiScores[scores[i].client][scores[i].player] = formatDistance(distScore);
+            totalString += "\n" + m_uiScores[scores[i].client][scores[i].player];
         }
         else
         {
-            totalString += "\n" + std::to_string(scores[i].frontNine);
+            m_uiScores[scores[i].client][scores[i].player] = std::to_string(scores[i].frontNine);
+            totalString += "\n" + m_uiScores[scores[i].client][scores[i].player];
         }
 
         switch (m_sharedData.scoreType)
@@ -4569,18 +4571,21 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 const cro::String str = " (+" + std::to_string(scores[i].parDiff) + ")";
                 strLen += str.size();
                 totalString += str;
+                m_uiScores[scores[i].client][scores[i].player] += str;
             }
             else if (scores[i].parDiff < 0)
             {
                 const cro::String str = " (" + std::to_string(scores[i].parDiff) + ")";
                 strLen += str.size();
                 totalString += str;
+                m_uiScores[scores[i].client][scores[i].player] += str;
             }
             else
             {
                 const cro::String str = " (0)";
                 strLen = str.size();
                 totalString += str;
+                m_uiScores[scores[i].client][scores[i].player] += str;
             }
 
             if (m_sharedData.scoreType == ScoreType::Elimination)
@@ -4599,6 +4604,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     str += std::to_string(scores[i].lives) + " Lives";
                 }
                 totalString += str;
+                m_uiScores[scores[i].client][scores[i].player] += str;
             }
         }
             break;
@@ -4608,20 +4614,24 @@ void GolfState::updateScoreboard(bool updateParDiff)
             if (scores[i].frontNine == 1)
             {
                 totalString += " POINT";
+                m_uiScores[scores[i].client][scores[i].player] += " POINT";
             }
             else
             {
                 totalString += " POINTS";
+                m_uiScores[scores[i].client][scores[i].player] += " POINTS";
             }
             break;
         case ScoreType::Skins:
             if (scores[i].frontNine == 1)
             {
                 totalString += " SKIN";
+                m_uiScores[scores[i].client][scores[i].player] += " SKIN";
             }
             else
             {
                 totalString += " SKINS";
+                m_uiScores[scores[i].client][scores[i].player] += " SKINS";
             }
             break;
         case ScoreType::NearestThePin:
@@ -4630,10 +4640,12 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 if (m_sharedData.imperialMeasurements)
                 {
                     totalString += "yd";
+                    m_uiScores[scores[i].client][scores[i].player] += "yd";
                 }
                 else
                 {
                     totalString += "m";
+                    m_uiScores[scores[i].client][scores[i].player] += "m";
                 }
 
                 for(auto j = 0; j < padCount; ++j)
@@ -4641,10 +4653,12 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     totalString += " ";
                 }
                 totalString += " - " + std::to_string(scores[i].frontNine) + " Point";
+                m_uiScores[scores[i].client][scores[i].player] += std::to_string(scores[i].frontNine) + " Point";
 
                 if (scores[i].frontNine != 1)
                 {
                     totalString += "s";
+                    m_uiScores[scores[i].client][scores[i].player] += "s";
                 }
             }
             else
@@ -4652,10 +4666,12 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 if (m_sharedData.imperialMeasurements)
                 {
                     totalString += " YARDS";
+                    m_uiScores[scores[i].client][scores[i].player] += " YARDS";
                 }
                 else
                 {
                     totalString += " METRES";
+                    m_uiScores[scores[i].client][scores[i].player] += " METRES";
                 }
             }
             break;
@@ -4668,6 +4684,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
         totalString += "\n";
     }
 
+    const bool isBackNine = m_currentHole > ((m_sharedData.scoreType == ScoreType::ShortRound) ? 5 : 8);
     if (page2)
     {
         const auto getSeparator =
@@ -4727,11 +4744,20 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     }
                 }
                 totalString += "\n" + formatDistance(distScore);
+
+                if (isBackNine)
+                {
+                    m_uiScores[scores[i].client][scores[i].player] = formatDistance(distScore);
+                }
             }
             else
             {
                 separator = getSeparator(scores[i].backNine);
                 totalString += "\n" + std::to_string(scores[i].backNine);
+                if (isBackNine)
+                {
+                    m_uiScores[scores[i].client][scores[i].player] = std::to_string(scores[i].backNine);
+                }
             }
             switch (m_sharedData.scoreType)
             {
@@ -4749,18 +4775,30 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     const cro::String str = " (+" + std::to_string(scores[i].parDiff) + ")";
                     strLen += str.size();
                     totalString += str;
+                    if (isBackNine)
+                    {
+                        m_uiScores[scores[i].client][scores[i].player] += str;
+                    }
                 }
                 else if (scores[i].parDiff < 0)
                 {
                     const cro::String str = " (" + std::to_string(scores[i].parDiff) + ")";
                     strLen += str.size();
                     totalString += str;
+                    if (isBackNine)
+                    {
+                        m_uiScores[scores[i].client][scores[i].player] += str;
+                    }
                 }
                 else
                 {
                     const cro::String str = " (0)";
                     strLen += str.size();
                     totalString += str;
+                    if (isBackNine)
+                    {
+                        m_uiScores[scores[i].client][scores[i].player] += str;
+                    }
                 }
 
                 if (m_sharedData.scoreType == ScoreType::Elimination)
@@ -4779,6 +4817,11 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         str += std::to_string(scores[i].lives) + " Lives";
                     }
                     totalString += str;
+
+                    if (isBackNine)
+                    {
+                        m_uiScores[scores[i].client][scores[i].player] += str;
+                    }
                 }
             }
                 break;
@@ -4793,30 +4836,54 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 if (scores[i].total == 1)
                 {
                     totalString += " POINT";
+                    if (isBackNine)
+                    {
+                        m_uiScores[scores[i].client][scores[i].player] += " POINT";
+                    }
                 }
                 else
                 {
                     totalString += " POINTS";
+                    if (isBackNine)
+                    {
+                        m_uiScores[scores[i].client][scores[i].player] += " POINTS";
+                    }
                 }
                 break;
             case ScoreType::Match:
                 if (scores[i].backNine == 1)
                 {
                     totalString += " POINT";
+                    if (isBackNine)
+                    {
+                        m_uiScores[scores[i].client][scores[i].player] += " POINT";
+                    }
                 }
                 else
                 {
                     totalString += " POINTS";
+                    if (isBackNine)
+                    {
+                        m_uiScores[scores[i].client][scores[i].player] += " POINTS";
+                    }
                 }
                 break;
             case ScoreType::Skins:
                 if (scores[i].backNine == 1)
                 {
                     totalString += " SKIN";
+                    if (isBackNine)
+                    {
+                        m_uiScores[scores[i].client][scores[i].player] += " SKIN";
+                    }
                 }
                 else
                 {
                     totalString += " SKINS";
+                    if (isBackNine)
+                    {
+                        m_uiScores[scores[i].client][scores[i].player] += " SKINS";
+                    }
                 }
                 break;
             case ScoreType::NearestThePin:
@@ -4825,10 +4892,18 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     if (m_sharedData.imperialMeasurements)
                     {
                         totalString += "yd";
+                        if (isBackNine)
+                        {
+                            m_uiScores[scores[i].client][scores[i].player] += "yd";
+                        }
                     }
                     else
                     {
                         totalString += "m";
+                        if (isBackNine)
+                        {
+                            m_uiScores[scores[i].client][scores[i].player] += "m";
+                        }
                     }
                     for (auto j = 0; j < padCount; ++j)
                     {
@@ -4836,10 +4911,18 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     }
                     //font nine and back nine both contain the total so don't sum them
                     totalString += " - " + std::to_string(/*scores[i].frontNine +*/ scores[i].backNine) + " Point";
+                    if (isBackNine)
+                    {
+                        m_uiScores[scores[i].client][scores[i].player] += std::to_string(scores[i].backNine) + " Point";
+                    }
 
                     if ((scores[i].frontNine + scores[i].backNine) != 1)
                     {
                         totalString += "s";
+                        if (isBackNine)
+                        {
+                            m_uiScores[scores[i].client][scores[i].player] += "s";
+                        }
                     }
                 }
                 else
@@ -4847,10 +4930,18 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     if (m_sharedData.imperialMeasurements)
                     {
                         totalString += " YARDS";
+                        if (isBackNine)
+                        {
+                            m_uiScores[scores[i].client][scores[i].player] += " YARDS";
+                        }
                     }
                     else
                     {
                         totalString += " METRES";
+                        if (isBackNine)
+                        {
+                            m_uiScores[scores[i].client][scores[i].player] += " METRES";
+                        }
                     }
                 }
                 break;

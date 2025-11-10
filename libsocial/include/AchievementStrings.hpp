@@ -638,8 +638,8 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*131*/TrophyID::GoldCup,
     /*132*/TrophyID::SilverCup,
     /*133*/TrophyID::SilverFigure,
-    /*143*/TrophyID::BronzeCup,
-    /*144*/TrophyID::BronzeCup,
+    /*134*/TrophyID::BronzeCup,
+    /*135*/TrophyID::BronzeCup,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
