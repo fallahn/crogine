@@ -6010,6 +6010,13 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                 }
+                else if (animID == AnimationID::Idle)
+                {
+                    if (getClub() >= ClubID::PitchWedge)
+                    {
+                        animID = AnimationID::ChipIdle;
+                    }
+                }
 
                 //TODO scale club model to zero if not idle or swing
 
@@ -7617,7 +7624,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     //this just makes sure to update the direction indicator
     //regardless of whether or not we actually switched clubs
     //it's a hack where above case tells the input parser not to update the club (because we're the same player)
-    //but we've also landed on th green and therefor auto-switched to a putter
+    //but we've also landed on the green and therefor auto-switched to a putter
     auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 
@@ -7646,6 +7653,18 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             const auto& models = m_clubModels.at(m_activeAvatar->clubModelID);
             m_activeAvatar->hands->setModel(models.models[models.indices[getClub()]]);
             m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
+
+            //play the correct stance based on current club (only applies if not overridden by remote anim packet)
+            if (getClub() >= ClubID::PitchWedge)
+            {
+                const auto anim = m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::ChipIdle];
+                m_activeAvatar->model.getComponent<cro::Skeleton>().play(anim);
+            }
+            else
+            {
+                const auto anim = m_avatars[m_currentPlayer.client][m_currentPlayer.player].animationIDs[AnimationID::Idle];
+                m_activeAvatar->model.getComponent<cro::Skeleton>().play(anim);
+            }
         }
 
         //set just far enough the flag shows in the distance
