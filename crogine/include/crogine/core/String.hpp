@@ -285,6 +285,7 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     std::basic_string<Uint8> toUtf8() const;
+    std::basic_string<char> toUtf8Char() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Convert the Unicode string to a UTF-16 string

@@ -281,7 +281,6 @@ void GolfState::registerDebugCommands()
     //registerWindow([&]() 
     //    {
     //        ImGui::Begin("Cloud Cover");
-    //        
     //        /*auto light = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour();
     //        ImGui::Text("%3.2f, %3.2f, %3.2f", light.getRed(), light.getGreen(), light.getBlue());
 

@@ -191,6 +191,18 @@ std::basic_string<Uint8> String::toUtf8() const
     return output;
 }
 
+std::basic_string<char> String::toUtf8Char() const
+{
+    // Prepare the output string
+    std::basic_string<char> output;
+    output.reserve(m_string.length());
+
+    // Convert
+    Utf32::toUtf8(m_string.begin(), m_string.end(), std::back_inserter(output));
+
+    return output;
+}
+
 
 ////////////////////////////////////////////////////////////
 std::basic_string<Uint16> String::toUtf16() const
