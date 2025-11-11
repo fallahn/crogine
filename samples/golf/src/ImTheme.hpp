@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Colordome-32.hpp"
 #include "golf/SharedStateData.hpp"
 
 #include <crogine/gui/Gui.hpp>
@@ -76,7 +77,7 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.7843137383460999f, 0.7215686440467834f, 0.6235294342041016f, 1.0f);
     style.Colors[ImGuiCol_Tab] = ImVec4(0.1882352977991104f, 0.3333333432674408f, 0.3568627536296844f, 1.0f);
     style.Colors[ImGuiCol_TabHovered] = ImVec4(0.4313725531101227f, 0.7019608020782471f, 0.615686297416687f, 1.0f);
-    style.Colors[ImGuiCol_TabActive] = ImVec4(0.4313725531101227f, 0.7019608020782471f, 0.615686297416687f, 1.0f);
+    style.Colors[ImGuiCol_TabActive] = CD32::Colours[CD32::Yellow];// ImVec4(0.4313725531101227f, 0.7019608020782471f, 0.615686297416687f, 1.0f);
     style.Colors[ImGuiCol_TabUnfocused] = ImVec4(0.1882352977991104f, 0.3333333432674408f, 0.3568627536296844f, 1.0f);
     style.Colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.1882352977991104f, 0.3333333432674408f, 0.3568627536296844f, 1.0f);
     style.Colors[ImGuiCol_PlotLines] = ImVec4(1.0f, 0.9725490212440491f, 0.8823529481887817f, 1.0f);
@@ -90,7 +91,7 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     style.Colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.0f, 0.9725490212440491f, 0.8823529481887817f, 1.0f);
     style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.4313725531101227f, 0.7450980544090271f, 0.4392156898975372f, 1.0f);
     style.Colors[ImGuiCol_DragDropTarget] = ImVec4(0.9490196108818054f, 0.8117647171020508f, 0.3607843220233917f, 1.0f);
-    style.Colors[ImGuiCol_NavHighlight] = ImVec4(0.4470588266849518f, 0.4470588266849518f, 0.8980392217636108f, 0.800000011920929f);
+    style.Colors[ImGuiCol_NavHighlight] = CD32::Colours[CD32::Yellow];// ImVec4(0.4470588266849518f, 0.4470588266849518f, 0.8980392217636108f, 0.800000011920929f);
     style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.0f, 0.9725490212440491f, 0.8823529481887817f, 1.0f);
     style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.7843137383460999f, 0.7215686440467834f, 0.6235294342041016f, 1.0f);
     style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.2000000029802322f, 0.2000000029802322f, 0.2000000029802322f, 0.3499999940395355f);

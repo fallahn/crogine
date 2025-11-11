@@ -110,8 +110,6 @@ enum class GameMode
 struct SharedCourseData;
 struct SharedStateData final
 {
-    std::unique_ptr<cro::MumbleLink> mumLink;
-
     inv::Inventory inventory;
     //which loadout to display in the editor, else display shop if == inv::MaxLoadouts
     std::uint32_t activeLoadout = inv::Inventory::MaxLoadouts;
@@ -128,6 +126,7 @@ struct SharedStateData final
     ChatFonts chatFonts;
     std::array<ImFont*, 3u> helpFonts = { nullptr, nullptr, nullptr };
     bool showHelp = false;
+    bool showOptionsWindow = false;
 
     bool useOSKBuffer = false; //if true output of OSK is buffered here instead of sending codepoints
     cro::String OSKBuffer;

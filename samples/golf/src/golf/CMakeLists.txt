@@ -128,4 +128,9 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/server/ServerLobbyGame.cpp
   ${PROJECT_DIR}/golf/server/ServerLobbyState.cpp
   ${PROJECT_DIR}/golf/server/ServerVoice.cpp
-  ${PROJECT_DIR}/golf/server/SnookerDirector.cpp)
+  ${PROJECT_DIR}/golf/server/SnookerDirector.cpp
+
+  ${PROJECT_DIR}/golf/ui/EventHandler.cpp
+  ${PROJECT_DIR}/golf/ui/Options.cpp
+
+  )

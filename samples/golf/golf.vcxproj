@@ -719,6 +719,8 @@
     <ClCompile Include="src\golf\TrophyState.cpp" />
     <ClCompile Include="src\golf\TutorialDirector.cpp" />
     <ClCompile Include="src\golf\TutorialState.cpp" />
+    <ClCompile Include="src\golf\ui\EventHandler.cpp" />
+    <ClCompile Include="src\golf\ui\Options.cpp" />
     <ClCompile Include="src\golf\UnlockState.cpp" />
     <ClCompile Include="src\golf\VatAnimationSystem.cpp" />
     <ClCompile Include="src\golf\VatFile.cpp" />
@@ -943,6 +945,7 @@
     <ClInclude Include="src\golf\TutorialState.hpp" />
     <ClInclude Include="src\golf\UnlockItems.hpp" />
     <ClInclude Include="src\golf\UnlockState.hpp" />
+    <ClInclude Include="src\golf\UserInterface.hpp" />
     <ClInclude Include="src\golf\Utility.hpp" />
     <ClInclude Include="src\golf\VatFile.hpp" />
     <ClInclude Include="src\golf\VatAnimationSystem.hpp" />

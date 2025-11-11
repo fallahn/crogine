@@ -112,6 +112,12 @@
     <Filter Include="Source Files\sportsball">
       <UniqueIdentifier>{774b2a37-f5e3-4e3f-8adf-d216c7e3173f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf\client\user interface">
+      <UniqueIdentifier>{0c56be52-4a26-4eb7-bd7e-82ad8a459891}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\client\user interface">
+      <UniqueIdentifier>{2b8d1138-3a71-4b41-ac70-d7a41b84f7fc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -689,6 +695,12 @@
     </ClCompile>
     <ClCompile Include="src\golf\CustomTournament.cpp">
       <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ui\Options.cpp">
+      <Filter>Source Files\golf\client\user interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ui\EventHandler.cpp">
+      <Filter>Source Files\golf\client\user interface</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1453,6 +1465,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\CustomTournament.hpp">
       <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\UserInterface.hpp">
+      <Filter>Header Files\golf\client\user interface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

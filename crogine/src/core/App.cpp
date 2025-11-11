@@ -380,7 +380,7 @@ void App::run(bool resetSettings)
 
         ImGui::CreateContext();
         setImguiStyle(&ImGui::GetStyle());
-        //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad | ImGuiConfigFlags_NavEnableKeyboard;
 
         ImGui_ImplSDL2_InitForOpenGL(m_window.m_window, m_window.m_mainContext);
 #ifdef PLATFORM_DESKTOP

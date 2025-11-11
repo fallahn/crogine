@@ -75,6 +75,7 @@ source distribution.
 #include "golf/ClubInfoState.hpp"
 #include "golf/EditTournamentState.hpp"
 #include "golf/XPAwardStrings.hpp"
+#include "golf/UserInterface.hpp"
 
 #include "editor/BushState.hpp"
 #include "sqlite/SqliteState.hpp"
@@ -141,22 +142,7 @@ namespace
     bool safeMode = false;
 #endif
 
-    struct HelpNav final
-    {
-        std::int32_t chapterCount = 0;
-        std::int32_t scrollIndex = 0;
-        std::int32_t targetIndex = 0;
-
-        std::int32_t selectedScroll = 0;
-
-        bool wantsScroll = false;
-
-        float manualScroll = 0.f;
-        float currTime = 0.f;
-        static constexpr float ScrollTime = 0.025f;
-        static constexpr float ScrollAmount = 12.f;
-
-    }helpNav;
+    HelpNav helpNav;
 
     els::SharedStateData elsShared;
 
@@ -294,72 +280,13 @@ void GolfGame::setSafeModeEnabled(bool sm)
 
 void GolfGame::handleEvent(const cro::Event& evt)
 {
-    if (m_sharedData.showHelp)
+    //handles UI close events such as how to play
+    //or the options menu
+    if (handleTopLevelEvent(evt, m_sharedData, helpNav))
     {
-        const auto doScroll =
-            [&]()
-            {
-                helpNav.wantsScroll = true;
-                auto* msg = postMessage<SystemEvent>(MessageID::SystemMessage);
-                msg->type = SystemEvent::MenuSwitched;
-            };
-
-        const auto scrollUp = 
-            [&]()
-            {
-                helpNav.targetIndex = (helpNav.selectedScroll + (helpNav.chapterCount - 1)) % helpNav.chapterCount;
-                doScroll();
-            };
-        const auto scrollDown = 
-            [&]()
-            {
-                helpNav.targetIndex = (helpNav.selectedScroll + 1) % helpNav.chapterCount;
-                doScroll();
-            };
-
-        switch (evt.type)
-        {
-        default: break;
-        case SDL_MOUSEBUTTONUP:
-            if (evt.button.button == SDL_BUTTON_RIGHT)
-            {
-                m_sharedData.showHelp = false;
-            }
-            break;
-        case SDL_CONTROLLERBUTTONUP:
-            switch (evt.cbutton.button)
-            {
-            default: break;
-            case cro::GameController::ButtonB:
-                m_sharedData.showHelp = false;
-                break;
-            case cro::GameController::DPadDown:
-                scrollDown();
-                break;
-            case cro::GameController::DPadUp:
-                scrollUp();
-                break;
-            }
-            break;
-        case SDL_KEYUP:
-            switch (evt.key.keysym.sym)
-            {
-            default: break;
-            case SDLK_ESCAPE:
-            case SDLK_BACKSPACE:
-                m_sharedData.showHelp = false;
-                break;
-            case SDLK_DOWN:
-                scrollDown();
-                break;
-            case SDLK_UP:
-                scrollUp();
-                break;
-            }
-            break;
-        }
         return;
     }
+
 
     switch (evt.type)
     {
@@ -405,6 +332,9 @@ void GolfGame::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_DIVIDE:
             m_sharedData.showHelp = true;
+            break;
+        case SDLK_o:
+            m_sharedData.showOptionsWindow = !m_sharedData.showOptionsWindow;
             break;
         }
         break;
@@ -680,8 +610,6 @@ void GolfGame::simulate(float dt)
 
     Achievements::update();
     m_progressIcon->update(dt);
-
-    m_sharedData.mumLink->update();
 }
 
 void GolfGame::render()
@@ -1096,18 +1024,33 @@ bool GolfGame::initialise()
             m_stateStack.pushState(StateID::ScrubBackground);
         });
 
-#ifdef USE_GNS
-    registerCommand("discord_connect",
-        [](const std::string&) 
+    registerWindow([&]()
         {
-            Discord::connect(); 
+            if (m_sharedData.showOptionsWindow)
+            {
+                optionsWindow(m_sharedData);
+
+                if (!m_sharedData.showOptionsWindow)
+                {
+                    //we must have closed so store the settings
+                    saveSettings();
+                    savePreferences();
+                }
+            }
         });
 
-    registerCommand("discord_disconnect",
-        [](const std::string&) 
-        {
-            Discord::disconnect(); 
-        });
+#ifdef USE_GNS
+    //registerCommand("discord_connect",
+    //    [](const std::string&) 
+    //    {
+    //        Discord::connect(); 
+    //    });
+
+    //registerCommand("discord_disconnect",
+    //    [](const std::string&) 
+    //    {
+    //        Discord::disconnect(); 
+    //    });
 #endif
 
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
@@ -1270,11 +1213,6 @@ bool GolfGame::initialise()
     }*/
     //Discord::disconnect();
 #endif
-
-    m_sharedData.mumLink = std::make_unique<cro::MumbleLink>(cro::String("Super Video Golf"), cro::String("Owen's Finest."));
-    m_sharedData.mumLink->setIdentity(m_profileData.playerProfiles[0].playerData.name);
-    //m_sharedData.mumLink->connect();
-
     //cro::App::getWindow().setCursor(&m_cursor);
 
     return true;
