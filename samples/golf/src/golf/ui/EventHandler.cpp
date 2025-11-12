@@ -104,7 +104,7 @@ bool handleTopLevelEvent(const cro::Event& evt, SharedStateData& sharedData, Hel
         }
         return true;
     }
-
+    return false; //temp disable the below
     //TODO this is likely to be much the same across windows
     //so we can probably recycle this.
     if (sharedData.showOptionsWindow)

@@ -110,6 +110,8 @@ enum class GameMode
 struct SharedCourseData;
 struct SharedStateData final
 {
+    std::array<ImGuiStyle, 6u> uiScales = {};
+
     inv::Inventory inventory;
     //which loadout to display in the editor, else display shop if == inv::MaxLoadouts
     std::uint32_t activeLoadout = inv::Inventory::MaxLoadouts;

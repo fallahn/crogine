@@ -3581,11 +3581,17 @@ void ImGui::RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFl
     }
     else
     {
-        const float distance = 3.0f + thickness * 0.5f;
+        const float distance = 2.0f + thickness * 0.5f;
         display_rect.Expand(ImVec2(distance, distance));
         bool fully_visible = window->ClipRect.Contains(display_rect);
+
         if (!fully_visible)
-            window->DrawList->PushClipRect(display_rect.Min, display_rect.Max);
+        {
+            auto clipRect = display_rect;
+            clipRect.Expand({2.f,1.f});
+            window->DrawList->PushClipRect(clipRect.Min, clipRect.Max);
+            //window->DrawList->PushClipRect(display_rect.Min, display_rect.Max);
+        }
         window->DrawList->AddRect(display_rect.Min, display_rect.Max, GetColorU32(ImGuiCol_NavHighlight), rounding, 0, thickness);
         if (!fully_visible)
             window->DrawList->PopClipRect();

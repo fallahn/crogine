@@ -39,8 +39,11 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     style.TabBorderSize = 0.0f;
     style.TabMinWidthForCloseButton = 0.0f;
     style.ColorButtonPosition = ImGuiDir_Right;
-    style.ButtonTextAlign = ImVec2(0.6f, 0.5f);
+    style.ButtonTextAlign = ImVec2(0.5f, 0.5f);
     style.SelectableTextAlign = ImVec2(0.0f, 0.0f);
+    style.AntiAliasedLines = true;
+    //style.AntiAliasedLinesUseTex = true;
+    style.AntiAliasedFill = true;
 
     style.Colors[ImGuiCol_Text] = ImVec4(1.0f, 0.9725490212440491f, 0.8823529481887817f, 1.0f);
     style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.7843137383460999f, 0.7215686440467834f, 0.6235294342041016f, 1.0f);
@@ -77,7 +80,7 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.7843137383460999f, 0.7215686440467834f, 0.6235294342041016f, 1.0f);
     style.Colors[ImGuiCol_Tab] = ImVec4(0.1882352977991104f, 0.3333333432674408f, 0.3568627536296844f, 1.0f);
     style.Colors[ImGuiCol_TabHovered] = ImVec4(0.4313725531101227f, 0.7019608020782471f, 0.615686297416687f, 1.0f);
-    style.Colors[ImGuiCol_TabActive] = CD32::Colours[CD32::Yellow];// ImVec4(0.4313725531101227f, 0.7019608020782471f, 0.615686297416687f, 1.0f);
+    style.Colors[ImGuiCol_TabActive] = ImVec4(0.4313725531101227f, 0.7019608020782471f, 0.615686297416687f, 1.0f);
     style.Colors[ImGuiCol_TabUnfocused] = ImVec4(0.1882352977991104f, 0.3333333432674408f, 0.3568627536296844f, 1.0f);
     style.Colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.1882352977991104f, 0.3333333432674408f, 0.3568627536296844f, 1.0f);
     style.Colors[ImGuiCol_PlotLines] = ImVec4(1.0f, 0.9725490212440491f, 0.8823529481887817f, 1.0f);
@@ -95,7 +98,14 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.0f, 0.9725490212440491f, 0.8823529481887817f, 1.0f);
     style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.7843137383460999f, 0.7215686440467834f, 0.6235294342041016f, 1.0f);
     style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.2000000029802322f, 0.2000000029802322f, 0.2000000029802322f, 0.3499999940395355f);
+    sd.uiScales[0] = style;
 
+    //keep a copy for each view scale so we can apply to ImGui as needed
+    for (auto i = 1u; i < sd.uiScales.size(); ++i)
+    {
+        sd.uiScales[i] = style;
+        sd.uiScales[i].ScaleAllSizes(static_cast<float>(i + 1));
+    }
 
     //ImGui::GetIO().FontGlobalScale = 2.f;
 
