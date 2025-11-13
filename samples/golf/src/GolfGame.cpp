@@ -1201,6 +1201,7 @@ bool GolfGame::initialise()
 
     applyImGuiStyle(m_sharedData);
     m_sharedData.flagPreview.init(m_sharedData.flagPath);
+    m_sharedData.flagPreview.setText(m_sharedData.flagText);
 
     if (m_sharedData.webSocket)
     {

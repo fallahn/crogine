@@ -147,7 +147,7 @@ static inline void settingsTab(SharedStateData& sharedData, float scale)
                 if (ImGui::Selectable(NumTypes[i].c_str(), selected))
                 {
                     sharedData.flagText = i;
-                    //TODO update preview
+                    sharedData.flagPreview.setText(i);
                 }
                 if(selected)
                 {

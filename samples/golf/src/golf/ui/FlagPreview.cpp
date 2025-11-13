@@ -29,9 +29,12 @@ source distribution.
 
 #include "FlagPreview.hpp"
 #include "Content.hpp"
+#include "../GameConsts.hpp"
 
+#include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/SimpleText.hpp>
 
 namespace
 {
@@ -42,7 +45,7 @@ namespace
 }
 
 FlagPreview::FlagPreview()
-: m_index(0)
+: m_index(0), m_textIndex(0)
 {}
 
 void FlagPreview::init(const std::string& currPath)
@@ -88,14 +91,14 @@ void FlagPreview::init(const std::string& currPath)
     }
 
     const auto RowCount = (mappedFlags.size() / ColCount) + 1;
-    m_texture.create(ColCount * PreviewWidth, RowCount * PreviewHeight, false);
+    m_textures[0].create(ColCount * PreviewWidth, RowCount * PreviewHeight, false);
 
     //load the flags and render to render target
     std::uint32_t loadedCount = 0;
     cro::Texture tex;
     cro::SimpleQuad quad;
 
-    m_texture.clear(cro::Colour::Blue);
+    m_textures[0].clear(cro::Colour::Blue);
     for (const auto& [path, flag] : mappedFlags)
     {
         const auto fullPath = path + flag;
@@ -123,14 +126,45 @@ void FlagPreview::init(const std::string& currPath)
             break;
         }
     }
-    m_texture.display();
+    m_textures[0].display();
+
+
+    cro::Font font;
+    font.loadFromFile("assets/golf/fonts/IBM_CGA.ttf");
+
+    cro::SimpleText text(font);
+    text.setCharacterSize(32);
+    text.setString("1");
+    text.setFillColour(LeaderboardTextDark);
+
+    quad.setTexture(m_textures[0].getTexture());
+    quad.setScale(glm::vec2(1.f));
+    quad.setPosition(glm::vec2(0.f));
+
+    //render alt versions to preview number
+    for (auto i = 1; i < m_textures.size(); ++i)
+    {
+        m_textures[i].create(m_textures[0].getSize().x, m_textures[0].getSize().y, false);
+
+        m_textures[i].clear();
+        quad.draw();
+
+        for (auto j = 0u; j < m_flagPaths.size(); ++j)
+        {
+            text.setPosition({ (j % ColCount) * PreviewWidth, (j / ColCount) * PreviewHeight });
+            text.move({ 67.f, 44.f });
+            text.draw();
+        }
+        m_textures[i].display();
+        text.setFillColour(TextNormalColour);
+    }
 }
 
 //public
 cro::FloatRect FlagPreview::getUV() const
 {
     static constexpr float Width = 1.f / ColCount;
-    const float Height = PreviewHeight / m_texture.getSize().y;
+    const float Height = PreviewHeight / m_textures[0].getSize().y;
 
     const float left = Width * (m_index % ColCount);
     const float bottom = Height * (m_index / ColCount);
@@ -156,4 +190,9 @@ void FlagPreview::next()
 void FlagPreview::prev()
 {
     m_index = (m_index + (m_flagPaths.size() -1)) % m_flagPaths.size();
+}
+
+void FlagPreview::setText(std::size_t index)
+{
+    m_textIndex = index;
 }

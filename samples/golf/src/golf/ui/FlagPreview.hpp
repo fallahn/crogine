@@ -43,16 +43,18 @@ public:
     //sigh we need to lazy-load this
     void init(const std::string&);
 
-    const cro::Texture& getTexure() const { return m_texture.getTexture(); }
+    const cro::Texture& getTexure() const { return m_textures[m_textIndex].getTexture(); }
     cro::FloatRect getUV() const;
     glm::vec2 getSize() const;
     std::string getPath() const;
 
     void next();
     void prev();
+    void setText(std::size_t);
 
 private:
-    cro::RenderTexture m_texture;
+    std::array<cro::RenderTexture, 3u> m_textures;
     std::vector<std::string> m_flagPaths;
     std::size_t m_index;
+    std::size_t m_textIndex;
 };
