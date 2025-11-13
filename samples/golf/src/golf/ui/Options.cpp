@@ -55,10 +55,13 @@ void showTip(const std::string& s)
     }
 }
 
-static inline void settingsTab(SharedStateData& sharedData, float scale)
+static inline void settingsTab(SharedStateData& sharedData, float scale, OptionsContext& optionsContext)
 {
-    if (ImGui::BeginTabItem("Game Settings"))
+    const auto active = optionsContext.requestedTab == OptionsContext::TabID::Game;
+    if (ImGui::BeginTabItem("Game Settings", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
+        optionsContext.tabIndex = OptionsContext::TabID::Game;
+
         ImGui::BeginChild("##settings_child", {-1.f, -1.f}, ImGuiChildFlags_NavFlattened);
         ImGui::SeparatorText("Display");
         ImGui::Checkbox("Show Flag Beacon", &sharedData.showBeacon); showTip("Display a coloured beacon at the flag visible from a distance");
@@ -162,7 +165,6 @@ static inline void settingsTab(SharedStateData& sharedData, float scale)
         ImGui::NewLine();
         ImGui::NewLine();
         ImGui::SeparatorText("Difficulty & Behaviour");
-        //ImGui::Text("Difficulty & Behaviour");
         ImGui::Checkbox("Enable Putt Assist", &sharedData.showPuttingPower); showTip("Display a small flag above the power bar when putting to estimate distance");
         ImGui::Checkbox("Precise Range Indicator", &sharedData.calculateRange); showTip("Accounts for terrain elevation and wind when drawing the range indicator instead of estimating the range");
         ImGui::Checkbox("Use Full UI", &sharedData.showMinimap); showTip("Uncheck this for a minimal UI, hiding the minimap for increased challenge");
@@ -315,67 +317,73 @@ static inline void settingsTab(SharedStateData& sharedData, float scale)
     }
 }
 
-static inline void keyboardTab(SharedStateData&)
+static inline void keyboardTab(SharedStateData& sharedData, float scale, OptionsContext& optionsContext)
 {
-    if (ImGui::BeginTabItem("Keyboard"))
+    const auto active = optionsContext.requestedTab == OptionsContext::TabID::Keyboard;
+    if (ImGui::BeginTabItem("Keyboard", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
-
+        optionsContext.tabIndex = OptionsContext::TabID::Keyboard;
 
         ImGui::EndTabItem();
     }
 }
 
-static inline void controllerTab(SharedStateData&)
+static inline void controllerTab(SharedStateData& sharedData, float scale, OptionsContext& optionsContext)
 {
-    if (ImGui::BeginTabItem("Controller"))
+    const auto active = optionsContext.requestedTab == OptionsContext::TabID::Controller;
+    if (ImGui::BeginTabItem("Controller", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
-
+        optionsContext.tabIndex = OptionsContext::TabID::Controller;
 
         ImGui::EndTabItem();
     }
 }
 
-static inline void displayTab(SharedStateData&)
+static inline void displayTab(SharedStateData& sharedData, float scale, OptionsContext& optionsContext)
 {
-    if (ImGui::BeginTabItem("Display"))
+    const auto active = optionsContext.requestedTab == OptionsContext::TabID::Display;
+    if (ImGui::BeginTabItem("Display", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
-
+        optionsContext.tabIndex = OptionsContext::TabID::Display;
 
         ImGui::EndTabItem();
     }
 }
 
-static inline void audioTab(SharedStateData&)
+static inline void audioTab(SharedStateData& sharedData, float scale, OptionsContext& optionsContext)
 {
-    if (ImGui::BeginTabItem("Audio"))
+    const auto active = optionsContext.requestedTab == OptionsContext::TabID::Audio;
+    if (ImGui::BeginTabItem("Audio", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
-
+        optionsContext.tabIndex = OptionsContext::TabID::Audio;
 
         ImGui::EndTabItem();
     }
 }
 
-static inline void achievementsTab()
+static inline void achievementsTab(float scale, OptionsContext& optionsContext)
 {
-    if (ImGui::BeginTabItem("Achievements"))
+    const auto active = optionsContext.requestedTab == OptionsContext::TabID::Achievements;
+    if (ImGui::BeginTabItem("Achievements", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
-
+        optionsContext.tabIndex = OptionsContext::TabID::Achievements;
 
         ImGui::EndTabItem();
     }
 }
 
-static inline void statsTab()
+static inline void statsTab(float scale, OptionsContext& optionsContext)
 {
-    if (ImGui::BeginTabItem("Stats"))
+    const auto active = optionsContext.requestedTab == OptionsContext::TabID::Stats;
+    if (ImGui::BeginTabItem("Stats", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
-
+        optionsContext.tabIndex = OptionsContext::TabID::Stats;
 
         ImGui::EndTabItem();
     }
 }
 
-void optionsWindow(SharedStateData& sharedData)
+void optionsWindow(SharedStateData& sharedData, OptionsContext& optionsContext)
 {
     tipText = {};
 
@@ -405,13 +413,13 @@ void optionsWindow(SharedStateData& sharedData)
     const float TabPaneWidth = size.x - ((((NavColWidth * scale) + (HPadding * 2.f)) * 2.f));
     ImGui::BeginChild("##tab_pane", { TabPaneWidth, -1.f }, ImGuiChildFlags_Border | ImGuiChildFlags_NavFlattened);
     ImGui::BeginTabBar("##tab_bar");
-    settingsTab(sharedData, scale);
-    keyboardTab(sharedData);
-    controllerTab(sharedData);
-    displayTab(sharedData);
-    audioTab(sharedData);
-    achievementsTab();
-    statsTab();
+    settingsTab(sharedData, scale, optionsContext);
+    keyboardTab(sharedData, scale, optionsContext);
+    controllerTab(sharedData, scale, optionsContext);
+    displayTab(sharedData, scale, optionsContext);
+    audioTab(sharedData, scale, optionsContext);
+    achievementsTab(scale, optionsContext);
+    statsTab(scale, optionsContext);
     ImGui::EndTabBar();
     ImGui::EndChild(); //tab_pane
     ImGui::PopStyleColor(); //child BG
@@ -451,4 +459,6 @@ void optionsWindow(SharedStateData& sharedData)
     ImGui::PopFont();
 
     ImGui::GetStyle() = sharedData.uiScales[0];
+
+    optionsContext.requestedTab = -1;
 }

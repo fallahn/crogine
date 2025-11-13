@@ -51,8 +51,26 @@ struct HelpNav final
     static constexpr float ScrollAmount = 12.f;
 };
 
+struct OptionsContext final
+{
+    struct TabID final
+    {
+        enum
+        {
+            Game, Keyboard, Controller,
+            Display, Audio, Achievements,
+            Stats,
+
+            Count
+        };
+    };
+
+    std::int32_t tabIndex = TabID::Game;
+    std::int32_t requestedTab = -1;
+};
+
 void showTip(const std::string&);
 
 //called from main golf game handler to close active windows
-bool handleTopLevelEvent(const cro::Event&, SharedStateData&, HelpNav&);
-void optionsWindow(SharedStateData&);
+bool handleTopLevelEvent(const cro::Event&, SharedStateData&, HelpNav&, OptionsContext&);
+void optionsWindow(SharedStateData&, OptionsContext&);

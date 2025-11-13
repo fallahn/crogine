@@ -143,6 +143,7 @@ namespace
 #endif
 
     HelpNav helpNav;
+    OptionsContext optionsContext;
 
     els::SharedStateData elsShared;
 
@@ -282,7 +283,7 @@ void GolfGame::handleEvent(const cro::Event& evt)
 {
     //handles UI close events such as how to play
     //or the options menu
-    if (handleTopLevelEvent(evt, m_sharedData, helpNav))
+    if (handleTopLevelEvent(evt, m_sharedData, helpNav, optionsContext))
     {
         return;
     }
@@ -1028,7 +1029,7 @@ bool GolfGame::initialise()
         {
             if (m_sharedData.showOptionsWindow)
             {
-                optionsWindow(m_sharedData);
+                optionsWindow(m_sharedData, optionsContext);
 
                 if (!m_sharedData.showOptionsWindow)
                 {

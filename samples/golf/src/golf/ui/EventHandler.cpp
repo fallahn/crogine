@@ -36,7 +36,7 @@ namespace
 
 }
 
-bool handleTopLevelEvent(const cro::Event& evt, SharedStateData& sharedData, HelpNav& helpNav)
+bool handleTopLevelEvent(const cro::Event& evt, SharedStateData& sharedData, HelpNav& helpNav, OptionsContext& optionsContext)
 {
     if (sharedData.showHelp)
     {
@@ -104,38 +104,88 @@ bool handleTopLevelEvent(const cro::Event& evt, SharedStateData& sharedData, Hel
         }
         return true;
     }
-    return false; //temp disable the below
-    //TODO this is likely to be much the same across windows
-    //so we can probably recycle this.
+
+    //TODO fix quit conditions which might be
+    //otherwise triggered when interacting with
+    //the options menu
     if (sharedData.showOptionsWindow)
     {
+        const auto prevTab = 
+            [&]()
+            {
+                optionsContext.tabIndex = (optionsContext.tabIndex + (OptionsContext::TabID::Count - 1)) % OptionsContext::TabID::Count;
+                optionsContext.requestedTab = optionsContext.tabIndex;
+                //TODO trigger audio somehow
+            };
+
+        const auto nextTab =
+            [&]()
+            {
+                optionsContext.tabIndex = (optionsContext.tabIndex + 1) % OptionsContext::TabID::Count;
+                optionsContext.requestedTab = optionsContext.tabIndex;
+                //TODO trigger audio somehow
+            };
+
+        const auto setActiveInput =
+            [&]()
+            {
+                //if mouse motion or key down
+
+                //else controller axis or button
+            };
+
         switch (evt.type)
         {
         default: break;
         case SDL_MOUSEBUTTONUP:
-            if (evt.button.button == SDL_BUTTON_RIGHT)
+            /*if (evt.button.button == SDL_BUTTON_RIGHT)
             {
                 sharedData.showOptionsWindow = false;
-            }
+            }*/
             break;
         case SDL_CONTROLLERBUTTONUP:
             switch (evt.cbutton.button)
             {
             default: break;
-            case cro::GameController::ButtonB:
+            /*case cro::GameController::ButtonB:
                 sharedData.showOptionsWindow = false;
+                break;*/
+            case cro::GameController::ButtonLeftShoulder:
+                prevTab();
+                break;
+            case cro::GameController::ButtonRightShoulder:
+                nextTab();
                 break;
             }
+            setActiveInput();
             break;
         case SDL_KEYUP:
             switch (evt.key.keysym.sym)
             {
             default: break;
-            case SDLK_ESCAPE:
+            /*case SDLK_ESCAPE:
             case SDLK_BACKSPACE:
                 sharedData.showOptionsWindow = false;
-                break;
+                break;*/
             }
+            
+            if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::PrevClub])
+            {
+                prevTab();
+            }
+            else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::NextClub])
+            {
+                nextTab();
+            }
+            setActiveInput();
+            break;
+        case SDL_MOUSEMOTION:
+            cro::App::getWindow().setMouseCaptured(false);
+            setActiveInput();
+            break;
+        case SDL_CONTROLLERAXISMOTION:
+            cro::App::getWindow().setMouseCaptured(true);
+            setActiveInput();
             break;
         }
         return true;
