@@ -131,6 +131,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/server/SnookerDirector.cpp
 
   ${PROJECT_DIR}/golf/ui/EventHandler.cpp
+  ${PROJECT_DIR}/golf/ui/FlagPreview.cpp
   ${PROJECT_DIR}/golf/ui/Options.cpp
 
   )

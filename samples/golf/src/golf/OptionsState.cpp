@@ -4967,7 +4967,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     }
 
     //this just checks that the path was found, else resets it
-    //if the file from the path loaded in the config is missing
+    //to the file from the path loaded if the config is missing
     if (m_flagIndex == 0)
     {
         m_sharedData.flagPath = m_flagPaths[0];

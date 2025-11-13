@@ -38,6 +38,7 @@ source distribution.
 #include "CustomTournament.hpp"
 #include "Inventory.hpp"
 #include "server/Server.hpp"
+#include "ui/FlagPreview.hpp"
 
 #include <crogine/audio/MumbleLink.hpp>
 #include <crogine/audio/sound_system/Playlist.hpp>
@@ -111,6 +112,7 @@ struct SharedCourseData;
 struct SharedStateData final
 {
     std::array<ImGuiStyle, 6u> uiScales = {};
+    FlagPreview flagPreview;
 
     inv::Inventory inventory;
     //which loadout to display in the editor, else display shop if == inv::MaxLoadouts

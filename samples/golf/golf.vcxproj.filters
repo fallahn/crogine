@@ -702,6 +702,9 @@
     <ClCompile Include="src\golf\ui\EventHandler.cpp">
       <Filter>Source Files\golf\client\user interface</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\ui\FlagPreview.cpp">
+      <Filter>Source Files\golf\client\user interface</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -1467,6 +1470,9 @@
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\UserInterface.hpp">
+      <Filter>Header Files\golf\client\user interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ui\FlagPreview.hpp">
       <Filter>Header Files\golf\client\user interface</Filter>
     </ClInclude>
   </ItemGroup>

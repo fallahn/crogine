@@ -124,10 +124,10 @@ void ChunkVisSystem::process(float)
     const auto camForward = camEnt.getComponent<cro::Transform>().getForwardVector();
     const glm::vec2 fwd2d = { camForward.x, camForward.z };
 
-#ifdef CRO_DEBUG_
-    narrowphaseCount = 0;
-    m_narrowphaseTimer.begin();
-#endif
+//#ifdef CRO_DEBUG_
+//    narrowphaseCount = 0;
+//    m_narrowphaseTimer.begin();
+//#endif
     for (auto i = 0; i < ChunkCount; ++i)
     {
         //const auto dir = m_boundingBoxes[i].getCentre() - camPos;
@@ -158,17 +158,17 @@ void ChunkVisSystem::process(float)
                 {
                     m_currentIndex |= (std::size_t(1) << i);
                     m_indexList.push_back(i);
-#ifdef CRO_DEBUG_
-                    narrowphaseCount++;
-                }
-            }
-            m_narrowphaseTimer.end();
-#else
+//#ifdef CRO_DEBUG_
+//                    narrowphaseCount++;
+//                }
+//            }
+//            m_narrowphaseTimer.end();
+//#else
                 }
             }
         }
     }
-#endif
+//#endif
 
     //check if index changed and send index list to TerrainBuilder
     if (m_currentIndex != lastIndex)

@@ -32,6 +32,7 @@ source distribution.
 #include "../GameConsts.hpp"
 #include "../Career.hpp"
 #include "../MessageIDs.hpp"
+#include "../MenuConsts.hpp"
 #include "../../WebsocketServer.hpp"
 #include "../../Colordome-32.hpp"
 
@@ -59,7 +60,7 @@ static inline void settingsTab(SharedStateData& sharedData, float scale)
     if (ImGui::BeginTabItem("Game Settings"))
     {
         ImGui::BeginChild("##settings_child", {-1.f, -1.f}, ImGuiChildFlags_NavFlattened);
-        ImGui::Text("Display");
+        ImGui::SeparatorText("Display");
         ImGui::Checkbox("Show Flag Beacon", &sharedData.showBeacon); showTip("Display a coloured beacon at the flag visible from a distance");
         ImGui::ColorButton("##bc", getBeaconColour(sharedData.beaconColour), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
         ImGui::SameLine();
@@ -78,8 +79,7 @@ static inline void settingsTab(SharedStateData& sharedData, float scale)
         ImGui::Checkbox("Zoom Follow Cam", &sharedData.zoomFollowCam);
         ImGui::Checkbox("Rotate Camera When Aiming", &sharedData.rotateCamera);
         ImGui::Checkbox("Show Lens Flare", &sharedData.useLensFlare);
-        //TODO flag selection
-        
+
         //TODO we can't actually preview this... as it's not applied to ImGui
         if (ImGui::Checkbox("Use Post Process", &sharedData.usePostProcess))
         {
@@ -89,11 +89,80 @@ static inline void settingsTab(SharedStateData& sharedData, float scale)
             auto* msg = cro::App::postMessage<SystemEvent>(cl::MessageID::SystemMessage);
             msg->type = SystemEvent::PostProcessToggled;
         }
-        //TODO post selection
+        //post selection
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(170.f);
+        if (ImGui::BeginCombo("##post_process", ShaderNames[sharedData.postProcessIndex].c_str()))
+        {
+            for (auto i = 0u; i < ShaderNames.size(); ++i)
+            {
+                const bool selected = i == sharedData.postProcessIndex;
+                if (ImGui::Selectable(ShaderNames[i].c_str(), selected))
+                {
+                    sharedData.postProcessIndex = i;
+
+                    auto* msg = cro::App::postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                    msg->type = SystemEvent::PostProcessIndexChanged;
+                }
+
+                if (selected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+
         //TODO tee ball colour
 
+
+        //flag selection
         ImGui::NewLine();
-        ImGui::Text("Difficulty & Behaviour");
+        ImGui::Text("Flag");
+        const auto s = sharedData.flagPreview.getSize() * scale;
+        const auto& t = sharedData.flagPreview.getTexure();
+        const auto uv = sharedData.flagPreview.getUV();
+        ImGui::Image(t, { s.x, s.y }, { uv.left, uv.height }, { uv.width, uv.bottom });
+        if (ImGui::Button("<"))
+        {
+            sharedData.flagPreview.prev();
+            sharedData.flagPath = sharedData.flagPreview.getPath();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button(">"))
+        {
+            sharedData.flagPreview.next();
+            sharedData.flagPath = sharedData.flagPreview.getPath();
+        }
+        ImGui::SameLine();
+
+        static const std::vector<std::string> NumTypes = { "None","Black","White" };
+        ImGui::SetNextItemWidth(114.f);
+        if (ImGui::BeginCombo("Number", NumTypes[sharedData.flagText].c_str()))
+        {
+            for (auto i = 0u; i < NumTypes.size(); ++i)
+            {
+                const auto selected = i == sharedData.flagText;
+                if (ImGui::Selectable(NumTypes[i].c_str(), selected))
+                {
+                    sharedData.flagText = i;
+                    //TODO update preview
+                }
+                if(selected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+
+
+        ImGui::NewLine();
+        ImGui::NewLine();
+        ImGui::SeparatorText("Difficulty & Behaviour");
+        //ImGui::Text("Difficulty & Behaviour");
         ImGui::Checkbox("Enable Putt Assist", &sharedData.showPuttingPower); showTip("Display a small flag above the power bar when putting to estimate distance");
         ImGui::Checkbox("Precise Range Indicator", &sharedData.calculateRange); showTip("Accounts for terrain elevation and wind when drawing the range indicator instead of estimating the range");
         ImGui::Checkbox("Use Full UI", &sharedData.showMinimap); showTip("Uncheck this for a minimal UI, hiding the minimap for increased challenge");
@@ -102,7 +171,8 @@ static inline void settingsTab(SharedStateData& sharedData, float scale)
 
 
         ImGui::NewLine();
-        ImGui::Text("Configuration");
+        ImGui::NewLine();
+        ImGui::SeparatorText("Configuration");
         ImGui::Checkbox("Enable Web Socket", &sharedData.webSocket); showTip("See https://github.com/fallahn/svs for more info");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(80.f * scale);
