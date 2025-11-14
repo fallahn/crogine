@@ -335,7 +335,7 @@ void GolfGame::handleEvent(const cro::Event& evt)
             m_sharedData.showHelp = true;
             break;
         case SDLK_o:
-            m_sharedData.showOptionsWindow = !m_sharedData.showOptionsWindow;
+            //m_sharedData.showOptionsWindow = !m_sharedData.showOptionsWindow;
             break;
         }
         break;

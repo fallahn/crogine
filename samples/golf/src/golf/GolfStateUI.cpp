@@ -1727,7 +1727,7 @@ void GolfState::buildUI()
             if (!m_inputParser.getActive()
                 || m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
             {
-                scale = std::max(0.f, scale - ((scale * dt) * 8.f));
+                scale = std::max(0.f, scale - ((scale * dt) * 12.f));
             }
             else
             {
