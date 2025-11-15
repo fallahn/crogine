@@ -42,7 +42,7 @@ source distribution.
 #include "golf/ShopState.hpp"
 #include "golf/BilliardsState.hpp"
 #include "golf/ErrorState.hpp"
-//#include "golf/OptionsState.hpp"
+#include "golf/OptionsState.hpp"
 #include "golf/OptionsV2.hpp"
 #include "golf/PauseState.hpp"
 #include "golf/TutorialState.hpp"
@@ -217,8 +217,8 @@ GolfGame::GolfGame()
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData, m_profileData);
     m_stateStack.registerState<ProfileState>(StateID::Profile, m_sharedData, m_profileData);
-    //m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
-    m_stateStack.registerState<OptionsV2>(StateID::Options, m_sharedData);
+    m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
+    //m_stateStack.registerState<OptionsV2>(StateID::Options, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);
     m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData, m_profileData);
@@ -334,9 +334,6 @@ void GolfGame::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_DIVIDE:
             m_sharedData.showHelp = true;
-            break;
-        case SDLK_o:
-            //m_sharedData.showOptionsWindow = !m_sharedData.showOptionsWindow;
             break;
         }
         break;
