@@ -144,8 +144,7 @@ namespace
 #endif
 
     HelpNav helpNav;
-    OptionsContext optionsContext;
-
+    
     els::SharedStateData elsShared;
 
     struct ShaderDescription final
@@ -285,7 +284,7 @@ void GolfGame::handleEvent(const cro::Event& evt)
 {
     //handles UI close events such as how to play
     //or the options menu
-    if (handleTopLevelEvent(evt, m_sharedData, helpNav, optionsContext))
+    if (handleTopLevelEvent(evt, m_sharedData, helpNav))
     {
         return;
     }

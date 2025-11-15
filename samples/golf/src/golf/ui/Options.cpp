@@ -37,6 +37,7 @@ source distribution.
 #include "../../Colordome-32.hpp"
 
 #include <crogine/gui/Gui.hpp>
+#include <crogine/util/Easings.hpp>
 
 namespace
 {
@@ -47,7 +48,7 @@ namespace
     std::string tipText;
 }
 
-static inline void showTip(const std::string& s)
+ void showTip(const std::string& s)
 {
     if (ImGui::IsItemHovered())
     {
@@ -57,10 +58,10 @@ static inline void showTip(const std::string& s)
 
 void OptionsV2::settingsTab(float scale)
 {
-    const auto active = m_optionsContext.requestedTab == OptionsContext::TabID::Game;
+    const auto active = m_navigationContext.requestedTab == NavigationContext::TabID::Game;
     if (ImGui::BeginTabItem("Game Settings", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
-        m_optionsContext.tabIndex = OptionsContext::TabID::Game;
+        m_navigationContext.tabIndex = NavigationContext::TabID::Game;
 
         ImGui::BeginChild("##settings_child", {-1.f, -1.f}, ImGuiChildFlags_NavFlattened);
         ImGui::SeparatorText("Display");
@@ -316,67 +317,67 @@ void OptionsV2::settingsTab(float scale)
     }
 }
 
-static inline void keyboardTab(SharedStateData& sharedData, float scale, OptionsContext& optionsContext)
+void OptionsV2::keyboardTab(float scale)
 {
-    const auto active = optionsContext.requestedTab == OptionsContext::TabID::Keyboard;
+    const auto active = m_navigationContext.requestedTab == NavigationContext::TabID::Keyboard;
     if (ImGui::BeginTabItem("Keyboard", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
-        optionsContext.tabIndex = OptionsContext::TabID::Keyboard;
+        m_navigationContext.tabIndex = NavigationContext::TabID::Keyboard;
 
         ImGui::EndTabItem();
     }
 }
 
-static inline void controllerTab(SharedStateData& sharedData, float scale, OptionsContext& optionsContext)
+void OptionsV2::controllerTab(float scale)
 {
-    const auto active = optionsContext.requestedTab == OptionsContext::TabID::Controller;
+    const auto active = m_navigationContext.requestedTab == NavigationContext::TabID::Controller;
     if (ImGui::BeginTabItem("Controller", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
-        optionsContext.tabIndex = OptionsContext::TabID::Controller;
+        m_navigationContext.tabIndex = NavigationContext::TabID::Controller;
 
         ImGui::EndTabItem();
     }
 }
 
-static inline void displayTab(SharedStateData& sharedData, float scale, OptionsContext& optionsContext)
+void OptionsV2::displayTab(float scale)
 {
-    const auto active = optionsContext.requestedTab == OptionsContext::TabID::Display;
+    const auto active = m_navigationContext.requestedTab == NavigationContext::TabID::Display;
     if (ImGui::BeginTabItem("Display", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
-        optionsContext.tabIndex = OptionsContext::TabID::Display;
+        m_navigationContext.tabIndex = NavigationContext::TabID::Display;
 
         ImGui::EndTabItem();
     }
 }
 
-static inline void audioTab(SharedStateData& sharedData, float scale, OptionsContext& optionsContext)
+void OptionsV2::audioTab(float scale)
 {
-    const auto active = optionsContext.requestedTab == OptionsContext::TabID::Audio;
+    const auto active = m_navigationContext.requestedTab == NavigationContext::TabID::Audio;
     if (ImGui::BeginTabItem("Audio", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
-        optionsContext.tabIndex = OptionsContext::TabID::Audio;
+        m_navigationContext.tabIndex = NavigationContext::TabID::Audio;
 
         ImGui::EndTabItem();
     }
 }
 
-static inline void achievementsTab(float scale, OptionsContext& optionsContext)
+void OptionsV2::achievementsTab(float scale)
 {
-    const auto active = optionsContext.requestedTab == OptionsContext::TabID::Achievements;
+    const auto active = m_navigationContext.requestedTab == NavigationContext::TabID::Achievements;
     if (ImGui::BeginTabItem("Achievements", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
-        optionsContext.tabIndex = OptionsContext::TabID::Achievements;
+        m_navigationContext.tabIndex = NavigationContext::TabID::Achievements;
 
         ImGui::EndTabItem();
     }
 }
 
-static inline void statsTab(float scale, OptionsContext& optionsContext)
+void OptionsV2::statsTab(float scale)
 {
-    const auto active = optionsContext.requestedTab == OptionsContext::TabID::Stats;
+    const auto active = m_navigationContext.requestedTab == NavigationContext::TabID::Stats;
     if (ImGui::BeginTabItem("Stats", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
-        optionsContext.tabIndex = OptionsContext::TabID::Stats;
+        m_navigationContext.tabIndex = NavigationContext::TabID::Stats;
 
         ImGui::EndTabItem();
     }
@@ -386,20 +387,19 @@ void OptionsV2::optionsWindow()
 {
     if (m_showOptions)
     {
-
         tipText = {};
 
         //fit to screen
         const auto size = glm::vec2(cro::App::getWindow().getSize());
         const auto scale = getViewScale();
         ImGui::SetNextWindowSize({ size.x, size.y });
-        ImGui::SetNextWindowPos({ 0.f, 0.f });
+        ImGui::SetNextWindowPos({ 0.f, size.y * (1.f - cro::Util::Easing::easeOutCubic(m_animationProgress))});
 
         ImGui::GetStyle() = m_sharedData.uiScales[static_cast<std::int32_t>(scale) - 1];
         const auto HPadding = ImGui::GetStyle().ItemSpacing.x;
 
         //set background to semi-black
-        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.f, 0.f, BackgroundAlpha));
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.f, 0.f, BackgroundAlpha * m_animationProgress));
 
         ImGui::GetFont()->Scale *= scale;
         ImGui::PushFont(ImGui::GetFont());
@@ -411,17 +411,17 @@ void OptionsV2::optionsWindow()
         ImGui::EndChild(); //nav_left
         ImGui::SameLine();
         //centre col for tabbed area
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f, 0.f, 0.f, BackgroundAlpha));
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f, 0.f, 0.f, BackgroundAlpha * m_animationProgress));
         const float TabPaneWidth = size.x - ((((NavColWidth * scale) + (HPadding * 2.f)) * 2.f));
         ImGui::BeginChild("##tab_pane", { TabPaneWidth, -1.f }, ImGuiChildFlags_Border | ImGuiChildFlags_NavFlattened);
         ImGui::BeginTabBar("##tab_bar");
         settingsTab(scale);
-        keyboardTab(m_sharedData, scale, m_optionsContext);
-        controllerTab(m_sharedData, scale, m_optionsContext);
-        displayTab(m_sharedData, scale, m_optionsContext);
-        audioTab(m_sharedData, scale, m_optionsContext);
-        achievementsTab(scale, m_optionsContext);
-        statsTab(scale, m_optionsContext);
+        keyboardTab(scale);
+        controllerTab(scale);
+        displayTab(scale);
+        audioTab(scale);
+        achievementsTab(scale);
+        statsTab(scale);
         ImGui::EndTabBar();
         ImGui::EndChild(); //tab_pane
         ImGui::PopStyleColor(); //child BG
@@ -450,7 +450,8 @@ void OptionsV2::optionsWindow()
         ImGui::SameLine();
         if (ImGui::Button("Close", { 0.f, ButtonHeight * scale }))
         {
-            requestStackPop();
+            //requestStackPop();
+            m_animationTarget = 0.f;
         }
         ImGui::EndChild(); //child_bottom
         ImGui::End();
@@ -462,6 +463,6 @@ void OptionsV2::optionsWindow()
 
         ImGui::GetStyle() = m_sharedData.uiScales[0];
 
-        m_optionsContext.requestedTab = -1;
+        m_navigationContext.requestedTab = -1;
     }
 }

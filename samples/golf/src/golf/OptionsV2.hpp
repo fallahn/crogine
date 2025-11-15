@@ -59,14 +59,39 @@ private:
     SharedStateData& m_sharedData;
     bool m_showOptions;
 
+    float m_animationTarget;
+    float m_animationProgress;
+
     void onCachedPush() override;
     void onCachedPop() override;
+    void closeWindow();
+    
+    struct NavigationContext final
+    {
+        struct TabID final
+        {
+            enum
+            {
+                Game, Keyboard, Controller,
+                Display, Audio, Achievements,
+                Stats,
 
-    //TODO remove this context and store
-    //members directly
-    OptionsContext m_optionsContext;
+                Count
+            };
+        };
+
+        std::int32_t tabIndex = TabID::Game;
+        std::int32_t requestedTab = -1;
+    }m_navigationContext;
+
     FlagPreview m_flagPreview;
     void optionsWindow();
 
     void settingsTab(float scale);
+    void keyboardTab(float scale);
+    void controllerTab(float scale);
+    void displayTab(float scale);
+    void audioTab(float scale);
+    void achievementsTab(float scale);
+    void statsTab(float scale);
 };

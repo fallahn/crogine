@@ -36,7 +36,7 @@ namespace
 
 }
 
-bool handleTopLevelEvent(const cro::Event& evt, SharedStateData& sharedData, HelpNav& helpNav, OptionsContext& optionsContext)
+bool handleTopLevelEvent(const cro::Event& evt, SharedStateData& sharedData, HelpNav& helpNav)
 {
     if (sharedData.showHelp)
     {

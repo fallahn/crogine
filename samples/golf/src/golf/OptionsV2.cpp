@@ -39,9 +39,11 @@ namespace
 }
 
 OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State    (ss, ctx),
-    m_sharedData    (sd),
-    m_showOptions   (false)
+    : cro::State        (ss, ctx),
+    m_sharedData        (sd),
+    m_showOptions       (false),
+    m_animationTarget   (0.f),
+    m_animationProgress (0.f)
 {
     registerWindow(std::bind(&OptionsV2::optionsWindow, this));
     
@@ -57,16 +59,16 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
         const auto prevTab =
             [&]()
             {
-                m_optionsContext.tabIndex = (m_optionsContext.tabIndex + (OptionsContext::TabID::Count - 1)) % OptionsContext::TabID::Count;
-                m_optionsContext.requestedTab = m_optionsContext.tabIndex;
+                m_navigationContext.tabIndex = (m_navigationContext.tabIndex + (NavigationContext::TabID::Count - 1)) % NavigationContext::TabID::Count;
+                m_navigationContext.requestedTab = m_navigationContext.tabIndex;
                 //TODO trigger audio somehow
             };
 
         const auto nextTab =
             [&]()
             {
-                m_optionsContext.tabIndex = (m_optionsContext.tabIndex + 1) % OptionsContext::TabID::Count;
-                m_optionsContext.requestedTab = m_optionsContext.tabIndex;
+                m_navigationContext.tabIndex = (m_navigationContext.tabIndex + 1) % NavigationContext::TabID::Count;
+                m_navigationContext.requestedTab = m_navigationContext.tabIndex;
                 //TODO trigger audio somehow
             };
 
@@ -139,8 +141,22 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
 
 void OptionsV2::handleMessage(const cro::Message&) {}
 
-bool OptionsV2::simulate(float)
+bool OptionsV2::simulate(float dt)
 {
+    const float animSpeed = dt * 4.f;
+    if (m_animationTarget < m_animationProgress)
+    {
+        m_animationProgress = std::max(0.f, m_animationProgress - animSpeed);
+        if (m_animationProgress == 0)
+        {
+            requestStackPop();
+        }
+    }
+    else if (m_animationTarget > m_animationProgress)
+    {
+        m_animationProgress = std::min(1.f, m_animationProgress + animSpeed);
+    }
+
     return true;
 }
 
@@ -151,9 +167,15 @@ void OptionsV2::render() {}
 void OptionsV2::onCachedPush()
 {
     m_showOptions = true;
+    m_animationTarget = 1.f;
 }
 
 void OptionsV2::onCachedPop()
 {
     m_showOptions = false;
+}
+
+void OptionsV2::closeWindow()
+{
+    m_animationTarget = 0.f;
 }
