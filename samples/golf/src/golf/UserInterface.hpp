@@ -51,7 +51,6 @@ struct HelpNav final
     static constexpr float ScrollAmount = 12.f;
 };
 
-
 void showTip(const std::string&);
 
 //called from main golf game handler to close active windows

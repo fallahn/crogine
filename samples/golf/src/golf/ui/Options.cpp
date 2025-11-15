@@ -65,27 +65,27 @@ void OptionsV2::settingsTab(float scale)
 
         ImGui::BeginChild("##settings_child", {-1.f, -1.f}, ImGuiChildFlags_NavFlattened);
         ImGui::SeparatorText("Display");
-        ImGui::Checkbox("Show Flag Beacon", &m_sharedData.showBeacon); showTip("Display a coloured beacon at the flag visible from a distance");
+        checkbox("Show Flag Beacon", &m_sharedData.showBeacon); showTip("Display a coloured beacon at the flag visible from a distance");
         ImGui::ColorButton("##bc", getBeaconColour(m_sharedData.beaconColour), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
         ImGui::SameLine();
         ImGui::SetNextItemWidth(120.f * scale);
-        //ImGui::SliderFloat("Beacon Colour", &sharedData.beaconColour, 0.f, 1.f, "%.1f", ImGuiSliderFlags_NoInput);
+
         float steps = 1.f;
         for (auto i = 0; i < scale; ++i) steps /= 8.f;
         ImGui::DragFloat("Beacon Colour", &m_sharedData.beaconColour, steps, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput); //slider doesn't appear to have kb input
         if (ImGui::IsItemActive()) m_itemActive = true;
-        ImGui::Checkbox("Show Ball Trail", &m_sharedData.showBallTrail);
-        ImGui::Checkbox("Ball Trail Uses Beacon Colour", &m_sharedData.trailBeaconColour); showTip("Trail colour is white if unselected");
-        ImGui::Checkbox("Imperial Measurements", &m_sharedData.imperialMeasurements); showTip("Display measurements in Yards, Feet and Inches instead of Metres and Centimetres");
-        ImGui::Checkbox("Use Large Power Bar", &m_sharedData.useLargePowerBar);
-        ImGui::Checkbox("Use High Contrast Power Bar", &m_sharedData.useContrastPowerBar);
-        ImGui::Checkbox("Decimated Power Bar", &m_sharedData.decimatePowerBar); showTip("Divide the power bar into 10 segments instead of 8");
-        ImGui::Checkbox("Decimalised Distances", &m_sharedData.decimateDistance); showTip("Display distances in decimal units");
-        ImGui::Checkbox("Show Monthly Rival", &m_sharedData.showRival); showTip("Display this month's leader on the scoreboard if available");
-        ImGui::Checkbox("Use Follow Cam When Putting", &m_sharedData.puttFollowCam); showTip("Follow the ball when putting instead of the overhead view");
-        ImGui::Checkbox("Zoom Follow Cam", &m_sharedData.zoomFollowCam);
-        ImGui::Checkbox("Rotate Camera When Aiming", &m_sharedData.rotateCamera);
-        ImGui::Checkbox("Show Lens Flare", &m_sharedData.useLensFlare);
+        checkbox("Show Ball Trail", &m_sharedData.showBallTrail);
+        checkbox("Ball Trail Uses Beacon Colour", &m_sharedData.trailBeaconColour); showTip("Trail colour is white if unselected");
+        checkbox("Imperial Measurements", &m_sharedData.imperialMeasurements); showTip("Display measurements in Yards, Feet and Inches instead of Metres and Centimetres");
+        checkbox("Use Large Power Bar", &m_sharedData.useLargePowerBar);
+        checkbox("Use High Contrast Power Bar", &m_sharedData.useContrastPowerBar);
+        checkbox("Decimated Power Bar", &m_sharedData.decimatePowerBar); showTip("Divide the power bar into 10 segments instead of 8");
+        checkbox("Decimalised Distances", &m_sharedData.decimateDistance); showTip("Display distances in decimal units");
+        checkbox("Show Monthly Rival", &m_sharedData.showRival); showTip("Display this month's leader on the scoreboard if available");
+        checkbox("Use Follow Cam When Putting", &m_sharedData.puttFollowCam); showTip("Follow the ball when putting instead of the overhead view");
+        checkbox("Zoom Follow Cam", &m_sharedData.zoomFollowCam);
+        checkbox("Rotate Camera When Aiming", &m_sharedData.rotateCamera);
+        checkbox("Show Lens Flare", &m_sharedData.useLensFlare);
 
         //TODO we can't actually preview this... as it's not applied to ImGui
         if (ImGui::Checkbox("Use Post Process", &m_sharedData.usePostProcess))
@@ -95,6 +95,8 @@ void OptionsV2::settingsTab(float scale)
             m_sharedData.usePostProcess = !m_sharedData.usePostProcess;
             auto* msg = cro::App::postMessage<SystemEvent>(cl::MessageID::SystemMessage);
             msg->type = SystemEvent::PostProcessToggled;
+
+            playSound(MenuSoundEvent::Activate);
         }
         //post selection
         ImGui::SameLine();
@@ -110,6 +112,8 @@ void OptionsV2::settingsTab(float scale)
 
                     auto* msg = cro::App::postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                     msg->type = SystemEvent::PostProcessIndexChanged;
+
+                    playSound(MenuSoundEvent::Activate);
                 }
 
                 if (selected)
@@ -135,12 +139,14 @@ void OptionsV2::settingsTab(float scale)
         {
             m_flagPreview.prev();
             m_sharedData.flagPath = m_flagPreview.getPath();
+            playSound(MenuSoundEvent::Prev);
         }
         ImGui::SameLine();
         if (ImGui::Button(">"))
         {
             m_flagPreview.next();
             m_sharedData.flagPath = m_flagPreview.getPath();
+            playSound(MenuSoundEvent::Next);
         }
         ImGui::SameLine();
 
@@ -155,6 +161,7 @@ void OptionsV2::settingsTab(float scale)
                 {
                     m_sharedData.flagText = i;
                     m_flagPreview.setText(i);
+                    playSound(MenuSoundEvent::Activate);
                 }
                 if(selected)
                 {
@@ -170,28 +177,29 @@ void OptionsV2::settingsTab(float scale)
         ImGui::NewLine();
         ImGui::NewLine();
         ImGui::SeparatorText("Difficulty & Behaviour");
-        ImGui::Checkbox("Enable Putt Assist", &m_sharedData.showPuttingPower); showTip("Display a small flag above the power bar when putting to estimate distance");
-        ImGui::Checkbox("Precise Range Indicator", &m_sharedData.calculateRange); showTip("Accounts for terrain elevation and wind when drawing the range indicator instead of estimating the range");
-        ImGui::Checkbox("Use Full UI", &m_sharedData.showMinimap); showTip("Uncheck this for a minimal UI, hiding the minimap for increased challenge");
-        ImGui::Checkbox("Show In Game Tips", &m_sharedData.showInGameTips);
-        ImGui::Checkbox("Fixed Range Putter", &m_sharedData.fixedPuttingRange); showTip("Disable dynamically adjusting the putting range and fix to 10m/33ft");
+        checkbox("Enable Putt Assist", &m_sharedData.showPuttingPower); showTip("Display a small flag above the power bar when putting to estimate distance");
+        checkbox("Precise Range Indicator", &m_sharedData.calculateRange); showTip("Accounts for terrain elevation and wind when drawing the range indicator instead of estimating the range");
+        checkbox("Use Full UI", &m_sharedData.showMinimap); showTip("Uncheck this for a minimal UI, hiding the minimap for increased challenge");
+        checkbox("Show In Game Tips", &m_sharedData.showInGameTips);
+        checkbox("Fixed Range Putter", &m_sharedData.fixedPuttingRange); showTip("Disable dynamically adjusting the putting range and fix to 10m/33ft");
 
 
         ImGui::NewLine();
         ImGui::NewLine();
         ImGui::SeparatorText("Configuration");
-        ImGui::Checkbox("Enable Web Socket", &m_sharedData.webSocket); showTip("See https://github.com/fallahn/svs for more info");
+        checkbox("Enable Web Socket", &m_sharedData.webSocket); showTip("See https://github.com/fallahn/svs for more info");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(80.f * scale);
         if (ImGui::InputInt("Port", &m_sharedData.webPort))
         {
             m_sharedData.webPort = std::clamp(m_sharedData.webPort, WebSock::MinPort, WebSock::MaxPort);
+            playSound(MenuSoundEvent::Activate);
         }
 
-        ImGui::Checkbox("Log Scores To CSV", &m_sharedData.logCSV); showTip("Files are saved to your user directory");
-        ImGui::Checkbox("Disable Multiplayer Chat", &m_sharedData.blockChat);
-        ImGui::Checkbox("Log Chat To Text File", &m_sharedData.logChat); showTip("Files are saved to your user directory");
-        ImGui::Checkbox("Enable Remote Content", &m_sharedData.remoteContent); showTip("Allow downloading remote content in multiplayer, such as Workshop items");
+        checkbox("Log Scores To CSV", &m_sharedData.logCSV); showTip("Files are saved to your user directory");
+        checkbox("Disable Multiplayer Chat", &m_sharedData.blockChat);
+        checkbox("Log Chat To Text File", &m_sharedData.logChat); showTip("Files are saved to your user directory");
+        checkbox("Enable Remote Content", &m_sharedData.remoteContent); showTip("Allow downloading remote content in multiplayer, such as Workshop items");
         
         //reset buttons
         ImVec2 ModalSize = { 300.f, 120.f };
@@ -214,12 +222,14 @@ void OptionsV2::settingsTab(float scale)
                     || m_closeModal)
                 {
                     ImGui::CloseCurrentPopup();
+                    playSound(MenuSoundEvent::Cancel);
                 }   
                 ImGui::SameLine();
                 if (ImGui::Button("OK", {buttonWidth, 0.f}))
                 {
                     cb();
                     ImGui::CloseCurrentPopup();
+                    playSound(MenuSoundEvent::Activate);
                 }
                 ImGui::EndPopup();
 
@@ -230,6 +240,7 @@ void OptionsV2::settingsTab(float scale)
         if (ImGui::Button("Reset Hints"))
         {
             ImGui::OpenPopup("Reset Hints?");
+            playSound(MenuSoundEvent::Activate);
         }
 
         ImGui::SetNextWindowSize(ModalSize);
@@ -249,6 +260,7 @@ void OptionsV2::settingsTab(float scale)
         if (ImGui::Button("Reset Career"))
         {
             ImGui::OpenPopup("Reset Career?");
+            playSound(MenuSoundEvent::Activate);
         }
         ImGui::SetNextWindowSize(ModalSize);
         ImGui::SetNextWindowPos(pos);
@@ -287,6 +299,7 @@ void OptionsV2::settingsTab(float scale)
         if (ImGui::Button("Reset Profile"))
         {
             ImGui::OpenPopup("Reset Profile?");
+            playSound(MenuSoundEvent::Activate);
         }
         ImGui::PopStyleColor();
 
@@ -504,5 +517,14 @@ void OptionsV2::optionsWindow()
 
         m_navigationContext.requestedTab = -1;
         m_closeModal = false;
+
+
+        if (m_prevFocus != ImGui::getFocusID())
+        {
+            //focus changes, play a sound
+            playSound(MenuSoundEvent::Next);
+
+            m_prevFocus = ImGui::getFocusID();
+        }
     }
 }

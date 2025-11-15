@@ -115,4 +115,7 @@ namespace ImGui
     {
         return ImGui::ImageButton((void*)(std::size_t)texture, size, uv0, uv1);
     }
+
+    //helper to find the id of the current focused widget (this isn't exposed by the public API by default)
+    CRO_EXPORT_API std::int32_t getFocusID();
 }

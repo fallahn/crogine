@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "InputBinding.hpp"
+#include "MessageIDs.hpp"
 #include "OptionsV2.hpp"
 #include "SharedStateData.hpp"
 
@@ -45,7 +46,8 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
     m_animationTarget   (0.f),
     m_animationProgress (0.f),
     m_itemActive        (false),
-    m_closeModal        (false)
+    m_closeModal        (false),
+    m_prevFocus         (0)
 {
     registerWindow(std::bind(&OptionsV2::optionsWindow, this));
     
@@ -197,9 +199,27 @@ void OptionsV2::closeWindow()
     if (!m_itemActive)
     {
         m_animationTarget = 0.f;
+        playSound(MenuSoundEvent::Cancel);
     }
     else
     {
         m_closeModal = true;
+    }
+}
+
+void OptionsV2::playSound(std::int32_t s)
+{
+    LogI << "Play sound " << s << std::endl;
+
+    //TODO implement this in the active sound director
+    auto* msg = postMessage<MenuSoundEvent>(cl::MessageID::MesnuSoundMessage);
+    msg->type = static_cast<std::uint8_t>(s);
+}
+
+void OptionsV2::checkbox(const char* s, bool* b)
+{
+    if (ImGui::Checkbox(s, b))
+    {
+        playSound(MenuSoundEvent::Activate);
     }
 }

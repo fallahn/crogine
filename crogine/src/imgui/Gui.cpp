@@ -27,6 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "imgui_internal.h"
 #include <crogine/gui/Gui.hpp>
 
 using namespace cro;
@@ -59,4 +60,12 @@ bool ui::wantsMouse()
 bool ui::wantsKeyboard()
 {
     return ImGui::GetIO().WantCaptureKeyboard;
+}
+
+namespace ImGui
+{
+    std::int32_t getFocusID()
+    {
+        return ImGui::GetFocusID();
+    }
 }

@@ -35,9 +35,6 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
-//TODO remove this and the options context
-#include "UserInterface.hpp"
-
 //wrapper state for the ImGui version of the Options window
 class OptionsV2 final : public cro::State, public cro::GuiClient
 {
@@ -63,10 +60,12 @@ private:
     float m_animationProgress;
     bool m_itemActive; //set this true if a combo box etc it open to prevent closing with controller
     bool m_closeModal;
+    std::int32_t m_prevFocus;
 
     void onCachedPush() override;
     void onCachedPop() override;
     void closeWindow();
+    void playSound(std::int32_t);
     
     struct NavigationContext final
     {
@@ -96,4 +95,7 @@ private:
     void audioTab(float scale);
     void achievementsTab(float scale);
     void statsTab(float scale);
+
+    //shortcut to render checkbox and play sound when activated
+    void checkbox(const char*, bool*);
 };

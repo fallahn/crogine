@@ -51,6 +51,7 @@ namespace cl::MessageID
         AIMessage,
         EnviroMessage,
         WebSocketMessage,
+        MesnuSoundMessage,
 
         Count
     };
@@ -239,4 +240,14 @@ struct WebSocketEvent final
         Connected, Disconnected
     }type = Connected;
 
+};
+
+struct MenuSoundEvent final
+{
+    enum
+    {
+        Prev, Next, Activate,
+        Cancel, Denied
+    };
+    std::uint8_t type = 0;
 };
