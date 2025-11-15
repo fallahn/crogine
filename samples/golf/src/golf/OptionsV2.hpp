@@ -61,6 +61,8 @@ private:
 
     float m_animationTarget;
     float m_animationProgress;
+    bool m_itemActive; //set this true if a combo box etc it open to prevent closing with controller
+    bool m_closeModal;
 
     void onCachedPush() override;
     void onCachedPop() override;

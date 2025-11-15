@@ -43,7 +43,9 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
     m_sharedData        (sd),
     m_showOptions       (false),
     m_animationTarget   (0.f),
-    m_animationProgress (0.f)
+    m_animationProgress (0.f),
+    m_itemActive        (false),
+    m_closeModal        (false)
 {
     registerWindow(std::bind(&OptionsV2::optionsWindow, this));
     
@@ -75,27 +77,38 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
         const auto setActiveInput =
             [&]()
             {
-                //if mouse motion or key down
-
-                //else controller axis or button
+                if (evt.type == SDL_MOUSEBUTTONDOWN
+                    || evt.type == SDL_MOUSEMOTION
+                    || evt.type == SDL_KEYDOWN)
+                {
+                    //if mouse motion or key down
+                    m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
+                }
+                else if (evt.type == SDL_CONTROLLERAXISMOTION
+                    || evt.type == SDL_CONTROLLERBUTTONUP)
+                {
+                    //else controller axis or button
+                    m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) ?
+                        SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
+                }
             };
 
         switch (evt.type)
         {
         default: break;
-        case SDL_MOUSEBUTTONUP:
-            /*if (evt.button.button == SDL_BUTTON_RIGHT)
+        case SDL_MOUSEBUTTONDOWN:
+            if (evt.button.button == SDL_BUTTON_RIGHT)
             {
-                sharedData.showOptionsWindow = false;
-            }*/
+                closeWindow();
+            }
             break;
-        case SDL_CONTROLLERBUTTONUP:
+        case SDL_CONTROLLERBUTTONDOWN:
             switch (evt.cbutton.button)
             {
             default: break;
-                /*case cro::GameController::ButtonB:
-                    sharedData.showOptionsWindow = false;
-                    break;*/
+            case cro::GameController::ButtonB:
+                closeWindow();
+                break;
             case cro::GameController::ButtonLeftShoulder:
                 prevTab();
                 break;
@@ -105,14 +118,14 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
             }
             setActiveInput();
             break;
-        case SDL_KEYUP:
+        case SDL_KEYDOWN:
             switch (evt.key.keysym.sym)
             {
             default: break;
-                /*case SDLK_ESCAPE:
+                case SDLK_ESCAPE:
                 case SDLK_BACKSPACE:
-                    sharedData.showOptionsWindow = false;
-                    break;*/
+                    closeWindow();
+                    break;
             }
 
             if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
@@ -130,8 +143,12 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
             setActiveInput();
             break;
         case SDL_CONTROLLERAXISMOTION:
-            cro::App::getWindow().setMouseCaptured(true);
-            setActiveInput();
+            if (evt.caxis.value > cro::GameController::LeftThumbDeadZone
+                || evt.caxis.value < -cro::GameController::LeftThumbDeadZone)
+            {
+                cro::App::getWindow().setMouseCaptured(true);
+                setActiveInput();
+            }
             break;
         }
     }
@@ -177,5 +194,12 @@ void OptionsV2::onCachedPop()
 
 void OptionsV2::closeWindow()
 {
-    m_animationTarget = 0.f;
+    if (!m_itemActive)
+    {
+        m_animationTarget = 0.f;
+    }
+    else
+    {
+        m_closeModal = true;
+    }
 }

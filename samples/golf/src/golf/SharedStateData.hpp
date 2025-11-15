@@ -139,7 +139,8 @@ struct SharedStateData final
             Keyboard, XBox, PS
         };
     };
-    std::int32_t activeInput = ActiveInput::Keyboard; //NOTE only updated by driving range and main game
+    //NOTE only updated by driving range and main game and new options menu
+    std::int32_t activeInput = ActiveInput::Keyboard;
 
     struct MinimapData final
     {

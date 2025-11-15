@@ -70,7 +70,10 @@ void OptionsV2::settingsTab(float scale)
         ImGui::SameLine();
         ImGui::SetNextItemWidth(120.f * scale);
         //ImGui::SliderFloat("Beacon Colour", &sharedData.beaconColour, 0.f, 1.f, "%.1f", ImGuiSliderFlags_NoInput);
-        ImGui::DragFloat("Beacon Colour", &m_sharedData.beaconColour, 0.1f, 0.f, 1.f, "%.1f", ImGuiSliderFlags_NoInput); //slider doesn't appear to have kb input
+        float steps = 1.f;
+        for (auto i = 0; i < scale; ++i) steps /= 8.f;
+        ImGui::DragFloat("Beacon Colour", &m_sharedData.beaconColour, steps, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput); //slider doesn't appear to have kb input
+        if (ImGui::IsItemActive()) m_itemActive = true;
         ImGui::Checkbox("Show Ball Trail", &m_sharedData.showBallTrail);
         ImGui::Checkbox("Ball Trail Uses Beacon Colour", &m_sharedData.trailBeaconColour); showTip("Trail colour is white if unselected");
         ImGui::Checkbox("Imperial Measurements", &m_sharedData.imperialMeasurements); showTip("Display measurements in Yards, Feet and Inches instead of Metres and Centimetres");
@@ -114,7 +117,7 @@ void OptionsV2::settingsTab(float scale)
                     ImGui::SetItemDefaultFocus();
                 }
             }
-
+            m_itemActive = true;
             ImGui::EndCombo();
         }
 
@@ -159,6 +162,7 @@ void OptionsV2::settingsTab(float scale)
                 }
             }
 
+            m_itemActive = true;
             ImGui::EndCombo();
         }
 
@@ -206,7 +210,8 @@ void OptionsV2::settingsTab(float scale)
                 ImGui::PopStyleColor();
 
                 const auto buttonWidth = ((ModalSize.x / 2.f) - (ImGui::GetStyle().ItemSpacing.x * 1.5f));
-                if (ImGui::Button("Cancel", {buttonWidth, 0.f}))
+                if (ImGui::Button("Cancel", {buttonWidth, 0.f})
+                    || m_closeModal)
                 {
                     ImGui::CloseCurrentPopup();
                 }   
@@ -217,6 +222,8 @@ void OptionsV2::settingsTab(float scale)
                     ImGui::CloseCurrentPopup();
                 }
                 ImGui::EndPopup();
+
+                m_itemActive = true;
             };
 
         ImGui::NewLine();
@@ -319,6 +326,13 @@ void OptionsV2::settingsTab(float scale)
 
 void OptionsV2::keyboardTab(float scale)
 {
+    /*
+    Note to self: Sliders must set m_itemActive with GetItemActive()
+    and combos can  set this directly - this stops the back button
+    from closing the window when finishing an edit.
+    Modals need to check m_closeModal to makes sure there's no close request.
+    */
+
     const auto active = m_navigationContext.requestedTab == NavigationContext::TabID::Keyboard;
     if (ImGui::BeginTabItem("Keyboard", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
@@ -388,6 +402,7 @@ void OptionsV2::optionsWindow()
     if (m_showOptions)
     {
         tipText = {};
+        m_itemActive = false;
 
         //fit to screen
         const auto size = glm::vec2(cro::App::getWindow().getSize());
@@ -408,6 +423,18 @@ void OptionsV2::optionsWindow()
         ImGui::BeginChild("##child_main", { -1.f, size.y - (((ButtonHeight * 2.f) + (VerticalPadding * 2.f)) * scale) }, ImGuiChildFlags_NavFlattened);
         //left col for prev tab icon (eg LB)
         ImGui::BeginChild("##nav_left", { (NavColWidth * scale), -1.f }, ImGuiChildFlags_NavFlattened);
+        switch (m_sharedData.activeInput)
+        {
+        default:
+            ImGui::Text("Q");
+            break;
+        case SharedStateData::ActiveInput::PS:
+            ImGui::Text("L1");
+            break;
+        case SharedStateData::ActiveInput::XBox:
+            ImGui::Text("LB");
+            break;
+        }
         ImGui::EndChild(); //nav_left
         ImGui::SameLine();
         //centre col for tabbed area
@@ -428,6 +455,18 @@ void OptionsV2::optionsWindow()
         ImGui::SameLine();
         //right col for next tab item
         ImGui::BeginChild("##nav_right", { (NavColWidth * scale), -1.f }, ImGuiChildFlags_NavFlattened);
+        switch (m_sharedData.activeInput)
+        {
+        default:
+            ImGui::Text("E");
+            break;
+        case SharedStateData::ActiveInput::PS:
+            ImGui::Text("R1");
+            break;
+        case SharedStateData::ActiveInput::XBox:
+            ImGui::Text("RB");
+            break;
+        }
         ImGui::EndChild();//nav_right
         ImGui::EndChild();//child_main
 
@@ -464,5 +503,6 @@ void OptionsV2::optionsWindow()
         ImGui::GetStyle() = m_sharedData.uiScales[0];
 
         m_navigationContext.requestedTab = -1;
+        m_closeModal = false;
     }
 }
