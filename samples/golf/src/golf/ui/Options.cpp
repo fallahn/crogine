@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "../UserInterface.hpp"
+#include "../OptionsV2.hpp"
 #include "../SharedStateData.hpp"
 #include "../GameConsts.hpp"
 #include "../Career.hpp"
@@ -47,7 +47,7 @@ namespace
     std::string tipText;
 }
 
-void showTip(const std::string& s)
+static inline void showTip(const std::string& s)
 {
     if (ImGui::IsItemHovered())
     {
@@ -55,54 +55,54 @@ void showTip(const std::string& s)
     }
 }
 
-static inline void settingsTab(SharedStateData& sharedData, float scale, OptionsContext& optionsContext)
+void OptionsV2::settingsTab(float scale)
 {
-    const auto active = optionsContext.requestedTab == OptionsContext::TabID::Game;
+    const auto active = m_optionsContext.requestedTab == OptionsContext::TabID::Game;
     if (ImGui::BeginTabItem("Game Settings", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
-        optionsContext.tabIndex = OptionsContext::TabID::Game;
+        m_optionsContext.tabIndex = OptionsContext::TabID::Game;
 
         ImGui::BeginChild("##settings_child", {-1.f, -1.f}, ImGuiChildFlags_NavFlattened);
         ImGui::SeparatorText("Display");
-        ImGui::Checkbox("Show Flag Beacon", &sharedData.showBeacon); showTip("Display a coloured beacon at the flag visible from a distance");
-        ImGui::ColorButton("##bc", getBeaconColour(sharedData.beaconColour), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
+        ImGui::Checkbox("Show Flag Beacon", &m_sharedData.showBeacon); showTip("Display a coloured beacon at the flag visible from a distance");
+        ImGui::ColorButton("##bc", getBeaconColour(m_sharedData.beaconColour), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
         ImGui::SameLine();
         ImGui::SetNextItemWidth(120.f * scale);
         //ImGui::SliderFloat("Beacon Colour", &sharedData.beaconColour, 0.f, 1.f, "%.1f", ImGuiSliderFlags_NoInput);
-        ImGui::DragFloat("Beacon Colour", &sharedData.beaconColour, 0.1f, 0.f, 1.f, "%.1f", ImGuiSliderFlags_NoInput); //slider doesn't appear to have kb input
-        ImGui::Checkbox("Show Ball Trail", &sharedData.showBallTrail);
-        ImGui::Checkbox("Ball Trail Uses Beacon Colour", &sharedData.trailBeaconColour); showTip("Trail colour is white if unselected");
-        ImGui::Checkbox("Imperial Measurements", &sharedData.imperialMeasurements); showTip("Display measurements in Yards, Feet and Inches instead of Metres and Centimetres");
-        ImGui::Checkbox("Use Large Power Bar", &sharedData.useLargePowerBar);
-        ImGui::Checkbox("Use High Contrast Power Bar", &sharedData.useContrastPowerBar);
-        ImGui::Checkbox("Decimated Power Bar", &sharedData.decimatePowerBar); showTip("Divide the power bar into 10 segments instead of 8");
-        ImGui::Checkbox("Decimalised Distances", &sharedData.decimateDistance); showTip("Display distances in decimal units");
-        ImGui::Checkbox("Show Monthly Rival", &sharedData.showRival); showTip("Display this month's leader on the scoreboard if available");
-        ImGui::Checkbox("Use Follow Cam When Putting", &sharedData.puttFollowCam); showTip("Follow the ball when putting instead of the overhead view");
-        ImGui::Checkbox("Zoom Follow Cam", &sharedData.zoomFollowCam);
-        ImGui::Checkbox("Rotate Camera When Aiming", &sharedData.rotateCamera);
-        ImGui::Checkbox("Show Lens Flare", &sharedData.useLensFlare);
+        ImGui::DragFloat("Beacon Colour", &m_sharedData.beaconColour, 0.1f, 0.f, 1.f, "%.1f", ImGuiSliderFlags_NoInput); //slider doesn't appear to have kb input
+        ImGui::Checkbox("Show Ball Trail", &m_sharedData.showBallTrail);
+        ImGui::Checkbox("Ball Trail Uses Beacon Colour", &m_sharedData.trailBeaconColour); showTip("Trail colour is white if unselected");
+        ImGui::Checkbox("Imperial Measurements", &m_sharedData.imperialMeasurements); showTip("Display measurements in Yards, Feet and Inches instead of Metres and Centimetres");
+        ImGui::Checkbox("Use Large Power Bar", &m_sharedData.useLargePowerBar);
+        ImGui::Checkbox("Use High Contrast Power Bar", &m_sharedData.useContrastPowerBar);
+        ImGui::Checkbox("Decimated Power Bar", &m_sharedData.decimatePowerBar); showTip("Divide the power bar into 10 segments instead of 8");
+        ImGui::Checkbox("Decimalised Distances", &m_sharedData.decimateDistance); showTip("Display distances in decimal units");
+        ImGui::Checkbox("Show Monthly Rival", &m_sharedData.showRival); showTip("Display this month's leader on the scoreboard if available");
+        ImGui::Checkbox("Use Follow Cam When Putting", &m_sharedData.puttFollowCam); showTip("Follow the ball when putting instead of the overhead view");
+        ImGui::Checkbox("Zoom Follow Cam", &m_sharedData.zoomFollowCam);
+        ImGui::Checkbox("Rotate Camera When Aiming", &m_sharedData.rotateCamera);
+        ImGui::Checkbox("Show Lens Flare", &m_sharedData.useLensFlare);
 
         //TODO we can't actually preview this... as it's not applied to ImGui
-        if (ImGui::Checkbox("Use Post Process", &sharedData.usePostProcess))
+        if (ImGui::Checkbox("Use Post Process", &m_sharedData.usePostProcess))
         {
             //we end up with a circular event here because the action flips
             //the setting, but then this message flips it back again...
-            sharedData.usePostProcess = !sharedData.usePostProcess;
+            m_sharedData.usePostProcess = !m_sharedData.usePostProcess;
             auto* msg = cro::App::postMessage<SystemEvent>(cl::MessageID::SystemMessage);
             msg->type = SystemEvent::PostProcessToggled;
         }
         //post selection
         ImGui::SameLine();
-        ImGui::SetNextItemWidth(170.f);
-        if (ImGui::BeginCombo("##post_process", ShaderNames[sharedData.postProcessIndex].c_str()))
+        ImGui::SetNextItemWidth(170.f * scale);
+        if (ImGui::BeginCombo("##post_process", ShaderNames[m_sharedData.postProcessIndex].c_str()))
         {
             for (auto i = 0u; i < ShaderNames.size(); ++i)
             {
-                const bool selected = i == sharedData.postProcessIndex;
+                const bool selected = i == m_sharedData.postProcessIndex;
                 if (ImGui::Selectable(ShaderNames[i].c_str(), selected))
                 {
-                    sharedData.postProcessIndex = i;
+                    m_sharedData.postProcessIndex = i;
 
                     auto* msg = cro::App::postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                     msg->type = SystemEvent::PostProcessIndexChanged;
@@ -123,34 +123,34 @@ static inline void settingsTab(SharedStateData& sharedData, float scale, Options
         //flag selection
         ImGui::NewLine();
         ImGui::Text("Flag");
-        const auto s = sharedData.flagPreview.getSize() * scale;
-        const auto& t = sharedData.flagPreview.getTexure();
-        const auto uv = sharedData.flagPreview.getUV();
+        const auto s = m_flagPreview.getSize() * scale;
+        const auto& t = m_flagPreview.getTexure();
+        const auto uv = m_flagPreview.getUV();
         ImGui::Image(t, { s.x, s.y }, { uv.left, uv.height }, { uv.width, uv.bottom });
         if (ImGui::Button("<"))
         {
-            sharedData.flagPreview.prev();
-            sharedData.flagPath = sharedData.flagPreview.getPath();
+            m_flagPreview.prev();
+            m_sharedData.flagPath = m_flagPreview.getPath();
         }
         ImGui::SameLine();
         if (ImGui::Button(">"))
         {
-            sharedData.flagPreview.next();
-            sharedData.flagPath = sharedData.flagPreview.getPath();
+            m_flagPreview.next();
+            m_sharedData.flagPath = m_flagPreview.getPath();
         }
         ImGui::SameLine();
 
         static const std::vector<std::string> NumTypes = { "None","Black","White" };
-        ImGui::SetNextItemWidth(114.f);
-        if (ImGui::BeginCombo("Number", NumTypes[sharedData.flagText].c_str()))
+        ImGui::SetNextItemWidth(114.f * scale);
+        if (ImGui::BeginCombo("Number", NumTypes[m_sharedData.flagText].c_str()))
         {
             for (auto i = 0u; i < NumTypes.size(); ++i)
             {
-                const auto selected = i == sharedData.flagText;
+                const auto selected = i == m_sharedData.flagText;
                 if (ImGui::Selectable(NumTypes[i].c_str(), selected))
                 {
-                    sharedData.flagText = i;
-                    sharedData.flagPreview.setText(i);
+                    m_sharedData.flagText = i;
+                    m_flagPreview.setText(i);
                 }
                 if(selected)
                 {
@@ -165,28 +165,28 @@ static inline void settingsTab(SharedStateData& sharedData, float scale, Options
         ImGui::NewLine();
         ImGui::NewLine();
         ImGui::SeparatorText("Difficulty & Behaviour");
-        ImGui::Checkbox("Enable Putt Assist", &sharedData.showPuttingPower); showTip("Display a small flag above the power bar when putting to estimate distance");
-        ImGui::Checkbox("Precise Range Indicator", &sharedData.calculateRange); showTip("Accounts for terrain elevation and wind when drawing the range indicator instead of estimating the range");
-        ImGui::Checkbox("Use Full UI", &sharedData.showMinimap); showTip("Uncheck this for a minimal UI, hiding the minimap for increased challenge");
-        ImGui::Checkbox("Show In Game Tips", &sharedData.showInGameTips);
-        ImGui::Checkbox("Fixed Range Putter", &sharedData.fixedPuttingRange); showTip("Disable dynamically adjusting the putting range and fix to 10m/33ft");
+        ImGui::Checkbox("Enable Putt Assist", &m_sharedData.showPuttingPower); showTip("Display a small flag above the power bar when putting to estimate distance");
+        ImGui::Checkbox("Precise Range Indicator", &m_sharedData.calculateRange); showTip("Accounts for terrain elevation and wind when drawing the range indicator instead of estimating the range");
+        ImGui::Checkbox("Use Full UI", &m_sharedData.showMinimap); showTip("Uncheck this for a minimal UI, hiding the minimap for increased challenge");
+        ImGui::Checkbox("Show In Game Tips", &m_sharedData.showInGameTips);
+        ImGui::Checkbox("Fixed Range Putter", &m_sharedData.fixedPuttingRange); showTip("Disable dynamically adjusting the putting range and fix to 10m/33ft");
 
 
         ImGui::NewLine();
         ImGui::NewLine();
         ImGui::SeparatorText("Configuration");
-        ImGui::Checkbox("Enable Web Socket", &sharedData.webSocket); showTip("See https://github.com/fallahn/svs for more info");
+        ImGui::Checkbox("Enable Web Socket", &m_sharedData.webSocket); showTip("See https://github.com/fallahn/svs for more info");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(80.f * scale);
-        if (ImGui::InputInt("Port", &sharedData.webPort))
+        if (ImGui::InputInt("Port", &m_sharedData.webPort))
         {
-            sharedData.webPort = std::clamp(sharedData.webPort, WebSock::MinPort, WebSock::MaxPort);
+            m_sharedData.webPort = std::clamp(m_sharedData.webPort, WebSock::MinPort, WebSock::MaxPort);
         }
 
-        ImGui::Checkbox("Log Scores To CSV", &sharedData.logCSV); showTip("Files are saved to your user directory");
-        ImGui::Checkbox("Disable Multiplayer Chat", &sharedData.blockChat);
-        ImGui::Checkbox("Log Chat To Text File", &sharedData.logChat); showTip("Files are saved to your user directory");
-        ImGui::Checkbox("Enable Remote Content", &sharedData.remoteContent); showTip("Allow downloading remote content in multiplayer, such as Workshop items");
+        ImGui::Checkbox("Log Scores To CSV", &m_sharedData.logCSV); showTip("Files are saved to your user directory");
+        ImGui::Checkbox("Disable Multiplayer Chat", &m_sharedData.blockChat);
+        ImGui::Checkbox("Log Chat To Text File", &m_sharedData.logChat); showTip("Files are saved to your user directory");
+        ImGui::Checkbox("Enable Remote Content", &m_sharedData.remoteContent); showTip("Allow downloading remote content in multiplayer, such as Workshop items");
         
         //reset buttons
         ImVec2 ModalSize = { 300.f, 120.f };
@@ -231,9 +231,9 @@ static inline void settingsTab(SharedStateData& sharedData, float scale, Options
             showModal("This will reset any previously\ndisplayed hints",
                 [&]()
                 {
-                    sharedData.showClubUpdate = true;
-                    sharedData.showRosterTip = true;
-                    sharedData.showTutorialTip = true;
+                    m_sharedData.showClubUpdate = true;
+                    m_sharedData.showRosterTip = true;
+                    m_sharedData.showTutorialTip = true;
                 });
         }
 
@@ -252,26 +252,25 @@ static inline void settingsTab(SharedStateData& sharedData, float scale, Options
                     //this is a kludge which tells the
                     //menu state to remove any existing connection/server instance
                     //if for some reason we're resetting mid-game
-                    sharedData.gameMode = GameMode::Reset;// Tutorial;
-                    sharedData.leagueTable = 0; //must reset this else league browser tries to open non-existent table
-                    sharedData.leagueRoundID = 0;
+                    m_sharedData.gameMode = GameMode::Reset;// Tutorial;
+                    m_sharedData.leagueTable = 0; //must reset this else league browser tries to open non-existent table
+                    m_sharedData.leagueRoundID = 0;
 
-                    Career::instance(sharedData).reset();
+                    Career::instance(m_sharedData).reset();
 
                     Tournament t;
                     t.id = 0;
                     resetTournament(t);
                     writeTournamentData(t);
-                    sharedData.tournaments[0] = t;
+                    m_sharedData.tournaments[0] = t;
 
                     t.id = 1;
                     resetTournament(t);
                     writeTournamentData(t);
-                    sharedData.tournaments[1] = t;
+                    m_sharedData.tournaments[1] = t;
 
-                    //requestStackClear();
-                    //requestStackPush(StateID::SplashScreen);
-                    sharedData.showOptionsWindow = false;
+                    requestStackClear();
+                    requestStackPush(StateID::SplashScreen);
                 });
         }
 
@@ -291,9 +290,9 @@ static inline void settingsTab(SharedStateData& sharedData, float scale, Options
                 [&]()
                 {
                     Social::resetProfile();
-                    Career::instance(sharedData).reset();
+                    Career::instance(m_sharedData).reset();
 
-                    League l(LeagueRoundID::Club, sharedData);
+                    League l(LeagueRoundID::Club, m_sharedData);
                     l.reset();
 
                     Tournament t;
@@ -304,8 +303,8 @@ static inline void settingsTab(SharedStateData& sharedData, float scale, Options
                     resetTournament(t);
                     writeTournamentData(t);
 
-                    readTournamentData(sharedData.tournaments[0]);
-                    readTournamentData(sharedData.tournaments[1]);
+                    readTournamentData(m_sharedData.tournaments[0]);
+                    readTournamentData(m_sharedData.tournaments[1]);
 
                     cro::App::quit();
                 });
@@ -383,82 +382,86 @@ static inline void statsTab(float scale, OptionsContext& optionsContext)
     }
 }
 
-void optionsWindow(SharedStateData& sharedData, OptionsContext& optionsContext)
+void OptionsV2::optionsWindow()
 {
-    tipText = {};
-
-    //fit to screen
-    const auto size = glm::vec2(cro::App::getWindow().getSize());
-    const auto scale = getViewScale();
-    ImGui::SetNextWindowSize({ size.x, size.y });
-    ImGui::SetNextWindowPos({ 0.f, 0.f });
-
-    ImGui::GetStyle() = sharedData.uiScales[static_cast<std::int32_t>(scale) - 1];
-    const auto HPadding = ImGui::GetStyle().ItemSpacing.x;
-
-    //set background to semi-black
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.f, 0.f, BackgroundAlpha));
-
-    ImGui::GetFont()->Scale *= scale;
-    ImGui::PushFont(ImGui::GetFont());
-    ImGui::Begin("Options", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus);
-    //top row to contain main body
-    ImGui::BeginChild("##child_main", { -1.f, size.y - (((ButtonHeight * 2.f) + (VerticalPadding * 2.f)) * scale) }, ImGuiChildFlags_NavFlattened);
-    //left col for prev tab icon (eg LB)
-    ImGui::BeginChild("##nav_left", { (NavColWidth * scale), -1.f }, ImGuiChildFlags_NavFlattened);
-    ImGui::EndChild(); //nav_left
-    ImGui::SameLine();
-    //centre col for tabbed area
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f, 0.f, 0.f, BackgroundAlpha));
-    const float TabPaneWidth = size.x - ((((NavColWidth * scale) + (HPadding * 2.f)) * 2.f));
-    ImGui::BeginChild("##tab_pane", { TabPaneWidth, -1.f }, ImGuiChildFlags_Border | ImGuiChildFlags_NavFlattened);
-    ImGui::BeginTabBar("##tab_bar");
-    settingsTab(sharedData, scale, optionsContext);
-    keyboardTab(sharedData, scale, optionsContext);
-    controllerTab(sharedData, scale, optionsContext);
-    displayTab(sharedData, scale, optionsContext);
-    audioTab(sharedData, scale, optionsContext);
-    achievementsTab(scale, optionsContext);
-    statsTab(scale, optionsContext);
-    ImGui::EndTabBar();
-    ImGui::EndChild(); //tab_pane
-    ImGui::PopStyleColor(); //child BG
-    ImGui::SameLine();
-    //right col for next tab item
-    ImGui::BeginChild("##nav_right", { (NavColWidth * scale), -1.f }, ImGuiChildFlags_NavFlattened);
-    ImGui::EndChild();//nav_right
-    ImGui::EndChild();//child_main
-
-    ImGui::BeginChild("##child_tiptext", {-1.f, ButtonHeight * scale});
-    ImGui::Text("%s", tipText.c_str());
-    ImGui::EndChild();
-
-    //bottom row for credits/HTP/close buttons
-    ImGui::BeginChild("##child_bottom", {-1.f, ButtonHeight * scale}, ImGuiChildFlags_NavFlattened);
-    if (ImGui::Button("How To Play", { 0.f, ButtonHeight * scale }))
+    if (m_showOptions)
     {
-        sharedData.showHelp = true;
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Credits", { 0.f, ButtonHeight * scale }))
-    {
-        sharedData.showOptionsWindow = false;
-        //TODO raise message to request pushing credits
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Close", { 0.f, ButtonHeight * scale }))
-    {
-        sharedData.showOptionsWindow = false;
-    }
-    ImGui::EndChild(); //child_bottom
-    ImGui::End();
-    
-    ImGui::PopStyleColor(); //background
 
-    ImGui::GetFont()->Scale = 1.f;
-    ImGui::PopFont();
+        tipText = {};
 
-    ImGui::GetStyle() = sharedData.uiScales[0];
+        //fit to screen
+        const auto size = glm::vec2(cro::App::getWindow().getSize());
+        const auto scale = getViewScale();
+        ImGui::SetNextWindowSize({ size.x, size.y });
+        ImGui::SetNextWindowPos({ 0.f, 0.f });
 
-    optionsContext.requestedTab = -1;
+        ImGui::GetStyle() = m_sharedData.uiScales[static_cast<std::int32_t>(scale) - 1];
+        const auto HPadding = ImGui::GetStyle().ItemSpacing.x;
+
+        //set background to semi-black
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.f, 0.f, BackgroundAlpha));
+
+        ImGui::GetFont()->Scale *= scale;
+        ImGui::PushFont(ImGui::GetFont());
+        ImGui::Begin("Options", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus);
+        //top row to contain main body
+        ImGui::BeginChild("##child_main", { -1.f, size.y - (((ButtonHeight * 2.f) + (VerticalPadding * 2.f)) * scale) }, ImGuiChildFlags_NavFlattened);
+        //left col for prev tab icon (eg LB)
+        ImGui::BeginChild("##nav_left", { (NavColWidth * scale), -1.f }, ImGuiChildFlags_NavFlattened);
+        ImGui::EndChild(); //nav_left
+        ImGui::SameLine();
+        //centre col for tabbed area
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f, 0.f, 0.f, BackgroundAlpha));
+        const float TabPaneWidth = size.x - ((((NavColWidth * scale) + (HPadding * 2.f)) * 2.f));
+        ImGui::BeginChild("##tab_pane", { TabPaneWidth, -1.f }, ImGuiChildFlags_Border | ImGuiChildFlags_NavFlattened);
+        ImGui::BeginTabBar("##tab_bar");
+        settingsTab(scale);
+        keyboardTab(m_sharedData, scale, m_optionsContext);
+        controllerTab(m_sharedData, scale, m_optionsContext);
+        displayTab(m_sharedData, scale, m_optionsContext);
+        audioTab(m_sharedData, scale, m_optionsContext);
+        achievementsTab(scale, m_optionsContext);
+        statsTab(scale, m_optionsContext);
+        ImGui::EndTabBar();
+        ImGui::EndChild(); //tab_pane
+        ImGui::PopStyleColor(); //child BG
+        ImGui::SameLine();
+        //right col for next tab item
+        ImGui::BeginChild("##nav_right", { (NavColWidth * scale), -1.f }, ImGuiChildFlags_NavFlattened);
+        ImGui::EndChild();//nav_right
+        ImGui::EndChild();//child_main
+
+        ImGui::BeginChild("##child_tiptext", { -1.f, ButtonHeight * scale });
+        ImGui::Text("%s", tipText.c_str());
+        ImGui::EndChild();
+
+        //bottom row for credits/HTP/close buttons
+        ImGui::BeginChild("##child_bottom", { -1.f, ButtonHeight * scale }, ImGuiChildFlags_NavFlattened);
+        if (ImGui::Button("How To Play", { 0.f, ButtonHeight * scale }))
+        {
+            m_sharedData.showHelp = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Credits", { 0.f, ButtonHeight * scale }))
+        {
+            requestStackPop();
+            requestStackPush(StateID::Credits);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Close", { 0.f, ButtonHeight * scale }))
+        {
+            requestStackPop();
+        }
+        ImGui::EndChild(); //child_bottom
+        ImGui::End();
+
+        ImGui::PopStyleColor(); //background
+
+        ImGui::GetFont()->Scale = 1.f;
+        ImGui::PopFont();
+
+        ImGui::GetStyle() = m_sharedData.uiScales[0];
+
+        m_optionsContext.requestedTab = -1;
+    }
 }

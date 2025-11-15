@@ -42,7 +42,8 @@ source distribution.
 #include "golf/ShopState.hpp"
 #include "golf/BilliardsState.hpp"
 #include "golf/ErrorState.hpp"
-#include "golf/OptionsState.hpp"
+//#include "golf/OptionsState.hpp"
+#include "golf/OptionsV2.hpp"
 #include "golf/PauseState.hpp"
 #include "golf/TutorialState.hpp"
 #include "golf/KeyboardState.hpp"
@@ -217,7 +218,8 @@ GolfGame::GolfGame()
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData, m_profileData);
     m_stateStack.registerState<ProfileState>(StateID::Profile, m_sharedData, m_profileData);
-    m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
+    //m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
+    m_stateStack.registerState<OptionsV2>(StateID::Options, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);
     m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData, m_profileData);
@@ -1025,21 +1027,6 @@ bool GolfGame::initialise()
             m_stateStack.pushState(StateID::ScrubBackground);
         });
 
-    registerWindow([&]()
-        {
-            if (m_sharedData.showOptionsWindow)
-            {
-                optionsWindow(m_sharedData, optionsContext);
-
-                if (!m_sharedData.showOptionsWindow)
-                {
-                    //we must have closed so store the settings
-                    saveSettings();
-                    savePreferences();
-                }
-            }
-        });
-
 #ifdef USE_GNS
     //registerCommand("discord_connect",
     //    [](const std::string&) 
@@ -1201,8 +1188,6 @@ bool GolfGame::initialise()
 #endif
 
     applyImGuiStyle(m_sharedData);
-    m_sharedData.flagPreview.init(m_sharedData.flagPath);
-    m_sharedData.flagPreview.setText(m_sharedData.flagText);
 
     if (m_sharedData.webSocket)
     {

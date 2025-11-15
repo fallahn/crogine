@@ -74,6 +74,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/NewsState.cpp
   ${PROJECT_DIR}/golf/NotificationSystem.cpp
   ${PROJECT_DIR}/golf/OptionsState.cpp
+  ${PROJECT_DIR}/golf/OptionsV2.cpp
   ${PROJECT_DIR}/golf/PauseState.cpp
   ${PROJECT_DIR}/golf/ParticleDirector.cpp
   ${PROJECT_DIR}/golf/Path.cpp
