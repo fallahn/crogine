@@ -40,7 +40,7 @@ class FlagPreview final
 public:
     FlagPreview();
 
-    //sigh we need to lazy-load this
+    //sigh we need to lazy-load this (actually we don't now...)
     void init(const std::string&);
 
     const cro::Texture& getTexure() const { return m_textures[m_textIndex].getTexture(); }

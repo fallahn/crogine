@@ -32,7 +32,7 @@ source distribution.
 #include "OptionsV2.hpp"
 #include "SharedStateData.hpp"
 
-#include <crogine/gui/Gui.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
 
 namespace
 {
@@ -52,8 +52,38 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
 {
     registerWindow(std::bind(&OptionsV2::optionsWindow, this));
     
+    //TODO we don't really need this double init any more
     m_flagPreview.init(m_sharedData.flagPath);
     m_flagPreview.setText(m_sharedData.flagText);
+
+    //convert the sprites to nav icons
+    cro::SpriteSheet spriteSheet;
+    if (spriteSheet.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_textureResource))
+    {
+        m_navTexture = spriteSheet.getTexture()->getGLHandle();
+
+        const auto convertSprite =
+            [&](const std::string& sprName)
+            {
+                const auto sprite = spriteSheet.getSprite(sprName);
+                auto rect = sprite.getTextureRect();
+
+                NavIcon ret;
+                ret.size = { rect.width, rect.height };
+
+                rect = sprite.getTextureRectNormalised();
+                ret.uv0.x = rect.left;
+                ret.uv0.y = rect.bottom + rect.height; //UV is flipped vertically
+
+                ret.uv1.x = rect.left + rect.width;
+                ret.uv1.y = rect.bottom;
+                return ret;
+            };
+        m_navIcons[NavIcon::PSNext] = convertSprite("next_tab_ps");
+        m_navIcons[NavIcon::PSPrev] = convertSprite("prev_tab_ps");
+        m_navIcons[NavIcon::XBNext] = convertSprite("next_tab_xbox");
+        m_navIcons[NavIcon::XBPrev] = convertSprite("prev_tab_xbox");
+    }
 }
 
 //public

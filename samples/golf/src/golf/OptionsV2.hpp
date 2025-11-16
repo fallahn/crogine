@@ -33,7 +33,9 @@ source distribution.
 #include "../StateIDs.hpp"
 
 #include <crogine/core/State.hpp>
+#include <crogine/gui/Gui.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/graphics/TextureResource.hpp>
 
 //wrapper state for the ImGui version of the Options window
 class OptionsV2 final : public cro::State, public cro::GuiClient
@@ -85,6 +87,23 @@ private:
         std::int32_t tabIndex = TabID::Game;
         std::int32_t requestedTab = -1;
     }m_navigationContext;
+
+    struct NavIcon final
+    {
+        ImVec2 size = {};
+        ImVec2 uv0 = {};
+        ImVec2 uv1 = {};
+
+        enum
+        {
+            PSPrev, PSNext,
+            XBPrev, XBNext,
+            Count
+        };
+    };
+    cro::TextureResource m_textureResource;
+    cro::TextureID m_navTexture;
+    std::array<NavIcon, NavIcon::Count> m_navIcons = {};
 
     FlagPreview m_flagPreview;
     void optionsWindow();

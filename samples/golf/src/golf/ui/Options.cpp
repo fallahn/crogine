@@ -36,7 +36,6 @@ source distribution.
 #include "../../WebsocketServer.hpp"
 #include "../../Colordome-32.hpp"
 
-#include <crogine/gui/Gui.hpp>
 #include <crogine/util/Easings.hpp>
 
 namespace
@@ -436,18 +435,16 @@ void OptionsV2::optionsWindow()
         ImGui::BeginChild("##child_main", { -1.f, size.y - (((ButtonHeight * 2.f) + (VerticalPadding * 2.f)) * scale) }, ImGuiChildFlags_NavFlattened);
         //left col for prev tab icon (eg LB)
         ImGui::BeginChild("##nav_left", { (NavColWidth * scale), -1.f }, ImGuiChildFlags_NavFlattened);
-        switch (m_sharedData.activeInput)
+        if (m_sharedData.activeInput == SharedStateData::ActiveInput::PS)
         {
-        default:
-            ImGui::Text("Q");
-            break;
-        case SharedStateData::ActiveInput::PS:
-            ImGui::Text("L1");
-            break;
-        case SharedStateData::ActiveInput::XBox:
-            ImGui::Text("LB");
-            break;
+            ImGui::Image(m_navTexture, m_navIcons[NavIcon::PSPrev].size * scale, m_navIcons[NavIcon::PSPrev].uv0, m_navIcons[NavIcon::PSPrev].uv1);
         }
+        else if (m_sharedData.activeInput == SharedStateData::ActiveInput::XBox)
+        {
+            ImGui::Image(m_navTexture, m_navIcons[NavIcon::XBPrev].size * scale, m_navIcons[NavIcon::XBPrev].uv0, m_navIcons[NavIcon::XBPrev].uv1);
+        }
+        //TODO ideally I want to handle keyboard input but rendering the text at the correct
+        //size with the correct font is a right faff.
         ImGui::EndChild(); //nav_left
         ImGui::SameLine();
         //centre col for tabbed area
@@ -468,17 +465,13 @@ void OptionsV2::optionsWindow()
         ImGui::SameLine();
         //right col for next tab item
         ImGui::BeginChild("##nav_right", { (NavColWidth * scale), -1.f }, ImGuiChildFlags_NavFlattened);
-        switch (m_sharedData.activeInput)
+        if (m_sharedData.activeInput == SharedStateData::ActiveInput::PS)
         {
-        default:
-            ImGui::Text("E");
-            break;
-        case SharedStateData::ActiveInput::PS:
-            ImGui::Text("R1");
-            break;
-        case SharedStateData::ActiveInput::XBox:
-            ImGui::Text("RB");
-            break;
+            ImGui::Image(m_navTexture, m_navIcons[NavIcon::PSNext].size * scale, m_navIcons[NavIcon::PSNext].uv0, m_navIcons[NavIcon::PSNext].uv1);
+        }
+        else if (m_sharedData.activeInput == SharedStateData::ActiveInput::XBox)
+        {
+            ImGui::Image(m_navTexture, m_navIcons[NavIcon::XBNext].size * scale, m_navIcons[NavIcon::XBNext].uv0, m_navIcons[NavIcon::XBNext].uv1);
         }
         ImGui::EndChild();//nav_right
         ImGui::EndChild();//child_main
