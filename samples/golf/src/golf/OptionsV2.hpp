@@ -61,6 +61,7 @@ private:
     bool m_itemActive; //set this true if a combo box etc it open to prevent closing with controller
     bool m_closeModal;
     std::int32_t m_prevFocus;
+    std::int32_t m_prevHovered;
 
     void onCachedPush() override;
     void onCachedPop() override;

@@ -139,14 +139,14 @@ void OptionsV2::settingsTab(float scale)
         {
             m_flagPreview.prev();
             m_sharedData.flagPath = m_flagPreview.getPath();
-            playSound(MenuSoundEvent::Prev);
+            playSound(MenuSoundEvent::Cancel);
         }
         ImGui::SameLine();
         if (ImGui::Button(">"))
         {
             m_flagPreview.next();
             m_sharedData.flagPath = m_flagPreview.getPath();
-            playSound(MenuSoundEvent::Next);
+            playSound(MenuSoundEvent::Activate);
         }
         ImGui::SameLine();
 
@@ -492,17 +492,19 @@ void OptionsV2::optionsWindow()
         if (ImGui::Button("How To Play", { 0.f, ButtonHeight * scale }))
         {
             m_sharedData.showHelp = true;
+            playSound(MenuSoundEvent::Activate);
         }
         ImGui::SameLine();
         if (ImGui::Button("Credits", { 0.f, ButtonHeight * scale }))
         {
             requestStackPop();
             requestStackPush(StateID::Credits);
+            playSound(MenuSoundEvent::Activate);
         }
         ImGui::SameLine();
         if (ImGui::Button("Close", { 0.f, ButtonHeight * scale }))
         {
-            //requestStackPop();
+            playSound(MenuSoundEvent::Cancel);
             m_animationTarget = 0.f;
         }
         ImGui::EndChild(); //child_bottom
@@ -522,9 +524,22 @@ void OptionsV2::optionsWindow()
         if (m_prevFocus != ImGui::getFocusID())
         {
             //focus changes, play a sound
-            playSound(MenuSoundEvent::Next);
+            if (m_sharedData.activeInput != SharedStateData::ActiveInput::Keyboard)
+            {
+                playSound(MenuSoundEvent::Switch);
+            }
 
             m_prevFocus = ImGui::getFocusID();
+        }
+
+        if (m_prevHovered != ImGui::getHoveredID())
+        {
+            if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+            {
+                playSound(MenuSoundEvent::Switch);
+            }
+
+            m_prevHovered = ImGui::getHoveredID();
         }
     }
 }

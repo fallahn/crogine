@@ -175,6 +175,8 @@ public:
             SkinsWin,
             Snapshot,
             Switch,
+            Accept,
+            Back,
             Toot,
             PlayerQuit,
             Fore,

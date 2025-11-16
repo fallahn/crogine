@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -62,10 +62,33 @@ bool ui::wantsKeyboard()
     return ImGui::GetIO().WantCaptureKeyboard;
 }
 
+/*
+These are used to expose some internal functionality so we can test
+when items have changed and trigger sound events.
+
+Note also there are a series of other changes (which, admittedly, make
+upgrading ImGui a bit more tricky) so I'll attempt to list them all
+hhere - although I'm bound to forget a few:
+
+imgui.cpp NavUpdate() - controller thumbstick is set to right thumb for
+scrolling
+imgui.cpp RenderNavHighlight() - the clip box is expanded as it clips
+too much
+
+
+It's also helpful to find the ImGui release the current version in based
+on and perform a diff with the files included in this repo.
+*/
+
 namespace ImGui
 {
     std::int32_t getFocusID()
     {
         return ImGui::GetFocusID();
+    }
+
+    std::int32_t getHoveredID()
+    {
+        return ImGui::GetHoveredID();
     }
 }

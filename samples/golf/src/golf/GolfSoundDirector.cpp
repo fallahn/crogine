@@ -198,6 +198,8 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/menu/skins.wav",
         "assets/golf/sound/menu/snapshot.wav",
         "assets/golf/sound/menu/switch.wav",
+        "assets/golf/sound/menu/accept.wav",
+        "assets/golf/sound/menu/back.wav",
         "assets/golf/sound/menu/toot2.wav",
         "assets/golf/sound/menu/lobby_exit.wav",
         "assets/golf/sound/menu/start_game.wav",
@@ -244,6 +246,27 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (msg.id)
         {
         default: break;
+        case cl::MessageID::MenuSoundMessage:
+        {
+            const auto& data = msg.getData<MenuSoundEvent>();
+            switch (data.type)
+            {
+            default: break;
+            case MenuSoundEvent::Activate:
+                playSound(AudioID::Accept, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case MenuSoundEvent::Cancel:
+                playSound(AudioID::Back, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case MenuSoundEvent::Switch:
+                playSound(AudioID::Switch, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case MenuSoundEvent::Denied:
+
+                break;
+            }
+        }
+        break;
         case MessageID::EnviroMessage:
         {
             const auto& data = msg.getData<EnviroEvent>();

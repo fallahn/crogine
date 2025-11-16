@@ -51,7 +51,7 @@ namespace cl::MessageID
         AIMessage,
         EnviroMessage,
         WebSocketMessage,
-        MesnuSoundMessage,
+        MenuSoundMessage,
 
         Count
     };
@@ -246,7 +246,7 @@ struct MenuSoundEvent final
 {
     enum
     {
-        Prev, Next, Activate,
+        Switch, Activate,
         Cancel, Denied
     };
     std::uint8_t type = 0;

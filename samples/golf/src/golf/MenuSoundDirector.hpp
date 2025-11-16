@@ -58,11 +58,15 @@ public:
             LobbyJoin,
             LobbyExit,
             Title,
-            Switch,
             Woof,
             Fw01,
             Fw02,
             Fw03,
+//aounds before here are rate limited
+            Switch,
+            Accept,
+            Back,
+
 
             Bounce01,
             Bounce02,

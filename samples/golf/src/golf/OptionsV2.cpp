@@ -47,7 +47,8 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
     m_animationProgress (0.f),
     m_itemActive        (false),
     m_closeModal        (false),
-    m_prevFocus         (0)
+    m_prevFocus         (0),
+    m_prevHovered       (0)
 {
     registerWindow(std::bind(&OptionsV2::optionsWindow, this));
     
@@ -65,7 +66,7 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
             {
                 m_navigationContext.tabIndex = (m_navigationContext.tabIndex + (NavigationContext::TabID::Count - 1)) % NavigationContext::TabID::Count;
                 m_navigationContext.requestedTab = m_navigationContext.tabIndex;
-                //TODO trigger audio somehow
+                playSound(MenuSoundEvent::Cancel); //nice intuitive naming...
             };
 
         const auto nextTab =
@@ -73,7 +74,7 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
             {
                 m_navigationContext.tabIndex = (m_navigationContext.tabIndex + 1) % NavigationContext::TabID::Count;
                 m_navigationContext.requestedTab = m_navigationContext.tabIndex;
-                //TODO trigger audio somehow
+                playSound(MenuSoundEvent::Activate);
             };
 
         const auto setActiveInput =
@@ -87,7 +88,7 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
                     m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
                 }
                 else if (evt.type == SDL_CONTROLLERAXISMOTION
-                    || evt.type == SDL_CONTROLLERBUTTONUP)
+                    || evt.type == SDL_CONTROLLERBUTTONDOWN)
                 {
                     //else controller axis or button
                     m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) ?
@@ -209,10 +210,7 @@ void OptionsV2::closeWindow()
 
 void OptionsV2::playSound(std::int32_t s)
 {
-    LogI << "Play sound " << s << std::endl;
-
-    //TODO implement this in the active sound director
-    auto* msg = postMessage<MenuSoundEvent>(cl::MessageID::MesnuSoundMessage);
+    auto* msg = postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage);
     msg->type = static_cast<std::uint8_t>(s);
 }
 

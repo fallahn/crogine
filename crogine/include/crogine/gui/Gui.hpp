@@ -118,4 +118,5 @@ namespace ImGui
 
     //helper to find the id of the current focused widget (this isn't exposed by the public API by default)
     CRO_EXPORT_API std::int32_t getFocusID();
+    CRO_EXPORT_API std::int32_t getHoveredID();
 }
