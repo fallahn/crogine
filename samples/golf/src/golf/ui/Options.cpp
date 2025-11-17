@@ -69,7 +69,27 @@ static inline void popImageButtonStyle()
     ImGui::PopStyleVar(2);
     ImGui::PopStyleColor(3);
 }
-
+//InputBinding
+static inline bool keyBinding(SharedStateData& sd, std::int32_t index)
+{
+    const std::string label = "Change##" + std::to_string(index);
+    const auto keyString = cro::Keyboard::keyString(sd.inputBinding.keys[index]).toUtf8Char();
+    
+    bool ret = false;
+    ImGui::TableNextColumn();
+    if (ImGui::Button(label.c_str()))
+    {
+        //don't early out here!
+        ret = true;
+    }
+    ImGui::TableNextColumn();
+    ImGui::Text("%s", InputLabels[index].c_str());
+    ImGui::TableNextColumn();
+    ImGui::Text("%s", keyString.c_str());
+    
+    ImGui::TableNextRow();
+    return ret;
+}
 
 void OptionsV2::settingsTab(float scale)
 {
@@ -223,33 +243,6 @@ void OptionsV2::settingsTab(float scale)
         const auto pos = (ImGui::GetIO().DisplaySize - ModalSize) / 2.f;
         const auto modalFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration;
 
-        const auto showModal = 
-            [&](const std::string& s, std::function<void()> cb)
-            {
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f, 0.f, 0.f, 0.f));
-                ImGui::BeginChild("##child_modal", {-1.f, ModalSize.y - (40.f * scale)}, ImGuiChildFlags_NavFlattened);
-                ImGui::Text("%s", s.c_str());
-                ImGui::EndChild();
-                ImGui::PopStyleColor();
-
-                const auto buttonWidth = ((ModalSize.x / 2.f) - (ImGui::GetStyle().ItemSpacing.x * 1.5f));
-                if (ImGui::Button("Cancel", {buttonWidth, 0.f})
-                    || m_closeModal)
-                {
-                    ImGui::CloseCurrentPopup();
-                    playSound(MenuSoundEvent::Cancel);
-                }   
-                ImGui::SameLine();
-                if (ImGui::Button("OK", {buttonWidth, 0.f}))
-                {
-                    cb();
-                    ImGui::CloseCurrentPopup();
-                    playSound(MenuSoundEvent::Activate);
-                }
-                ImGui::EndPopup();
-
-                m_itemActive = true;
-            };
 
         ImGui::NewLine();
         pushImageButtonStyle(scale);
@@ -266,13 +259,13 @@ void OptionsV2::settingsTab(float scale)
         ImGui::SetNextWindowPos(pos);
         if (ImGui::BeginPopupModal("Reset Hints?", nullptr, modalFlags))
         {
-            showModal("This will reset any previously\ndisplayed hints",
+            confirmModal("This will reset any previously\ndisplayed hints",
                 [&]()
                 {
                     m_sharedData.showClubUpdate = true;
                     m_sharedData.showRosterTip = true;
                     m_sharedData.showTutorialTip = true;
-                });
+                }, ModalSize, scale);
         }
 
         ImGui::SameLine();
@@ -289,7 +282,7 @@ void OptionsV2::settingsTab(float scale)
         ImGui::SetNextWindowPos(pos);
         if (ImGui::BeginPopupModal("Reset Career?", nullptr, modalFlags))
         {
-            showModal("Are you sure?\n\nThis will reset all of your\ncareer progress, preserving\nany unlocked items.",
+            confirmModal("Are you sure?\n\nThis will reset all of your\ncareer progress, preserving\nany unlocked items.",
                 [&]()
                 {
                     //this is a kludge which tells the
@@ -314,7 +307,7 @@ void OptionsV2::settingsTab(float scale)
 
                     requestStackClear();
                     requestStackPush(StateID::SplashScreen);
-                });
+                }, ModalSize, scale);
         }
 
         ImGui::SameLine();
@@ -332,7 +325,7 @@ void OptionsV2::settingsTab(float scale)
         ImGui::SetNextWindowPos(pos);
         if (ImGui::BeginPopupModal("Reset Profile?", nullptr, modalFlags))
         {
-            showModal("Are You REALLY Sure?\n\nThis will reset all of your\nprogress including all of\nyour XP and quit the game.",
+            confirmModal("Are You REALLY Sure?\n\nThis will reset all of your\nprogress including all of\nyour XP and quit the game.",
                 [&]()
                 {
                     Social::resetProfile();
@@ -353,7 +346,7 @@ void OptionsV2::settingsTab(float scale)
                     readTournamentData(m_sharedData.tournaments[1]);
 
                     cro::App::quit();
-                });
+                }, ModalSize, scale);
         }
 
 
@@ -366,9 +359,9 @@ void OptionsV2::keyboardTab(float scale)
 {
     /*
     Note to self: Sliders must set m_itemActive with GetItemActive()
-    and combos can  set this directly - this stops the back button
+    and combos can set this directly - this stops the back button
     from closing the window when finishing an edit.
-    Modals need to check m_closeModal to makes sure there's no close request.
+    Modals need to check m_closeModal to make sure there's no close request.
     */
 
     const auto active = m_navigationContext.requestedTab == NavigationContext::TabID::Keyboard;
@@ -376,6 +369,111 @@ void OptionsV2::keyboardTab(float scale)
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Keyboard;
 
+        ImGui::BeginChild("##keyboard_child", { -1.f, -1.f }, ImGuiChildFlags_NavFlattened);
+
+        ImGui::SeparatorText("Key Bindings");
+
+        //shared by all modals, below
+        ImVec2 ModalSize = { 300.f, 120.f };
+        ModalSize *= scale;
+
+        const auto pos = (ImGui::GetIO().DisplaySize - ModalSize) / 2.f;
+        const auto modalFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration;
+
+        if (ImGui::BeginTable("##table", 3, ImGuiTableFlags_NoSavedSettings, ImVec2(-1.f, 0.f)))
+        {
+            ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_WidthFixed, 50.f * scale);
+            ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed, 100.f * scale);
+            ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_WidthFixed, 50.f * scale);
+            ImGui::TableHeadersRow();
+            std::int32_t rebindIndex = -1;
+            for (auto i = 0; i < InputBinding::Count; ++i)
+            {
+                if (keyBinding(m_sharedData, i))
+                {
+                    rebindIndex = i;
+                }
+            }
+
+            ImGui::EndTable();
+
+            if (rebindIndex != -1)
+            {
+                m_rebindIndex = rebindIndex;
+                ImGui::OpenPopup("Rebind Key");
+            }
+
+            ImGui::SetNextWindowSize(ModalSize);
+            ImGui::SetNextWindowPos(pos);
+            if (ImGui::BeginPopupModal("Rebind Key", 0, modalFlags))
+            {
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f, 0.f, 0.f, 0.f));
+                ImGui::BeginChild("##child_modal", { -1.f, ModalSize.y - (40.f * scale) }, ImGuiChildFlags_NavFlattened);
+                ImGui::Text("Press Any Key or ESC to Cancel");
+
+                if (!m_rebindMessage.empty())
+                {
+                    ImGui::NewLine();
+                    ImGui::PushStyleColor(ImGuiCol_Text, TextGoldColour);
+                    ImGui::Text("%s", m_rebindMessage.c_str());
+                    ImGui::PopStyleColor();
+                }
+
+                ImGui::EndChild();
+                ImGui::PopStyleColor();
+
+                if (m_closeModal)
+                {
+                    m_rebindIndex = -1;
+                    m_rebindMessage.clear();
+                    ImGui::CloseCurrentPopup();
+                    playSound(MenuSoundEvent::Cancel);
+                }
+
+                ImGui::EndPopup();
+                m_itemActive = true;
+            }
+        }
+
+        ImGui::NewLine();
+        if (ImGui::Button("Reset To Default"))
+        {
+            ImGui::OpenPopup("Reset Keybindings");
+            
+        }
+
+
+        ImGui::SetNextWindowSize(ModalSize);
+        ImGui::SetNextWindowPos(pos);
+        if (ImGui::BeginPopupModal("Reset Keybindings", 0, modalFlags))
+        {
+            confirmModal("Really reset keys to their default?", 
+                [&]()
+                {
+                    const auto playerID = m_sharedData.inputBinding.playerID;
+                    const auto clubset = m_sharedData.inputBinding.clubset;
+                    m_sharedData.inputBinding = {};
+                    m_sharedData.inputBinding.playerID = playerID;
+                    m_sharedData.inputBinding.clubset = clubset; 
+                }, ModalSize, scale);
+        }
+
+
+        ImGui::NewLine();
+        ImGui::PushStyleColor(ImGuiCol_Text, TextGoldColour);
+        ImGui::Text("Fixed Keys (Cannot be assigned):");
+        ImGui::PopStyleColor();
+        ImGui::BeginChild("##Fixed Keys", { -1.f, 292.f * scale }, ImGuiChildFlags_NavFlattened | ImGuiChildFlags_Border);
+        ImGui::Text("Number Row:\n 1 - Drone Camera (Fairway)/Measure Putt (Green)\n 2 - Freecam\n 3 - Rotate Camera Left\n 4 - Rotate Camera Right\n 5 - Zoom Minimap\n 6 - Toggle DOF (Freecam)\n 7 - Emote(Applaud)\n 8 - Emote(Laugh)\n 9 - Emote(Happy)\n 0 - Emote(Angry)\n");
+        ImGui::NewLine();
+        ImGui::Text("F2 - Toggle Ball Labels\nF3 - Toggle UI\nF4 - Toggle Chat\nF5 - Take Screenshot\nF7 - Toggle Putting Grid\nF11 - Toggle Full Screen");
+        ImGui::Text("Tab - Show Scores\nEscape - Open Menu");
+        ImGui::EndChild(); //fixed keys
+
+        checkbox("Enable Left Mouse as Action Button", &m_sharedData.useMouseAction);
+        checkbox("Hold For Power", &m_sharedData.pressHold); showTip("Press and hold the Action button to select power, instead of 3-click");
+
+        ImGui::EndChild(); //keyboard_child
         ImGui::EndTabItem();
     }
 }

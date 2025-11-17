@@ -48,7 +48,8 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
     m_itemActive        (false),
     m_closeModal        (false),
     m_prevFocus         (0),
-    m_prevHovered       (0)
+    m_prevHovered       (0),
+    m_rebindIndex       (-1)
 {
     registerWindow(std::bind(&OptionsV2::optionsWindow, this));
     
@@ -114,6 +115,39 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
 {
     if (m_showOptions)
     {
+        if (m_rebindIndex != -1)
+        {
+            //rebinding is active
+            if (evt.type == SDL_KEYDOWN)
+            {
+                switch (evt.key.keysym.sym)
+                {
+                default: break;
+                case SDLK_ESCAPE:
+                case SDLK_BACKSPACE:
+                    closeWindow();
+                    break;
+                }
+
+                updateKeybind(evt.key.keysym.sym);
+            }
+
+            else if (evt.type == SDL_MOUSEBUTTONDOWN
+                && evt.button.button == SDL_BUTTON_RIGHT)
+            {
+                closeWindow();
+            }
+
+            else if (evt.type == SDL_CONTROLLERBUTTONDOWN
+                && evt.cbutton.button == cro::GameController::ButtonB)
+            {
+                closeWindow();
+            }
+
+            return false;
+        }
+
+
         const auto prevTab =
             [&]()
             {
@@ -184,14 +218,15 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
                     break;
             }
 
-            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+            //hmm this breaks if the user assigns something like return to one of these
+            /*if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
             {
                 prevTab();
             }
             else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
             {
                 nextTab();
-            }
+            }*/
             setActiveInput();
             break;
         case SDL_MOUSEMOTION:
@@ -273,4 +308,99 @@ void OptionsV2::checkbox(const char* s, bool* b)
     {
         playSound(MenuSoundEvent::Activate);
     }
+}
+
+void OptionsV2::confirmModal(const char* text, std::function<void()> cb, ImVec2 size, float scale)
+{
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f, 0.f, 0.f, 0.f));
+    ImGui::BeginChild("##child_modal", { -1.f, size.y - (40.f * scale) }, ImGuiChildFlags_NavFlattened);
+    ImGui::Text("%s", text);
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
+
+    const auto buttonWidth = ((size.x / 2.f) - (ImGui::GetStyle().ItemSpacing.x * 1.5f));
+    if (ImGui::Button("Cancel", { buttonWidth, 0.f })
+        || m_closeModal)
+    {
+        ImGui::CloseCurrentPopup();
+        playSound(MenuSoundEvent::Cancel);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("OK", { buttonWidth, 0.f }))
+    {
+        cb();
+        ImGui::CloseCurrentPopup();
+        playSound(MenuSoundEvent::Activate);
+    }
+    ImGui::EndPopup();
+
+    m_itemActive = true;
+}
+
+void OptionsV2::updateKeybind(SDL_Keycode key)
+{
+    //prevent binding top row and function keys
+    static constexpr std::array LockedKeys =
+    {
+        SDLK_1,
+        SDLK_2,
+        SDLK_3,
+        SDLK_4,
+        SDLK_5,
+        SDLK_6,
+        SDLK_7,
+        SDLK_8,
+        SDLK_9,
+        SDLK_0,
+
+        SDLK_F1,
+        SDLK_F2,
+        SDLK_F3,
+        SDLK_F4,
+        SDLK_F5,
+        SDLK_F6,
+        SDLK_F7,
+        SDLK_F8,
+        SDLK_F9,
+        SDLK_F10,
+        SDLK_F11,
+        SDLK_F12,
+
+        SDLK_KP_MINUS,
+        SDLK_KP_PLUS,
+        SDLK_TAB
+    };
+    if (const auto result = std::find(std::cbegin(LockedKeys), std::cend(LockedKeys), key);
+        result != std::cend(LockedKeys))
+    {
+        playSound(MenuSoundEvent::Denied);
+        m_rebindMessage = "This Key Cannot Be Assigned";
+        return;
+    }
+
+
+    auto& keys = m_sharedData.inputBinding.keys;
+    if (const auto result = std::find(keys.cbegin(), keys.cend(), key);
+        result != keys.cend())
+    {
+        playSound(MenuSoundEvent::Denied);
+        m_rebindMessage = "This Key Is Already Bound to:\n\n" + InputLabels[std::distance(keys.cbegin(), result)];
+        return;
+    }
+
+    //these keys cancel the input
+    if (key != SDLK_ESCAPE
+        && key != SDLK_BACKSPACE)
+    {
+        keys[m_rebindIndex] = key;
+        playSound(MenuSoundEvent::Activate);
+    }
+    else
+    {
+        playSound(MenuSoundEvent::Cancel);
+    }
+
+    closeWindow();
+    m_rebindMessage.clear();
+    m_rebindIndex = -1;
 }

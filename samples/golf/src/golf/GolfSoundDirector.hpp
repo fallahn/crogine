@@ -177,6 +177,7 @@ public:
             Switch,
             Accept,
             Back,
+            Denied,
             Toot,
             PlayerQuit,
             Fore,

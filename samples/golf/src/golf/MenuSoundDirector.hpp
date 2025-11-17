@@ -66,6 +66,7 @@ public:
             Switch,
             Accept,
             Back,
+            Denied,
 
 
             Bounce01,

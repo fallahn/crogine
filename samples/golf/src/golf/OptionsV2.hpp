@@ -136,6 +136,9 @@ private:
     cro::TextureID m_buttonTexture;
     std::array<Icon, ButtonIcon::Count> m_buttonIcons = {};
 
+    std::int32_t m_rebindIndex;
+    std::string m_rebindMessage;
+
     FlagPreview m_flagPreview;
     void optionsWindow();
 
@@ -149,4 +152,7 @@ private:
 
     //shortcut to render checkbox and play sound when activated
     void checkbox(const char*, bool*);
+    //note THIS INCLUDES EndPopUp()
+    void confirmModal(const char*, std::function<void()>, ImVec2 size, float scale);
+    void updateKeybind(SDL_Keycode key);
 };

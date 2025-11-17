@@ -67,6 +67,7 @@ MenuSoundDirector::MenuSoundDirector(cro::AudioResource& ar, const std::size_t& 
         "assets/golf/sound/menu/switch.wav",
         "assets/golf/sound/menu/accept.wav",
         "assets/golf/sound/menu/back.wav",
+        "assets/golf/sound/menu/nope.wav",
 
         "assets/golf/sound/menu/bucket/bounce01.wav",
         "assets/golf/sound/menu/bucket/bounce02.wav",
@@ -121,7 +122,7 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
                 playSound(AudioID::Switch, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
                 break;
             case MenuSoundEvent::Denied:
-
+                playSound(AudioID::Denied, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
                 break;
             }
         }

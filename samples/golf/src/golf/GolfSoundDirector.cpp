@@ -200,6 +200,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/menu/switch.wav",
         "assets/golf/sound/menu/accept.wav",
         "assets/golf/sound/menu/back.wav",
+        "assets/golf/sound/menu/nope.wav",
         "assets/golf/sound/menu/toot2.wav",
         "assets/golf/sound/menu/lobby_exit.wav",
         "assets/golf/sound/menu/start_game.wav",
@@ -262,7 +263,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 playSound(AudioID::Switch, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
                 break;
             case MenuSoundEvent::Denied:
-
+                playSound(AudioID::Denied, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
                 break;
             }
         }
