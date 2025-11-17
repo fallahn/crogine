@@ -957,74 +957,75 @@ void GolfState::registerDebugCommands()
 
 void GolfState::registerDebugWindows()
 {
-    registerWindow([&]()
-        {
-            /*ImGui::Begin("sdef");
-            for (auto& t : m_sharedData.nameTextures)
-            {
-                glm::vec2 size(t.getSize());
-                ImGui::Image(t.getTexture(), size, { 0.f, 1.f }, { 1.f, 0.f });
-                ImGui::SameLine();
-            }
-            ImGui::End();*/
-
-            //if (ImGui::Begin("Ball Cam"))
-            //{
-            //    glm::vec2 size(m_flightTexture.getSize());
-            //    ImGui::Image(m_flightTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
-
-            //    auto& cam = m_flightCam.getComponent<cro::Camera>();
-            //    static float fov = 60.f;
-            //    if (ImGui::SliderFloat("FOV", &fov, 40.f, 90.f))
-            //    {
-            //        cam.setPerspective(fov * cro::Util::Const::degToRad, 1.f, 0.001f, static_cast<float>(MapSize.x) * 1.25f/*, m_shadowQuality.cascadeCount*/);
-            //    }
-
-            //    static glm::vec3 pos(0.f);
-            //    if (ImGui::SliderFloat("Y", &pos.y, 0.f, 0.1f))
-            //    {
-            //        m_flightCam.getComponent<cro::Transform>().setPosition(m_currentPlayer.position + pos);
-            //    }
-            //    if (ImGui::SliderFloat("Z", &pos.z, 0.f, 0.1f))
-            //    {
-            //        m_flightCam.getComponent<cro::Transform>().setPosition(m_currentPlayer.position + pos);
-            //    }
-
-            //    static float rotation = 0.f;
-            //    if (ImGui::SliderFloat("Rotation", &rotation, -0.2f, 0.2f))
-            //    {
-            //        m_flightCam.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rotation);
-            //    }
-            //}
-            //ImGui::End();
-
-            //if (ImGui::Begin("Ach Track"))
-            //{
-            //    ImGui::Text("No holes over par %s", m_achievementTracker.noHolesOverPar ? "true" : "false");
-            //    ImGui::Text("No gimme used %s", m_achievementTracker.noGimmeUsed ? "true" : "false");
-            //    ImGui::Text("Two shots spare %s", m_achievementTracker.twoShotsSpare ? "true" : "false");
-            //    ImGui::Text("Consistency %s", m_achievementTracker.alwaysOnTheCourse ? "true" : "false");
-            //    ImGui::Text("Under two putts %s", m_achievementTracker.underTwoPutts ? "true" : "false");
-            //    ImGui::Text("Putt count %d", m_achievementTracker.puttCount);
-            //}
-            //ImGui::End();
-
-            /*if (ImGui::Begin("Depth Map"))
-            {
-                glm::vec2 size(m_gameSceneTexture.getSize() / 2u);
-                ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
-            }
-            ImGui::End();*/
-        });
-
     //registerWindow([&]()
     //    {
-    //        if (ImGui::Begin("Spin"))
+    //        /*ImGui::Begin("Sky Colour");
+    //        auto colours = m_skyScene.getSkyboxColours();
+    //        glm::vec4 skyTop = colours.top.getVec4();
+
+    //        if (ImGui::ColorEdit3("Top", &skyTop[0]))
     //        {
-    //            auto spin = m_inputParser.getSpin();
-    //            ImGui::SliderFloat2("Spin", &spin[0], -1.f, 1.f);
-    //            ImGui::End();
+    //            colours.top = skyTop;
+    //            m_skyScene.setSkyboxColours(colours);
     //        }
+
+    //        glm::vec4 skyMid = colours.middle.getVec4();
+    //        if (ImGui::ColorEdit3("Middle", &skyMid[0]))
+    //        {
+    //            colours.middle = skyMid;
+    //            m_skyScene.setSkyboxColours(colours);
+    //        }
+
+    //        auto sunColour = m_skyScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
+    //        if (ImGui::ColorEdit3("Sun", &sunColour[0]))
+    //        {
+    //            m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(sunColour);
+    //            m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(sunColour);
+    //        }
+
+
+    //        ImGui::End();*/
+
+    //        //if (ImGui::Begin("Ball Cam"))
+    //        //{
+    //        //    glm::vec2 size(m_flightTexture.getSize());
+    //        //    ImGui::Image(m_flightTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+
+    //        //    auto& cam = m_flightCam.getComponent<cro::Camera>();
+    //        //    static float fov = 60.f;
+    //        //    if (ImGui::SliderFloat("FOV", &fov, 40.f, 90.f))
+    //        //    {
+    //        //        cam.setPerspective(fov * cro::Util::Const::degToRad, 1.f, 0.001f, static_cast<float>(MapSize.x) * 1.25f/*, m_shadowQuality.cascadeCount*/);
+    //        //    }
+
+    //        //    static glm::vec3 pos(0.f);
+    //        //    if (ImGui::SliderFloat("Y", &pos.y, 0.f, 0.1f))
+    //        //    {
+    //        //        m_flightCam.getComponent<cro::Transform>().setPosition(m_currentPlayer.position + pos);
+    //        //    }
+    //        //    if (ImGui::SliderFloat("Z", &pos.z, 0.f, 0.1f))
+    //        //    {
+    //        //        m_flightCam.getComponent<cro::Transform>().setPosition(m_currentPlayer.position + pos);
+    //        //    }
+
+    //        //    static float rotation = 0.f;
+    //        //    if (ImGui::SliderFloat("Rotation", &rotation, -0.2f, 0.2f))
+    //        //    {
+    //        //        m_flightCam.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rotation);
+    //        //    }
+    //        //}
+    //        //ImGui::End();
+
+    //        //if (ImGui::Begin("Ach Track"))
+    //        //{
+    //        //    ImGui::Text("No holes over par %s", m_achievementTracker.noHolesOverPar ? "true" : "false");
+    //        //    ImGui::Text("No gimme used %s", m_achievementTracker.noGimmeUsed ? "true" : "false");
+    //        //    ImGui::Text("Two shots spare %s", m_achievementTracker.twoShotsSpare ? "true" : "false");
+    //        //    ImGui::Text("Consistency %s", m_achievementTracker.alwaysOnTheCourse ? "true" : "false");
+    //        //    ImGui::Text("Under two putts %s", m_achievementTracker.underTwoPutts ? "true" : "false");
+    //        //    ImGui::Text("Putt count %d", m_achievementTracker.puttCount);
+    //        //}
+    //        //ImGui::End();
     //    });
 
     //registerWindow([&]()
@@ -1062,84 +1063,6 @@ void GolfState::registerDebugWindows()
     //            ImGui::End();
     //        }
     //    });
-
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Sun"))
-    //        {
-    //            if (ImGui::SliderFloat("ToD", &m_skyData.tod, 0.f, 1.f))
-    //            {
-    //                float angle = SkyData::MinAngle + (m_skyData.tod * (SkyData::MaxAngle - SkyData::MinAngle));
-    //                m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -angle * cro::Util::Const::degToRad);
-    //                //m_skyData.sunRoot.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -angle * cro::Util::Const::degToRad);
-
-    //                /*if (auto w = m_skyData.sunPalette.getSize().x; w != 0)
-    //                {
-    //                    auto index = (w - 1) * m_skyData.tod;
-    //                    auto* colour = m_skyData.sunPalette.getPixel(static_cast<std::uint32_t>(index), 0);
-    //                    m_skyData.sunModel.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour(colour[0], colour[1], colour[2]));
-    //                }
-
-    //                if (auto w = m_skyData.lightPalette.getSize().x; w != 0)
-    //                {
-    //                    auto index = (w - 1) * m_skyData.tod;
-    //                    auto* colour = m_skyData.sunPalette.getPixel(static_cast<std::uint32_t>(index), 0);
-    //                    
-    //                    glm::vec4 lightColour(static_cast<float>(colour[0]) / 255.f, static_cast<float>(colour[1]) / 255.f, static_cast<float>(colour[3]) / 255.f, 1.f);
-    //                    auto colours = m_skyData.skyColours;
-    //                    colours.top *= lightColour;
-    //                    colours.middle *= lightColour;
-    //                    m_skyScene.setSkyboxColours(colours.bottom, colours.middle, colours.top);
-
-    //                    cro::Colour sLight(colour[0], colour[1], colour[2]);
-    //                    m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(sLight);
-    //                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(sLight);
-    //                }*/
-    //            }
-    //        }
-    //        ImGui::End();
-    //    });
-
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Depthmap"))
-    //        {
-    //            auto size = m_depthMap.getGridCount();
-    //            for (auto y = size.y - 1; y >= 0; --y)
-    //            {
-    //                for (auto x = 0; x < size.x; ++x)
-    //                {
-    //                    auto idx = y * size.x + x;
-    //                    ImGui::Image(m_depthMap.getTextureAt(idx), { 80.f, 80.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //                    ImGui::SameLine();
-    //                }
-    //                ImGui::NewLine();
-    //            }
-
-    //            /*const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-    //            for (auto i = 0u; i < cam.shadowMapBuffer.getLayerCount(); ++i)
-    //            {
-    //                ImGui::Image(cam.shadowMapBuffer.getTexture(i), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //                ImGui::SameLine();
-    //            }*/
-    //        }
-    //        ImGui::End();
-    //    });
-
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Network"))
-    //        {
-    //            auto size = m_greenBuffer.getSize();
-    //            ImGui::Text("Buffer Size %u, %u", size.x, size.y);
-
-    //            ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
-
-    //            auto terrain = m_collisionMesh.getTerrain(m_freeCam.getComponent<cro::Transform>().getPosition());
-    //            ImGui::Text("Terrain %s", TerrainStrings[terrain.terrain].c_str());
-    //        }
-    //        ImGui::End();
-    //    }, true);
 }
 
 void GolfState::dumpBenchmark()

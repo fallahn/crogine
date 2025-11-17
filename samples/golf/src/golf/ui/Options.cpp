@@ -96,6 +96,12 @@ void OptionsV2::settingsTab(float scale)
     const auto active = m_navigationContext.requestedTab == NavigationContext::TabID::Game;
     if (ImGui::BeginTabItem("Game Settings", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
+        //hmmm almost but not quite
+        //if (m_navigationContext.tabIndex != NavigationContext::TabID::Game
+        //    && !active) //only play this if it was clicked, not requested...
+        //{
+        //    playSound(MenuSoundEvent::Activate);
+        //}
         m_navigationContext.tabIndex = NavigationContext::TabID::Game;
 
         ImGui::BeginChild("##settings_child", {-1.f, -1.f}, ImGuiChildFlags_NavFlattened);
