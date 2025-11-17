@@ -47,13 +47,28 @@ namespace
     std::string tipText;
 }
 
- void showTip(const std::string& s)
+void showTip(const std::string& s)
 {
     if (ImGui::IsItemHovered())
     {
         tipText = s;
     }
 }
+
+static inline void pushImageButtonStyle()
+{
+    ImGui::PushStyleColor(ImGuiCol_Button, cro::Colour::Transparent);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, cro::Colour::Transparent);
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, cro::Colour::Transparent);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, 0.f));
+}
+
+static inline void popImageButtonStyle()
+{
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor(3);
+}
+
 
 void OptionsV2::settingsTab(float scale)
 {
@@ -236,11 +251,16 @@ void OptionsV2::settingsTab(float scale)
             };
 
         ImGui::NewLine();
-        if (ImGui::Button("Reset Hints"))
+        pushImageButtonStyle();
+        auto button = m_buttonIcons[ButtonIcon::ResetHints];
+        //if (ImGui::Button("Reset Hints"))
+        if (ImGui::ImageButton("Reset Hints", m_buttonTexture, button.size * scale, button.getUVStart(), button.getUVEnd()))
         {
             ImGui::OpenPopup("Reset Hints?");
             playSound(MenuSoundEvent::Activate);
         }
+        m_buttonIcons[ButtonIcon::ResetHints].hovered = ImGui::IsItemHovered();
+        popImageButtonStyle();
 
         ImGui::SetNextWindowSize(ModalSize);
         ImGui::SetNextWindowPos(pos);
@@ -256,11 +276,16 @@ void OptionsV2::settingsTab(float scale)
         }
 
         ImGui::SameLine();
-        if (ImGui::Button("Reset Career"))
+        pushImageButtonStyle();
+        button = m_buttonIcons[ButtonIcon::ResetCareer];
+        //if (ImGui::Button("Reset Career"))
+        if (ImGui::ImageButton("##rst_crc", m_buttonTexture, button.size * scale, button.getUVStart(), button.getUVEnd()))
         {
             ImGui::OpenPopup("Reset Career?");
             playSound(MenuSoundEvent::Activate);
         }
+        m_buttonIcons[ButtonIcon::ResetCareer].hovered = ImGui::IsItemHovered();
+        popImageButtonStyle();
         ImGui::SetNextWindowSize(ModalSize);
         ImGui::SetNextWindowPos(pos);
         if (ImGui::BeginPopupModal("Reset Career?", nullptr, modalFlags))
@@ -294,13 +319,16 @@ void OptionsV2::settingsTab(float scale)
         }
 
         ImGui::SameLine();
-        ImGui::PushStyleColor(ImGuiCol_Button, CD32::Colours[CD32::Red]);
-        if (ImGui::Button("Reset Profile"))
+        pushImageButtonStyle();
+        button = m_buttonIcons[ButtonIcon::ResetProfile];
+        //if (ImGui::Button("Reset Profile"))
+        if (ImGui::ImageButton("##rst_prf", m_buttonTexture, button.size * scale, button.getUVStart(), button.getUVEnd()))
         {
             ImGui::OpenPopup("Reset Profile?");
             playSound(MenuSoundEvent::Activate);
         }
-        ImGui::PopStyleColor();
+        m_buttonIcons[ButtonIcon::ResetProfile].hovered = ImGui::IsItemHovered();
+        popImageButtonStyle();
 
         ImGui::SetNextWindowSize(ModalSize);
         ImGui::SetNextWindowPos(pos);
@@ -425,6 +453,10 @@ void OptionsV2::optionsWindow()
         ImGui::GetStyle() = m_sharedData.uiScales[static_cast<std::int32_t>(scale) - 1];
         const auto HPadding = ImGui::GetStyle().ItemSpacing.x;
 
+        ImGui::PushStyleVar(ImGuiStyleVar_TabRounding, 0.f);
+        ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarRounding, 0.f);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.f); //also does buttons etc
+
         //set background to semi-black
         ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.f, 0.f, BackgroundAlpha * m_animationProgress));
 
@@ -504,6 +536,7 @@ void OptionsV2::optionsWindow()
         ImGui::End();
 
         ImGui::PopStyleColor(); //background
+        ImGui::PopStyleVar(3); //tab rounding, scroll bar rounding, frame rounding
 
         ImGui::GetFont()->Scale = 1.f;
         ImGui::PopFont();
@@ -512,7 +545,7 @@ void OptionsV2::optionsWindow()
 
         m_navigationContext.requestedTab = -1;
         m_closeModal = false;
-
+        
 
         if (m_prevFocus != ImGui::getFocusID())
         {

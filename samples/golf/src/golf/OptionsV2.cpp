@@ -58,31 +58,51 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
 
     //convert the sprites to nav icons
     cro::SpriteSheet spriteSheet;
+    const auto convertSprite =
+        [&](const std::string& sprName)
+        {
+            const auto sprite = spriteSheet.getSprite(sprName);
+            auto rect = sprite.getTextureRect();
+
+            Icon ret;
+            ret.size = { rect.width, rect.height };
+
+            rect = sprite.getTextureRectNormalised();
+            ret.uv0.x = rect.left;
+            ret.uv0.y = rect.bottom + rect.height; //UV is flipped vertically
+
+            ret.uv1.x = rect.left + rect.width;
+            ret.uv1.y = rect.bottom;
+
+
+            //this is a hack for the reset buttons
+            rect.bottom += (rect.height * 2.f);
+            ret.uv2 = ret.uv0;
+            ret.uv2.y = rect.bottom + rect.height;
+
+            ret.uv3 = ret.uv1;
+            ret.uv3.y = rect.bottom;
+
+            return ret;
+        };
+
     if (spriteSheet.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_textureResource))
     {
         m_navTexture = spriteSheet.getTexture()->getGLHandle();
 
-        const auto convertSprite =
-            [&](const std::string& sprName)
-            {
-                const auto sprite = spriteSheet.getSprite(sprName);
-                auto rect = sprite.getTextureRect();
-
-                NavIcon ret;
-                ret.size = { rect.width, rect.height };
-
-                rect = sprite.getTextureRectNormalised();
-                ret.uv0.x = rect.left;
-                ret.uv0.y = rect.bottom + rect.height; //UV is flipped vertically
-
-                ret.uv1.x = rect.left + rect.width;
-                ret.uv1.y = rect.bottom;
-                return ret;
-            };
         m_navIcons[NavIcon::PSNext] = convertSprite("next_tab_ps");
         m_navIcons[NavIcon::PSPrev] = convertSprite("prev_tab_ps");
         m_navIcons[NavIcon::XBNext] = convertSprite("next_tab_xbox");
         m_navIcons[NavIcon::XBPrev] = convertSprite("prev_tab_xbox");
+    }
+
+    if (spriteSheet.loadFromFile("assets/golf/sprites/options.spt", m_textureResource))
+    {
+        m_buttonTexture = spriteSheet.getTexture()->getGLHandle();
+
+        m_buttonIcons[ButtonIcon::ResetHints] = convertSprite("reset_hints");
+        m_buttonIcons[ButtonIcon::ResetCareer] = convertSprite("reset_career");
+        m_buttonIcons[ButtonIcon::ResetProfile] = convertSprite("reset_button");
     }
 }
 

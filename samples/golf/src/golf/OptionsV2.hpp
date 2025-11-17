@@ -70,6 +70,28 @@ private:
     void closeWindow();
     void playSound(std::int32_t);
     
+    struct Icon final
+    {
+        ImVec2 size = {};
+        ImVec2 uv0 = {};
+        ImVec2 uv1 = {};
+
+        //used in instances such as image buttons
+        ImVec2 uv2 = {};
+        ImVec2 uv3 = {};
+
+        ImVec2 getUVStart() const
+        {
+            return hovered ? uv2 : uv0;
+        }
+        ImVec2 getUVEnd() const
+        {
+            return hovered ? uv3 : uv1;
+        }
+
+        bool hovered = false;
+    };
+
     struct NavigationContext final
     {
         struct TabID final
@@ -90,10 +112,6 @@ private:
 
     struct NavIcon final
     {
-        ImVec2 size = {};
-        ImVec2 uv0 = {};
-        ImVec2 uv1 = {};
-
         enum
         {
             PSPrev, PSNext,
@@ -103,7 +121,18 @@ private:
     };
     cro::TextureResource m_textureResource;
     cro::TextureID m_navTexture;
-    std::array<NavIcon, NavIcon::Count> m_navIcons = {};
+    std::array<Icon, NavIcon::Count> m_navIcons = {};
+
+    struct ButtonIcon final
+    {
+        enum
+        {
+            ResetHints, ResetCareer,
+            ResetProfile, Count
+        };
+    };
+    cro::TextureID m_buttonTexture;
+    std::array<Icon, ButtonIcon::Count> m_buttonIcons = {};
 
     FlagPreview m_flagPreview;
     void optionsWindow();

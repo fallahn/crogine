@@ -106,9 +106,9 @@ namespace ImGui
         return ImGui::ImageButton((void*)(std::size_t)texture.getGLHandle(), size, uv0, uv1);
     }
 
-    static inline bool ImageButton(const cro::TextureID texture, const ImVec2& size, const ImVec2& uv0 = { 0.f, 0.f }, const ImVec2& uv1 = { 1.f, 1.f })
+    static inline bool ImageButton(const char* id, const cro::TextureID texture, const ImVec2& size, const ImVec2& uv0 = { 0.f, 0.f }, const ImVec2& uv1 = { 1.f, 1.f })
     {
-        return ImGui::ImageButton((void*)(std::size_t)texture.textureID, size, uv0, uv1);
+        return ImGui::ImageButton(id, (void*)(std::size_t)texture.textureID, size, uv0, uv1);
     }
 
     static inline bool ImageButton(std::uint32_t texture, const ImVec2& size, const ImVec2& uv0 = { 0.f, 0.f }, const ImVec2& uv1 = { 1.f, 1.f })
