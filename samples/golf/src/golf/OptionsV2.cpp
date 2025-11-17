@@ -75,7 +75,7 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
             ret.uv1.y = rect.bottom;
 
 
-            //this is a hack for the reset buttons
+            //this is a hack for the image buttons
             rect.bottom += (rect.height * 2.f);
             ret.uv2 = ret.uv0;
             ret.uv2.y = rect.bottom + rect.height;
@@ -103,6 +103,9 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
         m_buttonIcons[ButtonIcon::ResetHints] = convertSprite("reset_hints");
         m_buttonIcons[ButtonIcon::ResetCareer] = convertSprite("reset_career");
         m_buttonIcons[ButtonIcon::ResetProfile] = convertSprite("reset_button");
+        m_buttonIcons[ButtonIcon::HowToPlay] = convertSprite("how_to_play");
+        m_buttonIcons[ButtonIcon::Credits] = convertSprite("credits");
+        m_buttonIcons[ButtonIcon::Close] = convertSprite("close");
     }
 }
 

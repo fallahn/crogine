@@ -55,17 +55,18 @@ void showTip(const std::string& s)
     }
 }
 
-static inline void pushImageButtonStyle()
+static inline void pushImageButtonStyle(float scale)
 {
     ImGui::PushStyleColor(ImGuiCol_Button, cro::Colour::Transparent);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, cro::Colour::Transparent);
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, cro::Colour::Transparent);
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, 0.f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, 0.f)); 
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.f * scale);
 }
 
 static inline void popImageButtonStyle()
 {
-    ImGui::PopStyleVar();
+    ImGui::PopStyleVar(2);
     ImGui::PopStyleColor(3);
 }
 
@@ -251,9 +252,8 @@ void OptionsV2::settingsTab(float scale)
             };
 
         ImGui::NewLine();
-        pushImageButtonStyle();
+        pushImageButtonStyle(scale);
         auto button = m_buttonIcons[ButtonIcon::ResetHints];
-        //if (ImGui::Button("Reset Hints"))
         if (ImGui::ImageButton("Reset Hints", m_buttonTexture, button.size * scale, button.getUVStart(), button.getUVEnd()))
         {
             ImGui::OpenPopup("Reset Hints?");
@@ -276,9 +276,8 @@ void OptionsV2::settingsTab(float scale)
         }
 
         ImGui::SameLine();
-        pushImageButtonStyle();
+        pushImageButtonStyle(scale);
         button = m_buttonIcons[ButtonIcon::ResetCareer];
-        //if (ImGui::Button("Reset Career"))
         if (ImGui::ImageButton("##rst_crc", m_buttonTexture, button.size * scale, button.getUVStart(), button.getUVEnd()))
         {
             ImGui::OpenPopup("Reset Career?");
@@ -319,9 +318,8 @@ void OptionsV2::settingsTab(float scale)
         }
 
         ImGui::SameLine();
-        pushImageButtonStyle();
+        pushImageButtonStyle(scale);
         button = m_buttonIcons[ButtonIcon::ResetProfile];
-        //if (ImGui::Button("Reset Profile"))
         if (ImGui::ImageButton("##rst_prf", m_buttonTexture, button.size * scale, button.getUVStart(), button.getUVEnd()))
         {
             ImGui::OpenPopup("Reset Profile?");
@@ -514,24 +512,36 @@ void OptionsV2::optionsWindow()
 
         //bottom row for credits/HTP/close buttons
         ImGui::BeginChild("##child_bottom", { -1.f, ButtonHeight * scale }, ImGuiChildFlags_NavFlattened);
-        if (ImGui::Button("How To Play", { 0.f, ButtonHeight * scale }))
+        auto button = m_buttonIcons[ButtonIcon::HowToPlay];
+        pushImageButtonStyle(scale);
+        if (ImGui::ImageButton("How To Play", m_buttonTexture, button.size * scale, button.getUVStart(), button.getUVEnd()))
         {
             m_sharedData.showHelp = true;
             playSound(MenuSoundEvent::Activate);
         }
+        popImageButtonStyle();
+        m_buttonIcons[ButtonIcon::HowToPlay].hovered = ImGui::IsItemHovered();
         ImGui::SameLine();
-        if (ImGui::Button("Credits", { 0.f, ButtonHeight * scale }))
+        button = m_buttonIcons[ButtonIcon::Credits];
+        pushImageButtonStyle(scale);
+        if (ImGui::ImageButton("Credits", m_buttonTexture, button.size * scale, button.getUVStart(), button.getUVEnd()))
         {
             requestStackPop();
             requestStackPush(StateID::Credits);
             playSound(MenuSoundEvent::Activate);
         }
+        popImageButtonStyle();
+        m_buttonIcons[ButtonIcon::Credits].hovered = ImGui::IsItemHovered();
         ImGui::SameLine();
-        if (ImGui::Button("Close", { 0.f, ButtonHeight * scale }))
+        button = m_buttonIcons[ButtonIcon::Close];
+        pushImageButtonStyle(scale);
+        if (ImGui::ImageButton("Close", m_buttonTexture, button.size * scale, button.getUVStart(), button.getUVEnd()))
         {
             playSound(MenuSoundEvent::Cancel);
             m_animationTarget = 0.f;
         }
+        popImageButtonStyle();
+        m_buttonIcons[ButtonIcon::Close].hovered = ImGui::IsItemHovered();
         ImGui::EndChild(); //child_bottom
         ImGui::End();
 

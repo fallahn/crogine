@@ -128,7 +128,9 @@ private:
         enum
         {
             ResetHints, ResetCareer,
-            ResetProfile, Count
+            ResetProfile, HowToPlay,
+            Credits, Close,
+            Count
         };
     };
     cro::TextureID m_buttonTexture;
