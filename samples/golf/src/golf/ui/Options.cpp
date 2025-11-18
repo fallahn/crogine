@@ -37,12 +37,15 @@ source distribution.
 #include "../../Colordome-32.hpp"
 
 #include <crogine/util/Easings.hpp>
+#include <Social.hpp>
 
 namespace
 {
     constexpr float ButtonHeight = 20.f;
     constexpr float VerticalPadding = 12.f;
     constexpr float NavColWidth = 40.f;
+
+    constexpr float SliderWidth = 120.f;
 
     std::string tipText;
 }
@@ -109,12 +112,14 @@ void OptionsV2::settingsTab(float scale)
         checkbox("Show Flag Beacon", &m_sharedData.showBeacon); showTip("Display a coloured beacon at the flag visible from a distance");
         ImGui::ColorButton("##bc", getBeaconColour(m_sharedData.beaconColour), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
         ImGui::SameLine();
-        ImGui::SetNextItemWidth(120.f * scale);
+        ImGui::SetNextItemWidth(SliderWidth * scale);
 
+        //hmm would be nice to draw regular slider if nav isn't active
         float steps = 1.f;
         for (auto i = 0; i < scale; ++i) steps /= 8.f;
         ImGui::DragFloat("Beacon Colour", &m_sharedData.beaconColour, steps, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput); //slider doesn't appear to have kb input
         if (ImGui::IsItemActive()) m_itemActive = true;
+
         checkbox("Show Ball Trail", &m_sharedData.showBallTrail);
         checkbox("Ball Trail Uses Beacon Colour", &m_sharedData.trailBeaconColour); showTip("Trail colour is white if unselected");
         checkbox("Imperial Measurements", &m_sharedData.imperialMeasurements); showTip("Display measurements in Yards, Feet and Inches instead of Metres and Centimetres");
@@ -484,12 +489,95 @@ void OptionsV2::keyboardTab(float scale)
     }
 }
 
-void OptionsV2::controllerTab(float scale)
+void OptionsV2::controllerTab(float scale, float parentWidth)
 {
     const auto active = m_navigationContext.requestedTab == NavigationContext::TabID::Controller;
     if (ImGui::BeginTabItem("Controller", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Controller;
+
+        //we're assuming all of the controllers are the same size
+        const float controlWidth = m_controllerIcons[0].size.x * scale;
+        const float controlHeight = m_controllerIcons[0].size.y * scale;
+
+        ImGui::NewLine();
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0.f, 0.f });
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, cro::Colour::Transparent);
+        ImGui::BeginChild("##pad_left", {50.f * scale, controlHeight}, ImGuiChildFlags_NavFlattened);
+        ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::BeginChild("##controller_icon", {controlWidth, controlHeight}, ImGuiChildFlags_NavFlattened | ImGuiChildFlags_Border);
+        
+        if (Social::isSteamdeck())
+        {
+            //TODO *technically* this could be an external controller
+            ImGui::Image(m_controllerTexture, m_controllerIcons[ControllerIcon::Deck].size * scale,
+                m_controllerIcons[ControllerIcon::Deck].uv0, m_controllerIcons[ControllerIcon::Deck].uv1);
+        }
+        else
+        {
+            if (m_sharedData.activeInput == SharedStateData::ActiveInput::PS)
+            {
+                ImGui::Image(m_controllerTexture, m_controllerIcons[ControllerIcon::PS].size * scale,
+                    m_controllerIcons[ControllerIcon::PS].uv0, m_controllerIcons[ControllerIcon::PS].uv1);
+            }
+            else
+            {
+                ImGui::Image(m_controllerTexture, m_controllerIcons[ControllerIcon::Xbox].size * scale,
+                    m_controllerIcons[ControllerIcon::Xbox].uv0, m_controllerIcons[ControllerIcon::Xbox].uv1);
+            }
+        }
+        ImGui::EndChild(); //controller_icon
+        ImGui::PopStyleVar(); //window padding
+
+
+        ImGui::SameLine();
+        ImGui::BeginChild("##inputs", { 0.f, controlHeight + (30.f * scale)}, ImGuiChildFlags_NavFlattened);
+
+#ifdef USE_GNS
+        if (ImGui::Button("Rebind Controls"))
+        {
+            //open overlay to guide
+            Social::showWebPage("https://steamcommunity.com/sharedfiles/filedetails/?id=3445947141");
+        }
+#endif
+        //slider float doesn't work with nav :/
+        float steps = 1.f;
+        for (auto i = 0; i < scale; ++i) steps /= 8.f;
+        ImGui::SetNextItemWidth(SliderWidth * scale);
+        ImGui::DragFloat("Sensitivity", &m_sharedData.mouseSpeed, steps, 0.5f, 2.f, "%.2f", ImGuiSliderFlags_NoInput);
+        if (ImGui::IsItemActive()) m_itemActive = true;
+
+        static constexpr auto MinDeadZone = -3000;
+        static constexpr auto MaxDeadzone = 24000;
+        float distance = static_cast<float>((cro::GameController::LeftThumbDeadZone.getOffset() - MinDeadZone)) / (MaxDeadzone - MinDeadZone);
+
+        ImGui::SetNextItemWidth(SliderWidth * scale);
+        if (ImGui::DragFloat("Deadzone", &distance, steps, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput))
+        {
+            cro::GameController::LeftThumbDeadZone.setOffset(MinDeadZone + std::int16_t(static_cast<float>(MaxDeadzone - MinDeadZone) * distance));
+        }
+        if (ImGui::IsItemActive()) m_itemActive = true;
+        checkbox("Invert X", &m_sharedData.invertX); showTip("Invert the controller X axis when in camera mode");
+        checkbox("Invert Y", &m_sharedData.invertY); showTip("Invert the controller Y axis when in camera mode");
+        checkbox("Enable Swingput", &m_sharedData.useSwingput); showTip("Hold a trigger and use the Thumbstick to swing");
+        checkbox("Hold For Power", &m_sharedData.pressHold); showTip("Press and hold the Action button to select power, instead of 3-click");
+        
+        //rats.
+        bool rumble = m_sharedData.enableRumble != 0;
+        if (ImGui::Checkbox("Use Vibration", &rumble))
+        {
+            playSound(MenuSoundEvent::Activate);
+            m_sharedData.enableRumble = rumble ? 1 : 0;
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleColor(); //childbg
+
+        if (cro::GameController::getControllerCount() > 1)
+        {
+            //TODO list controllers and enable re-ordering
+        }
+
 
         ImGui::EndTabItem();
     }
@@ -577,8 +665,6 @@ void OptionsV2::optionsWindow()
         {
             ImGui::Image(m_navTexture, m_navIcons[NavIcon::XBPrev].size * scale, m_navIcons[NavIcon::XBPrev].uv0, m_navIcons[NavIcon::XBPrev].uv1);
         }
-        //TODO ideally I want to handle keyboard input but rendering the text at the correct
-        //size with the correct font is a right faff.
         ImGui::EndChild(); //nav_left
         ImGui::SameLine();
         //centre col for tabbed area
@@ -588,7 +674,7 @@ void OptionsV2::optionsWindow()
         ImGui::BeginTabBar("##tab_bar");
         settingsTab(scale);
         keyboardTab(scale);
-        controllerTab(scale);
+        controllerTab(scale, TabPaneWidth);
         displayTab(scale);
         audioTab(scale);
         achievementsTab(scale);

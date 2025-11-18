@@ -108,6 +108,15 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
         m_buttonIcons[ButtonIcon::Credits] = convertSprite("credits");
         m_buttonIcons[ButtonIcon::Close] = convertSprite("close");
     }
+
+    if (spriteSheet.loadFromFile("assets/golf/sprites/control_layout.spt", m_textureResource))
+    {
+        m_controllerTexture = spriteSheet.getTexture()->getGLHandle();
+
+        m_controllerIcons[ControllerIcon::Xbox] = convertSprite("xbox");
+        m_controllerIcons[ControllerIcon::Deck] = convertSprite("deck");
+        m_controllerIcons[ControllerIcon::PS] = convertSprite("ps");
+    }
 }
 
 //public

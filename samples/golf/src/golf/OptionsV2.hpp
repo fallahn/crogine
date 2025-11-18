@@ -136,6 +136,17 @@ private:
     cro::TextureID m_buttonTexture;
     std::array<Icon, ButtonIcon::Count> m_buttonIcons = {};
 
+    struct ControllerIcon final
+    {
+        enum
+        {
+            Xbox, Deck, PS,
+            Count
+        };
+    };
+    cro::TextureID m_controllerTexture;
+    std::array<Icon, ControllerIcon::Count> m_controllerIcons = {};
+
     std::int32_t m_rebindIndex;
     std::string m_rebindMessage;
 
@@ -144,7 +155,7 @@ private:
 
     void settingsTab(float scale);
     void keyboardTab(float scale);
-    void controllerTab(float scale);
+    void controllerTab(float scale, float parentWidth);
     void displayTab(float scale);
     void audioTab(float scale);
     void achievementsTab(float scale);
