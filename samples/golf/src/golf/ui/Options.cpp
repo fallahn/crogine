@@ -36,6 +36,7 @@ source distribution.
 #include "../../WebsocketServer.hpp"
 #include "../../Colordome-32.hpp"
 
+#include <crogine/audio/AudioDevice.hpp>
 #include <crogine/util/Easings.hpp>
 #include <Social.hpp>
 
@@ -840,7 +841,71 @@ void OptionsV2::audioTab(float scale)
         ImGui::SeparatorText("Audio Options");
         //ImGui::NewLine();
 
+        //device selection
+        if (!m_audioCombo.displayNames.empty())
+        {
+            if (ImGui::BeginCombo("Audio Device", m_audioCombo.displayNames[m_audioCombo.index].c_str()))
+            {
+                for (auto i = 0u; i < m_audioCombo.displayNames.size(); ++i)
+                {
+                    if (ImGui::Selectable(m_audioCombo.displayNames[i].c_str(), i == m_audioCombo.index))
+                    {
+                        m_audioCombo.index = i;
 
+                        const auto& devices = cro::AudioDevice::getDeviceList();
+                        if (!devices.empty())
+                        {
+                            cro::AudioDevice::setActiveDevice(devices[m_audioCombo.index]);
+                        }
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+
+            ImGui::NewLine();
+            ImGui::Separator();
+            ImGui::NewLine();
+        }
+
+        const auto step = getSliderSteps(scale);
+        auto v = cro::AudioMixer::getMasterVolume();
+        if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+        {
+            if (ImGui::SliderFloat("Master", &v, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput))
+            {
+                cro::AudioMixer::setMasterVolume(v);
+            }
+        }
+        else
+        {
+            if (ImGui::DragFloat("Master", &v, step, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput))
+            {
+                cro::AudioMixer::setMasterVolume(v);
+            }
+        }
+        if (ImGui::IsItemActive()) m_itemActive = true;
+
+        for (auto i = 0; i < MixerChannel::Count; ++i)
+        {
+            auto vol = cro::AudioMixer::getVolume(i);
+            if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+            {
+                if (ImGui::SliderFloat(cro::AudioMixer::getLabel(i).c_str(), &vol, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput))
+                {
+                    cro::AudioMixer::setVolume(vol, i);
+                }
+            }
+            else
+            {
+                if (ImGui::DragFloat(cro::AudioMixer::getLabel(i).c_str(), &vol, step, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput))
+                {
+                    cro::AudioMixer::setVolume(vol, i);
+                }
+            }
+            if (ImGui::IsItemActive()) m_itemActive = true;
+        }
+        checkbox("Use Text To Speech", &m_sharedData.useTTS);
 
         ImGui::EndChild(); //audio_child
         ImGui::EndTabItem();

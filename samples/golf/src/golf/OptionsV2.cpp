@@ -33,6 +33,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "GameConsts.hpp"
 
+#include <crogine/audio/AudioDevice.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
 namespace
@@ -172,6 +173,24 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
         std::string("None"),
     };
     m_crowdDensity.index = sd.crowdDensity;
+
+    m_audioCombo.displayNames = cro::AudioDevice::getDeviceList();
+    if (const auto res = std::find(m_audioCombo.displayNames.cbegin(), m_audioCombo.displayNames.cend(), cro::AudioDevice::getActiveDevice());
+        res != m_audioCombo.displayNames.cend())
+    {
+        m_audioCombo.index = std::distance(m_audioCombo.displayNames.cbegin(), res);
+    }
+
+    //tidy up the descriptions
+    static const std::string RemoveMe("OpenAL Soft on ");
+
+    for (auto& str : m_audioCombo.displayNames)
+    {
+        if (str.find(RemoveMe) != std::string::npos)
+        {
+            str = str.substr(RemoveMe.size());
+        }
+    }
 }
 
 //public

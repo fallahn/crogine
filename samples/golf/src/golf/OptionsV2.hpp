@@ -167,6 +167,7 @@ private:
     ComboContext m_shadowQuality;
     ComboContext m_crowdDensity;
 
+    ComboContext m_audioCombo;
 
     FlagPreview m_flagPreview;
     void optionsWindow();
