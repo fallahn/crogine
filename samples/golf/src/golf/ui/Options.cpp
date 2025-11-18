@@ -200,7 +200,7 @@ void OptionsV2::settingsTab(float scale)
 
         //flag selection
         ImGui::NewLine();
-        ImGui::Text("Flag");
+        ImGui::SeparatorText("Flag");
         const auto s = m_flagPreview.getSize() * scale;
         const auto& t = m_flagPreview.getTexure();
         const auto uv = m_flagPreview.getUV();
@@ -287,7 +287,7 @@ void OptionsV2::settingsTab(float scale)
             ImGui::OpenPopup("Reset Hints?");
             playSound(MenuSoundEvent::Activate);
         }
-        m_buttonIcons[ButtonIcon::ResetHints].hovered = ImGui::IsItemHovered();
+        m_buttonIcons[ButtonIcon::ResetHints].hovered = ImGui::IsItemHovered() ? 1 : 0;
         popImageButtonStyle();
 
         ImGui::SetNextWindowSize(ModalSize);
@@ -311,7 +311,7 @@ void OptionsV2::settingsTab(float scale)
             ImGui::OpenPopup("Reset Career?");
             playSound(MenuSoundEvent::Activate);
         }
-        m_buttonIcons[ButtonIcon::ResetCareer].hovered = ImGui::IsItemHovered();
+        m_buttonIcons[ButtonIcon::ResetCareer].hovered = ImGui::IsItemHovered() ? 1 : 0;
         popImageButtonStyle();
         ImGui::SetNextWindowSize(ModalSize);
         ImGui::SetNextWindowPos(pos);
@@ -353,7 +353,7 @@ void OptionsV2::settingsTab(float scale)
             ImGui::OpenPopup("Reset Profile?");
             playSound(MenuSoundEvent::Activate);
         }
-        m_buttonIcons[ButtonIcon::ResetProfile].hovered = ImGui::IsItemHovered();
+        m_buttonIcons[ButtonIcon::ResetProfile].hovered = ImGui::IsItemHovered() ? 1 : 0;
         popImageButtonStyle();
 
         ImGui::SetNextWindowSize(ModalSize);
@@ -548,8 +548,10 @@ void OptionsV2::controllerTab(float scale, float parentWidth)
             }
             else
             {
-                ImGui::Image(m_controllerTexture, m_controllerIcons[ControllerIcon::Xbox].size * scale,
-                    m_controllerIcons[ControllerIcon::Xbox].uv0, m_controllerIcons[ControllerIcon::Xbox].uv1);
+                const auto idx = (cro::GameController::getControllerCount() != 0 && cro::GameController::hasPSLayout(0)) ? ControllerIcon::PS : ControllerIcon::Xbox;
+
+                ImGui::Image(m_controllerTexture, m_controllerIcons[idx].size * scale,
+                    m_controllerIcons[idx].uv0, m_controllerIcons[idx].uv1);
             }
         }
         ImGui::EndChild(); //controller_icon
@@ -905,7 +907,7 @@ void OptionsV2::audioTab(float scale)
             }
             if (ImGui::IsItemActive()) m_itemActive = true;
         }
-        checkbox("Use Text To Speech", &m_sharedData.useTTS);
+        checkbox("Use Text To Speech", &m_sharedData.useTTS); showTip("Use Text To Speech to read in-game chat messages");
 
         ImGui::EndChild(); //audio_child
         ImGui::EndTabItem();
@@ -1017,7 +1019,7 @@ void OptionsV2::optionsWindow()
             playSound(MenuSoundEvent::Activate);
         }
         popImageButtonStyle();
-        m_buttonIcons[ButtonIcon::HowToPlay].hovered = ImGui::IsItemHovered();
+        m_buttonIcons[ButtonIcon::HowToPlay].hovered = ImGui::IsItemHovered() ? 1 : 0;
         ImGui::SameLine();
         button = m_buttonIcons[ButtonIcon::Credits];
         pushImageButtonStyle(scale);
@@ -1028,7 +1030,7 @@ void OptionsV2::optionsWindow()
             playSound(MenuSoundEvent::Activate);
         }
         popImageButtonStyle();
-        m_buttonIcons[ButtonIcon::Credits].hovered = ImGui::IsItemHovered();
+        m_buttonIcons[ButtonIcon::Credits].hovered = ImGui::IsItemHovered() ? 1 : 0;
         ImGui::SameLine();
         button = m_buttonIcons[ButtonIcon::Close];
         pushImageButtonStyle(scale);
@@ -1038,7 +1040,7 @@ void OptionsV2::optionsWindow()
             m_animationTarget = 0.f;
         }
         popImageButtonStyle();
-        m_buttonIcons[ButtonIcon::Close].hovered = ImGui::IsItemHovered();
+        m_buttonIcons[ButtonIcon::Close].hovered = ImGui::IsItemHovered() ? 1 : 0;
         ImGui::EndChild(); //child_bottom
         ImGui::End();
 
@@ -1065,14 +1067,15 @@ void OptionsV2::optionsWindow()
             m_prevFocus = ImGui::getFocusID();
         }
 
-        if (m_prevHovered != ImGui::getHoveredID())
+        const auto hoveredID = ImGui::getHoveredID();
+        if (m_prevHovered != hoveredID)
         {
-            if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+            if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard
+                && hoveredID != 0)
             {
                 playSound(MenuSoundEvent::Switch);
             }
-
-            m_prevHovered = ImGui::getHoveredID();
+            m_prevHovered = hoveredID;
         }
     }
 }

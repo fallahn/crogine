@@ -94,7 +94,8 @@ private:
             return hovered ? uv3 : uv1;
         }
 
-        bool hovered = false;
+        //contains the ID of the hovered button if multiple buttons share this Icon
+        int hovered = 0;
     };
 
     struct NavigationContext final
