@@ -37,6 +37,11 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/TextureResource.hpp>
 
+static inline constexpr std::array<std::uint32_t, 4u> AASamples =
+{
+    0, 2, 4, 8
+};
+
 //wrapper state for the ImGui version of the Options window
 class OptionsV2 final : public cro::State, public cro::GuiClient
 {
@@ -150,6 +155,19 @@ private:
     std::int32_t m_rebindIndex;
     std::string m_rebindMessage;
 
+    struct ComboContext final
+    {
+        std::vector<std::string> displayNames;
+        std::size_t index = 0;
+    };
+    ComboContext m_presetCombo;
+    ComboContext m_aaCombo;
+    ComboContext m_resolutions;
+    ComboContext m_treeQuality;
+    ComboContext m_shadowQuality;
+    ComboContext m_crowdDensity;
+
+
     FlagPreview m_flagPreview;
     void optionsWindow();
 
@@ -166,4 +184,6 @@ private:
     //note THIS INCLUDES EndPopUp()
     void confirmModal(const char*, std::function<void()>, ImVec2 size, float scale);
     void updateKeybind(SDL_Keycode key);
+
+    void applyDisplayPreset(std::int32_t);
 };

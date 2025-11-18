@@ -31,11 +31,16 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "OptionsV2.hpp"
 #include "SharedStateData.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/graphics/SpriteSheet.hpp>
 
 namespace
 {
+    constexpr std::array<std::size_t, 9u> AAIndexMap =
+    {
+        0, 0, 1, 0, 2, 0, 0, 0, 3
+    };
 
 }
 
@@ -117,6 +122,56 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
         m_controllerIcons[ControllerIcon::Deck] = convertSprite("deck");
         m_controllerIcons[ControllerIcon::PS] = convertSprite("ps");
     }
+
+
+    //conetxts for displaying combo boxes
+    m_presetCombo.displayNames =
+    {
+        "Low", "Medium", "High", "Custom"
+    };
+    m_presetCombo.index = 3;
+
+    m_aaCombo.displayNames = 
+    {
+        "None",
+        "2x MSAA",
+        "4x MSAA",
+        "8x MSAA"
+    };
+    m_aaCombo.index = AAIndexMap[sd.multisamples];
+
+    m_resolutions.displayNames = sd.resolutionStrings;
+    const auto size = ctx.mainWindow.getSize();
+    for (auto i = 0u; i < sd.resolutions.size(); ++i)
+    {
+        if (sd.resolutions[i].x == size.x && sd.resolutions[i].y == size.y)
+        {
+            m_resolutions.index = i;
+            break;
+        }
+    }
+
+    m_treeQuality.displayNames =
+    {
+        "Classic", "Low", "High"
+    };
+    m_treeQuality.index = sd.treeQuality;
+
+    m_shadowQuality.displayNames = 
+    {
+        "Very Low", "Low", "High", "Very High", "Classic"
+    };
+    m_shadowQuality.index = sd.shadowQuality;
+
+    m_crowdDensity.displayNames = 
+    {
+        std::string("Low"),
+        std::string("Normal"),
+        std::string("High"),
+        std::string("Extreme"),
+        std::string("None"),
+    };
+    m_crowdDensity.index = sd.crowdDensity;
 }
 
 //public
@@ -285,6 +340,18 @@ void OptionsV2::onCachedPush()
 {
     m_showOptions = true;
     m_animationTarget = 1.f;
+
+    //make sure the correct index is selected in case this was
+    //cheanged elsewhere eg the console.
+    const auto size = getContext().mainWindow.getSize();
+    for (auto i = 0u; i < m_sharedData.resolutions.size(); ++i)
+    {
+        if (m_sharedData.resolutions[i].x == size.x && m_sharedData.resolutions[i].y == size.y)
+        {
+            m_resolutions.index = i;
+            break;
+        }
+    }
 }
 
 void OptionsV2::onCachedPop()
@@ -412,4 +479,63 @@ void OptionsV2::updateKeybind(SDL_Keycode key)
     closeWindow();
     m_rebindMessage.clear();
     m_rebindIndex = -1;
+}
+
+void OptionsV2::applyDisplayPreset(std::int32_t index)
+{
+    switch (index)
+    {
+    default:return;
+    case 0:
+        //low
+        m_sharedData.treeQuality = 1;
+        m_treeQuality.index = 1;
+
+        m_sharedData.shadowQuality = 0;
+        m_shadowQuality.index = 0;
+
+        m_sharedData.crowdDensity = 0;
+        m_crowdDensity.index = 0;
+
+        m_aaCombo.index = 0;
+        break;
+    case 1:
+        //med
+        m_sharedData.treeQuality = 1;
+        m_treeQuality.index = 1;
+
+        m_sharedData.shadowQuality = 1;
+        m_shadowQuality.index = 1;
+
+        m_sharedData.crowdDensity = 2;
+        m_crowdDensity.index = 2;
+
+        m_aaCombo.index = 1;
+        break;
+    case 2:
+        //high
+        m_sharedData.treeQuality = 2;
+        m_treeQuality.index = 2;
+
+        m_sharedData.shadowQuality = 2;
+        m_shadowQuality.index = 2;
+
+        m_sharedData.crowdDensity = 3;
+        m_crowdDensity.index = 3;
+
+        m_aaCombo.index = 3;
+
+        break;
+    }
+
+    auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(cl::MessageID::SystemMessage);
+    msg->type = SystemEvent::TreeQualityChanged;
+
+    auto* msg2 = getContext().appInstance.getMessageBus().post<SystemEvent>(cl::MessageID::SystemMessage);
+    msg2->type = SystemEvent::ShadowQualityChanged;
+
+    auto* msg3 = getContext().appInstance.getMessageBus().post<SystemEvent>(cl::MessageID::SystemMessage);
+    msg3->type = SystemEvent::CrowdDensityChanged;
+
+    toggleAntialiasing(m_sharedData, AASamples[m_aaCombo.index] != 0, AASamples[m_aaCombo.index]);
 }

@@ -48,6 +48,13 @@ namespace
     constexpr float SliderWidth = 120.f;
 
     std::string tipText;
+
+    float getSliderSteps(float scale)
+    {
+        float steps = 1.f;
+        for (auto i = 0; i < scale; ++i) steps /= 8.f;
+        return steps;
+    }
 }
 
 void showTip(const std::string& s)
@@ -109,19 +116,35 @@ void OptionsV2::settingsTab(float scale)
 
         ImGui::BeginChild("##settings_child", {-1.f, -1.f}, ImGuiChildFlags_NavFlattened);
         ImGui::SeparatorText("Display");
+
         checkbox("Show Flag Beacon", &m_sharedData.showBeacon); showTip("Display a coloured beacon at the flag visible from a distance");
         ImGui::ColorButton("##bc", getBeaconColour(m_sharedData.beaconColour), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
         ImGui::SameLine();
         ImGui::SetNextItemWidth(SliderWidth * scale);
 
-        //hmm would be nice to draw regular slider if nav isn't active
-        float steps = 1.f;
-        for (auto i = 0; i < scale; ++i) steps /= 8.f;
-        ImGui::DragFloat("Beacon Colour", &m_sharedData.beaconColour, steps, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput); //slider doesn't appear to have kb input
+        const float steps = getSliderSteps(scale);
+        if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+        {
+            ImGui::SliderFloat("Beacon Colour", &m_sharedData.beaconColour, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput);
+        }
+        else
+        {
+            ImGui::DragFloat("Beacon Colour", &m_sharedData.beaconColour, steps, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput);
+        }
         if (ImGui::IsItemActive()) m_itemActive = true;
-
         checkbox("Show Ball Trail", &m_sharedData.showBallTrail);
         checkbox("Ball Trail Uses Beacon Colour", &m_sharedData.trailBeaconColour); showTip("Trail colour is white if unselected");
+        
+        ImGui::SetNextItemWidth(SliderWidth * scale);
+        if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+        {
+            ImGui::SliderFloat("Grid Intensity", &m_sharedData.gridTransparency, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput);
+        }
+        else
+        {
+            ImGui::DragFloat("Grid Intensity", &m_sharedData.gridTransparency, steps, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput);
+        }
+        if (ImGui::IsItemActive()) m_itemActive = true;
         checkbox("Imperial Measurements", &m_sharedData.imperialMeasurements); showTip("Display measurements in Yards, Feet and Inches instead of Metres and Centimetres");
         checkbox("Use Large Power Bar", &m_sharedData.useLargePowerBar);
         checkbox("Use High Contrast Power Bar", &m_sharedData.useContrastPowerBar);
@@ -172,7 +195,7 @@ void OptionsV2::settingsTab(float scale)
         }
 
         //TODO tee ball colour
-
+        //TODO putting grid transparency
 
         //flag selection
         ImGui::NewLine();
@@ -381,7 +404,6 @@ void OptionsV2::keyboardTab(float scale)
         m_navigationContext.tabIndex = NavigationContext::TabID::Keyboard;
 
         ImGui::BeginChild("##keyboard_child", { -1.f, -1.f }, ImGuiChildFlags_NavFlattened);
-
         ImGui::SeparatorText("Key Bindings");
 
         //shared by all modals, below
@@ -495,11 +517,13 @@ void OptionsV2::controllerTab(float scale, float parentWidth)
     if (ImGui::BeginTabItem("Controller", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Controller;
+        ImGui::BeginChild("##controller_child", { -1.f, -1.f }, ImGuiChildFlags_NavFlattened);
 
         //we're assuming all of the controllers are the same size
         const float controlWidth = m_controllerIcons[0].size.x * scale;
         const float controlHeight = m_controllerIcons[0].size.y * scale;
 
+        ImGui::SeparatorText("Controller Layout");
         ImGui::NewLine();
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0.f, 0.f });
         ImGui::PushStyleColor(ImGuiCol_ChildBg, cro::Colour::Transparent);
@@ -541,11 +565,16 @@ void OptionsV2::controllerTab(float scale, float parentWidth)
             Social::showWebPage("https://steamcommunity.com/sharedfiles/filedetails/?id=3445947141");
         }
 #endif
-        //slider float doesn't work with nav :/
-        float steps = 1.f;
-        for (auto i = 0; i < scale; ++i) steps /= 8.f;
+        const float steps = getSliderSteps(scale);
         ImGui::SetNextItemWidth(SliderWidth * scale);
-        ImGui::DragFloat("Sensitivity", &m_sharedData.mouseSpeed, steps, 0.5f, 2.f, "%.2f", ImGuiSliderFlags_NoInput);
+        if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+        {
+            ImGui::SliderFloat("Sensitivity", &m_sharedData.mouseSpeed, 0.5f, 2.f, "%.2f", ImGuiSliderFlags_NoInput);
+        }
+        else
+        {
+            ImGui::DragFloat("Sensitivity", &m_sharedData.mouseSpeed, steps, 0.5f, 2.f, "%.2f", ImGuiSliderFlags_NoInput);
+        }
         if (ImGui::IsItemActive()) m_itemActive = true;
 
         static constexpr auto MinDeadZone = -3000;
@@ -553,9 +582,19 @@ void OptionsV2::controllerTab(float scale, float parentWidth)
         float distance = static_cast<float>((cro::GameController::LeftThumbDeadZone.getOffset() - MinDeadZone)) / (MaxDeadzone - MinDeadZone);
 
         ImGui::SetNextItemWidth(SliderWidth * scale);
-        if (ImGui::DragFloat("Deadzone", &distance, steps, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput))
+        if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
         {
-            cro::GameController::LeftThumbDeadZone.setOffset(MinDeadZone + std::int16_t(static_cast<float>(MaxDeadzone - MinDeadZone) * distance));
+            if (ImGui::SliderFloat("Deadzone", &distance, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput))
+            {
+                cro::GameController::LeftThumbDeadZone.setOffset(MinDeadZone + std::int16_t(static_cast<float>(MaxDeadzone - MinDeadZone) * distance));
+            }
+        }
+        else
+        {
+            if (ImGui::DragFloat("Deadzone", &distance, steps, 0.f, 1.f, "%.2f", ImGuiSliderFlags_NoInput))
+            {
+                cro::GameController::LeftThumbDeadZone.setOffset(MinDeadZone + std::int16_t(static_cast<float>(MaxDeadzone - MinDeadZone) * distance));
+            }
         }
         if (ImGui::IsItemActive()) m_itemActive = true;
         checkbox("Invert X", &m_sharedData.invertX); showTip("Invert the controller X axis when in camera mode");
@@ -578,7 +617,7 @@ void OptionsV2::controllerTab(float scale, float parentWidth)
             //TODO list controllers and enable re-ordering
         }
 
-
+        ImGui::EndChild(); //controller_child
         ImGui::EndTabItem();
     }
 }
@@ -589,7 +628,204 @@ void OptionsV2::displayTab(float scale)
     if (ImGui::BeginTabItem("Display", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Display;
+        ImGui::BeginChild("##display_child", { -1.f, -1.f }, ImGuiChildFlags_NavFlattened);
 
+        ImGui::SeparatorText("Graphics Options");
+
+        
+        ImGui::SetNextItemWidth(SliderWidth * scale);
+        if (ImGui::BeginCombo("Preset", m_presetCombo.displayNames[m_presetCombo.index].c_str()))
+        {
+            for (auto i = 0u; i < m_presetCombo.displayNames.size(); ++i)
+            {
+                const bool selected = i == m_presetCombo.index;
+                if (ImGui::Selectable(m_presetCombo.displayNames[i].c_str(), selected))
+                {
+                    m_presetCombo.index = i;
+                    applyDisplayPreset(i);
+
+                    m_itemActive = true;
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        //anti-aliasing
+        ImGui::SetNextItemWidth(SliderWidth * scale);
+        if (ImGui::BeginCombo("Anti-aliasing", m_aaCombo.displayNames[m_aaCombo.index].c_str()))
+        {
+            for (auto i = 0u; i < m_aaCombo.displayNames.size(); ++i)
+            {
+                const bool selected = i == m_aaCombo.index;
+                if (ImGui::Selectable(m_aaCombo.displayNames[i].c_str(), selected))
+                {
+                    m_aaCombo.index = i;
+                    m_presetCombo.index = 3;
+                    m_itemActive = true;
+
+                    toggleAntialiasing(m_sharedData, AASamples[m_aaCombo.index] != 0, AASamples[m_aaCombo.index]);
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+
+        //resolution
+        ImGui::SetNextItemWidth(SliderWidth * scale);
+        if (ImGui::BeginCombo("Resolution", m_resolutions.displayNames[m_resolutions.index].c_str()))
+        {
+            for (auto i = 0u; i < m_resolutions.displayNames.size(); ++i)
+            {
+                const bool selected = i == m_resolutions.index;
+                if (ImGui::Selectable(m_resolutions.displayNames[i].c_str(), selected))
+                {
+                    m_resolutions.index = i;
+
+                    cro::App::getWindow().setSize(m_sharedData.resolutions[m_resolutions.index]);
+                }
+            }
+            ImGui::EndCombo();
+        }
+        
+
+        const auto updateFOV =
+            []() 
+            {
+                //raise a window resize message to trigger callbacks
+                auto size = cro::App::getWindow().getSize();
+                auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+                msg->data0 = size.x;
+                msg->data1 = size.y;
+                msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+            };
+
+        ImGui::SetNextItemWidth(SliderWidth * scale);
+        if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+        {
+            if (ImGui::SliderFloat("FOV", &m_sharedData.fov, MinFOV, MaxFOV, "%.2f", ImGuiSliderFlags_NoInput))
+            {
+                //we need to raise a message here to say it changed and actually apply it
+                updateFOV();
+            }
+        }
+        else
+        {
+            const auto steps = getSliderSteps(scale);
+            if (ImGui::DragFloat("FOV", &m_sharedData.fov, steps, MinFOV, MaxFOV, "%.2f", ImGuiSliderFlags_NoInput))
+            {
+                updateFOV();
+            }
+        }
+        if (ImGui::IsItemActive()) m_itemActive = true;
+
+        if (ImGui::Checkbox("Pixel Scaling", &m_sharedData.pixelScale))
+        {
+            //hum, we get a double-toggle here so we actually
+            //un-toggle what we've just toggled so we can toggle it...
+            m_sharedData.pixelScale = !m_sharedData.pixelScale;
+            togglePixelScale(m_sharedData, !m_sharedData.pixelScale);
+            playSound(MenuSoundEvent::Activate);
+            m_presetCombo.index = 3;
+        }
+        showTip("Use large pixels");
+
+        if (ImGui::Checkbox("Vertex Snapping", &m_sharedData.vertexSnap))
+        {
+            playSound(MenuSoundEvent::Activate);
+        }
+        showTip("For that retro 'wobble' - may cause Z-Fighting. Default OFF, Requires restart.");
+
+
+        bool fs = cro::App::getWindow().isFullscreen();
+        if (ImGui::Checkbox("Full Screen", &fs))
+        {
+            cro::App::getWindow().setFullScreen(fs);
+            playSound(MenuSoundEvent::Activate);
+        }
+
+        fs = cro::App::getWindow().getExclusiveFullscreen();
+        if (ImGui::Checkbox("Exclusive Full Screen", &fs))
+        {
+            cro::App::getWindow().setExclusiveFullscreen(fs);
+            playSound(MenuSoundEvent::Activate);
+        }
+        showTip("Gives the game exclusive full-screen at any resolution, else displays a borderless window at desktop resolution");
+
+        fs = cro::App::getWindow().getVsyncEnabled();
+        if (ImGui::Checkbox("Enable V-Sync", &fs))
+        {
+            cro::App::getWindow().setVsyncEnabled(fs);
+            playSound(MenuSoundEvent::Activate);
+        }
+        showTip("Synchronise the refresh rate with your display to prevent tearing");
+
+        //tree quality
+        ImGui::SetNextItemWidth(SliderWidth * scale);
+        if (ImGui::BeginCombo("Tree Quality", m_treeQuality.displayNames[m_treeQuality.index].c_str()))
+        {
+            for (auto i = 0u; i < m_treeQuality.displayNames.size(); ++i)
+            {
+                const bool selected = i == m_treeQuality.index;
+                if (ImGui::Selectable(m_treeQuality.displayNames[i].c_str(), selected))
+                {
+                    m_treeQuality.index = i;
+                    m_sharedData.treeQuality = i;
+
+                    auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(cl::MessageID::SystemMessage);
+                    msg->type = SystemEvent::TreeQualityChanged;
+                    m_itemActive = true;
+                    m_presetCombo.index = 3;
+                }
+            }
+            ImGui::EndCombo();
+        }
+        showTip("Toggling Classic Trees will require a restart");
+
+        //shadow quality
+        ImGui::SetNextItemWidth(SliderWidth * scale);
+        if (ImGui::BeginCombo("Shadow Quality", m_shadowQuality.displayNames[m_shadowQuality.index].c_str()))
+        {
+            for (auto i = 0u; i < m_shadowQuality.displayNames.size(); ++i)
+            {
+                const bool selected = i == m_shadowQuality.index;
+                if (ImGui::Selectable(m_shadowQuality.displayNames[i].c_str(), selected))
+                {
+                    m_shadowQuality.index = i;
+                    m_sharedData.shadowQuality = i;
+
+                    auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(cl::MessageID::SystemMessage);
+                    msg->type = SystemEvent::ShadowQualityChanged;
+                    m_itemActive = true;
+                    m_presetCombo.index = 3;
+                }
+            }
+            ImGui::EndCombo();
+        }
+        showTip("NOTE Toggling Classic shadows requires a restart and may cause visual artifacts until done so.");
+
+        //crowd density
+        ImGui::SetNextItemWidth(SliderWidth* scale);
+        if (ImGui::BeginCombo("Crowd Density", m_crowdDensity.displayNames[m_crowdDensity.index].c_str()))
+        {
+            for (auto i = 0u; i < m_crowdDensity.displayNames.size(); ++i)
+            {
+                const bool selected = i == m_crowdDensity.index;
+                if (ImGui::Selectable(m_crowdDensity.displayNames[i].c_str(), selected))
+                {
+                    m_crowdDensity.index = i;
+                    m_sharedData.crowdDensity = i;
+
+                    auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(cl::MessageID::SystemMessage);
+                    msg->type = SystemEvent::CrowdDensityChanged;
+                    m_itemActive = true;
+                    m_presetCombo.index = 3;
+                }
+            }
+            ImGui::EndCombo();
+        }
+        showTip("Very high density crowds may cause a drop in performance.");
+
+        ImGui::EndChild(); //display_child
         ImGui::EndTabItem();
     }
 }
@@ -600,7 +836,13 @@ void OptionsV2::audioTab(float scale)
     if (ImGui::BeginTabItem("Audio", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Audio;
+        ImGui::BeginChild("##audio_child", { -1.f, -1.f }, ImGuiChildFlags_NavFlattened);
+        ImGui::SeparatorText("Audio Options");
+        //ImGui::NewLine();
 
+
+
+        ImGui::EndChild(); //audio_child
         ImGui::EndTabItem();
     }
 }
