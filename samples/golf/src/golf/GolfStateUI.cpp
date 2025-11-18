@@ -5409,7 +5409,10 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                             && m_courseIndex != -1
                             && m_courseIndex < 12)
                         {
+                            const auto b = Achievements::getActive();
+                            Achievements::setActive(m_allowAchievements);
                             Social::getMonthlyChallenge().updateChallenge(ChallengeID::Ten, m_courseIndex);
+                            Achievements::setActive(b);
                         }
                     }
                 }
