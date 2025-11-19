@@ -38,6 +38,7 @@ source distribution.
 
 #include <crogine/audio/AudioDevice.hpp>
 #include <crogine/util/Easings.hpp>
+#include <AchievementStrings.hpp>
 #include <Social.hpp>
 
 namespace
@@ -941,7 +942,64 @@ void OptionsV2::achievementsTab(float scale)
     if (ImGui::BeginTabItem("Achievements", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Achievements;
+        ImGui::BeginChild("##container", { 0.f, 0.f }, ImGuiChildFlags_NavFlattened);
 
+        //ImGui::PushStyleColor(ImGuiCol_ChildBg, cro::Colour::Transparent);
+        //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 20.f * scale, 12.f * scale });
+
+        constexpr float IconSize = 32.f;
+        constexpr float ChildHeight = IconSize + 20.f;
+        static constexpr std::array Cols = {CD32::Colours[CD32::Brown], CD32::Colours[CD32::TanDarkest]};
+        std::int32_t i = 0;
+        for (const auto& [icon, ach] : m_achievements)
+        {
+            if (icon.texture)
+            {
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, Cols[i % 2]);
+
+                const std::string index = std::to_string(i++);
+                ImGui::BeginChild(("##" + index).c_str(), { 0.f, ChildHeight * scale }, ImGuiChildFlags_NavFlattened);
+                ImGui::BeginChild(("##padding" + index).c_str(), { 4.f * scale, ChildHeight * scale }, ImGuiChildFlags_NavFlattened);
+                ImGui::EndChild();
+                ImGui::SameLine();
+                ImGui::BeginChild(("##image" + index).c_str(), { IconSize * scale, ChildHeight * scale }, ImGuiChildFlags_NavFlattened);
+                ImGui::BeginChild(("##vpadding" + index).c_str(), { 0.f, 2.f * scale }, ImGuiChildFlags_NavFlattened);
+                ImGui::EndChild();
+                ImGui::Image(cro::TextureID(icon.texture->getGLHandle()), { IconSize * scale, IconSize * scale },
+                    { icon.textureRect.left, icon.textureRect.bottom + icon.textureRect.height },
+                    { icon.textureRect.left + icon.textureRect.width, icon.textureRect.bottom });
+                ImGui::EndChild();
+                ImGui::SameLine();
+                ImGui::BeginChild(("##desc" + index).c_str(), { 0.f, ChildHeight * scale }, ImGuiChildFlags_NavFlattened);
+                
+                ImGui::PushStyleColor(ImGuiCol_Text, TextGoldColour);
+                ImGui::Text("%s", ach->name.c_str());
+                ImGui::PopStyleColor();
+                
+
+                //TODO we could probably pre-process this on load...
+                //esp as we probably need to word-wrap these
+                std::string desc = AchievementDesc[ach->id].second ?
+                    ach->achieved ? AchievementDesc[ach->id].first : "Hidden"
+                    : AchievementDesc[ach->id].first;
+                ImGui::Text("%s", desc.c_str());
+
+                if (ach->achieved)
+                {
+                    const auto ts = cro::SysTime::dateString(ach->timestamp);
+                    ImGui::Text("Achieved: %s", ts.c_str());
+                }
+
+                ImGui::EndChild();
+                ImGui::EndChild();
+
+                ImGui::PopStyleColor();
+            }
+        }
+        //ImGui::PopStyleVar();
+        //ImGui::PopStyleColor();
+
+        ImGui::EndChild();
         ImGui::EndTabItem();
     }
 }

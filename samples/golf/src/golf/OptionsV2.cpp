@@ -33,6 +33,8 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "GameConsts.hpp"
 
+#include <AchievementStrings.hpp>
+
 #include <crogine/audio/AudioDevice.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
@@ -194,6 +196,12 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
         {
             str = str.substr(RemoveMe.size());
         }
+    }
+
+    //need to remap these because of the ridiculous way I indexed them by string...
+    for (const auto& str : AchievementStrings)
+    {
+        m_achievements.emplace_back(std::make_pair(Achievements::getIcon(str), Achievements::getAchievement(str)));
     }
 }
 

@@ -37,6 +37,8 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/TextureResource.hpp>
 
+#include <Achievements.hpp>
+
 static inline constexpr std::array<std::uint32_t, 4u> AASamples =
 {
     0, 2, 4, 8
@@ -173,6 +175,10 @@ private:
     ComboContext m_audioCombo;
 
     FlagPreview m_flagPreview;
+
+
+    std::vector<std::pair<AchievementImage, const AchievementData*>> m_achievements;
+
     void optionsWindow();
 
     void settingsTab(float scale);
