@@ -83,7 +83,7 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
 
 
             //this is a hack for the image buttons
-            rect.bottom += (rect.height * 2.f);
+            rect.bottom += (rect.height * 1.5f);
             ret.uv2 = ret.uv0;
             ret.uv2.y = rect.bottom + rect.height;
 
@@ -103,16 +103,20 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
         m_navIcons[NavIcon::XBPrev] = convertSprite("prev_tab_xbox");
     }
 
-    if (spriteSheet.loadFromFile("assets/golf/sprites/options.spt", m_textureResource))
+    if (spriteSheet.loadFromFile("assets/golf/sprites/options_buttons.spt", m_textureResource))
     {
         m_buttonTexture = spriteSheet.getTexture()->getGLHandle();
 
         m_buttonIcons[ButtonIcon::ResetHints] = convertSprite("reset_hints");
         m_buttonIcons[ButtonIcon::ResetCareer] = convertSprite("reset_career");
-        m_buttonIcons[ButtonIcon::ResetProfile] = convertSprite("reset_button");
+        m_buttonIcons[ButtonIcon::ResetProfile] = convertSprite("reset_profile");
         m_buttonIcons[ButtonIcon::HowToPlay] = convertSprite("how_to_play");
         m_buttonIcons[ButtonIcon::Credits] = convertSprite("credits");
         m_buttonIcons[ButtonIcon::Close] = convertSprite("close");
+        m_buttonIcons[ButtonIcon::Prev] = convertSprite("prev");
+        m_buttonIcons[ButtonIcon::Next] = convertSprite("next");
+        m_buttonIcons[ButtonIcon::ChangeKey] = convertSprite("change");
+        m_buttonIcons[ButtonIcon::ResetKeybinds] = convertSprite("reset_to_default");
     }
 
     if (spriteSheet.loadFromFile("assets/golf/sprites/control_layout.spt", m_textureResource))

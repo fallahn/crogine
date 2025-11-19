@@ -105,7 +105,7 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     {
         sd.uiScales[i] = style;
         sd.uiScales[i].ScaleAllSizes(static_cast<float>(i + 1));
-        sd.uiScales[i].ChildBorderSize = i + 1;
+        sd.uiScales[i].ChildBorderSize = static_cast<float>(i + 1);
     }
 
     //ImGui::GetIO().FontGlobalScale = 2.f;

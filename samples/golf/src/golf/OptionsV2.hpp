@@ -42,6 +42,30 @@ static inline constexpr std::array<std::uint32_t, 4u> AASamples =
     0, 2, 4, 8
 };
 
+struct Icon final
+{
+    ImVec2 size = {};
+    ImVec2 uv0 = {};
+    ImVec2 uv1 = {};
+
+    //used in instances such as image buttons
+    ImVec2 uv2 = {};
+    ImVec2 uv3 = {};
+
+    //index allows us to use multiple instances of the same icon
+    ImVec2 getUVStart(std::int32_t idx = 0) const
+    {
+        return hovered == idx ? uv2 : uv0;
+    }
+    ImVec2 getUVEnd(std::int32_t idx = 0) const
+    {
+        return hovered == idx ? uv3 : uv1;
+    }
+
+    //contains the ID of the hovered button if multiple buttons share this Icon
+    std::int32_t hovered = -1;
+};
+
 //wrapper state for the ImGui version of the Options window
 class OptionsV2 final : public cro::State, public cro::GuiClient
 {
@@ -75,29 +99,6 @@ private:
     void closeWindow();
     void playSound(std::int32_t);
     
-    struct Icon final
-    {
-        ImVec2 size = {};
-        ImVec2 uv0 = {};
-        ImVec2 uv1 = {};
-
-        //used in instances such as image buttons
-        ImVec2 uv2 = {};
-        ImVec2 uv3 = {};
-
-        ImVec2 getUVStart() const
-        {
-            return hovered ? uv2 : uv0;
-        }
-        ImVec2 getUVEnd() const
-        {
-            return hovered ? uv3 : uv1;
-        }
-
-        //contains the ID of the hovered button if multiple buttons share this Icon
-        int hovered = 0;
-    };
-
     struct NavigationContext final
     {
         struct TabID final
@@ -135,7 +136,8 @@ private:
         {
             ResetHints, ResetCareer,
             ResetProfile, HowToPlay,
-            Credits, Close,
+            Credits, Close, ChangeKey,
+            ResetKeybinds, Prev, Next,
             Count
         };
     };

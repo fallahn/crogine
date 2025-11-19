@@ -66,33 +66,37 @@ void showTip(const std::string& s)
     }
 }
 
-static inline void pushImageButtonStyle(float scale)
+static inline void pushImageButtonStyle(float scale, bool rounding = true)
 {
     ImGui::PushStyleColor(ImGuiCol_Button, cro::Colour::Transparent);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, cro::Colour::Transparent);
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, cro::Colour::Transparent);
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, 0.f)); 
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.f * scale);
+    if (rounding)
+    {
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, 0.f));
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.f * scale);
+    }
 }
 
-static inline void popImageButtonStyle()
+static inline void popImageButtonStyle(bool rounding = true)
 {
-    ImGui::PopStyleVar(2);
+    if(rounding) ImGui::PopStyleVar(2);
     ImGui::PopStyleColor(3);
 }
 //InputBinding
-static inline bool keyBinding(SharedStateData& sd, std::int32_t index)
+static inline bool keyBinding(SharedStateData& sd, std::int32_t index, Icon& button, cro::TextureID texture, float scale)
 {
     const std::string label = "Change##" + std::to_string(index);
     const auto keyString = cro::Keyboard::keyString(sd.inputBinding.keys[index]).toUtf8Char();
-    
+
     bool ret = false;
     ImGui::TableNextColumn();
-    if (ImGui::Button(label.c_str()))
+    if (ImGui::ImageButton(label.c_str(), texture, button.size * scale, button.getUVStart(index), button.getUVEnd(index)))
     {
         //don't early out here!
         ret = true;
     }
+    button.hovered = ImGui::IsItemHovered() ? index : button.hovered;
     ImGui::TableNextColumn();
     ImGui::Text("%s", InputLabels[index].c_str());
     ImGui::TableNextColumn();
@@ -205,19 +209,31 @@ void OptionsV2::settingsTab(float scale)
         const auto& t = m_flagPreview.getTexure();
         const auto uv = m_flagPreview.getUV();
         ImGui::Image(t, { s.x, s.y }, { uv.left, uv.height }, { uv.width, uv.bottom });
-        if (ImGui::Button("<"))
+        auto button = m_buttonIcons[ButtonIcon::Prev];
+        pushImageButtonStyle(scale,false);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0.f, 2.f * scale });
+        if (ImGui::ImageButton("##<", m_buttonTexture, button.size * scale, button.getUVStart(), button.getUVEnd()))
         {
             m_flagPreview.prev();
             m_sharedData.flagPath = m_flagPreview.getPath();
             playSound(MenuSoundEvent::Cancel);
         }
+        m_buttonIcons[ButtonIcon::Prev].hovered = ImGui::IsItemHovered() ? 0 : -1;
+        ImGui::PopStyleVar();
+        popImageButtonStyle(false);
         ImGui::SameLine();
-        if (ImGui::Button(">"))
+        button = m_buttonIcons[ButtonIcon::Next];
+        pushImageButtonStyle(scale,false);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0.f, 2.f * scale });
+        if (ImGui::ImageButton("##>", m_buttonTexture, button.size * scale, button.getUVStart(), button.getUVEnd()))
         {
             m_flagPreview.next();
             m_sharedData.flagPath = m_flagPreview.getPath();
             playSound(MenuSoundEvent::Activate);
         }
+        m_buttonIcons[ButtonIcon::Next].hovered = ImGui::IsItemHovered() ? 0 : -1;
+        ImGui::PopStyleVar();
+        popImageButtonStyle(false);
         ImGui::SameLine();
 
         static const std::vector<std::string> NumTypes = { "None","Black","White" };
@@ -281,13 +297,13 @@ void OptionsV2::settingsTab(float scale)
 
         ImGui::NewLine();
         pushImageButtonStyle(scale);
-        auto button = m_buttonIcons[ButtonIcon::ResetHints];
+        button = m_buttonIcons[ButtonIcon::ResetHints];
         if (ImGui::ImageButton("Reset Hints", m_buttonTexture, button.size * scale, button.getUVStart(), button.getUVEnd()))
         {
             ImGui::OpenPopup("Reset Hints?");
             playSound(MenuSoundEvent::Activate);
         }
-        m_buttonIcons[ButtonIcon::ResetHints].hovered = ImGui::IsItemHovered() ? 1 : 0;
+        m_buttonIcons[ButtonIcon::ResetHints].hovered = ImGui::IsItemHovered() ? 0 : -1;
         popImageButtonStyle();
 
         ImGui::SetNextWindowSize(ModalSize);
@@ -311,7 +327,7 @@ void OptionsV2::settingsTab(float scale)
             ImGui::OpenPopup("Reset Career?");
             playSound(MenuSoundEvent::Activate);
         }
-        m_buttonIcons[ButtonIcon::ResetCareer].hovered = ImGui::IsItemHovered() ? 1 : 0;
+        m_buttonIcons[ButtonIcon::ResetCareer].hovered = ImGui::IsItemHovered() ? 0 : -1;
         popImageButtonStyle();
         ImGui::SetNextWindowSize(ModalSize);
         ImGui::SetNextWindowPos(pos);
@@ -353,7 +369,7 @@ void OptionsV2::settingsTab(float scale)
             ImGui::OpenPopup("Reset Profile?");
             playSound(MenuSoundEvent::Activate);
         }
-        m_buttonIcons[ButtonIcon::ResetProfile].hovered = ImGui::IsItemHovered() ? 1 : 0;
+        m_buttonIcons[ButtonIcon::ResetProfile].hovered = ImGui::IsItemHovered() ? 0 : -1;
         popImageButtonStyle();
 
         ImGui::SetNextWindowSize(ModalSize);
@@ -423,10 +439,12 @@ void OptionsV2::keyboardTab(float scale)
             std::int32_t rebindIndex = -1;
             for (auto i = 0; i < InputBinding::Count; ++i)
             {
-                if (keyBinding(m_sharedData, i))
+                pushImageButtonStyle(scale);
+                if (keyBinding(m_sharedData, i, m_buttonIcons[ButtonIcon::ChangeKey], m_buttonTexture, scale))
                 {
                     rebindIndex = i;
                 }
+                popImageButtonStyle();
             }
 
             ImGui::EndTable();
@@ -470,12 +488,15 @@ void OptionsV2::keyboardTab(float scale)
         }
 
         ImGui::NewLine();
-        if (ImGui::Button("Reset To Default"))
+
+        auto button = m_buttonIcons[ButtonIcon::ResetKeybinds];
+        pushImageButtonStyle(scale);
+        if (ImGui::ImageButton("##Reset To Default", m_buttonTexture, button.size * scale, button.getUVStart(), button.getUVEnd()))
         {
             ImGui::OpenPopup("Reset Keybindings");
-            
         }
-
+        m_buttonIcons[ButtonIcon::ResetKeybinds].hovered = ImGui::IsItemHovered() ? 0 : -1;
+        popImageButtonStyle();
 
         ImGui::SetNextWindowSize(ModalSize);
         ImGui::SetNextWindowPos(pos);
@@ -1019,7 +1040,7 @@ void OptionsV2::optionsWindow()
             playSound(MenuSoundEvent::Activate);
         }
         popImageButtonStyle();
-        m_buttonIcons[ButtonIcon::HowToPlay].hovered = ImGui::IsItemHovered() ? 1 : 0;
+        m_buttonIcons[ButtonIcon::HowToPlay].hovered = ImGui::IsItemHovered() ? 0 : -1;
         ImGui::SameLine();
         button = m_buttonIcons[ButtonIcon::Credits];
         pushImageButtonStyle(scale);
@@ -1030,7 +1051,7 @@ void OptionsV2::optionsWindow()
             playSound(MenuSoundEvent::Activate);
         }
         popImageButtonStyle();
-        m_buttonIcons[ButtonIcon::Credits].hovered = ImGui::IsItemHovered() ? 1 : 0;
+        m_buttonIcons[ButtonIcon::Credits].hovered = ImGui::IsItemHovered() ? 0 : -1;
         ImGui::SameLine();
         button = m_buttonIcons[ButtonIcon::Close];
         pushImageButtonStyle(scale);
@@ -1040,7 +1061,7 @@ void OptionsV2::optionsWindow()
             m_animationTarget = 0.f;
         }
         popImageButtonStyle();
-        m_buttonIcons[ButtonIcon::Close].hovered = ImGui::IsItemHovered() ? 1 : 0;
+        m_buttonIcons[ButtonIcon::Close].hovered = ImGui::IsItemHovered() ? 0 : -1;
         ImGui::EndChild(); //child_bottom
         ImGui::End();
 
