@@ -203,6 +203,11 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
     {
         m_achievements.emplace_back(std::make_pair(Achievements::getIcon(str), Achievements::getAchievement(str)));
     }
+
+    for (const auto& str : StatStrings)
+    {
+        m_stats.push_back(Achievements::getStat(str));
+    }
 }
 
 //public

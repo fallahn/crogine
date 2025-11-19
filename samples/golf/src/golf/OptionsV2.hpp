@@ -178,6 +178,7 @@ private:
 
 
     std::vector<std::pair<AchievementImage, const AchievementData*>> m_achievements;
+    std::vector<const StatData*> m_stats;
 
     void optionsWindow();
 

@@ -944,12 +944,9 @@ void OptionsV2::achievementsTab(float scale)
         m_navigationContext.tabIndex = NavigationContext::TabID::Achievements;
         ImGui::BeginChild("##container", { 0.f, 0.f }, ImGuiChildFlags_NavFlattened);
 
-        //ImGui::PushStyleColor(ImGuiCol_ChildBg, cro::Colour::Transparent);
-        //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 20.f * scale, 12.f * scale });
-
         constexpr float IconSize = 32.f;
         constexpr float ChildHeight = IconSize + 20.f;
-        static constexpr std::array Cols = {CD32::Colours[CD32::Brown], CD32::Colours[CD32::TanDarkest]};
+        static constexpr std::array Cols = {cro::Colour(0.f, 0.f, 0.f, 0.f), CD32::Colours[CD32::Black]};
         std::int32_t i = 0;
         for (const auto& [icon, ach] : m_achievements)
         {
@@ -986,8 +983,10 @@ void OptionsV2::achievementsTab(float scale)
 
                 if (ach->achieved)
                 {
+                    ImGui::PushStyleColor(ImGuiCol_Text, CD32::Colours[CD32::GreyLight]);
                     const auto ts = cro::SysTime::dateString(ach->timestamp);
                     ImGui::Text("Achieved: %s", ts.c_str());
+                    ImGui::PopStyleColor();
                 }
 
                 ImGui::EndChild();
@@ -996,8 +995,6 @@ void OptionsV2::achievementsTab(float scale)
                 ImGui::PopStyleColor();
             }
         }
-        //ImGui::PopStyleVar();
-        //ImGui::PopStyleColor();
 
         ImGui::EndChild();
         ImGui::EndTabItem();
@@ -1010,7 +1007,52 @@ void OptionsV2::statsTab(float scale)
     if (ImGui::BeginTabItem("Stats", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Stats;
+        ImGui::BeginChild("##region", { 0.f, 0.f }, ImGuiChildFlags_NavFlattened);
 
+        constexpr float ChildHeight = 40.f;
+        static constexpr std::array Cols = { cro::Colour(0.f, 0.f, 0.f, 0.f), CD32::Colours[CD32::Black] };
+        std::int32_t i = 0;
+
+        for (const auto* stat : m_stats)
+        {
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, Cols[i % 2]);
+            const std::string index = std::to_string(i++);
+            ImGui::BeginChild(("##" + index).c_str(), { 0.f, ChildHeight * scale }, ImGuiChildFlags_NavFlattened);
+            
+            ImGui::PushStyleColor(ImGuiCol_Text, TextGoldColour);
+            ImGui::Text("%s", StatLabels[stat->id].c_str());
+            ImGui::PopStyleColor();
+            
+            //like the achievements we could process this on load
+            switch (StatTypes[stat->id])
+            {
+            default: break;
+            case StatType::Float:
+                ImGui::Text("%3.2f", stat->value);
+                break;
+            case StatType::Integer:
+                ImGui::Text("%d", static_cast<std::int32_t>(stat->value));
+                break;
+            case StatType::Percent:
+                ImGui::Text("%3.2f", stat->value * 100.f);
+                break;
+            case StatType::Time:
+            {
+                std::int32_t v = static_cast<std::int32_t>(Achievements::getStat(StatStrings[i])->value);
+                auto seconds = v % 60;
+                auto minutes = v / 60;
+                auto hours = minutes / 60;
+                minutes %= 60;
+
+                ImGui::Text("%dh%dm%ds", hours, minutes, seconds);
+            }
+                break;
+            }
+            ImGui::EndChild();
+            ImGui::PopStyleColor();
+        }
+
+        ImGui::EndChild();
         ImGui::EndTabItem();
     }
 }
