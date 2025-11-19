@@ -87,7 +87,7 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     style.Colors[ImGuiCol_PlotLinesHovered] = ImVec4(0.9490196108818054f, 0.8117647171020508f, 0.3607843220233917f, 1.0f);
     style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.9490196108818054f, 0.8117647171020508f, 0.3607843220233917f, 1.0f);
     style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.9254902005195618f, 0.4666666686534882f, 0.239215686917305f, 1.0f);
-    style.Colors[ImGuiCol_TableHeaderBg] = ImVec4(0.4941176474094391f, 0.4274509847164154f, 0.2156862765550613f, 1.0f);
+    style.Colors[ImGuiCol_TableHeaderBg] = ImVec4(0.3960784375667572f, 0.2627451121807098f, 0.1843137294054031f, 1.0f);// ImVec4(0.4941176474094391f, 0.4274509847164154f, 0.2156862765550613f, 1.0f);
     style.Colors[ImGuiCol_TableBorderStrong] = ImVec4(0.4941176474094391f, 0.4274509847164154f, 0.2156862765550613f, 1.0f);
     style.Colors[ImGuiCol_TableBorderLight] = ImVec4(0.2588235437870026f, 0.2588235437870026f, 0.2784313857555389f, 1.0f);
     style.Colors[ImGuiCol_TableRowBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);

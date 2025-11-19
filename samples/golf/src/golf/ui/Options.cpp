@@ -48,6 +48,7 @@ namespace
     constexpr float NavColWidth = 40.f;
 
     constexpr float SliderWidth = 120.f;
+    constexpr float LeftPadding = 10.f;
 
     std::string tipText;
 
@@ -84,7 +85,7 @@ static inline void popImageButtonStyle(bool rounding = true)
     if(rounding) ImGui::PopStyleVar(2);
     ImGui::PopStyleColor(3);
 }
-//InputBinding
+
 static inline bool keyBinding(SharedStateData& sd, std::int32_t index, Icon& button, cro::TextureID texture, float scale)
 {
     const std::string label = "Change##" + std::to_string(index);
@@ -102,7 +103,7 @@ static inline bool keyBinding(SharedStateData& sd, std::int32_t index, Icon& but
     ImGui::Text("%s", InputLabels[index].c_str());
     ImGui::TableNextColumn();
     ImGui::Text("%s", keyString.c_str());
-    
+       
     ImGui::TableNextRow();
     return ret;
 }
@@ -122,6 +123,14 @@ void OptionsV2::settingsTab(float scale)
 
         ImGui::BeginChild("##settings_child", {-1.f, -1.f}, ImGuiChildFlags_NavFlattened);
         ImGui::SeparatorText("Display");
+
+        ImGui::NewLine();
+
+        float childHeight = 368.f;
+        ImGui::BeginChild("##left_pad", { LeftPadding * scale, childHeight * scale }, ImGuiChildFlags_NavFlattened);
+        ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::BeginChild("##right", { 0.f, childHeight * scale }, ImGuiChildFlags_NavFlattened);
 
         checkbox("Show Flag Beacon", &m_sharedData.showBeacon); showTip("Display a coloured beacon at the flag visible from a distance");
         ImGui::ColorButton("##bc", getBeaconColour(m_sharedData.beaconColour), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
@@ -202,10 +211,21 @@ void OptionsV2::settingsTab(float scale)
 
         //TODO tee ball colour
         //TODO putting grid transparency
+        ImGui::EndChild(); //right
+
 
         //flag selection
         ImGui::NewLine();
         ImGui::SeparatorText("Flag");
+
+        ImGui::NewLine();
+        childHeight = 152.f;
+        ImGui::BeginChild("##left_pad0", { LeftPadding * scale, childHeight * scale }, ImGuiChildFlags_NavFlattened);
+        ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::BeginChild("##right0", { 0.f, childHeight * scale }, ImGuiChildFlags_NavFlattened);
+
+
         const auto s = m_flagPreview.getSize() * scale;
         const auto& t = m_flagPreview.getTexure();
         const auto uv = m_flagPreview.getUV();
@@ -239,7 +259,7 @@ void OptionsV2::settingsTab(float scale)
 
         static const std::vector<std::string> NumTypes = { "None","Black","White" };
         ImGui::SetNextItemWidth(114.f * scale);
-        if (ImGui::BeginCombo("Number", NumTypes[m_sharedData.flagText].c_str()))
+        if (ImGui::BeginCombo("Number Colour", NumTypes[m_sharedData.flagText].c_str()))
         {
             for (auto i = 0u; i < NumTypes.size(); ++i)
             {
@@ -259,21 +279,36 @@ void OptionsV2::settingsTab(float scale)
             m_itemActive = true;
             ImGui::EndCombo();
         }
+        ImGui::EndChild(); //right0
 
-
-        ImGui::NewLine();
+        //ImGui::NewLine();
         ImGui::NewLine();
         ImGui::SeparatorText("Difficulty & Behaviour");
+        ImGui::NewLine();
+        childHeight = 122.f;
+        ImGui::BeginChild("##left_pad1", { LeftPadding * scale, childHeight * scale }, ImGuiChildFlags_NavFlattened);
+        ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::BeginChild("##right1", { 0.f, childHeight * scale }, ImGuiChildFlags_NavFlattened);
+
         checkbox("Enable Putt Assist", &m_sharedData.showPuttingPower); showTip("Display a small flag above the power bar when putting to estimate distance");
-        checkbox("Precise Range Indicator", &m_sharedData.calculateRange); showTip("Accounts for terrain elevation and wind when drawing the range indicator instead of estimating the range");
+        checkbox("Precise Range Indicator", &m_sharedData.calculateRange); showTip("Accounts for terrain elevation and wind instead of estimating the range");
         checkbox("Use Full UI", &m_sharedData.showMinimap); showTip("Uncheck this for a minimal UI, hiding the minimap for increased challenge");
         checkbox("Show In Game Tips", &m_sharedData.showInGameTips);
         checkbox("Fixed Range Putter", &m_sharedData.fixedPuttingRange); showTip("Disable dynamically adjusting the putting range and fix to 10m/33ft");
 
-
-        ImGui::NewLine();
+        ImGui::EndChild();//right1
+        
         ImGui::NewLine();
         ImGui::SeparatorText("Configuration");
+
+        ImGui::NewLine();
+        childHeight = 152.f;
+        ImGui::BeginChild("##left_pad2", { LeftPadding * scale, childHeight * scale }, ImGuiChildFlags_NavFlattened);
+        ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::BeginChild("##right2", { 0.f, childHeight * scale }, ImGuiChildFlags_NavFlattened);
+
         checkbox("Enable Web Socket", &m_sharedData.webSocket); showTip("See https://github.com/fallahn/svs for more info");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(80.f * scale);
@@ -402,6 +437,8 @@ void OptionsV2::settingsTab(float scale)
         }
 
 
+        ImGui::EndChild(); //right2
+
         ImGui::EndChild();
         ImGui::EndTabItem();
     }
@@ -424,6 +461,13 @@ void OptionsV2::keyboardTab(float scale)
         ImGui::BeginChild("##keyboard_child", { -1.f, -1.f }, ImGuiChildFlags_NavFlattened);
         ImGui::SeparatorText("Key Bindings");
 
+        ImGui::NewLine();
+        const float PadHeight = 280.f;
+        ImGui::BeginChild("##left_pad_keys", { LeftPadding * scale, PadHeight * scale }, ImGuiChildFlags_NavFlattened);
+        ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::BeginChild("##keys_right", { 0.f, PadHeight * scale }, ImGuiChildFlags_NavFlattened);
+
         //shared by all modals, below
         ImVec2 ModalSize = { 300.f, 120.f };
         ModalSize *= scale;
@@ -431,11 +475,12 @@ void OptionsV2::keyboardTab(float scale)
         const auto pos = (ImGui::GetIO().DisplaySize - ModalSize) / 2.f;
         const auto modalFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration;
 
-        if (ImGui::BeginTable("##table", 3, ImGuiTableFlags_NoSavedSettings, ImVec2(-1.f, 0.f)))
+        ImGui::PushStyleColor(ImGuiCol_TableRowBg, CD32::Colours[CD32::Black]);
+        if (ImGui::BeginTable("##table", 3, ImGuiTableFlags_NoSavedSettings, ImVec2(454.f * scale, 0.f)))
         {
             ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_WidthFixed, 50.f * scale);
-            ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed, 100.f * scale);
-            ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_WidthFixed, 50.f * scale);
+            ImGui::TableSetupColumn("Assignment", ImGuiTableColumnFlags_WidthFixed, 100.f * scale);
+            ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_WidthFixed/*, 50.f * scale*/);
             ImGui::TableHeadersRow();
             std::int32_t rebindIndex = -1;
             for (auto i = 0; i < InputBinding::Count; ++i)
@@ -449,6 +494,7 @@ void OptionsV2::keyboardTab(float scale)
             }
 
             ImGui::EndTable();
+            ImGui::PopStyleColor();
 
             if (rebindIndex != -1)
             {
@@ -514,8 +560,8 @@ void OptionsV2::keyboardTab(float scale)
                 }, ModalSize, scale);
         }
 
+        ImGui::EndChild(); //keys_right
 
-        ImGui::NewLine();
         ImGui::PushStyleColor(ImGuiCol_Text, TextGoldColour);
         ImGui::Text("Fixed Keys (Cannot be assigned):");
         ImGui::PopStyleColor();
@@ -624,7 +670,7 @@ void OptionsV2::controllerTab(float scale, float parentWidth)
         if (ImGui::IsItemActive()) m_itemActive = true;
         checkbox("Invert X", &m_sharedData.invertX); showTip("Invert the controller X axis when in camera mode");
         checkbox("Invert Y", &m_sharedData.invertY); showTip("Invert the controller Y axis when in camera mode");
-        checkbox("Enable Swingput", &m_sharedData.useSwingput); showTip("Hold a trigger and use the Thumbstick to swing");
+        checkbox("Enable Swingput", &m_sharedData.useSwingput); showTip("Use the Thumbstick to swing whilst holding one of the triggers");
         checkbox("Hold For Power", &m_sharedData.pressHold); showTip("Press and hold the Action button to select power, instead of 3-click");
         
         //rats.
@@ -650,13 +696,18 @@ void OptionsV2::controllerTab(float scale, float parentWidth)
 void OptionsV2::displayTab(float scale)
 {
     const auto active = m_navigationContext.requestedTab == NavigationContext::TabID::Display;
-    if (ImGui::BeginTabItem("Display", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
+    if (ImGui::BeginTabItem("Graphics", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Display;
         ImGui::BeginChild("##display_child", { -1.f, -1.f }, ImGuiChildFlags_NavFlattened);
 
         ImGui::SeparatorText("Graphics Options");
+        ImGui::NewLine();
 
+        ImGui::BeginChild("##left_pad", { LeftPadding * scale, 0.f }, ImGuiChildFlags_NavFlattened);
+        ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::BeginChild("##right", { 0.f, 0.f }, ImGuiChildFlags_NavFlattened);
         
         ImGui::SetNextItemWidth(SliderWidth * scale);
         if (ImGui::BeginCombo("Preset", m_presetCombo.displayNames[m_presetCombo.index].c_str()))
@@ -672,6 +723,7 @@ void OptionsV2::displayTab(float scale)
                     m_itemActive = true;
                 }
             }
+            m_itemActive = true;
             ImGui::EndCombo();
         }
 
@@ -691,6 +743,8 @@ void OptionsV2::displayTab(float scale)
                     toggleAntialiasing(m_sharedData, AASamples[m_aaCombo.index] != 0, AASamples[m_aaCombo.index]);
                 }
             }
+            
+            m_itemActive = true;
             ImGui::EndCombo();
         }
 
@@ -709,6 +763,8 @@ void OptionsV2::displayTab(float scale)
                     cro::App::getWindow().setSize(m_sharedData.resolutions[m_resolutions.index]);
                 }
             }
+            
+            m_itemActive = true;
             ImGui::EndCombo();
         }
         
@@ -802,6 +858,7 @@ void OptionsV2::displayTab(float scale)
                     m_presetCombo.index = 3;
                 }
             }
+            m_itemActive = true;
             ImGui::EndCombo();
         }
         showTip("Toggling Classic Trees will require a restart");
@@ -824,9 +881,10 @@ void OptionsV2::displayTab(float scale)
                     m_presetCombo.index = 3;
                 }
             }
+            m_itemActive = true;
             ImGui::EndCombo();
         }
-        showTip("NOTE Toggling Classic shadows requires a restart and may cause visual artifacts until done so.");
+        showTip("Toggling Classic shadows requires a restart and may cause visual artifacts until done so.");
 
         //crowd density
         ImGui::SetNextItemWidth(SliderWidth* scale);
@@ -846,9 +904,12 @@ void OptionsV2::displayTab(float scale)
                     m_presetCombo.index = 3;
                 }
             }
+            m_itemActive = true;
             ImGui::EndCombo();
         }
         showTip("Very high density crowds may cause a drop in performance.");
+
+        ImGui::EndChild(); //right
 
         ImGui::EndChild(); //display_child
         ImGui::EndTabItem();
@@ -863,7 +924,12 @@ void OptionsV2::audioTab(float scale)
         m_navigationContext.tabIndex = NavigationContext::TabID::Audio;
         ImGui::BeginChild("##audio_child", { -1.f, -1.f }, ImGuiChildFlags_NavFlattened);
         ImGui::SeparatorText("Audio Options");
-        //ImGui::NewLine();
+        ImGui::NewLine();
+
+        ImGui::BeginChild("##audio_pad", { LeftPadding * scale, 0.f }, ImGuiChildFlags_NavFlattened);
+        ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::BeginChild("##audio_right", { 0.f, 0.f }, ImGuiChildFlags_NavFlattened);
 
         //device selection
         if (!m_audioCombo.displayNames.empty())
@@ -884,6 +950,7 @@ void OptionsV2::audioTab(float scale)
                     }
                 }
 
+                m_itemActive = true;
                 ImGui::EndCombo();
             }
 
@@ -931,6 +998,7 @@ void OptionsV2::audioTab(float scale)
         }
         checkbox("Use Text To Speech", &m_sharedData.useTTS); showTip("Use Text To Speech to read in-game chat messages");
 
+        ImGui::EndChild(); //audio_right
         ImGui::EndChild(); //audio_child
         ImGui::EndTabItem();
     }
@@ -943,6 +1011,7 @@ void OptionsV2::achievementsTab(float scale)
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Achievements;
         ImGui::BeginChild("##container", { 0.f, 0.f }, ImGuiChildFlags_NavFlattened);
+        ImGui::NewLine();
 
         constexpr float IconSize = 32.f;
         constexpr float ChildHeight = IconSize + 20.f;
@@ -1009,6 +1078,12 @@ void OptionsV2::statsTab(float scale)
         m_navigationContext.tabIndex = NavigationContext::TabID::Stats;
         ImGui::BeginChild("##region", { 0.f, 0.f }, ImGuiChildFlags_NavFlattened);
 
+        ImGui::NewLine();
+        ImGui::BeginChild("##stat_pad", {LeftPadding * scale, 0.f}, ImGuiChildFlags_NavFlattened);
+        ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::BeginChild("##stat_right", {0.f, 0.f}, ImGuiChildFlags_NavFlattened);
+
         constexpr float ChildHeight = 40.f;
         static constexpr std::array Cols = { cro::Colour(0.f, 0.f, 0.f, 0.f), CD32::Colours[CD32::Black] };
         std::int32_t i = 0;
@@ -1052,7 +1127,8 @@ void OptionsV2::statsTab(float scale)
             ImGui::PopStyleColor();
         }
 
-        ImGui::EndChild();
+        ImGui::EndChild(); //stat_right
+        ImGui::EndChild(); //region
         ImGui::EndTabItem();
     }
 }
@@ -1087,12 +1163,18 @@ void OptionsV2::optionsWindow()
         ImGui::BeginChild("##child_main", { -1.f, size.y - (((ButtonHeight * 2.f) + (VerticalPadding * 2.f)) * scale) }, ImGuiChildFlags_NavFlattened);
         //left col for prev tab icon (eg LB)
         ImGui::BeginChild("##nav_left", { (NavColWidth * scale), -1.f }, ImGuiChildFlags_NavFlattened);
+        const auto buttonWidth = ((m_navIcons[NavIcon::PSPrev].size.x - 2.f) * scale) - HPadding;
+        ImGui::BeginChild("##pad_left", { buttonWidth, 0.f }, ImGuiChildFlags_NavFlattened);
+        ImGui::EndChild();
+        
         if (m_sharedData.activeInput == SharedStateData::ActiveInput::PS)
         {
+            ImGui::SameLine();
             ImGui::Image(m_navTexture, m_navIcons[NavIcon::PSPrev].size * scale, m_navIcons[NavIcon::PSPrev].uv0, m_navIcons[NavIcon::PSPrev].uv1);
         }
         else if (m_sharedData.activeInput == SharedStateData::ActiveInput::XBox)
         {
+            ImGui::SameLine();
             ImGui::Image(m_navTexture, m_navIcons[NavIcon::XBPrev].size * scale, m_navIcons[NavIcon::XBPrev].uv0, m_navIcons[NavIcon::XBPrev].uv1);
         }
         ImGui::EndChild(); //nav_left
@@ -1132,6 +1214,15 @@ void OptionsV2::optionsWindow()
 
         //bottom row for credits/HTP/close buttons
         ImGui::BeginChild("##child_bottom", { -1.f, ButtonHeight * scale }, ImGuiChildFlags_NavFlattened);
+        
+        const auto padWidth = (m_buttonIcons[ButtonIcon::HowToPlay].size.x +
+            m_buttonIcons[ButtonIcon::Credits].size.x +
+            (m_buttonIcons[ButtonIcon::Close].size.x * 1.8f)) * scale;
+        ImGui::BeginChild("##button_pad_left", { size.x - padWidth, 0.f }, ImGuiChildFlags_NavFlattened);
+        ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::BeginChild("##button_right", { 0.f, 0.f }, ImGuiChildFlags_NavFlattened);
+
         auto button = m_buttonIcons[ButtonIcon::HowToPlay];
         pushImageButtonStyle(scale);
         if (ImGui::ImageButton("How To Play", m_buttonTexture, button.size * scale, button.getUVStart(), button.getUVEnd()))
@@ -1162,6 +1253,8 @@ void OptionsV2::optionsWindow()
         }
         popImageButtonStyle();
         m_buttonIcons[ButtonIcon::Close].hovered = ImGui::IsItemHovered() ? 0 : -1;
+        
+        ImGui::EndChild(); //button_right
         ImGui::EndChild(); //child_bottom
         ImGui::End();
 
