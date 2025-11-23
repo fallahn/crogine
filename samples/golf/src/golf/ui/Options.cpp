@@ -687,7 +687,7 @@ void OptionsV2::controllerTab(float scale, float parentWidth)
         for (auto i = 0; i < cro::GameController::getControllerCount(); ++i)
         {
             const auto col = m_controllerStates[i] ? ImVec4(1.f, 0.f, 0.f, 1.f) : ImVec4(0.f, 0.f, 0.f, 1.f);
-            const auto buttSize = ImVec2({ 16.f * scale, 16.f * scale });
+            const auto buttSize = ImVec2(16.f * scale, 16.f * scale);
             const auto idStr = std::to_string(i);
             
             
