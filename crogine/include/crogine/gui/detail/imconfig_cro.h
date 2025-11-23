@@ -16,6 +16,7 @@
         ImVec4(const cro::Colour& c) { x = c.getRed(); y = c.getGreen(); z = c.getBlue(); w = c.getAlpha(); }
 
 
-
-
+#ifdef  NO_IM_ASSERT
+#define IM_ASSERT(_EXPR) _EXPR
+#endif
 

@@ -68,7 +68,7 @@ when items have changed and trigger sound events.
 
 Note also there are a series of other changes (which, admittedly, make
 upgrading ImGui a bit more tricky) so I'll attempt to list them all
-hhere - although I'm bound to forget a few:
+here - although I'm bound to forget a few:
 
 imgui.cpp NavUpdate() - controller thumbstick is set to right thumb for
 scrolling
@@ -76,7 +76,7 @@ imgui.cpp RenderNavHighlight() - the clip box is expanded as it clips
 too much
 
 
-It's also helpful to find the ImGui release the current version in based
+It's also helpful to find the ImGui release the current version is based
 on and perform a diff with the files included in this repo.
 */
 

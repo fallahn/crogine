@@ -108,8 +108,6 @@ static inline void applyImGuiStyle(SharedStateData& sd)
         sd.uiScales[i].ChildBorderSize = static_cast<float>(i + 1);
     }
 
-    //ImGui::GetIO().FontGlobalScale = 2.f;
-
     //load specific fonts
     auto* fonts = ImGui::GetIO().Fonts;
     //fonts->AddFontDefault(); //this is already be done by cro, and will break the font if done again

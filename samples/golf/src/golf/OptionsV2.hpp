@@ -180,6 +180,8 @@ private:
     std::vector<std::pair<AchievementImage, const AchievementData*>> m_achievements;
     std::vector<const StatData*> m_stats;
 
+    std::array<bool, 4u> m_controllerStates = {}; //for displaying controller motion
+
     void optionsWindow();
 
     void settingsTab(float scale);

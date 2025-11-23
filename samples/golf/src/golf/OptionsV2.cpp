@@ -45,6 +45,7 @@ namespace
         0, 0, 1, 0, 2, 0, 0, 0, 3
     };
 
+    bool audioHackDone = false;
 }
 
 OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -61,6 +62,8 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
 {
     registerWindow(std::bind(&OptionsV2::optionsWindow, this));
     
+    std::fill(m_controllerStates.begin(), m_controllerStates.end(), false);
+
     //TODO we don't really need this double init any more
     m_flagPreview.init(m_sharedData.flagPath);
     m_flagPreview.setText(m_sharedData.flagText);
@@ -185,6 +188,13 @@ OptionsV2::OptionsV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateDa
         res != m_audioCombo.displayNames.cend())
     {
         m_audioCombo.index = std::distance(m_audioCombo.displayNames.cbegin(), res);
+
+        //currently the deck needs to re-apply the audio device for some reason
+        if (!audioHackDone)
+        {
+            cro::AudioDevice::setActiveDevice(*res);
+            audioHackDone = true;
+        }
     }
 
     //tidy up the descriptions
@@ -296,7 +306,7 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
             switch (evt.cbutton.button)
             {
             default: break;
-            case cro::GameController::ButtonB:
+            case cro::GameController::ButtonBack:
                 closeWindow();
                 break;
             case cro::GameController::ButtonLeftShoulder:
@@ -334,11 +344,20 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
             setActiveInput();
             break;
         case SDL_CONTROLLERAXISMOTION:
-            if (evt.caxis.value > cro::GameController::LeftThumbDeadZone
-                || evt.caxis.value < -cro::GameController::LeftThumbDeadZone)
             {
-                cro::App::getWindow().setMouseCaptured(true);
-                setActiveInput();
+                const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
+
+                if (std::abs(evt.caxis.value) > cro::GameController::LeftThumbDeadZone)
+                {
+                    cro::App::getWindow().setMouseCaptured(true);
+                    setActiveInput();
+
+                    m_controllerStates[controllerID] = true;
+                }
+                else
+                {
+                    m_controllerStates[controllerID] = false;
+                }
             }
             break;
         }
@@ -387,6 +406,12 @@ void OptionsV2::onCachedPush()
             m_resolutions.index = i;
             break;
         }
+    }
+
+    if (cro::GameController::getControllerCount() != 0)
+    {
+        m_sharedData.activeInput = cro::GameController::hasPSLayout(0) ?
+            SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
     }
 }
 

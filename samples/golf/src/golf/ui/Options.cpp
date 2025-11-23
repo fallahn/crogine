@@ -45,7 +45,7 @@ namespace
 {
     constexpr float ButtonHeight = 20.f;
     constexpr float VerticalPadding = 12.f;
-    constexpr float NavColWidth = 40.f;
+    constexpr float NavColWidth = 26.f;
 
     constexpr float SliderWidth = 120.f;
     constexpr float LeftPadding = 10.f;
@@ -121,7 +121,7 @@ void OptionsV2::settingsTab(float scale)
         //}
         m_navigationContext.tabIndex = NavigationContext::TabID::Game;
 
-        ImGui::BeginChild("##settings_child", {-1.f, -1.f}, ImGuiChildFlags_NavFlattened);
+        ImGui::BeginChild("##settings_child", { -1.f, -1.f }/*, ImGuiChildFlags_NavFlattened*/);
         ImGui::SeparatorText("Display");
 
         ImGui::NewLine();
@@ -439,7 +439,8 @@ void OptionsV2::settingsTab(float scale)
 
         ImGui::EndChild(); //right2
 
-        ImGui::EndChild();
+        ImGui::EndChild(); //settings_child
+        
         ImGui::EndTabItem();
     }
 }
@@ -458,7 +459,7 @@ void OptionsV2::keyboardTab(float scale)
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Keyboard;
 
-        ImGui::BeginChild("##keyboard_child", { -1.f, -1.f }, ImGuiChildFlags_NavFlattened);
+        ImGui::BeginChild("##keyboard_child", { -1.f, -1.f }/*, ImGuiChildFlags_NavFlattened*/);
         ImGui::SeparatorText("Key Bindings");
 
         ImGui::NewLine();
@@ -475,7 +476,7 @@ void OptionsV2::keyboardTab(float scale)
         const auto pos = (ImGui::GetIO().DisplaySize - ModalSize) / 2.f;
         const auto modalFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration;
 
-        ImGui::PushStyleColor(ImGuiCol_TableRowBg, CD32::Colours[CD32::Black]);
+        //ImGui::PushStyleColor(ImGuiCol_TableRowBg, CD32::Colours[CD32::Black]);
         if (ImGui::BeginTable("##table", 3, ImGuiTableFlags_NoSavedSettings, ImVec2(454.f * scale, 0.f)))
         {
             ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_WidthFixed, 50.f * scale);
@@ -494,7 +495,6 @@ void OptionsV2::keyboardTab(float scale)
             }
 
             ImGui::EndTable();
-            ImGui::PopStyleColor();
 
             if (rebindIndex != -1)
             {
@@ -533,6 +533,7 @@ void OptionsV2::keyboardTab(float scale)
                 m_itemActive = true;
             }
         }
+        //ImGui::PopStyleColor(); //table row bg
 
         ImGui::NewLine();
 
@@ -561,7 +562,6 @@ void OptionsV2::keyboardTab(float scale)
         }
 
         ImGui::EndChild(); //keys_right
-
         ImGui::PushStyleColor(ImGuiCol_Text, TextGoldColour);
         ImGui::Text("Fixed Keys (Cannot be assigned):");
         ImGui::PopStyleColor();
@@ -586,7 +586,7 @@ void OptionsV2::controllerTab(float scale, float parentWidth)
     if (ImGui::BeginTabItem("Controller", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Controller;
-        ImGui::BeginChild("##controller_child", { -1.f, -1.f }, ImGuiChildFlags_NavFlattened);
+        ImGui::BeginChild("##controller_child", { -1.f, -1.f }/*, ImGuiChildFlags_NavFlattened*/);
 
         //we're assuming all of the controllers are the same size
         const float controlWidth = m_controllerIcons[0].size.x * scale;
@@ -616,7 +616,7 @@ void OptionsV2::controllerTab(float scale, float parentWidth)
             }
             else
             {
-                const auto idx = (cro::GameController::getControllerCount() != 0 && cro::GameController::hasPSLayout(0)) ? ControllerIcon::PS : ControllerIcon::Xbox;
+                const auto idx = /*(cro::GameController::getControllerCount() != 0 && cro::GameController::hasPSLayout(0)) ? ControllerIcon::PS :*/ ControllerIcon::Xbox;
 
                 ImGui::Image(m_controllerTexture, m_controllerIcons[idx].size * scale,
                     m_controllerIcons[idx].uv0, m_controllerIcons[idx].uv1);
@@ -683,9 +683,36 @@ void OptionsV2::controllerTab(float scale, float parentWidth)
         ImGui::EndChild();
         ImGui::PopStyleColor(); //childbg
 
-        if (cro::GameController::getControllerCount() > 1)
+
+        for (auto i = 0; i < cro::GameController::getControllerCount(); ++i)
         {
-            //TODO list controllers and enable re-ordering
+            const auto col = m_controllerStates[i] ? ImVec4(1.f, 0.f, 0.f, 1.f) : ImVec4(0.f, 0.f, 0.f, 1.f);
+            const auto buttSize = ImVec2({ 16.f * scale, 16.f * scale });
+            const auto idStr = std::to_string(i);
+            
+            
+            //if (cro::GameController::getControllerCount() > 1)
+            //{
+            //    //re-order
+            //    std::string l = "Up##" + idStr;
+            //    if (ImGui::Button(l.c_str())) //this moves up on the screen but down in index...
+            //    {
+            //        cro::GameController::moveControllerIndexDown(i);
+            //    }
+            //    ImGui::SameLine();
+            //    l = "Down##" + idStr;
+            //    if (ImGui::Button(l.c_str()))
+            //    {
+            //        cro::GameController::moveControllerIndexUp(i);
+            //    }
+            //    ImGui::SameLine();
+            //}            
+            
+            const auto id = "##b" + idStr;
+
+            ImGui::ColorButton(id.c_str(), col, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip, buttSize);
+            ImGui::SameLine();
+            ImGui::Text("%d. %s", i+1, SDL_GameControllerNameForIndex(/*cro::GameController::deviceID*/(i)));
         }
 
         ImGui::EndChild(); //controller_child
@@ -699,7 +726,7 @@ void OptionsV2::displayTab(float scale)
     if (ImGui::BeginTabItem("Graphics", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Display;
-        ImGui::BeginChild("##display_child", { -1.f, -1.f }, ImGuiChildFlags_NavFlattened);
+        ImGui::BeginChild("##display_child", { -1.f, -1.f }/*, ImGuiChildFlags_NavFlattened*/);
 
         ImGui::SeparatorText("Graphics Options");
         ImGui::NewLine();
@@ -922,7 +949,7 @@ void OptionsV2::audioTab(float scale)
     if (ImGui::BeginTabItem("Audio", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Audio;
-        ImGui::BeginChild("##audio_child", { -1.f, -1.f }, ImGuiChildFlags_NavFlattened);
+        ImGui::BeginChild("##audio_child", { -1.f, -1.f }/*, ImGuiChildFlags_NavFlattened*/);
         ImGui::SeparatorText("Audio Options");
         ImGui::NewLine();
 
@@ -1010,7 +1037,7 @@ void OptionsV2::achievementsTab(float scale)
     if (ImGui::BeginTabItem("Achievements", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Achievements;
-        ImGui::BeginChild("##container", { 0.f, 0.f }, ImGuiChildFlags_NavFlattened);
+        ImGui::BeginChild("##container", { 0.f, 0.f }/*, ImGuiChildFlags_NavFlattened*/);
         ImGui::NewLine();
 
         constexpr float IconSize = 32.f;
@@ -1076,13 +1103,13 @@ void OptionsV2::statsTab(float scale)
     if (ImGui::BeginTabItem("Stats", 0, active ? ImGuiTabItemFlags_SetSelected : 0))
     {
         m_navigationContext.tabIndex = NavigationContext::TabID::Stats;
-        ImGui::BeginChild("##region", { 0.f, 0.f }, ImGuiChildFlags_NavFlattened);
+        ImGui::BeginChild("##region", { 0.f, 0.f }/*, ImGuiChildFlags_NavFlattened*/);
 
         ImGui::NewLine();
-        ImGui::BeginChild("##stat_pad", {LeftPadding * scale, 0.f}, ImGuiChildFlags_NavFlattened);
+        /*ImGui::BeginChild("##stat_pad", {LeftPadding * scale, 0.f}, ImGuiChildFlags_NavFlattened);
         ImGui::EndChild();
         ImGui::SameLine();
-        ImGui::BeginChild("##stat_right", {0.f, 0.f}, ImGuiChildFlags_NavFlattened);
+        ImGui::BeginChild("##stat_right", {0.f, 0.f}, ImGuiChildFlags_NavFlattened);*/
 
         constexpr float ChildHeight = 40.f;
         static constexpr std::array Cols = { cro::Colour(0.f, 0.f, 0.f, 0.f), CD32::Colours[CD32::Black] };
@@ -1127,7 +1154,7 @@ void OptionsV2::statsTab(float scale)
             ImGui::PopStyleColor();
         }
 
-        ImGui::EndChild(); //stat_right
+        //ImGui::EndChild(); //stat_right
         ImGui::EndChild(); //region
         ImGui::EndTabItem();
     }
@@ -1162,9 +1189,10 @@ void OptionsV2::optionsWindow()
         //top row to contain main body
         ImGui::BeginChild("##child_main", { -1.f, size.y - (((ButtonHeight * 2.f) + (VerticalPadding * 2.f)) * scale) }, ImGuiChildFlags_NavFlattened);
         //left col for prev tab icon (eg LB)
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.f, 0.f });
         ImGui::BeginChild("##nav_left", { (NavColWidth * scale), -1.f }, ImGuiChildFlags_NavFlattened);
-        const auto buttonWidth = ((m_navIcons[NavIcon::PSPrev].size.x - 2.f) * scale) - HPadding;
-        ImGui::BeginChild("##pad_left", { buttonWidth, 0.f }, ImGuiChildFlags_NavFlattened);
+        const auto buttonWidth = (m_navIcons[NavIcon::PSPrev].size.x * scale);
+        ImGui::BeginChild("##pad_left", { (NavColWidth * scale) - buttonWidth, 0.f }, ImGuiChildFlags_NavFlattened);
         ImGui::EndChild();
         
         if (m_sharedData.activeInput == SharedStateData::ActiveInput::PS)
@@ -1178,6 +1206,7 @@ void OptionsV2::optionsWindow()
             ImGui::Image(m_navTexture, m_navIcons[NavIcon::XBPrev].size * scale, m_navIcons[NavIcon::XBPrev].uv0, m_navIcons[NavIcon::XBPrev].uv1);
         }
         ImGui::EndChild(); //nav_left
+        ImGui::PopStyleVar();//item spacing
         ImGui::SameLine();
         //centre col for tabbed area
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f, 0.f, 0.f, BackgroundAlpha * m_animationProgress));
