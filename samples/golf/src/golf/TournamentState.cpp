@@ -733,12 +733,29 @@ void TournamentState::buildScene()
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-
-
+    //grey edit
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({452.f,62.f,0.1f});
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("edit_grey");
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = 
+        [](cro::Entity e, float)
+        {
+            if (tournamentID == TournamentIndex::Custom)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            }
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //current tournament name
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bgEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 98.f, 0.1f});
+    entity.addComponent<cro::Transform>().setPosition({ (bgEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f) - 27.f, 98.f, 0.1f});
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setString(TournamentNames[tournamentID]);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -751,7 +768,7 @@ void TournamentState::buildScene()
     //prev tournament
     m_titleString = entity;
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 133.f, 88.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 106.f, 88.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("previous");
@@ -779,7 +796,7 @@ void TournamentState::buildScene()
 
     //next tournament
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 361.f, 88.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 334.f, 88.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("next");
@@ -808,7 +825,7 @@ void TournamentState::buildScene()
 
     //displays winner if complete else current round / course
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bgEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 84.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({( bgEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f) - 27.f, 82.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(labelFont);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
