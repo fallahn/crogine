@@ -132,7 +132,7 @@ endif()
 include(FetchContent)
 #set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "Build KTX as a static library" FORCE)
 
-//hmmm this clashes with the crogine property...
+#hmmm this clashes with the crogine property...
 #set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build as a static library" FORCE)
 set(BUILD_TESTING OFF CACHE BOOL "Build the testing tree" FORCE)
 set(KTX_FEATURE_TESTS OFF CACHE BOOL "Build Unit Tests" FORCE)
