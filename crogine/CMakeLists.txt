@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.16)
 
 
 if(APPLE)
@@ -153,6 +153,10 @@ else()
   #use the included versions for brevity
   link_directories(${CMAKE_SOURCE_DIR}/extlibs/ktx/linux-x86_64/lib
                    ${CMAKE_SOURCE_DIR}/extlibs/ktx/win64/lib)
+
+  #sigh
+  link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../extlibs/ktx/linux-x86_64/lib
+                   ${CMAKE_CURRENT_SOURCE_DIR}/../extlibs/ktx/win64/lib)
 endif()
 
 
@@ -169,6 +173,7 @@ if (APPLE)
 else()
 
   include_directories(${CMAKE_SOURCE_DIR}/extlibs/ktx/include)
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../extlibs/ktx/include)
 
 endif()
 
