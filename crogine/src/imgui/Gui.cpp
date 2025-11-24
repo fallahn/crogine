@@ -75,6 +75,8 @@ scrolling
 imgui.cpp RenderNavHighlight() - the clip box is expanded as it clips
 too much
 
+imgui.cpp NavUpdateCreateMoveRequest()
+analgue navigation is added
 
 It's also helpful to find the ImGui release the current version is based
 on and perform a diff with the files included in this repo.

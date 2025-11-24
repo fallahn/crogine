@@ -12466,10 +12466,23 @@ void ImGui::NavUpdateCreateMoveRequest()
         if (window && !g.NavWindowingTarget && !(window->Flags & ImGuiWindowFlags_NoNavInputs))
         {
             const ImGuiInputFlags repeat_mode = ImGuiInputFlags_Repeat | (ImGuiInputFlags)ImGuiInputFlags_RepeatRateNavMove;
-            if (!IsActiveIdUsingNavDir(ImGuiDir_Left)  && ((nav_gamepad_active && IsKeyPressed(ImGuiKey_GamepadDpadLeft,  repeat_mode, ImGuiKeyOwner_NoOwner)) || (nav_keyboard_active && IsKeyPressed(ImGuiKey_LeftArrow,  repeat_mode, ImGuiKeyOwner_NoOwner)))) { g.NavMoveDir = ImGuiDir_Left; }
-            if (!IsActiveIdUsingNavDir(ImGuiDir_Right) && ((nav_gamepad_active && IsKeyPressed(ImGuiKey_GamepadDpadRight, repeat_mode, ImGuiKeyOwner_NoOwner)) || (nav_keyboard_active && IsKeyPressed(ImGuiKey_RightArrow, repeat_mode, ImGuiKeyOwner_NoOwner)))) { g.NavMoveDir = ImGuiDir_Right; }
-            if (!IsActiveIdUsingNavDir(ImGuiDir_Up)    && ((nav_gamepad_active && IsKeyPressed(ImGuiKey_GamepadDpadUp,    repeat_mode, ImGuiKeyOwner_NoOwner)) || (nav_keyboard_active && IsKeyPressed(ImGuiKey_UpArrow,    repeat_mode, ImGuiKeyOwner_NoOwner)))) { g.NavMoveDir = ImGuiDir_Up; }
-            if (!IsActiveIdUsingNavDir(ImGuiDir_Down)  && ((nav_gamepad_active && IsKeyPressed(ImGuiKey_GamepadDpadDown,  repeat_mode, ImGuiKeyOwner_NoOwner)) || (nav_keyboard_active && IsKeyPressed(ImGuiKey_DownArrow,  repeat_mode, ImGuiKeyOwner_NoOwner)))) { g.NavMoveDir = ImGuiDir_Down; }
+            static ImVec2 prevMoveDir = { 0.f,0.f };
+
+            //use this to nav with stick - looks to be normalised
+            const auto minMove = 0.2f;
+            const auto nav_move_dir = GetKeyMagnitude2d(ImGuiKey_GamepadLStickLeft, ImGuiKey_GamepadLStickRight, ImGuiKey_GamepadLStickUp, ImGuiKey_GamepadLStickDown);
+
+            const auto leftPressed = IsKeyPressed(ImGuiKey_GamepadDpadLeft, repeat_mode, ImGuiKeyOwner_NoOwner) || (nav_move_dir.x < -minMove && prevMoveDir.x > -minMove);
+            const auto rightPressed = IsKeyPressed(ImGuiKey_GamepadDpadRight, repeat_mode, ImGuiKeyOwner_NoOwner) || (nav_move_dir.x > minMove && prevMoveDir.x < minMove);
+            const auto upPressed = IsKeyPressed(ImGuiKey_GamepadDpadUp, repeat_mode, ImGuiKeyOwner_NoOwner) || (nav_move_dir.y < -minMove && prevMoveDir.y > -minMove);
+            const auto downPressed = IsKeyPressed(ImGuiKey_GamepadDpadDown, repeat_mode, ImGuiKeyOwner_NoOwner) || (nav_move_dir.y > minMove && prevMoveDir.y < minMove);
+
+            prevMoveDir = nav_move_dir;
+
+            if (!IsActiveIdUsingNavDir(ImGuiDir_Left)  && ((nav_gamepad_active && leftPressed) || (nav_keyboard_active && IsKeyPressed(ImGuiKey_LeftArrow,  repeat_mode, ImGuiKeyOwner_NoOwner)))) { g.NavMoveDir = ImGuiDir_Left; }
+            if (!IsActiveIdUsingNavDir(ImGuiDir_Right) && ((nav_gamepad_active && rightPressed) || (nav_keyboard_active && IsKeyPressed(ImGuiKey_RightArrow, repeat_mode, ImGuiKeyOwner_NoOwner)))) { g.NavMoveDir = ImGuiDir_Right; }
+            if (!IsActiveIdUsingNavDir(ImGuiDir_Up)    && ((nav_gamepad_active && upPressed) || (nav_keyboard_active && IsKeyPressed(ImGuiKey_UpArrow,    repeat_mode, ImGuiKeyOwner_NoOwner)))) { g.NavMoveDir = ImGuiDir_Up; }
+            if (!IsActiveIdUsingNavDir(ImGuiDir_Down)  && ((nav_gamepad_active && downPressed) || (nav_keyboard_active && IsKeyPressed(ImGuiKey_DownArrow,  repeat_mode, ImGuiKeyOwner_NoOwner)))) { g.NavMoveDir = ImGuiDir_Down; }
         }
         g.NavMoveClipDir = g.NavMoveDir;
         g.NavScoringNoClipRect = ImRect(+FLT_MAX, +FLT_MAX, -FLT_MAX, -FLT_MAX);
