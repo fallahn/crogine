@@ -6476,7 +6476,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     }
 
 
-    //update all the total hole times - TODO don't do this if loading from save game
+    //update all the total hole times
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
         m_sharedData.timeStats[i].totalTime += m_sharedData.timeStats[i].holeTimes[m_currentHole];

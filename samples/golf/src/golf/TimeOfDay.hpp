@@ -56,6 +56,8 @@ public:
     //random chance of snow based on month and latitude
     bool doSnow() const;
 
+    static std::string getCountryCode();
+
 private:
 
     glm::vec2 m_latlon;
@@ -69,6 +71,5 @@ private:
     //attempts to update the lat/lon data stored on disk
     void updateLatLon();
 
-    std::string getCountryCode();
     void writeDataFile() const;
 };
