@@ -130,6 +130,7 @@ endif()
 
 #ktx texture compression
 if (APPLE)
+
 include(FetchContent)
 #set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "Build KTX as a static library" FORCE)
 
@@ -146,12 +147,12 @@ FetchContent_Declare(
         GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
         GIT_TAG        v4.4.2
 )
-#FetchContent_MakeAvailable(fetch_ktx)
-else()
+FetchContent_MakeAvailable(fetch_ktx)
 
+else()
+  #use the included versions for brevity
   link_directories(${CMAKE_SOURCE_DIR}/extlibs/ktx/linux-x86_64/lib
                    ${CMAKE_SOURCE_DIR}/extlibs/ktx/win64/lib)
-
 endif()
 
 
@@ -159,9 +160,18 @@ include_directories(
   ${SDL2_INCLUDE_DIR}  
   ${FREETYPE_INCLUDE_DIRS} 
   ${OPUS_INCLUDE_DIRS}
-  #${fetch_ktx_SOURCE_DIR}/include
-  ${CMAKE_SOURCE_DIR}/extlibs/ktx/include
   ${CMAKE_SOURCE_DIR}/crogine/include)
+
+if (APPLE)
+
+  include_directories(${fetch_ktx_SOURCE_DIR}/include)
+
+else()
+
+  include_directories(${CMAKE_SOURCE_DIR}/extlibs/ktx/include))
+
+endif()
+
   
 if(MSVC)
   include_directories(${CMAKE_SOURCE_DIR}/extlibs/openal/include ${DBGHELP_INCLUDE_DIR})
