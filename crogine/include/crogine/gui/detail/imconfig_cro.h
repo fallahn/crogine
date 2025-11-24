@@ -17,6 +17,6 @@
 
 
 #ifdef  NO_IM_ASSERT
-#define IM_ASSERT(_EXPR) _EXPR
+#define IM_ASSERT(_EXPR)
 #endif
 

@@ -128,24 +128,31 @@ elseif(LINUX)
 endif()
 
 
-##ktx texture compression
-#include(FetchContent)
-##set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "Build KTX as a static library" FORCE)
+#ktx texture compression
+if (APPLE)
+include(FetchContent)
+#set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "Build KTX as a static library" FORCE)
 
-##hmmm this clashes with the crogine property...
-##set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build as a static library" FORCE)
-#set(BUILD_TESTING OFF CACHE BOOL "Build the testing tree" FORCE)
-#set(KTX_FEATURE_TESTS OFF CACHE BOOL "Build Unit Tests" FORCE)
-#set(KTX_FEATURE_TOOLS OFF CACHE BOOL "Build KTX Tools" FORCE)
+#hmmm this clashes with the crogine property...
+#set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build as a static library" FORCE)
+set(BUILD_TESTING OFF CACHE BOOL "Build the testing tree" FORCE)
+set(KTX_FEATURE_TESTS OFF CACHE BOOL "Build Unit Tests" FORCE)
+set(KTX_FEATURE_TOOLS OFF CACHE BOOL "Build KTX Tools" FORCE)
 
-#set(ASTCENC_ISA_AVX2 OFF CACHE BOOL "Use AVX2 extensions" FORCE)
-#set(ASTCENC_ISA_NONE ON CACHE BOOL "Use No extensions" FORCE)
-#FetchContent_Declare(
-#        fetch_ktx
-#        GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
-#        GIT_TAG        v4.4.2
-#)
+set(ASTCENC_ISA_AVX2 OFF CACHE BOOL "Use AVX2 extensions" FORCE)
+set(ASTCENC_ISA_NONE ON CACHE BOOL "Use No extensions" FORCE)
+FetchContent_Declare(
+        fetch_ktx
+        GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
+        GIT_TAG        v4.4.2
+)
 #FetchContent_MakeAvailable(fetch_ktx)
+else()
+
+  link_directories(${CMAKE_SOURCE_DIR}/extlibs/ktx/linux-x86_64/lib
+                   ${CMAKE_SOURCE_DIR}/extlibs/ktx/win64/lib)
+
+endif()
 
 
 include_directories(
@@ -203,8 +210,6 @@ if(NOT TARGET crogine)
 
 
   target_compile_definitions(${PROJECT_NAME} PUBLIC $<$<CONFIG:Debug>:CRO_DEBUG_ PARALLEL_GLOBAL_DISABLE>)
-
-  link_directories(${CMAKE_SOURCE_DIR}/extlibs/ktx/linux-x86_64/lib ${CMAKE_SOURCE_DIR}/extlibs/ktx/win64/lib)
 
   target_link_libraries(${PROJECT_NAME}
     ${SDL2_LIBRARY} 
