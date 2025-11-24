@@ -168,7 +168,7 @@ if (APPLE)
 
 else()
 
-  include_directories(${CMAKE_SOURCE_DIR}/extlibs/ktx/include))
+  include_directories(${CMAKE_SOURCE_DIR}/extlibs/ktx/include)
 
 endif()
 
