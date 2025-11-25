@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -56,6 +56,7 @@ namespace States
             VATs,
             EndlessDriving,
             TrackOverlay,
+            DeckIntro,
 
             PseutheBackground,
             PseutheGame,

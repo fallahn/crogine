@@ -50,6 +50,7 @@ source distribution.
 #include "LoadingScreen.hpp"
 #include "arc/ArcState.hpp"
 #include "trackoverlay/TrackOverlayState.hpp"
+#include "deckintro/DeckintroState.hpp"
 #include "pseuthe/PseutheBackgroundState.hpp"
 #include "pseuthe/PseutheGameState.hpp"
 #include "pseuthe/PseutheMenuState.hpp"
@@ -210,6 +211,7 @@ bool MyApp::initialise()
     m_stateStack.registerState<InteriorMappingState>(States::ScratchPad::InteriorMapping); //instance culling
     m_stateStack.registerState<EndlessDrivingState>(States::ScratchPad::EndlessDriving);
     m_stateStack.registerState<TrackOverlayState>(States::ScratchPad::TrackOverlay);
+    m_stateStack.registerState<DeckIntroState>(States::ScratchPad::DeckIntro);
     
     m_stateStack.registerState<ScrubGameState>(States::ScratchPad::Scrub);
     m_stateStack.registerState<ScrubAttractState>(States::ScratchPad::ScrubAttract);
@@ -225,7 +227,7 @@ bool MyApp::initialise()
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(States::ScratchPad::TrackOverlay);
     //m_stateStack.pushState(States::ScratchPad::BatCat);
-    m_stateStack.pushState(States::ScratchPad::Arc);
+    m_stateStack.pushState(States::ScratchPad::DeckIntro);
 #else
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
     m_stateStack.pushState(States::ScratchPad::BatCat);
