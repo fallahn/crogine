@@ -696,16 +696,13 @@
     <ClCompile Include="src\golf\CustomTournament.cpp">
       <Filter>Source Files\golf\client</Filter>
     </ClCompile>
-    <ClCompile Include="src\golf\ui\Options.cpp">
-      <Filter>Source Files\golf\client\user interface</Filter>
-    </ClCompile>
     <ClCompile Include="src\golf\ui\EventHandler.cpp">
       <Filter>Source Files\golf\client\user interface</Filter>
     </ClCompile>
     <ClCompile Include="src\golf\ui\FlagPreview.cpp">
       <Filter>Source Files\golf\client\user interface</Filter>
     </ClCompile>
-    <ClCompile Include="src\golf\OptionsV2.cpp">
+    <ClCompile Include="src\golf\OptionsStateV2.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1478,7 +1475,7 @@
     <ClInclude Include="src\golf\ui\FlagPreview.hpp">
       <Filter>Header Files\golf\client\user interface</Filter>
     </ClInclude>
-    <ClInclude Include="src\golf\OptionsV2.hpp">
+    <ClInclude Include="src\golf\OptionsStateV2.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
   </ItemGroup>

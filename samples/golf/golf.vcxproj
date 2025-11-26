@@ -675,7 +675,7 @@
     <ClCompile Include="src\golf\NewsState.cpp" />
     <ClCompile Include="src\golf\NotificationSystem.cpp" />
     <ClCompile Include="src\golf\OptionsState.cpp" />
-    <ClCompile Include="src\golf\OptionsV2.cpp" />
+    <ClCompile Include="src\golf\OptionsStateV2.cpp" />
     <ClCompile Include="src\golf\ParticleDirector.cpp" />
     <ClCompile Include="src\golf\Path.cpp" />
     <ClCompile Include="src\golf\PauseState.cpp" />
@@ -722,7 +722,6 @@
     <ClCompile Include="src\golf\TutorialState.cpp" />
     <ClCompile Include="src\golf\ui\EventHandler.cpp" />
     <ClCompile Include="src\golf\ui\FlagPreview.cpp" />
-    <ClCompile Include="src\golf\ui\Options.cpp" />
     <ClCompile Include="src\golf\UnlockState.cpp" />
     <ClCompile Include="src\golf\VatAnimationSystem.cpp" />
     <ClCompile Include="src\golf\VatFile.cpp" />
@@ -883,7 +882,7 @@
     <ClInclude Include="src\golf\NewsState.hpp" />
     <ClInclude Include="src\golf\NotificationSystem.hpp" />
     <ClInclude Include="src\golf\OptionsState.hpp" />
-    <ClInclude Include="src\golf\OptionsV2.hpp" />
+    <ClInclude Include="src\golf\OptionsStateV2.hpp" />
     <ClInclude Include="src\golf\PacketIDs.hpp" />
     <ClInclude Include="src\golf\ParticleDirector.hpp" />
     <ClInclude Include="src\golf\Path.hpp" />

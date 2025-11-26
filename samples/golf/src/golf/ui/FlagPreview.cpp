@@ -142,7 +142,7 @@ void FlagPreview::init(const std::string& currPath)
     quad.setPosition(glm::vec2(0.f));
 
     //render alt versions to preview number
-    for (auto i = 1; i < m_textures.size(); ++i)
+    for (auto i = 1u; i < m_textures.size(); ++i)
     {
         m_textures[i].create(m_textures[0].getSize().x, m_textures[0].getSize().y, false);
 
