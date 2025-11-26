@@ -43,9 +43,9 @@ source distribution.
 
 
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/UIInput.hpp>
+//#include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/UIElement.hpp>
-#include <crogine/ecs/components/CommandTarget.hpp>
+//#include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Text.hpp>
@@ -53,9 +53,9 @@ source distribution.
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 
-#include <crogine/ecs/systems/UISystem.hpp>
+//#include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/UIElementSystem.hpp>
-#include <crogine/ecs/systems/CommandSystem.hpp>
+//#include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
@@ -85,8 +85,7 @@ namespace
 OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State(ss, ctx),
     m_scene     (ctx.appInstance.getMessageBus()),
-    m_sharedData(sd)/*,
-    m_viewScale (2.f)*/
+    m_sharedData(sd)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -139,6 +138,29 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         {
             prevTab();
         }
+
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down]
+            || evt.key.keysym.sym == SDLK_DOWN)
+        {
+            nextItem();
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up]
+            || evt.key.keysym.sym == SDLK_UP)
+        {
+            prevItem();
+        }
+
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left]
+            || evt.key.keysym.sym == SDLK_LEFT)
+        {
+            activateLeft();
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right]
+            || evt.key.keysym.sym == SDLK_RIGHT)
+        {
+            activateRight();
+        }
+
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
@@ -147,6 +169,18 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         switch (evt.cbutton.button)
         {
         default: break;
+        case cro::GameController::DPadUp:
+            prevItem();
+            break;
+        case cro::GameController::DPadDown:
+            nextItem();
+            break;
+        case cro::GameController::DPadLeft:
+            activateLeft();
+            break;
+        case cro::GameController::DPadRight:
+            activateRight();
+            break;
         case cro::GameController::ButtonLeftShoulder:
             prevTab();
             break;
@@ -167,6 +201,9 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_MOUSEBUTTONUP)
     {
+        //TODO test clicks for tab bar buttons
+        //TODO test clicks for menu items
+
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             quitState();
@@ -195,6 +232,19 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
         setActiveInput(false, cro::GameController::controllerID(evt.caxis.which));
+
+        //TODO parse cursor movement
+    }
+    else if (evt.type == SDL_MOUSEWHEEL)
+    {
+        if (evt.wheel.y > 0)
+        {
+            prevItem();
+        }
+        else if (evt.wheel.y < 0)
+        {
+            nextItem();
+        }
     }
 
     //m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -209,6 +259,8 @@ void OptionsStateV2::handleMessage(const cro::Message& msg)
 
 bool OptionsStateV2::simulate(float dt)
 {
+    //TODO update menu scroll position
+
     m_scene.simulate(dt);
     return true;
 }
@@ -224,7 +276,7 @@ void OptionsStateV2::buildScene()
     auto& mb = getContext().appInstance.getMessageBus();
     //m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::UIElementSystem>(mb);
-    m_scene.addSystem<cro::CommandSystem>(mb);
+    //m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
     m_scene.addSystem<cro::TextSystem>(mb);
@@ -263,7 +315,7 @@ void OptionsStateV2::buildScene()
         default: break;
         case RootCallbackData::FadeIn:
             currTime = std::min(1.f, currTime + (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale(/*m_viewScale * */glm::vec2(cro::Util::Easing::easeOutQuint(currTime)));
+            e.getComponent<cro::Transform>().setScale(glm::vec2(cro::Util::Easing::easeOutQuint(currTime)));
             if (currTime == 1)
             {
                 state = RootCallbackData::FadeOut;
@@ -272,7 +324,7 @@ void OptionsStateV2::buildScene()
             break;
         case RootCallbackData::FadeOut:
             currTime = std::max(0.f, currTime - (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale(/*m_viewScale * */glm::vec2(cro::Util::Easing::easeOutQuint(currTime)));
+            e.getComponent<cro::Transform>().setScale(glm::vec2(cro::Util::Easing::easeOutQuint(currTime)));
             if (currTime == 0)
             {
                 requestStackPop();            
@@ -305,7 +357,7 @@ void OptionsStateV2::buildScene()
         e.getComponent<cro::Transform>().setPosition(size / 2.f);
 
         auto scale = rootNode.getComponent<cro::Transform>().getScale().x;
-        scale = std::min(1.f, scale/* / m_viewScale.x*/);
+        scale = std::min(1.f, scale);
 
         auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
         for (auto& v : verts)
@@ -315,7 +367,7 @@ void OptionsStateV2::buildScene()
     };
 
    
-    //background
+    //TODO background needs a 9-patch?
     
 
     //tab bar - we only create here, cahedPush() will update the drawable
@@ -357,6 +409,19 @@ void OptionsStateV2::buildScene()
     }
     updateTabBar();
 
+
+    //menu layout
+    createSettingsItems();
+    createKeyboardItems();
+    createControllerItems();
+    createDisplayItems();
+    createAudioItems();
+    createAchievementItems();
+    createStatItems();
+
+    updateMenuItems();
+
+    //camera settings
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
         glm::vec2 size(GolfGame::getActiveTarget()->getSize());
@@ -364,28 +429,9 @@ void OptionsStateV2::buildScene()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        //m_viewScale = glm::vec2(getViewScale());
-        //rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
 
         refreshView();
-
-        //updates any text objects / buttons with a relative position
-        /*cro::Command cmd;
-        cmd.targetFlags = CommandID::Menu::UIElement;
-        cmd.action =
-            [&, size](cro::Entity e, float)
-        {
-            const auto& element = e.getComponent<UIElement>();
-            auto pos = element.absolutePosition;
-            pos += element.relativePosition * size / m_viewScale;
-
-            pos.x = std::floor(pos.x);
-            pos.y = std::floor(pos.y);
-
-            e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
-        };
-        m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
     };
 
     entity = m_scene.createEntity();
@@ -393,6 +439,121 @@ void OptionsStateV2::buildScene()
     entity.addComponent<cro::Camera>().resizeCallback = updateView;
     m_scene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
+}
+
+void OptionsStateV2::createSettingsItems()
+{
+    //TODO specialise menu items eg for section titles
+    const auto count = 31;
+
+    for (auto i = 0; i < count; ++i)
+    {
+        auto& item = m_menuLayout.items[0].emplace_back();
+        item.itemTitle = "Dummy Item";
+        item.description = "This is the item description for " + std::to_string(i + 1);
+        item.callback = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
+        item.itemCount = cro::Util::Random::value(2, 4);
+        for (auto j = 0; j < item.itemCount; ++j)
+        {
+            item.itemLabels.push_back("Option " + std::to_string(j + 1));
+        }
+    }
+}
+
+void OptionsStateV2::createKeyboardItems()
+{
+    for (auto i = 0; i < 5; ++i)
+    {
+        auto& item = m_menuLayout.items[1].emplace_back();
+        item.itemTitle = "Dummy Item";
+        item.description = "This is the item description for " + std::to_string(i + 1);
+        item.callback = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
+        item.itemCount = cro::Util::Random::value(2, 4);
+        for (auto j = 0; j < item.itemCount; ++j)
+        {
+            item.itemLabels.push_back("Option " + std::to_string(j + 1));
+        }
+    }
+}
+
+void OptionsStateV2::createControllerItems()
+{
+    for (auto i = 0; i < 5; ++i)
+    {
+        auto& item = m_menuLayout.items[2].emplace_back();
+        item.itemTitle = "Dummy Item";
+        item.description = "This is the item description for " + std::to_string(i + 1);
+        item.callback = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
+        item.itemCount = cro::Util::Random::value(2, 4);
+        for (auto j = 0; j < item.itemCount; ++j)
+        {
+            item.itemLabels.push_back("Option " + std::to_string(j + 1));
+        }
+    }
+}
+
+void OptionsStateV2::createDisplayItems()
+{
+    for (auto i = 0; i < 5; ++i)
+    {
+        auto& item = m_menuLayout.items[3].emplace_back();
+        item.itemTitle = "Dummy Item";
+        item.description = "This is the item description for " + std::to_string(i + 1);
+        item.callback = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
+        item.itemCount = cro::Util::Random::value(2, 4);
+        for (auto j = 0; j < item.itemCount; ++j)
+        {
+            item.itemLabels.push_back("Option " + std::to_string(j + 1));
+        }
+    }
+}
+
+void OptionsStateV2::createAudioItems()
+{
+    for (auto i = 0; i < 5; ++i)
+    {
+        auto& item = m_menuLayout.items[4].emplace_back();
+        item.itemTitle = "Dummy Item";
+        item.description = "This is the item description for " + std::to_string(i + 1);
+        item.callback = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
+        item.itemCount = cro::Util::Random::value(2, 4);
+        for (auto j = 0; j < item.itemCount; ++j)
+        {
+            item.itemLabels.push_back("Option " + std::to_string(j + 1));
+        }
+    }
+}
+
+void OptionsStateV2::createAchievementItems()
+{
+    for (auto i = 0; i < 5; ++i)
+    {
+        auto& item = m_menuLayout.items[5].emplace_back();
+        item.itemTitle = "Dummy Item";
+        item.description = "This is the item description for " + std::to_string(i + 1);
+        item.callback = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
+        item.itemCount = cro::Util::Random::value(2, 4);
+        for (auto j = 0; j < item.itemCount; ++j)
+        {
+            item.itemLabels.push_back("Option " + std::to_string(j + 1));
+        }
+    }
+}
+
+void OptionsStateV2::createStatItems()
+{
+    for (auto i = 0; i < 5; ++i)
+    {
+        auto& item = m_menuLayout.items[6].emplace_back();
+        item.itemTitle = "Dummy Item";
+        item.description = "This is the item description for " + std::to_string(i + 1);
+        item.callback = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
+        item.itemCount = cro::Util::Random::value(2, 4);
+        for (auto j = 0; j < item.itemCount; ++j)
+        {
+            item.itemLabels.push_back("Option " + std::to_string(j + 1));
+        }
+    }
 }
 
 void OptionsStateV2::onCachedPush()
@@ -440,11 +601,8 @@ void OptionsStateV2::updateTabBar()
     addQuad(CD32::Colours[CD32::Brown], { 0.f, -viewScale }, { WindowX, viewScale });
 
     m_tabBar.background.getComponent<cro::Drawable2D>().setVertexData(verts);
-}
 
-void OptionsStateV2::refreshView()
-{
-    updateTabBar();
+    updateMenuItems();
 }
 
 void OptionsStateV2::nextTab()
@@ -459,6 +617,53 @@ void OptionsStateV2::prevTab()
     m_tabBar.activeIndex = (m_tabBar.activeIndex + (TabBar::Item::Count - 1)) % TabBar::Item::Count;
     refreshView();
     LogI << "Add sound here" << std::endl;
+}
+
+void OptionsStateV2::updateMenuItems()
+{
+    //TODO calc max texture size and resize first if necessary
+    //TODO render current item selection to render texture
+    //this includes either setting item highlight colour or rendering a highlight box
+    //TODO update the cropping area based on new tab bar position (allow for icons at bottom of the screen)
+}
+
+void OptionsStateV2::nextItem()
+{
+    m_menuLayout.itemIndex = (m_menuLayout.itemIndex + 1) % m_menuLayout.items[m_tabBar.activeIndex].size();
+    updateMenuItems();
+
+    LogI << "Play Sound Here" << std::endl;
+}
+
+void OptionsStateV2::prevItem()
+{
+    m_menuLayout.itemIndex = (m_menuLayout.itemIndex + (m_menuLayout.items[m_tabBar.activeIndex].size() - 1)) % m_menuLayout.items[m_tabBar.activeIndex].size();
+    updateMenuItems();
+
+    LogI << "Play Sound Here" << std::endl;
+}
+
+void OptionsStateV2::activateLeft()
+{
+    m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].activateLeft();
+    updateMenuItems();
+
+    //TODO check item count is > 1
+    LogI << "Play Sound Here" << std::endl;
+}
+
+void OptionsStateV2::activateRight()
+{
+    m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].activateRight();
+    updateMenuItems();
+
+    //TODO check item count is > 1
+    LogI << "Play Sound Here" << std::endl;
+}
+
+void OptionsStateV2::refreshView()
+{
+    updateTabBar();
 }
 
 void OptionsStateV2::quitState()

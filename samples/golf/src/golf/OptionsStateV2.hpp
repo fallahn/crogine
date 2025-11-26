@@ -69,9 +69,16 @@ private:
     };
     std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
-    //glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     void buildScene();
+
+    void createSettingsItems();
+    void createKeyboardItems();
+    void createControllerItems();
+    void createDisplayItems();
+    void createAudioItems();
+    void createAchievementItems();
+    void createStatItems();
 
     void onCachedPush() override;
     void onCachedPop() override;
@@ -97,10 +104,58 @@ private:
     }m_tabBar;
 
     void updateTabBar();
-    void refreshView();
-
     void nextTab();
     void prevTab();
 
+    struct Menu final
+    {
+        struct Item final
+        {
+            //TODO optional image to display colour selection
+            //or achievement ID
+
+            //TODO display type depending on data eg float/slider etc
+
+            //TODO float-rects in menu space to test clich against
+
+            std::int32_t itemIndex = 0; //currently selected entry
+            std::int32_t itemCount = 2; //number of items to cycle through when clicking
+            std::vector<cro::String> itemLabels; //display text for each setting when cycled
+            cro::String itemTitle; //main display title
+            cro::String description; //shown when hovered
+
+            std::function<void(Item&)> callback; //called when activated
+            void activateLeft()
+            {
+                if (itemCount > 1)
+                {
+                    itemIndex = (itemIndex + (itemCount - 1)) % itemCount;
+                    callback(*this);
+                }
+            }
+
+            void activateRight()
+            {
+                if (itemCount > 1)
+                {
+                    itemIndex = (itemIndex + 1) % itemCount;
+                    callback(*this);
+                }
+            }
+        };
+        std::array<std::vector<Item>, TabBar::Item::Count> items = {};
+
+        cro::RenderTexture texture;
+
+        std::int32_t itemIndex = 0;
+    }m_menuLayout;
+
+    void updateMenuItems();
+    void nextItem();
+    void prevItem();
+    void activateLeft();
+    void activateRight();
+
+    void refreshView();
     void quitState();
 };
