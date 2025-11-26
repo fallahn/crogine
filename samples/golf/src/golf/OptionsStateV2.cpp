@@ -33,11 +33,6 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
-#include "PacketIDs.hpp"
-#include "Utility.hpp"
-#include "TextAnimCallback.hpp"
-#include "Career.hpp"
-#include "Tournament.hpp"
 #include "../GolfGame.hpp"
 
 #include <Achievements.hpp>
@@ -45,12 +40,11 @@ source distribution.
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
-#include <crogine/graphics/Image.hpp>
-#include <crogine/graphics/SpriteSheet.hpp>
-#include <crogine/gui/Gui.hpp>
+
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
+#include <crogine/ecs/components/UIElement.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -60,6 +54,7 @@ source distribution.
 #include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/systems/UISystem.hpp>
+#include <crogine/ecs/systems/UIElementSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
@@ -71,19 +66,27 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/OpenGL.hpp>
 
 #include <filesystem>
 
 namespace
 {
+    const std::array ItemLabels =
+    {
+        "Settings", "Keyboard", "Controller",
+        "Display", "Audio", "Achievements",
+        "Stats"
+    };
 
+    constexpr float TabBarHeight = 16.f;
 }
 
 OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State(ss, ctx),
     m_scene     (ctx.appInstance.getMessageBus()),
-    m_sharedData(sd),
-    m_viewScale (2.f)
+    m_sharedData(sd)/*,
+    m_viewScale (2.f)*/
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -100,8 +103,27 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         return false;
     }
 
+    const auto setActiveInput =
+        [&](bool mouse, std::int32_t controllerIndex)
+        {
+            if (mouse)
+            {
+                m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
+                cro::App::getWindow().setMouseCaptured(false);
+            }
+            else
+            {
+                cro::App::getWindow().setMouseCaptured(true);
+                m_sharedData.activeInput = cro::GameController::hasPSLayout(controllerIndex)
+                    ? SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
+            }
+        };
+
+
     if (evt.type == SDL_KEYUP)
     {
+        setActiveInput(true, 0);
+
         if (evt.key.keysym.sym == SDLK_BACKSPACE
             || evt.key.keysym.sym == SDLK_ESCAPE
             || evt.key.keysym.sym == SDLK_p)
@@ -109,11 +131,35 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        {
+            nextTab();
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        {
+            prevTab();
+        }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (evt.cbutton.button == cro::GameController::ButtonB)
+        setActiveInput(false, cro::GameController::controllerID(evt.cbutton.which));
+
+        switch (evt.cbutton.button)
         {
+        default: break;
+        case cro::GameController::ButtonLeftShoulder:
+            prevTab();
+            break;
+        case cro::GameController::ButtonRightShoulder:
+            nextTab();
+            break;
+        case cro::GameController::ButtonX:
+            //TODO credits
+            break;
+        case cro::GameController::ButtonY:
+            //TODO how to play
+            break;
+        case cro::GameController::ButtonB:
             quitState();
             return false;
         }
@@ -142,7 +188,16 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         }
     }
 
-    m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        setActiveInput(true, 0);
+    }
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        setActiveInput(false, cro::GameController::controllerID(evt.caxis.which));
+    }
+
+    //m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
     m_scene.forwardEvent(evt);
     return false;
 }
@@ -167,7 +222,8 @@ void OptionsStateV2::render()
 void OptionsStateV2::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb);
+    //m_scene.addSystem<cro::UISystem>(mb);
+    m_scene.addSystem<cro::UIElementSystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
@@ -207,7 +263,7 @@ void OptionsStateV2::buildScene()
         default: break;
         case RootCallbackData::FadeIn:
             currTime = std::min(1.f, currTime + (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
+            e.getComponent<cro::Transform>().setScale(/*m_viewScale * */glm::vec2(cro::Util::Easing::easeOutQuint(currTime)));
             if (currTime == 1)
             {
                 state = RootCallbackData::FadeOut;
@@ -216,7 +272,7 @@ void OptionsStateV2::buildScene()
             break;
         case RootCallbackData::FadeOut:
             currTime = std::max(0.f, currTime - (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
+            e.getComponent<cro::Transform>().setScale(/*m_viewScale * */glm::vec2(cro::Util::Easing::easeOutQuint(currTime)));
             if (currTime == 0)
             {
                 requestStackPop();            
@@ -249,7 +305,7 @@ void OptionsStateV2::buildScene()
         e.getComponent<cro::Transform>().setPosition(size / 2.f);
 
         auto scale = rootNode.getComponent<cro::Transform>().getScale().x;
-        scale = std::min(1.f, scale / m_viewScale.x);
+        scale = std::min(1.f, scale/* / m_viewScale.x*/);
 
         auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
         for (auto& v : verts)
@@ -262,6 +318,44 @@ void OptionsStateV2::buildScene()
     //background
     
 
+    //tab bar - we only create here, cahedPush() will update the drawable
+    m_tabBar.background = m_scene.createEntity();
+    m_tabBar.background.addComponent<cro::Transform>();
+    m_tabBar.background.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    m_tabBar.background.addComponent<cro::UIElement>(cro::UIElement::Position, true);
+    m_tabBar.background.getComponent<cro::UIElement>().relativePosition = { -0.5f, 0.5f };
+    m_tabBar.background.getComponent<cro::UIElement>().absolutePosition = { 0.f, -(TabBarHeight * 2.f) };
+    rootNode.getComponent<cro::Transform>().addChild(m_tabBar.background.getComponent<cro::Transform>());
+
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info); //TODO insert the controller icon font into this one?
+    const float Spacing = 1.f / (TabBar::Item::Count + 2); //leave equivalent of a tab either end
+    for (auto i = 0; i < TabBar::Item::Count; ++i)
+    {
+        auto& item = m_tabBar.items[i];
+        item.text = m_scene.createEntity();
+        item.text.addComponent<cro::Transform>();
+        item.text.addComponent<cro::Drawable2D>();
+        item.text.addComponent<cro::Text>(smallFont).setString(ItemLabels[i]);
+        item.text.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        item.text.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+
+        auto& uiElement = item.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
+        uiElement.characterSize = InfoTextSize;
+        uiElement.depth = 0.1f;
+        //hmm this is ignored for text types, have to update manually in callback
+        //uiElement.relativePosition = { Spacing + (Spacing * i), 0.f };
+        const float offset = (Spacing * 1.5f) + (Spacing * i);
+        uiElement.resizeCallback = 
+            [&, offset](cro::Entity e)
+            {
+                const auto x = std::round((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
+                const auto y = 12.f;
+                e.getComponent<cro::UIElement>().absolutePosition = { x,y };
+            };
+
+        m_tabBar.background.getComponent<cro::Transform>().addChild(item.text.getComponent<cro::Transform>());
+    }
+    updateTabBar();
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
@@ -270,12 +364,14 @@ void OptionsStateV2::buildScene()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        m_viewScale = glm::vec2(getViewScale());
-        rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
+        //m_viewScale = glm::vec2(getViewScale());
+        //rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
 
+        refreshView();
+
         //updates any text objects / buttons with a relative position
-        cro::Command cmd;
+        /*cro::Command cmd;
         cmd.targetFlags = CommandID::Menu::UIElement;
         cmd.action =
             [&, size](cro::Entity e, float)
@@ -289,7 +385,7 @@ void OptionsStateV2::buildScene()
 
             e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
         };
-        m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
     };
 
     entity = m_scene.createEntity();
@@ -301,12 +397,68 @@ void OptionsStateV2::buildScene()
 
 void OptionsStateV2::onCachedPush()
 {
-
+    refreshView();
 }
 
 void OptionsStateV2::onCachedPop()
 {
 
+}
+
+void OptionsStateV2::updateTabBar()
+{
+    const auto WindowX = static_cast<float>(cro::App::getWindow().getSize().x);
+
+    const float Spacing = 1.f / (TabBar::Item::Count + 2); //leave equivalent of a tab either end
+    const float TabWidth = std::round(Spacing * WindowX);
+
+    std::vector<cro::Vertex2D> verts;
+    const auto addQuad = 
+        [&](cro::Colour c, glm::vec2 position, glm::vec2 size)
+        {
+            verts.emplace_back(glm::vec2(position.x, position.y + size.y), c);
+            verts.emplace_back(position, c);
+            verts.emplace_back(position + size, c);
+
+            verts.emplace_back(position + size, c);
+            verts.emplace_back(position, c);
+            verts.emplace_back(glm::vec2(position.x + size.x, position.y), c);
+        };
+
+    //update the verts for the tab bar.
+    const auto viewScale = cro::UIElementSystem::getViewScale();
+    for (auto i = 0u; i < m_tabBar.items.size(); ++i)
+    {
+        const auto active = m_tabBar.activeIndex;
+
+        const auto colour = i == active ? CD32::Colours[CD32::Brown] : CD32::Colours[CD32::TanDarkest];
+        addQuad(colour, { TabWidth + (i * TabWidth), 0.f }, { TabWidth - viewScale, TabBarHeight * viewScale});
+
+        m_tabBar.items[i].text.getComponent<cro::Text>().setFillColour(i == active ? TextNormalColour : CD32::Colours[CD32::BeigeMid]);
+    }
+
+    addQuad(CD32::Colours[CD32::Brown], { 0.f, -viewScale }, { WindowX, viewScale });
+
+    m_tabBar.background.getComponent<cro::Drawable2D>().setVertexData(verts);
+}
+
+void OptionsStateV2::refreshView()
+{
+    updateTabBar();
+}
+
+void OptionsStateV2::nextTab()
+{
+    m_tabBar.activeIndex = (m_tabBar.activeIndex + 1) % TabBar::Item::Count;
+    refreshView();
+    LogI << "Add sound here" << std::endl;
+}
+
+void OptionsStateV2::prevTab()
+{
+    m_tabBar.activeIndex = (m_tabBar.activeIndex + (TabBar::Item::Count - 1)) % TabBar::Item::Count;
+    refreshView();
+    LogI << "Add sound here" << std::endl;
 }
 
 void OptionsStateV2::quitState()

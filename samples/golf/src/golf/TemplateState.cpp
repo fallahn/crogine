@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "OptionsStateV2.hpp"
+#include "TemplateState.hpp"
 #include "SharedStateData.hpp"
 #include "CommonConsts.hpp"
 #include "CommandIDs.hpp"
@@ -79,7 +79,7 @@ namespace
 
 }
 
-OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
+STATE_NAME::STATE_NAME(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State(ss, ctx),
     m_scene     (ctx.appInstance.getMessageBus()),
     m_sharedData(sd),
@@ -91,7 +91,7 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
 }
 
 //public
-bool OptionsStateV2::handleEvent(const cro::Event& evt)
+bool STATE_NAME::handleEvent(const cro::Event& evt)
 {
     if (ImGui::GetIO().WantCaptureKeyboard
         || ImGui::GetIO().WantCaptureMouse
@@ -147,24 +147,24 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     return false;
 }
 
-void OptionsStateV2::handleMessage(const cro::Message& msg)
+void STATE_NAME::handleMessage(const cro::Message& msg)
 {
     m_scene.forwardMessage(msg);
 }
 
-bool OptionsStateV2::simulate(float dt)
+bool STATE_NAME::simulate(float dt)
 {
     m_scene.simulate(dt);
     return true;
 }
 
-void OptionsStateV2::render()
+void STATE_NAME::render()
 {
     m_scene.render();
 }
 
 //private
-void OptionsStateV2::buildScene()
+void STATE_NAME::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::UISystem>(mb);
@@ -299,17 +299,17 @@ void OptionsStateV2::buildScene()
     updateView(entity.getComponent<cro::Camera>());
 }
 
-void OptionsStateV2::onCachedPush()
+void STATE_NAME::onCachedPush()
 {
 
 }
 
-void OptionsStateV2::onCachedPop()
+void STATE_NAME::onCachedPop()
 {
 
 }
 
-void OptionsStateV2::quitState()
+void STATE_NAME::quitState()
 {
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();

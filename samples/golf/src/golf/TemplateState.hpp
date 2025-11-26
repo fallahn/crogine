@@ -35,12 +35,15 @@ source distribution.
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 
+#define STATE_NAME TemplateState
+#define STATE_ID StateID::Template
+
 struct SharedStateData;
 
-class OptionsStateV2 final : public cro::State
+class STATE_NAME final : public cro::State
 {
 public:
-    OptionsStateV2(cro::StateStack&, cro::State::Context, SharedStateData&);
+    STATE_NAME(cro::StateStack&, cro::State::Context, SharedStateData&);
 
     bool handleEvent(const cro::Event&) override;
 
@@ -50,7 +53,7 @@ public:
 
     void render() override;
 
-    cro::StateID getStateID() const override { return StateID::Options; }
+    cro::StateID getStateID() const override { return STATE_ID; }
 
 private:
 

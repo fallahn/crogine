@@ -709,6 +709,7 @@
     <ClCompile Include="src\golf\StudioCameraSystem.cpp" />
     <ClCompile Include="src\golf\Swingput.cpp" />
     <ClCompile Include="src\golf\TableData.cpp" />
+    <ClCompile Include="src\golf\TemplateState.cpp" />
     <ClCompile Include="src\golf\TerrainBuilder.cpp" />
     <ClCompile Include="src\golf\TerrainChunks.cpp" />
     <ClCompile Include="src\golf\TerrainDepthmap.cpp" />
@@ -930,6 +931,7 @@
     <ClInclude Include="src\golf\StudioCameraSystem.hpp" />
     <ClInclude Include="src\golf\Swingput.hpp" />
     <ClInclude Include="src\golf\TableData.hpp" />
+    <ClInclude Include="src\golf\TemplateState.hpp" />
     <ClInclude Include="src\golf\Terrain.hpp" />
     <ClInclude Include="src\golf\TerrainBuilder.hpp" />
     <ClInclude Include="src\golf\TerrainChunks.hpp" />

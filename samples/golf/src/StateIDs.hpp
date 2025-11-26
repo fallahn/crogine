@@ -82,7 +82,10 @@ struct StateID final
 
         SQLite, //used for testing SQLite features
         Workshop = 1100,
-        Count
+        Count,
+
+
+        Template
     };
 };
 

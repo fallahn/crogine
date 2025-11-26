@@ -118,6 +118,12 @@
     <Filter Include="Source Files\golf\client\user interface">
       <UniqueIdentifier>{2b8d1138-3a71-4b41-ac70-d7a41b84f7fc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf\client\template">
+      <UniqueIdentifier>{6f20e2e4-3d90-43a1-8aed-7d84e5fbfb96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\client\template">
+      <UniqueIdentifier>{acecd210-c5f3-4d22-a37f-15d425376e15}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -704,6 +710,9 @@
     </ClCompile>
     <ClCompile Include="src\golf\OptionsStateV2.cpp">
       <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\TemplateState.cpp">
+      <Filter>Source Files\golf\client\template</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1477,6 +1486,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\OptionsStateV2.hpp">
       <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\TemplateState.hpp">
+      <Filter>Header Files\golf\client\template</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

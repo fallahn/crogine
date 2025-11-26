@@ -69,12 +69,38 @@ private:
     };
     std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
-    glm::vec2 m_viewScale;
+    //glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     void buildScene();
 
     void onCachedPush() override;
     void onCachedPop() override;
+
+    struct TabBar final
+    {
+        struct Item final
+        {
+            enum
+            {
+                Settings, Keyboard, Controller,
+                Display, Audio, Achievements,
+                Stats,
+
+                Count
+            };
+            cro::Entity text;
+        };
+
+        cro::Entity background;
+        std::array<Item, Item::Count> items = {};
+        std::size_t activeIndex = 0;
+    }m_tabBar;
+
+    void updateTabBar();
+    void refreshView();
+
+    void nextTab();
+    void prevTab();
 
     void quitState();
 };
