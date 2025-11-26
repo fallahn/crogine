@@ -146,6 +146,7 @@ private:
         std::array<std::vector<Item>, TabBar::Item::Count> items = {};
 
         cro::RenderTexture texture;
+        cro::Entity sprite;
 
         std::int32_t itemIndex = 0;
     }m_menuLayout;

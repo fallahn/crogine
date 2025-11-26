@@ -129,7 +129,7 @@ namespace cro
         particular have a *negative* bottom value as text is drawn (usually)
         from top to bottom.
         \param area The area to which crop the drawable
-        \param abosolute If true the area is assume to be in absolute coordintates
+        \param abosolute If true the area is assumed to be in absolute coordintates
         and is transformed as-is to screen coords. If false the area is assumed to
         be local to the Drawable and is first transformed into global space
         by the Drawable's world transform before being converted to screen coords

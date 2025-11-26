@@ -40,7 +40,7 @@ source distribution.
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
-
+#include <crogine/graphics/SimpleText.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 //#include <crogine/ecs/components/UIInput.hpp>
@@ -80,6 +80,11 @@ namespace
     };
 
     constexpr float TabBarHeight = 16.f;
+
+    constexpr float ItemHeight = TabBarHeight * 3.f;
+    constexpr float ItemSpacing = 4.f;
+
+    constexpr float InfoBarHeight = 24.f; //space at the bottom
 }
 
 OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -259,7 +264,8 @@ void OptionsStateV2::handleMessage(const cro::Message& msg)
 
 bool OptionsStateV2::simulate(float dt)
 {
-    //TODO update menu scroll position
+    //TODO update menu scroll position using ORIGIN offset
+    //remember to account for window/sprite scale
 
     m_scene.simulate(dt);
     return true;
@@ -327,6 +333,8 @@ void OptionsStateV2::buildScene()
             e.getComponent<cro::Transform>().setScale(glm::vec2(cro::Util::Easing::easeOutQuint(currTime)));
             if (currTime == 0)
             {
+                state = RootCallbackData::FadeIn;
+                e.getComponent<cro::Callback>().active = false;
                 requestStackPop();            
             }
             break;
@@ -407,7 +415,6 @@ void OptionsStateV2::buildScene()
 
         m_tabBar.background.getComponent<cro::Transform>().addChild(item.text.getComponent<cro::Transform>());
     }
-    updateTabBar();
 
 
     //menu layout
@@ -419,7 +426,13 @@ void OptionsStateV2::buildScene()
     createAchievementItems();
     createStatItems();
 
-    updateMenuItems();
+    m_menuLayout.sprite = m_scene.createEntity();
+    m_menuLayout.sprite.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
+    m_menuLayout.sprite.addComponent<cro::Drawable2D>();
+    m_menuLayout.sprite.addComponent<cro::Sprite>();
+    rootNode.getComponent<cro::Transform>().addChild(m_menuLayout.sprite.getComponent<cro::Transform>());
+
+    updateTabBar(); //this also updates the menu items
 
     //camera settings
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
@@ -430,6 +443,11 @@ void OptionsStateV2::buildScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
+        auto& tx = m_menuLayout.sprite.getComponent<cro::Transform>();
+        auto pos = tx.getPosition();
+        pos.x = -(size.x / 2.f);
+        pos.y = -(size.y / 2.f);
+        tx.setPosition(pos);
 
         refreshView();
     };
@@ -559,6 +577,8 @@ void OptionsStateV2::createStatItems()
 void OptionsStateV2::onCachedPush()
 {
     refreshView();
+
+    m_rootNode.getComponent<cro::Callback>().active = true;
 }
 
 void OptionsStateV2::onCachedPop()
@@ -621,10 +641,63 @@ void OptionsStateV2::prevTab()
 
 void OptionsStateV2::updateMenuItems()
 {
-    //TODO calc max texture size and resize first if necessary
-    //TODO render current item selection to render texture
+    //NOTE this is all done 1:1 scale and the resulting sprite set to window scale
+    const auto& items = m_menuLayout.items[m_tabBar.activeIndex];
+    const auto viewScale = cro::UIElementSystem::getViewScale();
+
+    //calc max texture size and resize first if necessary
+    const auto texHeight = static_cast<std::uint32_t>(((ItemHeight + ItemSpacing) * items.size() + ItemSpacing));
+    const auto texWidth = static_cast<std::uint32_t>(static_cast<float>(cro::App::getWindow().getSize().x) / viewScale) / 2u;
+
+    if (!m_menuLayout.texture.available()
+        || texWidth > m_menuLayout.texture.getSize().x
+        || texHeight > m_menuLayout.texture.getSize().y)
+    {
+        m_menuLayout.texture.create(texWidth, texHeight, false);
+    }
+
+    //if we didn't resize the actual size might be bigger than we expect on other tabs...
+    const glm::vec2 renderSize = glm::vec2(m_menuLayout.texture.getSize());
+
+    m_menuLayout.sprite.getComponent<cro::Sprite>().setTexture(m_menuLayout.texture.getTexture());
+    m_menuLayout.sprite.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
+
+    cro::FloatRect crop = { 0.f, InfoBarHeight * viewScale,
+                            renderSize.x * viewScale, 
+                            (m_tabBar.background.getComponent<cro::Transform>().getPosition().y - (InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2)};
+    m_menuLayout.sprite.getComponent<cro::Drawable2D>().setCroppingArea(crop, true);
+
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    cro::SimpleText text(font);
+    text.setFillColour(TextNormalColour);
+    text.setCharacterSize(InfoTextSize);
+
+    constexpr float LineSpacing = 12.f;
+    const auto renderItem =
+        [&](const Menu::Item& item, glm::vec2 pos)
+        {
+            text.setPosition(pos);
+            text.setString(item.itemTitle);
+            text.draw();
+            text.move({ 0.f, -LineSpacing });
+            text.setString(item.itemLabels[item.itemIndex]);
+            text.draw();
+        };
+
+    constexpr float Stride = ItemHeight + ItemSpacing;
+    glm::vec2 pos = { 4.f, renderSize.y - Stride };
+
+    m_menuLayout.texture.clear(cro::Colour::Blue);
+    //render current item selection to render texture
     //this includes either setting item highlight colour or rendering a highlight box
-    //TODO update the cropping area based on new tab bar position (allow for icons at bottom of the screen)
+    
+    for (const auto& item : items)
+    {
+        renderItem(item, pos);
+        pos.y -= Stride;
+    }
+
+    m_menuLayout.texture.display();
 }
 
 void OptionsStateV2::nextItem()
