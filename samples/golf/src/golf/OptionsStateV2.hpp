@@ -34,6 +34,9 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/SimpleText.hpp>
+#include <crogine/graphics/SimpleVertexArray.hpp>
 
 struct SharedStateData;
 
@@ -70,6 +73,7 @@ private:
     std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
     cro::Entity m_rootNode;
+    void loadAssets();
     void buildScene();
 
     void createSettingsItems();
@@ -96,6 +100,12 @@ private:
                 Count
             };
             cro::Entity text;
+            float displayWidth = 0.5f; //how much horizontal space items in this tab use
+
+            enum
+            {
+                Left, Centre, Right
+            }alignment = Left;
         };
 
         cro::Entity background;
@@ -111,36 +121,60 @@ private:
     {
         struct Item final
         {
-            //TODO optional image to display colour selection
+            //optional image to display colour selection
             //or achievement ID
+            const cro::Texture* texture = nullptr;
+            cro::FloatRect uv; //pixel coords for SimpleQuad
 
-            //TODO display type depending on data eg float/slider etc
+            //display type depending on data eg float/slider etc
+            enum
+            {
+                Default, //left/right arrows
+                Slider, //represents a sliding amount
+                TextOnly //displays the description on the item
+            }displayType = Default;
 
-            //TODO float-rects in menu space to test clich against
+            cro::Colour backgroundColour = { 0xfff8e1af };
 
-            std::int32_t itemIndex = 0; //currently selected entry
-            std::int32_t itemCount = 2; //number of items to cycle through when clicking
-            std::vector<cro::String> itemLabels; //display text for each setting when cycled
-            cro::String itemTitle; //main display title
+            //TODO float-rects in menu space to test click against
+
+            std::int32_t selectedIndex = 0; //currently selected entry
+            std::int32_t count = 1; //number of items to cycle through when clicking
+            std::vector<cro::String> labels; //display text for each setting when cycled
+            cro::String title; //main display title
             cro::String description; //shown when hovered
 
             std::function<void(Item&)> callback; //called when activated
-            void activateLeft()
+            bool activateLeft()
             {
-                if (itemCount > 1)
+                if (count > 1)
                 {
-                    itemIndex = (itemIndex + (itemCount - 1)) % itemCount;
+                    selectedIndex = (selectedIndex + (count - 1)) % count;
                     callback(*this);
+                    return true;
                 }
+                return false;
             }
 
-            void activateRight()
+            bool activateRight()
             {
-                if (itemCount > 1)
+                if (count > 1)
                 {
-                    itemIndex = (itemIndex + 1) % itemCount;
+                    selectedIndex = (selectedIndex + 1) % count;
                     callback(*this);
+                    return true;
                 }
+                return false;
+            }
+
+            bool activate()
+            {
+                if (count == 1)
+                {
+                    callback(*this);
+                    return true;
+                }
+                return false;
             }
         };
         std::array<std::vector<Item>, TabBar::Item::Count> items = {};
@@ -148,14 +182,19 @@ private:
         cro::RenderTexture texture;
         cro::Entity sprite;
 
-        std::int32_t itemIndex = 0;
+        std::uint32_t itemIndex = 0;
     }m_menuLayout;
+
+    cro::SimpleQuad m_menuQuad;
+    cro::SimpleText m_menuText;
+    cro::SimpleVertexArray m_menuBackground;
 
     void updateMenuItems();
     void nextItem();
     void prevItem();
     void activateLeft();
     void activateRight();
+    void activate();
 
     void refreshView();
     void quitState();

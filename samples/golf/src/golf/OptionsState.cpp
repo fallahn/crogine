@@ -5746,9 +5746,9 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
         case StatType::Time:
         {
             std::int32_t v = static_cast<std::int32_t>(Achievements::getStat(StatStrings[i])->value);
-            auto seconds = v % 60;
+            const auto seconds = v % 60;
             auto minutes = v / 60;
-            auto hours = minutes / 60;
+            const auto hours = minutes / 60;
             minutes %= 60;
 
             std::stringstream ss;
