@@ -115,6 +115,9 @@ private:
         std::size_t activeIndex = 0;
 
         std::int32_t hoveredIndex = -1;
+
+        cro::Entity navLeft;
+        cro::Entity navRight;
     }m_tabBar;
 
     void updateTabBar();
@@ -195,6 +198,8 @@ private:
     cro::SimpleQuad m_menuQuad;
     cro::SimpleText m_menuText;
     cro::SimpleVertexArray m_menuBackground;
+
+    cro::Entity m_infoString;
 
     void updateMenuItems();
     void nextItem();

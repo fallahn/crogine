@@ -73,6 +73,37 @@ source distribution.
 
 namespace
 {
+    //TODO move this to an inline file or something
+    //as it's also repeated in ScrubConsts.hpp
+    //xbox
+    static constexpr inline std::uint32_t ButtonLT = 0x2196;
+    static constexpr inline std::uint32_t ButtonRT = 0x2197;
+    static constexpr inline std::uint32_t ButtonLB = 0x2198;
+    static constexpr inline std::uint32_t ButtonRB = 0x2199;
+    static constexpr inline std::uint32_t ButtonX = 0x21D0;
+    static constexpr inline std::uint32_t ButtonY = 0x21D1;
+    static constexpr inline std::uint32_t ButtonB = 0x21D2;
+    static constexpr inline std::uint32_t ButtonA = 0x21D3;
+    static constexpr inline std::uint32_t ButtonStart = 0x21FB;
+
+
+    //ps
+    static constexpr inline std::uint32_t ButtonL1 = 0x21B0;
+    static constexpr inline std::uint32_t ButtonR1 = 0x21B1;
+    static constexpr inline std::uint32_t ButtonL2 = 0x21B2;
+    static constexpr inline std::uint32_t ButtonR2 = 0x21B3;
+    static constexpr inline std::uint32_t ButtonSquare = 0x21E0;
+    static constexpr inline std::uint32_t ButtonTriangle = 0x21E1;
+    static constexpr inline std::uint32_t ButtonCircle = 0x21E2;
+    static constexpr inline std::uint32_t ButtonCross = 0x21E3;
+    static constexpr inline std::uint32_t ButtonOption = 0x21E8;
+
+
+    static const cro::String XboxInfo = cro::String(ButtonX) + " Show Credits   " + cro::String(ButtonY) + " How To Play   " + cro::String(ButtonB) + " Close";
+    static const cro::String PSInfo = cro::String(ButtonSquare) + " Show Credits   " + cro::String(ButtonCross) + " How To Play   " + cro::String(ButtonCircle) + " Close";
+    static const cro::String KeyInfo = "LCtrl - Show Credits   LAlt - How To Play   ESC - Close";
+
+
     const std::array ItemLabels =
     {
         "Settings", "Keyboard", "Controller",
@@ -119,17 +150,72 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         {
             if (mouse)
             {
+                m_infoString.getComponent<cro::Text>().setString(KeyInfo);
                 m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
-                cro::App::getWindow().setMouseCaptured(false);
+
+                m_tabBar.navLeft.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+                m_tabBar.navRight.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]));
+
+                const auto viewScale = cro::UIElementSystem::getViewScale();
+                const auto charSize = (LabelTextSize) * viewScale;
+                m_tabBar.navLeft.getComponent<cro::Text>().setCharacterSize(charSize);
+                m_tabBar.navLeft.getComponent<cro::UIElement>().characterSize = LabelTextSize;
+
+                m_tabBar.navRight.getComponent<cro::Text>().setCharacterSize(charSize);
+                m_tabBar.navRight.getComponent<cro::UIElement>().characterSize = LabelTextSize;
             }
             else
             {
-                cro::App::getWindow().setMouseCaptured(true);
-                m_sharedData.activeInput = cro::GameController::hasPSLayout(controllerIndex)
-                    ? SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
+                if (cro::GameController::hasPSLayout(controllerIndex))
+                {
+                    m_sharedData.activeInput = SharedStateData::ActiveInput::PS;
+
+                    m_infoString.getComponent<cro::Text>().setString(PSInfo);
+                    m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour);
+
+                    m_tabBar.navLeft.getComponent<cro::Text>().setString(cro::String(ButtonL1));
+                    m_tabBar.navRight.getComponent<cro::Text>().setString(cro::String(ButtonR1));
+                }
+                else
+                {
+                    m_sharedData.activeInput = SharedStateData::ActiveInput::XBox;
+
+                    m_infoString.getComponent<cro::Text>().setString(XboxInfo);
+                    m_infoString.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::BlueLight]);
+                    m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour, 1);
+                    m_infoString.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Yellow], 17);
+                    m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour, 18);
+                    m_infoString.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red], 33);
+                    m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour, 34);
+
+                    m_tabBar.navLeft.getComponent<cro::Text>().setString(cro::String(ButtonLB));
+                    m_tabBar.navRight.getComponent<cro::Text>().setString(cro::String(ButtonRB));
+                }
+
+                const auto viewScale = cro::UIElementSystem::getViewScale();
+                const auto charSize = (LabelTextSize * 2) * viewScale;
+                m_tabBar.navLeft.getComponent<cro::Text>().setCharacterSize(charSize);
+                m_tabBar.navLeft.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2;
+
+                m_tabBar.navRight.getComponent<cro::Text>().setCharacterSize(charSize);
+                m_tabBar.navRight.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2;
             }
+            cro::App::getWindow().setMouseCaptured(!mouse);
         };
 
+    const auto showHelp = 
+        [&]()
+        {
+            m_sharedData.showHelp = true;
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        };
+
+    const auto showCredits =
+        [&]() 
+        {
+            requestStackPush(StateID::Credits);
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        };
 
     if (evt.type == SDL_KEYUP)
     {
@@ -179,6 +265,17 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
             activate();
         }
 
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_LCTRL:
+            showCredits();
+            break;
+        case SDLK_LALT:
+            showHelp();
+            break;
+        }
+
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
@@ -206,10 +303,10 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
             nextTab();
             break;
         case cro::GameController::ButtonX:
-            //TODO credits
+            showCredits();
             break;
         case cro::GameController::ButtonY:
-            //TODO how to play
+            showHelp();
             break;
         case cro::GameController::ButtonA:
             activate();
@@ -437,8 +534,6 @@ void OptionsStateV2::buildScene()
         auto& uiElement = item.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
         uiElement.characterSize = InfoTextSize;
         uiElement.depth = 0.1f;
-        //hmm this is ignored for text types, have to update manually in callback
-        //uiElement.relativePosition = { Spacing + (Spacing * i), 0.f };
         const float offset = (Spacing * 1.5f) + (Spacing * i);
         uiElement.resizeCallback = 
             [&, offset](cro::Entity e)
@@ -450,6 +545,46 @@ void OptionsStateV2::buildScene()
 
         m_tabBar.background.getComponent<cro::Transform>().addChild(item.text.getComponent<cro::Transform>());
     }
+
+    const auto& controllerFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(controllerFont).setString(cro::String(ButtonLB));
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
+    entity.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2u;
+    entity.getComponent<cro::UIElement>().depth = 0.1f;
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [&, Spacing](cro::Entity e)
+        {
+            const auto x = std::round((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * (Spacing / 2.f));
+            const auto y = 14.f;
+            e.getComponent<cro::UIElement>().absolutePosition = { x,y };
+        };
+    m_tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_tabBar.navLeft = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(controllerFont).setString(cro::String(ButtonRB));
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
+    entity.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2u;
+    entity.getComponent<cro::UIElement>().depth = 0.1f;
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [&, Spacing](cro::Entity e)
+        {
+            const auto offset = (Spacing * (m_tabBar.items.size() + 1)) + (Spacing / 2.f);
+            const auto x = std::round((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
+            const auto y = 14.f;
+            e.getComponent<cro::UIElement>().absolutePosition = { x,y };
+        };
+    m_tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_tabBar.navRight = entity;
 
 
     //menu layout
@@ -471,6 +606,24 @@ void OptionsStateV2::buildScene()
 
 
     updateTabBar(); //this also updates the menu items
+
+
+    //info string at the bottom
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();// .setOrigin({ 320.f, 240.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(controllerFont).setString(XboxInfo);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).characterSize = LabelTextSize;
+    entity.getComponent<cro::UIElement>().depth = 0.1f;
+    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 16.f };
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [&](cro::Entity e)
+        {
+            e.getComponent<cro::Transform>().setOrigin(glm::vec2(cro::App::getWindow().getSize()) / 2.f);
+        };
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_infoString = entity;
 
     //camera settings
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
@@ -1221,7 +1374,8 @@ void OptionsStateV2::updateMenuItems()
     const auto renderItem =
         [&](const Menu::Item& item, glm::vec2 pos, std::int32_t idx)
         {
-            if (idx == m_menuLayout.hoveredIndex)
+            if (idx == m_menuLayout.hoveredIndex
+                && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
             {
                 for (auto& v : verts)
                 {
@@ -1326,6 +1480,9 @@ void OptionsStateV2::updateMenuItems()
 
 void OptionsStateV2::nextItem()
 {
+    //reset mouse hover highlight
+    m_menuLayout.hoveredIndex = -1;
+
     m_menuLayout.itemIndex = (m_menuLayout.itemIndex + 1) % m_menuLayout.items[m_tabBar.activeIndex].size();
     updateMenuItems();
 
@@ -1334,6 +1491,9 @@ void OptionsStateV2::nextItem()
 
 void OptionsStateV2::prevItem()
 {
+    //reset mouse hover highlight
+    m_menuLayout.hoveredIndex = -1;
+
     m_menuLayout.itemIndex = (m_menuLayout.itemIndex + (m_menuLayout.items[m_tabBar.activeIndex].size() - 1)) % m_menuLayout.items[m_tabBar.activeIndex].size();
     updateMenuItems();
 
@@ -1342,6 +1502,9 @@ void OptionsStateV2::prevItem()
 
 void OptionsStateV2::activateLeft()
 {
+    //reset mouse hover highlight
+    m_menuLayout.hoveredIndex = -1;
+
     if (m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].activateLeft())
     {
         updateMenuItems();
@@ -1351,6 +1514,9 @@ void OptionsStateV2::activateLeft()
 
 void OptionsStateV2::activateRight()
 {
+    //reset mouse hover highlight
+    m_menuLayout.hoveredIndex = -1;
+
     if (m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].activateRight())
     {
         updateMenuItems();
@@ -1435,11 +1601,19 @@ void OptionsStateV2::doMouseClick()
         m_menuLayout.itemIndex = 0;
         updateTabBar();
     }
-    else if (m_menuLayout.hoveredIndex != -1)
+    else
     {
-        m_menuLayout.itemIndex = m_menuLayout.hoveredIndex;
-        m_menuLayout.hoveredIndex = -1;
-        updateMenuItems();
+        if (m_menuLayout.hoveredIndex != -1)
+        {
+            m_menuLayout.itemIndex = m_menuLayout.hoveredIndex;
+            m_menuLayout.hoveredIndex = -1;
+            updateMenuItems();
+        }
+        else
+        {
+            //TODO this is the active item, test for activation click
+            
+        }
     }
 }
 
