@@ -3569,11 +3569,11 @@ void GolfState::buildScene()
         //but will if you open/close the options menu... so let's retry with a delay
         auto entity = m_uiScene.createEntity();
         entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<float>(10.f);
+        entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(10.f, 5);
         entity.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
             {
-                auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+                auto& [ct, tries] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
                 ct -= dt;
                 if (ct < 0)
                 {
@@ -3581,10 +3581,12 @@ void GolfState::buildScene()
                     //m_flagTexture.create(FlagTextureSize.x, FlagTextureSize.y, false);
                     updateFlagTexture(true);
 
-                    if (!m_flagTexture.available())
+                    if (!m_flagTexture.available()
+                        && tries > 0)
                     {
                         //keep trying
                         ct += 10.f;
+                        tries--;
                     }
                     else
                     {

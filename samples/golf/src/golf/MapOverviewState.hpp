@@ -102,7 +102,6 @@ private:
     struct ShaderUniforms final
     {
         std::int32_t posMap = -1;
-        std::int32_t maskMap = -1;
         std::int32_t normalMap = -1;
         std::int32_t transparency = -1;
         std::int32_t gridAmount = -1;

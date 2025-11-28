@@ -557,7 +557,6 @@ void MapOverviewState::loadAssets()
 
     m_mapShader.loadFromString(cro::SimpleQuad::getDefaultVertexShader(), MinimapFragment);
     m_shaderUniforms.posMap = m_mapShader.getUniformID("u_worldPos");
-    m_shaderUniforms.maskMap = m_mapShader.getUniformID("u_maskMap");
     m_shaderUniforms.normalMap = m_mapShader.getUniformID("u_normalMap");
     m_shaderUniforms.heatAmount = m_mapShader.getUniformID("u_heatAmount");
     m_shaderUniforms.gridAmount = m_mapShader.getUniformID("u_gridAmount");
@@ -865,21 +864,16 @@ void MapOverviewState::rescaleMap()
 void MapOverviewState::refreshMap()
 {
     static constexpr std::int32_t PosSlot = 6;
-    static constexpr std::int32_t MaskSlot = 7;
-    static constexpr std::int32_t NormalSlot = 8;
+    static constexpr std::int32_t NormalSlot = 7;
 
     glActiveTexture(GL_TEXTURE0 + PosSlot);
     glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Position).textureID);
-
-    glActiveTexture(GL_TEXTURE0 + MaskSlot);
-    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Count).textureID);
 
     glActiveTexture(GL_TEXTURE0 + NormalSlot);
     glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Normal).textureID);
 
     glUseProgram(m_mapShader.getGLHandle());
     glUniform1i(m_shaderUniforms.posMap, PosSlot);
-    glUniform1i(m_shaderUniforms.maskMap, MaskSlot);
     glUniform1i(m_shaderUniforms.normalMap, NormalSlot);
 
     //glUniform1f(m_shaderUniforms.gridAmount, m_shaderValues[m_shaderValueIndex].first);

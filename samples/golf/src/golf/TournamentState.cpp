@@ -1894,8 +1894,11 @@ void TournamentState::createConfirmMenu(cro::Entity parent)
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                 m_sharedData.activeTournament = tournamentID;
-                m_sharedData.tournamentPath = m_customPaths[m_customIndex];
 
+                if (!m_customPaths.empty())
+                {
+                    m_sharedData.tournamentPath = m_customPaths[m_customIndex];
+                }
                 auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                 msg->type = SystemEvent::MenuRequest;
                 msg->data = RequestID::Tournament;
@@ -2811,6 +2814,8 @@ void TournamentState::refreshCustomList()
     if (m_customPaths.empty())
     {
         m_customIndex = 0;
+
+        //create a default custom tournament
     }
     else if (m_customIndex >= m_customPaths.size())
     {
