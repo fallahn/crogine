@@ -187,6 +187,9 @@ private:
         cro::Entity sprite;
 
         std::uint32_t itemIndex = 0;
+        std::int32_t hoveredIndex = -1;
+
+        cro::FloatRect itemBox; //size is menu coords, position is updated during testing with current scroll position
     }m_menuLayout;
 
     cro::SimpleQuad m_menuQuad;

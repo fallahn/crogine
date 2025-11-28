@@ -1201,7 +1201,7 @@ void OptionsStateV2::updateMenuItems()
     m_menuLayout.sprite.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
 
     cro::FloatRect crop = { 0.f, InfoBarHeight * viewScale,
-                            /*renderSize.x * viewScale*/static_cast<float>(cro::App::getWindow().getSize().x),
+                            static_cast<float>(cro::App::getWindow().getSize().x),
                             (m_tabBar.background.getComponent<cro::Transform>().getPosition().y - (InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2)};
     m_menuLayout.sprite.getComponent<cro::Drawable2D>().setCroppingArea(crop, true);
 
@@ -1219,9 +1219,28 @@ void OptionsStateV2::updateMenuItems()
 
     constexpr float LineSpacing = 12.f;
     const auto renderItem =
-        [&](const Menu::Item& item, glm::vec2 pos)
+        [&](const Menu::Item& item, glm::vec2 pos, std::int32_t idx)
         {
-            if (item.backgroundColour != c)
+            if (idx == m_menuLayout.hoveredIndex)
+            {
+                for (auto& v : verts)
+                {
+                    v.colour = CD32::Colours[CD32::Yellow];
+                }
+                m_menuBackground.setVertexData(verts);
+            }
+            else if (idx == m_menuLayout.itemIndex)
+            {
+                for (auto& v : verts)
+                {
+                    v.colour = CD32::Colours[CD32::BlueDark];
+                }
+                m_menuBackground.setVertexData(verts);
+            }
+
+            else if (item.backgroundColour != c
+                || idx == m_menuLayout.hoveredIndex + 1
+                || idx == m_menuLayout.itemIndex + 1) //resets the colour
             {
                 c = item.backgroundColour;
                 for (auto& v : verts)
@@ -1247,6 +1266,21 @@ void OptionsStateV2::updateMenuItems()
 
             pos.x += ItemSpacing;
             pos.y += ItemHeight - LineSpacing;
+
+            if (idx == m_menuLayout.hoveredIndex)
+            {
+                m_menuText.setFillColour(CD32::Colours[CD32::Black]);
+            }
+            else if (idx == m_menuLayout.itemIndex)
+            {
+                m_menuText.setFillColour(CD32::Colours[CD32::Yellow]);
+            }
+            else
+            {
+                m_menuText.setFillColour(TextNormalColour);
+            }
+
+
             m_menuText.setPosition(pos);
             m_menuText.setString(item.title);
             m_menuText.draw();
@@ -1278,24 +1312,16 @@ void OptionsStateV2::updateMenuItems()
     auto i = 0;
     for (const auto& item : items)
     {
-        if (i == m_menuLayout.itemIndex)
-        {
-            m_menuText.setFillColour(CD32::Colours[CD32::Yellow]);
-        }
-        else
-        {
-            m_menuText.setFillColour(TextNormalColour);
-        }
-
         //TODO we could skip rendering if this is outside
         //the visible area, but it's not presenting a problem yet.
-        renderItem(item, pos);
+        renderItem(item, pos, i++);
         pos.y -= Stride;
-
-        i++;
     }
 
     m_menuLayout.texture.display();
+
+    m_menuLayout.itemBox = { 0.f, 0.f, renderSize.x - (ItemSpacing * 2.f), ItemHeight };
+    m_menuLayout.itemBox *= viewScale;
 }
 
 void OptionsStateV2::nextItem()
@@ -1342,8 +1368,9 @@ void OptionsStateV2::activate()
 
 void OptionsStateV2::checkMouseOver(glm::vec2 screenPos)
 {
-
     std::int32_t selectedTab = -1;
+    std::int32_t selectedItem = -1;
+
     if (screenPos.y > m_tabBar.background.getComponent<cro::Transform>().getWorldPosition().y)
     {
         //check the tab bar
@@ -1358,7 +1385,30 @@ void OptionsStateV2::checkMouseOver(glm::vec2 screenPos)
     }
     else
     {
+        const auto viewScale = cro::UIElementSystem::getViewScale();
+
         //check the item list - TODO only check against visible
+        const glm::vec2 WindowOffset = cro::App::getWindow().getSize() / 2u;
+        glm::vec2 basePos = m_menuLayout.sprite.getComponent<cro::Transform>().getPosition();
+        basePos += WindowOffset;
+        basePos.y -= m_menuLayout.sprite.getComponent<cro::Transform>().getOrigin().y * viewScale;
+
+        const auto menuHeight = static_cast<float>(m_menuLayout.texture.getSize().y);
+
+        for (auto i = 0u; i < m_menuLayout.items[m_tabBar.activeIndex].size(); ++i)
+        {
+            //TODO skip this if it's outside the drawable area
+            const float vertOffset = (menuHeight - ((i * (ItemHeight + ItemSpacing))) - (ItemHeight + ItemSpacing)) * viewScale;
+            auto testBox = m_menuLayout.itemBox;
+            testBox.left += basePos.x;
+            testBox.bottom += basePos.y + vertOffset;
+
+            if (testBox.contains(screenPos))
+            {
+                selectedItem = i;
+                break;
+            }
+        }
     }
 
 
@@ -1367,6 +1417,12 @@ void OptionsStateV2::checkMouseOver(glm::vec2 screenPos)
     {
         m_tabBar.hoveredIndex = selectedTab;
         updateTabBar();
+    }
+
+    if (selectedItem != m_menuLayout.hoveredIndex)
+    {
+        m_menuLayout.hoveredIndex = selectedItem;
+        updateMenuItems();
     }
 }
 
@@ -1379,10 +1435,12 @@ void OptionsStateV2::doMouseClick()
         m_menuLayout.itemIndex = 0;
         updateTabBar();
     }
-    /*else if (m_menuLayout.hoverdIndex != -1)
+    else if (m_menuLayout.hoveredIndex != -1)
     {
-
-    }*/
+        m_menuLayout.itemIndex = m_menuLayout.hoveredIndex;
+        m_menuLayout.hoveredIndex = -1;
+        updateMenuItems();
+    }
 }
 
 void OptionsStateV2::refreshView()
