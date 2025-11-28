@@ -222,10 +222,11 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_MOUSEBUTTONUP)
     {
-        //TODO test clicks for tab bar buttons
-        //TODO test clicks for menu items
-
-        if (evt.button.button == SDL_BUTTON_RIGHT)
+        if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            doMouseClick();
+        }
+        else if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             quitState();
             return false;
@@ -249,6 +250,9 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEMOTION)
     {
         setActiveInput(true, 0);
+
+        glm::vec2 pos(evt.motion.x, cro::App::getWindow().getSize().y - evt.motion.y);
+        checkMouseOver(pos);
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
@@ -1111,11 +1115,21 @@ void OptionsStateV2::updateTabBar()
     for (auto i = 0u; i < m_tabBar.items.size(); ++i)
     {
         const auto active = m_tabBar.activeIndex;
+        const auto hovered = (i == m_tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
 
-        const auto colour = i == active ? CD32::Colours[CD32::Brown] : CD32::Colours[CD32::TanDarkest];
-        addQuad(colour, { TabWidth + (i * TabWidth), 0.f }, { TabWidth - viewScale, TabBarHeight * viewScale});
+        const auto colour = i == active ? CD32::Colours[CD32::Brown] : 
+            hovered ? 
+            CD32::Colours[CD32::Yellow] : CD32::Colours[CD32::TanDarkest];
+        
+        glm::vec2 position = { TabWidth + (i * TabWidth), 0.f };
+        const glm::vec2 size = { TabWidth - viewScale, TabBarHeight * viewScale };
+        addQuad(colour, position, size);
 
-        m_tabBar.items[i].text.getComponent<cro::Text>().setFillColour(i == active ? TextNormalColour : CD32::Colours[CD32::BeigeMid]);
+        position += glm::vec2(m_tabBar.background.getComponent<cro::Transform>().getPosition());
+        position += WindowSize / 2.f; //screen centre
+        m_tabBar.items[i].hitbox = { position, size};
+        m_tabBar.items[i].text.getComponent<cro::Text>().setFillColour(i == active ? TextNormalColour : 
+            hovered ? CD32::Colours[CD32::Black] : CD32::Colours[CD32::BeigeMid]);
     }
 
     addQuad(CD32::Colours[CD32::Brown], { 0.f, -viewScale }, { WindowSize.x, viewScale });
@@ -1324,6 +1338,51 @@ void OptionsStateV2::activate()
     {
         LogI << "Play Sound Here" << std::endl;
     }
+}
+
+void OptionsStateV2::checkMouseOver(glm::vec2 screenPos)
+{
+
+    std::int32_t selectedTab = -1;
+    if (screenPos.y > m_tabBar.background.getComponent<cro::Transform>().getWorldPosition().y)
+    {
+        //check the tab bar
+        for (auto i = 0u; i < m_tabBar.items.size(); ++i)
+        {
+            if (m_tabBar.items[i].hitbox.contains(screenPos))
+            {
+                selectedTab = static_cast<std::int32_t>(i);
+                break;
+            }
+        }   
+    }
+    else
+    {
+        //check the item list - TODO only check against visible
+    }
+
+
+    //we may have switched from tab to item list so we still need to redraw
+    if (selectedTab != m_tabBar.hoveredIndex)
+    {
+        m_tabBar.hoveredIndex = selectedTab;
+        updateTabBar();
+    }
+}
+
+void OptionsStateV2::doMouseClick()
+{
+    if (m_tabBar.hoveredIndex != -1)
+    {
+        m_tabBar.activeIndex = m_tabBar.hoveredIndex;
+        m_tabBar.hoveredIndex = -1;
+        m_menuLayout.itemIndex = 0;
+        updateTabBar();
+    }
+    /*else if (m_menuLayout.hoverdIndex != -1)
+    {
+
+    }*/
 }
 
 void OptionsStateV2::refreshView()

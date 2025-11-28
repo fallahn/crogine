@@ -106,11 +106,15 @@ private:
             {
                 Left, Centre, Right
             }alignment = Left;
+
+            cro::FloatRect hitbox; //in screen coords
         };
 
         cro::Entity background;
         std::array<Item, Item::Count> items = {};
         std::size_t activeIndex = 0;
+
+        std::int32_t hoveredIndex = -1;
     }m_tabBar;
 
     void updateTabBar();
@@ -195,6 +199,9 @@ private:
     void activateLeft();
     void activateRight();
     void activate();
+
+    void checkMouseOver(glm::vec2);
+    void doMouseClick();
 
     void refreshView();
     void quitState();
