@@ -887,7 +887,7 @@ void TournamentState::buildScene()
 
     //gimme
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 310.f, 54.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 302.f, 54.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("No Gimme");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -897,7 +897,7 @@ void TournamentState::buildScene()
     m_settingsDetails.gimme = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 310.f, 50.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 302.f, 50.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
@@ -1313,7 +1313,7 @@ void TournamentState::buildScene()
 
         //warning string 
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 364.f, 37.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 356.f, 37.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString(std::uint32_t(0x26A0));
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -1322,7 +1322,7 @@ void TournamentState::buildScene()
 
 
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 315.f, 27.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 307.f, 27.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bag_select");
         entity.addComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
@@ -1391,7 +1391,7 @@ void TournamentState::buildScene()
 
     //club stats button
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 27.f, 23.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 10.f, 23.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
@@ -2477,7 +2477,7 @@ void TournamentState::createProfileLayout(cro::Entity bgEnt, const cro::SpriteSh
     if (m_clubTexture.create(210, 36, false))
     {
         auto clubEnt = m_scene.createEntity();
-        clubEnt.addComponent<cro::Transform>().setPosition({ 30.f, 26.f, 0.1f });
+        clubEnt.addComponent<cro::Transform>().setPosition({ 13.f, 26.f, 0.1f });
         clubEnt.addComponent<cro::Drawable2D>();
         clubEnt.addComponent<cro::Sprite>(m_clubTexture.getTexture());
         bgEnt.getComponent<cro::Transform>().addChild(clubEnt.getComponent<cro::Transform>());

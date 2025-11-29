@@ -88,6 +88,7 @@ struct ClubID final
         return 0;
     }
 
+    //this appears in Social.cpp too!!! Make sure they remain in sync
     static constexpr std::int32_t DefaultSet =
         Flags[Driver]    | Flags[ThreeWood]  | Flags[FiveIron] |
         Flags[EightIron] | Flags[PitchWedge] |

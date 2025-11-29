@@ -134,7 +134,7 @@ namespace
     constexpr float XPx = 0.07f;
     constexpr float XPy = 2.f;
 
-    constexpr std::int32_t DefaultClubSet = 3731;
+    constexpr std::int32_t DefaultClubSet = 16019;// 3731;
 
     std::int32_t getLevelFromXP(std::int32_t exp)
     {
