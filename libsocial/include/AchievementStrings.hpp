@@ -431,7 +431,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Win a round of Nearest the Pin", false),
     std::make_pair("Finish 9 holes on a full size course with less than 15m in Nearest the Pin", false),
     std::make_pair("Finish 18 holes on a full size course with less than 15m in Nearest the Pin", false),
-    std::make_pair("Take at least one screenshot on each course using freecam", false),
+    std::make_pair("Take at least one screenshot on each (non-DLC) course using freecam", false),
     std::make_pair("Come first in any Career league round on Casual difficulty", false),
     std::make_pair("Come first in any Career league round on Regular difficulty", false),
     std::make_pair("Come first in any Career league round on Pro difficulty", false),
