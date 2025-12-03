@@ -5225,12 +5225,13 @@ void MenuState::updateUnlockedItems()
     auto clubFlags = Social::getUnlockStatus(Social::UnlockType::Club);
     if (clubFlags != -1)
     {
-        if (clubFlags == 0)
+        //if (clubFlags == 0)
+        //make sure we always at least have the default set
         {
-            clubFlags = ClubID::DefaultSet;
+            clubFlags |= ClubID::DefaultSet;
         }
         //this is a fudge for people who miss putters from their set...
-        clubFlags |= ClubID::Flags[ClubID::Putter];
+        //clubFlags |= ClubID::Flags[ClubID::Putter];
         auto clubCount = std::min(ClubID::LockedSet.size(), static_cast<std::size_t>(level / Social::ClubStepLevel));
         for (auto i = 0u; i < clubCount; ++i)
         {

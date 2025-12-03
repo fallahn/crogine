@@ -197,6 +197,7 @@ private:
 
     cro::SimpleQuad m_menuQuad;
     cro::SimpleText m_menuText;
+    cro::SimpleText m_menuTextLarge;        
     cro::SimpleVertexArray m_menuBackground;
 
     cro::Entity m_infoString;

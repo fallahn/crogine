@@ -407,6 +407,11 @@ void OptionsStateV2::loadAssets()
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     m_menuText.setFont(font);
     m_menuText.setCharacterSize(InfoTextSize);
+
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    m_menuTextLarge.setFont(largeFont);
+    m_menuTextLarge.setCharacterSize(UITextSize);
+    m_menuTextLarge.setAlignment(cro::SimpleText::Alignment::Centre);
 }
 
 void OptionsStateV2::buildScene()
@@ -1437,14 +1442,17 @@ void OptionsStateV2::updateMenuItems()
             if (idx == m_menuLayout.hoveredIndex)
             {
                 m_menuText.setFillColour(CD32::Colours[CD32::Black]);
+                m_menuTextLarge.setFillColour(CD32::Colours[CD32::Black]);
             }
             else if (idx == m_menuLayout.itemIndex)
             {
                 m_menuText.setFillColour(CD32::Colours[CD32::Yellow]);
+                m_menuTextLarge.setFillColour(CD32::Colours[CD32::Yellow]);
             }
             else
             {
                 m_menuText.setFillColour(TextNormalColour);
+                m_menuTextLarge.setFillColour(TextNormalColour);
             }
 
 
@@ -1455,12 +1463,24 @@ void OptionsStateV2::updateMenuItems()
             switch (item.displayType)
             {
             default:
-
-                //m_menuText.setString(item.labels[item.selectedIndex]);
+                m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing * 2.f) });
+                if (item.labels.size() > 1)
+                {
+                    m_menuTextLarge.setString("< " + item.labels[item.selectedIndex] + " >");
+                }
+                else
+                {
+                    //this is a button
+                    m_menuTextLarge.setString(item.labels[item.selectedIndex]);
+                }
+                m_menuTextLarge.draw();
                 break;
-            case Menu::Item::Slider:
-
-                break;
+            //case Menu::Item::Slider:
+            //    m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing * 2.f) });
+            //    m_menuTextLarge.setString(item.labels[item.selectedIndex]);
+            //    m_menuTextLarge.draw();
+            //    //TODO draw a slider of some sort
+            //    break;
             case Menu::Item::TextOnly:
                 m_menuText.move({ 0.f, -LineSpacing });
                 m_menuText.setString(item.description);
