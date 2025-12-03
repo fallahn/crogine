@@ -873,6 +873,19 @@ void OptionsStateV2::createSettingsItems()
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.useLensFlare ? 1 : 0;
 
+    //reduced motion transition
+    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item->title = "Reduced Motion Transition";
+    item->description = "Hides the hole transition behind a loading screen to reduce motion sensitivity";
+    item->callback = [&](Menu::Item& i)
+        {
+            m_sharedData.miniLoadingScreen = i.selectedIndex == 0 ? false : true;
+        };
+    item->count = 2;
+    item->labels = { "No" , "Yes" };
+    item->selectedIndex = m_sharedData.miniLoadingScreen ? 1 : 0;
+
+
 
     //-------difficulty and behaviour, set background colour!!-----//
     //putt assist

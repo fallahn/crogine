@@ -1635,9 +1635,83 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
         };
 }
 
-
 void GolfState::startFlyBy()
 {
+    cro::Entity loadingEnt;
+    struct FlybyData final
+    {
+        std::int32_t state = 0;
+        float progress = 0.f;
+    };
+
+    if (m_sharedData.miniLoadingScreen)
+    {
+        if (m_currentHole != 0)
+        {
+            m_textChat.printToScreen("Loading...", TextGoldColour);
+        }
+
+        const auto& tex = m_resources.textures.get("assets/images/loading/07.png");
+
+        auto mapEnt = m_uiScene.createEntity();
+        mapEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 4.1f });
+        mapEnt.addComponent<cro::Drawable2D>();
+        mapEnt.addComponent<cro::Sprite>(tex);
+        const auto mapSize = glm::vec2(tex.getSize());
+        mapEnt.getComponent<cro::Transform>().setOrigin(mapSize / 2.f);
+
+        loadingEnt = m_uiScene.createEntity();
+        loadingEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 4.f });
+        loadingEnt.addComponent<cro::Drawable2D>().setVertexData(
+            {
+                cro::Vertex2D(glm::vec2(-0.5f, 0.5f), cro::Colour::Black),
+                cro::Vertex2D(glm::vec2(-0.5f), cro::Colour::Black),
+                cro::Vertex2D(glm::vec2(0.5f), cro::Colour::Black),
+                cro::Vertex2D(glm::vec2(0.5f, -0.5f), cro::Colour::Black)
+            });
+        loadingEnt.addComponent<cro::Callback>().active = true;
+        loadingEnt.getComponent<cro::Callback>().setUserData<FlybyData>();
+        loadingEnt.getComponent<cro::Callback>().function =
+            [&, mapEnt, mapSize](cro::Entity e, float dt) mutable
+            {
+                const auto size = glm::vec2(cro::App::getWindow().getSize());
+                auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<FlybyData>();
+
+                const auto Speed = dt * 4.f;
+                switch (state)
+                {
+                default:
+                case 0:
+                    //in
+                    currTime = std::min(1.f, currTime + Speed);
+                    if (currTime == 1)
+                    {
+                        state = 1;
+                    }
+                    break;
+                case 1:
+                    //hold
+                    break;
+                case 2:
+                    //out
+                    currTime = std::max(0.f, currTime - Speed);
+                    if (currTime == 1)
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                        m_uiScene.destroyEntity(e);
+                        m_uiScene.destroyEntity(mapEnt);
+                    }
+                    break;
+                }
+
+                e.getComponent<cro::Transform>().setScale(size * currTime);
+                e.getComponent<cro::Transform>().setPosition(size / 2.f);
+
+                mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(size.x / mapSize.x) * currTime);
+                mapEnt.getComponent<cro::Transform>().setPosition(size / 2.f);
+            };
+    }
+
     m_idleTimer.restart();
     m_idleTime = cro::seconds(90.f);
 
@@ -1729,7 +1803,7 @@ void GolfState::startFlyBy()
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<FlyByTarget>(targetData);
     entity.getComponent<cro::Callback>().function =
-        [&, SpeedMultiplier](cro::Entity e, float dt)
+        [&, SpeedMultiplier, loadingEnt](cro::Entity e, float dt) mutable
         {
             //keep the balls hidden during transition
             cro::Command c;
@@ -1829,6 +1903,11 @@ void GolfState::startFlyBy()
                         }
                         e.getComponent<cro::Callback>().active = false;
                         m_gameScene.destroyEntity(e);
+
+                        if (loadingEnt.isValid())
+                        {
+                            loadingEnt.getComponent<cro::Callback>().getUserData<FlybyData>().state = 2;
+                        }
                     }
                     break;
                 }

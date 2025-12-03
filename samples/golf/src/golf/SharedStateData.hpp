@@ -390,6 +390,7 @@ struct SharedStateData final
     bool showMinimap = true;
     bool showInGameTips = true;
     bool calculateRange = false; //calculate or estimate the range indicator
+    bool miniLoadingScreen = false; //cover the transition with a loading screen
     std::int32_t flagText = 0; //none, black, white
     std::string flagPath;
 

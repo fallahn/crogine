@@ -8520,4 +8520,3 @@ void GolfState::sendWebsocketGameInfo() const
         }
     }
 }
-

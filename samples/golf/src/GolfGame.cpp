@@ -217,8 +217,8 @@ GolfGame::GolfGame()
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData, m_profileData);
     m_stateStack.registerState<ProfileState>(StateID::Profile, m_sharedData, m_profileData);
-    m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
-    //m_stateStack.registerState<OptionsStateV2>(StateID::Options, m_sharedData);
+    //m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
+    m_stateStack.registerState<OptionsStateV2>(StateID::Options, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);
     m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData, m_profileData);
@@ -1811,6 +1811,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.calculateRange = prop.getValue<bool>();
                     }
+                    else if (name == "mini_load")
+                    {
+                        m_sharedData.miniLoadingScreen = prop.getValue<bool>();
+                    }
                 }
             }
 
@@ -1979,6 +1983,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("show_minimap").setValue(m_sharedData.showMinimap);
     cfg.addProperty("show_tips").setValue(m_sharedData.showInGameTips);
     cfg.addProperty("calculate_range").setValue(m_sharedData.calculateRange);
+    cfg.addProperty("mini_load").setValue(m_sharedData.miniLoadingScreen);
     cfg.save(path);
 
 
