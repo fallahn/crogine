@@ -131,6 +131,9 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
 {
     ctx.mainWindow.setMouseCaptured(false);
 
+    m_flagPreview.init(sd.flagPath);
+    m_flagPreview.setText(m_sharedData.flagText);
+
     loadAssets();
     buildScene();
 }
@@ -607,8 +610,35 @@ void OptionsStateV2::buildScene()
     m_menuLayout.sprite.addComponent<cro::Sprite>();
     rootNode.getComponent<cro::Transform>().addChild(m_menuLayout.sprite.getComponent<cro::Transform>());
 
-    //TODO details window on right side
+    //details window on right side
+    m_detailsPane.root = m_scene.createEntity();
+    m_detailsPane.root.addComponent<cro::Transform>();
+    m_detailsPane.root.addComponent<cro::UIElement>(cro::UIElement::Position, false);
+    m_detailsPane.root.getComponent<cro::UIElement>().relativePosition = { 0.25f, 0.f };
+    rootNode.getComponent<cro::Transform>().addChild(m_detailsPane.root.getComponent<cro::Transform>());
 
+    m_detailsPane.text = m_scene.createEntity();
+    m_detailsPane.text.addComponent<cro::Transform>();
+    m_detailsPane.text.addComponent<cro::Drawable2D>();
+    m_detailsPane.text.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI));
+    m_detailsPane.text.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    m_detailsPane.text.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    m_detailsPane.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
+    m_detailsPane.text.getComponent<cro::UIElement>().absolutePosition = { 0.f, -10.f };
+    m_detailsPane.text.getComponent<cro::UIElement>().characterSize = UITextSize;
+    m_detailsPane.text.getComponent<cro::UIElement>().verticalSpacing = 4.f;
+    m_detailsPane.text.getComponent<cro::UIElement>().depth = 0.2f;
+    m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.text.getComponent<cro::Transform>());
+
+
+    m_detailsPane.image = m_scene.createEntity();
+    m_detailsPane.image.addComponent<cro::Transform>();
+    m_detailsPane.image.addComponent<cro::Drawable2D>();
+    m_detailsPane.image.addComponent<cro::Sprite>();
+    m_detailsPane.image.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    m_detailsPane.image.getComponent<cro::UIElement>().absolutePosition = { 0.f, 10.f };
+    m_detailsPane.image.getComponent<cro::UIElement>().depth = 0.2f;
+    m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.image.getComponent<cro::Transform>());
 
     updateTabBar(); //this also updates the menu items
 
@@ -661,7 +691,8 @@ void OptionsStateV2::createSettingsItems()
     auto* item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Show Flag Beacon";
     item->description = "Draws a beacon at the pin position, visible from a distance";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showBeacon = i.selectedIndex == 0 ? false : true;
         };
@@ -673,7 +704,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Beacon Colour";
     item->description = "Choose the colour of the beacon";
-    item->callback = [&](Menu::Item& i)
+    item->activated = [&](Menu::Item& i)
         {
             const float amt = 0.1f * i.selectedIndex;
             m_sharedData.beaconColour = amt;
@@ -700,7 +731,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Show Ball Trail";
     item->description = "Draw a trail behind player's ball when it's in flight";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showBallTrail = i.selectedIndex == 0 ? false : true;
         };
@@ -712,7 +744,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Ball Trail Uses Beacon Colour";
     item->description = "Draws the ball trail with the beacon colour, else draws it white";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.trailBeaconColour = i.selectedIndex == 0 ? false : true;
         };
@@ -724,7 +757,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Putting Grid Density";
     item->description = "Sets the transparency of the putting grid";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             const float amt = 0.1f * i.selectedIndex;
             m_sharedData.gridTransparency = amt;
@@ -739,7 +773,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Imperial Measurements";
     item->description = "Render distances in Yards, Feet and Inches instead of Metres and Centimetres";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.imperialMeasurements = i.selectedIndex == 0 ? false : true;
         };
@@ -751,7 +786,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Large Power Bar";
     item->description = "Draws a larger power bar at the bottom ofthe UI";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.useLargePowerBar = i.selectedIndex == 0 ? false : true;
         };
@@ -763,7 +799,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "High Contrast Power Bar";
     item->description = "Draws the power bar with inverted colours";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.useContrastPowerBar = i.selectedIndex == 0 ? false : true;
         };
@@ -776,7 +813,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Decimate Power Bar";
     item->description = "Draws a power bar with 10 segements instead of 8";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.decimatePowerBar = i.selectedIndex == 0 ? false : true;
         };
@@ -789,7 +827,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Decimalised Distances";
     item->description = "Distances are drawn to the nearest 10th of a metre or yard";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.decimateDistance = i.selectedIndex == 0 ? false : true;
         };
@@ -802,7 +841,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Show Monthly Rival";
     item->description = "Shows the current monthly best on the scoreboard, if available";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showRival = i.selectedIndex == 0 ? false : true;
         };
@@ -815,7 +855,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Follow Cam When Putting";
     item->description = "The camera follows the ball when putting instead of displaying an overhead view";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.puttFollowCam = i.selectedIndex == 0 ? false : true;
         };
@@ -827,8 +868,9 @@ void OptionsStateV2::createSettingsItems()
     //zoom follow cam
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Zoom Follow Cam";
-    item->description = "Zoom the follow cam when the ball is in flight for a better view";
-    item->callback = [&](Menu::Item& i)
+    item->description = "Zoom the follow cam when the ball is in flight for a closer view";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.zoomFollowCam = i.selectedIndex == 0 ? false : true;
         };
@@ -841,7 +883,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Rotate When Aiming";
     item->description = "Automatically rotate the player camera when aiming";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.rotateCamera = i.selectedIndex == 0 ? false : true;
         };
@@ -851,23 +894,64 @@ void OptionsStateV2::createSettingsItems()
 
     
     //flag selection
+    const auto selectionCallback =
+        [&](const Menu::Item& i)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>().setTexture(m_flagPreview.getTexure());
+            m_detailsPane.image.getComponent<cro::Sprite>().setTextureRect(m_flagPreview.getUV());
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_flagPreview.getSize().x / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
+
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Flag Selection";
-    //item->description = "";
-    item->callback = [&](Menu::Item& i)
+#ifdef USE_GNS
+    item->description = "More flags are available in the Steam Workshop";
+#else
+    item->description = "Select the flag's appearance";
+#endif
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
-            //TODO cycle through flags
+            //cycle through flags
+            m_flagPreview.setIndex(i.selectedIndex);
+            m_detailsPane.image.getComponent<cro::Sprite>().setTextureRect(m_flagPreview.getUV());
+
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_flagPreview.getSize().x / 2.f, 0.f });
+            m_sharedData.flagPath = m_flagPreview.getPath();
         };
-    item->count = 2; //TODO set the flag count
-    item->labels = { "Flag 01" , "Flag 01" };
-    item->selectedIndex = 0; //TODO set this
+    item->count = m_flagPreview.getCount();
+    for (auto i = 0; i < item->count; ++i)
+    {
+        item->labels.push_back("Flag " + std::to_string(i));
+    }
+    item->selectedIndex = m_flagPreview.getIndex();
+    item->selected = selectionCallback;
+
+    //flag text type
+    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item->title = "Flag Text";
+    item->description = "Choose how text is displayed on the flag";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.flagText = i.selectedIndex;
+            m_flagPreview.setText(m_sharedData.flagText);
+            m_detailsPane.image.getComponent<cro::Sprite>().setTexture(m_flagPreview.getTexure());
+            m_detailsPane.image.getComponent<cro::Sprite>().setTextureRect(m_flagPreview.getUV());
+        };
+    item->count = 3;
+    item->labels = { "None" , "Black", "White"};
+    item->selectedIndex = m_sharedData.flagText;
+    item->selected = selectionCallback;
+
 
 
     //post FX selection (none as an option)
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Post Process";
     //item->description = "";
-    item->callback = [&](Menu::Item& i)
+    item->activated = [&](Menu::Item& i)
         {
             //TODO cycle through effects
         };
@@ -883,7 +967,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Show Lens Flare";
     item->description = "Display a lens flare effect in sunny weather";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.useLensFlare = i.selectedIndex == 0 ? false : true;
         };
@@ -895,7 +980,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reduced Motion Transition";
     item->description = "Hides the hole transition behind a loading screen to reduce motion sensitivity";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.miniLoadingScreen = i.selectedIndex == 0 ? false : true;
         };
@@ -909,8 +995,9 @@ void OptionsStateV2::createSettingsItems()
     //putt assist
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Putt Assist";
-    item->description = "Show a small flag above the power bar when putting";
-    item->callback = [&](Menu::Item& i)
+    item->description = "Show a small flag above the power bar when putting to estimate the range";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showPuttingPower = i.selectedIndex == 0 ? false : true;
         };
@@ -924,7 +1011,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Fixed Range Putter";
     item->description = "Fixes the max range of the putter at 10m/33ft";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.fixedPuttingRange = i.selectedIndex == 0 ? false : true;
         };
@@ -937,8 +1025,9 @@ void OptionsStateV2::createSettingsItems()
     //precise range indicator
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Estimated Range Indicator";
-    item->description = "Increases difficulty by omitting elevation and wind from the range indicator";
-    item->callback = [&](Menu::Item& i)
+    item->description = "Increases difficulty by omitting elevation and wind from the range indicator prediction";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.calculateRange = i.selectedIndex == 0 ? true : false;
         };
@@ -952,7 +1041,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Minimal UI";
     item->description = "Increases difficulty by removing most of the UI elements";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showMinimap = i.selectedIndex == 0 ? true : false;
         };
@@ -966,7 +1056,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Display In-Game Tips";
     item->description = "Shows tips when playing on how to best take your shot";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showInGameTips = i.selectedIndex == 0 ? false : true;
         };
@@ -983,7 +1074,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Enable Web Socket";
     item->description = "See https://github.com/fallahn/svs for more info";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.webSocket = i.selectedIndex == 0 ? false : true;
         };
@@ -998,7 +1090,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Log Scores To CSV";
     item->description = "Files are saved to you user directory";
-    item->callback = [&](Menu::Item& i)
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.logCSV = i.selectedIndex == 0 ? false : true;
         };
@@ -1011,7 +1103,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Disable Chat";
     item->description = "Removes the in-game chat from multiplayer games";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.blockChat = i.selectedIndex == 0 ? false : true;
         };
@@ -1024,7 +1117,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Log Chat To File";
     item->description = "Logs in-game multiplayer chat to a text file in your user directory";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.logChat = i.selectedIndex == 0 ? false : true;
         };
@@ -1038,7 +1132,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Download Remote Content";
     item->description = "Allow downloading remote content eg Workshop items in multiplayer";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             m_sharedData.remoteContent = i.selectedIndex == 0 ? false : true;
         };
@@ -1054,7 +1149,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reset Hints";
     item->description = "Enable all in-game hints which were previously dismissed";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             //TODO show pop-up (confirm should require press/hold button)
         };
@@ -1067,7 +1163,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reset Career";
     item->description = "Resets all Career progress, preserving any unlocked items";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             //TODO show pop-up (confirm should require press/hold button)
         };
@@ -1081,7 +1178,8 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reset Profile";
     item->description = "WARNING Resets all progress and unlocked items!!";
-    item->callback = [&](Menu::Item& i)
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
             //TODO show pop-up (confirm should require press/hold button)
         };
@@ -1098,7 +1196,7 @@ void OptionsStateV2::createKeyboardItems()
         auto& item = m_menuLayout.items[1].emplace_back();
         item.title = "Dummy Item";
         item.description = "This is the item description for " + std::to_string(i + 1);
-        item.callback = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
+        item.activated = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
         item.count = cro::Util::Random::value(2, 4);
         for (auto j = 0; j < item.count; ++j)
         {
@@ -1114,7 +1212,7 @@ void OptionsStateV2::createControllerItems()
         auto& item = m_menuLayout.items[2].emplace_back();
         item.title = "Dummy Item";
         item.description = "This is the item description for " + std::to_string(i + 1);
-        item.callback = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
+        item.activated = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
         item.count = cro::Util::Random::value(2, 4);
         for (auto j = 0; j < item.count; ++j)
         {
@@ -1130,7 +1228,7 @@ void OptionsStateV2::createDisplayItems()
         auto& item = m_menuLayout.items[3].emplace_back();
         item.title = "Dummy Item";
         item.description = "This is the item description for " + std::to_string(i + 1);
-        item.callback = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
+        item.activated = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
         item.count = cro::Util::Random::value(2, 4);
         for (auto j = 0; j < item.count; ++j)
         {
@@ -1146,7 +1244,7 @@ void OptionsStateV2::createAudioItems()
         auto& item = m_menuLayout.items[4].emplace_back();
         item.title = "Dummy Item";
         item.description = "This is the item description for " + std::to_string(i + 1);
-        item.callback = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
+        item.activated = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
         item.count = cro::Util::Random::value(2, 4);
         for (auto j = 0; j < item.count; ++j)
         {
@@ -1325,17 +1423,25 @@ void OptionsStateV2::updateTabBar()
     default:
     case TabBar::Item::Left:
         m_menuLayout.sprite.getComponent<cro::Transform>().setPosition({ 0.f, 0.f });
+
+        m_detailsPane.root.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        m_detailsPane.root.getComponent<cro::UIElement>().relativePosition.x = 0.25f;
         break;
     case TabBar::Item::Centre:
     {
         const float x = std::round((WindowSize.x - (static_cast<float>(m_menuLayout.texture.getSize().x * cro::UIElementSystem::getViewScale()) * m_tabBar.items[m_tabBar.activeIndex].displayWidth)) / 2.f);
         m_menuLayout.sprite.getComponent<cro::Transform>().setPosition({ x, 0.f });
+
+        m_detailsPane.root.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
         break;
     case TabBar::Item::Right:
     {
         const float x = std::round(WindowSize.x - (static_cast<float>(m_menuLayout.texture.getSize().x * cro::UIElementSystem::getViewScale()) * m_tabBar.items[m_tabBar.activeIndex].displayWidth));
         m_menuLayout.sprite.getComponent<cro::Transform>().setPosition({ x, 0.f });
+
+        m_detailsPane.root.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        m_detailsPane.root.getComponent<cro::UIElement>().relativePosition.x = -0.25f;
     }
         break;
     }
@@ -1506,12 +1612,25 @@ void OptionsStateV2::updateMenuItems()
     constexpr float Stride = ItemHeight + ItemSpacing;
     glm::vec2 pos = { ItemSpacing, renderSize.y - Stride };
 
+    //hide the preview image and let the selection callback
+    //display/update it as needed.
+    m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+
     m_menuLayout.texture.clear(cro::Colour::Transparent);
     //render current item selection to render texture
     //this includes either setting item highlight colour or rendering a highlight box
     auto i = 0;
     for (const auto& item : items)
     {
+        if (i == m_menuLayout.itemIndex)
+        {
+            m_detailsPane.text.getComponent<cro::Text>().setString(item.description);
+            if (item.selected)
+            {
+                item.selected(item);
+            }
+        }
+
         //TODO we could skip rendering if this is outside
         //the visible area, but it's not presenting a problem yet.
         renderItem(item, pos, i++);

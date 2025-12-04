@@ -48,6 +48,10 @@ public:
     glm::vec2 getSize() const;
     std::string getPath() const;
 
+    void setIndex(std::int32_t);
+    std::int32_t getIndex() const;
+    std::int32_t getCount() const;
+
     void next();
     void prev();
     void setText(std::size_t);

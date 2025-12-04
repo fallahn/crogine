@@ -142,6 +142,8 @@ void FlagPreview::init(const std::string& currPath)
     quad.setPosition(glm::vec2(0.f));
 
     //render alt versions to preview number
+    //would be nice to use an ArrayTexture but GL41
+    //only lets us access it via a shader *sigh*
     for (auto i = 1u; i < m_textures.size(); ++i)
     {
         m_textures[i].create(m_textures[0].getSize().x, m_textures[0].getSize().y, false);
@@ -163,13 +165,10 @@ void FlagPreview::init(const std::string& currPath)
 //public
 cro::FloatRect FlagPreview::getUV() const
 {
-    static constexpr float Width = 1.f / ColCount;
-    const float Height = PreviewHeight / m_textures[0].getSize().y;
+    const float left = PreviewWidth * (m_index % ColCount);
+    const float bottom = PreviewHeight * (m_index / ColCount);
 
-    const float left = Width * (m_index % ColCount);
-    const float bottom = Height * (m_index / ColCount);
-
-    return {left, bottom, left + Width, bottom + Height};
+    return {left, bottom, PreviewWidth, PreviewHeight};
 }
 
 glm::vec2 FlagPreview::getSize() const
@@ -180,6 +179,21 @@ glm::vec2 FlagPreview::getSize() const
 std::string FlagPreview::getPath() const
 {
     return m_flagPaths[m_index];
+}
+
+void FlagPreview::setIndex(std::int32_t i)
+{
+    m_index = i % m_flagPaths.size();
+}
+
+std::int32_t FlagPreview::getIndex() const
+{
+    return static_cast<std::int32_t>(m_index);
+}
+
+std::int32_t FlagPreview::getCount() const
+{
+    return static_cast<std::int32_t>(m_flagPaths.size());
 }
 
 void FlagPreview::next()

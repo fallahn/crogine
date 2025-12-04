@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "ui/FlagPreview.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
@@ -151,13 +152,14 @@ private:
             cro::String title; //main display title
             cro::String description; //shown when hovered
 
-            std::function<void(Item&)> callback; //called when activated
+            std::function<void(const Item&)> selected; //called when selected
+            std::function<void(Item&)> activated; //called when activated
             bool activateLeft()
             {
                 if (count > 1)
                 {
                     selectedIndex = (selectedIndex + (count - 1)) % count;
-                    callback(*this);
+                    activated(*this);
                     return true;
                 }
                 return false;
@@ -168,7 +170,7 @@ private:
                 if (count > 1)
                 {
                     selectedIndex = (selectedIndex + 1) % count;
-                    callback(*this);
+                    activated(*this);
                     return true;
                 }
                 return false;
@@ -178,7 +180,7 @@ private:
             {
                 if (count == 1)
                 {
-                    callback(*this);
+                    activated(*this);
                     return true;
                 }
                 return false;
@@ -202,6 +204,16 @@ private:
 
     cro::Entity m_infoString;
     cro::Texture m_beaconPreview; //TODO this is 1x1px so we could just atlas into another texture...
+
+    FlagPreview m_flagPreview;
+
+    struct DetailsPane final
+    {
+        cro::Entity root;
+        cro::Entity text;
+        cro::Entity image;
+    }m_detailsPane;
+
 
     void updateMenuItems();
     void nextItem();
