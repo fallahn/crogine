@@ -677,11 +677,24 @@ void OptionsStateV2::createSettingsItems()
         {
             const float amt = 0.1f * i.selectedIndex;
             m_sharedData.beaconColour = amt;
+
+            //set the preview colour
+            const cro::Detail::ColourLowP c = getBeaconColour(m_sharedData.beaconColour);
+            m_beaconPreview.update(&c);
         };
-    item->count = 11;
-    item->labels = { "0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"};
-    item->selectedIndex = std::floor(m_sharedData.beaconColour * 10.f);
+    item->count = 10; //hmmm why don't I infer this from the size of the label vector?
+    item->labels = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" };
+    item->selectedIndex = std::floor(m_sharedData.beaconColour * 9.f);
     item->displayType = Menu::Item::Slider;
+
+    //TODO set this on a sub-tex of some other texture
+    const auto c = getBeaconColour(m_sharedData.beaconColour);
+    cro::Image img;
+    img.create(1, 1, c);
+    m_beaconPreview.loadFromImage(img);
+    item->texture = &m_beaconPreview;
+    item->uv = { 0.f, 0.f, 1.f, 1.f };
+
 
     //use ball trail
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();

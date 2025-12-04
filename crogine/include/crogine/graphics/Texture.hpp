@@ -43,6 +43,11 @@ namespace cro
     class Image;
     class Colour;
 
+    namespace Detail
+    {
+        struct ColourLowP;
+    }
+
     /*!
     \brief Generic texture wrapper for OpenGL RGB or RGBA textures.
     This class is intended for use with mesh texturing, rather than any
@@ -101,6 +106,7 @@ namespace cro
         \param area InRect representing the area of the texture to update. If the size is zero
         the entire texture will be updated.
         */
+        bool update(const Detail::ColourLowP* pixels, bool createMipMaps = false, URect area = {});
         bool update(const std::uint8_t* pixels, bool createMipMaps = false, URect area = {});
         bool update(const std::uint16_t* pixels, bool createMipMaps = false, URect area = {});
 

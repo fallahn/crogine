@@ -323,6 +323,12 @@ bool Texture::loadFromImage(const Image& image, bool createMipMaps)
     return update(image.getPixelData(), createMipMaps);
 }
 
+bool Texture::update(const Detail::ColourLowP* pixels, bool createMipMaps, URect area)
+{
+    m_type = GL_UNSIGNED_BYTE;
+    return update(static_cast<const void*>(pixels), createMipMaps, area);
+}
+
 bool Texture::update(const std::uint8_t* pixels, bool createMipMaps, URect area)
 {
     m_type = GL_UNSIGNED_BYTE;
