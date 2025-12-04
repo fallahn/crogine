@@ -139,7 +139,8 @@ private:
             {
                 Default, //left/right arrows
                 Slider, //represents a sliding amount
-                TextOnly //displays the description on the item
+                TextOnly, //displays the description on the item
+                Heading //only displays the title, with half height background
             }displayType = Default;
 
             cro::Colour backgroundColour = { 0xfff8e1af };

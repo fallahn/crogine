@@ -33,6 +33,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
+#include "MessageIDs.hpp"
 #include "../GolfGame.hpp"
 
 #include <Achievements.hpp>
@@ -687,8 +688,13 @@ void OptionsStateV2::buildScene()
 
 void OptionsStateV2::createSettingsItems()
 {
-    //use flag beacon
     auto* item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item->title = "Appearance";
+    item->displayType = Menu::Item::Heading;
+    item->backgroundColour = TextHighlightColour;
+
+    //use flag beacon
+    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Show Flag Beacon";
     item->description = "Draws a beacon at the pin position, visible from a distance";
     cro::Util::String::wordWrap(item->description, 36);
@@ -946,18 +952,45 @@ void OptionsStateV2::createSettingsItems()
     item->selected = selectionCallback;
 
 
-
     //post FX selection (none as an option)
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Post Process";
-    //item->description = "";
+    item->description = "Choose a visual effect";
     item->activated = [&](Menu::Item& i)
         {
-            //TODO cycle through effects
+            //cycle through effects
+            switch (i.selectedIndex)
+            {
+            default: break;
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+                m_sharedData.usePostProcess = true;
+                m_sharedData.postProcessIndex = i.selectedIndex;
+                {
+                    auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                    msg->type = SystemEvent::PostProcessIndexChanged;
+                }
+                break;
+            case ShaderNames.size():
+            {
+                //set to on then the message toggles to off...
+                m_sharedData.usePostProcess = true;
+                auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                msg->type = SystemEvent::PostProcessToggled;
+            }
+                break;
+            }
         };
-    item->count = 2; //TODO set the effects count
-    item->labels = { "None" , "CRT" };
-    item->selectedIndex = 0; //TODO set this
+    item->count = ShaderNames.size() + 1;
+    for (const auto& name : ShaderNames)
+    {
+        item->labels.push_back(name);
+    }
+    item->labels.push_back("None");
+    item->selectedIndex = m_sharedData.usePostProcess ? m_sharedData.postProcessIndex : ShaderNames.size();
 
 
     //TODO tee ball colour
@@ -991,7 +1024,13 @@ void OptionsStateV2::createSettingsItems()
 
 
 
-    //-------difficulty and behaviour, set background colour!!-----//
+    //-------difficulty and behaviour-----//
+    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item->title = "Gameplay Settings";
+    item->displayType = Menu::Item::Heading;
+    item->backgroundColour = TextHighlightColour;
+
+
     //putt assist
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Putt Assist";
@@ -1070,6 +1109,11 @@ void OptionsStateV2::createSettingsItems()
 
 
     //----------config settings---------//
+    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item->title = "Configuration";
+    item->displayType = Menu::Item::Heading;
+    item->backgroundColour = TextHighlightColour;
+
     //web socket
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Enable Web Socket";
@@ -1152,7 +1196,11 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            //TODO show pop-up (confirm should require press/hold button)
+            m_sharedData.showClubUpdate = true;
+            m_sharedData.showRosterTip = true;
+            m_sharedData.showTutorialTip = true;
+
+            m_detailsPane.text.getComponent<cro::Text>().setString("Tutorials Reset!");
         };
     item->count = 1;
     item->labels = { "OK" };
@@ -1166,7 +1214,9 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            //TODO show pop-up (confirm should require press/hold button)
+            //TODO (confirm should require press/hold button)
+            m_sharedData.errorMessage = "reset_career";
+            requestStackPush(StateID::MessageOverlay);
         };
     item->count = 1;
     item->labels = { "OK" };
@@ -1181,7 +1231,9 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            //TODO show pop-up (confirm should require press/hold button)
+            //TODO (confirm should require press/hold button)
+            m_sharedData.errorMessage = "reset_profile";
+            requestStackPush(StateID::MessageOverlay);
         };
     item->count = 1;
     item->labels = { "OK" };
@@ -1542,6 +1594,7 @@ void OptionsStateV2::updateMenuItems()
             }
 
             m_menuBackground.setPosition(pos);
+            m_menuBackground.setScale(item.displayType == Menu::Item::Heading ? glm::vec2(1.f, 0.5f) : glm::vec2(1.f));
             m_menuBackground.draw();
 
             if (item.texture)
@@ -1574,10 +1627,12 @@ void OptionsStateV2::updateMenuItems()
                 m_menuTextLarge.setFillColour(TextNormalColour);
             }
 
-
-            m_menuText.setPosition(pos);
-            m_menuText.setString(item.title);
-            m_menuText.draw();
+            if (item.displayType != Menu::Item::Heading)
+            {
+                m_menuText.setPosition(pos);
+                m_menuText.setString(item.title);
+                m_menuText.draw();
+            }
 
             switch (item.displayType)
             {
@@ -1604,6 +1659,11 @@ void OptionsStateV2::updateMenuItems()
                 m_menuText.move({ 0.f, -LineSpacing });
                 m_menuText.setString(item.description);
                 m_menuText.draw();
+                break;
+            case Menu::Item::Heading:
+                m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - std::round(LineSpacing * 1.6f) });
+                m_menuTextLarge.setString(item.title);
+                m_menuTextLarge.draw();
                 break;
             }
             
