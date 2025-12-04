@@ -3967,6 +3967,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     std::vector<ScoreInfo> scoreInfo;
     const auto& courseData = m_sharedCourseData.courseData[m_sharedData.courseIndex];
     cro::String str = "Welcome To Super Video Golf!";
+#ifdef USE_GNS
+    bool showReadyMessage = true;
+#else
+    bool showReadyMessage = false;
+#endif
 
     //only tally scores if we returned from a previous game
     //rather than quitting one, or completing the tutorial
@@ -4095,6 +4100,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 str += " >< " + names[i];
             }
             str += " >";
+
+            showReadyMessage = false;
         }
     }
 
@@ -4107,7 +4114,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&, bounds](cro::Entity e, float dt)
+        [&, bounds, showReadyMessage](cro::Entity e, float dt)
     {
         if (m_currentMenu == MenuID::Lobby)
         {
@@ -4129,6 +4136,12 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 
             cro::FloatRect cropping = { -pos.x + Offset, -16.f, (cro::App::getWindow().getSize().x / m_viewScale.x) - (Offset * 2.f), 18.f };
             e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+
+            if (!m_sharedData.hosting
+                && showReadyMessage)
+            {
+                e.getComponent<cro::Text>().setString("Can't ready up? Try opening then closing the Steam Overlay.");
+            }
         }
     };
 
