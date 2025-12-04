@@ -241,7 +241,8 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
             prevTab();
         }
 
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down]
+        //done on key down evet for repeat when held
+        /*else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down]
             || evt.key.keysym.sym == SDLK_DOWN)
         {
             nextItem();
@@ -250,7 +251,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
             || evt.key.keysym.sym == SDLK_UP)
         {
             prevItem();
-        }
+        }*/
 
         else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left]
             || evt.key.keysym.sym == SDLK_LEFT)
@@ -281,6 +282,21 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         }
 
     }
+    else if (evt.type == SDL_KEYDOWN)
+    {
+        //do this here to take advantageof key repeat
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down]
+            || evt.key.keysym.sym == SDLK_DOWN)
+        {
+            nextItem();
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up]
+            || evt.key.keysym.sym == SDLK_UP)
+        {
+            prevItem();
+        }
+    }
+
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
         setActiveInput(false, cro::GameController::controllerID(evt.cbutton.which));
@@ -333,20 +349,6 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
             return false;
         }
     }
-
-    /*else if (evt.type == SDL_KEYDOWN)
-    {
-        switch (evt.key.keysym.sym)
-        {
-        default: break;
-        case SDLK_UP:
-        case SDLK_DOWN:
-        case SDLK_LEFT:
-        case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(false);
-            break;
-        }
-    }*/
 
     else if (evt.type == SDL_MOUSEMOTION)
     {
