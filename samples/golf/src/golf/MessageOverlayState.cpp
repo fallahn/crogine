@@ -80,10 +80,12 @@ namespace
 }
 
 MessageOverlayState::MessageOverlayState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State(ss, ctx),
-    m_scene     (ctx.appInstance.getMessageBus()),
-    m_sharedData(sd),
-    m_viewScale (2.f)
+    : cro::State    (ss, ctx),
+    m_scene         (ctx.appInstance.getMessageBus()),
+    m_sharedData    (sd),
+    m_viewScale     (2.f),
+    m_buttonTimer   (0.f),
+    m_timerActive   (false)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -102,6 +104,9 @@ bool MessageOverlayState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
+        //cancel any active timer
+        m_timerActive = false;
+
         if (evt.key.keysym.sym == SDLK_BACKSPACE
             || evt.key.keysym.sym == SDLK_ESCAPE
             || evt.key.keysym.sym == SDLK_p)
@@ -112,6 +117,9 @@ bool MessageOverlayState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
+        //cancel any active timer
+        m_timerActive = false;
+
         if (evt.cbutton.button == cro::GameController::ButtonB)
         {
             quitState();
@@ -121,11 +129,19 @@ bool MessageOverlayState::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_MOUSEBUTTONUP)
     {
+        //cancel any active timer
+        m_timerActive = false;
+
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             quitState();
             return false;
         }
+    }
+
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
     }
 
     else if (evt.type == SDL_KEYDOWN)
@@ -154,6 +170,24 @@ void MessageOverlayState::handleMessage(const cro::Message& msg)
 
 bool MessageOverlayState::simulate(float dt)
 {
+    //if timeout active increase timer
+    if (m_timerActive)
+    {
+        m_buttonTimer += dt;
+        if (m_buttonTimer > ButtonTimeout)
+        {
+            if (m_timeoutAction)
+            {
+                m_timeoutAction();
+            }
+            m_timerActive = false;
+        }
+    }
+    else
+    {
+        m_buttonTimer = 0.f;
+    }
+
     m_scene.simulate(dt);
     return true;
 }
@@ -293,7 +327,7 @@ void MessageOverlayState::buildScene()
         });
 
     
-    auto createItem = [&](glm::vec2 position, const std::string& label, cro::Entity parent) 
+    const auto createItem = [&](glm::vec2 position, const std::string& label, cro::Entity parent) 
     {
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(position);
@@ -313,6 +347,27 @@ void MessageOverlayState::buildScene()
         return e;
     };
 
+    const auto createResetBar =
+        [&](glm::vec2 position)
+        {
+            auto entity = m_scene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(position);
+            entity.addComponent<cro::Drawable2D>().setVertexData(
+                {
+                    cro::Vertex2D(glm::vec2(-24.f, 3.f), TextGoldColour),
+                    cro::Vertex2D(glm::vec2(-24.f, -3.f), TextGoldColour),
+                    cro::Vertex2D(glm::vec2(24.f, 3.f), TextGoldColour),
+                    cro::Vertex2D(glm::vec2(24.f, -3.f), TextGoldColour)
+                });
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float)
+                {
+                    const float scale = std::min(1.f, m_buttonTimer / ButtonTimeout);
+                    e.getComponent<cro::Transform>().setScale({ scale, 1.f });
+                };
+            menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        };
 
     glm::vec2 position(0.f, 28.f);
     static constexpr float ItemHeight = 10.f;
@@ -602,6 +657,8 @@ void MessageOverlayState::buildScene()
 
         m_sharedData.errorMessage = "";
 
+        createResetBar({ 0.f, -38.f });
+
         //buttons
         entity = createItem(glm::vec2(28.f, -26.f), "No", menuEntity);
         entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
@@ -615,39 +672,40 @@ void MessageOverlayState::buildScene()
                 });
 
         entity = createItem(glm::vec2(-28.f, -26.f), "Yes", menuEntity);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
                     if (activated(evt))
                     {
-                        //this is a kludge which tells the
-                        //menu state to remove any existing connection/server instance
-                        //if for some reason we're resetting mid-game
-                        //m_sharedData.gameMode = GameMode::Tutorial;
-
-                        Social::resetProfile();
-                        Career::instance(m_sharedData).reset();
-
-                        League l(LeagueRoundID::Club, m_sharedData);
-                        l.reset();
-                        
-                        Tournament t;
-                        t.id = 0;
-                        resetTournament(t);
-                        writeTournamentData(t);
-                        t.id = 1;
-                        resetTournament(t);
-                        writeTournamentData(t);
-
-                        readTournamentData(m_sharedData.tournaments[0]);
-                        readTournamentData(m_sharedData.tournaments[1]);
-
-                        cro::App::quit();
-
-                        /*requestStackClear();
-                        requestStackPush(StateID::SplashScreen);*/
+                        m_timerActive = true;
                     }
                 });
+        m_timeoutAction = [&]() 
+            {
+                //this is a kludge which tells the
+                //menu state to remove any existing connection/server instance
+                //if for some reason we're resetting mid-game
+                //m_sharedData.gameMode = GameMode::Tutorial;
+
+                Social::resetProfile();
+                Career::instance(m_sharedData).reset();
+
+                League l(LeagueRoundID::Club, m_sharedData);
+                l.reset();
+
+                Tournament t;
+                t.id = 0;
+                resetTournament(t);
+                writeTournamentData(t);
+                t.id = 1;
+                resetTournament(t);
+                writeTournamentData(t);
+
+                readTournamentData(m_sharedData.tournaments[0]);
+                readTournamentData(m_sharedData.tournaments[1]);
+
+                cro::App::quit();
+            };
 
     }
     else if (m_sharedData.errorMessage == "reset_career")
@@ -668,6 +726,8 @@ void MessageOverlayState::buildScene()
 
         m_sharedData.errorMessage = "";
 
+        createResetBar({ 0.f, -38.f });
+
         //buttons
         entity = createItem(glm::vec2(28.f, -26.f), "No", menuEntity);
         entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
@@ -681,40 +741,46 @@ void MessageOverlayState::buildScene()
                 });
 
         entity = createItem(glm::vec2(-28.f, -26.f), "Yes", menuEntity);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
                     if (activated(evt))
                     {
-                        //this is a kludge which tells the
-                        //menu state to remove any existing connection/server instance
-                        //if for some reason we're resetting mid-game
-                        m_sharedData.gameMode = GameMode::Reset;// Tutorial;
-                        m_sharedData.leagueTable = 0; //must reset this else league browser tries to open non-existent table
-                        m_sharedData.leagueRoundID = 0;
-
-                        Career::instance(m_sharedData).reset();
-
-                        Tournament t;
-                        t.id = 0;
-                        resetTournament(t);
-                        writeTournamentData(t);
-                        m_sharedData.tournaments[0] = t;
-
-                        t.id = 1;
-                        resetTournament(t);
-                        writeTournamentData(t);
-                        m_sharedData.tournaments[1] = t;
-
-                        /*Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
-                        Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);
-                        Social::setUnlockStatus(Social::UnlockType::CareerHair, 0);
-                        Social::setUnlockStatus(Social::UnlockType::CareerPosition, 0);*/
-
-                        requestStackClear();
-                        requestStackPush(StateID::SplashScreen);
+                        m_timerActive = true;
                     }
                 });
+
+        m_timeoutAction = 
+            [&]()
+            {
+                //this is a kludge which tells the
+                //menu state to remove any existing connection/server instance
+                //if for some reason we're resetting mid-game
+                m_sharedData.gameMode = GameMode::Reset;// Tutorial;
+                m_sharedData.leagueTable = 0; //must reset this else league browser tries to open non-existent table
+                m_sharedData.leagueRoundID = 0;
+
+                Career::instance(m_sharedData).reset();
+
+                Tournament t;
+                t.id = 0;
+                resetTournament(t);
+                writeTournamentData(t);
+                m_sharedData.tournaments[0] = t;
+
+                t.id = 1;
+                resetTournament(t);
+                writeTournamentData(t);
+                m_sharedData.tournaments[1] = t;
+
+                /*Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
+                Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);
+                Social::setUnlockStatus(Social::UnlockType::CareerHair, 0);
+                Social::setUnlockStatus(Social::UnlockType::CareerPosition, 0);*/
+
+                requestStackClear();
+                requestStackPush(StateID::SplashScreen);
+            };
 
     }
     else if (m_sharedData.errorMessage == "delete_profile")
@@ -736,6 +802,8 @@ void MessageOverlayState::buildScene()
 
         m_sharedData.errorMessage = ""; //must reset this else cancelling with back/right click still deletes profile!
 
+        createResetBar({ 0.f, -38.f });
+
         //buttons
         entity = createItem(glm::vec2(28.f, -26.f), "No", menuEntity);
         entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
@@ -755,10 +823,15 @@ void MessageOverlayState::buildScene()
                 {
                     if (activated(evt))
                     {
-                        m_sharedData.errorMessage = "delete_profile"; //used when returning to menu to decide on appropriate action
-                        quitState();
+                        m_timerActive = true;
                     }
                 });
+        m_timeoutAction = 
+            [&]() 
+            {
+                m_sharedData.errorMessage = "delete_profile"; //used when returning to menu to decide on appropriate action
+                quitState();
+            };
     }
     else //a generic message
     {

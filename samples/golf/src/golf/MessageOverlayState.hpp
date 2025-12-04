@@ -69,6 +69,12 @@ private:
     };
     std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
+    float m_buttonTimer;
+    static constexpr float ButtonTimeout = 1.5f;
+
+    bool m_timerActive;
+    std::function<void()> m_timeoutAction;
+
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     void buildScene();

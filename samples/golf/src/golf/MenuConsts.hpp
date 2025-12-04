@@ -230,7 +230,9 @@ static inline bool activated(const cro::ButtonEvent& evt)
         return true;
     case SDL_KEYUP:
     case SDL_KEYDOWN:
-        return ((evt.key.keysym.sym == SDLK_KP_ENTER || evt.key.keysym.sym == SDLK_RETURN) && ((evt.key.keysym.mod & KMOD_ALT) == 0));
+        return ((evt.key.keysym.sym == SDLK_KP_ENTER || evt.key.keysym.sym == SDLK_RETURN) 
+            && ((evt.key.keysym.mod & KMOD_ALT) == 0)
+            && evt.key.repeat == 0);
     }
 }
 
