@@ -41,6 +41,7 @@ source distribution.
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/SimpleText.hpp>
 #include <crogine/graphics/SimpleVertexArray.hpp>
 
@@ -154,7 +155,9 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         {
             if (mouse)
             {
-                m_infoString.getComponent<cro::Text>().setString(KeyInfo);
+                m_infoString.getComponent<cro::Text>().setString(KeyInfo); //garbled font bug strikes again!!
+                m_infoString.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                m_infoSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                 m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
 
                 m_tabBar.navLeft.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
@@ -170,12 +173,16 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
             }
             else
             {
+                m_infoString.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                m_infoSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+
                 if (cro::GameController::hasPSLayout(controllerIndex))
                 {
                     m_sharedData.activeInput = SharedStateData::ActiveInput::PS;
 
-                    m_infoString.getComponent<cro::Text>().setString(PSInfo);
-                    m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                    /*m_infoString.getComponent<cro::Text>().setString(PSInfo);
+                    m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour);*/
+                    m_infoSprite.getComponent<cro::Sprite>().setTextureRect(m_infoRects[0]);
 
                     m_tabBar.navLeft.getComponent<cro::Text>().setString(cro::String(ButtonL1));
                     m_tabBar.navRight.getComponent<cro::Text>().setString(cro::String(ButtonR1));
@@ -184,13 +191,14 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
                 {
                     m_sharedData.activeInput = SharedStateData::ActiveInput::XBox;
 
-                    m_infoString.getComponent<cro::Text>().setString(XboxInfo);
+                    /*m_infoString.getComponent<cro::Text>().setString(XboxInfo);
                     m_infoString.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::BlueLight]);
                     m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour, 1);
                     m_infoString.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Yellow], 17);
                     m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour, 18);
                     m_infoString.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red], 33);
-                    m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour, 34);
+                    m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour, 34);*/
+                    m_infoSprite.getComponent<cro::Sprite>().setTextureRect(m_infoRects[1]);
 
                     m_tabBar.navLeft.getComponent<cro::Text>().setString(cro::String(ButtonLB));
                     m_tabBar.navRight.getComponent<cro::Text>().setString(cro::String(ButtonRB));
@@ -649,8 +657,8 @@ void OptionsStateV2::buildScene()
     //info string at the bottom
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();// .setOrigin({ 320.f, 240.f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(controllerFont).setString(XboxInfo);
+    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.addComponent<cro::Text>(controllerFont).setString(KeyInfo);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).characterSize = LabelTextSize;
     entity.getComponent<cro::UIElement>().depth = 0.1f;
@@ -662,6 +670,30 @@ void OptionsStateV2::buildScene()
         };
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_infoString = entity;
+
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/options_buttons.spt", m_sharedData.sharedResources->textures);
+    m_infoRects[0] = spriteSheet.getSprite("info_ps").getTextureRect();
+    m_infoRects[1] = spriteSheet.getSprite("info_xbox").getTextureRect();
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("info_xbox");
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    entity.getComponent<cro::UIElement>().depth = 0.1f;
+    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 2.f };
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [&](cro::Entity e)
+        {
+            auto o = (glm::vec2(cro::App::getWindow().getSize()) / 2.f) / cro::UIElementSystem::getViewScale();
+            o.x = std::round(o.x);
+            o.y = std::round(o.y);
+            e.getComponent<cro::Transform>().setOrigin(o);
+        };
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_infoSprite = entity;
+
 
     //camera settings
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
@@ -1216,7 +1248,6 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            //TODO (confirm should require press/hold button)
             m_sharedData.errorMessage = "reset_career";
             requestStackPush(StateID::MessageOverlay);
         };
@@ -1233,7 +1264,6 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            //TODO (confirm should require press/hold button)
             m_sharedData.errorMessage = "reset_profile";
             requestStackPush(StateID::MessageOverlay);
         };

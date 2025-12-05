@@ -1290,8 +1290,8 @@ void GolfGame::initFonts()
     }
 
     //controller icon font
-    ctx.codepointRange = {0x2190,0x21FF};
-    m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
+    //ctx.codepointRange = {0x2190,0x21FF};
+    //m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
 
 
     //emoji fonts

@@ -204,6 +204,8 @@ private:
     cro::SimpleVertexArray m_menuBackground;
 
     cro::Entity m_infoString;
+    cro::Entity m_infoSprite;
+    std::array<cro::FloatRect, 2u> m_infoRects = {};
     cro::Texture m_beaconPreview; //TODO this is 1x1px so we could just atlas into another texture...
 
     FlagPreview m_flagPreview;
