@@ -338,7 +338,8 @@ bool ShopState::handleEvent(const cro::Event& evt)
         {
             nextCat();
         }
-        else if (evt.key.keysym.sym == SDLK_ESCAPE)
+        else if (evt.key.keysym.sym == SDLK_ESCAPE
+            || evt.key.keysym.sym == SDLK_BACKSPACE)
         {
             quitState();
             return false;

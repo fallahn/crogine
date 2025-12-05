@@ -402,9 +402,10 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 applyTextEdit();
             }
             break;
-        /*case SDLK_p:
-            renderBallFrames();
-            break;*/
+        //case SDLK_p:
+        //    //renderBallFrames();
+        //    requestStackPush(StateID::Shop);
+        //    break;
         //case SDLK_k:
         //    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().getUserData<std::int32_t>()++;
         //    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
@@ -790,6 +791,13 @@ void ProfileState::handleMessage(const cro::Message& msg)
             default: break;
             case StateID::Keyboard:
                 applyTextEdit();
+                break;
+            case StateID::Shop:
+                for (auto i = 0u; i < m_gearMenus.size(); ++i)
+                {
+                    refreshItemDescription(i);
+                }
+                refreshItemLists();
                 break;
             }
         }
@@ -4422,8 +4430,9 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
 void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext& ctx)
 {
     constexpr std::size_t IndexClose = 10000;
-    constexpr std::size_t IndexClubs = 10001;
-    constexpr std::size_t IndexList = 10002;
+    constexpr std::size_t IndexCounter = 10001;
+    constexpr std::size_t IndexClubs = 10002;
+    constexpr std::size_t IndexList = 10003;
 
 
     auto [bgEnt, closeButtonEnt] = createBrowserBackground(MenuID::GearEditor, ctx);
@@ -4431,10 +4440,10 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
     m_menuEntities[EntityID::GearEditor] = bgEnt;
     parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
 
-    closeButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(70.f, 21.f) + glm::vec2(closeButtonEnt.getComponent<cro::Transform>().getOrigin()));
+    closeButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(186.f, 21.f) + glm::vec2(closeButtonEnt.getComponent<cro::Transform>().getOrigin()));
     closeButtonEnt.getComponent<cro::UIInput>().setSelectionIndex(IndexClose);
     closeButtonEnt.getComponent<cro::UIInput>().setNextIndex(IndexClubs, IndexList);
-    closeButtonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexList + GearID::Count, IndexList + GearID::Count);
+    closeButtonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexCounter, IndexList + GearID::Count);
 
 
     //clubset preview
@@ -4496,6 +4505,36 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     
+
+    //equipment counter button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(90.f, 31.f, 0.2f));
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("equipment_button");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::GearEditor);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(IndexCounter);
+    entity.getComponent<cro::UIInput>().setNextIndex(IndexClose, IndexList);
+    entity.getComponent<cro::UIInput>().setPrevIndex(IndexClose, IndexList + (GearID::Count - 1));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    requestStackPush(StateID::Shop);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
+    entity.getComponent<cro::Transform>().setOrigin({ std::round(bounds.width / 2.f), std::round(bounds.height / 2.f) });
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
     const auto itemAvailable = [](std::int32_t i)
@@ -4648,8 +4687,8 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
     }
 
     //correct indices for first / last
-    temp.front().getComponent<cro::UIInput>().setPrevIndex(IndexClubs, IndexClose);
-    temp.back().getComponent<cro::UIInput>().setNextIndex(IndexClubs, IndexClose);
+    temp.front().getComponent<cro::UIInput>().setPrevIndex(IndexClubs, IndexCounter);
+    temp.back().getComponent<cro::UIInput>().setNextIndex(IndexClubs, IndexCounter);
 
 
     //stats for selected item
@@ -6122,7 +6161,7 @@ void ProfileState::refreshItemDescription(std::uint32_t i)
 {
     if (m_activeProfile.loadout.items[i] == -1)
     {
-        m_gearMenus[i].description.getComponent<cro::Text>().setString("(1/" + std::to_string(m_gearMenus[i].items.size()) + ") Default");
+        m_gearMenus[i].description.getComponent<cro::Text>().setString("(1/" + std::to_string(std::max(std::size_t(1), m_gearMenus[i].items.size())) + ") Default");
     }
     else
     {
@@ -6139,7 +6178,7 @@ void ProfileState::refreshItemDescription(std::uint32_t i)
             itemIndex = std::distance(items.cbegin(), res);
         }
 
-        const std::string num = "(" + std::to_string(itemIndex + 1) + "/" + std::to_string(m_gearMenus[i].items.size()) + ") ";
+        const std::string num = "(" + std::to_string(itemIndex + 1) + "/" + std::to_string(std::max(std::size_t(1), m_gearMenus[i].items.size())) + ") ";
         m_gearMenus[i].description.getComponent<cro::Text>().setString(num + inv::Manufacturers[inv::Items[m_activeProfile.loadout.items[i]].manufacturer]);
     }
 }
