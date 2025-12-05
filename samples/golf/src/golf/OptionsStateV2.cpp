@@ -101,8 +101,8 @@ namespace
     static constexpr inline std::uint32_t ButtonOption = 0x21E8;
 
 
-    static const cro::String XboxInfo = cro::String(ButtonX) + " Show Credits   " + cro::String(ButtonY) + " How To Play   " + cro::String(ButtonB) + " Close";
-    static const cro::String PSInfo = cro::String(ButtonSquare) + " Show Credits   " + cro::String(ButtonCross) + " How To Play   " + cro::String(ButtonCircle) + " Close";
+    //static const cro::String XboxInfo = cro::String(ButtonX) + " Show Credits   " + cro::String(ButtonY) + " How To Play   " + cro::String(ButtonB) + " Close";
+    //static const cro::String PSInfo = cro::String(ButtonSquare) + " Show Credits   " + cro::String(ButtonCross) + " How To Play   " + cro::String(ButtonCircle) + " Close";
     static const cro::String KeyInfo = "LCtrl - Show Credits   LAlt - How To Play   ESC - Close";
 
 
@@ -128,7 +128,7 @@ namespace
 
 OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State(ss, ctx),
-    m_scene     (ctx.appInstance.getMessageBus()),
+    m_scene     (ctx.appInstance.getMessageBus(), 192),
     m_sharedData(sd)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -163,54 +163,54 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
                 m_tabBar.navLeft.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
                 m_tabBar.navRight.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]));
 
+                m_tabBar.navLeftSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                m_tabBar.navRightSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+
                 const auto viewScale = cro::UIElementSystem::getViewScale();
                 const auto charSize = (LabelTextSize) * viewScale;
                 m_tabBar.navLeft.getComponent<cro::Text>().setCharacterSize(charSize);
                 m_tabBar.navLeft.getComponent<cro::UIElement>().characterSize = LabelTextSize;
+                m_tabBar.navLeft.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
 
                 m_tabBar.navRight.getComponent<cro::Text>().setCharacterSize(charSize);
                 m_tabBar.navRight.getComponent<cro::UIElement>().characterSize = LabelTextSize;
+                m_tabBar.navRight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
             }
             else
             {
                 m_infoString.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                 m_infoSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
 
+                m_tabBar.navLeft.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                m_tabBar.navRight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+
+                m_tabBar.navLeftSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                m_tabBar.navRightSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+
                 if (cro::GameController::hasPSLayout(controllerIndex))
                 {
                     m_sharedData.activeInput = SharedStateData::ActiveInput::PS;
-
-                    /*m_infoString.getComponent<cro::Text>().setString(PSInfo);
-                    m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour);*/
                     m_infoSprite.getComponent<cro::Sprite>().setTextureRect(m_infoRects[0]);
 
-                    m_tabBar.navLeft.getComponent<cro::Text>().setString(cro::String(ButtonL1));
-                    m_tabBar.navRight.getComponent<cro::Text>().setString(cro::String(ButtonR1));
+                    m_tabBar.navLeftSprite.getComponent<cro::Sprite>().setTextureRect(m_tabBar.navLeftRects[0]);
+                    m_tabBar.navRightSprite.getComponent<cro::Sprite>().setTextureRect(m_tabBar.navRightRects[0]);
                 }
                 else
                 {
                     m_sharedData.activeInput = SharedStateData::ActiveInput::XBox;
-
-                    /*m_infoString.getComponent<cro::Text>().setString(XboxInfo);
-                    m_infoString.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::BlueLight]);
-                    m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour, 1);
-                    m_infoString.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Yellow], 17);
-                    m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour, 18);
-                    m_infoString.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red], 33);
-                    m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour, 34);*/
                     m_infoSprite.getComponent<cro::Sprite>().setTextureRect(m_infoRects[1]);
 
-                    m_tabBar.navLeft.getComponent<cro::Text>().setString(cro::String(ButtonLB));
-                    m_tabBar.navRight.getComponent<cro::Text>().setString(cro::String(ButtonRB));
+                    m_tabBar.navLeftSprite.getComponent<cro::Sprite>().setTextureRect(m_tabBar.navLeftRects[1]);
+                    m_tabBar.navRightSprite.getComponent<cro::Sprite>().setTextureRect(m_tabBar.navRightRects[1]);
                 }
 
-                const auto viewScale = cro::UIElementSystem::getViewScale();
+                /*const auto viewScale = cro::UIElementSystem::getViewScale();
                 const auto charSize = (LabelTextSize * 2) * viewScale;
                 m_tabBar.navLeft.getComponent<cro::Text>().setCharacterSize(charSize);
                 m_tabBar.navLeft.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2;
 
                 m_tabBar.navRight.getComponent<cro::Text>().setCharacterSize(charSize);
-                m_tabBar.navRight.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2;
+                m_tabBar.navRight.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2;*/
             }
             cro::App::getWindow().setMouseCaptured(!mouse);
         };
@@ -529,7 +529,7 @@ void OptionsStateV2::buildScene()
     //TODO background needs a 9-patch?
     
 
-    //tab bar - we only create here, cahedPush() will update the drawable
+    //tab bar - we only create here, cachedPush() will update the drawable
     m_tabBar.background = m_scene.createEntity();
     m_tabBar.background.addComponent<cro::Transform>();
     m_tabBar.background.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
@@ -568,9 +568,8 @@ void OptionsStateV2::buildScene()
     const auto& controllerFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(controllerFont).setString(cro::String(ButtonLB));
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.addComponent<cro::Text>(controllerFont).setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     entity.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2u;
@@ -578,7 +577,7 @@ void OptionsStateV2::buildScene()
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&, Spacing](cro::Entity e)
         {
-            const auto x = std::round((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * (Spacing / 2.f));
+            const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * (Spacing / 2.f));
             const auto y = 14.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
@@ -587,9 +586,8 @@ void OptionsStateV2::buildScene()
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(controllerFont).setString(cro::String(ButtonRB));
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.addComponent<cro::Text>(controllerFont).setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     entity.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2u;
@@ -598,12 +596,58 @@ void OptionsStateV2::buildScene()
         [&, Spacing](cro::Entity e)
         {
             const auto offset = (Spacing * (m_tabBar.items.size() + 1)) + (Spacing / 2.f);
-            const auto x = std::round((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
+            const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
             const auto y = 14.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
     m_tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_tabBar.navRight = entity;
+
+
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/options_buttons.spt", m_sharedData.sharedResources->textures);
+    m_tabBar.navLeftRects[0] = spriteSheet.getSprite("l1").getTextureRect();
+    m_tabBar.navLeftRects[1] = spriteSheet.getSprite("lb").getTextureRect();
+
+    m_tabBar.navRightRects[0] = spriteSheet.getSprite("r1").getTextureRect();
+    m_tabBar.navRightRects[1] = spriteSheet.getSprite("rb").getTextureRect();
+
+    const auto bounds = spriteSheet.getSprite("l1").getTextureBounds();
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), bounds.height / 2.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("lb");
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    entity.getComponent<cro::UIElement>().depth = 0.1f;
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [&, Spacing](cro::Entity e)
+        {
+            const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * (Spacing / 2.f));
+            const auto y = 10.f;
+            e.getComponent<cro::UIElement>().absolutePosition = { x,y };
+        };
+    m_tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_tabBar.navLeftSprite = entity;
+
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), bounds.height / 2.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("rb");
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    entity.getComponent<cro::UIElement>().depth = 0.1f;
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [&, Spacing](cro::Entity e)
+        {
+            const auto offset = (Spacing * (m_tabBar.items.size() + 1)) + (Spacing / 2.f);
+            const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
+            const auto y = 10.f;
+            e.getComponent<cro::UIElement>().absolutePosition = { x,y };
+        };
+    m_tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_tabBar.navRightSprite = entity;
+
 
 
     //menu layout
@@ -671,8 +715,6 @@ void OptionsStateV2::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_infoString = entity;
 
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/options_buttons.spt", m_sharedData.sharedResources->textures);
     m_infoRects[0] = spriteSheet.getSprite("info_ps").getTextureRect();
     m_infoRects[1] = spriteSheet.getSprite("info_xbox").getTextureRect();
 

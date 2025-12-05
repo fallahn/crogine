@@ -119,6 +119,12 @@ private:
 
         cro::Entity navLeft;
         cro::Entity navRight;
+
+        cro::Entity navLeftSprite;
+        cro::Entity navRightSprite;
+
+        std::array<cro::FloatRect, 2U> navLeftRects = {};
+        std::array<cro::FloatRect, 2U> navRightRects = {};
     }m_tabBar;
 
     void updateTabBar();
