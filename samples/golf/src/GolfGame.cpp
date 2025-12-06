@@ -282,8 +282,7 @@ void GolfGame::setSafeModeEnabled(bool sm)
 
 void GolfGame::handleEvent(const cro::Event& evt)
 {
-    //handles UI close events such as how to play
-    //or the options menu
+    //handles UI close events for ImGui such as how to play
     if (handleTopLevelEvent(evt, m_sharedData, helpNav))
     {
         return;

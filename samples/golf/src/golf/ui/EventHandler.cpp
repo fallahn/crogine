@@ -52,12 +52,14 @@ bool handleTopLevelEvent(const cro::Event& evt, SharedStateData& sharedData, Hel
             [&]()
             {
                 helpNav.targetIndex = (helpNav.selectedScroll + (helpNav.chapterCount - 1)) % helpNav.chapterCount;
+                cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = MenuSoundEvent::Switch;
                 doScroll();
             };
         const auto scrollDown =
             [&]()
             {
                 helpNav.targetIndex = (helpNav.selectedScroll + 1) % helpNav.chapterCount;
+                cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = MenuSoundEvent::Switch;
                 doScroll();
             };
 
@@ -68,6 +70,7 @@ bool handleTopLevelEvent(const cro::Event& evt, SharedStateData& sharedData, Hel
             if (evt.button.button == SDL_BUTTON_RIGHT)
             {
                 sharedData.showHelp = false;
+                cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = MenuSoundEvent::Cancel;
             }
             break;
         case SDL_CONTROLLERBUTTONUP:
@@ -76,6 +79,7 @@ bool handleTopLevelEvent(const cro::Event& evt, SharedStateData& sharedData, Hel
             default: break;
             case cro::GameController::ButtonB:
                 sharedData.showHelp = false;
+                cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = MenuSoundEvent::Cancel;
                 break;
             case cro::GameController::DPadDown:
                 scrollDown();
@@ -92,6 +96,7 @@ bool handleTopLevelEvent(const cro::Event& evt, SharedStateData& sharedData, Hel
             case SDLK_ESCAPE:
             case SDLK_BACKSPACE:
                 sharedData.showHelp = false;
+                cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = MenuSoundEvent::Cancel;
                 break;
             case SDLK_DOWN:
                 scrollDown();

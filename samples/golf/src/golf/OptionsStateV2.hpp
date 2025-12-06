@@ -61,17 +61,17 @@ private:
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
 
-    cro::AudioScape m_menuSounds;
-    struct AudioID final
-    {
-        enum
-        {
-            Accept, Back,
+    //cro::AudioScape m_menuSounds;
+    //struct AudioID final
+    //{
+    //    enum
+    //    {
+    //        Accept, Back,
 
-            Count
-        };
-    };
-    std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
+    //        Count
+    //    };
+    //};
+    //std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
     cro::Entity m_rootNode;
     void loadAssets();

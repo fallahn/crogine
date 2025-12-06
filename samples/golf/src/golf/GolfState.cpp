@@ -8380,7 +8380,7 @@ void GolfState::gamepadNotify(std::int32_t type)
                     else
                     {
                         data.state = 0;
-
+                        
                         //switch off effect
                         cro::GameController::rumbleStop(controllerID);
                         cro::GameController::setLEDColour(controllerID, data.colours[data.colourIndex++]);

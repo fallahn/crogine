@@ -46,9 +46,7 @@ source distribution.
 #include <crogine/graphics/SimpleVertexArray.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
-//#include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/UIElement.hpp>
-//#include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Text.hpp>
@@ -56,9 +54,7 @@ source distribution.
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 
-//#include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/UIElementSystem.hpp>
-//#include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
@@ -124,6 +120,11 @@ namespace
     constexpr auto BackgroundDark = cro::Colour(0xc8b89faf);
     constexpr auto BackgroundYellow = cro::Colour(0xf2cf5caf);
     constexpr auto BackgroundRed = cro::Colour(0xb83530af);
+
+    void playSound(std::int32_t id)
+    {
+        cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = id;
+    }
 }
 
 OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -167,7 +168,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
                 m_tabBar.navRightSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
 
                 const auto viewScale = cro::UIElementSystem::getViewScale();
-                const auto charSize = (LabelTextSize) * viewScale;
+                const auto charSize = static_cast<std::uint32_t>((LabelTextSize) * viewScale);
                 m_tabBar.navLeft.getComponent<cro::Text>().setCharacterSize(charSize);
                 m_tabBar.navLeft.getComponent<cro::UIElement>().characterSize = LabelTextSize;
                 m_tabBar.navLeft.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
@@ -219,14 +220,14 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         [&]()
         {
             m_sharedData.showHelp = true;
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            playSound(MenuSoundEvent::Activate);
         };
 
     const auto showCredits =
         [&]() 
         {
             requestStackPush(StateID::Credits);
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            playSound(MenuSoundEvent::Activate);
         };
 
     if (evt.type == SDL_KEYUP)
@@ -292,6 +293,8 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYDOWN)
     {
+        setActiveInput(true, 0);
+
         //do this here to take advantageof key repeat
         if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down]
             || evt.key.keysym.sym == SDLK_DOWN)
@@ -426,6 +429,12 @@ void OptionsStateV2::loadAssets()
     m_menuTextLarge.setFont(largeFont);
     m_menuTextLarge.setCharacterSize(UITextSize);
     m_menuTextLarge.setAlignment(cro::SimpleText::Alignment::Centre);
+
+    //m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
+    //m_audioEnts[AudioID::Accept] = m_scene.createEntity();
+    //m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
+    //m_audioEnts[AudioID::Back] = m_scene.createEntity();
+    //m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 }
 
 void OptionsStateV2::buildScene()
@@ -441,13 +450,7 @@ void OptionsStateV2::buildScene()
     m_scene.addSystem<cro::RenderSystem2D>(mb);
     m_scene.addSystem<cro::AudioPlayerSystem>(mb);
 
-    m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
-    m_audioEnts[AudioID::Accept] = m_scene.createEntity();
-    m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
-    m_audioEnts[AudioID::Back] = m_scene.createEntity();
-    m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
-    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
     struct RootCallbackData final
     {
@@ -797,7 +800,7 @@ void OptionsStateV2::createSettingsItems()
         };
     item->count = 10; //hmmm why don't I infer this from the size of the label vector?
     item->labels = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" };
-    item->selectedIndex = std::floor(m_sharedData.beaconColour * 9.f);
+    item->selectedIndex = static_cast<std::int32_t>(std::floor(m_sharedData.beaconColour * 9.f));
     item->displayType = Menu::Item::Slider;
 
     //TODO set this on a sub-tex of some other texture
@@ -847,7 +850,7 @@ void OptionsStateV2::createSettingsItems()
         };
     item->count = 11;
     item->labels = { "0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0" };
-    item->selectedIndex = std::floor(m_sharedData.gridTransparency * 10.f);
+    item->selectedIndex = static_cast<std::int32_t>(std::floor(m_sharedData.gridTransparency * 10.f));
     item->displayType = Menu::Item::Slider;
 
 
@@ -1060,13 +1063,13 @@ void OptionsStateV2::createSettingsItems()
                 break;
             }
         };
-    item->count = ShaderNames.size() + 1;
+    item->count = static_cast<std::int32_t>(ShaderNames.size() + 1);
     for (const auto& name : ShaderNames)
     {
         item->labels.push_back(name);
     }
     item->labels.push_back("None");
-    item->selectedIndex = m_sharedData.usePostProcess ? m_sharedData.postProcessIndex : ShaderNames.size();
+    item->selectedIndex = m_sharedData.usePostProcess ? m_sharedData.postProcessIndex : static_cast<std::int32_t>(ShaderNames.size());
 
 
     //TODO tee ball colour
@@ -1580,7 +1583,8 @@ void OptionsStateV2::nextTab()
     m_tabBar.activeIndex = (m_tabBar.activeIndex + 1) % TabBar::Item::Count;
     m_menuLayout.itemIndex = 0;
     refreshView();
-    LogI << "Add sound here" << std::endl;
+    
+    playSound(MenuSoundEvent::Activate);
 }
 
 void OptionsStateV2::prevTab()
@@ -1588,7 +1592,8 @@ void OptionsStateV2::prevTab()
     m_tabBar.activeIndex = (m_tabBar.activeIndex + (TabBar::Item::Count - 1)) % TabBar::Item::Count;
     refreshView();
     m_menuLayout.itemIndex = 0;
-    LogI << "Add sound here" << std::endl;
+    
+    playSound(MenuSoundEvent::Cancel);
 }
 
 void OptionsStateV2::updateMenuItems()
@@ -1785,7 +1790,7 @@ void OptionsStateV2::nextItem()
     m_menuLayout.itemIndex = (m_menuLayout.itemIndex + 1) % m_menuLayout.items[m_tabBar.activeIndex].size();
     updateMenuItems();
 
-    LogI << "Play Sound Here" << std::endl;
+    playSound(MenuSoundEvent::Switch);
 }
 
 void OptionsStateV2::prevItem()
@@ -1793,10 +1798,10 @@ void OptionsStateV2::prevItem()
     //reset mouse hover highlight
     m_menuLayout.hoveredIndex = -1;
 
-    m_menuLayout.itemIndex = (m_menuLayout.itemIndex + (m_menuLayout.items[m_tabBar.activeIndex].size() - 1)) % m_menuLayout.items[m_tabBar.activeIndex].size();
+    m_menuLayout.itemIndex = static_cast<std::uint32_t>((m_menuLayout.itemIndex + (m_menuLayout.items[m_tabBar.activeIndex].size() - 1)) % m_menuLayout.items[m_tabBar.activeIndex].size());
     updateMenuItems();
 
-    LogI << "Play Sound Here" << std::endl;
+    playSound(MenuSoundEvent::Switch);
 }
 
 void OptionsStateV2::activateLeft()
@@ -1807,7 +1812,7 @@ void OptionsStateV2::activateLeft()
     if (m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].activateLeft())
     {
         updateMenuItems();
-        LogI << "Play Sound Here" << std::endl;
+        playSound(MenuSoundEvent::Cancel);
     }
 }
 
@@ -1819,7 +1824,7 @@ void OptionsStateV2::activateRight()
     if (m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].activateRight())
     {
         updateMenuItems();
-        LogI << "Play Sound Here" << std::endl;
+        playSound(MenuSoundEvent::Activate);
     }
 }
 
@@ -1827,7 +1832,7 @@ void OptionsStateV2::activate()
 {
     if (m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].activate())
     {
-        LogI << "Play Sound Here" << std::endl;
+        playSound(MenuSoundEvent::Activate);
     }
 }
 
@@ -1924,5 +1929,5 @@ void OptionsStateV2::refreshView()
 void OptionsStateV2::quitState()
 {
     m_rootNode.getComponent<cro::Callback>().active = true;
-    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+    playSound(MenuSoundEvent::Cancel);
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -34,6 +34,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
+#include "MessageIDs.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/core/Window.hpp>
@@ -389,4 +390,5 @@ void CreditsState::buildScene()
 void CreditsState::quitState()
 {
     m_rootNode.getComponent<cro::Callback>().active = true;
+    cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = MenuSoundEvent::Cancel;
 }
