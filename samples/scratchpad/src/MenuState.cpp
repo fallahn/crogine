@@ -102,7 +102,7 @@ namespace
 
     cro::ConfigFile testFile;
 
-    bool spawnActive = true;
+    //bool spawnActive = true;
 
     const std::string QuantizeFrag =
 R"(
@@ -284,14 +284,97 @@ bool MenuState::handleEvent(const cro::Event& evt)
         return true;
     }
 
+    const auto fw = 
+        []()
+        {
+            if (cro::GameController::hasPSLayout(0))
+            {
+                cro::GameController::rumbleStart(0, (std::numeric_limits<std::uint16_t>::max() / 5) * 3, 0, 150);
+            }
+            else
+            {
+                cro::GameController::rumbleStart(0, 10000, (std::numeric_limits<std::uint16_t>::max() / 5) * 2, 150);
+            }
+        };
+
+    const auto hio =
+        []()
+        {
+            if (cro::GameController::hasPSLayout(0))
+            {
+                cro::GameController::rumbleStart(0, (std::numeric_limits<std::uint16_t>::max() / 5) * 4, 0, 1500);
+            }
+            else
+            {
+                cro::GameController::rumbleStart(0, 8000, (std::numeric_limits<std::uint16_t>::max() / 5)/2, 1500);
+            }
+        };
+
+    const auto bounce =
+        []()
+        {
+            if (cro::GameController::hasPSLayout(0))
+            {
+                cro::GameController::rumbleStart(0, 1000, (std::numeric_limits<std::uint16_t>::max() / 5) * 3, 100);
+            }
+            else
+            {
+                cro::GameController::rumbleStart(0, 6000, (std::numeric_limits<std::uint16_t>::max() / 5) * 1, 150);
+            }
+        };
+
+
+    const auto rumbleLow = [](std::uint16_t strength, std::uint16_t dur = 500)
+        {
+            cro::GameController::rumbleStart(0, (std::numeric_limits<std::uint16_t>::max() / 5) * strength, 0, dur);
+        };
+
+    const auto rumbleHigh = [](std::uint16_t strength, std::uint16_t dur = 500)
+        {
+            cro::GameController::rumbleStart(0, 0, (std::numeric_limits<std::uint16_t>::max() / 5) * strength, dur);
+        };
+
     if (evt.type == SDL_KEYDOWN)
     {
         switch (evt.key.keysym.sym)
         {
         default: break;
-        case SDLK_p:
-            spawnActive = !spawnActive;
+        case SDLK_1:
+            //rumbleLow(1);
+            fw();
             break;
+        case SDLK_2:
+            //rumbleLow(2);
+            hio();
+            break;
+        case SDLK_3:
+            //rumbleLow(3, 150);
+            bounce();
+            break;
+        case SDLK_4:
+            rumbleLow(4, 1500);
+            break;
+        case SDLK_5:
+            rumbleLow(5);
+            break;
+        case SDLK_6:
+            rumbleHigh(1, 100);
+            break;
+        case SDLK_7:
+            rumbleHigh(2, 100);
+            break;
+        case SDLK_8:
+            rumbleHigh(3, 1500);
+            break;
+        case SDLK_9:
+            rumbleHigh(4, 150);
+            break;
+        case SDLK_0:
+            rumbleHigh(5);
+            break;
+        /*case SDLK_p:
+            spawnActive = !spawnActive;
+            break;*/
         }
     }
 

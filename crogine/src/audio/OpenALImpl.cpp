@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -106,10 +106,18 @@ bool OpenALImpl::init()
     if (!m_device)
     {
         /*alcCheck*/(m_device = alcOpenDevice(nullptr));
+        m_preferredDevice = "default";
         if (!m_device)
         {
             LOG("OpenAL: Failed opening valid OpenAL device", Logger::Type::Error);
             return false;
+        }
+        else
+        {
+            //store this in the config as last known good device
+            ConfigFile cfg;
+            cfg.addProperty("preferred_device").setValue(m_preferredDevice);
+            cfg.save(getPreferencePath());
         }
     }
     
@@ -767,19 +775,19 @@ void OpenALImpl::enumerateDevices()
                 {
                     if (ImGui::Begin("Default Audio Device", &showWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))
                     {
-                        std::vector<const char*> items; //lol.
-                        for (const auto& d : m_devices)
-                        {
-                            items.push_back(d.c_str());
-                        }
+                        //std::vector<const char*> items; //lol.
+                        //for (const auto& d : m_devices)
+                        //{
+                        //    items.push_back(d.c_str());
+                        //}
 
                         static std::int32_t idx = 0;
                         if (ImGui::BeginListBox("##", ImVec2(-FLT_MIN, 0.f)))
                         {
-                            for (auto n = 0u; n < items.size(); ++n)
+                            for (auto n = 0u; n < m_devices.size(); ++n)
                             {
                                 const bool selected = (idx == n);
-                                if (ImGui::Selectable(items[n], selected))
+                                if (ImGui::Selectable(m_devices[n].c_str(), selected))
                                 {
                                     idx = n;
                                 }

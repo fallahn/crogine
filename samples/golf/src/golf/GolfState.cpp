@@ -2764,6 +2764,50 @@ void GolfState::handleMessage(const cro::Message& msg)
                 Social::awardXP(2, XPStringID::NearMiss);
             }
         }
+        else if (data.type == CollisionEvent::Begin)
+        {
+            if (m_sharedData.enableRumble
+                && m_currentPlayer.client == m_sharedData.clientConnection.connectionID
+                && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+            {
+                switch (data.terrain)
+                {
+                default: break;
+                case TerrainID::Fairway:
+                case TerrainID::Green:
+                case TerrainID::Rough:
+                    ControllerEffect::trigger(activeControllerID(m_sharedData.inputBinding.playerID), ControllerEffect::Bounce);
+                    break;
+                case TerrainID::Water:
+                    break;
+                case TerrainID::Bunker:
+                case TerrainID::Scrub:
+                case CollisionEvent::FlagPole:
+                    ControllerEffect::trigger(activeControllerID(m_sharedData.inputBinding.playerID), ControllerEffect::Firework);
+                    break;
+                case TerrainID::Hole:
+                    //TODO something a bit more expressive that this
+                    ControllerEffect::trigger(activeControllerID(m_sharedData.inputBinding.playerID), ControllerEffect::Bounce);
+                    break;
+                }
+            }
+        }
+        else if (data.type == CollisionEvent::End)
+        {
+            if (m_sharedData.enableRumble
+                && m_currentPlayer.client == m_sharedData.clientConnection.connectionID
+                && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+            {
+                switch (data.terrain)
+                {
+                default: break;
+                case TerrainID::Hole:
+                    //TODO something a bit more expressive that this
+                    ControllerEffect::trigger(activeControllerID(m_sharedData.inputBinding.playerID), ControllerEffect::Bounce);
+                    break;
+                }
+            }
+        }
     }
         break;
     }

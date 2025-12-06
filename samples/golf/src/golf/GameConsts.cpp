@@ -55,6 +55,46 @@ bool hasPSLayout(std::int32_t controllerID)
     return cro::GameController::hasPSLayout(controllerID);
 }
 
+void ControllerEffect::trigger(std::int32_t controllerID, std::int32_t effect)
+{
+    const bool isPS = cro::GameController::hasPSLayout(controllerID);
+
+    switch (effect)
+    {
+    default: break;
+    case ControllerEffect::Firework:
+        if (isPS)
+        {
+            cro::GameController::rumbleStart(controllerID, (std::numeric_limits<std::uint16_t>::max() / 5) * 3, 0, 150);
+        }
+        else
+        {
+            cro::GameController::rumbleStart(controllerID, 10000, (std::numeric_limits<std::uint16_t>::max() / 5) * 2, 150);
+        }
+        break;
+    case ControllerEffect::HIO:
+        if (isPS)
+        {
+            cro::GameController::rumbleStart(controllerID, (std::numeric_limits<std::uint16_t>::max() / 5) * 4, 0, 1500);
+        }
+        else
+        {
+            cro::GameController::rumbleStart(controllerID, 8000, (std::numeric_limits<std::uint16_t>::max() / 5) / 2, 1500);
+        }
+        break;
+    case ControllerEffect::Bounce:
+        if (isPS)
+        {
+            cro::GameController::rumbleStart(controllerID, 1000, (std::numeric_limits<std::uint16_t>::max() / 5) * 3, 100);
+        }
+        else
+        {
+            cro::GameController::rumbleStart(controllerID, 6000, (std::numeric_limits<std::uint16_t>::max() / 5) * 1, 150);
+        }
+        break;
+    }
+}
+
 void renderToNormalMap(const cro::Mesh::Data meshData, cro::Shader& normalShader, cro::MultiRenderTexture& normalMap)
 {
     std::size_t normalOffset = 0;

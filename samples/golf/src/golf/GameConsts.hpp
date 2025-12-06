@@ -428,6 +428,15 @@ struct ShaderID final
     };
 };
 
+struct ControllerEffect final
+{
+    enum
+    {
+        Firework, HIO, Bounce
+    };
+    static void trigger(std::int32_t controllerID, std::int32_t type);
+};
+
 struct SkipState final
 {
     std::int32_t state = -1;

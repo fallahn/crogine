@@ -6477,7 +6477,7 @@ void GolfState::buildTrophyScene()
             entity.getComponent<cro::AudioEmitter>().setLooped(false);
             entity.addComponent<cro::Callback>().setUserData<FireWorkData>(0.5f + (0.5f * i));
             entity.getComponent<cro::Callback>().function =
-                [](cro::Entity e, float dt)
+                [&](cro::Entity e, float dt)
                 {
                     auto& [currTime, count] = e.getComponent<cro::Callback>().getUserData<FireWorkData>();
                     currTime -= dt;
@@ -6497,6 +6497,15 @@ void GolfState::buildTrophyScene()
                         {
                             e.getComponent<cro::AudioEmitter>().play();
                         }
+
+                        if (m_sharedData.enableRumble)
+                        {
+                            for (auto i = 0; i < cro::GameController::getControllerCount(); ++i)
+                            {
+                                ControllerEffect::trigger(i, ControllerEffect::Firework);
+                            }
+                        }
+
                         currTime += 1.f;
                         currTime += static_cast<float>(cro::Util::Random::value(-5, 5)) / 10.f;
 
