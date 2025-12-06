@@ -764,11 +764,35 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 msg2->travelDistance = std::atan2(dir.z, dir.x);
             }
         }
+
+        if (data.type == CollisionEvent::Begin)
+        {
+            switch (data.terrain)
+            {
+            default: break;
+            case TerrainID::Green:
+            case TerrainID::Fairway:
+            case TerrainID::Rough:
+                ControllerEffect::trigger(cro::GameController::controllerID(m_inputParser.getLastActiveController()), ControllerEffect::Bounce);
+                break;
+            }
+        }
+
         /*else if (data.terrain == CollisionEvent::FlagPole)
         {
             Social::getMonthlyChallenge().updateChallenge(ChallengeID::Eleven, 0);
         }*/
         //LogI << glm::length(data.position - PlayerPosition) << std::endl;
+    }
+        break;
+    case cro::Message::SpriteAnimationMessage:
+    {
+        //stars on rank message after stroke
+        const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
+        if (data.userType == SpriteAnimID::Medal) //scoreboard star animation
+        {
+            ControllerEffect::trigger(cro::GameController::controllerID(m_inputParser.getLastActiveController()), ControllerEffect::Bounce);
+        }
     }
         break;
     case cro::Message::SkeletalAnimationMessage:

@@ -5358,12 +5358,12 @@ void MenuState::updateUnlockedItems()
         //}
 
         auto flag = (1 << (ul::UnlockID::Clubhouse - genericBase));
-        if ((genericFlags & flag) == 0 &&
+        /*if ((genericFlags & flag) == 0 &&
             Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
         {
             genericFlags |= flag;
             m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Clubhouse;
-        }
+        }*/
 
         flag = (1 << (ul::UnlockID::CourseEditor - genericBase));
         if ((genericFlags & flag) == 0 &&
