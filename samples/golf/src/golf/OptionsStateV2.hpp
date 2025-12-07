@@ -204,10 +204,18 @@ private:
         cro::FloatRect itemBox; //size is menu coords, position is updated during testing with current scroll position
     }m_menuLayout;
 
-    cro::SimpleQuad m_menuQuad;
+    cro::SimpleQuad m_menuQuad; //item image if it exists
     cro::SimpleText m_menuText;
     cro::SimpleText m_menuTextLarge;        
     cro::SimpleVertexArray m_menuBackground;
+
+    cro::SimpleVertexArray m_itemBackground;
+    cro::SimpleVertexArray m_itemBackgroundActive;
+    cro::SimpleVertexArray m_itemBackgroundHighlight;
+    cro::SimpleVertexArray m_tabActive;
+    cro::SimpleVertexArray m_tabInactive;
+    cro::SimpleVertexArray m_detailBackground;
+
 
     cro::Entity m_infoString;
     cro::Entity m_infoSprite;
@@ -223,6 +231,7 @@ private:
         cro::Entity image;
     }m_detailsPane;
 
+    void resizeItemGraphics();
 
     void updateMenuItems();
     void nextItem();

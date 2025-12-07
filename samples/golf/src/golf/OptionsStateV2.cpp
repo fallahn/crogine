@@ -1596,6 +1596,15 @@ void OptionsStateV2::prevTab()
     playSound(MenuSoundEvent::Cancel);
 }
 
+void OptionsStateV2::resizeItemGraphics()
+{
+    //update tab backgrounds
+
+    //update all the item backgrounds based on current window size and selected tab
+
+    //update detail background
+}
+
 void OptionsStateV2::updateMenuItems()
 {
     //NOTE this is all done 1:1 scale and the resulting sprite set to window scale
@@ -1923,6 +1932,7 @@ void OptionsStateV2::doMouseClick()
 
 void OptionsStateV2::refreshView()
 {
+    resizeItemGraphics();
     updateTabBar();
 }
 
