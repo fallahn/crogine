@@ -130,7 +130,8 @@ namespace
 OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State(ss, ctx),
     m_scene     (ctx.appInstance.getMessageBus(), 192),
-    m_sharedData(sd)
+    m_sharedData(sd),
+    m_uiTexture (nullptr)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -168,13 +169,13 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
                 m_tabBar.navRightSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
 
                 const auto viewScale = cro::UIElementSystem::getViewScale();
-                const auto charSize = static_cast<std::uint32_t>((LabelTextSize) * viewScale);
+                const auto charSize = static_cast<std::uint32_t>((UITextSize) * viewScale);
                 m_tabBar.navLeft.getComponent<cro::Text>().setCharacterSize(charSize);
-                m_tabBar.navLeft.getComponent<cro::UIElement>().characterSize = LabelTextSize;
+                m_tabBar.navLeft.getComponent<cro::UIElement>().characterSize = UITextSize;
                 m_tabBar.navLeft.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
 
                 m_tabBar.navRight.getComponent<cro::Text>().setCharacterSize(charSize);
-                m_tabBar.navRight.getComponent<cro::UIElement>().characterSize = LabelTextSize;
+                m_tabBar.navRight.getComponent<cro::UIElement>().characterSize = UITextSize;
                 m_tabBar.navRight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
             }
             else
@@ -430,19 +431,68 @@ void OptionsStateV2::loadAssets()
     m_menuTextLarge.setCharacterSize(UITextSize);
     m_menuTextLarge.setAlignment(cro::SimpleText::Alignment::Centre);
 
-    //m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
-    //m_audioEnts[AudioID::Accept] = m_scene.createEntity();
-    //m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
-    //m_audioEnts[AudioID::Back] = m_scene.createEntity();
-    //m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+    cro::SpriteSheet spriteSheet;
+    if (spriteSheet.loadFromFile("assets/golf/sprites/options_buttons.spt", m_sharedData.sharedResources->textures))
+    {
+        m_uiTexture = spriteSheet.getTexture();
+
+        //active tab
+        auto bounds = spriteSheet.getSprite("tab_active_left").getTextureBounds();
+        auto uv = spriteSheet.getSprite("tab_active_left").getTextureRectNormalised();
+
+        m_tabActive[0].size = { bounds.width, bounds.height };
+        m_tabActive[0].uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
+
+        bounds = spriteSheet.getSprite("tab_active_right").getTextureBounds();
+        uv = spriteSheet.getSprite("tab_active_right").getTextureRectNormalised();
+
+        m_tabActive[1].size = { bounds.width, bounds.height };
+        m_tabActive[1].uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
+
+
+        //inactive tab
+        bounds = spriteSheet.getSprite("tab_inactive_left").getTextureBounds();
+        uv = spriteSheet.getSprite("tab_inactive_left").getTextureRectNormalised();
+
+        m_tabInactive[0].size = { bounds.width, bounds.height };
+        m_tabInactive[0].uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
+
+
+        bounds = spriteSheet.getSprite("tab_inactive_right").getTextureBounds();
+        uv = spriteSheet.getSprite("tab_inactive_right").getTextureRectNormalised();
+
+        m_tabInactive[1].size = { bounds.width, bounds.height };
+        m_tabInactive[1].uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
+
+
+        //highlight tab
+        bounds = spriteSheet.getSprite("tab_highlight_left").getTextureBounds();
+        uv = spriteSheet.getSprite("tab_highlight_left").getTextureRectNormalised();
+
+        m_tabHighlight[0].size = { bounds.width, bounds.height };
+        m_tabHighlight[0].uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
+
+
+        bounds = spriteSheet.getSprite("tab_highlight_right").getTextureBounds();
+        uv = spriteSheet.getSprite("tab_highlight_right").getTextureRectNormalised();
+
+        m_tabHighlight[1].size = { bounds.width, bounds.height };
+        m_tabHighlight[1].uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
+
+
+
+
+        //background 9-patch
+        m_backgroundCentre = spriteSheet.getSprite("background_centre").getTextureRectNormalised();
+        m_backgroundCentre.width += m_backgroundCentre.left;
+        m_backgroundCentre.height += m_backgroundCentre.bottom;
+    }
 }
 
 void OptionsStateV2::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    //m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::UIElementSystem>(mb);
-    //m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
     m_scene.addSystem<cro::TextSystem>(mb);
@@ -536,12 +586,13 @@ void OptionsStateV2::buildScene()
     m_tabBar.background = m_scene.createEntity();
     m_tabBar.background.addComponent<cro::Transform>();
     m_tabBar.background.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    m_tabBar.background.getComponent<cro::Drawable2D>().setTexture(m_uiTexture);
     m_tabBar.background.addComponent<cro::UIElement>(cro::UIElement::Position, true);
     m_tabBar.background.getComponent<cro::UIElement>().relativePosition = { -0.5f, 0.5f };
     m_tabBar.background.getComponent<cro::UIElement>().absolutePosition = { 0.f, -(TabBarHeight * 2.f) };
     rootNode.getComponent<cro::Transform>().addChild(m_tabBar.background.getComponent<cro::Transform>());
 
-    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info); //TODO insert the controller icon font into this one?
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info); 
     const float Spacing = 1.f / (TabBar::Item::Count + 2); //leave equivalent of a tab either end
     for (auto i = 0; i < TabBar::Item::Count; ++i)
     {
@@ -560,7 +611,7 @@ void OptionsStateV2::buildScene()
         uiElement.resizeCallback = 
             [&, offset](cro::Entity e)
             {
-                const auto x = std::round((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
+                const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
                 const auto y = 12.f;
                 e.getComponent<cro::UIElement>().absolutePosition = { x,y };
             };
@@ -568,14 +619,14 @@ void OptionsStateV2::buildScene()
         m_tabBar.background.getComponent<cro::Transform>().addChild(item.text.getComponent<cro::Transform>());
     }
 
-    const auto& controllerFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-    entity.addComponent<cro::Text>(controllerFont).setFillColour(TextNormalColour);
+    entity.addComponent<cro::Text>(largeFont).setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
-    entity.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2u;
+    entity.getComponent<cro::UIElement>().characterSize = UITextSize;
     entity.getComponent<cro::UIElement>().depth = 0.1f;
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&, Spacing](cro::Entity e)
@@ -590,10 +641,10 @@ void OptionsStateV2::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-    entity.addComponent<cro::Text>(controllerFont).setFillColour(TextNormalColour);
+    entity.addComponent<cro::Text>(largeFont).setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
-    entity.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2u;
+    entity.getComponent<cro::UIElement>().characterSize = UITextSize;
     entity.getComponent<cro::UIElement>().depth = 0.1f;
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&, Spacing](cro::Entity e)
@@ -678,7 +729,7 @@ void OptionsStateV2::buildScene()
     m_detailsPane.text = m_scene.createEntity();
     m_detailsPane.text.addComponent<cro::Transform>();
     m_detailsPane.text.addComponent<cro::Drawable2D>();
-    m_detailsPane.text.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI));
+    m_detailsPane.text.addComponent<cro::Text>(largeFont);
     m_detailsPane.text.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     m_detailsPane.text.getComponent<cro::Text>().setFillColour(TextNormalColour);
     m_detailsPane.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
@@ -705,9 +756,9 @@ void OptionsStateV2::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();// .setOrigin({ 320.f, 240.f });
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-    entity.addComponent<cro::Text>(controllerFont).setString(KeyInfo);
+    entity.addComponent<cro::Text>(largeFont).setString(KeyInfo);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).characterSize = LabelTextSize;
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).characterSize = UITextSize;
     entity.getComponent<cro::UIElement>().depth = 0.1f;
     entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 16.f };
     entity.getComponent<cro::UIElement>().resizeCallback =
@@ -1509,41 +1560,122 @@ void OptionsStateV2::updateTabBar()
     const float TabWidth = std::round(Spacing * WindowSize.x);
 
     std::vector<cro::Vertex2D> verts;
-    const auto addQuad = 
-        [&](cro::Colour c, glm::vec2 position, glm::vec2 size)
-        {
-            verts.emplace_back(glm::vec2(position.x, position.y + size.y), c);
-            verts.emplace_back(position, c);
-            verts.emplace_back(position + size, c);
-
-            verts.emplace_back(position + size, c);
-            verts.emplace_back(position, c);
-            verts.emplace_back(glm::vec2(position.x + size.x, position.y), c);
-        };
-
-    //update the verts for the tab bar.
     const auto viewScale = cro::UIElementSystem::getViewScale();
-    for (auto i = 0u; i < m_tabBar.items.size(); ++i)
+    
+    if (m_uiTexture)
     {
-        const auto active = m_tabBar.activeIndex;
-        const auto hovered = (i == m_tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
+        const auto width = TabWidth - viewScale;
+        const auto height = TabBarHeight * viewScale;
 
-        const auto colour = i == active ? CD32::Colours[CD32::Brown] : 
-            hovered ? 
-            CD32::Colours[CD32::Yellow] : CD32::Colours[CD32::TanDarkest];
-        
-        glm::vec2 position = { TabWidth + (i * TabWidth), 0.f };
-        const glm::vec2 size = { TabWidth - viewScale, TabBarHeight * viewScale };
-        addQuad(colour, position, size);
+        const auto addQuad = 
+            [&](glm::vec2 position, const SpriteSection& left, const SpriteSection& right)
+            {
+                const auto sectionWidth = left.size.x * viewScale;
 
-        position += glm::vec2(m_tabBar.background.getComponent<cro::Transform>().getPosition());
-        position += WindowSize / 2.f; //screen centre
-        m_tabBar.items[i].hitbox = { position, size};
-        m_tabBar.items[i].text.getComponent<cro::Text>().setFillColour(i == active ? TextNormalColour : 
-            hovered ? CD32::Colours[CD32::Black] : CD32::Colours[CD32::BeigeMid]);
+                //left section
+                verts.emplace_back(glm::vec2(position.x, position.y + height), glm::vec2(left.uv.left, left.uv.height));
+                verts.emplace_back(position, glm::vec2(left.uv.left, left.uv.bottom));
+                verts.emplace_back(glm::vec2(position.x + sectionWidth, position.y + height), glm::vec2(left.uv.width, left.uv.height));
+                verts.emplace_back(glm::vec2(position.x + sectionWidth, position.y + height), glm::vec2(left.uv.width, left.uv.height));
+                verts.emplace_back(position, glm::vec2(left.uv.left, left.uv.bottom));
+                verts.emplace_back(glm::vec2(position.x + sectionWidth, position.y), glm::vec2(left.uv.width, left.uv.bottom));
+
+
+                //middle section
+                position.x += sectionWidth;
+                const auto centreWidth = (TabWidth - (sectionWidth * 2.f));
+                verts.emplace_back(glm::vec2(position.x, position.y + height), glm::vec2(left.uv.width, left.uv.height));
+                verts.emplace_back(position, glm::vec2(left.uv.width, left.uv.bottom));
+                verts.emplace_back(glm::vec2(position.x + centreWidth, position.y + height), glm::vec2(right.uv.left, right.uv.height));
+                verts.emplace_back(glm::vec2(position.x + centreWidth, position.y + height), glm::vec2(right.uv.left, right.uv.height));
+                verts.emplace_back(position, glm::vec2(left.uv.width, left.uv.bottom));
+                verts.emplace_back(glm::vec2(position.x + centreWidth, position.y), glm::vec2(right.uv.left, right.uv.bottom));
+
+
+                //right section
+                position.x += centreWidth;
+                verts.emplace_back(glm::vec2(position.x, position.y + height), glm::vec2(right.uv.left, right.uv.height));
+                verts.emplace_back(position, glm::vec2(right.uv.left, right.uv.bottom));
+                verts.emplace_back(glm::vec2(position.x + sectionWidth, position.y + height), glm::vec2(right.uv.width, right.uv.height));
+                verts.emplace_back(glm::vec2(position.x + sectionWidth, position.y + height), glm::vec2(right.uv.width, right.uv.height));
+                verts.emplace_back(position, glm::vec2(right.uv.left, right.uv.bottom));
+                verts.emplace_back(glm::vec2(position.x + sectionWidth, position.y), glm::vec2(right.uv.width, right.uv.bottom));
+            };
+
+        for (auto i = 0u; i < m_tabBar.items.size(); ++i)
+        {
+            const auto active = i == m_tabBar.activeIndex;
+            const auto hovered = (i == m_tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
+
+            glm::vec2 position = { TabWidth + (i * TabWidth), 0.f };
+            if (active)
+            {
+                addQuad(position, m_tabActive[0], m_tabActive[1]);
+            }
+            else if(hovered)
+            {
+                addQuad(position, m_tabHighlight[0], m_tabHighlight[1]);
+            }
+            else
+            {
+                addQuad(position, m_tabInactive[0], m_tabInactive[1]);
+            }
+
+            //set the text
+            position += glm::vec2(m_tabBar.background.getComponent<cro::Transform>().getPosition());
+            position += WindowSize / 2.f; //screen centre
+            m_tabBar.items[i].hitbox = { position, glm::vec2(width, height)};
+            m_tabBar.items[i].text.getComponent<cro::Text>().setFillColour(active ? TextNormalColour :
+                hovered ? CD32::Colours[CD32::Yellow] : CD32::Colours[CD32::BeigeMid]);
+        }
+
+        //add a quad to the verts as an underline
+        const glm::vec2 uv0(m_backgroundCentre.left, m_backgroundCentre.bottom);
+        const glm::vec2 uv1(m_backgroundCentre.width, m_backgroundCentre.height);
+        verts.emplace_back(glm::vec2(0.f, 0.f), glm::vec2(uv0.x, uv1.y));
+        verts.emplace_back(glm::vec2(0.f, -viewScale), uv0);
+        verts.emplace_back(glm::vec2(WindowSize.x, 0.f), uv1);
+        verts.emplace_back(glm::vec2(WindowSize.x, 0.f), uv1);
+        verts.emplace_back(glm::vec2(0.f, -viewScale), uv0);
+        verts.emplace_back(glm::vec2(WindowSize.x, -viewScale), glm::vec2(uv1.x, uv0.y));
     }
+    else
+    {
+        const auto addQuad =
+            [&](cro::Colour c, glm::vec2 position, glm::vec2 size)
+            {
+                verts.emplace_back(glm::vec2(position.x, position.y + size.y), c);
+                verts.emplace_back(position, c);
+                verts.emplace_back(position + size, c);
 
-    addQuad(CD32::Colours[CD32::Brown], { 0.f, -viewScale }, { WindowSize.x, viewScale });
+                verts.emplace_back(position + size, c);
+                verts.emplace_back(position, c);
+                verts.emplace_back(glm::vec2(position.x + size.x, position.y), c);
+            };
+
+        //update the verts for the tab bar.
+        for (auto i = 0u; i < m_tabBar.items.size(); ++i)
+        {
+            const auto active = i == m_tabBar.activeIndex;
+            const auto hovered = (i == m_tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
+
+            const auto colour = active ? CD32::Colours[CD32::Brown] :
+                hovered ?
+                CD32::Colours[CD32::Yellow] : CD32::Colours[CD32::TanDarkest];
+
+            glm::vec2 position = { TabWidth + (i * TabWidth), 0.f };
+            const glm::vec2 size = { TabWidth - viewScale, TabBarHeight * viewScale };
+            addQuad(colour, position, size);
+
+            position += glm::vec2(m_tabBar.background.getComponent<cro::Transform>().getPosition());
+            position += WindowSize / 2.f; //screen centre
+            m_tabBar.items[i].hitbox = { position, size };
+            m_tabBar.items[i].text.getComponent<cro::Text>().setFillColour(active ? TextNormalColour :
+                hovered ? CD32::Colours[CD32::Black] : CD32::Colours[CD32::BeigeMid]);
+        }
+
+        addQuad(CD32::Colours[CD32::Brown], { 0.f, -viewScale }, { WindowSize.x, viewScale });
+    }
 
     m_tabBar.background.getComponent<cro::Drawable2D>().setVertexData(verts);
 

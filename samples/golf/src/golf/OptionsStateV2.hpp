@@ -61,18 +61,6 @@ private:
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
 
-    //cro::AudioScape m_menuSounds;
-    //struct AudioID final
-    //{
-    //    enum
-    //    {
-    //        Accept, Back,
-
-    //        Count
-    //    };
-    //};
-    //std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
-
     cro::Entity m_rootNode;
     void loadAssets();
     void buildScene();
@@ -87,6 +75,18 @@ private:
 
     void onCachedPush() override;
     void onCachedPop() override;
+
+    struct SpriteSection final
+    {
+        cro::FloatRect uv;
+        glm::vec2 size = { 0.f, 0.f };
+    };
+    const cro::Texture* m_uiTexture;
+    std::array<SpriteSection, 2u> m_tabActive = {};
+    std::array<SpriteSection, 2u> m_tabInactive = {};
+    std::array<SpriteSection, 2u> m_tabHighlight = {};
+
+    cro::FloatRect m_backgroundCentre;
 
     struct TabBar final
     {
@@ -212,8 +212,8 @@ private:
     cro::SimpleVertexArray m_itemBackground;
     cro::SimpleVertexArray m_itemBackgroundActive;
     cro::SimpleVertexArray m_itemBackgroundHighlight;
-    cro::SimpleVertexArray m_tabActive;
-    cro::SimpleVertexArray m_tabInactive;
+    /*cro::SimpleVertexArray m_tabActive;
+    cro::SimpleVertexArray m_tabInactive;*/
     cro::SimpleVertexArray m_detailBackground;
 
 
