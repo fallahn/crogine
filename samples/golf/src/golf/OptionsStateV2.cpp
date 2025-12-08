@@ -459,9 +459,15 @@ void OptionsStateV2::loadAssets()
 
 
         //background 9-patch
-        m_backgroundCentre = spriteSheet.getSprite("background_centre").getTextureRectNormalised();
-        m_backgroundCentre.width += m_backgroundCentre.left;
-        m_backgroundCentre.height += m_backgroundCentre.bottom;
+        parseSprite("background_centre", m_backgroundSections[BackgroundSection::Centre]);
+        parseSprite("background_top", m_backgroundSections[BackgroundSection::Top]);
+        parseSprite("background_left", m_backgroundSections[BackgroundSection::Left]);
+        parseSprite("background_right", m_backgroundSections[BackgroundSection::Right]);
+        parseSprite("background_bottom", m_backgroundSections[BackgroundSection::Bottom]);
+        parseSprite("background_tl", m_backgroundSections[BackgroundSection::TL]);
+        parseSprite("background_tr", m_backgroundSections[BackgroundSection::TR]);
+        parseSprite("background_bl", m_backgroundSections[BackgroundSection::BL]);
+        parseSprite("background_br", m_backgroundSections[BackgroundSection::BR]);
 
 
 
@@ -586,8 +592,6 @@ void OptionsStateV2::buildScene()
     };
 
    
-    //TODO background needs a 9-patch?
-    
 
     //tab bar - we only create here, cachedPush() will update the drawable
     m_tabBar.background = m_scene.createEntity();
@@ -733,6 +737,7 @@ void OptionsStateV2::buildScene()
     m_detailsPane.root.getComponent<cro::UIElement>().relativePosition = { 0.25f, 0.f };
     rootNode.getComponent<cro::Transform>().addChild(m_detailsPane.root.getComponent<cro::Transform>());
 
+    //text
     m_detailsPane.text = m_scene.createEntity();
     m_detailsPane.text.addComponent<cro::Transform>();
     m_detailsPane.text.addComponent<cro::Drawable2D>();
@@ -746,7 +751,7 @@ void OptionsStateV2::buildScene()
     m_detailsPane.text.getComponent<cro::UIElement>().depth = 0.2f;
     m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.text.getComponent<cro::Transform>());
 
-
+    //image
     m_detailsPane.image = m_scene.createEntity();
     m_detailsPane.image.addComponent<cro::Transform>();
     m_detailsPane.image.addComponent<cro::Drawable2D>();
@@ -756,12 +761,23 @@ void OptionsStateV2::buildScene()
     m_detailsPane.image.getComponent<cro::UIElement>().depth = 0.2f;
     m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.image.getComponent<cro::Transform>());
 
+    //background/9 patch
+    m_detailsPane.background = m_scene.createEntity();
+    m_detailsPane.background.addComponent<cro::Transform>().setOrigin({ 0.f, InfoBarHeight / 2.f });
+    m_detailsPane.background.addComponent<cro::Drawable2D>().setTexture(m_uiTexture);
+    m_detailsPane.background.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    m_detailsPane.background.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    m_detailsPane.background.getComponent<cro::UIElement>().absolutePosition = { 0.f, 10.f };
+    m_detailsPane.background.getComponent<cro::UIElement>().depth = -0.3f;
+    m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.background.getComponent<cro::Transform>());
+
+
     updateTabBar(); //this also updates the menu items
 
 
     //info string at the bottom
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();// .setOrigin({ 320.f, 240.f });
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     entity.addComponent<cro::Text>(largeFont).setString(KeyInfo);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -828,7 +844,6 @@ void OptionsStateV2::createSettingsItems()
     auto* item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Appearance";
     item->displayType = Menu::Item::Heading;
-    //item->backgroundColour = TextHighlightColour;
 
     //use flag beacon
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
@@ -1165,7 +1180,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Gameplay Settings";
     item->displayType = Menu::Item::Heading;
-    //item->backgroundColour = TextHighlightColour;
 
 
     //putt assist
@@ -1180,7 +1194,6 @@ void OptionsStateV2::createSettingsItems()
     item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.showPuttingPower ? 1 : 0;
-    //item->backgroundColour = BackgroundDark;
     
     
     //fixed range putter
@@ -1195,7 +1208,7 @@ void OptionsStateV2::createSettingsItems()
     item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.fixedPuttingRange ? 1 : 0;
-    //item->backgroundColour = BackgroundDark;
+
 
 
     //precise range indicator
@@ -1210,7 +1223,7 @@ void OptionsStateV2::createSettingsItems()
     item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.calculateRange ? 0 : 1;
-    //item->backgroundColour = BackgroundDark;
+
 
 
     //minimal UI
@@ -1225,7 +1238,7 @@ void OptionsStateV2::createSettingsItems()
     item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.showMinimap ? 0 : 1;
-    //item->backgroundColour = BackgroundDark;
+
 
 
     //in-game tips
@@ -1240,7 +1253,6 @@ void OptionsStateV2::createSettingsItems()
     item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.showInGameTips ? 1 : 0;
-    //item->backgroundColour = BackgroundDark;
 
   
 
@@ -1249,7 +1261,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Configuration";
     item->displayType = Menu::Item::Heading;
-    //item->backgroundColour = TextHighlightColour;
+
 
     //web socket
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
@@ -1342,7 +1354,7 @@ void OptionsStateV2::createSettingsItems()
     item->count = 1;
     item->labels = { "OK" };
     item->selectedIndex = 0;
-    //item->backgroundColour = BackgroundYellow;
+
 
     //reset career
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
@@ -1357,7 +1369,6 @@ void OptionsStateV2::createSettingsItems()
     item->count = 1;
     item->labels = { "OK" };
     item->selectedIndex = 0;
-    //item->backgroundColour = BackgroundYellow;
 
 
     //reset profile
@@ -1373,7 +1384,6 @@ void OptionsStateV2::createSettingsItems()
     item->count = 1;
     item->labels = { "OK" };
     item->selectedIndex = 0;
-    //item->backgroundColour = BackgroundRed;
 }
 
 void OptionsStateV2::createKeyboardItems()
@@ -1638,8 +1648,9 @@ void OptionsStateV2::updateTabBar()
         }
 
         //add a quad to the verts as an underline
-        const glm::vec2 uv0(m_backgroundCentre.left, m_backgroundCentre.bottom);
-        const glm::vec2 uv1(m_backgroundCentre.width, m_backgroundCentre.height);
+        const auto backgroundCentre = m_backgroundSections[BackgroundSection::Centre].uv;
+        const glm::vec2 uv0(backgroundCentre.left, backgroundCentre.bottom);
+        const glm::vec2 uv1(backgroundCentre.width, backgroundCentre.height);
         verts.emplace_back(glm::vec2(0.f, 0.f), glm::vec2(uv0.x, uv1.y));
         verts.emplace_back(glm::vec2(0.f, -viewScale), uv0);
         verts.emplace_back(glm::vec2(WindowSize.x, 0.f), uv1);
@@ -1740,6 +1751,8 @@ void OptionsStateV2::prevTab()
 
 void OptionsStateV2::resizeItemGraphics()
 {
+    //this is all done 1:1 as the ui element/nodes scale this for us
+
     const auto& items = m_menuLayout.items[m_tabBar.activeIndex];
     const auto viewScale = cro::UIElementSystem::getViewScale();
 
@@ -1808,7 +1821,109 @@ void OptionsStateV2::resizeItemGraphics()
     calcVerts(m_itemTitleSection[0], m_itemTitleSection[1]);
     m_itemBackgroundTitle.setVertexData(verts);
 
+
     //update detail background
+    //TODO this only needs to be a vec2...
+    cro::FloatRect backgroundArea = { 0.f, 0.f,
+                        static_cast<float>(cro::App::getWindow().getSize().x / 2u),
+                        (m_tabBar.background.getComponent<cro::Transform>().getPosition().y - (InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2) };
+
+    static constexpr float Padding = 16.f;
+    backgroundArea.width -= (Padding * viewScale);
+    backgroundArea.height -= (Padding * viewScale);
+
+    backgroundArea.width /= viewScale;
+    backgroundArea.height /= viewScale;
+
+    backgroundArea.width = std::round(backgroundArea.width / 2.f);
+    backgroundArea.height = std::round(backgroundArea.height / 2.f);
+
+    const float CentreWidth = backgroundArea.width - m_backgroundSections[BackgroundSection::TL].size.x;
+    const float CentreHeight = backgroundArea.height - m_backgroundSections[BackgroundSection::TL].size.y;
+
+    verts.clear();
+
+    const auto addQuad = 
+        [&](glm::vec2 position, glm::vec2 size, cro::FloatRect uv)
+        {
+            verts.emplace_back(glm::vec2(position.x, position.y + size.y), glm::vec2(uv.left, uv.height));
+            verts.emplace_back(position, glm::vec2(uv.left, uv.bottom));
+            verts.emplace_back(position + size, glm::vec2(uv.width, uv.height));
+
+            verts.emplace_back(position + size, glm::vec2(uv.width, uv.height));
+            verts.emplace_back(position, glm::vec2(uv.left, uv.bottom));
+            verts.emplace_back(glm::vec2(position.x + size.x, position.y), glm::vec2(uv.width, uv.bottom));
+        };
+
+    //top left
+    glm::vec2 p(-backgroundArea.width, CentreHeight);
+    addQuad(p, m_backgroundSections[BackgroundSection::TL].size, m_backgroundSections[BackgroundSection::TL].uv);
+
+    //top right
+    p = { CentreWidth, CentreHeight };
+    addQuad(p, m_backgroundSections[BackgroundSection::TR].size, m_backgroundSections[BackgroundSection::TR].uv);
+
+    //bottom left
+    p = { -backgroundArea.width, -backgroundArea.height };
+    addQuad(p, m_backgroundSections[BackgroundSection::BL].size, m_backgroundSections[BackgroundSection::BL].uv);
+
+    //bottom right
+    p = { CentreWidth, -backgroundArea.height };
+    addQuad(p, m_backgroundSections[BackgroundSection::BR].size, m_backgroundSections[BackgroundSection::BR].uv);
+
+
+    //top
+    p = { -CentreWidth, CentreHeight };
+    glm::vec2 size = { CentreWidth * 2.f, m_backgroundSections[BackgroundSection::Top].size.y };
+    cro::FloatRect uv = 
+    {
+        m_backgroundSections[BackgroundSection::TL].uv.width,
+        m_backgroundSections[BackgroundSection::TL].uv.bottom,
+        m_backgroundSections[BackgroundSection::TR].uv.left,
+        m_backgroundSections[BackgroundSection::TR].uv.height
+    };
+    addQuad(p, size, uv);
+
+    //bottom
+    p = { -CentreWidth, -backgroundArea.height };
+    uv =
+    {
+        m_backgroundSections[BackgroundSection::BL].uv.width,
+        m_backgroundSections[BackgroundSection::BL].uv.bottom,
+        m_backgroundSections[BackgroundSection::BR].uv.left,
+        m_backgroundSections[BackgroundSection::BR].uv.height
+    };
+    addQuad(p, size, uv);
+
+    //left
+    p = { -backgroundArea.width, -CentreHeight };
+    size = { m_backgroundSections[BackgroundSection::Left].size.x, CentreHeight * 2.f };
+    uv =
+    {
+        m_backgroundSections[BackgroundSection::BL].uv.left,
+        m_backgroundSections[BackgroundSection::BL].uv.height,
+        m_backgroundSections[BackgroundSection::TL].uv.width,
+        m_backgroundSections[BackgroundSection::TL].uv.bottom
+    };
+    addQuad(p, size, uv);
+
+    //right
+    p = { CentreWidth, -CentreHeight };
+    uv =
+    {
+        m_backgroundSections[BackgroundSection::BR].uv.left,
+        m_backgroundSections[BackgroundSection::BR].uv.height,
+        m_backgroundSections[BackgroundSection::TR].uv.width,
+        m_backgroundSections[BackgroundSection::TR].uv.bottom
+    };
+    addQuad(p, size, uv);
+
+    //centre
+    p = { -CentreWidth, -CentreHeight };
+    size = { CentreWidth * 2.f, CentreHeight * 2.f };
+    addQuad(p, size, m_backgroundSections[BackgroundSection::Centre].uv);
+
+    m_detailsPane.background.getComponent<cro::Drawable2D>().setVertexData(verts);
 }
 
 void OptionsStateV2::updateMenuItems()

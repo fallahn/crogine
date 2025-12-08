@@ -86,7 +86,18 @@ private:
     std::array<SpriteSection, 2u> m_tabInactive = {};
     std::array<SpriteSection, 2u> m_tabHighlight = {};
 
-    cro::FloatRect m_backgroundCentre;
+    struct BackgroundSection final
+    {
+        enum
+        {
+            Top, Left, Right, Centre, Bottom,
+            TR, TL, BR, BL,
+            Count
+        };
+    };
+    
+    std::array<SpriteSection, BackgroundSection::Count> m_backgroundSections = {};
+    
 
     struct TabBar final
     {
@@ -230,6 +241,7 @@ private:
         cro::Entity root;
         cro::Entity text;
         cro::Entity image;
+        cro::Entity background;
     }m_detailsPane;
 
     void resizeItemGraphics();
