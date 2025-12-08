@@ -162,8 +162,8 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
                 m_infoSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                 m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
 
-                m_tabBar.navLeft.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
-                m_tabBar.navRight.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]));
+                m_tabBar.navLeft.getComponent<cro::Text>().setString("<  " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+                m_tabBar.navRight.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + "  >");
 
                 m_tabBar.navLeftSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                 m_tabBar.navRightSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -436,49 +436,25 @@ void OptionsStateV2::loadAssets()
     {
         m_uiTexture = spriteSheet.getTexture();
 
+        const auto parseSprite = [&](const std::string& spr, SpriteSection& dst)
+            {
+                auto bounds = spriteSheet.getSprite(spr).getTextureBounds();
+                auto uv = spriteSheet.getSprite(spr).getTextureRectNormalised();
+                dst.size = { bounds.width, bounds.height };
+                dst.uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
+            };
+
         //active tab
-        auto bounds = spriteSheet.getSprite("tab_active_left").getTextureBounds();
-        auto uv = spriteSheet.getSprite("tab_active_left").getTextureRectNormalised();
-
-        m_tabActive[0].size = { bounds.width, bounds.height };
-        m_tabActive[0].uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
-
-        bounds = spriteSheet.getSprite("tab_active_right").getTextureBounds();
-        uv = spriteSheet.getSprite("tab_active_right").getTextureRectNormalised();
-
-        m_tabActive[1].size = { bounds.width, bounds.height };
-        m_tabActive[1].uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
-
+        parseSprite("tab_active_left", m_tabActive[0]);
+        parseSprite("tab_active_right", m_tabActive[1]);
 
         //inactive tab
-        bounds = spriteSheet.getSprite("tab_inactive_left").getTextureBounds();
-        uv = spriteSheet.getSprite("tab_inactive_left").getTextureRectNormalised();
-
-        m_tabInactive[0].size = { bounds.width, bounds.height };
-        m_tabInactive[0].uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
-
-
-        bounds = spriteSheet.getSprite("tab_inactive_right").getTextureBounds();
-        uv = spriteSheet.getSprite("tab_inactive_right").getTextureRectNormalised();
-
-        m_tabInactive[1].size = { bounds.width, bounds.height };
-        m_tabInactive[1].uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
-
+        parseSprite("tab_inactive_left", m_tabInactive[0]);
+        parseSprite("tab_inactive_right", m_tabInactive[1]);
 
         //highlight tab
-        bounds = spriteSheet.getSprite("tab_highlight_left").getTextureBounds();
-        uv = spriteSheet.getSprite("tab_highlight_left").getTextureRectNormalised();
-
-        m_tabHighlight[0].size = { bounds.width, bounds.height };
-        m_tabHighlight[0].uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
-
-
-        bounds = spriteSheet.getSprite("tab_highlight_right").getTextureBounds();
-        uv = spriteSheet.getSprite("tab_highlight_right").getTextureRectNormalised();
-
-        m_tabHighlight[1].size = { bounds.width, bounds.height };
-        m_tabHighlight[1].uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
-
+        parseSprite("tab_highlight_left", m_tabHighlight[0]);
+        parseSprite("tab_highlight_right", m_tabHighlight[1]);
 
 
 
@@ -486,6 +462,37 @@ void OptionsStateV2::loadAssets()
         m_backgroundCentre = spriteSheet.getSprite("background_centre").getTextureRectNormalised();
         m_backgroundCentre.width += m_backgroundCentre.left;
         m_backgroundCentre.height += m_backgroundCentre.bottom;
+
+
+
+        //item backgrounds
+        parseSprite("item_background_left", m_itemSection[0]);
+        parseSprite("item_background_right", m_itemSection[1]);
+
+        //item active
+        parseSprite("item_active_left", m_itemActiveSection[0]);
+        parseSprite("item_active_right", m_itemActiveSection[1]);
+
+        //item highlight
+        parseSprite("item_highlight_left", m_itemHighlightSection[0]);
+        parseSprite("item_highlight_right", m_itemHighlightSection[1]);
+
+        //item title
+        parseSprite("item_title_left", m_itemTitleSection[0]);
+        parseSprite("item_title_right", m_itemTitleSection[1]);
+
+
+        m_itemBackground.setTexture(*m_uiTexture);
+        m_itemBackground.setPrimitiveType(GL_TRIANGLES);
+
+        m_itemBackgroundActive.setTexture(*m_uiTexture);
+        m_itemBackgroundActive.setPrimitiveType(GL_TRIANGLES);
+
+        m_itemBackgroundHighlight.setTexture(*m_uiTexture);
+        m_itemBackgroundHighlight.setPrimitiveType(GL_TRIANGLES);
+
+        m_itemBackgroundTitle.setTexture(*m_uiTexture);
+        m_itemBackgroundTitle.setPrimitiveType(GL_TRIANGLES);
     }
 }
 
@@ -611,7 +618,7 @@ void OptionsStateV2::buildScene()
         uiElement.resizeCallback = 
             [&, offset](cro::Entity e)
             {
-                const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
+                const auto x = std::ceil((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset) + 1.f;
                 const auto y = 12.f;
                 e.getComponent<cro::UIElement>().absolutePosition = { x,y };
             };
@@ -821,7 +828,7 @@ void OptionsStateV2::createSettingsItems()
     auto* item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Appearance";
     item->displayType = Menu::Item::Heading;
-    item->backgroundColour = TextHighlightColour;
+    //item->backgroundColour = TextHighlightColour;
 
     //use flag beacon
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
@@ -1158,7 +1165,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Gameplay Settings";
     item->displayType = Menu::Item::Heading;
-    item->backgroundColour = TextHighlightColour;
+    //item->backgroundColour = TextHighlightColour;
 
 
     //putt assist
@@ -1173,7 +1180,7 @@ void OptionsStateV2::createSettingsItems()
     item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.showPuttingPower ? 1 : 0;
-    item->backgroundColour = BackgroundDark;
+    //item->backgroundColour = BackgroundDark;
     
     
     //fixed range putter
@@ -1188,7 +1195,7 @@ void OptionsStateV2::createSettingsItems()
     item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.fixedPuttingRange ? 1 : 0;
-    item->backgroundColour = BackgroundDark;
+    //item->backgroundColour = BackgroundDark;
 
 
     //precise range indicator
@@ -1203,7 +1210,7 @@ void OptionsStateV2::createSettingsItems()
     item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.calculateRange ? 0 : 1;
-    item->backgroundColour = BackgroundDark;
+    //item->backgroundColour = BackgroundDark;
 
 
     //minimal UI
@@ -1218,7 +1225,7 @@ void OptionsStateV2::createSettingsItems()
     item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.showMinimap ? 0 : 1;
-    item->backgroundColour = BackgroundDark;
+    //item->backgroundColour = BackgroundDark;
 
 
     //in-game tips
@@ -1233,7 +1240,7 @@ void OptionsStateV2::createSettingsItems()
     item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.showInGameTips ? 1 : 0;
-    item->backgroundColour = BackgroundDark;
+    //item->backgroundColour = BackgroundDark;
 
   
 
@@ -1242,7 +1249,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Configuration";
     item->displayType = Menu::Item::Heading;
-    item->backgroundColour = TextHighlightColour;
+    //item->backgroundColour = TextHighlightColour;
 
     //web socket
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
@@ -1335,7 +1342,7 @@ void OptionsStateV2::createSettingsItems()
     item->count = 1;
     item->labels = { "OK" };
     item->selectedIndex = 0;
-    item->backgroundColour = BackgroundYellow;
+    //item->backgroundColour = BackgroundYellow;
 
     //reset career
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
@@ -1350,7 +1357,7 @@ void OptionsStateV2::createSettingsItems()
     item->count = 1;
     item->labels = { "OK" };
     item->selectedIndex = 0;
-    item->backgroundColour = BackgroundYellow;
+    //item->backgroundColour = BackgroundYellow;
 
 
     //reset profile
@@ -1366,7 +1373,7 @@ void OptionsStateV2::createSettingsItems()
     item->count = 1;
     item->labels = { "OK" };
     item->selectedIndex = 0;
-    item->backgroundColour = BackgroundRed;
+    //item->backgroundColour = BackgroundRed;
 }
 
 void OptionsStateV2::createKeyboardItems()
@@ -1607,7 +1614,8 @@ void OptionsStateV2::updateTabBar()
             const auto active = i == m_tabBar.activeIndex;
             const auto hovered = (i == m_tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
 
-            glm::vec2 position = { TabWidth + (i * TabWidth), 0.f };
+            const float kludgeOffset = (2.f * viewScale);
+            glm::vec2 position = { (TabWidth + kludgeOffset) + ((i * TabWidth) + viewScale), 0.f };
             if (active)
             {
                 addQuad(position, m_tabActive[0], m_tabActive[1]);
@@ -1707,6 +1715,8 @@ void OptionsStateV2::updateTabBar()
         break;
     }
     m_menuLayout.sprite.getComponent<cro::Transform>().move(-WindowSize / 2.f);
+    
+    resizeItemGraphics();
     updateMenuItems();
 }
 
@@ -1730,16 +1740,6 @@ void OptionsStateV2::prevTab()
 
 void OptionsStateV2::resizeItemGraphics()
 {
-    //update tab backgrounds
-
-    //update all the item backgrounds based on current window size and selected tab
-
-    //update detail background
-}
-
-void OptionsStateV2::updateMenuItems()
-{
-    //NOTE this is all done 1:1 scale and the resulting sprite set to window scale
     const auto& items = m_menuLayout.items[m_tabBar.activeIndex];
     const auto viewScale = cro::UIElementSystem::getViewScale();
 
@@ -1754,6 +1754,70 @@ void OptionsStateV2::updateMenuItems()
         m_menuLayout.texture.create(texWidth, texHeight, false);
     }
 
+
+    //update all the item backgrounds based on current window size and selected tab
+    //these aren't scaled by view size here - the target they're rendered to is
+    glm::vec2 renderSize = glm::vec2(m_menuLayout.texture.getSize());
+    renderSize.x = std::round(renderSize.x * m_tabBar.items[m_tabBar.activeIndex].displayWidth);
+
+    std::vector<cro::Vertex2D> verts;
+    const auto calcVerts =
+        [&](const SpriteSection& left, const SpriteSection& right)
+        {
+            glm::vec2 position(0.f);
+            verts.emplace_back(glm::vec2(position.x, left.size.y), glm::vec2(left.uv.left, left.uv.height));
+            verts.emplace_back(position, glm::vec2(left.uv.left, left.uv.bottom));
+            verts.emplace_back(glm::vec2(position.x + left.size.x, left.size.y), glm::vec2(left.uv.width, left.uv.height));
+            verts.emplace_back(glm::vec2(position.x + left.size.x, left.size.y), glm::vec2(left.uv.width, left.uv.height));
+            verts.emplace_back(position, glm::vec2(left.uv.left, left.uv.bottom));
+            verts.emplace_back(glm::vec2(position.x + left.size.x, position.y), glm::vec2(left.uv.width, left.uv.bottom));
+
+            
+            position.x += left.size.x;
+            const auto centreWidth = renderSize.x - (left.size.x * 2.f);
+            verts.emplace_back(glm::vec2(position.x, left.size.y), glm::vec2(left.uv.width, left.uv.height));
+            verts.emplace_back(position, glm::vec2(left.uv.width, left.uv.bottom));
+            verts.emplace_back(glm::vec2(position.x + centreWidth, left.size.y), glm::vec2(right.uv.left, right.uv.height));
+            verts.emplace_back(glm::vec2(position.x + centreWidth, left.size.y), glm::vec2(right.uv.left, right.uv.height));
+            verts.emplace_back(position, glm::vec2(left.uv.width, left.uv.bottom));
+            verts.emplace_back(glm::vec2(position.x + centreWidth, position.y), glm::vec2(right.uv.left, right.uv.bottom));
+
+
+            position.x += centreWidth;
+            verts.emplace_back(glm::vec2(position.x, right.size.y), glm::vec2(right.uv.left, right.uv.height));
+            verts.emplace_back(position, glm::vec2(right.uv.left, right.uv.bottom));
+            verts.emplace_back(glm::vec2(position.x + right.size.x, right.size.y), glm::vec2(right.uv.width, right.uv.height));
+            verts.emplace_back(glm::vec2(position.x + right.size.x, right.size.y), glm::vec2(right.uv.width, right.uv.height));
+            verts.emplace_back(position, glm::vec2(right.uv.left, right.uv.bottom));
+            verts.emplace_back(glm::vec2(position.x + right.size.x, position.y), glm::vec2(right.uv.width, right.uv.bottom));
+        };
+
+    calcVerts(m_itemSection[0], m_itemSection[1]);
+    m_itemBackground.setVertexData(verts);
+
+
+    verts.clear();
+    calcVerts(m_itemActiveSection[0], m_itemActiveSection[1]);
+    m_itemBackgroundActive.setVertexData(verts);
+
+    verts.clear();
+    calcVerts(m_itemHighlightSection[0], m_itemHighlightSection[1]);
+    m_itemBackgroundHighlight.setVertexData(verts);
+
+    verts.clear();
+    calcVerts(m_itemTitleSection[0], m_itemTitleSection[1]);
+    m_itemBackgroundTitle.setVertexData(verts);
+
+    //update detail background
+}
+
+void OptionsStateV2::updateMenuItems()
+{
+    //NOTE this is all done 1:1 scale and the resulting sprite set to window scale
+    const auto& items = m_menuLayout.items[m_tabBar.activeIndex];
+    const auto viewScale = cro::UIElementSystem::getViewScale();
+
+
     //if we didn't resize the actual size might be bigger than we expect
     //on other tabs...
     glm::vec2 renderSize = glm::vec2(m_menuLayout.texture.getSize());
@@ -1767,55 +1831,33 @@ void OptionsStateV2::updateMenuItems()
                             (m_tabBar.background.getComponent<cro::Transform>().getPosition().y - (InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2)};
     m_menuLayout.sprite.getComponent<cro::Drawable2D>().setCroppingArea(crop, true);
 
-    cro::Colour c = items[0].backgroundColour;
-    std::vector<cro::Vertex2D> verts =
-    {
-        cro::Vertex2D({0.f, ItemHeight}, c),
-        cro::Vertex2D(glm::vec2(0.f), c),
-        cro::Vertex2D({renderSize.x - (ItemSpacing * 2.f), ItemHeight}, c),
-        cro::Vertex2D({renderSize.x - (ItemSpacing * 2.f), 0.f}, c)
-    };
-    m_menuBackground.setVertexData(verts);
-
     m_menuText.setFillColour(TextNormalColour);
 
     constexpr float LineSpacing = 12.f;
     const auto renderItem =
         [&](const Menu::Item& item, glm::vec2 pos, std::int32_t idx)
         {
+            auto* background = &m_itemBackground;
             if (idx == m_menuLayout.hoveredIndex
                 && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
             {
-                for (auto& v : verts)
-                {
-                    v.colour = CD32::Colours[CD32::Yellow];
-                }
-                m_menuBackground.setVertexData(verts);
+                background = &m_itemBackgroundHighlight;
             }
             else if (idx == m_menuLayout.itemIndex)
             {
-                for (auto& v : verts)
-                {
-                    v.colour = CD32::Colours[CD32::BlueDark];
-                }
-                m_menuBackground.setVertexData(verts);
+                background = &m_itemBackgroundActive;
             }
 
-            else if (item.backgroundColour != c
-                || idx == m_menuLayout.hoveredIndex + 1
-                || idx == m_menuLayout.itemIndex + 1) //resets the colour
+            if (item.displayType == Menu::Item::Heading)
             {
-                c = item.backgroundColour;
-                for (auto& v : verts)
-                {
-                    v.colour = c;
-                }
-                m_menuBackground.setVertexData(verts);
+                m_itemBackgroundTitle.setPosition(pos);
+                m_itemBackgroundTitle.draw();
             }
-
-            m_menuBackground.setPosition(pos);
-            m_menuBackground.setScale(item.displayType == Menu::Item::Heading ? glm::vec2(1.f, 0.5f) : glm::vec2(1.f));
-            m_menuBackground.draw();
+            else
+            {
+                background->setPosition(pos);
+                background->draw();
+            }
 
             if (item.texture)
             {
@@ -1831,12 +1873,14 @@ void OptionsStateV2::updateMenuItems()
             pos.x += ItemSpacing;
             pos.y += ItemHeight - LineSpacing;
 
-            if (idx == m_menuLayout.hoveredIndex)
+            /*if (idx == m_menuLayout.hoveredIndex)
             {
                 m_menuText.setFillColour(CD32::Colours[CD32::Black]);
                 m_menuTextLarge.setFillColour(CD32::Colours[CD32::Black]);
             }
-            else if (idx == m_menuLayout.itemIndex)
+            else */
+            if (idx == m_menuLayout.itemIndex
+                || idx == m_menuLayout.hoveredIndex)
             {
                 m_menuText.setFillColour(CD32::Colours[CD32::Yellow]);
                 m_menuTextLarge.setFillColour(CD32::Colours[CD32::Yellow]);
@@ -1857,7 +1901,7 @@ void OptionsStateV2::updateMenuItems()
             switch (item.displayType)
             {
             default:
-                m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing * 2.f) });
+                m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing * 1.7f) });
                 if (item.labels.size() > 1)
                 {
                     m_menuTextLarge.setString("< " + item.labels[item.selectedIndex] + " >");
@@ -1881,8 +1925,9 @@ void OptionsStateV2::updateMenuItems()
                 m_menuText.draw();
                 break;
             case Menu::Item::Heading:
-                m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - std::round(LineSpacing * 1.6f) });
+                m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - std::round(LineSpacing * 1.7f) });
                 m_menuTextLarge.setString(item.title);
+                m_menuTextLarge.setFillColour(TextNormalColour);
                 m_menuTextLarge.draw();
                 break;
             }
@@ -2064,7 +2109,6 @@ void OptionsStateV2::doMouseClick()
 
 void OptionsStateV2::refreshView()
 {
-    resizeItemGraphics();
     updateTabBar();
 }
 

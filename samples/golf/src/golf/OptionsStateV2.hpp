@@ -149,7 +149,7 @@ private:
                 Heading //only displays the title, with half height background
             }displayType = Default;
 
-            cro::Colour backgroundColour = { 0xfff8e1af };
+            //cro::Colour backgroundColour = { 0xfff8e1af };
 
             //TODO float-rects in menu space to test click against
 
@@ -204,17 +204,18 @@ private:
         cro::FloatRect itemBox; //size is menu coords, position is updated during testing with current scroll position
     }m_menuLayout;
 
-    cro::SimpleQuad m_menuQuad; //item image if it exists
+    cro::SimpleQuad m_menuQuad; //item image/thumb if it exists
     cro::SimpleText m_menuText;
     cro::SimpleText m_menuTextLarge;        
-    cro::SimpleVertexArray m_menuBackground;
 
+    std::array<SpriteSection, 2u> m_itemSection = {};
+    std::array<SpriteSection, 2u> m_itemActiveSection = {};
+    std::array<SpriteSection, 2u> m_itemHighlightSection = {};
+    std::array<SpriteSection, 2u> m_itemTitleSection = {};
     cro::SimpleVertexArray m_itemBackground;
     cro::SimpleVertexArray m_itemBackgroundActive;
     cro::SimpleVertexArray m_itemBackgroundHighlight;
-    /*cro::SimpleVertexArray m_tabActive;
-    cro::SimpleVertexArray m_tabInactive;*/
-    cro::SimpleVertexArray m_detailBackground;
+    cro::SimpleVertexArray m_itemBackgroundTitle;
 
 
     cro::Entity m_infoString;
