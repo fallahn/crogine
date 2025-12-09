@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -65,20 +65,6 @@ Time Clock::restart()
     Time retVal = curTime - m_startTime;
     m_startTime = curTime;
     return retVal;
-}
-
-CRO_EXPORT_API Time cro::seconds(float seconds)
-{
-    Time t;
-    t.m_value = static_cast<std::int32_t>(seconds * 1000.f);
-    return t;
-}
-
-CRO_EXPORT_API Time cro::milliseconds(std::int32_t millis)
-{
-    Time t;
-    t.m_value = millis;
-    return t;
 }
 
 //---operator overloads---//

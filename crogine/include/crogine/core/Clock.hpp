@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -47,21 +47,28 @@ namespace cro
         std::int32_t asMilliseconds() const;
 
     private:
-        friend CRO_EXPORT_API Time seconds(float);
-        friend CRO_EXPORT_API Time milliseconds(std::int32_t);
+        friend CRO_EXPORT_API Time constexpr seconds(float);
+        friend CRO_EXPORT_API Time constexpr milliseconds(std::int32_t);
 
+        constexpr Time(std::int32_t m) : m_value(m) {}
         std::int32_t m_value;
     };
 
     /*!
     \brief Constructs a time object from a duration of seconds
     */
-    CRO_EXPORT_API Time seconds(float s);    
+    CRO_EXPORT_API Time constexpr seconds(float s)
+    {
+        return { static_cast<std::int32_t>(s * 1000.f) };
+    }
 
     /*!
     \brief Constructs a Time object from a duration of milliseconds
     */
-    CRO_EXPORT_API Time milliseconds(std::int32_t millis);
+    CRO_EXPORT_API Time constexpr milliseconds(std::int32_t millis)
+    {
+        return { millis };
+    }
 
     /*!
     \brief Overload of == operator for two Time objects

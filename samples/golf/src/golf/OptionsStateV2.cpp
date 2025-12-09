@@ -2220,6 +2220,8 @@ void OptionsStateV2::doMouseClick()
         m_tabBar.hoveredIndex = -1;
         m_menuLayout.itemIndex = 0;
         updateTabBar();
+
+        playSound(MenuSoundEvent::Activate);
     }
     else
     {
@@ -2228,6 +2230,8 @@ void OptionsStateV2::doMouseClick()
             m_menuLayout.itemIndex = m_menuLayout.hoveredIndex;
             m_menuLayout.hoveredIndex = -1;
             updateMenuItems();
+
+            playSound(MenuSoundEvent::Activate);
         }
         else
         {

@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "ui/FlagPreview.hpp"
 
+#include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -75,6 +76,9 @@ private:
 
     void onCachedPush() override;
     void onCachedPop() override;
+
+    cro::Clock m_inputRepeatClock;
+    static constexpr cro::Time RepeatTime = cro::seconds(0.2f);
 
     struct SpriteSection final
     {
@@ -159,8 +163,6 @@ private:
                 TextOnly, //displays the description on the item
                 Heading //only displays the title, with half height background
             }displayType = Default;
-
-            //cro::Colour backgroundColour = { 0xfff8e1af };
 
             //TODO float-rects in menu space to test click against
 
