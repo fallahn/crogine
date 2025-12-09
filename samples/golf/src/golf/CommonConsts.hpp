@@ -52,6 +52,18 @@ struct MixerChannel final
     };
 };
 
+static inline const std::array<cro::String, MixerChannel::Count> MixerLabels =
+{
+    "Menu Music",
+    "Game Music",
+    "Effects",
+    "Menu Sounds",
+    "Voices",
+    "Vehicles",
+    "Environment",
+    "Text To Speech"
+};
+
 static const std::string TournamentDataFile = "data.tmt";
 
 namespace ConstVal

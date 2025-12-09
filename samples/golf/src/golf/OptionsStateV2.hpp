@@ -264,6 +264,7 @@ private:
     void checkMouseOver(glm::vec2);
     void doMouseClick(glm::vec2);
 
+    void refreshAudioDevices(Menu::Item&);
     void refreshView();
     void quitState();
 };

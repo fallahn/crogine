@@ -130,17 +130,6 @@ namespace
         };
     };
 
-    const std::array<cro::String, MixerChannel::Count> MixerLabels =
-    {
-        "Menu Music",
-        "Game Music",
-        "Effects",
-        "Menu Sounds",
-        "Voices",
-        "Vehicles",
-        "Environment",
-        "Text To Speech"
-    };
     //generally static vars would be a bad idea, but in this case
     //a static index value will remember the last channel between
     //showing instances of options, as well as being available to

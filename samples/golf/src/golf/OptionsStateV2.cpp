@@ -39,6 +39,7 @@ source distribution.
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 
+#include <crogine/audio/AudioDevice.hpp>
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
@@ -158,7 +159,13 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
 
     //TODO we MUST be able to cancel keybinds with a controller!
 
-
+    //we need to refresh the audio device display when dis/re connect
+    //WARNING we're indexing the item directly!
+    if (evt.type == SDL_AUDIODEVICEADDED
+        || evt.type == SDL_AUDIODEVICEREMOVED)
+    {
+        refreshAudioDevices(m_menuLayout.items[TabBar::Item::Audio][1]);
+    }
 
     const auto setActiveInput =
         [&](bool mouse, std::int32_t controllerIndex)
@@ -1792,17 +1799,68 @@ void OptionsStateV2::createDisplayItems()
 
 void OptionsStateV2::createAudioItems()
 {
-    for (auto i = 0; i < 5; ++i)
+    m_tabBar.items[TabBar::Item::Audio].displayWidth = 0.8f;
+    m_tabBar.items[TabBar::Item::Audio].alignment = TabBar::Item::Centre;
+
+    auto* item = &m_menuLayout.items[TabBar::Item::Audio].emplace_back();
+    item->title = "Configuration";
+    item->displayType = Menu::Item::Heading;
+
+    //device selection - WARNING we have a hack when handling device
+    //disconnect events which indexes this directly!! Don't chage the index!
+    item = &m_menuLayout.items[TabBar::Item::Audio].emplace_back();
+    item->title = "Audio Device";
+    //item->description = "Enable text to speech playback for in-game chat";
+    //cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& it)
+        {
+            const auto& devices = cro::AudioDevice::getDeviceList();
+            if (devices.empty())
+            {
+                return;
+            }
+
+            it.selectedIndex %= devices.size();
+            cro::AudioDevice::setActiveDevice(devices[it.selectedIndex]);
+        };
+    refreshAudioDevices(*item);
+
+
+    //text to speech
+    item = &m_menuLayout.items[TabBar::Item::Audio].emplace_back();
+    item->title = "Use Text To Speech for Chat";
+    item->description = "Enable text to speech playback for in-game chat";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.useTTS = i.selectedIndex == 0 ? false : true;
+        };
+    item->count = 2;
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.useTTS ? 1 : 0;
+
+
+    //mixer
+    item = &m_menuLayout.items[TabBar::Item::Audio].emplace_back();
+    item->title = "Volume Levels";
+    item->displayType = Menu::Item::Heading;
+
+    for (auto i = 0; i < MixerChannel::Count; ++i)
     {
-        auto& item = m_menuLayout.items[4].emplace_back();
-        item.title = "Dummy Item";
-        item.description = "This is the item description for " + std::to_string(i + 1);
-        item.activated = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
-        item.count = cro::Util::Random::value(2, 4);
+        auto& item = m_menuLayout.items[TabBar::Item::Audio].emplace_back();
+        item.title = MixerLabels[i];
+        //item.description = "This is the item description for " + std::to_string(i + 1);
+        item.activated = 
+            [i](Menu::Item& it)
+            {
+                cro::AudioMixer::setVolume(static_cast<float>(it.selectedIndex) / 10.f, i);
+            };
+        item.count = 11;
         for (auto j = 0; j < item.count; ++j)
         {
-            item.labels.push_back("Option " + std::to_string(j + 1));
+            item.labels.push_back("Vol: " + std::to_string(j));
         }
+        item.selectedIndex = std::clamp(static_cast<std::int32_t>(cro::AudioMixer::getVolume(i) * 10.f), 0, 10);
     }
 }
 
@@ -2615,6 +2673,58 @@ void OptionsStateV2::doMouseClick(glm::vec2 mousePos)
                 }
             }
         }
+    }
+}
+
+void OptionsStateV2::refreshAudioDevices(Menu::Item& item)
+{
+    item.labels.clear();
+
+    std::string str;
+    auto deviceList = cro::AudioDevice::getDeviceList();
+    if (deviceList.empty())
+    {
+        item.count = 0;
+        item.labels.push_back("No Device Available");
+        item.selectedIndex = 0;
+        return;
+    }
+    else
+    {
+        /*if (Social::isSteamdeck())
+        {
+            str = "Default";
+        }
+        else*/
+        {
+            str = cro::AudioDevice::getActiveDevice();
+        }
+    }
+
+    static const std::string RemoveMe("OpenAL Soft on ");
+    if (str.find(RemoveMe) != std::string::npos)
+    {
+        str = str.substr(RemoveMe.size());
+    }
+    for (auto& d : deviceList)
+    {
+        if (d.find(RemoveMe) != std::string::npos)
+        {
+            d = d.substr(RemoveMe.size());
+        }
+        item.labels.push_back(d);
+    }
+
+    item.count = static_cast<std::int32_t>(deviceList.size());
+    if (const auto res = std::find(deviceList.cbegin(), deviceList.cend(), str);
+        res != deviceList.cend())
+    {
+        item.selectedIndex = static_cast<std::int32_t>(std::distance(deviceList.cbegin(), res));
+    }
+    else
+    {
+        item.selectedIndex = 0;
+        item.activated(item);
     }
 }
 
