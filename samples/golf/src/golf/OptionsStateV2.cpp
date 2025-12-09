@@ -122,6 +122,10 @@ namespace
     constexpr auto BackgroundYellow = cro::Colour(0xf2cf5caf);
     constexpr auto BackgroundRed = cro::Colour(0xb83530af);
 
+
+    static constexpr cro::Time RepeatTimeLong = cro::seconds(0.5f);
+    static constexpr cro::Time RepeatTimeShort = cro::seconds(0.05f);
+
     void playSound(std::int32_t id)
     {
         cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = id;
@@ -316,13 +320,11 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
             || evt.key.keysym.sym == SDLK_DOWN)
         {
             nextItem();
-            m_inputRepeatClock.restart();
         }
         else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up]
             || evt.key.keysym.sym == SDLK_UP)
         {
             prevItem();
-            m_inputRepeatClock.restart();
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
@@ -334,11 +336,11 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         default: break;
         case cro::GameController::DPadUp:
             prevItem();
-            m_inputRepeatClock.restart();
+            resetRepeatTimer(RepeatTimeLong);
             break;
         case cro::GameController::DPadDown:
             nextItem();
-            m_inputRepeatClock.restart();
+            resetRepeatTimer(RepeatTimeLong);
             break;
         }
     }
@@ -396,57 +398,60 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        setActiveInput(false, cro::GameController::controllerID(evt.caxis.which));
-
+        const std::int16_t Threshold = cro::GameController::LeftThumbDeadZone * 2;// 15000;
+        
+        if (std::abs(evt.caxis.value) > Threshold)
         {
-            const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
+            setActiveInput(false, cro::GameController::controllerID(evt.caxis.which));
+        }
+        
+        const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
             
-            if (controllerID != -1
-                && controllerID < 4)
+        if (controllerID != -1
+            && controllerID < 4)
+        {
+            switch (evt.caxis.axis)
             {
-                const std::int16_t Threshold = cro::GameController::LeftThumbDeadZone * 2;// 15000;
-                switch (evt.caxis.axis)
+            default: break;
+            case SDL_CONTROLLER_AXIS_LEFTX:
+                if (evt.caxis.value > Threshold)
                 {
-                default: break;
-                case SDL_CONTROLLER_AXIS_LEFTX:
-                    if (evt.caxis.value > Threshold)
-                    {
-                        //right
-                        m_controllerMasks[controllerID] |= InputFlag::Right;
-                        m_controllerMasks[controllerID] &= ~InputFlag::Left;
-                    }
-                    else if (evt.caxis.value < -Threshold)
-                    {
-                        //left
-                        m_controllerMasks[controllerID] |= InputFlag::Left;
-                        m_controllerMasks[controllerID] &= ~InputFlag::Right;
-                    }
-                    else
-                    {
-                        m_controllerMasks[controllerID] &= ~(InputFlag::Left | InputFlag::Right);
-                    }
-                    break;
-                case SDL_CONTROLLER_AXIS_LEFTY:
-                    if (evt.caxis.value > Threshold)
-                    {
-                        //down
-                        m_controllerMasks[controllerID] |= InputFlag::Down;
-                        m_controllerMasks[controllerID] &= ~InputFlag::Up;
-                    }
-                    else if (evt.caxis.value < -Threshold)
-                    {
-                        //up
-                        m_controllerMasks[controllerID] |= InputFlag::Up;
-                        m_controllerMasks[controllerID] &= ~InputFlag::Down;
-                    }
-                    else
-                    {
-                        m_controllerMasks[controllerID] &= ~(InputFlag::Up | InputFlag::Down);
-                    }
-                    break;
+                    //right
+                    m_controllerMasks[controllerID] |= InputFlag::Right;
+                    m_controllerMasks[controllerID] &= ~InputFlag::Left;
                 }
+                else if (evt.caxis.value < -Threshold)
+                {
+                    //left
+                    m_controllerMasks[controllerID] |= InputFlag::Left;
+                    m_controllerMasks[controllerID] &= ~InputFlag::Right;
+                }
+                else
+                {
+                    m_controllerMasks[controllerID] &= ~(InputFlag::Left | InputFlag::Right);
+                }
+                break;
+            case SDL_CONTROLLER_AXIS_LEFTY:
+                if (evt.caxis.value > Threshold)
+                {
+                    //down
+                    m_controllerMasks[controllerID] |= InputFlag::Down;
+                    m_controllerMasks[controllerID] &= ~InputFlag::Up;
+                }
+                else if (evt.caxis.value < -Threshold)
+                {
+                    //up
+                    m_controllerMasks[controllerID] |= InputFlag::Up;
+                    m_controllerMasks[controllerID] &= ~InputFlag::Down;
+                }
+                else
+                {
+                    m_controllerMasks[controllerID] &= ~(InputFlag::Up | InputFlag::Down);
+                }
+                break;
             }
         }
+        
     }
     else if (evt.type == SDL_MOUSEWHEEL)
     {
@@ -505,11 +510,13 @@ bool OptionsStateV2::simulate(float dt)
         if (maskTest(i, InputFlag::Up))
         {
             prevItem();
+            resetRepeatTimer(RepeatTimeLong);
         }
 
         if (maskTest(i, InputFlag::Down))
         {
             nextItem();
+            resetRepeatTimer(RepeatTimeLong);
         }
 
         m_controllerPrevMasks[i] = m_controllerMasks[i];
@@ -518,20 +525,20 @@ bool OptionsStateV2::simulate(float dt)
         if (cro::GameController::isButtonPressed(i, cro::GameController::DPadDown)
             || (m_controllerMasks[i] & InputFlag::Down))
         {
-            if (m_inputRepeatClock.elapsed() > RepeatTime)
+            if (m_inputRepeatClock.elapsed() > m_repeatTime)
             {
                 nextItem();
-                m_inputRepeatClock.restart();
+                resetRepeatTimer(RepeatTimeShort);
             }
         }
 
         if (cro::GameController::isButtonPressed(i, cro::GameController::DPadUp)
             || (m_controllerMasks[i] & InputFlag::Up))
         {
-            if (m_inputRepeatClock.elapsed() > RepeatTime)
+            if (m_inputRepeatClock.elapsed() > m_repeatTime)
             {
                 prevItem();
-                m_inputRepeatClock.restart();
+                resetRepeatTimer(RepeatTimeShort);
             }
         }
     }
@@ -1986,6 +1993,12 @@ void OptionsStateV2::onCachedPush()
 void OptionsStateV2::onCachedPop()
 {
 
+}
+
+void OptionsStateV2::resetRepeatTimer(cro::Time resetTime)
+{
+    m_inputRepeatClock.restart();
+    m_repeatTime = resetTime;
 }
 
 void OptionsStateV2::updateTabBar()
