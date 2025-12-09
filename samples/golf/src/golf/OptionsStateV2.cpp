@@ -366,7 +366,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
-            doMouseClick();
+            doMouseClick({ evt.motion.x, evt.motion.y });
         }
         else if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -2058,7 +2058,7 @@ void OptionsStateV2::resizeItemGraphics()
 void OptionsStateV2::updateMenuItems()
 {
     //NOTE this is all done 1:1 scale and the resulting sprite set to window scale
-    const auto& items = m_menuLayout.items[m_tabBar.activeIndex];
+    auto& items = m_menuLayout.items[m_tabBar.activeIndex];
     const auto viewScale = cro::UIElementSystem::getViewScale();
 
 
@@ -2079,7 +2079,7 @@ void OptionsStateV2::updateMenuItems()
 
     constexpr float LineSpacing = 12.f;
     const auto renderItem =
-        [&](const Menu::Item& item, glm::vec2 pos, std::int32_t idx)
+        [&](Menu::Item& item, glm::vec2 pos, std::int32_t idx)
         {
             auto* background = &m_itemBackground;
             if (idx == m_menuLayout.hoveredIndex
@@ -2156,6 +2156,17 @@ void OptionsStateV2::updateMenuItems()
                     m_menuTextLarge.setString(item.labels[item.selectedIndex]);
                 }
                 m_menuTextLarge.draw();
+
+                {
+                    static constexpr float HitPadding = 4.f;
+                    item.hitbox = m_menuTextLarge.getLocalBounds();
+                    item.hitbox.left += m_menuTextLarge.getPosition().x;
+                    item.hitbox.left -= HitPadding;
+                    item.hitbox.bottom += m_menuTextLarge.getPosition().y;
+                    item.hitbox.bottom -= HitPadding;
+                    item.hitbox.width += (2.f * HitPadding);
+                    item.hitbox.height += (2.f * HitPadding);
+                }
                 break;
             //case Menu::Item::Slider:
             //    m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing * 2.f) });
@@ -2189,7 +2200,7 @@ void OptionsStateV2::updateMenuItems()
     //render current item selection to render texture
     //this includes either setting item highlight colour or rendering a highlight box
     auto i = 0;
-    for (const auto& item : items)
+    for (auto& item : items)
     {
         if (i == m_menuLayout.itemIndex)
         {
@@ -2326,7 +2337,7 @@ void OptionsStateV2::checkMouseOver(glm::vec2 screenPos)
     }
 }
 
-void OptionsStateV2::doMouseClick()
+void OptionsStateV2::doMouseClick(glm::vec2 mousePos)
 {
     if (m_tabBar.hoveredIndex != -1)
     {
@@ -2347,10 +2358,27 @@ void OptionsStateV2::doMouseClick()
 
             playSound(MenuSoundEvent::Activate);
         }
-        else
+        //else
         {
-            //TODO this is the active item, test for activation click
-            
+            //this is the active item, test for activation click
+            const auto testbox = m_menuLayout.sprite.getComponent<cro::Transform>().getWorldTransform() *
+                m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].hitbox;
+            const auto testpos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(mousePos);
+
+            if (testbox.contains(testpos))
+            {
+                activate();
+
+                const float xPos = testpos.x - testbox.left;
+                if (xPos < testbox.width / 2.f)
+                {
+                    activateLeft();
+                }
+                else
+                {
+                    activateRight();
+                }
+            }
         }
     }
 }

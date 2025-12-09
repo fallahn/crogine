@@ -166,7 +166,8 @@ private:
                 Heading //only displays the title, with half height background
             }displayType = Default;
 
-            //TODO float-rects in menu space to test click against
+            //float-rect in menu space to test click against
+            cro::FloatRect hitbox;
 
             std::int32_t selectedIndex = 0; //currently selected entry
             std::int32_t count = 1; //number of items to cycle through when clicking
@@ -260,7 +261,7 @@ private:
     void activate();
 
     void checkMouseOver(glm::vec2);
-    void doMouseClick();
+    void doMouseClick(glm::vec2);
 
     void refreshView();
     void quitState();
