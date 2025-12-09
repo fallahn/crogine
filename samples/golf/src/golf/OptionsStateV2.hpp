@@ -221,10 +221,12 @@ private:
 
     std::array<SpriteSection, 2u> m_itemSection = {};
     std::array<SpriteSection, 2u> m_itemActiveSection = {};
+    std::array<SpriteSection, 2u> m_itemActiveHighlightSection = {};
     std::array<SpriteSection, 2u> m_itemHighlightSection = {};
     std::array<SpriteSection, 2u> m_itemTitleSection = {};
     cro::SimpleVertexArray m_itemBackground;
     cro::SimpleVertexArray m_itemBackgroundActive;
+    cro::SimpleVertexArray m_itemBackgroundActiveHighlight;
     cro::SimpleVertexArray m_itemBackgroundHighlight;
     cro::SimpleVertexArray m_itemBackgroundTitle;
 

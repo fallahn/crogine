@@ -479,6 +479,10 @@ void OptionsStateV2::loadAssets()
         parseSprite("item_active_left", m_itemActiveSection[0]);
         parseSprite("item_active_right", m_itemActiveSection[1]);
 
+        //item active highlight
+        parseSprite("item_highlight_active_left", m_itemActiveHighlightSection[0]);
+        parseSprite("item_highlight_active_right", m_itemActiveHighlightSection[1]);
+
         //item highlight
         parseSprite("item_highlight_left", m_itemHighlightSection[0]);
         parseSprite("item_highlight_right", m_itemHighlightSection[1]);
@@ -493,6 +497,9 @@ void OptionsStateV2::loadAssets()
 
         m_itemBackgroundActive.setTexture(*m_uiTexture);
         m_itemBackgroundActive.setPrimitiveType(GL_TRIANGLES);
+        
+        m_itemBackgroundActiveHighlight.setTexture(*m_uiTexture);
+        m_itemBackgroundActiveHighlight.setPrimitiveType(GL_TRIANGLES);
 
         m_itemBackgroundHighlight.setTexture(*m_uiTexture);
         m_itemBackgroundHighlight.setPrimitiveType(GL_TRIANGLES);
@@ -1808,10 +1815,13 @@ void OptionsStateV2::resizeItemGraphics()
     calcVerts(m_itemSection[0], m_itemSection[1]);
     m_itemBackground.setVertexData(verts);
 
-
     verts.clear();
     calcVerts(m_itemActiveSection[0], m_itemActiveSection[1]);
     m_itemBackgroundActive.setVertexData(verts);
+
+    verts.clear();
+    calcVerts(m_itemActiveHighlightSection[0], m_itemActiveHighlightSection[1]);
+    m_itemBackgroundActiveHighlight.setVertexData(verts);
 
     verts.clear();
     calcVerts(m_itemHighlightSection[0], m_itemHighlightSection[1]);
@@ -1956,7 +1966,7 @@ void OptionsStateV2::updateMenuItems()
             if (idx == m_menuLayout.hoveredIndex
                 && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
             {
-                background = &m_itemBackgroundHighlight;
+                background = idx == m_menuLayout.itemIndex ? &m_itemBackgroundActiveHighlight : &m_itemBackgroundHighlight;
             }
             else if (idx == m_menuLayout.itemIndex)
             {
