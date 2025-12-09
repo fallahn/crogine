@@ -138,6 +138,9 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_flagPreview.init(sd.flagPath);
     m_flagPreview.setText(m_sharedData.flagText);
 
+    std::fill(m_controllerMasks.begin(), m_controllerMasks.end(), 0);
+    std::fill(m_controllerPrevMasks.begin(), m_controllerMasks.end(), 0);
+
     loadAssets();
     buildScene();
 }
@@ -383,7 +386,55 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     {
         setActiveInput(false, cro::GameController::controllerID(evt.caxis.which));
 
-        //TODO parse cursor movement
+        {
+            const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
+            
+            if (controllerID != -1
+                && controllerID < 4)
+            {
+                const std::int16_t Threshold = cro::GameController::LeftThumbDeadZone * 2;// 15000;
+                switch (evt.caxis.axis)
+                {
+                default: break;
+                case SDL_CONTROLLER_AXIS_LEFTX:
+                    if (evt.caxis.value > Threshold)
+                    {
+                        //right
+                        m_controllerMasks[controllerID] |= InputFlag::Right;
+                        m_controllerMasks[controllerID] &= ~InputFlag::Left;
+                    }
+                    else if (evt.caxis.value < -Threshold)
+                    {
+                        //left
+                        m_controllerMasks[controllerID] |= InputFlag::Left;
+                        m_controllerMasks[controllerID] &= ~InputFlag::Right;
+                    }
+                    else
+                    {
+                        m_controllerMasks[controllerID] &= ~(InputFlag::Left | InputFlag::Right);
+                    }
+                    break;
+                case SDL_CONTROLLER_AXIS_LEFTY:
+                    if (evt.caxis.value > Threshold)
+                    {
+                        //down
+                        m_controllerMasks[controllerID] |= InputFlag::Down;
+                        m_controllerMasks[controllerID] &= ~InputFlag::Up;
+                    }
+                    else if (evt.caxis.value < -Threshold)
+                    {
+                        //up
+                        m_controllerMasks[controllerID] |= InputFlag::Up;
+                        m_controllerMasks[controllerID] &= ~InputFlag::Down;
+                    }
+                    else
+                    {
+                        m_controllerMasks[controllerID] &= ~(InputFlag::Up | InputFlag::Down);
+                    }
+                    break;
+                }
+            }
+        }
     }
     else if (evt.type == SDL_MOUSEWHEEL)
     {
@@ -420,23 +471,56 @@ bool OptionsStateV2::simulate(float dt)
     origin.y += diff * (dt * 10.f);
     m_menuLayout.sprite.getComponent<cro::Transform>().setOrigin(origin);
 
-
-    //check for repeat inputs
-    if (cro::GameController::isButtonPressed(0, cro::GameController::DPadDown))
-    {
-        if (m_inputRepeatClock.elapsed() > RepeatTime)
+    const auto maskTest =
+        [&](std::int32_t index, std::int32_t flag)
         {
-            nextItem();
-            m_inputRepeatClock.restart();
-        }
-    }
+            return ((m_controllerMasks[index] & flag) != 0) && ((m_controllerPrevMasks[index] & flag) == 0);
+        };
 
-    if (cro::GameController::isButtonPressed(0, cro::GameController::DPadUp))
+    for (auto i = 0; i < cro::GameController::getControllerCount(); ++i)
     {
-        if (m_inputRepeatClock.elapsed() > RepeatTime)
+        //check stick input
+        if (maskTest(i, InputFlag::Left))
+        {
+            activateLeft();
+        }
+
+        if (maskTest(i, InputFlag::Right))
+        {
+            activateRight();
+        }
+
+        if (maskTest(i, InputFlag::Up))
         {
             prevItem();
-            m_inputRepeatClock.restart();
+        }
+
+        if (maskTest(i, InputFlag::Down))
+        {
+            nextItem();
+        }
+
+        m_controllerPrevMasks[i] = m_controllerMasks[i];
+        
+        //check for repeat inputs
+        if (cro::GameController::isButtonPressed(i, cro::GameController::DPadDown)
+            || (m_controllerMasks[i] & InputFlag::Down))
+        {
+            if (m_inputRepeatClock.elapsed() > RepeatTime)
+            {
+                nextItem();
+                m_inputRepeatClock.restart();
+            }
+        }
+
+        if (cro::GameController::isButtonPressed(i, cro::GameController::DPadUp)
+            || (m_controllerMasks[i] & InputFlag::Up))
+        {
+            if (m_inputRepeatClock.elapsed() > RepeatTime)
+            {
+                prevItem();
+                m_inputRepeatClock.restart();
+            }
         }
     }
 

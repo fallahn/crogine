@@ -79,6 +79,8 @@ private:
 
     cro::Clock m_inputRepeatClock;
     static constexpr cro::Time RepeatTime = cro::seconds(0.2f);
+    std::array<std::uint8_t, 4u> m_controllerMasks = {};
+    std::array<std::uint8_t, 4u> m_controllerPrevMasks = {};
 
     struct SpriteSection final
     {
