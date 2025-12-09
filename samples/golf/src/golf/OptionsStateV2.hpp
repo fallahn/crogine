@@ -173,6 +173,7 @@ private:
             std::int32_t count = 1; //number of items to cycle through when clicking
             std::vector<cro::String> labels; //display text for each setting when cycled
             cro::String title; //main display title
+            cro::String subTitle; //shown below title in TextOnly items
             cro::String description; //shown when hovered
 
             std::function<void(const Item&)> selected; //called when selected

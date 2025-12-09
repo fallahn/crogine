@@ -155,6 +155,11 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         return false;
     }
 
+
+    //TODO we MUST be able to cancel keybinds with a controller!
+
+
+
     const auto setActiveInput =
         [&](bool mouse, std::int32_t controllerIndex)
         {
@@ -1509,18 +1514,248 @@ void OptionsStateV2::createSettingsItems()
 
 void OptionsStateV2::createKeyboardItems()
 {
-    for (auto i = 0; i < 5; ++i)
-    {
-        auto& item = m_menuLayout.items[1].emplace_back();
-        item.title = "Dummy Item";
-        item.description = "This is the item description for " + std::to_string(i + 1);
-        item.activated = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
-        item.count = cro::Util::Random::value(2, 4);
-        for (auto j = 0; j < item.count; ++j)
+    //config
+    auto* item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Configuration";
+    item->displayType = Menu::Item::Heading;
+
+    
+    //mouse button for action
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Use Left Mouse as Action Button";
+    item->description = "Clicking left mouse button performs the same as the Action key";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
-            item.labels.push_back("Option " + std::to_string(j + 1));
-        }
-    }
+            m_sharedData.useMouseAction = i.selectedIndex == 0 ? false : true;
+        };
+    item->count = 2;
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
+
+    //hold for power
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Hold Action For Power";
+    item->description = "Press and hold the Action key to choose swing power instead of the traditional 3-click system";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.pressHold = i.selectedIndex == 0 ? false : true;
+        };
+    item->count = 2;
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.pressHold ? 1 : 0;
+
+
+    
+    
+    //keybinds
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Key Bindings";
+    item->displayType = Menu::Item::Heading;
+
+    //prev club
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Previous Club";
+    item->description = "Press to select a new key";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+        };
+    item->count = 1;
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub])};
+    item->selectedIndex = 0;
+
+    //next club
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Next Club";
+    item->description = "Press to select a new key";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+        };
+    item->count = 1;
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) };
+    item->selectedIndex = 0;
+
+    //aim left
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Aim Left";
+    item->description = "Press to select a new key";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+        };
+    item->count = 1;
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]) };
+    item->selectedIndex = 0;
+
+    //aim right
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Aim Right";
+    item->description = "Press to select a new key";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+        };
+    item->count = 1;
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]) };
+    item->selectedIndex = 0;
+
+    //camera up
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Camera Up";
+    item->description = "Press to select a new key";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+        };
+    item->count = 1;
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Up]) };
+    item->selectedIndex = 0;
+
+    //camera down
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Camera Down";
+    item->description = "Press to select a new key";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+        };
+    item->count = 1;
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Down]) };
+    item->selectedIndex = 0;
+
+    //action
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Action (Take Shot)";
+    item->description = "Press to select a new key";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+        };
+    item->count = 1;
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) };
+    item->selectedIndex = 0;
+
+    //spin menu
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Show Spin Menu";
+    item->description = "Press to select a new key";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+        };
+    item->count = 1;
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]) };
+    item->selectedIndex = 0;
+
+    //emote wheel
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Show Emote Wheel";
+    item->description = "Press to select a new key";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+        };
+    item->count = 1;
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::EmoteMenu]) };
+    item->selectedIndex = 0;
+
+    //cancel shot
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Cancel Shot In Progress";
+    item->description = "Press to select a new key";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+        };
+    item->count = 1;
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::CancelShot]) };
+    item->selectedIndex = 0;
+
+
+
+
+
+    //fixed keys
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Fixed Keys";
+    item->displayType = Menu::Item::Heading;
+
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Measure Putt";
+    item->subTitle = "Displays a distance widget to meaure the green when putting";
+    item->description = "Key: Number 1 (Top Row)";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Freecam";
+    item->subTitle = "Enter freecam / photo mode";
+    item->description = "Key: Number 2 (Top Row)";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Rotate Camera Left";
+    item->description = "Key: Number 3 (Top Row)";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Rotate Camera Right";
+    item->description = "Key: Number 4 (Top Row)";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Zoom Minimap";
+    item->description = "Key: Number 5 (Top Row)";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Show Scores";
+    item->description = "Key: Tab";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Open Menu";
+    item->description = "Key: Escape";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Toggle Ball Labels";
+    item->subTitle = "Show or hide player name labels when putting";
+    item->description = "Key: F2";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Toggle UI";
+    item->description = "Key: F3";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Toggle Chat";
+    item->subTitle = "Show the in-game chat window";
+    item->description = "Key: F4";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Take Screenshot";
+    item->description = "Key: F5";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Toggle Putting Grid";
+    item->description = "Key: F7";
+    item->displayType = Menu::Item::TextOnly;
 }
 
 void OptionsStateV2::createControllerItems()
@@ -1595,11 +1830,11 @@ void OptionsStateV2::createAchievementItems()
             else
             {
                 item.title = ach->name;
-                item.description = AchievementDesc[ach->id].first;
+                item.subTitle = AchievementDesc[ach->id].first;
 
                 if (ach->achieved)
                 {
-                    item.description += "\nUnlocked: " + cro::SysTime::dateString(ach->timestamp);
+                    item.subTitle += "\nUnlocked: " + cro::SysTime::dateString(ach->timestamp);
                 }
             }
             item.texture = icon.texture;
@@ -1676,7 +1911,7 @@ void OptionsStateV2::createStatItems()
         {
             auto& item = m_menuLayout.items[TabBar::Item::Stats].emplace_back();
             item.title = StatLabels[stat->id];
-            item.description = formatValue(StatTypes[stat->id], stat->value);
+            item.subTitle = formatValue(StatTypes[stat->id], stat->value);
             item.count = 0;
             item.displayType = Menu::Item::TextOnly;
         }
@@ -2176,7 +2411,7 @@ void OptionsStateV2::updateMenuItems()
             //    break;
             case Menu::Item::TextOnly:
                 m_menuText.move({ 0.f, -(LineSpacing - 1.f) });
-                m_menuText.setString(item.description);
+                m_menuText.setString(item.subTitle);
                 m_menuText.draw();
                 break;
             case Menu::Item::Heading:
