@@ -301,15 +301,16 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
             || evt.key.keysym.sym == SDLK_DOWN)
         {
             nextItem();
+            m_inputRepeatClock.restart();
         }
         else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up]
             || evt.key.keysym.sym == SDLK_UP)
         {
             prevItem();
+            m_inputRepeatClock.restart();
         }
     }
-
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
         setActiveInput(false, cro::GameController::controllerID(evt.cbutton.which));
 
@@ -318,10 +319,19 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         default: break;
         case cro::GameController::DPadUp:
             prevItem();
+            m_inputRepeatClock.restart();
             break;
         case cro::GameController::DPadDown:
             nextItem();
+            m_inputRepeatClock.restart();
             break;
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    {
+        switch (evt.cbutton.button)
+        {
+        default: break;
         case cro::GameController::DPadLeft:
             activateLeft();
             break;
@@ -409,6 +419,26 @@ bool OptionsStateV2::simulate(float dt)
     const float diff = target - origin.y;
     origin.y += diff * (dt * 10.f);
     m_menuLayout.sprite.getComponent<cro::Transform>().setOrigin(origin);
+
+
+    //check for repeat inputs
+    if (cro::GameController::isButtonPressed(0, cro::GameController::DPadDown))
+    {
+        if (m_inputRepeatClock.elapsed() > RepeatTime)
+        {
+            nextItem();
+            m_inputRepeatClock.restart();
+        }
+    }
+
+    if (cro::GameController::isButtonPressed(0, cro::GameController::DPadUp))
+    {
+        if (m_inputRepeatClock.elapsed() > RepeatTime)
+        {
+            prevItem();
+            m_inputRepeatClock.restart();
+        }
+    }
 
     m_scene.simulate(dt);
     return true;
