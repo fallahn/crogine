@@ -1482,6 +1482,11 @@ void OptionsStateV2::createAchievementItems()
             {
                 item.title = ach->name;
                 item.description = AchievementDesc[ach->id].first;
+
+                if (ach->achieved)
+                {
+                    item.description += "\nUnlocked: " + cro::SysTime::dateString(ach->timestamp);
+                }
             }
             item.texture = icon.texture;
             item.uv = icon.textureRect;
@@ -2045,7 +2050,7 @@ void OptionsStateV2::updateMenuItems()
             //    //TODO draw a slider of some sort
             //    break;
             case Menu::Item::TextOnly:
-                m_menuText.move({ 0.f, -LineSpacing });
+                m_menuText.move({ 0.f, -(LineSpacing - 1.f) });
                 m_menuText.setString(item.description);
                 m_menuText.draw();
                 break;
