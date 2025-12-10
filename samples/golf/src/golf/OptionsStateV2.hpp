@@ -170,6 +170,7 @@ private:
             //float-rect in menu space to test click against
             cro::FloatRect hitbox;
 
+            bool wrapValue = true; //value wraps back to the beginning instead of clamping
             std::int32_t selectedIndex = 0; //currently selected entry
             std::int32_t count = 1; //number of items to cycle through when clicking
             std::vector<cro::String> labels; //display text for each setting when cycled
@@ -183,7 +184,10 @@ private:
             {
                 if (count > 1)
                 {
-                    selectedIndex = (selectedIndex + (count - 1)) % count;
+                    selectedIndex = wrapValue ?
+                        (selectedIndex + (count - 1)) % count
+                        : std::max(selectedIndex - 1, 0);
+
                     activated(*this);
                     return true;
                 }
@@ -194,7 +198,9 @@ private:
             {
                 if (count > 1)
                 {
-                    selectedIndex = (selectedIndex + 1) % count;
+                    selectedIndex = wrapValue ? 
+                        (selectedIndex + 1) % count
+                        : std::min(selectedIndex + 1, count - 1);
                     activated(*this);
                     return true;
                 }
@@ -236,6 +242,7 @@ private:
     cro::SimpleVertexArray m_itemBackgroundActiveHighlight;
     cro::SimpleVertexArray m_itemBackgroundHighlight;
     cro::SimpleVertexArray m_itemBackgroundTitle;
+    cro::SimpleVertexArray m_itemSlider;
 
 
     cro::Entity m_infoString;
@@ -254,6 +261,7 @@ private:
     }m_detailsPane;
 
     void resizeItemGraphics();
+    void updateSliderGraphic(std::int32_t amt, std::int32_t total);
 
     void updateMenuItems();
     void nextItem();

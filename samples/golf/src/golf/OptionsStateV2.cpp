@@ -582,6 +582,8 @@ void OptionsStateV2::loadAssets()
     m_menuTextLarge.setCharacterSize(UITextSize);
     m_menuTextLarge.setAlignment(cro::SimpleText::Alignment::Centre);
 
+    m_itemSlider.setPrimitiveType(GL_TRIANGLES);
+
     cro::SpriteSheet spriteSheet;
     if (spriteSheet.loadFromFile("assets/golf/sprites/options_buttons.spt", m_sharedData.sharedResources->textures))
     {
@@ -1910,6 +1912,8 @@ void OptionsStateV2::createAudioItems()
             item.labels.push_back("Vol: " + std::to_string(j));
         }
         item.selectedIndex = std::clamp(static_cast<std::int32_t>(cro::AudioMixer::getVolume(i) * 10.f), 0, 10);
+        item.displayType = Menu::Item::Slider;
+        item.wrapValue = false;
     }
 }
 
@@ -2403,6 +2407,55 @@ void OptionsStateV2::resizeItemGraphics()
     m_detailsPane.background.getComponent<cro::Drawable2D>().setVertexData(verts);
 }
 
+void OptionsStateV2::updateSliderGraphic(std::int32_t amt, std::int32_t total)
+{
+    std::vector<cro::Vertex2D> verts;
+
+    if (total)
+    {
+        static constexpr float SliderWidth = 40.f;
+        static constexpr float SliderHeight = 6.f;
+        const float amtNorm = static_cast<float>(amt) / total;
+
+        const float width = std::round(amtNorm * (SliderWidth * 2.f));
+        static constexpr cro::Colour c = CD32::Colours[CD32::Red];
+        static constexpr cro::Colour d = CD32::Colours[CD32::BlueDarkest];
+
+        verts =
+        {
+            cro::Vertex2D(glm::vec2(-(SliderWidth + 1.f), SliderHeight + 1.f), CD32::Colours[CD32::TanDarkest]),
+            cro::Vertex2D(glm::vec2(-(SliderWidth + 1.f), -1.f), CD32::Colours[CD32::TanDarkest]),
+            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), SliderHeight + 1.f), CD32::Colours[CD32::TanDarkest]),
+            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), SliderHeight + 1.f), CD32::Colours[CD32::TanDarkest]),
+            cro::Vertex2D(glm::vec2(-(SliderWidth + 1.f), -1.f), CD32::Colours[CD32::TanDarkest]),
+            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), -1.f), CD32::Colours[CD32::TanDarkest]),
+
+            cro::Vertex2D(glm::vec2(-(SliderWidth), SliderHeight), CD32::Colours[CD32::Olive]),
+            cro::Vertex2D(glm::vec2(-(SliderWidth), -1.f), CD32::Colours[CD32::Olive]),
+            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), SliderHeight), CD32::Colours[CD32::Olive]),
+            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), SliderHeight), CD32::Colours[CD32::Olive]),
+            cro::Vertex2D(glm::vec2(-(SliderWidth), -1.f), CD32::Colours[CD32::Olive]),
+            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), -1.f), CD32::Colours[CD32::Olive]),
+
+
+            cro::Vertex2D(glm::vec2(-SliderWidth, SliderHeight), c),
+            cro::Vertex2D(glm::vec2(-SliderWidth, 0.f), c),
+            cro::Vertex2D(glm::vec2(-SliderWidth + width, SliderHeight), c),
+            cro::Vertex2D(glm::vec2(-SliderWidth + width, SliderHeight), c),
+            cro::Vertex2D(glm::vec2(-SliderWidth, 0.f), c),
+            cro::Vertex2D(glm::vec2(-SliderWidth + width, 0.f), c),
+
+            cro::Vertex2D(glm::vec2(-SliderWidth + width, SliderHeight), d),
+            cro::Vertex2D(glm::vec2(-SliderWidth + width, 0.f), d),
+            cro::Vertex2D(glm::vec2(SliderWidth, SliderHeight), d),
+            cro::Vertex2D(glm::vec2(SliderWidth, SliderHeight), d),
+            cro::Vertex2D(glm::vec2(-SliderWidth + width, 0.f), d),
+            cro::Vertex2D(glm::vec2(SliderWidth, 0.f), d)
+        };
+    }
+    m_itemSlider.setVertexData(verts);
+}
+
 void OptionsStateV2::updateMenuItems()
 {
     //NOTE this is all done 1:1 scale and the resulting sprite set to window scale
@@ -2492,8 +2545,21 @@ void OptionsStateV2::updateMenuItems()
 
             switch (item.displayType)
             {
+            case Menu::Item::Slider:
+                updateSliderGraphic(item.selectedIndex, item.count - 1);
+                m_itemSlider.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing * 1.7f) });
+                m_itemSlider.draw();
+                [[fallthrough]];
             default:
-                m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing * 1.7f) });
+                if (item.displayType == Menu::Item::Slider)
+                {
+                    m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing - 4.f) });
+                }
+                else
+                {
+                    m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing * 1.7f) });
+                }
+
                 if (item.labels.size() > 1)
                 {
                     m_menuTextLarge.setString("< " + item.labels[item.selectedIndex] + " >");
@@ -2516,16 +2582,12 @@ void OptionsStateV2::updateMenuItems()
                     item.hitbox.height += (2.f * HitPadding);
                 }
                 break;
-            //case Menu::Item::Slider:
-            //    m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing * 2.f) });
-            //    m_menuTextLarge.setString(item.labels[item.selectedIndex]);
-            //    m_menuTextLarge.draw();
-            //    //TODO draw a slider of some sort
-            //    break;
             case Menu::Item::TextOnly:
                 m_menuText.move({ 0.f, -(LineSpacing - 1.f) });
                 m_menuText.setString(item.subTitle);
                 m_menuText.draw();
+
+                //TODO draw large text if descriptoin not empty
                 break;
             case Menu::Item::Heading:
                 m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - std::round(LineSpacing * 1.7f) });
