@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -69,6 +69,7 @@ std::array<float, AudioMixer::MaxChannels> AudioMixer::m_prefadeChannels
 { { 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f } };
 
 float AudioMixer::m_masterVol = 1.f;
+float AudioMixer::m_masterPrefade = 1.f;
 
 void AudioMixer::setMasterVolume(float vol)
 {
@@ -93,6 +94,16 @@ float AudioMixer::getVolume(std::uint8_t channel)
 {
     CRO_ASSERT(channel < MaxChannels, "Channel index out of range");
     return AudioMixer::m_channels[channel];
+}
+
+void AudioMixer::setMasterPrefadeVolume(float vol)
+{
+    m_masterPrefade = std::clamp(vol, 0.f, 1.f);
+}
+
+float AudioMixer::getMasterPrefadeVolume()
+{
+    return m_masterPrefade;
 }
 
 void AudioMixer::setPrefadeVolume(float vol, std::uint8_t channel)

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -64,6 +64,14 @@ namespace cro
         \brief Returns the current master volume
         */
         static float getMasterVolume();
+
+        /*!
+        \brief Sets the prefade volume of the master channel
+        \see setPrefadeVolume()
+        */
+        static void setMasterPrefadeVolume(float vol);
+
+        static float getMasterPrefadeVolume();
 
         /*!
         \brief Sets the volume of the given channel.
@@ -135,6 +143,7 @@ namespace cro
         static std::array<float, MaxChannels> m_channels;
         static std::array<float, MaxChannels> m_prefadeChannels;
         static float m_masterVol;
+        static float m_masterPrefade;
 
         friend class AudioPlayerSystem;
         friend class AudioSystem;

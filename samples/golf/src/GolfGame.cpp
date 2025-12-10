@@ -143,6 +143,9 @@ namespace
     bool safeMode = false;
 #endif
 
+    float prefade = 1.f;
+    float prefadeTarget = 1.f;
+
     HelpNav helpNav;
     
     els::SharedStateData elsShared;
@@ -292,6 +295,21 @@ void GolfGame::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
+    case SDL_WINDOWEVENT:
+        switch (evt.window.event)
+        {
+        default: break;
+        case SDL_WINDOWEVENT_MINIMIZED:
+        case SDL_WINDOWEVENT_FOCUS_LOST:
+            prefadeTarget = 0.f;
+            break;
+        case SDL_WINDOWEVENT_MAXIMIZED:
+        case SDL_WINDOWEVENT_FOCUS_GAINED:
+            //TODO switching to full screen
+            prefadeTarget = 1.f;
+            break;
+        }
+        break;
     case SDL_MOUSEMOTION:
         //cro::App::getWindow().setMouseCaptured(false);
         break;
@@ -569,6 +587,18 @@ void GolfGame::handleMessage(const cro::Message& msg)
 
 void GolfGame::simulate(float dt)
 {
+    if (prefadeTarget < prefade)
+    {
+        prefade = std::max(prefadeTarget, prefade - dt);
+        cro::AudioMixer::setMasterPrefadeVolume(prefade);
+    }
+
+    if (prefadeTarget > prefade)
+    {
+        prefade = std::min(prefadeTarget, prefade + dt);
+        cro::AudioMixer::setMasterPrefadeVolume(prefade);
+    }
+
     if (m_sharedData.showHelp)
     {
         const auto scroll = 
