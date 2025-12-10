@@ -4236,7 +4236,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
     //swingput enable
     entity = createSquareHighlight(glm::vec2(97.f, 22.f));
-    entity.setLabel("With either trigger held, pull back on a thumbstick to charge the power.\nPush forward on the stick to make your shot. Timing is important!");
+    entity.setLabel("With either trigger held, pull back on a thumbstick to charge the power.\nPush forward on the stick to take your shot. Timing is important!");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlSwg);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlMouseAction, WindowAdvanced);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlMouseAction, CtrlAltPower);

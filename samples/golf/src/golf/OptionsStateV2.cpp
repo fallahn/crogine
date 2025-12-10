@@ -1885,18 +1885,89 @@ void OptionsStateV2::createKeyboardItems()
 
 void OptionsStateV2::createControllerItems()
 {
-    for (auto i = 0; i < 5; ++i)
-    {
-        auto& item = m_menuLayout.items[2].emplace_back();
-        item.title = "Dummy Item";
-        item.description = "This is the item description for " + std::to_string(i + 1);
-        item.activated = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
-        item.count = cro::Util::Random::value(2, 4);
-        for (auto j = 0; j < item.count; ++j)
+    //TODO input sensitivity
+    //TODO thumbstick deadzone
+    //TODO set detail image based on input activity
+    //TODO set detail text to controller list (how to show activity?)
+
+    //invert X axis
+    auto* item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    item->title = "Invert X axis";
+    item->description = "Invert the controller X axis when in camera mode";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
         {
-            item.labels.push_back("Option " + std::to_string(j + 1));
-        }
-    }
+            m_sharedData.invertX = i.selectedIndex == 0 ? false : true;
+        };
+    item->count = 2;
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.invertX ? 1 : 0;
+
+    //invert Y axis
+    item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    item->title = "Invert Y axis";
+    item->description = "Invert the controller Y axis when in camera mode";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.invertY = i.selectedIndex == 0 ? false : true;
+        };
+    item->count = 2;
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.invertY ? 1 : 0;
+
+    //enable swingput
+    item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    item->title = "Enable Swingput";
+    item->description = "With either trigger held, pull back on a thumbstick to charge the power. Push forward on the stick to take your shot. Timing is important!";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.useSwingput = i.selectedIndex == 0 ? false : true;
+        };
+    item->count = 2;
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.useSwingput ? 1 : 0;
+
+    //vibration
+    item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    item->title = "Use Vibration";
+    item->description = "Enable vibration effects on supported controllers";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.enableRumble = i.selectedIndex;
+        };
+    item->count = 2;
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.enableRumble;
+
+    item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    item->title = "Hold Action For Power";
+    item->description = "Press and hold the Action key to choose swing power instead of the traditional 3-click system";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.pressHold = i.selectedIndex == 0 ? false : true;
+        };
+    item->count = 2;
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.pressHold ? 1 : 0;
+
+#ifdef USE_GNS
+
+    item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    item->title = "Rebind Buttons";
+    item->description = "Review a Steam guide on rebinding the controller buttons with Steam Input";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            Social::showControllerBinding();
+        };
+    item->count = 1;
+    item->labels = { "View Steam Guide" };
+
+#endif
 }
 
 void OptionsStateV2::createDisplayItems()
