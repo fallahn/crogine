@@ -1352,10 +1352,10 @@ void InputParser::updateStroke(float dt)
                 msg->club = oldClub;
 
                 //if we're on the green toggle putt assist
-                if (m_terrain == TerrainID::Green)
+                /*if (m_terrain == TerrainID::Green)
                 {
                     m_sharedData.showPuttingPower = !m_sharedData.showPuttingPower;
-                }
+                }*/
 
                 updateDistanceEstimation();
                 beginIcon();
@@ -1392,10 +1392,10 @@ void InputParser::updateStroke(float dt)
                 msg->score = m_isCPU? 0 : 1;
                 msg->club = oldClub;
                 
-                if (m_terrain == TerrainID::Green)
+                /*if (m_terrain == TerrainID::Green)
                 {
                     m_sharedData.showPuttingPower = !m_sharedData.showPuttingPower;
-                }
+                }*/
                 
                 updateDistanceEstimation();
                 beginIcon();
