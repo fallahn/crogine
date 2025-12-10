@@ -133,10 +133,12 @@ namespace
 }
 
 OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State(ss, ctx),
-    m_scene     (ctx.appInstance.getMessageBus(), 192),
-    m_sharedData(sd),
-    m_uiTexture (nullptr)
+    : cro::State        (ss, ctx),
+    m_scene             (ctx.appInstance.getMessageBus(), 192),
+    m_sharedData        (sd),
+    m_uiTexture         (nullptr),
+    m_keybindIndex      (-1),
+    m_keybindItemIndex  (-1)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -161,7 +163,24 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     }
 
 
-    //TODO we MUST be able to cancel keybinds with a controller!
+    //we MUST be able to cancel keybinds with a controller!
+    if (m_keybindIndex != -1)
+    {
+        if (evt.type == SDL_KEYUP)
+        {
+            updateKeybind(evt.key.keysym.sym);
+        }
+        else if (evt.type == SDL_CONTROLLERBUTTONUP)
+        {
+            if (evt.cbutton.button == cro::GameController::ButtonB)
+            {
+                cancelKeybind();
+            }
+        }
+
+        return false;
+    }
+
 
     //we need to refresh the audio device display when dis/re connect
     //WARNING we're indexing the item directly!
@@ -255,8 +274,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         setActiveInput(true, 0);
 
         if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_p)
+            || evt.key.keysym.sym == SDLK_ESCAPE)
         {
             quitState();
             return false;
@@ -1568,131 +1586,155 @@ void OptionsStateV2::createKeyboardItems()
     item->title = "Key Bindings";
     item->displayType = Menu::Item::Heading;
 
+    cro::String keybindDesc = "Press Enter to select a new key";
+    cro::Util::String::wordWrap(keybindDesc, 36);
+
+
     //prev club
+    auto itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
     item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
     item->title = "Previous Club";
-    item->description = "Press to select a new key";
-    cro::Util::String::wordWrap(item->description, 36);
-    item->activated = [&](Menu::Item& i)
+    item->description = keybindDesc;
+    item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_keybindIndex = InputBinding::PrevClub;
+            m_keybindItemIndex = itemIndex;
         };
     item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub])};
     item->selectedIndex = 0;
 
     //next club
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
     item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
     item->title = "Next Club";
-    item->description = "Press to select a new key";
-    cro::Util::String::wordWrap(item->description, 36);
-    item->activated = [&](Menu::Item& i)
+    item->description = keybindDesc;
+    item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_keybindIndex = InputBinding::NextClub;
+            m_keybindItemIndex = itemIndex;
         };
     item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) };
     item->selectedIndex = 0;
 
     //aim left
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
     item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
     item->title = "Aim Left";
-    item->description = "Press to select a new key";
-    cro::Util::String::wordWrap(item->description, 36);
-    item->activated = [&](Menu::Item& i)
+    item->description = keybindDesc;
+    item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_keybindIndex = InputBinding::Left;
+            m_keybindItemIndex = itemIndex;
         };
     item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]) };
     item->selectedIndex = 0;
 
     //aim right
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
     item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
     item->title = "Aim Right";
-    item->description = "Press to select a new key";
-    cro::Util::String::wordWrap(item->description, 36);
-    item->activated = [&](Menu::Item& i)
+    item->description = keybindDesc;
+    item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_keybindIndex = InputBinding::Right;
+            m_keybindItemIndex = itemIndex;
         };
     item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]) };
     item->selectedIndex = 0;
 
     //camera up
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
     item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
     item->title = "Camera Up";
-    item->description = "Press to select a new key";
-    cro::Util::String::wordWrap(item->description, 36);
-    item->activated = [&](Menu::Item& i)
+    item->description = keybindDesc;
+    item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_keybindIndex = InputBinding::Up;
+            m_keybindItemIndex = itemIndex;
         };
     item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Up]) };
     item->selectedIndex = 0;
 
     //camera down
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
     item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
     item->title = "Camera Down";
-    item->description = "Press to select a new key";
-    cro::Util::String::wordWrap(item->description, 36);
-    item->activated = [&](Menu::Item& i)
+    item->description = keybindDesc;
+    item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_keybindIndex = InputBinding::Down;
+            m_keybindItemIndex = itemIndex;
         };
     item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Down]) };
     item->selectedIndex = 0;
 
     //action
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
     item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
     item->title = "Action (Take Shot)";
-    item->description = "Press to select a new key";
-    cro::Util::String::wordWrap(item->description, 36);
-    item->activated = [&](Menu::Item& i)
+    item->description = keybindDesc;
+    item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_keybindIndex = InputBinding::Action;
+            m_keybindItemIndex = itemIndex;
         };
     item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) };
     item->selectedIndex = 0;
 
     //spin menu
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
     item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
     item->title = "Show Spin Menu";
-    item->description = "Press to select a new key";
-    cro::Util::String::wordWrap(item->description, 36);
-    item->activated = [&](Menu::Item& i)
+    item->description = keybindDesc;
+    item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_keybindIndex = InputBinding::SpinMenu;
+            m_keybindItemIndex = itemIndex;
         };
     item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]) };
     item->selectedIndex = 0;
 
     //emote wheel
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
     item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
     item->title = "Show Emote Wheel";
-    item->description = "Press to select a new key";
-    cro::Util::String::wordWrap(item->description, 36);
-    item->activated = [&](Menu::Item& i)
+    item->description = keybindDesc;
+    item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_keybindIndex = InputBinding::EmoteMenu;
+            m_keybindItemIndex = itemIndex;
         };
     item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::EmoteMenu]) };
     item->selectedIndex = 0;
 
     //cancel shot
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
     item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
     item->title = "Cancel Shot In Progress";
-    item->description = "Press to select a new key";
-    cro::Util::String::wordWrap(item->description, 36);
-    item->activated = [&](Menu::Item& i)
+    item->description = keybindDesc;
+    item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press A Key");
+            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_keybindIndex = InputBinding::CancelShot;
+            m_keybindItemIndex = itemIndex;
         };
     item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::CancelShot]) };
@@ -2687,6 +2729,89 @@ void OptionsStateV2::doMouseClick(glm::vec2 mousePos)
             }
         }
     }
+}
+
+void OptionsStateV2::updateKeybind(SDL_Keycode key)
+{
+    if (key == SDLK_ESCAPE
+        || key == SDLK_BACKSPACE)
+    {
+        cancelKeybind();
+        return;
+    }
+
+
+    //prevent binding top row and function keys
+    const std::array LockedKeys =
+    {
+        SDLK_1,
+        SDLK_2,
+        SDLK_3,
+        SDLK_4,
+        SDLK_5,
+        SDLK_6,
+        SDLK_7,
+        SDLK_8,
+        SDLK_9,
+        SDLK_0,
+
+        SDLK_F1,
+        SDLK_F2,
+        SDLK_F3,
+        SDLK_F4,
+        SDLK_F5,
+        SDLK_F6,
+        SDLK_F7,
+        SDLK_F8,
+        SDLK_F9,
+        SDLK_F10,
+        SDLK_F11,
+        SDLK_F12,
+    };
+
+    if (auto result = std::find(std::begin(LockedKeys), std::end(LockedKeys), key); result != std::end(LockedKeys))
+    {
+        cro::String msg("This key cannot be assigned. Press a key.");
+        cro::Util::String::wordWrap(msg, 36);
+        m_detailsPane.text.getComponent<cro::Text>().setString(msg);
+
+        return;
+    }
+
+
+    auto& keys = m_sharedData.inputBinding.keys;
+    if (auto result = std::find(keys.begin(), keys.end(), key); result != keys.end())
+    {
+        cro::String msg = cro::Keyboard::keyString(key);
+        msg += " is already bound. Press a key";
+        cro::Util::String::wordWrap(msg, 36);
+        m_detailsPane.text.getComponent<cro::Text>().setString(msg);
+
+        return;
+    }
+
+
+    keys[m_keybindIndex] = key;
+
+    //m_detailsPane.text.getComponent<cro::Text>().setString(
+    //    "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[m_keybindIndex]));
+    
+    m_menuLayout.items[TabBar::Item::Keyboard][m_keybindItemIndex].labels[0] = 
+        "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[m_keybindIndex]);
+
+    playSound(MenuSoundEvent::Activate);
+    updateMenuItems();
+
+    m_keybindIndex = -1;
+    m_keybindItemIndex = -1;
+}
+
+void OptionsStateV2::cancelKeybind()
+{
+    playSound(MenuSoundEvent::Cancel);
+
+    m_keybindIndex = -1;
+    m_keybindItemIndex = -1;
 }
 
 void OptionsStateV2::refreshAudioDevices(Menu::Item& item)
