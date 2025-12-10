@@ -300,13 +300,13 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
             prevItem();
         }*/
 
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left]
-            || evt.key.keysym.sym == SDLK_LEFT)
+        else if (/*evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left]
+            || */evt.key.keysym.sym == SDLK_LEFT)
         {
             activateLeft();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right]
-            || evt.key.keysym.sym == SDLK_RIGHT)
+        else if (/*evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right]
+            || */evt.key.keysym.sym == SDLK_RIGHT)
         {
             activateRight();
         }
@@ -334,13 +334,13 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         setActiveInput(true, 0);
 
         //do this here to take advantageof key repeat
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down]
-            || evt.key.keysym.sym == SDLK_DOWN)
+        if (/*evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down]
+            || */evt.key.keysym.sym == SDLK_DOWN)
         {
             nextItem();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up]
-            || evt.key.keysym.sym == SDLK_UP)
+        else if (/*evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up]
+            ||*/ evt.key.keysym.sym == SDLK_UP)
         {
             prevItem();
         }
@@ -931,6 +931,73 @@ void OptionsStateV2::buildScene()
     m_detailsPane.background.getComponent<cro::UIElement>().depth = -0.3f;
     m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.background.getComponent<cro::Transform>());
 
+
+    //displays a cancel message when a keybind is in progress
+    auto msgRoot = m_scene.createEntity();
+    msgRoot.addComponent<cro::Transform>();
+    msgRoot.addComponent<cro::UIElement>(cro::UIElement::Position, false);
+    msgRoot.getComponent<cro::UIElement>().relativePosition = { 0.03f, -0.37f };
+    msgRoot.addComponent<cro::Callback>().active = true;
+    msgRoot.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const float scale = m_keybindIndex == -1 ? 0.f : 1.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+    rootNode.getComponent<cro::Transform>().addChild(msgRoot.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Esc - Cancel");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
+    entity.getComponent<cro::UIElement>().characterSize = UITextSize;
+    entity.getComponent<cro::UIElement>().depth = 0.2f;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Drawable2D>().setFacing(
+                m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard ?
+                cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
+        };
+    msgRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("cancel_xbox");
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, -8.f };
+    entity.getComponent<cro::UIElement>().depth = 0.2f;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Drawable2D>().setFacing(
+                m_sharedData.activeInput == SharedStateData::ActiveInput::XBox ?
+                cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
+        };
+    msgRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("cancel_ps");
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, -8.f };
+    entity.getComponent<cro::UIElement>().depth = 0.2f;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Drawable2D>().setFacing(
+                m_sharedData.activeInput == SharedStateData::ActiveInput::PS ?
+                cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
+        };
+    msgRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     updateTabBar(); //this also updates the menu items
 
@@ -2583,11 +2650,18 @@ void OptionsStateV2::updateMenuItems()
                 }
                 break;
             case Menu::Item::TextOnly:
-                m_menuText.move({ 0.f, -(LineSpacing - 1.f) });
-                m_menuText.setString(item.subTitle);
-                m_menuText.draw();
-
-                //TODO draw large text if descriptoin not empty
+                if (!item.description.empty())
+                {
+                    m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing * 1.7f) });
+                    m_menuTextLarge.setString(item.description);
+                    m_menuTextLarge.draw();
+                }
+                else
+                {
+                    m_menuText.move({ 0.f, -(LineSpacing - 1.f) });
+                    m_menuText.setString(item.subTitle);
+                    m_menuText.draw();
+                }
                 break;
             case Menu::Item::Heading:
                 m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - std::round(LineSpacing * 1.7f) });
@@ -2871,6 +2945,8 @@ void OptionsStateV2::updateKeybind(SDL_Keycode key)
 void OptionsStateV2::cancelKeybind()
 {
     playSound(MenuSoundEvent::Cancel);
+
+    m_detailsPane.text.getComponent<cro::Text>().setString("Press Enter to select a new key");
 
     m_keybindIndex = -1;
     m_keybindItemIndex = -1;
