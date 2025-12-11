@@ -35,6 +35,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
 #include "../GolfGame.hpp"
+#include "../WebsocketServer.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -101,6 +102,23 @@ namespace
     //static const cro::String XboxInfo = cro::String(ButtonX) + " Show Credits   " + cro::String(ButtonY) + " How To Play   " + cro::String(ButtonB) + " Close";
     //static const cro::String PSInfo = cro::String(ButtonSquare) + " Show Credits   " + cro::String(ButtonCross) + " How To Play   " + cro::String(ButtonCircle) + " Close";
     static const cro::String KeyInfo = "LCtrl - Show Credits   LAlt - How To Play   ESC - Close";
+
+    constexpr std::array<std::size_t, 9u> AAIndexMap =
+    {
+        0,
+        0,
+        1,
+        0,
+        2,
+        0,
+        0,
+        0,
+        3
+    };
+    constexpr std::array<std::uint32_t, 4u> AASamples =
+    {
+        0,2,4,8
+    };
 
 
     const std::array ItemLabels =
@@ -500,6 +518,16 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
 
 void OptionsStateV2::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            //hack to force the texture to resize properly
+            m_menuLayout.texture.create(1, 1, false);
+            refreshView();
+        }
+    }
     m_scene.forwardMessage(msg);
 }
 
@@ -1561,6 +1589,26 @@ void OptionsStateV2::createSettingsItems()
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.webSocket = i.selectedIndex == 1;
+
+            if (m_sharedData.webSocket)
+            {
+                if (WebSock::getPort() && WebSock::getPort() != m_sharedData.webPort)
+                {
+                    WebSock::stop();
+                }
+
+                if (!WebSock::isRunning())
+                {
+                    WebSock::start(m_sharedData.webPort);
+                }
+            }
+            else
+            {
+                if (WebSock::isRunning())
+                {
+                    WebSock::stop();
+                }
+            }
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -2198,7 +2246,20 @@ void OptionsStateV2::createDisplayItems()
 
     //TODO Presets
 
+
     //anti-aliasing
+    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item->title = "Antialiasing";
+    //item->description = "Switch between billboard and 3D trees. Classic trees are applied when the game is loaded";
+    //cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            //sets shared data value
+            toggleAntialiasing(m_sharedData, AASamples[i.selectedIndex] != 0, AASamples[i.selectedIndex]);
+        };
+    item->count = 4;
+    item->labels = { "None", "2x MSAA", "4x MSAA", "8x MSAA" };
+    item->selectedIndex = AAIndexMap[m_sharedData.multisamples];
 
 
     //Resolution
