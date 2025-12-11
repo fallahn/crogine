@@ -7073,7 +7073,7 @@ void GolfState::showMeasureWidget()
                 //input parser already made sure we're the correct length
                 //we just need to rotate in the correct direction
                 movement = glm::rotate(cro::Transform::QUAT_IDENTITY, m_camRotation - (cro::Util::Const::PI / 2.f), cro::Transform::Y_AXIS) * movement;
-                pos += movement * dt;
+                pos += movement * m_sharedData.measureSpeed * dt;
 
                 movement = glm::vec3(0.f);
             }

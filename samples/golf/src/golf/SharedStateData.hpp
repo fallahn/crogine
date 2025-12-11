@@ -368,7 +368,7 @@ struct SharedStateData final
     bool useTTS = false;
     bool useLensFlare = true;
     bool useMouseAction = false;
-    bool useLargePowerBar = false;
+    bool useLargePowerBar = true;
     bool useContrastPowerBar = false;
     bool decimatePowerBar = false;
     bool decimateDistance = false;
@@ -376,8 +376,9 @@ struct SharedStateData final
     bool fixedPuttingRange = false;
     std::int32_t lightmapQuality = 0;
     
-    bool webSocket = false;
+    float measureSpeed = 1.f; //multiplier when measuring for putt
     std::int32_t webPort = 8080;
+    bool webSocket = false;
     bool logCSV = false;
     bool blockChat = false;
     bool logChat = false;

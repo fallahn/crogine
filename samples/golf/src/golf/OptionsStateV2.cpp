@@ -106,7 +106,7 @@ namespace
     const std::array ItemLabels =
     {
         "Settings", "Keyboard", "Controller",
-        "Display", "Audio", "Achievements",
+        "Graphics", "Audio", "Achievements",
         "Stats"
     };
 
@@ -1413,6 +1413,59 @@ void OptionsStateV2::createSettingsItems()
 
 
 
+    //----------shared control settings--------------//
+    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item->title = "Control Settings";
+    item->displayType = Menu::Item::Heading;
+
+
+    //mouse button for action
+    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item->title = "Use Left Mouse as Action Button";
+    item->description = "Clicking left mouse button performs the same as the Action button";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.useMouseAction = i.selectedIndex == 0 ? false : true;
+        };
+    item->count = 2;
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
+
+    //hold for power
+    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item->title = "Hold Action For Power";
+    item->description = "Press and hold the Action button to choose swing power instead of the traditional 3-click system";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.pressHold = i.selectedIndex == 0 ? false : true;
+        };
+    item->count = 2;
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.pressHold ? 1 : 0;
+
+
+    //measure sensitivity
+    static constexpr std::array<float, 6u> SpeedValues = { 0.5f, 1.f, 2.f, 3.f, 4.f, 5.f };
+    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item->title = "Measure Sensitivity";
+    item->description = "Sets the speed of the Measure Widget when putting";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.measureSpeed = SpeedValues[i.selectedIndex];
+        };
+    item->count = 6;
+    item->labels = { "0.5", "1.0", "2.0", "3.0", "4.0", "5.0" };
+    item->selectedIndex = (static_cast<std::int32_t>(std::floor(m_sharedData.measureSpeed) * 10.f) / 10);
+    item->displayType = Menu::Item::Slider;
+
+
+
+
+
+
     //-------difficulty and behaviour-----//
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Gameplay Settings";
@@ -1626,42 +1679,42 @@ void OptionsStateV2::createSettingsItems()
 void OptionsStateV2::createKeyboardItems()
 {
     //config
-    auto* item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    /*auto* item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
     item->title = "Configuration";
-    item->displayType = Menu::Item::Heading;
+    item->displayType = Menu::Item::Heading;*/
 
     
-    //mouse button for action
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
-    item->title = "Use Left Mouse as Action Button";
-    item->description = "Clicking left mouse button performs the same as the Action key";
-    cro::Util::String::wordWrap(item->description, 36);
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.useMouseAction = i.selectedIndex == 0 ? false : true;
-        };
-    item->count = 2;
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
+    ////mouse button for action
+    //item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    //item->title = "Use Left Mouse as Action Button";
+    //item->description = "Clicking left mouse button performs the same as the Action key";
+    //cro::Util::String::wordWrap(item->description, 36);
+    //item->activated = [&](Menu::Item& i)
+    //    {
+    //        m_sharedData.useMouseAction = i.selectedIndex == 0 ? false : true;
+    //    };
+    //item->count = 2;
+    //item->labels = { "No", "Yes" };
+    //item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
 
-    //hold for power
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
-    item->title = "Hold Action For Power";
-    item->description = "Press and hold the Action key to choose swing power instead of the traditional 3-click system";
-    cro::Util::String::wordWrap(item->description, 36);
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.pressHold = i.selectedIndex == 0 ? false : true;
-        };
-    item->count = 2;
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = m_sharedData.pressHold ? 1 : 0;
+    ////hold for power
+    //item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    //item->title = "Hold Action For Power";
+    //item->description = "Press and hold the Action key to choose swing power instead of the traditional 3-click system";
+    //cro::Util::String::wordWrap(item->description, 36);
+    //item->activated = [&](Menu::Item& i)
+    //    {
+    //        m_sharedData.pressHold = i.selectedIndex == 0 ? false : true;
+    //    };
+    //item->count = 2;
+    //item->labels = { "No", "Yes" };
+    //item->selectedIndex = m_sharedData.pressHold ? 1 : 0;
 
 
     
     
     //keybinds
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    auto* item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
     item->title = "Key Bindings";
     item->displayType = Menu::Item::Heading;
 
@@ -1954,7 +2007,7 @@ void OptionsStateV2::createControllerItems()
     ent.addComponent<cro::Transform>();
     ent.addComponent<cro::Drawable2D>();
     ent.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
-    ent.getComponent<cro::Text>().setString("1 Buns Flaps\n2 Game Controller\n3 Super awesome arcade stick\n4 this is made up y'know");
+    ent.getComponent<cro::Text>();// .setString("1 Buns Flaps\n2 Game Controller\n3 Super awesome arcade stick\n4 this is made up y'know");
     ent.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     ent.getComponent<cro::UIElement>().depth = 0.2f;
     ent.getComponent<cro::UIElement>().characterSize = InfoTextSize;
@@ -2044,6 +2097,7 @@ void OptionsStateV2::createControllerItems()
     item->wrapValue = false;
 
 
+
     //thumbstick deadzone
     static constexpr auto MinDeadZone = -3000;
     static constexpr auto MaxDeadzone = 24000;
@@ -2115,7 +2169,9 @@ void OptionsStateV2::createControllerItems()
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.enableRumble;
 
-    item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    //this goes out of sync if we duplicate it on the kyboard page
+    //so we have just one on the main settings page
+    /*item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
     item->title = "Hold Action For Power";
     item->description = "Press and hold the Action key to choose swing power instead of the traditional 3-click system";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2125,7 +2181,7 @@ void OptionsStateV2::createControllerItems()
         };
     item->count = 2;
     item->labels = { "No", "Yes" };
-    item->selectedIndex = m_sharedData.pressHold ? 1 : 0;
+    item->selectedIndex = m_sharedData.pressHold ? 1 : 0*/;
 
 #ifdef USE_GNS
 

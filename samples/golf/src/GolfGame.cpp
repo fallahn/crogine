@@ -1479,7 +1479,7 @@ void GolfGame::loadPreferences()
     //bool restoreDefaults = false;
 
     //make sure to set all defaults *before* loading any files
-    m_sharedData.useLargePowerBar = Social::isSteamdeck();
+    //m_sharedData.useLargePowerBar = Social::isSteamdeck();
 
     auto path = getPreferencePath() + "prefs.cfg";
     if (cro::FileSystem::fileExists(path))
@@ -1844,6 +1844,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.miniLoadingScreen = prop.getValue<bool>();
                     }
+                    else if (name == "measure_speed")
+                    {
+                        m_sharedData.measureSpeed = std::clamp(prop.getValue<float>(), 0.5f, 5.f);
+                    }
                 }
             }
 
@@ -2013,6 +2017,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("show_tips").setValue(m_sharedData.showInGameTips);
     cfg.addProperty("calculate_range").setValue(m_sharedData.calculateRange);
     cfg.addProperty("mini_load").setValue(m_sharedData.miniLoadingScreen);
+    cfg.addProperty("measure_speed").setValue(m_sharedData.measureSpeed);
     cfg.save(path);
 
 
