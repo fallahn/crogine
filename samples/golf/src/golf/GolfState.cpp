@@ -2486,14 +2486,15 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
                 else if (m_sharedData.tutorialIndex == TutorialID::PuttAssist)
                 {
-                    if (!m_sharedData.showPuttingPower)
+                    //TODO this should be giving the user a choice
+                    /*if (!m_sharedData.showPuttingPower)
                     {
                         m_textChat.printToScreen("Putting Assist is now enabled", CD32::Colours[CD32::BlueLight]);
                         postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
-                    }
+                    }*/
 
                     m_sharedData.tutorialIndex = 0;
-                    m_sharedData.showPuttingPower = true;
+                    //m_sharedData.showPuttingPower = true;
                 }
             }
             else if (data.id == StateID::Options)

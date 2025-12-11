@@ -254,6 +254,7 @@ private:
 
     struct DetailsPane final
     {
+        std::array<cro::Entity, TabBar::Item::Count> tabDetails = {};
         cro::Entity root;
         cro::Entity text;
         cro::Entity image;
@@ -277,6 +278,10 @@ private:
     std::int32_t m_keybindItemIndex; //the menu item to update
     void updateKeybind(SDL_Keycode key);
     void cancelKeybind();
+
+    cro::String m_controllerString;
+    std::array<cro::Colour, 4u> m_activityColours = {};
+    void refreshControllerDevices();
 
     void refreshAudioDevices(Menu::Item&);
     void refreshView();
