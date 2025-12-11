@@ -365,18 +365,19 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        setActiveInput(false, cro::GameController::controllerID(evt.cbutton.which));
+        const auto controllerID = cro::GameController::controllerID(evt.cbutton.which);
+        setActiveInput(false, controllerID);
 
         switch (evt.cbutton.button)
         {
         default: break;
         case cro::GameController::DPadUp:
             prevItem();
-            resetRepeatTimer(RepeatTimeLong);
+            resetRepeatTimer(controllerID, RepeatTimeLong);
             break;
         case cro::GameController::DPadDown:
             nextItem();
-            resetRepeatTimer(RepeatTimeLong);
+            resetRepeatTimer(controllerID, RepeatTimeLong);
             break;
         }
     }
@@ -434,7 +435,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        const std::int16_t Threshold = cro::GameController::LeftThumbDeadZone * 2;// 15000;
+        const std::int16_t Threshold = std::numeric_limits<std::int16_t>::max() / 2;// cro::GameController::LeftThumbDeadZone * 2;// 15000;
         const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
         
         if (std::abs(evt.caxis.value) > Threshold)
@@ -508,7 +509,35 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERDEVICEADDED
         || evt.type == SDL_CONTROLLERDEVICEREMOVED)
     {
-        refreshControllerDevices();
+        //refreshControllerDevices();
+        //*sigh* the names aren't updated until AFTER the event
+        //so we have to delay a frame or 2.
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<std::int32_t>(2);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+            {
+                auto& c = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+                c--;
+
+                if (c == 0)
+                {
+                    refreshControllerDevices();
+
+                    e.getComponent<cro::Callback>().active = false;
+                    m_scene.destroyEntity(e);
+                }
+            };
+
+        //make sure to reset all timers etc
+        std::fill(m_controllerMasks.begin(), m_controllerMasks.end(), 0);
+        std::fill(m_controllerPrevMasks.begin(), m_controllerMasks.end(), 0);
+
+        for (auto i = 0; i < 4; ++i)
+        {
+            resetRepeatTimer(i, RepeatTimeLong);
+        }
     }
 
     //m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -566,13 +595,13 @@ bool OptionsStateV2::simulate(float dt)
         if (maskTest(i, InputFlag::Up))
         {
             prevItem();
-            resetRepeatTimer(RepeatTimeLong);
+            resetRepeatTimer(i, RepeatTimeLong);
         }
 
         if (maskTest(i, InputFlag::Down))
         {
             nextItem();
-            resetRepeatTimer(RepeatTimeLong);
+            resetRepeatTimer(i, RepeatTimeLong);
         }
 
         m_controllerPrevMasks[i] = m_controllerMasks[i];
@@ -581,20 +610,20 @@ bool OptionsStateV2::simulate(float dt)
         if (cro::GameController::isButtonPressed(i, cro::GameController::DPadDown)
             || (m_controllerMasks[i] & InputFlag::Down))
         {
-            if (m_inputRepeatClock.elapsed() > m_repeatTime)
+            if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
             {
                 nextItem();
-                resetRepeatTimer(RepeatTimeShort);
+                resetRepeatTimer(i, RepeatTimeShort);
             }
         }
 
         if (cro::GameController::isButtonPressed(i, cro::GameController::DPadUp)
             || (m_controllerMasks[i] & InputFlag::Up))
         {
-            if (m_inputRepeatClock.elapsed() > m_repeatTime)
+            if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
             {
                 prevItem();
-                resetRepeatTimer(RepeatTimeShort);
+                resetRepeatTimer(i, RepeatTimeShort);
             }
         }
     }
@@ -2264,7 +2293,7 @@ void OptionsStateV2::createDisplayItems()
 
     //Resolution
     item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
-    item->title = "FOV";
+    item->title = "Resolution";
     item->activated =
         [&](Menu::Item& i)
         {
@@ -2633,10 +2662,10 @@ void OptionsStateV2::onCachedPop()
 
 }
 
-void OptionsStateV2::resetRepeatTimer(cro::Time resetTime)
+void OptionsStateV2::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
 {
-    m_inputRepeatClock.restart();
-    m_repeatTime = resetTime;
+    m_inputRepeatClocks[i].restart();
+    m_repeatTimes[i] = resetTime;
 }
 
 void OptionsStateV2::updateTabBar()

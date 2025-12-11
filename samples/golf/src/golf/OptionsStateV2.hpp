@@ -77,11 +77,11 @@ private:
     void onCachedPush() override;
     void onCachedPop() override;
 
-    cro::Clock m_inputRepeatClock;
-    cro::Time m_repeatTime;
+    std::array<cro::Clock, 4u> m_inputRepeatClocks = {};
+    std::array<cro::Time, 4u> m_repeatTimes = {};
     std::array<std::uint8_t, 4u> m_controllerMasks = {};
     std::array<std::uint8_t, 4u> m_controllerPrevMasks = {};
-    void resetRepeatTimer(cro::Time);
+    void resetRepeatTimer(std::int32_t, cro::Time);
 
     struct SpriteSection final
     {
