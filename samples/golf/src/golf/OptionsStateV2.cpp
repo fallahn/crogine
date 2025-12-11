@@ -1089,7 +1089,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.showBeacon = i.selectedIndex == 0 ? false : true;
+            m_sharedData.showBeacon = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No", "Yes" };
@@ -1129,7 +1129,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.showBallTrail = i.selectedIndex == 0 ? false : true;
+            m_sharedData.showBallTrail = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No", "Yes" };
@@ -1142,7 +1142,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.trailBeaconColour = i.selectedIndex == 0 ? false : true;
+            m_sharedData.trailBeaconColour = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No", "Yes" };
@@ -1171,7 +1171,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.imperialMeasurements = i.selectedIndex == 0 ? false : true;
+            m_sharedData.imperialMeasurements = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No", "Yes" };
@@ -1184,7 +1184,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.useLargePowerBar = i.selectedIndex == 0 ? false : true;
+            m_sharedData.useLargePowerBar = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes"  };
@@ -1197,7 +1197,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.useContrastPowerBar = i.selectedIndex == 0 ? false : true;
+            m_sharedData.useContrastPowerBar = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1211,7 +1211,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.decimatePowerBar = i.selectedIndex == 0 ? false : true;
+            m_sharedData.decimatePowerBar = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1225,7 +1225,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.decimateDistance = i.selectedIndex == 0 ? false : true;
+            m_sharedData.decimateDistance = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1239,7 +1239,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.showRival = i.selectedIndex == 0 ? false : true;
+            m_sharedData.showRival = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1253,7 +1253,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.puttFollowCam = i.selectedIndex == 0 ? false : true;
+            m_sharedData.puttFollowCam = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1267,7 +1267,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.zoomFollowCam = i.selectedIndex == 0 ? false : true;
+            m_sharedData.zoomFollowCam = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1281,7 +1281,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.rotateCamera = i.selectedIndex == 0 ? false : true;
+            m_sharedData.rotateCamera = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1392,7 +1392,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.useLensFlare = i.selectedIndex == 0 ? false : true;
+            m_sharedData.useLensFlare = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1405,7 +1405,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.miniLoadingScreen = i.selectedIndex == 0 ? false : true;
+            m_sharedData.miniLoadingScreen = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1426,7 +1426,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.useMouseAction = i.selectedIndex == 0 ? false : true;
+            m_sharedData.useMouseAction = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No", "Yes" };
@@ -1439,7 +1439,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.pressHold = i.selectedIndex == 0 ? false : true;
+            m_sharedData.pressHold = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No", "Yes" };
@@ -1479,7 +1479,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.showPuttingPower = i.selectedIndex == 0 ? false : true;
+            m_sharedData.showPuttingPower = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1493,7 +1493,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.fixedPuttingRange = i.selectedIndex == 0 ? false : true;
+            m_sharedData.fixedPuttingRange = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1508,7 +1508,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.calculateRange = i.selectedIndex == 0 ? true : false;
+            m_sharedData.calculateRange = i.selectedIndex == 0;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1523,7 +1523,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.showMinimap = i.selectedIndex == 0 ? true : false;
+            m_sharedData.showMinimap = i.selectedIndex == 0;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1538,7 +1538,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.showInGameTips = i.selectedIndex == 0 ? false : true;
+            m_sharedData.showInGameTips = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1560,7 +1560,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.webSocket = i.selectedIndex == 0 ? false : true;
+            m_sharedData.webSocket = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1575,7 +1575,7 @@ void OptionsStateV2::createSettingsItems()
     item->description = "Files are saved to you user directory";
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.logCSV = i.selectedIndex == 0 ? false : true;
+            m_sharedData.logCSV = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1589,7 +1589,7 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.blockChat = i.selectedIndex == 0 ? false : true;
+            m_sharedData.blockChat = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
@@ -1603,14 +1603,14 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.logChat = i.selectedIndex == 0 ? false : true;
+            m_sharedData.logChat = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.logChat ? 1 : 0;
 
 
-
+#ifdef USE_GNS
     //enable remote content
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Download Remote Content";
@@ -1618,12 +1618,12 @@ void OptionsStateV2::createSettingsItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.remoteContent = i.selectedIndex == 0 ? false : true;
+            m_sharedData.remoteContent = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.remoteContent ? 1 : 0;
-
+#endif
 
 
 
@@ -1944,6 +1944,11 @@ void OptionsStateV2::createKeyboardItems()
     item->title = "Toggle Putting Grid";
     item->description = "Key: F7";
     item->displayType = Menu::Item::TextOnly;
+
+    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item->title = "Toggle Full Screen";
+    item->description = "Key: F11";
+    item->displayType = Menu::Item::TextOnly;
 }
 
 void OptionsStateV2::createControllerItems()
@@ -2124,7 +2129,7 @@ void OptionsStateV2::createControllerItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.invertX = i.selectedIndex == 0 ? false : true;
+            m_sharedData.invertX = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No", "Yes" };
@@ -2137,7 +2142,7 @@ void OptionsStateV2::createControllerItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.invertY = i.selectedIndex == 0 ? false : true;
+            m_sharedData.invertY = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No", "Yes" };
@@ -2150,7 +2155,7 @@ void OptionsStateV2::createControllerItems()
     cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
-            m_sharedData.useSwingput = i.selectedIndex == 0 ? false : true;
+            m_sharedData.useSwingput = i.selectedIndex == 1;
         };
     item->count = 2;
     item->labels = { "No", "Yes" };
@@ -2168,20 +2173,6 @@ void OptionsStateV2::createControllerItems()
     item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.enableRumble;
-
-    //this goes out of sync if we duplicate it on the kyboard page
-    //so we have just one on the main settings page
-    /*item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
-    item->title = "Hold Action For Power";
-    item->description = "Press and hold the Action key to choose swing power instead of the traditional 3-click system";
-    cro::Util::String::wordWrap(item->description, 36);
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.pressHold = i.selectedIndex == 0 ? false : true;
-        };
-    item->count = 2;
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = m_sharedData.pressHold ? 1 : 0*/;
 
 #ifdef USE_GNS
 
@@ -2201,18 +2192,190 @@ void OptionsStateV2::createControllerItems()
 
 void OptionsStateV2::createDisplayItems()
 {
-    for (auto i = 0; i < 5; ++i)
-    {
-        auto& item = m_menuLayout.items[3].emplace_back();
-        item.title = "Dummy Item";
-        item.description = "This is the item description for " + std::to_string(i + 1);
-        item.activated = [](Menu::Item& i) {LogI << "Callback!" << std::endl; };
-        item.count = cro::Util::Random::value(2, 4);
-        for (auto j = 0; j < item.count; ++j)
+    auto* item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item->title = "Configuration";
+    item->displayType = Menu::Item::Heading;
+
+    //TODO Presets
+
+    //anti-aliasing
+
+
+    //Resolution
+    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item->title = "FOV";
+    item->activated =
+        [&](Menu::Item& i)
         {
-            item.labels.push_back("Option " + std::to_string(j + 1));
+            cro::App::getWindow().setSize(m_sharedData.resolutions[i.selectedIndex]);
+        };
+    
+    for (const auto& s : m_sharedData.resolutionStrings)
+    {
+        item->labels.push_back(s);
+    }
+    item->count = static_cast<std::int32_t>(item->labels.size());
+    item->wrapValue = false;
+
+    const auto size = cro::App::getWindow().getSize();
+    for (auto i = 0u; i < m_sharedData.resolutions.size(); ++i)
+    {
+        if (m_sharedData.resolutions[i].x == size.x 
+            && m_sharedData.resolutions[i].y == size.y)
+        {
+            item->selectedIndex = i;
+            break;
         }
     }
+
+
+
+    //FOV
+    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item->title = "FOV";
+    item->activated = 
+        [&](Menu::Item& i) 
+        {
+            m_sharedData.fov = static_cast<float>(std::atoi(i.labels[i.selectedIndex].toAnsiString().c_str()));
+
+            //raise a window resize message to trigger callbacks
+            auto size = cro::App::getWindow().getSize();
+            auto* msg = postMessage<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+            msg->data0 = size.x;
+            msg->data1 = size.y;
+            msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+        };
+    for (std::int32_t i = MinFOV; i < MaxFOV + 1; i += 5)
+    {
+        item->labels.push_back(std::to_string(i));
+    }
+    item->count = static_cast<std::int32_t>(item->labels.size());
+    item->selectedIndex = static_cast<std::int32_t>((m_sharedData.fov - MinFOV) / 5.f);
+    item->wrapValue = false;
+
+
+    //pixel scaling
+    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item->title = "Use Pixel Scaling (Default: OFF)";
+    item->description = "Renders the game at a low resolution and then scales the output for a pixelated, retro look. Shortcut +/- on numpad";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            //this func toggles the actual property...
+            togglePixelScale(m_sharedData, i.selectedIndex != 0);
+        };
+    item->count = 2;
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.pixelScale ? 1 : 0;
+
+    //vertex snap
+    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item->title = "Use Vertex Snapping (Default: OFF)";
+    item->description = "Usually used in conjunction with Pixel Scaling. May cause z-fighting. Requires restart.";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.vertexSnap = i.selectedIndex == 1;
+        };
+    item->count = 2;
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.vertexSnap ? 1 : 0;
+
+
+    //full screen
+    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item->title = "Enable Full Screen";
+    item->description = "Shortcut: F11 or Alt+Enter";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            cro::App::getWindow().setFullScreen(i.selectedIndex == 1);
+        };
+    item->count = 2;
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = cro::App::getWindow().isFullscreen() ? 1 : 0;
+
+
+    //full screen borderless/exclusive
+    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item->title = "Full Screen Mode";
+    item->description = "When in full screen run the game in a borderless window at the desktop resolution, or exclusive full screen at the window resolution.";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            cro::App::getWindow().setExclusiveFullscreen(i.selectedIndex == 1);
+
+            if (cro::App::getWindow().isFullscreen())
+            {
+                //apply the setting
+                cro::App::getWindow().setFullScreen(false);
+                cro::App::getWindow().setFullScreen(true);
+            }
+        };
+    item->count = 2;
+    item->labels = { "Borderless Window", "Exclusive Mode" };
+    item->selectedIndex = cro::App::getWindow().getExclusiveFullscreen() ? 1 : 0;
+
+
+    //vsync
+    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item->title = "Enable VSync";
+    item->description = "Synchronises the game's refresh rate with your monitor";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            cro::App::getWindow().setVsyncEnabled(i.selectedIndex == 1);
+        };
+    item->count = 2;
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = cro::App::getWindow().getVsyncEnabled() ? 1 : 0;
+
+    //tree quality
+    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item->title = "Tree Quality";
+    item->description = "Switch between billboard and 3D trees. Classic trees are applied when the game is loaded";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.treeQuality = i.selectedIndex;
+            auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+            msg->type = SystemEvent::TreeQualityChanged;
+        };
+    item->count = 3;
+    item->labels = { "Classic", "Low", "High" };
+    item->selectedIndex = m_sharedData.treeQuality;
+
+
+    //shadow quality
+    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item->title = "Shadow Quality";
+    item->description = "NOTE Toggling Classic shadows requires a restart and may cause visual artifacts until done so";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.shadowQuality = i.selectedIndex;
+            auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+            msg->type = SystemEvent::ShadowQualityChanged;
+        };
+    item->count = 5;
+    item->labels = { "Very Low", "Low", "High", "Very High", "Classic" };
+    item->selectedIndex = m_sharedData.shadowQuality;
+
+
+    //crowd density
+    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item->title = "Crowd Density";
+    item->description = "NOTE Very high density crowds may cause a drop in performance";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.crowdDensity = i.selectedIndex;
+            auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+            msg->type = SystemEvent::CrowdDensityChanged;
+        };
+    item->count = 5;
+    item->labels = { "Low", "Normal", "High", "Extreme", "None" };
+    item->selectedIndex = m_sharedData.crowdDensity;
 }
 
 void OptionsStateV2::createAudioItems()

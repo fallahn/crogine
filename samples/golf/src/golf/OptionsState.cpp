@@ -330,7 +330,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     ctx.mainWindow.setMouseCaptured(false);
 
     m_videoSettings.fullScreen = ctx.mainWindow.isFullscreen();
-    auto size = ctx.mainWindow.getSize();
+    const auto size = ctx.mainWindow.getSize();
     for (auto i = 0u; i < sd.resolutions.size(); ++i)
     {
         if (sd.resolutions[i].x == size.x && sd.resolutions[i].y == size.y)
