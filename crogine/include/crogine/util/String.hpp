@@ -48,6 +48,59 @@ source distribution.
 namespace cro::Util::String
 {
     /*!
+    \brief Replaces all instances of c with r
+    */
+    static inline void replace(std::string& str, char c, char r)
+    {
+        std::size_t start = 0u;
+        auto next = str.find_first_of(c, start);
+        while (next != std::string::npos && start < str.length())
+        {
+            str.replace(next, 1, &r);
+            start = ++next;
+            next = str.find_first_of(c, start);
+            if (next > str.length()) next = std::string::npos;
+        }
+    }
+
+    /*!
+    \brief Replace all instances of s with r
+    https://stackoverflow.com/a/3418285/6740859
+    */
+    static inline bool replace(std::string& str, const std::string& s, const std::string& r)
+    {
+        if (s.empty())
+        {
+            return false;
+        }
+
+        std::size_t startPos = 0;
+        bool replaced = false;
+        while ((startPos = str.find(s, startPos)) != std::string::npos)
+        {
+            str.replace(startPos, s.length(), r);
+            startPos += r.length();
+            replaced = true;
+        }
+        return replaced;
+    }
+
+    static inline void replace(cro::String& str, const cro::String& s, const cro::String& r)
+    {
+        if (s.empty())
+        {
+            return;
+        }
+
+        std::size_t startPos = 0;
+        while ((startPos = str.find(s, startPos)) != cro::String::InvalidPos)
+        {
+            str.replace(startPos, s.size(), r);
+            startPos += r.size();
+        }
+    }
+
+    /*!
     \brief Splits a string with a given token and returns a vector of results
     */
     static inline std::vector<std::string> tokenize(const std::string& str, char delim, bool keepEmpty = false)
@@ -159,6 +212,8 @@ namespace cro::Util::String
         static const cro::String endline(" ");
         static const cro::String newline("\n");
 
+        //this may have been pre-wrapped so we need to unwrap it first...
+        replace(str, newline, endline);
         
         std::size_t rowCount = 1;
         const auto tokens = tokenize(str, endline);
@@ -211,59 +266,6 @@ namespace cro::Util::String
     static inline void removeChar(std::string& line, const char c)
     {
         line.erase(std::remove(line.begin(), line.end(), c), line.end());
-    }
-
-    /*!
-    \brief Replaces all instances of c with r
-    */
-    static inline void replace(std::string& str, char c, char r)
-    {
-        std::size_t start = 0u;
-        auto next = str.find_first_of(c, start);
-        while (next != std::string::npos && start < str.length())
-        {
-            str.replace(next, 1, &r);
-            start = ++next;
-            next = str.find_first_of(c, start);
-            if (next > str.length()) next = std::string::npos;
-        }
-    }
-
-    /*!
-    \brief Replace all instances of s with r
-    https://stackoverflow.com/a/3418285/6740859
-    */
-    static inline bool replace(std::string& str, const std::string& s, const std::string& r)
-    {
-        if (s.empty())
-        {
-            return false;
-        }
-
-        std::size_t startPos = 0;
-        bool replaced = false;
-        while ((startPos = str.find(s, startPos)) != std::string::npos) 
-        {
-            str.replace(startPos, s.length(), r);
-            startPos += r.length();
-            replaced = true;
-        }
-        return replaced;
-    }
-
-    static inline void replace(cro::String& str, const cro::String& s, const cro::String& r)
-    {
-        if (s.empty())
-        {
-            return;
-        }
-
-        std::size_t startPos = 0;
-        while ((startPos = str.find(s, startPos)) != cro::String::InvalidPos)
-        {
-            str.replace(startPos, s.size(), r);
-            startPos += r.size();
-        }
     }
 
     /*!

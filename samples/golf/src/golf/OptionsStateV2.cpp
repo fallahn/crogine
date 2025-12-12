@@ -140,6 +140,11 @@ namespace
     constexpr auto BackgroundYellow = cro::Colour(0xf2cf5caf);
     constexpr auto BackgroundRed = cro::Colour(0xb83530af);
 
+    constexpr float DetailBackgroundPadding = 16.f;
+    constexpr float DetailBackgroundOffset = DetailBackgroundPadding / 4.f;
+
+    constexpr std::size_t WordWrapLarge = 36;
+    constexpr std::size_t WordWrapSmall = 28;
 
     static constexpr cro::Time RepeatTimeLong = cro::seconds(0.5f);
     static constexpr cro::Time RepeatTimeShort = cro::seconds(0.05f);
@@ -218,8 +223,8 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
                 m_infoSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                 m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
 
-                m_tabBar.navLeft.getComponent<cro::Text>().setString("<  " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
-                m_tabBar.navRight.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + "  >");
+                m_tabBar.navLeft.getComponent<cro::Text>().setString("< " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+                m_tabBar.navRight.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + " >");
 
                 m_tabBar.navLeftSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                 m_tabBar.navRightSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -831,7 +836,7 @@ void OptionsStateV2::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(m_tabBar.background.getComponent<cro::Transform>());
 
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info); 
-    const float Spacing = 1.f / (TabBar::Item::Count + 2); //leave equivalent of a tab either end
+    const float Spacing = 1.f / (TabBar::Item::Count + 1); //leave equivalent of half a tab either end
     for (auto i = 0; i < TabBar::Item::Count; ++i)
     {
         auto& item = m_tabBar.items[i];
@@ -845,11 +850,11 @@ void OptionsStateV2::buildScene()
         auto& uiElement = item.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
         uiElement.characterSize = InfoTextSize;
         uiElement.depth = 0.1f;
-        const float offset = (Spacing * 1.5f) + (Spacing * i);
+        const float offset = (Spacing/* * 1.5f*/) + (Spacing * i);
         uiElement.resizeCallback = 
             [&, offset](cro::Entity e)
             {
-                const auto x = std::ceil((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset) + 1.f;
+                const auto x = std::ceil((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset) + 2.f;
                 const auto y = 12.f;
                 e.getComponent<cro::UIElement>().absolutePosition = { x,y };
             };
@@ -869,7 +874,7 @@ void OptionsStateV2::buildScene()
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&, Spacing](cro::Entity e)
         {
-            const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * (Spacing / 2.f));
+            const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * (Spacing / 4.f));
             const auto y = 14.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
@@ -887,7 +892,7 @@ void OptionsStateV2::buildScene()
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&, Spacing](cro::Entity e)
         {
-            const auto offset = (Spacing * (m_tabBar.items.size() + 1)) + (Spacing / 2.f);
+            const auto offset = (Spacing * m_tabBar.items.size()) + (Spacing * 0.75f);
             const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
             const auto y = 14.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
@@ -915,7 +920,7 @@ void OptionsStateV2::buildScene()
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&, Spacing](cro::Entity e)
         {
-            const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * (Spacing / 2.f));
+            const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * (Spacing / 4.f));
             const auto y = 10.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
@@ -932,7 +937,7 @@ void OptionsStateV2::buildScene()
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&, Spacing](cro::Entity e)
         {
-            const auto offset = (Spacing * (m_tabBar.items.size() + 1)) + (Spacing / 2.f);
+            const auto offset = (Spacing * m_tabBar.items.size()) + (Spacing * 0.75f);
             const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
             const auto y = 10.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
@@ -961,9 +966,9 @@ void OptionsStateV2::buildScene()
     m_detailsPane.text.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     m_detailsPane.text.getComponent<cro::Text>().setFillColour(TextNormalColour);
     m_detailsPane.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
-    m_detailsPane.text.getComponent<cro::UIElement>().absolutePosition = { 0.f, -90.f };
+    m_detailsPane.text.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -74.f }; //90
     m_detailsPane.text.getComponent<cro::UIElement>().characterSize = UITextSize;
-    m_detailsPane.text.getComponent<cro::UIElement>().verticalSpacing = 4.f;
+    m_detailsPane.text.getComponent<cro::UIElement>().verticalSpacing = 3.f;
     m_detailsPane.text.getComponent<cro::UIElement>().depth = 0.2f;
     m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.text.getComponent<cro::Transform>());
 
@@ -973,7 +978,7 @@ void OptionsStateV2::buildScene()
     m_detailsPane.image.addComponent<cro::Drawable2D>();
     m_detailsPane.image.addComponent<cro::Sprite>();
     m_detailsPane.image.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
-    m_detailsPane.image.getComponent<cro::UIElement>().absolutePosition = { 0.f, -10.f };
+    m_detailsPane.image.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -10.f };
     m_detailsPane.image.getComponent<cro::UIElement>().depth = 0.2f;
     m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.image.getComponent<cro::Transform>());
 
@@ -983,7 +988,12 @@ void OptionsStateV2::buildScene()
     m_detailsPane.background.addComponent<cro::Drawable2D>().setTexture(m_uiTexture);
     m_detailsPane.background.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     m_detailsPane.background.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
-    //m_detailsPane.background.getComponent<cro::UIElement>().absolutePosition = { 0.f, 10.f };
+    m_detailsPane.background.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, 8.f };
+    /*m_detailsPane.background.getComponent<cro::UIElement>().resizeCallback =
+        [&](cro::Entity e) 
+        {
+        
+        };*/
     m_detailsPane.background.getComponent<cro::UIElement>().depth = -0.3f;
     m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.background.getComponent<cro::Transform>());
 
@@ -1143,7 +1153,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Show Flag Beacon";
     item->description = "Draws a beacon at the pin position, visible from a distance";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showBeacon = i.selectedIndex == 1;
@@ -1183,7 +1193,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Show Ball Trail";
     item->description = "Draw a trail behind player's ball when it's in flight";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showBallTrail = i.selectedIndex == 1;
@@ -1196,7 +1206,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Ball Trail Uses Beacon Colour";
     item->description = "Draws the ball trail with the beacon colour, else draws it white";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.trailBeaconColour = i.selectedIndex == 1;
@@ -1209,7 +1219,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Putting Grid Density";
     item->description = "Sets the transparency of the putting grid";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             const float amt = 0.1f * i.selectedIndex;
@@ -1225,7 +1235,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Imperial Measurements";
     item->description = "Render distances in Yards, Feet and Inches instead of Metres and Centimetres";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.imperialMeasurements = i.selectedIndex == 1;
@@ -1238,7 +1248,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Large Power Bar";
     item->description = "Draws a larger power bar at the bottom ofthe UI";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.useLargePowerBar = i.selectedIndex == 1;
@@ -1251,7 +1261,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "High Contrast Power Bar";
     item->description = "Draws the power bar with inverted colours";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.useContrastPowerBar = i.selectedIndex == 1;
@@ -1265,7 +1275,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Decimate Power Bar";
     item->description = "Draws a power bar with 10 segements instead of 8";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.decimatePowerBar = i.selectedIndex == 1;
@@ -1279,7 +1289,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Decimalised Distances";
     item->description = "Distances are drawn to the nearest 10th of a metre or yard";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.decimateDistance = i.selectedIndex == 1;
@@ -1293,7 +1303,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Show Monthly Rival";
     item->description = "Shows the current monthly best on the scoreboard, if available";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showRival = i.selectedIndex == 1;
@@ -1307,7 +1317,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Follow Cam When Putting";
     item->description = "The camera follows the ball when putting instead of displaying an overhead view";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.puttFollowCam = i.selectedIndex == 1;
@@ -1321,7 +1331,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Zoom Follow Cam";
     item->description = "Zoom the follow cam when the ball is in flight for a closer view";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.zoomFollowCam = i.selectedIndex == 1;
@@ -1335,7 +1345,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Rotate When Aiming";
     item->description = "Automatically rotate the player camera when aiming";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.rotateCamera = i.selectedIndex == 1;
@@ -1362,7 +1372,7 @@ void OptionsStateV2::createSettingsItems()
 #else
     item->description = "Select the flag's appearance";
 #endif
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             //cycle through flags
@@ -1384,7 +1394,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Flag Text";
     item->description = "Choose how text is displayed on the flag";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.flagText = i.selectedIndex;
@@ -1446,7 +1456,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Show Lens Flare";
     item->description = "Display a lens flare effect in sunny weather";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.useLensFlare = i.selectedIndex == 1;
@@ -1459,7 +1469,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reduced Motion Transition";
     item->description = "Hides the hole transition behind a loading screen to reduce motion sensitivity";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.miniLoadingScreen = i.selectedIndex == 1;
@@ -1480,7 +1490,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Left Mouse as Action Button";
     item->description = "Clicking left mouse button performs the same as the Action button";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.useMouseAction = i.selectedIndex == 1;
@@ -1493,7 +1503,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Hold Action For Power";
     item->description = "Press and hold the Action button to choose swing power instead of the traditional 3-click system";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.pressHold = i.selectedIndex == 1;
@@ -1508,7 +1518,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Measure Sensitivity";
     item->description = "Sets the speed of the Measure Widget when putting";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.measureSpeed = SpeedValues[i.selectedIndex];
@@ -1533,7 +1543,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Putt Assist";
     item->description = "Show a small flag above the power bar when putting to estimate the range";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showPuttingPower = i.selectedIndex == 1;
@@ -1547,7 +1557,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Fixed Range Putter";
     item->description = "Fixes the max range of the putter at 10m/33ft";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.fixedPuttingRange = i.selectedIndex == 1;
@@ -1562,7 +1572,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Estimated Range Indicator";
     item->description = "Increases difficulty by omitting elevation and wind from the range indicator prediction";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.calculateRange = i.selectedIndex == 0;
@@ -1577,7 +1587,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Minimal UI";
     item->description = "Increases difficulty by removing most of the UI elements";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showMinimap = i.selectedIndex == 0;
@@ -1592,7 +1602,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Display In-Game Tips";
     item->description = "Shows tips when playing on how to best take your shot";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showInGameTips = i.selectedIndex == 1;
@@ -1614,7 +1624,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Enable Web Socket";
     item->description = "See https://github.com/fallahn/svs for more info";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.webSocket = i.selectedIndex == 1;
@@ -1663,7 +1673,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Disable Chat";
     item->description = "Removes the in-game chat from multiplayer games";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.blockChat = i.selectedIndex == 1;
@@ -1677,7 +1687,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Log Chat To File";
     item->description = "Logs in-game multiplayer chat to a text file in your user directory";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.logChat = i.selectedIndex == 1;
@@ -1709,7 +1719,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reset Hints";
     item->description = "Enable all in-game hints which were previously dismissed";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showClubUpdate = true;
@@ -1727,7 +1737,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reset Career";
     item->description = "Resets all Career progress, preserving any unlocked items";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.errorMessage = "reset_career";
@@ -1742,7 +1752,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reset Profile";
     item->description = "WARNING Resets all progress and unlocked items!!";
-    cro::Util::String::wordWrap(item->description, 36);
+
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.errorMessage = "reset_profile";
@@ -1796,7 +1806,6 @@ void OptionsStateV2::createKeyboardItems()
     item->displayType = Menu::Item::Heading;
 
     cro::String keybindDesc = "Press Enter to select a new key";
-    cro::Util::String::wordWrap(keybindDesc, 36);
 
 
     //prev club
@@ -2053,7 +2062,7 @@ void OptionsStateV2::createControllerItems()
     spriteData.bounds[SpriteData::PS] = controllerSprites.getSprite("ps").getTextureRect();
 
     ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setOrigin({ std::floor(spriteData.bounds[0].width / 2.f), std::floor(spriteData.bounds[0].height / 5.f) });
+    ent.addComponent<cro::Transform>().setOrigin({ std::floor(spriteData.bounds[0].width / 2.f) - DetailBackgroundOffset, std::floor(spriteData.bounds[0].height / 5.f) });
     ent.addComponent<cro::Drawable2D>();
     ent.addComponent<cro::Sprite>() = controllerSprites.getSprite("deck");
     ent.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
@@ -2074,6 +2083,18 @@ void OptionsStateV2::createControllerItems()
                 {
                     e.getComponent<cro::Sprite>().setTextureRect(data.bounds[SpriteData::PS]);
                 }
+                else if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+                {
+                    if (cro::GameController::getControllerCount())
+                    {
+                        const auto idx = cro::GameController::hasPSLayout(0) ? SpriteData::PS : SpriteData::Xbox;
+                        e.getComponent<cro::Sprite>().setTextureRect(data.bounds[idx]);
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Sprite>().setTextureRect(data.bounds[SpriteData::Xbox]);
+                    }
+                }
                 else
                 {
                     e.getComponent<cro::Sprite>().setTextureRect(data.bounds[SpriteData::Xbox]);
@@ -2083,7 +2104,7 @@ void OptionsStateV2::createControllerItems()
     m_detailsPane.tabDetails[TabBar::Item::Controller].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
 
-    //set detail text to controller list (TODO how to show activity?)
+    //set detail text to controller list
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     ent = m_scene.createEntity();
     ent.addComponent<cro::Transform>();
@@ -2093,7 +2114,7 @@ void OptionsStateV2::createControllerItems()
     ent.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     ent.getComponent<cro::UIElement>().depth = 0.2f;
     ent.getComponent<cro::UIElement>().characterSize = InfoTextSize;
-    ent.getComponent<cro::UIElement>().absolutePosition = { 0.f, -std::floor((spriteData.bounds[0].height / 5.f) + 6.f) };
+    ent.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundPadding / 2.f, -std::floor((spriteData.bounds[0].height / 5.f) + 6.f) };
     ent.addComponent<cro::Callback>().active = true;
     ent.getComponent<cro::Callback>().function = 
         [&](cro::Entity e, float)
@@ -2672,7 +2693,7 @@ void OptionsStateV2::updateTabBar()
 {
     const glm::vec2 WindowSize = cro::App::getWindow().getSize();
 
-    const float Spacing = 1.f / (TabBar::Item::Count + 2); //leave equivalent of a tab either end
+    const float Spacing = 1.f / (TabBar::Item::Count + 1); //leave equivalent of half a tab either end
     const float TabWidth = std::round(Spacing * WindowSize.x);
 
     std::vector<cro::Vertex2D> verts;
@@ -2724,7 +2745,7 @@ void OptionsStateV2::updateTabBar()
             const auto hovered = (i == m_tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
 
             const float kludgeOffset = (2.f * viewScale);
-            glm::vec2 position = { (TabWidth + kludgeOffset) + ((i * TabWidth) + viewScale), 0.f };
+            glm::vec2 position = { (std::round(TabWidth / 2.f) + kludgeOffset) + ((i * TabWidth) + viewScale), 0.f };
             if (active)
             {
                 addQuad(position, m_tabActive[0], m_tabActive[1]);
@@ -2781,7 +2802,7 @@ void OptionsStateV2::updateTabBar()
                 hovered ?
                 CD32::Colours[CD32::Yellow] : CD32::Colours[CD32::TanDarkest];
 
-            glm::vec2 position = { TabWidth + (i * TabWidth), 0.f };
+            glm::vec2 position = { std::round(TabWidth / 2.f) + (i * TabWidth), 0.f };
             const glm::vec2 size = { TabWidth - viewScale, TabBarHeight * viewScale };
             addQuad(colour, position, size);
 
@@ -2826,6 +2847,25 @@ void OptionsStateV2::updateTabBar()
     }
     m_menuLayout.sprite.getComponent<cro::Transform>().move(-WindowSize / 2.f);
     
+
+    //set the detail text alignment based on active tab
+    switch (m_tabBar.activeIndex)
+    {
+    default:
+        m_detailsPane.text.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
+        break;
+    case TabBar::Item::Controller:
+    {
+        //this is hacky but it means the text only goes out of bounds in the edge
+        //case where there are 4 controllers and the resolution of the window is one
+        //of 3 obscure sizes (1176x664, 1600x1024 and 1680x1050 - that I know of)
+        const float Offset = cro::GameController::getControllerCount() > 3 ? 16.f : 0.f;
+        m_detailsPane.text.getComponent<cro::Transform>().setOrigin({ 0.f, Offset });
+    }
+        break;
+    }
+
+
     resizeItemGraphics();
     updateMenuItems();
 }
@@ -2946,23 +2986,21 @@ void OptionsStateV2::resizeItemGraphics()
 
 
     //update detail background
-    //TODO this only needs to be a vec2...
-    cro::FloatRect backgroundArea = { 0.f, 0.f,
-                        static_cast<float>(cro::App::getWindow().getSize().x / 2u),
+    glm::vec2 backgroundArea = { static_cast<float>(cro::App::getWindow().getSize().x / 2u),
                         (m_tabBar.background.getComponent<cro::Transform>().getPosition().y - (InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2) };
 
-    static constexpr float Padding = 16.f;
-    backgroundArea.width -= (Padding * viewScale);
-    backgroundArea.height -= (Padding * viewScale);
+    backgroundArea.x -= (DetailBackgroundPadding * viewScale);
+    backgroundArea.y -= (DetailBackgroundPadding * viewScale);
 
-    backgroundArea.width /= viewScale;
-    backgroundArea.height /= viewScale;
+    backgroundArea.x /= viewScale;
+    backgroundArea.y /= viewScale;
 
-    backgroundArea.width = std::round(backgroundArea.width / 2.f);
-    backgroundArea.height = std::round(backgroundArea.height / 2.f);
+    backgroundArea.x = std::round(backgroundArea.x / 2.f);
+    backgroundArea.y = std::round(backgroundArea.y / 2.f);
+    m_detailsPane.backgroundSize = backgroundArea * 2.f;
 
-    const float CentreWidth = backgroundArea.width - m_backgroundSections[BackgroundSection::TL].size.x;
-    const float CentreHeight = backgroundArea.height - m_backgroundSections[BackgroundSection::TL].size.y;
+    const float CentreWidth = backgroundArea.x - m_backgroundSections[BackgroundSection::TL].size.x;
+    const float CentreHeight = backgroundArea.y - m_backgroundSections[BackgroundSection::TL].size.y;
 
     verts.clear();
 
@@ -2979,7 +3017,7 @@ void OptionsStateV2::resizeItemGraphics()
         };
 
     //top left
-    glm::vec2 p(-backgroundArea.width, CentreHeight);
+    glm::vec2 p(-backgroundArea.x, CentreHeight);
     addQuad(p, m_backgroundSections[BackgroundSection::TL].size, m_backgroundSections[BackgroundSection::TL].uv);
 
     //top right
@@ -2987,11 +3025,11 @@ void OptionsStateV2::resizeItemGraphics()
     addQuad(p, m_backgroundSections[BackgroundSection::TR].size, m_backgroundSections[BackgroundSection::TR].uv);
 
     //bottom left
-    p = { -backgroundArea.width, -backgroundArea.height };
+    p = { -backgroundArea.x, -backgroundArea.y };
     addQuad(p, m_backgroundSections[BackgroundSection::BL].size, m_backgroundSections[BackgroundSection::BL].uv);
 
     //bottom right
-    p = { CentreWidth, -backgroundArea.height };
+    p = { CentreWidth, -backgroundArea.y };
     addQuad(p, m_backgroundSections[BackgroundSection::BR].size, m_backgroundSections[BackgroundSection::BR].uv);
 
 
@@ -3008,7 +3046,7 @@ void OptionsStateV2::resizeItemGraphics()
     addQuad(p, size, uv);
 
     //bottom
-    p = { -CentreWidth, -backgroundArea.height };
+    p = { -CentreWidth, -backgroundArea.y };
     uv =
     {
         m_backgroundSections[BackgroundSection::BL].uv.width,
@@ -3019,7 +3057,7 @@ void OptionsStateV2::resizeItemGraphics()
     addQuad(p, size, uv);
 
     //left
-    p = { -backgroundArea.width, -CentreHeight };
+    p = { -backgroundArea.x, -CentreHeight };
     size = { m_backgroundSections[BackgroundSection::Left].size.x, CentreHeight * 2.f };
     uv =
     {
@@ -3189,17 +3227,17 @@ void OptionsStateV2::updateMenuItems()
             {
             case Menu::Item::Slider:
                 updateSliderGraphic(item.selectedIndex, item.count - 1);
-                m_itemSlider.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing * 1.7f) });
+                m_itemSlider.setPosition({ std::floor(renderSize.x / 2.f), pos.y - std::floor(LineSpacing * 1.7f) });
                 m_itemSlider.draw();
                 [[fallthrough]];
             default:
                 if (item.displayType == Menu::Item::Slider)
                 {
-                    m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing - 4.f) });
+                    m_menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - (LineSpacing - 4.f) });
                 }
                 else
                 {
-                    m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing * 1.7f) });
+                    m_menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
                 }
 
                 if (item.labels.size() > 1)
@@ -3227,7 +3265,7 @@ void OptionsStateV2::updateMenuItems()
             case Menu::Item::TextOnly:
                 if (!item.description.empty())
                 {
-                    m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - (LineSpacing * 1.7f) });
+                    m_menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
                     m_menuTextLarge.setString(item.description);
                     m_menuTextLarge.draw();
                 }
@@ -3239,7 +3277,7 @@ void OptionsStateV2::updateMenuItems()
                 }
                 break;
             case Menu::Item::Heading:
-                m_menuTextLarge.setPosition({ renderSize.x / 2.f, pos.y - std::round(LineSpacing * 1.7f) });
+                m_menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
                 m_menuTextLarge.setString(item.title);
                 m_menuTextLarge.setFillColour(TextNormalColour);
                 m_menuTextLarge.draw();
@@ -3263,7 +3301,18 @@ void OptionsStateV2::updateMenuItems()
     {
         if (i == m_menuLayout.itemIndex)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString(item.description);
+            auto txt = item.description;
+            cro::Util::String::wordWrap(txt, WordWrapLarge);
+            
+            m_detailsPane.text.getComponent<cro::Text>().setString(txt);
+
+            const auto b = (cro::Text::getLocalBounds(m_detailsPane.text).width / viewScale) + DetailBackgroundPadding;
+            if (b > m_detailsPane.backgroundSize.x)
+            {
+                cro::Util::String::wordWrap(txt, WordWrapSmall);
+                m_detailsPane.text.getComponent<cro::Text>().setString(txt);
+            }
+
             if (item.selected)
             {
                 item.selected(item);
@@ -3541,7 +3590,7 @@ void OptionsStateV2::cancelKeybind()
 void OptionsStateV2::refreshControllerDevices()
 {
     cro::String str;
-    for (auto i = 0; i < std::max(4, cro::GameController::getControllerCount()); ++i)
+    for (auto i = 0; i < std::min(4, cro::GameController::getControllerCount()); ++i)
     {
         str += std::to_string(i + 1) + ". ";
         str += cro::GameController::getPrintableName(i);
@@ -3604,6 +3653,8 @@ void OptionsStateV2::refreshAudioDevices(Menu::Item& item)
 
 void OptionsStateV2::refreshView()
 {
+    //heh OK let's say I had grander plans for this funtions...
+
     updateTabBar();
 }
 
