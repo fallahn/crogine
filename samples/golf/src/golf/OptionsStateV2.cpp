@@ -731,6 +731,10 @@ void OptionsStateV2::loadAssets()
 
         m_itemBackgroundTitle.setTexture(*m_uiTexture);
         m_itemBackgroundTitle.setPrimitiveType(GL_TRIANGLES);
+
+        m_tabBar.items[TabBar::Item::Settings].sprite = spriteSheet.getSprite("settings_icon");
+        m_tabBar.items[TabBar::Item::Display].sprite = spriteSheet.getSprite("graphics_icon");
+        m_tabBar.items[TabBar::Item::Keyboard].sprite = spriteSheet.getSprite("keyboard_icon");
     }
 }
 
@@ -1394,7 +1398,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Flag Text";
     item->description = "Choose how text is displayed on the flag";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.flagText = i.selectedIndex;
@@ -3316,6 +3319,14 @@ void OptionsStateV2::updateMenuItems()
             if (item.selected)
             {
                 item.selected(item);
+            }
+            else if (m_tabBar.items[m_tabBar.activeIndex].sprite.getTexture())
+            {
+                //set this sprite if it's available
+                m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                m_detailsPane.image.getComponent<cro::Sprite>() = m_tabBar.items[m_tabBar.activeIndex].sprite;
+                const auto bounds = m_detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
+                m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f,0.f });
             }
         }
 

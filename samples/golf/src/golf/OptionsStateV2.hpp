@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/SimpleText.hpp>
 #include <crogine/graphics/SimpleVertexArray.hpp>
@@ -127,6 +128,7 @@ private:
             }alignment = Left;
 
             cro::FloatRect hitbox; //in screen coords
+            cro::Sprite sprite;
         };
 
         cro::Entity background;
