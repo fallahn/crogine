@@ -2527,8 +2527,13 @@ void GolfState::loadModels()
                 }
             }
         };
-    std::string baseAudioPath = "assets/golf/sound/avatars/";
-    processPath(baseAudioPath);
+
+    const auto installPaths = Content::getInstallPaths();
+    std::string baseAudioPath = "/sound/avatars/";
+    for (const auto& path : installPaths)
+    {
+        processPath(path + baseAudioPath);
+    }
     baseAudioPath = Content::getUserContentPath(Content::UserContent::Voice);
     const auto voiceDirs = cro::FileSystem::listDirectories(baseAudioPath);
     for (const auto& dir : voiceDirs)
