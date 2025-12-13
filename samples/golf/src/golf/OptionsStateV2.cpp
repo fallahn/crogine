@@ -149,6 +149,8 @@ namespace
     static constexpr cro::Time RepeatTimeLong = cro::seconds(0.5f);
     static constexpr cro::Time RepeatTimeShort = cro::seconds(0.05f);
 
+    bool audioHackDone = false;
+
     void playSound(std::int32_t id)
     {
         cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = id;
@@ -2519,6 +2521,14 @@ void OptionsStateV2::createAudioItems()
             cro::AudioDevice::setActiveDevice(devices[it.selectedIndex]);
         };
     refreshAudioDevices(*item);
+
+    //currently the deck needs to re-apply the audio device for some reason
+    if (!audioHackDone)
+    {
+        item->activated(*item);
+        audioHackDone = true;
+    }
+
 
 
     //text to speech

@@ -106,12 +106,18 @@ bool OpenALImpl::init()
     if (!m_device)
     {
         /*alcCheck*/(m_device = alcOpenDevice(nullptr));
+#ifdef _WIN32
+        //hum, this breaks the audio hack where the steam deck forgets
+        //which audio device it was using, so we can only assume this is
+        //true for all linux builds... :/
         m_preferredDevice = "default";
+#endif
         if (!m_device)
         {
             LOG("OpenAL: Failed opening valid OpenAL device", Logger::Type::Error);
             return false;
         }
+#ifdef _WIN32
         else
         {
             //store this in the config as last known good device
@@ -119,6 +125,7 @@ bool OpenALImpl::init()
             cfg.addProperty("preferred_device").setValue(m_preferredDevice);
             cfg.save(getPreferencePath());
         }
+#endif
     }
     
     

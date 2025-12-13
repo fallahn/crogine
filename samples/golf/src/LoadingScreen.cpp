@@ -103,6 +103,12 @@ LoadingScreen::LoadingScreen(SharedStateData& sd)
 //public
 void LoadingScreen::launch()
 {
+    //quit all rumbling in case someone skipped while pad was active
+    for (auto i = 0; i < cro::GameController::getControllerCount(); ++i)
+    {
+        cro::GameController::rumbleStop(i);
+    }
+
     WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Loading..." }));
 
     const glm::vec2 screenSize = cro::App::getWindow().getSize();
