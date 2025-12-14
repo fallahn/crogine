@@ -131,7 +131,7 @@ namespace
     constexpr float TabBarHeight = 16.f;
 
     constexpr float ItemHeight = TabBarHeight * 2.5f;
-    constexpr float ItemSpacing = 4.f;
+    constexpr float ItemSpacing = 6.f;
     constexpr glm::vec2 ItemImage = glm::vec2(ItemHeight - (ItemSpacing * 2.f), ItemHeight - (ItemSpacing * 2.f));
 
     constexpr float InfoBarHeight = 24.f; //space at the bottom
@@ -143,8 +143,8 @@ namespace
     constexpr float DetailBackgroundPadding = 16.f;
     constexpr float DetailBackgroundOffset = DetailBackgroundPadding / 4.f;
 
-    constexpr std::size_t WordWrapLarge = 36;
-    constexpr std::size_t WordWrapSmall = 28;
+    constexpr std::size_t WordWrapLarge = 42;
+    constexpr std::size_t WordWrapSmall = 36;
 
     static constexpr cro::Time RepeatTimeLong = cro::seconds(0.5f);
     static constexpr cro::Time RepeatTimeShort = cro::seconds(0.05f);
@@ -961,7 +961,7 @@ void OptionsStateV2::buildScene()
     m_detailsPane.root = m_scene.createEntity();
     m_detailsPane.root.addComponent<cro::Transform>();
     m_detailsPane.root.addComponent<cro::UIElement>(cro::UIElement::Position, false);
-    m_detailsPane.root.getComponent<cro::UIElement>().relativePosition = { 0.25f, 0.f };
+    m_detailsPane.root.getComponent<cro::UIElement>().relativePosition = { 0.f, 0.f }; //this i set set when updating the active tab, might be right or left aligned
     rootNode.getComponent<cro::Transform>().addChild(m_detailsPane.root.getComponent<cro::Transform>());
 
     //text
@@ -972,7 +972,7 @@ void OptionsStateV2::buildScene()
     m_detailsPane.text.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     m_detailsPane.text.getComponent<cro::Text>().setFillColour(TextNormalColour);
     m_detailsPane.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
-    m_detailsPane.text.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -74.f }; //90
+    m_detailsPane.text.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -82.f }; //90
     m_detailsPane.text.getComponent<cro::UIElement>().characterSize = UITextSize;
     m_detailsPane.text.getComponent<cro::UIElement>().verticalSpacing = 3.f;
     m_detailsPane.text.getComponent<cro::UIElement>().depth = 0.2f;
@@ -995,11 +995,11 @@ void OptionsStateV2::buildScene()
     m_detailsPane.background.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     m_detailsPane.background.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
     m_detailsPane.background.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, 8.f };
-    /*m_detailsPane.background.getComponent<cro::UIElement>().resizeCallback =
+    m_detailsPane.background.getComponent<cro::UIElement>().resizeCallback =
         [&](cro::Entity e) 
         {
-        
-        };*/
+
+        };
     m_detailsPane.background.getComponent<cro::UIElement>().depth = -0.3f;
     m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.background.getComponent<cro::Transform>());
 
@@ -1080,7 +1080,6 @@ void OptionsStateV2::buildScene()
     createAudioItems();
     createAchievementItems();
     createStatItems();
-
 
     updateTabBar(); //this also updates the menu items
 
@@ -2067,7 +2066,7 @@ void OptionsStateV2::createControllerItems()
     spriteData.bounds[SpriteData::PS] = controllerSprites.getSprite("ps").getTextureRect();
 
     ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setOrigin({ std::floor(spriteData.bounds[0].width / 2.f) - DetailBackgroundOffset, std::floor(spriteData.bounds[0].height / 5.f) });
+    ent.addComponent<cro::Transform>().setOrigin({ std::floor(spriteData.bounds[0].width / 2.f) - DetailBackgroundOffset, std::floor(spriteData.bounds[0].height / 5.f) - 2.f });
     ent.addComponent<cro::Drawable2D>();
     ent.addComponent<cro::Sprite>() = controllerSprites.getSprite("deck");
     ent.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
@@ -2119,7 +2118,7 @@ void OptionsStateV2::createControllerItems()
     ent.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     ent.getComponent<cro::UIElement>().depth = 0.2f;
     ent.getComponent<cro::UIElement>().characterSize = InfoTextSize;
-    ent.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundPadding / 2.f, -std::floor((spriteData.bounds[0].height / 5.f) + 6.f) };
+    ent.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundPadding / 2.f, -std::floor((spriteData.bounds[0].height / 5.f) + 4.f) };
     ent.addComponent<cro::Callback>().active = true;
     ent.getComponent<cro::Callback>().function = 
         [&](cro::Entity e, float)
@@ -2831,6 +2830,8 @@ void OptionsStateV2::updateTabBar()
 
     m_tabBar.background.getComponent<cro::Drawable2D>().setVertexData(verts);
 
+    const auto DetailOffset = (((1.f - m_tabBar.items[m_tabBar.activeIndex].displayWidth) / 2.f) + m_tabBar.items[m_tabBar.activeIndex].displayWidth) - 0.5f;
+
     switch (m_tabBar.items[m_tabBar.activeIndex].alignment)
     {
     default:
@@ -2838,7 +2839,7 @@ void OptionsStateV2::updateTabBar()
         m_menuLayout.sprite.getComponent<cro::Transform>().setPosition({ 0.f, 0.f });
 
         m_detailsPane.root.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        m_detailsPane.root.getComponent<cro::UIElement>().relativePosition.x = 0.25f;
+        m_detailsPane.root.getComponent<cro::UIElement>().relativePosition.x = DetailOffset;
         break;
     case TabBar::Item::Centre:
     {
@@ -2850,11 +2851,11 @@ void OptionsStateV2::updateTabBar()
         break;
     case TabBar::Item::Right:
     {
-        const float x = std::round(WindowSize.x - (static_cast<float>(m_menuLayout.texture.getSize().x * cro::UIElementSystem::getViewScale()) * m_tabBar.items[m_tabBar.activeIndex].displayWidth));
+        const float x = std::round(WindowSize.x - ((static_cast<float>(m_menuLayout.texture.getSize().x) * m_tabBar.items[m_tabBar.activeIndex].displayWidth) * cro::UIElementSystem::getViewScale()));
         m_menuLayout.sprite.getComponent<cro::Transform>().setPosition({ x, 0.f });
 
         m_detailsPane.root.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        m_detailsPane.root.getComponent<cro::UIElement>().relativePosition.x = -0.25f;
+        m_detailsPane.root.getComponent<cro::UIElement>().relativePosition.x = -DetailOffset;
     }
         break;
     }
@@ -2862,21 +2863,21 @@ void OptionsStateV2::updateTabBar()
     
 
     //set the detail text alignment based on active tab
-    switch (m_tabBar.activeIndex)
-    {
-    default:
-        m_detailsPane.text.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
-        break;
-    case TabBar::Item::Controller:
-    {
-        //this is hacky but it means the text only goes out of bounds in the edge
-        //case where there are 4 controllers and the resolution of the window is one
-        //of 3 obscure sizes (1176x664, 1600x1024 and 1680x1050 - that I know of)
-        const float Offset = cro::GameController::getControllerCount() > 3 ? 16.f : 0.f;
-        m_detailsPane.text.getComponent<cro::Transform>().setOrigin({ 0.f, Offset });
-    }
-        break;
-    }
+    //switch (m_tabBar.activeIndex)
+    //{
+    //default:
+    //    m_detailsPane.text.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
+    //    break;
+    //case TabBar::Item::Controller:
+    //{
+    //    //this is hacky but it means the text only goes out of bounds in the edge
+    //    //case where there are 4 controllers and the resolution of the window is one
+    //    //of 3 obscure sizes (1176x664, 1600x1024 and 1680x1050 - that I know of)
+    //    /*const float Offset = cro::GameController::getControllerCount() > 3 ? 16.f : 0.f;
+    //    m_detailsPane.text.getComponent<cro::Transform>().setOrigin({ 0.f, Offset });*/
+    //}
+    //    break;
+    //}
 
 
     resizeItemGraphics();
@@ -2943,8 +2944,8 @@ void OptionsStateV2::resizeItemGraphics()
 
     //update all the item backgrounds based on current window size and selected tab
     //these aren't scaled by view size here - the target they're rendered to is
-    glm::vec2 renderSize = glm::vec2(m_menuLayout.texture.getSize());
-    renderSize.x = std::round(renderSize.x * m_tabBar.items[m_tabBar.activeIndex].displayWidth);
+    float renderSize = static_cast<float>(m_menuLayout.texture.getSize().x);
+    renderSize = std::round(renderSize * m_tabBar.items[m_tabBar.activeIndex].displayWidth);
 
     std::vector<cro::Vertex2D> verts;
     const auto calcVerts =
@@ -2960,7 +2961,7 @@ void OptionsStateV2::resizeItemGraphics()
 
             
             position.x += left.size.x;
-            const auto centreWidth = renderSize.x - (left.size.x * 2.f);
+            const auto centreWidth = renderSize - (left.size.x * 2.f);
             verts.emplace_back(glm::vec2(position.x, left.size.y), glm::vec2(left.uv.width, left.uv.height));
             verts.emplace_back(position, glm::vec2(left.uv.width, left.uv.bottom));
             verts.emplace_back(glm::vec2(position.x + centreWidth, left.size.y), glm::vec2(right.uv.left, right.uv.height));
@@ -2999,7 +3000,7 @@ void OptionsStateV2::resizeItemGraphics()
 
 
     //update detail background
-    glm::vec2 backgroundArea = { static_cast<float>(cro::App::getWindow().getSize().x / 2u),
+    glm::vec2 backgroundArea = { static_cast<float>(cro::App::getWindow().getSize().x - (renderSize * viewScale)),
                         (m_tabBar.background.getComponent<cro::Transform>().getPosition().y - (InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2) };
 
     backgroundArea.x -= (DetailBackgroundPadding * viewScale);
@@ -3205,7 +3206,7 @@ void OptionsStateV2::updateMenuItems()
                 m_menuQuad.setTextureRect(item.uv);
 
                 m_menuQuad.draw();
-                pos.x += (ItemSpacing * 2.f) + ItemImage.x;
+                pos.x += (ItemSpacing) + ItemImage.x;
             }
 
             pos.x += ItemSpacing;
@@ -3240,13 +3241,13 @@ void OptionsStateV2::updateMenuItems()
             {
             case Menu::Item::Slider:
                 updateSliderGraphic(item.selectedIndex, item.count - 1);
-                m_itemSlider.setPosition({ std::floor(renderSize.x / 2.f), pos.y - std::floor(LineSpacing * 1.7f) });
+                m_itemSlider.setPosition({ std::floor(renderSize.x / 2.f), pos.y - 22.f/*std::floor(LineSpacing * 1.7f)*/ });
                 m_itemSlider.draw();
                 [[fallthrough]];
             default:
                 if (item.displayType == Menu::Item::Slider)
                 {
-                    m_menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - (LineSpacing - 4.f) });
+                    m_menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - (LineSpacing - 1.f) });
                 }
                 else
                 {

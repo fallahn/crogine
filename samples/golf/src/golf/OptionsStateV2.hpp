@@ -120,7 +120,7 @@ private:
                 Count
             };
             cro::Entity text;
-            float displayWidth = 0.5f; //how much horizontal space items in this tab use
+            float displayWidth = 0.375f; //how much horizontal space items in this tab use
 
             enum
             {
