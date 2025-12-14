@@ -70,7 +70,7 @@ void GameController::swapControllers(std::int32_t currentIndex, std::int32_t dst
 
 void GameController::moveControllerIndexDown(std::int32_t currentIndex)
 {
-    if (currentIndex > 0 && currentIndex < getControllerCount())
+    if (currentIndex > 0 && currentIndex < getControllerCount() - 1)
     {
         const auto dstIndex = currentIndex - 1;
         swapControllers(currentIndex, dstIndex);
@@ -79,7 +79,7 @@ void GameController::moveControllerIndexDown(std::int32_t currentIndex)
 
 void GameController::moveControllerIndexUp(std::int32_t currentIndex)
 {
-    if (currentIndex < (getControllerCount() - 1))
+    if (currentIndex < (getControllerCount() - 2))
     {
         const auto dstIndex = currentIndex + 1;
         swapControllers(currentIndex, dstIndex);
