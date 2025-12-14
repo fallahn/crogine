@@ -2496,7 +2496,7 @@ void OptionsStateV2::createDisplayItems()
 
 void OptionsStateV2::createAudioItems()
 {
-    m_tabBar.items[TabBar::Item::Audio].displayWidth = 0.8f;
+    m_tabBar.items[TabBar::Item::Audio].displayWidth = 0.7f;
     m_tabBar.items[TabBar::Item::Audio].alignment = TabBar::Item::Centre;
 
     auto* item = &m_menuLayout.items[TabBar::Item::Audio].emplace_back();
@@ -2573,7 +2573,7 @@ void OptionsStateV2::createAudioItems()
 
 void OptionsStateV2::createAchievementItems()
 {
-    m_tabBar.items[TabBar::Item::Achievements].displayWidth = 0.8f;
+    m_tabBar.items[TabBar::Item::Achievements].displayWidth = 0.9f;
     m_tabBar.items[TabBar::Item::Achievements].alignment = TabBar::Item::Centre;
 
     //TODO display progress of achievements
@@ -2619,7 +2619,7 @@ void OptionsStateV2::createAchievementItems()
 
 void OptionsStateV2::createStatItems()
 {
-    m_tabBar.items[TabBar::Item::Stats].displayWidth = 0.8f;
+    m_tabBar.items[TabBar::Item::Stats].displayWidth = 0.7f;
     m_tabBar.items[TabBar::Item::Stats].alignment = TabBar::Item::Centre;
 
     const auto formatValue =
