@@ -374,7 +374,7 @@ struct SharedStateData final
     bool decimateDistance = false;
     bool showRosterTip = true;
     bool fixedPuttingRange = false;
-    std::int32_t lightmapQuality = 0;
+    //std::int32_t lightmapQuality = 0;
     
     float measureSpeed = 1.f; //multiplier when measuring for putt
     std::int32_t webPort = 8080;

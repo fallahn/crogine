@@ -394,6 +394,7 @@ private:
     struct Swarm final
     {
         std::string texture;
+        std::string mask;
         std::int32_t frameCount = 1;
         std::int32_t frameRate = 18;
         glm::vec3 position;

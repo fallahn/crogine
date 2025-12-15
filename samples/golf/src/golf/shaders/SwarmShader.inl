@@ -90,6 +90,11 @@ R"(
 static inline const std::string SwarmFragment =
 R"(
         uniform sampler2D u_texture;
+#if defined(ILLUM)
+        uniform sampler2D u_mask;
+        //light mask is stored in norm.a
+        layout (location = 2) out vec4 NORM_OUT;
+#endif
         uniform vec4 u_lightColour;
 #include LIGHT_COLOUR
 
@@ -117,7 +122,9 @@ R"(
             LIGHT_OUT = vec4(vec3(0.0), 1.0);
             FRAG_OUT *= getLightColour();
 #else
-            LIGHT_OUT = vec4(FRAG_OUT.rgb, 1.0);
+            float mask = TEXTURE(u_mask, coord).g;
+            LIGHT_OUT = vec4(FRAG_OUT.rgb * mask, 1.0);
+            NORM_OUT.a = mask;
 #endif
 
 //TODO also fog colour?

@@ -124,14 +124,20 @@ cro::Entity GolfState::createSwarm(const GolfState::Swarm& info)
 
 
     const auto shaderID = (info.frameCount << 16) | (info.frameRate << 8) | ShaderID::Swarm;
+    const bool illum = m_sharedData.nightTime && !info.mask.empty();
 
     if (!m_resources.shaders.hasShader(shaderID))
     {
         const std::string sizeDef = "#define AREA_SIZE " + std::to_string(AreaSize) + "\n";
-        //TODO define ILLUM for self illuminating eg glowflies
+        std::string illumDef;
+        if (illum)
+        {
+            illumDef = "#define ILLUM\n";
+        }
+
         const std::string frameDefs = "#define FRAME_RATE " + std::to_string(1.f / info.frameRate) + "\n#define FRAME_COUNT " + std::to_string(info.frameCount) + "\n";
 
-        m_resources.shaders.loadFromString(shaderID, SwarmVertex, SwarmFragment, sizeDef + frameDefs);
+        m_resources.shaders.loadFromString(shaderID, SwarmVertex, SwarmFragment, sizeDef + frameDefs + illumDef);
         const auto& shader = m_resources.shaders.get(shaderID);
         m_windBuffer.addShader(shader); //time input
         m_resolutionBuffer.addShader(shader); //viewport size
@@ -147,6 +153,14 @@ cro::Entity GolfState::createSwarm(const GolfState::Swarm& info)
     auto& tex = m_resources.textures.get(info.texture);
     tex.setSmooth(false);
     material.setProperty("u_texture", tex);
+
+    //TODO conver this to a texture array
+    if (illum)
+    {
+        auto& illumTex = m_resources.textures.get(info.mask);
+        illumTex.setSmooth(false);
+        material.setProperty("u_mask", tex);
+    }
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(info.position);

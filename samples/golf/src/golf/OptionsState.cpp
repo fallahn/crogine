@@ -2838,7 +2838,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             {
                 if (activated(evt))
                 {
-                    m_sharedData.lightmapQuality = m_sharedData.lightmapQuality == 0 ? 1 : 0;
+                    //m_sharedData.lightmapQuality = m_sharedData.lightmapQuality == 0 ? 1 : 0;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
                 }
@@ -2859,8 +2859,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            float scale = m_sharedData.lightmapQuality ? 1.f : 0.f;
-            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+            //float scale = m_sharedData.lightmapQuality ? 1.f : 0.f;
+            //e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

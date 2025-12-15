@@ -1346,6 +1346,18 @@ void GolfState::loadMap()
                                     if (spName == "diffuse")
                                     {
                                         swarmSettings.texture = sp.getValue<std::string>();
+                                        if (m_sharedData.nightTime)
+                                        {
+                                            const auto ext = cro::FileSystem::getFileExtension(swarmSettings.texture);
+                                            if (!ext.empty())
+                                            {
+                                                swarmSettings.texture = swarmSettings.texture.substr(0, swarmSettings.texture.find(ext)) + "_night" + ext;
+                                            }
+                                        }
+                                    }
+                                    else if (spName == "mask")
+                                    {
+                                        swarmSettings.mask = sp.getValue<std::string>();
                                     }
                                     else if (spName == "position")
                                     {
