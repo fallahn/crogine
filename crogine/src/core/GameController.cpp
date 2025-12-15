@@ -60,12 +60,14 @@ void GameController::swapControllers(std::int32_t currentIndex, std::int32_t dst
 {
     auto temp = App::m_instance->m_controllers[dstIndex];
     SDL_GameControllerSetPlayerIndex(temp.controller, -1);
+    SDL_GameControllerUpdate();
 
     App::m_instance->m_controllers[dstIndex] = App::m_instance->m_controllers[currentIndex];
     App::m_instance->m_controllers[currentIndex] = temp;
 
     SDL_GameControllerSetPlayerIndex(App::m_instance->m_controllers[dstIndex].controller, dstIndex);
     SDL_GameControllerSetPlayerIndex(App::m_instance->m_controllers[currentIndex].controller, currentIndex);
+    SDL_GameControllerUpdate();
 }
 
 void GameController::moveControllerIndexDown(std::int32_t currentIndex)

@@ -46,7 +46,7 @@ public:
             Ball, Hair, Course, Flag,
             Profile, Avatar, Career,
             Clubs, Voice, Tournament,
-
+            TextChat,
             Count
         };
     };
