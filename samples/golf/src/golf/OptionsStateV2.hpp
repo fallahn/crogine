@@ -253,6 +253,23 @@ private:
     cro::Texture m_beaconPreview; //TODO this is 1x1px so we could just atlas into another texture...
 
     FlagPreview m_flagPreview;
+    struct OptionIcon final
+    {
+        enum
+        {
+            GridDensity,
+            BeaconColour,
+            HighContrast,
+            LargePower,
+            DecimatePower,
+            WidgetSpeed,
+            PuttAssist,
+            BallTrail,
+
+            Count
+        };
+    };
+    std::array<cro::Sprite, OptionIcon::Count> m_optionIcons = {};
 
     struct DetailsPane final
     {

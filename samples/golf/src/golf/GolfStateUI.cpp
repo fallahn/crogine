@@ -2458,6 +2458,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     Achievements::setActive(m_allowAchievements); //make sure these are re-enabled in case CPU player was last
 
 #ifdef USE_GNS
+    //TODO should be automatically done when successfully inserting the leaderboard score
     if (m_sharedData.leagueRoundID == LeagueRoundID::Club
         && m_sharedData.scoreType == ScoreType::Stroke)
     {

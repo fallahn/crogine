@@ -738,6 +738,18 @@ void OptionsStateV2::loadAssets()
         m_tabBar.items[TabBar::Item::Display].sprite = spriteSheet.getSprite("graphics_icon");
         m_tabBar.items[TabBar::Item::Keyboard].sprite = spriteSheet.getSprite("keyboard_icon");
     }
+
+    if (spriteSheet.loadFromFile("assets/golf/sprites/options_images.spt", m_sharedData.sharedResources->textures))
+    {
+        m_optionIcons[OptionIcon::GridDensity] = spriteSheet.getSprite("grid_density");
+        m_optionIcons[OptionIcon::BeaconColour] = spriteSheet.getSprite("beacon_colour");
+        m_optionIcons[OptionIcon::HighContrast] = spriteSheet.getSprite("high_contrast");
+        m_optionIcons[OptionIcon::LargePower] = spriteSheet.getSprite("large_power");
+        m_optionIcons[OptionIcon::DecimatePower] = spriteSheet.getSprite("decimate_power");
+        m_optionIcons[OptionIcon::WidgetSpeed] = spriteSheet.getSprite("widget_speed");
+        m_optionIcons[OptionIcon::PuttAssist] = spriteSheet.getSprite("putt_assist");
+        m_optionIcons[OptionIcon::BallTrail] = spriteSheet.getSprite("ball_trail");
+    }
 }
 
 void OptionsStateV2::buildScene()
@@ -1158,7 +1170,13 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Show Flag Beacon";
     item->description = "Draws a beacon at the pin position, visible from a distance";
-
+    item->selected = 
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BeaconColour];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BeaconColour].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showBeacon = i.selectedIndex == 1;
@@ -1171,6 +1189,13 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Beacon Colour";
     item->description = "Choose the colour of the beacon";
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BeaconColour];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BeaconColour].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
     item->activated = [&](Menu::Item& i)
         {
             const float amt = 0.1f * i.selectedIndex;
@@ -1198,7 +1223,13 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Show Ball Trail";
     item->description = "Draw a trail behind player's ball when it's in flight";
-
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BallTrail];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BallTrail].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showBallTrail = i.selectedIndex == 1;
@@ -1211,7 +1242,13 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Ball Trail Uses Beacon Colour";
     item->description = "Draws the ball trail with the beacon colour, else draws it white";
-
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BallTrail];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BallTrail].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.trailBeaconColour = i.selectedIndex == 1;
@@ -1224,7 +1261,13 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Putting Grid Density";
     item->description = "Sets the transparency of the putting grid";
-
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::GridDensity];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::GridDensity].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
     item->activated = [&](Menu::Item& i)
         {
             const float amt = 0.1f * i.selectedIndex;
@@ -1240,7 +1283,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Imperial Measurements";
     item->description = "Render distances in Yards, Feet and Inches instead of Metres and Centimetres";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.imperialMeasurements = i.selectedIndex == 1;
@@ -1253,7 +1295,13 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Large Power Bar";
     item->description = "Draws a larger power bar at the bottom ofthe UI";
-
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::LargePower];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::LargePower].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.useLargePowerBar = i.selectedIndex == 1;
@@ -1266,7 +1314,13 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "High Contrast Power Bar";
     item->description = "Draws the power bar with inverted colours";
-
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::HighContrast];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::HighContrast].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.useContrastPowerBar = i.selectedIndex == 1;
@@ -1280,7 +1334,13 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Decimate Power Bar";
     item->description = "Draws a power bar with 10 segements instead of 8";
-
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::DecimatePower];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::DecimatePower].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.decimatePowerBar = i.selectedIndex == 1;
@@ -1294,7 +1354,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Decimalised Distances";
     item->description = "Distances are drawn to the nearest 10th of a metre or yard";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.decimateDistance = i.selectedIndex == 1;
@@ -1308,7 +1367,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Show Monthly Rival";
     item->description = "Shows the current monthly best on the scoreboard, if available";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showRival = i.selectedIndex == 1;
@@ -1322,7 +1380,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Follow Cam When Putting";
     item->description = "The camera follows the ball when putting instead of displaying an overhead view";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.puttFollowCam = i.selectedIndex == 1;
@@ -1336,7 +1393,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Zoom Follow Cam";
     item->description = "Zoom the follow cam when the ball is in flight for a closer view";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.zoomFollowCam = i.selectedIndex == 1;
@@ -1350,7 +1406,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Rotate When Aiming";
     item->description = "Automatically rotate the player camera when aiming";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.rotateCamera = i.selectedIndex == 1;
@@ -1460,7 +1515,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Show Lens Flare";
     item->description = "Display a lens flare effect in sunny weather";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.useLensFlare = i.selectedIndex == 1;
@@ -1473,7 +1527,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reduced Motion Transition";
     item->description = "Hides the hole transition behind a loading screen to reduce motion sensitivity";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.miniLoadingScreen = i.selectedIndex == 1;
@@ -1484,7 +1537,7 @@ void OptionsStateV2::createSettingsItems()
 
 
 
-    //----------shared control settings--------------//
+    //----------control settings--------------//
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Control Settings";
     item->displayType = Menu::Item::Heading;
@@ -1494,7 +1547,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Left Mouse as Action Button";
     item->description = "Clicking left mouse button performs the same as the Action button";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.useMouseAction = i.selectedIndex == 1;
@@ -1507,7 +1559,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Hold Action For Power";
     item->description = "Press and hold the Action button to choose swing power instead of the traditional 3-click system";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.pressHold = i.selectedIndex == 1;
@@ -1522,7 +1573,13 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Measure Sensitivity";
     item->description = "Sets the speed of the Measure Widget when putting";
-
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::WidgetSpeed];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::WidgetSpeed].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.measureSpeed = SpeedValues[i.selectedIndex];
@@ -1547,7 +1604,13 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Use Putt Assist";
     item->description = "Show a small flag above the power bar when putting to estimate the range";
-
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::PuttAssist];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::PuttAssist].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showPuttingPower = i.selectedIndex == 1;
@@ -1561,7 +1624,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Fixed Range Putter";
     item->description = "Fixes the max range of the putter at 10m/33ft";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.fixedPuttingRange = i.selectedIndex == 1;
@@ -1576,7 +1638,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Estimated Range Indicator";
     item->description = "Increases difficulty by omitting elevation and wind from the range indicator prediction";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.calculateRange = i.selectedIndex == 0;
@@ -1591,7 +1652,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Minimal UI";
     item->description = "Increases difficulty by removing most of the UI elements";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showMinimap = i.selectedIndex == 0;
@@ -1606,7 +1666,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Display In-Game Tips";
     item->description = "Shows tips when playing on how to best take your shot";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showInGameTips = i.selectedIndex == 1;
@@ -1628,7 +1687,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Enable Web Socket";
     item->description = "See https://github.com/fallahn/svs for more info";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.webSocket = i.selectedIndex == 1;
@@ -1677,7 +1735,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Disable Chat";
     item->description = "Removes the in-game chat from multiplayer games";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.blockChat = i.selectedIndex == 1;
@@ -1691,7 +1748,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Log Chat To File";
     item->description = "Logs in-game multiplayer chat to a text file in your user directory";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.logChat = i.selectedIndex == 1;
@@ -1718,12 +1774,10 @@ void OptionsStateV2::createSettingsItems()
 
 
 
-    //--------set background colour for these EG yellow/red for warning!!-------//
     //reset hints
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reset Hints";
     item->description = "Enable all in-game hints which were previously dismissed";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showClubUpdate = true;
@@ -1741,7 +1795,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reset Career";
     item->description = "Resets all Career progress, preserving any unlocked items";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.errorMessage = "reset_career";
@@ -1756,7 +1809,6 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reset Profile";
     item->description = "WARNING Resets all progress and unlocked items!!";
-
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.errorMessage = "reset_profile";
