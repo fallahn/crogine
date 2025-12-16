@@ -429,7 +429,7 @@ void LeagueState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<Social::StatEvent>();
         if (data.type == Social::StatEvent::LeagueReceived)
         {
-            updateLeagueText();
+            updateLeagueText(data.index == 1);
         }
     }
     else if (msg.id == cro::Message::StateMessage)
@@ -438,7 +438,8 @@ void LeagueState::handleMessage(const cro::Message& msg)
         if (data.action == cro::Message::StateEvent::Pushed
             && data.id == StateID::League)
         {
-            updateLeagueText();
+            updateLeagueText(true);
+            updateLeagueText(false);
         }
     }
 #endif
@@ -533,7 +534,8 @@ void LeagueState::buildScene()
                 }
 #ifdef USE_GNS
                 //remote steam list
-                updateLeagueText();
+                updateLeagueText(true);
+                updateLeagueText(false);
 #endif
                 //in case we changed our profile name
                 refreshAllNameLists();
@@ -743,8 +745,10 @@ void LeagueState::buildScene()
         }
     }
 #ifdef USE_GNS
-    createGlobalLeagueTab(bgNode, spriteSheet);
+    createGlobalLeagueTab(bgNode, spriteSheet, LeagueID::Global);
+    createGlobalLeagueTab(bgNode, spriteSheet, LeagueID::FriendsGlobal);
     m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_leagueNodes[LeagueID::FriendsGlobal].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     m_currentLeague = LeagueID::Global;
 #endif
     addLeagueButtons(spriteSheet);
@@ -1149,10 +1153,17 @@ void LeagueState::refreshAllNameLists()
 }
 
 #ifdef USE_GNS
-void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
+void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteSheet& spriteSheet, std::int32_t leagueIndex)
 {
-    m_leagueNodes[LeagueID::Global] = m_scene.createEntity();
-    m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(m_leagueNodes[LeagueID::Global].addComponent<cro::Transform>());
+    const auto textIndex = leagueIndex - LeagueID::Global;
+    const std::array<cro::String, 2u> TitleStrings =
+    {
+        "Global League for ",
+        "Friends League for "
+    };
+
+    m_leagueNodes[leagueIndex] = m_scene.createEntity();
+    m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(m_leagueNodes[leagueIndex].addComponent<cro::Transform>());
 
     const auto centre = parent.getComponent<cro::Sprite>().getTextureBounds().width / 2.f;
 
@@ -1161,13 +1172,13 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ centre, 298.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString("Global League for " + MonthStrings[Social::getMonth()]);
+    entity.addComponent<cro::Text>(largeFont).setString(TitleStrings[textIndex] + MonthStrings[Social::getMonth()]);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     centreText(entity);
-    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //stripes
     entity = m_scene.createEntity();
@@ -1176,7 +1187,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("stripes");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
-    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto stripeEnt = entity;
     entity = m_scene.createEntity();
@@ -1188,11 +1199,8 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     stripeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-
-
-
     //cro::String str(" 1/36\n23/36\n 7/36\n33/36\n 1/36\n23/36\n 7/36\n33/36\n 1/36\n23/36\n 7/36\n33/36\n 1/36\n23/36\n 7/36\n33/36");
-    const auto& str = Social::getMonthlyLeague();
+    const auto& str = Social::getMonthlyLeague(false);
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 68.f, TextTop + 1.f, 0.2f });
@@ -1200,8 +1208,8 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     entity.addComponent<cro::Text>(smallFont).setString(str[2]);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
-    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_leagueText.games = entity;
+    m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueText[textIndex].games = entity;
 
 
     //str = "Big\nJim\nBeef\nFrank\nSteve\nMelissa\nJean\nSavoury\nRegina Philange Banana Hammock";
@@ -1211,8 +1219,8 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     entity.addComponent<cro::Text>(smallFont).setString(str[0]);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
-    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_leagueText.names = entity;
+    m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueText[textIndex].names = entity;
 
     //str = "  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n123 Points";
     entity = m_scene.createEntity();
@@ -1222,8 +1230,8 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
-    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_leagueText.scores = entity;
+    m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueText[textIndex].scores = entity;
 
     //auto statusString = "PLAYER SCORE HERE";
     entity = m_scene.createEntity();
@@ -1235,8 +1243,8 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     centreText(entity);
-    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_leagueText.personal = entity;
+    m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueText[textIndex].personal = entity;
 
     //how to play
     auto statusString = "To compete play through all 36 rounds in Free Play";
@@ -1249,7 +1257,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     centreText(entity);
-    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //text scroller
@@ -1262,16 +1270,16 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
 
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
-    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, leagueIndex](cro::Entity e, float dt)
         {
             const auto bounds = cro::Text::getLocalBounds(e);
-            float scale = m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().getScale().x;
+            float scale = m_leagueNodes[leagueIndex].getComponent<cro::Transform>().getScale().x;
             if (scale == 0)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -1303,18 +1311,20 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
             }
         };
 
-    m_leagueText.previous = entity;
+    m_leagueText[textIndex].previous = entity;
 }
 
-void LeagueState::updateLeagueText()
+void LeagueState::updateLeagueText(bool friendsOnly)
 {
-    const auto& str = Social::getMonthlyLeague();
-    m_leagueText.games.getComponent<cro::Text>().setString(str[2]);
-    m_leagueText.names.getComponent<cro::Text>().setString(str[0]);
-    m_leagueText.scores.getComponent<cro::Text>().setString(str[1]);
-    m_leagueText.personal.getComponent<cro::Text>().setString(str[3]);
-    m_leagueText.previous.getComponent<cro::Text>().setString(str[4]);
-    centreText(m_leagueText.personal);
+    const auto& str = Social::getMonthlyLeague(friendsOnly);
+    const auto textIndex = friendsOnly ? 1 : 0;
+
+    m_leagueText[textIndex].games.getComponent<cro::Text>().setString(str[2]);
+    m_leagueText[textIndex].names.getComponent<cro::Text>().setString(str[0]);
+    m_leagueText[textIndex].scores.getComponent<cro::Text>().setString(str[1]);
+    m_leagueText[textIndex].personal.getComponent<cro::Text>().setString(str[3].empty() ? "No Score Yet" : str[3]);
+    m_leagueText[textIndex].previous.getComponent<cro::Text>().setString(str[4].empty() ? "Fetching..." : str[4]);
+    centreText(m_leagueText[textIndex].personal);
 }
 #endif
 

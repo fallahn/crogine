@@ -107,6 +107,7 @@ private:
             S05,
             S06,
             Global,
+            FriendsGlobal,
 
             Count
         };
@@ -137,10 +138,11 @@ private:
         cro::Entity scores;
         cro::Entity personal;
         cro::Entity previous;
-    }m_leagueText;
+    };
+    std::array<LeagueText, 2u> m_leagueText = {};
 
-    void createGlobalLeagueTab(cro::Entity,const cro::SpriteSheet&);
-    void updateLeagueText();
+    void createGlobalLeagueTab(cro::Entity,const cro::SpriteSheet&, std::int32_t leagueIndex);
+    void updateLeagueText(bool friendsOnly = false);
 #endif
     void addLeagueButtons(const cro::SpriteSheet&);
 
