@@ -1489,8 +1489,9 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                     }
                 }
 #ifdef USE_GNS
-                else
+                else if (m_currentLeague == LeagueID::Global)
                 {
+                    //don't show in frineds only
                     Social::showLeaguePlayer(idx);
                 }
 #endif
