@@ -658,6 +658,10 @@ void OptionsStateV2::loadAssets()
 
     m_itemSlider.setPrimitiveType(GL_TRIANGLES);
 
+    cro::Image img;
+    img.create(1, 1, cro::Colour::White);
+    m_colourPreview.loadFromImage(img);
+
     cro::SpriteSheet spriteSheet;
     if (spriteSheet.loadFromFile("assets/golf/sprites/options_buttons.spt", m_sharedData.sharedResources->textures))
     {
@@ -1266,26 +1270,21 @@ void OptionsStateV2::createSettingsItems()
             m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BeaconColour].getTextureBounds().width / 2.f, 0.f });
             m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
-    item->activated = [&](Menu::Item& i)
+    item->activated = 
+        [&](Menu::Item& i)
         {
             const float amt = 0.1f * i.selectedIndex;
             m_sharedData.beaconColour = amt;
 
             //set the preview colour
-            const cro::Detail::ColourLowP c = getBeaconColour(m_sharedData.beaconColour);
-            m_beaconPreview.update(&c);
+            i.previewColour = getBeaconColour(m_sharedData.beaconColour);
         };
     item->count = 10; //hmmm why don't I infer this from the size of the label vector?
     item->labels = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" };
     item->selectedIndex = static_cast<std::int32_t>(std::floor(m_sharedData.beaconColour * 9.f));
     item->displayType = Menu::Item::Slider;
-
-    //TODO set this on a sub-tex of some other texture
-    const auto c = getBeaconColour(m_sharedData.beaconColour);
-    cro::Image img;
-    img.create(1, 1, c);
-    m_beaconPreview.loadFromImage(img);
-    item->texture = &m_beaconPreview;
+    item->previewColour = getBeaconColour(m_sharedData.beaconColour);
+    item->texture = &m_colourPreview;
     item->uv = { 0.f, 0.f, 1.f, 1.f };
 
 
@@ -1347,6 +1346,52 @@ void OptionsStateV2::createSettingsItems()
     item->labels = { "0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0" };
     item->selectedIndex = static_cast<std::int32_t>(std::floor(m_sharedData.gridTransparency * 10.f));
     item->displayType = Menu::Item::Slider;
+
+
+    //tee ball colour
+    static constexpr std::array ColourIndices =
+    {
+        CD32::Red, CD32::Yellow, CD32::BlueMid, CD32::BeigeLight,
+        CD32::GreenLight, CD32::Orange, CD32::Black
+    };
+    std::int32_t activeColour = 0;
+    if (const auto res = std::find(ColourIndices.cbegin(), ColourIndices.cend(), m_sharedData.teeColour);
+        res != ColourIndices.cend())
+    {
+        activeColour = static_cast<std::int32_t>(std::distance(ColourIndices.cbegin(), res));
+    }
+    else
+    {
+        m_sharedData.teeColour = ColourIndices[0];
+    }
+
+    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item->title = "Tee Marker Colour";
+    item->description = "Choose the colour of the tee marker. Note that this doesn't affect the tee position, it's purely cosmetic";
+    /*item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BeaconColour];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BeaconColour].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };*/
+    item->activated =
+        [&](Menu::Item& i)
+        {
+            m_sharedData.teeColour = ColourIndices[i.selectedIndex];
+
+            //set the preview colour
+            i.previewColour = CD32::Colours[m_sharedData.teeColour];
+        };
+    item->count = 7;
+    item->labels = { "1", "2", "3", "4", "5", "6", "7" };
+    item->selectedIndex = activeColour;
+    item->displayType = Menu::Item::Slider;
+    item->previewColour = CD32::Colours[m_sharedData.teeColour];
+    item->texture = &m_colourPreview;
+    item->uv = { 0.f, 0.f, 1.f, 1.f };
+
+
 
 
     //use imperial measurements
@@ -1577,8 +1622,6 @@ void OptionsStateV2::createSettingsItems()
     item->labels.push_back("None");
     item->selectedIndex = m_sharedData.usePostProcess ? m_sharedData.postProcessIndex : static_cast<std::int32_t>(ShaderNames.size());
 
-
-    //TODO tee ball colour
 
 
     //lens flare
@@ -3365,6 +3408,7 @@ void OptionsStateV2::updateMenuItems()
                 m_menuQuad.setScale(ItemImage / glm::vec2(item.uv.width, item.uv.height));
                 m_menuQuad.setPosition(pos + glm::vec2(ItemSpacing, ItemSpacing));
                 m_menuQuad.setTextureRect(item.uv);
+                m_menuQuad.setColour(item.previewColour);
 
                 m_menuQuad.draw();
                 pos.x += (ItemSpacing) + ItemImage.x;

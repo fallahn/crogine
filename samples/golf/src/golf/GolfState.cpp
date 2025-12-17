@@ -2513,6 +2513,21 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                 m_spectateGhost.getComponent<cro::Model>().setMaterialProperty(0, "u_rimColour", getBeaconColour(m_sharedData.beaconColour));
 
+                cmd.targetFlags = CommandID::Tee;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        if (cro::SysTime::now().months() == 10 && cro::SysTime::now().days() > 22)
+                        {
+                            //we have a spooky tee so an't set the colour
+                            e.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", cro::Colour::White);
+                        }
+                        else
+                        {
+                            e.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", CD32::Colours[m_sharedData.teeColour]);
+                        }
+                    };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
                 //and distance values
                 cmd.targetFlags = CommandID::UI::ClubName;
                 cmd.action = [&](cro::Entity e, float)
@@ -4062,7 +4077,7 @@ void GolfState::buildScene()
 
     //tee marker
     material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
-    bool spooky = cro::SysTime::now().months() == 10 && cro::SysTime::now().days() > 22;
+    const bool spooky = cro::SysTime::now().months() == 10 && cro::SysTime::now().days() > 22;
     if (spooky)
     {
         md.loadFromFile("assets/golf/models/tee_balls02.cmt");
@@ -4070,6 +4085,7 @@ void GolfState::buildScene()
     else
     {
         md.loadFromFile("assets/golf/models/tee_balls.cmt");
+        material.setProperty("u_ballColour", CD32::Colours[m_sharedData.teeColour]);
     }
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].tee);

@@ -333,6 +333,7 @@ struct SharedStateData final
     bool invertY = false;
     bool showBeacon = true;
     float beaconColour = 1.f; //normalised rotation
+    std::int32_t teeColour = 17; //CD32 index
     bool imperialMeasurements = false;
     float gridTransparency = 1.f;
     struct TreeQuality final
