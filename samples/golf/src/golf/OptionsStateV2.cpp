@@ -2472,13 +2472,19 @@ void OptionsStateV2::createDisplayItems()
     item->selected = 
         [&](const Menu::Item&)
         {
+            //TODO display a graphic
+
             m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         };
     item->activated =
         [&](Menu::Item& i)
         {
-            cro::App::getWindow().setSize(m_sharedData.resolutions[i.selectedIndex]);
+            if (!i.valueChangedOnActivate)
+            {
+                cro::App::getWindow().setSize(m_sharedData.resolutions[i.selectedIndex]);
+            }
         };
+    item->alwaysActivate = true;
     
     for (const auto& s : m_sharedData.resolutionStrings)
     {

@@ -172,6 +172,8 @@ private:
             //float-rect in menu space to test click against
             cro::FloatRect hitbox;
 
+            bool valueChangedOnActivate = false;
+            bool alwaysActivate = false; //hack to always call activation callback regardless of input
             bool wrapValue = true; //value wraps back to the beginning instead of clamping
             std::int32_t selectedIndex = 0; //currently selected entry
             std::int32_t count = 1; //number of items to cycle through when clicking
@@ -190,6 +192,7 @@ private:
                         (selectedIndex + (count - 1)) % count
                         : std::max(selectedIndex - 1, 0);
 
+                    valueChangedOnActivate = true;
                     activated(*this);
                     return true;
                 }
@@ -203,6 +206,8 @@ private:
                     selectedIndex = wrapValue ? 
                         (selectedIndex + 1) % count
                         : std::min(selectedIndex + 1, count - 1);
+                    
+                    valueChangedOnActivate = true;
                     activated(*this);
                     return true;
                 }
@@ -211,8 +216,10 @@ private:
 
             bool activate()
             {
-                if (count == 1)
+                if (count == 1
+                    || alwaysActivate)
                 {
+                    valueChangedOnActivate = false;
                     activated(*this);
                     return true;
                 }
