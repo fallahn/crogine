@@ -755,6 +755,9 @@ void OptionsStateV2::loadAssets()
         m_optionIcons[OptionIcon::WidgetSpeed] = spriteSheet.getSprite("widget_speed");
         m_optionIcons[OptionIcon::PuttAssist] = spriteSheet.getSprite("putt_assist");
         m_optionIcons[OptionIcon::BallTrail] = spriteSheet.getSprite("ball_trail");
+        m_optionIcons[OptionIcon::TeeMarker] = spriteSheet.getSprite("tee_marker");
+        m_optionIcons[OptionIcon::ZoomFlight] = spriteSheet.getSprite("zoom_flight");
+        m_optionIcons[OptionIcon::PuttFollow] = spriteSheet.getSprite("putt_follow");
     }
 }
 
@@ -1368,13 +1371,13 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Tee Marker Colour";
     item->description = "Choose the colour of the tee marker. Note that this doesn't affect the tee position, it's purely cosmetic";
-    /*item->selected =
+    item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BeaconColour];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BeaconColour].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::TeeMarker];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::TeeMarker].getTextureBounds().width / 2.f, 0.f });
             m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-        };*/
+        };
     item->activated =
         [&](Menu::Item& i)
         {
@@ -1495,6 +1498,13 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Follow Cam When Putting";
     item->description = "The camera follows the ball when putting instead of displaying an overhead view";
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::PuttFollow];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::PuttFollow].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.puttFollowCam = i.selectedIndex == 1;
@@ -1508,6 +1518,13 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Zoom Follow Cam";
     item->description = "Zoom the follow cam when the ball is in flight for a closer view";
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::ZoomFlight];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::ZoomFlight].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.zoomFollowCam = i.selectedIndex == 1;

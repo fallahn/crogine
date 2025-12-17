@@ -273,6 +273,9 @@ private:
             WidgetSpeed,
             PuttAssist,
             BallTrail,
+            TeeMarker,
+            ZoomFlight,
+            PuttFollow,
             Warning,
 
             Count
