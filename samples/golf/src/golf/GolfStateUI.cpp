@@ -203,7 +203,6 @@ namespace
         return expansion;
     }
 }
-
 void GolfState::buildUI()
 {
     if (m_holeData.empty())

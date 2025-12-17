@@ -737,6 +737,8 @@ void OptionsStateV2::loadAssets()
         m_tabBar.items[TabBar::Item::Settings].sprite = spriteSheet.getSprite("settings_icon");
         m_tabBar.items[TabBar::Item::Display].sprite = spriteSheet.getSprite("graphics_icon");
         m_tabBar.items[TabBar::Item::Keyboard].sprite = spriteSheet.getSprite("keyboard_icon");
+
+        m_optionIcons[OptionIcon::Warning] = spriteSheet.getSprite("warning_icon");
     }
 
     if (spriteSheet.loadFromFile("assets/golf/sprites/options_images.spt", m_sharedData.sharedResources->textures))
@@ -973,7 +975,7 @@ void OptionsStateV2::buildScene()
     m_detailsPane.root = m_scene.createEntity();
     m_detailsPane.root.addComponent<cro::Transform>();
     m_detailsPane.root.addComponent<cro::UIElement>(cro::UIElement::Position, false);
-    m_detailsPane.root.getComponent<cro::UIElement>().relativePosition = { 0.f, 0.f }; //this i set set when updating the active tab, might be right or left aligned
+    m_detailsPane.root.getComponent<cro::UIElement>().relativePosition = { 0.f, 0.f }; //this is set set when updating the active tab, might be right or left aligned
     rootNode.getComponent<cro::Transform>().addChild(m_detailsPane.root.getComponent<cro::Transform>());
 
     //text
@@ -1014,6 +1016,74 @@ void OptionsStateV2::buildScene()
         };
     m_detailsPane.background.getComponent<cro::UIElement>().depth = -0.3f;
     m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.background.getComponent<cro::Transform>());
+
+
+    //displays an Apply icon if an item requests it
+    m_detailsPane.applyButton = m_scene.createEntity();
+    m_detailsPane.applyButton.addComponent<cro::Transform>();
+    m_detailsPane.applyButton.addComponent<cro::Callback>().active = true;
+    m_detailsPane.applyButton.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Transform>().setPosition(-(m_detailsPane.backgroundSize / 2.f) * cro::UIElementSystem::getViewScale());
+        };
+    m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.applyButton.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Enter - Apply");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
+    entity.getComponent<cro::UIElement>().characterSize = UITextSize;
+    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 12.f };
+    entity.getComponent<cro::UIElement>().depth = 0.2f;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Drawable2D>().setFacing(
+                m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard ?
+                cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
+        };
+    m_detailsPane.applyButton.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("apply_xbox");
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 4.f };
+    entity.getComponent<cro::UIElement>().depth = 0.2f;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Drawable2D>().setFacing(
+                m_sharedData.activeInput == SharedStateData::ActiveInput::XBox ?
+                cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
+        };
+    m_detailsPane.applyButton.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("apply_ps");
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 4.f };
+    entity.getComponent<cro::UIElement>().depth = 0.2f;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Drawable2D>().setFacing(
+                m_sharedData.activeInput == SharedStateData::ActiveInput::PS ?
+                cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
+        };
+    m_detailsPane.applyButton.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
 
 
     //displays a cancel message when a keybind is in progress
@@ -1778,6 +1848,16 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reset Hints";
     item->description = "Enable all in-game hints which were previously dismissed";
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_tabBar.items[m_tabBar.activeIndex].sprite;
+            const auto bounds = m_detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
+
+            m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        };
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showClubUpdate = true;
@@ -1795,6 +1875,15 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reset Career";
     item->description = "Resets all Career progress, preserving any unlocked items";
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::Warning];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::Warning].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+
+            m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        };
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.errorMessage = "reset_career";
@@ -1809,6 +1898,15 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Reset Profile";
     item->description = "WARNING Resets all progress and unlocked items!!";
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::Warning];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::Warning].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+
+            m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        };
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.errorMessage = "reset_profile";
@@ -2371,6 +2469,11 @@ void OptionsStateV2::createDisplayItems()
     //Resolution
     item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
     item->title = "Resolution";
+    item->selected = 
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        };
     item->activated =
         [&](Menu::Item& i)
         {
@@ -3358,6 +3461,7 @@ void OptionsStateV2::updateMenuItems()
     //hide the preview image and let the selection callback
     //display/update it as needed.
     m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 
     m_menuLayout.texture.clear(cro::Colour::Transparent);
     //render current item selection to render texture

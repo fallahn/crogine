@@ -1944,16 +1944,6 @@ void GolfState::handleMessage(const cro::Message& msg)
         break;
         case GolfEvent::ClubChanged:
         {
-            //crude animation for indicator
-            /*if (m_inputParser.getClub() > data.club)
-            {
-                m_minimapIndicatorEnt.getComponent<cro::Callback>().getUserData<StrokeData>().targetScale = 0.7f;
-            }
-            else if (m_inputParser.getClub() < data.club)
-            {
-                m_minimapIndicatorEnt.getComponent<cro::Callback>().getUserData<StrokeData>().targetScale = 1.4f;
-            }*/
-
             //update the player with correct club
             //this includes remote player changes
             if (m_activeAvatar
@@ -8223,7 +8213,7 @@ void GolfState::updateActor(const ActorInfo& update)
             if (m_sharedData.showMinimap)
             {
                 //hmmm this is actually wrong, because it doesn't use the current (lagged) output of the interpolation
-                formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, terrain == TerrainID::Green, isMultiTarget);
+                formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, getClub() == ClubID::Putter, isMultiTarget);
             }
             else
             {

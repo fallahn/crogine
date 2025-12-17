@@ -265,6 +265,7 @@ private:
             WidgetSpeed,
             PuttAssist,
             BallTrail,
+            Warning,
 
             Count
         };
@@ -278,6 +279,7 @@ private:
         cro::Entity text;
         cro::Entity image;
         cro::Entity background;
+        cro::Entity applyButton;
 
         //track this so we can resize items which appear within it
         //NOTE that is *without* the view scaling
