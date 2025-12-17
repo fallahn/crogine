@@ -91,6 +91,7 @@ InputParser::InputParser(SharedStateData& sd, cro::Scene* s)
     m_analogueAmount    (0.f),
     m_inputAcceleration (0.f),
     m_camMotion         (0.f),
+    m_widgetMultiplier  (1.f),
     m_mouseWheel        (0),
     m_prevMouseWheel    (0),
     //m_mouseMove         (0),
@@ -185,6 +186,15 @@ void InputParser::handleEvent(const cro::Event& evt)
                     || (m_humanCount == 1 && (m_activeController == -1 || m_activeController == joyID))); //allow input from any controller if only one local player
         };
 
+    const auto toggleWidgetSpeed =
+        [&]()
+        {
+            if (m_state == State::Measure)
+            {
+                m_widgetMultiplier = m_widgetMultiplier == 1 ? 2.f : 1.f;
+            }
+        };
+
     if (m_active &&
         !m_swingput.handleEvent(evt, m_inputFlags, static_cast<std::int32_t>(m_state)))
     {
@@ -236,6 +246,10 @@ void InputParser::handleEvent(const cro::Event& evt)
             {
                 m_inputFlags |= InputFlag::Cancel;
                 //cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                if (m_state == State::Measure)
+                {
+                    toggleWidgetSpeed();
+                }
             }
             else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::SpinMenu])
             {
@@ -454,10 +468,11 @@ void InputParser::handleEvent(const cro::Event& evt)
                     //}
                 }
 
-                /*else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
+                else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
                 {
-                    m_inputFlags &= ~InputFlag::MiniMap;
-                }*/
+                    //m_inputFlags &= ~InputFlag::MiniMap;
+                    toggleWidgetSpeed();
+                }
             }
         }
 
@@ -487,10 +502,16 @@ void InputParser::handleEvent(const cro::Event& evt)
             m_inputFlags |= InputFlag::Action;
         }
         else if (evt.type == SDL_MOUSEBUTTONUP
-            && !m_isCPU
-            && evt.button.button == SDL_BUTTON_LEFT)
+            && !m_isCPU)
         {
-            m_inputFlags &= ~InputFlag::Action;
+            if (evt.button.button == SDL_BUTTON_LEFT)
+            {
+                m_inputFlags &= ~InputFlag::Action;
+            }
+            else if (evt.button.button == SDL_BUTTON_RIGHT)
+            {
+                toggleWidgetSpeed();
+            }
         }
         /*else if (evt.type == SDL_MOUSEMOTION)
         {
@@ -1951,6 +1972,7 @@ void InputParser::updateMeasure()
     {
         v /= std::sqrt(l2);
         v *= m_analogueAmount;
+        v *= m_widgetMultiplier;
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::MeasureWidget;

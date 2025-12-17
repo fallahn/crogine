@@ -139,6 +139,7 @@ private:
     float m_analogueAmount;
     float m_inputAcceleration;
     float m_camMotion;
+    float m_widgetMultiplier;
 
     std::int32_t m_mouseWheel;
     std::int32_t m_prevMouseWheel;
