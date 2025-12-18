@@ -222,7 +222,7 @@ void GolfState::buildUI()
 
     //draws the background using the render texture
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(1.f/Upscale));
     entity.addComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
 
     auto* shader = &m_resources.shaders.get(ShaderID::Composite);
@@ -270,6 +270,7 @@ void GolfState::buildUI()
     else
     {
         entity.addComponent<cro::Sprite>(m_gameSceneTexture.getTexture());
+        m_gameSceneTexture.setSmooth(true);
 
         auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
         entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, 0.5f));

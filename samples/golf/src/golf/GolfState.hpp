@@ -76,6 +76,8 @@ source distribution.
 #endif
 #define VIEW_SPACE_LIGHTING
 
+static constexpr float Upscale = 1.f;
+
 struct BullsEye;
 struct BullHit;
 namespace cro

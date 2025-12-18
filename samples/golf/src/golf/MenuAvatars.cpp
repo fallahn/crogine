@@ -1008,7 +1008,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     profile.name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
                     for (auto i = 0u; i < profile.avatarFlags.size(); ++i)
                     {
-                        profile.avatarFlags[i] = static_cast<std::uint8_t>(cro::Util::Random::value(0u, pc::PairCounts[i] - 1));
+                        profile.avatarFlags[i] = static_cast<std::uint8_t>(cro::Util::Random::value(0u, (pc::PairCounts[i] / 2) - 1));
                     }
 
                     //don't allow locked items duh
@@ -1022,7 +1022,6 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     else
                     {
                         profile.ballID = 0;// m_cosmeticIDs.balls[cro::Util::Random::value(0u, m_cosmeticIDs.balls.size() - 1)];
-
                     }
 
                     profile.flipped = cro::Util::Random::value(0, 1) == 0 ? false : true;
