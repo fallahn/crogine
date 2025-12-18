@@ -758,8 +758,6 @@ private:
     std::vector<cro::Entity> m_minimapModels;
     cro::Entity m_minimapTrail;
 
-    std::int32_t m_minimapTexturePass;
-    static constexpr std::int32_t MaxMinimapPasses = 1;
     void updateMinimapTexture();
     void updateMiniMap();
 

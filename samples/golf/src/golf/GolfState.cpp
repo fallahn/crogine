@@ -234,7 +234,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_puttTutShown          (false),
     m_courseIndex           (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel            (sd, m_currentPlayer, m_textChat),
-    m_minimapTexturePass    (MaxMinimapPasses),
     m_measurePosition       (0.f),
     m_drawDebugMesh         (false)
 {
@@ -2836,12 +2835,6 @@ bool GolfState::simulate(float dt)
     if (m_activeAvatar)
     {
         m_activeAvatar->applyAttachment();
-    }
-
-    if (m_minimapTexturePass < MaxMinimapPasses)
-    {
-        m_mapScene.simulate(dt);
-        updateMinimapTexture();
     }
 
     m_strokeTimer += dt;

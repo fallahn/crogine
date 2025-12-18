@@ -1527,8 +1527,8 @@ void GolfState::buildUI()
 
             if (scale == 0)
             {
-                //starts the multipass rendering (actually done in Scene::simulate())
-                m_minimapTexturePass = 0;
+                m_mapScene.simulate(dt);
+                updateMinimapTexture();
 
                 //and set to grow
                 state = 1;
@@ -6529,7 +6529,6 @@ void GolfState::buildTrophyScene()
 
 void GolfState::updateMinimapTexture()
 {
-    //TODO assert if we need to do this every pass
     if (m_sharedData.scoreType == ScoreType::MultiTarget)
     {
         auto* shader = &m_resources.shaders.get(ShaderID::MinimapModel);
@@ -6567,50 +6566,32 @@ void GolfState::updateMinimapTexture()
     cro::Colour c = cro::Colour::Transparent;
     //cro::Colour c(std::uint8_t(39), 56, 153);
     
-    if (m_minimapTexturePass == 0)
-    {
-        m_minimapTrail.getComponent<cro::Drawable2D>().getVertexData().clear();
 
-        m_mapTextureMRT.clear(c);
-    }
-    else
-    {
-        m_mapTextureMRT.activate(true);
-    }
+    m_minimapTrail.getComponent<cro::Drawable2D>().getVertexData().clear();
+
+    m_mapTextureMRT.clear(c);
     m_mapScene.render();
-    m_minimapTexturePass++;
-
     m_minimapModels[m_currentHole].getComponent<cro::Model>().setHidden(true);
+    m_mapTextureMRT.display();
 
-    if (m_minimapTexturePass == MaxMinimapPasses)
-    {
-        m_mapTextureMRT.display();
-    }
-    else
-    {
-        m_mapTextureMRT.activate(false);
-    }
 
     ////m_mapTextureMRT.setBorderColour(c);
 
 
-    //only finalise the minimap once all passes are complete
-    if (m_minimapTexturePass == MaxMinimapPasses)
+
+    //this triggers a map refresh so don't set it until
+    //we know the texture is up to date.
+    m_sharedData.minimapData.holeNumber = m_currentHole;
+
+    retargetMinimap(true);
+
+    auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
+    msg->type = SceneEvent::MinimapUpdated;
+
+    if (m_sharedData.scoreType == ScoreType::MultiTarget)
     {
-        //this triggers a map refresh so don't set it until
-        //we know the texture is up to date.
-        m_sharedData.minimapData.holeNumber = m_currentHole;
-
-        retargetMinimap(true);
-
-        auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
-        msg->type = SceneEvent::MinimapUpdated;
-
-        if (m_sharedData.scoreType == ScoreType::MultiTarget)
-        {
-            m_targetShader.size = 0.f;
-            m_targetShader.update();
-        }
+        m_targetShader.size = 0.f;
+        m_targetShader.update();
     }
 }
 

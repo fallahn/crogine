@@ -154,6 +154,268 @@ void renderToNormalMap(const cro::Mesh::Data meshData, cro::Shader& normalShader
     glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
 }
 
+std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated)
+{
+    auto endColour = TextGoldColour;
+    endColour.setAlpha(0.f);
+    const cro::Colour Grey(0.419f, 0.435f, 0.447f);
+
+    if (decimated)
+    {
+        static constexpr std::array Offsets =
+        {
+            0.0001f, 0.0002f, 0.0004f, 0.0008f
+        };
+
+        return
+        {
+            //gold
+            cro::Vertex2D(glm::vec2(0.f, 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.f, -0.5f), TextGoldColour),
+
+
+            //05 - 0.045 0.055
+            cro::Vertex2D(glm::vec2(0.045f - Offsets[3], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.045f - Offsets[3], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.045f - Offsets[3], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.045f - Offsets[3], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.055f - Offsets[3], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.055f - Offsets[3], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.055f - Offsets[3], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.055f - Offsets[3], -0.5f), TextGoldColour),
+
+
+            //1 - 0.095 0.105
+            cro::Vertex2D(glm::vec2(0.095f - Offsets[2], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.095f - Offsets[2], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.095f - Offsets[2], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.095f - Offsets[2], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.105f - Offsets[2], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.105f - Offsets[2], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.105f - Offsets[2], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.105f - Offsets[2], -0.5f), TextGoldColour),
+
+
+            //15 - 0.145 0.155
+            cro::Vertex2D(glm::vec2(0.145f - Offsets[1], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.145f - Offsets[1], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.145f - Offsets[1], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.145f - Offsets[1], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.155f - Offsets[1], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.155f - Offsets[1], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.155f - Offsets[1], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.155f - Offsets[1], -0.5f), TextGoldColour),
+
+
+            //2 - 0.195 0.205
+            cro::Vertex2D(glm::vec2(0.195f - Offsets[0], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.195f - Offsets[0], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.195f - Offsets[0], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.195f - Offsets[0], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.205f - Offsets[0], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.205f - Offsets[0], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.205f - Offsets[0], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.205f - Offsets[0], -0.5f), TextGoldColour),
+
+
+
+            //25 - 0.245 0.255
+            cro::Vertex2D(glm::vec2(0.245f, 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.245f, -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.245f, 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.245f, -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.255f, 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.255f, -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.255f, 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.255f, -0.5f), TextGoldColour),
+
+
+            //3 - 0.295 0.305
+            cro::Vertex2D(glm::vec2(0.295f + Offsets[0], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.295f + Offsets[0], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.295f + Offsets[0], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.295f + Offsets[0], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.305f + Offsets[0], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.305f + Offsets[0], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.305f + Offsets[0], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.305f + Offsets[0], -0.5f), TextGoldColour),
+
+
+            //35 - 0.345 0.355
+            cro::Vertex2D(glm::vec2(0.345f + Offsets[1], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.345f + Offsets[1], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.345f + Offsets[1], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.345f + Offsets[1], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.355f + Offsets[1], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.355f + Offsets[1], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.355f + Offsets[1], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.355f + Offsets[1], -0.5f), TextGoldColour),
+
+
+            //4 - 0.395 0.405
+            cro::Vertex2D(glm::vec2(0.395f + Offsets[2], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.395f + Offsets[2], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.395f + Offsets[2], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.395f + Offsets[2], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.405f + Offsets[2], 0.5f), Grey),
+            cro::Vertex2D(glm::vec2(0.405f + Offsets[2], -0.5f), Grey),
+
+            cro::Vertex2D(glm::vec2(0.405f + Offsets[2], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.405f + Offsets[2], -0.5f), TextGoldColour),
+
+
+
+            //45 0.445 0. 455
+            cro::Vertex2D(glm::vec2(0.445f + Offsets[3], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.445f + Offsets[3], -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.445f + Offsets[3], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.445f + Offsets[3], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.455f + Offsets[3], 0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.455f + Offsets[3], -0.5f), LeaderboardTextDark),
+
+            cro::Vertex2D(glm::vec2(0.455f + Offsets[3], 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.455f + Offsets[3], -0.5f), TextGoldColour),
+
+
+
+
+            cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
+            cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
+        };
+    }
+
+    return
+    {
+        //gold
+        cro::Vertex2D(glm::vec2(0.f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f, -0.5f), TextGoldColour),
+
+        //grey
+        cro::Vertex2D(glm::vec2(0.0188f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.0188f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.0188f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.0188f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.0288f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.0288f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.0288f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.0288f, -0.5f), TextGoldColour),
+
+
+        //black
+        cro::Vertex2D(glm::vec2(0.07f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.07f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.07f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.07f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.08f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.08f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.08f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.08f, -0.5f), TextGoldColour),
+
+        //grey
+        cro::Vertex2D(glm::vec2(0.1525f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.1525f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.1525f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.1525f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.1625f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.1625f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.1625f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.1625f, -0.5f), TextGoldColour),
+
+        //black
+        cro::Vertex2D(glm::vec2(0.245f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.245f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.245f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.245f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.255f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.255f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.255f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.255f, -0.5f), TextGoldColour),
+
+
+        //grey
+        cro::Vertex2D(glm::vec2(0.3175f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.3175f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.3175f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.3175f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.3275f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.3275f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.3275f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.3275f, -0.5f), TextGoldColour),
+
+
+        //black
+        cro::Vertex2D(glm::vec2(0.395f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.395f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.395f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.395f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.405f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.405f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.405f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.405f, -0.5f), TextGoldColour),
+
+        //grey
+        cro::Vertex2D(glm::vec2(0.4475f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.4475f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.4475f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.4475f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.4575f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.4575f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.4575f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.4575f, -0.5f), TextGoldColour),
+
+        //gold
+        cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
+        cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
+    };
+}
+
+
 glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3& impulse, glm::vec3 windVec, glm::vec3 pin, CollisionMesh& collisionMesh, float dt)
 {
     float groundHeight = -1.f;
