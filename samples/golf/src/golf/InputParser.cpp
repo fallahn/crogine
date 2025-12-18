@@ -748,11 +748,17 @@ void InputParser::setEnableFlags(std::uint16_t flags)
 void InputParser::setMaxClub(float dist, bool atTee)
 {
     //a fudge to allow a full set on any hole bigger than pitch n putt
+    std::int32_t maxClub = ClubID::Driver;
     if (!atTee)
     {
         if (dist > 115.f)
         {
             dist = 1000.f;
+        }
+
+        if (m_terrain == TerrainID::Rough)
+        {
+            maxClub = ClubID::ThreeWood;
         }
     }
     else
@@ -773,20 +779,20 @@ void InputParser::setMaxClub(float dist, bool atTee)
     m_firstClub = ClubID::SandWedge;
 
     while ((Clubs[m_firstClub].getBaseTarget()/* * 1.05f*/) < dist
-        && m_firstClub != ClubID::Driver)
+        && m_firstClub != /*ClubID::Driver*/maxClub)
     {
         //this WILL get stuck in an infinite loop if the clubset is 0 for some reason
         do
         {
             m_firstClub--;
         } while ((m_inputBinding.clubset & ClubID::Flags[m_firstClub]) == 0
-            && m_firstClub != ClubID::Driver);
+            && m_firstClub != /*ClubID::Driver*/maxClub);
     }
 
     //this isn't perfect so give one extra club wiggle room
     //if (!atTee)
     {
-        m_firstClub = std::max(0, m_firstClub - 1);
+        m_firstClub = std::max(maxClub, m_firstClub - 1);
     }
     const auto oldClub = m_currentClub;
     m_currentClub = m_firstClub;
