@@ -1107,6 +1107,9 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
 float InputParser::getDampening() const
 {
+    auto clubLevel = Club::getClubLevel();
+    clubLevel *= clubLevel;
+
     float dampening = 1.f;
     switch (m_terrain)
     {
@@ -1120,12 +1123,12 @@ float InputParser::getDampening() const
         case ClubID::Driver:
         case ClubID::ThreeWood:
         case ClubID::FiveWood:
-            dampening *= 0.85f;
+            dampening *= 1.f - (0.0375f * clubLevel);// 0.85f;
             break;
         }
         break;
     case TerrainID::Bunker:
-        dampening *= (0.75f - (0.15f * Club::getClubLevel()));
+        dampening *= (0.8f - (0.025f * clubLevel));
         break;
     }
 
