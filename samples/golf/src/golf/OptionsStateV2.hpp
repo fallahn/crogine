@@ -276,6 +276,7 @@ private:
             TeeMarker,
             ZoomFlight,
             PuttFollow,
+            RangeIndicator,
             Warning,
 
             Count

@@ -758,6 +758,7 @@ void OptionsStateV2::loadAssets()
         m_optionIcons[OptionIcon::TeeMarker] = spriteSheet.getSprite("tee_marker");
         m_optionIcons[OptionIcon::ZoomFlight] = spriteSheet.getSprite("zoom_flight");
         m_optionIcons[OptionIcon::PuttFollow] = spriteSheet.getSprite("putt_follow");
+        m_optionIcons[OptionIcon::RangeIndicator] = spriteSheet.getSprite("range_indicator");
     }
 }
 
@@ -1768,6 +1769,13 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
     item->title = "Estimated Range Indicator";
     item->description = "Increases difficulty by omitting elevation and wind from the range indicator prediction";
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::RangeIndicator];
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::RangeIndicator].getTextureBounds().width / 2.f, 0.f });
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.calculateRange = i.selectedIndex == 0;
