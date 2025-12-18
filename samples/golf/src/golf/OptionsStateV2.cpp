@@ -2795,6 +2795,7 @@ void OptionsStateV2::createAchievementItems()
 {
     m_tabBar.items[TabBar::Item::Achievements].displayWidth = 0.9f;
     m_tabBar.items[TabBar::Item::Achievements].alignment = TabBar::Item::Centre;
+    m_menuLayout.items[TabBar::Item::Achievements].clear();
 
     //TODO display progress of achievements
     //which are based on stats.
@@ -2841,6 +2842,7 @@ void OptionsStateV2::createStatItems()
 {
     m_tabBar.items[TabBar::Item::Stats].displayWidth = 0.7f;
     m_tabBar.items[TabBar::Item::Stats].alignment = TabBar::Item::Centre;
+    m_menuLayout.items[TabBar::Item::Stats].clear();
 
     const auto formatValue =
         [](std::int32_t type, float statValue)
@@ -2905,6 +2907,10 @@ void OptionsStateV2::createStatItems()
 
 void OptionsStateV2::onCachedPush()
 {
+    //refreshes stats/achievements when opening the window
+    createAchievementItems();
+    createStatItems();
+
     refreshControllerDevices();
     refreshView();
 
