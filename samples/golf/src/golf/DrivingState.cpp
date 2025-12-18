@@ -3623,7 +3623,8 @@ void DrivingState::hitBall()
 #ifdef CRO_DEBUG_
     //result.impulse *= powerMultiplier;
 #endif
-    result.impulse *= Dampening[TerrainID::Fairway];
+    //performed bu getStroke()
+    //result.impulse *= Dampening[TerrainID::Fairway];
 
     //apply impulse to ball component
     cro::Command cmd;

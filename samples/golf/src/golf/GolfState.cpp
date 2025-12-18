@@ -8006,7 +8006,9 @@ void GolfState::hitBall()
     auto lie = m_avatars[m_currentPlayer.client][m_currentPlayer.player].ballModel.getComponent<ClientCollider>().lie;
 
     auto [impulse, spin, _] = m_inputParser.getStroke(club, facing, m_distanceToHole);
-    impulse *= Dampening[m_currentPlayer.terrain] * LieDampening[m_currentPlayer.terrain][lie];
+    
+    //hmm surely this is added by getStroke() ?
+    //impulse *= Dampening[m_currentPlayer.terrain] * LieDampening[m_currentPlayer.terrain][lie];
     impulse *= godmode;
 
     InputUpdate update;
@@ -8379,7 +8381,7 @@ std::int32_t GolfState::getClub() const
 
 float GolfState::getDampening() const
 {
-    return Dampening[m_currentPlayer.terrain] * LieDampening[m_currentPlayer.terrain][m_inputParser.getLie()];
+    return m_inputParser.getDampening();// Dampening[m_currentPlayer.terrain] * LieDampening[m_currentPlayer.terrain][m_inputParser.getLie()];
 }
 
 void GolfState::gamepadNotify(std::int32_t type)

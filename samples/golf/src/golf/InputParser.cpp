@@ -663,7 +663,7 @@ bool InputParser::getButtonState(std::int32_t binding) const
 
 float InputParser::getPower() const
 {
-    return MinPower + (MaxPower * cro::Util::Easing::easeInSine(std::min(m_power, 1.f)));
+    return (MinPower + (MaxPower * cro::Util::Easing::easeInSine(std::min(m_power, 1.f))));
 }
 
 float InputParser::getHook() const
@@ -971,11 +971,11 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     default: break;
     case TerrainID::Rough:
         maxHook -= 0.01f;
-        powerMod = 0.05f;
+        powerMod = 0.1f;
         break;
     case TerrainID::Bunker:
         maxHook -= 0.04f;
-        powerMod = 0.1f;
+        powerMod = 0.2f;
         break;
     }
     powerMod *= clubLevel;
@@ -1098,11 +1098,38 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     power *= (1.f - (SideSpinReduction * std::abs(spin.x)));
 
-    const auto impulse = getImpulse(pitch, yaw) * power;
+    const auto impulse = getImpulse(pitch, yaw) * power * getDampening();
 
     m_lastCalculatedHook = hook;
     m_activeLoadout = nullptr;
     return { impulse, spin, hook };
+}
+
+float InputParser::getDampening() const
+{
+    float dampening = 1.f;
+    switch (m_terrain)
+    {
+    default: break;
+    case TerrainID::Rough:
+        switch (m_currentClub)
+        {
+        default:
+            dampening *= 0.95f;
+            break;
+        case ClubID::Driver:
+        case ClubID::ThreeWood:
+        case ClubID::FiveWood:
+            dampening *= 0.85f;
+            break;
+        }
+        break;
+    case TerrainID::Bunker:
+        dampening *= (0.75f - (0.15f * Club::getClubLevel()));
+        break;
+    }
+
+    return Dampening[m_terrain] * LieDampening[m_terrain][m_lie] * dampening;
 }
 
 std::vector<glm::vec3> InputParser::getImpulseForArc() const
@@ -1120,7 +1147,7 @@ std::vector<glm::vec3> InputParser::getImpulseForArc() const
             for (auto i = 1; i < (stepCount + 1); ++i)
             {
                 const auto p = cro::Util::Easing::easeOutSine(step * i);
-                ret.push_back(getImpulse(pitch, yaw) * power * p * Dampening[m_terrain] * LieDampening[m_terrain][m_lie]);
+                ret.push_back(getImpulse(pitch, yaw) * power * p * getDampening());
             }
         };
 
@@ -1210,7 +1237,7 @@ void InputParser::updateDistanceEstimation()
     impulse *= power;
 
     //multiply the terrain dampening
-    impulse *= Dampening[m_terrain] * LieDampening[m_terrain][m_lie];
+    impulse *= getDampening();
 
     static constexpr float dt = 1.f / 60.f; //I'm sure we're redefining this...
     const auto stepVel = impulse * dt;

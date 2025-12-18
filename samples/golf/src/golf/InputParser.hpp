@@ -108,6 +108,9 @@ public:
     };
     StrokeResult getStroke(std::int32_t club, std::int32_t facing, float holeDistance) const; //facing is -1 or 1 to decide on slice/hook
 
+    //returns the stroke dampening based on the current lie and terrain
+    float getDampening() const;
+
     //returns a series of impulse vectors for the current club
     //for each power setting along the prediction curve, ie 8 or 10
     std::vector<glm::vec3> getImpulseForArc() const;
