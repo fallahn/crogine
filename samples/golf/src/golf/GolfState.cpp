@@ -7512,6 +7512,11 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             static const std::array<std::string, 2u> str = { u8"Bunker ↓", u8"Bunker ↑" };
             e.getComponent<cro::Text>().setString(cro::String::fromUtf8(str[lie].begin(), str[lie].end()));
         }
+        else if (player.terrain == TerrainID::Rough)
+        {
+            static const std::array<std::string, 2u> str = { u8"Rough ↓", u8"Rough ↑" };
+            e.getComponent<cro::Text>().setString(cro::String::fromUtf8(str[lie].begin(), str[lie].end()));
+        }
         else
         {
             e.getComponent<cro::Text>().setString(TerrainStrings[player.terrain]);
