@@ -649,5 +649,8 @@
     <None Include="src\batcat\TestShaders.inl">
       <Filter>Header Files\batcat</Filter>
     </None>
+    <None Include="src\batcat\GrassShader.inl">
+      <Filter>Header Files\batcat</Filter>
+    </None>
   </ItemGroup>
 </Project>

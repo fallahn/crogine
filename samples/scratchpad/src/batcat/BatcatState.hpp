@@ -82,6 +82,9 @@ private:
     void createScene();
     void createUI();
 
+    void createGrass();
+    void createTestModels();
+
     void calcViewport(cro::Camera&);
     void updateView(cro::Camera&);
 };
