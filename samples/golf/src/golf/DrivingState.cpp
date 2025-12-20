@@ -990,6 +990,14 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+                //and tee marker
+                cmd.targetFlags = CommandID::Tee;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", CD32::Colours[m_sharedData.teeColour]);
+                    };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
                 //and the measurement settings
                 cmd.targetFlags = CommandID::UI::ClubName;
                 cmd.action = [&](cro::Entity e, float)
@@ -1312,7 +1320,7 @@ void DrivingState::loadAssets()
     m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
     
     //models
-    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define SKINNED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n" + wobble);
@@ -1337,6 +1345,7 @@ void DrivingState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Cel]).setProperty("u_ballColour", cro::Colour::White);
     
     shader = &m_resources.shaders.get(ShaderID::CelSkinned);
     m_scaleBuffer.addShader(*shader);
@@ -2057,6 +2066,8 @@ void DrivingState::createScene()
     entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
     md.createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", CD32::Colours[m_sharedData.teeColour]);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Tee;
 
     createFlag();
 
