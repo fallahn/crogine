@@ -1109,7 +1109,10 @@ void DrivingState::createUI()
             return;
         }
 
-        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
+        //some sort of estimate rotation offset based on side spin
+        const auto spin = m_inputParser.getSpin().x * Clubs[m_inputParser.getClub()].getSideSpinMultiplier() * 0.18f;
+
+        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() - spin);
         float scale = e.getComponent<cro::Transform>().getScale().x;
 
         //more magic numbers than Ken Dodd's tax return.

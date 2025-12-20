@@ -1815,8 +1815,11 @@ void GolfState::buildUI()
             return;
         }
 
+        //some sort of estimate rotation offset based on side spin
+        const auto spin = m_inputParser.getSpin().x * Clubs[m_inputParser.getClub()].getSideSpinMultiplier() * 0.18f;
+
         e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_currentPlayer.position), 0.01f));
-        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() + m_minimapZoom.tilt);
+        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() + m_minimapZoom.tilt - spin);
 
         float& scale = e.getComponent<cro::Callback>().getUserData<float>();
         if (!m_inputParser.getActive()
