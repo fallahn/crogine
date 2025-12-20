@@ -31,6 +31,7 @@ source distribution.
 #include "Social.hpp"
 #include "CollisionMesh.hpp"
 #include "Terrain.hpp"
+#include "BallSystem.hpp"
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/graphics/MeshData.hpp>
@@ -416,9 +417,10 @@ std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated)
 }
 
 
-glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3& impulse, glm::vec3 windVec, glm::vec3 pin, CollisionMesh& collisionMesh, float dt)
+glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3& impulse, float sideSpin, glm::vec3 windVec, glm::vec3 pin, CollisionMesh& collisionMesh, float dt)
 {
     float groundHeight = -1.f;
+    const auto sideVec = glm::cross(glm::normalize(glm::vec3(impulse.x, 0.f, impulse.z)), cro::Transform::Y_AXIS);
     TerrainResult t;
     do
     {
@@ -428,6 +430,13 @@ glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3& impulse, glm::vec3 windVec, g
         //TODO this is lifted from the BallSystem - would prefer not to replicate.
         const auto windHeight = std::clamp(groundHeight, 0.f, 60.f);
         const auto windMultiplier = getWindMultiplier(windHeight, glm::length(pin - pos)) * 1.36f;
+
+        //TODO sidespin  = +/-1 from input parser
+        //TODO side vec = cross(norm(imp.xz), y_up)
+        //TODO spin *= flight decay
+        //TODO impulse += sideVec * spin * BallSystetm::SideSpinInf * dt
+
+        impulse += sideVec * BallSystem::estimateSidespin(sideSpin) * dt;
 
         pos += impulse * dt;
         impulse += Gravity * dt;

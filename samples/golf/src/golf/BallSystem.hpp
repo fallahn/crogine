@@ -167,6 +167,9 @@ public:
 
     void fastForward(cro::Entity);
 
+    //used to predict the flight for range indicator
+    static float estimateSidespin(float& spin);
+
 #ifdef CRO_DEBUG_
     void setDebugFlags(std::int32_t);
     void renderDebug(const glm::mat4&, glm::uvec2);

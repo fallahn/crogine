@@ -232,14 +232,14 @@ static constexpr std::array<std::int32_t, ClubID::Count> ClubShot =
 //name, angle, side spin, top spin
 static inline const std::array<Club, ClubID::Count> Clubs =
 {
-    Club(ClubID::Driver,    "Driver ", 28.992f, 0.300f, 0.500f),
-    Club(ClubID::ThreeWood, "3 Wood ", 32.315f, 0.350f, 0.550f),
-    Club(ClubID::FiveWood,  "5 Wood ", 34.721f, 0.450f, 0.550f),
-    Club(ClubID::FourIron,  "4 Iron ", 37.586f, 0.450f, 0.780f),
-    Club(ClubID::FiveIron,  "5 Iron ", 37.128f, 0.500f, 0.780f),
-    Club(ClubID::SixIron,   "6 Iron ", 36.326f, 0.550f, 0.800f),
-    Club(ClubID::SevenIron, "7 Iron ", 35.924f, 0.600f, 0.800f),
-    Club(ClubID::EightIron, "8 Iron ", 35.924f, 0.750f, 0.850f),
+    Club(ClubID::Driver,    "Driver ", 28.992f, 0.700f, 0.500f),
+    Club(ClubID::ThreeWood, "3 Wood ", 32.315f, 0.710f, 0.550f),
+    Club(ClubID::FiveWood,  "5 Wood ", 34.721f, 0.710f, 0.550f),
+    Club(ClubID::FourIron,  "4 Iron ", 37.586f, 0.740f, 0.780f),
+    Club(ClubID::FiveIron,  "5 Iron ", 37.128f, 0.750f, 0.780f),
+    Club(ClubID::SixIron,   "6 Iron ", 36.326f, 0.750f, 0.800f),
+    Club(ClubID::SevenIron, "7 Iron ", 35.924f, 0.760f, 0.800f),
+    Club(ClubID::EightIron, "8 Iron ", 35.924f, 0.780f, 0.850f),
     Club(ClubID::NineIron,  "9 Iron ", 35.523f, 0.800f, 0.850f),
     Club(ClubID::PitchWedge, "Pitch Wedge ", 56.895f, 0.050f, 0.900f),
 #ifdef LOB_WEDGE

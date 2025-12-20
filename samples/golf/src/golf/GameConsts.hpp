@@ -554,7 +554,7 @@ void renderToNormalMap(const cro::Mesh::Data, cro::Shader&, cro::MultiRenderText
 
 static constexpr glm::vec3 Gravity = glm::vec3(0.f, -9.8f, 0.f);
 //NOTE after calling this impulse contains the *reflected* vector of the final bounce
-glm::vec3 getImpactPoint(glm::vec3 startPos, glm::vec3& impulse, glm::vec3 wind, glm::vec3 pin, class CollisionMesh&, float dt = 1.f / 30.f);
+glm::vec3 getImpactPoint(glm::vec3 startPos, glm::vec3& impulse, float sideSpin, glm::vec3 wind, glm::vec3 pin, class CollisionMesh&, float dt = 1.f / 30.f);
 
 template <typename T>
 constexpr T interpolate(T a, T b, float t)

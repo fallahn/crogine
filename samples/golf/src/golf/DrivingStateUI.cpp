@@ -1030,10 +1030,12 @@ void DrivingState::createUI()
             windDir *= windDir.y;
             windDir.y = 0.f;
 
+            const auto sidespin = m_inputParser.getSpin().x * Clubs[m_inputParser.getClub()].getSideSpinMultiplier() / 2.f;
+
             std::vector<glm::vec3> points;
             for (auto& i : impulses)
             {
-                points.push_back(getImpactPoint(PlayerPosition, i, windDir, m_holeData[m_targetIndex].pin, m_collisionMesh));
+                points.push_back(getImpactPoint(PlayerPosition, i, sidespin, windDir, m_holeData[m_targetIndex].pin, m_collisionMesh));
             }
             points.push_back(points.back() + (impulses.back()/* / 2.f*/)); //the impulses are converted to reflected vectors
 

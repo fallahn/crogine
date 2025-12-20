@@ -1140,6 +1140,7 @@ std::vector<glm::vec3> InputParser::getImpulseForArc() const
     const auto pitch = Clubs[m_currentClub].getAngle();
     const auto yaw = getYaw();
     const auto power = Clubs[m_currentClub].getPower(m_distanceToHole, m_sharedData.imperialMeasurements);
+    const auto sidespin = 1.f - (std::abs(getSpin().x * (Clubs[m_currentClub].getSideSpinMultiplier() / 2.f)) * SideSpinReduction);
 
     std::vector<glm::vec3> ret;
 
@@ -1150,7 +1151,7 @@ std::vector<glm::vec3> InputParser::getImpulseForArc() const
             for (auto i = 1; i < (stepCount + 1); ++i)
             {
                 const auto p = cro::Util::Easing::easeOutSine(step * i);
-                ret.push_back(getImpulse(pitch, yaw) * power * p * getDampening());
+                ret.push_back(getImpulse(pitch, yaw) * power * p * getDampening() * sidespin);
             }
         };
 

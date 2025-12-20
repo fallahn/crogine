@@ -1737,11 +1737,13 @@ void GolfState::buildUI()
 
                 //only update the arc if it's active on screen
                 auto impulses = m_inputParser.getImpulseForArc();
+                const auto sidespin = m_inputParser.getSpin().x * Clubs[m_inputParser.getClub()].getSideSpinMultiplier() / 2.f;
+
                 std::vector<glm::vec3> points;
                 for (auto& i : impulses)
                 {
                     //after this is called the impulse contains the reflected vector of the impact
-                    points.push_back(getImpactPoint(m_currentPlayer.position, i, windDir, m_holeData[m_currentHole].pin, m_collisionMesh, dt));
+                    points.push_back(getImpactPoint(m_currentPlayer.position, i, sidespin, windDir, m_holeData[m_currentHole].pin, m_collisionMesh, dt));
                 }
                 points.push_back(points.back() + (impulses.back() /*/ 2.f*/)); //so we can use it to draw a tail
 

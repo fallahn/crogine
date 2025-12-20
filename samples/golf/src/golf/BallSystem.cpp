@@ -372,6 +372,12 @@ void BallSystem::fastForward(cro::Entity entity)
     msg->client = entity.getComponent<Ball>().client;
 }
 
+float BallSystem::estimateSidespin(float& spin)
+{
+    spin *= SpinDecay[static_cast<std::int32_t>(Ball::State::Flight)].x;
+    return spin * SideSpinInfluence;
+}
+
 #ifdef CRO_DEBUG_
 void BallSystem::renderDebug(const glm::mat4& mat, glm::uvec2 targetSize)
 {
