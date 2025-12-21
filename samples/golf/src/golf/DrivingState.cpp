@@ -765,7 +765,8 @@ void DrivingState::handleMessage(const cro::Message& msg)
             }
         }
 
-        if (data.type == CollisionEvent::Begin)
+        if (data.type == CollisionEvent::Begin
+            && m_sharedData.enableRumble)
         {
             switch (data.terrain)
             {
@@ -789,7 +790,8 @@ void DrivingState::handleMessage(const cro::Message& msg)
     {
         //stars on rank message after stroke
         const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
-        if (data.userType == SpriteAnimID::Medal) //scoreboard star animation
+        if (m_sharedData.enableRumble &&
+            data.userType == SpriteAnimID::Medal) //scoreboard star animation
         {
             ControllerEffect::trigger(cro::GameController::controllerID(m_inputParser.getLastActiveController()), ControllerEffect::Bounce);
         }
