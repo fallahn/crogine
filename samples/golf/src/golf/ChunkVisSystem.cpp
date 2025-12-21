@@ -134,6 +134,7 @@ void ChunkVisSystem::process(float)
         const auto centre = (m_boundingBoxes[i].getCentre());
         const glm::vec2 worldCentre = glm::vec2(centre.x, centre.z);
         const glm::vec2 dir = worldCentre - glm::vec2(camPos.x, camPos.z);
+        m_visibilityStates[i].visible = false;
 
         //cull any chunks behind the camera
         //unless they overlap the camera position
@@ -145,7 +146,7 @@ void ChunkVisSystem::process(float)
             if (l2 < CullDist)
             {
                 //TODO we could early-cull against map
-                // AABB as there'll be no trees in the water (hopefully)
+                //AABB as there'll be no trees in the water (hopefully)
                 //all planes face inwards
                 bool intersects = true;
                 auto j = 0;
@@ -156,6 +157,9 @@ void ChunkVisSystem::process(float)
 
                 if (intersects)
                 {
+                    m_visibilityStates[i].visible = true;
+                    m_visibilityStates[i].distToCamSqr = l2;
+
                     m_currentIndex |= (std::size_t(1) << i);
                     m_indexList.push_back(i);
 //#ifdef CRO_DEBUG_
@@ -173,6 +177,7 @@ void ChunkVisSystem::process(float)
     //check if index changed and send index list to TerrainBuilder
     if (m_currentIndex != lastIndex)
     {
+        m_terrainBuilder->setVisibilityStates(m_visibilityStates);
         m_terrainBuilder->onChunkUpdate(m_indexList);
     }
 

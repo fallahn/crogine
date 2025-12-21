@@ -234,6 +234,8 @@ TerrainBuilder::~TerrainBuilder()
 //public
 void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scene, const ThemeSettings& theme)
 {
+    //createGrassChunks(resources, scene, theme);
+
     //create a mesh for the height map - this is actually one quad short
     //top and left - but hey you didn't notice until you read this did you? :)
     for (auto i = 0u; i < m_terrainBuffer.size(); ++i)
@@ -770,6 +772,14 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
     //in which case we need to implement a get-out clause
     while (m_wantsUpdate) {}
 
+    for (auto i = 0u; i < m_grassCells.size(); ++i)
+    {
+        if (m_grassBuildResults[i].valid())
+        {
+            m_grassCells[i].getComponent<cro::Model>().setInstanceTransforms(m_grassBuildResults[i].get());
+        }
+    }
+
     if (holeIndex == m_currentHole)
     {
         bool doAnim = holeIndex == 0 || (m_holeData[holeIndex - 1].modelPath != m_holeData[holeIndex].modelPath) || forceAnim;
@@ -984,6 +994,76 @@ void TerrainBuilder::applyCrowdDensity()
 }
 
 //private
+void TerrainBuilder::createGrassChunks(cro::ResourceCollection& resources, cro::Scene& scene, const ThemeSettings&)
+{
+    //TODO use theme to set grass colour
+    constexpr glm::vec2 ChunkSize(MapSize.x / ChunkVisSystem::ColCount, MapSize.y / ChunkVisSystem::RowCount);
+
+
+    cro::ModelDefinition md(resources);
+    if (md.loadFromFile("assets/golf/models/grass_blade.cmt", true))
+    {
+        for (auto y = 0; y < ChunkVisSystem::RowCount; ++y)
+        {
+            for (auto x = 0; x < ChunkVisSystem::ColCount; ++x)
+            {
+                const glm::vec2 pos = glm::vec2(ChunkSize.x * x, ChunkSize.y * y) + (ChunkSize / 2.f);
+
+                auto entity = scene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({ pos.x, 0.f, -pos.y });
+                entity.getComponent<cro::Transform>().setOrigin({0.f, -10.f, 0.f});
+                md.createModel(entity);
+
+                const auto chunkIdx = y * ChunkVisSystem::ColCount + x;
+                m_grassCells[chunkIdx] = entity;
+
+
+                m_grassBuildResults[chunkIdx] = std::async(std::launch::async, 
+                    [pos]()
+                    {
+                        //use world space bounds so that the positions tile correctly
+                        const std::array minb = { pos.x - (ChunkSize.x / 2.f), pos.y - (ChunkSize.y / 2.f) };
+                        const std::array maxb = { pos.x + (ChunkSize.x / 2.f), pos.y + (ChunkSize.y / 2.f) };
+
+
+                        //TODO depending on mem usage we can speed up perf by storing these
+                        //transforms and modifying the Y value only on hole-change
+                        constexpr float density = 0.05f; //0.02f
+                        const auto points = pd::PoissonDiskSampling(density, minb, maxb);
+
+                        std::vector<glm::mat4> tx;
+                        for (const auto& [x, y] : points)
+                        {
+                            //remember to put this point relative to ent position...
+                            auto t = glm::translate(glm::mat4(1.f), glm::vec3(x, 0.f, -y) - glm::vec3(pos.x, 0.f, -pos.y));
+                            t = glm::rotate(t, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI), cro::Transform::Y_AXIS);
+                            t = glm::scale(t, glm::vec3(cro::Util::Random::value(0.8f, 1.1f)));
+                            tx.emplace_back(t);
+                        }
+                        return tx;
+                    });
+            }
+        }
+    }
+}
+
+void TerrainBuilder::setVisibilityStates(const ChunkVisSystem::VisStates& states)
+{
+    static constexpr float VisRadius = 50.f * 50.f;
+    for (auto i = 0u; i < m_grassCells.size(); ++i)
+    {
+        if (states[i].visible)
+        {
+            //m_grassCells[i].getComponent<cro::Model>().setMaterialProperty(0, "u_colour", states[i].distToCamSqr < VisRadius ? cro::Colour::White : cro::Colour::Yellow);
+            m_grassCells[i].getComponent<cro::Model>().setHidden(states[i].distToCamSqr > VisRadius);
+        }
+        else
+        {
+            m_grassCells[i].getComponent<cro::Model>().setHidden(true);
+        }
+    }
+}
+
 void TerrainBuilder::onChunkUpdate(const std::vector<std::int32_t>& visibleChunks)
 {
     auto shrubIndex = m_swapIndex % 2;

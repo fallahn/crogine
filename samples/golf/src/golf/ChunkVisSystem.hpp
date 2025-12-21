@@ -64,6 +64,13 @@ public:
     static constexpr std::int32_t RowCount = MapSize.y / 50;
     static_assert(ColCount * RowCount < 64, "This will break bit flags");
 
+    struct VisibilityState final
+    {
+        float distToCamSqr = 0.f;
+        bool visible = false;
+    };
+    using VisStates = std::array<VisibilityState, RowCount * ColCount>;
+
 #ifdef CRO_DEBUG_
     //checks all boxes against frustum
     std::int32_t narrowphaseCount = 0;
@@ -75,7 +82,8 @@ private:
     std::uint64_t m_currentIndex;
     std::vector<std::int32_t> m_indexList; //TODO would a fixed size array be faster?
 
-    std::array<cro::Box, RowCount* ColCount> m_boundingBoxes = {};
+    VisStates m_visibilityStates = {};
+    std::array<cro::Box, RowCount * ColCount> m_boundingBoxes = {};
     float m_chunkCullRadius;
 
     cro::RenderTexture m_debugTexture;
