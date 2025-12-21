@@ -351,13 +351,13 @@ Material::Data& Model::getMaterialData(Mesh::IndexData::Pass pass, std::size_t s
     return m_materials[pass][submesh];
 }
 
-void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
+std::vector<glm::mat3> Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
 {
 #ifdef PLATFORM_DESKTOP
     if (transforms.empty())
     {
         LogW << "Attempt to set empty instance transform array on model" << std::endl;
-        return;
+        return {};
     }
 
     //create VBOs if needed
@@ -433,6 +433,10 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
             updateVAO(i, Mesh::IndexData::Shadow);
         }
     }
+
+    return normalMatrices;
+#else
+    return {};
 #endif
 }
 

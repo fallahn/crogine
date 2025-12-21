@@ -214,8 +214,9 @@ namespace cro
         containing the transform and normal matrix data is completely recalculated, which
         can take a long time for large arrays.
         Transform data is copied from the vector, so the data may safely be discarded
+        \returns A vector containing all of the normal matrices generated for the transforms
         */
-        void setInstanceTransforms(const std::vector<glm::mat4>& transforms);
+        std::vector<glm::mat3> setInstanceTransforms(const std::vector<glm::mat4>& transforms);
 
         /*!
         \brief Updates the transform data for an instanced model.

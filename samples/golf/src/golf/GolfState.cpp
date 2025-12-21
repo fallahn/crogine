@@ -8230,7 +8230,8 @@ void GolfState::updateActor(const ActorInfo& update)
             if (m_sharedData.showMinimap)
             {
                 //hmmm this is actually wrong, because it doesn't use the current (lagged) output of the interpolation
-                formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, getClub() == ClubID::Putter, isMultiTarget);
+                formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, 
+                    getClub() == ClubID::Putter || terrain == TerrainID::Green, isMultiTarget);
             }
             else
             {

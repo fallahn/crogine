@@ -62,6 +62,8 @@ source distribution.
 
 #include <chrono>
 
+//#define GRASS_ACTIVE
+
 using namespace cl;
 
 namespace
@@ -234,7 +236,9 @@ TerrainBuilder::~TerrainBuilder()
 //public
 void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scene, const ThemeSettings& theme)
 {
-    //createGrassChunks(resources, scene, theme);
+#ifdef GRASS_ACTIVE
+    createGrassChunks(resources, scene, theme);
+#endif
 
     //create a mesh for the height map - this is actually one quad short
     //top and left - but hey you didn't notice until you read this did you? :)
@@ -772,13 +776,27 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
     //in which case we need to implement a get-out clause
     while (m_wantsUpdate) {}
 
+#ifdef GRASS_ACTIVE
+    //check for any async results from updating the grass instances
     for (auto i = 0u; i < m_grassCells.size(); ++i)
     {
         if (m_grassBuildResults[i].valid())
         {
-            m_grassCells[i].getComponent<cro::Model>().setInstanceTransforms(m_grassBuildResults[i].get());
+            if (m_grassCellData[i].transforms.empty())
+            {
+                //this was the first call so set up the entity
+                m_grassCellData[i].transforms = m_grassBuildResults[i].get().transforms;
+                m_grassCellData[i].normalMats = m_grassCells[i].getComponent<cro::Model>().setInstanceTransforms(m_grassCellData[i].transforms);
+            }
+            else
+            {
+                //this is a result from updating the terrain
+                const auto result = m_grassBuildResults[i].get();
+                m_grassCells[i].getComponent<cro::Model>().updateInstanceTransforms({&result.transforms},{&result.normalMats});
+            }
         }
     }
+#endif
 
     if (holeIndex == m_currentHole)
     {
@@ -885,6 +903,11 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
         cro::DynamicMeshBuilder::setIndexData(*m_slopeProperties.meshData, { cro::DataArray(m_slopeIndices.data(), m_slopeIndices.size()) });
         
         m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
+
+#ifdef GRASS_ACTIVE
+        //do this now for the current hole before the below updates the hole index
+        updateGrassChunks();
+#endif
 
         //signal to the thread we want to update the buffers
         //ready for next time
@@ -1011,7 +1034,7 @@ void TerrainBuilder::createGrassChunks(cro::ResourceCollection& resources, cro::
 
                 auto entity = scene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition({ pos.x, 0.f, -pos.y });
-                entity.getComponent<cro::Transform>().setOrigin({0.f, -10.f, 0.f});
+                //entity.getComponent<cro::Transform>().setOrigin({0.f, -10.f, 0.f});
                 md.createModel(entity);
 
                 const auto chunkIdx = y * ChunkVisSystem::ColCount + x;
@@ -1025,36 +1048,81 @@ void TerrainBuilder::createGrassChunks(cro::ResourceCollection& resources, cro::
                         const std::array minb = { pos.x - (ChunkSize.x / 2.f), pos.y - (ChunkSize.y / 2.f) };
                         const std::array maxb = { pos.x + (ChunkSize.x / 2.f), pos.y + (ChunkSize.y / 2.f) };
 
-
-                        //TODO depending on mem usage we can speed up perf by storing these
-                        //transforms and modifying the Y value only on hole-change
                         constexpr float density = 0.05f; //0.02f
                         const auto points = pd::PoissonDiskSampling(density, minb, maxb);
 
-                        std::vector<glm::mat4> tx;
+                        CellData result;
                         for (const auto& [x, y] : points)
                         {
                             //remember to put this point relative to ent position...
                             auto t = glm::translate(glm::mat4(1.f), glm::vec3(x, 0.f, -y) - glm::vec3(pos.x, 0.f, -pos.y));
                             t = glm::rotate(t, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI), cro::Transform::Y_AXIS);
                             t = glm::scale(t, glm::vec3(cro::Util::Random::value(0.8f, 1.1f)));
-                            tx.emplace_back(t);
+                            result.transforms.emplace_back(t);
                         }
-                        return tx;
+                        return result;
                     });
             }
         }
     }
 }
 
+void TerrainBuilder::updateGrassChunks()
+{
+    //TODO must be VERY careful to do this in a threadsafe manner
+    const auto holeIndex = m_currentHole;
+    for (auto i = 0u; i < m_grassCellData.size(); ++i)
+    {
+        if (!m_grassCellData[i].transforms.empty())
+        {
+            //LogI << "Launching thread" << std::endl;
+            m_grassBuildResults[i] = std::async(std::launch::async,
+                [&cellData = std::as_const(m_grassCellData), i, holeIndex]()
+                {
+                    CellData ret;
+                    //TODO check this cell even intersects the current hole model
+                    //if (cell.intersects())
+                    {
+                        for (auto j = 0u; j < cellData[i].transforms.size(); ++j)
+                        {
+                            //TODO check the terrain at the current pos
+                            auto tx = cellData[i].transforms[j];
+                            auto pos = tx[3];
+
+                            //if (terrain == rough)
+                            {
+                                //TODO get height
+                                pos.y = static_cast<float>(cro::Util::Random::value(5, 15));
+                                tx[3] = pos;
+
+                                ret.transforms.push_back(tx);
+                                ret.normalMats.push_back(cellData[i].normalMats[j]);
+                            }
+                        }
+                    }
+                    /*else
+                    {
+                        ret.transforms.push_back(glm::mat4(1.f));
+                        ret.normalMats.push_back(glm::mat3(1.f));
+                    }*/
+                    return ret;
+                });
+        }
+        /*else
+        {
+            LogI << "Call grass update too soon" << std::endl;
+        }*/
+    }
+}
+
 void TerrainBuilder::setVisibilityStates(const ChunkVisSystem::VisStates& states)
 {
+#ifdef GRASS_ACTIVE
     static constexpr float VisRadius = 50.f * 50.f;
     for (auto i = 0u; i < m_grassCells.size(); ++i)
     {
         if (states[i].visible)
         {
-            //m_grassCells[i].getComponent<cro::Model>().setMaterialProperty(0, "u_colour", states[i].distToCamSqr < VisRadius ? cro::Colour::White : cro::Colour::Yellow);
             m_grassCells[i].getComponent<cro::Model>().setHidden(states[i].distToCamSqr > VisRadius);
         }
         else
@@ -1062,6 +1130,7 @@ void TerrainBuilder::setVisibilityStates(const ChunkVisSystem::VisStates& states
             m_grassCells[i].getComponent<cro::Model>().setHidden(true);
         }
     }
+#endif
 }
 
 void TerrainBuilder::onChunkUpdate(const std::vector<std::int32_t>& visibleChunks)
