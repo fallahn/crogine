@@ -714,6 +714,9 @@
     <ClCompile Include="src\golf\TemplateState.cpp">
       <Filter>Source Files\golf\client\template</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\ui\MenuLayout.cpp">
+      <Filter>Source Files\golf\client\user interface</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -1489,6 +1492,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\TemplateState.hpp">
       <Filter>Header Files\golf\client\template</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ui\MenuLayout.hpp">
+      <Filter>Header Files\golf\client\user interface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

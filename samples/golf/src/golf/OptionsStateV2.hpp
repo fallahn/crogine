@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "ui/FlagPreview.hpp"
+#include "ui/MenuLayout.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
@@ -107,136 +108,13 @@ private:
     std::array<SpriteSection, BackgroundSection::Count> m_backgroundSections = {};
     
 
-    struct TabBar final
-    {
-        struct Item final
-        {
-            enum
-            {
-                Settings, Keyboard, Controller,
-                Display, Audio, Achievements,
-                Stats,
-
-                Count
-            };
-            cro::Entity text;
-            float displayWidth = 0.375f; //how much horizontal space items in this tab use
-
-            enum
-            {
-                Left, Centre, Right
-            }alignment = Left;
-
-            cro::FloatRect hitbox; //in screen coords
-            cro::Sprite sprite;
-        };
-
-        cro::Entity background;
-        std::array<Item, Item::Count> items = {};
-        std::size_t activeIndex = 0;
-
-        std::int32_t hoveredIndex = -1;
-
-        cro::Entity navLeft;
-        cro::Entity navRight;
-
-        cro::Entity navLeftSprite;
-        cro::Entity navRightSprite;
-
-        std::array<cro::FloatRect, 2U> navLeftRects = {};
-        std::array<cro::FloatRect, 2U> navRightRects = {};
-    }m_tabBar;
+    TabBar m_tabBar;
 
     void updateTabBar();
     void nextTab();
     void prevTab();
 
-    struct Menu final
-    {
-        struct Item final
-        {
-            //optional image to display colour selection
-            //or achievement ID
-            const cro::Texture* texture = nullptr;
-            cro::FloatRect uv; //pixel coords for SimpleQuad
-            cro::Colour previewColour = cro::Colour::White;
-
-            //display type depending on data eg float/slider etc
-            enum
-            {
-                Default, //left/right arrows
-                Slider, //represents a sliding amount
-                TextOnly, //displays the description on the item
-                Heading //only displays the title, with half height background
-            }displayType = Default;
-
-            //float-rect in menu space to test click against
-            cro::FloatRect hitbox;
-
-            bool valueChangedOnActivate = false;
-            bool alwaysActivate = false; //hack to always call activation callback regardless of input
-            bool wrapValue = true; //value wraps back to the beginning instead of clamping
-            std::int32_t selectedIndex = 0; //currently selected entry
-            std::int32_t count = 1; //number of items to cycle through when clicking
-            std::vector<cro::String> labels; //display text for each setting when cycled
-            cro::String title; //main display title
-            cro::String subTitle; //shown below title in TextOnly items
-            cro::String description; //shown when hovered
-
-            std::function<void(const Item&)> selected; //called when selected
-            std::function<void(Item&)> activated; //called when activated
-            bool activateLeft()
-            {
-                if (count > 1)
-                {
-                    selectedIndex = wrapValue ?
-                        (selectedIndex + (count - 1)) % count
-                        : std::max(selectedIndex - 1, 0);
-
-                    valueChangedOnActivate = true;
-                    activated(*this);
-                    return true;
-                }
-                return false;
-            }
-
-            bool activateRight()
-            {
-                if (count > 1)
-                {
-                    selectedIndex = wrapValue ? 
-                        (selectedIndex + 1) % count
-                        : std::min(selectedIndex + 1, count - 1);
-                    
-                    valueChangedOnActivate = true;
-                    activated(*this);
-                    return true;
-                }
-                return false;
-            }
-
-            bool activate()
-            {
-                if (count == 1
-                    || alwaysActivate)
-                {
-                    valueChangedOnActivate = false;
-                    activated(*this);
-                    return true;
-                }
-                return false;
-            }
-        };
-        std::array<std::vector<Item>, TabBar::Item::Count> items = {};
-
-        cro::RenderTexture texture;
-        cro::Entity sprite;
-
-        std::uint32_t itemIndex = 0;
-        std::int32_t hoveredIndex = -1;
-
-        cro::FloatRect itemBox; //size is menu coords, position is updated during testing with current scroll position
-    }m_menuLayout;
+    Menu m_menuLayout;
 
     cro::SimpleQuad m_menuQuad; //item image/thumb if it exists
     cro::SimpleText m_menuText;
@@ -284,9 +162,22 @@ private:
     };
     std::array<cro::Sprite, OptionIcon::Count> m_optionIcons = {};
 
+
+    struct TabID final
+    {
+        enum
+        {
+            Settings, Keyboard, Controller,
+            Display, Audio, Achievements,
+            Stats,
+
+            Count
+        };
+    };
+
     struct DetailsPane final
     {
-        std::array<cro::Entity, TabBar::Item::Count> tabDetails = {};
+        std::array<cro::Entity, TabID::Count> tabDetails = {};
         cro::Entity root;
         cro::Entity text;
         cro::Entity image;

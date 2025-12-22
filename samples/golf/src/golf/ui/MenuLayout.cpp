@@ -3,7 +3,7 @@
 Matt Marchant 2025
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,32 +27,20 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "MenuLayout.hpp"
 
-#include <crogine/core/App.hpp>
-#include <crogine/ecs/System.hpp>
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/systems/UIElementSystem.hpp>
 
-namespace cro
+void scrollToTarget(TabBar& tabBar, Menu& menuLayout, float dt)
 {
-    /*!
-    \brief Triggers an update on all entities with a UIElement component
-    when the active window is resized
-    */
-    class CRO_EXPORT_API UIElementSystem final : public cro::System
-    {
-    public:
-        explicit UIElementSystem(MessageBus&);
+    const float texHeight = static_cast<float>(menuLayout.texture.getSize().y);
+    static constexpr float Stride = UI::ItemHeight + UI::ItemSpacing;
+    const float Extents = tabBar.background.getComponent<cro::Transform>().getPosition().y / cro::UIElementSystem::getViewScale();
+    const float target = std::clamp((texHeight - (Stride * menuLayout.itemIndex)) - Extents, -UI::ItemHeight, texHeight - (Extents * 2.f));
 
-        void handleMessage(const Message&) override;
-
-        /*!
-        \brief returns a rounded scale value based on the given view size
-        */
-        static float getViewScale(glm::vec2 viewSize = App::getWindow().getSize());
-
-    private:
-        void onEntityAdded(Entity) override;
-
-        void updateEntity(Entity, glm::vec2);
-    };
+    auto origin = menuLayout.sprite.getComponent<cro::Transform>().getOrigin();
+    const float diff = target - origin.y;
+    origin.y += diff * (dt * 10.f);
+    menuLayout.sprite.getComponent<cro::Transform>().setOrigin(origin);
 }

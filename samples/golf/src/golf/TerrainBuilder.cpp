@@ -357,6 +357,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     //modified billboard shader - shader loading is done in GolfState::loadAssets()
     auto billboardMatID = resources.materials.add(resources.shaders.get(ShaderID::Billboard));
+    //hmm we wanted nearer culling for grass but it shares an entity with other shrubs
+    //auto billboardGrassMatID = resources.materials.add(resources.shaders.get(ShaderID::BillboardGrass)); 
     auto billboardShadowID = resources.materials.add(resources.shaders.get(ShaderID::BillboardShadow));
 
     //custom shader for instanced plants
@@ -434,6 +436,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                         e.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
 
                         auto material = resources.materials.get(billboardMatID);
+                        material.addCustomSetting(GL_CLIP_DISTANCE1);
                         applyMaterialData(billboardDef, material);
                         material.setProperty("u_noiseTexture", noiseTex);
                         e.getComponent<cro::Model>().setMaterial(0, material);

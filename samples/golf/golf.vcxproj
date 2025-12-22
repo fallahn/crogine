@@ -723,6 +723,7 @@
     <ClCompile Include="src\golf\TutorialState.cpp" />
     <ClCompile Include="src\golf\ui\EventHandler.cpp" />
     <ClCompile Include="src\golf\ui\FlagPreview.cpp" />
+    <ClCompile Include="src\golf\ui\MenuLayout.cpp" />
     <ClCompile Include="src\golf\UnlockState.cpp" />
     <ClCompile Include="src\golf\VatAnimationSystem.cpp" />
     <ClCompile Include="src\golf\VatFile.cpp" />
@@ -948,6 +949,7 @@
     <ClInclude Include="src\golf\TutorialDirector.hpp" />
     <ClInclude Include="src\golf\TutorialState.hpp" />
     <ClInclude Include="src\golf\ui\FlagPreview.hpp" />
+    <ClInclude Include="src\golf\ui\MenuLayout.hpp" />
     <ClInclude Include="src\golf\UnlockItems.hpp" />
     <ClInclude Include="src\golf\UnlockState.hpp" />
     <ClInclude Include="src\golf\UserInterface.hpp" />

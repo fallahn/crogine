@@ -120,21 +120,12 @@ namespace
         0,2,4,8
     };
 
-
     const std::array ItemLabels =
     {
         "Settings", "Keyboard", "Controller",
         "Graphics", "Audio", "Achievements",
         "Stats"
     };
-
-    constexpr float TabBarHeight = 16.f;
-
-    constexpr float ItemHeight = TabBarHeight * 2.5f;
-    constexpr float ItemSpacing = 6.f;
-    constexpr glm::vec2 ItemImage = glm::vec2(ItemHeight - (ItemSpacing * 2.f), ItemHeight - (ItemSpacing * 2.f));
-
-    constexpr float InfoBarHeight = 24.f; //space at the bottom
 
     constexpr auto BackgroundDark = cro::Colour(0xc8b89faf);
     constexpr auto BackgroundYellow = cro::Colour(0xf2cf5caf);
@@ -157,6 +148,8 @@ namespace
     }
 }
 
+using namespace UI;
+
 OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus(), 192),
@@ -172,6 +165,9 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     std::fill(m_controllerMasks.begin(), m_controllerMasks.end(), 0);
     std::fill(m_controllerPrevMasks.begin(), m_controllerMasks.end(), 0);
+
+    m_tabBar.items.resize(TabID::Count);
+    m_menuLayout.items.resize(TabID::Count);
 
     loadAssets();
     buildScene();
@@ -212,7 +208,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     if (evt.type == SDL_AUDIODEVICEADDED
         || evt.type == SDL_AUDIODEVICEREMOVED)
     {
-        refreshAudioDevices(m_menuLayout.items[TabBar::Item::Audio][1]);
+        refreshAudioDevices(m_menuLayout.items[TabID::Audio][1]);
     }
 
     const auto setActiveInput =
@@ -570,15 +566,7 @@ void OptionsStateV2::handleMessage(const cro::Message& msg)
 bool OptionsStateV2::simulate(float dt)
 {
     //TODO this doesn't actually do what I wanted, but it's servicable
-    const float texHeight = static_cast<float>(m_menuLayout.texture.getSize().y);
-    static constexpr float Stride = ItemHeight + ItemSpacing;
-    const float Extents = m_tabBar.background.getComponent<cro::Transform>().getPosition().y / cro::UIElementSystem::getViewScale();
-    const float target = std::clamp((texHeight - (Stride * m_menuLayout.itemIndex)) - Extents, -ItemHeight, texHeight - (Extents * 2.f));
-
-    auto origin = m_menuLayout.sprite.getComponent<cro::Transform>().getOrigin();
-    const float diff = target - origin.y;
-    origin.y += diff * (dt * 10.f);
-    m_menuLayout.sprite.getComponent<cro::Transform>().setOrigin(origin);
+    scrollToTarget(m_tabBar, m_menuLayout, dt);
 
     const auto maskTest =
         [&](std::int32_t index, std::int32_t flag)
@@ -738,9 +726,9 @@ void OptionsStateV2::loadAssets()
         m_itemBackgroundTitle.setTexture(*m_uiTexture);
         m_itemBackgroundTitle.setPrimitiveType(GL_TRIANGLES);
 
-        m_tabBar.items[TabBar::Item::Settings].sprite = spriteSheet.getSprite("settings_icon");
-        m_tabBar.items[TabBar::Item::Display].sprite = spriteSheet.getSprite("graphics_icon");
-        m_tabBar.items[TabBar::Item::Keyboard].sprite = spriteSheet.getSprite("keyboard_icon");
+        m_tabBar.items[TabID::Settings].sprite = spriteSheet.getSprite("settings_icon");
+        m_tabBar.items[TabID::Display].sprite = spriteSheet.getSprite("graphics_icon");
+        m_tabBar.items[TabID::Keyboard].sprite = spriteSheet.getSprite("keyboard_icon");
 
         m_optionIcons[OptionIcon::Warning] = spriteSheet.getSprite("warning_icon");
     }
@@ -864,8 +852,8 @@ void OptionsStateV2::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(m_tabBar.background.getComponent<cro::Transform>());
 
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info); 
-    const float Spacing = 1.f / (TabBar::Item::Count + 1); //leave equivalent of half a tab either end
-    for (auto i = 0; i < TabBar::Item::Count; ++i)
+    const float Spacing = 1.f / (TabID::Count + 1); //leave equivalent of half a tab either end
+    for (auto i = 0; i < TabID::Count; ++i)
     {
         auto& item = m_tabBar.items[i];
         item.text = m_scene.createEntity();
@@ -1240,12 +1228,12 @@ void OptionsStateV2::buildScene()
 
 void OptionsStateV2::createSettingsItems()
 {
-    auto* item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    auto* item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Appearance";
     item->displayType = Menu::Item::Heading;
 
     //use flag beacon
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Show Flag Beacon";
     item->description = "Draws a beacon at the pin position, visible from a distance";
     item->selected = 
@@ -1264,7 +1252,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.showBeacon ? 1 : 0;
 
     //beacon colour
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Beacon Colour";
     item->description = "Choose the colour of the beacon";
     item->selected =
@@ -1293,7 +1281,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //use ball trail
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Show Ball Trail";
     item->description = "Draw a trail behind player's ball when it's in flight";
     item->selected =
@@ -1312,7 +1300,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.showBallTrail ? 1 : 0;
 
     //ball trail colour
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Ball Trail Uses Beacon Colour";
     item->description = "Draws the ball trail with the beacon colour, else draws it white";
     item->selected =
@@ -1331,7 +1319,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.trailBeaconColour ? 1 : 0;
 
     //putting grid density
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Putting Grid Density";
     item->description = "Sets the transparency of the putting grid";
     item->selected =
@@ -1369,7 +1357,7 @@ void OptionsStateV2::createSettingsItems()
         m_sharedData.teeColour = ColourIndices[0];
     }
 
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Tee Marker Colour";
     item->description = "Choose the colour of the tee marker. Note that this doesn't affect the tee position, it's purely cosmetic";
     item->selected =
@@ -1399,7 +1387,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //use imperial measurements
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Use Imperial Measurements";
     item->description = "Render distances in Yards, Feet and Inches instead of Metres and Centimetres";
     item->activated = [&](Menu::Item& i)
@@ -1411,7 +1399,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.imperialMeasurements ? 1 : 0;
 
     //large power bar
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Use Large Power Bar";
     item->description = "Draws a larger power bar at the bottom ofthe UI";
     item->selected =
@@ -1430,7 +1418,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.useLargePowerBar ? 1 : 0;
 
     //high contrast power bar
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "High Contrast Power Bar";
     item->description = "Draws the power bar with inverted colours";
     item->selected =
@@ -1450,7 +1438,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //decimated power bar
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Decimate Power Bar";
     item->description = "Draws a power bar with 10 segements instead of 8";
     item->selected =
@@ -1470,7 +1458,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //decimalised distances
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Use Decimalised Distances";
     item->description = "Distances are drawn to the nearest 10th of a metre or yard";
     item->activated = [&](Menu::Item& i)
@@ -1483,7 +1471,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //monthly rival
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Show Monthly Rival";
     item->description = "Shows the current monthly best on the scoreboard, if available";
     item->activated = [&](Menu::Item& i)
@@ -1496,7 +1484,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //follow cam when putting
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Follow Cam When Putting";
     item->description = "The camera follows the ball when putting instead of displaying an overhead view";
     item->selected =
@@ -1516,7 +1504,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //zoom follow cam
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Zoom Follow Cam";
     item->description = "Zoom the follow cam when the ball is in flight for a closer view";
     item->selected =
@@ -1536,7 +1524,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //rotate when aiming
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Rotate When Aiming";
     item->description = "Automatically rotate the player camera when aiming";
     item->activated = [&](Menu::Item& i)
@@ -1558,7 +1546,7 @@ void OptionsStateV2::createSettingsItems()
             m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
 
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Flag Selection";
 #ifdef USE_GNS
     item->description = "More flags are available in the Steam Workshop";
@@ -1584,7 +1572,7 @@ void OptionsStateV2::createSettingsItems()
     item->selected = selectionCallback;
 
     //flag text type
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Flag Text";
     item->description = "Choose how text is displayed on the flag";
     item->activated = [&](Menu::Item& i)
@@ -1601,7 +1589,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //post FX selection (none as an option)
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Post Process";
     item->description = "Choose a visual effect";
     item->activated = [&](Menu::Item& i)
@@ -1643,7 +1631,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //lens flare
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Show Lens Flare";
     item->description = "Display a lens flare effect in sunny weather";
     item->activated = [&](Menu::Item& i)
@@ -1655,7 +1643,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.useLensFlare ? 1 : 0;
 
     //reduced motion transition
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Reduced Motion Transition";
     item->description = "Hides the hole transition behind a loading screen to reduce motion sensitivity";
     item->activated = [&](Menu::Item& i)
@@ -1669,13 +1657,13 @@ void OptionsStateV2::createSettingsItems()
 
 
     //----------control settings--------------//
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Control Settings";
     item->displayType = Menu::Item::Heading;
 
 
     //mouse button for action
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Use Left Mouse as Action Button";
     item->description = "Clicking left mouse button performs the same as the Action button";
     item->activated = [&](Menu::Item& i)
@@ -1687,7 +1675,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
 
     //hold for power
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Hold Action For Power";
     item->description = "Press and hold the Action button to choose swing power instead of the traditional 3-click system";
     item->activated = [&](Menu::Item& i)
@@ -1701,7 +1689,7 @@ void OptionsStateV2::createSettingsItems()
 
     //measure sensitivity
     static constexpr std::array<float, 6u> SpeedValues = { 0.5f, 1.f, 2.f, 3.f, 4.f, 5.f };
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Measure Sensitivity";
     item->description = "Sets the speed of the Measure Widget when putting";
     item->selected =
@@ -1726,13 +1714,13 @@ void OptionsStateV2::createSettingsItems()
 
 
     //-------difficulty and behaviour-----//
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Gameplay Settings";
     item->displayType = Menu::Item::Heading;
 
 
     //putt assist
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Use Putt Assist";
     item->description = "Show a small flag above the power bar when putting to estimate the range";
     item->selected =
@@ -1752,7 +1740,7 @@ void OptionsStateV2::createSettingsItems()
     
     
     //fixed range putter
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Fixed Range Putter";
     item->description = "Fixes the max range of the putter at 10m/33ft";
     item->activated = [&](Menu::Item& i)
@@ -1766,7 +1754,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //precise range indicator
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Estimated Range Indicator";
     item->description = "Increases difficulty by omitting elevation and wind from the range indicator prediction";
     item->selected =
@@ -1787,7 +1775,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //minimal UI
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Minimal UI";
     item->description = "Increases difficulty by removing most of the UI elements";
     item->activated = [&](Menu::Item& i)
@@ -1801,7 +1789,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //in-game tips
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Display In-Game Tips";
     item->description = "Shows tips when playing on how to best take your shot";
     item->activated = [&](Menu::Item& i)
@@ -1816,13 +1804,13 @@ void OptionsStateV2::createSettingsItems()
 
 
     //----------config settings---------//
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Configuration";
     item->displayType = Menu::Item::Heading;
 
 
     //web socket
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Enable Web Socket";
     item->description = "See https://github.com/fallahn/svs for more info";
     item->activated = [&](Menu::Item& i)
@@ -1857,7 +1845,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //CSV logging
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Log Scores To CSV";
     item->description = "Files are saved to you user directory";
     item->activated = [&](Menu::Item& i)
@@ -1870,7 +1858,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //disable chat
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Disable Chat";
     item->description = "Removes the in-game chat from multiplayer games";
     item->activated = [&](Menu::Item& i)
@@ -1883,7 +1871,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //log chat
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Log Chat To File";
     item->description = "Logs in-game multiplayer chat to a text file in your user directory";
     item->activated = [&](Menu::Item& i)
@@ -1897,7 +1885,7 @@ void OptionsStateV2::createSettingsItems()
 
 #ifdef USE_GNS
     //enable remote content
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Download Remote Content";
     item->description = "Allow downloading remote content eg Workshop items in multiplayer";
     cro::Util::String::wordWrap(item->description, 36);
@@ -1913,7 +1901,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //reset hints
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Reset Hints";
     item->description = "Enable all in-game hints which were previously dismissed";
     item->selected =
@@ -1940,7 +1928,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //reset career
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Reset Career";
     item->description = "Resets all Career progress, preserving any unlocked items";
     item->selected =
@@ -1963,7 +1951,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //reset profile
-    item = &m_menuLayout.items[TabBar::Item::Settings].emplace_back();
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Reset Profile";
     item->description = "WARNING Resets all progress and unlocked items!!";
     item->selected =
@@ -1988,13 +1976,13 @@ void OptionsStateV2::createSettingsItems()
 void OptionsStateV2::createKeyboardItems()
 {
     //config
-    /*auto* item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    /*auto* item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Configuration";
     item->displayType = Menu::Item::Heading;*/
 
     
     ////mouse button for action
-    //item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    //item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     //item->title = "Use Left Mouse as Action Button";
     //item->description = "Clicking left mouse button performs the same as the Action key";
     //cro::Util::String::wordWrap(item->description, 36);
@@ -2007,7 +1995,7 @@ void OptionsStateV2::createKeyboardItems()
     //item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
 
     ////hold for power
-    //item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    //item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     //item->title = "Hold Action For Power";
     //item->description = "Press and hold the Action key to choose swing power instead of the traditional 3-click system";
     //cro::Util::String::wordWrap(item->description, 36);
@@ -2023,7 +2011,7 @@ void OptionsStateV2::createKeyboardItems()
     
     
     //keybinds
-    auto* item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    auto* item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Key Bindings";
     item->displayType = Menu::Item::Heading;
 
@@ -2031,8 +2019,8 @@ void OptionsStateV2::createKeyboardItems()
 
 
     //prev club
-    auto itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    auto itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Previous Club";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2046,8 +2034,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //next club
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Next Club";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2061,8 +2049,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //aim left
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Aim Left";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2076,8 +2064,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //aim right
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Aim Right";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2091,8 +2079,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //camera up
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Camera Up";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2106,8 +2094,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //camera down
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Camera Down";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2121,8 +2109,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //action
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Action (Take Shot)";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2136,8 +2124,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //spin menu
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Show Spin Menu";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2151,8 +2139,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //emote wheel
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Show Emote Wheel";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2166,8 +2154,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //cancel shot
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabBar::Item::Keyboard].size());
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Cancel Shot In Progress";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2185,75 +2173,75 @@ void OptionsStateV2::createKeyboardItems()
 
 
     //fixed keys
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Fixed Keys";
     item->displayType = Menu::Item::Heading;
 
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Measure Putt";
     item->subTitle = "Displays a distance widget to meaure the green when putting";
     item->description = "Key: Number 1 (Top Row)";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Freecam";
     item->subTitle = "Enter freecam / photo mode";
     item->description = "Key: Number 2 (Top Row)";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Rotate Camera Left";
     item->description = "Key: Number 3 (Top Row)";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Rotate Camera Right";
     item->description = "Key: Number 4 (Top Row)";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Zoom Minimap";
     item->description = "Key: Number 5 (Top Row)";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Show Scores";
     item->description = "Key: Tab";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Open Menu";
     item->description = "Key: Escape";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Toggle Ball Labels";
     item->subTitle = "Show or hide player name labels when putting";
     item->description = "Key: F2";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Toggle UI";
     item->description = "Key: F3";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Toggle Chat";
     item->subTitle = "Show the in-game chat window";
     item->description = "Key: F4";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Take Screenshot";
     item->description = "Key: F5";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Toggle Putting Grid";
     item->description = "Key: F7";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabBar::Item::Keyboard].emplace_back();
+    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Toggle Full Screen";
     item->description = "Key: F11";
     item->displayType = Menu::Item::TextOnly;
@@ -2264,7 +2252,7 @@ void OptionsStateV2::createControllerItems()
     auto ent = m_scene.createEntity();
     ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     m_detailsPane.root.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-    m_detailsPane.tabDetails[TabBar::Item::Controller] = ent;
+    m_detailsPane.tabDetails[TabID::Controller] = ent;
 
     //set detail image based on input activity
     cro::SpriteSheet controllerSprites;
@@ -2323,7 +2311,7 @@ void OptionsStateV2::createControllerItems()
                 }
             }
         };
-    m_detailsPane.tabDetails[TabBar::Item::Controller].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    m_detailsPane.tabDetails[TabID::Controller].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
 
     //set detail text to controller list
@@ -2353,7 +2341,7 @@ void OptionsStateV2::createControllerItems()
             auto posX = std::round(bounds.width / 2.f) + 4.f;
             e.getComponent<cro::Transform>().setOrigin({ posX, 0.f });            
         };
-    m_detailsPane.tabDetails[TabBar::Item::Controller].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    m_detailsPane.tabDetails[TabID::Controller].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
     auto textEnt = ent;
 
     //activity icons next to description
@@ -2402,12 +2390,12 @@ void OptionsStateV2::createControllerItems()
 
     //menu items
 
-    auto* item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    auto* item = &m_menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Controller Settings";
     item->displayType = Menu::Item::Heading;
 
     //input sensitivity
-    item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    item = &m_menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Look Sensitivity";
     item->activated = [&](Menu::Item& i)
         {
@@ -2426,7 +2414,7 @@ void OptionsStateV2::createControllerItems()
     //thumbstick deadzone
     static constexpr auto MinDeadZone = -3000;
     static constexpr auto MaxDeadzone = 24000;
-    item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    item = &m_menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Thumbstick Deadzone";
     item->description = "Adjusts the minimum movement of the thumbstick before input is accepted by the game: larger values require more movement.";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2443,7 +2431,7 @@ void OptionsStateV2::createControllerItems()
     
 
     //invert X axis
-    item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    item = &m_menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Invert X axis";
     item->description = "Invert the controller X axis when in camera mode";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2456,7 +2444,7 @@ void OptionsStateV2::createControllerItems()
     item->selectedIndex = m_sharedData.invertX ? 1 : 0;
 
     //invert Y axis
-    item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    item = &m_menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Invert Y axis";
     item->description = "Invert the controller Y axis when in camera mode";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2469,7 +2457,7 @@ void OptionsStateV2::createControllerItems()
     item->selectedIndex = m_sharedData.invertY ? 1 : 0;
 
     //enable swingput
-    item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    item = &m_menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Enable Swingput";
     item->description = "With either trigger held, pull back on a thumbstick to charge the power. Push forward on the stick to take your shot.";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2482,7 +2470,7 @@ void OptionsStateV2::createControllerItems()
     item->selectedIndex = m_sharedData.useSwingput ? 1 : 0;
 
     //vibration
-    item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    item = &m_menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Use Vibration";
     item->description = "Enable vibration effects on supported controllers";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2496,7 +2484,7 @@ void OptionsStateV2::createControllerItems()
 
 #ifdef USE_GNS
 
-    item = &m_menuLayout.items[TabBar::Item::Controller].emplace_back();
+    item = &m_menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Rebind Buttons";
     item->description = "Review a Steam guide on rebinding the controller buttons with Steam Input";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2512,7 +2500,7 @@ void OptionsStateV2::createControllerItems()
 
 void OptionsStateV2::createDisplayItems()
 {
-    auto* item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    auto* item = &m_menuLayout.items[TabID::Display].emplace_back();
     item->title = "Configuration";
     item->displayType = Menu::Item::Heading;
 
@@ -2520,7 +2508,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //anti-aliasing
-    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item = &m_menuLayout.items[TabID::Display].emplace_back();
     item->title = "Antialiasing";
     //item->description = "Switch between billboard and 3D trees. Classic trees are applied when the game is loaded";
     //cro::Util::String::wordWrap(item->description, 36);
@@ -2535,7 +2523,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //Resolution
-    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item = &m_menuLayout.items[TabID::Display].emplace_back();
     item->title = "Resolution";
     item->selected = 
         [&](const Menu::Item&)
@@ -2575,7 +2563,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //FOV
-    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item = &m_menuLayout.items[TabID::Display].emplace_back();
     item->title = "FOV";
     item->activated = 
         [&](Menu::Item& i) 
@@ -2599,7 +2587,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //pixel scaling
-    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item = &m_menuLayout.items[TabID::Display].emplace_back();
     item->title = "Use Pixel Scaling (Default: OFF)";
     item->description = "Renders the game at a low resolution and then scales the output for a pixelated, retro look. Shortcut +/- on numpad";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2613,7 +2601,7 @@ void OptionsStateV2::createDisplayItems()
     item->selectedIndex = m_sharedData.pixelScale ? 1 : 0;
 
     //vertex snap
-    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item = &m_menuLayout.items[TabID::Display].emplace_back();
     item->title = "Use Vertex Snapping (Default: OFF)";
     item->description = "Usually used in conjunction with Pixel Scaling. May cause z-fighting. Requires restart.";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2627,7 +2615,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //full screen
-    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item = &m_menuLayout.items[TabID::Display].emplace_back();
     item->title = "Enable Full Screen";
     item->description = "Shortcut: F11 or Alt+Enter";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2641,7 +2629,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //full screen borderless/exclusive
-    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item = &m_menuLayout.items[TabID::Display].emplace_back();
     item->title = "Full Screen Mode";
     item->description = "When in full screen run the game in a borderless window at the desktop resolution, or exclusive full screen at the window resolution.";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2662,7 +2650,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //vsync
-    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item = &m_menuLayout.items[TabID::Display].emplace_back();
     item->title = "Enable VSync";
     item->description = "Synchronises the game's refresh rate with your monitor";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2675,7 +2663,7 @@ void OptionsStateV2::createDisplayItems()
     item->selectedIndex = cro::App::getWindow().getVsyncEnabled() ? 1 : 0;
 
     //tree quality
-    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item = &m_menuLayout.items[TabID::Display].emplace_back();
     item->title = "Tree Quality";
     item->description = "Switch between billboard and 3D trees. Classic trees are applied when the game is loaded";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2691,7 +2679,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //shadow quality
-    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item = &m_menuLayout.items[TabID::Display].emplace_back();
     item->title = "Shadow Quality";
     item->description = "NOTE Toggling Classic shadows requires a restart and may cause visual artifacts until done so";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2707,7 +2695,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //crowd density
-    item = &m_menuLayout.items[TabBar::Item::Display].emplace_back();
+    item = &m_menuLayout.items[TabID::Display].emplace_back();
     item->title = "Crowd Density";
     item->description = "NOTE Very high density crowds may cause a drop in performance";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2724,16 +2712,16 @@ void OptionsStateV2::createDisplayItems()
 
 void OptionsStateV2::createAudioItems()
 {
-    m_tabBar.items[TabBar::Item::Audio].displayWidth = 0.7f;
-    m_tabBar.items[TabBar::Item::Audio].alignment = TabBar::Item::Centre;
+    m_tabBar.items[TabID::Audio].displayWidth = 0.7f;
+    m_tabBar.items[TabID::Audio].alignment = TabBar::Item::Centre;
 
-    auto* item = &m_menuLayout.items[TabBar::Item::Audio].emplace_back();
+    auto* item = &m_menuLayout.items[TabID::Audio].emplace_back();
     item->title = "Configuration";
     item->displayType = Menu::Item::Heading;
 
     //device selection - WARNING we have a hack when handling device
     //disconnect events which indexes this directly!! Don't chage the index!
-    item = &m_menuLayout.items[TabBar::Item::Audio].emplace_back();
+    item = &m_menuLayout.items[TabID::Audio].emplace_back();
     item->title = "Audio Device";
     //item->description = "Enable text to speech playback for in-game chat";
     //cro::Util::String::wordWrap(item->description, 36);
@@ -2760,7 +2748,7 @@ void OptionsStateV2::createAudioItems()
 
 
     //text to speech
-    item = &m_menuLayout.items[TabBar::Item::Audio].emplace_back();
+    item = &m_menuLayout.items[TabID::Audio].emplace_back();
     item->title = "Use Text To Speech for Chat";
     item->description = "Enable text to speech playback for in-game chat";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2774,13 +2762,13 @@ void OptionsStateV2::createAudioItems()
 
 
     //mixer
-    item = &m_menuLayout.items[TabBar::Item::Audio].emplace_back();
+    item = &m_menuLayout.items[TabID::Audio].emplace_back();
     item->title = "Volume Levels";
     item->displayType = Menu::Item::Heading;
 
     for (auto i = 0; i < MixerChannel::Count; ++i)
     {
-        auto& item = m_menuLayout.items[TabBar::Item::Audio].emplace_back();
+        auto& item = m_menuLayout.items[TabID::Audio].emplace_back();
         item.title = MixerLabels[i];
         //item.description = "This is the item description for " + std::to_string(i + 1);
         item.activated = 
@@ -2801,9 +2789,9 @@ void OptionsStateV2::createAudioItems()
 
 void OptionsStateV2::createAchievementItems()
 {
-    m_tabBar.items[TabBar::Item::Achievements].displayWidth = 0.9f;
-    m_tabBar.items[TabBar::Item::Achievements].alignment = TabBar::Item::Centre;
-    m_menuLayout.items[TabBar::Item::Achievements].clear();
+    m_tabBar.items[TabID::Achievements].displayWidth = 0.9f;
+    m_tabBar.items[TabID::Achievements].alignment = TabBar::Item::Centre;
+    m_menuLayout.items[TabID::Achievements].clear();
 
     //TODO display progress of achievements
     //which are based on stats.
@@ -2815,7 +2803,7 @@ void OptionsStateV2::createAchievementItems()
 
         if (ach)
         {
-            auto& item = m_menuLayout.items[TabBar::Item::Achievements].emplace_back();
+            auto& item = m_menuLayout.items[TabID::Achievements].emplace_back();
             
             if (!ach->achieved && AchievementDesc[ach->id].second)
             {
@@ -2848,9 +2836,9 @@ void OptionsStateV2::createAchievementItems()
 
 void OptionsStateV2::createStatItems()
 {
-    m_tabBar.items[TabBar::Item::Stats].displayWidth = 0.7f;
-    m_tabBar.items[TabBar::Item::Stats].alignment = TabBar::Item::Centre;
-    m_menuLayout.items[TabBar::Item::Stats].clear();
+    m_tabBar.items[TabID::Stats].displayWidth = 0.7f;
+    m_tabBar.items[TabID::Stats].alignment = TabBar::Item::Centre;
+    m_menuLayout.items[TabID::Stats].clear();
 
     const auto formatValue =
         [](std::int32_t type, float statValue)
@@ -2904,7 +2892,7 @@ void OptionsStateV2::createStatItems()
 
         if (stat)
         {
-            auto& item = m_menuLayout.items[TabBar::Item::Stats].emplace_back();
+            auto& item = m_menuLayout.items[TabID::Stats].emplace_back();
             item.title = StatLabels[stat->id];
             item.subTitle = formatValue(StatTypes[stat->id], stat->value);
             item.count = 0;
@@ -2940,7 +2928,7 @@ void OptionsStateV2::updateTabBar()
 {
     const glm::vec2 WindowSize = cro::App::getWindow().getSize();
 
-    const float Spacing = 1.f / (TabBar::Item::Count + 1); //leave equivalent of half a tab either end
+    const float Spacing = 1.f / (TabID::Count + 1); //leave equivalent of half a tab either end
     const float TabWidth = std::round(Spacing * WindowSize.x);
 
     std::vector<cro::Vertex2D> verts;
@@ -3103,7 +3091,7 @@ void OptionsStateV2::updateTabBar()
     //default:
     //    m_detailsPane.text.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
     //    break;
-    //case TabBar::Item::Controller:
+    //case TabID::Controller:
     //{
     //    //this is hacky but it means the text only goes out of bounds in the edge
     //    //case where there are 4 controllers and the resolution of the window is one
@@ -3126,7 +3114,7 @@ void OptionsStateV2::nextTab()
         m_detailsPane.tabDetails[m_tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
 
-    m_tabBar.activeIndex = (m_tabBar.activeIndex + 1) % TabBar::Item::Count;
+    m_tabBar.activeIndex = (m_tabBar.activeIndex + 1) % TabID::Count;
     m_menuLayout.itemIndex = 0;
 
     if (m_detailsPane.tabDetails[m_tabBar.activeIndex].isValid())
@@ -3146,7 +3134,7 @@ void OptionsStateV2::prevTab()
         m_detailsPane.tabDetails[m_tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
 
-    m_tabBar.activeIndex = (m_tabBar.activeIndex + (TabBar::Item::Count - 1)) % TabBar::Item::Count;
+    m_tabBar.activeIndex = (m_tabBar.activeIndex + (TabID::Count - 1)) % TabID::Count;
     m_menuLayout.itemIndex = 0;
     
     if (m_detailsPane.tabDetails[m_tabBar.activeIndex].isValid())
@@ -3826,7 +3814,7 @@ void OptionsStateV2::updateKeybind(SDL_Keycode key)
     //m_detailsPane.text.getComponent<cro::Text>().setString(
     //    "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[m_keybindIndex]));
     
-    m_menuLayout.items[TabBar::Item::Keyboard][m_keybindItemIndex].labels[0] = 
+    m_menuLayout.items[TabID::Keyboard][m_keybindItemIndex].labels[0] = 
         "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[m_keybindIndex]);
 
     playSound(MenuSoundEvent::Activate);

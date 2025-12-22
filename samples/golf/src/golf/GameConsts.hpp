@@ -343,6 +343,7 @@ struct ShaderID final
         Terrain,
         TerrainShadow,
         Billboard,
+        BillboardGrass,
         BillboardShadow,
         Cel,
         CelSkinned,
