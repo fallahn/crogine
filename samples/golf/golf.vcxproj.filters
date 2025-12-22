@@ -717,6 +717,9 @@
     <ClCompile Include="src\golf\ui\MenuLayout.cpp">
       <Filter>Source Files\golf\client\user interface</Filter>
     </ClCompile>
+    <ClCompile Include="src\editor\GrassProcessing.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -1495,6 +1498,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\ui\MenuLayout.hpp">
       <Filter>Header Files\golf\client\user interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\GrassProcessing.hpp">
+      <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

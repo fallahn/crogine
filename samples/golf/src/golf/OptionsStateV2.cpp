@@ -3733,7 +3733,12 @@ void OptionsStateV2::doMouseClick(glm::vec2 mousePos)
 
             if (testbox.contains(testpos))
             {
-                activate();
+                //this seems counter intuitive but it stops mouse input
+                //automatically activating items like resolution setting
+                if (!m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].alwaysActivate)
+                {
+                    activate();
+                }
 
                 const float xPos = testpos.x - testbox.left;
                 if (xPos < testbox.width / 2.f)

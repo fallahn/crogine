@@ -603,6 +603,7 @@
   <ItemGroup>
     <ClCompile Include="src\DefaultAchievements.cpp" />
     <ClCompile Include="src\editor\BushState.cpp" />
+    <ClCompile Include="src\editor\GrassProcessing.cpp" />
     <ClCompile Include="src\golf\BallAnimationSystem.cpp" />
     <ClCompile Include="src\golf\BallSystem.cpp" />
     <ClCompile Include="src\golf\BallTrail.cpp" />
@@ -804,6 +805,7 @@
     <ClInclude Include="src\Colordome-32.hpp" />
     <ClInclude Include="src\DefaultAchievements.hpp" />
     <ClInclude Include="src\editor\BushState.hpp" />
+    <ClInclude Include="src\editor\GrassProcessing.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\golf\AvatarAnimation.hpp" />
     <ClInclude Include="src\golf\AvatarRotationSystem.hpp" />

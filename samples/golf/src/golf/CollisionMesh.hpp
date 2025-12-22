@@ -67,6 +67,7 @@ public:
     CollisionMesh& operator = (CollisionMesh&&) = delete;
 
     void updateCollisionMesh(const cro::Mesh::Data&);
+    void updateCollisionMesh(const cro::Mesh::Data&, const std::vector<float>&, const std::vector<std::vector<std::uint32_t>>&);
 
     TerrainResult getTerrain(glm::vec3 position) const;
     TerrainResult getTerrain(glm::vec3 rayStart, glm::vec3 rayEnd) const;
@@ -94,4 +95,6 @@ private:
 
     void initCollisionWorld();
     void clearCollisionObjects();
+
+    void setCollisionMesh(const cro::Mesh::Data&, std::uint32_t vertStride);
 };

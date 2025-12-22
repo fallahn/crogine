@@ -42,6 +42,7 @@ using namespace cro;
 
 std::list<std::string> Logger::m_buffer;
 std::string Logger::m_output;
+std::mutex Logger::m_mutex;
 
 void Logger::log(const std::string& message, Type type, Output output)
 {
@@ -121,6 +122,9 @@ void Logger::log(const std::string& message, Type type, Output output)
 std::ostream& Logger::log(Logger::Type type)
 {
     static cro::Detail::LogStream stream;
+    
+    std::scoped_lock l(m_mutex);
+
     switch (type)
     {
     default:

@@ -62,14 +62,16 @@ public:
 
     static constexpr std::int32_t ColCount = MapSize.x / 55;
     static constexpr std::int32_t RowCount = MapSize.y / 50;
-    static_assert(ColCount * RowCount < 64, "This will break bit flags");
+    static constexpr std::int32_t ChunkCount = RowCount * ColCount;
+    static_assert(ChunkCount < 64, "This will break bit flags");
+    static_assert(ChunkCount == 60, "This may affect binary size for grass chunks! See GrassProcessing.hpp");
 
     struct VisibilityState final
     {
         float distToCamSqr = 0.f;
         bool visible = false;
     };
-    using VisStates = std::array<VisibilityState, RowCount * ColCount>;
+    using VisStates = std::array<VisibilityState, ChunkCount>;
 
 #ifdef CRO_DEBUG_
     //checks all boxes against frustum

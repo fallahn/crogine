@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "BushState.hpp"
+#include "GrassProcessing.hpp"
 #include "../golf/GameConsts.hpp"
 #include "../golf/SharedStateData.hpp"
 
@@ -142,6 +143,31 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
     registerWindow([&]() 
         {
             drawUI();
+        });
+
+    registerCommand("process_grass", 
+        [](const std::string& param)
+        {
+            const std::string path = "assets/golf/models/" + param;
+            if (!cro::FileSystem::directoryExists(path))
+            {
+                cro::Console::print(param + ": path doesn't exist");
+            }
+            else
+            {
+                std::thread t([path]()
+                    {
+                        GrassProcessor processor;
+                        processor.begin(path);
+
+                        while (!processor.process())
+                        {
+                            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                        }
+                        LogI << "Process complete!" << std::endl;
+                    });
+                t.detach();
+            }
         });
 
     palette.loadFromFile("assets/workshop/colordome-32.ase");
