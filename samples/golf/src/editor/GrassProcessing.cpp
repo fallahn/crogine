@@ -156,7 +156,7 @@ void GrassProcessor::queueJob()
                     const std::array minb = { chunkPos.x - (ChunkSize.x / 2.f), chunkPos.y - (ChunkSize.y / 2.f) };
                     const std::array maxb = { chunkPos.x + (ChunkSize.x / 2.f), chunkPos.y + (ChunkSize.y / 2.f) };
 
-                    static constexpr float density = 0.05f; //0.02f
+                    static constexpr float density = 0.3f; //0.02f
                     const auto points = pd::PoissonDiskSampling(density, minb, maxb);
 
                     std::vector<glm::mat4> result;

@@ -55,10 +55,6 @@ static inline const std::string BillboardVertexShader = R"(
     uniform mat4 u_worldMatrix;
     uniform sampler2D u_noiseTexture;
 
-#if !defined(DISTANCE_MULTIPLIER)
-#define DISTANCE_MULTIPLIER 1.0
-#endif
-
 
 #include WIND_BUFFER
 #include RESOLUTION_BUFFER
@@ -181,12 +177,10 @@ static inline const std::string BillboardVertexShader = R"(
 #endif
         v_texCoord0 = a_texCoord0;
 
-float nearFade = u_nearFadeDistance * DISTANCE_MULTIPLIER;
-
-        float fadeDistance = nearFade * (5.0 / DISTANCE_MULTIPLIER);
+        float fadeDistance = u_nearFadeDistance * 5.0;
         float distance = length(position - u_cameraWorldPosition);
 
-        v_ditherAmount = pow(clamp((distance - nearFade) / fadeDistance, 0.0, 1.0), 5.0);
+        v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 5.0);
         v_ditherAmount *= 1.0 - clamp((distance - FarFadeDistance) / fadeDistance, 0.0, 1.0);
 
 #if !defined(SHADOW_MAPPING)

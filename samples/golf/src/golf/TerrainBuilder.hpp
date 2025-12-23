@@ -131,17 +131,16 @@ private:
         std::vector<glm::mat3> normalMats;
     };    
     
+    std::array<std::vector<glm::mat4>, ChunkVisSystem::ChunkCount> m_grassTransforms = {};
+    std::array<cro::Entity, ChunkCount> m_grassChunks = {};
+    void readGrassData();
 
-    std::array<std::future<CellData>, ChunkCount> m_grassBuildResults;
-    std::array<CellData, ChunkCount> m_grassCellData = {};
-    void createGrassChunks(cro::ResourceCollection&, cro::Scene&, const ThemeSettings&);
-    void updateGrassChunks();
+    void createGrassChunks(cro::ResourceCollection&, cro::Scene&, const cro::Material::Data&);
     void setVisibilityStates(const ChunkVisSystem::VisStates&);
 
 
     //contains matrix data for current and next hole, indexed by m_swapIndex
     std::array<std::array<std::array<CellData, ChunkCount>, MaxShrubInstances>, 2> m_cellData = {};
-    std::array<cro::Entity, ChunkCount> m_grassCells = {};
     friend class ChunkVisSystem;
     void onChunkUpdate(const std::vector<std::int32_t>&);
 

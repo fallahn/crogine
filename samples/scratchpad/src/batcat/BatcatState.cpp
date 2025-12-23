@@ -1044,7 +1044,7 @@ void BatcatState::createGrass()
     }
 
     cro::ModelDefinition md(m_resources);
-    if (md.loadFromFile("assets/golf/models/grass_blade.cmt", true))
+    if (md.loadFromFile("assets/golf/models/grass_dense.cmt", true))
     {
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
@@ -1053,7 +1053,7 @@ void BatcatState::createGrass()
 
         static constexpr std::array<float, 2u> minb = { -5.f, -2.f };
         static constexpr std::array<float, 2u> maxb = { 5.f, 2.f };
-        const auto points = pd::PoissonDiskSampling(0.02f, minb, maxb);
+        const auto points = pd::PoissonDiskSampling(/*0.02f*/0.25f, minb, maxb);
 
         std::vector<glm::mat4> tx;
         for (const auto& [x,y] : points)

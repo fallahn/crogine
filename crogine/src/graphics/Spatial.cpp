@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -238,3 +238,10 @@ Box Spatial::updateFrustum(std::array<Plane, 6u>& frustum, glm::mat4 viewProj)
 
     return { glm::vec3(minX->x, minY->y, minZ->z), glm::vec3(maxX->x, maxY->y, maxZ->z) };
 }
+
+
+//std::ostream& operator << (std::ostream& out, cro::Sphere s)
+//{
+//    out << "Radius: " << s.radius << ", position: {" << s.centre.x << ", " << s.centre.y << ", " << s.centre.z << "}";
+//    return out;
+//}

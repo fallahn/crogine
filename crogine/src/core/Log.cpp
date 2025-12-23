@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/core/String.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/Types.hpp>
+#include <crogine/graphics/Spatial.hpp>
 
 #include <SDL_log.h>
 
@@ -234,6 +235,11 @@ LogStream::LogStream()
 }
 
 //operator overloads
+//std::ostream& operator << (std::ostream& out, cro::Sphere s)
+//{
+//    out << "Radius: " << s.radius << ", position: " << s.centre;
+//    return out;
+//}
 //std::ostream& operator << (std::ostream& out, const cro::String& str)
 //{
 //    out << str.toAnsiString();

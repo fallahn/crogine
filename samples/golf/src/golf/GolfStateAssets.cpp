@@ -88,6 +88,7 @@ namespace
 #include "shaders/Weather.inl"
 #include "shaders/ClothShader.inl"
 #include "shaders/MinimapModel.inl"
+#include "shaders/GrassShader.inl"
 
     //colour is normal colour with dark shadow
     const std::array BannerStrings =
@@ -2213,13 +2214,14 @@ void GolfState::loadMaterials()
 
     if (m_sharedData.nightTime)
     {
+        //high density grass - TODO use theme to create colour defines
+        m_resources.shaders.loadFromString(ShaderID::Grass, GrassVert, GrassFrag, "#define USE_MRT\n" + lightingDefs);
         m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader, "#define USE_MRT\n" + FadeDistance + lightingDefs);
-        //m_resources.shaders.loadFromString(ShaderID::BillboardGrass, BillboardVertexShader, BillboardFragmentShader, "#define DISTANCE_MULTIPLIER 0.1\n#define USE_MRT\n" + FadeDistance + lightingDefs);
     }
     else
     {
+        m_resources.shaders.loadFromString(ShaderID::Grass, GrassVert, GrassFrag);
         m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader, FadeDistance);
-        //m_resources.shaders.loadFromString(ShaderID::BillboardGrass, BillboardVertexShader, BillboardFragmentShader, "#define DISTANCE_MULTIPLIER 0.1\n" + FadeDistance);
     }
     shader = &m_resources.shaders.get(ShaderID::Billboard);
     m_scaleBuffer.addShader(*shader);
@@ -2227,13 +2229,14 @@ void GolfState::loadMaterials()
     m_windBuffer.addShader(*shader);
 
     //hmm this isn't used anywhere? TerrainBuilder creates its own billboard material...
-    m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
-    m_resources.materials.get(m_materialIDs[MaterialID::Billboard]).addCustomSetting(GL_CLIP_DISTANCE1);
+    //m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
+    //m_resources.materials.get(m_materialIDs[MaterialID::Billboard]).addCustomSetting(GL_CLIP_DISTANCE1);
 
-    /*shader = &m_resources.shaders.get(ShaderID::BillboardGrass);
-    m_scaleBuffer.addShader(*shader);
-    m_resolutionBuffer.addShader(*shader);
-    m_windBuffer.addShader(*shader);*/
+
+    shader = &m_resources.shaders.get(ShaderID::Grass);
+    m_windBuffer.addShader(*shader);
+    //m_scaleBuffer.addShader(*shader);
+    //m_resolutionBuffer.addShader(*shader);
 
 
 
