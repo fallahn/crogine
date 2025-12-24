@@ -1409,7 +1409,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         else if (data.type == SystemEvent::TreeQualityChanged)
         {
             m_terrainBuilder.applyTreeQuality();
-            m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::TreeQuality::High);
+            m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::TreeQuality::High || m_sharedData.grassDensity != 0);
         }
         else if (data.type == SystemEvent::CrowdDensityChanged)
         {
@@ -1430,6 +1430,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                     spectator.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
                 }
             }
+        }
+        else if (data.type == SystemEvent::GrassDensityChanged)
+        {
+            m_terrainBuilder.applyGrassDensity();
+            m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::TreeQuality::High || m_sharedData.grassDensity != 0);
         }
     }
         break;

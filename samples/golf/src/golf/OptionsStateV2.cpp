@@ -2500,6 +2500,8 @@ void OptionsStateV2::createControllerItems()
 
 void OptionsStateV2::createDisplayItems()
 {
+    m_menuLayout.items[TabID::Display].clear();
+
     auto* item = &m_menuLayout.items[TabID::Display].emplace_back();
     item->title = "Configuration";
     item->displayType = Menu::Item::Heading;
@@ -2708,6 +2710,21 @@ void OptionsStateV2::createDisplayItems()
     item->count = 5;
     item->labels = { "Low", "Normal", "High", "Extreme", "None" };
     item->selectedIndex = m_sharedData.crowdDensity;
+
+    //grass density
+    item = &m_menuLayout.items[TabID::Display].emplace_back();
+    item->title = "Grass Density";
+    item->description = "Changes the appearance of the grass in the rough. Setting this to Low can improve performance";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.grassDensity = i.selectedIndex;
+            auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+            msg->type = SystemEvent::GrassDensityChanged;
+        };
+    item->count = 2;
+    item->labels = { "Low", "High" };
+    item->selectedIndex = m_sharedData.grassDensity;
 }
 
 void OptionsStateV2::createAudioItems()
@@ -2903,6 +2920,8 @@ void OptionsStateV2::createStatItems()
 
 void OptionsStateV2::onCachedPush()
 {
+    createDisplayItems();
+
     //refreshes stats/achievements when opening the window
     createAchievementItems();
     createStatItems();

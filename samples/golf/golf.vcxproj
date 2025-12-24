@@ -1076,6 +1076,7 @@
     <None Include="src\golf\shaders\EmissiveShader.inl" />
     <None Include="src\golf\shaders\Glass.inl" />
     <None Include="src\golf\shaders\GlowShader.inl" />
+    <None Include="src\golf\shaders\GrassShader.inl" />
     <None Include="src\golf\shaders\Hole.inl" />
     <None Include="src\golf\shaders\Hologram.inl" />
     <None Include="src\golf\shaders\Lantern.inl" />

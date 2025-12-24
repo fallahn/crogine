@@ -97,6 +97,15 @@ namespace
         return { MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier };
     }
 
+    struct GrassUniform final
+    {
+        std::int32_t alpha = -1;
+        std::uint32_t shader = 0;
+
+        float target = 1.f;
+        float current = 0.f;
+    }grassUniform;
+
     //callback data
     struct SwapData final
     {
@@ -123,13 +132,28 @@ namespace
 
             swapData.currentTime = std::min(SwapData::TransitionTime, swapData.currentTime + dt);
 
-            pos.y = swapData.start + ((swapData.destination - swapData.start) * cro::Util::Easing::easeInOutQuint(swapData.currentTime / SwapData::TransitionTime));
+            const auto progress = cro::Util::Easing::easeInOutQuint(swapData.currentTime / SwapData::TransitionTime);
+            const auto movement = (swapData.destination - swapData.start);
+            pos.y = swapData.start + (movement * progress);
             pos.y = std::min(-TerrainLevel, std::max(-MaxShrubOffset, pos.y));
 
             e.getComponent<cro::Transform>().setPosition(pos);
 
+            grassUniform.target = (cro::Util::Maths::sgn(movement)) + 1 / 2;
+            if (grassUniform.target < grassUniform.current)
+            {
+                grassUniform.current = std::max(0.f, grassUniform.current - dt);
+            }
+            else
+            {
+                grassUniform.current = std::min(1.f, grassUniform.current + dt);
+            }
+
             if (swapData.currentTime == SwapData::TransitionTime)
             {
+                grassUniform.target = std::clamp(std::round(grassUniform.target), 0.f, 1.f);
+                grassUniform.current = grassUniform.target;
+
                 pos.y = swapData.destination;
                 e.getComponent<cro::Transform>().setPosition(pos);
                 e.getComponent<cro::Callback>().active = false;
@@ -175,6 +199,9 @@ namespace
                     swapData.umbrellaEnt.getComponent<cro::Model>().setHidden(true);
                 }
             }
+
+            glUseProgram(grassUniform.shader);
+            glUniform1f(grassUniform.alpha, grassUniform.current);
         }
 
         cro::Entity terrainEntity;
@@ -1014,6 +1041,14 @@ void TerrainBuilder::applyCrowdDensity()
     }
 }
 
+void TerrainBuilder::applyGrassDensity()
+{
+    for (auto e : m_grassChunks)
+    {
+        e.getComponent<cro::Model>().setHidden(m_sharedData.grassDensity == 0);
+    }
+}
+
 //private
 void TerrainBuilder::readGrassData()
 {
@@ -1051,11 +1086,15 @@ void TerrainBuilder::readGrassData()
 
 void TerrainBuilder::createGrassChunks(cro::ResourceCollection& resources, cro::Scene& scene, const cro::Material::Data& material)
 {
-    //TODO use theme to set grass colour
+    const auto& shader = resources.shaders.get(ShaderID::Grass);
+    grassUniform.shader = shader.getGLHandle();
+    grassUniform.alpha = shader.getUniformID("u_alpha");
+
     constexpr glm::vec2 ChunkSize(MapSize.x / ChunkVisSystem::ColCount, MapSize.y / ChunkVisSystem::RowCount);
 
     cro::ModelDefinition md(resources);
     if (md.loadFromFile("assets/golf/models/grass_sparse.cmt", true))
+    //if (md.loadFromFile("assets/golf/models/grass_dense.cmt", true))
     {
         for (auto y = 0; y < ChunkVisSystem::RowCount; ++y)
         {
@@ -1073,21 +1112,30 @@ void TerrainBuilder::createGrassChunks(cro::ResourceCollection& resources, cro::
             }
         }
     }
+
+    applyGrassDensity();
 }
 
 void TerrainBuilder::setVisibilityStates(const ChunkVisSystem::VisStates& states)
 {
-    static constexpr float VisRadius = 50.f * 50.f;
-    for (auto i = 0u; i < m_grassChunks.size(); ++i)
+    if (m_sharedData.grassDensity)
     {
-        //TODO check density is set to high
-        if (states[i].visible) //hide if current transforms empty - chunk may still hold transforms from previous hole.
+        constexpr auto a2 = ChunkVisSystem::ChunkWidth * ChunkVisSystem::ChunkWidth;
+        constexpr auto b2 = ChunkVisSystem::ChunkHeight * ChunkVisSystem::ChunkHeight;
+        constexpr auto c2 = a2 + b2;
+
+        //would be nice to make this variable (along with fade dist in shader)
+        static constexpr float VisRadius = static_cast<float>(c2);
+        for (auto i = 0u; i < m_grassChunks.size(); ++i)
         {
-            m_grassChunks[i].getComponent<cro::Model>().setHidden(states[i].distToCamSqr > VisRadius);
-        }
-        else
-        {
-            m_grassChunks[i].getComponent<cro::Model>().setHidden(true);
+            if (states[i].visible)
+            {
+                m_grassChunks[i].getComponent<cro::Model>().setHidden(states[i].distToCamSqr > VisRadius);
+            }
+            else
+            {
+                m_grassChunks[i].getComponent<cro::Model>().setHidden(true);
+            }
         }
     }
 }
@@ -1398,6 +1446,9 @@ void TerrainBuilder::threadFunc()
 
 
 #ifdef GEN_GRASS
+                //hmm it would be nice to not do this if density is set to 0
+                //however if the density is changed mid-round no transforms will be generated
+                //until the next hole...
                 for (auto& tx : m_grassTransforms)
                 {
                     tx.clear();
@@ -1429,7 +1480,7 @@ void TerrainBuilder::threadFunc()
                             {
                                 //don't place on steep slopes
                                 const auto n = readNormal(static_cast<std::uint32_t>(x1), static_cast<std::uint32_t>(y1));
-                                if (glm::dot(n, cro::Transform::Y_AXIS) > 0.3f)
+                                if (glm::dot(n, cro::Transform::Y_AXIS) > 0.7f)
                                 {
                                     pointPos.y = height;
 

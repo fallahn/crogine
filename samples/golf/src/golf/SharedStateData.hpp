@@ -275,6 +275,9 @@ struct SharedStateData final
     std::array<std::size_t, ConstVal::MaxPlayers> profileIndices = {};
     cro::String targetIP = "255.255.255.255";
 
+    //printed by the error state
+    std::string errorMessage;
+
     //sent to server if hosting else rx'd from server
     //for brevity this only contains a directory name
     //within which a file named data.course is sought
@@ -288,20 +291,17 @@ struct SharedStateData final
     std::uint8_t weatherType = 0;
     std::uint8_t randomWind = 0; //bool
     std::uint8_t windStrength = 0; //1-5 but stored 0-4 for ease of iteration
+    //counts the number of holes actually played in elimination
+    std::uint8_t holesPlayed = 0;    
     std::int32_t leagueRoundID = 0; //which league we're playing in
     std::int32_t quickplayOpponents = 0; //1-3 if quickplay, 0 to disable
     std::int32_t groupMode = 0; //experimental group mode - buggy as all balls.
     std::int32_t teamMode = 0;
 
-    //counts the number of holes actually played in elimination
-    std::uint8_t holesPlayed = 0;
 
-    //printed by the error state
-    std::string errorMessage;
-
+    GameMode gameMode = GameMode::FreePlay;
     bool hosting = false;
     bool hasMulligan = false;
-    GameMode gameMode = GameMode::FreePlay;
     std::size_t tutorialIndex = 0; //set in tutorial mode to decide which part to display
     std::size_t courseIndex = 0; //if hosting which course/billiard table we last chose.
     std::int32_t ballSkinIndex = 0; //billiards balls
@@ -317,15 +317,15 @@ struct SharedStateData final
     std::vector<Unlock> unlockedItems;
 
     //client settings
-    bool usePostProcess = false;
-    std::int32_t postProcessIndex = 0;
-    std::string customShaderPath;
     InputBinding inputBinding;
+    std::string customShaderPath;
+    std::int32_t postProcessIndex = 0;
+    bool usePostProcess = false;
     bool pixelScale = false;
     bool antialias = false;
+    bool vertexSnap = false;
     std::uint32_t multisamples = 0;
     float fov = MinFOV;
-    bool vertexSnap = false;
     float mouseSpeed = 1.f;
     float swingputThreshold = 0.1f;
     bool useSwingput = false;
@@ -334,7 +334,6 @@ struct SharedStateData final
     bool showBeacon = true;
     float beaconColour = 1.f; //normalised rotation
     std::int32_t teeColour = 17; //CD32 index
-    bool imperialMeasurements = false;
     float gridTransparency = 1.f;
     struct TreeQuality final
     {
@@ -353,6 +352,7 @@ struct SharedStateData final
         };
     };
     std::int32_t shadowQuality = ShadowQuality::Low;
+    bool imperialMeasurements = false;
     bool logBenchmarks = false;
     bool showCustomCourses = true;
     bool showTutorialTip = true;
@@ -364,6 +364,7 @@ struct SharedStateData final
     std::int32_t clubSet = 0;
     std::int32_t preferredClubSet = 0; //this is what the player chooses, may be overridden by game rules
     std::int32_t crowdDensity = 1;
+    std::int32_t grassDensity = 0;
 
     bool pressHold = false; //press and hold the action button to select power
     bool useTTS = false;
@@ -375,10 +376,7 @@ struct SharedStateData final
     bool decimateDistance = false;
     bool showRosterTip = true;
     bool fixedPuttingRange = false;
-    //std::int32_t lightmapQuality = 0;
     
-    float measureSpeed = 1.f; //multiplier when measuring for putt
-    std::int32_t webPort = 8080;
     bool webSocket = false;
     bool logCSV = false;
     bool blockChat = false;
@@ -393,6 +391,9 @@ struct SharedStateData final
     bool showInGameTips = true;
     bool calculateRange = false; //calculate or estimate the range indicator
     bool miniLoadingScreen = false; //cover the transition with a loading screen
+    float measureSpeed = 1.f; //multiplier when measuring for putt
+    std::int32_t webPort = 8080;
+    
     std::int32_t flagText = 0; //none, black, white
     std::string flagPath;
 

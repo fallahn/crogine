@@ -101,6 +101,8 @@ public:
 
     void applyCrowdDensity();
 
+    void applyGrassDensity();
+
 private:
     static constexpr auto ChunkCount = ChunkVisSystem::RowCount * ChunkVisSystem::ColCount;
     
@@ -192,7 +194,6 @@ private:
         cro::Entity entity;
         float currentAlpha = 0.f;
     }m_slopeProperties;
-
 
     std::atomic_bool m_threadRunning;
     std::atomic_bool m_wantsUpdate;

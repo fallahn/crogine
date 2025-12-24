@@ -60,8 +60,10 @@ public:
 
     glm::vec2 getChunkSize() const { return m_chunkSize; }
 
-    static constexpr std::int32_t ColCount = MapSize.x / 55;
-    static constexpr std::int32_t RowCount = MapSize.y / 50;
+    static constexpr std::int32_t ChunkWidth = 55;
+    static constexpr std::int32_t ChunkHeight = 50;
+    static constexpr std::int32_t ColCount = MapSize.x / ChunkWidth;
+    static constexpr std::int32_t RowCount = MapSize.y / ChunkHeight;
     static constexpr std::int32_t ChunkCount = RowCount * ColCount;
     static_assert(ChunkCount < 64, "This will break bit flags");
     static_assert(ChunkCount == 60, "This may affect binary size for grass chunks! See GrassProcessing.hpp");

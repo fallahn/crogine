@@ -169,6 +169,7 @@ struct SystemEvent final
         ShadowQualityChanged,
         TreeQualityChanged,
         CrowdDensityChanged,
+        GrassDensityChanged,
         MenuChanged,
         MenuRequest, //freeplay menu wants to do something
         RestartActiveMode, //currently just driving range, but might apply somewhere else one day :)

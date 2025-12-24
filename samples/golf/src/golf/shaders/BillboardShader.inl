@@ -216,7 +216,6 @@ static inline const std::string BillboardFragmentShader = R"(
 
 #include BAYER_MATRIX
 #include LIGHT_COLOUR
-
 #include WATER_LEVEL
 
     void main()
@@ -247,7 +246,7 @@ static inline const std::string BillboardFragmentShader = R"(
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
         float alpha = findClosest(x, y, smoothstep(0.1, 0.999, v_ditherAmount));
-        FRAG_OUT.a *= alpha * step(WaterLevel - 0.001, v_worldPosition.y);
+        FRAG_OUT.a *= alpha;// * step(WaterLevel - 0.001, v_worldPosition.y);
 
         if(FRAG_OUT.a < 0.3) discard;
     })";
