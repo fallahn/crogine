@@ -137,6 +137,46 @@ namespace
             }
         }
     }
+
+    std::pair<std::string, bool> getMapPath(const std::string& mapDir)
+    {
+        const auto installPaths = Content::getInstallPaths();
+
+        std::string mapPath;
+        for (const auto& dir : installPaths)
+        {
+            mapPath = dir + ConstVal::MapPath + mapDir;
+            if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + mapPath))
+            {
+                break;
+            }
+        }
+        mapPath += +"/course.data";
+
+
+        bool isUser = false;
+        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
+        {
+            auto coursePath = cro::App::getPreferencePath() + ConstVal::UserMapPath;
+            if (!cro::FileSystem::directoryExists(coursePath))
+            {
+                cro::FileSystem::createDirectory(coursePath);
+            }
+
+            mapPath = cro::App::getPreferencePath() + ConstVal::UserMapPath + mapDir + "/course.data";
+            isUser = true;
+
+            if (!cro::FileSystem::fileExists(mapPath))
+            {
+                LOG("Course file doesn't exist", cro::Logger::Type::Error);
+                //error = true;
+                mapPath.clear(); //use this to signal error
+            }
+        }
+
+
+        return std::make_pair(mapPath, isUser);
+    }
 }
 
 void GolfState::loadAssets()
@@ -283,41 +323,10 @@ void GolfState::loadMap()
     }
 
     //load the map data
-    bool error = false;
     bool hasSpectators = false;
     const auto mapDir = m_sharedData.mapDirectory.toAnsiString();
-
-    const auto installPaths = Content::getInstallPaths();
-
-    std::string mapPath;
-    for (const auto& dir : installPaths)
-    {
-        mapPath = dir + ConstVal::MapPath + mapDir;
-        if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + mapPath))
-        {
-            break;
-        }
-    }
-    mapPath += +"/course.data";
-
-    bool isUser = false;
-    if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
-    {
-        auto coursePath = cro::App::getPreferencePath() + ConstVal::UserMapPath;
-        if (!cro::FileSystem::directoryExists(coursePath))
-        {
-            cro::FileSystem::createDirectory(coursePath);
-        }
-
-        mapPath = cro::App::getPreferencePath() + ConstVal::UserMapPath + mapDir + "/course.data";
-        isUser = true;
-
-        if (!cro::FileSystem::fileExists(mapPath))
-        {
-            LOG("Course file doesn't exist", cro::Logger::Type::Error);
-            error = true;
-        }
-    }
+    const auto [mapPath, isUser] = getMapPath(mapDir);
+    bool error = mapPath.empty();
 
     cro::ConfigFile courseFile;
     if (!courseFile.loadFromFile(mapPath, !isUser))
@@ -2212,15 +2221,30 @@ void GolfState::loadMaterials()
     m_gridShaders[1].transparency = shader->getUniformID("u_transparency");
     m_gridShaders[1].holeHeight = shader->getUniformID("u_holePosition");
 
+
+    const auto [mapPath, _] = getMapPath(m_sharedData.mapDirectory.toAnsiString());
+    std::string grassDef;
+    cro::ConfigFile mapSettings;
+    if (mapSettings.loadFromFile(mapPath))
+    {
+        if (const auto* prop = mapSettings.findProperty("rough");
+            prop != nullptr)
+        {
+            const glm::vec3 c = prop->getValue<glm::vec3>();
+            const std::string val = std::to_string(c.r) + ", " + std::to_string(c.g) + ", " + std::to_string(c.b);
+            grassDef = "#define GRASS_COL\nconst vec3 ColourLight = vec3(" + val + ");\nconst vec3 ColourDark = vec3(" + val + ");";
+        }
+    }
+
     if (m_sharedData.nightTime)
     {
         //high density grass - TODO use theme to create colour defines
-        m_resources.shaders.loadFromString(ShaderID::Grass, GrassVert, GrassFrag, "#define USE_MRT\n" + lightingDefs);
+        m_resources.shaders.loadFromString(ShaderID::Grass, GrassVert, GrassFrag, "#define USE_MRT\n" + lightingDefs + grassDef);
         m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader, "#define USE_MRT\n" + FadeDistance + lightingDefs);
     }
     else
     {
-        m_resources.shaders.loadFromString(ShaderID::Grass, GrassVert, GrassFrag);
+        m_resources.shaders.loadFromString(ShaderID::Grass, GrassVert, GrassFrag, grassDef);
         m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader, FadeDistance);
     }
     shader = &m_resources.shaders.get(ShaderID::Billboard);

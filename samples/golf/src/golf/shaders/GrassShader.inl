@@ -92,9 +92,11 @@ VARYING_IN float v_fadeDistance;
 //const vec3 ColourDark = vec3(0.188,0.332,0.357);
 //const vec3 ColourLight = vec3(0.157,0.306,0.263);
 //const vec3 ColourLight = vec3(1.0);
+#if !defined(GRASS_COL)
 const vec3 ColourDark = vec3(0.1294,0.251,0.2157);
 const vec3 ColourLight = vec3(0.157,0.306,0.263);
-const vec3 ColourSpec = vec3(0.275,0.494,0.243);
+#endif
+//const vec3 ColourSpec = vec3(0.275,0.494,0.243);
 
 void main()
 {
