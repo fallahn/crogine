@@ -94,7 +94,9 @@ VARYING_IN float v_fadeDistance;
 //const vec3 ColourLight = vec3(1.0);
 #if !defined(GRASS_COL)
 const vec3 ColourDark = vec3(0.1294,0.251,0.2157);
-const vec3 ColourLight = vec3(0.157,0.306,0.263);
+//const vec3 ColourLight = vec3(0.157,0.306,0.263);
+const vec3 ColourLight = vec3(0.149,0.2863,0.2627);
+//const vec3 ColourLight = vec3(0.1255,0.2706,0.2078);
 #endif
 //const vec3 ColourSpec = vec3(0.275,0.494,0.243);
 
@@ -123,7 +125,7 @@ void main()
 
     //float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
 
-    vec3 baseColour = mix(ColourDark * 0.8, ColourLight, pow(v_texCoord0.y, 2.0));// * dot(normal, halfVec);
+    vec3 baseColour = mix(ColourDark * 0.8, ColourLight, 1.0 - pow(1.0 - v_texCoord0.y, 9.0));// * dot(normal, halfVec);
     //baseColour += ColourSpec * pow(specularAngle, 120.0);
 
     /*float rim = 1.0 - dot(normal, eyeDirection);
