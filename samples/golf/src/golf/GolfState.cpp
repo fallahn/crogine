@@ -3140,6 +3140,7 @@ bool GolfState::simulate(float dt)
     
     m_emoteWheel.update(dt);
     m_gameScene.simulate(dt);
+    m_mapScene.simulate(dt);
     m_uiScene.simulate(dt);
 
     updateSkybox(dt);
@@ -3422,6 +3423,14 @@ void GolfState::render()
         m_trophySceneTexture.clear(cro::Colour::Transparent);
         m_trophyScene.render();
         m_trophySceneTexture.display();
+    }
+
+    //TODO is this really an optimisation?
+    //if (m_minimapZoom.activeAnimation.isValid())
+    {
+        m_minimapZoom.sceneTexture.clear();
+        m_mapScene.render();
+        m_minimapZoom.sceneTexture.display();
     }
 
     //m_uiScene.setActiveCamera(uiCam);

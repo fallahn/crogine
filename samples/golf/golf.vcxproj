@@ -650,6 +650,7 @@
     <ClCompile Include="src\golf\GolfStateAssets.cpp" />
     <ClCompile Include="src\golf\GolfStateCameras.cpp" />
     <ClCompile Include="src\golf\GolfStateDebug.cpp" />
+    <ClCompile Include="src\golf\GolfStateMinimap.cpp" />
     <ClCompile Include="src\golf\GolfStateScoring.cpp" />
     <ClCompile Include="src\golf\InputParser.cpp" />
     <ClCompile Include="src\golf\GolfStateUI.cpp" />

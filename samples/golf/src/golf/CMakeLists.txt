@@ -46,6 +46,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/GolfStateAssets.cpp
   ${PROJECT_DIR}/golf/GolfStateCameras.cpp
   ${PROJECT_DIR}/golf/GolfStateDebug.cpp
+  ${PROJECT_DIR}/golf/GolfStateMinimap.cpp
   ${PROJECT_DIR}/golf/GolfStateScoring.cpp
   ${PROJECT_DIR}/golf/GolfStateUI.cpp
   ${PROJECT_DIR}/golf/InputParser.cpp

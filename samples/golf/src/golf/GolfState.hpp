@@ -760,11 +760,14 @@ private:
     std::vector<cro::Entity> m_minimapModels;
     cro::Entity m_minimapTrail;
 
+    MinimapZoom m_minimapZoom;
+
+    //GolfStateMinimap.cpp
+    void createMinimapCamera();
     void updateMinimapTexture();
     void updateMiniMap();
-
-    MinimapZoom m_minimapZoom;
     void retargetMinimap(bool reset);
+
 
     cro::Entity m_greenCam;
     cro::MultiRenderTexture m_overheadBuffer;
