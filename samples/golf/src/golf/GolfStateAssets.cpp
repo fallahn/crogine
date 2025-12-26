@@ -2172,10 +2172,11 @@ void GolfState::loadMaterials()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
+    //set when spawning bullseye model
     if (!targetDefines.empty())
     {
-        m_targetShader.shaderID = shader->getGLHandle();
-        m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
+        m_targetShader.shaders[TargetShader::ShaderUniform::Course].shaderID = shader->getGLHandle();
+        m_targetShader.shaders[TargetShader::ShaderUniform::Course].vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
         m_targetShader.update();
     }
 
@@ -2188,6 +2189,8 @@ void GolfState::loadMaterials()
     m_resources.shaders.loadFromString(ShaderID::MinimapModel, MinimapModelVertex, MinimapModelFragment, targetDefines);
     shader = &m_resources.shaders.get(ShaderID::MinimapModel);
     m_materialIDs[MaterialID::Minimap] = m_resources.materials.add(*shader);
+    m_targetShader.shaders[TargetShader::ShaderUniform::Map].shaderID = shader->getGLHandle();
+    m_targetShader.shaders[TargetShader::ShaderUniform::Map].vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
 
     //m_ballShadows.shaders[0].shader = shader->getGLHandle();
     //m_ballShadows.shaders[0].uniform = shader->getUniformID("u_ballPosition");
@@ -2210,10 +2213,13 @@ void GolfState::loadMaterials()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
+
+    //these are set when the target is spawned as it may vary
+    //from hole to hole
     if (!targetDefines.empty())
     {
-        m_targetShader.shaderID = shader->getGLHandle();
-        m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
+        m_targetShader.shaders[TargetShader::ShaderUniform::Course].shaderID = shader->getGLHandle();
+        m_targetShader.shaders[TargetShader::ShaderUniform::Course].vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
         m_targetShader.update();
     }
 
@@ -3937,7 +3943,11 @@ void GolfState::TargetShader::update()
     projMat = glm::ortho(-s, s, -s, s, -20.f, 20.f);
     viewMat = glm::translate(RotMat, -position );
 
+    //*sigh* we can optimise here...
     const auto viewProj = projMat * viewMat;
-    glCheck(glUseProgram(shaderID));
-    glCheck(glUniformMatrix4fv(vpUniform, 1, GL_FALSE, glm::value_ptr(viewProj)));
+    for (auto [shaderID, vpUniform] : shaders)
+    {
+        glCheck(glUseProgram(shaderID));
+        glCheck(glUniformMatrix4fv(vpUniform, 1, GL_FALSE, glm::value_ptr(viewProj)));
+    }
 }

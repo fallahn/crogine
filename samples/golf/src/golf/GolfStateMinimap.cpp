@@ -68,20 +68,20 @@ void GolfState::createMinimapCamera()
 
 void GolfState::updateMinimapTexture()
 {
-    if (m_sharedData.scoreType == ScoreType::MultiTarget)
-    {
-        auto* shader = &m_resources.shaders.get(ShaderID::MinimapModel);
-        m_targetShader.shaderID = shader->getGLHandle();
-        m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
+    //if (m_sharedData.scoreType == ScoreType::MultiTarget)
+    //{
+    //    const auto* shader = &m_resources.shaders.get(ShaderID::MinimapModel);
+    //    m_targetShader.shaderID = shader->getGLHandle();
+    //    m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
 
-        m_targetShader.size = 5.f; //we don't actually know what size has been chosen, so this is a rough average
-        if (m_holeData[m_currentHole].puttFromTee)
-        {
-            m_targetShader.size *= 0.032f;
-        }
-        m_targetShader.position = m_holeData[m_currentHole].target;
-        m_targetShader.update();
-    }
+    //    m_targetShader.size = 5.f; //we don't actually know what size has been chosen, so this is a rough average
+    //    if (m_holeData[m_currentHole].puttFromTee)
+    //    {
+    //        m_targetShader.size *= 0.032f;
+    //    }
+    //    m_targetShader.position = m_holeData[m_currentHole].target;
+    //    m_targetShader.update();
+    //}
 
     //16 pass for 4x4 smaller renders
     /*glm::vec2 viewSize(MapSize);
@@ -134,11 +134,11 @@ void GolfState::updateMinimapTexture()
     auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
     msg->type = SceneEvent::MinimapUpdated;
 
-    if (m_sharedData.scoreType == ScoreType::MultiTarget)
+    /*if (m_sharedData.scoreType == ScoreType::MultiTarget)
     {
         m_targetShader.size = 0.f;
         m_targetShader.update();
-    }
+    }*/
 }
 
 void GolfState::updateMiniMap()

@@ -3426,7 +3426,8 @@ void GolfState::render()
     }
 
     //TODO is this really an optimisation?
-    if (m_minimapZoom.activeAnimation.isValid())
+    if (m_minimapZoom.activeAnimation.isValid()
+        || m_sharedData.scoreType == ScoreType::MultiTarget)
     {
         m_minimapZoom.sceneTexture.clear(cro::Colour::Transparent);
         m_mapScene.render();
@@ -5180,10 +5181,11 @@ void GolfState::spawnBullsEye(const BullsEye& b)
 {
     if (b.spawn)
     {
-        //make sure to select the correct shader
+        //make sure to select the correct shader - it's possible different holes
+        //within the same course have different tee statuses
         auto* shader = m_holeData[m_currentHole].puttFromTee ? &m_resources.shaders.get(ShaderID::CourseGrid) : &m_resources.shaders.get(ShaderID::Course);
-        m_targetShader.shaderID = shader->getGLHandle();
-        m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
+        m_targetShader.shaders[TargetShader::ShaderUniform::Course].shaderID = shader->getGLHandle();
+        m_targetShader.shaders[TargetShader::ShaderUniform::Course].vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
 
         auto targetScale = b.diametre;
 

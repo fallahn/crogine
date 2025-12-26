@@ -212,8 +212,18 @@ private:
     {
         static constexpr float Epsilon = 0.0001f;
 
-        std::uint32_t shaderID = 0;
-        std::int32_t vpUniform = -1;
+        struct ShaderUniform final
+        {
+            std::uint32_t shaderID = 0;
+            std::int32_t vpUniform = -1;
+
+            enum
+            {
+                Course, Map, Count
+            };
+        };
+        //one for game view, one for minimap - TODO consolidate these
+        std::array<ShaderUniform, ShaderUniform::Count> shaders = {};
 
         glm::vec3 position = glm::vec3(0.f);
         float size = Epsilon;
