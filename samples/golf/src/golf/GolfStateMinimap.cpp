@@ -51,19 +51,19 @@ void GolfState::createMinimapCamera()
 
     m_minimapZoom.sceneTexture.create(MapSize.x, MapSize.y, true);
 
-    registerWindow([&]() 
-        {
-            ImGui::Begin("Minimap");
-            ImGui::Image(m_minimapZoom.sceneTexture.getTexture(), { MapSizeFloat.x, MapSizeFloat.y }, { 0.f, 1.f }, { 1.f, 0.f });
-            ImGui::Text("Zoom %3.2f, %3.2f", m_minimapZoom.zoom, 1.f / m_minimapZoom.zoom);
-            /*static float r = 0.f;
-            if (ImGui::SliderFloat("X", &r, -3.f, 3.f))
-            {
-                m_minimapZoom.camera.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, r);
-            }*/
+    //registerWindow([&]() 
+    //    {
+    //        ImGui::Begin("Minimap");
+    //        ImGui::Image(m_minimapZoom.sceneTexture.getTexture(), { MapSizeFloat.x, MapSizeFloat.y }, { 0.f, 1.f }, { 1.f, 0.f });
+    //        ImGui::Text("Zoom %3.2f, %3.2f", m_minimapZoom.zoom, 1.f / m_minimapZoom.zoom);
+    //        /*static float r = 0.f;
+    //        if (ImGui::SliderFloat("X", &r, -3.f, 3.f))
+    //        {
+    //            m_minimapZoom.camera.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, r);
+    //        }*/
 
-            ImGui::End();
-        });
+    //        ImGui::End();
+    //    });
 }
 
 void GolfState::updateMinimapTexture()
@@ -285,9 +285,10 @@ void MinimapZoom::updateShader()
     //to the 3D camera completely
     CRO_ASSERT(glm::length2(textureSize) != 0, "");
 
-    const auto pos = pan / textureSize;
-
+    //the inverse matrix is calculated so we can convert
+    //world positions to map coords in toMapCoords()
     static constexpr glm::vec3 centre(0.5f, 0.5f, 0.f);
+    const auto pos = pan / textureSize;
     const float aspect = textureSize.x / textureSize.y;
 
     glm::mat4 matrix(1.f);
@@ -296,14 +297,12 @@ void MinimapZoom::updateShader()
     matrix = glm::rotate(matrix, -tilt, cro::Transform::Z_AXIS);
     matrix = glm::scale(matrix, glm::vec3(aspect, 1.f, 1.f));
     matrix = glm::scale(matrix, glm::vec3(1.f / zoom));
-
     matrix = glm::scale(matrix, glm::vec3(MapSizeRatio, 1.f));
-
     matrix = glm::translate(matrix, -centre);
     invTx = glm::inverse(matrix);
 
-    glUseProgram(shaderID);
-    glUniformMatrix4fv(matrixUniformID, 1, GL_FALSE, &matrix[0][0]);
+    //glUseProgram(shaderID);
+    //glUniformMatrix4fv(matrixUniformID, 1, GL_FALSE, &matrix[0][0]);
 
 
     //update the 3D camera 
@@ -316,8 +315,12 @@ void MinimapZoom::updateShader()
     auto& cam = camera.getComponent<cro::Camera>();
     const glm::vec2 viewSize = ((MapSizeFloat / zoom) / 2.f) * MapSizeRatio; //MapSizeRatio scales the UI size of the minimap to the texture
     cam.setOrthographic(-viewSize.x, viewSize.x, -viewSize.y, viewSize.y, 10.f, 40.f);
+    
+    
+    //problem is: the perspective mis-aligns icons on the minimap, the UI viewport of
+    //the minimap has a different aspect to the texture, and something else I don't remember.
     /*constexpr float ratio = MapSizeFloat.x / MapSizeFloat.y;
-    const auto fov = std::atan(((MapSizeFloat.y / 2.f) / zoom) / CamHeight) * 2.f;
+    const auto fov = std::atan((((MapSizeFloat.y / 2.f) / zoom) * MapSizeRatio.y) / CamHeight) * 2.f;
     cam.setPerspective(fov, ratio, 10.f, 40.f);*/
 }
 

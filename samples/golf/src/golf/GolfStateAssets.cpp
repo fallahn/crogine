@@ -2411,8 +2411,8 @@ void GolfState::loadMaterials()
     //minimap - course view
     m_resources.shaders.loadFromString(ShaderID::MinimapView, MinimapViewVertex, MinimapViewFragment);
     shader = &m_resources.shaders.get(ShaderID::MinimapView);
-    m_minimapZoom.shaderID = shader->getGLHandle();
-    m_minimapZoom.matrixUniformID = shader->getUniformID("u_coordMatrix");
+    //m_minimapZoom.shaderID = shader->getGLHandle();
+    //m_minimapZoom.matrixUniformID = shader->getUniformID("u_coordMatrix");
 
     //water - this is if we ever get the rain splash pattern working
     //std::string waterDefines;

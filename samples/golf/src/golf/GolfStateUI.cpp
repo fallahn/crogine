@@ -1528,6 +1528,7 @@ void GolfState::buildUI()
 
             if (scale == 0)
             {
+                //this switches the active model - TODO rename this to something that makes more sense
                 updateMinimapTexture();
 
                 //and set to grow
@@ -1978,13 +1979,22 @@ void GolfState::buildUI()
         m_mapTextureMRT.setBorderColour(cro::Colour::Transparent);
         m_sharedData.minimapData.mrt = &m_mapTextureMRT;
 
-        mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTextureMRT.getTexture());
+        /*mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTextureMRT.getTexture());
         mapEnt.getComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, texSize.y / 2.f });
         mapEnt.getComponent<cro::Callback>().getUserData<MinimapData>().textureRatio = static_cast<float>(MapSizeMultiplier * 2);
         m_minimapZoom.mapScale = texSize / MapSize;
         m_minimapZoom.pan = texSize / 2u;
         m_minimapZoom.textureSize = texSize;
-        m_minimapZoom.updateShader();
+        m_minimapZoom.updateShader();*/
+
+
+        mapEnt.getComponent<cro::Sprite>().setTexture(m_minimapZoom.sceneTexture.getTexture());
+        mapEnt.getComponent<cro::Transform>().setOrigin({ MapSizeFloat.x / 2.f, MapSizeFloat.y / 2.f });
+        mapEnt.getComponent<cro::Callback>().getUserData<MinimapData>().textureRatio = 2.f;// static_cast<float>(MapSizeMultiplier * 2);
+        m_minimapZoom.mapScale = glm::vec2(1.f);
+        m_minimapZoom.pan = MapSizeFloat / 2.f;
+        m_minimapZoom.textureSize = MapSize;
+
 
         glm::vec2 viewSize(MapSize);
         miniCam.setOrthographic(-viewSize.x / 2.f, viewSize.x / 2.f, -viewSize.y / 2.f, viewSize.y / 2.f, -0.1f, 60.f);

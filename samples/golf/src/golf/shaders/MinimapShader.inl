@@ -167,17 +167,17 @@ static inline const std::string MinimapViewVertex = R"(
         uniform mat4 u_worldMatrix;
         uniform mat4 u_viewProjectionMatrix;
 
-        uniform mat4 u_coordMatrix = mat4(1.0);
+        //uniform mat4 u_coordMatrix = mat4(1.0);
 
         VARYING_OUT vec2 v_texCoord0;
-        VARYING_OUT vec2 v_texCoord1;
+        //VARYING_OUT vec2 v_texCoord1;
         VARYING_OUT vec4 v_colour;
 
         void main()
         {
             gl_Position = u_viewProjectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
-            v_texCoord0 = (u_coordMatrix * vec4(a_texCoord0, 0.0, 1.0)).xy;
-            v_texCoord1 = a_texCoord0;
+            //v_texCoord0 = (u_coordMatrix * vec4(a_texCoord0, 0.0, 1.0)).xy;
+            v_texCoord0 = a_texCoord0;
             v_colour = a_colour;
         })";
 
@@ -185,7 +185,7 @@ static inline const std::string MinimapViewFragment = R"(
         uniform sampler2D u_texture;
 
         VARYING_IN vec2 v_texCoord0;
-        VARYING_IN vec2 v_texCoord1;
+        //VARYING_IN vec2 v_texCoord1;
         VARYING_IN vec4 v_colour;
 
         OUTPUT
@@ -208,7 +208,7 @@ static inline const std::string MinimapViewFragment = R"(
 
         void main()
         {
-            uv = (round(floor(v_texCoord1 * res) * scale) / scale) / res;
+            uv = (round(floor(v_texCoord0 * res) * scale) / scale) / res;
             uv = (2.0 * uv - 1.0);
             uv.x *= res.x/res.y;
 

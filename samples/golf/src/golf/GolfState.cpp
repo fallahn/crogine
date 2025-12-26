@@ -3426,9 +3426,9 @@ void GolfState::render()
     }
 
     //TODO is this really an optimisation?
-    //if (m_minimapZoom.activeAnimation.isValid())
+    if (m_minimapZoom.activeAnimation.isValid())
     {
-        m_minimapZoom.sceneTexture.clear(cro::Colour::Blue/*Transparent*/);
+        m_minimapZoom.sceneTexture.clear(cro::Colour::Transparent);
         m_mapScene.render();
         m_minimapZoom.sceneTexture.display();
     }
