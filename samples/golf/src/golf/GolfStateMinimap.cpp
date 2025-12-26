@@ -39,7 +39,7 @@ using namespace cl;
 void GolfState::createMinimapCamera()
 {
     auto mapCam = m_mapScene.createEntity();
-    mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, 36.f, -static_cast<float>(MapSize.y) / 2.f });
+    mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, MinimapZoom::CamHeight, -static_cast<float>(MapSize.y) / 2.f });
     mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = mapCam.addComponent<cro::Camera>();
     miniCam.setOrthographic(-MapSizeFloat.x / 2.f, MapSizeFloat.x / 2.f, -MapSizeFloat.y / 2.f, MapSizeFloat.y / 2.f, 10.f, 40.f);
@@ -55,6 +55,12 @@ void GolfState::createMinimapCamera()
         {
             ImGui::Begin("Minimap");
             ImGui::Image(m_minimapZoom.sceneTexture.getTexture(), { MapSizeFloat.x, MapSizeFloat.y }, { 0.f, 1.f }, { 1.f, 0.f });
+            ImGui::Text("Zoom %3.2f, %3.2f", m_minimapZoom.zoom, 1.f / m_minimapZoom.zoom);
+            /*static float r = 0.f;
+            if (ImGui::SliderFloat("X", &r, -3.f, 3.f))
+            {
+                m_minimapZoom.camera.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, r);
+            }*/
 
             ImGui::End();
         });
@@ -195,8 +201,8 @@ void GolfState::retargetMinimap(bool reset)
             && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
 
         //find vec between player and flag
-        auto pin = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
-        auto player = m_currentPlayer.position;
+        const auto pin = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
+        const auto player = m_currentPlayer.position;
 
         //rotate minimap so flag is at top
         glm::vec2 dir(pin.x - player.x, -pin.z + player.z);
@@ -236,7 +242,7 @@ void GolfState::retargetMinimap(bool reset)
 
         //get distance between flag and player and expand by 1.4 (about 3m around a putting hole)
         //TODO this should be fixed 3m - as a percentage it's HUGE on big maps when fully zoomed
-        float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.45f; //remember this is world coords
+        const float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.45f; //remember this is world coords
 
         //scale zoom on long edge of map by box length and clamp to 32x
         target.end.zoom = std::clamp(static_cast<float>(MiniMapSize.x) / viewLength, MinZoom, MaxZoom);
@@ -275,9 +281,11 @@ void GolfState::retargetMinimap(bool reset)
 //minimap zoom struct
 void MinimapZoom::updateShader()
 {
+    //TODO rename this once which switch from the shader
+    //to the 3D camera completely
     CRO_ASSERT(glm::length2(textureSize) != 0, "");
 
-    auto pos = pan / textureSize;
+    const auto pos = pan / textureSize;
 
     static constexpr glm::vec3 centre(0.5f, 0.5f, 0.f);
     const float aspect = textureSize.x / textureSize.y;
@@ -296,6 +304,21 @@ void MinimapZoom::updateShader()
 
     glUseProgram(shaderID);
     glUniformMatrix4fv(matrixUniformID, 1, GL_FALSE, &matrix[0][0]);
+
+
+    //update the 3D camera 
+    auto& tx = camera.getComponent<cro::Transform>();
+    const auto pos3D = pan / mapScale; //TODO once large tex is removed pan no longer needs to scale
+    tx.setPosition({pos3D.x, CamHeight, -pos3D.y});
+    tx.setRotation(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+    tx.rotate(cro::Transform::Z_AXIS, -tilt);
+
+    auto& cam = camera.getComponent<cro::Camera>();
+    const glm::vec2 viewSize = ((MapSizeFloat / zoom) / 2.f) * MapSizeRatio; //MapSizeRatio scales the UI size of the minimap to the texture
+    cam.setOrthographic(-viewSize.x, viewSize.x, -viewSize.y, viewSize.y, 10.f, 40.f);
+    /*constexpr float ratio = MapSizeFloat.x / MapSizeFloat.y;
+    const auto fov = std::atan(((MapSizeFloat.y / 2.f) / zoom) / CamHeight) * 2.f;
+    cam.setPerspective(fov, ratio, 10.f, 40.f);*/
 }
 
 glm::vec2 MinimapZoom::toMapCoords(glm::vec3 worldCoord) const

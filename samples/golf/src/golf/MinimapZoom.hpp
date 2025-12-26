@@ -59,6 +59,7 @@ struct MinimapZoom final
 
 
     //updated settings for 3D camera
+    static constexpr float CamHeight = 36.f; //Y pos in world units
     cro::Entity camera;
     cro::RenderTexture sceneTexture;
 };

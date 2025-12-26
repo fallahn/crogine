@@ -1528,7 +1528,6 @@ void GolfState::buildUI()
 
             if (scale == 0)
             {
-                //m_mapScene.simulate(dt);
                 updateMinimapTexture();
 
                 //and set to grow
@@ -1964,7 +1963,7 @@ void GolfState::buildUI()
 
     createScoreboard();
 
-
+    createMinimapCamera(); //creates the 3D camera
     //set up the overhead cam for the mini map - this renders the entire hole
     //to a texture - the view of the minimap is controlled in the shader which draws it
     //see minimapZoom
@@ -2002,7 +2001,7 @@ void GolfState::buildUI()
 
     //m_mapScene.setActiveCamera(mapCam);
     //miniCam.resizeCallback = updateMiniView; //don't do this on resize as recreating the buffer clears it..
-    createMinimapCamera(); //creates the 3D camera
+
 
 
     //and the mini view of the green
