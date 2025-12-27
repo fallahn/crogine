@@ -119,14 +119,14 @@ void main()
 #endif
 
 
-    //vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
-    //vec3 lightDirection = normalize(-u_lightDirection);
-    //vec3 halfVec = normalize(eyeDirection + lightDirection);
+    vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+    vec3 lightDirection = normalize(-u_lightDirection);
+    vec3 halfVec = normalize(eyeDirection + lightDirection);
 
-    //float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
+    float specularAngle = dot(normal, halfVec);//clamp(dot(normal, halfVec), 0.0, 1.0);
 
-    vec3 baseColour = mix(ColourDark * 0.8, ColourLight, 1.0 - pow(1.0 - v_texCoord0.y, 9.0));// * dot(normal, halfVec);
-    //baseColour += ColourSpec * pow(specularAngle, 120.0);
+    vec3 baseColour = mix(ColourDark * 0.8, ColourLight, 1.0 - pow(1.0 - v_texCoord0.y, 9.0));
+    baseColour += (ColourLight * 0.1) * specularAngle;
 
     /*float rim = 1.0 - dot(normal, eyeDirection);
     rim = smoothstep(0.99002, 1.0, rim);

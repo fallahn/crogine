@@ -42,14 +42,15 @@ void GolfState::createMinimapCamera()
     mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, MinimapZoom::CamHeight, -static_cast<float>(MapSize.y) / 2.f });
     mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = mapCam.addComponent<cro::Camera>();
-    miniCam.setOrthographic(-MapSizeFloat.x / 2.f, MapSizeFloat.x / 2.f, -MapSizeFloat.y / 2.f, MapSizeFloat.y / 2.f, 10.f, 40.f);
+    miniCam.setOrthographic(-MapSizeFloat.x / 2.f, MapSizeFloat.x / 2.f, -MapSizeFloat.y / 2.f, MapSizeFloat.y / 2.f, 1.f, 40.f);
     miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
     m_minimapZoom.camera = mapCam;
     m_mapScene.setActiveCamera(mapCam);
 
 
-    m_minimapZoom.sceneTexture.create(MapSize.x, MapSize.y, true);
+    m_minimapZoom.sceneTexture.create(MapSize.x*2, MapSize.y*2, true, false/*, 2*/);
+    m_minimapZoom.sceneTexture.setSmooth(true);
 
     //registerWindow([&]() 
     //    {
@@ -314,7 +315,7 @@ void MinimapZoom::updateShader()
 
     auto& cam = camera.getComponent<cro::Camera>();
     const glm::vec2 viewSize = ((MapSizeFloat / zoom) / 2.f) * MapSizeRatio; //MapSizeRatio scales the UI size of the minimap to the texture
-    cam.setOrthographic(-viewSize.x, viewSize.x, -viewSize.y, viewSize.y, 10.f, 40.f);
+    cam.setOrthographic(-viewSize.x, viewSize.x, -viewSize.y, viewSize.y, 1.f, 40.f);
     
     
     //problem is: the perspective mis-aligns icons on the minimap, the UI viewport of

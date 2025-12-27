@@ -137,7 +137,7 @@ private:
     std::array<cro::Entity, ChunkCount> m_grassChunks = {};
     void readGrassData();
 
-    void createGrassChunks(cro::ResourceCollection&, cro::Scene&, const cro::Material::Data&);
+    void createGrassChunks(cro::ResourceCollection&, cro::Scene&, cro::Material::Data&);
     void setVisibilityStates(const ChunkVisSystem::VisStates&);
 
 

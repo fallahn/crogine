@@ -1084,7 +1084,7 @@ void TerrainBuilder::readGrassData()
     }
 }
 
-void TerrainBuilder::createGrassChunks(cro::ResourceCollection& resources, cro::Scene& scene, const cro::Material::Data& material)
+void TerrainBuilder::createGrassChunks(cro::ResourceCollection& resources, cro::Scene& scene, cro::Material::Data& material)
 {
     const auto& shader = resources.shaders.get(ShaderID::Grass);
     grassUniform.shader = shader.getGLHandle();
@@ -1096,6 +1096,7 @@ void TerrainBuilder::createGrassChunks(cro::ResourceCollection& resources, cro::
     if (md.loadFromFile("assets/golf/models/grass_sparse.cmt", true))
     //if (md.loadFromFile("assets/golf/models/grass_dense.cmt", true))
     {
+        applyMaterialData(md, material);
         for (auto y = 0; y < ChunkVisSystem::RowCount; ++y)
         {
             for (auto x = 0; x < ChunkVisSystem::ColCount; ++x)

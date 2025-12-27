@@ -1987,13 +1987,14 @@ void GolfState::buildUI()
         m_minimapZoom.textureSize = texSize;
         m_minimapZoom.updateShader();*/
 
-
+        //how this ended up being so convoluted I'll never recall...
+        const auto spriteTexSize = glm::vec2(m_minimapZoom.sceneTexture.getSize());
         mapEnt.getComponent<cro::Sprite>().setTexture(m_minimapZoom.sceneTexture.getTexture());
-        mapEnt.getComponent<cro::Transform>().setOrigin({ MapSizeFloat.x / 2.f, MapSizeFloat.y / 2.f });
-        mapEnt.getComponent<cro::Callback>().getUserData<MinimapData>().textureRatio = 2.f;// static_cast<float>(MapSizeMultiplier * 2);
-        m_minimapZoom.mapScale = glm::vec2(1.f);
-        m_minimapZoom.pan = MapSizeFloat / 2.f;
-        m_minimapZoom.textureSize = MapSize;
+        mapEnt.getComponent<cro::Transform>().setOrigin({ spriteTexSize.x / 2.f, spriteTexSize.y / 2.f });
+        mapEnt.getComponent<cro::Callback>().getUserData<MinimapData>().textureRatio = 2.f * (spriteTexSize.x / MapSizeFloat.x);// static_cast<float>(MapSizeMultiplier * 2);
+        m_minimapZoom.mapScale = spriteTexSize / MapSizeFloat;// glm::vec2(1.f);
+        m_minimapZoom.pan = spriteTexSize / 2.f;
+        m_minimapZoom.textureSize = spriteTexSize;
 
 
         glm::vec2 viewSize(MapSize);
