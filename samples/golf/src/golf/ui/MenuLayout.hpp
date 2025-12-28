@@ -31,7 +31,7 @@ source distribution.
 
 #include <crogine/core/String.hpp>
 #include <crogine/ecs/Entity.hpp>
-#include <crogine/ecs/Components/Sprite.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
