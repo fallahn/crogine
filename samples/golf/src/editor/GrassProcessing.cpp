@@ -134,7 +134,7 @@ bool GrassProcessor::process()
 void GrassProcessor::queueJob()
 {
     LogI << "Queing job for " << m_modelPaths[m_currentPath] << std::endl;
-    constexpr glm::vec2 ChunkSize(MapSize.x / ChunkVisSystem::ColCount, MapSize.y / ChunkVisSystem::RowCount);
+    static constexpr glm::vec2 ChunkSize(MapSize.x / ChunkVisSystem::ColCount, MapSize.y / ChunkVisSystem::RowCount);
 
     std::vector<float> verts;
     std::vector<std::vector<std::uint32_t>> indices;
