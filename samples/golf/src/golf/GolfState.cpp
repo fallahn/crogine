@@ -7591,7 +7591,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //if client is ours activate input/set initial stroke direction
-    auto target = m_cameras[CameraID::Player].getComponent<TargetInfo>().targetLookAt;
+    const auto target = m_cameras[CameraID::Player].getComponent<TargetInfo>().targetLookAt;
     m_inputParser.resetPower();
     m_inputParser.setHoleDirection(target - player.position);
     
@@ -7601,12 +7601,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_inputParser.setMaxRotation(m_holeData[m_currentHole].puttFromTee ? MaxPuttRotation : 
         player.terrain == TerrainID::Green ? rotation / 3.f : rotation);
 
-    auto midTarget = findTargetPos(player.position);
+    const auto midTarget = findTargetPos(player.position);
 
     //set this separately because target might not necessarily be the pin.
-    bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
+    const bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
         && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
-    auto clubTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
+    const auto clubTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
     m_inputParser.setClub(glm::length(clubTarget - player.position));
 
 

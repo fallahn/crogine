@@ -37,7 +37,8 @@ namespace
 {
     const std::array SearchPaths =
     {
-        std::string("dlc/adventurer/")
+        std::string("dlc/adventurer/"),
+        std::string("dlc/island/"),
     };
 }
 

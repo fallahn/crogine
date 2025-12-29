@@ -595,8 +595,8 @@ void GolfState::setGreenCamPosition()
 
     if (m_holeData[m_currentHole].puttFromTee)
     {
-        auto teePos = m_holeData[m_currentHole].tee;
-        auto targetPos = m_holeData[m_currentHole].target;
+        const auto teePos = m_holeData[m_currentHole].tee;
+        const auto targetPos = m_holeData[m_currentHole].target;
 
         if ((glm::length2(m_currentPlayer.position - teePos) <
             glm::length2(m_currentPlayer.position - holePos))
@@ -1348,8 +1348,8 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
     auto activeTarget = findTargetPos(playerData.position);
 
 
-    auto targetDir = activeTarget - playerData.position;
-    auto pinDir = m_holeData[m_currentHole].pin - playerData.position;
+    const auto targetDir = activeTarget - playerData.position;
+    const auto pinDir = m_holeData[m_currentHole].pin - playerData.position;
     targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
 
     //always look at the target in mult-target mode and target not yet hit
@@ -1364,8 +1364,8 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
         if (glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)) > 0.4)
         {
             //set the target depending on how close it is
-            auto pinDist = glm::length2(pinDir);
-            auto targetDist = glm::length2(targetDir);
+            const auto pinDist = glm::length2(pinDir);
+            const auto targetDist = glm::length2(targetDir);
             if (pinDist < targetDist)
             {
                 //always target pin if its closer
@@ -1380,7 +1380,22 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
                 const float MinDist = m_holeData[m_currentHole].puttFromTee ? 9.f : 2500.f;
                 if (targetDist < MinDist) //remember this in len2
                 {
-                    targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+                    if (!m_holeData[m_currentHole].puttFromTee)
+                    {
+                        targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+                    }
+                    else
+                    {
+                        if (glm::length2(m_currentPlayer.position - m_holeData[m_currentHole].tee) < (0.01f * 0.01f))
+                        {
+                            //we're on the tee always look at the target
+                            targetInfo.targetLookAt = activeTarget;
+                        }
+                        else
+                        {
+                            targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+                        }
+                    }
                 }
                 else
                 {

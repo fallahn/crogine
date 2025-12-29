@@ -55,7 +55,32 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
     m_vertexData.clear();
     m_indexData.clear();
 
+    //OK so most (if not all) of the time terrain is large enough to
+    //require 16 bit indexing - however during dev/debug there *are*
+    //some models small enough that the indexing is optimised to 8-bit
+    //so we have to undo that here...
+    if (meshData.indexData[0].format == GL_UNSIGNED_BYTE)
+    {
+        LogI << "correcting for index data..." << std::endl;
+        std::vector<std::vector<std::uint8_t>> temp;
+        const auto vertStride = cro::Mesh::readVertexData(meshData, m_vertexData, temp);
+
+        for (auto i = 0u; i < temp.size(); ++i)
+        {
+            auto& indices = m_indexData.emplace_back();
+            for (auto j = 0u; j < temp[i].size(); ++j)
+            {
+                indices.push_back(temp[i][j]);
+            }
+        }
+
+        setCollisionMesh(meshData, vertStride);
+
+        return;
+    }
+
     const auto vertStride = cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
+    if (m_vertexData.size() > std::numeric_limits<std::uint16_t>::max()) LogW << "Collision Mesh: Terrain has more vertices than can be indexed in 16 bits!!" << std::endl;
     setCollisionMesh(meshData, vertStride);
 }
 

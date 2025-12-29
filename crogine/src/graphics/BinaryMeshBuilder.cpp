@@ -383,24 +383,25 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                 meshData.indexData[i].primitiveType = meshData.primitiveType;
                 meshData.indexData[i].indexCount = static_cast<std::uint32_t>(indexData[i].size());
 
-                if (meshData.vertexCount < std::numeric_limits<std::uint8_t>::max())
-                {
-                    //we can use bytes for indexing
-                    meshData.indexData[i].format = GL_UNSIGNED_BYTE;
-                    std::vector<std::uint8_t> temp(indexData[i].size());
-                    for (auto j = 0u; j < temp.size(); ++j)
-                    {
-                        temp[j] = indexData[i][j];
-                    }
+                //if (meshData.vertexCount < std::numeric_limits<std::uint8_t>::max())
+                //{
+                //    //we can use bytes for indexing
+                //    meshData.indexData[i].format = GL_UNSIGNED_BYTE;
+                //    std::vector<std::uint8_t> temp(indexData[i].size());
+                //    for (auto j = 0u; j < temp.size(); ++j)
+                //    {
+                //        temp[j] = indexData[i][j];
+                //    }
 
-                    //this is a bit pointless doing it every submesh as it should always return the same one
-                    meshData.iboAllocator = allocationResource->getIBOAllocator(3, sizeof(std::uint8_t));
-                    meshData.indexData[i].iboAllocation = meshData.iboAllocator->newAllocation(indexData[i].size());
-                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
-                    glCheck(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.offset,
-                        temp.size(), temp.data()));
-                }
-                else if (meshData.vertexCount < std::numeric_limits<std::uint16_t>::max())
+                //    //this is a bit pointless doing it every submesh as it should always return the same one
+                //    meshData.iboAllocator = allocationResource->getIBOAllocator(3, sizeof(std::uint8_t));
+                //    meshData.indexData[i].iboAllocation = meshData.iboAllocator->newAllocation(indexData[i].size());
+                //    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
+                //    glCheck(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.offset,
+                //        temp.size(), temp.data()));
+                //}
+                //else 
+                    if (meshData.vertexCount < std::numeric_limits<std::uint16_t>::max())
                 {
                     //use shorts
                     meshData.indexData[i].format = GL_UNSIGNED_SHORT;
@@ -433,6 +434,8 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
 
         m_skeleton = {};
         parseSkeleton(file, header);
+
+        LogI << FILE_LINE << "REVERT THIS" << std::endl;
     }
     else
     {
