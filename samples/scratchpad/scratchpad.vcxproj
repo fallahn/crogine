@@ -349,6 +349,7 @@
     <ClCompile Include="src\ssao\SSAOState.cpp" />
     <ClCompile Include="src\swingput\Swingput.cpp" />
     <ClCompile Include="src\swingput\SwingState.cpp" />
+    <ClCompile Include="src\trackoverlay\pugixml.cpp" />
     <ClCompile Include="src\trackoverlay\TrackOverlayState.cpp" />
     <ClCompile Include="src\vats\VatFile.cpp" />
     <ClCompile Include="src\vats\VatsState.cpp" />

@@ -1,6 +1,7 @@
 //Auto-generated source file for Scratchpad Stub 01/07/2024, 11:14:05
 
 #include "TrackoverlayState.hpp"
+#include "pugixml.hpp"
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -436,6 +437,55 @@ void TrackOverlayState::createUI()
                     {
                         m_settings.artistFontSize = std::clamp(m_settings.artistFontSize, MinFontSize, MaxFontSize);
                         m_displayEnts.artistText.getComponent<cro::Text>().setCharacterSize(m_settings.artistFontSize);
+                    }
+
+                    if (ImGui::Button("Convert EngineDJ Playlist"))
+                    {
+                        const auto path = cro::FileSystem::openFileDialogue("", "json");
+                        if (!path.empty())
+                        {
+                            cro::ConfigFile input;
+                            if (input.loadFromFile(path))
+                            {
+                                cro::ConfigFile cfg;
+
+                                std::int32_t trackNumber = 0;
+                                for (const auto& obj : input.getObjects())
+                                {
+                                    cro::String name;
+                                    cro::String title;
+
+                                    for (const auto& p : obj.getProperties())
+                                    {
+                                        if (p.getName() == "artist")
+                                        {
+                                            name = p.getValue<cro::String>();
+                                        }
+                                        else if (p.getName() == "title")
+                                        {
+                                            title = p.getValue<cro::String>();
+                                        }
+                                    }
+
+                                    trackNumber++;
+
+                                    std::stringstream ss;
+                                    ss << std::setfill('0') << std::setw(2) << trackNumber;
+                                    const auto numStr = ss.str();
+
+                                    auto obj = cfg.addObject("track ", numStr);
+                                    obj->addProperty("title").setValue(title);
+                                    obj->addProperty("artist").setValue(name);
+                                    obj->addProperty("thumb").setValue(numStr + ".png");
+                                }
+
+                                if (trackNumber)
+                                {
+                                    cfg.save(cro::FileSystem::getFilePath(path) + "tracklist.cfg");
+                                    LogI << "Wrote " << trackNumber << " tracks to tracklist.cfg" << std::endl;
+                                }
+                            }
+                        }
                     }
 
                     ImGui::Text("Current Dir: %s", m_settings.albumDirectory.c_str());

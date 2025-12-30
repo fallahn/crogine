@@ -369,6 +369,9 @@
     <ClCompile Include="src\deckintro\DeckintroState.cpp">
       <Filter>Source Files\deck intro</Filter>
     </ClCompile>
+    <ClCompile Include="src\trackoverlay\pugixml.cpp">
+      <Filter>Source Files\track overlay</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
