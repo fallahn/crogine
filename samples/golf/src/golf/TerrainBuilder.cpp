@@ -427,10 +427,12 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     noiseTex.setRepeated(true);
     noiseTex.setSmooth(true);
 
-    resources.materials.get(grassID).setProperty("u_noiseTexture", noiseTex);
-    resources.materials.get(grassID).addCustomSetting(GL_CLIP_DISTANCE1);
-    createGrassChunks(resources, scene, resources.materials.get(grassID));
-
+    if (!Social::isSteamdeck())
+    {
+        resources.materials.get(grassID).setProperty("u_noiseTexture", noiseTex);
+        resources.materials.get(grassID).addCustomSetting(GL_CLIP_DISTANCE1);
+        createGrassChunks(resources, scene, resources.materials.get(grassID));
+    }
 
     auto b = 0;
     for (auto& entity : m_propRootEntities)
@@ -920,17 +922,21 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
         m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
 
         //if we have any transforms update the chunks
-        //TODO only do this if density is set to high
-        for (auto i = 0u; i < m_grassTransforms.size(); ++i)
+        if (!Social::isSteamdeck()
+            /*&& m_sharedData.grassDensity == 1*/) //hmm, we always have to do this in case the user changes the setting mid-round
         {
-            if (!m_grassTransforms[i].empty())
+            for (auto i = 0u; i < m_grassTransforms.size(); ++i)
             {
-                m_grassChunks[i].getComponent<cro::Model>().setInstanceTransforms(m_grassTransforms[i]);
-                m_grassChunks[i].getComponent<cro::Model>().setRenderFlags(RenderFlags::Main);
-            }
-            else
-            {
-                m_grassChunks[i].getComponent<cro::Model>().setRenderFlags(0);
+                if (!m_grassTransforms[i].empty())
+                {
+                    m_grassChunks[i].getComponent<cro::Model>().setInstanceTransforms(m_grassTransforms[i]);
+                    m_grassChunks[i].getComponent<cro::Model>().setRenderFlags(RenderFlags::Main);
+                    m_grassTransforms[i].clear();
+                }
+                else
+                {
+                    m_grassChunks[i].getComponent<cro::Model>().setRenderFlags(0);
+                }
             }
         }
 
@@ -1119,7 +1125,8 @@ void TerrainBuilder::createGrassChunks(cro::ResourceCollection& resources, cro::
 
 void TerrainBuilder::setVisibilityStates(const ChunkVisSystem::VisStates& states)
 {
-    if (m_sharedData.grassDensity)
+    if (!Social::isSteamdeck() &&
+        m_sharedData.grassDensity)
     {
         constexpr auto a2 = ChunkVisSystem::ChunkWidth * ChunkVisSystem::ChunkWidth;
         constexpr auto b2 = ChunkVisSystem::ChunkHeight * ChunkVisSystem::ChunkHeight;
@@ -1447,49 +1454,52 @@ void TerrainBuilder::threadFunc()
 
 
 #ifdef GEN_GRASS
-                //hmm it would be nice to not do this if density is set to 0
-                //however if the density is changed mid-round no transforms will be generated
-                //until the next hole...
-                for (auto& tx : m_grassTransforms)
+                if (!Social::isSteamdeck())
                 {
-                    tx.clear();
-                }
-                //TODO only do if desity set to high?
-                constexpr glm::vec2 ChunkSize(MapSize.x / ChunkVisSystem::ColCount, MapSize.y / ChunkVisSystem::RowCount);
-                for (auto y = 0; y < ChunkVisSystem::RowCount; ++y)
-                {
-                    for (auto x = 0; x < ChunkVisSystem::ColCount; ++x)
+                    //hmm it would be nice to not do this if density is set to 0
+                    //however if the density is changed mid-round no transforms will be generated
+                    //until the next hole...
+                    for (auto& tx : m_grassTransforms)
                     {
-                        const glm::vec2 chunkPos = glm::vec2(ChunkSize.x * x, ChunkSize.y * y) + (ChunkSize / 2.f);
-                        const auto chunkIdx = y * ChunkVisSystem::ColCount + x;
-
-                        //use world space bounds so that the positions tile correctly
-                        const std::array minb = { chunkPos.x - (ChunkSize.x / 2.f), chunkPos.y - (ChunkSize.y / 2.f) };
-                        const std::array maxb = { chunkPos.x + (ChunkSize.x / 2.f), chunkPos.y + (ChunkSize.y / 2.f) };
-
-                        static constexpr float density = 0.3f; //0.02f
-                        const auto points = pd::PoissonDiskSampling(density, minb, maxb);
-
-                        for (const auto& [x1, y1] : points)
+                        tx.clear();
+                    }
+                    //TODO only do if desity set to high?
+                    constexpr glm::vec2 ChunkSize(MapSize.x / ChunkVisSystem::ColCount, MapSize.y / ChunkVisSystem::RowCount);
+                    for (auto y = 0; y < ChunkVisSystem::RowCount; ++y)
+                    {
+                        for (auto x = 0; x < ChunkVisSystem::ColCount; ++x)
                         {
-                            auto pointPos = glm::vec3(x1, 0.f, -y1);
-                            const auto [terrain, _1] = readMap(mapImage, x1, y1);
-                            const float height = readHeightMap(static_cast<std::uint32_t>(x1), static_cast<std::uint32_t>(y1));
+                            const glm::vec2 chunkPos = glm::vec2(ChunkSize.x * x, ChunkSize.y * y) + (ChunkSize / 2.f);
+                            const auto chunkIdx = y * ChunkVisSystem::ColCount + x;
 
-                            if (terrain == TerrainID::Rough
-                                && height > 0.f)
+                            //use world space bounds so that the positions tile correctly
+                            const std::array minb = { chunkPos.x - (ChunkSize.x / 2.f), chunkPos.y - (ChunkSize.y / 2.f) };
+                            const std::array maxb = { chunkPos.x + (ChunkSize.x / 2.f), chunkPos.y + (ChunkSize.y / 2.f) };
+
+                            static constexpr float density = 0.3f; //0.02f
+                            const auto points = pd::PoissonDiskSampling(density, minb, maxb);
+
+                            for (const auto& [x1, y1] : points)
                             {
-                                //don't place on steep slopes
-                                const auto n = readNormal(static_cast<std::uint32_t>(x1), static_cast<std::uint32_t>(y1));
-                                if (glm::dot(n, cro::Transform::Y_AXIS) > 0.7f)
-                                {
-                                    pointPos.y = height;
+                                auto pointPos = glm::vec3(x1, 0.f, -y1);
+                                const auto [terrain, _1] = readMap(mapImage, x1, y1);
+                                const float height = readHeightMap(static_cast<std::uint32_t>(x1), static_cast<std::uint32_t>(y1));
 
-                                    //remember to put this point relative to ent position...
-                                    auto t = glm::translate(glm::mat4(1.f), pointPos - glm::vec3(chunkPos.x, 0.f, -chunkPos.y));
-                                    t = glm::rotate(t, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI), cro::Transform::Y_AXIS);
-                                    t = glm::scale(t, glm::vec3(cro::Util::Random::value(0.8f, 1.1f)) * 2.f);
-                                    m_grassTransforms[chunkIdx].emplace_back(t);
+                                if (terrain == TerrainID::Rough
+                                    && height > 0.f)
+                                {
+                                    //don't place on steep slopes
+                                    const auto n = readNormal(static_cast<std::uint32_t>(x1), static_cast<std::uint32_t>(y1));
+                                    if (glm::dot(n, cro::Transform::Y_AXIS) > 0.7f)
+                                    {
+                                        pointPos.y = height;
+
+                                        //remember to put this point relative to ent position...
+                                        auto t = glm::translate(glm::mat4(1.f), pointPos - glm::vec3(chunkPos.x, 0.f, -chunkPos.y));
+                                        t = glm::rotate(t, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI), cro::Transform::Y_AXIS);
+                                        t = glm::scale(t, glm::vec3(cro::Util::Random::value(0.8f, 1.1f)) * 2.f);
+                                        m_grassTransforms[chunkIdx].emplace_back(t);
+                                    }
                                 }
                             }
                         }
