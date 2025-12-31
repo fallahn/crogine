@@ -616,9 +616,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         ball.delay -= dt;
         if (ball.delay < 0)
         {
-            
-            //doBallCollision(entity);
-
             auto& tx = entity.getComponent<cro::Transform>();
             auto position = tx.getPosition();
 
@@ -747,24 +744,65 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
 
             //move by velocity
-            tx.move(ball.velocity * dt);
+            const auto movement = ball.velocity * dt;
+            tx.move(movement);
 
 
             //check for wall collision
-            /*if (auto l2 = glm::length2(ball.velocity); l2 != 0
-                && glm::dot(ball.velocity, cro::Transform::Y_AXIS) > 0)
+            if (ball.state == Ball::State::Putt //this may have changed above
+                && m_holeData->puttFromTee)
             {
-                //the problem with this is that the ray *shouldn't* be cast from behind the ball in this case.
-                auto wallResult = getTerrain(tx.getPosition(), ball.velocity / std::sqrt(l2) * (Ball::Radius * 4.f));
-                if (wallResult.penetration > 0)
+                std::int32_t stepCount = 1;
+
+                if (glm::length2(movement) > (Ball::Radius * Ball::Radius))
                 {
-                    tx.move(wallResult.normal * wallResult.penetration);
-                    ball.velocity = glm::reflect(ball.velocity, wallResult.normal);
-                    LogI << "Bounced off wall" << std::endl;
+                    stepCount = static_cast<std::int32_t>(std::ceil(glm::length(movement) / Ball::Radius)) + 1;
+                    //LogI << "Step count: " << stepCount << std::endl;
                 }
-            }*/
 
+                const auto step = movement / static_cast<float>(stepCount);
+                
+                auto centre = tx.getPosition() + (cro::Transform::Y_AXIS * Ball::Radius); //actual pos is on the ground...
+                std::size_t collisionCount = 0;
+                
+                //take multiple smaller steps to attempt to reduce tunneling
+                for (auto i = 0; i < stepCount && collisionCount == 0; ++i)
+                {
+                    const auto testOffset = (static_cast<float>(i) * step);
+                    const auto manifolds = doSphereCollision(centre - testOffset);
+                    collisionCount += manifolds.size();
 
+                    for (auto [normal, penetration] : manifolds)
+                    {
+                        if (penetration != 0)
+                        {
+                            const auto dir = glm::normalize(ball.velocity);
+                            tx.move(-testOffset);
+                            //tx.move((-dir * penetration));
+                            
+                            //this makes sure the normal is always facing the direction
+                            //the ball was travelling from - otherwise it flips if the
+                            //centre of the ball is the other side of the colliding face.
+                            const auto surfaceDir = static_cast<float>(cro::Util::Maths::sgn(glm::dot(normal, -dir)));
+                            //LogI << surfaceDir << std::endl;
+
+                            normal *= surfaceDir;
+                            if (surfaceDir < 0)
+                            {
+                                penetration = Ball::Radius * 2.f;// -penetration;
+                            }
+                            //LogI << normal << ", " << penetration << std::endl;
+
+                            //TODO this is a bit crude and will cause sliding along the wall
+                            //we need to use the penetration depth + angle between the normal and velocity
+                            //to figure out how far back along the velocity path to move
+                            tx.move((normal * penetration)); 
+                            ball.velocity = glm::reflect(ball.velocity, normal) * 0.5f;
+                            //LogI << i << std::endl;
+                        }
+                    }
+                }
+            }
 
             auto newPos = tx.getPosition();
             terrainContact = getTerrain(newPos);
@@ -848,10 +886,14 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //make sure to update the position
                 position = tx.getPosition();
                 len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
+                constexpr float PenDist = (HoleRadius * 2) * (HoleRadius * 2.f);
 
                 auto* msg = postEvent();
                 msg->type = GolfBallEvent::Landed;
-                msg->terrain = ((terrainContact.penetration > Ball::Radius) || (len2 < MinBallDistance)) ? TerrainID::Hole : ball.terrain;
+                msg->terrain = ((terrainContact.penetration >= Ball::Radius) && (len2 < PenDist)) || (len2 < MinBallDistance) ? TerrainID::Hole : ball.terrain;
+                
+                //TODO fix the penetration test as it causes the ball to hole-out when it clips through geometry
+                //msg->terrain = ((terrainContact.penetration > Ball::Radius)/* && (len2 < MinBallDistance)*/) || (len2 < MinBallDistance) ? TerrainID::Hole : ball.terrain;
                 msg->client = ball.client;
 
                 if (msg->terrain == TerrainID::Hole)
@@ -1150,6 +1192,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         //do the ball collision here to separate any balls which were overlapping when they came to rest
         //we do this outside the time out, else the server won't send the updated position until the next turn
         doBallCollision(entity);
+
+        //TODO we could do a ray cast here to make sure we're sitting on top of any geom instead of stuck in it.
 
         ball.delay -= dt;
 
@@ -1594,6 +1638,16 @@ void BallSystem::updateWind()
     //m_windStrengthTarget = 0.f;
 }
 
+std::vector<BallSystem::SphereResult::Manifold> BallSystem::doSphereCollision(glm::vec3 worldPosition)
+{
+    m_ballCollider->setWorldTransform(btTransform(btQuaternion(), glmToBt(worldPosition)));
+
+    SphereResult result;
+    m_collisionWorld->contactTest(m_ballCollider.get(), result);
+
+    return result.manifolds;
+}
+
 void BallSystem::initCollisionWorld(bool drawDebug)
 {
     m_collisionCfg = std::make_unique<btDefaultCollisionConfiguration>();
@@ -1601,6 +1655,13 @@ void BallSystem::initCollisionWorld(bool drawDebug)
 
     m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
     m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionCfg.get());
+
+
+    m_ballCollisionShape = std::make_unique<btSphereShape>(Ball::Radius + 0.001f);
+    m_ballCollider = std::make_unique<btCollisionObject>();
+    m_ballCollider->setCollisionShape(m_ballCollisionShape.get());
+    m_ballCollider->setCcdMotionThreshold(Ball::Radius / 2.f);
+    m_ballCollider->setCcdSweptSphereRadius(Ball::Radius);
 
 #ifdef CRO_DEBUG_
     if (drawDebug)
@@ -1683,4 +1744,29 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
     m_puttFromTee = getTerrain(m_holeData->tee).terrain == TerrainID::Green;
 
     return true;
+}
+
+btScalar BallSystem::SphereResult::addSingleResult(btManifoldPoint& cp, const btCollisionObjectWrapper*, int, int, const btCollisionObjectWrapper*, int, int)
+{
+    //NOTE the that normal direction *flips* if the centre of
+    //the sphere is the other side of the collision plane...
+    //but the penetration, not always :S
+
+    const auto normal = btToGlm(cp.m_normalWorldOnB);
+    static constexpr float MaxAngle = 8.f / 90.f;
+
+    //only keep this collision if the surface is near vertical
+    const auto angle = glm::dot(cro::Transform::Y_AXIS, normal);
+    if (angle < MaxAngle
+        && angle >= 0.f)
+    {
+        auto& man = manifolds.emplace_back();
+        man.normal = normal;
+        man.penetration = -cp.m_distance1;
+    }
+    /*else
+    {
+        LogI << angle << ": threshold not met" << std::endl;
+    }*/
+    return 0.f; //what is this even returning? bullet docs are *infuriating*
 }

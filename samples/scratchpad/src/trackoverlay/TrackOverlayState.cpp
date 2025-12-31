@@ -447,7 +447,7 @@ void TrackOverlayState::createUI()
                             cro::ConfigFile input;
                             if (input.loadFromFile(path))
                             {
-                                cro::ConfigFile cfg;
+                                cro::ConfigFile cfg("tracklist");
 
                                 std::int32_t trackNumber = 0;
                                 for (const auto& obj : input.getObjects())
@@ -473,7 +473,7 @@ void TrackOverlayState::createUI()
                                     ss << std::setfill('0') << std::setw(2) << trackNumber;
                                     const auto numStr = ss.str();
 
-                                    auto obj = cfg.addObject("track ", numStr);
+                                    auto obj = cfg.addObject("track", numStr);
                                     obj->addProperty("title").setValue(title);
                                     obj->addProperty("artist").setValue(name);
                                     obj->addProperty("thumb").setValue(numStr + ".png");
