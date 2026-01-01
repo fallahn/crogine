@@ -616,6 +616,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         ball.delay -= dt;
         if (ball.delay < 0)
         {
+            //ball.lastTerrain = ConstVal::NullValue;
+
             auto& tx = entity.getComponent<cro::Transform>();
             auto position = tx.getPosition();
 
@@ -762,7 +764,12 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                 const auto step = movement / static_cast<float>(stepCount);
                 
-                auto centre = tx.getPosition() + (cro::Transform::Y_AXIS * Ball::Radius); //actual pos is on the ground...
+                //do yet another raycast to pull us out of the ground before doing spherical collision
+                //actually... it doesn't work.
+                auto centre = tx.getPosition();
+                //centre.y = getTerrain(centre).intersection.y;
+                centre += (cro::Transform::Y_AXIS * Ball::Radius); //actual pos is on the ground...
+                
                 std::size_t collisionCount = 0;
                 
                 //take multiple smaller steps to attempt to reduce tunneling
@@ -778,7 +785,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                         {
                             const auto dir = glm::normalize(ball.velocity);
                             tx.move(-testOffset);
-                            //tx.move((-dir * penetration));
                             
                             //this makes sure the normal is always facing the direction
                             //the ball was travelling from - otherwise it flips if the
@@ -798,6 +804,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                             //to figure out how far back along the velocity path to move
                             tx.move((normal * penetration)); 
                             ball.velocity = glm::reflect(ball.velocity, normal) * 0.5f;
+                            ball.lastTerrain = TerrainID::Stone; //this will trigger a sound effect when it reaches the client
                             //LogI << i << std::endl;
                         }
                     }
@@ -1193,7 +1200,13 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         //we do this outside the time out, else the server won't send the updated position until the next turn
         doBallCollision(entity);
 
-        //TODO we could do a ray cast here to make sure we're sitting on top of any geom instead of stuck in it.
+        //do a ray cast here to make sure we're sitting on top of any geom instead of stuck in it.
+        if (ball.terrain != TerrainID::Hole)
+        {
+            const auto oldPos = entity.getComponent<cro::Transform>().getPosition();
+            const auto newPos = getTerrain(oldPos).intersection;
+            entity.getComponent<cro::Transform>().setPosition(newPos);
+        }
 
         ball.delay -= dt;
 

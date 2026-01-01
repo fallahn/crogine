@@ -605,7 +605,8 @@ void GolfState::netBroadcast()
                 info.lie = ballC.lie;
                 info.groupID = m_groupAssignments[player.client];
                 //as these are only used for sound effects only send the events where we bounce on something
-                info.collisionTerrain = ballC.state == Ball::State::Flight ? ballC.lastTerrain : ConstVal::NullValue;
+                info.collisionTerrain = ballC.state == Ball::State::Flight || ballC.state == Ball::State::Putt
+                    ? ballC.lastTerrain : ConstVal::NullValue;
                 ballC.lastTerrain = ConstVal::NullValue;
                 m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Unreliable);
             }
