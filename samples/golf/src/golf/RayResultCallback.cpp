@@ -87,7 +87,7 @@ btScalar SphereResult::addSingleResult(btManifoldPoint& cp, const btCollisionObj
     //so we use the calculated face normal instead
 
     const auto normal = btToGlm(/*cp.m_normalWorldOnB*/faceNormal);
-    static constexpr float MaxAngle = 6.f / 90.f;
+    static constexpr float MaxAngle = 8.f / 90.f;
 
     //only keep this collision if the surface is near vertical
     const auto angle = glm::dot(cro::Transform::Y_AXIS, normal);
