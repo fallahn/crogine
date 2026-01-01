@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -165,7 +165,7 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_flagPreview.setText(m_sharedData.flagText);
 
     std::fill(m_controllerMasks.begin(), m_controllerMasks.end(), 0);
-    std::fill(m_controllerPrevMasks.begin(), m_controllerMasks.end(), 0);
+    std::fill(m_controllerPrevMasks.begin(), m_controllerPrevMasks.end(), 0);
 
     m_tabBar.items.resize(TabID::Count);
     m_menuLayout.items.resize(TabID::Count);

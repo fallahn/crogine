@@ -80,7 +80,7 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
     }
 
     const auto vertStride = cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
-    if (m_vertexData.size() > std::numeric_limits<std::uint16_t>::max()) LogW << "Collision Mesh: Terrain has more vertices than can be indexed in 16 bits!!" << std::endl;
+    if ((m_vertexData.size() / vertStride) > std::numeric_limits<std::uint16_t>::max()) LogW << "Collision Mesh: Terrain has more vertices than can be indexed in 16 bits!!" << std::endl;
     setCollisionMesh(meshData, vertStride);
 }
 

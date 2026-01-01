@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -763,12 +763,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 }
 
                 const auto step = movement / static_cast<float>(stepCount);
-                
-                //do yet another raycast to pull us out of the ground before doing spherical collision
-                //actually... it doesn't work.
-                auto centre = tx.getPosition();
-                //centre.y = getTerrain(centre).intersection.y;
-                centre += (cro::Transform::Y_AXIS * Ball::Radius); //actual pos is on the ground...
+                const auto centre = tx.getPosition() + (cro::Transform::Y_AXIS * Ball::Radius); //actual pos is on the ground...
                 
                 std::size_t collisionCount = 0;
                 
@@ -786,26 +781,33 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                             const auto dir = glm::normalize(ball.velocity);
                             tx.move(-testOffset);
                             
+                            //penetration is actually the offset of the centre of the ball from teh collision plane
+                            float correction = Ball::Radius;// -std::abs(penetration);
+
                             //this makes sure the normal is always facing the direction
                             //the ball was travelling from - otherwise it flips if the
                             //centre of the ball is the other side of the colliding face.
                             const auto surfaceDir = static_cast<float>(cro::Util::Maths::sgn(glm::dot(normal, -dir)));
-                            //LogI << surfaceDir << std::endl;
+                            //normal *= surfaceDir;
 
-                            normal *= surfaceDir;
-                            if (surfaceDir < 0)
-                            {
-                                penetration = Ball::Radius * 2.f;// -penetration;
-                            }
-                            //LogI << normal << ", " << penetration << std::endl;
+                            //if (surfaceDir < 0)
+                            //{
+                            //    LogI << surfaceDir << std::endl;
+                            //    //we're on the wrong side so add another ball diameter
+                            //    correction = (Ball::Radius * 2.f);
+                            //}
+                            
 
                             //TODO this is a bit crude and will cause sliding along the wall
                             //we need to use the penetration depth + angle between the normal and velocity
                             //to figure out how far back along the velocity path to move
-                            tx.move((normal * penetration)); 
-                            ball.velocity = glm::reflect(ball.velocity, normal) * 0.5f;
-                            ball.lastTerrain = TerrainID::Stone; //this will trigger a sound effect when it reaches the client
-                            //LogI << i << std::endl;
+                            
+                            if (surfaceDir > 0)
+                            {
+                                tx.move((normal * correction));
+                                ball.velocity = glm::reflect(ball.velocity, normal) * 0.5f;
+                                ball.lastTerrain = TerrainID::Stone; //this will trigger a sound effect when it reaches the client
+                            }
                         }
                     }
                 }
@@ -1651,11 +1653,12 @@ void BallSystem::updateWind()
     //m_windStrengthTarget = 0.f;
 }
 
-std::vector<BallSystem::SphereResult::Manifold> BallSystem::doSphereCollision(glm::vec3 worldPosition)
+std::vector<SphereResult::Manifold> BallSystem::doSphereCollision(glm::vec3 worldPosition)
 {
     m_ballCollider->setWorldTransform(btTransform(btQuaternion(), glmToBt(worldPosition)));
 
     SphereResult result;
+    result.objects = &m_groundObjects;
     m_collisionWorld->contactTest(m_ballCollider.get(), result);
 
     return result.manifolds;
@@ -1670,7 +1673,8 @@ void BallSystem::initCollisionWorld(bool drawDebug)
     m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionCfg.get());
 
 
-    m_ballCollisionShape = std::make_unique<btSphereShape>(Ball::Radius + 0.001f);
+    //m_ballCollisionShape = std::make_unique<btSphereShape>(Ball::Radius - 0.001f);
+    m_ballCollisionShape = std::make_unique<btCylinderShape>(btVector3(Ball::Radius, Ball::Radius / 6.f, Ball::Radius));
     m_ballCollider = std::make_unique<btCollisionObject>();
     m_ballCollider->setCollisionShape(m_ballCollisionShape.get());
     m_ballCollider->setCcdMotionThreshold(Ball::Radius / 2.f);
@@ -1718,6 +1722,8 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
         }
     }
 
+    if (meshData.vertexCount > std::numeric_limits<std::uint16_t>::max()) LogW << "FIX ME " << FILE_LINE << std::endl;
+
     if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
     {
         LogE << "No colour property found in collision mesh" << std::endl;
@@ -1735,6 +1741,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
 
     //Later note: now we have per-triangle terrain detection this probably isn't true now.
     //for (auto i = 0u; i < m_indexData.size(); ++i)
+    auto i = 0;
     for(const auto& id : m_indexData)
     {
         btIndexedMesh groundMesh;
@@ -1750,6 +1757,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
         m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
         m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
         m_groundObjects.back()->setUserIndex(colourOffset); //use to read the terrain type in RayResult
+        m_groundObjects.back()->setUserIndex2(i++); //so we can index back into this array in a callback
         m_collisionWorld->addCollisionObject(m_groundObjects.back().get(), CollisionGroup::Terrain, CollisionGroup::Ball);
     }
 
@@ -1757,29 +1765,4 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
     m_puttFromTee = getTerrain(m_holeData->tee).terrain == TerrainID::Green;
 
     return true;
-}
-
-btScalar BallSystem::SphereResult::addSingleResult(btManifoldPoint& cp, const btCollisionObjectWrapper*, int, int, const btCollisionObjectWrapper*, int, int)
-{
-    //NOTE the that normal direction *flips* if the centre of
-    //the sphere is the other side of the collision plane...
-    //but the penetration, not always :S
-
-    const auto normal = btToGlm(cp.m_normalWorldOnB);
-    static constexpr float MaxAngle = 8.f / 90.f;
-
-    //only keep this collision if the surface is near vertical
-    const auto angle = glm::dot(cro::Transform::Y_AXIS, normal);
-    if (angle < MaxAngle
-        && angle >= 0.f)
-    {
-        auto& man = manifolds.emplace_back();
-        man.normal = normal;
-        man.penetration = -cp.m_distance1;
-    }
-    /*else
-    {
-        LogI << angle << ": threshold not met" << std::endl;
-    }*/
-    return 0.f; //what is this even returning? bullet docs are *infuriating*
 }

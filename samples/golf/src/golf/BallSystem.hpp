@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -226,20 +226,7 @@ private:
     std::vector<float> m_vertexData;
     std::vector<std::vector<std::uint16_t>> m_indexData;
 
-    //custom callback for sphere intersections
-    struct SphereResult final : public btCollisionWorld::ContactResultCallback
-    {
-        //we may have multiple contacts in a single collision
-        struct Manifold final
-        {
-            glm::vec3 normal = glm::vec3(0.f);
-            float penetration = 0.f;
-        };
-        std::vector<Manifold> manifolds;
-
-        btScalar addSingleResult(btManifoldPoint&, const btCollisionObjectWrapper*, int, int, const btCollisionObjectWrapper*, int, int) override;
-    };
-    std::unique_ptr<btSphereShape> m_ballCollisionShape;
+    std::unique_ptr<btCollisionShape> m_ballCollisionShape;
     std::unique_ptr<btCollisionObject> m_ballCollider;
 
     std::vector<SphereResult::Manifold> doSphereCollision(glm::vec3);
