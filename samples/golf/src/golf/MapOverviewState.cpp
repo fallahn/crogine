@@ -167,6 +167,8 @@ namespace
     constexpr float MinZoom = 1.f;
     constexpr float BaseScaleMultiplier = 0.8f;
     constexpr std::int32_t MaxFingers = 2;
+
+    constexpr float CamHeight = 36.f;
 }
 
 MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -183,6 +185,7 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
     ctx.mainWindow.setMouseCaptured(false);
 
     CRO_ASSERT(sd.minimapData.mrt, "");
+    CRO_ASSERT(sd.minimapData.mapScene, "");
     addSystems();
     loadAssets();
     buildScene();
@@ -525,6 +528,12 @@ bool MapOverviewState::simulate(float dt)
 
 void MapOverviewState::render()
 {
+    auto oldCam = m_sharedData.minimapData.mapScene->setActiveCamera(m_mapCamera);
+    m_mapBuffer.clear(cro::Colour::/*Transparent*/Magenta);
+    m_sharedData.minimapData.mapScene->render();
+    m_mapBuffer.display();
+    m_sharedData.minimapData.mapScene->setActiveCamera(oldCam);
+
     m_scene.render();
 }
 
@@ -552,7 +561,10 @@ void MapOverviewState::loadAssets()
     m_audioEnts[AudioID::Back] = m_scene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
-    auto buffSize = m_sharedData.minimapData.mrt->getSize();
+    const auto size = GolfGame::getActiveTarget()->getSize();
+    m_mapBuffer.create(size.x, size.y);
+
+    const auto buffSize = m_sharedData.minimapData.mrt->getSize();
     m_renderBuffer.create(buffSize.x, buffSize.y, false);
 
     m_mapShader.loadFromString(cro::SimpleQuad::getDefaultVertexShader(), MinimapFragment);
@@ -671,6 +683,14 @@ void MapOverviewState::buildScene()
             v.colour.setAlpha(BackgroundAlpha * scale);
         }
     };
+
+    //new map entity
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_mapBuffer.getTexture());
+    rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
+    auto mapEnt = entity;
 
     //map entity
     refreshMap();
@@ -793,12 +813,17 @@ void MapOverviewState::buildScene()
     m_ballLandingArea = entity;
 
 
-    auto updateView = [&, rootNode](cro::Camera& cam) mutable
+    auto updateView = [&, rootNode, mapEnt](cro::Camera& cam) mutable
     {
-        glm::vec2 size(GolfGame::getActiveTarget()->getSize());
+        const glm::vec2 size(GolfGame::getActiveTarget()->getSize());
 
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+
+        m_mapBuffer.create(static_cast<std::uint32_t>(size.x), static_cast<std::uint32_t>(size.y));
+        mapEnt.getComponent<cro::Transform>().setOrigin(size / 2.f);
+        mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f)/m_viewScale);
+        //TODO zoom the 3D cam so that it correctly resizes the viewport
 
         m_viewScale = glm::vec2(getViewScale());
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
@@ -831,6 +856,18 @@ void MapOverviewState::buildScene()
     updateView(entity.getComponent<cro::Camera>());
 
     m_scene.simulate(0.f);
+
+
+
+
+    //camera for 3D scene
+    entity = m_sharedData.minimapData.mapScene->createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(MapSizeFloat.x / 2.f, CamHeight, -MapSizeFloat.y / 2.f));
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+    entity.addComponent<cro::Camera>();
+    m_mapCamera = entity;
+
+    scaleCamera(1.f);
 }
 
 void MapOverviewState::quitState()
@@ -848,6 +885,12 @@ void MapOverviewState::recentreMap()
     m_mapEnt.getComponent<cro::Transform>().setOrigin(centre);
     m_mapEnt.getComponent<cro::Transform>().setScale((glm::vec2(windowSize.x / std::round(centre.x * 2.f)) / m_viewScale.x) * BaseScaleMultiplier);
     m_zoomScale = 1.f;
+
+    if (m_mapCamera.isValid())
+    {
+        m_mapCamera.getComponent<cro::Transform>().setPosition({ m_sharedData.minimapData.mapCentre.x, CamHeight, m_sharedData.minimapData.mapCentre.z });
+        scaleCamera(1.f / m_mapEnt.getComponent<cro::Transform>().getScale().x);
+    }
 }
 
 void MapOverviewState::rescaleMap()
@@ -857,6 +900,8 @@ void MapOverviewState::rescaleMap()
 
     const float baseScale = ((windowSize.x / std::round(mapSize.x)) / m_viewScale.x) * BaseScaleMultiplier;
     m_mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(baseScale * m_zoomScale));
+
+    scaleCamera(1.f / (baseScale * m_zoomScale));
 
     refreshMap();
 }
@@ -971,6 +1016,39 @@ void MapOverviewState::onCachedPush()
     m_ballLandingArea.getComponent<cro::Transform>().setPosition(toMapCoords(m_sharedData.minimapData.targetPos));
 }
 
+void MapOverviewState::scaleCamera(float scale)
+{
+    if (m_mapCamera.isValid())
+    {
+        const auto viewSize = (MapSizeFloat * scale) / 2.f;
+
+        auto& cam = m_mapCamera.getComponent<cro::Camera>();
+        cam.setOrthographic(-viewSize.x, viewSize.x, -viewSize.y, viewSize.y, 1.f, 40.f);
+        
+        cam.viewport = { 0.f,0.f,1.f,1.f };
+
+        //glm::vec2 targetSize(m_mapBuffer.getSize());
+        //float xRatio = (viewSize.x * 2.f) / targetSize.x;
+        //float yRatio = (viewSize.y * 2.f) / targetSize.y;
+        //
+        //if (viewSize.x > viewSize.y)
+        //{
+        //    //scale Y to fit
+        //    xRatio *= 1.f / yRatio;
+
+        //    const float xOffset = (1.f - xRatio) / 2.f;
+        //    cam.viewport = { xOffset, 0.f, xRatio, 1.f };
+        //}
+        //else
+        //{
+        //    yRatio *= 1.f / xRatio;
+
+        //    const float yOffset = (1.f - yRatio) / 2.f;
+        //    cam.viewport = { 0.f, yOffset, 1.f, yRatio };
+        //}
+    }
+}
+
 void MapOverviewState::pan(glm::vec2 movement)
 {
     auto position = m_mapEnt.getComponent<cro::Transform>().getOrigin();
@@ -985,6 +1063,11 @@ void MapOverviewState::pan(glm::vec2 movement)
     position.y = std::clamp(position.y, 0.f, bounds.y);
 
     m_mapEnt.getComponent<cro::Transform>().setOrigin(position);
+
+    if (m_mapCamera.isValid())
+    {
+        m_mapCamera.getComponent<cro::Transform>().setPosition(toWorldCoords(position));
+    }
 }
 
 glm::vec2 MapOverviewState::toMapCoords(glm::vec3 pos)
@@ -998,6 +1081,19 @@ glm::vec2 MapOverviewState::toMapCoords(glm::vec3 pos)
     };
 
     return ret * MapScale;
+}
+
+glm::vec3 MapOverviewState::toWorldCoords(glm::vec2 pos)
+{
+    const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MapSize.x;
+
+    glm::vec3 ret
+    {
+        /*std::round*/(pos.x / MapScale),
+        CamHeight,
+        /*std::round*/(-pos.y / MapScale)
+    };
+    return ret;
 }
 
 void MapOverviewState::gotoTarget()

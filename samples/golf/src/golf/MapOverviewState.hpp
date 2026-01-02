@@ -82,6 +82,9 @@ private:
     };
     std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
+    cro::Entity m_mapCamera;
+    cro::RenderTexture m_mapBuffer;
+
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     cro::Entity m_mapEnt;
@@ -136,7 +139,10 @@ private:
     void updateNormals();
     void onCachedPush() override;
 
+    void scaleCamera(float);
+
     void pan(glm::vec2);
     glm::vec2 toMapCoords(glm::vec3);
+    glm::vec3 toWorldCoords(glm::vec2);
     void gotoTarget();
 };

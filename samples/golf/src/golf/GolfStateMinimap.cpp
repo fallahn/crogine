@@ -52,6 +52,8 @@ void GolfState::createMinimapCamera()
     m_minimapZoom.sceneTexture.create(MapSize.x*2, MapSize.y*2, true, false/*, 2*/);
     m_minimapZoom.sceneTexture.setSmooth(true);
 
+    m_sharedData.minimapData.mapScene = &m_mapScene;
+
     //registerWindow([&]() 
     //    {
     //        ImGui::Begin("Minimap");
