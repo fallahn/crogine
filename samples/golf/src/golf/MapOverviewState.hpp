@@ -92,7 +92,6 @@ private:
     cro::Entity m_mapEnt;
     cro::Entity m_mapText;
     cro::Entity m_mapNormals;
-    cro::Entity m_ballLandingArea;
 
     cro::Entity m_controlIcon;
     cro::Entity m_controlText;

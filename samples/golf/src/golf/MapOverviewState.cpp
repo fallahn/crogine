@@ -409,6 +409,10 @@ void MapOverviewState::handleMessage(const cro::Message& msg)
 
 bool MapOverviewState::simulate(float dt)
 {
+    //hmm - this removes the overlay lag (because it's actually a member of a different state
+    //updated *after* this one) but it does mean the system is being double-processed.
+    m_sharedData.minimapData.mapScene->getSystem<cro::CameraSystem>()->process(0.f);
+
     glm::vec2 movement(0.f);
     if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left]))
     {
@@ -467,13 +471,6 @@ bool MapOverviewState::simulate(float dt)
 
     if (len2 != 0)
     {
-        /*auto origin = m_mapEnt.getComponent<cro::Transform>().getOrigin();
-        origin += (glm::vec3(movement, 0.f) * 1650.f * (1.f / m_zoomScale)) * dt;
-        glm::vec2 bounds(m_renderBuffer.getSize());
-        LogI << FILE_LINE << "fix me!" << std::endl;
-        origin.x = std::clamp(origin.x, 0.f, bounds.x);
-        origin.y = std::clamp(origin.y, 0.f, bounds.y);
-        m_mapEnt.getComponent<cro::Transform>().setOrigin(origin);*/
         panCamera(movement * 12.f * m_sharedData.mouseSpeed);
     }
 
@@ -624,52 +621,52 @@ void MapOverviewState::buildScene()
     rootNode.getComponent<cro::Callback>().setUserData<RootCallbackData>();
     rootNode.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
-    {
-        auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<RootCallbackData>();
-
-        switch (state)
         {
-        default: break;
-        case RootCallbackData::FadeIn:
-            currTime = std::min(1.f, currTime + (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
+            auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<RootCallbackData>();
 
-            //check hole number and compare with the last time this
-            //menu was opened - then recentre the map if it's a new hole.
-            if (m_previousMap != m_sharedData.minimapData.holeNumber)
+            switch (state)
             {
-                m_mapText.getComponent<cro::Text>().setString(m_sharedData.minimapData.courseName);
+            default: break;
+            case RootCallbackData::FadeIn:
+                currTime = std::min(1.f, currTime + (dt * 2.f));
+                e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
 
-                recentreMap();
-                updateNormals();
-                m_previousMap = m_sharedData.minimapData.holeNumber;
+                //check hole number and compare with the last time this
+                //menu was opened - then recentre the map if it's a new hole.
+                if (m_previousMap != m_sharedData.minimapData.holeNumber)
+                {
+                    m_mapText.getComponent<cro::Text>().setString(m_sharedData.minimapData.courseName);
+
+                    recentreMap();
+                    updateNormals();
+                    m_previousMap = m_sharedData.minimapData.holeNumber;
+                }
+
+
+                if (currTime == 1)
+                {
+                    state = RootCallbackData::FadeOut;
+                    e.getComponent<cro::Callback>().active = false;
+
+                    m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    refreshMap();
+                }
+                break;
+            case RootCallbackData::FadeOut:
+                currTime = std::max(0.f, currTime - (dt * 2.f));
+                e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
+                if (currTime == 0)
+                {
+                    requestStackPop();
+
+                    state = RootCallbackData::FadeIn;
+                }
+                break;
             }
 
-
-            if (currTime == 1)
-            {
-                state = RootCallbackData::FadeOut;
-                e.getComponent<cro::Callback>().active = false;
-
-                m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                refreshMap();
-            }
-            break;
-        case RootCallbackData::FadeOut:
-            currTime = std::max(0.f, currTime - (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
-            if (currTime == 0)
-            {
-                requestStackPop();
-
-                state = RootCallbackData::FadeIn;
-            }
-            break;
-        }
-
-    };
+        };
 
     m_rootNode = rootNode;
 
@@ -688,20 +685,20 @@ void MapOverviewState::buildScene()
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&, rootNode](cro::Entity e, float)
-    {
-        auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-        e.getComponent<cro::Transform>().setScale(size);
-        e.getComponent<cro::Transform>().setPosition(size / 2.f);
-
-        auto scale = rootNode.getComponent<cro::Transform>().getScale().x;
-        scale = std::min(1.f, scale / m_viewScale.x);
-
-        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-        for (auto& v : verts)
         {
-            v.colour.setAlpha(BackgroundAlpha * scale);
-        }
-    };
+            auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
+            e.getComponent<cro::Transform>().setScale(size);
+            e.getComponent<cro::Transform>().setPosition(size / 2.f);
+
+            auto scale = rootNode.getComponent<cro::Transform>().getScale().x;
+            scale = std::min(1.f, scale / m_viewScale.x);
+
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            for (auto& v : verts)
+            {
+                v.colour.setAlpha(BackgroundAlpha * scale);
+            }
+        };
 
     //new map entity
     entity = m_scene.createEntity();
@@ -731,7 +728,7 @@ void MapOverviewState::buildScene()
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
-    entity.addComponent<UIElement>().relativePosition = {0.f, -0.49f };
+    entity.addComponent<UIElement>().relativePosition = { 0.f, -0.49f };
     entity.getComponent<UIElement>().depth = 0.6f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     auto bgNode = entity;
@@ -815,7 +812,7 @@ void MapOverviewState::buildScene()
     colour.setAlpha(0.5f);
     verts.emplace_back(glm::vec2(0.f), colour);
     colour.setAlpha(0.1f);
-    static constexpr float Radius = 120.f;
+    static constexpr float Radius = 60.f;
     static constexpr float PointCount = 32.f;
     static constexpr float ArcSize = cro::Util::Const::TAU / PointCount;
 
@@ -825,11 +822,43 @@ void MapOverviewState::buildScene()
         auto p = glm::vec2(glm::cos(i * ArcSize), glm::sin(i * ArcSize)) * Radius;
         verts.emplace_back(p, colour);
     }
-    verts.push_back(verts.front());   
+    verts.push_back(verts.front());
 
     entity.getComponent<cro::Drawable2D>().setVertexData(verts);
-    m_mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_ballLandingArea = entity;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (m_mapCamera.isValid())
+            {
+                e.getComponent<cro::Transform>().setPosition(m_mapCamera.getComponent<cro::Camera>().coordsToPixel(m_sharedData.minimapData.targetPos, m_mapBuffer.getSize()));
+                e.getComponent<cro::Transform>().setScale(glm::vec2(m_zoomScale * m_viewScale.y));
+            }
+        };
+    mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //marks the tee position;
+    const auto& teeFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.3f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(teeFont).setString("T");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (m_mapCamera.isValid())
+            {
+                e.getComponent<cro::Transform>().setPosition(m_mapCamera.getComponent<cro::Camera>().coordsToPixel(m_sharedData.minimapData.teePos, m_mapBuffer.getSize()));
+                e.getComponent<cro::Transform>().setScale(glm::vec2(std::round(m_zoomScale * m_viewScale.y)));
+            }
+        };
+
 
 
     auto updateView = [&, rootNode, mapEnt](cro::Camera& cam) mutable
@@ -882,8 +911,7 @@ void MapOverviewState::buildScene()
 
     //camera for 3D scene
     entity = m_sharedData.minimapData.mapScene->createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(MapSizeFloat.x / 2.f, CamHeight, -MapSizeFloat.y / 2.f));
-    entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+    entity.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     entity.addComponent<cro::Camera>();
     m_mapCamera = entity;
 
@@ -899,22 +927,28 @@ void MapOverviewState::quitState()
 
 void MapOverviewState::recentreMap()
 {
-    const glm::vec2 windowSize(cro::App::getWindow().getSize());
-    const auto centre = toMapCoords(m_sharedData.minimapData.mapCentre);
+    //TODO remove this block
+    {
+        const glm::vec2 windowSize(cro::App::getWindow().getSize());
+        const auto centre = toMapCoords(m_sharedData.minimapData.mapCentre);
 
-    m_mapEnt.getComponent<cro::Transform>().setOrigin(centre);
-    m_mapEnt.getComponent<cro::Transform>().setScale((glm::vec2(windowSize.x / std::round(centre.x * 2.f)) / m_viewScale.x) * BaseScaleMultiplier);
-    m_zoomScale = 1.f;
+        m_mapEnt.getComponent<cro::Transform>().setOrigin(centre);
+        m_mapEnt.getComponent<cro::Transform>().setScale((glm::vec2(windowSize.x / std::round(centre.x * 2.f)) / m_viewScale.x) * BaseScaleMultiplier);
+        m_zoomScale = 1.f;
+    }
+
 
     if (m_mapCamera.isValid())
     {
         m_mapCamera.getComponent<cro::Transform>().setPosition({ m_sharedData.minimapData.mapCentre.x, CamHeight, m_sharedData.minimapData.mapCentre.z });
-        rescaleMap();
+        zoomCamera(BaseScaleMultiplier * m_zoomScale);
     }
 }
 
 void MapOverviewState::rescaleMap()
 {
+    //TODO replace calls to this with zoomCamera() and remove this func
+
     const glm::vec2 windowSize(cro::App::getWindow().getSize());
     const auto mapSize = toMapCoords(m_sharedData.minimapData.mapCentre) * 2.f;
 
@@ -1033,7 +1067,7 @@ void MapOverviewState::updateNormals()
 
 void MapOverviewState::onCachedPush()
 {
-    m_ballLandingArea.getComponent<cro::Transform>().setPosition(toMapCoords(m_sharedData.minimapData.targetPos));
+
 }
 
 void MapOverviewState::zoomCamera(float scale)
@@ -1072,18 +1106,22 @@ void MapOverviewState::zoomCamera(float scale)
 
 void MapOverviewState::panCamera(glm::vec2 movement)
 {
-    auto position = m_mapEnt.getComponent<cro::Transform>().getOrigin();
-    position += glm::vec3(movement, 0.f);
+    //TODO remove this block
+    {
+        auto position = m_mapEnt.getComponent<cro::Transform>().getOrigin();
+        position += glm::vec3(movement, 0.f);
 
-    position.x = std::floor(position.x);
-    position.y = std::floor(position.y);
+        position.x = std::floor(position.x);
+        position.y = std::floor(position.y);
 
-    const glm::vec2 bounds(m_renderBuffer.getSize());
+        const glm::vec2 bounds(m_renderBuffer.getSize());
 
-    position.x = std::clamp(position.x, 0.f, bounds.x);
-    position.y = std::clamp(position.y, 0.f, bounds.y);
+        position.x = std::clamp(position.x, 0.f, bounds.x);
+        position.y = std::clamp(position.y, 0.f, bounds.y);
 
-    m_mapEnt.getComponent<cro::Transform>().setOrigin(position);
+        m_mapEnt.getComponent<cro::Transform>().setOrigin(position);
+
+    }
 
     if (m_mapCamera.isValid())
     {
@@ -1113,7 +1151,6 @@ float MapOverviewState::pixelsPerMetre() const
 
 glm::vec2 MapOverviewState::toMapCoords(glm::vec3 pos) const
 {
-    //const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MapSize.x;
     const auto MapScale = glm::vec2(m_renderBuffer.getSize()) / m_sharedData.minimapData.mapSize;
 
     glm::vec2 ret
@@ -1127,19 +1164,11 @@ glm::vec2 MapOverviewState::toMapCoords(glm::vec3 pos) const
 
 glm::vec3 MapOverviewState::toWorldCoords(glm::vec2 pos) const
 {
-    //const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MapSize.x;
+    //TODO remove this function
 
     auto worldPos = m_mapCamera.getComponent<cro::Camera>().pixelToCoords(pos, m_mapBuffer.getSize());
     worldPos.y = CamHeight;
     return worldPos;
-
-    //glm::vec3 ret
-    //{
-    //    /*std::round*/(pos.x / MapScale),
-    //    CamHeight,
-    //    /*std::round*/(-pos.y / MapScale)
-    //};
-    //return ret;
 }
 
 void MapOverviewState::gotoTarget()
