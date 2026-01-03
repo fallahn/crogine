@@ -7159,9 +7159,13 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 
     //m_waterEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_depthMap", m_depthMap.getTexture());
 
+    const auto& bb = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData().boundingBox;
+    const float bbWidth = bb[1].x - bb[0].x;
+    const float bbHeight = bb[1].z - bb[0].z;
+    m_sharedData.minimapData.mapSize = { bbWidth, bbHeight };
+    m_sharedData.minimapData.mapCentre = bb.getCentre();
     m_sharedData.minimapData.teePos = m_holeData[m_currentHole].tee;
     m_sharedData.minimapData.pinPos = m_holeData[m_currentHole].pin;
-    m_sharedData.minimapData.mapCentre = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData().boundingBox.getCentre();
     //m_sharedData.minimapData.holeNumber = m_currentHole;
     
     if (m_sharedData.reverseCourse)

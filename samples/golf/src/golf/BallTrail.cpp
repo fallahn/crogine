@@ -104,7 +104,7 @@ void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, st
     {
         //this is the driving range
         glm::vec2 rangeSize(RangeSize);
-        boundingBox = { glm::vec3(-rangeSize.x, 100.f, rangeSize.y), glm::vec3(rangeSize.x, 100.f, -rangeSize.y) };
+        boundingBox = { glm::vec3(-rangeSize.x, /*100.f*/0.f, rangeSize.y), glm::vec3(rangeSize.x, 100.f, -rangeSize.y) };
     }
 
     for (auto i = 0u; i < BufferCount; ++i)

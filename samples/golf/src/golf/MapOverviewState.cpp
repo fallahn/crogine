@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -529,7 +529,7 @@ bool MapOverviewState::simulate(float dt)
 void MapOverviewState::render()
 {
     auto oldCam = m_sharedData.minimapData.mapScene->setActiveCamera(m_mapCamera);
-    m_mapBuffer.clear(cro::Colour::/*Transparent*/Magenta);
+    m_mapBuffer.clear(cro::Colour::Transparent);
     m_sharedData.minimapData.mapScene->render();
     m_mapBuffer.display();
     m_sharedData.minimapData.mapScene->setActiveCamera(oldCam);
@@ -561,7 +561,7 @@ void MapOverviewState::loadAssets()
     m_audioEnts[AudioID::Back] = m_scene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
-    const auto size = GolfGame::getActiveTarget()->getSize();
+    const auto size = cro::App::getWindow().getSize();
     m_mapBuffer.create(size.x, size.y);
 
     const auto buffSize = m_sharedData.minimapData.mrt->getSize();
@@ -816,16 +816,16 @@ void MapOverviewState::buildScene()
     auto updateView = [&, rootNode, mapEnt](cro::Camera& cam) mutable
     {
         const glm::vec2 size(GolfGame::getActiveTarget()->getSize());
+        m_viewScale = glm::vec2(getViewScale());
 
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         m_mapBuffer.create(static_cast<std::uint32_t>(size.x), static_cast<std::uint32_t>(size.y));
+        mapEnt.getComponent<cro::Sprite>().setTextureRect({ glm::vec2(0.f), size });
         mapEnt.getComponent<cro::Transform>().setOrigin(size / 2.f);
         mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f)/m_viewScale);
-        //TODO zoom the 3D cam so that it correctly resizes the viewport
 
-        m_viewScale = glm::vec2(getViewScale());
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
 
@@ -846,6 +846,7 @@ void MapOverviewState::buildScene()
         };
         m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+        //calls the viewport resize for potential new aspect ratio
         rescaleMap();
     };
 
@@ -889,7 +890,7 @@ void MapOverviewState::recentreMap()
     if (m_mapCamera.isValid())
     {
         m_mapCamera.getComponent<cro::Transform>().setPosition({ m_sharedData.minimapData.mapCentre.x, CamHeight, m_sharedData.minimapData.mapCentre.z });
-        scaleCamera(1.f / m_mapEnt.getComponent<cro::Transform>().getScale().x);
+        scaleCamera(m_mapEnt.getComponent<cro::Transform>().getScale().x);
     }
 }
 
@@ -901,7 +902,7 @@ void MapOverviewState::rescaleMap()
     const float baseScale = ((windowSize.x / std::round(mapSize.x)) / m_viewScale.x) * BaseScaleMultiplier;
     m_mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(baseScale * m_zoomScale));
 
-    scaleCamera(1.f / (baseScale * m_zoomScale));
+    scaleCamera(baseScale * m_zoomScale);
 
     refreshMap();
 }
@@ -941,10 +942,10 @@ void MapOverviewState::refreshMap()
     m_mapString.setShadowOffset({ charScale, -charScale });
 
     m_renderBuffer.clear(cro::Colour::Transparent);
-    m_mapQuad.draw();
+    /*m_mapQuad.draw();
     m_mapString.setString("T");
     m_mapString.setPosition(teePos);
-    m_mapString.draw();
+    m_mapString.draw();*/
     
     //m_mapString.setString("P");
     //m_mapString.setPosition(pinPos * MapScale);
@@ -1020,32 +1021,33 @@ void MapOverviewState::scaleCamera(float scale)
 {
     if (m_mapCamera.isValid())
     {
-        const auto viewSize = (MapSizeFloat * scale) / 2.f;
+        //view size actually gets smaller to make the zoom 'larger'
+        scale = 1.f / scale;
+        const auto viewSize = (m_sharedData.minimapData.mapSize * scale) / 2.f;
 
         auto& cam = m_mapCamera.getComponent<cro::Camera>();
         cam.setOrthographic(-viewSize.x, viewSize.x, -viewSize.y, viewSize.y, 1.f, 40.f);
         
-        cam.viewport = { 0.f,0.f,1.f,1.f };
+        float left = 0.f;
+        float bottom = 0.f;
+        float width = 1.f;
+        float height = 1.f;
 
-        //glm::vec2 targetSize(m_mapBuffer.getSize());
-        //float xRatio = (viewSize.x * 2.f) / targetSize.x;
-        //float yRatio = (viewSize.y * 2.f) / targetSize.y;
-        //
-        //if (viewSize.x > viewSize.y)
-        //{
-        //    //scale Y to fit
-        //    xRatio *= 1.f / yRatio;
+        glm::vec2 targetSize(m_mapBuffer.getSize());
+        const float targetRatio = targetSize.x / targetSize.y;
+        const float viewRatio = viewSize.x / viewSize.y;
 
-        //    const float xOffset = (1.f - xRatio) / 2.f;
-        //    cam.viewport = { xOffset, 0.f, xRatio, 1.f };
-        //}
-        //else
-        //{
-        //    yRatio *= 1.f / xRatio;
-
-        //    const float yOffset = (1.f - yRatio) / 2.f;
-        //    cam.viewport = { 0.f, yOffset, 1.f, yRatio };
-        //}
+        if (targetRatio < viewRatio)
+        {
+            width = viewRatio / targetRatio;
+            left = (1.f - width) / 2.f;
+        }
+        else
+        {
+            height = targetRatio / viewRatio;
+            bottom = (1.f - height) / 2.f;
+        }
+        cam.viewport = { left, bottom, width, height };
     }
 }
 

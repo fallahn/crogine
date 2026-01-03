@@ -1634,7 +1634,12 @@ void GolfState::loadMap()
             loadSpectators();
         }
 
-        m_sharedData.minimapData.mapCentre = m_holeData[0].modelEntity.getComponent<cro::Model>().getMeshData().boundingBox.getCentre();
+        
+        const auto& bb = m_holeData[0].modelEntity.getComponent<cro::Model>().getMeshData().boundingBox;
+        const float bbWidth = bb[1].x - bb[0].x;
+        const float bbHeight = bb[1].z - bb[0].z;
+        m_sharedData.minimapData.mapSize = { bbWidth, bbHeight };
+        m_sharedData.minimapData.mapCentre = bb.getCentre();
     }
 
     m_terrainBuilder.create(m_resources, m_gameScene, theme);
