@@ -141,9 +141,10 @@ private:
     void updateNormals();
     void onCachedPush() override;
 
-    void scaleCamera(float);
+    void zoomCamera(float);
+    void panCamera(glm::vec2);
 
-    void pan(glm::vec2);
+    float pixelsPerMetre() const;
     glm::vec2 toMapCoords(glm::vec3) const;
     glm::vec3 toWorldCoords(glm::vec2) const;
     void gotoTarget();

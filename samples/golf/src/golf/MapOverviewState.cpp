@@ -164,7 +164,7 @@ namespace
         )";
 
     constexpr float MaxZoom = 12.f;
-    constexpr float MinZoom = 1.f;
+    constexpr float MinZoom = 0.75f;
     constexpr float BaseScaleMultiplier = 0.8f;
     constexpr std::int32_t MaxFingers = 2;
 
@@ -199,8 +199,11 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
     //        const auto pos = m_mapCamera.getComponent<cro::Camera>().coordsToPixel(camPos, m_mapBuffer.getSize());
     //        ImGui::Text("Screen pos %3.2f, %3.2f", pos.x, pos.y);
 
-    //        const auto worldPos = m_mapCamera.getComponent<cro::Camera>().pixelToCoords(pos, m_mapBuffer.getSize());
-    //        ImGui::Text("World pos %3.2f, %3.2f, %3.2f", worldPos.x, worldPos.y, worldPos.z);
+    //        const auto pos2 = m_mapCamera.getComponent<cro::Camera>().coordsToPixel(camPos + glm::vec3(1.f,0.f,1.f), m_mapBuffer.getSize()) - pos;
+    //        ImGui::Text("Pixels per metre: %3.2f, %3.2f", pos2.x, pos2.y);
+
+    //        /*const auto worldPos = m_mapCamera.getComponent<cro::Camera>().pixelToCoords(pos, m_mapBuffer.getSize());
+    //        ImGui::Text("World pos %3.2f, %3.2f, %3.2f", worldPos.x, worldPos.y, worldPos.z);*/
     //        ImGui::End();
     //    });
 }
@@ -361,15 +364,15 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
         cro::App::getWindow().setMouseCaptured(false);
         if (evt.motion.state & (SDL_BUTTON_MIDDLE | SDL_BUTTON_LEFT))
         {
-            const float Scale = 1.f / m_mapEnt.getComponent<cro::Transform>().getScale().x;
+            //const float Scale = 1.f;// / m_zoomScale;// m_mapEnt.getComponent<cro::Transform>().getScale().x;
 
-            /*glm::vec2 movement(0.f);
-            movement.x -= static_cast<float>(evt.motion.xrel) * Scale;
-            movement.y += static_cast<float>(evt.motion.yrel) * Scale;
-            movement /= m_viewScale;*/
-            
+            //glm::vec2 movement(0.f);
+            //movement.x -= static_cast<float>(evt.motion.xrel) * Scale;
+            //movement.y -= static_cast<float>(evt.motion.yrel) * Scale;
+            ////movement /= m_viewScale;
+            //
             //pan(movement);
-            pan({ -evt.motion.xrel, -evt.motion.yrel });
+            panCamera({ -evt.motion.xrel, -evt.motion.yrel });
         }
     }
     else if (evt.type == SDL_MOUSEWHEEL)
@@ -417,11 +420,11 @@ bool MapOverviewState::simulate(float dt)
     }
     if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
     {
-        movement.y += 1.f;
+        movement.y -= 1.f;
     }
     if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Down]))
     {
-        movement.y -= 1.f;
+        movement.y += 1.f;
     }
     
 
@@ -440,7 +443,7 @@ bool MapOverviewState::simulate(float dt)
             movement.x = static_cast<float>(x) / cro::GameController::AxisMax;
         }
 
-        const auto y = m_thumbsticks.getValue(cro::GameController::AxisLeftY);
+        const auto y = -m_thumbsticks.getValue(cro::GameController::AxisLeftY);
         if (y > cro::GameController::LeftThumbDeadZone || y < -cro::GameController::LeftThumbDeadZone)
         {
             movement.y = -static_cast<float>(y) / cro::GameController::AxisMax;
@@ -464,13 +467,14 @@ bool MapOverviewState::simulate(float dt)
 
     if (len2 != 0)
     {
-        auto origin = m_mapEnt.getComponent<cro::Transform>().getOrigin();
+        /*auto origin = m_mapEnt.getComponent<cro::Transform>().getOrigin();
         origin += (glm::vec3(movement, 0.f) * 1650.f * (1.f / m_zoomScale)) * dt;
         glm::vec2 bounds(m_renderBuffer.getSize());
         LogI << FILE_LINE << "fix me!" << std::endl;
         origin.x = std::clamp(origin.x, 0.f, bounds.x);
         origin.y = std::clamp(origin.y, 0.f, bounds.y);
-        m_mapEnt.getComponent<cro::Transform>().setOrigin(origin);
+        m_mapEnt.getComponent<cro::Transform>().setOrigin(origin);*/
+        panCamera(movement * 12.f * m_sharedData.mouseSpeed);
     }
 
 
@@ -883,7 +887,7 @@ void MapOverviewState::buildScene()
     entity.addComponent<cro::Camera>();
     m_mapCamera = entity;
 
-    scaleCamera(1.f);
+    zoomCamera(BaseScaleMultiplier);
 }
 
 void MapOverviewState::quitState()
@@ -905,7 +909,6 @@ void MapOverviewState::recentreMap()
     if (m_mapCamera.isValid())
     {
         m_mapCamera.getComponent<cro::Transform>().setPosition({ m_sharedData.minimapData.mapCentre.x, CamHeight, m_sharedData.minimapData.mapCentre.z });
-        //scaleCamera(/*m_mapEnt.getComponent<cro::Transform>().getScale().x*/);
         rescaleMap();
     }
 }
@@ -918,7 +921,7 @@ void MapOverviewState::rescaleMap()
     const float baseScale = ((windowSize.x / std::round(mapSize.x)) / m_viewScale.x) * BaseScaleMultiplier;
     m_mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(baseScale * m_zoomScale));
 
-    scaleCamera(BaseScaleMultiplier * m_zoomScale);
+    zoomCamera(BaseScaleMultiplier * m_zoomScale);
 
     refreshMap();
 }
@@ -1033,7 +1036,7 @@ void MapOverviewState::onCachedPush()
     m_ballLandingArea.getComponent<cro::Transform>().setPosition(toMapCoords(m_sharedData.minimapData.targetPos));
 }
 
-void MapOverviewState::scaleCamera(float scale)
+void MapOverviewState::zoomCamera(float scale)
 {
     if (m_mapCamera.isValid())
     {
@@ -1067,7 +1070,7 @@ void MapOverviewState::scaleCamera(float scale)
     }
 }
 
-void MapOverviewState::pan(glm::vec2 movement)
+void MapOverviewState::panCamera(glm::vec2 movement)
 {
     auto position = m_mapEnt.getComponent<cro::Transform>().getOrigin();
     position += glm::vec3(movement, 0.f);
@@ -1084,14 +1087,28 @@ void MapOverviewState::pan(glm::vec2 movement)
 
     if (m_mapCamera.isValid())
     {
-        auto camPos = m_mapCamera.getComponent<cro::Camera>().coordsToPixel(m_mapCamera.getComponent<cro::Transform>().getPosition(), m_mapBuffer.getSize());
-        camPos += movement;
-
-        auto worldPos = m_mapCamera.getComponent<cro::Camera>().pixelToCoords(camPos, m_mapBuffer.getSize());
+        movement /= pixelsPerMetre();
+        auto worldPos = m_mapCamera.getComponent<cro::Transform>().getPosition() + (glm::vec3(movement.x, 0.f, movement.y));
         worldPos.y = CamHeight;
+
+        const auto minX = m_sharedData.minimapData.mapCentre.x - (m_sharedData.minimapData.mapSize.x / 2.f);
+        const auto maxX = minX + m_sharedData.minimapData.mapSize.x;
+        worldPos.x = std::clamp(worldPos.x, minX, maxX);
+        const auto minZ = m_sharedData.minimapData.mapCentre.z - (m_sharedData.minimapData.mapSize.y / 2.f);
+        const auto maxZ = minZ + m_sharedData.minimapData.mapSize.y;
+        worldPos.z = std::clamp(worldPos.z, minZ, maxZ);
 
         m_mapCamera.getComponent<cro::Transform>().setPosition(worldPos);
     }
+}
+
+float MapOverviewState::pixelsPerMetre() const
+{
+    //as the camera is always centerd in pixel space we can just subtract the
+    //centre from the camera's pixel position offset by 1m
+    const auto camPos = m_mapCamera.getComponent<cro::Transform>().getPosition();
+    const auto ppm = m_mapCamera.getComponent<cro::Camera>().coordsToPixel(camPos + glm::vec3(1.f, 0.f, 1.f), m_mapBuffer.getSize()) - glm::vec2(cro::App::getWindow().getSize() / 2u);
+    return ppm.x; //assumes the aspect ratio is correct.
 }
 
 glm::vec2 MapOverviewState::toMapCoords(glm::vec3 pos) const
