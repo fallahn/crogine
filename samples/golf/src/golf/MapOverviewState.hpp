@@ -139,6 +139,7 @@ private:
     void refreshMap();
     void updateNormals();
     void onCachedPush() override;
+    void onCachedPop() override;
 
     void zoomCamera(float);
     void panCamera(glm::vec2);

@@ -409,10 +409,6 @@ void MapOverviewState::handleMessage(const cro::Message& msg)
 
 bool MapOverviewState::simulate(float dt)
 {
-    //hmm - this removes the overlay lag (because it's actually a member of a different state
-    //updated *after* this one) but it does mean the system is being double-processed.
-    m_sharedData.minimapData.mapScene->getSystem<cro::CameraSystem>()->process(0.f);
-
     glm::vec2 movement(0.f);
     if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left]))
     {
@@ -474,6 +470,9 @@ bool MapOverviewState::simulate(float dt)
         panCamera(movement * 12.f * m_sharedData.mouseSpeed);
     }
 
+    //hmm - this removes the overlay lag (because it's actually a member of a different state
+    //updated *after* this one) but it does mean the system is being double-processed.
+    m_sharedData.minimapData.mapScene->getSystem<cro::CameraSystem>()->process(0.f);
 
 
     //check for touchpad input
@@ -848,6 +847,7 @@ void MapOverviewState::buildScene()
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -912,7 +912,7 @@ void MapOverviewState::buildScene()
     //camera for 3D scene
     entity = m_sharedData.minimapData.mapScene->createEntity();
     entity.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    entity.addComponent<cro::Camera>();
+    entity.addComponent<cro::Camera>().active = false;
     m_mapCamera = entity;
 
     zoomCamera(BaseScaleMultiplier);
@@ -1067,7 +1067,14 @@ void MapOverviewState::updateNormals()
 
 void MapOverviewState::onCachedPush()
 {
+    m_sharedData.minimapData.mapScene->getActiveCamera().getComponent<cro::Camera>().active = false;
+    m_mapCamera.getComponent<cro::Camera>().active = true;
+}
 
+void MapOverviewState::onCachedPop()
+{
+    m_sharedData.minimapData.mapScene->getActiveCamera().getComponent<cro::Camera>().active = true;
+    m_mapCamera.getComponent<cro::Camera>().active = false;
 }
 
 void MapOverviewState::zoomCamera(float scale)
