@@ -189,6 +189,20 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
     addSystems();
     loadAssets();
     buildScene();
+
+    //registerWindow([&]()
+    //    {
+    //        ImGui::Begin("Window");
+    //        const auto camPos = m_mapCamera.getComponent<cro::Transform>().getPosition();
+    //        ImGui::Text("Cam pos %3.2f, %3.2f, %3.2f", camPos.x, camPos.y, camPos.z);
+
+    //        const auto pos = m_mapCamera.getComponent<cro::Camera>().coordsToPixel(camPos, m_mapBuffer.getSize());
+    //        ImGui::Text("Screen pos %3.2f, %3.2f", pos.x, pos.y);
+
+    //        const auto worldPos = m_mapCamera.getComponent<cro::Camera>().pixelToCoords(pos, m_mapBuffer.getSize());
+    //        ImGui::Text("World pos %3.2f, %3.2f, %3.2f", worldPos.x, worldPos.y, worldPos.z);
+    //        ImGui::End();
+    //    });
 }
 
 //public
@@ -349,12 +363,13 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
         {
             const float Scale = 1.f / m_mapEnt.getComponent<cro::Transform>().getScale().x;
 
-            glm::vec2 movement(0.f);
+            /*glm::vec2 movement(0.f);
             movement.x -= static_cast<float>(evt.motion.xrel) * Scale;
             movement.y += static_cast<float>(evt.motion.yrel) * Scale;
-            movement /= m_viewScale;
+            movement /= m_viewScale;*/
             
-            pan(movement);
+            //pan(movement);
+            pan({ -evt.motion.xrel, -evt.motion.yrel });
         }
     }
     else if (evt.type == SDL_MOUSEWHEEL)
@@ -452,7 +467,7 @@ bool MapOverviewState::simulate(float dt)
         auto origin = m_mapEnt.getComponent<cro::Transform>().getOrigin();
         origin += (glm::vec3(movement, 0.f) * 1650.f * (1.f / m_zoomScale)) * dt;
         glm::vec2 bounds(m_renderBuffer.getSize());
-        
+        LogI << FILE_LINE << "fix me!" << std::endl;
         origin.x = std::clamp(origin.x, 0.f, bounds.x);
         origin.y = std::clamp(origin.y, 0.f, bounds.y);
         m_mapEnt.getComponent<cro::Transform>().setOrigin(origin);
@@ -890,7 +905,8 @@ void MapOverviewState::recentreMap()
     if (m_mapCamera.isValid())
     {
         m_mapCamera.getComponent<cro::Transform>().setPosition({ m_sharedData.minimapData.mapCentre.x, CamHeight, m_sharedData.minimapData.mapCentre.z });
-        scaleCamera(m_mapEnt.getComponent<cro::Transform>().getScale().x);
+        //scaleCamera(/*m_mapEnt.getComponent<cro::Transform>().getScale().x*/);
+        rescaleMap();
     }
 }
 
@@ -902,7 +918,7 @@ void MapOverviewState::rescaleMap()
     const float baseScale = ((windowSize.x / std::round(mapSize.x)) / m_viewScale.x) * BaseScaleMultiplier;
     m_mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(baseScale * m_zoomScale));
 
-    scaleCamera(baseScale * m_zoomScale);
+    scaleCamera(BaseScaleMultiplier * m_zoomScale);
 
     refreshMap();
 }
@@ -1037,7 +1053,7 @@ void MapOverviewState::scaleCamera(float scale)
         const float targetRatio = targetSize.x / targetSize.y;
         const float viewRatio = viewSize.x / viewSize.y;
 
-        if (targetRatio < viewRatio)
+        if (targetRatio > viewRatio)
         {
             width = viewRatio / targetRatio;
             left = (1.f - width) / 2.f;
@@ -1068,13 +1084,20 @@ void MapOverviewState::pan(glm::vec2 movement)
 
     if (m_mapCamera.isValid())
     {
-        m_mapCamera.getComponent<cro::Transform>().setPosition(toWorldCoords(position));
+        auto camPos = m_mapCamera.getComponent<cro::Camera>().coordsToPixel(m_mapCamera.getComponent<cro::Transform>().getPosition(), m_mapBuffer.getSize());
+        camPos += movement;
+
+        auto worldPos = m_mapCamera.getComponent<cro::Camera>().pixelToCoords(camPos, m_mapBuffer.getSize());
+        worldPos.y = CamHeight;
+
+        m_mapCamera.getComponent<cro::Transform>().setPosition(worldPos);
     }
 }
 
-glm::vec2 MapOverviewState::toMapCoords(glm::vec3 pos)
+glm::vec2 MapOverviewState::toMapCoords(glm::vec3 pos) const
 {
-    const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MapSize.x;
+    //const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MapSize.x;
+    const auto MapScale = glm::vec2(m_renderBuffer.getSize()) / m_sharedData.minimapData.mapSize;
 
     glm::vec2 ret
     {
@@ -1085,17 +1108,21 @@ glm::vec2 MapOverviewState::toMapCoords(glm::vec3 pos)
     return ret * MapScale;
 }
 
-glm::vec3 MapOverviewState::toWorldCoords(glm::vec2 pos)
+glm::vec3 MapOverviewState::toWorldCoords(glm::vec2 pos) const
 {
-    const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MapSize.x;
+    //const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MapSize.x;
 
-    glm::vec3 ret
-    {
-        /*std::round*/(pos.x / MapScale),
-        CamHeight,
-        /*std::round*/(-pos.y / MapScale)
-    };
-    return ret;
+    auto worldPos = m_mapCamera.getComponent<cro::Camera>().pixelToCoords(pos, m_mapBuffer.getSize());
+    worldPos.y = CamHeight;
+    return worldPos;
+
+    //glm::vec3 ret
+    //{
+    //    /*std::round*/(pos.x / MapScale),
+    //    CamHeight,
+    //    /*std::round*/(-pos.y / MapScale)
+    //};
+    //return ret;
 }
 
 void MapOverviewState::gotoTarget()

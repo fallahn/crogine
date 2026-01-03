@@ -39,6 +39,8 @@ source distribution.
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/SimpleText.hpp>
 
+#include <crogine/gui/GuiClient.hpp>
+
 struct SharedStateData;
 
 //TODO move this to own file if we use it elsewhere
@@ -48,7 +50,7 @@ struct TrackpadFinger final
     glm::vec2 currPosition = glm::vec2(0.f);
 };
 
-class MapOverviewState final : public cro::State
+class MapOverviewState final : public cro::State, public cro::GuiClient
 {
 public:
     MapOverviewState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -142,7 +144,7 @@ private:
     void scaleCamera(float);
 
     void pan(glm::vec2);
-    glm::vec2 toMapCoords(glm::vec3);
-    glm::vec3 toWorldCoords(glm::vec2);
+    glm::vec2 toMapCoords(glm::vec3) const;
+    glm::vec3 toWorldCoords(glm::vec2) const;
     void gotoTarget();
 };
