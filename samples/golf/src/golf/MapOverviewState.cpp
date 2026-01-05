@@ -168,7 +168,8 @@ namespace
     constexpr float BaseScaleMultiplier = 0.8f;
     constexpr std::int32_t MaxFingers = 2;
 
-    constexpr float CamHeight = 36.f;
+    constexpr float CamHeight = 136.f;
+    constexpr float CamFar = CamHeight + 4.f;
 }
 
 MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -737,6 +738,28 @@ void MapOverviewState::buildScene()
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    const auto calcAlpha = [&](glm::vec2 pos)
+        {
+            static constexpr float fadeDistance = 40.f;
+            const auto vp = m_mapCamera.getComponent<cro::Camera>().viewport;
+            const auto widthX = std::round(static_cast<float>(m_mapBuffer.getSize().x) * vp.width);
+            const auto leftX = m_mapBuffer.getSize().x - widthX;
+            const auto rightX = leftX + widthX;
+
+            const float fadeLeft = smoothstep(leftX, leftX + (fadeDistance * m_viewScale.x), pos.x);
+            const float fadeRight = 1.f - smoothstep(rightX - (fadeDistance * m_viewScale.x), rightX, pos.x);
+
+
+            const auto heightY = std::round(static_cast<float>(m_mapBuffer.getSize().y) * vp.height);
+            const auto bottomY = m_mapBuffer.getSize().y - heightY;
+            const auto topY = bottomY + heightY;
+
+            const float fadeBottom = smoothstep(bottomY, bottomY + (fadeDistance * m_viewScale.y), pos.y);
+            const float fadeTop = 1.f - smoothstep(topY - (fadeDistance * m_viewScale.y), topY, pos.y);
+
+            return fadeLeft * fadeRight * fadeBottom * fadeTop;
+        };
+
     //marks the tee position;
     const auto& teeFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_scene.createEntity();
@@ -750,12 +773,43 @@ void MapOverviewState::buildScene()
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
+        [&, calcAlpha](cro::Entity e, float)
         {
             if (m_mapCamera.isValid())
             {
                 e.getComponent<cro::Transform>().setPosition(m_mapCamera.getComponent<cro::Camera>().coordsToPixel(m_sharedData.minimapData.teePos, m_mapBuffer.getSize()));
                 e.getComponent<cro::Transform>().setScale(glm::vec2(std::round(m_zoomScale * m_viewScale.y)));
+
+                const float alpha = calcAlpha(e.getComponent<cro::Transform>().getPosition());
+                auto fill = TextNormalColour;
+                fill.setAlpha(alpha);
+
+                auto shadow = LeaderboardTextDark;
+                shadow.setAlpha(alpha);
+                e.getComponent<cro::Text>().setFillColour(fill);
+                e.getComponent<cro::Text>().setShadowColour(shadow);
+            }
+        };
+
+    //marks the pin position
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.3f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("map_flag");
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, calcAlpha](cro::Entity e, float)
+        {
+            if (m_mapCamera.isValid())
+            {
+                e.getComponent<cro::Transform>().setPosition(m_mapCamera.getComponent<cro::Camera>().coordsToPixel(m_sharedData.minimapData.pinPos, m_mapBuffer.getSize()));
+                e.getComponent<cro::Transform>().setScale(glm::vec2(std::max(1.f, std::round((m_zoomScale / 2.f) * m_viewScale.y))));
+
+                const float alpha = calcAlpha(e.getComponent<cro::Transform>().getPosition());
+                auto c = cro::Colour::White;
+                c.setAlpha(alpha);
+                e.getComponent<cro::Sprite>().setColour(c);
             }
         };
 
@@ -917,12 +971,11 @@ void MapOverviewState::zoomCamera()
         const auto viewSize = (m_sharedData.minimapData.mapSize * scale) / 2.f;
 
         auto& cam = m_mapCamera.getComponent<cro::Camera>();
-        cam.setOrthographic(-viewSize.x, viewSize.x, -viewSize.y, viewSize.y, 1.f, 40.f);
+        //cam.setOrthographic(-viewSize.x, viewSize.x, -viewSize.y, viewSize.y, 1.f, 40.f);
         
-        //TODO this *almost* works, but it messes with the pan speed
-        /*const auto ratio = viewSize.x / viewSize.y;
+        const auto ratio = viewSize.x / viewSize.y;
         const auto fov = 2 * std::atan(viewSize.y/CamHeight);
-        cam.setPerspective(fov, ratio, 1.f, 40.f);*/
+        cam.setPerspective(fov, ratio, 1.f, CamFar);
         
         float left = 0.f;
         float bottom = 0.f;
@@ -970,8 +1023,10 @@ float MapOverviewState::pixelsPerMetre() const
 {
     //as the camera is always centerd in pixel space we can just subtract the
     //centre from the camera's pixel position offset by 1m
+    constexpr auto offset = glm::vec3(1.f, -CamFar, 1.f); //also offsets bar the far plane (as we're in perspective)
+    
     const auto camPos = m_mapCamera.getComponent<cro::Transform>().getPosition();
-    const auto ppm = m_mapCamera.getComponent<cro::Camera>().coordsToPixel(camPos + glm::vec3(1.f, 0.f, 1.f), m_mapBuffer.getSize()) - glm::vec2(cro::App::getWindow().getSize() / 2u);
+    const auto ppm = m_mapCamera.getComponent<cro::Camera>().coordsToPixel(camPos + offset, m_mapBuffer.getSize()) - glm::vec2(cro::App::getWindow().getSize() / 2u);
     return ppm.x; //assumes the aspect ratio is correct.
 }
 
