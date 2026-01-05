@@ -38,6 +38,12 @@ using namespace cl;
 
 void GolfState::createMinimapCamera()
 {
+    m_minimapZoom.sceneTexture.create(MapSize.x * 2, MapSize.y * 2, true, false/*, 2*/);
+    m_minimapZoom.sceneTexture.setSmooth(true);
+
+    m_sharedData.minimapData.mapScene = &m_mapScene;
+
+
     auto mapCam = m_mapScene.createEntity();
     mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, MinimapZoom::CamHeight, -static_cast<float>(MapSize.y) / 2.f });
     mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
@@ -45,14 +51,25 @@ void GolfState::createMinimapCamera()
     miniCam.setOrthographic(-MapSizeFloat.x / 2.f, MapSizeFloat.x / 2.f, -MapSizeFloat.y / 2.f, MapSizeFloat.y / 2.f, 1.f, 40.f);
     miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
+    auto updateView = [&](cro::Camera&)
+        {
+            const auto spriteTexSize = glm::vec2(m_minimapZoom.sceneTexture.getSize());
+            m_minimapEnt.getComponent<cro::Sprite>().setTexture(m_minimapZoom.sceneTexture.getTexture());
+            m_minimapEnt.getComponent<cro::Transform>().setOrigin({ spriteTexSize.x / 2.f, spriteTexSize.y / 2.f });
+            m_minimapEnt.getComponent<cro::Callback>().getUserData<MinimapData>().textureRatio = 2.f * (spriteTexSize.x / MapSizeFloat.x);
+            m_minimapZoom.mapScale = spriteTexSize / MapSizeFloat;
+            m_minimapZoom.pan = spriteTexSize / 2.f;
+            m_minimapZoom.textureSize = spriteTexSize;
+
+            //the camera itself is continuously updated by pan/zoom so we don't do that here
+        };
+    updateView(miniCam);
+    miniCam.resizeCallback = updateView;
+
     m_minimapZoom.camera = mapCam;
     m_mapScene.setActiveCamera(mapCam);
 
 
-    m_minimapZoom.sceneTexture.create(MapSize.x*2, MapSize.y*2, true, false/*, 2*/);
-    m_minimapZoom.sceneTexture.setSmooth(true);
-
-    m_sharedData.minimapData.mapScene = &m_mapScene;
 
     //registerWindow([&]() 
     //    {
@@ -69,63 +86,15 @@ void GolfState::createMinimapCamera()
     //    });
 }
 
-void GolfState::updateMinimapTexture()
+void GolfState::updateMinimapModel()
 {
-    //if (m_sharedData.scoreType == ScoreType::MultiTarget)
-    //{
-    //    const auto* shader = &m_resources.shaders.get(ShaderID::MinimapModel);
-    //    m_targetShader.shaderID = shader->getGLHandle();
-    //    m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
-
-    //    m_targetShader.size = 5.f; //we don't actually know what size has been chosen, so this is a rough average
-    //    if (m_holeData[m_currentHole].puttFromTee)
-    //    {
-    //        m_targetShader.size *= 0.032f;
-    //    }
-    //    m_targetShader.position = m_holeData[m_currentHole].target;
-    //    m_targetShader.update();
-    //}
-
-    //16 pass for 4x4 smaller renders
-    /*glm::vec2 viewSize(MapSize);
-    auto& miniCam = m_mapCam.getComponent<cro::Camera>();
-    miniCam.setOrthographic(-viewSize.x / 8.f, viewSize.x / 8.f, -viewSize.y / 8.f, viewSize.y / 8.f, -0.1f, 60.f);
-    miniCam.viewport = { 0.f, 0.f, 1.f/4.f, 1.f/4.f };*/
-
     if (m_currentHole > 0)
     {
         m_minimapModels[m_currentHole - 1].getComponent<cro::Model>().setHidden(true);
     }
 
     m_minimapModels[m_currentHole].getComponent<cro::Model>().setHidden(false);
-    m_mapScene.getSystem<cro::CameraSystem>()->process(0.f); //updates the visibility of the models
-    m_mapScene.getSystem<cro::ModelRenderer>()->process(0.f);
-
-
-    //auto vCount = m_mapScene.getSystem<cro::ModelRenderer>()->getVisibleCount(m_mapCam.getComponent<cro::Camera>().getDrawListIndex());
-    //LogI << "Visible count: " << vCount << std::endl;
-
-    //auto entCount = m_mapScene.getSystem<cro::ModelRenderer>()->getEntities().size();
-    //LogI << "Entity count: " << entCount << std::endl;
-
-
-    cro::Colour c = cro::Colour::Transparent;
-    //cro::Colour c(std::uint8_t(39), 56, 153);
-
-
     m_minimapTrail.getComponent<cro::Drawable2D>().getVertexData().clear();
-
-    auto oldCam = m_mapScene.setActiveCamera(m_minimapZoom.camera2D);
-
-    m_mapTextureMRT.clear(c);
-    m_mapScene.render();
-    //m_minimapModels[m_currentHole].getComponent<cro::Model>().setHidden(true);
-    m_mapTextureMRT.display();
-
-    m_mapScene.setActiveCamera(oldCam);
-
-    ////m_mapTextureMRT.setBorderColour(c);
-
 
 
     //this triggers a map refresh so don't set it until
@@ -136,12 +105,6 @@ void GolfState::updateMinimapTexture()
 
     auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
     msg->type = SceneEvent::MinimapUpdated;
-
-    /*if (m_sharedData.scoreType == ScoreType::MultiTarget)
-    {
-        m_targetShader.size = 0.f;
-        m_targetShader.update();
-    }*/
 }
 
 void GolfState::updateMiniMap()

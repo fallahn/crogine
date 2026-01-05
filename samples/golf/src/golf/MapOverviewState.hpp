@@ -96,10 +96,6 @@ private:
     cro::Entity m_controlIcon;
     cro::Entity m_controlText;
 
-    cro::RenderTexture m_renderBuffer;
-    cro::SimpleQuad m_mapQuad;
-    cro::SimpleText m_mapString;
-
     cro::Shader m_mapShader;
     cro::Shader m_slopeShader;
 

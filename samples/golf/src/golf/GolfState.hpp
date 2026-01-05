@@ -85,6 +85,17 @@ namespace cro
     struct NetEvent;
 }
 
+//minimap callack data
+struct MinimapData final
+{
+    std::int32_t state = 0;
+    float scale = 0.001f;
+    float rotation = -1.f;
+
+    //pixels per metre in the minimap texture * 2
+    float textureRatio = 1.f; 
+};
+
 //sprite which carries green overhead view
 struct GreenCallbackData final
 {
@@ -765,8 +776,6 @@ private:
     //-----------
 
     cro::Entity m_mapRoot;
-    cro::MultiRenderTexture m_mapTextureMRT; //hack to create images for map explorer
-    
     std::vector<cro::Entity> m_minimapModels;
     cro::Entity m_minimapTrail;
 
@@ -774,7 +783,7 @@ private:
 
     //GolfStateMinimap.cpp
     void createMinimapCamera();
-    void updateMinimapTexture();
+    void updateMinimapModel();
     void updateMiniMap();
     void retargetMinimap(bool reset);
 

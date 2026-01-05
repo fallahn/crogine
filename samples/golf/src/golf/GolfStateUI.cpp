@@ -1488,14 +1488,6 @@ void GolfState::buildUI()
 
 
     //minimap view
-    struct MinimapData final
-    {
-        std::int32_t state = 0;
-        float scale = 0.001f;
-        float rotation = -1.f;
-
-        float textureRatio = 1.f; //pixels per metre in the minimap texture * 2
-    };
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();// .setPosition({ 0.f, 0.f, 0.2f });
     entity.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
@@ -1528,8 +1520,8 @@ void GolfState::buildUI()
 
             if (scale == 0)
             {
-                //this switches the active model - TODO rename this to something that makes more sense
-                updateMinimapTexture();
+                //this switches the active model
+                updateMinimapModel();
 
                 //and set to grow
                 state = 1;
@@ -1964,55 +1956,9 @@ void GolfState::buildUI()
 
     createScoreboard();
 
-    createMinimapCamera(); //creates the 3D camera
-    //set up the overhead cam for the mini map - this renders the entire hole
-    //to a texture - the view of the minimap is controlled in the shader which draws it
-    //see minimapZoom
-    auto updateMiniView = [&, mapEnt](cro::Camera& miniCam) mutable
-    {
-        constexpr glm::uvec2 texSize = MapSize * MapSizeMultiplier;
-        m_mapTextureMRT.setChannelCount(MRTIndex::Position, 1);
-        m_mapTextureMRT.setPrecision(MRTIndex::Position, cro::TexturePrecision::Default);
-        m_mapTextureMRT.setPrecision(MRTIndex::Normal, cro::TexturePrecision::Default);
-
-        m_mapTextureMRT.create(texSize.x, texSize.y, MRTIndex::Count - 1); //colour, pos, normal(and mask)
-        m_mapTextureMRT.setBorderColour(cro::Colour::Transparent);
-        m_sharedData.minimapData.mrt = &m_mapTextureMRT;
-
-        /*mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTextureMRT.getTexture());
-        mapEnt.getComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, texSize.y / 2.f });
-        mapEnt.getComponent<cro::Callback>().getUserData<MinimapData>().textureRatio = static_cast<float>(MapSizeMultiplier * 2);
-        m_minimapZoom.mapScale = texSize / MapSize;
-        m_minimapZoom.pan = texSize / 2u;
-        m_minimapZoom.textureSize = texSize;
-        m_minimapZoom.updateShader();*/
-
-        //how this ended up being so convoluted I'll never recall...
-        const auto spriteTexSize = glm::vec2(m_minimapZoom.sceneTexture.getSize());
-        mapEnt.getComponent<cro::Sprite>().setTexture(m_minimapZoom.sceneTexture.getTexture());
-        mapEnt.getComponent<cro::Transform>().setOrigin({ spriteTexSize.x / 2.f, spriteTexSize.y / 2.f });
-        mapEnt.getComponent<cro::Callback>().getUserData<MinimapData>().textureRatio = 2.f * (spriteTexSize.x / MapSizeFloat.x);// static_cast<float>(MapSizeMultiplier * 2);
-        m_minimapZoom.mapScale = spriteTexSize / MapSizeFloat;// glm::vec2(1.f);
-        m_minimapZoom.pan = spriteTexSize / 2.f;
-        m_minimapZoom.textureSize = spriteTexSize;
-
-
-        glm::vec2 viewSize(MapSize);
-        miniCam.setOrthographic(-viewSize.x / 2.f, viewSize.x / 2.f, -viewSize.y / 2.f, viewSize.y / 2.f, -0.1f, 60.f);
-        miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
-    };
-
-
-    auto mapCam = m_mapScene.createEntity();
-    mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, 36.f, -static_cast<float>(MapSize.y) / 2.f});
-    mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    auto& miniCam = mapCam.addComponent<cro::Camera>();
-    updateMiniView(miniCam);
-    m_minimapZoom.camera2D = mapCam;
-
-    //m_mapScene.setActiveCamera(mapCam);
-    //miniCam.resizeCallback = updateMiniView; //don't do this on resize as recreating the buffer clears it..
-
+    //creates the 3D camera / render buffer
+    createMinimapCamera();
+    
 
 
     //and the mini view of the green

@@ -146,7 +146,6 @@ struct SharedStateData final
     {
         cro::String courseName;
         cro::Scene* mapScene = nullptr;
-        cro::MultiRenderTexture* mrt = nullptr;
         glm::vec3 teePos = glm::vec3(0.f);
         glm::vec3 pinPos = glm::vec3(0.f);
         glm::vec3 targetPos = glm::vec3(0.f); //approx location of aiming target

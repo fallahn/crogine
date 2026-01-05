@@ -579,8 +579,8 @@ void MapOverviewState::loadAssets()
     const auto size = cro::App::getWindow().getSize();
     m_mapBuffer.create(size.x, size.y);
 
-    const auto buffSize = m_sharedData.minimapData.mrt->getSize();
-    m_renderBuffer.create(buffSize.x, buffSize.y, false);
+    //const auto buffSize = m_sharedData.minimapData.mrt->getSize();
+    //m_renderBuffer.create(1, 1, false);
 
     m_mapShader.loadFromString(cro::SimpleQuad::getDefaultVertexShader(), MinimapFragment);
     m_shaderUniforms.posMap = m_mapShader.getUniformID("u_worldPos");
@@ -589,18 +589,18 @@ void MapOverviewState::loadAssets()
     m_shaderUniforms.gridAmount = m_mapShader.getUniformID("u_gridAmount");
     m_shaderUniforms.gridScale = m_mapShader.getUniformID("u_gridScale");
 
-    m_mapQuad.setTexture(m_sharedData.minimapData.mrt->getTexture(MRTIndex::Colour), m_renderBuffer.getSize());
-    m_mapQuad.setShader(m_mapShader);
+    //m_mapQuad.setTexture(m_sharedData.minimapData.mrt->getTexture(MRTIndex::Colour), m_renderBuffer.getSize());
+    //m_mapQuad.setShader(m_mapShader);
 
     m_slopeShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), MiniSlopeFragment);
     m_shaderUniforms.transparency = m_slopeShader.getUniformID("u_transparency");
 
-    m_mapString.setFont(m_sharedData.sharedResources->fonts.get(FontID::Label));
-    m_mapString.setFillColour(TextNormalColour);
-    m_mapString.setShadowColour(LeaderboardTextDark);
-    m_mapString.setShadowOffset({ 8.f, -8.f });
-    m_mapString.setCharacterSize(LabelTextSize * MapSizeMultiplier); //really should be reading the texture scale
-    m_mapString.setAlignment(2);
+    //m_mapString.setFont(m_sharedData.sharedResources->fonts.get(FontID::Label));
+    //m_mapString.setFillColour(TextNormalColour);
+    //m_mapString.setShadowColour(LeaderboardTextDark);
+    //m_mapString.setShadowOffset({ 8.f, -8.f });
+    //m_mapString.setCharacterSize(LabelTextSize * MapSizeMultiplier); //really should be reading the texture scale
+    //m_mapString.setAlignment(2);
 }
 
 void MapOverviewState::buildScene()
@@ -707,12 +707,12 @@ void MapOverviewState::buildScene()
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
     auto mapEnt = entity;
 
-    //map entity
+    //map entity - TODO remove this
     refreshMap();
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_renderBuffer.getTexture());
+    entity.addComponent<cro::Sprite>();// (m_renderBuffer.getTexture());
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
     m_mapEnt = entity;
     recentreMap();
@@ -965,11 +965,11 @@ void MapOverviewState::refreshMap()
     static constexpr std::int32_t PosSlot = 6;
     static constexpr std::int32_t NormalSlot = 7;
 
-    glActiveTexture(GL_TEXTURE0 + PosSlot);
-    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Position).textureID);
+    //glActiveTexture(GL_TEXTURE0 + PosSlot);
+    //glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Position).textureID);
 
-    glActiveTexture(GL_TEXTURE0 + NormalSlot);
-    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Normal).textureID);
+    //glActiveTexture(GL_TEXTURE0 + NormalSlot);
+    //glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Normal).textureID);
 
     glUseProgram(m_mapShader.getGLHandle());
     glUniform1i(m_shaderUniforms.posMap, PosSlot);
@@ -981,7 +981,7 @@ void MapOverviewState::refreshMap()
 
 
 
-    const glm::vec2 teePos = toMapCoords(m_sharedData.minimapData.teePos);
+    //const glm::vec2 teePos = toMapCoords(m_sharedData.minimapData.teePos);
 
     //glm::vec2 pinPos =
     //{
@@ -989,12 +989,12 @@ void MapOverviewState::refreshMap()
     //    std::round(-m_sharedData.minimapData.pinPos.z),
     //};
 
-    auto charScale = std::round(MaxZoom - (m_zoomScale - MinZoom));
-    charScale = std::round((charScale / MaxZoom) * MapSizeMultiplier);
-    m_mapString.setCharacterSize(LabelTextSize * charScale);
-    m_mapString.setShadowOffset({ charScale, -charScale });
+    //auto charScale = std::round(MaxZoom - (m_zoomScale - MinZoom));
+    //charScale = std::round((charScale / MaxZoom) * MapSizeMultiplier);
+    //m_mapString.setCharacterSize(LabelTextSize * charScale);
+    //m_mapString.setShadowOffset({ charScale, -charScale });
 
-    m_renderBuffer.clear(cro::Colour::Transparent);
+    //m_renderBuffer.clear(cro::Colour::Transparent);
     /*m_mapQuad.draw();
     m_mapString.setString("T");
     m_mapString.setPosition(teePos);
@@ -1004,65 +1004,65 @@ void MapOverviewState::refreshMap()
     //m_mapString.setPosition(pinPos * MapScale);
     //m_mapString.draw();
 
-    m_renderBuffer.display();
+    //m_renderBuffer.display();
 }
 
 void MapOverviewState::updateNormals()
 {
-    const auto imageSize = m_renderBuffer.getSize();
-    constexpr auto Components = 4;
+    //const auto imageSize = m_renderBuffer.getSize();
+    //constexpr auto Components = 4;
 
-    //so much for doing this all in the shader...
-    std::vector<std::uint8_t> image(imageSize.x * imageSize.y * Components);
-    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Normal).textureID);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+    ////so much for doing this all in the shader...
+    //std::vector<std::uint8_t> image(imageSize.x * imageSize.y * Components);
+    //glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Normal).textureID);
+    //glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
 
-    const auto PixelsPerMetre = (imageSize.x / MapSize.x) * 2;
-    const auto Stride = Components * PixelsPerMetre;
+    //const auto PixelsPerMetre = (imageSize.x / MapSize.x) * 2;
+    //const auto Stride = Components * PixelsPerMetre;
 
-    //TODO remind ourself how to do the vert building with std::async
-    std::vector<cro::Vertex2D> verts;
-    for (auto y = 0u; y < imageSize.y; y += PixelsPerMetre)
-    {
-        for (auto x = 0u; x < (imageSize.x * Components); x += Stride)
-        {
-            const auto index = y * (imageSize.x * Components) + x;
+    ////TODO remind ourself how to do the vert building with std::async
+    //std::vector<cro::Vertex2D> verts;
+    //for (auto y = 0u; y < imageSize.y; y += PixelsPerMetre)
+    //{
+    //    for (auto x = 0u; x < (imageSize.x * Components); x += Stride)
+    //    {
+    //        const auto index = y * (imageSize.x * Components) + x;
 
-            if (image[index + 3] > 126
-                /* && image[index + 1] < 0.9999f*/) //more than this we kinda assume the normal is vertical and skip it
-            {
-                glm::vec3 n = glm::vec3(image[index], image[index + 1], image[index + 2]);
-                n /= 255.f;
-                n *= 2.f;
-                n -= 1.f;
+    //        if (image[index + 3] > 126
+    //            /* && image[index + 1] < 0.9999f*/) //more than this we kinda assume the normal is vertical and skip it
+    //        {
+    //            glm::vec3 n = glm::vec3(image[index], image[index + 1], image[index + 2]);
+    //            n /= 255.f;
+    //            n *= 2.f;
+    //            n -= 1.f;
 
-                glm::vec2 normal = glm::vec2(n.x,-n.z) * 50.f;
-                const glm::vec2 position(x / 4, y);
+    //            glm::vec2 normal = glm::vec2(n.x,-n.z) * 50.f;
+    //            const glm::vec2 position(x / 4, y);
 
-                //TODO how do we clamp the length without normalising?
+    //            //TODO how do we clamp the length without normalising?
 
-                auto c = cro::Colour::Yellow;
-                verts.emplace_back(position, c);
-                float g = 1.f - std::min(1.f, glm::length2(normal) / (8.f * 8.f));
-                c.setGreen(g);
-                verts.emplace_back((position + normal), c);
+    //            auto c = cro::Colour::Yellow;
+    //            verts.emplace_back(position, c);
+    //            float g = 1.f - std::min(1.f, glm::length2(normal) / (8.f * 8.f));
+    //            c.setGreen(g);
+    //            verts.emplace_back((position + normal), c);
 
-                auto endPoint = verts.back().position;
+    //            auto endPoint = verts.back().position;
 
-                normal *= 0.8f;
-                glm::vec2 cross(-normal.y, normal.x);
-                cross *= 0.2f;
-                verts.emplace_back(position + normal + cross, c);
-                verts.emplace_back(position + normal - cross, c);
-                verts.emplace_back(position + normal - cross, c);
-                verts.emplace_back(endPoint, c);
-                verts.emplace_back(endPoint, c);
-                verts.emplace_back(position + normal + cross, c);
-            }
-        }
-    }
+    //            normal *= 0.8f;
+    //            glm::vec2 cross(-normal.y, normal.x);
+    //            cross *= 0.2f;
+    //            verts.emplace_back(position + normal + cross, c);
+    //            verts.emplace_back(position + normal - cross, c);
+    //            verts.emplace_back(position + normal - cross, c);
+    //            verts.emplace_back(endPoint, c);
+    //            verts.emplace_back(endPoint, c);
+    //            verts.emplace_back(position + normal + cross, c);
+    //        }
+    //    }
+    //}
 
-    m_mapNormals.getComponent<cro::Drawable2D>().setVertexData(verts);
+    //m_mapNormals.getComponent<cro::Drawable2D>().setVertexData(verts);
 }
 
 void MapOverviewState::onCachedPush()
@@ -1115,7 +1115,7 @@ void MapOverviewState::panCamera(glm::vec2 movement)
 {
     //TODO remove this block
     {
-        auto position = m_mapEnt.getComponent<cro::Transform>().getOrigin();
+        /*auto position = m_mapEnt.getComponent<cro::Transform>().getOrigin();
         position += glm::vec3(movement, 0.f);
 
         position.x = std::floor(position.x);
@@ -1126,7 +1126,7 @@ void MapOverviewState::panCamera(glm::vec2 movement)
         position.x = std::clamp(position.x, 0.f, bounds.x);
         position.y = std::clamp(position.y, 0.f, bounds.y);
 
-        m_mapEnt.getComponent<cro::Transform>().setOrigin(position);
+        m_mapEnt.getComponent<cro::Transform>().setOrigin(position);*/
 
     }
 
@@ -1158,15 +1158,16 @@ float MapOverviewState::pixelsPerMetre() const
 
 glm::vec2 MapOverviewState::toMapCoords(glm::vec3 pos) const
 {
-    const auto MapScale = glm::vec2(m_renderBuffer.getSize()) / m_sharedData.minimapData.mapSize;
+    //const auto MapScale = glm::vec2(m_renderBuffer.getSize()) / m_sharedData.minimapData.mapSize;
 
-    glm::vec2 ret
-    {
-        std::round(pos.x),
-        std::round(-pos.z)
-    };
+    //glm::vec2 ret
+    //{
+    //    std::round(pos.x),
+    //    std::round(-pos.z)
+    //};
 
-    return ret * MapScale;
+    //return ret * MapScale;
+    return { 0.f, 0.f };
 }
 
 glm::vec3 MapOverviewState::toWorldCoords(glm::vec2 pos) const
@@ -1181,49 +1182,49 @@ glm::vec3 MapOverviewState::toWorldCoords(glm::vec2 pos) const
 void MapOverviewState::gotoTarget()
 {
     //check if transition exists and skip this
-    if (m_transitionActive)
-    {
-        return;
-    }
+    //if (m_transitionActive)
+    //{
+    //    return;
+    //}
 
-    const auto startPos = glm::vec2(m_mapEnt.getComponent<cro::Transform>().getOrigin());
-    auto endPos = toMapCoords(m_sharedData.minimapData.targetPos);
-    const glm::vec2 bounds(m_renderBuffer.getSize());
+    //const auto startPos = glm::vec2(m_mapEnt.getComponent<cro::Transform>().getOrigin());
+    //auto endPos = toMapCoords(m_sharedData.minimapData.targetPos);
+    //const glm::vec2 bounds(m_renderBuffer.getSize());
 
-    endPos.x = std::clamp(endPos.x, 0.f, bounds.x);
-    endPos.y = std::clamp(endPos.y, 0.f, bounds.y);
+    //endPos.x = std::clamp(endPos.x, 0.f, bounds.x);
+    //endPos.y = std::clamp(endPos.y, 0.f, bounds.y);
 
-    const auto startZ = m_zoomScale;
+    //const auto startZ = m_zoomScale;
 
-    cro::Entity entity = m_scene.createEntity();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    entity.getComponent<cro::Callback>().function =
-        [&, startPos, endPos, startZ](cro::Entity e, float dt)
-        {
-            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
-            ct = std::min(1.f, ct + dt);
+    //cro::Entity entity = m_scene.createEntity();
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    //entity.getComponent<cro::Callback>().function =
+    //    [&, startPos, endPos, startZ](cro::Entity e, float dt)
+    //    {
+    //        auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+    //        ct = std::min(1.f, ct + dt);
 
-            const auto progress = cro::Util::Easing::easeOutQuint(ct);
+    //        const auto progress = cro::Util::Easing::easeOutQuint(ct);
 
-            m_mapEnt.getComponent<cro::Transform>().setOrigin(glm::mix(startPos, endPos, progress));
+    //        m_mapEnt.getComponent<cro::Transform>().setOrigin(glm::mix(startPos, endPos, progress));
 
-            if (startZ < MaxZoom)
-            {
-                m_zoomScale = glm::mix(startZ, MaxZoom, progress);
-                rescaleMap();
-            }
-
-
-            if (ct == 1)
-            {
-                e.getComponent<cro::Callback>().active = false;
-                m_scene.destroyEntity(e);
-
-                m_transitionActive = false;
-            }
-        };
+    //        if (startZ < MaxZoom)
+    //        {
+    //            m_zoomScale = glm::mix(startZ, MaxZoom, progress);
+    //            rescaleMap();
+    //        }
 
 
-    m_transitionActive = true;
+    //        if (ct == 1)
+    //        {
+    //            e.getComponent<cro::Callback>().active = false;
+    //            m_scene.destroyEntity(e);
+
+    //            m_transitionActive = false;
+    //        }
+    //    };
+
+
+    //m_transitionActive = true;
 }
