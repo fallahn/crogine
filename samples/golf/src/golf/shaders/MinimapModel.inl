@@ -74,6 +74,7 @@ R"(
 #include OUTPUT_LOCATION
 
 uniform sampler2D u_diffuseMap;
+uniform float u_heatmap = 0.0;
 
 VARYING_IN vec4 v_colour;
 VARYING_IN vec3 v_worldPosition;
@@ -84,6 +85,14 @@ VARYING_IN vec2 v_texCoord;
     VARYING_IN vec4 v_targetProjection;
 #endif
 
+const vec3 BaseHeatColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion
+vec3 hsv2rgb(vec3 c)
+{
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
 void main()
 {
     FRAG_OUT = TEXTURE(u_diffuseMap, v_texCoord);
@@ -92,11 +101,11 @@ void main()
         discard; //else alpha effects create holes in the map
     }
 
-    NORM_OUT = vec4(normalize(v_normal) * 0.5 + 0.5, 1.0);
-    POS_OUT.r = v_worldPosition.y;
-    
-    float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
-    NORM_OUT.a = greenTerrain;
+    //NORM_OUT = vec4(normalize(v_normal) * 0.5 + 0.5, 1.0);
+    //POS_OUT.r = v_worldPosition.y;
+    //
+    //float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
+    //NORM_OUT.a = greenTerrain;
 
 #if defined(MULTI_TARGET)
     //this is effectively clip-space so +/- 1 is perfect for circles
@@ -111,4 +120,16 @@ void main()
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, targetColour + FRAG_OUT.rgb, targetAmount);
 #endif
 
+    vec3 c = BaseHeatColour;
+    c.x += v_worldPosition.y * 0.1;
+    c = hsv2rgb(c);
+
+    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, c, u_heatmap * 0.6);
+
+
+    //float f = fract(v_worldPosition.y * 150.0); //larger is closer together
+    //float df = fwidth(v_worldPosition.y * 150.0);
+    //float contour = smoothstep(df * 1.0, df * 2.0, f);
+
+    //FRAG_OUT.rgb = mix(FRAG_OUT.rgb, c, (1.0 - contour) * 0.6);
 })";

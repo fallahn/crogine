@@ -177,7 +177,8 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
     m_sharedData        (sd),
     m_previousMap       (-1),
     m_viewScale         (2.f),
-    m_shaderValueIndex  (0),
+    m_heatTarget        (0.f),
+    m_heatAmount        (0.f),
     m_zoomScale         (1.f),
     m_transitionActive  (false),
     m_fingerCount       (0)
@@ -239,13 +240,11 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
         default: 
             if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
             {
-                m_shaderValueIndex = (m_shaderValueIndex + 1) % m_shaderValues.size();
-                //refreshMap();
+                m_heatTarget = 1.f;
             }
             else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
             {
-                m_shaderValueIndex = (m_shaderValueIndex + (m_shaderValues.size() - 1)) % m_shaderValues.size();
-                //refreshMap();
+                m_heatTarget = 0.f;
             }
             else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
             {
@@ -288,12 +287,10 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         case cro::GameController::ButtonRightShoulder:
-            m_shaderValueIndex = (m_shaderValueIndex + 1) % m_shaderValues.size();
-            //refreshMap();
+            m_heatTarget = 1.f;
             break;
         case cro::GameController::ButtonLeftShoulder:
-            m_shaderValueIndex = (m_shaderValueIndex + (m_shaderValues.size() - 1)) % m_shaderValues.size();
-            //refreshMap();
+            m_heatTarget = 0.f;
             break;
         case cro::GameController::ButtonRightStick:
             gotoTarget();
@@ -392,7 +389,6 @@ void MapOverviewState::handleMessage(const cro::Message& msg)
         }
         else if (data.type == SceneEvent::MinimapUpdated)
         {
-            //refreshMap();
             recentreMap();
         }
     }
@@ -468,9 +464,19 @@ bool MapOverviewState::simulate(float dt)
 
 
     //update shader properties
-    glUseProgram(m_slopeShader.getGLHandle());
-    glUniform1f(m_shaderUniforms.transparency, (m_zoomScale / MaxZoom) * (1.f - (m_shaderValues[m_shaderValueIndex].first + m_shaderValues[m_shaderValueIndex].second)));
-
+    if (m_heatAmount != m_heatTarget)
+    {
+        if (m_heatAmount < m_heatTarget)
+        {
+            m_heatAmount = std::min(m_heatAmount + (dt * 2.f), m_heatTarget);
+        }
+        else
+        {
+            m_heatAmount = std::max(m_heatTarget, m_heatAmount - (dt * 2.f));
+        }
+        glUseProgram(m_sharedData.minimapData.shaderID);
+        glUniform1f(m_sharedData.minimapData.heatUniform, m_heatAmount);
+    }
 
     m_scene.simulate(dt);
     return true;
@@ -513,17 +519,6 @@ void MapOverviewState::loadAssets()
 
     const auto size = cro::App::getWindow().getSize();
     m_mapBuffer.create(size.x, size.y);
-
-
-    m_mapShader.loadFromString(cro::SimpleQuad::getDefaultVertexShader(), MinimapFragment);
-    m_shaderUniforms.posMap = m_mapShader.getUniformID("u_worldPos");
-    m_shaderUniforms.normalMap = m_mapShader.getUniformID("u_normalMap");
-    m_shaderUniforms.heatAmount = m_mapShader.getUniformID("u_heatAmount");
-    m_shaderUniforms.gridAmount = m_mapShader.getUniformID("u_gridAmount");
-    m_shaderUniforms.gridScale = m_mapShader.getUniformID("u_gridScale");
-
-    m_slopeShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), MiniSlopeFragment);
-    m_shaderUniforms.transparency = m_slopeShader.getUniformID("u_transparency");
 }
 
 void MapOverviewState::buildScene()
@@ -907,6 +902,10 @@ void MapOverviewState::onCachedPop()
 {
     m_sharedData.minimapData.mapScene->getActiveCamera().getComponent<cro::Camera>().active = true;
     m_mapCamera.getComponent<cro::Camera>().active = false;
+
+    m_heatAmount = 0.f;
+    glUseProgram(m_sharedData.minimapData.shaderID);
+    glUniform1f(m_sharedData.minimapData.heatUniform, 0.f);
 }
 
 void MapOverviewState::zoomCamera()
@@ -987,10 +986,6 @@ void MapOverviewState::gotoTarget()
     const auto startPos = m_mapCamera.getComponent<cro::Transform>().getPosition();
     auto endPos = m_sharedData.minimapData.targetPos;
     endPos.y = CamHeight;
-    //const glm::vec2 bounds(m_renderBuffer.getSize());
-
-    //endPos.x = std::clamp(endPos.x, 0.f, bounds.x);
-    //endPos.y = std::clamp(endPos.y, 0.f, bounds.y);
 
     const auto startZ = m_zoomScale;
 

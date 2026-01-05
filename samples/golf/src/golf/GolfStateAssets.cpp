@@ -2196,6 +2196,8 @@ void GolfState::loadMaterials()
     m_materialIDs[MaterialID::Minimap] = m_resources.materials.add(*shader);
     m_targetShader.shaders[TargetShader::ShaderUniform::Map].shaderID = shader->getGLHandle();
     m_targetShader.shaders[TargetShader::ShaderUniform::Map].vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
+    m_sharedData.minimapData.shaderID = shader->getGLHandle();
+    m_sharedData.minimapData.heatUniform = shader->getUniformID("u_heatmap");
 
     //m_ballShadows.shaders[0].shader = shader->getGLHandle();
     //m_ballShadows.shaders[0].uniform = shader->getUniformID("u_ballPosition");

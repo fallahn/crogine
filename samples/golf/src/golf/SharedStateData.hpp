@@ -152,6 +152,10 @@ struct SharedStateData final
         glm::vec3 mapCentre = glm::vec3(0.f); //based on AABB of geom rather than world size
         glm::vec2 mapSize = glm::vec2(0.f); //as above but with X/Z used to create ortho view
         std::int32_t holeNumber = -1;
+
+        std::uint32_t shaderID = 0;
+        std::int32_t heatUniform = -1;
+
         bool active = false;
     }minimapData;
 
