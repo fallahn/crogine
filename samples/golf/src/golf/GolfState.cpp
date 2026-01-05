@@ -4353,6 +4353,13 @@ void GolfState::buildScene()
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -75.f * cro::Util::Const::degToRad);
 
+    sunEnt = m_skyScene.getSunlight();
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -75.f * cro::Util::Const::degToRad);
+
+    sunEnt = m_mapScene.getSunlight();
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -75.f * cro::Util::Const::degToRad);
  
     if (auto month = cro::SysTime::now().months(); 
              (month == 6 || m_sharedData.weatherType == WeatherType::Showers) && !m_sharedData.nightTime)

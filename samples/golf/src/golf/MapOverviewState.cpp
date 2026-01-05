@@ -755,7 +755,7 @@ void MapOverviewState::buildScene()
             const auto topY = bottomY + heightY;
 
             const float fadeBottom = smoothstep(bottomY, bottomY + (fadeDistance * m_viewScale.y), pos.y);
-            const float fadeTop = 1.f - smoothstep(topY - (fadeDistance * m_viewScale.y), topY, pos.y);
+            const float fadeTop = 1.f - smoothstep(topY - ((fadeDistance * 2.f) * m_viewScale.y), topY, pos.y);
 
             return fadeLeft * fadeRight * fadeBottom * fadeTop;
         };

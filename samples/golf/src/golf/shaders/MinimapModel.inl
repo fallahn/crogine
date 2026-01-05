@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -72,6 +72,7 @@ static const inline std::string MinimapModelFragment =
 R"(
 #define USE_MRT
 #include OUTPUT_LOCATION
+#include LIGHT_UBO
 
 uniform sampler2D u_diffuseMap;
 uniform float u_heatmap = 0.0;
@@ -106,6 +107,11 @@ void main()
     //
     //float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
     //NORM_OUT.a = greenTerrain;
+
+vec3 lightDirection = normalize(-u_lightDirection);
+vec3 normal = normalize(v_normal);
+float lightStrength = clamp(dot(normal, lightDirection), 0.0, 1.0) * 0.5;
+FRAG_OUT.rgb = (FRAG_OUT.rgb * 0.5) + (FRAG_OUT.rgb * lightStrength);
 
 #if defined(MULTI_TARGET)
     //this is effectively clip-space so +/- 1 is perfect for circles
