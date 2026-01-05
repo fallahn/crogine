@@ -133,7 +133,7 @@ private:
     void onCachedPush() override;
     void onCachedPop() override;
 
-    void zoomCamera(float);
+    void zoomCamera();
     void panCamera(glm::vec2);
 
     float pixelsPerMetre() const;

@@ -373,7 +373,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
 
         const auto amount = evt.wheel.preciseY;
         m_zoomScale = std::clamp(m_zoomScale + amount, MinZoom, MaxZoom);
-        zoomCamera(BaseScaleMultiplier* m_zoomScale);
+        zoomCamera();
     }
 
     m_scene.forwardEvent(evt);
@@ -452,7 +452,7 @@ bool MapOverviewState::simulate(float dt)
         {
             float zoomRatio = static_cast<float>(zoom) / cro::GameController::AxisMax;
             m_zoomScale = std::clamp(m_zoomScale + (2.f * zoomRatio * m_zoomScale * dt), MinZoom, MaxZoom);
-            zoomCamera(BaseScaleMultiplier * m_zoomScale);
+            zoomCamera();
         }
     }
 
@@ -800,7 +800,7 @@ void MapOverviewState::buildScene()
         m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
         //calls the viewport resize for potential new aspect ratio
-        zoomCamera(BaseScaleMultiplier * m_zoomScale);
+        zoomCamera();
     };
 
     entity = m_scene.createEntity();
@@ -820,7 +820,7 @@ void MapOverviewState::buildScene()
     entity.addComponent<cro::Camera>().active = false;
     m_mapCamera = entity;
 
-    zoomCamera(BaseScaleMultiplier);
+    zoomCamera();
 }
 
 void MapOverviewState::quitState()
@@ -835,7 +835,7 @@ void MapOverviewState::recentreMap()
     if (m_mapCamera.isValid())
     {
         m_mapCamera.getComponent<cro::Transform>().setPosition({ m_sharedData.minimapData.mapCentre.x, CamHeight, m_sharedData.minimapData.mapCentre.z });
-        zoomCamera(BaseScaleMultiplier * m_zoomScale);
+        zoomCamera();
     }
 }
 
@@ -909,16 +909,21 @@ void MapOverviewState::onCachedPop()
     m_mapCamera.getComponent<cro::Camera>().active = false;
 }
 
-void MapOverviewState::zoomCamera(float scale)
+void MapOverviewState::zoomCamera()
 {
     if (m_mapCamera.isValid())
     {
         //view size actually gets smaller to make the zoom 'larger'
-        scale = 1.f / scale;
+        const auto scale = 1.f / (m_zoomScale * BaseScaleMultiplier);
         const auto viewSize = (m_sharedData.minimapData.mapSize * scale) / 2.f;
 
         auto& cam = m_mapCamera.getComponent<cro::Camera>();
         cam.setOrthographic(-viewSize.x, viewSize.x, -viewSize.y, viewSize.y, 1.f, 40.f);
+        
+        //TODO this *almost* works, but it messes with the pan speed
+        /*const auto ratio = viewSize.x / viewSize.y;
+        const auto fov = 2 * std::atan(viewSize.y/CamHeight);
+        cam.setPerspective(fov, ratio, 1.f, 40.f);*/
         
         float left = 0.f;
         float bottom = 0.f;
@@ -974,49 +979,50 @@ float MapOverviewState::pixelsPerMetre() const
 void MapOverviewState::gotoTarget()
 {
     //check if transition exists and skip this
-    //if (m_transitionActive)
-    //{
-    //    return;
-    //}
+    if (m_transitionActive)
+    {
+        return;
+    }
 
-    //const auto startPos = glm::vec2(m_mapEnt.getComponent<cro::Transform>().getOrigin());
-    //auto endPos = toMapCoords(m_sharedData.minimapData.targetPos);
+    const auto startPos = m_mapCamera.getComponent<cro::Transform>().getPosition();
+    auto endPos = m_sharedData.minimapData.targetPos;
+    endPos.y = CamHeight;
     //const glm::vec2 bounds(m_renderBuffer.getSize());
 
     //endPos.x = std::clamp(endPos.x, 0.f, bounds.x);
     //endPos.y = std::clamp(endPos.y, 0.f, bounds.y);
 
-    //const auto startZ = m_zoomScale;
+    const auto startZ = m_zoomScale;
 
-    //cro::Entity entity = m_scene.createEntity();
-    //entity.addComponent<cro::Callback>().active = true;
-    //entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    //entity.getComponent<cro::Callback>().function =
-    //    [&, startPos, endPos, startZ](cro::Entity e, float dt)
-    //    {
-    //        auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
-    //        ct = std::min(1.f, ct + dt);
+    cro::Entity entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, startPos, endPos, startZ](cro::Entity e, float dt)
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct = std::min(1.f, ct + dt);
 
-    //        const auto progress = cro::Util::Easing::easeOutQuint(ct);
+            const auto progress = cro::Util::Easing::easeOutQuint(ct);
 
-    //        m_mapEnt.getComponent<cro::Transform>().setOrigin(glm::mix(startPos, endPos, progress));
+            m_mapCamera.getComponent<cro::Transform>().setPosition(glm::mix(startPos, endPos, progress));
 
-    //        if (startZ < MaxZoom)
-    //        {
-    //            m_zoomScale = glm::mix(startZ, MaxZoom, progress);
-    //            rescaleMap();
-    //        }
-
-
-    //        if (ct == 1)
-    //        {
-    //            e.getComponent<cro::Callback>().active = false;
-    //            m_scene.destroyEntity(e);
-
-    //            m_transitionActive = false;
-    //        }
-    //    };
+            if (startZ < MaxZoom)
+            {
+                m_zoomScale = glm::mix(startZ, MaxZoom, progress);
+                zoomCamera();
+            }
 
 
-    //m_transitionActive = true;
+            if (ct == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_scene.destroyEntity(e);
+
+                m_transitionActive = false;
+            }
+        };
+
+
+    m_transitionActive = true;
 }
