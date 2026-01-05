@@ -701,6 +701,28 @@ void MapOverviewState::buildScene()
 
 
 
+    const auto calcAlpha = [&](glm::vec2 pos)
+        {
+            static constexpr float fadeDistance = 40.f;
+            const auto vp = m_mapCamera.getComponent<cro::Camera>().viewport;
+            const auto widthX = std::round(static_cast<float>(m_mapBuffer.getSize().x) * vp.width);
+            const auto leftX = m_mapBuffer.getSize().x - widthX;
+            const auto rightX = leftX + widthX;
+
+            const float fadeLeft = smoothstep(leftX, leftX + (fadeDistance * m_viewScale.x), pos.x);
+            const float fadeRight = 1.f - smoothstep(rightX - (fadeDistance * m_viewScale.x), rightX, pos.x);
+
+            //TODO something is off and making the vertical calc incorrect...
+            const auto heightY = std::round(static_cast<float>(m_mapBuffer.getSize().y)/* * vp.height*/);
+            const auto bottomY = m_mapBuffer.getSize().y - heightY;
+            const auto topY = bottomY + heightY;
+
+            const float fadeBottom = smoothstep(bottomY, bottomY + (fadeDistance * m_viewScale.y), pos.y);
+            const float fadeTop = 1.f - smoothstep(topY - (fadeDistance * m_viewScale.y), topY, pos.y);
+
+            return fadeLeft * fadeRight * fadeBottom * fadeTop;
+        };
+
     //marks approx landing area of ball
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
@@ -727,38 +749,24 @@ void MapOverviewState::buildScene()
     entity.getComponent<cro::Drawable2D>().setVertexData(verts);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
+        [&, calcAlpha](cro::Entity e, float)
         {
             if (m_mapCamera.isValid())
             {
                 e.getComponent<cro::Transform>().setPosition(m_mapCamera.getComponent<cro::Camera>().coordsToPixel(m_sharedData.minimapData.targetPos, m_mapBuffer.getSize()));
                 e.getComponent<cro::Transform>().setScale(glm::vec2(m_zoomScale * m_viewScale.y));
+
+                //hmm this doesn't work because we have special case alpha value...
+                /*const auto alpha = calcAlpha(e.getComponent<cro::Transform>().getPosition());
+                for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+                {
+                    v.colour.setAlpha(alpha);
+                }*/
             }
         };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    const auto calcAlpha = [&](glm::vec2 pos)
-        {
-            static constexpr float fadeDistance = 40.f;
-            const auto vp = m_mapCamera.getComponent<cro::Camera>().viewport;
-            const auto widthX = std::round(static_cast<float>(m_mapBuffer.getSize().x) * vp.width);
-            const auto leftX = m_mapBuffer.getSize().x - widthX;
-            const auto rightX = leftX + widthX;
-
-            const float fadeLeft = smoothstep(leftX, leftX + (fadeDistance * m_viewScale.x), pos.x);
-            const float fadeRight = 1.f - smoothstep(rightX - (fadeDistance * m_viewScale.x), rightX, pos.x);
-
-
-            const auto heightY = std::round(static_cast<float>(m_mapBuffer.getSize().y) * vp.height);
-            const auto bottomY = m_mapBuffer.getSize().y - heightY;
-            const auto topY = bottomY + heightY;
-
-            const float fadeBottom = smoothstep(bottomY, bottomY + (fadeDistance * m_viewScale.y), pos.y);
-            const float fadeTop = 1.f - smoothstep(topY - ((fadeDistance * 2.f) * m_viewScale.y), topY, pos.y);
-
-            return fadeLeft * fadeRight * fadeBottom * fadeTop;
-        };
 
     //marks the tee position;
     const auto& teeFont = m_sharedData.sharedResources->fonts.get(FontID::Label);

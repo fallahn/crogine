@@ -86,6 +86,10 @@ VARYING_IN vec2 v_texCoord;
     VARYING_IN vec4 v_targetProjection;
 #endif
 
+#define COLOUR_LEVELS 5.0
+#define AMOUNT_MIN 0.8
+#define AMOUNT_MAX 0.2
+
 const vec3 BaseHeatColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion
 vec3 hsv2rgb(vec3 c)
 {
@@ -108,10 +112,17 @@ void main()
     //float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
     //NORM_OUT.a = greenTerrain;
 
-vec3 lightDirection = normalize(-u_lightDirection);
-vec3 normal = normalize(v_normal);
-float lightStrength = clamp(dot(normal, lightDirection), 0.0, 1.0) * 0.5;
-FRAG_OUT.rgb = (FRAG_OUT.rgb * 0.5) + (FRAG_OUT.rgb * lightStrength);
+    vec3 lightDirection = normalize(-u_lightDirection);
+    vec3 normal = normalize(v_normal);
+    float lightStrength = clamp(dot(normal, lightDirection), 0.0, 1.0);
+
+    lightStrength *= COLOUR_LEVELS;
+    lightStrength = round(lightStrength);
+    lightStrength /= COLOUR_LEVELS;
+    lightStrength = (lightStrength * AMOUNT_MAX) + AMOUNT_MIN;
+    FRAG_OUT.rgb *= lightStrength;
+
+    //FRAG_OUT.rgb = (FRAG_OUT.rgb * 0.5) + (FRAG_OUT.rgb * (lightStrength * 0.5));
 
 #if defined(MULTI_TARGET)
     //this is effectively clip-space so +/- 1 is perfect for circles
