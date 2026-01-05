@@ -240,12 +240,12 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
             {
                 m_shaderValueIndex = (m_shaderValueIndex + 1) % m_shaderValues.size();
-                refreshMap();
+                //refreshMap();
             }
             else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
             {
                 m_shaderValueIndex = (m_shaderValueIndex + (m_shaderValues.size() - 1)) % m_shaderValues.size();
-                refreshMap();
+                //refreshMap();
             }
             else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
             {
@@ -289,11 +289,11 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             return false;
         case cro::GameController::ButtonRightShoulder:
             m_shaderValueIndex = (m_shaderValueIndex + 1) % m_shaderValues.size();
-            refreshMap();
+            //refreshMap();
             break;
         case cro::GameController::ButtonLeftShoulder:
             m_shaderValueIndex = (m_shaderValueIndex + (m_shaderValues.size() - 1)) % m_shaderValues.size();
-            refreshMap();
+            //refreshMap();
             break;
         case cro::GameController::ButtonRightStick:
             gotoTarget();
@@ -364,14 +364,6 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
         cro::App::getWindow().setMouseCaptured(false);
         if (evt.motion.state & (SDL_BUTTON_MIDDLE | SDL_BUTTON_LEFT))
         {
-            //const float Scale = 1.f;// / m_zoomScale;// m_mapEnt.getComponent<cro::Transform>().getScale().x;
-
-            //glm::vec2 movement(0.f);
-            //movement.x -= static_cast<float>(evt.motion.xrel) * Scale;
-            //movement.y -= static_cast<float>(evt.motion.yrel) * Scale;
-            ////movement /= m_viewScale;
-            //
-            //pan(movement);
             panCamera({ -evt.motion.xrel, -evt.motion.yrel });
         }
     }
@@ -381,7 +373,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
 
         const auto amount = evt.wheel.preciseY;
         m_zoomScale = std::clamp(m_zoomScale + amount, MinZoom, MaxZoom);
-        rescaleMap();
+        zoomCamera(BaseScaleMultiplier* m_zoomScale);
     }
 
     m_scene.forwardEvent(evt);
@@ -400,7 +392,7 @@ void MapOverviewState::handleMessage(const cro::Message& msg)
         }
         else if (data.type == SceneEvent::MinimapUpdated)
         {
-            refreshMap();
+            //refreshMap();
             recentreMap();
         }
     }
@@ -460,7 +452,7 @@ bool MapOverviewState::simulate(float dt)
         {
             float zoomRatio = static_cast<float>(zoom) / cro::GameController::AxisMax;
             m_zoomScale = std::clamp(m_zoomScale + (2.f * zoomRatio * m_zoomScale * dt), MinZoom, MaxZoom);
-            rescaleMap();
+            zoomCamera(BaseScaleMultiplier * m_zoomScale);
         }
     }
 
@@ -474,63 +466,6 @@ bool MapOverviewState::simulate(float dt)
     //updated *after* this one) but it does mean the system is being double-processed.
     m_sharedData.minimapData.mapScene->getSystem<cro::CameraSystem>()->process(0.f);
 
-
-    //check for touchpad input
-    //if (m_fingerCount == 1)
-    //{
-    //    const auto doPan = [&](std::int32_t finger)
-    //    {
-    //        //map finger to screen space (correct for aspect ratio? pad is not necessarily a fixed shape)
-
-    //        glm::vec2 screenMotion = glm::vec2(cro::App::getWindow().getSize()) * (m_trackpadFingers[finger].prevPosition - m_trackpadFingers[finger].currPosition);
-
-    //        //convert screen space to world coords
-    //        const float Scale = 1.f / m_mapEnt.getComponent<cro::Transform>().getScale().x;
-    //        screenMotion *= Scale;
-    //        screenMotion /= m_viewScale;
-
-    //        //pan as if mouse movement
-    //        pan(screenMotion);
-    //    };
-
-    //    //pan
-    //    if (auto vel = m_trackpadFingers[0].currPosition - m_trackpadFingers[0].prevPosition; glm::length2(vel) != 0)
-    //    {
-    //        doPan(0);
-    //    }
-    //    else
-    //    {
-    //        vel = m_trackpadFingers[1].currPosition - m_trackpadFingers[1].prevPosition;
-    //        doPan(1);
-    //    }
-    //}
-    //else if (m_fingerCount == 2)
-    //{
-    //    //zoom - move the position of the second finger
-    //    //relative to the first and adjust velocity
-    //    glm::vec2 f2 = m_trackpadFingers[1].currPosition - m_trackpadFingers[0].currPosition;
-    //    glm::vec2 f2v = (m_trackpadFingers[1].currPosition - m_trackpadFingers[1].prevPosition) - (m_trackpadFingers[0].currPosition - m_trackpadFingers[0].prevPosition);
-
-    //    //then test to see if new velocity moves towards
-    //    //the first finger, or away
-    //    float amount = 0.f;
-    //    if (glm::length2(f2 + f2v) > glm::length2(f2))
-    //    {
-    //        //moving away
-    //        amount = 0.1f;
-    //    }
-    //    else
-    //    {
-    //        //moving towards each other
-    //        amount = -0.1f;
-    //    }
-
-    //    if (amount != 0)
-    //    {
-    //        m_zoomScale = std::clamp(m_zoomScale + amount, MinZoom, MaxZoom);
-    //        rescaleMap();
-    //    }
-    //}
 
     //update shader properties
     glUseProgram(m_slopeShader.getGLHandle());
@@ -579,8 +514,6 @@ void MapOverviewState::loadAssets()
     const auto size = cro::App::getWindow().getSize();
     m_mapBuffer.create(size.x, size.y);
 
-    //const auto buffSize = m_sharedData.minimapData.mrt->getSize();
-    //m_renderBuffer.create(1, 1, false);
 
     m_mapShader.loadFromString(cro::SimpleQuad::getDefaultVertexShader(), MinimapFragment);
     m_shaderUniforms.posMap = m_mapShader.getUniformID("u_worldPos");
@@ -589,18 +522,8 @@ void MapOverviewState::loadAssets()
     m_shaderUniforms.gridAmount = m_mapShader.getUniformID("u_gridAmount");
     m_shaderUniforms.gridScale = m_mapShader.getUniformID("u_gridScale");
 
-    //m_mapQuad.setTexture(m_sharedData.minimapData.mrt->getTexture(MRTIndex::Colour), m_renderBuffer.getSize());
-    //m_mapQuad.setShader(m_mapShader);
-
     m_slopeShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), MiniSlopeFragment);
     m_shaderUniforms.transparency = m_slopeShader.getUniformID("u_transparency");
-
-    //m_mapString.setFont(m_sharedData.sharedResources->fonts.get(FontID::Label));
-    //m_mapString.setFillColour(TextNormalColour);
-    //m_mapString.setShadowColour(LeaderboardTextDark);
-    //m_mapString.setShadowOffset({ 8.f, -8.f });
-    //m_mapString.setCharacterSize(LabelTextSize * MapSizeMultiplier); //really should be reading the texture scale
-    //m_mapString.setAlignment(2);
 }
 
 void MapOverviewState::buildScene()
@@ -634,7 +557,7 @@ void MapOverviewState::buildScene()
                 //menu was opened - then recentre the map if it's a new hole.
                 if (m_previousMap != m_sharedData.minimapData.holeNumber)
                 {
-                    m_mapText.getComponent<cro::Text>().setString(m_sharedData.minimapData.courseName);
+                    m_mapTitleText.getComponent<cro::Text>().setString(m_sharedData.minimapData.courseName);
 
                     recentreMap();
                     updateNormals();
@@ -649,8 +572,6 @@ void MapOverviewState::buildScene()
 
                     m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                    refreshMap();
                 }
                 break;
             case RootCallbackData::FadeOut:
@@ -699,7 +620,7 @@ void MapOverviewState::buildScene()
             }
         };
 
-    //new map entity
+    //map entity
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
@@ -707,14 +628,6 @@ void MapOverviewState::buildScene()
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
     auto mapEnt = entity;
 
-    //map entity - TODO remove this
-    refreshMap();
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>();// (m_renderBuffer.getTexture());
-    rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
-    m_mapEnt = entity;
     recentreMap();
 
     //menu background
@@ -733,6 +646,7 @@ void MapOverviewState::buildScene()
     auto bgNode = entity;
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
 
+    //displays the course name
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), 56.f, 0.1f });
@@ -742,7 +656,7 @@ void MapOverviewState::buildScene()
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_mapText = entity;
+    m_mapTitleText = entity;
 
 
     //displays the zoom control
@@ -789,15 +703,6 @@ void MapOverviewState::buildScene()
     bgNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
     m_controlText = entity;
 
-
-    //draws the slope based on normals
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.3f });
-    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);
-    entity.getComponent<cro::Drawable2D>().setShader(&m_slopeShader);
-
-    m_mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_mapNormals = entity;
 
 
     //marks approx landing area of ball
@@ -895,7 +800,7 @@ void MapOverviewState::buildScene()
         m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
         //calls the viewport resize for potential new aspect ratio
-        rescaleMap();
+        zoomCamera(BaseScaleMultiplier * m_zoomScale);
     };
 
     entity = m_scene.createEntity();
@@ -927,84 +832,11 @@ void MapOverviewState::quitState()
 
 void MapOverviewState::recentreMap()
 {
-    //TODO remove this block
-    {
-        const glm::vec2 windowSize(cro::App::getWindow().getSize());
-        const auto centre = toMapCoords(m_sharedData.minimapData.mapCentre);
-
-        m_mapEnt.getComponent<cro::Transform>().setOrigin(centre);
-        m_mapEnt.getComponent<cro::Transform>().setScale((glm::vec2(windowSize.x / std::round(centre.x * 2.f)) / m_viewScale.x) * BaseScaleMultiplier);
-        m_zoomScale = 1.f;
-    }
-
-
     if (m_mapCamera.isValid())
     {
         m_mapCamera.getComponent<cro::Transform>().setPosition({ m_sharedData.minimapData.mapCentre.x, CamHeight, m_sharedData.minimapData.mapCentre.z });
         zoomCamera(BaseScaleMultiplier * m_zoomScale);
     }
-}
-
-void MapOverviewState::rescaleMap()
-{
-    //TODO replace calls to this with zoomCamera() and remove this func
-
-    const glm::vec2 windowSize(cro::App::getWindow().getSize());
-    const auto mapSize = toMapCoords(m_sharedData.minimapData.mapCentre) * 2.f;
-
-    const float baseScale = ((windowSize.x / std::round(mapSize.x)) / m_viewScale.x) * BaseScaleMultiplier;
-    m_mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(baseScale * m_zoomScale));
-
-    zoomCamera(BaseScaleMultiplier * m_zoomScale);
-
-    refreshMap();
-}
-
-void MapOverviewState::refreshMap()
-{
-    static constexpr std::int32_t PosSlot = 6;
-    static constexpr std::int32_t NormalSlot = 7;
-
-    //glActiveTexture(GL_TEXTURE0 + PosSlot);
-    //glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Position).textureID);
-
-    //glActiveTexture(GL_TEXTURE0 + NormalSlot);
-    //glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Normal).textureID);
-
-    glUseProgram(m_mapShader.getGLHandle());
-    glUniform1i(m_shaderUniforms.posMap, PosSlot);
-    glUniform1i(m_shaderUniforms.normalMap, NormalSlot);
-
-    //glUniform1f(m_shaderUniforms.gridAmount, m_shaderValues[m_shaderValueIndex].first);
-    glUniform1f(m_shaderUniforms.heatAmount, m_shaderValues[m_shaderValueIndex].second);
-    glUniform1f(m_shaderUniforms.gridScale, /*std::ceil(m_zoomScale / 4.f)*/std::round(m_zoomScale));
-
-
-
-    //const glm::vec2 teePos = toMapCoords(m_sharedData.minimapData.teePos);
-
-    //glm::vec2 pinPos =
-    //{
-    //    std::round(m_sharedData.minimapData.pinPos.x),
-    //    std::round(-m_sharedData.minimapData.pinPos.z),
-    //};
-
-    //auto charScale = std::round(MaxZoom - (m_zoomScale - MinZoom));
-    //charScale = std::round((charScale / MaxZoom) * MapSizeMultiplier);
-    //m_mapString.setCharacterSize(LabelTextSize * charScale);
-    //m_mapString.setShadowOffset({ charScale, -charScale });
-
-    //m_renderBuffer.clear(cro::Colour::Transparent);
-    /*m_mapQuad.draw();
-    m_mapString.setString("T");
-    m_mapString.setPosition(teePos);
-    m_mapString.draw();*/
-    
-    //m_mapString.setString("P");
-    //m_mapString.setPosition(pinPos * MapScale);
-    //m_mapString.draw();
-
-    //m_renderBuffer.display();
 }
 
 void MapOverviewState::updateNormals()
@@ -1113,23 +945,6 @@ void MapOverviewState::zoomCamera(float scale)
 
 void MapOverviewState::panCamera(glm::vec2 movement)
 {
-    //TODO remove this block
-    {
-        /*auto position = m_mapEnt.getComponent<cro::Transform>().getOrigin();
-        position += glm::vec3(movement, 0.f);
-
-        position.x = std::floor(position.x);
-        position.y = std::floor(position.y);
-
-        const glm::vec2 bounds(m_renderBuffer.getSize());
-
-        position.x = std::clamp(position.x, 0.f, bounds.x);
-        position.y = std::clamp(position.y, 0.f, bounds.y);
-
-        m_mapEnt.getComponent<cro::Transform>().setOrigin(position);*/
-
-    }
-
     if (m_mapCamera.isValid())
     {
         movement /= pixelsPerMetre();
@@ -1154,29 +969,6 @@ float MapOverviewState::pixelsPerMetre() const
     const auto camPos = m_mapCamera.getComponent<cro::Transform>().getPosition();
     const auto ppm = m_mapCamera.getComponent<cro::Camera>().coordsToPixel(camPos + glm::vec3(1.f, 0.f, 1.f), m_mapBuffer.getSize()) - glm::vec2(cro::App::getWindow().getSize() / 2u);
     return ppm.x; //assumes the aspect ratio is correct.
-}
-
-glm::vec2 MapOverviewState::toMapCoords(glm::vec3 pos) const
-{
-    //const auto MapScale = glm::vec2(m_renderBuffer.getSize()) / m_sharedData.minimapData.mapSize;
-
-    //glm::vec2 ret
-    //{
-    //    std::round(pos.x),
-    //    std::round(-pos.z)
-    //};
-
-    //return ret * MapScale;
-    return { 0.f, 0.f };
-}
-
-glm::vec3 MapOverviewState::toWorldCoords(glm::vec2 pos) const
-{
-    //TODO remove this function
-
-    auto worldPos = m_mapCamera.getComponent<cro::Camera>().pixelToCoords(pos, m_mapBuffer.getSize());
-    worldPos.y = CamHeight;
-    return worldPos;
 }
 
 void MapOverviewState::gotoTarget()

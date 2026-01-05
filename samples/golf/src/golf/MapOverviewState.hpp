@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -89,9 +89,7 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
-    cro::Entity m_mapEnt;
-    cro::Entity m_mapText;
-    cro::Entity m_mapNormals;
+    cro::Entity m_mapTitleText;
 
     cro::Entity m_controlIcon;
     cro::Entity m_controlText;
@@ -131,8 +129,6 @@ private:
     void quitState();
 
     void recentreMap();
-    void rescaleMap();
-    void refreshMap();
     void updateNormals();
     void onCachedPush() override;
     void onCachedPop() override;
@@ -141,7 +137,5 @@ private:
     void panCamera(glm::vec2);
 
     float pixelsPerMetre() const;
-    glm::vec2 toMapCoords(glm::vec3) const;
-    glm::vec3 toWorldCoords(glm::vec2) const;
     void gotoTarget();
 };
