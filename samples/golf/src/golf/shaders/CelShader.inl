@@ -429,6 +429,27 @@ static inline const std::string CelFragmentShader = R"(
 
     const vec3 SlopeShade = vec3(0.439, 0.368, 0.223);
     const vec3 BaseContourColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion
+#if defined(HOLE_HEIGHT)
+    float getContour(float spacing, float thickness)
+    {
+        vec3 f = fract(v_worldPosition * spacing);
+
+        float sizeMultiplier = smoothstep(10.0, 20.0, length(u_holePosition - v_cameraWorldPosition));
+        float falloff = 0.003;
+        falloff += 0.02 * sizeMultiplier;
+
+        //float thickness = 0.018;
+        thickness += thickness * sizeMultiplier;
+
+        float edge2 = 1.0 - falloff;
+        float edge1 = edge2 - thickness;
+        float edge0 = edge1 - falloff;
+
+        float contourX = smoothstep(edge0, edge1, f.x) * (1.0 - smoothstep(edge2, 1.0, f.x));
+        float contourY = smoothstep(edge0, edge1, f.z) * (1.0 - smoothstep(edge2, 1.0, f.z));
+        return clamp(contourX + contourY, 0.0, 1.0);
+    }
+#endif
 
     void main()
     {
@@ -657,38 +678,14 @@ static inline const std::string CelFragmentShader = R"(
 
 #if defined(HOLE_HEIGHT)
 #if !defined(CONTOUR) //regular green
-    //vec3 f = fract(v_worldPosition * 0.5);
-    //vec3 df = fwidth(v_worldPosition * 0.5);
-    ////df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
-    //vec3 g = step(df * u_pixelScale, f);
 
-    //float contour = /*round*/(1.0 - (g.x * g.y * g.z));
-
-vec3 f = fract(v_worldPosition * 0.5);
-
-float sizeMultiplier = smoothstep(10.0, 20.0, length(u_holePosition - v_cameraWorldPosition));
-float falloff = 0.003;
-falloff += 0.02 * sizeMultiplier;
-
-float thickness = 0.018;
-thickness += thickness * sizeMultiplier;
-
-float edge2 = 1.0 - falloff;
-float edge1 = edge2 - thickness;
-float edge0 = edge1 - falloff;
-
-float contourX = smoothstep(edge0, edge1, f.x) * (1.0 - smoothstep(edge2, 1.0, f.x));
-float contourY = smoothstep(edge0, edge1, f.z) * (1.0 - smoothstep(edge2, 1.0, f.z));
-float contour = clamp(contourX + contourY, 0.0, 1.0);
-
+float contour = getContour(0.5, 0.018);
 
     vec3 gridColour = ((FRAG_OUT.rgb * vec3(0.999, 0.95, 0.85))) * (0.4 + (0.6 * holeHeight)) * 0.2;
     //vec3 gridColour = ((FRAG_OUT.rgb * vec3(0.999, 0.95, 0.85))) * (0.8 + (0.4 * holeHeight));
-    
-
-//    float slope = 1.0 - dot(normal, vec3(0.0, 1.0, 0.0));
-//    slope = smoothstep(0.02, 0.04, clamp(slope / 0.05, 0.0, 1.0));
-//    gridColour = mix(gridColour, vec3(1.0, 0.0, 0.0), slope * 0.5);
+    //    float slope = 1.0 - dot(normal, vec3(0.0, 1.0, 0.0));
+    //    slope = smoothstep(0.02, 0.04, clamp(slope / 0.05, 0.0, 1.0));
+    //    gridColour = mix(gridColour, vec3(1.0, 0.0, 0.0), slope * 0.5);
 
 
     float transparency = 1.0 - pow(1.0 - u_transparency, 4.0);
@@ -699,12 +696,13 @@ float contour = clamp(contourX + contourY, 0.0, 1.0);
 
 #else //putting green
 
-    vec3 f = fract(v_worldPosition * 2.0);
-    vec3 df = fwidth(v_worldPosition * 2.0);
-    //df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
-    vec3 g = step(df * u_pixelScale, f);
+    //vec3 f = fract(v_worldPosition * 2.0);
+    //vec3 df = fwidth(v_worldPosition * 2.0);
+    ////df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
+    //vec3 g = step(df * u_pixelScale, f);
 
-    float contour = 1.0 - (g.x * g.y * g.z);
+    //float contour = 1.0 - (g.x * g.y * g.z);
+float contour = getContour(2.0, 0.036);
 
     vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
     //these magic numbers are distance sqr
