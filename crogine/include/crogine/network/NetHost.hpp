@@ -41,6 +41,7 @@ namespace cro
 {
     struct NetEvent;
     struct NetPeer;
+    class NetClient;
     
     /*!
     \brief Creates a network host.
