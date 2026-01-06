@@ -236,8 +236,8 @@ void NetClient::sendPacket(std::uint8_t id, const void* data, std::size_t size, 
 bool NetClient::connect(const ENetAddress* add, std::uint32_t timeout)
 {
     CRO_ASSERT(timeout > 0, "Timeout should probably be at least 1000ms");
-    CRO_ASSERT(port > 0, "Invalid port number");
-    CRO_ASSERT(!address.empty(), "Invalid address string");
+    CRO_ASSERT(add->port > 0, "Invalid port number");
+    CRO_ASSERT(add->host != 0, "Invalid address string");
 
     if (m_peer.m_peer)
     {
@@ -271,7 +271,7 @@ bool NetClient::connect(const ENetAddress* add, std::uint32_t timeout)
         //m_threadRunning = true;
         //m_thread = std::make_unique<std::thread>(&NetClient::threadFunc, this);
 
-        LOG("Connected to " + address, Logger::Type::Info);
+        //LOG("Connected to " + address, Logger::Type::Info);
         return true;
     }
 
