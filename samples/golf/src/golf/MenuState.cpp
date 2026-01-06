@@ -4518,6 +4518,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
     cro::App::getWindow().setTitle(std::to_string(msgData.hostID));
 #endif
 #else
+    //m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
     if (!m_sharedData.clientConnection.connected)
     {

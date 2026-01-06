@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,6 +41,7 @@ source distribution.
 #include <atomic>
 
 struct _ENetHost;
+struct _ENetAddress;
 
 namespace cro
 {
@@ -88,6 +89,7 @@ namespace cro
         \returns true on success or false if the attempt timed out.
         */
         bool connect(const std::string& address, std::uint16_t port, std::uint32_t timeout = 5000);
+        bool connect(std::int32_t address, std::uint16_t port, std::uint32_t timeout = 5000);
 
         /*!
         \brief Closes any active connections.
@@ -156,6 +158,9 @@ namespace cro
         std::list<std::any> m_evtBuffer;
         std::list<std::any> m_activeBuffer;
         std::atomic_bool m_threadRunning;
+
+        bool connect(const _ENetAddress*, std::uint32_t);
+
         void threadFunc();
     };
 

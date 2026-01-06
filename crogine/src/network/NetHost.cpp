@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,6 +32,7 @@ source distribution.
 #include "../detail/enet/enet/enet.h"
 
 #include "NetConf.hpp"
+#include <crogine/network/NetClient.hpp>
 #include <crogine/network/NetHost.hpp>
 #include <crogine/core/Log.hpp>
 #include <crogine/detail/Assert.hpp>
@@ -171,6 +172,17 @@ bool NetHost::pollEvent(NetEvent& evt)
 {
     if (!m_host) return false;
 
+    /*
+    if(localCon.hasPacket())
+    {
+        evt.type == RECEIVED
+        evt.packet.setPacketData(localCont.getData())
+        localCon.pop();
+        return true;
+    }
+    */
+
+
     ENetEvent hostEvt;
     if (enet_host_service(m_host, &hostEvt, 0) > 0)
     {
@@ -212,6 +224,11 @@ void NetHost::sendPacket(const NetPeer& peer, std::uint8_t id, const void* data,
     {
         enet_peer_send(peer.m_peer, channel, createPacket(id, data, size, flags));
     }
+
+    /*else if (peer.localCon == true)
+    {
+        localCon.push(packet);
+    }*/
 }
 
 void NetHost::disconnect(NetPeer& peer)
@@ -230,4 +247,29 @@ void NetHost::disconnectLater(NetPeer& peer)
         enet_peer_disconnect_later(peer.m_peer, 0);
         peer.m_peer = nullptr;
     }
+}
+
+bool NetHost::addLocalConnection(NetClient& client)
+{
+    if (client.getPeer().getState() != NetPeer::State::Disconnected)
+    {
+        LogE << "Could not create local connection, peer is already connected" << std::endl;
+        return false;
+    }
+
+    if (m_host)
+    {
+        //hm, we still need a valid peer to make the rest of this work
+        //if so, other than reduced latency, what's the point of direct
+        //messages if the network stack is still instanciated?
+        return client.connect(m_host->address.host, m_host->address.port, 5000);        
+    }
+
+    /*if (m_peers.size() >= m_maxClients)
+    {
+        LogE << "Max clients already connected" << std::endl;
+        return false;
+    }*/
+
+    return false;
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -96,22 +96,6 @@ bool NetClient::create(std::size_t maxChannels, std::size_t maxClients, std::uin
 
 bool NetClient::connect(const std::string& address, std::uint16_t port, std::uint32_t timeout)
 {
-    CRO_ASSERT(timeout > 0, "Timeout should probably be at least 1000ms");
-    CRO_ASSERT(port > 0, "Invalid port number");
-    CRO_ASSERT(!address.empty(), "Invalid address string");
-
-    if (m_peer.m_peer)
-    {
-        disconnect();
-    }
-
-    if (!m_client)
-    {
-        //must call create() successfully first!
-        Logger::log("Unable to connect, call NetClient::create() first!", Logger::Type::Error);
-        return false;
-    }
-
     ENetAddress add;
     if (enet_address_set_host(&add, address.c_str()) != 0)
     {
@@ -120,34 +104,15 @@ bool NetClient::connect(const std::string& address, std::uint16_t port, std::uin
     }
     add.port = port;
 
-    m_peer.m_peer = enet_host_connect(m_client, &add, m_client->channelLimit, 0);
-    if (!m_peer.m_peer)
-    {
-        Logger::log("Failed assigning peer connection to host", Logger::Type::Error);
-        return false;
-    }
+    return connect(&add, timeout);
+}
 
-    //wait for a success event from server - this part is blocking
-    ENetEvent evt;
-    if (enet_host_service(m_client, &evt, timeout) > 0 && evt.type == ENET_EVENT_TYPE_CONNECT)
-    {
-        //this is a hack to allow for long(er) loading times when the main
-        //thread is unable to poll a connection to keep it alive
-        enet_peer_timeout(m_peer.m_peer, ENET_PEER_TIMEOUT_LIMIT * 2, ENET_PEER_TIMEOUT_MINIMUM * 2, ENET_PEER_TIMEOUT_MAXIMUM * 2);
-
-
-        //ehhhhh... it actually works, but ofc introduces latency.
-        //m_threadRunning = true;
-        //m_thread = std::make_unique<std::thread>(&NetClient::threadFunc, this);
-
-        LOG("Connected to " + address, Logger::Type::Info);
-        return true;
-    }
-
-    enet_peer_reset(m_peer.m_peer);
-    m_peer.m_peer = nullptr;
-    Logger::log("Connection attempt timed out after " + std::to_string(timeout) + " milliseconds.", Logger::Type::Error);
-    return false;
+bool NetClient::connect(std::int32_t address, std::uint16_t port, std::uint32_t timeout)
+{
+    ENetAddress add;
+    add.host = address;
+    add.port = port;
+    return connect(&add, timeout);
 }
 
 void NetClient::disconnect()
@@ -188,6 +153,16 @@ void NetClient::disconnect()
 bool NetClient::pollEvent(NetEvent& evt)
 {
     if (!m_client) return false;
+
+    /*
+    if(localCon.hasPacket())
+    {
+        evt.type = NetEvent::PacketReceived;
+        evt.packet.setPacketData(hostEvt.packet);
+        return true;
+    }
+    */
+
 
     ENetEvent hostEvt;
     if (enet_host_service(m_client, &hostEvt, 0) > 0)
@@ -249,9 +224,63 @@ void NetClient::sendPacket(std::uint8_t id, const void* data, std::size_t size, 
 
         enet_peer_send(m_peer.m_peer, channel, packet);
     }
+    /*
+    else if(m_peer.localCon)
+    {
+        m_peer.localCon.push(packet);
+    }
+    */
 }
 
 //private
+bool NetClient::connect(const ENetAddress* add, std::uint32_t timeout)
+{
+    CRO_ASSERT(timeout > 0, "Timeout should probably be at least 1000ms");
+    CRO_ASSERT(port > 0, "Invalid port number");
+    CRO_ASSERT(!address.empty(), "Invalid address string");
+
+    if (m_peer.m_peer)
+    {
+        disconnect();
+    }
+
+    if (!m_client)
+    {
+        //must call create() successfully first!
+        Logger::log("Unable to connect, call NetClient::create() first!", Logger::Type::Error);
+        return false;
+    }
+
+    m_peer.m_peer = enet_host_connect(m_client, add, m_client->channelLimit, 0);
+    if (!m_peer.m_peer)
+    {
+        Logger::log("Failed assigning peer connection to host", Logger::Type::Error);
+        return false;
+    }
+
+    //wait for a success event from server - this part is blocking
+    ENetEvent evt;
+    if (enet_host_service(m_client, &evt, timeout) > 0 && evt.type == ENET_EVENT_TYPE_CONNECT)
+    {
+        //this is a hack to allow for long(er) loading times when the main
+        //thread is unable to poll a connection to keep it alive
+        enet_peer_timeout(m_peer.m_peer, ENET_PEER_TIMEOUT_LIMIT * 2, ENET_PEER_TIMEOUT_MINIMUM * 2, ENET_PEER_TIMEOUT_MAXIMUM * 2);
+
+
+        //ehhhhh... it actually works, but ofc introduces latency.
+        //m_threadRunning = true;
+        //m_thread = std::make_unique<std::thread>(&NetClient::threadFunc, this);
+
+        LOG("Connected to " + address, Logger::Type::Info);
+        return true;
+    }
+
+    enet_peer_reset(m_peer.m_peer);
+    m_peer.m_peer = nullptr;
+    Logger::log("Connection attempt timed out after " + std::to_string(timeout) + " milliseconds.", Logger::Type::Error);
+    return false;
+}
+
 void NetClient::threadFunc()
 {
     while (m_threadRunning)
