@@ -105,6 +105,9 @@ private:
 
     Thumbsticks m_thumbsticks;
 
+    cro::Shader m_ditherShader;
+    std::int32_t m_ditherUniform;
+
     void addSystems();
     void loadAssets();
     void buildScene();

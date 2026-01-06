@@ -163,6 +163,35 @@ namespace
             }
         )";
 
+    const std::string DitherFragment = 
+R"(
+OUTPUT
+uniform sampler2D u_texture;
+uniform vec4 u_displayArea;
+
+VARYING_IN vec2 v_texCoord;
+VARYING_IN vec4 v_colour;
+
+const float FadeDistance = 40.0;
+
+void main()
+{
+    ivec2 texSize = textureSize(u_texture, 0);
+    float ditherWidth = FadeDistance / texSize.x;
+    float ditherHeight = FadeDistance / texSize.y;
+
+    float left = smoothstep(u_displayArea.x, u_displayArea.x + ditherWidth, v_texCoord.x);
+    float right = 1.0 - smoothstep((u_displayArea.x + u_displayArea.z) - ditherWidth, (u_displayArea.x + u_displayArea.z), v_texCoord.x);
+
+    float bottom = smoothstep(u_displayArea.y, u_displayArea.y + ditherHeight, v_texCoord.y);
+    float top = 1.0 - smoothstep((u_displayArea.y + u_displayArea.w) - ditherHeight, (u_displayArea.y + u_displayArea.w), v_texCoord.y);
+
+    float dither = left * right * bottom * top;
+    vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
+
+    FRAG_OUT = vec4(colour.rgb, colour.a * dither);
+})";
+
     constexpr float MaxZoom = 12.f;
     constexpr float MinZoom = 0.75f;
     constexpr float BaseScaleMultiplier = 0.8f;
@@ -182,7 +211,8 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
     m_heatAmount        (0.f),
     m_zoomScale         (1.f),
     m_transitionActive  (false),
-    m_fingerCount       (0)
+    m_fingerCount       (0),
+    m_ditherUniform     (-1)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -520,6 +550,9 @@ void MapOverviewState::loadAssets()
 
     const auto size = cro::App::getWindow().getSize();
     m_mapBuffer.create(size.x, size.y);
+
+    m_ditherShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), DitherFragment, "#define TEXTURED\n");
+    m_ditherUniform = m_ditherShader.getUniformID("u_displayArea");
 }
 
 void MapOverviewState::buildScene()
@@ -621,6 +654,7 @@ void MapOverviewState::buildScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_mapBuffer.getTexture());
+    entity.getComponent<cro::Drawable2D>().setShader(&m_ditherShader);
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
     auto mapEnt = entity;
 
@@ -1005,6 +1039,9 @@ void MapOverviewState::zoomCamera()
             bottom = (1.f - height) / 2.f;
         }
         cam.viewport = { left, bottom, width, height };
+
+        glUseProgram(m_ditherShader.getGLHandle());
+        glUniform4f(m_ditherUniform, left, bottom, width, height);
     }
 }
 
