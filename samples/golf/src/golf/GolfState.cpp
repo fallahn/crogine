@@ -4352,14 +4352,14 @@ void GolfState::buildScene()
     auto sunEnt = m_gameScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -75.f * cro::Util::Const::degToRad);
+    const auto rot = sunEnt.getComponent<cro::Transform>().getRotation();
 
     sunEnt = m_skyScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -75.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().setRotation(rot);
 
     sunEnt = m_mapScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -75.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().setRotation(rot);
+
  
     if (auto month = cro::SysTime::now().months(); 
              (month == 6 || m_sharedData.weatherType == WeatherType::Showers) && !m_sharedData.nightTime)
@@ -6592,14 +6592,18 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     m_terrainBuilder.update(hole, forceTransition);
     m_gameScene.getSystem<ClientCollisionSystem>()->setMap(hole);
     m_gameScene.getSystem<ClientCollisionSystem>()->setPinPosition(m_holeData[hole].pin);
-    m_collisionMesh.updateCollisionMesh(m_holeData[hole].modelEntity.getComponent<cro::Model>().getMeshData());
 
     //set the min tree height of the culling system based on the hole model's AABB
     const float height = m_holeData[hole].modelEntity.getComponent<cro::Model>().getAABB().getSize().y + 15.f;
     m_gameScene.getSystem<ChunkVisSystem>()->setWorldHeight(height);
 
     //create hole model transition
-    bool rescale = (hole == 0) || (m_holeData[/*hole - 1*/m_currentHole].modelPath != m_holeData[hole].modelPath) || forceTransition;
+    const bool rescale = (hole == 0) || (m_holeData[/*hole - 1*/m_currentHole].modelPath != m_holeData[hole].modelPath) || forceTransition;
+    if (rescale)
+    {
+        m_collisionMesh.updateCollisionMesh(m_holeData[hole].modelEntity.getComponent<cro::Model>().getMeshData());
+    }
+
     auto* propModels = &m_holeData[m_currentHole].propEntities;
     auto* particles = &m_holeData[m_currentHole].particleEntities;
     auto* audio = &m_holeData[m_currentHole].audioEntities;
