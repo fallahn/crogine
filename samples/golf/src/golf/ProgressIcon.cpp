@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2025
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/ecs/systems/UIElementSystem.hpp>
 #include <crogine/util/String.hpp>
 
 namespace
@@ -52,6 +53,9 @@ namespace
     constexpr cro::Colour GradientLight(0x3a9ceeff);
     constexpr cro::Colour GradientDark(0x235dcfff);
     constexpr cro::Colour GradientBackground(0x969696ff);
+
+    constexpr glm::vec2 TextPos(IconSize.x / 2.f, 60.f);
+    constexpr glm::vec2 TitleTextPos(IconSize.x / 2.f, 6.f);
 }
 
 ProgressIcon::ProgressIcon(const cro::Font& font)
@@ -114,14 +118,14 @@ ProgressIcon::ProgressIcon(const cro::Font& font)
 
     m_text.setFont(font);
     m_text.setCharacterSize(16);
-    m_text.setPosition({ std::floor(IconSize.x / 2.f), 60.f });
+    m_text.setPosition(/*{ std::floor(IconSize.x / 2.f), 60.f }*/TextPos);
     m_text.setAlignment(cro::SimpleText::Alignment::Centre);
     m_text.setVerticalSpacing(1.f);
 
     m_titleText.setFont(font);
     m_titleText.setCharacterSize(16);
     m_titleText.setString("CHALLENGE PROGRESS");
-    m_titleText.setPosition({ std::floor(IconSize.x / 2.f), 6.f });
+    m_titleText.setPosition(/*{ std::floor(IconSize.x / 2.f), 6.f }*/TitleTextPos);
     m_titleText.setAlignment(cro::SimpleText::Alignment::Centre);
 
     setPosition({ 0.f, -IconSize.y });
@@ -145,9 +149,9 @@ void ProgressIcon::update(float dt)
         if (m_state == ScrollIn)
         {
             move({ 0.f, -Speed * dt });
-            if (getPosition().y < windowSize.y - IconSize.y)
+            if (getPosition().y < windowSize.y - (IconSize.y * getScale().y))
             {
-                setPosition({ windowSize.x - IconSize.x, windowSize.y - IconSize.y });
+                setPosition({ windowSize.x - (IconSize.x * getScale().x), windowSize.y - (IconSize.y * getScale().y) });
                 m_state = Paused;
             }
         }
@@ -194,6 +198,17 @@ void ProgressIcon::update(float dt)
             break;
         }
 
+        const auto scale = std::floor(cro::UIElementSystem::getViewScale() / 3.f) + 1.f;
+        setScale(glm::vec2(scale));
+
+        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+        setPosition({ windowSize.x - (IconSize.x * scale), windowSize.y });
+
+        //hmmm I thought the text position would scale with its parent
+        //but apparently it appears otherwise...
+        m_text.setPosition(TextPos * scale);
+        m_titleText.setPosition(TitleTextPos * scale);
+
         m_messageQueue.pop_front();
     }
 }
@@ -202,7 +217,7 @@ void ProgressIcon::draw()
 {
     if (m_active)
     {
-        auto tx = getTransform();
+        const auto& tx = getTransform();
 
         m_background.draw(tx);
 
@@ -253,8 +268,8 @@ void ProgressIcon::showChallenge(std::int32_t index, std::int32_t progress, std:
         m_state = ScrollIn;
         m_pauseTime = PauseTime;
 
-        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
-        setPosition({ windowSize.x - IconSize.x, windowSize.y });
+        /*const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+        setPosition({ windowSize.x - IconSize.x, windowSize.y })*/;
     }
 }
 
@@ -283,8 +298,8 @@ void ProgressIcon::showAchievement(std::int32_t index, std::int32_t progress, st
         m_state = ScrollIn;
         m_pauseTime = PauseTime;
 
-        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
-        setPosition({ windowSize.x - IconSize.x, windowSize.y });
+        /*const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+        setPosition({ windowSize.x - IconSize.x, windowSize.y });*/
     }
 }
 
@@ -330,8 +345,8 @@ void ProgressIcon::showLeague(std::int32_t index, std::int32_t progress, std::in
         m_state = ScrollIn;
         m_pauseTime = PauseTime;
 
-        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
-        setPosition({ windowSize.x - IconSize.x, windowSize.y });
+        /*const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+        setPosition({ windowSize.x - IconSize.x, windowSize.y });*/
     }
 }
 
@@ -356,7 +371,7 @@ void ProgressIcon::showMessage(const std::string& title, const std::string& msg)
         m_state = ScrollIn;
         m_pauseTime = PauseTime;
 
-        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
-        setPosition({ windowSize.x - IconSize.x, windowSize.y });
+        /*const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+        setPosition({ windowSize.x - IconSize.x, windowSize.y });*/
     }
 }
