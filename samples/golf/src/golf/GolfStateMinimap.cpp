@@ -101,7 +101,7 @@ void GolfState::updateMinimapModel()
     //we know the texture is up to date.
     m_sharedData.minimapData.holeNumber = m_currentHole;
 
-    retargetMinimap(true);
+    retargetMinimap(/*true*/!m_holeData[m_currentHole].puttFromTee);
 
     auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
     msg->type = SceneEvent::MinimapUpdated;
@@ -121,6 +121,11 @@ void GolfState::updateMiniMap()
 }
 
 void GolfState::retargetMinimap(bool reset)
+{
+    m_minimapAnimationQueue.push_back(reset);
+}
+
+void GolfState::startMinimapAnim(bool reset)
 {
     if (m_minimapZoom.activeAnimation.isValid())
     {

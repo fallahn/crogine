@@ -782,10 +782,12 @@ private:
     MinimapZoom m_minimapZoom;
 
     //GolfStateMinimap.cpp
+    std::deque<bool> m_minimapAnimationQueue;
     void createMinimapCamera();
     void updateMinimapModel();
     void updateMiniMap();
     void retargetMinimap(bool reset);
+    void startMinimapAnim(bool reset);
 
 
     cro::Entity m_greenCam;

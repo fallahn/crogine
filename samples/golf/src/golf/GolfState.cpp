@@ -2837,6 +2837,13 @@ bool GolfState::simulate(float dt)
     //to be able to stop/start it when only a hole requires it
     m_billboardVideo.update(dt);
 
+    if (!m_minimapZoom.activeAnimation.isValid()
+        && !m_minimapAnimationQueue.empty())
+    {
+        startMinimapAnim(m_minimapAnimationQueue.front());
+        m_minimapAnimationQueue.pop_front();
+    }
+
     if (m_activeAvatar)
     {
         m_activeAvatar->applyAttachment();

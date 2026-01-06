@@ -2274,7 +2274,7 @@ void GolfState::spectateGroup(std::uint8_t group)
         setCameraTarget(pPos);
         createTransition(pPos, false);
 
-        retargetMinimap(true);
+        retargetMinimap(/*true*/!m_holeData[m_currentHole].puttFromTee);
 
         //hm, doesn't really work
         //m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(group);
