@@ -59,6 +59,7 @@ source distribution.
 namespace cro
 {
     class MultiRenderTexture;
+    class Scene;
 }
 
 struct MenuSky final
