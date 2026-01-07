@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -110,7 +110,7 @@ VARYING_OUT vec4 v_menuProjection;
     VARYING_OUT vec3 v_cameraWorldPosition;
     VARYING_OUT vec3 v_worldPosition;
     VARYING_OUT vec3 v_viewPosition;
-    //VARYING_OUT float v_perspectiveScale;
+    VARYING_OUT float v_perspectiveScale;
 
 #if defined (TEXTURED)
     VARYING_OUT vec2 v_texCoord;
@@ -268,7 +268,7 @@ flat out int v_instanceID;
 #if defined(TERRAIN_CLIP)
     gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
 #endif
-        //v_perspectiveScale = u_projectionMatrix[1][1] / gl_Position.w;
+        v_perspectiveScale = clamp(1.0 - (u_projectionMatrix[1][1] / gl_Position.w), 0.0, 1.0);
     })";
 
 static inline const std::string CelFragmentShader = R"(
@@ -358,7 +358,7 @@ static inline const std::string CelFragmentShader = R"(
     VARYING_IN vec3 v_worldPosition;
     VARYING_IN vec3 v_viewPosition;
     VARYING_IN vec2 v_texCoord;
-    //VARYING_IN float v_perspectiveScale;
+    VARYING_IN float v_perspectiveScale;
 
 #if defined(MULTI_TARGET)
     VARYING_IN vec4 v_targetProjection;
@@ -692,11 +692,12 @@ float contour = getContour(0.5, 0.018);
     //vec3 g = step(df * u_pixelScale, f);
 
     //float contour = 1.0 - (g.x * g.y * g.z);
-    float contour = getContour(2.0, 0.036);
 
-    vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
+    float contour = getContour(2.0, 0.036 + (v_perspectiveScale * 0.1));
+
     //these magic numbers are distance sqr
-    float fade = (1.0 - smoothstep(81.0, 144.0, dot(distance, distance))) * u_transparency * 0.75;
+    vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
+    float fade = (1.0 - smoothstep(81.0, 100.0, dot(distance, distance))) * u_transparency * 0.75;
 
     vec3 contourColour = BaseContourColour;
     contourColour.x += mod(v_worldPosition.y * 3.0, 1.0);

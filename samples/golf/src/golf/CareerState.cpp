@@ -557,7 +557,10 @@ void CareerState::buildScene()
     std::vector<std::uint8_t> temp(18);
     std::int32_t temp2 = 0;
 
-    for (auto i = 0u; i < Career::MaxLeagues; ++i)
+    const bool showCustom = false;// (leagueTables[Career::MaxLeagues - 1].getCurrentBest() < CareerLeagueThreshold);
+    const std::uint32_t displayCount = showCustom ? Career::MaxLeagues : Career::MaxLeagues - 1;
+
+    for (auto i = 0u; i < /*Career::MaxLeagues*/displayCount; ++i)
     {
         //this just builds up the string if needed, and finds the previous result (if any)
         leagueTables[i].getPreviousResults(playerName);
@@ -655,7 +658,10 @@ void CareerState::buildScene()
     buttons.back().getComponent<cro::UIInput>().setNextIndex(CareerGimme, CareerGimme);
 
     //put player name on bottom row of the box
-    position.y -= LeagueLineSpacing;
+    if (!showCustom)
+    {
+        position.y -= LeagueLineSpacing;
+    }
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
     entity.addComponent<cro::Drawable2D>();
@@ -671,44 +677,47 @@ void CareerState::buildScene()
 
     //ticker for freeplay reminder
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-    position.x += 100.f;
-    position.y += LeagueLineSpacing + 1.f;
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(position);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString("Don't forget you can practice any course at any time in Free Play mode!");
-    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<ScrollData>();
-    entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds.height += 2.f;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-        {
-            auto& [bounds, xPos] = e.getComponent<cro::Callback>().getUserData<ScrollData>();
-            xPos -= (dt * 30.f);
-
-            static constexpr float BGWidth = 198.f;
-
-            if (xPos < (-bounds.width))
+    
+    if (!showCustom)
+    {
+        position.x += 100.f;
+        position.y += LeagueLineSpacing + 1.f;
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("Don't forget you can practice any course at any time in Free Play mode!");
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<ScrollData>();
+        entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds.height += 2.f;
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
             {
-                xPos = BGWidth + 20.f;
-            }
+                auto& [bounds, xPos] = e.getComponent<cro::Callback>().getUserData<ScrollData>();
+                xPos -= (dt * 30.f);
 
-            auto pos = e.getComponent<cro::Transform>().getPosition();
-            pos.x = std::round(xPos);
+                static constexpr float BGWidth = 198.f;
 
-            e.getComponent<cro::Transform>().setPosition(pos);
+                if (xPos < (-bounds.width))
+                {
+                    xPos = BGWidth + 20.f;
+                }
 
-            auto cropping = bounds;
-            cropping.left = -pos.x;
-            cropping.left += 20.f;
-            cropping.width = BGWidth;
-            e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
-        };
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                auto pos = e.getComponent<cro::Transform>().getPosition();
+                pos.x = std::round(xPos);
 
+                e.getComponent<cro::Transform>().setPosition(pos);
+
+                auto cropping = bounds;
+                cropping.left = -pos.x;
+                cropping.left += 20.f;
+                cropping.width = BGWidth;
+                e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+            };
+        bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
 
     //gimme
     entity = m_scene.createEntity();

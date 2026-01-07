@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -62,7 +62,8 @@ public:
     Career& operator = (const Career&) = delete;
     Career& operator = (Career&&) = delete;
 
-    static constexpr std::uint32_t MaxLeagues = 6;
+    static constexpr std::uint32_t MaxLeagues = 7;
+    //static constexpr std::uint32_t MaxLeagues = 6;
 
     static Career& instance(const SharedStateData& sd)
     {

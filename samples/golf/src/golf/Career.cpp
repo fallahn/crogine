@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -42,7 +42,9 @@ namespace
         {7, 3},
         {10,1},
         {8, 2},
-        {6,11},}
+        {6,11},
+        {0,1}
+        }
     };
 
     const std::array<cro::String, Career::MaxLeagues> LeagueNames =
@@ -52,7 +54,8 @@ namespace
         "Links Challenge",
         "Hill and Hole Valley Run",
         "Chippers Pitch 'n' Putt",
-        "The Woodlands League"
+        "The Woodlands League",
+        "Custom League"
     };
 }
 

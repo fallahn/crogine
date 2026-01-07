@@ -6658,7 +6658,7 @@ void GolfState::updateLeague()
         if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
         {
             std::int32_t bestCount = 0;
-            for (auto i = 0u; i < 6u; ++i)
+            for (auto i = 0u; i < Career::MaxLeagues - 1; ++i) //don't include custom league
             {
                 bestCount += Career::instance(m_sharedData).getLeagueTables()[i].getCurrentBest();
             }
