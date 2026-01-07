@@ -6710,6 +6710,7 @@ void GolfState::updateLeagueHole()
             case LeagueRoundID::RoundFour:
             case LeagueRoundID::RoundFive:
             case LeagueRoundID::RoundSix:
+            case LeagueRoundID::Custom:
             {
                 auto& league = Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
                 //this may have been saved previously
