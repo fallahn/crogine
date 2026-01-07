@@ -76,6 +76,7 @@ R"(
 
 uniform sampler2D u_diffuseMap;
 uniform float u_heatmap = 0.0;
+uniform float u_zoom = 1.0;
 
 VARYING_IN vec4 v_colour;
 VARYING_IN vec3 v_worldPosition;
@@ -138,7 +139,7 @@ void main()
 #endif
 
     vec3 c = BaseHeatColour;
-    c.x += v_worldPosition.y * 0.1;
+    c.x += v_worldPosition.y * 0.25 * (1.0 + (u_zoom * 0.1));
     c = hsv2rgb(c);
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, c, u_heatmap * 0.6);

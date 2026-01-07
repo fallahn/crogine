@@ -1042,6 +1042,9 @@ void MapOverviewState::zoomCamera()
 
         glUseProgram(m_ditherShader.getGLHandle());
         glUniform4f(m_ditherUniform, left, bottom, width, height);
+
+        glUseProgram(m_sharedData.minimapData.shaderID);
+        glUniform1f(m_sharedData.minimapData.zoomUniform, m_zoomScale);
     }
 }
 

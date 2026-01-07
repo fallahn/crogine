@@ -156,6 +156,7 @@ struct SharedStateData final
 
         std::uint32_t shaderID = 0;
         std::int32_t heatUniform = -1;
+        std::int32_t zoomUniform = -1;
 
         bool active = false;
     }minimapData;

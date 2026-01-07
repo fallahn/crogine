@@ -371,14 +371,11 @@ static inline const std::string CelFragmentShader = R"(
 #define USE_MRT
 #include OUTPUT_LOCATION
 
-    //layout (location = 4) out vec4 o_terrain;
-
 
 #if defined(RX_SHADOWS)
 #include SHADOWMAP_INPUTS
 #include CASCADE_SELECTION
 
-//#if defined (TERRAIN) || defined(CONTOUR)
 #if !defined (CLASSIC_SHADOWS)
 #include VSM_SHADOWS
 #else
@@ -438,7 +435,6 @@ static inline const std::string CelFragmentShader = R"(
         float falloff = 0.003;
         falloff += 0.02 * sizeMultiplier;
 
-        //float thickness = 0.018;
         thickness += thickness * sizeMultiplier;
 
         float edge2 = 1.0 - falloff;
@@ -499,9 +495,6 @@ static inline const std::string CelFragmentShader = R"(
 #else
         POS_OUT = vec4(v_worldPosition, 1.0);
 #endif
-        //float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
-
-        //o_terrain = vec4(vec3(greenTerrain), 1.0);
 
         vec3 lightDirection = normalize(-u_lightDirection);
         float amount = dot(normal, lightDirection);
@@ -537,7 +530,6 @@ static inline const std::string CelFragmentShader = R"(
 
 
 #if !defined(HOLE_HEIGHT)
-
         //TODO most of these comp shade materials don't need this
         //so would be nice to be able to skip the pointless lookups
         if (u_maskColour.b < 0.95)
@@ -660,8 +652,8 @@ static inline const std::string CelFragmentShader = R"(
 #endif 
 
 
-#if defined (DITHERED) || defined (FADE_INPUT)// || defined (TERRAIN)
-        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
+#if defined (DITHERED) || defined (FADE_INPUT)
+        vec2 xy = gl_FragCoord.xy;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
 
@@ -672,8 +664,6 @@ static inline const std::string CelFragmentShader = R"(
 #endif
         if(alpha < 0.1) discard;
 #endif
-
-
 
 
 #if defined(HOLE_HEIGHT)
@@ -702,7 +692,7 @@ float contour = getContour(0.5, 0.018);
     //vec3 g = step(df * u_pixelScale, f);
 
     //float contour = 1.0 - (g.x * g.y * g.z);
-float contour = getContour(2.0, 0.036);
+    float contour = getContour(2.0, 0.036);
 
     vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
     //these magic numbers are distance sqr
@@ -721,12 +711,6 @@ float contour = getContour(2.0, 0.036);
 #endif
 #endif
 
-
-
-#if defined(TERRAIN_CLIP)
-    //FRAG_OUT.rgb = mix(vec3(0.2, 0.3059, 0.6118) * u_lightColour.rgb, FRAG_OUT.rgb, smoothstep(WaterLevel - 0.001, WaterLevel + 0.001, v_worldPosition.y));
-    //FRAG_OUT.a = step(WaterLevel - 0.001, v_worldPosition.y);
-#endif
 
 #if defined (MASK_MAP)
     vec3 mask = TEXTURE(u_maskMap, texCoord).rgb;
@@ -778,11 +762,10 @@ vec3 mapColour = TEXTURE(u_menuTexture, projUV).rgb;
     mapColour *= 1.0 - mask.g;
 #endif
 FRAG_OUT.rgb += mapColour;
-
 #endif
-//FRAG_OUT += vec4(1.0, 0.0, 0.0, 1.0);
     })";
     
+//FRAG_OUT += vec4(1.0, 0.0, 0.0, 1.0);
 //FRAG_OUT.r *= step(0.001, projUV.x);
 //FRAG_OUT.r *= 1.0 - step(0.999, projUV.x);
 
