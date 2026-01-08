@@ -686,14 +686,14 @@ float contour = getContour(0.5, 0.018);
 
 #else //putting green
 
-    //vec3 f = fract(v_worldPosition * 2.0);
-    //vec3 df = fwidth(v_worldPosition * 2.0);
-    ////df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
-    //vec3 g = step(df * u_pixelScale, f);
+    vec3 f = fract(v_worldPosition * 2.0);
+    vec3 df = fwidth(v_worldPosition * 2.0);
+    //df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
+    vec3 g = step(df * u_pixelScale, f);
 
-    //float contour = 1.0 - (g.x * g.y * g.z);
+    float contour = 1.0 - (g.x * g.y * g.z);
 
-    float contour = getContour(2.0, 0.036 + (v_perspectiveScale * 0.1));
+    //float contour = getContour(2.0, 0.036 + (v_perspectiveScale * 0.1));
 
     //these magic numbers are distance sqr
     vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
