@@ -122,11 +122,6 @@ void GolfState::updateMiniMap()
 
 void GolfState::retargetMinimap(bool reset)
 {
-    m_minimapAnimationQueue.push_back(reset);
-}
-
-void GolfState::startMinimapAnim(bool reset)
-{
     if (m_minimapZoom.activeAnimation.isValid())
     {
         //remove existing animation
