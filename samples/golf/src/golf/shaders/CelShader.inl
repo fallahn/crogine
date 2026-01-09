@@ -427,6 +427,9 @@ static inline const std::string CelFragmentShader = R"(
     const vec3 SlopeShade = vec3(0.439, 0.368, 0.223);
     const vec3 BaseContourColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion
 #if defined(HOLE_HEIGHT)
+#if defined(CONTOUR)
+#include CONTOUR
+#else
     float getContour(float spacing, float thickness)
     {
         vec3 f = fract(v_worldPosition * spacing);
@@ -445,6 +448,7 @@ static inline const std::string CelFragmentShader = R"(
         float contourY = smoothstep(edge0, edge1, f.z) * (1.0 - smoothstep(edge2, 1.0, f.z));
         return clamp(contourX + contourY, 0.0, 1.0);
     }
+#endif
 #endif
 
     void main()
@@ -686,14 +690,14 @@ float contour = getContour(0.5, 0.018);
 
 #else //putting green
 
-    vec3 f = fract(v_worldPosition * 2.0);
-    vec3 df = fwidth(v_worldPosition * 2.0);
-    //df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
-    vec3 g = step(df * u_pixelScale, f);
+    //vec2 f = fract(v_worldPosition.xz * 2.0);
+    //vec2 df = fwidth(v_worldPosition.xz * 2.0);
+    ////df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
+    //vec2 g = step(df * u_pixelScale, f);
 
-    float contour = 1.0 - (g.x * g.y * g.z);
+    //float contour = 1.0 - (g.x * g.y);
 
-    //float contour = getContour(2.0, 0.036 + (v_perspectiveScale * 0.1));
+    float contour = pristineGrid(v_worldPosition.xz*2.0,vec2(1.0/40.0));
 
     //these magic numbers are distance sqr
     vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;

@@ -442,6 +442,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="src\batcat\GrassShader.inl" />
+    <None Include="src\batcat\GridShader.inl" />
     <None Include="src\batcat\smaa_shaders\blend.inl" />
     <None Include="src\batcat\smaa_shaders\edges.inl" />
     <None Include="src\batcat\smaa_shaders\weights.inl" />

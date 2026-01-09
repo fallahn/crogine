@@ -655,5 +655,8 @@
     <None Include="src\batcat\GrassShader.inl">
       <Filter>Header Files\batcat</Filter>
     </None>
+    <None Include="src\batcat\GridShader.inl">
+      <Filter>Header Files\batcat</Filter>
+    </None>
   </ItemGroup>
 </Project>

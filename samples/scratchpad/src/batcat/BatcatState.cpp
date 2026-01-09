@@ -100,6 +100,7 @@ namespace
 {
 #include "TestShaders.inl"
 #include "GrassShader.inl"
+#include "GridShader.inl"
 
     //cro::UISystem* uiSystem = nullptr;
     cro::CommandSystem* commandSystem = nullptr;
@@ -447,11 +448,15 @@ void BatcatState::loadAssets()
     //CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
 
     m_audioBuffer.loadFromFile("assets/batcat/sound/laser.wav");
+
+    //rimming enables passing world pos to frag shader
+    m_resources.shaders.loadFromString(ShaderID::Grid,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), GridFrag, "#define TEXTURED\n#define RIMMING\n");
 }
 
 void BatcatState::createScene()
 {
-    createGrass();
+    //createGrass();
 
     //createTestModels();
 
@@ -528,6 +533,9 @@ void BatcatState::createScene()
     entity.getComponent<cro::Transform>().addChild(bbEnt.getComponent<cro::Transform>());
 
     //TODO these will be different types of chunk
+    const auto gridID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Grid));
+    auto material = m_resources.materials.get(gridID);
+
     const int count = 3;
     for (auto i = 0; i < count; ++i)
     {
@@ -537,6 +545,8 @@ void BatcatState::createScene()
         //auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
         m_modelDefs[GameModelID::TestRoom]->createModel(entity);
         entity.addComponent<TerrainChunk>().width = 200.f;
+
+        entity.getComponent<cro::Model>().setMaterial(0, material);
 
         bbEnt = m_scene.createEntity();
         bbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 3.f + (3.f * i) });

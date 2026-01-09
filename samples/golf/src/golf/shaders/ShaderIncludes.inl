@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -309,6 +309,35 @@ static inline const std::string IncWaterLevel = R"(const float WaterLevel = -0.0
 
 static inline const std::string ClipDistance = R"(gl_ClipDistance[1] = dot(position, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));)";
 
+//https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8
+static inline const std::string Contour =
+R"(
+float pristineGrid(vec2 uv, vec2 lineWidth)
+{
+    vec2 ddx = dFdx(uv);
+    vec2 ddy = dFdy(uv);
+    vec2 uvDeriv = vec2(length(vec2(ddx.x, ddy.x)), length(vec2(ddx.y, ddy.y)));
+    bvec2 invertLine = bvec2(lineWidth.x > 0.5, lineWidth.y > 0.5);
+    vec2 targetWidth = 
+    vec2(
+      invertLine.x ? 1.0 - lineWidth.x : lineWidth.x,
+      invertLine.y ? 1.0 - lineWidth.y : lineWidth.y
+      );
+    vec2 drawWidth = clamp(targetWidth, uvDeriv, vec2(0.5));
+    vec2 lineAA = uvDeriv * 1.5;
+    vec2 gridUV = abs(fract(uv) * 2.0 - 1.0);
+    gridUV.x = invertLine.x ? gridUV.x : 1.0 - gridUV.x;
+    gridUV.y = invertLine.y ? gridUV.y : 1.0 - gridUV.y;
+    vec2 grid2 = smoothstep(drawWidth + lineAA, drawWidth - lineAA, gridUV);
+
+    grid2 *= clamp(targetWidth / drawWidth, 0.0, 1.0);
+    grid2 = mix(grid2, targetWidth, clamp(uvDeriv * 2.0 - 1.0, 0.0, 1.0));
+    grid2.x = invertLine.x ? 1.0 - grid2.x : grid2.x;
+    grid2.y = invertLine.y ? 1.0 - grid2.y : grid2.y;
+    return mix(grid2.x, 1.0, grid2.y);
+}
+)";
+
 static inline const std::unordered_map<std::string, const char*> IncludeMappings =
 {
     std::make_pair("WIND_BUFFER", WindBuffer.c_str()),
@@ -324,4 +353,5 @@ static inline const std::unordered_map<std::string, const char*> IncludeMappings
     std::make_pair("FOG_COLOUR", FogColour.c_str()),
     std::make_pair("WATER_LEVEL", IncWaterLevel.c_str()),
     std::make_pair("CLIP_DISTANCE", ClipDistance.c_str()),
+    std::make_pair("CONTOUR", Contour.c_str()),
 };
