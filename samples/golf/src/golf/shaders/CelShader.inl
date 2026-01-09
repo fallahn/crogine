@@ -690,14 +690,15 @@ float contour = getContour(0.5, 0.018);
 
 #else //putting green
 
-    //vec2 f = fract(v_worldPosition.xz * 2.0);
-    //vec2 df = fwidth(v_worldPosition.xz * 2.0);
-    ////df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
-    //vec2 g = step(df * u_pixelScale, f);
+    vec2 f = fract(v_worldPosition.xz * 2.0);
+    vec2 df = fwidth(v_worldPosition.xz * 2.0);
+    //df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
+    vec2 g = step(df * u_pixelScale, f);
+    //vec2 g = smoothstep(df, df * 3.0, f); //good theory but only smooths one side
 
-    //float contour = 1.0 - (g.x * g.y);
+    float contour = 1.0 - (g.x * g.y);
 
-    float contour = pristineGrid(v_worldPosition.xz*2.0,vec2(1.0/40.0));
+    //float contour = pristineGrid(v_worldPosition.xz*2.0,vec2(1.0/40.0));
 
     //these magic numbers are distance sqr
     vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;

@@ -144,10 +144,15 @@ void main()
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, c, u_heatmap * 0.6);
 
+    /*vec2 f = fract(v_worldPosition.xz / 2.0);
+    vec2 df = fwidth(v_worldPosition.xz / 2.0);
+    vec2 g = step(df, f);
+    float contour = (g.x * g.y);*/
+
 
     //float f = fract(v_worldPosition.y * 150.0); //larger is closer together
     //float df = fwidth(v_worldPosition.y * 150.0);
     //float contour = smoothstep(df * 1.0, df * 2.0, f);
 
-    //FRAG_OUT.rgb = mix(FRAG_OUT.rgb, c, (1.0 - contour) * 0.6);
+    //FRAG_OUT.rgb = mix(FRAG_OUT.rgb, vec3(1.0) - c, contour * 0.6 * u_heatmap);
 })";
