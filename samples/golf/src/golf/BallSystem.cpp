@@ -152,6 +152,8 @@ namespace
     constexpr float TopSpinInfluence = 1.f;
 
     constexpr float BallPenetrationAvg = 0.054f; //if the ball collision is greater than this it's set to 'buried' else 'sitting up'
+
+    constexpr float PhysicsScale = 10.f; //physics world is scaled by this to decrease tunnelling (supposedly)
 }
 
 const std::array<std::string, 5u> Ball::StateStrings = { "Idle", "Flight", "Putt", "Paused", "Reset" };
@@ -313,6 +315,9 @@ BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos, glm::vec3 forwar
 {
     CRO_ASSERT(glm::length2(forward) != 0, "");
     
+    pos *= PhysicsScale;
+    rayLength *= PhysicsScale;
+
     //normalised vecs share a normalised length squared
     //assuming no fp error...
     if (glm::length2(forward) != 1.f)
@@ -340,6 +345,9 @@ BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos, glm::vec3 forwar
         retVal.normal = { res.m_hitNormalWorld.x(), res.m_hitNormalWorld.y(), res.m_hitNormalWorld.z() };
         retVal.intersection = { res.m_hitPointWorld.x(), res.m_hitPointWorld.y(), res.m_hitPointWorld.z() };
         retVal.penetration = res.m_hitPointWorld.y() - pos.y;
+
+        retVal.intersection /= PhysicsScale;
+        retVal.penetration /= PhysicsScale;
     }
 
     return retVal;
@@ -774,6 +782,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                     const auto manifolds = doSphereCollision(centre - testOffset);
                     collisionCount += manifolds.size();
 
+                    //NOTE this penetration value *isn't* the penetration depth, this needs
+                    //to be renamed!!
                     for (auto [normal, penetration] : manifolds)
                     {
                         if (penetration != 0)
@@ -1655,7 +1665,7 @@ void BallSystem::updateWind()
 
 std::vector<SphereResult::Manifold> BallSystem::doSphereCollision(glm::vec3 worldPosition)
 {
-    m_ballCollider->setWorldTransform(btTransform(btQuaternion(), glmToBt(worldPosition)));
+    m_ballCollider->setWorldTransform(btTransform(btQuaternion(), glmToBt(worldPosition * PhysicsScale)));
 
     SphereResult result;
     result.objects = &m_groundObjects;
@@ -1673,8 +1683,8 @@ void BallSystem::initCollisionWorld(bool drawDebug)
     m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionCfg.get());
 
 
-    //m_ballCollisionShape = std::make_unique<btSphereShape>(Ball::Radius - 0.001f);
-    m_ballCollisionShape = std::make_unique<btCylinderShape>(btVector3(Ball::Radius, Ball::Radius / 6.f, Ball::Radius));
+    m_ballCollisionShape = std::make_unique<btSphereShape>((Ball::Radius - 0.001f) * PhysicsScale);
+    //m_ballCollisionShape = std::make_unique<btCylinderShape>(btVector3(Ball::Radius, Ball::Radius / 6.f, Ball::Radius));
     m_ballCollider = std::make_unique<btCollisionObject>();
     m_ballCollider->setCollisionShape(m_ballCollisionShape.get());
     m_ballCollider->setCcdMotionThreshold(Ball::Radius / 2.f);
@@ -1755,6 +1765,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
 
         m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh, PHY_SHORT);
         m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
+        m_groundShapes.back()->setLocalScaling(btVector3(PhysicsScale, PhysicsScale, PhysicsScale));
         m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
         m_groundObjects.back()->setUserIndex(colourOffset); //use to read the terrain type in RayResult
         m_groundObjects.back()->setUserIndex2(i++); //so we can index back into this array in a callback
