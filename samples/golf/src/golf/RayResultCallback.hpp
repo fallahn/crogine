@@ -80,7 +80,6 @@ struct RayResultCallback final : public btCollisionWorld::ClosestRayResultCallba
 
 private:
 
-
     CollisionUtil::FaceData getFaceData(const btCollisionWorld::LocalRayResult& rayResult, std::int32_t colourOffset) const;
 };
 
