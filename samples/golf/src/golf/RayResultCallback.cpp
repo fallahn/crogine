@@ -79,7 +79,7 @@ btScalar SphereResult::addSingleResult(btManifoldPoint& cp, const btCollisionObj
 
     //for some reason the object passed in as a param returns a nullptr so we have to hack around it like this
     const auto& arr = *objects;
-    const auto [faceNormal, _] = CollisionUtil::getFaceData(arr[obj0->getCollisionObject()->getUserIndex2()]->getCollisionShape(), partID0, triangleIndex0, colourOffset);
+    const auto [faceNormal, terrain] = CollisionUtil::getFaceData(arr[obj0->getCollisionObject()->getUserIndex2()]->getCollisionShape(), partID0, triangleIndex0, colourOffset);
 
     //NOTE the that normal direction *flips* if the centre of
     //the sphere is the other side of the collision plane...
@@ -87,11 +87,11 @@ btScalar SphereResult::addSingleResult(btManifoldPoint& cp, const btCollisionObj
     //so we use the calculated face normal instead
 
     const auto normal = btToGlm(/*cp.m_normalWorldOnB*/faceNormal);
-    static constexpr float MaxAngle = 8.f / 90.f;
+    //static constexpr float MaxAngle = 8.f / 90.f;
 
     //only keep this collision if the surface is near vertical
     const auto angle = glm::dot(cro::Transform::Y_AXIS, normal);
-    if (angle < MaxAngle
+    if (angle < /*MaxAngle*/(maxTestAngle / 90.f)
         && angle >= 0.f)
     {
         auto& man = manifolds.emplace_back();
@@ -100,6 +100,7 @@ btScalar SphereResult::addSingleResult(btManifoldPoint& cp, const btCollisionObj
         //TODO this isn't correct so we're ignoring it when processing the result
         //perhaps we could use the point on worldB property to calculate the correction?
         man.penetration = -cp.m_distance1;
+        man.terrain = ((terrain & 0xFF000000) >> 24);
 
         //LogI << normal << ", " << btToGlm(faceNormal) << std::endl;
     }

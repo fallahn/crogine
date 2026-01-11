@@ -479,12 +479,34 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 float r = cro::Util::Const::TAU * (vel2 / MaxVel) * ball.rotation;// *ball.spin.x;
                 r = std::clamp(r, -MaxRotation, MaxRotation);
 
-
+                //this isn't actually the ball spin - rather it makes
+                //balls with spin disabled rotate on the Y axis while in flight
                 tx.rotate(cro::Transform::Y_AXIS, r * dt);
 
-                //test collision
-                doCollision(entity);
-                //doBallCollision(entity);
+                //test collision (accounts for ball position not actually being at the centre...
+                if (const auto manifolds = doSphereCollision(tx.getPosition() + glm::vec3(0.f, Ball::Radius, 0.f), 60.f);
+                    !manifolds.empty())
+                {
+                    //LogI << "Wall collision!" << std::endl;
+                    //doCollision(entity);
+                    const auto dir = glm::normalize(ball.velocity);
+
+                    for (const auto& [normal, _, terrain] : manifolds)
+                    {
+                        const auto surfaceDir = static_cast<float>(cro::Util::Maths::sgn(glm::dot(normal, -dir)));
+                        if (surfaceDir > 0)
+                        {
+                            tx.move((normal * Ball::Radius));
+                            ball.velocity = glm::reflect(ball.velocity, normal) * Restitution[terrain];
+                            ball.lastTerrain = terrain; //this will trigger a sound effect when it reaches the client
+                        }
+                    }
+                }
+                else
+                {
+                    doCollision(entity);
+                    //doBallCollision(entity);
+                }
 
                 if (ball.state != Ball::State::Flight)
                 {
@@ -784,7 +806,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                     //NOTE this penetration value *isn't* the penetration depth, this needs
                     //to be renamed!!
-                    for (auto [normal, penetration] : manifolds)
+                    for (const auto& [normal, penetration, terrain] : manifolds)
                     {
                         if (penetration != 0)
                         {
@@ -792,7 +814,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                             tx.move(-testOffset);
                             
                             //penetration is actually the offset of the centre of the ball from teh collision plane
-                            float correction = Ball::Radius;// -std::abs(penetration);
+                            const float correction = Ball::Radius;// -std::abs(penetration);
 
                             //this makes sure the normal is always facing the direction
                             //the ball was travelling from - otherwise it flips if the
@@ -1663,12 +1685,13 @@ void BallSystem::updateWind()
     //m_windStrengthTarget = 0.f;
 }
 
-std::vector<SphereResult::Manifold> BallSystem::doSphereCollision(glm::vec3 worldPosition)
+std::vector<SphereResult::Manifold> BallSystem::doSphereCollision(glm::vec3 worldPosition, float maxWallAngle)
 {
     m_ballCollider->setWorldTransform(btTransform(btQuaternion(), glmToBt(worldPosition * PhysicsScale)));
 
     SphereResult result;
     result.objects = &m_groundObjects;
+    result.maxTestAngle = maxWallAngle;
     m_collisionWorld->contactTest(m_ballCollider.get(), result);
 
     return result.manifolds;

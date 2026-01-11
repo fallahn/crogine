@@ -94,8 +94,12 @@ struct SphereResult final : public btCollisionWorld::ContactResultCallback
     {
         glm::vec3 normal = glm::vec3(0.f);
         float penetration = 0.f;
+        std::int32_t terrain = 0;
     };
     std::vector<Manifold> manifolds;
+
+    static constexpr float MaxAngle = 8.f; //degrees.
+    float maxTestAngle = MaxAngle;
 
     btScalar addSingleResult(btManifoldPoint&, const btCollisionObjectWrapper*, int, int, const btCollisionObjectWrapper*, int, int) override;
 };

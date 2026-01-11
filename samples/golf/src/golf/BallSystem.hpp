@@ -229,7 +229,7 @@ private:
     std::unique_ptr<btCollisionShape> m_ballCollisionShape;
     std::unique_ptr<btCollisionObject> m_ballCollider;
 
-    std::vector<SphereResult::Manifold> doSphereCollision(glm::vec3);
+    std::vector<SphereResult::Manifold> doSphereCollision(glm::vec3 position, float maxWallAngle = SphereResult::MaxAngle);
 
 #ifdef CRO_DEBUG_
     std::unique_ptr<BulletDebug> m_debugDraw;
