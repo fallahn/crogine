@@ -620,8 +620,8 @@ void League::decreaseDifficulty()
 
 std::string League::getFilePath(const std::string& fn) const
 {
-    std::string basePath = Content::getBaseContentPath();
     
+    std::string basePath = Content::getBaseContentPath() + "career/";
     const auto assertPath = 
         [&]()
         {
@@ -631,43 +631,39 @@ std::string League::getFilePath(const std::string& fn) const
             }
         };
     
+    assertPath();
+
+
     switch (m_id)
     {
     default: break;
     case LeagueRoundID::RoundOne:
-        basePath += "career/";
-        assertPath();
         basePath += "round_01/";
         assertPath();
         break;
     case LeagueRoundID::RoundTwo:
-        basePath += "career/";
-        assertPath();
         basePath += "round_02/";
         assertPath();
         break;
     case LeagueRoundID::RoundThree:
-        basePath += "career/";
-        assertPath();
         basePath += "round_03/";
         assertPath();
         break;
     case LeagueRoundID::RoundFour:
-        basePath += "career/";
-        assertPath();
+
         basePath += "round_04/";
         assertPath();
         break;
     case LeagueRoundID::RoundFive:
-        basePath += "career/";
-        assertPath();
         basePath += "round_05/";
         assertPath();
         break;
     case LeagueRoundID::RoundSix:
-        basePath += "career/";
-        assertPath();
         basePath += "round_06/";
+        assertPath();
+        break;
+    case LeagueRoundID::Custom:
+        basePath += "round_07/";
         assertPath();
         break;
     }

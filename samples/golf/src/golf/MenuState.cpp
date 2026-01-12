@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -3877,10 +3877,18 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::PlayerXP:
         {
-            auto value = evt.packet.as<std::uint16_t>();
+            const auto value = evt.packet.as<std::uint16_t>();
             std::uint8_t client = value & 0xff;
             std::uint8_t level = value >> 8;
-            m_sharedData.connectionData[client].level = level;
+
+            if (client < ConstVal::MaxClients)
+            {
+                m_sharedData.connectionData[client].level = level;
+            }
+            else
+            {
+                LogW << "Recieved XP value of " << (int)level << " for client " << (int)client << ": client out of range...";
+            }
         }
             break;
         case PacketID::NewLobbyReady:

@@ -216,7 +216,6 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
 {
     ctx.mainWindow.setMouseCaptured(false);
 
-    CRO_ASSERT(sd.minimapData.mrt, "");
     CRO_ASSERT(sd.minimapData.mapScene, "");
     addSystems();
     loadAssets();
