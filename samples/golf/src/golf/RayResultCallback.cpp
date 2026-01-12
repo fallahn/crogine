@@ -36,7 +36,7 @@ source distribution.
 
 //custom callback to return proper face normal (I wish we could cache these...)
 RayResultCallback::RayResultCallback(const btVector3& rayFromWorld, const btVector3& rayToWorld)
-    : ClosestRayResultCallback(rayFromWorld, rayToWorld)
+    : /*ClosestRayResultCallback*/AllHitsRayResultCallback(rayFromWorld, rayToWorld)
 {
 }
 
@@ -52,10 +52,20 @@ btScalar RayResultCallback::addSingleResult(btCollisionWorld::LocalRayResult& ra
         //TODO getFaceData could fill these directly, but it's clearer
         //what's going on if we do it here.
 
-        auto [normal, collisionType] = getFaceData(rayResult, m_collisionObject->getUserIndex());
-        m_hitNormalWorld = normal;
-        m_collisionType = collisionType;
-        m_hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
+        const auto [normal, collisionType] = getFaceData(rayResult, m_collisionObject->getUserIndex());
+        //m_hitNormalWorld = normal;
+        //m_collisionType = collisionType;
+        //m_hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
+        m_hitNormalWorld.push_back(normal);
+        m_collisionType.push_back(collisionType);
+        
+        btVector3 hitPointWorld;
+        hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
+        m_hitPointWorld.push_back(hitPointWorld);
+
+        //TODO not used afaik, included for completeness
+        m_collisionObjects.push_back(rayResult.m_collisionObject);
+        m_hitFractions.push_back(rayResult.m_hitFraction);
     }
     else
     {

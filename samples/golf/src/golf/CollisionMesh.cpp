@@ -126,11 +126,17 @@ TerrainResult CollisionMesh::getTerrain(glm::vec3 position) const
 
     if (res.hasHit())
     {
-        retVal.height = res.m_hitPointWorld.y();
-        retVal.terrain = (res.m_collisionType >> 24);
-        retVal.trigger = ((res.m_collisionType & 0x00ff0000) >> 16);
-        retVal.normal = { res.m_hitNormalWorld.getX(), res.m_hitNormalWorld.getY(), res.m_hitNormalWorld.getZ() };
-        retVal.wasRayHit = true;
+        for (auto i = 0u; i < res.m_hitPointWorld.size(); ++i)
+        {
+            if (res.m_hitPointWorld[i].y() > retVal.height)
+            {
+                retVal.height = res.m_hitPointWorld[i].y();
+                retVal.terrain = (res.m_collisionType[i] >> 24);
+                retVal.trigger = ((res.m_collisionType[i] & 0x00ff0000) >> 16);
+                retVal.normal = { res.m_hitNormalWorld[i].getX(), res.m_hitNormalWorld[i].getY(), res.m_hitNormalWorld[i].getZ()};
+                retVal.wasRayHit = true;
+            }
+        }
     }
 
     return retVal;
@@ -148,11 +154,17 @@ TerrainResult CollisionMesh::getTerrain(glm::vec3 rayStart, glm::vec3 rayDir) co
 
     if (res.hasHit())
     {
-        retVal.height = res.m_hitPointWorld.y();
-        retVal.terrain = (res.m_collisionType >> 24);
-        retVal.trigger = ((res.m_collisionType & 0x00ff0000) >> 16);
-        retVal.normal = { res.m_hitNormalWorld.getX(), res.m_hitNormalWorld.getY(), res.m_hitNormalWorld.getZ() };
-        retVal.wasRayHit = true;
+        for (auto i = 0u; i < res.m_hitPointWorld.size(); ++i)
+        {
+            if (res.m_hitPointWorld[i].y() > retVal.height)
+            {
+                retVal.height = res.m_hitPointWorld[i].y();
+                retVal.terrain = (res.m_collisionType[i] >> 24);
+                retVal.trigger = ((res.m_collisionType[i] & 0x00ff0000) >> 16);
+                retVal.normal = { res.m_hitNormalWorld[i].getX(), res.m_hitNormalWorld[i].getY(), res.m_hitNormalWorld[i].getZ()};
+                retVal.wasRayHit = true;
+            }
+        }
     }
 
     return retVal;

@@ -340,14 +340,25 @@ BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos, glm::vec3 forwar
     m_collisionWorld->rayTest(rayStart, rayEnd, res);
     if (res.hasHit())
     {
-        retVal.terrain = (res.m_collisionType >> 24);
-        retVal.trigger = ((res.m_collisionType & 0x00ff0000) >> 16);
-        retVal.normal = { res.m_hitNormalWorld.x(), res.m_hitNormalWorld.y(), res.m_hitNormalWorld.z() };
-        retVal.intersection = { res.m_hitPointWorld.x(), res.m_hitPointWorld.y(), res.m_hitPointWorld.z() };
-        retVal.penetration = res.m_hitPointWorld.y() - pos.y;
+        //TODO we might have more that one result (although rarely more than 2)
+        //so we need to find the closest to the test point? If the test point
+        //is below ground however the one we look for (the ground surface) may
+        //actually be further away... so do we keep the result with the highest
+        //Y value and assume the ray is always cast downwards?
+        for (auto i = 0u; i < res.m_hitPointWorld.size(); ++i)
+        {
+            if (res.m_hitPointWorld[i].y() > retVal.intersection.y)
+            {
+                retVal.terrain = (res.m_collisionType[i] >> 24);
+                retVal.trigger = ((res.m_collisionType[i] & 0x00ff0000) >> 16);
+                retVal.normal = { res.m_hitNormalWorld[i].x(), res.m_hitNormalWorld[i].y(), res.m_hitNormalWorld[i].z() };
+                retVal.intersection = { res.m_hitPointWorld[i].x(), res.m_hitPointWorld[i].y(), res.m_hitPointWorld[i].z() };
+                retVal.penetration = res.m_hitPointWorld[i].y() - pos.y;
 
-        retVal.intersection /= PhysicsScale;
-        retVal.penetration /= PhysicsScale;
+                retVal.intersection /= PhysicsScale;
+                retVal.penetration /= PhysicsScale;
+            }
+        }
     }
 
     return retVal;

@@ -71,12 +71,14 @@ struct CollisionGroup final
     };
 };
 
-struct RayResultCallback final : public btCollisionWorld::ClosestRayResultCallback
+struct RayResultCallback final : public btCollisionWorld::AllHitsRayResultCallback//ClosestRayResultCallback
 {
     RayResultCallback(const btVector3& rayFromWorld, const btVector3& rayToWorld);
     btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override;
 
-    std::int32_t m_collisionType = 0; //R|G|B|A from face, R == terrain
+    //std::int32_t m_collisionType = 0;
+    //R|G|B|A from face, R == terrain
+    btAlignedObjectArray<std::int32_t> m_collisionType;
 
 private:
 
