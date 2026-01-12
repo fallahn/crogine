@@ -591,8 +591,10 @@ static inline const std::string CelFragmentShader = R"(
         int texY = int(mod(texCheck.y, MatrixSize));
 
         float facing = dot(normal, vec3(0.0, 1.0, 0.0));
-        float waterFade = (1.0 - smoothstep(WaterLevel, (1.15 * (1.0 - smoothstep(0.89, 0.99, facing))) + WaterLevel, v_worldPosition.y));
-        float waterDither = findClosest(texX, texY, waterFade) * waterFade * (1.0 - step(0.96, facing));
+        float waterFade = (1.0 - smoothstep(WaterLevel, (1.15 * (1.0 - smoothstep(0.98, 0.995, facing))) + WaterLevel, v_worldPosition.y));
+        //float waterFade = (1.0 - smoothstep(WaterLevel, (1.15 * (1.0 - smoothstep(0.89, 0.99, facing))) + WaterLevel, v_worldPosition.y));
+        float waterDither = findClosest(texX, texY, waterFade) * waterFade * (1.0 - step(0.992, facing));
+        //float waterDither = findClosest(texX, texY, waterFade) * waterFade * (1.0 - step(0.96, facing));
 
 #if defined(COMP_SHADE)
         waterDither *= u_maskColour.g;
