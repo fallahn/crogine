@@ -1710,7 +1710,17 @@ void OptionsStateV2::createSettingsItems()
     item->displayType = Menu::Item::Slider;
 
 
-
+    //skip speed
+    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item->title = "Shot Animation Skip Speed";
+    item->description = "Set the amount of time required to hold the Action button to skip to the end of the current shot";
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.skipSpeed = i.selectedIndex == 1 ? 10.f : 60.f;
+        };
+    item->count = 2;
+    item->labels = { "Normal", "Fast" };
+    item->selectedIndex = m_sharedData.skipSpeed == 10.f ? 1 : 0;
 
 
 

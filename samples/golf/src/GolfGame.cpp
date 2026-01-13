@@ -1852,6 +1852,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.teeColour = std::clamp(prop.getValue<std::int32_t>(), 0, static_cast<std::int32_t>(CD32::Count));
                     }
+                    else if (name == "skip_speed")
+                    {
+                        m_sharedData.skipSpeed = std::clamp(prop.getValue<float>(), 10.f, 60.f);
+                    }
                 }
             }
 
@@ -2023,6 +2027,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("mini_load").setValue(m_sharedData.miniLoadingScreen);
     cfg.addProperty("measure_speed").setValue(m_sharedData.measureSpeed);
     cfg.addProperty("tee_colour").setValue(m_sharedData.teeColour);
+    cfg.addProperty("skip_speed").setValue(m_sharedData.skipSpeed);
     cfg.save(path);
 
 

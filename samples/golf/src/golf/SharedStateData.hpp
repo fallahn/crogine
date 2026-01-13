@@ -399,6 +399,7 @@ struct SharedStateData final
     bool calculateRange = false; //calculate or estimate the range indicator
     bool miniLoadingScreen = false; //cover the transition with a loading screen
     float measureSpeed = 1.f; //multiplier when measuring for putt
+    float skipSpeed = 60.f; //how long the shot button is held (lower faster) to skip the shot
     std::int32_t webPort = 8080;
     
     std::int32_t flagText = 0; //none, black, white

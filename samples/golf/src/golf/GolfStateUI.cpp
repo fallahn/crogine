@@ -6129,7 +6129,9 @@ void GolfState::updateSkipMessage(float dt)
                 || cro::GameController::isButtonPressed(activeControllerID(m_currentPlayer.player), m_sharedData.inputBinding.buttons[InputBinding::Action])
                 || (m_humanCount == 1 && m_buttonStates.buttonA)) //TODO this breaks if we ever get around to reassigning controller buttons
             {
-                m_skipState.currentTime = std::min(SkipState::SkipTime, m_skipState.currentTime + dt);
+                const float skipSpeed = SkipState::SkipTime / m_sharedData.skipSpeed;
+
+                m_skipState.currentTime = std::min(SkipState::SkipTime, m_skipState.currentTime + skipSpeed);
                 if (m_skipState.currentTime == SkipState::SkipTime)
                 {
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
@@ -6144,6 +6146,8 @@ void GolfState::updateSkipMessage(float dt)
                         e.getComponent<cro::Callback>().active = true;
                     };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                    m_skipState.currentTime = 0.f;
                 }
             }
             else
