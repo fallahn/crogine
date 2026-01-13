@@ -2506,6 +2506,10 @@ void OptionsStateV2::createDisplayItems()
     auto* item = &m_menuLayout.items[TabID::Display].emplace_back();
     item->title = "Configuration";
     item->displayType = Menu::Item::Heading;
+    if (cro::App::getWindow().getGPUVendor() == cro::GPUVendor::NVidia)
+    {
+        item->description = "Tip: disable Threaded Optimization in the nvidia control panel and restart the game if you experience stuttering.";
+    }
 
     //TODO Presets
 

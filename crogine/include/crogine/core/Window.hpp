@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -47,6 +47,11 @@ namespace cro
 {   
     class LoadingScreen;
     class Cursor;
+
+    enum class GPUVendor
+    {
+        NVidia, AMD, Intel, Unknown
+    };
 
     /*!
     \brief Creates a window to which to draw.
@@ -284,12 +289,17 @@ namespace cro
         */
         glm::uvec2 getWindowedSize() const;
 
+        /*!
+        \brief Returns the GPU vendor of the current OpenGL context
+        */
+        GPUVendor getGPUVendor() const;
 
     private:
 
         SDL_Window* m_window;
         SDL_GLContext m_threadContext;
         SDL_GLContext m_mainContext;
+        mutable GPUVendor m_gpuVendor;
 
         std::unique_ptr<LoadingScreen> m_loadingScreen;
 
