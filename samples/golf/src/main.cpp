@@ -32,6 +32,7 @@ source distribution.
 #include <SDL.h>
 
 #include "GolfGame.hpp"
+#include "nv/NVSettings.hpp"
 
 #include <iostream>
 
@@ -40,7 +41,6 @@ int main(int argc, char** argsv)
 {
     bool safeMode = false;
 
-    GolfGame game;
     if (argc > 1)
     {
         std::string str(argsv[1]);
@@ -51,6 +51,12 @@ int main(int argc, char** argsv)
 #endif
 
     }
+
+#ifdef _WIN32
+    applyNVSettings();
+#endif
+
+    GolfGame game;
 
     game.setSafeModeEnabled(safeMode);
     game.run(safeMode);
