@@ -1090,6 +1090,7 @@
     <None Include="src\golf\shaders\ShaderIncludes.inl" />
     <None Include="src\golf\shaders\ShadowMapping.inl" />
     <None Include="src\golf\shaders\ShopItems.inl" />
+    <None Include="src\golf\shaders\Shore.inl" />
     <None Include="src\golf\shaders\SwarmShader.inl" />
     <None Include="src\golf\shaders\TerrainMaterials.inl" />
     <None Include="src\golf\shaders\TerrainShader.inl" />

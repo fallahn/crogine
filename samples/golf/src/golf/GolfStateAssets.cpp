@@ -89,6 +89,7 @@ namespace
 #include "shaders/ClothShader.inl"
 #include "shaders/MinimapModel.inl"
 #include "shaders/GrassShader.inl"
+#include "shaders/Shore.inl"
 
     //colour is normal colour with dark shadow
     const std::array BannerStrings =
@@ -1900,6 +1901,19 @@ void GolfState::loadMaterials()
         };
     m_resources.shaders.addLazyLoader(ShaderID::Cloth, lazyLoad5);
     m_resources.shaders.mapStringID("sail", ShaderID::Cloth);
+
+    const auto lazyLoad6 =
+        [&, mrt](cro::ShaderResource& shaders)
+        {
+            if (shaders.loadFromString(ShaderID::Shore, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit),
+                ShoreFragment, "#define TEXTURED\n#define RIMMING\n" + mrt/*wobble*/))
+            {
+                m_windBuffer.addShader(shaders.get(ShaderID::Shore));
+                /*m_resolutionBuffer.addShader(shaders.get(ShaderID::Shore));*/
+            }
+        };
+    m_resources.shaders.addLazyLoader(ShaderID::Shore, lazyLoad6);
+    m_resources.shaders.mapStringID("shore", ShaderID::Shore);
 
     //create compile time constants from moon phase data
     const MoonPhase mp(std::time(nullptr));

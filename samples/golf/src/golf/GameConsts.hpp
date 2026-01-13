@@ -425,7 +425,8 @@ struct ShaderID final
         Umbrella,
         Moon,
         Earth,
-        Cloth
+        Cloth,
+        Shore
     };
 };
 
