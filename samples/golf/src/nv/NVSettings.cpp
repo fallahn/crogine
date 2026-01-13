@@ -54,22 +54,30 @@ static inline void setStr(NvAPI_UnicodeString& out, const std::wstring& in)
     memcpy_s(out, sizeof(out), in.data(), in.size() * sizeof(wchar_t));
 }
 
-static inline void CheckError(NvAPI_Status status)
+static inline void log(const char* s)
+{
+    std::cerr << s << std::endl;
+    OutputDebugStringA(s);
+    OutputDebugStringA("\n");
+}
+
+static inline bool checkError(NvAPI_Status status)
 {
     if (status == NVAPI_OK)
     {
-        return;
+        return false;
     }
 
     NvAPI_ShortString str = { 0 };
     NvAPI_GetErrorMessage(status, str);
 
-    if (str)
+    //if (str)
     {
         //can't use normal logger here as it's not yet initialised
-        std::cerr << str << std::endl;
-        OutputDebugStringA(str);
+        log(str);
     }
+
+    return true;
 }
 
 //https://stackoverflow.com/questions/36959508/nvidia-graphics-driver-causing-noticeable-frame-stuttering
@@ -79,13 +87,22 @@ void applyNVSettings()
     NvDRSSessionHandle hSession = 0;
 
     status = NvAPI_Initialize();
-    CheckError(status);
+    if (checkError(status))
+    {
+        log("Failed initialising");
+    }
 
     status = NvAPI_DRS_CreateSession(&hSession);
-    CheckError(status);
+    if (checkError(status))
+    {
+        log("failed create session");
+    }
 
     status = NvAPI_DRS_LoadSettings(hSession);
-    CheckError(status);
+    if (checkError(status))
+    {
+        log("Failed loading settings");
+    }
 
 
     
@@ -98,8 +115,15 @@ void applyNVSettings()
 
     //create Profile
     NvDRSProfileHandle hProfile = 0;
-    status = NvAPI_DRS_CreateProfile(hSession, &profileInfo, &hProfile);
-    CheckError(status);
+    status = NvAPI_DRS_FindProfileByName(hSession, profileInfo.profileName, &hProfile);
+    if (checkError(status))
+    {
+        status = NvAPI_DRS_CreateProfile(hSession, &profileInfo, &hProfile);
+        if (checkError(status))
+        {
+            log("Failed creating profile");
+        }
+    }
 
 
     //fill Application Info
@@ -108,13 +132,19 @@ void applyNVSettings()
     app.isPredefined = 0;
     setStr(app.appName, appName);
     setStr(app.userFriendlyName, appFriendlyName);
-    //setStr(app.launcher, L"");
-    //setStr(app.fileInFolder, L"");
+    setStr(app.launcher, L"");
+    setStr(app.fileInFolder, L"");
 
     //create Application
-    status = NvAPI_DRS_CreateApplication(hSession, hProfile, &app);
-    CheckError(status);
-
+    status = NvAPI_DRS_FindApplicationByName(hSession, app.appName, &hProfile, &app);
+    if (checkError(status))
+    {
+        status = NvAPI_DRS_CreateApplication(hSession, hProfile, &app);
+        if (checkError(status))
+        {
+            log("Failed creating application");
+        }
+    }
 
     //fill Setting Info
     NVDRS_SETTING setting = {};
@@ -124,17 +154,23 @@ void applyNVSettings()
     setting.settingLocation = NVDRS_CURRENT_PROFILE_LOCATION;
     setting.isCurrentPredefined = 0;
     setting.isPredefinedValid = 0;
-    setting.u32CurrentValue = /*threadedOptimisation*/false ? OGL_THREAD_CONTROL_ENABLE : OGL_THREAD_CONTROL_DISABLE;
-    setting.u32PredefinedValue = /*threadedOptimisation*/false ? OGL_THREAD_CONTROL_ENABLE : OGL_THREAD_CONTROL_DISABLE;
+    setting.u32CurrentValue = /*threadedOptimisationf ? OGL_THREAD_CONTROL_ENABLE :*/ OGL_THREAD_CONTROL_DISABLE;
+    setting.u32PredefinedValue = /*threadedOptimisation ? OGL_THREAD_CONTROL_ENABLE : */OGL_THREAD_CONTROL_DISABLE;
 
     //set Setting
     status = NvAPI_DRS_SetSetting(hSession, hProfile, &setting);
-    CheckError(status);
+    if (checkError(status))
+    {
+        log("Failed applying setting");
+    }
 
 
     //apply (or save) our changes to the system
     status = NvAPI_DRS_SaveSettings(hSession);
-    CheckError(status);
+    if (checkError(status))
+    {
+        log("Failed saving settings");
+    }
 
     NvAPI_DRS_DestroySession(hSession);
 }
