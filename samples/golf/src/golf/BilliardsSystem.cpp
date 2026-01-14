@@ -42,7 +42,7 @@ source distribution.
 
 namespace
 {
-
+    constexpr float PhysicsScale = 1.f;
 }
 
 //conversion funcs are declared in GameConsts
@@ -59,18 +59,20 @@ btVector3 glmToBt(glm::vec3 v)
 void BilliardBall::getWorldTransform(btTransform& dest) const
 {
     const auto& tx = m_parent.getComponent<cro::Transform>();
-    dest.setFromOpenGLMatrix(&tx.getWorldTransform()[0][0]);
+    const auto src = glm::scale(tx.getWorldTransform(), glm::vec3(PhysicsScale));
+    dest.setFromOpenGLMatrix(&src[0][0]);
 }
 
 void BilliardBall::setWorldTransform(const btTransform& src)
 {
     static std::array<float, 16> matrixBuffer = {};
+    //static constexpr auto InvScale = glm::vec3(1.f / PhysicsScale);
 
     src.getOpenGLMatrix(matrixBuffer.data());
     const auto mat = glm::make_mat4(matrixBuffer.data());
 
     auto& tx = m_parent.getComponent<cro::Transform>();
-    tx.setPosition(glm::vec3(mat[3]));
+    tx.setPosition(glm::vec3(mat[3]) / PhysicsScale);
     tx.setRotation(glm::quat_cast(mat));
 
     hadUpdate = true;
@@ -90,7 +92,7 @@ BilliardsSystem::BilliardsSystem(cro::MessageBus& mb)
     requireComponent<BilliardBall>();
     requireComponent<cro::Transform>();
 
-    m_ballShape = std::make_unique<btSphereShape>(BilliardBall::Radius);
+    m_ballShape = std::make_unique<btSphereShape>(BilliardBall::Radius * PhysicsScale);
 
     //note these have to be created in the right order so that destruction
     //is properly done in reverse...
@@ -220,6 +222,7 @@ void BilliardsSystem::initTable(const TableData& tableData)
         return;
     }
 
+    const btVector3 scaleVector = btVector3(PhysicsScale, PhysicsScale, PhysicsScale);
 
     btTransform transform;
     transform.setIdentity();
@@ -237,10 +240,11 @@ void BilliardsSystem::initTable(const TableData& tableData)
 
 
         m_tableVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(tableMesh);
-        m_tableShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_tableVertices.back().get(), false));
+        m_tableShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_tableVertices.back().get(), false))->setLocalScaling(scaleVector);
 
         auto& body = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Cushion, 0.f, m_tableShapes.back().get())));
         body->setWorldTransform(transform);
+        
         m_collisionWorld->addRigidBody(body.get(), (1<< CollisionID::Cushion), (1 << CollisionID::Ball));
     }
 
@@ -248,6 +252,7 @@ void BilliardsSystem::initTable(const TableData& tableData)
     //the physics. Balls check their proximity to pockets and disable table collision
     //when they need to. This way we can place a pocket anywhere on the surface.
     auto& tableShape = m_boxShapes.emplace_back(std::make_unique<btBoxShape>(btBoxShape(btVector3(meshData.boundingBox[1].x, 0.05f, meshData.boundingBox[1].z))));
+    tableShape->setLocalScaling(scaleVector);
     transform.setOrigin({ 0.f, -0.05f, 0.f });
     auto& table = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Table, 0.f, tableShape.get())));
     table->setWorldTransform(transform);
@@ -266,7 +271,9 @@ void BilliardsSystem::initTable(const TableData& tableData)
 #endif
 
     m_pocketWalls[0] = std::make_unique<btBoxShape>(btVector3(Pocket::DefaultRadius, WallHeight, WallThickness));
+    m_pocketWalls[0]->setLocalScaling(scaleVector);
     m_pocketWalls[1] = std::make_unique<btBoxShape>(btVector3(WallThickness, WallHeight, Pocket::DefaultRadius));
+    m_pocketWalls[1]->setLocalScaling(scaleVector);
 
     const std::array Offsets =
     {
@@ -279,14 +286,16 @@ void BilliardsSystem::initTable(const TableData& tableData)
     for (auto p : tableData.pockets)
     {
         glm::vec3 pocketPos(p.position.x, -WallHeight, -p.position.y);
+        //pocketPos *= PhysicsScale;
         if (p.radius <= 0)
         {
             p.radius = Pocket::DefaultRadius;
         }
+        //p.radius *= PhysicsScale;
 
         //place these in world space for simpler testing
         auto& pocket = m_pockets.emplace_back();
-        pocket.box = { pocketPos - PocketHalfSize, pocketPos + PocketHalfSize };
+        pocket.box = { pocketPos - (PocketHalfSize/* * PhysicsScale*/), pocketPos + (PocketHalfSize/* * PhysicsScale*/) };
         pocket.id = i++;
         pocket.position = { pocketPos.x, pocketPos.z };
         pocket.value = p.value;
@@ -296,7 +305,7 @@ void BilliardsSystem::initTable(const TableData& tableData)
         {
             const auto& wallShape = m_pocketWalls[j % 2];
             auto& obj = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Pocket, 0.f, wallShape.get())));
-            transform.setOrigin(glmToBt(pocketPos) + (Offsets[j] * (WallThickness + p.radius)));
+            transform.setOrigin(glmToBt(pocketPos) + (Offsets[j] * ((WallThickness * PhysicsScale) + (p.radius * PhysicsScale))));
             obj->setWorldTransform(transform);
             m_collisionWorld->addCollisionObject(obj.get(), (1 << CollisionID::Pocket), (1 << CollisionID::Ball));
         }
@@ -490,8 +499,10 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
     //set a random orientation
     entity.getComponent<cro::Transform>().setRotation(cro::Util::Random::quaternion());
 
+    const auto tx = glm::scale(entity.getComponent<cro::Transform>().getWorldTransform(), glm::vec3(PhysicsScale));
+
     btTransform transform;
-    transform.setFromOpenGLMatrix(&entity.getComponent<cro::Transform>().getWorldTransform()[0][0]);
+    transform.setFromOpenGLMatrix(&tx[0][0]);
     
     auto& body = m_ballObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Ball, BilliardBall::Mass, m_ballShape.get(), &ball)));
     body->setWorldTransform(transform);
