@@ -1767,7 +1767,7 @@ void OptionsStateV2::createSettingsItems()
     //precise range indicator
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Estimated Range Indicator";
-    item->description = "Increases difficulty by omitting elevation and wind from the range indicator prediction";
+    item->description = "Set to OFF to account for elevation and wind when predicting the range";
     item->selected =
         [&](const Menu::Item&)
         {
@@ -1780,7 +1780,7 @@ void OptionsStateV2::createSettingsItems()
             m_sharedData.calculateRange = i.selectedIndex == 0;
         };
     item->count = 2;
-    item->labels = { "No" , "Yes" };
+    item->labels = { "Off" , "On" };
     item->selectedIndex = m_sharedData.calculateRange ? 0 : 1;
 
 
