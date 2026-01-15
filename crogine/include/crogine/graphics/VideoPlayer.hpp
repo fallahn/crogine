@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -158,6 +158,16 @@ namespace cro
         rendered.
         */
         const cro::Texture& getTexture() const { return m_outputBuffer.getTexture(); }
+
+        /*!
+        \brief Enables or disables texture smoothing on the output buffer
+        */
+        void setSmooth(bool s) { m_outputBuffer.setSmooth(s); }
+
+        /*!
+        \brief Enables or disables texture repeating on the output buffer
+        */
+        void setRepeated(bool r) { m_outputBuffer.setRepeated(r); }
 
     private:
 
