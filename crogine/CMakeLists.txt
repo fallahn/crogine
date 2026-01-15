@@ -28,6 +28,7 @@ SET(TARGET_ANDROID FALSE CACHE BOOL "Build the library for Android devices")
 
 SET(USE_GL_41 FALSE CACHE BOOL "Use OpenGL 4.1 instead of 4.6 on desktop builds.")
 SET(USE_PARALLEL_EXECUTION TRUE CACHE BOOL "Enable parallel execution, requires compiler support")
+SET(BUILD_KTX FALSE CACHE BOOL "Choose to fetch and build libktx instead of using the binary inclued in the repository")
 
 if(${TARGET_ANDROID})
   SET(${CMAKE_TOOLCHAIN_FILE} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchains/android-arm.cmake")
@@ -129,7 +130,7 @@ endif()
 
 
 #ktx texture compression
-if (APPLE)
+if (APPLE OR BUILD_KTX)
 
 include(FetchContent)
 #set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "Build KTX as a static library" FORCE)
