@@ -97,6 +97,7 @@ source distribution.
 
 #include <AchievementIDs.hpp>
 #include <AchievementStrings.hpp>
+#include <CompetitionLeague.hpp>
 
 #ifdef USE_GNS
 #include <AchievementsImpl.hpp>
@@ -744,6 +745,7 @@ bool GolfGame::initialise()
     }
 
     loadAvatars(); //this relies on steam being initialised
+    CompetitionLeague::init(); //as does this
 
     if (Social::isSteamdeck())
     {
