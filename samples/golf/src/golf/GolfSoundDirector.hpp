@@ -58,7 +58,7 @@ public:
     void setActivePlayer(std::size_t client, std::size_t player, bool skipAudio);
     void setCrowdPositions(const std::vector<glm::mat4>& v) { m_crowdPositions = &v; }
 
-    cro::Entity playSound(std::int32_t, glm::vec3, float = 1.f);
+    cro::Entity playSound(std::int32_t, glm::vec3, float = 1.f, std::uint8_t terrain = 255);
 
     struct AudioID final
     {

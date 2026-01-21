@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1098,10 +1098,21 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     power *= (1.f - (SideSpinReduction * std::abs(spin.x)));
 
-    const auto impulse = getImpulse(pitch, yaw) * power * getDampening();
+    auto impulse = getImpulse(pitch, yaw) * power * getDampening();
 
     m_lastCalculatedHook = hook;
     m_activeLoadout = nullptr;
+
+
+    if (m_terrain == TerrainID::Bunker)
+    {
+        //fluff the shot if we hook / slice
+        if (std::abs(hook) > (MinHook / (1.f + Club::getClubLevel())))
+        {
+            impulse *= 0.1f;
+        }
+    }
+
     return { impulse, spin, hook };
 }
 

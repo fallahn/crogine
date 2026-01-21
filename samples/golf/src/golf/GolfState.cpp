@@ -1513,14 +1513,22 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = GolfEvent::HookedBall;
-                    floatingMessage("Hook");
+                    msg3->terrain = m_currentPlayer.terrain;
+                    if (m_currentPlayer.terrain != TerrainID::Bunker)
+                    {
+                        floatingMessage("Hook");
+                    }
                     isHook = true;
                 }
                 else if (hook > (MinHook / hookDivisor))
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = GolfEvent::SlicedBall;
-                    floatingMessage("Slice");
+                    msg3->terrain = m_currentPlayer.terrain;
+                    if (m_currentPlayer.terrain != TerrainID::Bunker)
+                    {
+                        floatingMessage("Slice");
+                    }
                     isHook = true;
                 }
 

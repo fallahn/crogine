@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -451,13 +451,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             case GolfEvent::HookedBall:
             if (cro::Util::Random::value(0,1) == 0)
             {
-                playSound(AudioID::Hook, glm::vec3(0.f));
+                playSound(AudioID::Hook, glm::vec3(0.f), data.terrain);
             }
             break;
             case GolfEvent::SlicedBall:
             if (cro::Util::Random::value(0, 1) == 0)
             {
-                playSound(AudioID::Slice, glm::vec3(0.f));
+                playSound(AudioID::Slice, glm::vec3(0.f), data.terrain);
             }
             break;
             case GolfEvent::NiceShot:
@@ -990,7 +990,7 @@ void GolfSoundDirector::setActivePlayer(std::size_t client, std::size_t player, 
     m_newHole = false;
 }
 
-cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, float volume)
+cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, float volume, std::uint8_t terrain)
 {
     const auto playDefault = [&, id, volume, position]()
     {
@@ -1067,7 +1067,8 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
         return playSpecial();
     case AudioID::Hook:
     case AudioID::Slice:
-        return cro::Util::Random::value(0, 1) == 0 ? playSpecial() : playDefault();
+        return cro::Util::Random::value(0, 1) == 0
+            || terrain == TerrainID::Bunker ? playSpecial() : playDefault();
     }
 
     m_soundTimers[id].restart();
