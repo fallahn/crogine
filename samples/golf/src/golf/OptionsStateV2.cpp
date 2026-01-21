@@ -1232,6 +1232,7 @@ void OptionsStateV2::createSettingsItems()
     auto* item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Appearance";
     item->displayType = Menu::Item::Heading;
+    item->description = "Customise in-game display settings";
 
     //use flag beacon
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
@@ -1661,7 +1662,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Control Settings";
     item->displayType = Menu::Item::Heading;
-
+    item->description = "Configure input settings";
 
     //mouse button for action
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
@@ -1728,7 +1729,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Gameplay Settings";
     item->displayType = Menu::Item::Heading;
-
+    item->description = "Configure difficulty and accessibility settings";
 
     //putt assist
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
