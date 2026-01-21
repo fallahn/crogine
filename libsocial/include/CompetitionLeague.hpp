@@ -45,7 +45,7 @@ public:
 
     static const cro::String& getCurrentLeaderboard();
     static const cro::String& getPreviousLeaderboard();
-
+    static std::int32_t getCourseIndex() { return -1; }
 private:
 
 };

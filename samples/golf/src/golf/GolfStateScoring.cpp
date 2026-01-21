@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -35,6 +35,7 @@ source distribution.
 #include "XPAwardStrings.hpp"
 
 #include <AchievementStrings.hpp>
+#include <CompetitionLeague.hpp>
 
 using namespace cl;
 
@@ -191,6 +192,12 @@ void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestStri
                 }
 
                 Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score, stableford, scoreData);
+
+                if (true/*m_sharedData.competitionRound*/)
+                {
+                    LogI << FILE_LINE << " - implement me" << std::endl;
+                    //CompetitionLeague::insertScore(stableford, m_courseIndex);
+                }
                 break;
             }
         }
