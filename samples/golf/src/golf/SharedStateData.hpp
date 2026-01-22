@@ -309,6 +309,7 @@ struct SharedStateData final
     GameMode gameMode = GameMode::FreePlay;
     bool hosting = false;
     bool hasMulligan = false;
+    bool competitionLeague = false;
     std::size_t tutorialIndex = 0; //set in tutorial mode to decide which part to display
     std::size_t courseIndex = 0; //if hosting which course/billiard table we last chose.
     std::int32_t ballSkinIndex = 0; //billiards balls

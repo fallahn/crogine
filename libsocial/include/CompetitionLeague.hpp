@@ -38,14 +38,20 @@ class CompetitionLeague final
 public:
 
     static void init();
+    static void insertScore(std::int32_t stableford, std::int32_t courseIndex);
 
-    static void insertScore(std::int32_t stableford, std::int32_t holeIndex);
+    //these funcs raise a Social::StatMessage to say that the string is ready
+    static void refreshCurrentLeaderboard() {};
+    static void refreshPreviousLeaderboard() {};
 
-    static void refreshTotal();
+    //leaderboard string, personal score string
+    static const std::pair<const cro::String*, const cro::String*> getCurrentLeaderboard();
+    static const std::pair<const cro::String*, const cro::String*> getPreviousLeaderboard();
 
-    static const cro::String& getCurrentLeaderboard();
-    static const cro::String& getPreviousLeaderboard();
+    //returns the next course to play or -1 if this month is complete
     static std::int32_t getCourseIndex() { return -1; }
+
 private:
 
+    static void refreshTotal(std::int32_t currentCourse);
 };

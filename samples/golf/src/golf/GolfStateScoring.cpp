@@ -193,10 +193,9 @@ void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestStri
 
                 Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score, stableford, scoreData);
 
-                if (true/*m_sharedData.competitionRound*/)
+                if (m_sharedData.competitionLeague)
                 {
-                    LogI << FILE_LINE << " - implement me" << std::endl;
-                    //CompetitionLeague::insertScore(stableford, m_courseIndex);
+                    CompetitionLeague::insertScore(stableford, m_courseIndex);
                 }
                 break;
             }

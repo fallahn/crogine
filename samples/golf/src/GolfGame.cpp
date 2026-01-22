@@ -583,6 +583,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
         }
     }
 
+
     m_stateStack.handleMessage(msg);
 }
 

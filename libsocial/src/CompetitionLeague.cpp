@@ -36,6 +36,7 @@ namespace
     cro::String previousLeaderboard;
 }
 
+//public
 void CompetitionLeague::init()
 {
     currentLeaderboard = "No entries";
@@ -47,17 +48,18 @@ void CompetitionLeague::insertScore(std::int32_t stableford, std::int32_t hoelIn
 
 }
 
-void CompetitionLeague::refreshTotal()
+const std::pair<const cro::String*, const cro::String*> CompetitionLeague::getCurrentLeaderboard()
 {
-
+    return { &currentLeaderboard, &currentLeaderboard };
 }
 
-const cro::String& CompetitionLeague::getCurrentLeaderboard()
+const std::pair<const cro::String*, const cro::String*> CompetitionLeague::getPreviousLeaderboard()
 {
-    return currentLeaderboard;
+    return { &previousLeaderboard, &currentLeaderboard };
 }
 
-const cro::String& CompetitionLeague::getPreviousLeaderboard()
+//private
+void CompetitionLeague::refreshTotal(std::int32_t)
 {
-    return previousLeaderboard;
+
 }

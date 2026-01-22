@@ -106,6 +106,7 @@ public:
             AwardsReceived,
             RequestRestart,
             LeagueReceived,
+            CompetitionLeagueReceived,
             ScrubScoresReceived,
             SBallScoresReceived,
         }type = StatsReceived;
