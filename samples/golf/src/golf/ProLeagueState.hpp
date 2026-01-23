@@ -91,9 +91,14 @@ private:
     std::function<void()> enterInfoCallback;
     std::function<void()> quitInfoCallback;
 
+    cro::Entity m_progressText;
+
     void addSystems();
     void buildScene();
     void createConfirmMenu(cro::Entity);
+    void refreshProgressText();
+
+    void onCachedPush() override;
 
     void quitState();
 };

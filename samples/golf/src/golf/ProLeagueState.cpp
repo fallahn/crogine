@@ -226,6 +226,14 @@ void ProLeagueState::handleMessage(const cro::Message& msg)
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         }
     }
+    else if (msg.id == Social::MessageID::StatsMessage)
+    {
+        const auto& data = msg.getData<Social::StatEvent>();
+        if (data.type == Social::StatEvent::CompetitionLeagueReceived)
+        {
+            refreshProgressText();
+        }
+    }
 
     m_scene.forwardMessage(msg);
 }
@@ -308,16 +316,16 @@ void ProLeagueState::buildScene()
                     {
                         requestStackPush(StateID::Unlock);
                     }
-                    else
-                    {
-                        auto idx = m_sharedData.leagueRoundID - LeagueRoundID::RoundOne;
-                        if (idx == 0 && m_progressPositions[idx] == 0 //no completed holes
-                            && Career::instance(m_sharedData).getLeagueTables()[idx].getCurrentIteration() == 0)
-                        {
-                            //if we're on the first league/season show the info
-                            enterInfoCallback();
-                        }
-                    }
+                    //else
+                    //{
+                    //    auto idx = m_sharedData.leagueRoundID - LeagueRoundID::RoundOne;
+                    //    if (idx == 0 && m_progressPositions[idx] == 0 //no completed holes
+                    //        && Career::instance(m_sharedData).getLeagueTables()[idx].getCurrentIteration() == 0)
+                    //    {
+                    //        //if we're on the first league/season show the info
+                    //        enterInfoCallback();
+                    //    }
+                    //}
 
                     //start title animation
                     cro::Command cmd;
@@ -367,32 +375,84 @@ void ProLeagueState::buildScene()
     m_rootNode = rootNode;
 
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/career_menu.spt", m_sharedData.sharedResources->textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/pro_league_menu.spt", m_sharedData.sharedResources->textures);
 
     //background
-    //auto entity = m_scene.createEntity();
-    //entity.addComponent<cro::Transform>();
-    //entity.addComponent<cro::Drawable2D>();
-    //entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
-    //entity.getComponent<UIElement>().absolutePosition = { 0.f, 10.f };
-    //entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    //entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
-    //auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    //entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
-    //rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 10.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //auto bgEnt = entity;
+    auto bgEnt = entity;
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    //title text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), 224.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Welcome to the Pro League!");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    const std::string info = 
+        R"(
+Rules:
+
+    The league lasts one calendar month.
+    There are 12 rounds, one on each course, made up of 18 holes.
+    Each round can only be played once each month - so bring your A-Game!
+    All assists are off - there's no putt assist, and the range indicator is set to Estimated.
+    Pro clubs only! Your profile loadout is still applied, so make sure to upgrade your kit.
+
+    Current progress can be viewed from the League Browser, as with other leagues.
+)";
+
+    //menu text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 16.f, 216.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(info);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //progress info (score, current position etc)
+    const auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), 15.f, 0.1f});
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(labelFont).setString(*CompetitionLeague::getCurrentLeaderboard().second);
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_progressText = entity;
+
+    refreshProgressText();
+
+    //TODO display course info for next round
 
 
     //title
-    auto entity = m_scene.createEntity();
+    entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.9f };
     entity.getComponent<UIElement>().depth = 1.6f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
-    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function = TitleTextCallback();
@@ -426,19 +486,6 @@ void ProLeagueState::buildScene()
             entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         });
 
-    //auto selectHighlight = m_scene.getSystem<cro::UISystem>()->addCallback(
-    //    [](cro::Entity e)
-    //    {
-    //        e.getComponent<cro::Callback>().active = true;
-    //        e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-    //        e.getComponent<cro::AudioEmitter>().play();
-    //    });
-    //auto unselectHighlight = m_scene.getSystem<cro::UISystem>()->addCallback(
-    //    [](cro::Entity e)
-    //    {
-    //        e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    //    });
-
     auto selectOffset = m_scene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
@@ -455,9 +502,6 @@ void ProLeagueState::buildScene()
             e.getComponent<cro::Sprite>().setTextureRect(bounds);
         });
 
-
-    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-    
 
 
     //entity with confirmation for starting round
@@ -499,7 +543,7 @@ void ProLeagueState::buildScene()
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerQuit);
     entity.getComponent<cro::UIInput>().setNextIndex(CareerProfile, CareerStart);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerStart, CareerClubStats);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerStart, CareerProfile);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectOffset;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectOffset;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -540,8 +584,8 @@ void ProLeagueState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerProfile);
-    entity.getComponent<cro::UIInput>().setNextIndex(CareerLeagueBrowser, CareerSeason);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, CareerClubStats);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerLeagueBrowser, CareerQuit);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, CareerLeagueBrowser);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -600,8 +644,8 @@ void ProLeagueState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerLeagueBrowser);
-    entity.getComponent<cro::UIInput>().setNextIndex(CareerStart, CareerOptions);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerProfile, CareerOptions);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerStart, CareerProfile);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerProfile, CareerStart);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -645,8 +689,8 @@ void ProLeagueState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerStart);
-    entity.getComponent<cro::UIInput>().setNextIndex(CareerQuit, CareerOptions);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerLeagueBrowser, CareerInfo);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerQuit, CareerLeagueBrowser);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerLeagueBrowser, CareerQuit);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -921,6 +965,28 @@ void ProLeagueState::createConfirmMenu(cro::Entity parent)
 
         m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
     };
+}
+
+void ProLeagueState::refreshProgressText()
+{
+    m_progressText.getComponent<cro::Text>().setString(*CompetitionLeague::getCurrentLeaderboard().second);
+
+    /*const auto currentRound = CompetitionLeague::getCourseIndex();
+    if (currentRound == -1)
+    {
+        m_progressText.getComponent<cro::Text>().setString(*CompetitionLeague::getCurrentLeaderboard().second);
+    }
+    else
+    {
+        cro::String str = "Current Round: " + std::to_string(currentRound+1) + "/12 - ";
+        str += *CompetitionLeague::getCurrentLeaderboard().second;
+        m_progressText.getComponent<cro::Text>().setString(str);
+    }*/
+}
+
+void ProLeagueState::onCachedPush()
+{
+    CompetitionLeague::refreshCurrentLeaderboard();
 }
 
 void ProLeagueState::quitState()

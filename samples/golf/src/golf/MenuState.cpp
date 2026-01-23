@@ -263,6 +263,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Practice);
         cacheState(StateID::Career);
         cacheState(StateID::Tournament);
+        cacheState(StateID::ProLeague);
         cacheState(StateID::EditTournament);
         cacheState(StateID::FreePlay);
         cacheState(StateID::Keyboard);
