@@ -87,6 +87,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/PracticeState.cpp
   ${PROJECT_DIR}/golf/ProfileState.cpp
   ${PROJECT_DIR}/golf/ProgressIcon.cpp
+  ${PROJECT_DIR}/golf/ProLeagueState.cpp
   ${PROJECT_DIR}/golf/PropFollowSystem.cpp
   #${PROJECT_DIR}/golf/PuttingState.cpp
   #${PROJECT_DIR}/golf/PuttingStateUI.cpp

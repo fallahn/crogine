@@ -53,6 +53,7 @@ source distribution.
 #include "golf/DrivingState.hpp"
 #include "golf/ClubhouseState.hpp"
 #include "golf/LeagueState.hpp"
+#include "golf/ProLeagueState.hpp"
 #include "golf/GcState.hpp"
 #include "golf/MessageOverlayState.hpp"
 #include "golf/TrophyState.hpp"
@@ -221,7 +222,6 @@ GolfGame::GolfGame()
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData, m_profileData);
     m_stateStack.registerState<ProfileState>(StateID::Profile, m_sharedData, m_profileData);
-    //m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
     m_stateStack.registerState<OptionsStateV2>(StateID::Options, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);
@@ -232,6 +232,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<CareerState>(StateID::Career, m_sharedData);
+    m_stateStack.registerState<ProLeagueState>(StateID::ProLeague, m_sharedData);
     m_stateStack.registerState<TournamentState>(StateID::Tournament, m_sharedData);
     m_stateStack.registerState<FreePlayState>(StateID::FreePlay, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);

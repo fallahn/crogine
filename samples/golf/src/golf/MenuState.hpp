@@ -469,6 +469,7 @@ private:
 
     void launchQuickPlay();
     void launchTournament(std::int32_t);
+    void launchProLeague();
     void handleNetEvent(const net::NetEvent&);
 
     void createDebugWindows();
@@ -476,6 +477,7 @@ private:
     void applyCareerConnection();
     void applyQuickPlayConnection();
     void applyTournamentConnection();
+    void applyProLeagueConnection();
 
     friend struct MainMenuContext;
 };

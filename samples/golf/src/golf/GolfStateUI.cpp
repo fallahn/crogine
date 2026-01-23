@@ -1697,7 +1697,8 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&, mapEnt](cro::Entity e, float dt)
         {
-            if (!m_sharedData.calculateRange)
+            if (!m_sharedData.calculateRange
+                || m_sharedData.competitionLeague)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 return;
@@ -1801,7 +1802,8 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&, mapEnt/*, dbEnt*/](cro::Entity e, float dt) mutable
     {
-        if (m_sharedData.calculateRange)
+        if (m_sharedData.calculateRange
+            && !m_sharedData.competitionLeague)
         {
             e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             return;
@@ -2190,7 +2192,8 @@ void GolfState::createPowerBars(cro::Entity rootNode)
             {
                 //grow if not the first stroke (CPU players still need power prediction though)
                 if (m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] == 0
-                    || !m_sharedData.showPuttingPower)
+                    || !m_sharedData.showPuttingPower
+                    || m_sharedData.competitionLeague)
                 {
                     scale.y = 0.f;
                 }

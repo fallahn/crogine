@@ -216,6 +216,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     }
 
     checkCommandLine = false;
+    sd.competitionLeague = false;
     sd.courseData = &m_sharedCourseData;
     sd.baseState = StateID::Menu;
     sd.activeResources = &m_resources;
@@ -1778,6 +1779,10 @@ void MenuState::handleMessage(const cro::Message& msg)
             else if (data.data == RequestID::Tournament)
             {
                 launchTournament(m_sharedData.activeTournament);
+            }
+            else if (data.data == RequestID::ProLeague)
+            {
+                launchProLeague();
             }
         }
         else if (data.type == SystemEvent::ShadowQualityChanged)
@@ -3722,6 +3727,40 @@ void MenuState::launchTournament(std::int32_t tournamentID)
     m_sharedData.leagueRoundID = LeagueRoundID::Club;
 }
 
+void MenuState::launchProLeague()
+{
+    m_sharedData.quickplayOpponents = 0;
+
+    m_sharedData.hosting = true;
+    m_sharedData.gameMode = GameMode::FreePlay;
+    m_sharedData.competitionLeague = true;
+    m_sharedData.localConnectionData.playerCount = 1;
+    m_sharedData.localConnectionData.playerData[0].isCPU = false;
+
+    m_sharedData.leagueRoundID = LeagueRoundID::Club;
+    m_sharedData.clubLimit = 0;
+
+    //start a local server and connect
+    if (quickConnect(m_sharedData))
+    {
+        //set the course
+        m_sharedData.courseIndex = CompetitionLeague::getCourseIndex();
+        m_sharedData.mapDirectory = m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
+        m_sharedData.holeCount = 0;
+
+        auto data = serialiseString(m_sharedData.mapDirectory);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+        //now we wait for the server to send us the map name so we know the
+        //know the course has been set. Then the network event handler 
+        //sends the game rules and launches the game.
+    }
+    else
+    {
+        requestStackPush(StateID::Error); //error makes sure to reset any connection (message set by quickConnect())
+    }
+}
+
 void MenuState::handleNetEvent(const net::NetEvent& evt)
 {
     if (evt.type == net::NetEvent::PacketReceived)
@@ -3951,6 +3990,10 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 else if (m_sharedData.gameMode == GameMode::Tournament)
                 {
                     applyTournamentConnection();
+                }
+                else if (m_sharedData.competitionLeague)
+                {
+                    applyProLeagueConnection();
                 }
                 else if (m_sharedData.quickplayOpponents != 0)
                 {
@@ -4945,6 +4988,32 @@ void MenuState::applyTournamentConnection()
     //assuming we have a similar menu in the tournament screen,
     //this will probably do for applying settings
     applyCareerConnection();
+}
+
+void MenuState::applyProLeagueConnection()
+{
+    m_sharedData.reverseCourse = 0;
+    m_sharedData.scoreType = ScoreType::Stroke;
+    m_sharedData.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
+    m_sharedData.holeCount = 0;
+    m_sharedData.gimmeRadius = GimmeSize::None;
+    m_sharedData.teamMode = 0;
+    m_sharedData.clubSet = m_sharedData.preferredClubSet = 2;
+
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, m_sharedData.weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::NightTime, m_sharedData.nightTime, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RandomWind, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    //TODO we may need to delay this a frame?
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 //from MenuConsts.hpp - used for quick launching

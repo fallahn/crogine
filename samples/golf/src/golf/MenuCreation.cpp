@@ -1,6 +1,6 @@
 ﻿/*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -811,7 +811,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
     static constexpr float TextOffset = 26.f;
     static constexpr float LineSpacing = 10.f;
-    glm::vec3 textPos = { TextOffset, 54.f, 0.1f };
+    glm::vec3 textPos = { TextOffset, 64.f, 0.1f };
 
     auto createButton = [&](const std::string& label)
     {
@@ -1121,6 +1121,47 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 });
 
 
+        //competition league
+        entity = createButton("Pro League");
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
+                {
+                    if (activated(evt))
+                    {
+                        //make sure to always play with default profile
+                        m_rosterMenu.activeIndex = 0;
+                        setProfileIndex(0, false);
+                        m_profileData.activeProfileIndex = 0;
+                        m_sharedData.localConnectionData.playerData[0].isCPU = false;
+                        m_profileData.playerProfiles[0].playerData.isCPU = false;
+                        m_profileData.playerProfiles[0].playerData.saveProfile();
+
+                        requestStackPush(StateID::ProLeague);
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                        //scales down main menu
+                        auto ent = m_uiScene.createEntity();
+                        ent.addComponent<cro::Callback>().active = true;
+                        ent.getComponent<cro::Callback>().setUserData<float>(1.f);
+                        ent.getComponent<cro::Callback>().function =
+                            [&](cro::Entity e, float dt)
+                            {
+                                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                                currTime = std::max(0.f, currTime - (dt * 2.f));
+
+                                const float scale = cro::Util::Easing::easeInCubic(currTime);
+                                m_menuEntities[MenuID::Main].getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+
+                                if (currTime == 0)
+                                {
+                                    e.getComponent<cro::Callback>().active = false;
+                                    m_uiScene.destroyEntity(e);
+                                }
+                            };
+                    }
+                });
+
+
         //facilities menu
         entity = createButton("19th Hole");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -1188,71 +1229,6 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     cro::App::quit();
                 }
             });
-
-#ifdef USE_GNS
-    //join chat button
-    //if (!Social::isSteamdeck())
-    //{
-    //    entity = m_uiScene.createEntity();
-    //    entity.addComponent<cro::Transform>();
-    //    entity.addComponent<UIElement>().absolutePosition = { 0.f, 0.f };
-    //    entity.getComponent<UIElement>().relativePosition = { 0.12f, 0.89f };
-    //    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
-
-    //    entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
-    //    entity.addComponent<cro::Callback>().active = true;
-    //    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    //    entity.getComponent<cro::Callback>().function = TitleTextCallback();
-    //    menuTransform.addChild(entity.getComponent<cro::Transform>());
-
-    //    auto buttonNode = entity;
-
-    //    entity = m_uiScene.createEntity();
-    //    entity.addComponent<cro::Transform>();
-    //    entity.addComponent<cro::Drawable2D>();
-    //    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("chat_button");
-    //    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    //    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-    //    entity.addComponent<cro::Callback>().active = true;
-    //    entity.getComponent<cro::Callback>().function =
-    //        [buttonNode](cro::Entity e, float dt)
-    //        {
-    //            if (buttonNode.getComponent<cro::Callback>().active)
-    //            {
-    //                //rotate with scale
-    //                const float scale = -buttonNode.getComponent<cro::Transform>().getScale().x;
-    //                e.getComponent<cro::Transform>().setRotation(cro::Util::Const::PI * scale);
-    //            }
-    //            else
-    //            {
-    //                //gently rotate
-    //                e.getComponent<cro::Transform>().rotate(-dt * 0.1f);
-    //            }
-    //        };
-    //    buttonNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-    //    entity = createButton("Join\nChatroom");
-    //    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    //    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-    //    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    //    bounds = cro::Text::getLocalBounds(entity);
-    //    entity.getComponent<cro::Transform>().setRotation(0.09f);
-    //    entity.getComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, 0.1f));
-    //    entity.getComponent<cro::Transform>().setOrigin({ 0.f, std::floor(-bounds.height / 2.f) - 2.f});
-    //    entity.getComponent<cro::UIInput>().area = bounds;
-    //    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-    //        m_uiScene.getSystem<cro::UISystem>()->addCallback([](cro::Entity, const cro::ButtonEvent& evt)
-    //            {
-    //                if (activated(evt))
-    //                {
-    //                    Social::joinChatroom();
-    //                }
-    //            });
-    //    buttonNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    //}
-#endif
-
 }
 
 void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)

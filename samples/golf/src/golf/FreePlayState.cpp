@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -79,7 +79,8 @@ namespace
     {
         enum
         {
-            GameMode, Quickplay, Dummy,
+            GameMode, Quickplay, 
+            CompetitionLeague, Dummy,
 
             Count
         };
@@ -92,6 +93,7 @@ namespace
             HostGame = 1,
             JoinGame,
             QuickGame,
+            CompetitionLeague,
             ReturnToMain,
 
             Clubset = 10,
@@ -403,6 +405,10 @@ and All Time best scores.)";
                 helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 helpText.getComponent<cro::Text>().setString("Jump into a round of 9 random\nholes against virtual opponents");
                 break;
+            case SelectionIndex::CompetitionLeague:
+                helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                helpText.getComponent<cro::Text>().setString("Play the next available round in\nthis month's Competition League");
+                break;
             case SelectionIndex::ReturnToMain:
                 helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 helpText.getComponent<cro::Text>().setString("Return to Main Menu");
@@ -537,7 +543,6 @@ and All Time best scores.)";
                     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Quickplay);
                 }
             });
-
 
     position.y -= ItemHeight;
     position.y -= 6.f;

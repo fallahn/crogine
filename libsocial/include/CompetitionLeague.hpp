@@ -49,7 +49,7 @@ public:
     static const std::pair<const cro::String*, const cro::String*> getPreviousLeaderboard();
 
     //returns the next course to play or -1 if this month is complete
-    static std::int32_t getCourseIndex() { return -1; }
+    static std::int32_t getCourseIndex() { return 0; }
 
 private:
 

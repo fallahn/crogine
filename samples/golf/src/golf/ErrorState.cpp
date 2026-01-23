@@ -294,6 +294,7 @@ void ErrorState::quitState()
     m_sharedData.clientConnection.netClient.disconnect();
     m_sharedData.clientConnection.connectionID = ConstVal::NullValue;
     m_sharedData.clientConnection.ready = false;
+    m_sharedData.competitionLeague = false;
 
     for (auto& cd : m_sharedData.connectionData)
     {

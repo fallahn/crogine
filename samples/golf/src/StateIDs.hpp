@@ -45,6 +45,7 @@ struct StateID final
         Career,
         Tournament,
         EditTournament,
+        ProLeague,
         DrivingRange,
         PuttingRange,
         Clubhouse,
@@ -97,6 +98,7 @@ struct RequestID final
     enum
     {
         QuickPlay = StateID::Count,
-        Tournament
+        Tournament,
+        ProLeague
     };
 };
