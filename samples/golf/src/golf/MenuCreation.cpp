@@ -1120,7 +1120,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     }
                 });
 
-
+#ifdef USE_GNS
         //competition league
         entity = createButton("Pro League");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -1160,7 +1160,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                             };
                     }
                 });
-
+#endif
 
         //facilities menu
         entity = createButton("19th Hole");
@@ -1218,6 +1218,9 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 }
             });
 
+#ifndef USE_GNS
+    textPos.y -= LineSpacing;
+#endif
 
     //quit
     entity = createButton("Quit");

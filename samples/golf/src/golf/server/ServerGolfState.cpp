@@ -2296,8 +2296,8 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
                     }
                 };
         }
-#endif
         break;
+#endif
         }
     }
 }

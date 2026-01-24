@@ -79,11 +79,8 @@ namespace cro
         {
             if (file)
             {
-                if (file)
-                {
-                    SDL_RWclose(file);
-                    file = nullptr;
-                }
+                SDL_RWclose(file);
+                file = nullptr;
             }
         }
     };

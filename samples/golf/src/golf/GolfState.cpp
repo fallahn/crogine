@@ -891,7 +891,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 cro::Console::doCommand("build_cubemaps");
             }
             break;
+
+
 #ifdef CRO_DEBUG_
+        case SDLK_F10:
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::EndGame), net::NetFlag::Reliable);
+            break;
         //case SDLK_F7:
         //    //m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
         //    
@@ -903,9 +908,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
         //    //showNotification("buns");
         //    //Achievements::awardAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
         //    break;
-        case SDLK_F10:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::ChangeWind), net::NetFlag::Reliable);
-            break;
         //case SDLK_KP_0: //used by emote quick key
         //    setActiveCamera(CameraID::Idle);
         //{

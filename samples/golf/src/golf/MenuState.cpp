@@ -216,7 +216,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     }
 
     checkCommandLine = false;
-    sd.competitionLeague = false;
     sd.courseData = &m_sharedCourseData;
     sd.baseState = StateID::Menu;
     sd.activeResources = &m_resources;
@@ -298,9 +297,12 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         //if we returned from a career game create a delayed
         //entity to push the correct state
         if (sd.gameMode == GameMode::Career
-            || sd.gameMode == GameMode::Tournament)
+            || sd.gameMode == GameMode::Tournament
+            || sd.competitionLeague)
         {
-            const auto state = sd.gameMode == GameMode::Career ? StateID::Career : StateID::Tournament;
+            const auto state = sd.gameMode == GameMode::Career ? 
+                StateID::Career : 
+                sd.competitionLeague ? StateID::ProLeague : StateID::Tournament;
 
             auto entity = m_uiScene.createEntity();
             entity.addComponent<cro::Callback>().active = true;
@@ -332,14 +334,20 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                         m_uiScene.destroyEntity(e);
                     }
                 };
+
+            sd.clientConnection.connected = false;
+            sd.clientConnection.connectionID = ConstVal::NullValue;
+            sd.clientConnection.ready = false;
+            sd.clientConnection.netClient.disconnect();
         }
 
 
         //reset the state if we came from the tutorial (this is
         //also set if the player quit the game from the pause menu)
-        if (sd.gameMode != GameMode::FreePlay
+        if ((sd.gameMode != GameMode::FreePlay
             || sd.quickplayOpponents != 0 //we were playing quickplay
             || sd.activeTournament != TournamentIndex::NullVal) //or a tournament (although the above ought to be set to 1 in this case...)
+            && !sd.competitionLeague)
         {
             if (sd.gameMode == GameMode::Tutorial)
             {
@@ -367,7 +375,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         }
         sd.quickplayOpponents = 0; //make sure to always reset this
         sd.activeTournament = TournamentIndex::NullVal; //make sure to always reset this
-
+        sd.competitionLeague = false;
 
         //we returned from a previous game (this will have been disconnected above, otherwise)
         if (sd.clientConnection.connected)

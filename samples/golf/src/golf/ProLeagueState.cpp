@@ -309,7 +309,7 @@ void ProLeagueState::buildScene()
                     m_scene.setSystemActive<cro::UISystem>(true);
                     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Career);
                     m_scene.getSystem<cro::UISystem>()->selectAt(CareerStart);
-                    WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Viewing the Leagues" }));
+                    WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Pondering the Pro League" }));
 
 
                     if (!m_sharedData.unlockedItems.empty())
