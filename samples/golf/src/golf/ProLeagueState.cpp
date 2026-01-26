@@ -409,7 +409,7 @@ void ProLeagueState::buildScene()
         R"(
 Rules:
 
-    The league lasts one calendar month.
+    The Pro League is an online only leaderboard, and lasts one calendar month.
     There are 12 rounds, one on each course, made up of 18 holes.
     Each round can only be played once each month - so bring your A-Game!
     All assists are off - there's no putt assist, and the range indicator is set to Estimated.
@@ -441,8 +441,28 @@ Rules:
 
     refreshProgressText();
 
-    //TODO display course info for next round
-
+    //display course info for next round
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), 70.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setVerticalSpacing(6.f);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    const auto courseIndex = CompetitionLeague::getCourseIndex();
+    if (courseIndex == -1)
+    {
+        //league is complete!
+        entity.getComponent<cro::Text>().setString("League Complete!\nThe next League starts on the first of the month.");
+    }
+    else
+    {
+        entity.getComponent<cro::Text>().setString("Next Round: " + m_sharedData.courseData->courseData[courseIndex].title);
+        //m_sharedData.courseData->courseData[courseIndex].description;
+    }
 
     //title
     entity = m_scene.createEntity();
@@ -653,7 +673,7 @@ Rules:
             {
                 if (activated(evt))
                 {
-                    m_sharedData.leagueTable = m_sharedData.leagueRoundID;
+                    m_sharedData.leagueTable = 9;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     m_scene.getActiveCamera().getComponent<cro::Camera>().active = false;
                     requestStackPush(StateID::League);
@@ -963,6 +983,7 @@ void ProLeagueState::createConfirmMenu(cro::Entity parent)
         confirmEnt.getComponent<cro::Callback>().active = true;
         shadeEnt.getComponent<cro::Callback>().active = true;
 
+        m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
     };
 }

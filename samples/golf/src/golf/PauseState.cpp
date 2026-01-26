@@ -587,14 +587,23 @@ void PauseState::buildScene()
         if (m_sharedData.gameMode == GameMode::Career
             || m_sharedData.gameMode == GameMode::Tournament)
         {
-            entity.getComponent<cro::Transform>().move({ 0.f, 10.f });
             entity.getComponent<cro::Text>().setString("Your Progress Up To The\nCurrent Hole Will Be Saved.");
             entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            entity.getComponent<cro::Transform>().move({ 0.f, 10.f });
         }
         else
         {
-            entity.getComponent<cro::Text>().setString("This Will Kick All Players");
-            centreText(entity);
+            if (!m_sharedData.competitionLeague)
+            {
+                entity.getComponent<cro::Text>().setString("This Will Kick All Players");
+                centreText(entity);
+            }
+            else
+            {
+                entity.getComponent<cro::Text>().setString("Your Progress On This\nCourse Will Be Lost.");
+                entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+                entity.getComponent<cro::Transform>().move({ 0.f, 10.f });
+            }
         }
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         confirmEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

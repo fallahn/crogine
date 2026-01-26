@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -108,6 +108,8 @@ private:
             S06,
             Global,
             FriendsGlobal,
+            Pro,
+            FriendsPro,
 
             Count
         };
@@ -139,10 +141,20 @@ private:
         cro::Entity personal;
         cro::Entity previous;
     };
-    std::array<LeagueText, 2u> m_leagueText = {};
+    struct LeagueTextID final
+    {
+        enum
+        {
+            Global, GlobalFriends,
+            Pro, ProFriends,
+            Count
+        };
+    };
+    std::array<LeagueText, LeagueTextID::Count> m_leagueText = {};
 
     void createGlobalLeagueTab(cro::Entity,const cro::SpriteSheet&, std::int32_t leagueIndex);
-    void updateLeagueText(bool friendsOnly = false);
+    void updateLeagueText(std::int32_t);
+    void updateProLeagueText(std::int32_t);
 #endif
     void addLeagueButtons(const cro::SpriteSheet&);
 
@@ -157,4 +169,6 @@ private:
     };
     void switchLeague(std::int32_t);
     void quitState();
+
+    void onCachedPush() override;
 };

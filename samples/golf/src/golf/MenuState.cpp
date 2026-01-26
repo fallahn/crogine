@@ -247,6 +247,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             Achievements::update();
         }
+        CompetitionLeague::refreshTotal(CompetitionLeague::getCourseIndex());
         checkBeta();
 #endif
 

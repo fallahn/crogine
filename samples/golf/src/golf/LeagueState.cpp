@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -47,6 +47,7 @@ source distribution.
 #include <AchievementIDs.hpp>
 #include <AchievementStrings.hpp>
 #include <Achievements.hpp>
+#include <CompetitionLeague.hpp>
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
@@ -429,17 +430,22 @@ void LeagueState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<Social::StatEvent>();
         if (data.type == Social::StatEvent::LeagueReceived)
         {
-            updateLeagueText(data.index == 1);
+            updateLeagueText(data.index);
+        }
+        else if (data.type == Social::StatEvent::CompetitionLeagueReceived)
+        {
+            updateProLeagueText(data.index);
         }
     }
     else if (msg.id == cro::Message::StateMessage)
     {
+        //TODO this should probably be in onCachedPush()?
         const auto& data = msg.getData<cro::Message::StateEvent>();
         if (data.action == cro::Message::StateEvent::Pushed
             && data.id == StateID::League)
         {
-            updateLeagueText(true);
-            updateLeagueText(false);
+            updateLeagueText(LeagueTextID::GlobalFriends);
+            updateLeagueText(LeagueTextID::Global);
         }
     }
 #endif
@@ -530,12 +536,12 @@ void LeagueState::buildScene()
 
                 if (m_sharedData.baseState == StateID::Clubhouse)
                 {
-                    Social::setStatus(Social::InfoID::Menu, { "Browsing League Table" });
+                    Social::setStatus(Social::InfoID::Menu, { "Browsing League Tables" });
                 }
 #ifdef USE_GNS
                 //remote steam list
-                updateLeagueText(true);
-                updateLeagueText(false);
+                updateLeagueText(LeagueTextID::GlobalFriends);
+                updateLeagueText(LeagueTextID::Global);
 #endif
                 //in case we changed our profile name
                 refreshAllNameLists();
@@ -747,8 +753,12 @@ void LeagueState::buildScene()
 #ifdef USE_GNS
     createGlobalLeagueTab(bgNode, spriteSheet, LeagueID::Global);
     createGlobalLeagueTab(bgNode, spriteSheet, LeagueID::FriendsGlobal);
+    createGlobalLeagueTab(bgNode, spriteSheet, LeagueID::Pro);
+    createGlobalLeagueTab(bgNode, spriteSheet, LeagueID::FriendsPro);
     m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     m_leagueNodes[LeagueID::FriendsGlobal].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_leagueNodes[LeagueID::Pro].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_leagueNodes[LeagueID::FriendsPro].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     m_currentLeague = LeagueID::Global;
 #endif
     addLeagueButtons(spriteSheet);
@@ -1157,10 +1167,12 @@ void LeagueState::refreshAllNameLists()
 void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteSheet& spriteSheet, std::int32_t leagueIndex)
 {
     const auto textIndex = leagueIndex - LeagueID::Global;
-    const std::array<cro::String, 2u> TitleStrings =
+    const std::array<cro::String, 4u> TitleStrings =
     {
         "Global League for ",
-        "Friends League for "
+        "Friends League for ",
+        "Pro League for ",
+        "Friends Pro League for ",
     };
 
     m_leagueNodes[leagueIndex] = m_scene.createEntity();
@@ -1248,7 +1260,9 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     m_leagueText[textIndex].personal = entity;
 
     //how to play
-    auto statusString = "To compete play through all 36 rounds in Free Play";
+    const auto statusString = textIndex > 1 ?
+        "To compete select Pro League from the Main Menu" :
+        "To compete play through all 36 rounds in Free Play";
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ centre, 50.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
@@ -1315,10 +1329,21 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     m_leagueText[textIndex].previous = entity;
 }
 
-void LeagueState::updateLeagueText(bool friendsOnly)
+void LeagueState::updateLeagueText(std::int32_t textIndex)
 {
-    const auto& str = Social::getMonthlyLeague(friendsOnly);
-    const auto textIndex = friendsOnly ? 1 : 0;
+    const auto& str = Social::getMonthlyLeague(textIndex == LeagueTextID::GlobalFriends);
+
+    m_leagueText[textIndex].games.getComponent<cro::Text>().setString(str[2]);
+    m_leagueText[textIndex].names.getComponent<cro::Text>().setString(str[0]);
+    m_leagueText[textIndex].scores.getComponent<cro::Text>().setString(str[1]);
+    m_leagueText[textIndex].personal.getComponent<cro::Text>().setString(str[3].empty() ? "No Score Yet" : str[3]);
+    m_leagueText[textIndex].previous.getComponent<cro::Text>().setString(str[4].empty() ? "Fetching..." : str[4]);
+    centreText(m_leagueText[textIndex].personal);
+}
+
+void LeagueState::updateProLeagueText(std::int32_t textIndex)
+{
+    const auto& str = CompetitionLeague::getLeagueStrings(textIndex == LeagueTextID::ProFriends);
 
     m_leagueText[textIndex].games.getComponent<cro::Text>().setString(str[2]);
     m_leagueText[textIndex].names.getComponent<cro::Text>().setString(str[0]);
@@ -1354,7 +1379,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
         });
 
     cro::Entity buttonRight = m_scene.createEntity();
-    buttonRight.addComponent<cro::Transform>().setPosition({ 370.f, 286.f, 0.2f });
+    buttonRight.addComponent<cro::Transform>().setPosition({ 380.f, 286.f, 0.2f });
     buttonRight.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     buttonRight.addComponent<cro::Drawable2D>();
     buttonRight.addComponent<cro::Sprite>() = spriteRight;
@@ -1363,7 +1388,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
 
 
     cro::Entity buttonLeft = m_scene.createEntity();
-    buttonLeft.addComponent<cro::Transform>().setPosition({ 128.f, 286.f, 0.2f });
+    buttonLeft.addComponent<cro::Transform>().setPosition({ 118.f, 286.f, 0.2f });
     buttonLeft.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     buttonLeft.addComponent<cro::Drawable2D>();
     buttonLeft.addComponent<cro::Sprite>() = spriteLeft;
@@ -1599,4 +1624,12 @@ void LeagueState::quitState()
     //m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+}
+
+void LeagueState::onCachedPush()
+{
+    //these raise messages which we handle
+    //to update the text once refresh is complete
+    CompetitionLeague::refreshCurrentLeaderboard();
+    CompetitionLeague::refreshPreviousLeaderboard();
 }
