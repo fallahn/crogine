@@ -1641,9 +1641,10 @@ void LeagueState::onCachedPush()
     //update the strings *anyway* because we might already have data
     //which also means if we're too fast in requesting (below) it
     //still displays something
+#ifdef USE_GNS
     updateProLeagueText(LeagueTextID::Pro);
     updateProLeagueText(LeagueTextID::FriendsPro);
-
+#endif
 
     //these raise messages which we handle
     //to update the text once refresh is complete
