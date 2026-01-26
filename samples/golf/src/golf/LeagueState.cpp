@@ -444,7 +444,7 @@ void LeagueState::handleMessage(const cro::Message& msg)
         if (data.action == cro::Message::StateEvent::Pushed
             && data.id == StateID::League)
         {
-            updateLeagueText(LeagueTextID::GlobalFriends);
+            updateLeagueText(LeagueTextID::FriendsGlobal);
             updateLeagueText(LeagueTextID::Global);
         }
     }
@@ -540,7 +540,7 @@ void LeagueState::buildScene()
                 }
 #ifdef USE_GNS
                 //remote steam list
-                updateLeagueText(LeagueTextID::GlobalFriends);
+                updateLeagueText(LeagueTextID::FriendsGlobal);
                 updateLeagueText(LeagueTextID::Global);
 #endif
                 //in case we changed our profile name
@@ -1331,7 +1331,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
 
 void LeagueState::updateLeagueText(std::int32_t textIndex)
 {
-    const auto& str = Social::getMonthlyLeague(textIndex == LeagueTextID::GlobalFriends);
+    const auto& str = Social::getMonthlyLeague(textIndex == LeagueTextID::FriendsGlobal);
 
     m_leagueText[textIndex].games.getComponent<cro::Text>().setString(str[2]);
     m_leagueText[textIndex].names.getComponent<cro::Text>().setString(str[0]);
@@ -1343,7 +1343,7 @@ void LeagueState::updateLeagueText(std::int32_t textIndex)
 
 void LeagueState::updateProLeagueText(std::int32_t textIndex)
 {
-    const auto& str = CompetitionLeague::getLeagueStrings(textIndex == LeagueTextID::ProFriends);
+    const auto& str = CompetitionLeague::getLeagueStrings(textIndex == LeagueTextID::FriendsPro);
 
     m_leagueText[textIndex].games.getComponent<cro::Text>().setString(str[2]);
     m_leagueText[textIndex].names.getComponent<cro::Text>().setString(str[0]);
@@ -1613,6 +1613,16 @@ void LeagueState::switchLeague(std::int32_t forward)
             m_leagueNodes[m_currentLeague].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             m_leagueNodes[next].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             m_currentLeague = next;
+#ifdef USE_GNS
+            if (m_currentLeague == LeagueID::Pro)
+            {
+                updateProLeagueText(LeagueTextID::Pro);
+            }
+            else if (m_currentLeague == LeagueID::FriendsPro)
+            {
+                updateProLeagueText(LeagueTextID::FriendsPro);
+            }
+#endif
 
             f.getComponent<cro::Callback>().active = false;
             m_scene.destroyEntity(f);
@@ -1628,8 +1638,46 @@ void LeagueState::quitState()
 
 void LeagueState::onCachedPush()
 {
+    //update the strings *anyway* because we might already have data
+    //which also means if we're too fast in requesting (below) it
+    //still displays something
+    updateProLeagueText(LeagueTextID::Pro);
+    updateProLeagueText(LeagueTextID::FriendsPro);
+
+
     //these raise messages which we handle
     //to update the text once refresh is complete
-    CompetitionLeague::refreshCurrentLeaderboard();
-    CompetitionLeague::refreshPreviousLeaderboard();
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(2.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct -= dt;
+            if (ct < 0)
+            {
+                CompetitionLeague::refreshCurrentLeaderboard();
+
+                e.getComponent<cro::Callback>().active = false;
+                m_scene.destroyEntity(e);
+            }
+        };
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(6.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct -= dt;
+            if (ct < 0)
+            {
+                CompetitionLeague::refreshPreviousLeaderboard();
+
+                e.getComponent<cro::Callback>().active = false;
+                m_scene.destroyEntity(e);
+            }
+        };
 }

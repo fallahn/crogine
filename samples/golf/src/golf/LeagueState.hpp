@@ -145,8 +145,8 @@ private:
     {
         enum
         {
-            Global, GlobalFriends,
-            Pro, ProFriends,
+            Global, FriendsGlobal,
+            Pro, FriendsPro,
             Count
         };
     };
