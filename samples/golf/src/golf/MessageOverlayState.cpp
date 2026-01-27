@@ -83,9 +83,9 @@ MessageOverlayState::MessageOverlayState(cro::StateStack& ss, cro::State::Contex
     : cro::State    (ss, ctx),
     m_scene         (ctx.appInstance.getMessageBus()),
     m_sharedData    (sd),
-    m_viewScale     (2.f),
     m_buttonTimer   (0.f),
-    m_timerActive   (false)
+    m_timerActive   (false),
+    m_viewScale     (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
