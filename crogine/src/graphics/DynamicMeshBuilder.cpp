@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -121,7 +121,7 @@ Mesh::Data DynamicMeshBuilder::build(AllocationResource* allocationResource) con
     //meshData.vboAllocator = allocationResource->getVBOAllocator(4, meshData.vertexSize);
     //meshData.vboAllocation = meshData.vboAllocator->newAllocation(meshData.vertexCount);
 
-    std::uint32_t iboDataSize = sizeof(std::uint32_t);
+    /*std::uint32_t iboDataSize = sizeof(std::uint32_t);
     switch (m_indexFormat)
     {
     default: break;
@@ -131,7 +131,7 @@ Mesh::Data DynamicMeshBuilder::build(AllocationResource* allocationResource) con
     case GL_UNSIGNED_SHORT:
         iboDataSize = sizeof(std::uint16_t);
         break;
-    }
+    }*/
 
     meshData.submeshCount = m_submeshCount;
     for (auto i = 0; i < m_submeshCount; ++i)
