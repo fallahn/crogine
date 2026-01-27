@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -234,7 +234,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
 #else
         std::sort(std::begin(drawList[i].renderables), std::end(drawList[i].renderables),
 #endif
-            [](MaterialPair& a, MaterialPair& b)
+            [](const MaterialPair& a, const MaterialPair& b)
             {
                 return a.second.flags < b.second.flags;
             });
