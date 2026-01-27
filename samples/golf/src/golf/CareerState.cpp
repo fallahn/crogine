@@ -557,10 +557,10 @@ void CareerState::buildScene()
     std::vector<std::uint8_t> temp(18);
     std::int32_t temp2 = 0;
 
-    const bool showCustom = false;// (leagueTables[Career::MaxLeagues - 1].getCurrentBest() < CareerLeagueThreshold);
-    const std::uint32_t displayCount = showCustom ? Career::MaxLeagues : Career::MaxLeagues - 1;
+    //const bool showCustom = false;// (leagueTables[Career::MaxLeagues - 1].getCurrentBest() < CareerLeagueThreshold);
+    //const std::uint32_t displayCount = showCustom ? Career::MaxLeagues : Career::MaxLeagues - 1;
 
-    for (auto i = 0u; i < /*Career::MaxLeagues*/displayCount; ++i)
+    for (auto i = 0u; i < Career::MaxLeagues/*displayCount*/; ++i)
     {
         //this just builds up the string if needed, and finds the previous result (if any)
         leagueTables[i].getPreviousResults(playerName);
@@ -658,10 +658,11 @@ void CareerState::buildScene()
     buttons.back().getComponent<cro::UIInput>().setNextIndex(CareerGimme, CareerGimme);
 
     //put player name on bottom row of the box
-    if (!showCustom)
+    /*if (!showCustom)
     {
-        position.y -= LeagueLineSpacing;
-    }
+    }*/
+    position.y -= LeagueLineSpacing;
+
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
     entity.addComponent<cro::Drawable2D>();
@@ -678,7 +679,7 @@ void CareerState::buildScene()
     //ticker for freeplay reminder
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     
-    if (!showCustom)
+    //if (!showCustom)
     {
         position.x += 100.f;
         position.y += LeagueLineSpacing + 1.f;

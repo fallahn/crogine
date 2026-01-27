@@ -830,7 +830,7 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
         "Career League Four",
         "Career League Five",
         "Career League Six",
-        "Custom League",
+        //"Custom League",
     };
 
     auto entity = m_scene.createEntity();
