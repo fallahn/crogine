@@ -53,7 +53,7 @@ int main(int argc, char** argsv)
     }
 
 #ifdef _WIN32
-    applyNVSettings();
+    //applyNVSettings();
 #endif
 
     GolfGame game;
