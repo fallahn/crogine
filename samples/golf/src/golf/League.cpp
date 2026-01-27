@@ -875,6 +875,7 @@ void League::read()
             {
                 //close the file and delete it
                 SDL_RWclose(dbFile.file);
+                dbFile.file = nullptr;
 
                 LogE << "DB File size incorrect, DB will be reset" << std::endl;
 
