@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.2)
+cmake_minimum_required(VERSION 3.10)
 
 #Xcode 10 will default to Mojave (must be done BEFORE project())
 if (APPLE)
@@ -123,6 +123,14 @@ else()
   SET(SOCIAL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/include)
 endif()
 
+#don't do this it mangles the rpath
+#use the included versions for brevity
+#link_directories(${CMAKE_SOURCE_DIR}/../extlibs/ktx/linux-x86_64/lib
+#                  ${CMAKE_SOURCE_DIR}/../extlibs/ktx/win64/lib)
+
+#sigh
+#link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../extlibs/ktx/linux-x86_64/lib
+#                  ${CMAKE_CURRENT_SOURCE_DIR}/../../extlibs/ktx/win64/lib)
 
 include_directories(
   ${CROGINE_INCLUDE_DIR}
