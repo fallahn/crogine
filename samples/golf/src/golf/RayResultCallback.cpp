@@ -173,13 +173,13 @@ CollisionUtil::FaceData CollisionUtil::getFaceData(const btCollisionShape* shape
     {
     default: break;
     case 3:
-        ind = CollisionUtil::getIndices<std::uint8_t>(indices + triangleID * indicesStride);
+        ind = CollisionUtil::getTriangleIndices<std::uint8_t>(indices + triangleID * indicesStride);
         break;
     case 6:
-        ind = CollisionUtil::getIndices<std::uint16_t>(indices + triangleID * indicesStride);
+        ind = CollisionUtil::getTriangleIndices<std::uint16_t>(indices + triangleID * indicesStride);
         break;
     case 12:
-        ind = CollisionUtil::getIndices<std::uint32_t>(indices + triangleID * indicesStride);
+        ind = CollisionUtil::getTriangleIndices<std::uint32_t>(indices + triangleID * indicesStride);
         break;
     }
 

@@ -41,15 +41,15 @@ source distribution.
 namespace CollisionUtil
 {
     template <typename T>
-    std::array<std::uint32_t, 3u> getIndices(const std::uint8_t* data)
+    std::array<std::uint32_t, 3u> getTriangleIndices(const std::uint8_t* data)
     {
         const auto* i = reinterpret_cast<const T*>(data);
-        return std::array<std::uint32_t, 3u>
+        return std::array<std::uint32_t, 3u>(
         {
             *i,
             *(i + 1),
             *(i + 2)
-        };
+        });
     }
 
     struct FaceData final
