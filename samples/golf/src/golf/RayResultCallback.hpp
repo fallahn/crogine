@@ -37,6 +37,7 @@ source distribution.
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <array>
 
 namespace CollisionUtil
 {
