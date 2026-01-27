@@ -44,7 +44,7 @@ namespace CollisionUtil
     std::array<std::uint32_t, 3u> getIndices(const std::uint8_t* data)
     {
         const auto* i = reinterpret_cast<const T*>(data);
-        return //const std::array<std::uint32_t, 3u> ind =
+        return std::array<std::uint32_t, 3u>
         {
             *i,
             *(i + 1),

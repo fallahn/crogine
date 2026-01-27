@@ -2402,7 +2402,7 @@ void MenuState::updateLobbyAvatars()
             entity.addComponent<cro::SpriteAnimation>();
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
-                [&, cID](cro::Entity e2, float)
+                [&, cID](cro::Entity e2, float) //apparently captured structed binding actually need c++ 20
                 {
                     auto index = m_readyState[cID] ? 1 : 0;
                     e2.getComponent<cro::SpriteAnimation>().play(index);

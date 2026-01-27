@@ -607,7 +607,7 @@ void GolfState::buildUI()
     nameEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole distance
-    const auto uiScale = m_sharedData.showMinimap ? 1.f : 0.f;
+    //const auto uiScale = m_sharedData.showMinimap ? 1.f : 0.f;
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();// .setScale(glm::vec2(uiScale));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PinDistance | CommandID::UI::UIElement;
