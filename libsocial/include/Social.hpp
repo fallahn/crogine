@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -218,6 +218,16 @@ public:
     static cro::String getTickerMessage() { return {}; }
 
     static float getCompletionCount(const std::string&, bool);
+
+    struct LeaderboardFilter final
+    {
+        enum
+        {
+            FriendsOnly, NoAssist
+        };
+    };
+    static void setLeaderboardFilter(std::int32_t filter, bool) {}
+    static bool getLeaderboardFilter(std::int32_t filter) { return false; }
 
     //awards (inventory items) to display in clubhouse
     struct Award final
