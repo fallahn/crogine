@@ -1086,7 +1086,8 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
         sideSpin *= 0.995f;
     }
 
-    float accuracy = 1.f - std::abs(hook);
+    const float absHook = std::abs(hook);
+    const float accuracy = 1.f - absHook;
     auto spin = getSpin() * accuracy * spinBuff;
 
     //modulate pitch with topspin
@@ -1104,13 +1105,24 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     m_activeLoadout = nullptr;
 
 
-    if (m_terrain == TerrainID::Bunker)
+    //fluff the shot if we hook / slice
+    if (absHook > (MinHook / (1.f + Club::getClubLevel())))
     {
-        //fluff the shot if we hook / slice
-        if (std::abs(hook) > (MinHook / (1.f + Club::getClubLevel())))
+        if (m_terrain == TerrainID::Bunker)
         {
-            impulse *= 0.1f;
+            impulse *= (m_lie == 0) ? 0.2f : 0.9f;
+            spin.x = std::clamp(spin.x * 1.4f, -1.f, 1.f);
         }
+        else if (m_terrain == TerrainID::Rough
+            && m_currentClub < ClubID::FourIron)
+        {
+            impulse *= std::max(0.9f, (1.f - (absHook * 0.5f)));
+            spin.x = std::clamp(spin.x * 2.f, -1.f, 1.f);
+        }
+        /*else
+        {
+            spin.x = std::clamp(spin.x * 1.1f, -1.f, 1.f);
+        }*/
     }
 
     return { impulse, spin, hook };
@@ -1134,7 +1146,7 @@ float InputParser::getDampening() const
         case ClubID::Driver:
         case ClubID::ThreeWood:
         case ClubID::FiveWood:
-            dampening *= 1.f - (0.0375f * clubLevel);// 0.85f;
+            dampening *= 1.f - (0.00375f * clubLevel);// 0.85f;
             break;
         }
         break;
