@@ -1822,7 +1822,7 @@ void OptionsStateV2::createSettingsItems()
     //friends only
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Friends Only";
-    item->description = "Leaderboards only display results from players on your Steam friends list";
+    item->description = "Leaderboards only display results from players on your Steam friends list. Takes effect next time the Main Menu is loaded.";
     item->activated = [&](Menu::Item& i)
         {
             Social::setLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly, i.selectedIndex == 1);
@@ -1834,7 +1834,7 @@ void OptionsStateV2::createSettingsItems()
     //assisted scores
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Hide Assisted Scores";
-    item->description = "Leaderboards only display results from players who used the Estimated range finder";
+    item->description = "Leaderboards only display results from players who used the Estimated range finder. Takes effect next time the Main Menu is loaded.";
     item->activated = [&](Menu::Item& i)
         {
             Social::setLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist, i.selectedIndex == 1);
