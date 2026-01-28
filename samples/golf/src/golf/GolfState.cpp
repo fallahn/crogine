@@ -1471,12 +1471,12 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 
 
-            auto isCPU = m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU;
+            const auto isCPU = m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU;
             if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
                 && !isCPU)
             {
-                auto strLow = static_cast<std::uint16_t>(50000.f * m_inputParser.getPower()) * m_sharedData.enableRumble;
-                auto strHigh = static_cast<std::uint16_t>(35000.f * m_inputParser.getPower()) * m_sharedData.enableRumble;
+                const auto strLow = static_cast<std::uint16_t>(50000.f * m_inputParser.getPower()) * m_sharedData.enableRumble;
+                const auto strHigh = static_cast<std::uint16_t>(35000.f * m_inputParser.getPower()) * m_sharedData.enableRumble;
 
                 if (m_humanCount == 1)
                 {
@@ -1485,6 +1485,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                 else
                 {
                     cro::GameController::rumbleStart(activeControllerID(m_sharedData.inputBinding.playerID), strLow, strHigh, 200);
+                }
+                
+                if (m_sharedData.calculateRange)
+                {
+                    m_achievementTracker.usedAssist = true;
                 }
             }
 

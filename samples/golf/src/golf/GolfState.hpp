@@ -841,6 +841,7 @@ private:
         bool nearMissChallenge = false;
         bool bullseyeChallenge = false;
         bool leadingCareerRound = false;
+        bool usedAssist = false;
     }m_achievementTracker;
     cro::Clock m_playTimer; //track avg play time stat
     cro::Time m_playTime;

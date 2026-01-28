@@ -924,7 +924,7 @@ bool Social::getLeaderboardsEnabled()
     return leaderboardsEnabled;
 }
 
-void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score, std::int32_t, const std::vector<std::uint8_t>& holeScores)
+void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score, std::int32_t, const std::vector<std::uint8_t>& holeScores, bool)
 {
 #ifdef USE_GJS
     //GJ::insertScore(course, hole, score);
