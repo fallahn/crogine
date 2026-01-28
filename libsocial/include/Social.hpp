@@ -219,7 +219,7 @@ public:
 
     static float getCompletionCount(const std::string&, bool);
 
-    struct LeaderboardFilter final
+    struct LeaderboardFilterValue final
     {
         enum
         {

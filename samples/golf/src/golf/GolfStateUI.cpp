@@ -3398,7 +3398,7 @@ void GolfState::createScoreboard()
 
         if (m_sharedData.scoreType == ScoreType::Stroke)
         {
-            auto leader = Social::getLeader(m_sharedData.mapDirectory, m_sharedData.holeCount);
+            const auto leader = Social::getLeader(m_sharedData.mapDirectory, m_sharedData.holeCount);
             if (!leader.empty())
             {
                 str += " - " + leader;

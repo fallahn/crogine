@@ -5172,7 +5172,8 @@ void MenuState::updateCourseRuleString(bool updateScoreboard)
             if (updateScoreboard)
             {
                 const float scale = m_sharedData.scoreType == ScoreType::Stroke ? 1.f : 0.f;
-                auto scoreStr = Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
+                const auto scoreStr = Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
+
                 m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString(scoreStr);
                 m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(scale));
 #ifdef USE_GNS

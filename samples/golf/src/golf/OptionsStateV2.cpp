@@ -1825,11 +1825,11 @@ void OptionsStateV2::createSettingsItems()
     item->description = "Leaderboards only display results from players on your Steam friends list";
     item->activated = [&](Menu::Item& i)
         {
-            Social::setLeaderboardFilter(Social::LeaderboardFilter::FriendsOnly, i.selectedIndex == 1);
+            Social::setLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly, i.selectedIndex == 1);
         };
     item->count = 2;
     item->labels = { "No", "Yes" };
-    item->selectedIndex = Social::getLeaderboardFilter(Social::LeaderboardFilter::FriendsOnly) ? 1 : 0;
+    item->selectedIndex = Social::getLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly) ? 1 : 0;
 
     //assisted scores
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
@@ -1837,11 +1837,11 @@ void OptionsStateV2::createSettingsItems()
     item->description = "Leaderboards only display results from players who used the Estimated range finder";
     item->activated = [&](Menu::Item& i)
         {
-            Social::setLeaderboardFilter(Social::LeaderboardFilter::NoAssist, i.selectedIndex == 1);
+            Social::setLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist, i.selectedIndex == 1);
         };
     item->count = 2;
     item->labels = { "No", "Yes" };
-    item->selectedIndex = Social::getLeaderboardFilter(Social::LeaderboardFilter::NoAssist) ? 1 : 0;
+    item->selectedIndex = Social::getLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist) ? 1 : 0;
 #endif
 
 
