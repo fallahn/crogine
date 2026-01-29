@@ -2878,6 +2878,13 @@ void OptionsStateV2::createAchievementItems()
             else
             {
                 item.title = ach->name;
+#ifdef USE_GNS
+                std::stringstream ss;
+                ss.precision(2);
+                //ss << std::setw(2) << std::setfill('0');
+                ss << ach->percent;
+                item.title += " - (Achieved by " + ss.str() + "% of Players)";
+#endif
                 item.subTitle = AchievementDesc[ach->id].first;
 
                 if (ach->achieved)
