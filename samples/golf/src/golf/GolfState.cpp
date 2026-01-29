@@ -1487,7 +1487,9 @@ void GolfState::handleMessage(const cro::Message& msg)
                     cro::GameController::rumbleStart(activeControllerID(m_sharedData.inputBinding.playerID), strLow, strHigh, 200);
                 }
                 
-                if (m_sharedData.calculateRange)
+                //this might be true in pro-league but the pro-league flag overrides it
+                if (m_sharedData.calculateRange
+                    && !m_sharedData.competitionLeague)
                 {
                     m_achievementTracker.usedAssist = true;
                 }
