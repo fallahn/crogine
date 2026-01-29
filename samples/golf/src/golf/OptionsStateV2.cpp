@@ -439,7 +439,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        const std::int16_t Threshold = std::numeric_limits<std::int16_t>::max() / 2;// cro::GameController::LeftThumbDeadZone * 2;// 15000;
+        constexpr std::int16_t Threshold = std::numeric_limits<std::int16_t>::max() / 2;// cro::GameController::LeftThumbDeadZone * 2;// 15000;
         const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
         
         if (std::abs(evt.caxis.value) > Threshold)

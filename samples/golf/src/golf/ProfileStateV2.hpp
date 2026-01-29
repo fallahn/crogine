@@ -30,7 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
-#include "ui/FlagPreview.hpp"
+//#include "ui/FlagPreview.hpp"
 #include "ui/MenuLayout.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -68,13 +68,19 @@ private:
     void loadAssets();
     void buildScene();
 
-    void createSettingsItems();
+    void createBodyItems();
+    void createHeadwearItems();
+    void createEquipmentItems();
+    void createLoadoutItems();
+    void createDetailItems();
+
+    /*void createSettingsItems();
     void createKeyboardItems();
     void createControllerItems();
     void createDisplayItems();
     void createAudioItems();
     void createAchievementItems();
-    void createStatItems();
+    void createStatItems();*/
 
     void onCachedPush() override;
     void onCachedPop() override;
@@ -138,25 +144,25 @@ private:
     std::array<cro::FloatRect, 2u> m_infoRects = {};
     cro::Texture m_colourPreview; //TODO this is 1x1px so we could just atlas into another texture...
 
-    FlagPreview m_flagPreview;
+    //FlagPreview m_flagPreview;
     struct OptionIcon final
     {
         enum
         {
-            GridDensity,
-            BeaconColour,
-            HighContrast,
-            LargePower,
-            DecimatePower,
-            WidgetSpeed,
-            PuttAssist,
-            BallTrail,
-            TeeMarker,
-            ZoomFlight,
-            PuttFollow,
-            RangeIndicator,
-            Warning,
-
+            //GridDensity,
+            //BeaconColour,
+            //HighContrast,
+            //LargePower,
+            //DecimatePower,
+            //WidgetSpeed,
+            //PuttAssist,
+            //BallTrail,
+            //TeeMarker,
+            //ZoomFlight,
+            //PuttFollow,
+            //RangeIndicator,
+            //Warning,
+            Temp,
             Count
         };
     };
@@ -167,9 +173,9 @@ private:
     {
         enum
         {
-            Settings, Keyboard, Controller,
-            Display, Audio, Achievements,
-            Stats,
+            Body, Headwear,
+            Equipment, Loadout,
+            Details,
 
             Count
         };
@@ -202,16 +208,6 @@ private:
     void checkMouseOver(glm::vec2);
     void doMouseClick(glm::vec2);
 
-    std::int32_t m_keybindIndex;
-    std::int32_t m_keybindItemIndex; //the menu item to update
-    void updateKeybind(SDL_Keycode key);
-    void cancelKeybind();
-
-    cro::String m_controllerString;
-    std::array<cro::Colour, 4u> m_activityColours = {};
-    void refreshControllerDevices();
-
-    void refreshAudioDevices(Menu::Item&);
     void refreshView();
     void quitState();
 };
