@@ -687,6 +687,7 @@
     <ClCompile Include="src\golf\PocketBallSystem.cpp" />
     <ClCompile Include="src\golf\PracticeState.cpp" />
     <ClCompile Include="src\golf\ProfileState.cpp" />
+    <ClCompile Include="src\golf\ProfileStateV2.cpp" />
     <ClCompile Include="src\golf\ProgressIcon.cpp" />
     <ClCompile Include="src\golf\ProLeagueState.cpp" />
     <ClCompile Include="src\golf\PropFollowSystem.cpp" />
@@ -887,7 +888,6 @@
     <ClInclude Include="src\golf\Networking.hpp" />
     <ClInclude Include="src\golf\NewsState.hpp" />
     <ClInclude Include="src\golf\NotificationSystem.hpp" />
-    <ClInclude Include="src\golf\OptionsState.hpp" />
     <ClInclude Include="src\golf\OptionsStateV2.hpp" />
     <ClInclude Include="src\golf\PacketIDs.hpp" />
     <ClInclude Include="src\golf\ParticleDirector.hpp" />
@@ -902,6 +902,7 @@
     <ClInclude Include="src\golf\PoissonDisk.hpp" />
     <ClInclude Include="src\golf\PracticeState.hpp" />
     <ClInclude Include="src\golf\ProfileState.hpp" />
+    <ClInclude Include="src\golf\ProfileStateV2.hpp" />
     <ClInclude Include="src\golf\ProgressIcon.hpp" />
     <ClInclude Include="src\golf\ProLeagueState.hpp" />
     <ClInclude Include="src\golf\PropFollowSystem.hpp" />

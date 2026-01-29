@@ -42,7 +42,7 @@ source distribution.
 #include "golf/ShopState.hpp"
 #include "golf/BilliardsState.hpp"
 #include "golf/ErrorState.hpp"
-#include "golf/OptionsState.hpp"
+//#include "golf/OptionsState.hpp"
 #include "golf/OptionsStateV2.hpp"
 #include "golf/PauseState.hpp"
 #include "golf/TutorialState.hpp"
@@ -63,6 +63,7 @@ source distribution.
 #include "golf/CreditsState.hpp"
 #include "golf/UnlockState.hpp"
 #include "golf/ProfileState.hpp"
+#include "golf/ProfileStateV2.hpp"
 #include "golf/LeaderboardState.hpp"
 #include "golf/StatsState.hpp"
 #include "golf/FreePlayState.hpp"
@@ -221,7 +222,8 @@ GolfGame::GolfGame()
     m_stateStack.registerState<KeyboardState>(StateID::Keyboard, m_sharedData);
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData, m_profileData);
-    m_stateStack.registerState<ProfileState>(StateID::Profile, m_sharedData, m_profileData);
+    //m_stateStack.registerState<ProfileState>(StateID::Profile, m_sharedData, m_profileData);
+    m_stateStack.registerState<ProfileStateV2>(StateID::Profile, m_sharedData, m_profileData);
     m_stateStack.registerState<OptionsStateV2>(StateID::Options, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);

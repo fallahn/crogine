@@ -86,6 +86,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/PocketBallSystem.cpp
   ${PROJECT_DIR}/golf/PracticeState.cpp
   ${PROJECT_DIR}/golf/ProfileState.cpp
+  ${PROJECT_DIR}/golf/ProfileStateV2.cpp
   ${PROJECT_DIR}/golf/ProgressIcon.cpp
   ${PROJECT_DIR}/golf/ProLeagueState.cpp
   ${PROJECT_DIR}/golf/PropFollowSystem.cpp

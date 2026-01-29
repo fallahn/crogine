@@ -726,6 +726,9 @@
     <ClCompile Include="src\golf\ProLeagueState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\ProfileStateV2.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -844,9 +847,6 @@
     </ClInclude>
     <ClInclude Include="src\golf\GolfCartSystem.hpp">
       <Filter>Header Files\golf\client\systems</Filter>
-    </ClInclude>
-    <ClInclude Include="src\golf\OptionsState.hpp">
-      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\PauseState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
@@ -1512,6 +1512,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\ProLeagueState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ProfileStateV2.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
   </ItemGroup>
