@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -302,9 +302,22 @@ std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated)
             cro::Vertex2D(glm::vec2(0.455f + Offsets[3], 0.5f), TextGoldColour),
             cro::Vertex2D(glm::vec2(0.455f + Offsets[3], -0.5f), TextGoldColour),
 
+            
+            //olive
+            cro::Vertex2D(glm::vec2(0.468f, 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.468f, -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.468f, 0.5f), CD32::Colours[CD32::Olive]),
+            cro::Vertex2D(glm::vec2(0.468f, -0.5f), CD32::Colours[CD32::Olive]),
+
+            cro::Vertex2D(glm::vec2(0.4775f, 0.5f), CD32::Colours[CD32::Olive]),
+            cro::Vertex2D(glm::vec2(0.4775f, -0.5f), CD32::Colours[CD32::Olive]),
+
+            cro::Vertex2D(glm::vec2(0.4775f, 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.4775f, -0.5f), TextGoldColour),
 
 
-
+            //end
             cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
             cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
         };
@@ -410,12 +423,28 @@ std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated)
         cro::Vertex2D(glm::vec2(0.4575f, 0.5f), TextGoldColour),
         cro::Vertex2D(glm::vec2(0.4575f, -0.5f), TextGoldColour),
 
+
+
+        //olive
+        cro::Vertex2D(glm::vec2(0.468f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.468f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.468f, 0.5f), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(0.468f, -0.5f), CD32::Colours[CD32::Olive]),
+
+        cro::Vertex2D(glm::vec2(0.4775f, 0.5f), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(0.4775f, -0.5f), CD32::Colours[CD32::Olive]),
+
+        cro::Vertex2D(glm::vec2(0.4775f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.4775f, -0.5f), TextGoldColour),
+
+
+
         //gold
         cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
         cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
     };
 }
-
 
 glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3& impulse, float sideSpin, glm::vec3 windVec, glm::vec3 pin, CollisionMesh& collisionMesh, float dt)
 {
@@ -480,7 +509,7 @@ std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2
     //hack to hide the confusing last impact point
     for (auto i = 1; i < 5; ++i)
     {
-        ret[ret.size() - i].colour = TextHighlightColour;
+        ret[ret.size() - i].colour = CD32::Colours[CD32::Olive];// TextHighlightColour;
     }
 
     //add a tail

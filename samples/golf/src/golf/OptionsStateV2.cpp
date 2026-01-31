@@ -1767,8 +1767,8 @@ void OptionsStateV2::createSettingsItems()
 
     //precise range indicator
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Estimated Range Indicator";
-    item->description = "Set to OFF to account for elevation and wind when predicting the range";
+    item->title = "Range Indicator Assist";
+    item->description = "The Range Indicator for clubs longer than a Pitch Wedge will account for elevation and wind conditions";
     item->selected =
         [&](const Menu::Item&)
         {
@@ -1781,7 +1781,7 @@ void OptionsStateV2::createSettingsItems()
             m_sharedData.calculateRange = i.selectedIndex == 0;
         };
     item->count = 2;
-    item->labels = { "Off" , "On" };
+    item->labels = { "On" , "Off" };
     item->selectedIndex = m_sharedData.calculateRange ? 0 : 1;
 
 

@@ -1698,7 +1698,8 @@ void GolfState::buildUI()
         [&, mapEnt](cro::Entity e, float dt)
         {
             if (!m_sharedData.calculateRange
-                || m_sharedData.competitionLeague)
+                || m_sharedData.competitionLeague
+                || getClub() > ClubID::NineIron)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 return;
@@ -1792,7 +1793,7 @@ void GolfState::buildUI()
 
 
 
-    //esitimated version
+    //estimated version
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
     entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
@@ -1803,7 +1804,8 @@ void GolfState::buildUI()
         [&, mapEnt/*, dbEnt*/](cro::Entity e, float dt) mutable
     {
         if (m_sharedData.calculateRange
-            && !m_sharedData.competitionLeague)
+            && !m_sharedData.competitionLeague
+            && getClub() < ClubID::PitchWedge)
         {
             e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             return;
