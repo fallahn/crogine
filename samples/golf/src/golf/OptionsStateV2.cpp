@@ -1768,7 +1768,7 @@ void OptionsStateV2::createSettingsItems()
     //precise range indicator
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Use Range Indicator Assist";
-    item->description = "The Range Indicator for clubs longer than a Pitch Wedge will account for elevation and wind conditions";
+    item->description = "The Range Indicator for clubs longer than a Pitch Wedge will account for elevation in terrain and wind conditions";
     item->selected =
         [&](const Menu::Item&)
         {
