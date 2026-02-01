@@ -1733,7 +1733,7 @@ void OptionsStateV2::createSettingsItems()
 
     //putt assist
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Use Putt Assist";
+    item->title = "Use Putting Assist";
     item->description = "Show a small flag above the power bar when putting to estimate the range";
     item->selected =
         [&](const Menu::Item&)
@@ -1767,7 +1767,7 @@ void OptionsStateV2::createSettingsItems()
 
     //precise range indicator
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Range Indicator Assist";
+    item->title = "Use Range Indicator Assist";
     item->description = "The Range Indicator for clubs longer than a Pitch Wedge will account for elevation and wind conditions";
     item->selected =
         [&](const Menu::Item&)
