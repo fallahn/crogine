@@ -1833,11 +1833,11 @@ void OptionsStateV2::createSettingsItems()
 
     //assisted scores
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Hide Assisted Scores";
-    item->description = "Leaderboards only display results from players who used the Estimated range finder. Takes effect next time the Main Menu is loaded.";
+    item->title = "View Assisted Scores";
+    item->description = "Leaderboards only display results from players who used the Range Indicator assist, otherwise displays only unassisted scores.";
     item->activated = [&](Menu::Item& i)
         {
-            Social::setLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist, i.selectedIndex == 1);
+            Social::setLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist, i.selectedIndex == 0);
         };
     item->count = 2;
     item->labels = { "No", "Yes" };
