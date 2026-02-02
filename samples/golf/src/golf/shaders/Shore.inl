@@ -85,5 +85,5 @@ void main()
     coord.x += 0.5;
     colour += getColour(time, coord);
 
-    FRAG_OUT = colour * getLightColour();;
+    FRAG_OUT = colour * getLightColour();
 })";

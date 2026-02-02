@@ -1779,6 +1779,7 @@ void OptionsStateV2::createSettingsItems()
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.calculateRange = i.selectedIndex == 0;
+            Social::setLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist, i.selectedIndex == 1);
         };
     item->count = 2;
     item->labels = { "On" , "Off" };
@@ -1832,7 +1833,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = Social::getLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly) ? 1 : 0;
 
     //assisted scores
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    /*item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "View Assisted Scores";
     item->description = "Leaderboards only display results from players who used the Range Indicator assist, otherwise displays only unassisted scores.";
     item->activated = [&](Menu::Item& i)
@@ -1841,7 +1842,7 @@ void OptionsStateV2::createSettingsItems()
         };
     item->count = 2;
     item->labels = { "No", "Yes" };
-    item->selectedIndex = Social::getLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist) ? 1 : 0;
+    item->selectedIndex = Social::getLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist) ? 1 : 0;*/
 #endif
 
 
