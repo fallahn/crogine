@@ -29,7 +29,6 @@ source distribution.
 
 #include "ProfileStateV2.hpp"
 #include "SharedStateData.hpp"
-#include "SharedProfileData.hpp"
 #include "CommonConsts.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
@@ -69,9 +68,11 @@ source distribution.
 
 namespace
 {
+#include "shaders/ProgressShader.inl"
+
     //static const cro::String XboxInfo = cro::String(ButtonX) + " Show Credits   " + cro::String(ButtonY) + " How To Play   " + cro::String(ButtonB) + " Close";
     //static const cro::String PSInfo = cro::String(ButtonSquare) + " Show Credits   " + cro::String(ButtonCross) + " How To Play   " + cro::String(ButtonCircle) + " Close";
-    static const cro::String KeyInfo = "Put the correct text here";
+    static const cro::String KeyInfo = "LCtrl (Hold) - Save and Close   ESC (Hold) - Cancel Changes";
 
     const std::array ItemLabels =
     {
@@ -104,6 +105,10 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus(), 192),
     m_sharedData        (sd),
+    m_profileData       (profileData),
+    m_exitHoldTimer     (0.f),
+    m_exitFlags         (0),
+    m_progressUniform   (-1),
     m_uiTexture         (nullptr)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -202,8 +207,13 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         if (evt.key.keysym.sym == SDLK_BACKSPACE
             || evt.key.keysym.sym == SDLK_ESCAPE)
         {
-            quitState();
-            return false;
+            /*quitState();
+            return false;*/
+            m_exitFlags &= ~ExitFlagQuit;
+        }
+        else if (evt.key.keysym.sym == SDLK_LCTRL)
+        {
+            m_exitFlags &= ~ExitFlagSave;
         }
         else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
         {
@@ -214,7 +224,7 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
             prevTab();
         }
 
-        //done on key down evet for repeat when held
+        //done on key down event for repeat when held
         /*else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down]
             || evt.key.keysym.sym == SDLK_DOWN)
         {
@@ -258,6 +268,18 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         {
             prevItem();
         }
+
+        else if (evt.key.keysym.sym == SDLK_BACKSPACE
+            || evt.key.keysym.sym == SDLK_ESCAPE)
+        {
+            /*quitState();
+            return false;*/
+            m_exitFlags |= ExitFlagQuit;
+        }
+        else if (evt.key.keysym.sym == SDLK_LCTRL)
+        {
+            m_exitFlags |= ExitFlagSave;
+        }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
@@ -274,6 +296,12 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         case cro::GameController::DPadDown:
             nextItem();
             resetRepeatTimer(controllerID, RepeatTimeLong);
+            break;
+        case cro::GameController::ButtonB:
+            m_exitFlags |= ExitFlagQuit;
+            break;
+        case cro::GameController::ButtonX:
+            m_exitFlags |= ExitFlagSave;
             break;
         }
     }
@@ -298,8 +326,13 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
             activate();
             break;
         case cro::GameController::ButtonB:
-            quitState();
-            return false;
+            /*quitState();
+            return false;*/
+            m_exitFlags &= ~ExitFlagQuit;
+            break;
+        case cro::GameController::ButtonX:
+            m_exitFlags &= ~ExitFlagSave;
+            break;
         }
     }
 
@@ -311,8 +344,16 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         }
         else if (evt.button.button == SDL_BUTTON_RIGHT)
         {
-            quitState();
-            return false;
+            //quitState();
+            //return false;
+            m_exitFlags &= ~ExitFlagQuit;
+        }
+    }
+    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    {
+        if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            m_exitFlags |= ExitFlagQuit;
         }
     }
 
@@ -448,6 +489,38 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
 
 bool ProfileStateV2::simulate(float dt)
 {
+    if (m_exitFlags)
+    {
+        m_exitHoldTimer = std::min(m_exitHoldTimer + dt, 1.f);
+        
+        if (m_exitHoldTimer == 1)
+        {
+            if (m_exitFlags == ExitFlagQuit)
+            {
+                quitState();
+            }
+            else if (m_exitFlags == ExitFlagSave)
+            {
+                //TODO copy av data back to proper data and write files
+                quitState();
+            }
+            else
+            {
+                //mode than one button held, so invalid
+                m_exitFlags = 0;
+                m_exitHoldTimer = 0.f;
+            }
+        }
+    }
+    else
+    {
+        m_exitHoldTimer = 0.f;
+    }
+
+    glUseProgram(m_progressShader.getGLHandle());
+    glUniform1f(m_progressUniform, m_exitHoldTimer);
+
+
     //TODO this doesn't actually do what I wanted, but it's servicable
     scrollToTarget(m_tabBar, m_menuLayout, dt);
 
@@ -528,6 +601,13 @@ void ProfileStateV2::loadAssets()
     m_menuTextLarge.setAlignment(cro::SimpleText::Alignment::Centre);
 
     m_itemSlider.setPrimitiveType(GL_TRIANGLES);
+
+
+    if (m_progressShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), ProgressFrag))
+    {
+        m_progressUniform = m_progressShader.getUniformID("u_progress");
+    }
+
 
     cro::Image img;
     img.create(1, 1, cro::Colour::White);
@@ -1036,7 +1116,7 @@ void ProfileStateV2::buildScene()
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).characterSize = UITextSize;
     entity.getComponent<cro::UIElement>().depth = 0.1f;
-    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 16.f };
+    entity.getComponent<cro::UIElement>().absolutePosition = { 22.f, 14.f };
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&](cro::Entity e)
         {
@@ -1054,7 +1134,36 @@ void ProfileStateV2::buildScene()
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("info_xbox");
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
     entity.getComponent<cro::UIElement>().depth = 0.1f;
-    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 2.f };
+    entity.getComponent<cro::UIElement>().absolutePosition = { 20.f, 2.f };
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [&](cro::Entity e)
+        {
+            //0,0 is screen centre so we need to offset origin by half screen size
+            auto o = (glm::vec2(cro::App::getWindow().getSize()) / 2.f) / cro::UIElementSystem::getViewScale();
+            o.x = std::round(o.x);
+            o.y = std::round(o.y);
+            e.getComponent<cro::Transform>().setOrigin(o);
+        };
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_infoSprite = entity;
+
+    //progress for hold-to-quit
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setShader(&m_progressShader);
+    //entity.getComponent<cro::Drawable2D>().setTexture(m_uiTexture);
+    //hmm theres a bug here preventing the coords being forwarded to the
+    //shader so we'll fudg coords in the colour channel
+    entity.getComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 16.f), cro::Colour(0.f, 1.f, 1.f, 1.f)),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour(0.f, 0.f, 1.f, 1.f)),
+            cro::Vertex2D(glm::vec2(16.f), cro::Colour(1.f, 1.f, 1.f, 1.f)),
+            cro::Vertex2D(glm::vec2(16.f, 0.f), cro::Colour(1.f, 0.f, 1.f, 1.f)),
+        });
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    entity.getComponent<cro::UIElement>().depth = 0.1f;
+    entity.getComponent<cro::UIElement>().absolutePosition = { 2.f, 2.f };
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&](cro::Entity e)
         {
@@ -1064,7 +1173,6 @@ void ProfileStateV2::buildScene()
             e.getComponent<cro::Transform>().setOrigin(o);
         };
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_infoSprite = entity;
 
 
     //camera settings
@@ -2805,7 +2913,15 @@ void ProfileStateV2::createDetailItems()
 
 void ProfileStateV2::onCachedPush()
 {
-    //do this here so each tab is refreshed on push
+    m_exitFlags = 0;
+    m_exitHoldTimer = 0.f;
+
+    //we make a copy of this so we can cancel any modifications
+    m_activeProfile = m_profileData.playerProfiles[m_profileData.activeProfileIndex];
+    m_activeProfile.loadout.read(m_activeProfile.playerData.profileID);
+
+
+    //do this here so each tab is refreshed on push by reading the active profile
     createBodyItems();
     createHeadwearItems();
     createEquipmentItems();
@@ -3667,6 +3783,9 @@ void ProfileStateV2::refreshView()
 
 void ProfileStateV2::quitState()
 {
+    m_exitFlags = 0;
+    m_exitHoldTimer = 0.f;
+
     m_rootNode.getComponent<cro::Callback>().active = true;
     playSound(MenuSoundEvent::Cancel);
 }

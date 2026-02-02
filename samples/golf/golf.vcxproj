@@ -1091,6 +1091,7 @@
     <None Include="src\golf\shaders\PaletteSwap.inl" />
     <None Include="src\golf\shaders\PointLightShader.inl" />
     <None Include="src\golf\shaders\PostProcess.inl" />
+    <None Include="src\golf\shaders\ProgressShader.inl" />
     <None Include="src\golf\shaders\RoidShader.inl" />
     <None Include="src\golf\shaders\ShaderIncludes.inl" />
     <None Include="src\golf\shaders\ShadowMapping.inl" />

@@ -30,8 +30,8 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
-//#include "ui/FlagPreview.hpp"
 #include "ui/MenuLayout.hpp"
+#include "SharedProfileData.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
@@ -47,7 +47,7 @@ struct SharedStateData;
 class ProfileStateV2 final : public cro::State
 {
 public:
-    ProfileStateV2(cro::StateStack&, cro::State::Context, SharedStateData&, struct SharedProfileData&);
+    ProfileStateV2(cro::StateStack&, cro::State::Context, SharedStateData&, SharedProfileData&);
 
     bool handleEvent(const cro::Event&) override;
 
@@ -63,6 +63,16 @@ private:
 
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
+    SharedProfileData& m_profileData;
+    SharedProfileData::LocalProfile m_activeProfile;
+
+    float m_exitHoldTimer;
+    std::uint8_t m_exitFlags;
+    static constexpr std::uint8_t ExitFlagSave = 0x1;
+    static constexpr std::uint8_t ExitFlagQuit = 0x2;
+
+    cro::Shader m_progressShader;
+    std::int32_t m_progressUniform;
 
     cro::Entity m_rootNode;
     void loadAssets();
