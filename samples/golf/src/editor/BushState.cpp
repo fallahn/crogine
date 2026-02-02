@@ -1173,7 +1173,7 @@ void BushState::createThumbnails()
     auto dirs = cro::FileSystem::listDirectories("assets/golf/courses");
     dirs.erase(std::remove_if(dirs.begin(), dirs.end(), [](const std::string& s) {return s.find("course_") == std::string::npos; }), dirs.end());
 
-    for (auto dir : dirs)
+    for (const auto& dir : dirs)
     {
         auto path = "assets/golf/courses/" + dir + "/course.data";
         if (cro::FileSystem::fileExists(path))
@@ -1256,7 +1256,6 @@ void BushState::createThumbnails()
 
                     if (md.loadFromFile(modelPath))
                     {
-                        
                         auto entity = m_gameScene.createEntity();
                         entity.addComponent<cro::Transform>().setPosition(MapCentre);
                         md.createModel(entity);
@@ -1278,14 +1277,13 @@ void BushState::createThumbnails()
                         entity.getComponent<cro::Transform>().setOrigin(o);
 
                         auto size = bounds[1] - bounds[0];
-                        size.z *= -1.f;
+                        //size.z *= -1.f;
 
-                        const float scaleX = std::max(1.f, std::floor(MapSizeFloat.x / size.x));
-                        const float scaleY = std::max(1.f, std::floor(MapSizeFloat.y / size.z));
+                        const float scaleX = /*std::max(1.f, std::floor*/(MapSizeFloat.x / size.x);//);
+                        const float scaleY = /*std::max(1.f, std::floor*/(MapSizeFloat.y / size.z);//);
 
                         const float scale = std::min(scaleX, scaleY);
                         entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-
 
                         glm::vec3 flagPos = glm::vec3(0.f);
                         auto* flag = holeFile.findProperty("pin");
