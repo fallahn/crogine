@@ -1442,7 +1442,7 @@ void OptionsStateV2::createSettingsItems()
     //decimated power bar
     item = &m_menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Decimate Power Bar";
-    item->description = "Draws a power bar with 10 segements instead of 8";
+    item->description = "Draws a power bar with 10 segments instead of 8";
     item->selected =
         [&](const Menu::Item&)
         {
