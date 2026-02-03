@@ -109,7 +109,6 @@ struct Menu final
         bool alwaysActivate = false; //hack to always call activation callback regardless of input
         bool wrapValue = true; //value wraps back to the beginning instead of clamping
         std::int32_t selectedIndex = 0; //currently selected entry
-        std::int32_t count = 1; //number of items to cycle through when clicking
         std::vector<cro::String> labels; //display text for each setting when cycled
         cro::String title; //main display title
         cro::String subTitle; //shown below title in TextOnly items
@@ -119,6 +118,9 @@ struct Menu final
         std::function<void(Item&)> activated; //called when activated
         bool activateLeft()
         {
+            assert(!labels.empty());
+            const auto count = static_cast<std::int32_t>(labels.size());
+
             if (count > 1)
             {
                 selectedIndex = wrapValue ?
@@ -134,6 +136,9 @@ struct Menu final
 
         bool activateRight()
         {
+            assert(!labels.empty());
+            const auto count = static_cast<std::int32_t>(labels.size());
+
             if (count > 1)
             {
                 selectedIndex = wrapValue ?
@@ -149,6 +154,9 @@ struct Menu final
 
         bool activate()
         {
+            assert(!labels.empty());
+            const auto count = static_cast<std::int32_t>(labels.size());
+
             if (count == 1
                 || alwaysActivate)
             {

@@ -1249,7 +1249,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.showBeacon = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.showBeacon ? 1 : 0;
 
@@ -1273,7 +1272,6 @@ void OptionsStateV2::createSettingsItems()
             //set the preview colour
             i.previewColour = getBeaconColour(m_sharedData.beaconColour);
         };
-    item->count = 10; //hmmm why don't I infer this from the size of the label vector?
     item->labels = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" };
     item->selectedIndex = static_cast<std::int32_t>(std::floor(m_sharedData.beaconColour * 9.f));
     item->displayType = Menu::Item::Slider;
@@ -1297,7 +1295,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.showBallTrail = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.showBallTrail ? 1 : 0;
 
@@ -1316,7 +1313,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.trailBeaconColour = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.trailBeaconColour ? 1 : 0;
 
@@ -1336,7 +1332,6 @@ void OptionsStateV2::createSettingsItems()
             const float amt = 0.1f * i.selectedIndex;
             m_sharedData.gridTransparency = amt;
         };
-    item->count = 11;
     item->labels = { "0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0" };
     item->selectedIndex = static_cast<std::int32_t>(std::floor(m_sharedData.gridTransparency * 10.f));
     item->displayType = Menu::Item::Slider;
@@ -1377,7 +1372,6 @@ void OptionsStateV2::createSettingsItems()
             //set the preview colour
             i.previewColour = CD32::Colours[m_sharedData.teeColour];
         };
-    item->count = 7;
     item->labels = { "1", "2", "3", "4", "5", "6", "7" };
     item->selectedIndex = activeColour;
     item->displayType = Menu::Item::Slider;
@@ -1396,7 +1390,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.imperialMeasurements = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.imperialMeasurements ? 1 : 0;
 
@@ -1415,7 +1408,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.useLargePowerBar = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes"  };
     item->selectedIndex = m_sharedData.useLargePowerBar ? 1 : 0;
 
@@ -1434,7 +1426,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.useContrastPowerBar = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.useContrastPowerBar ? 1 : 0;
 
@@ -1454,7 +1445,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.decimatePowerBar = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.decimatePowerBar ? 1 : 0;
 
@@ -1467,7 +1457,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.decimateDistance = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.decimateDistance ? 1 : 0;
 
@@ -1480,7 +1469,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.showRival = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.showRival ? 1 : 0;
 
@@ -1500,7 +1488,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.puttFollowCam = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.puttFollowCam ? 1 : 0;
 
@@ -1520,7 +1507,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.zoomFollowCam = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.zoomFollowCam ? 1 : 0;
 
@@ -1533,7 +1519,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.rotateCamera = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.rotateCamera ? 1 : 0;
 
@@ -1565,8 +1550,8 @@ void OptionsStateV2::createSettingsItems()
             m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_flagPreview.getSize().x / 2.f, 0.f });
             m_sharedData.flagPath = m_flagPreview.getPath();
         };
-    item->count = m_flagPreview.getCount();
-    for (auto i = 0; i < item->count; ++i)
+
+    for (auto i = 0; i < m_flagPreview.getCount(); ++i)
     {
         item->labels.push_back("Flag " + std::to_string(i));
     }
@@ -1584,7 +1569,6 @@ void OptionsStateV2::createSettingsItems()
             m_detailsPane.image.getComponent<cro::Sprite>().setTexture(m_flagPreview.getTexure());
             m_detailsPane.image.getComponent<cro::Sprite>().setTextureRect(m_flagPreview.getUV());
         };
-    item->count = 3;
     item->labels = { "None" , "Black", "White"};
     item->selectedIndex = m_sharedData.flagText;
     item->selected = selectionCallback;
@@ -1622,7 +1606,7 @@ void OptionsStateV2::createSettingsItems()
                 break;
             }
         };
-    item->count = static_cast<std::int32_t>(ShaderNames.size() + 1);
+
     for (const auto& name : ShaderNames)
     {
         item->labels.push_back(name);
@@ -1640,7 +1624,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.useLensFlare = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.useLensFlare ? 1 : 0;
 
@@ -1652,7 +1635,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.miniLoadingScreen = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.miniLoadingScreen ? 1 : 0;
 
@@ -1672,7 +1654,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.useMouseAction = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
 
@@ -1684,7 +1665,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.pressHold = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.pressHold ? 1 : 0;
 
@@ -1705,7 +1685,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.measureSpeed = SpeedValues[i.selectedIndex];
         };
-    item->count = 6;
     item->labels = { "0.5", "1.0", "2.0", "3.0", "4.0", "5.0" };
     item->selectedIndex = (static_cast<std::int32_t>(std::floor(m_sharedData.measureSpeed) * 10.f) / 10);
     item->displayType = Menu::Item::Slider;
@@ -1719,7 +1698,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.skipSpeed = i.selectedIndex == 1 ? 10.f : 60.f;
         };
-    item->count = 2;
     item->labels = { "Normal", "Fast" };
     item->selectedIndex = m_sharedData.skipSpeed == 10.f ? 1 : 0;
 
@@ -1746,7 +1724,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.showPuttingPower = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.showPuttingPower ? 1 : 0;
     
@@ -1759,7 +1736,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.fixedPuttingRange = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.fixedPuttingRange ? 1 : 0;
 
@@ -1781,7 +1757,6 @@ void OptionsStateV2::createSettingsItems()
             m_sharedData.calculateRange = i.selectedIndex == 0;
             Social::setLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist, i.selectedIndex == 1);
         };
-    item->count = 2;
     item->labels = { "On" , "Off" };
     item->selectedIndex = m_sharedData.calculateRange ? 0 : 1;
 
@@ -1795,7 +1770,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.showMinimap = i.selectedIndex == 0;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.showMinimap ? 0 : 1;
 
@@ -1809,7 +1783,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.showInGameTips = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.showInGameTips ? 1 : 0;
 
@@ -1828,7 +1801,6 @@ void OptionsStateV2::createSettingsItems()
         {
             Social::setLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly, i.selectedIndex == 1);
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = Social::getLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly) ? 1 : 0;
 
@@ -1880,7 +1852,6 @@ void OptionsStateV2::createSettingsItems()
                 }
             }
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.webSocket ? 1 : 0;
 
@@ -1895,7 +1866,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.logCSV = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.logCSV ? 1 : 0;
 
@@ -1908,7 +1878,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.blockChat = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.blockChat ? 1 : 0;
 
@@ -1921,7 +1890,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.logChat = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.logChat ? 1 : 0;
 
@@ -1936,7 +1904,6 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.remoteContent = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.remoteContent ? 1 : 0;
 #endif
@@ -1965,7 +1932,6 @@ void OptionsStateV2::createSettingsItems()
 
             m_detailsPane.text.getComponent<cro::Text>().setString("Tutorials Reset!");
         };
-    item->count = 1;
     item->labels = { "OK" };
     item->selectedIndex = 0;
 
@@ -1988,7 +1954,6 @@ void OptionsStateV2::createSettingsItems()
             m_sharedData.errorMessage = "reset_career";
             requestStackPush(StateID::MessageOverlay);
         };
-    item->count = 1;
     item->labels = { "OK" };
     item->selectedIndex = 0;
 
@@ -2011,7 +1976,6 @@ void OptionsStateV2::createSettingsItems()
             m_sharedData.errorMessage = "reset_profile";
             requestStackPush(StateID::MessageOverlay);
         };
-    item->count = 1;
     item->labels = { "OK" };
     item->selectedIndex = 0;
 }
@@ -2072,7 +2036,6 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::PrevClub;
             m_keybindItemIndex = itemIndex;
         };
-    item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub])};
     item->selectedIndex = 0;
 
@@ -2087,7 +2050,6 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::NextClub;
             m_keybindItemIndex = itemIndex;
         };
-    item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) };
     item->selectedIndex = 0;
 
@@ -2102,7 +2064,6 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::Left;
             m_keybindItemIndex = itemIndex;
         };
-    item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]) };
     item->selectedIndex = 0;
 
@@ -2117,7 +2078,6 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::Right;
             m_keybindItemIndex = itemIndex;
         };
-    item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]) };
     item->selectedIndex = 0;
 
@@ -2132,7 +2092,6 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::Up;
             m_keybindItemIndex = itemIndex;
         };
-    item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Up]) };
     item->selectedIndex = 0;
 
@@ -2147,7 +2106,6 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::Down;
             m_keybindItemIndex = itemIndex;
         };
-    item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Down]) };
     item->selectedIndex = 0;
 
@@ -2162,7 +2120,6 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::Action;
             m_keybindItemIndex = itemIndex;
         };
-    item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) };
     item->selectedIndex = 0;
 
@@ -2177,7 +2134,6 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::SpinMenu;
             m_keybindItemIndex = itemIndex;
         };
-    item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]) };
     item->selectedIndex = 0;
 
@@ -2192,7 +2148,6 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::EmoteMenu;
             m_keybindItemIndex = itemIndex;
         };
-    item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::EmoteMenu]) };
     item->selectedIndex = 0;
 
@@ -2207,7 +2162,6 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::CancelShot;
             m_keybindItemIndex = itemIndex;
         };
-    item->count = 1;
     item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::CancelShot]) };
     item->selectedIndex = 0;
 
@@ -2446,7 +2400,6 @@ void OptionsStateV2::createControllerItems()
             m_sharedData.mouseSpeed = std::clamp(ConstVal::MinMouseSpeed + amt, ConstVal::MinMouseSpeed, ConstVal::MaxMouseSpeed);
         };
     //TODO this should really be reading the min/max constvals
-    item->count = 16;
     item->labels = { "0.5", "0.6", "0.7", "0.8", "0.9", "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "2.0"};
     item->selectedIndex = static_cast<std::int32_t>(std::floor((m_sharedData.mouseSpeed - ConstVal::MinMouseSpeed) * 10.f));
     item->displayType = Menu::Item::Slider;
@@ -2466,7 +2419,6 @@ void OptionsStateV2::createControllerItems()
             const float amt = 0.1f * (i.selectedIndex + 1);
             cro::GameController::LeftThumbDeadZone.setOffset(MinDeadZone + std::int16_t(static_cast<float>(MaxDeadzone - MinDeadZone) * amt));            
         };
-    item->count = 10;
     item->labels = { "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0" };
     item->selectedIndex = static_cast<std::int32_t>(static_cast<float>(cro::GameController::LeftThumbDeadZone.getOffset() - MinDeadZone) / (MaxDeadzone - MinDeadZone) * 10.f);
     item->displayType = Menu::Item::Slider;
@@ -2482,7 +2434,6 @@ void OptionsStateV2::createControllerItems()
         {
             m_sharedData.invertX = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.invertX ? 1 : 0;
 
@@ -2495,7 +2446,6 @@ void OptionsStateV2::createControllerItems()
         {
             m_sharedData.invertY = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.invertY ? 1 : 0;
 
@@ -2508,7 +2458,6 @@ void OptionsStateV2::createControllerItems()
         {
             m_sharedData.useSwingput = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.useSwingput ? 1 : 0;
 
@@ -2521,7 +2470,6 @@ void OptionsStateV2::createControllerItems()
         {
             m_sharedData.enableRumble = i.selectedIndex;
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.enableRumble;
 
@@ -2535,7 +2483,6 @@ void OptionsStateV2::createControllerItems()
         {
             Social::showControllerBinding();
         };
-    item->count = 1;
     item->labels = { "View Steam Guide" };
 
 #endif
@@ -2566,7 +2513,6 @@ void OptionsStateV2::createDisplayItems()
             //sets shared data value
             toggleAntialiasing(m_sharedData, AASamples[i.selectedIndex] != 0, AASamples[i.selectedIndex]);
         };
-    item->count = 4;
     item->labels = { "None", "2x MSAA", "4x MSAA", "8x MSAA" };
     item->selectedIndex = AAIndexMap[m_sharedData.multisamples];
 
@@ -2595,7 +2541,6 @@ void OptionsStateV2::createDisplayItems()
     {
         item->labels.push_back(s);
     }
-    item->count = static_cast<std::int32_t>(item->labels.size());
     item->wrapValue = false;
 
     const auto size = cro::App::getWindow().getSize();
@@ -2630,7 +2575,6 @@ void OptionsStateV2::createDisplayItems()
     {
         item->labels.push_back(std::to_string(i));
     }
-    item->count = static_cast<std::int32_t>(item->labels.size());
     item->selectedIndex = static_cast<std::int32_t>((m_sharedData.fov - MinFOV) / 5.f);
     item->wrapValue = false;
 
@@ -2645,7 +2589,6 @@ void OptionsStateV2::createDisplayItems()
             //this func toggles the actual property...
             togglePixelScale(m_sharedData, i.selectedIndex != 0);
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.pixelScale ? 1 : 0;
 
@@ -2658,7 +2601,6 @@ void OptionsStateV2::createDisplayItems()
         {
             m_sharedData.vertexSnap = i.selectedIndex == 1;
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.vertexSnap ? 1 : 0;
 
@@ -2672,7 +2614,6 @@ void OptionsStateV2::createDisplayItems()
         {
             cro::App::getWindow().setFullScreen(i.selectedIndex == 1);
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = cro::App::getWindow().isFullscreen() ? 1 : 0;
 
@@ -2693,7 +2634,6 @@ void OptionsStateV2::createDisplayItems()
                 cro::App::getWindow().setFullScreen(true);
             }
         };
-    item->count = 2;
     item->labels = { "Borderless Window", "Exclusive Mode" };
     item->selectedIndex = cro::App::getWindow().getExclusiveFullscreen() ? 1 : 0;
 
@@ -2707,7 +2647,6 @@ void OptionsStateV2::createDisplayItems()
         {
             cro::App::getWindow().setVsyncEnabled(i.selectedIndex == 1);
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = cro::App::getWindow().getVsyncEnabled() ? 1 : 0;
 
@@ -2722,7 +2661,6 @@ void OptionsStateV2::createDisplayItems()
             auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
             msg->type = SystemEvent::TreeQualityChanged;
         };
-    item->count = 3;
     item->labels = { "Classic", "Low", "High" };
     item->selectedIndex = m_sharedData.treeQuality;
 
@@ -2738,7 +2676,6 @@ void OptionsStateV2::createDisplayItems()
             auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
             msg->type = SystemEvent::ShadowQualityChanged;
         };
-    item->count = 5;
     item->labels = { "Very Low", "Low", "High", "Very High", "Classic" };
     item->selectedIndex = m_sharedData.shadowQuality;
 
@@ -2754,7 +2691,6 @@ void OptionsStateV2::createDisplayItems()
             auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
             msg->type = SystemEvent::CrowdDensityChanged;
         };
-    item->count = 5;
     item->labels = { "Low", "Normal", "High", "Extreme", "None" };
     item->selectedIndex = m_sharedData.crowdDensity;
 
@@ -2771,7 +2707,6 @@ void OptionsStateV2::createDisplayItems()
                 auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                 msg->type = SystemEvent::GrassDensityChanged;
             };
-        item->count = 2;
         item->labels = { "Low", "High" };
         item->selectedIndex = m_sharedData.grassDensity;
     }
@@ -2823,7 +2758,6 @@ void OptionsStateV2::createAudioItems()
         {
             m_sharedData.useTTS = i.selectedIndex == 0 ? false : true;
         };
-    item->count = 2;
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.useTTS ? 1 : 0;
 
@@ -2843,8 +2777,8 @@ void OptionsStateV2::createAudioItems()
             {
                 cro::AudioMixer::setVolume(static_cast<float>(it.selectedIndex) / 10.f, i);
             };
-        item.count = 11;
-        for (auto j = 0; j < item.count; ++j)
+
+        for (auto j = 0; j < 11; ++j) //TODO how do we determine this arbitrary number of channels?
         {
             item.labels.push_back("Vol: " + std::to_string(j));
         }
@@ -2903,7 +2837,6 @@ void OptionsStateV2::createAchievementItems()
             item.uv.height *= texSize.y;
 
             item.displayType = Menu::Item::TextOnly;
-            item.count = 0;
         }
     }
 }
@@ -2969,7 +2902,6 @@ void OptionsStateV2::createStatItems()
             auto& item = m_menuLayout.items[TabID::Stats].emplace_back();
             item.title = StatLabels[stat->id];
             item.subTitle = formatValue(StatTypes[stat->id], stat->value);
-            item.count = 0;
             item.displayType = Menu::Item::TextOnly;
         }
     }
@@ -3540,7 +3472,7 @@ void OptionsStateV2::updateMenuItems()
             switch (item.displayType)
             {
             case Menu::Item::Slider:
-                updateSliderGraphic(item.selectedIndex, item.count - 1);
+                updateSliderGraphic(item.selectedIndex, item.labels.size() - 1);
                 m_itemSlider.setPosition({ std::floor(renderSize.x / 2.f), pos.y - 22.f/*std::floor(LineSpacing * 1.7f)*/ });
                 m_itemSlider.draw();
                 [[fallthrough]];
@@ -3935,7 +3867,7 @@ void OptionsStateV2::refreshAudioDevices(Menu::Item& item)
     auto deviceList = cro::AudioDevice::getDeviceList();
     if (deviceList.empty())
     {
-        item.count = 0;
+        //hmmm how do we have both the count set to zero but labels set to one?
         item.labels.push_back("No Device Available");
         item.selectedIndex = 0;
         return;
@@ -3966,7 +3898,7 @@ void OptionsStateV2::refreshAudioDevices(Menu::Item& item)
         item.labels.push_back(d);
     }
 
-    item.count = static_cast<std::int32_t>(deviceList.size());
+    //item.count = static_cast<std::int32_t>(deviceList.size());
     if (const auto res = std::find(deviceList.cbegin(), deviceList.cend(), str);
         res != deviceList.cend())
     {
