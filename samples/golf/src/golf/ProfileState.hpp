@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -56,19 +56,6 @@ struct BallPreview final
 
     std::int32_t type = 0;
     std::int32_t infoIndex = -1;
-};
-
-struct AvatarPreview final
-{
-    std::int32_t type = 0;
-    std::size_t hairIndex = 0; //TODO this doesn't really need to be per model...
-    std::size_t hatIndex = 0; //TODO this doesn't really need to be per model...
-    cro::Attachment* hairAttachment = nullptr;
-    cro::Attachment* hatAttachment = nullptr;
-    cro::Entity previewModel;
-    std::vector<cro::Entity> previewAudio;
-    std::uint32_t audioUID = 0;
-    std::size_t previewIndex = 0; //actual index may differ because of locked models
 };
 
 class ProfileState final : public cro::State, public cro::GuiClient

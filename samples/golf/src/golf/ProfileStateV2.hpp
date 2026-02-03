@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "ui/MenuLayout.hpp"
 #include "SharedProfileData.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
@@ -41,6 +42,8 @@ source distribution.
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/SimpleText.hpp>
 #include <crogine/graphics/SimpleVertexArray.hpp>
+
+#include <vector>
 
 struct SharedStateData;
 
@@ -62,6 +65,7 @@ public:
 private:
 
     cro::Scene m_scene;
+    cro::Scene m_previewScene;
     SharedStateData& m_sharedData;
     SharedProfileData& m_profileData;
     SharedProfileData::LocalProfile m_activeProfile;
@@ -75,22 +79,32 @@ private:
     std::int32_t m_progressUniform;
 
     cro::Entity m_rootNode;
+
+    cro::RenderTexture m_previewTexture;
+    cro::ResourceCollection m_resources;
+    std::size_t m_avatarIndex;
+    std::size_t m_lockedAvatarCount;
+    std::vector<AvatarPreview> m_avatarModels;
+
     void loadAssets();
     void buildScene();
+
+    struct PreviewCamera final
+    {
+        enum
+        {
+            Avatar, Ball, Club,
+            Count
+        };
+    };
+    std::array<cro::Entity, PreviewCamera::Count> m_previewCameras = {};
+    void buildPreviewScene();
 
     void createBodyItems();
     void createHeadwearItems();
     void createEquipmentItems();
     void createLoadoutItems();
     void createDetailItems();
-
-    /*void createSettingsItems();
-    void createKeyboardItems();
-    void createControllerItems();
-    void createDisplayItems();
-    void createAudioItems();
-    void createAchievementItems();
-    void createStatItems();*/
 
     void onCachedPush() override;
     void onCachedPop() override;
@@ -220,4 +234,10 @@ private:
 
     void refreshView();
     void quitState();
+
+
+    void loadAvatarPreviews();
+    std::size_t indexFromAvatarID(std::uint32_t skinID) const;
+    //note this sets the m_avatarIndex member value too!!
+    void setAvatarIndex(std::size_t idx);
 };

@@ -3981,7 +3981,7 @@ void OptionsStateV2::refreshAudioDevices(Menu::Item& item)
 
 void OptionsStateV2::refreshView()
 {
-    //heh OK let's say I had grander plans for this funtions...
+    //heh OK let's say I had grander plans for this funtion...
 
     updateTabBar();
 }

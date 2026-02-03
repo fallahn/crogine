@@ -115,3 +115,22 @@ namespace ConstVal
 
     static const std::uint8_t SummaryTimeout = 30;
 }
+
+namespace cro
+{
+    class Entity;
+    struct Attachment;
+}
+
+struct AvatarPreview final
+{
+    std::int32_t type = 0;
+    std::size_t hairIndex = 0; //TODO this doesn't really need to be per model...
+    std::size_t hatIndex = 0; //TODO this doesn't really need to be per model...
+    cro::Attachment* hairAttachment = nullptr;
+    cro::Attachment* hatAttachment = nullptr;
+    cro::Entity previewModel;
+    std::vector<cro::Entity> previewAudio;
+    std::uint32_t audioUID = 0;
+    std::size_t previewIndex = 0; //actual index may differ because of locked models
+};

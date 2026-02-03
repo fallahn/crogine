@@ -29,11 +29,11 @@ source distribution.
 
 #include "ProfileStateV2.hpp"
 #include "SharedStateData.hpp"
-#include "CommonConsts.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
+#include "CallbackData.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/core/Window.hpp>
@@ -53,6 +53,8 @@ source distribution.
 
 #include <crogine/ecs/systems/UIElementSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -104,11 +106,14 @@ using namespace UI;
 ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedProfileData& profileData)
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus(), 192),
+    m_previewScene      (ctx.appInstance.getMessageBus(), 192),
     m_sharedData        (sd),
     m_profileData       (profileData),
     m_exitHoldTimer     (0.f),
     m_exitFlags         (0),
     m_progressUniform   (-1),
+    m_avatarIndex       (0),
+    m_lockedAvatarCount (0),
     m_uiTexture         (nullptr)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -121,6 +126,7 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     loadAssets();
     buildScene();
+    buildPreviewScene();
 }
 
 //public
@@ -468,6 +474,7 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
     }
 
     //m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
+    m_previewScene.forwardEvent(evt);
     m_scene.forwardEvent(evt);
     return false;
 }
@@ -484,6 +491,7 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
             refreshView();
         }
     }
+    m_previewScene.forwardMessage(msg);
     m_scene.forwardMessage(msg);
 }
 
@@ -579,12 +587,19 @@ bool ProfileStateV2::simulate(float dt)
         }
     }
 
+    m_previewScene.simulate(dt);
     m_scene.simulate(dt);
     return true;
 }
 
 void ProfileStateV2::render()
 {
+    //TODO select camera based on tab
+    m_previewTexture.clear(cro::Colour::Transparent);
+    m_previewScene.render();
+    m_previewTexture.display();
+
+
     m_scene.render();
 }
 
@@ -607,6 +622,8 @@ void ProfileStateV2::loadAssets()
     {
         m_progressUniform = m_progressShader.getUniformID("u_progress");
     }
+
+    m_previewTexture.create(2, 2);
 
 
     cro::Image img;
@@ -698,6 +715,11 @@ void ProfileStateV2::loadAssets()
     {
         m_optionIcons[OptionIcon::GridDensity] = spriteSheet.getSprite("grid_density");
     }*/
+
+    //this sets the default image shown on the right when the tab is selected
+    //note that if a sepecific menu item has a Selected callback that it'll override this
+    //even if the item sprite itself is set to nothing (therefore the image is hidden)
+    m_tabBar.items[0].sprite.setTexture(m_previewTexture.getTexture());
 }
 
 void ProfileStateV2::buildScene()
@@ -942,7 +964,7 @@ void ProfileStateV2::buildScene()
     m_detailsPane.image.addComponent<cro::Drawable2D>();
     m_detailsPane.image.addComponent<cro::Sprite>();
     m_detailsPane.image.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
-    m_detailsPane.image.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -10.f };
+    m_detailsPane.image.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -60.f };
     m_detailsPane.image.getComponent<cro::UIElement>().depth = 0.2f;
     m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.image.getComponent<cro::Transform>());
 
@@ -1030,72 +1052,73 @@ void ProfileStateV2::buildScene()
 
 
 
-    //displays a cancel message when a keybind is in progress
-    //auto msgRoot = m_scene.createEntity();
-    //msgRoot.addComponent<cro::Transform>();
-    //msgRoot.addComponent<cro::UIElement>(cro::UIElement::Position, false);
-    //msgRoot.getComponent<cro::UIElement>().relativePosition = { 0.03f, -0.37f };
-    //msgRoot.addComponent<cro::Callback>().active = true;
-    //msgRoot.getComponent<cro::Callback>().function =
-    //    [&](cro::Entity e, float)
-    //    {
-    //        const float scale = m_keybindIndex == -1 ? 0.f : 1.f;
-    //        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-    //    };
-    //rootNode.getComponent<cro::Transform>().addChild(msgRoot.getComponent<cro::Transform>());
+    //displays zoom/rotate controls
+    auto msgRoot = m_scene.createEntity();
+    msgRoot.addComponent<cro::Transform>();
+    msgRoot.addComponent<cro::UIElement>(cro::UIElement::Position, false);
+    msgRoot.getComponent<cro::UIElement>().relativePosition = { -0.03f, -0.37f };
+    msgRoot.addComponent<cro::Callback>().active = true;
+    msgRoot.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const float scale = m_tabBar.activeIndex == 0 ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+    rootNode.getComponent<cro::Transform>().addChild(msgRoot.getComponent<cro::Transform>());
 
-    //entity = m_scene.createEntity();
-    //entity.addComponent<cro::Transform>();
-    //entity.addComponent<cro::Drawable2D>();
-    //entity.addComponent<cro::Text>(largeFont).setString("Esc - Cancel");
-    //entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    //entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
-    //entity.getComponent<cro::UIElement>().characterSize = UITextSize;
-    //entity.getComponent<cro::UIElement>().depth = 0.2f;
-    //entity.addComponent<cro::Callback>().active = true;
-    //entity.getComponent<cro::Callback>().function =
-    //    [&](cro::Entity e, float)
-    //    {
-    //        e.getComponent<cro::Drawable2D>().setFacing(
-    //            m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard ?
-    //            cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
-    //    };
-    //msgRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("TODO - Zoom/Rotate");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
+    entity.getComponent<cro::UIElement>().characterSize = UITextSize;
+    entity.getComponent<cro::UIElement>().depth = 0.2f;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Drawable2D>().setFacing(
+                m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard ?
+                cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
+        };
+    msgRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //TODO set these sprites
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("cancel_xbox");
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, -8.f };
+    entity.getComponent<cro::UIElement>().depth = 0.2f;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Drawable2D>().setFacing(
+                m_sharedData.activeInput == SharedStateData::ActiveInput::XBox ?
+                cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
+        };
+    msgRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("cancel_ps");
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, -8.f };
+    entity.getComponent<cro::UIElement>().depth = 0.2f;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Drawable2D>().setFacing(
+                m_sharedData.activeInput == SharedStateData::ActiveInput::PS ?
+                cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
+        };
+    msgRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
-    //entity = m_scene.createEntity();
-    //entity.addComponent<cro::Transform>();
-    //entity.addComponent<cro::Drawable2D>();
-    //entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("cancel_xbox");
-    //entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
-    //entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, -8.f };
-    //entity.getComponent<cro::UIElement>().depth = 0.2f;
-    //entity.addComponent<cro::Callback>().active = true;
-    //entity.getComponent<cro::Callback>().function =
-    //    [&](cro::Entity e, float)
-    //    {
-    //        e.getComponent<cro::Drawable2D>().setFacing(
-    //            m_sharedData.activeInput == SharedStateData::ActiveInput::XBox ?
-    //            cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
-    //    };
-    //msgRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //entity = m_scene.createEntity();
-    //entity.addComponent<cro::Transform>();
-    //entity.addComponent<cro::Drawable2D>();
-    //entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("cancel_ps");
-    //entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
-    //entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, -8.f };
-    //entity.getComponent<cro::UIElement>().depth = 0.2f;
-    //entity.addComponent<cro::Callback>().active = true;
-    //entity.getComponent<cro::Callback>().function =
-    //    [&](cro::Entity e, float)
-    //    {
-    //        e.getComponent<cro::Drawable2D>().setFacing(
-    //            m_sharedData.activeInput == SharedStateData::ActiveInput::PS ?
-    //            cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
-    //    };
-    //msgRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //menu layouts - needs to be done before updating Tab Bar
@@ -1153,7 +1176,7 @@ void ProfileStateV2::buildScene()
     entity.addComponent<cro::Drawable2D>().setShader(&m_progressShader);
     //entity.getComponent<cro::Drawable2D>().setTexture(m_uiTexture);
     //hmm theres a bug here preventing the coords being forwarded to the
-    //shader so we'll fudg coords in the colour channel
+    //shader so we'll fudge coords in the colour channel
     entity.getComponent<cro::Drawable2D>().setVertexData(
         {
             cro::Vertex2D(glm::vec2(0.f, 16.f), cro::Colour(0.f, 1.f, 1.f, 1.f)),
@@ -1200,6 +1223,39 @@ void ProfileStateV2::buildScene()
     updateView(entity.getComponent<cro::Camera>());
 }
 
+void ProfileStateV2::buildPreviewScene()
+{
+    auto& mb = cro::App::getInstance().getMessageBus();
+    m_previewScene.addSystem<cro::CallbackSystem>(mb);
+    m_previewScene.addSystem<cro::SkeletalAnimator>(mb);
+    m_previewScene.addSystem<cro::CameraSystem>(mb);
+    m_previewScene.addSystem<cro::ModelRenderer>(mb);
+
+    loadAvatarPreviews();
+
+
+
+    const auto resize = 
+        [&](cro::Camera& cam)
+        {
+            const auto vpSize = glm::vec2(m_previewTexture.getSize());
+            cam.setPerspective(70.f * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, 10.f);
+            cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+
+            //TODO we might have a split view for clubs/balls so this will be camera specific
+        };
+    auto camEnt = m_previewScene.getActiveCamera();
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 1.f, -1.5f });
+    camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.05f);
+
+    auto& cam = camEnt.getComponent<cro::Camera>();
+    cam.resizeCallback = resize;
+    //TODO could set to isStatic to disable continual culling
+    resize(cam);
+    m_previewCameras[PreviewCamera::Avatar] = camEnt;
+}
+
 void ProfileStateV2::createBodyItems()
 {
     m_menuLayout.items[TabID::Body].clear();
@@ -1209,19 +1265,41 @@ void ProfileStateV2::createBodyItems()
     item->displayType = Menu::Item::Heading;
     item->description = "Customise your avatar";
 
-    //TODO parse available models and create button to scroll through
+    //avatar
+    item = &m_menuLayout.items[TabID::Body].emplace_back();
+    item->title = "Body Type";
+    //item->description = "Choose a colour";
+    item->activated =
+        [&](Menu::Item& i)
+        {
+            setAvatarIndex(i.selectedIndex);
+        };
+    for (auto i = 0u; i < m_avatarModels.size(); ++i)
+    {
+        item->labels.push_back(std::to_string(i + 1));
+    }
+
+    //on first construction the models aren't yet
+    //loaded so we need a placeholder
+    if (item->labels.empty())
+    {
+        item->labels.push_back("Please Wait");
+    }
+    item->count = item->labels.size();
+    item->selectedIndex = m_avatarIndex;
+
 
     //colour 1
     item = &m_menuLayout.items[TabID::Body].emplace_back();
     item->title = "Colour 01";
     item->description = "Choose a colour";
-    item->selected =
+    /*item->selected =
         [&](const Menu::Item&)
         {
-            /*m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BeaconColour];
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BeaconColour];
             m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BeaconColour].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);*/
-        };
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };*/
     item->activated = 
         [&](Menu::Item& i)
         {
@@ -2920,6 +2998,9 @@ void ProfileStateV2::onCachedPush()
     m_activeProfile = m_profileData.playerProfiles[m_profileData.activeProfileIndex];
     m_activeProfile.loadout.read(m_activeProfile.playerData.profileID);
 
+    //set any initial previews
+    setAvatarIndex(indexFromAvatarID(m_activeProfile.playerData.skinID));
+
 
     //do this here so each tab is refreshed on push by reading the active profile
     createBodyItems();
@@ -3342,6 +3423,23 @@ void ProfileStateV2::resizeItemGraphics()
     addQuad(p, size, m_backgroundSections[BackgroundSection::Centre].uv);
 
     m_detailsPane.background.getComponent<cro::Drawable2D>().setVertexData(verts);
+
+    //resize the preview graphic to fit
+    m_previewTexture.create(static_cast<std::uint32_t>(CentreWidth*2.f * viewScale), static_cast<std::uint32_t>(CentreHeight*1.25f * viewScale));
+    m_tabBar.items[0].sprite.setTexture(m_previewTexture.getTexture());
+
+    for (auto camEnt : m_previewCameras)
+    {
+        //TODO we shouldn't need this test once all cameras are created
+        //but we need to do this to make sure the cameras have the correct
+        //viewport for the resized preview texture
+        if (camEnt.isValid())
+        {
+            auto& cam = camEnt.getComponent<cro::Camera>();
+            cam.resizeCallback(cam);
+        }
+    }
+    
 }
 
 void ProfileStateV2::updateSliderGraphic(std::int32_t amt, std::int32_t total)
@@ -3550,6 +3648,7 @@ void ProfileStateV2::updateMenuItems()
     //hide the preview image and let the selection callback
     //display/update it as needed.
     m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    m_detailsPane.image.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
     m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 
     m_menuLayout.texture.clear(cro::Colour::Transparent);
@@ -3776,7 +3875,7 @@ void ProfileStateV2::doMouseClick(glm::vec2 mousePos)
 
 void ProfileStateV2::refreshView()
 {
-    //heh OK let's say I had grander plans for this funtions...
+    //heh OK let's say I had grander plans for this funtion...
 
     updateTabBar();
 }
@@ -3788,4 +3887,196 @@ void ProfileStateV2::quitState()
 
     m_rootNode.getComponent<cro::Callback>().active = true;
     playSound(MenuSoundEvent::Cancel);
+}
+
+
+void ProfileStateV2::loadAvatarPreviews()
+{
+    static constexpr glm::vec3 AvatarPos({ -0.867f, 0.f, 0.f });
+    std::size_t previewIndex = 1;
+    for (auto i = 0u; i < m_profileData.avatarDefs.size(); ++i)
+    {
+        //need to pad this out regardless for correct indexing
+        auto& avt = m_avatarModels.emplace_back();
+        if (!m_sharedData.avatarInfo[i].locked)
+        {
+            auto& avatar = m_profileData.avatarDefs[i];
+
+            auto entity = m_previewScene.createEntity();
+            entity.addComponent<cro::Transform>().setOrigin(AvatarPos);
+            avatar.createModel(entity);
+            entity.getComponent<cro::Model>().setHidden(true);
+
+            auto material = m_profileData.profileMaterials.avatar;
+            applyMaterialData(avatar, material);
+            entity.getComponent<cro::Model>().setMaterial(0, material);
+
+            entity.addComponent<cro::Callback>().setUserData<AvatarAnimCallbackData>();
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+                {
+                    auto& [direction, progress] = e.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>();
+                    const float Speed = dt * 4.f;
+                    float rotation = 0.f; //hmm would be nice to rotate in the direction of the index change...
+
+                    if (direction == 0)
+                    {
+                        //grow
+                        progress = std::min(1.f, progress + Speed);
+                        rotation = -cro::Util::Const::TAU + (cro::Util::Const::TAU * progress);
+
+                        if (progress == 1)
+                        {
+                            e.getComponent<cro::Callback>().active = false;
+                        }
+                    }
+                    else
+                    {
+                        //shrink
+                        progress = std::max(0.f, progress - Speed);
+                        rotation = cro::Util::Const::TAU * (1.f - progress);
+
+                        if (progress == 0)
+                        {
+                            e.getComponent<cro::Callback>().active = false;
+                            e.getComponent<cro::Model>().setHidden(true);
+                        }
+                    }
+
+                    glm::vec3 scale(progress, 1.f, progress);
+                    e.getComponent<cro::Transform>().setScale(scale);
+
+                    //TODO we want to add initial rotation here ideally...
+                    //however it's not easily extractable from the orientation.
+                    e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+                };
+
+            avt.previewModel = entity;
+            avt.type = m_sharedData.avatarInfo[i].type;
+            avt.previewIndex = previewIndex++;
+
+            //these are unique models from the menu so we'll 
+            //need to capture their attachment points once again...
+            if (entity.hasComponent<cro::Skeleton>())
+            {
+                //this should never not be true as the models were validated
+                //in the menu state - but 
+                auto id = entity.getComponent<cro::Skeleton>().getAttachmentIndex("head");
+                if (id > -1)
+                {
+                    //duplicate the hat attachment first so we don't invalidate pointers
+                    //when adding the attachment resizes the attachment vector
+                    auto hatAttachment = entity.getComponent<cro::Skeleton>().getAttachments()[id];
+                    auto hatID = entity.getComponent<cro::Skeleton>().addAttachment(hatAttachment);
+
+                    avt.hatAttachment = &entity.getComponent<cro::Skeleton>().getAttachments()[hatID];
+
+                    //hair is optional so OK if this doesn't exist
+                    avt.hairAttachment = &entity.getComponent<cro::Skeleton>().getAttachments()[id];
+                }
+
+                entity.getComponent<cro::Skeleton>().play(entity.getComponent<cro::Skeleton>().getAnimationIndex("idle_standing"));
+            }
+        }
+        else
+        {
+            m_lockedAvatarCount++;
+        }
+    }
+}
+
+std::size_t ProfileStateV2::indexFromAvatarID(std::uint32_t skinID) const
+{
+    const auto& avatarInfo = m_sharedData.avatarInfo;
+
+    if (auto result = std::find_if(avatarInfo.cbegin(), avatarInfo.cend(),
+        [skinID](const SharedStateData::AvatarInfo& a) {return a.uid == skinID; }); result != avatarInfo.cend())
+    {
+        return std::distance(avatarInfo.cbegin(), result);
+    }
+
+    return 0;
+}
+
+void ProfileStateV2::setAvatarIndex(std::size_t idx)
+{
+    auto hairIdx = m_avatarModels[m_avatarIndex].hairIndex;
+    auto hatIdx = m_avatarModels[m_avatarIndex].hatIndex;
+
+    if (m_avatarModels[m_avatarIndex].hairAttachment)
+    {
+        m_avatarModels[m_avatarIndex].hairAttachment->setModel({});
+    }
+
+    if (m_avatarModels[m_avatarIndex].hatAttachment)
+    {
+        m_avatarModels[m_avatarIndex].hatAttachment->setModel({});
+    }
+
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 1;
+
+    //we might have blank spots so skip these
+    if (m_avatarIndex == 0 || idx < m_avatarIndex)
+    {
+        while (!m_avatarModels[idx].previewModel.isValid()
+            && idx != m_avatarIndex)
+        {
+            idx = (idx + (m_avatarModels.size() - 1)) % m_avatarModels.size();
+        }
+    }
+    else
+    {
+        while (!m_avatarModels[idx].previewModel.isValid()
+            && idx != m_avatarIndex)
+        {
+            idx = (idx + 1) % m_avatarModels.size();
+        }
+    }
+
+    m_avatarIndex = idx;
+
+    if (m_avatarModels[m_avatarIndex].hairAttachment)
+    {
+        //m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIdx]);
+        LogI << FILE_LINE << " TODO" << std::endl;
+        m_avatarModels[m_avatarIndex].hairIndex = hairIdx;
+    }
+
+    if (m_avatarModels[m_avatarIndex].hatAttachment)
+    {
+        //m_avatarModels[m_avatarIndex].hatAttachment->setModel(m_avatarHairModels[hatIdx]);
+        LogI << FILE_LINE << " TODO" << std::endl;
+        m_avatarModels[m_avatarIndex].hatIndex = hatIdx;
+    }
+
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(false);
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 0;
+
+    m_activeProfile.playerData.skinID = m_sharedData.avatarInfo[m_avatarIndex].uid;
+
+
+    LogI << FILE_LINE << " TODO" << std::endl;
+    //for (auto i = 0u; i < m_activeProfile.playerData.avatarFlags.size(); ++i)
+    //{
+    //    m_profileTextures[idx].setColour(pc::ColourKey::Index(i), m_activeProfile.playerData.avatarFlags[i]);
+    //}
+    //m_profileTextures[idx].apply();
+
+
+    //although this should never be true as we
+    //assert the selected index when the window opens
+    if (m_activeProfile.playerData.voiceID == 0)
+    {
+        LogI << FILE_LINE << " TODO" << std::endl;
+        /*if (!m_avatarModels[m_avatarIndex].previewAudio.empty())
+        {
+            m_avatarModels[m_avatarIndex].previewAudio[cro::Util::Random::value(0u, m_avatarModels[m_avatarIndex].previewAudio.size() - 1)].getComponent<cro::AudioEmitter>().play();
+        }*/
+    }
+    else
+    {
+        //playPreviewAudio();
+    }
 }
