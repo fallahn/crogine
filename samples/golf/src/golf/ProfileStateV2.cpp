@@ -510,6 +510,29 @@ bool ProfileStateV2::simulate(float dt)
             else if (m_exitFlags == ExitFlagSave)
             {
                 //TODO copy av data back to proper data and write files
+                /*
+                m_profileData.playerProfiles[m_profileData.activeProfileIndex] = m_activeProfile;
+                m_profileData.playerProfiles[m_profileData.activeProfileIndex].playerData.saveProfile();
+
+                if (m_mugshotUpdated)
+                {
+                    auto path = Content::getUserContentPath(Content::UserContent::Profile) + m_activeProfile.playerData.profileID + "/mug.png";
+                    m_mugshotTexture.getTexture().saveToFile(path);
+
+                    m_activeProfile.playerData.mugshot = path;
+                    m_profileData.playerProfiles[m_profileData.activeProfileIndex].playerData.mugshot = path;
+                    m_profileData.playerProfiles[m_profileData.activeProfileIndex].playerData.saveProfile();
+
+                    m_mugshotUpdated = false;
+                }
+
+                if (m_activeProfile.playerData.isSteamID
+                    && m_activeProfile.playerData.name != Social::getPlayerName())
+                {
+                    Social::setPlayerName(m_activeProfile.playerData.name);
+                }
+                */
+                LogI << FILE_LINE << " TODO" << std::endl;
                 quitState();
             }
             else
@@ -1268,15 +1291,20 @@ void ProfileStateV2::createBodyItems()
     //avatar
     item = &m_menuLayout.items[TabID::Body].emplace_back();
     item->title = "Body Type";
-    //item->description = "Choose a colour";
     item->activated =
         [&](Menu::Item& i)
         {
             setAvatarIndex(i.selectedIndex);
+            i.description = i.labels[i.selectedIndex] + "/" + std::to_string(m_avatarModels.size() - m_lockedAvatarCount);
+            m_detailsPane.text.getComponent<cro::Text>().setString(i.description);
+            //TODO could add if this is an unlock/workshop model here
         };
     for (auto i = 0u; i < m_avatarModels.size(); ++i)
     {
-        item->labels.push_back(std::to_string(i + 1));
+        if (m_avatarModels[i].previewModel.isValid())
+        {
+            item->labels.push_back(std::to_string(i + 1));
+        }
     }
 
     //on first construction the models aren't yet
@@ -1287,7 +1315,7 @@ void ProfileStateV2::createBodyItems()
     }
 
     item->selectedIndex = m_avatarIndex;
-
+    item->description = item->labels[item->selectedIndex] + "/" + std::to_string(m_avatarModels.size() - m_lockedAvatarCount);
 
     //colour 1
     item = &m_menuLayout.items[TabID::Body].emplace_back();

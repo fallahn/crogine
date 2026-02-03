@@ -605,7 +605,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
     //menu text background
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 26.f, -0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 22.f, -0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("banner");
     auto textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
