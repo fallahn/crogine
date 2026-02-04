@@ -86,6 +86,7 @@ private:
     std::size_t m_lockedAvatarCount;
     std::vector<AvatarPreview> m_avatarModels;
     std::vector<ProfileTexture> m_profileTextures;
+    std::vector<cro::Entity> m_avatarHairModels;
 
     void loadAssets();
     void buildScene();
@@ -239,7 +240,13 @@ private:
 
     void loadAvatarPreviews();
     void loadAvatarTextures();
+    void loadHairModels();
+
     std::size_t indexFromAvatarID(std::uint32_t skinID) const;
+    std::size_t indexFromHairID(std::uint32_t hairID) const;
+
     //note this sets the m_avatarIndex member value too!!
     void setAvatarIndex(std::size_t idx);
+    void setHairIndex(std::size_t idx);
+    void setHatIndex(std::size_t idx);
 };

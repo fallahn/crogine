@@ -65,6 +65,8 @@ struct TabBar final
 
         cro::FloatRect hitbox; //in screen coords
         cro::Sprite sprite;
+
+        std::function<void()> selected;
     };
 
     cro::Entity background;
