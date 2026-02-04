@@ -497,11 +497,12 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
 
 bool ProfileStateV2::simulate(float dt)
 {
+    static constexpr float MaxHoldTime = 0.5f;
     if (m_exitFlags)
     {
-        m_exitHoldTimer = std::min(m_exitHoldTimer + dt, 1.f);
+        m_exitHoldTimer = std::min(m_exitHoldTimer + dt, MaxHoldTime);
         
-        if (m_exitHoldTimer == 1)
+        if (m_exitHoldTimer >= MaxHoldTime)
         {
             if (m_exitFlags == ExitFlagQuit)
             {
@@ -509,12 +510,11 @@ bool ProfileStateV2::simulate(float dt)
             }
             else if (m_exitFlags == ExitFlagSave)
             {
-                //TODO copy av data back to proper data and write files
-                /*
+                //copy av data back to proper data and write files                
                 m_profileData.playerProfiles[m_profileData.activeProfileIndex] = m_activeProfile;
                 m_profileData.playerProfiles[m_profileData.activeProfileIndex].playerData.saveProfile();
 
-                if (m_mugshotUpdated)
+                /*if (m_mugshotUpdated)
                 {
                     auto path = Content::getUserContentPath(Content::UserContent::Profile) + m_activeProfile.playerData.profileID + "/mug.png";
                     m_mugshotTexture.getTexture().saveToFile(path);
@@ -549,7 +549,7 @@ bool ProfileStateV2::simulate(float dt)
     }
 
     glUseProgram(m_progressShader.getGLHandle());
-    glUniform1f(m_progressUniform, m_exitHoldTimer);
+    glUniform1f(m_progressUniform, m_exitHoldTimer / MaxHoldTime);
 
 
     //TODO this doesn't actually do what I wanted, but it's servicable
@@ -1080,6 +1080,7 @@ void ProfileStateV2::buildScene()
     msgRoot.addComponent<cro::Transform>();
     msgRoot.addComponent<cro::UIElement>(cro::UIElement::Position, false);
     msgRoot.getComponent<cro::UIElement>().relativePosition = { -0.03f, -0.37f };
+    //msgRoot.getComponent<cro::UIElement>().absolutePosition = { 0.f, 32.f };
     msgRoot.addComponent<cro::Callback>().active = true;
     msgRoot.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -1255,7 +1256,7 @@ void ProfileStateV2::buildPreviewScene()
     m_previewScene.addSystem<cro::ModelRenderer>(mb);
 
     loadAvatarPreviews();
-
+    loadAvatarTextures();
 
 
     const auto resize = 
@@ -1277,6 +1278,10 @@ void ProfileStateV2::buildPreviewScene()
     //TODO could set to isStatic to disable continual culling
     resize(cam);
     m_previewCameras[PreviewCamera::Avatar] = camEnt;
+
+    auto lightEnt = m_previewScene.getSunlight();
+    lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 2.8f);
+    lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.8f);
 }
 
 void ProfileStateV2::createBodyItems()
@@ -1317,34 +1322,37 @@ void ProfileStateV2::createBodyItems()
     item->selectedIndex = m_avatarIndex;
     item->description = item->labels[item->selectedIndex] + "/" + std::to_string(m_avatarModels.size() - m_lockedAvatarCount);
 
-    //colour 1
-    item = &m_menuLayout.items[TabID::Body].emplace_back();
-    item->title = "Colour 01";
-    item->description = "Choose a colour";
-    /*item->selected =
-        [&](const Menu::Item&)
-        {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BeaconColour];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BeaconColour].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-        };*/
-    item->activated = 
-        [&](Menu::Item& i)
-        {
-            //const float amt = 0.1f * i.selectedIndex;
-            //m_sharedData.beaconColour = amt;
+    //colours - somehow Hair ended up with index 0 but hats on index 6...
+    for (std::int32_t c = pc::ColourKey::Skin; c < pc::ColourKey::Hat; ++c)
+    {
+        item = &m_menuLayout.items[TabID::Body].emplace_back();
+        item->title = "Colour " + std::to_string(c);
+        item->description = "Choose a colour";
+        item->activated =
+            [&, c](Menu::Item& i)
+            {
+                m_activeProfile.playerData.avatarFlags[c] = i.selectedIndex;
+                const cro::Colour colour = pc::Palette[m_activeProfile.playerData.avatarFlags[c]];
 
-            ////set the preview colour
-            //i.previewColour = getBeaconColour(m_sharedData.beaconColour);
-        };
-    item->labels = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" };
-    item->selectedIndex = 0;// static_cast<std::int32_t>(std::floor(m_sharedData.beaconColour * 9.f));
-    item->displayType = Menu::Item::Slider;
-    item->previewColour = cro::Colour::White;// getBeaconColour(m_sharedData.beaconColour);
-    item->texture = &m_colourPreview;
-    item->uv = { 0.f, 0.f, 1.f, 1.f };
+                //set the preview colour
+                i.previewColour = colour;
 
-    //TODO colours 2 - 5 (use a lambda to repeat above?)
+                //update the texture
+                m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(c), i.selectedIndex);
+                m_profileTextures[m_avatarIndex].apply();
+            };
+
+        for (auto i = 0; i < pc::PairCounts[c]; ++i)
+        {
+            item->labels.push_back(std::to_string(i + 1));
+        }
+
+        item->selectedIndex = m_activeProfile.playerData.avatarFlags[c];
+        item->displayType = Menu::Item::Slider;
+        item->previewColour = pc::Palette[item->selectedIndex];
+        item->texture = &m_colourPreview;
+        item->uv = { 0.f, 0.f, 1.f, 1.f };
+    }
 }
 
 void ProfileStateV2::createHeadwearItems()
@@ -1409,7 +1417,6 @@ void ProfileStateV2::onCachedPush()
 
     //set any initial previews
     setAvatarIndex(indexFromAvatarID(m_activeProfile.playerData.skinID));
-
 
     //do this here so each tab is refreshed on push by reading the active profile
     createBodyItems();
@@ -2394,6 +2401,46 @@ void ProfileStateV2::loadAvatarPreviews()
     }
 }
 
+void ProfileStateV2::loadAvatarTextures()
+{
+    for (auto i = 0u; i < m_sharedData.avatarInfo.size(); ++i)
+    {
+        //need to pad out the vector anyway for correct indexing
+        auto& t = m_profileTextures.emplace_back(m_sharedData.avatarInfo[i].texturePath);
+
+        if (!m_sharedData.avatarInfo[i].locked)
+        {
+            //no point applyingthe colours here as we don't have a valid active profile until
+            //onCachedPush() has been called.
+            /*for (auto j = 0; j < pc::ColourKey::Count; ++j)
+            {
+                t.setColour(pc::ColourKey::Index(j), m_activeProfile.playerData.avatarFlags[j]);
+            }
+            t.apply();*/
+
+            m_avatarModels[i].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", t.getTextureID());
+
+            /*cro::AudioScape as;
+            if (!m_sharedData.avatarInfo[i].audioscape.empty() &&
+                as.loadFromFile(m_sharedData.avatarInfo[i].audioscape, m_resources.audio))
+            {
+                m_avatarModels[i].audioUID = as.getUID();
+                for (const auto& name : emitterNames)
+                {
+                    if (as.hasEmitter(name))
+                    {
+                        auto e = m_uiScene.createEntity();
+                        e.addComponent<cro::Transform>();
+                        e.addComponent<cro::AudioEmitter>() = as.getEmitter(name);
+                        e.getComponent<cro::AudioEmitter>().setLooped(false);
+                        m_avatarModels[i].previewAudio.push_back(e);
+                    }
+                }
+            }*/
+        }
+    }
+}
+
 std::size_t ProfileStateV2::indexFromAvatarID(std::uint32_t skinID) const
 {
     const auto& avatarInfo = m_sharedData.avatarInfo;
@@ -2466,12 +2513,11 @@ void ProfileStateV2::setAvatarIndex(std::size_t idx)
     m_activeProfile.playerData.skinID = m_sharedData.avatarInfo[m_avatarIndex].uid;
 
 
-    LogI << FILE_LINE << " TODO" << std::endl;
-    //for (auto i = 0u; i < m_activeProfile.playerData.avatarFlags.size(); ++i)
-    //{
-    //    m_profileTextures[idx].setColour(pc::ColourKey::Index(i), m_activeProfile.playerData.avatarFlags[i]);
-    //}
-    //m_profileTextures[idx].apply();
+    for (auto i = 0u; i < m_activeProfile.playerData.avatarFlags.size(); ++i)
+    {
+        m_profileTextures[idx].setColour(pc::ColourKey::Index(i), m_activeProfile.playerData.avatarFlags[i]);
+    }
+    m_profileTextures[idx].apply();
 
 
     //although this should never be true as we

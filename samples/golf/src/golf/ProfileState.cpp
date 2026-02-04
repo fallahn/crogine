@@ -5919,8 +5919,8 @@ void ProfileState::refreshSwatch()
     std::vector<cro::Vertex2D> verts;
     for (auto i = 1u; i < SwatchPositions.size(); ++i)//skip hair
     {
-        cro::Colour c = pc::Palette[m_activeProfile.playerData.avatarFlags[i]];
-        auto pos = SwatchPositions[i];
+        const cro::Colour c = pc::Palette[m_activeProfile.playerData.avatarFlags[i]];
+        const auto& pos = SwatchPositions[i];
 
         verts.emplace_back(glm::vec2(pos.x, pos.y + SwatchSize.y), c);
         verts.emplace_back(pos, c);

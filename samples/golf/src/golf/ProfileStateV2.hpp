@@ -85,6 +85,7 @@ private:
     std::size_t m_avatarIndex;
     std::size_t m_lockedAvatarCount;
     std::vector<AvatarPreview> m_avatarModels;
+    std::vector<ProfileTexture> m_profileTextures;
 
     void loadAssets();
     void buildScene();
@@ -237,6 +238,7 @@ private:
 
 
     void loadAvatarPreviews();
+    void loadAvatarTextures();
     std::size_t indexFromAvatarID(std::uint32_t skinID) const;
     //note this sets the m_avatarIndex member value too!!
     void setAvatarIndex(std::size_t idx);
