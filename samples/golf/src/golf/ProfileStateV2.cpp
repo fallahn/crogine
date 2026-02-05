@@ -50,15 +50,17 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/UIElementSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
-#include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Easings.hpp>
@@ -71,7 +73,7 @@ source distribution.
 namespace
 {
 #include "shaders/ProgressShader.inl"
-
+    constexpr glm::vec3 BallPos = glm::vec3({ 10.f, 0.f, 0.f });
     constexpr glm::vec3 CamPosAvatar = glm::vec3({ 0.f, 1.f, -1.5f });
     constexpr glm::vec3 CamPosHead = glm::vec3({ 0.f, 1.6f, -0.35f });
 
@@ -1285,6 +1287,14 @@ void ProfileStateV2::buildScene()
     m_tabBar.items[TabID::Body].selected =
         [&]()
         {
+            for (auto c : m_previewCameras)
+            {
+                c.getComponent<cro::Camera>().active = false;
+            }
+
+            m_previewCameras[PreviewCamera::Avatar].getComponent<cro::Camera>().active = true;
+            m_previewScene.setActiveCamera(m_previewCameras[PreviewCamera::Avatar]);
+
             //transitions the camera if not already in position
             auto ent = m_previewScene.createEntity();
             ent.addComponent<cro::Callback>().active = true;
@@ -1310,6 +1320,14 @@ void ProfileStateV2::buildScene()
     m_tabBar.items[TabID::Headwear].selected =
         [&]()
         {
+            for (auto c : m_previewCameras)
+            {
+                c.getComponent<cro::Camera>().active = false;
+            }
+
+            m_previewCameras[PreviewCamera::Avatar].getComponent<cro::Camera>().active = true;
+            m_previewScene.setActiveCamera(m_previewCameras[PreviewCamera::Avatar]);
+
             auto ent = m_previewScene.createEntity();
             ent.addComponent<cro::Callback>().active = true;
             ent.getComponent<cro::Callback>().function =
@@ -1331,6 +1349,17 @@ void ProfileStateV2::buildScene()
             m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().stop();
             m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().gotoFrame(0);
         };
+    m_tabBar.items[TabID::Equipment].selected =
+        [&]()
+        {
+            for (auto c : m_previewCameras)
+            {
+                c.getComponent<cro::Camera>().active = false;
+            }
+
+            m_previewCameras[PreviewCamera::Ball].getComponent<cro::Camera>().active = true;
+            m_previewScene.setActiveCamera(m_previewCameras[PreviewCamera::Ball]);
+        };
 }
 
 void ProfileStateV2::buildPreviewScene()
@@ -1340,10 +1369,12 @@ void ProfileStateV2::buildPreviewScene()
     m_previewScene.addSystem<cro::SkeletalAnimator>(mb);
     m_previewScene.addSystem<cro::CameraSystem>(mb);
     m_previewScene.addSystem<cro::ModelRenderer>(mb);
+    m_previewScene.addSystem<cro::ParticleSystem>(mb);
 
     loadAvatarPreviews();
     loadAvatarTextures();
     loadHairModels();
+    loadBallModels();
 
     const auto resize = 
         [&](cro::Camera& cam)
@@ -1362,8 +1393,21 @@ void ProfileStateV2::buildPreviewScene()
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     //TODO could set to isStatic to disable continual culling
+    //although the tab selected callback should disable all but active
+    //cameras anyway.
     resize(cam);
     m_previewCameras[PreviewCamera::Avatar] = camEnt;
+
+
+    camEnt = m_previewScene.createEntity();
+    camEnt.addComponent<cro::Transform>().setPosition({ BallPos.x, 0.03f, -0.05f });
+    camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.05f);
+    auto& ballCam = camEnt.addComponent<cro::Camera>();
+    ballCam.resizeCallback = resize;
+    resize(ballCam);
+    m_previewCameras[PreviewCamera::Ball] = camEnt;
+
 
     auto lightEnt = m_previewScene.getSunlight();
     lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 2.8f);
@@ -1659,11 +1703,15 @@ void ProfileStateV2::createEquipmentItems()
     item->displayType = Menu::Item::Heading;
     item->description = "Choose how your equipment appears";
 
+    //TODO puff particles when switching balls
+
     //ball model
     //ball colour
     //club model
-
+#ifdef USE_GNS
     //workshop button if steam
+    LogI << FILE_LINE << " implement me" << std::endl;
+#endif
 }
 
 void ProfileStateV2::createLoadoutItems()
@@ -2773,6 +2821,66 @@ void ProfileStateV2::loadHairModels()
 
         m_avatarHairModels.push_back(entity);
     }
+}
+
+void ProfileStateV2::loadBallModels()
+{
+    CRO_ASSERT(!m_profileData.ballDefs.empty(), "Must load this state on top of menu");
+
+    //TODO rather than creating an emitter for every single model a single
+    //emitter will do (or maybe 2/3 to buffer when switching previews  quickly)
+    cro::EmitterSettings emitterSettings;
+    emitterSettings.loadFromFile("assets/golf/particles/puff_small.cps", m_resources.textures);
+
+    //this has all been parsed by the menu state - so we're assuming
+    //all the models etc are fine and load without chicken
+    std::int32_t c = 0;
+    for (auto& ballDef : m_profileData.ballDefs)
+    {
+        auto entity = m_previewScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        ballDef.createModel(entity);
+        entity.getComponent<cro::Model>().setHidden(true);
+        if (ballDef.hasSkeleton())
+        {
+            entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ballSkinned);
+            entity.getComponent<cro::Skeleton>().play(0);
+        }
+        else
+        {
+            if (ballDef.getMaterial(0)->properties.count("u_normalMap"))
+            {
+                auto mat = m_profileData.profileMaterials.ballBumped;
+                applyMaterialData(ballDef, mat);
+                entity.getComponent<cro::Model>().setMaterial(0, mat);
+            }
+            else
+            {
+                entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
+            }
+        }
+        entity.getComponent<cro::Model>().setMaterial(1, m_profileData.profileMaterials.ballReflection);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+            {
+                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+            };
+
+        auto& preview = m_ballModels.emplace_back();
+        preview.ball = entity;
+        preview.type = m_sharedData.ballInfo[c].type;
+        preview.infoIndex = c;
+        preview.root = m_previewScene.createEntity();
+        preview.root.addComponent<cro::Transform>().setPosition(BallPos);
+        preview.root.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_sharedData.ballInfo[c].previewRotation);
+        preview.root.getComponent<cro::Transform>().addChild(preview.ball.getComponent<cro::Transform>());
+        preview.root.addComponent<cro::ParticleEmitter>().settings = emitterSettings;
+
+        ++c;
+    }
+
+    m_ballModels[0].ball.getComponent<cro::Model>().setHidden(false);
 }
 
 std::size_t ProfileStateV2::indexFromAvatarID(std::uint32_t skinID) const

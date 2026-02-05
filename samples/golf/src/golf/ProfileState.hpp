@@ -49,15 +49,6 @@ namespace cro
     class SpriteSheet;
 }
 
-struct BallPreview final
-{
-    cro::Entity root;
-    cro::Entity ball;
-
-    std::int32_t type = 0;
-    std::int32_t infoIndex = -1;
-};
-
 class ProfileState final : public cro::State, public cro::GuiClient
 {
 public:

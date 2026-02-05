@@ -87,6 +87,7 @@ private:
     std::vector<AvatarPreview> m_avatarModels;
     std::vector<ProfileTexture> m_profileTextures;
     std::vector<cro::Entity> m_avatarHairModels;
+    std::vector<BallPreview> m_ballModels;
 
     void loadAssets();
     void buildScene();
@@ -95,7 +96,7 @@ private:
     {
         enum
         {
-            Avatar, Ball, Club,
+            Avatar, Ball, //Club, //clubs have thumbnails on disk
             Count
         };
     };
@@ -240,6 +241,7 @@ private:
     void loadAvatarPreviews();
     void loadAvatarTextures();
     void loadHairModels();
+    void loadBallModels();
 
     std::size_t indexFromAvatarID(std::uint32_t skinID) const;
     std::size_t indexFromHairID(std::uint32_t hairID) const;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -133,4 +133,13 @@ struct AvatarPreview final
     std::vector<cro::Entity> previewAudio;
     std::uint32_t audioUID = 0;
     std::size_t previewIndex = 0; //actual index may differ because of locked models
+};
+
+struct BallPreview final
+{
+    cro::Entity root;
+    cro::Entity ball;
+
+    std::int32_t type = 0;
+    std::int32_t infoIndex = -1;
 };
