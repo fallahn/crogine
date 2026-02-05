@@ -564,26 +564,27 @@ bool ProfileStateV2::simulate(float dt)
         {
             m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, v);
         };
-    constexpr auto threshold = std::numeric_limits<std::int16_t>::max() / 2;
+    constexpr auto threshold = std::numeric_limits<std::int16_t>::max() / 6;
+    constexpr float SpeedMultiplier = 2.f;
     if (const auto v = cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft);
                 v > threshold)
     {
-        const float speed = static_cast<float>(v) / std::numeric_limits<std::uint16_t>::max();
-        rotateModel(-dt * speed * 1.2f);
+        const float speed = cro::Util::Easing::easeInQuart(static_cast<float>(v) / std::numeric_limits<std::int16_t>::max());
+        rotateModel(-dt * speed * SpeedMultiplier);
     }
     if (const auto v = cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight);
                 v > threshold)
     {
-        const float speed = static_cast<float>(v) / std::numeric_limits<std::uint16_t>::max();
-        rotateModel(dt * speed * 1.2f);
+        const float speed = cro::Util::Easing::easeInQuart(static_cast<float>(v) / std::numeric_limits<std::int16_t>::max());
+        rotateModel(dt * speed * SpeedMultiplier);
     }
     if (cro::Keyboard::isKeyPressed(SDLK_1))
     {
-        rotateModel(-dt);
+        rotateModel(-dt * SpeedMultiplier);
     }
     if (cro::Keyboard::isKeyPressed(SDLK_2))
     {
-        rotateModel(dt);
+        rotateModel(dt * SpeedMultiplier);
     }
 
 
