@@ -4255,7 +4255,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
                 {
                     auto idx = (PlayerData::HeadwearOffset::HairTx + i) + (PlayerData::HeadwearOffset::HatTx * m_headwearID);
 
-                    float val = m_activeProfile.playerData.headwearOffsets[idx][j];
+                    const float val = m_activeProfile.playerData.headwearOffsets[idx][j];
                     std::stringstream ss;
                     ss.precision(2);
                     ss << std::fixed << val;

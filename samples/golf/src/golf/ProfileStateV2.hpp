@@ -249,4 +249,6 @@ private:
     void setAvatarIndex(std::size_t idx);
     void setHairIndex(std::size_t idx);
     void setHatIndex(std::size_t idx);
+
+    void applyHeadwearTransform(std::size_t idx, std::size_t indexOffset);
 };

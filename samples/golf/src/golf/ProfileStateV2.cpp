@@ -564,16 +564,16 @@ bool ProfileStateV2::simulate(float dt)
         };
     constexpr auto threshold = std::numeric_limits<std::int16_t>::max() / 2;
     if (const auto v = cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft);
-v        > threshold)
+                v > threshold)
     {
         const float speed = static_cast<float>(v) / std::numeric_limits<std::uint16_t>::max();
-        rotateModel(-dt * speed);
+        rotateModel(-dt * speed * 1.2f);
     }
     if (const auto v = cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight);
-v        > threshold)
+                v > threshold)
     {
         const float speed = static_cast<float>(v) / std::numeric_limits<std::uint16_t>::max();
-        rotateModel(dt * speed);
+        rotateModel(dt * speed * 1.2f);
     }
     if (cro::Keyboard::isKeyPressed(SDLK_1))
     {
@@ -1525,28 +1525,114 @@ void ProfileStateV2::createHeadwearItems()
             item->texture = &m_colourPreview;
             item->uv = { 0.f, 0.f, 1.f, 1.f };
 
-            //TODO transform properties
+            //transform properties
+            auto offset = PlayerData::HeadwearOffset::HairTx
+                + keyIndex == pc::ColourKey::Hair ? 0 : PlayerData::HeadwearOffset::HatTx;
 
-            //posX
-            //posY
-            //posZ
+            const std::array<std::string, 3u> LabelA = { "Position","Rotation","Scale" };
+            const std::array<std::string, 3u> LabelB = { " X"," Y"," Z" };
+            constexpr std::array<float, 3u> MaxValues = { 0.05f, cro::Util::Const::PI, 1.5f };
+            constexpr std::array<float, 3u> MinValues = { -0.05f, -cro::Util::Const::PI, 0.05f };
+            static constexpr std::array<float, 3u> CentreValues = { 0.f, 0.f, 1.f };
+            static constexpr std::int32_t SelectionCount = 24; //number of selections is +/- this
 
-            //reset pos
+            const auto indexToValue =
+                [&](std::int32_t type, std::int32_t selectedIndex)
+                {
+                    //type is pos/rot/scale selectedIndex is the selection in the widget
+                    const auto offsetIndex = selectedIndex - SelectionCount;
+                    if (offsetIndex < 0)
+                    {
+                        return (((CentreValues[type] - MinValues[type]) / SelectionCount) * offsetIndex) + CentreValues[type];
+                    }
+                    else if (offsetIndex > 0)
+                    {
+                        return (((MaxValues[type] - CentreValues[type]) / SelectionCount) * offsetIndex) + CentreValues[type];
+                    }
+                    else
+                    {
+                        return CentreValues[type];
+                    }
+                };
 
-            //rotX
-            //rotY
-            //rotZ
+            const auto valueToIndex =
+                [indexToValue](std::int32_t type, float value)
+                {
+                    //hmm. would be nice to keep these values somewhere save regenerating them...
+                    std::vector<float> values;
+                    for (auto i = 0; i < (SelectionCount * 2) + 1; ++i)
+                    {
+                        values.push_back(indexToValue(type,i));
+                    }
+                    const auto res = std::lower_bound(values.cbegin(), values.cend(), value);
+                    return static_cast<std::size_t>(std::distance(values.cbegin(), res));
+                };
 
-            //reset rot
+            for (auto i = 0; i < 3; ++i)
+            {
+                //pos, rot, scale
+                for (auto j = 0; j < 3; ++j)
+                {
+                    //x,y,z
+                    item = &m_menuLayout.items[TabID::Headwear].emplace_back();
+                    item->title = LabelA[i] + LabelB[j];
+                    item->displayType = Menu::Item::Slider;
 
-            //scaleX
-            //scaleY
-            //scaleZ
+                    for (auto k = 0; k < (SelectionCount * 2) + 1; ++k)
+                    {
+                        const auto val = indexToValue(i,k);
+                        
+                        std::stringstream ss;
+                        ss.precision(3);
+                        ss << std::fixed << val;
+                        item->labels.push_back(ss.str());
+                    }
 
-            //reset scale
+                    item->selectedIndex = std::min(item->labels.size() - 1, valueToIndex(i, m_activeProfile.playerData.headwearOffsets[offset][j]));
+                    item->activated = 
+                        [&, indexToValue, i, j, offset, keyIndex](Menu::Item& item)
+                        {
+                            const auto val = indexToValue(i, item.selectedIndex);
+                            m_activeProfile.playerData.headwearOffsets[offset][j] = val;
+                            
+                            if (keyIndex == pc::ColourKey::Hair)
+                            {
+                                applyHeadwearTransform(m_avatarModels[m_avatarIndex].hairIndex, PlayerData::HeadwearOffset::HairTx);
+                            }
+                            else
+                            {
+                                applyHeadwearTransform(m_avatarModels[m_avatarIndex].hatIndex, PlayerData::HeadwearOffset::HatTx);
+                            }
+                        };
+                }
+                //reset
+                auto resetIndex = m_menuLayout.items[TabID::Headwear].size();
+                item = &m_menuLayout.items[TabID::Headwear].emplace_back();
+                item->title = LabelA[i];
+                item->labels.push_back("Reset");
+                item->activated =
+                    [&,resetIndex,i,offset](Menu::Item& item)
+                    {
+                        m_activeProfile.playerData.headwearOffsets[offset] = glm::vec3(CentreValues[i]);
+                        if (keyIndex == pc::ColourKey::Hair)
+                        {
+                            applyHeadwearTransform(m_avatarModels[m_avatarIndex].hairIndex, PlayerData::HeadwearOffset::HairTx);
+                        }
+                        else
+                        {
+                            applyHeadwearTransform(m_avatarModels[m_avatarIndex].hatIndex, PlayerData::HeadwearOffset::HatTx);
+                        }
 
+                        //reset the selected indices of the transform items
+                        for (auto j = 1; j < 4; ++j)
+                        {
+                            m_menuLayout.items[TabID::Headwear][resetIndex - j].selectedIndex = SelectionCount;
+                        }
+                        updateMenuItems();
+                    };
 
-            //workshop button if steam
+                offset++;
+            }
         };
     createItems(pc::ColourKey::Hair);
 
@@ -1558,6 +1644,12 @@ void ProfileStateV2::createHeadwearItems()
     item->description = "Choose headwear model 02";
 
     createItems(pc::ColourKey::Hat);
+
+
+#ifdef USE_GNS
+        //workshop button if steam
+        LogI << FILE_LINE << " implement" << std::endl;
+#endif
 }
 
 void ProfileStateV2::createEquipmentItems()
@@ -2817,12 +2909,7 @@ void ProfileStateV2::setHairIndex(std::size_t idx)
         m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.playerData.avatarFlags[pc::ColourKey::Hair]]);
         m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.playerData.avatarFlags[pc::ColourKey::Hair]]);
 
-        const auto rot = m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairRot] * cro::Util::Const::PI;
-        m_avatarHairModels[hairIndex].getComponent<cro::Transform>().setPosition(m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairTx]);
-        m_avatarHairModels[hairIndex].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
-        m_avatarHairModels[hairIndex].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
-        m_avatarHairModels[hairIndex].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
-        m_avatarHairModels[hairIndex].getComponent<cro::Transform>().setScale(m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairScale]);
+        applyHeadwearTransform(hairIndex, 0);
     }
     m_avatarModels[m_avatarIndex].hairIndex = hairIndex;
 
@@ -2858,16 +2945,24 @@ void ProfileStateV2::setHatIndex(std::size_t idx)
         m_avatarHairModels[hatIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.playerData.avatarFlags[pc::ColourKey::Hat]]);
         m_avatarHairModels[hatIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.playerData.avatarFlags[pc::ColourKey::Hat]]);
 
-        const auto rot = m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HatRot] * cro::Util::Const::PI;
-        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().setPosition(m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HatTx]);
-        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
-        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
-        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
-        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().setScale(m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HatScale]);
+        applyHeadwearTransform(hatIndex, PlayerData::HeadwearOffset::HatTx);
     }
     m_avatarModels[m_avatarIndex].hatIndex = hatIndex;
 
     m_activeProfile.playerData.hatID = m_sharedData.hairInfo[hatIndex].uid;
 
     //m_headwearPreviewRects[HeadwearID::Hat] = getThumbnailTextureRect(hatIndex);
+}
+
+void ProfileStateV2::applyHeadwearTransform(std::size_t idx, std::size_t indexOffset)
+{
+    if (m_avatarHairModels[idx].isValid()) //'bald' at front has no transform
+    {
+        const auto rot = m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairRot + indexOffset] * cro::Util::Const::PI;
+        m_avatarHairModels[idx].getComponent<cro::Transform>().setPosition(m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairTx + indexOffset]);
+        m_avatarHairModels[idx].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
+        m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
+        m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
+        m_avatarHairModels[idx].getComponent<cro::Transform>().setScale(m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairScale + indexOffset]);
+    }
 }
