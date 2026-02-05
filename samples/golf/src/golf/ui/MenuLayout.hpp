@@ -179,5 +179,5 @@ struct Menu final
 
     cro::FloatRect itemBox; //size is menu coords, position is updated during testing with current scroll position
 };
-
-void scrollToTarget(TabBar&, Menu&, float);
+//returns cropping areas for debugging
+std::pair<cro::FloatRect, cro::FloatRect> scrollToTarget(TabBar&, Menu&, float);

@@ -170,7 +170,6 @@ private:
     std::array<cro::FloatRect, 2u> m_infoRects = {};
     cro::Texture m_colourPreview; //TODO this is 1x1px so we could just atlas into another texture...
 
-    //FlagPreview m_flagPreview;
     struct OptionIcon final
     {
         enum

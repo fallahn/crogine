@@ -585,7 +585,6 @@ bool ProfileStateV2::simulate(float dt)
     }
 
 
-    //TODO this doesn't actually do what I wanted, but it's servicable
     scrollToTarget(m_tabBar, m_menuLayout, dt);
 
     const auto maskTest =
@@ -654,7 +653,6 @@ void ProfileStateV2::render()
     m_previewTexture.clear(cro::Colour::Transparent);
     m_previewScene.render();
     m_previewTexture.display();
-
 
     m_scene.render();
 }
@@ -1987,7 +1985,6 @@ void ProfileStateV2::resizeItemGraphics()
         m_menuLayout.texture.create(texWidth, texHeight, false);
     }
 
-
     //update all the item backgrounds based on current window size and selected tab
     //these aren't scaled by view size here - the target they're rendered to is
     float renderSize = static_cast<float>(m_menuLayout.texture.getSize().x);
@@ -2161,7 +2158,6 @@ void ProfileStateV2::resizeItemGraphics()
             cam.resizeCallback(cam);
         }
     }
-    
 }
 
 void ProfileStateV2::updateSliderGraphic(std::int32_t amt, std::int32_t total)
