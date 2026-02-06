@@ -3585,21 +3585,28 @@ void OptionsStateV2::nextItem()
     //reset mouse hover highlight
     m_menuLayout.hoveredIndex = -1;
 
-    m_menuLayout.itemIndex = (m_menuLayout.itemIndex + 1) % m_menuLayout.items[m_tabBar.activeIndex].size();
-    updateMenuItems();
+    if (m_menuLayout.itemIndex < m_menuLayout.items[m_tabBar.activeIndex].size() - 1)
+    {
+        m_menuLayout.itemIndex++;
+        updateMenuItems();
 
-    playSound(MenuSoundEvent::Switch);
+        playSound(MenuSoundEvent::Switch);
+    }
 }
 
 void OptionsStateV2::prevItem()
 {
     //reset mouse hover highlight
     m_menuLayout.hoveredIndex = -1;
+    
+    //hmm these are uints so we can't use max(0)
+    if (m_menuLayout.itemIndex > 0)
+    {
+        m_menuLayout.itemIndex--;
+        updateMenuItems();
 
-    m_menuLayout.itemIndex = static_cast<std::uint32_t>((m_menuLayout.itemIndex + (m_menuLayout.items[m_tabBar.activeIndex].size() - 1)) % m_menuLayout.items[m_tabBar.activeIndex].size());
-    updateMenuItems();
-
-    playSound(MenuSoundEvent::Switch);
+        playSound(MenuSoundEvent::Switch);
+    }
 }
 
 void OptionsStateV2::activateLeft()

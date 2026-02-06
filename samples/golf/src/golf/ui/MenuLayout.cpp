@@ -53,7 +53,7 @@ std::pair<cro::FloatRect, cro::FloatRect> scrollToTarget(TabBar& tabBar, Menu& m
     {
         const float target = std::clamp((texHeight - (Stride * menuLayout.itemIndex)) - Extents, -UI::ItemHeight, texHeight - (Extents * 2.f));
         const float diff = target - origin.y;
-        origin.y += diff * (dt * 5.f);
+        origin.y += diff * (dt * 4.f);
         menuLayout.sprite.getComponent<cro::Transform>().setOrigin(origin);
     }
     else
