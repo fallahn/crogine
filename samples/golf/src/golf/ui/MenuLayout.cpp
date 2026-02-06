@@ -65,3 +65,16 @@ std::pair<cro::FloatRect, cro::FloatRect> scrollToTarget(TabBar& tabBar, Menu& m
 
     return { viewRect, itemRect };
 }
+
+void focusToIndex(TabBar& tabBar, Menu& menuLayout)
+{
+    const float viewScale = cro::UIElementSystem::getViewScale();
+    const float texHeight = static_cast<float>(menuLayout.texture.getSize().y);
+    static constexpr float Stride = UI::ItemHeight + UI::ItemSpacing;
+    const float Extents = tabBar.background.getComponent<cro::Transform>().getPosition().y / viewScale;
+    const float target = std::clamp((texHeight - (Stride * menuLayout.itemIndex)) - Extents, -UI::ItemHeight, texHeight - (Extents * 2.f));
+
+    auto origin = menuLayout.sprite.getComponent<cro::Transform>().getOrigin();
+    origin.y = target - UI::ItemHeight;
+    menuLayout.sprite.getComponent<cro::Transform>().setOrigin(origin);
+}

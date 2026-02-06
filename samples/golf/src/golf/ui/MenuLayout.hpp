@@ -181,3 +181,4 @@ struct Menu final
 };
 //returns cropping areas for debugging
 std::pair<cro::FloatRect, cro::FloatRect> scrollToTarget(TabBar&, Menu&, float);
+void focusToIndex(TabBar&, Menu&);

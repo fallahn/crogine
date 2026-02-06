@@ -113,6 +113,7 @@ private:
     void updateTabBar();
     void nextTab();
     void prevTab();
+    void activateTab(std::int32_t);
 
     Menu m_menuLayout;
 

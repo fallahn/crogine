@@ -1768,7 +1768,8 @@ void ProfileStateV2::onCachedPush()
     createLoadoutItems();
     createDetailItems();
 
-    refreshView();
+    activateTab(0);
+    //refreshView(); //done by activateTab();
 
     m_rootNode.getComponent<cro::Callback>().active = true;
 }
@@ -1969,39 +1970,26 @@ void ProfileStateV2::updateTabBar()
 
 void ProfileStateV2::nextTab()
 {
-    if (m_detailsPane.tabDetails[m_tabBar.activeIndex].isValid())
-    {
-        m_detailsPane.tabDetails[m_tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    }
-
-    m_tabBar.activeIndex = (m_tabBar.activeIndex + 1) % TabID::Count;
-    m_menuLayout.itemIndex = 0;
-
-    if (m_detailsPane.tabDetails[m_tabBar.activeIndex].isValid())
-    {
-        m_detailsPane.tabDetails[m_tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-    }
-
-    if (m_tabBar.items[m_tabBar.activeIndex].selected)
-    {
-        m_tabBar.items[m_tabBar.activeIndex].selected();
-    }
-
-    refreshView();
-    
+    activateTab((m_tabBar.activeIndex + 1) % TabID::Count);
     playSound(MenuSoundEvent::Activate);
 }
 
 void ProfileStateV2::prevTab()
+{
+    activateTab((m_tabBar.activeIndex + (TabID::Count - 1)) % TabID::Count);
+    playSound(MenuSoundEvent::Cancel);
+}
+
+void ProfileStateV2::activateTab(std::int32_t idx)
 {
     if (m_detailsPane.tabDetails[m_tabBar.activeIndex].isValid())
     {
         m_detailsPane.tabDetails[m_tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
 
-    m_tabBar.activeIndex = (m_tabBar.activeIndex + (TabID::Count - 1)) % TabID::Count;
+    m_tabBar.activeIndex = idx;
     m_menuLayout.itemIndex = 0;
-    
+
     if (m_detailsPane.tabDetails[m_tabBar.activeIndex].isValid())
     {
         m_detailsPane.tabDetails[m_tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
@@ -2013,7 +2001,9 @@ void ProfileStateV2::prevTab()
     }
 
     refreshView();
-    playSound(MenuSoundEvent::Cancel);
+
+    //set item 0 as focused
+    focusToIndex(m_tabBar, m_menuLayout);
 }
 
 void ProfileStateV2::resizeItemGraphics()
@@ -2582,27 +2572,8 @@ void ProfileStateV2::doMouseClick(glm::vec2 mousePos)
 {
     if (m_tabBar.hoveredIndex != -1)
     {
-        if (m_detailsPane.tabDetails[m_tabBar.activeIndex].isValid())
-        {
-            m_detailsPane.tabDetails[m_tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        }
-
-        m_tabBar.activeIndex = m_tabBar.hoveredIndex;
+        activateTab(m_tabBar.hoveredIndex);
         m_tabBar.hoveredIndex = -1;
-        m_menuLayout.itemIndex = 0;
-
-        if (m_tabBar.items[m_tabBar.activeIndex].selected)
-        {
-            m_tabBar.items[m_tabBar.activeIndex].selected();
-        }
-
-        if (m_detailsPane.tabDetails[m_tabBar.activeIndex].isValid())
-        {
-            m_detailsPane.tabDetails[m_tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        }
-
-        updateTabBar();
-
         playSound(MenuSoundEvent::Activate);
     }
     else
