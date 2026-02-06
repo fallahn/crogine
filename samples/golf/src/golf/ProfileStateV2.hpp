@@ -88,6 +88,9 @@ private:
     std::vector<ProfileTexture> m_profileTextures;
     std::vector<cro::Entity> m_avatarHairModels;
     std::vector<BallPreview> m_ballModels;
+    std::size_t m_ballIndex;
+    std::array<cro::Entity, 3u> m_ballParticles = {};
+    std::size_t m_particleIndex;
 
     void loadAssets();
     void buildScene();
@@ -246,11 +249,13 @@ private:
 
     std::size_t indexFromAvatarID(std::uint32_t skinID) const;
     std::size_t indexFromHairID(std::uint32_t hairID) const;
+    std::size_t indexFromBallID(std::uint32_t) const;
 
     //note this sets the m_avatarIndex member value too!!
     void setAvatarIndex(std::size_t idx);
     void setHairIndex(std::size_t idx);
     void setHatIndex(std::size_t idx);
+    void setBallIndex(std::size_t);
 
     void applyHeadwearTransform(std::size_t idx, std::size_t indexOffset);
 };

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -65,7 +65,7 @@ void ParticleEmitter::start()
 {
     m_running = true;
     m_emissionTimestamp = m_prevTimestamp;
-    m_emissionTime = 0.f;
+    m_emissionTime = 1.f / settings.emitRate;// means we'll emit the first particle immediately
 
     if (settings.releaseCount)
     {

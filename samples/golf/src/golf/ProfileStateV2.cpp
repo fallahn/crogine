@@ -119,6 +119,8 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_progressUniform   (-1),
     m_avatarIndex       (0),
     m_lockedAvatarCount (0),
+    m_ballIndex         (0),
+    m_particleIndex     (0),
     m_uiTexture         (nullptr)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -1400,6 +1402,9 @@ void ProfileStateV2::buildPreviewScene()
     m_previewCameras[PreviewCamera::Avatar] = camEnt;
 
 
+
+    //TODO this needs its own callback with narrower FOV and split screen
+    //for club thumbnails
     camEnt = m_previewScene.createEntity();
     camEnt.addComponent<cro::Transform>().setPosition({ BallPos.x, 0.03f, -0.05f });
     camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
@@ -1705,10 +1710,73 @@ void ProfileStateV2::createEquipmentItems()
     item->description = "Choose how your equipment appears";
 
     //TODO puff particles when switching balls
+    //TODO we can't preview locked balls now there are no thumbnails :/
 
-    //ball model
-    //ball colour
-    //club model
+    //model selection
+    item = &m_menuLayout.items[TabID::Equipment].emplace_back();
+    item->title = "Ball Appearance";
+    item->activated =
+        [&](Menu::Item& i)
+        {
+            setBallIndex(i.selectedIndex);
+
+            i.description = i.labels[i.selectedIndex] + "/" + std::to_string(m_ballModels.size());
+            if (!m_sharedData.hairInfo[i.selectedIndex].label.empty())
+            {
+                i.description += " " + m_sharedData.ballInfo[i.selectedIndex].label;
+            }
+
+            m_detailsPane.text.getComponent<cro::Text>().setString(i.description);
+            //TODO could add if this is an unlock/workshop model here
+            //m_sharedData.ballInfo[i.selectedIndex].type == 1; //1 unlock 2 workshop
+        };
+    for (auto i = 0u; i < m_ballModels.size(); ++i)
+    {
+        item->labels.push_back(std::to_string(i + 1));
+    }
+    item->selectedIndex = indexFromBallID(m_activeProfile.playerData.ballID);
+    item->description = item->labels[item->selectedIndex] + "/" + std::to_string(m_avatarHairModels.size());
+    if (!m_sharedData.hairInfo[item->selectedIndex].label.empty())
+    {
+        item->description += " " + m_sharedData.hairInfo[item->selectedIndex].label;
+    }
+    setBallIndex(item->selectedIndex);
+
+    //colour property
+    item = &m_menuLayout.items[TabID::Equipment].emplace_back();
+    item->title = "Colour";
+    item->description = "Choose a colour";
+    item->activated =
+        [&](Menu::Item& i)
+        {
+            const auto idx = i.selectedIndex - 1 < 0 ? 255 : i.selectedIndex - 1;
+            m_activeProfile.playerData.ballColourIndex = idx; //hack because white is index 0 but expects invalid idx
+            const cro::Colour colour = idx < pc::Palette.size() ? pc::Palette[idx] : cro::Colour::White;
+
+            //set the preview colour
+            i.previewColour = colour;
+            m_activeProfile.playerData.ballColour = colour;
+
+            //update the shader uniform
+            m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_activeProfile.playerData.ballColour);
+        };
+
+    //front is white/no colour
+    item->labels.push_back("1");
+    for (auto i = 0u; i < pc::PairCounts[0]; ++i)
+    {
+        item->labels.push_back(std::to_string(i + 2));
+    }
+
+    item->selectedIndex = m_activeProfile.playerData.ballColourIndex < pc::Palette.size() ? m_activeProfile.playerData.ballColourIndex + 1 : 0;
+    item->displayType = Menu::Item::Slider;
+    item->previewColour = item->selectedIndex == 0 ? cro::Colour::White : pc::Palette[item->selectedIndex-1];
+    item->texture = &m_colourPreview;
+    item->uv = { 0.f, 0.f, 1.f, 1.f };
+    
+    
+    
+    //TODO club model - need to set up camera callback
 #ifdef USE_GNS
     //workshop button if steam
     LogI << FILE_LINE << " implement me" << std::endl;
@@ -2806,57 +2874,67 @@ void ProfileStateV2::loadBallModels()
 {
     CRO_ASSERT(!m_profileData.ballDefs.empty(), "Must load this state on top of menu");
 
-    //TODO rather than creating an emitter for every single model a single
-    //emitter will do (or maybe 2/3 to buffer when switching previews  quickly)
+    //rather than creating an emitter for every single model a single
+    //emitter will do (well 2/3 to buffer when switching previews  quickly)
     cro::EmitterSettings emitterSettings;
     emitterSettings.loadFromFile("assets/golf/particles/puff_small.cps", m_resources.textures);
+
+    for (auto i = 0u; i < m_ballParticles.size(); ++i)
+    {
+        m_ballParticles[i] = m_previewScene.createEntity();
+        m_ballParticles[i].addComponent<cro::Transform>().setPosition(BallPos);
+        m_ballParticles[i].addComponent<cro::ParticleEmitter>().settings = emitterSettings;
+    }
+
 
     //this has all been parsed by the menu state - so we're assuming
     //all the models etc are fine and load without chicken
     std::int32_t c = 0;
     for (auto& ballDef : m_profileData.ballDefs)
     {
-        auto entity = m_previewScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        ballDef.createModel(entity);
-        entity.getComponent<cro::Model>().setHidden(true);
-        if (ballDef.hasSkeleton())
+        if (!m_sharedData.ballInfo[c].locked)
         {
-            entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ballSkinned);
-            entity.getComponent<cro::Skeleton>().play(0);
-        }
-        else
-        {
-            if (ballDef.getMaterial(0)->properties.count("u_normalMap"))
+            auto entity = m_previewScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            ballDef.createModel(entity);
+            entity.getComponent<cro::Model>().setHidden(true);
+            if (ballDef.hasSkeleton())
             {
-                auto mat = m_profileData.profileMaterials.ballBumped;
-                applyMaterialData(ballDef, mat);
-                entity.getComponent<cro::Model>().setMaterial(0, mat);
+                entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ballSkinned);
+                entity.getComponent<cro::Skeleton>().play(0);
             }
             else
             {
-                entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
+                if (ballDef.getMaterial(0)->properties.count("u_normalMap"))
+                {
+                    auto mat = m_profileData.profileMaterials.ballBumped;
+                    applyMaterialData(ballDef, mat);
+                    entity.getComponent<cro::Model>().setMaterial(0, mat);
+                }
+                else
+                {
+                    entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
+                }
             }
+            entity.getComponent<cro::Model>().setMaterial(1, m_profileData.profileMaterials.ballReflection);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+                {
+                    e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+                };
+
+            auto& preview = m_ballModels.emplace_back();
+            preview.ball = entity;
+            preview.type = m_sharedData.ballInfo[c].type;
+            preview.infoIndex = c;
+            preview.root = m_previewScene.createEntity();
+            preview.root.addComponent<cro::Transform>().setPosition(BallPos);
+            preview.root.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_sharedData.ballInfo[c].previewRotation);
+            preview.root.getComponent<cro::Transform>().addChild(preview.ball.getComponent<cro::Transform>());
+
+            ++c;
         }
-        entity.getComponent<cro::Model>().setMaterial(1, m_profileData.profileMaterials.ballReflection);
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [](cro::Entity e, float dt)
-            {
-                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
-            };
-
-        auto& preview = m_ballModels.emplace_back();
-        preview.ball = entity;
-        preview.type = m_sharedData.ballInfo[c].type;
-        preview.infoIndex = c;
-        preview.root = m_previewScene.createEntity();
-        preview.root.addComponent<cro::Transform>().setPosition(BallPos);
-        preview.root.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_sharedData.ballInfo[c].previewRotation);
-        preview.root.getComponent<cro::Transform>().addChild(preview.ball.getComponent<cro::Transform>());
-        preview.root.addComponent<cro::ParticleEmitter>().settings = emitterSettings;
-
-        ++c;
     }
 
     m_ballModels[0].ball.getComponent<cro::Model>().setHidden(false);
@@ -2883,6 +2961,21 @@ std::size_t ProfileStateV2::indexFromHairID(std::uint32_t hairID) const
     {
         return std::distance(hairInfo.begin(), result);
     }
+    return 0;
+}
+
+std::size_t ProfileStateV2::indexFromBallID(std::uint32_t ballID) const
+{
+    const auto& ballInfo = m_sharedData.ballInfo;
+    if (auto result = std::find_if(ballInfo.cbegin(), ballInfo.cend(),
+        [ballID](const SharedStateData::BallInfo& b)
+        {
+            return b.uid == ballID;
+        }); result != ballInfo.cend())
+    {
+        return std::distance(ballInfo.cbegin(), result);
+    }
+
     return 0;
 }
 
@@ -3035,6 +3128,23 @@ void ProfileStateV2::setHatIndex(std::size_t idx)
     m_activeProfile.playerData.hatID = m_sharedData.hairInfo[hatIndex].uid;
 
     //m_headwearPreviewRects[HeadwearID::Hat] = getThumbnailTextureRect(hatIndex);
+}
+
+void ProfileStateV2::setBallIndex(std::size_t idx)
+{
+    CRO_ASSERT(idx < m_ballModels.size(), "");
+
+    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
+
+    m_ballIndex = idx;
+
+    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_activeProfile.playerData.ballColour);
+
+    m_particleIndex = (m_particleIndex + 1) % m_ballParticles.size();
+    m_ballParticles[m_particleIndex].getComponent<cro::ParticleEmitter>().start();
+
+    m_activeProfile.playerData.ballID = m_sharedData.ballInfo[m_ballIndex].uid;
 }
 
 void ProfileStateV2::applyHeadwearTransform(std::size_t idx, std::size_t indexOffset)
