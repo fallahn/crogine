@@ -1709,7 +1709,6 @@ void ProfileStateV2::createEquipmentItems()
     item->displayType = Menu::Item::Heading;
     item->description = "Choose how your equipment appears";
 
-    //TODO puff particles when switching balls
     //TODO we can't preview locked balls now there are no thumbnails :/
 
     //model selection
@@ -1729,22 +1728,27 @@ void ProfileStateV2::createEquipmentItems()
             m_detailsPane.text.getComponent<cro::Text>().setString(i.description);
             //TODO could add if this is an unlock/workshop model here
             //m_sharedData.ballInfo[i.selectedIndex].type == 1; //1 unlock 2 workshop
+
+            if (m_sharedData.ballInfo[i.selectedIndex].locked)
+            {
+                LogI << "Locked ball!" << std::endl;
+            }
         };
     for (auto i = 0u; i < m_ballModels.size(); ++i)
     {
         item->labels.push_back(std::to_string(i + 1));
     }
     item->selectedIndex = indexFromBallID(m_activeProfile.playerData.ballID);
-    item->description = item->labels[item->selectedIndex] + "/" + std::to_string(m_avatarHairModels.size());
-    if (!m_sharedData.hairInfo[item->selectedIndex].label.empty())
+    item->description = item->labels[item->selectedIndex] + "/" + std::to_string(m_ballModels.size());
+    if (!m_sharedData.ballInfo[item->selectedIndex].label.empty())
     {
-        item->description += " " + m_sharedData.hairInfo[item->selectedIndex].label;
+        item->description += " " + m_sharedData.ballInfo[item->selectedIndex].label;
     }
     setBallIndex(item->selectedIndex);
 
     //colour property
     item = &m_menuLayout.items[TabID::Equipment].emplace_back();
-    item->title = "Colour";
+    item->title = "Ball Tint";
     item->description = "Choose a colour";
     item->activated =
         [&](Menu::Item& i)
@@ -2892,7 +2896,7 @@ void ProfileStateV2::loadBallModels()
     std::int32_t c = 0;
     for (auto& ballDef : m_profileData.ballDefs)
     {
-        if (!m_sharedData.ballInfo[c].locked)
+        //if (!m_sharedData.ballInfo[c].locked)
         {
             auto entity = m_previewScene.createEntity();
             entity.addComponent<cro::Transform>();

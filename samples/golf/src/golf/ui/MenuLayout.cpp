@@ -51,7 +51,7 @@ std::pair<cro::FloatRect, cro::FloatRect> scrollToTarget(TabBar& tabBar, Menu& m
 
     if (!viewRect.contains(itemRect))
     {
-        const float target = std::clamp((texHeight - (Stride * menuLayout.itemIndex)) - Extents, -UI::ItemHeight, texHeight - (Extents * 2.f));
+        const float target = std::min(std::max((texHeight - (Stride * menuLayout.itemIndex)) - Extents, -UI::ItemHeight), texHeight - (Extents * 2.f));
         const float diff = target - origin.y;
         origin.y += diff * (dt * 4.f);
         menuLayout.sprite.getComponent<cro::Transform>().setOrigin(origin);
@@ -72,7 +72,7 @@ void focusToIndex(TabBar& tabBar, Menu& menuLayout)
     const float texHeight = static_cast<float>(menuLayout.texture.getSize().y);
     static constexpr float Stride = UI::ItemHeight + UI::ItemSpacing;
     const float Extents = tabBar.background.getComponent<cro::Transform>().getPosition().y / viewScale;
-    const float target = std::clamp((texHeight - (Stride * menuLayout.itemIndex)) - Extents, -UI::ItemHeight, texHeight - (Extents * 2.f));
+    const float target = std::min(std::max((texHeight - (Stride * menuLayout.itemIndex)) - Extents, -UI::ItemHeight), texHeight - (Extents * 2.f));
 
     auto origin = menuLayout.sprite.getComponent<cro::Transform>().getOrigin();
     origin.y = target - UI::ItemHeight;

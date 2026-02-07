@@ -2799,7 +2799,7 @@ void OptionsStateV2::createAchievementItems()
 
     for(const auto& s : AchievementStrings)
     {
-        auto icon = Achievements::getIcon(s);
+        const auto icon = Achievements::getIcon(s);
         const auto* ach = Achievements::getAchievement(s);
 
         if (ach)
@@ -2827,15 +2827,18 @@ void OptionsStateV2::createAchievementItems()
                     item.subTitle += "\nUnlocked: " + cro::SysTime::dateString(ach->timestamp);
                 }
             }
-            item.texture = icon.texture;
-            item.uv = icon.textureRect;
 
-            const auto texSize = glm::vec2(icon.texture->getSize());
-            item.uv.left *= texSize.x;
-            item.uv.width *= texSize.x;
-            item.uv.bottom *= texSize.y;
-            item.uv.height *= texSize.y;
+            if (item.texture)
+            {
+                item.texture = icon.texture;
+                item.uv = icon.textureRect;
 
+                const auto texSize = glm::vec2(icon.texture->getSize());
+                item.uv.left *= texSize.x;
+                item.uv.width *= texSize.x;
+                item.uv.bottom *= texSize.y;
+                item.uv.height *= texSize.y;
+            }
             item.displayType = Menu::Item::TextOnly;
         }
     }
