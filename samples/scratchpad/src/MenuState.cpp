@@ -34,6 +34,7 @@ source distribution.
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/SysTime.hpp>
+#include <crogine/core/Mouse.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -205,7 +206,25 @@ void main()
                 }
                 else
                 {
-                    if (const auto decRes = odin_decoder_create(48000, false, &decoder); decRes != ODIN_ERROR_SUCCESS)
+                    auto pipeline = odin_encoder_get_pipeline(encoder);
+                    
+                    //TODO insert the voice activation effect here
+                    
+                    
+                    std::uint32_t apm_id = 0;
+                    odin_pipeline_insert_apm_effect(pipeline, 0, 48000, false, &apm_id);
+
+                    OdinApmConfig config = {};
+                    config.echo_canceller = false; //don't know how to get the loopback audio in order to feed this...
+                    config.high_pass_filter = true;
+                    config.transient_suppressor = true;
+                    config.noise_suppression_level = ODIN_NOISE_SUPPRESSION_LEVEL_MODERATE;
+                    config.gain_controller_version = ODIN_GAIN_CONTROLLER_VERSION_V2;
+
+                    odin_pipeline_set_apm_config(pipeline, apm_id, &config);
+
+                    //hmm trying to use mono playback causes the audio to break up
+                    if (const auto decRes = odin_decoder_create(48000, true, &decoder); decRes != ODIN_ERROR_SUCCESS)
                     {
                         LogI << "Failed creating decoder: " << decRes << std::endl;
                     }
@@ -452,20 +471,26 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
-    //const auto* data = m_soundRecorder.getFloatingPointData(&m_recorderDebug.captureAvailable);
+    //TODO this needs the speaker output samples which are fed in here
+    //to negate the echo caused by the mic picking up the speaker output.
+    //HOWEVER I have no idea how to get this from libSDL AND I have no
+    //idea how I would calculate the latency if I could.
+    //Looks like SDL3 can do this - another reason to migrate?
+    //odin_pipeline_update_apm_playback();
+
     static constexpr std::uint32_t FRAME_COUNT = 2048;
     if (odin)
     {
         static std::array<std::uint8_t, FRAME_COUNT * sizeof(float)> encodeBuffer = {};
         m_recorderDebug.captureAvailable = SDL_DequeueAudio(odin->recordDevice, encodeBuffer.data(), FRAME_COUNT*sizeof(float));
-        if (m_recorderDebug.captureAvailable != 0)
+        if (m_recorderDebug.captureAvailable != 0
+            && cro::Mouse::isButtonPressed(cro::Mouse::Button::Right)) //crude but proves a point. probably wants a slight delay after releasing the button
         {
             const auto res = odin_encoder_push(odin->encoder, (float*)encodeBuffer.data(), m_recorderDebug.captureAvailable / sizeof(float));
             if (res != ODIN_ERROR_SUCCESS)
             {
                 LogI << "Encode error: " << res << std::endl;
             }
-            //SDL_QueueAudio(odin->playbackDevice, encodeBuffer.data(), m_recorderDebug.captureAvailable);
         }
     }
 
@@ -491,13 +516,15 @@ bool MenuState::simulate(float dt)
 
         for (const auto& packet : pretendPacketQueue)
         {
+            //TODO in a proper network scenario we need to check the packet's peer
+            //and then use a decoder *specifically* for that peer.
             odin_decoder_push(odin->decoder, packet.data(), packet.size());
 
             static std::array<float, FRAME_COUNT> decodeBuffer = {};
             bool isSilent = false;
             m_recorderDebug.decoderErrorID = odin_decoder_pop(odin->decoder, decodeBuffer.data(), FRAME_COUNT, &isSilent);
 
-            //if (m_recorderDebug.decoderErrorID == ODIN_ERROR_SUCCESS)
+            if (m_recorderDebug.decoderErrorID == ODIN_ERROR_SUCCESS)
             {
                 SDL_QueueAudio(odin->playbackDevice, decodeBuffer.data(), decodeBuffer.size() * sizeof(float));
             }
@@ -1717,7 +1744,7 @@ void MenuState::odinWindow()
             SDL_AudioSpec spec = {};
             spec.freq = 48000;
             spec.format = AUDIO_F32;
-            spec.channels = 1;
+            spec.channels = 2; //TODO if we want to play this through the AudioSystem (for positional) we need an SDL stream to resmaple to mono/16bit
             spec.samples = 2048;
 
             SDL_AudioSpec obtained = {};
@@ -1727,7 +1754,7 @@ void MenuState::odinWindow()
             {
                 odin->playbackDevice = SDL_OpenAudioDevice(nullptr, 0, &spec, &obtained, 0);
             }
-
+            spec.channels = 1;
             if (!odin->recordDevice)
             {
                 odin->recordDevice = SDL_OpenAudioDevice(devList[idx].c_str(), SDL_TRUE, &spec, &obtained, 0);
@@ -1745,6 +1772,10 @@ void MenuState::odinWindow()
                 {
                     if (ImGui::Button("Record"))
                     {
+                        //NOTE TO SELF pausing the audio device doesn't flush
+                        //the buffer, so anything not yet output to speakers
+                        //will be put out AFTER unpausing the device, causing
+                        //potentially severe lag.
                         //m_soundRecorder.openDevice(devList[idx], 2, 48000);
                         SDL_PauseAudioDevice(odin->playbackDevice, 0);
                         SDL_PauseAudioDevice(odin->recordDevice, 0);
