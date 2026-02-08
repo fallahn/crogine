@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -30,6 +30,7 @@ source distribution.
 #include "MenuState.hpp"
 #include "MyApp.hpp"
 #include "rapidcsv.h"
+#include "odin.h"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/SysTime.hpp>
@@ -180,6 +181,64 @@ void main()
     }quantizeUniform;
 
     ShaderUniform moonUniform;
+
+    struct OdinObject final
+    {
+        OdinEncoder* encoder = nullptr;
+        OdinDecoder* decoder = nullptr;
+
+        std::int32_t playbackDevice = 0; //SDL Playback device
+        std::int32_t recordDevice = 0; //SDL Record device
+        bool active = false;
+
+        OdinObject()
+        {
+            if (const auto res = odin_initialize(ODIN_VERSION); res != ODIN_ERROR_SUCCESS)
+            {
+                LogI << "Failed init Odin: " << res << std::endl;
+            }
+            else
+            {
+                if (const auto encRes = odin_encoder_create(1234, 48000, false, &encoder); encRes != ODIN_ERROR_SUCCESS)
+                {
+                    LogI << "Failed creating encoder: " << encRes << std::endl;
+                }
+                else
+                {
+                    if (const auto decRes = odin_decoder_create(48000, false, &decoder); decRes != ODIN_ERROR_SUCCESS)
+                    {
+                        LogI << "Failed creating decoder: " << decRes << std::endl;
+                    }
+                }
+            }
+        }
+
+
+        ~OdinObject()
+        {
+            if (decoder)
+            {
+                odin_decoder_free(decoder);
+            }
+
+            if (encoder)
+            {
+                odin_encoder_free(encoder);
+            }
+
+            if (recordDevice)
+            {
+                SDL_CloseAudioDevice(recordDevice);
+            }
+
+            if (playbackDevice)
+            {
+                SDL_CloseAudioDevice(playbackDevice);
+            }
+            odin_shutdown();
+        }
+    };
+    std::unique_ptr<OdinObject> odin;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp& app, cro::ResourceCollection& rc)
@@ -209,6 +268,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
 
     m_musicName = "No File";
 
+
+    registerWindow(std::bind(&MenuState::odinWindow, this));
 
     /*auto* fonts = ImGui::GetIO().Fonts;
     static const std::vector<ImWchar> rangesB = { 0x231a, 0x23fe, 0x256d, 0x2bd1, 0x10000, 0x10FFFF, 0 };
@@ -391,6 +452,60 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
+    //const auto* data = m_soundRecorder.getFloatingPointData(&m_recorderDebug.captureAvailable);
+    static constexpr std::uint32_t FRAME_COUNT = 2048;
+    if (odin)
+    {
+        static std::array<std::uint8_t, FRAME_COUNT * sizeof(float)> encodeBuffer = {};
+        m_recorderDebug.captureAvailable = SDL_DequeueAudio(odin->recordDevice, encodeBuffer.data(), FRAME_COUNT*sizeof(float));
+        if (m_recorderDebug.captureAvailable != 0)
+        {
+            const auto res = odin_encoder_push(odin->encoder, (float*)encodeBuffer.data(), m_recorderDebug.captureAvailable / sizeof(float));
+            if (res != ODIN_ERROR_SUCCESS)
+            {
+                LogI << "Encode error: " << res << std::endl;
+            }
+            //SDL_QueueAudio(odin->playbackDevice, encodeBuffer.data(), m_recorderDebug.captureAvailable);
+        }
+    }
+
+    static constexpr std::uint32_t PACKET_SIZE = 2048;
+    static std::array<std::uint8_t, PACKET_SIZE> packetBuffer = {};
+    //though this returns the size encoded it must be initialised to the size of the buffer for encoding to take place!
+    m_recorderDebug.encodedPacketSize = PACKET_SIZE;
+    if (odin)
+    {
+        std::vector<std::vector<std::uint8_t>> pretendPacketQueue; //emulates the incoming network data
+
+        while (odin_encoder_pop(odin->encoder, packetBuffer.data(), &m_recorderDebug.encodedPacketSize) == ODIN_ERROR_SUCCESS)
+        {
+            //note for future: we want a decoder per *peer* and need to check the source of the packet
+            //before we can know to which decoder this should be pushed.
+            //odin_decoder_push(odin->decoder, packetBuffer.data(), m_recorderDebug.encodedPacketSize);
+
+            auto& v = pretendPacketQueue.emplace_back();
+            v.resize(m_recorderDebug.encodedPacketSize);
+            std::memcpy(v.data(), packetBuffer.data(), v.size());
+        }
+
+
+        for (const auto& packet : pretendPacketQueue)
+        {
+            odin_decoder_push(odin->decoder, packet.data(), packet.size());
+
+            static std::array<float, FRAME_COUNT> decodeBuffer = {};
+            bool isSilent = false;
+            m_recorderDebug.decoderErrorID = odin_decoder_pop(odin->decoder, decodeBuffer.data(), FRAME_COUNT, &isSilent);
+
+            //if (m_recorderDebug.decoderErrorID == ODIN_ERROR_SUCCESS)
+            {
+                SDL_QueueAudio(odin->playbackDevice, decodeBuffer.data(), decodeBuffer.size() * sizeof(float));
+            }
+        }
+        pretendPacketQueue.clear();
+    }
+
+
     m_video.update(dt);
     m_scene.simulate(dt);
 
@@ -1570,4 +1685,100 @@ void MenuState::moonPhase()
         }
     }
     ImGui::End();
+}
+
+void MenuState::odinWindow()
+{
+    if (ImGui::Begin("Odin"))
+    {
+        const auto& devList = m_soundRecorder.listDevices();
+        static std::uint32_t idx = 0;
+        if (ImGui::BeginCombo("Input Device", devList[idx].c_str()))
+        {
+            for (auto i = 0u; i < devList.size(); ++i)
+            {
+                const bool selected = idx == i;
+                if (ImGui::Selectable(devList[i].c_str(), selected))
+                {
+                    idx = i;
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        if (ImGui::Button("Init"))
+        {
+            if (!odin)
+            {
+                odin = std::make_unique<OdinObject>();
+            }
+
+
+            SDL_AudioSpec spec = {};
+            spec.freq = 48000;
+            spec.format = AUDIO_F32;
+            spec.channels = 1;
+            spec.samples = 2048;
+
+            SDL_AudioSpec obtained = {};
+
+
+            if (!odin->playbackDevice)
+            {
+                odin->playbackDevice = SDL_OpenAudioDevice(nullptr, 0, &spec, &obtained, 0);
+            }
+
+            if (!odin->recordDevice)
+            {
+                odin->recordDevice = SDL_OpenAudioDevice(devList[idx].c_str(), SDL_TRUE, &spec, &obtained, 0);
+            }
+        }
+
+        if (odin)
+        {
+            ImGui::Text("Odin Active");
+
+            if (odin->playbackDevice
+                && odin->recordDevice)
+            {
+                if (!odin->active)
+                {
+                    if (ImGui::Button("Record"))
+                    {
+                        //m_soundRecorder.openDevice(devList[idx], 2, 48000);
+                        SDL_PauseAudioDevice(odin->playbackDevice, 0);
+                        SDL_PauseAudioDevice(odin->recordDevice, 0);
+                        odin->active = true;
+                    }
+                }
+                else
+                {
+                    if (ImGui::Button("Stop"))
+                    {
+                        SDL_PauseAudioDevice(odin->playbackDevice, 1);
+                        SDL_PauseAudioDevice(odin->recordDevice, 1);
+                        //m_soundRecorder.closeDevice();
+                        odin->active = false;
+                    }
+                }
+
+                ImGui::Text("Captured samples: %d", m_recorderDebug.captureAvailable);
+                ImGui::Text("Encoded Packet Size %u", m_recorderDebug.encodedPacketSize);
+
+                if (m_soundRecorder.isActive())
+                {
+                    ImGui::Text("Encoder Error ID: %d", m_recorderDebug.packetErrorID);
+                }
+            }
+            else
+            {
+                ImGui::Text("No output device");
+            }
+        }
+        else
+        {
+            ImGui::Text("Odin Inactive");
+        }
+        ImGui::End();
+    }
 }

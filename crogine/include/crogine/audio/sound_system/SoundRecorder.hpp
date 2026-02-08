@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -138,6 +138,16 @@ namespace cro
         */
         const std::int16_t* getPCMData(std::int32_t* count) const;
 
+        /*!
+        \brief Returns a pointer to the raw captured PCM data (if any)
+        in floating point format. Should not be mixed with getPCMData()!
+        \param count A pointer to an int32_t which is filled with the
+        number of *samples* in the buffer. (Note the total size is
+        samples * channel count)
+        TODO as this currently just returns the capture buffer pre-conversion
+        it is *always* stereo regardless of how the SoundRecorder was configured
+        */
+        //const float* getFloatingPointData(std::int32_t* count) const;
 
         /*!
         \brief Returns the number of audio channels with which the audio

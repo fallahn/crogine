@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -34,6 +34,7 @@ source distribution.
 #include "moonphase/MoonPhase.hpp"
 #include <crogine/graphics/VideoPlayer.hpp>
 #include <crogine/audio/sound_system/MusicPlayer.hpp>
+#include <crogine/audio/sound_system/SoundRecorder.hpp>
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -102,5 +103,17 @@ namespace sp
         cro::SimpleQuad m_moonQuad;
         cro::Shader m_moonShader;
         void moonPhase();
+
+
+        struct RecorderDebug final
+        {
+            std::int32_t captureAvailable = 0;
+            std::uint32_t encodedPacketSize = 0;
+
+            std::int32_t packetErrorID = 0;
+            std::int32_t decoderErrorID = 0;
+        }m_recorderDebug;
+        cro::SoundRecorder m_soundRecorder;
+        void odinWindow();
     };
 }
