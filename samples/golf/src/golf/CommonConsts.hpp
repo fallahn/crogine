@@ -143,3 +143,14 @@ struct BallPreview final
     std::int32_t type = 0;
     std::int32_t infoIndex = -1;
 };
+
+struct ClubData final
+{
+    std::string name;
+    std::string thumbnail;
+    cro::FloatRect uv = {};
+    std::uint32_t uid = 0;
+    std::int32_t manufacturer = -1;
+    bool userItem = false;
+    bool locked = false;
+};

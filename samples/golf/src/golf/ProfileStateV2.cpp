@@ -122,6 +122,8 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_ballIndex         (0),
     m_lockedBallCount   (0),
     m_particleIndex     (0),
+    m_lockedClubCount   (0),
+    m_clubIndex         (0),
     m_uiTexture         (nullptr)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -655,8 +657,7 @@ bool ProfileStateV2::simulate(float dt)
 
 void ProfileStateV2::render()
 {
-    //TODO select camera based on tab
-    m_previewTexture.clear(cro::Colour::Transparent);
+    m_previewTexture.clear(CD32::Colours[CD32::BlueLight]);
     m_previewScene.render();
     m_previewTexture.display();
 
@@ -781,6 +782,8 @@ void ProfileStateV2::loadAssets()
     //even if the item sprite itself is set to nothing (therefore the image is hidden)
     m_tabBar.items[TabID::Body].sprite.setTexture(m_previewTexture.getTexture());
     m_tabBar.items[TabID::Headwear].sprite.setTexture(m_previewTexture.getTexture());
+
+    loadClubData();
 }
 
 void ProfileStateV2::buildScene()
@@ -1043,6 +1046,46 @@ void ProfileStateV2::buildScene()
         };
     m_detailsPane.background.getComponent<cro::UIElement>().depth = -0.3f;
     m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.background.getComponent<cro::Transform>());
+
+
+    //displays the selected club set on the equipment tab
+    if (!m_clubData.empty())
+    {
+        static constexpr std::int32_t Cols = 5;
+        std::int32_t rows = ((m_clubData.size() - 1) / Cols) + 1;
+
+        cro::Texture tempTexture;
+        cro::SimpleQuad tempQuad;
+
+        tempTexture.loadFromFile(m_clubData[0].thumbnail);
+        tempQuad.setTexture(tempTexture);
+        m_clubTexture.create(Cols * tempTexture.getSize().x, rows * tempTexture.getSize().y, false);
+        m_clubTexture.setSmooth(false);
+        m_clubData[0].uv = { glm::vec2(0.f), glm::vec2(tempTexture.getSize()) };
+
+        m_clubTexture.clear(CD32::Colours[CD32::BlueLight]);
+        tempQuad.draw();
+        for (auto i = 1u; i < m_clubData.size(); ++i)
+        {
+            const float x = std::floor((i % Cols) * tempTexture.getSize().x);
+            const float y = std::floor((i / Cols) * tempTexture.getSize().y);
+
+            tempTexture.loadFromFile(m_clubData[i].thumbnail);
+            tempQuad.setTexture(tempTexture);
+            tempQuad.setPosition({x,y});
+            tempQuad.draw();
+
+            m_clubData[i].uv = { glm::vec2(x,y), glm::vec2(tempTexture.getSize()) };
+        }
+        m_clubTexture.display();
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.05f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>(m_clubTexture.getTexture());
+        m_detailsPane.image.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_detailsPane.clubsetImage = entity;
+    }
 
 
     //displays an Apply icon if an item requests it
@@ -1320,6 +1363,12 @@ void ProfileStateV2::buildScene()
                 };
             const auto idx = m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().getAnimationIndex("idle_standing");
             m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().play(idx);
+
+            //hide club preview
+            if (m_detailsPane.clubsetImage.isValid())
+            {
+                m_detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
         };
     m_tabBar.items[TabID::Headwear].selected =
         [&]()
@@ -1352,6 +1401,12 @@ void ProfileStateV2::buildScene()
                 };
             m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().stop();
             m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().gotoFrame(0);
+
+            //hide club preview
+            if (m_detailsPane.clubsetImage.isValid())
+            {
+                m_detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
         };
     m_tabBar.items[TabID::Equipment].selected =
         [&]()
@@ -1363,6 +1418,37 @@ void ProfileStateV2::buildScene()
 
             m_previewCameras[PreviewCamera::Ball].getComponent<cro::Camera>().active = true;
             m_previewScene.setActiveCamera(m_previewCameras[PreviewCamera::Ball]);
+
+            if (m_detailsPane.clubsetImage.isValid())
+            {
+                m_detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            }
+        };
+    m_tabBar.items[TabID::Loadout].selected =
+        [&]()
+        {
+            for (auto c : m_previewCameras)
+            {
+                c.getComponent<cro::Camera>().active = false;
+            }
+
+            if (m_detailsPane.clubsetImage.isValid())
+            {
+                m_detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+    m_tabBar.items[TabID::Details].selected =
+        [&]()
+        {
+            for (auto c : m_previewCameras)
+            {
+                c.getComponent<cro::Camera>().active = false;
+            }
+
+            if (m_detailsPane.clubsetImage.isValid())
+            {
+                m_detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
         };
 }
 
@@ -1375,6 +1461,9 @@ void ProfileStateV2::buildPreviewScene()
     m_previewScene.addSystem<cro::ModelRenderer>(mb);
     m_previewScene.addSystem<cro::ParticleSystem>(mb);
 
+    m_previewScene.enableSkybox();
+    m_previewScene.setCubemap("assets/golf/images/skybox/dusk/sky.ccm");
+
     loadAvatarPreviews();
     loadAvatarTextures();
     loadHairModels();
@@ -1384,10 +1473,8 @@ void ProfileStateV2::buildPreviewScene()
         [&](cro::Camera& cam)
         {
             const auto vpSize = glm::vec2(m_previewTexture.getSize());
-            cam.setPerspective(70.f * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.01f, 10.f);
+            cam.setPerspective(70.f * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.01f, 25.f);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-
-            //TODO we might have a split view for clubs/balls so this will be camera specific
         };
     auto camEnt = m_previewScene.getActiveCamera();
     camEnt.getComponent<cro::Transform>().setPosition(CamPosAvatar);
@@ -1404,15 +1491,23 @@ void ProfileStateV2::buildPreviewScene()
 
 
 
-    //TODO this needs its own callback with narrower FOV and split screen
+    //this needs its own callback with narrower FOV and split screen
     //for club thumbnails
+    const auto resize2 =
+        [&](cro::Camera& cam)
+        {
+            const auto vpSize = glm::vec2(m_previewTexture.getSize());
+            cam.setPerspective(60.f * cro::Util::Const::degToRad, (vpSize.x / 2.f) / vpSize.y, 0.01f, 10.f);
+            cam.viewport = { 0.5f, 0.f, 0.5f, 1.f };
+        };
+
     camEnt = m_previewScene.createEntity();
-    camEnt.addComponent<cro::Transform>().setPosition({ BallPos.x, 0.03f, -0.05f });
+    camEnt.addComponent<cro::Transform>().setPosition({ BallPos.x, 0.03f, -0.1f });
     camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.05f);
     auto& ballCam = camEnt.addComponent<cro::Camera>();
-    ballCam.resizeCallback = resize;
-    resize(ballCam);
+    ballCam.resizeCallback = resize2;
+    resize2(ballCam);
     m_previewCameras[PreviewCamera::Ball] = camEnt;
 
 
@@ -1715,9 +1810,55 @@ void ProfileStateV2::createEquipmentItems()
     item->displayType = Menu::Item::Heading;
     item->description = "Choose how your equipment appears";
 
+
+    //clubs
+    item = &m_menuLayout.items[TabID::Equipment].emplace_back();
+    item->title = "Club Set Appearance";
+    item->displayType = Menu::Item::Slider;
+    item->activated =
+        [&](Menu::Item& i)
+        {
+            setClubIndex(i.selectedIndex);
+            //setClubIndex() may have adjusted thit ti account for locked clubs
+            i.selectedIndex = m_clubIndex;
+
+            i.description = i.labels[i.selectedIndex] + "/" + std::to_string(m_clubData.size() - m_lockedClubCount);
+            if (!m_clubData[i.selectedIndex].name.empty())
+            {
+                i.description += " " + m_clubData[i.selectedIndex].name;
+            }
+
+            m_detailsPane.text.getComponent<cro::Text>().setString(i.description);
+            //TODO could add if this is an unlock/workshop model here
+            //m_clubData[i.selectedIndex].type == 1; //1 unlock 2 workshop
+        };
+
+    //see skipping locked items, below
+    std::int32_t j = 1;
+    for (auto i = 0u; i < m_clubData.size(); ++i)
+    {
+        if (m_clubData[i].locked)
+        {
+            item->labels.push_back("Locked");
+        }
+        else
+        {
+            item->labels.push_back(std::to_string(j++));
+        }
+    }
+    item->selectedIndex = indexFromClubID(m_activeProfile.playerData.clubID);
+    item->description = item->labels[item->selectedIndex] + "/" + std::to_string(m_clubData.size() - m_lockedClubCount);
+    if (!m_clubData[item->selectedIndex].name.empty())
+    {
+        item->description += " " + m_clubData[item->selectedIndex].name;
+    }
+    setClubIndex(item->selectedIndex);
+
+
+
     //TODO we can't preview locked balls now there are no thumbnails :/
 
-    //model selection
+    //ball model selection
     item = &m_menuLayout.items[TabID::Equipment].emplace_back();
     item->title = "Ball Appearance";
     item->displayType = Menu::Item::Slider;
@@ -1729,7 +1870,7 @@ void ProfileStateV2::createEquipmentItems()
             //setBallIndex() may skip locked balls so we need to re-sync...
             i.selectedIndex = m_ballIndex;
 
-            i.description = i.labels[i.selectedIndex];// +"/" + std::to_string(m_ballModels.size() - m_lockedBallCount);
+            i.description = i.labels[i.selectedIndex] + "/" + std::to_string(m_ballModels.size() - m_lockedBallCount);
             if (!m_sharedData.ballInfo[i.selectedIndex].label.empty())
             {
                 i.description += " " + m_sharedData.ballInfo[i.selectedIndex].label;
@@ -1742,7 +1883,7 @@ void ProfileStateV2::createEquipmentItems()
     
     //to hide locked balls we'll use a separate counter
     //then skip locked items in setBallIndex()
-    std::int32_t j = 1;
+    j = 1;
     for (auto i = 0u; i < m_ballModels.size(); ++i)
     {
         if (m_sharedData.ballInfo[i].locked)
@@ -1751,11 +1892,11 @@ void ProfileStateV2::createEquipmentItems()
         }
         else
         {
-            item->labels.push_back(std::to_string(j++));// +"/" + std::to_string(m_ballModels.size() - m_lockedBallCount));
+            item->labels.push_back(std::to_string(j++));
         }
     }
     item->selectedIndex = indexFromBallID(m_activeProfile.playerData.ballID);
-    item->description = item->labels[item->selectedIndex];// +"/" + std::to_string(m_ballModels.size() - m_lockedBallCount);
+    item->description = item->labels[item->selectedIndex] + "/" + std::to_string(m_ballModels.size() - m_lockedBallCount);
     if (!m_sharedData.ballInfo[item->selectedIndex].label.empty())
     {
         item->description += " " + m_sharedData.ballInfo[item->selectedIndex].label;
@@ -1766,7 +1907,7 @@ void ProfileStateV2::createEquipmentItems()
     item = &m_menuLayout.items[TabID::Equipment].emplace_back();
     item->title = "Ball Tint";
     item->displayType = Menu::Item::Slider;
-    item->description = "Choose a colour";
+    item->description = "Choose ball colour";
     item->activated =
         [&](Menu::Item& i)
         {
@@ -1783,10 +1924,10 @@ void ProfileStateV2::createEquipmentItems()
         };
 
     //front is white/no colour
-    item->labels.push_back("1/" + std::to_string(pc::Palette.size() +1));
+    item->labels.push_back("1");
     for (auto i = 0u; i < pc::PairCounts[0]; ++i)
     {
-        item->labels.push_back(std::to_string(i + 2));// +"/" + std::to_string(pc::Palette.size() + 1));
+        item->labels.push_back(std::to_string(i + 2));
     }
 
     item->selectedIndex = m_activeProfile.playerData.ballColourIndex < pc::Palette.size() ? m_activeProfile.playerData.ballColourIndex + 1 : 0;
@@ -1795,9 +1936,7 @@ void ProfileStateV2::createEquipmentItems()
     item->texture = &m_colourPreview;
     item->uv = { 0.f, 0.f, 1.f, 1.f };
     
-    
-    
-    //TODO club model - need to set up camera callback
+
 #ifdef USE_GNS
     //workshop button if steam
     LogI << FILE_LINE << " implement me" << std::endl;
@@ -2285,6 +2424,18 @@ void ProfileStateV2::resizeItemGraphics()
             auto& cam = camEnt.getComponent<cro::Camera>();
             cam.resizeCallback(cam);
         }
+    }
+
+    //reposition club sprite
+    if (m_detailsPane.clubsetImage.isValid())
+    {
+        //m_detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
+        const glm::vec2 thumbSize = { m_clubData[0].uv.width /** viewScale*/, m_clubData[0].uv.height/* * viewScale*/ };
+        const glm::vec2 bgSize = m_previewTexture.getSize();
+        glm::vec2 pos = { ((bgSize.x / 2.f) - thumbSize.x) / 2.f, (bgSize.y - thumbSize.y) / 2.f };
+        pos.x = std::floor(pos.x);
+        pos.y = std::floor(pos.y);
+        m_detailsPane.clubsetImage.getComponent<cro::Transform>().setPosition(pos);
     }
 }
 
@@ -2962,6 +3113,141 @@ void ProfileStateV2::loadBallModels()
     m_ballModels[0].ball.getComponent<cro::Model>().setHidden(false);
 }
 
+void ProfileStateV2::loadClubData()
+{
+    const auto processClubPath =
+        [&](const std::string& path, bool isUser)
+        {
+            ClubData data;
+            data.userItem = isUser;
+
+            bool hasModels = true;
+
+            const auto files = cro::FileSystem::listFiles(path);
+            for (const auto& f : files)
+            {
+                if (f == "list.cst")
+                {
+                    cro::ConfigFile cfg;
+                    if (cfg.loadFromFile(path + "/" + f))
+                    {
+                        const auto& props = cfg.getProperties();
+                        for (const auto& p : props)
+                        {
+                            const auto& name = p.getName();
+                            if (name == "name")
+                            {
+                                data.name = p.getValue<std::string>();
+                            }
+                            else if (name == "uid")
+                            {
+                                data.uid = p.getValue<std::uint32_t>();
+                            }
+                            else if (name == "man")
+                            {
+                                data.manufacturer = std::clamp(p.getValue<std::int32_t>(), 0, std::int32_t(inv::ManufID::BeyTree));
+                                data.locked =
+                                    data.manufacturer != -1
+                                    && (m_sharedData.inventory.manufacturerFlags & (1 << data.manufacturer)) == 0;
+
+                                if (data.locked)
+                                {
+                                    m_lockedClubCount++;
+                                }
+                            }
+                        }
+
+                        //make sure some models are listed and exist
+                        if (const auto* models = cfg.findObjectWithName("models");
+                            models == nullptr)
+                        {
+                            LogE << "No models were listed in " << path + "/" + f;
+                            hasModels = false;
+                        }
+                        else
+                        {
+                            for (const auto& p : models->getProperties())
+                            {
+                                if (p.getName() == "path")
+                                {
+                                    if (!cro::FileSystem::fileExists(path + "/" + p.getValue<std::string>()))
+                                    {
+                                        LogE << path << " lists model files, but they were not found on disk" << std::endl;
+                                        hasModels = false;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (f == "thumb.png")
+                {
+                    data.thumbnail = path + "/" + f;
+                }
+            }
+
+            if (!data.name.empty()
+                && !data.thumbnail.empty()
+                && hasModels)
+            {
+                //make sure this ID doesn't already exist!!
+                if (std::find_if(m_clubData.begin(), m_clubData.end(), [&data](const ClubData& cd) { return cd.uid == data.uid; }) == m_clubData.end())
+                {
+                    m_clubData.push_back(data);
+                }
+                else
+                {
+                    LogW << "Multiple club sets with UID " << data.uid << " were found." << std::endl;
+                }
+            }
+            else
+            {
+                LogW << path << ": clubset skipped, invalid file data" << std::endl;
+            }
+        };
+
+    const auto ContentDirs = Content::getInstallPaths();
+    for (const auto& c : ContentDirs)
+    {
+        const auto basePath = cro::FileSystem::getResourcePath() + c + "clubs/";
+        const auto clubsets = cro::FileSystem::listDirectories(basePath);
+
+        for (const auto& s : clubsets)
+        {
+            processClubPath(basePath + s, false);
+        }
+    }
+
+    //make sure the default set is first, if it's found
+    if (auto res = std::find_if(m_clubData.begin(), m_clubData.end(),
+        [](const ClubData& cd)
+        {
+            return cd.name.find("Default") != std::string::npos;
+        }); res != m_clubData.end() && m_clubData.size() > 1)
+    {
+        std::swap(m_clubData[0], m_clubData[std::distance(m_clubData.begin(), res)]);
+    }
+
+    //workshop clubs
+    const auto basePath = Content::getUserContentPath(Content::UserContent::Clubs);
+    auto clubsets = cro::FileSystem::listDirectories(basePath);
+
+    //remove dirs from this list if it's not from the workshop (rather crudely)
+    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::string& s) {return s.back() != 'w'; }), clubsets.end());
+
+    if (clubsets.size() > ConstVal::MaxClubsets)
+    {
+        clubsets.resize(ConstVal::MaxClubsets);
+        LogW << "Installed clubsets have been truncated to the maximum 64!" << std::endl;
+    }
+
+    for (const auto& s : clubsets)
+    {
+        processClubPath(basePath + s, true);
+    }
+}
+
 std::size_t ProfileStateV2::indexFromAvatarID(std::uint32_t skinID) const
 {
     const auto& avatarInfo = m_sharedData.avatarInfo;
@@ -2998,6 +3284,16 @@ std::size_t ProfileStateV2::indexFromBallID(std::uint32_t ballID) const
         return std::distance(ballInfo.cbegin(), result);
     }
 
+    return 0;
+}
+
+std::size_t ProfileStateV2::indexFromClubID(std::uint32_t uid) const
+{
+    if (auto result = std::find_if(m_clubData.cbegin(), m_clubData.cend(),
+        [uid](const ClubData& cd) {return cd.uid == uid; }); result != m_clubData.cend())
+    {
+        return std::distance(m_clubData.cbegin(), result);
+    }
     return 0;
 }
 
@@ -3184,6 +3480,33 @@ void ProfileStateV2::setBallIndex(std::size_t idx)
     m_ballParticles[m_particleIndex].getComponent<cro::ParticleEmitter>().start();
 
     m_activeProfile.playerData.ballID = m_sharedData.ballInfo[m_ballIndex].uid;
+}
+
+void ProfileStateV2::setClubIndex(std::size_t idx)
+{
+    if (idx > m_clubIndex)
+    {
+        while (m_clubData[idx].locked)
+        {
+            idx = (idx+1) % m_clubData.size();
+        }
+    }
+    else if (idx < m_clubIndex)
+    {
+        while (m_clubData[idx].locked)
+        {
+            idx = (idx + (m_clubData.size() - 1)) % m_clubData.size();
+        }
+    }
+
+    //update the thumbnail preview
+    if (m_detailsPane.clubsetImage.isValid())
+    {
+        m_detailsPane.clubsetImage.getComponent<cro::Sprite>().setTextureRect(m_clubData[idx].uv);
+    }
+
+    m_clubIndex = idx;
+    m_activeProfile.playerData.clubID = m_clubData[idx].uid;
 }
 
 void ProfileStateV2::applyHeadwearTransform(std::size_t idx, std::size_t indexOffset)

@@ -988,7 +988,7 @@ void ProfileState::loadResources()
                             }
                             else if (name == "man")
                             {
-                                data.man = std::clamp(p.getValue<std::int32_t>(), 0, std::int32_t(inv::ManufID::BeyTree));
+                                data.manufacturer = std::clamp(p.getValue<std::int32_t>(), 0, std::int32_t(inv::ManufID::BeyTree));
                             }
                         }
 
@@ -1056,7 +1056,7 @@ void ProfileState::loadResources()
 
     //make sure the default set is first, if it's found
     if (auto res = std::find_if(m_clubData.begin(), m_clubData.end(),
-        [](const ProfileState::ClubData& cd)
+        [](const ClubData& cd)
         {
             return cd.name.find("Default") != std::string::npos;
         }); res != m_clubData.end() && m_clubData.size() > 1)
@@ -5234,8 +5234,8 @@ void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& 
                 {
                     const auto idx = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
 
-                    if (m_clubData[idx].man == -1
-                        || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[idx].man)) != 0)
+                    if (m_clubData[idx].manufacturer == -1
+                        || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[idx].manufacturer)) != 0)
                     {
                         //apply selection
                         m_activeProfile.playerData.clubID = m_clubData[idx].uid;
@@ -5270,7 +5270,7 @@ void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& 
                 m_pageContexts[PaginationID::Clubs].pageList[i].highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
 
                 const auto itemIndex = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
-                const bool locked = !(m_clubData[itemIndex].man == -1 || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[itemIndex].man)) != 0);
+                const bool locked = !(m_clubData[itemIndex].manufacturer == -1 || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[itemIndex].manufacturer)) != 0);
                 
                 auto& tc = m_pageContexts[PaginationID::Clubs].pageHandles.itemLabel.getComponent<cro::Text>();
 
@@ -5817,7 +5817,7 @@ void ProfileState::activatePage(std::int32_t itemID, std::size_t page, bool forc
                 }
                 else
                 {
-                    locked = !(m_clubData[itemIndex].man == -1 || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[itemIndex].man)) != 0);
+                    locked = !(m_clubData[itemIndex].manufacturer == -1 || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[itemIndex].manufacturer)) != 0);
                 }
                 const cro::Colour c = locked ? cro::Colour::DarkGrey : cro::Colour::White;
 

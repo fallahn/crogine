@@ -93,6 +93,11 @@ private:
     std::array<cro::Entity, 3u> m_ballParticles = {};
     std::size_t m_particleIndex;
 
+    std::vector<ClubData> m_clubData;
+    std::size_t m_lockedClubCount;
+    cro::RenderTexture m_clubTexture;
+    std::size_t m_clubIndex;
+
     void loadAssets();
     void buildScene();
 
@@ -220,6 +225,7 @@ private:
         cro::Entity image;
         cro::Entity background;
         cro::Entity applyButton;
+        cro::Entity clubsetImage;
 
         //track this so we can resize items which appear within it
         //NOTE that is *without* the view scaling
@@ -247,16 +253,19 @@ private:
     void loadAvatarTextures();
     void loadHairModels();
     void loadBallModels();
+    void loadClubData();
 
     std::size_t indexFromAvatarID(std::uint32_t skinID) const;
     std::size_t indexFromHairID(std::uint32_t hairID) const;
     std::size_t indexFromBallID(std::uint32_t) const;
+    std::size_t indexFromClubID(std::uint32_t) const;
 
     //note this sets the m_avatarIndex member value too!!
     void setAvatarIndex(std::size_t idx);
     void setHairIndex(std::size_t idx);
     void setHatIndex(std::size_t idx);
     void setBallIndex(std::size_t);
+    void setClubIndex(std::size_t);
 
     void applyHeadwearTransform(std::size_t idx, std::size_t indexOffset);
 };
