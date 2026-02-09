@@ -82,21 +82,21 @@ private:
 
     cro::RenderTexture m_previewTexture;
     cro::ResourceCollection m_resources;
-    std::size_t m_avatarIndex;
-    std::size_t m_lockedAvatarCount;
+    std::int32_t m_avatarIndex;
+    std::int32_t m_lockedAvatarCount;
     std::vector<AvatarPreview> m_avatarModels;
     std::vector<ProfileTexture> m_profileTextures;
     std::vector<cro::Entity> m_avatarHairModels;
     std::vector<BallPreview> m_ballModels;
-    std::size_t m_ballIndex;
-    std::size_t m_lockedBallCount;
+    std::int32_t m_ballIndex;
+    std::int32_t m_lockedBallCount;
     std::array<cro::Entity, 3u> m_ballParticles = {};
     std::size_t m_particleIndex;
 
     std::vector<ClubData> m_clubData;
-    std::size_t m_lockedClubCount;
+    std::int32_t m_lockedClubCount;
     cro::RenderTexture m_clubTexture;
-    std::size_t m_clubIndex;
+    std::int32_t m_clubIndex;
 
     void loadAssets();
     void buildScene();
@@ -255,17 +255,17 @@ private:
     void loadBallModels();
     void loadClubData();
 
-    std::size_t indexFromAvatarID(std::uint32_t skinID) const;
-    std::size_t indexFromHairID(std::uint32_t hairID) const;
-    std::size_t indexFromBallID(std::uint32_t) const;
-    std::size_t indexFromClubID(std::uint32_t) const;
+    std::int32_t indexFromAvatarID(std::uint32_t skinID) const;
+    std::int32_t indexFromHairID(std::uint32_t hairID) const;
+    std::int32_t indexFromBallID(std::uint32_t) const;
+    std::int32_t indexFromClubID(std::uint32_t) const;
 
     //note this sets the m_avatarIndex member value too!!
-    void setAvatarIndex(std::size_t idx);
-    void setHairIndex(std::size_t idx);
-    void setHatIndex(std::size_t idx);
-    void setBallIndex(std::size_t);
-    void setClubIndex(std::size_t);
+    void setAvatarIndex(std::int32_t idx);
+    void setHairIndex(std::int32_t idx);
+    void setHatIndex(std::int32_t idx);
+    void setBallIndex(std::int32_t);
+    void setClubIndex(std::int32_t);
 
     void applyHeadwearTransform(std::size_t idx, std::size_t indexOffset);
 };

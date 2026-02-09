@@ -1052,7 +1052,7 @@ void ProfileStateV2::buildScene()
     if (!m_clubData.empty())
     {
         static constexpr std::int32_t Cols = 5;
-        std::int32_t rows = ((m_clubData.size() - 1) / Cols) + 1;
+        std::int32_t rows = (static_cast<std::int32_t>(m_clubData.size() - 1) / Cols) + 1;
 
         cro::Texture tempTexture;
         cro::SimpleQuad tempQuad;
@@ -1067,8 +1067,8 @@ void ProfileStateV2::buildScene()
         tempQuad.draw();
         for (auto i = 1u; i < m_clubData.size(); ++i)
         {
-            const float x = std::floor((i % Cols) * tempTexture.getSize().x);
-            const float y = std::floor((i / Cols) * tempTexture.getSize().y);
+            const float x = static_cast<float>(std::floor((i % Cols) * tempTexture.getSize().x));
+            const float y = static_cast<float>(std::floor((i / Cols) * tempTexture.getSize().y));
 
             tempTexture.loadFromFile(m_clubData[i].thumbnail);
             tempQuad.setTexture(tempTexture);
@@ -2579,7 +2579,7 @@ void ProfileStateV2::updateMenuItems()
             switch (item.displayType)
             {
             case Menu::Item::Slider:
-                updateSliderGraphic(item.selectedIndex, item.labels.size() - 1);
+                updateSliderGraphic(item.selectedIndex, static_cast<std::int32_t>(item.labels.size() - 1));
                 m_itemSlider.setPosition({ std::floor(renderSize.x / 2.f), pos.y - 22.f/*std::floor(LineSpacing * 1.7f)*/ });
                 m_itemSlider.draw();
                 [[fallthrough]];
@@ -3248,31 +3248,31 @@ void ProfileStateV2::loadClubData()
     }
 }
 
-std::size_t ProfileStateV2::indexFromAvatarID(std::uint32_t skinID) const
+std::int32_t ProfileStateV2::indexFromAvatarID(std::uint32_t skinID) const
 {
     const auto& avatarInfo = m_sharedData.avatarInfo;
 
     if (auto result = std::find_if(avatarInfo.cbegin(), avatarInfo.cend(),
         [skinID](const SharedStateData::AvatarInfo& a) {return a.uid == skinID; }); result != avatarInfo.cend())
     {
-        return std::distance(avatarInfo.cbegin(), result);
+        return static_cast<std::int32_t>(std::distance(avatarInfo.cbegin(), result));
     }
 
     return 0;
 }
 
-std::size_t ProfileStateV2::indexFromHairID(std::uint32_t hairID) const
+std::int32_t ProfileStateV2::indexFromHairID(std::uint32_t hairID) const
 {
     const auto& hairInfo = m_sharedData.hairInfo;
     if (auto result = std::find_if(hairInfo.cbegin(), hairInfo.cend(),
         [hairID](const SharedStateData::HairInfo& hi) {return hi.uid == hairID; }); result != hairInfo.end())
     {
-        return std::distance(hairInfo.begin(), result);
+        return static_cast<std::int32_t>(std::distance(hairInfo.begin(), result));
     }
     return 0;
 }
 
-std::size_t ProfileStateV2::indexFromBallID(std::uint32_t ballID) const
+std::int32_t ProfileStateV2::indexFromBallID(std::uint32_t ballID) const
 {
     const auto& ballInfo = m_sharedData.ballInfo;
     if (auto result = std::find_if(ballInfo.cbegin(), ballInfo.cend(),
@@ -3281,23 +3281,23 @@ std::size_t ProfileStateV2::indexFromBallID(std::uint32_t ballID) const
             return b.uid == ballID;
         }); result != ballInfo.cend())
     {
-        return std::distance(ballInfo.cbegin(), result);
+        return static_cast<std::int32_t>(std::distance(ballInfo.cbegin(), result));
     }
 
     return 0;
 }
 
-std::size_t ProfileStateV2::indexFromClubID(std::uint32_t uid) const
+std::int32_t ProfileStateV2::indexFromClubID(std::uint32_t uid) const
 {
     if (auto result = std::find_if(m_clubData.cbegin(), m_clubData.cend(),
         [uid](const ClubData& cd) {return cd.uid == uid; }); result != m_clubData.cend())
     {
-        return std::distance(m_clubData.cbegin(), result);
+        return static_cast<std::int32_t>(std::distance(m_clubData.cbegin(), result));
     }
     return 0;
 }
 
-void ProfileStateV2::setAvatarIndex(std::size_t idx)
+void ProfileStateV2::setAvatarIndex(std::int32_t idx)
 {
     auto hairIdx = m_avatarModels[m_avatarIndex].hairIndex;
     auto hatIdx = m_avatarModels[m_avatarIndex].hatIndex;
@@ -3321,7 +3321,7 @@ void ProfileStateV2::setAvatarIndex(std::size_t idx)
         while (!m_avatarModels[idx].previewModel.isValid()
             && idx != m_avatarIndex)
         {
-            idx = (idx + (m_avatarModels.size() - 1)) % m_avatarModels.size();
+            idx = static_cast<std::int32_t>((idx + (m_avatarModels.size() - 1)) % m_avatarModels.size());
         }
     }
     else
@@ -3377,7 +3377,7 @@ void ProfileStateV2::setAvatarIndex(std::size_t idx)
     }
 }
 
-void ProfileStateV2::setHairIndex(std::size_t idx)
+void ProfileStateV2::setHairIndex(std::int32_t idx)
 {
     //don't set the same as the hat
     if (idx == m_avatarModels[m_avatarIndex].hatIndex)
@@ -3412,7 +3412,7 @@ void ProfileStateV2::setHairIndex(std::size_t idx)
     //m_headwearPreviewRects[HeadwearID::Hair] = getThumbnailTextureRect(hairIndex);
 }
 
-void ProfileStateV2::setHatIndex(std::size_t idx)
+void ProfileStateV2::setHatIndex(std::int32_t idx)
 {
     //don't set the same as hair
     if (idx == m_avatarModels[m_avatarIndex].hairIndex)
@@ -3448,7 +3448,7 @@ void ProfileStateV2::setHatIndex(std::size_t idx)
     //m_headwearPreviewRects[HeadwearID::Hat] = getThumbnailTextureRect(hatIndex);
 }
 
-void ProfileStateV2::setBallIndex(std::size_t idx)
+void ProfileStateV2::setBallIndex(std::int32_t idx)
 {
     CRO_ASSERT(idx < m_ballModels.size(), "");
 
@@ -3467,7 +3467,7 @@ void ProfileStateV2::setBallIndex(std::size_t idx)
     {
         while (m_sharedData.ballInfo[idx].locked)
         {
-            idx = (idx +( m_ballModels.size() -1)) % m_ballModels.size();
+            idx = static_cast<std::int32_t>((idx +( m_ballModels.size() -1)) % m_ballModels.size());
         }
     }
 
@@ -3482,7 +3482,7 @@ void ProfileStateV2::setBallIndex(std::size_t idx)
     m_activeProfile.playerData.ballID = m_sharedData.ballInfo[m_ballIndex].uid;
 }
 
-void ProfileStateV2::setClubIndex(std::size_t idx)
+void ProfileStateV2::setClubIndex(std::int32_t idx)
 {
     if (idx > m_clubIndex)
     {
@@ -3495,7 +3495,7 @@ void ProfileStateV2::setClubIndex(std::size_t idx)
     {
         while (m_clubData[idx].locked)
         {
-            idx = (idx + (m_clubData.size() - 1)) % m_clubData.size();
+            idx = static_cast<std::int32_t>((idx + (m_clubData.size() - 1)) % m_clubData.size());
         }
     }
 
