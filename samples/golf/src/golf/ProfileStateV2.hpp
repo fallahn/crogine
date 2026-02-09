@@ -89,6 +89,7 @@ private:
     std::vector<cro::Entity> m_avatarHairModels;
     std::vector<BallPreview> m_ballModels;
     std::size_t m_ballIndex;
+    std::size_t m_lockedBallCount;
     std::array<cro::Entity, 3u> m_ballParticles = {};
     std::size_t m_particleIndex;
 

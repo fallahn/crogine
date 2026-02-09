@@ -120,6 +120,7 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_avatarIndex       (0),
     m_lockedAvatarCount (0),
     m_ballIndex         (0),
+    m_lockedBallCount   (0),
     m_particleIndex     (0),
     m_uiTexture         (nullptr)
 {
@@ -1432,6 +1433,7 @@ void ProfileStateV2::createBodyItems()
     //avatar
     item = &m_menuLayout.items[TabID::Body].emplace_back();
     item->title = "Body Type";
+    item->displayType = Menu::Item::Slider;
     item->activated =
         [&](Menu::Item& i)
         {
@@ -1505,6 +1507,7 @@ void ProfileStateV2::createHeadwearItems()
             //model selection
             item = &m_menuLayout.items[TabID::Headwear].emplace_back();
             item->title = "Appearance";
+            item->displayType = Menu::Item::Slider;
             item->activated =
                 [&, keyIndex](Menu::Item& i)
                 {
@@ -1625,6 +1628,7 @@ void ProfileStateV2::createHeadwearItems()
                     item = &m_menuLayout.items[TabID::Headwear].emplace_back();
                     item->title = LabelA[i] + LabelB[j];
                     item->displayType = Menu::Item::Slider;
+                    item->description = "Adjust the " + LabelA[i] + " " + LabelB[j] + " axis";
 
                     for (auto k = 0; k < (SelectionCount * 2) + 1; ++k)
                     {
@@ -1653,10 +1657,12 @@ void ProfileStateV2::createHeadwearItems()
                             }
                         };
                 }
+
                 //reset
                 auto resetIndex = m_menuLayout.items[TabID::Headwear].size();
                 item = &m_menuLayout.items[TabID::Headwear].emplace_back();
-                item->title = LabelA[i];
+                item->title = "Reset " + LabelA[i];
+                item->description = "Resets the " + LabelA[i] + " to its default value";
                 item->labels.push_back("Reset");
                 item->activated =
                     [&,resetIndex,i,offset](Menu::Item& item)
@@ -1714,13 +1720,17 @@ void ProfileStateV2::createEquipmentItems()
     //model selection
     item = &m_menuLayout.items[TabID::Equipment].emplace_back();
     item->title = "Ball Appearance";
+    item->displayType = Menu::Item::Slider;
     item->activated =
         [&](Menu::Item& i)
         {
             setBallIndex(i.selectedIndex);
 
-            i.description = i.labels[i.selectedIndex] + "/" + std::to_string(m_ballModels.size());
-            if (!m_sharedData.hairInfo[i.selectedIndex].label.empty())
+            //setBallIndex() may skip locked balls so we need to re-sync...
+            i.selectedIndex = m_ballIndex;
+
+            i.description = i.labels[i.selectedIndex];// +"/" + std::to_string(m_ballModels.size() - m_lockedBallCount);
+            if (!m_sharedData.ballInfo[i.selectedIndex].label.empty())
             {
                 i.description += " " + m_sharedData.ballInfo[i.selectedIndex].label;
             }
@@ -1728,18 +1738,24 @@ void ProfileStateV2::createEquipmentItems()
             m_detailsPane.text.getComponent<cro::Text>().setString(i.description);
             //TODO could add if this is an unlock/workshop model here
             //m_sharedData.ballInfo[i.selectedIndex].type == 1; //1 unlock 2 workshop
-
-            if (m_sharedData.ballInfo[i.selectedIndex].locked)
-            {
-                LogI << "Locked ball!" << std::endl;
-            }
         };
+    
+    //to hide locked balls we'll use a separate counter
+    //then skip locked items in setBallIndex()
+    std::int32_t j = 1;
     for (auto i = 0u; i < m_ballModels.size(); ++i)
     {
-        item->labels.push_back(std::to_string(i + 1));
+        if (m_sharedData.ballInfo[i].locked)
+        {
+            item->labels.push_back("Locked");
+        }
+        else
+        {
+            item->labels.push_back(std::to_string(j++));// +"/" + std::to_string(m_ballModels.size() - m_lockedBallCount));
+        }
     }
     item->selectedIndex = indexFromBallID(m_activeProfile.playerData.ballID);
-    item->description = item->labels[item->selectedIndex] + "/" + std::to_string(m_ballModels.size());
+    item->description = item->labels[item->selectedIndex];// +"/" + std::to_string(m_ballModels.size() - m_lockedBallCount);
     if (!m_sharedData.ballInfo[item->selectedIndex].label.empty())
     {
         item->description += " " + m_sharedData.ballInfo[item->selectedIndex].label;
@@ -1749,6 +1765,7 @@ void ProfileStateV2::createEquipmentItems()
     //colour property
     item = &m_menuLayout.items[TabID::Equipment].emplace_back();
     item->title = "Ball Tint";
+    item->displayType = Menu::Item::Slider;
     item->description = "Choose a colour";
     item->activated =
         [&](Menu::Item& i)
@@ -1766,10 +1783,10 @@ void ProfileStateV2::createEquipmentItems()
         };
 
     //front is white/no colour
-    item->labels.push_back("1");
+    item->labels.push_back("1/" + std::to_string(pc::Palette.size() +1));
     for (auto i = 0u; i < pc::PairCounts[0]; ++i)
     {
-        item->labels.push_back(std::to_string(i + 2));
+        item->labels.push_back(std::to_string(i + 2));// +"/" + std::to_string(pc::Palette.size() + 1));
     }
 
     item->selectedIndex = m_activeProfile.playerData.ballColourIndex < pc::Palette.size() ? m_activeProfile.playerData.ballColourIndex + 1 : 0;
@@ -2896,49 +2913,50 @@ void ProfileStateV2::loadBallModels()
     std::int32_t c = 0;
     for (auto& ballDef : m_profileData.ballDefs)
     {
-        //if (!m_sharedData.ballInfo[c].locked)
+        if (m_sharedData.ballInfo[c].locked)
         {
-            auto entity = m_previewScene.createEntity();
-            entity.addComponent<cro::Transform>();
-            ballDef.createModel(entity);
-            entity.getComponent<cro::Model>().setHidden(true);
-            if (ballDef.hasSkeleton())
+            m_lockedBallCount++;
+        }
+        auto entity = m_previewScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        ballDef.createModel(entity);
+        entity.getComponent<cro::Model>().setHidden(true);
+        if (ballDef.hasSkeleton())
+        {
+            entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ballSkinned);
+            entity.getComponent<cro::Skeleton>().play(0);
+        }
+        else
+        {
+            if (ballDef.getMaterial(0)->properties.count("u_normalMap"))
             {
-                entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ballSkinned);
-                entity.getComponent<cro::Skeleton>().play(0);
+                auto mat = m_profileData.profileMaterials.ballBumped;
+                applyMaterialData(ballDef, mat);
+                entity.getComponent<cro::Model>().setMaterial(0, mat);
             }
             else
             {
-                if (ballDef.getMaterial(0)->properties.count("u_normalMap"))
-                {
-                    auto mat = m_profileData.profileMaterials.ballBumped;
-                    applyMaterialData(ballDef, mat);
-                    entity.getComponent<cro::Model>().setMaterial(0, mat);
-                }
-                else
-                {
-                    entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
-                }
+                entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
             }
-            entity.getComponent<cro::Model>().setMaterial(1, m_profileData.profileMaterials.ballReflection);
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().function =
-                [](cro::Entity e, float dt)
-                {
-                    e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
-                };
-
-            auto& preview = m_ballModels.emplace_back();
-            preview.ball = entity;
-            preview.type = m_sharedData.ballInfo[c].type;
-            preview.infoIndex = c;
-            preview.root = m_previewScene.createEntity();
-            preview.root.addComponent<cro::Transform>().setPosition(BallPos);
-            preview.root.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_sharedData.ballInfo[c].previewRotation);
-            preview.root.getComponent<cro::Transform>().addChild(preview.ball.getComponent<cro::Transform>());
-
-            ++c;
         }
+        entity.getComponent<cro::Model>().setMaterial(1, m_profileData.profileMaterials.ballReflection);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+            {
+                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+            };
+
+        auto& preview = m_ballModels.emplace_back();
+        preview.ball = entity;
+        preview.type = m_sharedData.ballInfo[c].type;
+        preview.infoIndex = c;
+        preview.root = m_previewScene.createEntity();
+        preview.root.addComponent<cro::Transform>().setPosition(BallPos);
+        preview.root.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_sharedData.ballInfo[c].previewRotation);
+        preview.root.getComponent<cro::Transform>().addChild(preview.ball.getComponent<cro::Transform>());
+
+        ++c;
     }
 
     m_ballModels[0].ball.getComponent<cro::Model>().setHidden(false);
@@ -3139,6 +3157,23 @@ void ProfileStateV2::setBallIndex(std::size_t idx)
     CRO_ASSERT(idx < m_ballModels.size(), "");
 
     m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
+
+    //skip over locked balls. This isn't ideal, we want to preview
+    //them without making them selectable...
+    if (idx > m_ballIndex)
+    {
+        while (m_sharedData.ballInfo[idx].locked)
+        {
+            idx = (idx + 1) % m_ballModels.size();
+        }
+    }
+    else if (idx < m_ballIndex)
+    {
+        while (m_sharedData.ballInfo[idx].locked)
+        {
+            idx = (idx +( m_ballModels.size() -1)) % m_ballModels.size();
+        }
+    }
 
     m_ballIndex = idx;
 
