@@ -295,18 +295,6 @@ const std::int16_t* SoundRecorder::getPCMData(std::int32_t* count) const
     return nullptr;
 }
 
-//const float* SoundRecorder::getFloatingPointData(std::int32_t* count) const
-//{
-//    if (m_recordingDevice
-//        && hasProcessedBuffer())
-//    {
-//        *count = m_processBuffer.size(); //TODO this needs to be set correctly, we're just assuming always stereo atm
-//        return m_processBuffer.data();
-//    }
-//    *count = 0;
-//    return nullptr;
-//}
-
 std::int32_t SoundRecorder::getChannelCount() const
 {
     return m_channelCount;

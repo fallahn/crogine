@@ -2428,7 +2428,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
 #ifdef USE_GNS
     //TODO should be automatically done when successfully inserting the leaderboard score
     if (m_sharedData.leagueRoundID == LeagueRoundID::Club
-        && m_sharedData.scoreType == ScoreType::Stroke)
+        && m_sharedData.scoreType == ScoreType::Stroke
+        && !m_sharedData.competitionLeague)
     {
         Social::incCompletionCount(m_sharedData.mapDirectory, m_sharedData.holeCount);
     }

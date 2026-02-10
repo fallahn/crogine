@@ -191,7 +191,8 @@ void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestStri
                     std::reverse(scoreData.begin(), scoreData.end());
                 }
 
-                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score, stableford, scoreData, m_achievementTracker.usedAssist);
+                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score, stableford, scoreData, 
+                    (m_achievementTracker.usedAssist && !m_sharedData.competitionLeague));
 
                 if (m_sharedData.competitionLeague)
                 {
