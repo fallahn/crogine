@@ -5893,10 +5893,10 @@ void ProfileState::refreshMugshot()
 {
     if (!m_activeProfile.playerData.mugshot.empty())
     {
-        auto& tex = m_sharedData.sharedResources->textures.get(m_activeProfile.playerData.mugshot);
+        const auto& tex = m_sharedData.sharedResources->textures.get(m_activeProfile.playerData.mugshot);
 
-        glm::vec2 texSize(tex.getSize());
-        glm::vec2 scale = glm::vec2(96.f, 48.f) / texSize;
+        const glm::vec2 texSize(tex.getSize());
+        const glm::vec2 scale = glm::vec2(96.f, 48.f) / texSize;
         m_menuEntities[EntityID::Mugshot].getComponent<cro::Transform>().setScale(scale);
         m_menuEntities[EntityID::Mugshot].getComponent<cro::Sprite>().setTexture(tex);
     }

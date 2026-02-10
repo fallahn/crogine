@@ -75,7 +75,10 @@ namespace
 #include "shaders/ProgressShader.inl"
     constexpr glm::vec3 BallPos = glm::vec3({ 10.f, 0.f, 0.f });
     constexpr glm::vec3 CamPosAvatar = glm::vec3({ 0.f, 1.f, -1.5f });
-    constexpr glm::vec3 CamPosHead = glm::vec3({ 0.f, 1.6f, -0.35f });
+    constexpr glm::vec3 CamPosHead = glm::vec3({ 0.f, 1.61f, -0.35f });
+    constexpr glm::vec3 MugCameraPosition = CamPosHead;
+
+    constexpr glm::uvec2 MugshotTexSize(192u, 96u);
 
     //static const cro::String XboxInfo = cro::String(ButtonX) + " Show Credits   " + cro::String(ButtonY) + " How To Play   " + cro::String(ButtonB) + " Close";
     //static const cro::String PSInfo = cro::String(ButtonSquare) + " Show Credits   " + cro::String(ButtonCross) + " How To Play   " + cro::String(ButtonCircle) + " Close";
@@ -84,7 +87,7 @@ namespace
     const std::array ItemLabels =
     {
         "Avatar", "Headwear",
-        "Equipment", "Loadouts", "Details"
+        "Equipment", "Loadout", "Biography"
     };
 
     constexpr auto BackgroundDark = cro::Colour(0xc8b89faf);
@@ -126,6 +129,7 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_clubIndex         (0),
     m_showNameInput     (false),
     m_voiceIndex        (0),
+    m_saveMugshotOnExit (false),
     m_uiTexture         (nullptr)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -511,7 +515,7 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
             entity.getComponent<cro::Callback>().function =
                 [&](cro::Entity e, float)
                 {
-                    m_tabBar.activeIndex = 0;
+                    m_menuLayout.itemIndex = 0;
                     focusToIndex(m_tabBar, m_menuLayout);
 
                     e.getComponent<cro::Callback>().active = false;
@@ -560,20 +564,12 @@ bool ProfileStateV2::simulate(float dt)
             }
             else if (m_exitFlags == ExitFlagSave)
             {
-                //copy av data back to proper data and write files                
-                m_profileData.playerProfiles[m_profileData.activeProfileIndex] = m_activeProfile;
-                m_profileData.playerProfiles[m_profileData.activeProfileIndex].playerData.saveProfile();
-
-                /*if (m_mugshotUpdated)
+                if (m_saveMugshotOnExit)
                 {
-                    auto path = Content::getUserContentPath(Content::UserContent::Profile) + m_activeProfile.playerData.profileID + "/mug.png";
+                    const auto path = Content::getUserContentPath(Content::UserContent::Profile) + m_activeProfile.playerData.profileID + "/mug.png";
                     m_mugshotTexture.getTexture().saveToFile(path);
-
                     m_activeProfile.playerData.mugshot = path;
-                    m_profileData.playerProfiles[m_profileData.activeProfileIndex].playerData.mugshot = path;
-                    m_profileData.playerProfiles[m_profileData.activeProfileIndex].playerData.saveProfile();
-
-                    m_mugshotUpdated = false;
+                    m_saveMugshotOnExit = false;
                 }
 
                 if (m_activeProfile.playerData.isSteamID
@@ -581,8 +577,11 @@ bool ProfileStateV2::simulate(float dt)
                 {
                     Social::setPlayerName(m_activeProfile.playerData.name);
                 }
-                */
-                LogI << FILE_LINE << " TODO" << std::endl;
+
+                //copy av data back to proper data and write files                
+                m_profileData.playerProfiles[m_profileData.activeProfileIndex] = m_activeProfile;
+                m_profileData.playerProfiles[m_profileData.activeProfileIndex].playerData.saveProfile();
+
                 quitState();
             }
             else
@@ -696,7 +695,7 @@ bool ProfileStateV2::simulate(float dt)
 
 void ProfileStateV2::render()
 {
-    m_previewTexture.clear(CD32::Colours[CD32::BlueLight]);
+    m_previewTexture.clear(CD32::Colours[m_tabBar.activeIndex == TabID::Details ? CD32::Brown : CD32::BlueLight]);
     m_previewScene.render();
     m_previewTexture.display();
 
@@ -706,6 +705,8 @@ void ProfileStateV2::render()
 //private
 void ProfileStateV2::loadAssets()
 {
+    m_mugshotTexture.create(MugshotTexSize.x, MugshotTexSize.y);
+
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     m_menuText.setFont(font);
     m_menuText.setCharacterSize(InfoTextSize);
@@ -1127,6 +1128,14 @@ void ProfileStateV2::buildScene()
         m_detailsPane.clubsetImage = entity;
     }
 
+    //displays the mugshot if available
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.05f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>();
+    m_detailsPane.image.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_detailsPane.mugshotImage = entity;
+
 
     //displays an Apply icon if an item requests it
     m_detailsPane.applyButton = m_scene.createEntity();
@@ -1409,6 +1418,9 @@ void ProfileStateV2::buildScene()
             {
                 m_detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
+
+            //hide mugshot
+            m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
     m_tabBar.items[TabID::Headwear].selected =
         [&]()
@@ -1447,6 +1459,9 @@ void ProfileStateV2::buildScene()
             {
                 m_detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
+
+            //hide mugshot
+            m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
     m_tabBar.items[TabID::Equipment].selected =
         [&]()
@@ -1463,6 +1478,9 @@ void ProfileStateV2::buildScene()
             {
                 m_detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }
+
+            //hide mugshot
+            m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
     m_tabBar.items[TabID::Loadout].selected =
         [&]()
@@ -1476,6 +1494,9 @@ void ProfileStateV2::buildScene()
             {
                 m_detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
+
+            //hide mugshot
+            m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
     m_tabBar.items[TabID::Details].selected =
         [&]()
@@ -1484,10 +1505,22 @@ void ProfileStateV2::buildScene()
             {
                 c.getComponent<cro::Camera>().active = false;
             }
+            m_previewCameras[PreviewCamera::MugShot].getComponent<cro::Camera>().active = true;
+            m_previewCameras[PreviewCamera::Biog].getComponent<cro::Camera>().active = true;
+            m_previewScene.setActiveCamera(m_previewCameras[PreviewCamera::Biog]);
+
+            const auto idx = m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().getAnimationIndex("idle_standing");
+            m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().play(idx);
 
             if (m_detailsPane.clubsetImage.isValid())
             {
                 m_detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+
+            //show the mughot if the profile currently has one
+            if (!m_activeProfile.playerData.mugshot.empty())
+            {
+                m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }
         };
 }
@@ -1530,7 +1563,6 @@ void ProfileStateV2::buildPreviewScene()
     m_previewCameras[PreviewCamera::Avatar] = camEnt;
 
 
-
     //this needs its own callback with narrower FOV and split screen
     //for club thumbnails
     const auto resize2 =
@@ -1549,6 +1581,37 @@ void ProfileStateV2::buildPreviewScene()
     ballCam.resizeCallback = resize2;
     resize2(ballCam);
     m_previewCameras[PreviewCamera::Ball] = camEnt;
+
+
+    const auto resize3 =
+        [&](cro::Camera& cam)
+        {
+            const auto vpSize = glm::vec2(m_previewTexture.getSize());
+            cam.setPerspective(70.f * cro::Util::Const::degToRad, (vpSize.x / 2.f) / vpSize.y, 0.01f, 25.f);
+            cam.viewport = { 0.f, 0.f, 0.5f, 1.f };
+        };
+    camEnt = m_previewScene.createEntity();
+    camEnt.addComponent<cro::Transform>().setPosition(CamPosAvatar);
+    camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.05f);
+
+    auto& bioCam = camEnt.addComponent<cro::Camera>();
+    bioCam.resizeCallback = resize3;
+    resize3(bioCam);
+    m_previewCameras[PreviewCamera::Biog] = camEnt;
+
+
+
+    //doesn't use a callback because the mugshot texture doesn't resize
+    camEnt = m_previewScene.createEntity();
+    camEnt.addComponent<cro::Transform>().setPosition(MugCameraPosition);
+    camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.057f);
+    auto& cam2 = camEnt.addComponent<cro::Camera>();
+    cam2.setPerspective(60.f * cro::Util::Const::degToRad, 1.f, 0.1f, 6.f);
+    cam2.viewport = { 0.f, 0.f, 0.5f, 1.f };
+    //cam2.setRenderFlags(cro::Camera::Pass::Final, ~(1 << 1));
+    m_previewCameras[PreviewCamera::MugShot] = camEnt;
 
 
     auto lightEnt = m_previewScene.getSunlight();
@@ -2051,14 +2114,34 @@ void ProfileStateV2::createDetailItems()
     item->labels.push_back(m_activeProfile.playerData.name);
     item->description = "Choose a profile name";
 
-    //description
+    //TODO description
     //hmmm is this something we really want to bother editing?
+
+
+    //load the current mugshot image if available
+    if (!m_activeProfile.playerData.mugshot.empty())
+    {
+        const auto& tex = m_sharedData.sharedResources->textures.get(m_activeProfile.playerData.mugshot);
+
+        //const glm::vec2 texSize(tex.getSize());
+        //const glm::vec2 scale = glm::vec2(96.f, 48.f) / texSize;
+        m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        m_detailsPane.mugshotImage.getComponent<cro::Sprite>().setTexture(tex);
+    }
+    else
+    {
+        m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    }
+
 
     //update mugshot
     item = &m_menuLayout.items[TabID::Details].emplace_back();
     item->title = "Mugshot";
     item->activated =
-        [&](Menu::Item& i) {};
+        [&](Menu::Item& i)
+        {
+            updateMugshot();
+        };
     item->labels.push_back("Update");
     item->description = "Update the player icon displayed for this profile.";
 
@@ -2066,7 +2149,10 @@ void ProfileStateV2::createDetailItems()
     item = &m_menuLayout.items[TabID::Details].emplace_back();
     item->title = "Mugshot";
     item->activated =
-        [&](Menu::Item& i) {};
+        [&](Menu::Item& i)
+        {
+            clearMugshot();
+        };
     item->labels.push_back("Remove");
 #ifdef USE_GNS
     item->description = "Remove the player icon displayed for this profile. Defaults to you Steam avatar icon.";
@@ -2570,21 +2656,32 @@ void ProfileStateV2::resizeItemGraphics()
         if (camEnt.isValid())
         {
             auto& cam = camEnt.getComponent<cro::Camera>();
-            cam.resizeCallback(cam);
+            //mugshot cam doesn't have one of these
+            if (cam.resizeCallback)
+            {
+                cam.resizeCallback(cam);
+            }
         }
     }
 
     //reposition club sprite
+    const glm::vec2 bgSize = m_previewTexture.getSize();
     if (m_detailsPane.clubsetImage.isValid())
     {
         //m_detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
         const glm::vec2 thumbSize = { m_clubData[0].uv.width /** viewScale*/, m_clubData[0].uv.height/* * viewScale*/ };
-        const glm::vec2 bgSize = m_previewTexture.getSize();
         glm::vec2 pos = { ((bgSize.x / 2.f) - thumbSize.x) / 2.f, (bgSize.y - thumbSize.y) / 2.f };
         pos.x = std::floor(pos.x);
         pos.y = std::floor(pos.y);
         m_detailsPane.clubsetImage.getComponent<cro::Transform>().setPosition(pos);
     }
+
+    //and mugshot
+    const glm::vec2 texSize = { MugshotTexSize.x, MugshotTexSize.y };
+    glm::vec2 pos = { (((bgSize.x / 2.f) - texSize.x) / 2.f) + (bgSize.x / 2.f), (bgSize.y - texSize.y) - 6.f };
+    pos.x = std::floor(pos.x);
+    pos.y = std::floor(pos.y);
+    m_detailsPane.mugshotImage.getComponent<cro::Transform>().setPosition(pos);
 }
 
 void ProfileStateV2::updateSliderGraphic(std::int32_t amt, std::int32_t total)
@@ -3853,4 +3950,61 @@ void ProfileStateV2::playPreviewAudio()
 
         playCount++;
     }
+}
+
+void ProfileStateV2::updateMugshot()
+{
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().stop();
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().gotoFrame(0);
+
+    m_mugshotTexture.clear({ 0xa9c0afff });
+    auto camEnt = m_previewCameras[PreviewCamera::MugShot];
+    auto& cam = camEnt.getComponent<cro::Camera>();
+    cam.viewport = { 0.f, 0.f, 0.5f, 1.f };
+    camEnt.getComponent<cro::Transform>().setPosition(MugCameraPosition);
+    camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+    camEnt.getComponent<cro::Camera>().updateMatrices(camEnt.getComponent<cro::Transform>());
+    auto oldCam = m_previewScene.setActiveCamera(camEnt);
+    m_previewScene.simulate(0.f); //updates all the camera/model matrices
+    m_previewScene.render();
+
+    cam.viewport = { 0.5f, 0.f, 0.5f, 1.f };
+    camEnt.getComponent<cro::Transform>().setPosition(MugCameraPosition + glm::vec3(-MugCameraPosition.z /*+ 0.05f*/, 0.f, -MugCameraPosition.z));
+    camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f);
+    camEnt.getComponent<cro::Camera>().updateMatrices(camEnt.getComponent<cro::Transform>());
+    m_previewScene.simulate(0.f);
+    m_previewScene.render();
+
+    m_mugshotTexture.display();
+    m_previewScene.setActiveCamera(oldCam);
+
+    m_saveMugshotOnExit = true;
+
+    const auto idx = m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().getAnimationIndex("idle_standing");
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().play(idx);
+    m_detailsPane.mugshotImage.getComponent<cro::Sprite>().setTexture(m_mugshotTexture.getTexture());
+    m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
+}
+
+void ProfileStateV2::clearMugshot()
+{
+    const auto path = Content::getUserContentPath(Content::UserContent::Profile) + m_activeProfile.playerData.profileID + "/mug.png";
+    if (cro::FileSystem::fileExists(path))
+    {
+        std::error_code ec;
+        std::filesystem::remove(path, ec);
+
+        if (ec)
+        {
+            LogE << "Unable to remove mugshot file: " << ec.message() << std::endl;
+        }
+    }
+
+    m_activeProfile.playerData.mugshot.clear();
+    m_profileData.playerProfiles[m_profileData.activeProfileIndex].playerData.mugshot.clear();
+
+    m_saveMugshotOnExit = false;
+
+    //hide any preview sprite
+    m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 }

@@ -105,6 +105,9 @@ private:
     std::vector<cro::AudioScape> m_voices;
     std::int32_t m_voiceIndex;
 
+    bool m_saveMugshotOnExit;
+    cro::RenderTexture m_mugshotTexture;
+
     void loadAssets();
     void buildScene();
 
@@ -113,6 +116,7 @@ private:
         enum
         {
             Avatar, Ball, //Club, //clubs have thumbnails on disk
+            MugShot, Biog,
             Count
         };
     };
@@ -233,6 +237,7 @@ private:
         cro::Entity background;
         cro::Entity applyButton;
         cro::Entity clubsetImage;
+        cro::Entity mugshotImage;
 
         //track this so we can resize items which appear within it
         //NOTE that is *without* the view scaling
@@ -279,4 +284,6 @@ private:
     void nameInputWindow();
     void applyNameString();
     void playPreviewAudio();
+    void updateMugshot();
+    void clearMugshot();
 };
