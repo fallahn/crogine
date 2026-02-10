@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -521,7 +521,7 @@ void EditTournamentState::buildScene()
                     if (/*cro::GameController::getControllerCount() != 0*/evt.type == SDL_CONTROLLERBUTTONDOWN)
                     {
 #ifdef USE_GNS
-                        if (Social::isSteamdeck())
+                        if (Social::isSteamdeck(true))
                         {
                             //OSK
                             const auto cb =
@@ -529,15 +529,15 @@ void EditTournamentState::buildScene()
                                 {
                                     if (submitted)
                                     {
-                                        auto str = cro::String::fromUtf8(buffer, buffer + std::strlen(buffer));
+                                        const auto str = cro::String::fromUtf8(buffer, buffer + std::strlen(buffer));
                                         m_tournamentNameEntity.getComponent<cro::Text>().setString(str);
                                         m_tournamentInfo.setTitle(str);
                                     }
                                 };
 
                             //this only shows the overlay as Steam takes care of dismissing it
-                            const auto utf = m_tournamentInfo.getTitle().toUtf8();
-                            Social::showTextInput(cb, "Tournament Name", ConstVal::MaxStringChars * 2, reinterpret_cast<const char*>(utf.data()));
+                            const auto utf = m_tournamentInfo.getTitle().toUtf8Char();
+                            Social::showTextInput(cb, "Tournament Name", ConstVal::MaxStringChars * 2, utf.data());
                         }
                         else
 #endif
@@ -552,11 +552,7 @@ void EditTournamentState::buildScene()
                     {
                         //show ImGuiWindow
                         cro::App::getWindow().setMouseCaptured(false);
-                        const auto utf = m_tournamentNameEntity.getComponent<cro::Text>().getString().toUtf8();
-                        //baahhhhhhhh
-                        m_imguiBuffer.resize(utf.size());
-                        std::memcpy(m_imguiBuffer.data(), utf.data(), utf.size());
-
+                        m_imguiBuffer = m_tournamentNameEntity.getComponent<cro::Text>().getString().toUtf8Char();
                         m_showImguiInput = true;
                     }
                 }

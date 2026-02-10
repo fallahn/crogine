@@ -124,6 +124,7 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_particleIndex     (0),
     m_lockedClubCount   (0),
     m_clubIndex         (0),
+    m_showNameInput     (false),
     m_uiTexture         (nullptr)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -133,6 +134,8 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     m_tabBar.items.resize(TabID::Count);
     m_menuLayout.items.resize(TabID::Count);
+
+    registerWindow(std::bind(&ProfileStateV2::nameInputWindow, this));
 
     loadAssets();
     buildPreviewScene(); //make sure models are loaded first so menu creation can read the data
@@ -144,7 +147,8 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
 {
     if (ImGui::GetIO().WantCaptureKeyboard
         || ImGui::GetIO().WantCaptureMouse
-        || m_rootNode.getComponent<cro::Callback>().active)
+        || m_rootNode.getComponent<cro::Callback>().active
+        || m_showNameInput)
     {
         return false;
     }
@@ -499,8 +503,42 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
             //hack to force the texture to resize properly
             m_menuLayout.texture.create(1, 1, false);
             refreshView();
+
+            //realigns the current menu to the new screen size
+            cro::Entity entity = m_scene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float)
+                {
+                    m_tabBar.activeIndex = 0;
+                    focusToIndex(m_tabBar, m_menuLayout);
+
+                    e.getComponent<cro::Callback>().active = false;
+                    m_scene.destroyEntity(e);
+                };
         }
     }
+    else if (msg.id == cl::MessageID::SystemMessage)
+    {
+        const auto& data = msg.getData<SystemEvent>();
+        if (data.type == SystemEvent::CancelOSK)
+        {
+            m_sharedData.useOSKBuffer = false;
+            //m_showOSK = false;
+        }
+        else if (data.type == SystemEvent::SubmitOSK)
+        {
+            m_sharedData.useOSKBuffer = false;
+            //m_showOSK = false;
+
+            if (!m_sharedData.OSKBuffer.empty())
+            {
+                m_activeProfile.playerData.name = m_sharedData.OSKBuffer;
+                applyNameString();
+            }
+        }
+    }
+
     m_previewScene.forwardMessage(msg);
     m_scene.forwardMessage(msg);
 }
@@ -1964,14 +2002,62 @@ void ProfileStateV2::createDetailItems()
     auto* item = &m_menuLayout.items[TabID::Details].emplace_back();
     item->title = "Profile Details";
     item->displayType = Menu::Item::Heading;
-    //item->description = "Choose headwear model 01";
 
-    //name
+    //name - sigh applyNameString() has this index hardcoded...
+    item = &m_menuLayout.items[TabID::Details].emplace_back();
+    item->title = "Profile Name";
+    item->activated = 
+        [&](Menu::Item& i)
+        {
+            if (m_sharedData.activeInput != SharedStateData::ActiveInput::Keyboard)
+            {
+#ifdef USE_GNS
+                if (Social::isSteamdeck(true))
+                {
+                    //OSK
+                    const auto cb =
+                        [&](bool submitted, const char* buffer)
+                        {
+                            if (submitted)
+                            {
+                                m_activeProfile.playerData.name = cro::String::fromUtf8(buffer, buffer + std::strlen(buffer));
+                                applyNameString();
+                            }
+                        };
+
+                    //this only shows the overlay as Steam takes care of dismissing it
+                    const auto utf = m_activeProfile.playerData.name.toUtf8Char();
+                    Social::showTextInput(cb, "Profile Name", ConstVal::MaxStringChars * 2, utf.data());
+                }
+                else
+#endif
+                {
+                    //m_showOSK = true; // hmm this is used to block input, but OSK state shouldn't be forwarding it?
+                    m_sharedData.useOSKBuffer = true;
+                    m_sharedData.OSKBuffer = m_activeProfile.playerData.name;
+                    requestStackPush(StateID::Keyboard);
+                }
+            }
+            else
+            {
+                //show ImGuiWindow
+                cro::App::getWindow().setMouseCaptured(false);
+                m_nameBuffer = m_activeProfile.playerData.name.toUtf8Char();
+                m_showNameInput = true;
+            }
+        };
+    item->labels.push_back(m_activeProfile.playerData.name);
+    item->description = "Choose a profile name";
+
     //description
-    //mugshot
+    //update mugshot
+    //remove mugshot
     //voice
 
+#ifdef USE_GNS
     //workshop button if steam
+    LogI << FILE_LINE << " implement this" << std::endl;
+#endif
 }
 
 void ProfileStateV2::onCachedPush()
@@ -3520,4 +3606,57 @@ void ProfileStateV2::applyHeadwearTransform(std::size_t idx, std::size_t indexOf
         m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
         m_avatarHairModels[idx].getComponent<cro::Transform>().setScale(m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairScale + indexOffset]);
     }
+}
+
+void ProfileStateV2::nameInputWindow()
+{
+    if (m_showNameInput)
+    {
+        const float viewScale = getViewScale();
+
+        const auto size = glm::vec2(cro::App::getWindow().getSize());
+        const glm::vec2 WindowSize = glm::vec2(200.f, 80.f) * viewScale;
+        const auto WindowPos = (size - WindowSize) / 2.f;
+
+        ImGui::SetNextWindowSize({ WindowSize.x, WindowSize.y });
+        ImGui::SetNextWindowPos({ WindowPos.x, WindowPos.y });
+
+        ImGui::GetFont()->Scale *= viewScale;
+        ImGui::PushFont(ImGui::GetFont());
+
+        ImGui::Begin("Profile Name", &m_showNameInput, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+        ImGui::SetNextItemWidth(-1.f);
+        if (ImGui::InputText("##input", &m_nameBuffer))
+        {
+            static constexpr std::size_t MaxChars = ConstVal::MaxStringChars;
+            if (m_nameBuffer.length() > MaxChars)
+            {
+                m_nameBuffer = m_nameBuffer.substr(0, MaxChars);
+            }
+        }
+        if (ImGui::Button("OK", { (WindowSize.x / 2.f) - 12.f, 0.f }))
+        {
+            m_activeProfile.playerData.name = cro::String::fromUtf8(m_nameBuffer.begin(), m_nameBuffer.end());
+            applyNameString();
+
+            m_nameBuffer.clear();
+            m_showNameInput = false;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", { -1.f, 0.f }))
+        {
+            m_nameBuffer.clear();
+            m_showNameInput = false;
+        }
+        ImGui::End();
+
+        ImGui::GetFont()->Scale = 1.f;
+        ImGui::PopFont();
+    }
+}
+
+void ProfileStateV2::applyNameString()
+{
+    m_menuLayout.items[TabID::Details][1].labels[0] = m_activeProfile.playerData.name;
+    updateMenuItems(); //redraw the new name label
 }

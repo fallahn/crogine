@@ -445,6 +445,7 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
 
     m_scene.forwardEvent(evt);
     return true;
+    //return false; //hmm this should always consume events, no?
 }
 
 void KeyboardState::handleMessage(const cro::Message& msg)

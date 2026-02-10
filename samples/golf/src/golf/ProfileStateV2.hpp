@@ -36,6 +36,7 @@ source distribution.
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
+#include <crogine/gui/GuiClient.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -47,7 +48,7 @@ source distribution.
 
 struct SharedStateData;
 
-class ProfileStateV2 final : public cro::State
+class ProfileStateV2 final : public cro::State, public cro::GuiClient
 {
 public:
     ProfileStateV2(cro::StateStack&, cro::State::Context, SharedStateData&, SharedProfileData&);
@@ -97,6 +98,9 @@ private:
     std::int32_t m_lockedClubCount;
     cro::RenderTexture m_clubTexture;
     std::int32_t m_clubIndex;
+
+    std::string m_nameBuffer;
+    bool m_showNameInput;
 
     void loadAssets();
     void buildScene();
@@ -268,4 +272,6 @@ private:
     void setClubIndex(std::int32_t);
 
     void applyHeadwearTransform(std::size_t idx, std::size_t indexOffset);
+    void nameInputWindow();
+    void applyNameString();
 };
