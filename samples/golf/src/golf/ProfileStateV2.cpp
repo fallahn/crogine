@@ -125,6 +125,7 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_lockedClubCount   (0),
     m_clubIndex         (0),
     m_showNameInput     (false),
+    m_voiceIndex        (0),
     m_uiTexture         (nullptr)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -822,6 +823,7 @@ void ProfileStateV2::loadAssets()
     m_tabBar.items[TabID::Headwear].sprite.setTexture(m_previewTexture.getTexture());
 
     loadClubData();
+    loadVoiceData();
 }
 
 void ProfileStateV2::buildScene()
@@ -2050,9 +2052,69 @@ void ProfileStateV2::createDetailItems()
     item->description = "Choose a profile name";
 
     //description
+    //hmmm is this something we really want to bother editing?
+
     //update mugshot
+    item = &m_menuLayout.items[TabID::Details].emplace_back();
+    item->title = "Mugshot";
+    item->activated =
+        [&](Menu::Item& i) {};
+    item->labels.push_back("Update");
+    item->description = "Update the player icon displayed for this profile.";
+
     //remove mugshot
-    //voice
+    item = &m_menuLayout.items[TabID::Details].emplace_back();
+    item->title = "Mugshot";
+    item->activated =
+        [&](Menu::Item& i) {};
+    item->labels.push_back("Remove");
+#ifdef USE_GNS
+    item->description = "Remove the player icon displayed for this profile. Defaults to you Steam avatar icon.";
+#else
+    item->description = "Remove the player icon displayed for this profile.";
+#endif
+
+    //voice type
+    if (const auto v = std::find_if(m_voices.begin(), m_voices.end(),
+        [&](const cro::AudioScape& as) {return as.getUID() == m_activeProfile.playerData.voiceID; });
+        v != m_voices.end())
+    {
+        m_voiceIndex = static_cast<std::int32_t>(std::distance(m_voices.begin(), v));
+    };
+
+    item = &m_menuLayout.items[TabID::Details].emplace_back();
+    item->title = "Voice Type";
+    item->activated =
+        [&](Menu::Item& i)
+        {
+            m_voiceIndex = i.selectedIndex;
+            m_activeProfile.playerData.voiceID = m_voices[m_voiceIndex].getUID();
+            playPreviewAudio();
+
+            i.description = "Voice: " + m_voices[m_voiceIndex].getName();
+            m_detailsPane.text.getComponent<cro::Text>().setString(i.description);
+        };
+    item->selectedIndex = m_voiceIndex;
+    item->description = "Voice: " + m_voices[m_voiceIndex].getName();
+    for (auto i = 0u; i < m_voices.size(); ++i)
+    {
+        item->labels.push_back(std::to_string(i + 1));
+    }
+    item->displayType = Menu::Item::Slider;
+
+    //voice pitch
+    item = &m_menuLayout.items[TabID::Details].emplace_back();
+    item->title = "Voice Pitch";
+    item->activated =
+        [&](Menu::Item& i)
+        {
+            m_activeProfile.playerData.voicePitch = static_cast<std::int8_t>(i.selectedIndex - 2);
+            playPreviewAudio();
+        };
+    item->selectedIndex = m_activeProfile.playerData.voicePitch + 2;
+    item->labels = { "-2", "-1", "Default", "+1", "+2" };
+    item->displayType = Menu::Item::Slider;
+
 
 #ifdef USE_GNS
     //workshop button if steam
@@ -3334,6 +3396,94 @@ void ProfileStateV2::loadClubData()
     }
 }
 
+void ProfileStateV2::loadVoiceData()
+{
+    //parse all the available audioscapes
+    const std::array EmitterNames =
+    {
+        std::string("bunker"),
+        std::string("fairway"),
+        std::string("green"),
+        std::string("celebrate"),
+        std::string("hook"),
+        std::string("rough"),
+        std::string("scrub"),
+        std::string("slice"),
+        std::string("water")
+    };
+
+    std::vector<std::string> paths;
+    const auto ContentDirs = Content::getInstallPaths();
+
+    for (const auto& c : ContentDirs)
+    {
+        std::string basePath = "sound/avatars/";
+        const auto files = cro::FileSystem::listFiles(c + basePath);
+        for (const auto& f : files)
+        {
+            if (cro::FileSystem::getFileExtension(f) == ".xas")
+            {
+                paths.push_back(c + basePath + f);
+            }
+        }
+    }
+
+
+    //we can't always gaurantee paths are read in the same order across
+    //different OS so let's sort them to be sure
+    std::sort(paths.begin(), paths.end());
+    const auto next = paths.size();
+
+    const auto basePath = Content::getUserContentPath(Content::UserContent::Voice);
+    const auto dirs = cro::FileSystem::listDirectories(basePath);
+    for (const auto& dir : dirs)
+    {
+        const auto files = cro::FileSystem::listFiles(basePath + dir);
+        for (const auto& f : files)
+        {
+            if (cro::FileSystem::getFileExtension(f) == ".xas")
+            {
+                paths.push_back(basePath + dir + "/" + f);
+            }
+        }
+    }
+
+    if (next < paths.size())
+    {
+        //more were added
+        std::sort(paths.begin() + next, paths.end());
+    }
+
+    for (const auto& path : paths)
+    {
+        cro::AudioScape as;
+        as.loadFromFile(path, m_resources.audio);
+
+        bool allEmitters = true;
+        for (const auto& emitter : EmitterNames)
+        {
+            if (!as.hasEmitter(emitter))
+            {
+                allEmitters = false;
+                LogW << "Skipping " << as.getName() << ", missing emitter " << emitter << std::endl;
+                break;
+            }
+        }
+
+        if (as.getUID() != 0
+            && allEmitters)
+        {
+            m_voices.push_back(as);
+        }
+    }
+
+    if (m_voices.empty())
+    {
+        //possibly because no audio hardware was found
+        m_voices.emplace_back();
+    }
+}
+
 std::int32_t ProfileStateV2::indexFromAvatarID(std::uint32_t skinID) const
 {
     const auto& avatarInfo = m_sharedData.avatarInfo;
@@ -3659,4 +3809,48 @@ void ProfileStateV2::applyNameString()
 {
     m_menuLayout.items[TabID::Details][1].labels[0] = m_activeProfile.playerData.name;
     updateMenuItems(); //redraw the new name label
+}
+
+void ProfileStateV2::playPreviewAudio()
+{
+    //I'll leave this here as an I told you so
+    //for when you come back to fix using a static var.
+    static std::size_t playCount = 0;
+
+    static std::size_t emitterIndex = 0;
+    static const std::array<std::string, 8> EmitterNames =
+    {
+        std::string("celebrate"),
+        "slice",
+        "hook",
+        "green",
+        "bunker",
+        "fairway",
+        "scrub",
+        "water"
+    };
+
+    if (playCount < 4)
+    {
+        emitterIndex = (emitterIndex + 1) % EmitterNames.size();
+
+        auto e = m_scene.createEntity();
+        e.addComponent<cro::Transform>();
+        e.addComponent<cro::AudioEmitter>() = m_voices[m_voiceIndex].getEmitter(EmitterNames[emitterIndex]);
+        e.getComponent<cro::AudioEmitter>().setPitch(1.f + (static_cast<float>(m_activeProfile.playerData.voicePitch) / VoicePitchDivisor));
+        e.getComponent<cro::AudioEmitter>().play();
+        e.addComponent<cro::Callback>().active = true;
+        e.getComponent<cro::Callback>().function =
+            [&](cro::Entity f, float)
+            {
+                if (f.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                {
+                    f.getComponent<cro::Callback>().active = false;
+                    m_scene.destroyEntity(f);
+                    playCount--;
+                }
+            };
+
+        playCount++;
+    }
 }

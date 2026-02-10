@@ -102,6 +102,9 @@ private:
     std::string m_nameBuffer;
     bool m_showNameInput;
 
+    std::vector<cro::AudioScape> m_voices;
+    std::int32_t m_voiceIndex;
+
     void loadAssets();
     void buildScene();
 
@@ -258,6 +261,7 @@ private:
     void loadHairModels();
     void loadBallModels();
     void loadClubData();
+    void loadVoiceData();
 
     std::int32_t indexFromAvatarID(std::uint32_t skinID) const;
     std::int32_t indexFromHairID(std::uint32_t hairID) const;
@@ -274,4 +278,5 @@ private:
     void applyHeadwearTransform(std::size_t idx, std::size_t indexOffset);
     void nameInputWindow();
     void applyNameString();
+    void playPreviewAudio();
 };
