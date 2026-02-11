@@ -107,6 +107,7 @@ private:
 
     bool m_saveMugshotOnExit;
     cro::RenderTexture m_mugshotTexture;
+    cro::Shader m_mugshotShader;
 
     void loadAssets();
     void buildScene();

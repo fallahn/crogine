@@ -72,6 +72,7 @@ source distribution.
 
 namespace
 {
+#include "shaders/2DBorderShader.inl"
 #include "shaders/ProgressShader.inl"
     constexpr glm::vec3 BallPos = glm::vec3({ 10.f, 0.f, 0.f });
     constexpr glm::vec3 CamPosAvatar = glm::vec3({ 0.f, 1.f, -1.5f });
@@ -706,6 +707,8 @@ void ProfileStateV2::render()
 void ProfileStateV2::loadAssets()
 {
     m_mugshotTexture.create(MugshotTexSize.x, MugshotTexSize.y);
+    m_mugshotShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), BorderFrag, "#define TEXTURED\n");
+
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     m_menuText.setFont(font);
@@ -1131,8 +1134,22 @@ void ProfileStateV2::buildScene()
     //displays the mugshot if available
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.05f });
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setShader(&m_mugshotShader);
     entity.addComponent<cro::Sprite>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (m_tabBar.activeIndex == TabID::Details)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(e.getComponent<cro::Callback>().getUserData<float>()));
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
     m_detailsPane.image.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_detailsPane.mugshotImage = entity;
 
@@ -2669,19 +2686,29 @@ void ProfileStateV2::resizeItemGraphics()
     if (m_detailsPane.clubsetImage.isValid())
     {
         //m_detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
-        const glm::vec2 thumbSize = { m_clubData[0].uv.width /** viewScale*/, m_clubData[0].uv.height/* * viewScale*/ };
+        const glm::vec2 thumbSize = { m_clubData[0].uv.width /** viewScale*/, m_clubData[0].uv.height /** viewScale*/ };
         glm::vec2 pos = { ((bgSize.x / 2.f) - thumbSize.x) / 2.f, (bgSize.y - thumbSize.y) / 2.f };
         pos.x = std::floor(pos.x);
         pos.y = std::floor(pos.y);
         m_detailsPane.clubsetImage.getComponent<cro::Transform>().setPosition(pos);
+        m_detailsPane.clubsetImage.getComponent<cro::Drawable2D>().setCroppingArea({ std::abs(std::min(pos.x, 0.f)), std::abs(std::min(pos.y, 0.f)),
+                                                                                        bgSize.x / 2.f, bgSize.y });
     }
 
     //and mugshot
-    const glm::vec2 texSize = { MugshotTexSize.x, MugshotTexSize.y };
-    glm::vec2 pos = { (((bgSize.x / 2.f) - texSize.x) / 2.f) + (bgSize.x / 2.f), (bgSize.y - texSize.y) - 6.f };
+    const glm::vec2 texSize = glm::vec2(MugshotTexSize.x, MugshotTexSize.y) * viewScale;
+    glm::vec2 pos = { (((bgSize.x / 2.f) - texSize.x) / 2.f) + (bgSize.x / 2.f), (bgSize.y - texSize.y) };
     pos.x = std::floor(pos.x);
     pos.y = std::floor(pos.y);
     m_detailsPane.mugshotImage.getComponent<cro::Transform>().setPosition(pos);
+    m_detailsPane.mugshotImage.getComponent<cro::Callback>().setUserData<float>(viewScale);
+
+    cro::FloatRect crop = { glm::vec2(0.f), glm::vec2(MugshotTexSize) };
+    crop.left = std::abs(std::min(0.f, pos.x - (bgSize.x / 2.f))) * 2.f;
+    crop.width -= (crop.left * 2.f);
+
+    m_detailsPane.mugshotImage.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+    m_detailsPane.mugshotImage.getComponent<cro::Drawable2D>().bindUniform("u_croppingArea", glm::vec4(crop.left, crop.bottom, crop.width, crop.height));
 }
 
 void ProfileStateV2::updateSliderGraphic(std::int32_t amt, std::int32_t total)
@@ -3966,6 +3993,10 @@ void ProfileStateV2::updateMugshot()
     camEnt.getComponent<cro::Camera>().updateMatrices(camEnt.getComponent<cro::Transform>());
     auto oldCam = m_previewScene.setActiveCamera(camEnt);
     m_previewScene.simulate(0.f); //updates all the camera/model matrices
+    
+    //hack to set the background a solid colour by pointing at the sky
+    auto q = glm::rotate(cro::Transform::QUAT_IDENTITY, cro::Util::Const::PI / 2.f, cro::Transform::X_AXIS);
+    m_previewScene.setSkyboxOrientation(q);
     m_previewScene.render();
 
     cam.viewport = { 0.5f, 0.f, 0.5f, 1.f };
@@ -3973,7 +4004,11 @@ void ProfileStateV2::updateMugshot()
     camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f);
     camEnt.getComponent<cro::Camera>().updateMatrices(camEnt.getComponent<cro::Transform>());
     m_previewScene.simulate(0.f);
+    
+    q = glm::rotate(cro::Transform::QUAT_IDENTITY, cro::Util::Const::PI / 2.f, cro::Transform::Z_AXIS);
+    m_previewScene.setSkyboxOrientation(q);
     m_previewScene.render();
+    m_previewScene.setSkyboxOrientation(cro::Transform::QUAT_IDENTITY);
 
     m_mugshotTexture.display();
     m_previewScene.setActiveCamera(oldCam);
@@ -3983,7 +4018,7 @@ void ProfileStateV2::updateMugshot()
     const auto idx = m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().getAnimationIndex("idle_standing");
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().play(idx);
     m_detailsPane.mugshotImage.getComponent<cro::Sprite>().setTexture(m_mugshotTexture.getTexture());
-    m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
+    //m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
 }
 
 void ProfileStateV2::clearMugshot()
