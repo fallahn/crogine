@@ -239,6 +239,7 @@ private:
         cro::Entity applyButton;
         cro::Entity clubsetImage;
         cro::Entity mugshotImage;
+        cro::Entity bioString;
 
         //track this so we can resize items which appear within it
         //NOTE that is *without* the view scaling
@@ -287,4 +288,7 @@ private:
     void playPreviewAudio();
     void updateMugshot();
     void clearMugshot();
+    std::string generateRandomBio() const;
+    void refreshBio();
+    void setBioString(const std::string&);
 };

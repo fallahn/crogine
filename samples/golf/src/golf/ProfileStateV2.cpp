@@ -80,6 +80,7 @@ namespace
     constexpr glm::vec3 MugCameraPosition = CamPosHead;
 
     constexpr glm::uvec2 MugshotTexSize(192u, 96u);
+    constexpr std::size_t MaxBioChars = 512;
 
     //static const cro::String XboxInfo = cro::String(ButtonX) + " Show Credits   " + cro::String(ButtonY) + " How To Play   " + cro::String(ButtonB) + " Close";
     //static const cro::String PSInfo = cro::String(ButtonSquare) + " Show Credits   " + cro::String(ButtonCross) + " How To Play   " + cro::String(ButtonCircle) + " Close";
@@ -1060,7 +1061,7 @@ void ProfileStateV2::buildScene()
     m_detailsPane.text.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     m_detailsPane.text.getComponent<cro::Text>().setFillColour(TextNormalColour);
     m_detailsPane.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
-    m_detailsPane.text.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -82.f }; //90
+    m_detailsPane.text.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -98.f }; //90
     m_detailsPane.text.getComponent<cro::UIElement>().characterSize = UITextSize;
     m_detailsPane.text.getComponent<cro::UIElement>().verticalSpacing = 3.f;
     m_detailsPane.text.getComponent<cro::UIElement>().depth = 0.2f;
@@ -1144,6 +1145,8 @@ void ProfileStateV2::buildScene()
             if (m_tabBar.activeIndex == TabID::Details)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(e.getComponent<cro::Callback>().getUserData<float>()));
+                /*e.getComponent<cro::Drawable2D>().setFacing(m_activeProfile.playerData.mugshot.empty() 
+                    ? cro::Drawable2D::Facing::Back : cro::Drawable2D::Facing::Front);*/
             }
             else
             {
@@ -1152,6 +1155,14 @@ void ProfileStateV2::buildScene()
         };
     m_detailsPane.image.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_detailsPane.mugshotImage = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    m_detailsPane.mugshotImage.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_detailsPane.bioString = entity;
 
 
     //displays an Apply icon if an item requests it
@@ -2233,6 +2244,7 @@ void ProfileStateV2::onCachedPush()
     //we make a copy of this so we can cancel any modifications
     m_activeProfile = m_profileData.playerProfiles[m_profileData.activeProfileIndex];
     m_activeProfile.loadout.read(m_activeProfile.playerData.profileID);
+    refreshBio();
 
     //set any initial previews
     setAvatarIndex(indexFromAvatarID(m_activeProfile.playerData.skinID));
@@ -4040,6 +4052,105 @@ void ProfileStateV2::clearMugshot()
 
     m_saveMugshotOnExit = false;
 
-    //hide any preview sprite
-    m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_mugshotTexture.clear(cro::Colour::Transparent);
+    m_mugshotTexture.display();
+
+    //hide any preview sprite - this is done by the sprite callback now
+    //m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+}
+
+std::string ProfileStateV2::generateRandomBio() const
+{
+    switch (cro::Util::Random::value(0, 6))
+    {
+    default:
+    case 0:
+        return
+            u8"This former house-builder knows all about the benefits of elevation. If they play a good shot, you'll certainly be able to see their big beam and they'll hit the roof if they manage a hole in one! As a low-handicapper, tends to play off the builders tee, and enjoys ladder tournaments.";
+    case 1:
+        return
+            u8"A retired gardener this player knows a thing or two about lying in the rough. Don't underestimate them though - they could be considered the rake in the grass!";
+    case 2:
+        return
+            u8"Small feet mean nothing - not when you can handle your wood like this.";
+    case 3:
+        return
+            u8"Formerly a countryside resident this player moved to the city to experience the thrills of urban golf. Just don't sneak up on them when they're strumming the banjo.";
+    case 4:
+        return
+            u8"\"Good things come in small packages\" is this player's motto. Apparently they diet exclusively on fortune cookies.";
+    case 5:
+        return
+            u8"The clever use of turn signals got this player to where they are today.";
+    case 6:
+        return
+            u8"Nick-named \"The Midwife\" because they always deliver (and \"Postman\" was already taken) here's a player who knows a comfy lie is much better than a water-berth. Takes a cautious approach as they know it's much better to crawl before you can walk. Becoming a golf pro was their crowning achievement";
+    }
+}
+
+void ProfileStateV2::refreshBio()
+{
+    //look for bio file and load it if it exists
+    auto path = Content::getUserContentPath(Content::UserContent::Profile);
+    if (cro::FileSystem::directoryExists(path))
+    {
+        if (m_activeProfile.playerData.profileID.empty())
+        {
+            //this creates a new id
+            m_activeProfile.playerData.saveProfile();
+        }
+
+        path += m_activeProfile.playerData.profileID + "/";
+
+        if (cro::FileSystem::directoryExists(path))
+        {
+            path += "bio.txt";
+
+            if (cro::FileSystem::fileExists(path))
+            {
+                std::vector<char> buffer(MaxBioChars + 1);
+
+                cro::RaiiRWops inFile;
+                inFile.file = SDL_RWFromFile(path.c_str(), "r");
+                if (inFile.file)
+                {
+                    auto readCount = inFile.file->read(inFile.file, buffer.data(), 1, MaxBioChars);
+                    buffer[readCount] = 0; //nullterm
+                    setBioString(buffer.data());
+                }
+            }
+            else
+            {
+                //else set bio to random and write file
+                std::string bio = generateRandomBio();
+
+                cro::RaiiRWops outfile;
+                outfile.file = SDL_RWFromFile(path.c_str(), "w");
+                if (outfile.file)
+                {
+                    outfile.file->write(outfile.file, bio.data(), bio.size(), 1);
+                }
+                setBioString(bio);
+            }
+        }
+        else
+        {
+            setBioString(generateRandomBio());
+        }
+    }
+}
+
+void ProfileStateV2::setBioString(const std::string& str)
+{
+    //TODO measure space and word wrap
+
+    cro::String s = str;
+    cro::Util::String::wordWrap(s, 36);
+
+    m_detailsPane.bioString.getComponent<cro::Text>().setString(s);
+
+    const auto left = m_detailsPane.mugshotImage.getComponent<cro::Drawable2D>().getCroppingArea().left;
+    m_detailsPane.bioString.getComponent<cro::Transform>().setPosition(glm::vec2(left + 8.f, -4.f));
+
+    //TODO set char size? OR should we be using the UIElement here?
 }
