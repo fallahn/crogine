@@ -105,6 +105,23 @@ namespace
     static constexpr cro::Time RepeatTimeLong = cro::seconds(0.5f);
     static constexpr cro::Time RepeatTimeShort = cro::seconds(0.05f);
 
+    const std::array ManufacturerText =
+    {
+        cro::String("The original Scottish golf manufacturers,\nGallawent have only the firmest of woods and\ntoughest of drivers to back them up.\n\nGrab a caber, aye?"),
+        cro::String("Sonorous by name and sonorous by nature,\nthe satisfying thunk of a Dong is all you need\nto get to the bottom of a hole."),
+        cro::String("Hand crafted by authentic one-eyed, three\nfingered craftsmen since the 1700s,\nFellowCraft avoid the hazards so you don't\nhave to."),
+        cro::String("Whether you're a proponent of Imperial or\nMetric Akrun only deal in feet, three of which\nare gaurenteed to fit comfortably in your\ngrip."),
+        cro::String("Though Dannis may sound like a different\nsport, their high quality equipment ensures you\nwon't be calling out for New Balls Please!"),
+        cro::String("Clix, inspired by the sound of every great\ngolfer's shoulder, promise the only thing\nyou'll be shouting on the fairway is FORE!"),
+        cro::String("For over 100 years BeyTree, the makers of\nsome of the world's finest sporting equipment,\nhave been lamenting a single typo."),
+        cro::String("Tunnelrock Balls, a name synonymous with\nspelunking, are carefully vacuum packed at\nthe source to preserve maximum freshness.\nFrom field to freezer in under an hour."),
+        cro::String("Woven from the finest golden retreiver hair,\nFlaxen make sure their balls use only the\nsoftest clippings to ensure the swiftest of\nflights."),
+        cro::String("Hardings Balls, both notorious and revered,\nhave a heart of gold and a west country\naccent that would turn any bushel of apples\ninto the sweetest of ciders."),
+        cro::String("The only splinters here are those from the\ncourse record, as Woodgear Balls are the\nepitome of driving long, hard, and fast.\nMay not contain actual wood."),
+        cro::String("Brilton & Stockley started in the soup\nindustry, nearly 200 years ago, before\nbranching out to manufacturing sports\nequipment after a rogue accident involving a\nyard long spoon."),
+        cro::String("There's nothing assigned to this slot. Go to the\nEquipment Counter to find upgrades!")
+    };
+
     void playSound(std::int32_t id)
     {
         cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = id;
@@ -545,7 +562,23 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
             }
         }
     }
-
+    else if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped)
+        {
+            switch (data.id)
+            {
+            default: break;
+            case StateID::Shop:
+                LogI << FILE_LINE << " update locked item counts and refresh menu" << std::endl;
+                
+                createEquipmentItems();
+                createLoadoutItems();
+                break;
+            }
+        }
+    }
     m_previewScene.forwardMessage(msg);
     m_scene.forwardMessage(msg);
 }
@@ -2081,11 +2114,111 @@ void ProfileStateV2::createLoadoutItems()
     auto* item = &m_menuLayout.items[TabID::Loadout].emplace_back();
     item->title = "Select Loadout";
     item->displayType = Menu::Item::Heading;
-    //item->description = "Choose headwear model 01";
+    item->description = "Select your loadout from equipment bought at the Equipment Counter";
 
-    //each club
-    //balls
+
+    const auto itemAvailable = [](std::int32_t i)
+        {
+            switch (i)
+            {
+            default: return true;
+            case GearID::FiveW:
+                return Social::getLevel() >= ClubID::getUnlockLevel(ClubID::FiveWood);
+            case GearID::FourI:
+                return Social::getLevel() >= ClubID::getUnlockLevel(ClubID::FourIron);
+            case GearID::SixI:
+                return Social::getLevel() >= ClubID::getUnlockLevel(ClubID::SixIron);
+            case GearID::SevenI:
+                return Social::getLevel() >= ClubID::getUnlockLevel(ClubID::SevenIron);
+            case GearID::NineI:
+                return Social::getLevel() >= ClubID::getUnlockLevel(ClubID::NineIron);
+            }
+            return true;
+        };
+    
+    //TODO slight problem here in that the equipment counter doesn't cover the lob wedge...
+    const std::array titles =
+    {
+        std::string("Driver"),
+        std::string("3 Wood"),
+        std::string("5 Wood"),
+        std::string("4 Iron"),
+        std::string("5 Iron"),
+        std::string("6 Iron"),
+        std::string("7 Iron"),
+        std::string("8 Iron"),
+        std::string("9 Iron"),
+        std::string("Pitch Wedge"),
+        std::string("Gap Wedge"),
+        std::string("Sand Wedge"),
+        std::string("Balls"),
+    };
+
+    //sort inventory into sub-lists of things that we own
+    struct SubItem final
+    {
+        std::string name;
+        std::int32_t idx = -1;
+        SubItem(const std::string& s) :name(s) {}
+    };
+    std::array<std::vector<SubItem>, GearID::Count> subItems;
+    for (auto& list : subItems)
+    {
+        list.emplace_back("Default");
+    }
+
+    for (auto i = 0u; i < m_sharedData.inventory.inventory.size(); ++i)
+    {
+        auto idx = m_sharedData.inventory.inventory[i];
+        if (idx != -1)
+        {
+            //we own this
+            const auto& item = inv::Items[i];
+            subItems[item.type].emplace_back(inv::Manufacturers[item.manufacturer]).idx = i;
+        }
+    }
+
+
+    for (auto i = 0u; i < GearID::Count; ++i)
+    {
+        const auto available = itemAvailable(i);
+
+        item = &m_menuLayout.items[TabID::Loadout].emplace_back();
+        item->title = titles[i];
+
+        if (available)
+        {
+            const auto& items = subItems[i];
+            for (const auto& subItem : items)
+            {
+                item->labels.push_back(subItem.name);
+            }
+            //TODO we need to keep the sub item index here
+            //so we can apply it to m_activeProfile.loadout.items[i] = itemIndex;
+            //and also use it for the current selected index
+            item->displayType = Menu::Item::Slider;
+            item->activated = [](Menu::Item&) {};
+            item->selected = [](const Menu::Item&) {}; //TODO update stats window
+        }
+        else
+        {
+            //WARNING this relies on i matching ClubIDs
+            item->labels.push_back("Unlocked at level " + std::to_string(ClubID::getUnlockLevel(i)));
+            item->activated = [](Menu::Item&) {};
+            item->selected = [](const Menu::Item&) {}; //TODO display a locked icon in window
+        }
+    }
+    
+
     //equipment counter
+    item = &m_menuLayout.items[TabID::Loadout].emplace_back();
+    item->title = "Go To";
+    item->labels.push_back("Equipment Counter");
+    item->activated =
+        [&](Menu::Item&)
+        {
+            requestStackPush(StateID::Shop);
+        };
 }
 
 void ProfileStateV2::createDetailItems()

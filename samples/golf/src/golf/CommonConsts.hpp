@@ -154,3 +154,16 @@ struct ClubData final
     bool userItem = false;
     bool locked = false;
 };
+
+struct GearID final
+{
+    enum
+    {
+        Driver, ThreeW, FiveW, FourI,
+        FiveI, SixI, SevenI, EightI,
+        NineI, PitchWedge, GapWedge,
+        SandWedge, Balls,
+
+        Count
+    };
+};
