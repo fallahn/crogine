@@ -1718,13 +1718,124 @@ void ProfileStateV2::buildStatScene()
     m_statScene.addSystem<cro::CameraSystem>(mb);
     m_statScene.addSystem<cro::RenderSystem2D>(mb);
 
+
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/gear_editor.spt", m_resources.textures);
+
+    auto sprite = spriteSheet.getSprite("stat_bar");
+    const auto spriteSize = sprite.getTextureBounds();
+    const auto spriteUV = sprite.getTextureRectNormalised();
+    static constexpr float StatWidth = 132.f;
+    static constexpr float EndWidth = 10.f;
+
+    const float UVWidth = spriteUV.width * (EndWidth / spriteSize.width);
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    const auto createStatBar = [&](glm::vec2 pos)
+        {
+            auto& statBar = m_statBars.emplace_back();
+
+            auto entity = m_statScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.2f));
+            entity.addComponent<cro::Drawable2D>().setVertexData(
+                {
+                    cro::Vertex2D(glm::vec2(0.f, spriteSize.height),                  glm::vec2(spriteUV.left, spriteUV.bottom + spriteUV.height)),
+                    cro::Vertex2D(glm::vec2(0.f),                                     glm::vec2(spriteUV.left, spriteUV.bottom)),
+
+                    cro::Vertex2D(glm::vec2(EndWidth, spriteSize.height),             glm::vec2(spriteUV.left + UVWidth, spriteUV.bottom + spriteUV.height)),
+                    cro::Vertex2D(glm::vec2(EndWidth, 0.f),                           glm::vec2(spriteUV.left + UVWidth, spriteUV.bottom)),
+
+                    cro::Vertex2D(glm::vec2(StatWidth / 2.f, spriteSize.height),      glm::vec2(spriteUV.left + (spriteUV.width / 2.f), spriteUV.bottom + spriteUV.height)),
+                    cro::Vertex2D(glm::vec2(StatWidth / 2.f, 0.f),                    glm::vec2(spriteUV.left + (spriteUV.width / 2.f), spriteUV.bottom)),
+
+                    cro::Vertex2D(glm::vec2(StatWidth - EndWidth, spriteSize.height), glm::vec2(spriteUV.left + (spriteUV.width - UVWidth), spriteUV.bottom + spriteUV.height)),
+                    cro::Vertex2D(glm::vec2(StatWidth - EndWidth, 0.f),               glm::vec2(spriteUV.left + (spriteUV.width - UVWidth), spriteUV.bottom)),
+
+                    cro::Vertex2D(glm::vec2(StatWidth, spriteSize.height),            glm::vec2(spriteUV.left + spriteUV.width, spriteUV.bottom + spriteUV.height)),
+                    cro::Vertex2D(glm::vec2(StatWidth, 0.f),                          glm::vec2(spriteUV.left + spriteUV.width, spriteUV.bottom))
+                });
+            entity.getComponent<cro::Drawable2D>().setTexture(sprite.getTexture());
+
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<std::int32_t>(6);
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+                {
+                    const auto val = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+                    static constexpr float size = (StatWidth - (EndWidth / 2.f));
+                    static constexpr float SegmentCount = 20.f;
+
+                    const float segSize = size / SegmentCount;
+                    const float target = ((size / 2.f) + (val * segSize));
+
+                    auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+                    const float pos = verts[4].position.x;
+                    const float move = (target - pos) * dt * 5.f;
+
+                    verts[4].position.x += move;
+                    verts[5].position.x = verts[4].position.x;
+                };
+
+            statBar.bgEnt = entity;
+
+            entity = m_statScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("stat_pointer");
+            const auto r = entity.getComponent<cro::Sprite>().getTextureBounds();
+            entity.getComponent<cro::Transform>().setOrigin({ std::ceil(r.width / 2.f) + 1.f, r.height, -0.1f });
+
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<std::int32_t>(6);
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+                {
+                    const auto val = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+                    static constexpr float BasePos = StatWidth / 2.f;
+                    const float offset = (BasePos / 10.f) * val;
+
+                    e.getComponent<cro::Transform>().setPosition({ BasePos + offset, -2.f });
+                };
+
+            statBar.bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+            statBar.pointer = entity;
+
+            entity = m_statScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec3(glm::vec2(6.f, InfoTextSize + 5.f), 0.1f));
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
+            entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+            entity.getComponent<cro::Text>().setString("Default: 0");
+            statBar.bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+            statBar.text = entity;
+        };
+
+    createStatBar(glm::vec2(20.f, 178.f));
+    createStatBar(glm::vec2(20.f, 178.f - (spriteSize.height + 22.f)));
+
+    //TODO these need to re-adjust as the screen resizes.
     auto entity = m_statScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 10.f, 10.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 20.f, 214.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString("sdfdgdfggfh");
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+
+    m_statTitle = entity;
+
+    entity = m_statScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 160.f, 214.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setString(ManufacturerText.back());
+
+    m_manufacturerInfo = entity;
+
+
+
 
 
     auto camEnt = m_statScene.getActiveCamera();
@@ -2260,6 +2371,7 @@ void ProfileStateV2::createLoadoutItems()
                 [&, itemIndices, i](Menu::Item& menuItem)
                 {
                     m_activeProfile.loadout.items[i] = itemIndices[menuItem.selectedIndex];
+                    refreshStat(i, itemIndices[menuItem.selectedIndex], true);
                 };
             const auto res = std::find(itemIndices.cbegin(), itemIndices.cend(), m_activeProfile.loadout.items[i]);
             if (res != itemIndices.cend())
@@ -2267,9 +2379,10 @@ void ProfileStateV2::createLoadoutItems()
                 item->selectedIndex = static_cast<std::int32_t>(std::distance(itemIndices.cbegin(), res));
             }
             item->selected = 
-                [&](const Menu::Item&) 
+                [&, itemIndices, i](const Menu::Item& menuItem) 
                 {
-                    //TODO update stats window
+                    //update stats window
+                    refreshStat(i, itemIndices[menuItem.selectedIndex], true);
                     m_detailsPane.image.getComponent<cro::Sprite>().setTexture(m_previewTexture.getTexture());
                     m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_detailsPane.image.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 0.f });
                     m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
@@ -3370,6 +3483,114 @@ void ProfileStateV2::quitState()
 
     m_rootNode.getComponent<cro::Callback>().active = true;
     playSound(MenuSoundEvent::Cancel);
+}
+
+void ProfileStateV2::refreshStat(std::uint32_t catID, std::int32_t invID, bool setPointer)
+{
+    m_statTitle.getComponent<cro::Text>().setString(inv::ItemStrings[catID]);
+
+    if (invID == -1)
+    {
+        //nothing assigned to this slot
+        m_statBars[0].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
+        m_statBars[1].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
+
+        if (setPointer)
+        {
+            m_statBars[0].pointer.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
+            m_statBars[1].pointer.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
+        }
+
+        m_statBars[0].text.getComponent<cro::Text>().setString("Default: 0");
+        m_manufacturerInfo.getComponent<cro::Text>().setString(ManufacturerText.back());
+
+        if (catID == GearID::Balls)
+        {
+            m_statBars[1].text.getComponent<cro::Text>().setString(" ");
+            m_statBars[1].bgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            m_statBars[1].pointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+        }
+        else
+        {
+            m_statBars[1].text.getComponent<cro::Text>().setString("Default: 0");
+            m_statBars[1].bgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_statBars[1].pointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        }
+        return;
+    }
+
+
+    const auto& item = inv::Items[invID];
+    m_manufacturerInfo.getComponent<cro::Text>().setString(ManufacturerText[item.manufacturer]);
+
+    m_statBars[0].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat01);
+    m_statBars[1].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat02);
+
+    if (setPointer)
+    {
+        m_statBars[0].pointer.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat01);
+        m_statBars[1].pointer.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat02);
+    }
+
+    std::int32_t category = 0;
+    switch (item.type)
+    {
+    default:
+    case inv::ItemType::Driver:
+        break;
+    case inv::ItemType::FiveW:
+    case inv::ItemType::ThreeW:
+        category = 1;
+        break;
+    case inv::ItemType::FourI:
+    case inv::ItemType::FiveI:
+    case inv::ItemType::SixI:
+    case inv::ItemType::SevenI:
+    case inv::ItemType::EightI:
+    case inv::ItemType::NineI:
+        category = 2;
+        break;
+    case inv::ItemType::GapWedge:
+    case inv::ItemType::PitchWedge:
+    case inv::ItemType::SandWedge:
+        category = 3;
+        break;
+    case inv::ItemType::Ball:
+        category = 4;
+        break;
+    }
+
+    std::string valStr;
+    if (item.stat01 > -1)
+    {
+        valStr += "+";
+    }
+    valStr += std::to_string(item.stat01);
+    m_statBars[0].text.getComponent<cro::Text>().setString(inv::StatLabels[category].stat1 + valStr);
+
+
+    //second stat might be empty, eg balls
+    valStr.clear();
+    if (!inv::StatLabels[category].stat2.empty())
+    {
+        if (item.stat02 > -1)
+        {
+            valStr += "+";
+        }
+        valStr += std::to_string(item.stat02);
+        m_statBars[1].bgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        m_statBars[1].pointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+    }
+    else
+    {
+        //display number of balls remaining
+        const auto amt = m_sharedData.inventory.inventory[invID];
+        valStr = std::to_string(amt) + " remaining";
+
+        m_statBars[1].bgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+        m_statBars[1].pointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    }
+    m_statBars[1].text.getComponent<cro::Text>().setString(inv::StatLabels[category].stat2 + valStr);
 }
 
 void ProfileStateV2::loadAvatarPreviews()
