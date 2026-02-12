@@ -67,6 +67,7 @@ private:
 
     cro::Scene m_scene;
     cro::Scene m_previewScene;
+    cro::Scene m_statScene;
     SharedStateData& m_sharedData;
     SharedProfileData& m_profileData;
     SharedProfileData::LocalProfile m_activeProfile;
@@ -123,6 +124,7 @@ private:
     };
     std::array<cro::Entity, PreviewCamera::Count> m_previewCameras = {};
     void buildPreviewScene();
+    void buildStatScene();
 
     void createBodyItems();
     void createHeadwearItems();

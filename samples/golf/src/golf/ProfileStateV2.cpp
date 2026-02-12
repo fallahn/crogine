@@ -134,6 +134,7 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus(), 192),
     m_previewScene      (ctx.appInstance.getMessageBus(), 192),
+    m_statScene         (ctx.appInstance.getMessageBus(), 192),
     m_sharedData        (sd),
     m_profileData       (profileData),
     m_exitHoldTimer     (0.f),
@@ -163,6 +164,7 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     loadAssets();
     buildPreviewScene(); //make sure models are loaded first so menu creation can read the data
+    buildStatScene();
     buildScene();
 }
 
@@ -512,6 +514,7 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
     }
 
     //m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
+    m_statScene.forwardEvent(evt);
     m_previewScene.forwardEvent(evt);
     m_scene.forwardEvent(evt);
     return false;
@@ -579,6 +582,7 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
             }
         }
     }
+    m_statScene.forwardMessage(msg);
     m_previewScene.forwardMessage(msg);
     m_scene.forwardMessage(msg);
 }
@@ -613,7 +617,8 @@ bool ProfileStateV2::simulate(float dt)
                     Social::setPlayerName(m_activeProfile.playerData.name);
                 }
 
-                //copy av data back to proper data and write files                
+                //copy av data back to proper data and write files     
+                m_activeProfile.loadout.write(m_activeProfile.playerData.profileID);          
                 m_profileData.playerProfiles[m_profileData.activeProfileIndex] = m_activeProfile;
                 m_profileData.playerProfiles[m_profileData.activeProfileIndex].playerData.saveProfile();
 
@@ -723,6 +728,7 @@ bool ProfileStateV2::simulate(float dt)
         }
     }
 
+    m_statScene.simulate(dt);
     m_previewScene.simulate(dt);
     m_scene.simulate(dt);
     return true;
@@ -730,8 +736,31 @@ bool ProfileStateV2::simulate(float dt)
 
 void ProfileStateV2::render()
 {
-    m_previewTexture.clear(CD32::Colours[m_tabBar.activeIndex == TabID::Details ? CD32::Brown : CD32::BlueLight]);
-    m_previewScene.render();
+    std::int32_t colourIndex = 0;
+    switch (m_tabBar.activeIndex)
+    {
+    default:
+        colourIndex = CD32::BlueLight;
+        break;
+    case TabID::Loadout:
+        colourIndex = CD32::BeigeDarkest;
+        break;
+    case TabID::Details:
+        colourIndex = CD32::Brown;
+        break;
+    }
+
+    m_previewTexture.clear(CD32::Colours[colourIndex]);
+    if (m_tabBar.activeIndex == TabID::Loadout)
+    {
+        //this seems a fart arse way of rendering stat graphics
+        //but I guess this is where we are now...
+        m_statScene.render();
+    }
+    else
+    {
+        m_previewScene.render();
+    }
     m_previewTexture.display();
 
     m_scene.render();
@@ -1680,6 +1709,37 @@ void ProfileStateV2::buildPreviewScene()
     lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.8f);
 }
 
+void ProfileStateV2::buildStatScene()
+{
+    auto& mb = cro::App::getInstance().getMessageBus();
+    m_statScene.addSystem<cro::CallbackSystem>(mb);
+    m_statScene.addSystem<cro::TextSystem>(mb);
+    m_statScene.addSystem<cro::SpriteSystem2D>(mb);
+    m_statScene.addSystem<cro::CameraSystem>(mb);
+    m_statScene.addSystem<cro::RenderSystem2D>(mb);
+
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    auto entity = m_statScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 10.f, 10.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("sdfdgdfggfh");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+
+
+    auto camEnt = m_statScene.getActiveCamera();
+    auto& cam = camEnt.getComponent<cro::Camera>();
+    cam.resizeCallback = 
+        [&](cro::Camera& c)
+        {
+            const auto viewScale = cro::UIElementSystem::getViewScale();
+            const glm::vec2 viewSize = m_previewTexture.getSize();
+            c.setOrthographic(0.f, std::floor(viewSize.x / viewScale), 0.f, std::floor(viewSize.y / viewScale), -1.f, 10.f);
+            c.viewport = { 0.f, 0.f, 1.f, 1.f };
+        };
+    cam.resizeCallback(cam);
+}
+
 void ProfileStateV2::createBodyItems()
 {
     m_menuLayout.items[TabID::Body].clear();
@@ -2116,7 +2176,6 @@ void ProfileStateV2::createLoadoutItems()
     item->displayType = Menu::Item::Heading;
     item->description = "Select your loadout from equipment bought at the Equipment Counter";
 
-
     const auto itemAvailable = [](std::int32_t i)
         {
             switch (i)
@@ -2188,17 +2247,33 @@ void ProfileStateV2::createLoadoutItems()
 
         if (available)
         {
+            std::vector<std::int32_t> itemIndices;
+
             const auto& items = subItems[i];
             for (const auto& subItem : items)
             {
                 item->labels.push_back(subItem.name);
+                itemIndices.push_back(subItem.idx);
             }
-            //TODO we need to keep the sub item index here
-            //so we can apply it to m_activeProfile.loadout.items[i] = itemIndex;
-            //and also use it for the current selected index
             item->displayType = Menu::Item::Slider;
-            item->activated = [](Menu::Item&) {};
-            item->selected = [](const Menu::Item&) {}; //TODO update stats window
+            item->activated = 
+                [&, itemIndices, i](Menu::Item& menuItem)
+                {
+                    m_activeProfile.loadout.items[i] = itemIndices[menuItem.selectedIndex];
+                };
+            const auto res = std::find(itemIndices.cbegin(), itemIndices.cend(), m_activeProfile.loadout.items[i]);
+            if (res != itemIndices.cend())
+            {
+                item->selectedIndex = static_cast<std::int32_t>(std::distance(itemIndices.cbegin(), res));
+            }
+            item->selected = 
+                [&](const Menu::Item&) 
+                {
+                    //TODO update stats window
+                    m_detailsPane.image.getComponent<cro::Sprite>().setTexture(m_previewTexture.getTexture());
+                    m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_detailsPane.image.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 0.f });
+                    m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                };
         }
         else
         {
@@ -2825,6 +2900,7 @@ void ProfileStateV2::resizeItemGraphics()
             }
         }
     }
+    m_statScene.getActiveCamera().getComponent<cro::Camera>().resizeCallback(m_statScene.getActiveCamera().getComponent<cro::Camera>());
 
     //reposition club sprite
     const glm::vec2 bgSize = m_previewTexture.getSize();
