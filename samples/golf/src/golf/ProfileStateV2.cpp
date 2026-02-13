@@ -1940,7 +1940,16 @@ void ProfileStateV2::createBodyItems()
 
 #ifdef USE_GNS
     //workshop button if steam
-    LogI << "Add workshop button!" << std::endl;
+    item = &m_menuLayout.items[TabID::Body].emplace_back();
+    item->title = "Steam Workshop";
+    item->description = "Opens the Steam Workshop in the overlay";
+    item->labels.push_back("Find More Avatars");
+    item->activated = 
+        [](Menu::Item&)
+        {
+            Social::showWorkshop();
+        };
+    //TODO icon
 #endif
 }
 
@@ -2155,8 +2164,17 @@ void ProfileStateV2::createHeadwearItems()
 
 
 #ifdef USE_GNS
-        //workshop button if steam
-        LogI << FILE_LINE << " implement" << std::endl;
+    //workshop button if steam
+    item = &m_menuLayout.items[TabID::Headwear].emplace_back();
+    item->title = "Steam Workshop";
+    item->description = "Opens the Steam Workshop in the overlay";
+    item->labels.push_back("Find More Items");
+    item->activated =
+        [](Menu::Item&)
+        {
+            Social::showWorkshop();
+        };
+    //TODO icon
 #endif
 }
 
@@ -2341,7 +2359,16 @@ void ProfileStateV2::createEquipmentItems()
 
 #ifdef USE_GNS
     //workshop button if steam
-    LogI << FILE_LINE << " implement me" << std::endl;
+    item = &m_menuLayout.items[TabID::Equipment].emplace_back();
+    item->title = "Steam Workshop";
+    item->description = "Opens the Steam Workshop in the overlay";
+    item->labels.push_back("Find More Items");
+    item->activated =
+        [](Menu::Item&)
+        {
+            Social::showWorkshop();
+        };
+    //TODO icon
 #endif
 }
 
@@ -2584,7 +2611,7 @@ void ProfileStateV2::createDetailItems()
         };
     item->labels.push_back("Remove");
 #ifdef USE_GNS
-    item->description = "Remove the player icon displayed for this profile. Defaults to you Steam avatar icon.";
+    item->description = "Remove the player icon displayed for this profile. Defaults to your Steam avatar icon.";
 #else
     item->description = "Remove the player icon displayed for this profile.";
 #endif
@@ -2643,7 +2670,16 @@ void ProfileStateV2::createDetailItems()
 
 #ifdef USE_GNS
     //workshop button if steam
-    LogI << FILE_LINE << " implement this" << std::endl;
+    item = &m_menuLayout.items[TabID::Details].emplace_back();
+    item->title = "Steam Workshop";
+    item->description = "Opens the Steam Workshop in the overlay";
+    item->labels.push_back("Find More Voices");
+    item->activated =
+        [](Menu::Item&)
+        {
+            Social::showWorkshop();
+        };
+    //TODO icon
 #endif
 }
 
