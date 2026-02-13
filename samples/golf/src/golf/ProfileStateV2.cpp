@@ -107,19 +107,19 @@ namespace
 
     const std::array ManufacturerText =
     {
-        cro::String("The original Scottish golf manufacturers,\nGallawent have only the firmest of woods and\ntoughest of drivers to back them up.\n\nGrab a caber, aye?"),
-        cro::String("Sonorous by name and sonorous by nature,\nthe satisfying thunk of a Dong is all you need\nto get to the bottom of a hole."),
+        cro::String("The original Scottish golf manufacturers,\nGallawent have only the firmest of woods\nand toughest of drivers to back them up.\n\nGrab a caber, aye?"),
+        cro::String("Sonorous by name and sonorous by nature,\nthe satisfying thunk of a Dong is all\nyou need to get to the bottom of a hole."),
         cro::String("Hand crafted by authentic one-eyed, three\nfingered craftsmen since the 1700s,\nFellowCraft avoid the hazards so you don't\nhave to."),
-        cro::String("Whether you're a proponent of Imperial or\nMetric Akrun only deal in feet, three of which\nare gaurenteed to fit comfortably in your\ngrip."),
-        cro::String("Though Dannis may sound like a different\nsport, their high quality equipment ensures you\nwon't be calling out for New Balls Please!"),
+        cro::String("Whether you're a proponent of Imperial or\nMetric Akrun only deal in feet, three of\nwhich are gaurenteed to fit comfortably in\nyour grip."),
+        cro::String("Though Dannis may sound like a different\nsport, their high quality equipment ensures\nyou won't be calling out for New Balls\nPlease!"),
         cro::String("Clix, inspired by the sound of every great\ngolfer's shoulder, promise the only thing\nyou'll be shouting on the fairway is FORE!"),
-        cro::String("For over 100 years BeyTree, the makers of\nsome of the world's finest sporting equipment,\nhave been lamenting a single typo."),
-        cro::String("Tunnelrock Balls, a name synonymous with\nspelunking, are carefully vacuum packed at\nthe source to preserve maximum freshness.\nFrom field to freezer in under an hour."),
-        cro::String("Woven from the finest golden retreiver hair,\nFlaxen make sure their balls use only the\nsoftest clippings to ensure the swiftest of\nflights."),
-        cro::String("Hardings Balls, both notorious and revered,\nhave a heart of gold and a west country\naccent that would turn any bushel of apples\ninto the sweetest of ciders."),
-        cro::String("The only splinters here are those from the\ncourse record, as Woodgear Balls are the\nepitome of driving long, hard, and fast.\nMay not contain actual wood."),
-        cro::String("Brilton & Stockley started in the soup\nindustry, nearly 200 years ago, before\nbranching out to manufacturing sports\nequipment after a rogue accident involving a\nyard long spoon."),
-        cro::String("There's nothing assigned to this slot. Go to the\nEquipment Counter to find upgrades!")
+        cro::String("For over 100 years BeyTree, the makers of\nsome of the world's finest sporting\nequipment, have been lamenting a single typo."),
+        cro::String("Tunnelrock Balls, a name synonymous with\nspelunking, are carefully vacuum packed\nat the source to preserve maximum\nfreshness. From field to freezer in under\nan hour."),
+        cro::String("Woven from the finest golden retreiver hair,\nFlaxen make sure their balls use\nonly the softest clippings to ensure the\nswiftest of flights."),
+        cro::String("Hardings Balls, both notorious and revered,\nhave a heart of gold and a west\ncountry accent that would turn any bushel\nof apples into the sweetest of ciders."),
+        cro::String("The only splinters here are those from the\ncourse record, as Woodgear Balls are\nthe epitome of driving long, hard, and fast.\n\nMay not contain actual wood."),
+        cro::String("Brilton & Stockley started in the soup\nindustry, nearly 200 years ago, before\nbranching out to manufacturing sports\nequipment after a rogue accident involving\na yard long spoon."),
+        cro::String("There's nothing assigned to this slot.\nGo to the Equipment Counter to find\nupgrades!")
     };
 
     void playSound(std::int32_t id)
@@ -743,8 +743,8 @@ void ProfileStateV2::render()
         colourIndex = CD32::BlueLight;
         break;
     case TabID::Loadout:
-        colourIndex = CD32::BeigeDarkest;
-        break;
+        /*colourIndex = CD32::BeigeDarkest;
+        break;*/
     case TabID::Details:
         colourIndex = CD32::Brown;
         break;
@@ -1733,7 +1733,7 @@ void ProfileStateV2::buildStatScene()
 
     const auto createStatBar = [&](glm::vec2 pos)
         {
-            auto& statBar = m_statBars.emplace_back();
+            auto& statBar = m_statLayout.statBars.emplace_back();
 
             auto entity = m_statScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.2f));
@@ -1820,10 +1820,10 @@ void ProfileStateV2::buildStatScene()
     entity.addComponent<cro::Transform>().setPosition({ 20.f, 214.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
 
-    m_statTitle = entity;
+    m_statLayout.statTitle = entity;
 
     entity = m_statScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 160.f, 214.f, 0.1f });
@@ -1832,7 +1832,7 @@ void ProfileStateV2::buildStatScene()
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setString(ManufacturerText.back());
 
-    m_manufacturerInfo = entity;
+    m_statLayout.manufacturerInfo = entity;
 
 
 
@@ -2307,6 +2307,7 @@ void ProfileStateV2::createLoadoutItems()
     item->title = "Select Loadout";
     item->displayType = Menu::Item::Heading;
     item->description = "Select your loadout from equipment bought at the Equipment Counter";
+    item->selected = [](const Menu::Item&) {}; //empty just to hide the stats sprite
 
     const auto itemAvailable = [](std::int32_t i)
         {
@@ -2360,7 +2361,7 @@ void ProfileStateV2::createLoadoutItems()
 
     for (auto i = 0u; i < m_sharedData.inventory.inventory.size(); ++i)
     {
-        auto idx = m_sharedData.inventory.inventory[i];
+        const auto idx = m_sharedData.inventory.inventory[i];
         if (idx != -1)
         {
             //we own this
@@ -3064,6 +3065,15 @@ void ProfileStateV2::resizeItemGraphics()
 
     m_detailsPane.mugshotImage.getComponent<cro::Drawable2D>().setCroppingArea(crop);
     m_detailsPane.mugshotImage.getComponent<cro::Drawable2D>().bindUniform("u_croppingArea", glm::vec4(crop.left, crop.bottom, crop.width, crop.height));
+
+    //and update the layout of stat items
+    //confusingly these are done pre-scale whereas
+    //the texture size itself is scaled...
+    const glm::vec2 previewSize(CentreWidth * 2.f, std::floor(CentreHeight * 1.25f));
+    m_statLayout.statTitle.getComponent<cro::Transform>().setPosition({ 6.f, previewSize.y - 24.f });
+    m_statLayout.manufacturerInfo.getComponent<cro::Transform>().setPosition({ (previewSize.x / 2.f) - 40.f, previewSize.y - 36.f });
+    m_statLayout.statBars[0].bgEnt.getComponent<cro::Transform>().setPosition({ 2.f, previewSize.y - 60.f });
+    m_statLayout.statBars[1].bgEnt.getComponent<cro::Transform>().setPosition({ 2.f, previewSize.y - 106.f });
 }
 
 void ProfileStateV2::updateSliderGraphic(std::int32_t amt, std::int32_t total)
@@ -3508,49 +3518,49 @@ void ProfileStateV2::quitState()
 
 void ProfileStateV2::refreshStat(std::uint32_t catID, std::int32_t invID, bool setPointer)
 {
-    m_statTitle.getComponent<cro::Text>().setString(inv::ItemStrings[catID]);
+    m_statLayout.statTitle.getComponent<cro::Text>().setString(inv::ItemStrings[catID]);
 
     if (invID == -1)
     {
         //nothing assigned to this slot
-        m_statBars[0].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
-        m_statBars[1].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
+        m_statLayout.statBars[0].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
+        m_statLayout.statBars[1].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
 
         if (setPointer)
         {
-            m_statBars[0].pointer.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
-            m_statBars[1].pointer.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
+            m_statLayout.statBars[0].pointer.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
+            m_statLayout.statBars[1].pointer.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
         }
 
-        m_statBars[0].text.getComponent<cro::Text>().setString("Default: 0");
-        m_manufacturerInfo.getComponent<cro::Text>().setString(ManufacturerText.back());
+        m_statLayout.statBars[0].text.getComponent<cro::Text>().setString("Default: 0");
+        m_statLayout.manufacturerInfo.getComponent<cro::Text>().setString(ManufacturerText.back());
 
         if (catID == GearID::Balls)
         {
-            m_statBars[1].text.getComponent<cro::Text>().setString(" ");
-            m_statBars[1].bgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-            m_statBars[1].pointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            m_statLayout.statBars[1].text.getComponent<cro::Text>().setString(" ");
+            m_statLayout.statBars[1].bgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            m_statLayout.statBars[1].pointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
         }
         else
         {
-            m_statBars[1].text.getComponent<cro::Text>().setString("Default: 0");
-            m_statBars[1].bgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-            m_statBars[1].pointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_statLayout.statBars[1].text.getComponent<cro::Text>().setString("Default: 0");
+            m_statLayout.statBars[1].bgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_statLayout.statBars[1].pointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         }
         return;
     }
 
 
     const auto& item = inv::Items[invID];
-    m_manufacturerInfo.getComponent<cro::Text>().setString(ManufacturerText[item.manufacturer]);
+    m_statLayout.manufacturerInfo.getComponent<cro::Text>().setString(ManufacturerText[item.manufacturer]);
 
-    m_statBars[0].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat01);
-    m_statBars[1].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat02);
+    m_statLayout.statBars[0].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat01);
+    m_statLayout.statBars[1].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat02);
 
     if (setPointer)
     {
-        m_statBars[0].pointer.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat01);
-        m_statBars[1].pointer.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat02);
+        m_statLayout.statBars[0].pointer.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat01);
+        m_statLayout.statBars[1].pointer.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat02);
     }
 
     std::int32_t category = 0;
@@ -3587,7 +3597,7 @@ void ProfileStateV2::refreshStat(std::uint32_t catID, std::int32_t invID, bool s
         valStr += "+";
     }
     valStr += std::to_string(item.stat01);
-    m_statBars[0].text.getComponent<cro::Text>().setString(inv::StatLabels[category].stat1 + valStr);
+    m_statLayout.statBars[0].text.getComponent<cro::Text>().setString(inv::StatLabels[category].stat1 + valStr);
 
 
     //second stat might be empty, eg balls
@@ -3599,8 +3609,8 @@ void ProfileStateV2::refreshStat(std::uint32_t catID, std::int32_t invID, bool s
             valStr += "+";
         }
         valStr += std::to_string(item.stat02);
-        m_statBars[1].bgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-        m_statBars[1].pointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        m_statLayout.statBars[1].bgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        m_statLayout.statBars[1].pointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
     }
     else
     {
@@ -3608,10 +3618,10 @@ void ProfileStateV2::refreshStat(std::uint32_t catID, std::int32_t invID, bool s
         const auto amt = m_sharedData.inventory.inventory[invID];
         valStr = std::to_string(amt) + " remaining";
 
-        m_statBars[1].bgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-        m_statBars[1].pointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+        m_statLayout.statBars[1].bgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+        m_statLayout.statBars[1].pointer.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     }
-    m_statBars[1].text.getComponent<cro::Text>().setString(inv::StatLabels[category].stat2 + valStr);
+    m_statLayout.statBars[1].text.getComponent<cro::Text>().setString(inv::StatLabels[category].stat2 + valStr);
 }
 
 void ProfileStateV2::loadAvatarPreviews()

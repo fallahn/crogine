@@ -264,15 +264,18 @@ private:
     void refreshView();
     void quitState();
 
-    struct StatBar final
+    struct StatLayout final
     {
-        cro::Entity bgEnt;
-        cro::Entity pointer;
-        cro::Entity text;
-    };
-    std::vector<StatBar> m_statBars;
-    cro::Entity m_statTitle;
-    cro::Entity m_manufacturerInfo;
+        struct StatBar final
+        {
+            cro::Entity bgEnt;
+            cro::Entity pointer;
+            cro::Entity text;
+        };
+        std::vector<StatBar> statBars;
+        cro::Entity statTitle;
+        cro::Entity manufacturerInfo;
+    }m_statLayout;
     void refreshStat(std::uint32_t catID, std::int32_t invID, bool setPointer);
 
     void loadAvatarPreviews();
