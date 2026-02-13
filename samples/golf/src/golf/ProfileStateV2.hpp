@@ -103,7 +103,12 @@ private:
     std::string m_nameBuffer;
     bool m_showNameInput;
 
-    std::vector<cro::AudioScape> m_voices;
+    struct VoiceData final
+    {
+        cro::AudioScape audioScape;
+        bool isWorkshop = false;
+    };
+    std::vector<VoiceData> m_voices;
     std::int32_t m_voiceIndex;
 
     bool m_saveMugshotOnExit;
@@ -195,28 +200,25 @@ private:
     std::array<cro::FloatRect, 2u> m_infoRects = {};
     cro::Texture m_colourPreview; //TODO this is 1x1px so we could just atlas into another texture...
 
-    struct OptionIcon final
+    struct ItemIcon final
     {
         enum
         {
-            //GridDensity,
-            //BeaconColour,
-            //HighContrast,
-            //LargePower,
-            //DecimatePower,
-            //WidgetSpeed,
-            //PuttAssist,
-            //BallTrail,
-            //TeeMarker,
-            //ZoomFlight,
-            //PuttFollow,
-            //RangeIndicator,
-            //Warning,
-            Temp,
+            Locked,
+            UnlockedItem,
+            WorkshopItem,
+
+            Gallawent, Dong,
+            Fellowcraft, Akrun,
+            Dannis, Clix,
+            Beytree, Tunnelrock,
+            Flaxen, Hardings,
+            Woodgear, BnS,
+
             Count
         };
     };
-    std::array<cro::Sprite, OptionIcon::Count> m_optionIcons = {};
+    std::array<cro::Sprite, ItemIcon::Count> m_itemIcons = {};
 
 
     struct TabID final

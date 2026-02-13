@@ -2828,7 +2828,7 @@ void OptionsStateV2::createAchievementItems()
                 }
             }
 
-            if (item.texture)
+            if (icon.texture)
             {
                 item.texture = icon.texture;
                 item.uv = icon.textureRect;

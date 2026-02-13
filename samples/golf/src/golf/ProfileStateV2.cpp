@@ -873,15 +873,25 @@ void ProfileStateV2::loadAssets()
         m_itemBackgroundTitle.setTexture(*m_uiTexture);
         m_itemBackgroundTitle.setPrimitiveType(GL_TRIANGLES);
 
-        /*m_tabBar.items[TabID::Settings].sprite = spriteSheet.getSprite("settings_icon");
-        m_tabBar.items[TabID::Display].sprite = spriteSheet.getSprite("graphics_icon");
-        m_tabBar.items[TabID::Keyboard].sprite = spriteSheet.getSprite("keyboard_icon");*/
+        m_itemIcons[ItemIcon::UnlockedItem] = spriteSheet.getSprite("item_unlocked");
+        m_itemIcons[ItemIcon::WorkshopItem] = spriteSheet.getSprite("item_workshop");
     }
 
-    /*if (spriteSheet.loadFromFile("assets/golf/sprites/options_images.spt", m_sharedData.sharedResources->textures))
+    if (spriteSheet.loadFromFile("assets/golf/sprites/shop_badges.spt", m_sharedData.sharedResources->textures))
     {
-        m_optionIcons[OptionIcon::GridDensity] = spriteSheet.getSprite("grid_density");
-    }*/
+        m_itemIcons[ItemIcon::Gallawent]   = spriteSheet.getSprite("large_01");
+        m_itemIcons[ItemIcon::Dong]        = spriteSheet.getSprite("large_02");
+        m_itemIcons[ItemIcon::Fellowcraft] = spriteSheet.getSprite("large_03");
+        m_itemIcons[ItemIcon::Akrun]       = spriteSheet.getSprite("large_04");
+        m_itemIcons[ItemIcon::Dannis]      = spriteSheet.getSprite("large_05");
+        m_itemIcons[ItemIcon::Clix]        = spriteSheet.getSprite("large_06");
+        m_itemIcons[ItemIcon::Beytree]     = spriteSheet.getSprite("large_07");
+        m_itemIcons[ItemIcon::Tunnelrock]  = spriteSheet.getSprite("large_08");
+        m_itemIcons[ItemIcon::Flaxen]      = spriteSheet.getSprite("large_09");
+        m_itemIcons[ItemIcon::Hardings]    = spriteSheet.getSprite("large_10");
+        m_itemIcons[ItemIcon::Woodgear]    = spriteSheet.getSprite("large_11");
+        m_itemIcons[ItemIcon::BnS]         = spriteSheet.getSprite("large_12");
+    }
 
     //this sets the default image shown on the right when the tab is selected
     //note that if a specific menu item has a Selected callback that it'll override this
@@ -1870,7 +1880,21 @@ void ProfileStateV2::createBodyItems()
             setAvatarIndex(i.selectedIndex);
             i.description = i.labels[i.selectedIndex] + "/" + std::to_string(m_avatarModels.size() - m_lockedAvatarCount);
             m_detailsPane.text.getComponent<cro::Text>().setString(i.description);
-            //TODO could add if this is an unlock/workshop model here
+
+            switch (m_avatarModels[m_avatarIndex].type)
+            {
+            default:
+                i.texture = nullptr;
+                break;
+            case 1: //unlocked
+                i.texture = m_itemIcons[ItemIcon::UnlockedItem].getTexture();
+                i.uv = m_itemIcons[ItemIcon::UnlockedItem].getTextureRect();
+                break;
+            case 2: //from workshop
+                i.texture = m_itemIcons[ItemIcon::WorkshopItem].getTexture();
+                i.uv = m_itemIcons[ItemIcon::WorkshopItem].getTextureRect();
+                break;
+            }
         };
     for (auto i = 0u; i < m_avatarModels.size(); ++i)
     {
@@ -2185,8 +2209,17 @@ void ProfileStateV2::createEquipmentItems()
             }
 
             m_detailsPane.text.getComponent<cro::Text>().setString(i.description);
-            //TODO could add if this is an unlock/workshop model here
-            //m_clubData[i.selectedIndex].type == 1; //1 unlock 2 workshop
+            //hmm, we don't appear to be tracking unlocked items
+            //for clubs, just if they're workshop clubs...
+            if (m_clubData[i.selectedIndex].userItem)
+            {
+                i.texture = m_itemIcons[ItemIcon::WorkshopItem].getTexture();
+                i.uv = m_itemIcons[ItemIcon::WorkshopItem].getTextureRect();
+            }
+            else
+            {
+                i.texture = nullptr;
+            }
         };
 
     //see skipping locked items, below
@@ -2233,8 +2266,21 @@ void ProfileStateV2::createEquipmentItems()
             }
 
             m_detailsPane.text.getComponent<cro::Text>().setString(i.description);
-            //TODO could add if this is an unlock/workshop model here
-            //m_sharedData.ballInfo[i.selectedIndex].type == 1; //1 unlock 2 workshop
+            
+            switch (m_sharedData.ballInfo[i.selectedIndex].type)
+            {
+            default:
+                i.texture = nullptr;
+                break;
+            case 1: //unlocked
+                i.texture = m_itemIcons[ItemIcon::UnlockedItem].getTexture();
+                i.uv = m_itemIcons[ItemIcon::UnlockedItem].getTextureRect();
+                break;
+            case 2: //from workshop
+                i.texture = m_itemIcons[ItemIcon::WorkshopItem].getTexture();
+                i.uv = m_itemIcons[ItemIcon::WorkshopItem].getTextureRect();
+                break;
+            }
         };
     
     //to hide locked balls we'll use a separate counter
@@ -2394,6 +2440,18 @@ void ProfileStateV2::createLoadoutItems()
                 {
                     m_activeProfile.loadout.items[i] = itemIndices[menuItem.selectedIndex];
                     refreshStat(i, itemIndices[menuItem.selectedIndex], true);
+
+                    //hmm this would be OK if it didn't move the title text so much.
+                    //maybe set this in the main area instead.
+                    /*if (m_activeProfile.loadout.items[i] > -1)
+                    {
+                        menuItem.texture = m_itemIcons[ItemIcon::Gallawent + itemIndices[menuItem.selectedIndex]].getTexture();
+                        menuItem.uv = m_itemIcons[ItemIcon::Gallawent + itemIndices[menuItem.selectedIndex]].getTextureRect();
+                    }
+                    else
+                    {
+                        menuItem.texture = nullptr;
+                    }*/
                 };
             const auto res = std::find(itemIndices.cbegin(), itemIndices.cend(), m_activeProfile.loadout.items[i]);
             if (res != itemIndices.cend())
@@ -2533,7 +2591,7 @@ void ProfileStateV2::createDetailItems()
 
     //voice type
     if (const auto v = std::find_if(m_voices.begin(), m_voices.end(),
-        [&](const cro::AudioScape& as) {return as.getUID() == m_activeProfile.playerData.voiceID; });
+        [&](const VoiceData& as) {return as.audioScape.getUID() == m_activeProfile.playerData.voiceID; });
         v != m_voices.end())
     {
         m_voiceIndex = static_cast<std::int32_t>(std::distance(m_voices.begin(), v));
@@ -2545,14 +2603,24 @@ void ProfileStateV2::createDetailItems()
         [&](Menu::Item& i)
         {
             m_voiceIndex = i.selectedIndex;
-            m_activeProfile.playerData.voiceID = m_voices[m_voiceIndex].getUID();
+            m_activeProfile.playerData.voiceID = m_voices[m_voiceIndex].audioScape.getUID();
             playPreviewAudio();
 
-            i.description = "Voice: " + m_voices[m_voiceIndex].getName();
+            i.description = "Voice: " + m_voices[m_voiceIndex].audioScape.getName();
             m_detailsPane.text.getComponent<cro::Text>().setString(i.description);
+
+            if (m_voices[m_voiceIndex].isWorkshop)
+            {
+                i.texture = m_itemIcons[ItemIcon::WorkshopItem].getTexture();
+                i.uv = m_itemIcons[ItemIcon::WorkshopItem].getTextureRect();
+            }
+            else
+            {
+                i.texture = nullptr;
+            }
         };
     item->selectedIndex = m_voiceIndex;
-    item->description = "Voice: " + m_voices[m_voiceIndex].getName();
+    item->description = "Voice: " + m_voices[m_voiceIndex].audioScape.getName();
     for (auto i = 0u; i < m_voices.size(); ++i)
     {
         item->labels.push_back(std::to_string(i + 1));
@@ -4057,6 +4125,7 @@ void ProfileStateV2::loadVoiceData()
         std::sort(paths.begin() + next, paths.end());
     }
 
+    std::size_t i = 0;
     for (const auto& path : paths)
     {
         cro::AudioScape as;
@@ -4073,10 +4142,13 @@ void ProfileStateV2::loadVoiceData()
             }
         }
 
+        i++;
         if (as.getUID() != 0
             && allEmitters)
         {
-            m_voices.push_back(as);
+            auto& vd = m_voices.emplace_back();
+            vd.audioScape = as;
+            vd.isWorkshop = i > next;
         }
     }
 
@@ -4439,7 +4511,7 @@ void ProfileStateV2::playPreviewAudio()
 
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>();
-        e.addComponent<cro::AudioEmitter>() = m_voices[m_voiceIndex].getEmitter(EmitterNames[emitterIndex]);
+        e.addComponent<cro::AudioEmitter>() = m_voices[m_voiceIndex].audioScape.getEmitter(EmitterNames[emitterIndex]);
         e.getComponent<cro::AudioEmitter>().setPitch(1.f + (static_cast<float>(m_activeProfile.playerData.voicePitch) / VoicePitchDivisor));
         e.getComponent<cro::AudioEmitter>().play();
         e.addComponent<cro::Callback>().active = true;
