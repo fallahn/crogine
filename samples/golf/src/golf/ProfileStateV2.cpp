@@ -2138,6 +2138,27 @@ void ProfileStateV2::createHeadwearItems()
 
 void ProfileStateV2::createEquipmentItems()
 {
+    m_lockedBallCount = 0;
+    //for some reason (I forget) the ballInfo size
+    //is different to the number of model defs
+    std::int32_t c = 0;
+    for (auto& ballDef : m_profileData.ballDefs)
+    {
+        if (m_sharedData.ballInfo[c++].locked)
+        {
+            m_lockedBallCount++;
+        }
+    }
+
+    m_lockedClubCount = 0;
+    for (const auto& data : m_clubData)
+    {
+        if (data.locked)
+        {
+            m_lockedClubCount++;
+        }
+    }
+
     m_menuLayout.items[TabID::Equipment].clear();
 
     auto* item = &m_menuLayout.items[TabID::Equipment].emplace_back();
@@ -3778,10 +3799,13 @@ void ProfileStateV2::loadBallModels()
     std::int32_t c = 0;
     for (auto& ballDef : m_profileData.ballDefs)
     {
-        if (m_sharedData.ballInfo[c].locked)
+        //this is superfluous here as we do it each time we
+        //lay out the menu items in case a ball was unlocked at the
+        //equipment counter
+        /*if (m_sharedData.ballInfo[c].locked)
         {
             m_lockedBallCount++;
-        }
+        }*/
         auto entity = m_previewScene.createEntity();
         entity.addComponent<cro::Transform>();
         ballDef.createModel(entity);
@@ -3864,10 +3888,13 @@ void ProfileStateV2::loadClubData()
                                     data.manufacturer != -1
                                     && (m_sharedData.inventory.manufacturerFlags & (1 << data.manufacturer)) == 0;
 
-                                if (data.locked)
+                                //moved to creating menu items
+                                //(for one thing this will be wrong if a duplicated
+                                //club is counted then removed...)
+                                /*if (data.locked)
                                 {
                                     m_lockedClubCount++;
-                                }
+                                }*/
                             }
                         }
 
