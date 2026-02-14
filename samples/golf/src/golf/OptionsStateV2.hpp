@@ -157,6 +157,7 @@ private:
             PuttFollow,
             RangeIndicator,
             Warning,
+            SteamIcon,
 
             Count
         };

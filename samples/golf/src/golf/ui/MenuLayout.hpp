@@ -56,7 +56,8 @@ struct TabBar final
     struct Item final
     {
         cro::Entity text;
-        float displayWidth = 0.375f; //how much horizontal space items in this tab use
+        float displayWidth = 0.375f; //how much horizontal space items in this tab use as ratio of screen width
+        float renderWidth = 0.f; //prescaled size the items for this tab were calculated to be in pixels
 
         enum
         {

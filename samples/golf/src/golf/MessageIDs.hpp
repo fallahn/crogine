@@ -248,7 +248,8 @@ struct MenuSoundEvent final
     enum
     {
         Switch, Activate,
-        Cancel, Denied
+        Cancel, Denied,
+        Snapshot, Crumple,
     };
     std::uint8_t type = 0;
 };

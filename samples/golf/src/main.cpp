@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -53,7 +53,7 @@ int main(int argc, char** argsv)
     }
 
 #ifdef _WIN32
-    //applyNVSettings();
+    applyNVSettings();
 #endif
 
     GolfGame game;

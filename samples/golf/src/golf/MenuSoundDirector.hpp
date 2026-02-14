@@ -55,6 +55,7 @@ public:
             Hole,
             Ground,
             Snapshot,
+            Crumple,
             LobbyJoin,
             LobbyExit,
             Title,

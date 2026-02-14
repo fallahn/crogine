@@ -207,6 +207,8 @@ private:
             Locked,
             UnlockedItem,
             WorkshopItem,
+            WorkshopButton,
+            EquipButton,
 
             Gallawent, Dong,
             Fellowcraft, Akrun,

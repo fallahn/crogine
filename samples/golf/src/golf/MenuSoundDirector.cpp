@@ -55,6 +55,7 @@ MenuSoundDirector::MenuSoundDirector(cro::AudioResource& ar, const std::size_t& 
         "assets/golf/sound/ball/holed.wav",
         "assets/golf/sound/ball/drop.wav",
         "assets/golf/sound/menu/snapshot.wav",
+        "assets/golf/sound/menu/crumple.wav",
         "assets/golf/sound/menu/lobby.wav",
         "assets/golf/sound/menu/lobby_exit.wav",
         "assets/golf/sound/menu/title.wav",
@@ -123,6 +124,12 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
                 break;
             case MenuSoundEvent::Denied:
                 playSound(AudioID::Denied, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case MenuSoundEvent::Snapshot:
+                playSound(AudioID::Snapshot, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case MenuSoundEvent::Crumple:
+                playSound(AudioID::Crumple, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
                 break;
             }
         }

@@ -1,4 +1,4 @@
-/*-----------------------------------------------------------------------
+﻿/*-----------------------------------------------------------------------
 
 Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
@@ -82,9 +82,8 @@ namespace
     constexpr glm::uvec2 MugshotTexSize(192u, 96u);
     constexpr std::size_t MaxBioChars = 512;
 
-    //static const cro::String XboxInfo = cro::String(ButtonX) + " Show Credits   " + cro::String(ButtonY) + " How To Play   " + cro::String(ButtonB) + " Close";
-    //static const cro::String PSInfo = cro::String(ButtonSquare) + " Show Credits   " + cro::String(ButtonCross) + " How To Play   " + cro::String(ButtonCircle) + " Close";
-    static const cro::String KeyInfo = "LCtrl (Hold) - Save and Close   ESC (Hold) - Cancel Changes";
+    static constexpr std::uint32_t DownArrow = 0x2193;
+    static const cro::String KeyInfo = cro::String(DownArrow) + cro::String(" LCtrl Save & Close   ") + cro::String(DownArrow) + cro::String(" LAlt Randomise   ") + cro::String(DownArrow) + cro::String(" ESC Close");
 
     const std::array ItemLabels =
     {
@@ -590,7 +589,7 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
 bool ProfileStateV2::simulate(float dt)
 {
     //press/hold to exist
-    static constexpr float MaxHoldTime = 0.5f;
+    static constexpr float MaxHoldTime = 0.35f;
     if (m_exitFlags)
     {
         m_exitHoldTimer = std::min(m_exitHoldTimer + dt, MaxHoldTime);
@@ -875,6 +874,9 @@ void ProfileStateV2::loadAssets()
 
         m_itemIcons[ItemIcon::UnlockedItem] = spriteSheet.getSprite("item_unlocked");
         m_itemIcons[ItemIcon::WorkshopItem] = spriteSheet.getSprite("item_workshop");
+        m_itemIcons[ItemIcon::WorkshopButton] = spriteSheet.getSprite("workshop_button");
+        m_itemIcons[ItemIcon::EquipButton] = spriteSheet.getSprite("item_equip_counter");
+        m_itemIcons[ItemIcon::Locked] = spriteSheet.getSprite("locked_icon");
     }
 
     if (spriteSheet.loadFromFile("assets/golf/sprites/shop_badges.spt", m_sharedData.sharedResources->textures))
@@ -1404,13 +1406,13 @@ void ProfileStateV2::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_infoString = entity;
 
-    m_infoRects[0] = spriteSheet.getSprite("info_ps").getTextureRect();
-    m_infoRects[1] = spriteSheet.getSprite("info_xbox").getTextureRect();
+    m_infoRects[0] = spriteSheet.getSprite("info_profile_ps").getTextureRect();
+    m_infoRects[1] = spriteSheet.getSprite("info_profile_xbox").getTextureRect();
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("info_xbox");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("info_profile_xbox");
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
     entity.getComponent<cro::UIElement>().depth = 0.1f;
     entity.getComponent<cro::UIElement>().absolutePosition = { 20.f, 2.f };
@@ -1949,7 +1951,8 @@ void ProfileStateV2::createBodyItems()
         {
             Social::showWorkshop();
         };
-    //TODO icon
+    item->texture = m_itemIcons[ItemIcon::WorkshopButton].getTexture();
+    item->uv = m_itemIcons[ItemIcon::WorkshopButton].getTextureRect();
 #endif
 }
 
@@ -2103,7 +2106,7 @@ void ProfileStateV2::createHeadwearItems()
                         item->labels.push_back(ss.str());
                     }
 
-                    item->selectedIndex = std::min(item->labels.size() - 1, valueToIndex(i, m_activeProfile.playerData.headwearOffsets[offset][j]));
+                    item->selectedIndex = static_cast<std::int32_t>(std::min(item->labels.size() - 1, valueToIndex(i, m_activeProfile.playerData.headwearOffsets[offset][j])));
                     item->activated = 
                         [&, indexToValue, i, j, offset, keyIndex](Menu::Item& item)
                         {
@@ -2174,7 +2177,8 @@ void ProfileStateV2::createHeadwearItems()
         {
             Social::showWorkshop();
         };
-    //TODO icon
+    item->texture = m_itemIcons[ItemIcon::WorkshopButton].getTexture();
+    item->uv = m_itemIcons[ItemIcon::WorkshopButton].getTextureRect();
 #endif
 }
 
@@ -2368,7 +2372,8 @@ void ProfileStateV2::createEquipmentItems()
         {
             Social::showWorkshop();
         };
-    //TODO icon
+    item->texture = m_itemIcons[ItemIcon::WorkshopButton].getTexture();
+    item->uv = m_itemIcons[ItemIcon::WorkshopButton].getTextureRect();
 #endif
 }
 
@@ -2514,6 +2519,8 @@ void ProfileStateV2::createLoadoutItems()
         {
             requestStackPush(StateID::Shop);
         };
+    item->texture = m_itemIcons[ItemIcon::EquipButton].getTexture();
+    item->uv = m_itemIcons[ItemIcon::EquipButton].getTextureRect();
 }
 
 void ProfileStateV2::createDetailItems()
@@ -2679,7 +2686,8 @@ void ProfileStateV2::createDetailItems()
         {
             Social::showWorkshop();
         };
-    //TODO icon
+    item->texture = m_itemIcons[ItemIcon::WorkshopButton].getTexture();
+    item->uv = m_itemIcons[ItemIcon::WorkshopButton].getTextureRect();
 #endif
 }
 
@@ -2964,8 +2972,8 @@ void ProfileStateV2::resizeItemGraphics()
 
     //update all the item backgrounds based on current window size and selected tab
     //these aren't scaled by view size here - the target they're rendered to is
-    float renderSize = static_cast<float>(m_menuLayout.texture.getSize().x);
-    renderSize = std::round(renderSize * m_tabBar.items[m_tabBar.activeIndex].displayWidth);
+    m_tabBar.items[m_tabBar.activeIndex].renderWidth = static_cast<float>(m_menuLayout.texture.getSize().x);
+    m_tabBar.items[m_tabBar.activeIndex].renderWidth = std::round(m_tabBar.items[m_tabBar.activeIndex].renderWidth * m_tabBar.items[m_tabBar.activeIndex].displayWidth);
 
     std::vector<cro::Vertex2D> verts;
     const auto calcVerts =
@@ -2981,7 +2989,7 @@ void ProfileStateV2::resizeItemGraphics()
 
             
             position.x += left.size.x;
-            const auto centreWidth = renderSize - (left.size.x * 2.f);
+            const auto centreWidth = m_tabBar.items[m_tabBar.activeIndex].renderWidth - (left.size.x * 2.f);
             verts.emplace_back(glm::vec2(position.x, left.size.y), glm::vec2(left.uv.width, left.uv.height));
             verts.emplace_back(position, glm::vec2(left.uv.width, left.uv.bottom));
             verts.emplace_back(glm::vec2(position.x + centreWidth, left.size.y), glm::vec2(right.uv.left, right.uv.height));
@@ -3020,7 +3028,7 @@ void ProfileStateV2::resizeItemGraphics()
 
 
     //update detail background
-    glm::vec2 backgroundArea = { static_cast<float>(cro::App::getWindow().getSize().x - (renderSize * viewScale)),
+    glm::vec2 backgroundArea = { static_cast<float>(cro::App::getWindow().getSize().x - (m_tabBar.items[m_tabBar.activeIndex].renderWidth * viewScale)),
                         (m_tabBar.background.getComponent<cro::Transform>().getPosition().y - (InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2) };
 
     backgroundArea.x -= (DetailBackgroundPadding * viewScale);
@@ -3279,25 +3287,28 @@ void ProfileStateV2::updateMenuItems()
 
             if (item.texture)
             {
+                if (item.displayType == Menu::Item::TextOnly)
+                {
+                    //achievement icon
+                    m_menuQuad.setPosition(pos + glm::vec2(ItemSpacing, ItemSpacing));
+                    pos.x += ItemSpacing + ItemImage.x; //moves title text over
+                }
+                else
+                {
+                    //align to the right
+                    m_menuQuad.setPosition(pos + glm::vec2(m_tabBar.items[m_tabBar.activeIndex].renderWidth - (ItemSpacing + ItemImage.x), ItemSpacing));
+                }
                 m_menuQuad.setTexture(*item.texture);
                 m_menuQuad.setScale(ItemImage / glm::vec2(item.uv.width, item.uv.height));
-                m_menuQuad.setPosition(pos + glm::vec2(ItemSpacing, ItemSpacing));
                 m_menuQuad.setTextureRect(item.uv);
                 m_menuQuad.setColour(item.previewColour);
 
                 m_menuQuad.draw();
-                pos.x += (ItemSpacing) + ItemImage.x;
             }
 
             pos.x += ItemSpacing;
             pos.y += ItemHeight - LineSpacing;
 
-            /*if (idx == m_menuLayout.hoveredIndex)
-            {
-                m_menuText.setFillColour(CD32::Colours[CD32::Black]);
-                m_menuTextLarge.setFillColour(CD32::Colours[CD32::Black]);
-            }
-            else */
             if (idx == m_menuLayout.itemIndex
                 || idx == m_menuLayout.hoveredIndex)
             {
@@ -4606,6 +4617,8 @@ void ProfileStateV2::updateMugshot()
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().play(idx);
     m_detailsPane.mugshotImage.getComponent<cro::Sprite>().setTexture(m_mugshotTexture.getTexture());
     //m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
+
+    playSound(MenuSoundEvent::Snapshot);
 }
 
 void ProfileStateV2::clearMugshot()
@@ -4632,6 +4645,8 @@ void ProfileStateV2::clearMugshot()
 
     //hide any preview sprite - this is done by the sprite callback now
     //m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+
+    playSound(MenuSoundEvent::Crumple);
 }
 
 std::string ProfileStateV2::generateRandomBio() const
@@ -4725,7 +4740,7 @@ void ProfileStateV2::setBioString(const std::string& str)
     m_detailsPane.bioString.getComponent<cro::Text>().setString(s);
 
     const auto left = m_detailsPane.mugshotImage.getComponent<cro::Drawable2D>().getCroppingArea().left;
-    m_detailsPane.bioString.getComponent<cro::Transform>().setPosition(glm::vec2(left + 8.f, -4.f));
+    m_detailsPane.bioString.getComponent<cro::Transform>().setPosition(glm::vec2(left/* + 8.f*/, -4.f));
 
     //TODO set char size? OR should we be using the UIElement here?
 }

@@ -759,7 +759,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     if (Social::doubleXP() == 2)
     {
         entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 48.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 56.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(font).setString("Double XP\nWeekend!");
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);

@@ -732,6 +732,7 @@ void OptionsStateV2::loadAssets()
         m_tabBar.items[TabID::Keyboard].sprite = spriteSheet.getSprite("keyboard_icon");
 
         m_optionIcons[OptionIcon::Warning] = spriteSheet.getSprite("warning_icon");
+        m_optionIcons[OptionIcon::SteamIcon] = spriteSheet.getSprite("workshop_button");
     }
 
     if (spriteSheet.loadFromFile("assets/golf/sprites/options_images.spt", m_sharedData.sharedResources->textures))
@@ -2474,7 +2475,6 @@ void OptionsStateV2::createControllerItems()
     item->selectedIndex = m_sharedData.enableRumble;
 
 #ifdef USE_GNS
-
     item = &m_menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Rebind Buttons";
     item->description = "Review a Steam guide on rebinding the controller buttons with Steam Input";
@@ -2484,7 +2484,8 @@ void OptionsStateV2::createControllerItems()
             Social::showControllerBinding();
         };
     item->labels = { "View Steam Guide" };
-
+    item->texture = m_optionIcons[OptionIcon::SteamIcon].getTexture();
+    item->uv = m_optionIcons[OptionIcon::SteamIcon].getTextureRect();
 #endif
 }
 
@@ -3172,8 +3173,8 @@ void OptionsStateV2::resizeItemGraphics()
 
     //update all the item backgrounds based on current window size and selected tab
     //these aren't scaled by view size here - the target they're rendered to is
-    float renderSize = static_cast<float>(m_menuLayout.texture.getSize().x);
-    renderSize = std::round(renderSize * m_tabBar.items[m_tabBar.activeIndex].displayWidth);
+    m_tabBar.items[m_tabBar.activeIndex].renderWidth = static_cast<float>(m_menuLayout.texture.getSize().x);
+    m_tabBar.items[m_tabBar.activeIndex].renderWidth = std::round(m_tabBar.items[m_tabBar.activeIndex].renderWidth * m_tabBar.items[m_tabBar.activeIndex].displayWidth);
 
     std::vector<cro::Vertex2D> verts;
     const auto calcVerts =
@@ -3189,7 +3190,7 @@ void OptionsStateV2::resizeItemGraphics()
 
             
             position.x += left.size.x;
-            const auto centreWidth = renderSize - (left.size.x * 2.f);
+            const auto centreWidth = m_tabBar.items[m_tabBar.activeIndex].renderWidth - (left.size.x * 2.f);
             verts.emplace_back(glm::vec2(position.x, left.size.y), glm::vec2(left.uv.width, left.uv.height));
             verts.emplace_back(position, glm::vec2(left.uv.width, left.uv.bottom));
             verts.emplace_back(glm::vec2(position.x + centreWidth, left.size.y), glm::vec2(right.uv.left, right.uv.height));
@@ -3228,7 +3229,7 @@ void OptionsStateV2::resizeItemGraphics()
 
 
     //update detail background
-    glm::vec2 backgroundArea = { static_cast<float>(cro::App::getWindow().getSize().x - (renderSize * viewScale)),
+    glm::vec2 backgroundArea = { static_cast<float>(cro::App::getWindow().getSize().x - (m_tabBar.items[m_tabBar.activeIndex].renderWidth * viewScale)),
                         (m_tabBar.background.getComponent<cro::Transform>().getPosition().y - (InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2) };
 
     backgroundArea.x -= (DetailBackgroundPadding * viewScale);
@@ -3428,25 +3429,28 @@ void OptionsStateV2::updateMenuItems()
 
             if (item.texture)
             {
+                if (item.displayType == Menu::Item::TextOnly)
+                {
+                    //achievement icon
+                    m_menuQuad.setPosition(pos + glm::vec2(ItemSpacing, ItemSpacing));
+                    pos.x += ItemSpacing + ItemImage.x; //moves title text over
+                }
+                else
+                {
+                    //align to the right
+                    m_menuQuad.setPosition(pos + glm::vec2(m_tabBar.items[m_tabBar.activeIndex].renderWidth - (ItemSpacing + ItemImage.x), ItemSpacing));
+                }
                 m_menuQuad.setTexture(*item.texture);
                 m_menuQuad.setScale(ItemImage / glm::vec2(item.uv.width, item.uv.height));
-                m_menuQuad.setPosition(pos + glm::vec2(ItemSpacing, ItemSpacing));
                 m_menuQuad.setTextureRect(item.uv);
                 m_menuQuad.setColour(item.previewColour);
 
                 m_menuQuad.draw();
-                pos.x += (ItemSpacing) + ItemImage.x;
             }
 
             pos.x += ItemSpacing;
             pos.y += ItemHeight - LineSpacing;
 
-            /*if (idx == m_menuLayout.hoveredIndex)
-            {
-                m_menuText.setFillColour(CD32::Colours[CD32::Black]);
-                m_menuTextLarge.setFillColour(CD32::Colours[CD32::Black]);
-            }
-            else */
             if (idx == m_menuLayout.itemIndex
                 || idx == m_menuLayout.hoveredIndex)
             {
