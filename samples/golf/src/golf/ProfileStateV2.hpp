@@ -76,6 +76,7 @@ private:
     std::uint8_t m_exitFlags;
     static constexpr std::uint8_t ExitFlagSave = 0x1;
     static constexpr std::uint8_t ExitFlagQuit = 0x2;
+    static constexpr std::uint8_t ExitFlagRandomise = 0x4;
 
     cro::Shader m_progressShader;
     std::int32_t m_progressUniform;
@@ -310,4 +311,5 @@ private:
     std::string generateRandomBio() const;
     void refreshBio();
     void setBioString(const std::string&);
+    void randomise();
 };

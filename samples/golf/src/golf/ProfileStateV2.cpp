@@ -260,6 +260,10 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         {
             m_exitFlags &= ~ExitFlagSave;
         }
+        else if (evt.key.keysym.sym == SDLK_LALT)
+        {
+            m_exitFlags &= ~ExitFlagRandomise;
+        }
         else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
         {
             nextTab();
@@ -325,6 +329,11 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         {
             m_exitFlags |= ExitFlagSave;
         }
+        else if (evt.key.keysym.sym == SDLK_LALT
+            && evt.key.repeat == 0)
+        {
+            m_exitFlags |= ExitFlagRandomise;
+        }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
@@ -347,6 +356,9 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
             break;
         case cro::GameController::ButtonX:
             m_exitFlags |= ExitFlagSave;
+            break;
+        case cro::GameController::ButtonY:
+            m_exitFlags |= ExitFlagRandomise;
             break;
         }
     }
@@ -377,6 +389,9 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
             break;
         case cro::GameController::ButtonX:
             m_exitFlags &= ~ExitFlagSave;
+            break;
+        case cro::GameController::ButtonY:
+            m_exitFlags &= ~ExitFlagRandomise;
             break;
         }
     }
@@ -596,12 +611,16 @@ bool ProfileStateV2::simulate(float dt)
         
         if (m_exitHoldTimer >= MaxHoldTime)
         {
-            if (m_exitFlags == ExitFlagQuit)
+            switch (m_exitFlags)
             {
+            default:
+                //mode than one button held, so invalid
+                m_exitHoldTimer = 0.f;
+                break;
+            case ExitFlagQuit:
                 quitState();
-            }
-            else if (m_exitFlags == ExitFlagSave)
-            {
+                break;
+            case ExitFlagSave:
                 if (m_saveMugshotOnExit)
                 {
                     const auto path = Content::getUserContentPath(Content::UserContent::Profile) + m_activeProfile.playerData.profileID + "/mug.png";
@@ -617,18 +636,17 @@ bool ProfileStateV2::simulate(float dt)
                 }
 
                 //copy av data back to proper data and write files     
-                m_activeProfile.loadout.write(m_activeProfile.playerData.profileID);          
+                m_activeProfile.loadout.write(m_activeProfile.playerData.profileID);
                 m_profileData.playerProfiles[m_profileData.activeProfileIndex] = m_activeProfile;
                 m_profileData.playerProfiles[m_profileData.activeProfileIndex].playerData.saveProfile();
 
                 quitState();
+                break;
+            case ExitFlagRandomise:
+                randomise();
+                break;
             }
-            else
-            {
-                //mode than one button held, so invalid
-                m_exitFlags = 0;
-                m_exitHoldTimer = 0.f;
-            }
+            m_exitFlags = 0;
         }
     }
     else
@@ -1253,7 +1271,7 @@ void ProfileStateV2::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString("Enter - Apply");
+    entity.addComponent<cro::Text>(largeFont).setString("Enter - Play Voice");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     entity.getComponent<cro::UIElement>().characterSize = UITextSize;
@@ -1273,7 +1291,7 @@ void ProfileStateV2::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("apply_xbox");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("voice_xbox");
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
     entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 4.f };
     entity.getComponent<cro::UIElement>().depth = 0.2f;
@@ -1290,7 +1308,7 @@ void ProfileStateV2::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("apply_ps");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("voice_ps");
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
     entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 4.f };
     entity.getComponent<cro::UIElement>().depth = 0.2f;
@@ -1346,7 +1364,7 @@ void ProfileStateV2::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("cancel_xbox");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("rotate_xbox");
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
     entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, -8.f };
     entity.getComponent<cro::UIElement>().depth = 0.2f;
@@ -1363,7 +1381,7 @@ void ProfileStateV2::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("cancel_ps");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("rotate_ps");
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
     entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, -8.f };
     entity.getComponent<cro::UIElement>().depth = 0.2f;
@@ -2505,7 +2523,10 @@ void ProfileStateV2::createLoadoutItems()
             //WARNING this relies on i matching ClubIDs
             item->labels.push_back("Unlocked at level " + std::to_string(ClubID::getUnlockLevel(i)));
             item->activated = [](Menu::Item&) {};
-            item->selected = [](const Menu::Item&) {}; //TODO display a locked icon in window
+            item->selected = [&](const Menu::Item&)
+                {
+                    m_detailsPane.image.getComponent<cro::Sprite>() = m_itemIcons[ItemIcon::Locked];
+                };
         }
     }
     
@@ -2521,6 +2542,7 @@ void ProfileStateV2::createLoadoutItems()
         };
     item->texture = m_itemIcons[ItemIcon::EquipButton].getTexture();
     item->uv = m_itemIcons[ItemIcon::EquipButton].getTextureRect();
+    item->selected = [&](const Menu::Item&) {}; //hides stat image
 }
 
 void ProfileStateV2::createDetailItems()
@@ -2660,6 +2682,17 @@ void ProfileStateV2::createDetailItems()
         item->labels.push_back(std::to_string(i + 1));
     }
     item->displayType = Menu::Item::Slider;
+    item->alwaysActivate = true;
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_tabBar.items[m_tabBar.activeIndex].sprite;
+            const auto bounds = m_detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f,0.f });
+        };
 
     //voice pitch
     item = &m_menuLayout.items[TabID::Details].emplace_back();
@@ -2673,7 +2706,17 @@ void ProfileStateV2::createDetailItems()
     item->selectedIndex = m_activeProfile.playerData.voicePitch + 2;
     item->labels = { "-2", "-1", "Default", "+1", "+2" };
     item->displayType = Menu::Item::Slider;
+    item->alwaysActivate = true;
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
+            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_tabBar.items[m_tabBar.activeIndex].sprite;
+            const auto bounds = m_detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
+            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f,0.f });
+        };
 
 #ifdef USE_GNS
     //workshop button if steam
@@ -4323,15 +4366,14 @@ void ProfileStateV2::setAvatarIndex(std::int32_t idx)
     //assert the selected index when the window opens
     if (m_activeProfile.playerData.voiceID == 0)
     {
-        LogI << FILE_LINE << " TODO" << std::endl;
-        /*if (!m_avatarModels[m_avatarIndex].previewAudio.empty())
+        if (!m_avatarModels[m_avatarIndex].previewAudio.empty())
         {
             m_avatarModels[m_avatarIndex].previewAudio[cro::Util::Random::value(0u, m_avatarModels[m_avatarIndex].previewAudio.size() - 1)].getComponent<cro::AudioEmitter>().play();
-        }*/
+        }
     }
     else
     {
-        //playPreviewAudio();
+        playPreviewAudio();
     }
 }
 
@@ -4743,4 +4785,42 @@ void ProfileStateV2::setBioString(const std::string& str)
     m_detailsPane.bioString.getComponent<cro::Transform>().setPosition(glm::vec2(left/* + 8.f*/, -4.f));
 
     //TODO set char size? OR should we be using the UIElement here?
+}
+
+void ProfileStateV2::randomise()
+{
+    //randomise hair
+    setHairIndex(cro::Util::Random::value(0u, m_avatarHairModels.size() - 1));
+    setHatIndex(0);
+
+    //randomise avatar
+    setAvatarIndex(cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1));
+
+    m_activeProfile.playerData.voiceID = m_avatarModels[m_avatarIndex].audioUID;
+    m_activeProfile.playerData.voicePitch = 0;
+
+    //randomise colours
+    for (auto i = 0; i < /*PaletteID::BallThumb*/6; ++i)
+    {
+        m_activeProfile.playerData.avatarFlags[i] = static_cast<std::uint8_t>(cro::Util::Random::value(0u, (pc::PairCounts[i] / 2) - 1));
+        m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(i), m_activeProfile.playerData.avatarFlags[i]);
+    }
+
+    //update texture
+    m_profileTextures[m_avatarIndex].apply();
+
+    //update hair
+    if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].isValid())
+    {
+        m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.playerData.avatarFlags[0]]);
+        m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.playerData.avatarFlags[0]]);
+    }
+
+    createBodyItems();
+    createHeadwearItems();
+    createEquipmentItems();
+    //createLoadoutItems();
+    createDetailItems();
+
+    activateTab(m_tabBar.activeIndex);
 }
