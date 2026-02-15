@@ -275,6 +275,7 @@
     <ClInclude Include="include\Social.hpp" />
     <ClInclude Include="include\StoredValue.hpp" />
     <ClInclude Include="include\Timeline.hpp" />
+    <ClInclude Include="include\Voice.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Achievements.cpp" />
@@ -284,6 +285,7 @@
     <ClCompile Include="src\MonthlyChallenge.cpp" />
     <ClCompile Include="src\PersonalBest.cpp" />
     <ClCompile Include="src\Social.cpp" />
+    <ClCompile Include="src\Voice.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
