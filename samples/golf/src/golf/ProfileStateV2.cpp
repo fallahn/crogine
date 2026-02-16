@@ -1176,11 +1176,11 @@ void ProfileStateV2::buildScene()
     m_detailsPane.background.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     m_detailsPane.background.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
     m_detailsPane.background.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, 8.f };
-    m_detailsPane.background.getComponent<cro::UIElement>().resizeCallback =
+    /*m_detailsPane.background.getComponent<cro::UIElement>().resizeCallback =
         [&](cro::Entity e) 
         {
 
-        };
+        };*/
     m_detailsPane.background.getComponent<cro::UIElement>().depth = -0.3f;
     m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.background.getComponent<cro::Transform>());
 
@@ -1328,9 +1328,6 @@ void ProfileStateV2::buildScene()
     //displays zoom/rotate controls
     auto msgRoot = m_scene.createEntity();
     msgRoot.addComponent<cro::Transform>();
-    msgRoot.addComponent<cro::UIElement>(cro::UIElement::Position, false);
-    msgRoot.getComponent<cro::UIElement>().relativePosition = { -0.03f, -0.37f };
-    //msgRoot.getComponent<cro::UIElement>().absolutePosition = { 0.f, 32.f };
     msgRoot.addComponent<cro::Callback>().active = true;
     msgRoot.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -1339,8 +1336,10 @@ void ProfileStateV2::buildScene()
                 || m_tabBar.activeIndex == TabID::Headwear)
                 ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+            e.getComponent<cro::Transform>().setPosition(-(m_detailsPane.backgroundSize / 2.f) * cro::UIElementSystem::getViewScale());
         };
-    rootNode.getComponent<cro::Transform>().addChild(msgRoot.getComponent<cro::Transform>());
+    m_detailsPane.root.getComponent<cro::Transform>().addChild(msgRoot.getComponent<cro::Transform>());
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1349,6 +1348,7 @@ void ProfileStateV2::buildScene()
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     entity.getComponent<cro::UIElement>().characterSize = UITextSize;
+    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 12.f };
     entity.getComponent<cro::UIElement>().depth = 0.2f;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -1360,13 +1360,12 @@ void ProfileStateV2::buildScene()
         };
     msgRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //TODO set these sprites
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("rotate_xbox");
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
-    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, -8.f };
+    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 4.f };
     entity.getComponent<cro::UIElement>().depth = 0.2f;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -1383,7 +1382,7 @@ void ProfileStateV2::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("rotate_ps");
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
-    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, -8.f };
+    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 4.f };
     entity.getComponent<cro::UIElement>().depth = 0.2f;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -2698,7 +2697,7 @@ void ProfileStateV2::createDetailItems()
         };
     item->labels.push_back("Update");
     item->description = "Update the player icon displayed for this profile.";
-    item->activatedAudioID = -1; //mutes the menu sound
+    item->activatedAudioID = MenuSoundEvent::Snapshot;
 
     //remove mugshot
     item = &m_menuLayout.items[TabID::Details].emplace_back();
@@ -2714,7 +2713,7 @@ void ProfileStateV2::createDetailItems()
 #else
     item->description = "Remove the player icon displayed for this profile.";
 #endif
-    item->activatedAudioID = -1; //mutes the menu sound
+    item->activatedAudioID = MenuSoundEvent::Crumple;
 
     //voice type
     if (const auto v = std::find_if(m_voices.begin(), m_voices.end(),
@@ -4744,8 +4743,6 @@ void ProfileStateV2::updateMugshot()
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().play(idx);
     m_detailsPane.mugshotImage.getComponent<cro::Sprite>().setTexture(m_mugshotTexture.getTexture());
     //m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
-
-    playSound(MenuSoundEvent::Snapshot);
 }
 
 void ProfileStateV2::clearMugshot()
@@ -4772,8 +4769,6 @@ void ProfileStateV2::clearMugshot()
 
     //hide any preview sprite - this is done by the sprite callback now
     //m_detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-
-    playSound(MenuSoundEvent::Crumple);
 }
 
 std::string ProfileStateV2::generateRandomBio() const
