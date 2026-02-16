@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -112,6 +112,8 @@ struct Menu final
         bool alwaysActivate = false; //hack to always call activation callback regardless of input
         bool wrapValue = true; //value wraps back to the beginning instead of clamping
         std::int32_t selectedIndex = 0; //currently selected entry
+        std::int32_t activatedAudioID = 1; //defaults to MenuSoundEvent::Activate
+
         std::vector<cro::String> labels; //display text for each setting when cycled
         cro::String title; //main display title
         cro::String subTitle; //shown below title in TextOnly items

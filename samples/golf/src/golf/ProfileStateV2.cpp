@@ -2698,6 +2698,7 @@ void ProfileStateV2::createDetailItems()
         };
     item->labels.push_back("Update");
     item->description = "Update the player icon displayed for this profile.";
+    item->activatedAudioID = -1; //mutes the menu sound
 
     //remove mugshot
     item = &m_menuLayout.items[TabID::Details].emplace_back();
@@ -2713,6 +2714,7 @@ void ProfileStateV2::createDetailItems()
 #else
     item->description = "Remove the player icon displayed for this profile.";
 #endif
+    item->activatedAudioID = -1; //mutes the menu sound
 
     //voice type
     if (const auto v = std::find_if(m_voices.begin(), m_voices.end(),
@@ -2771,6 +2773,7 @@ void ProfileStateV2::createDetailItems()
             const auto bounds = m_detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
             m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f,0.f });
         };
+    item->activatedAudioID = -1; //mutes the menu sound
 
     //voice pitch
     item = &m_menuLayout.items[TabID::Details].emplace_back();
@@ -2795,6 +2798,7 @@ void ProfileStateV2::createDetailItems()
             const auto bounds = m_detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
             m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f,0.f });
         };
+    item->activatedAudioID = -1; //mutes the menu sound
 
 #ifdef USE_GNS
     //workshop button if steam
@@ -3604,10 +3608,12 @@ void ProfileStateV2::activateLeft()
     //reset mouse hover highlight
     m_menuLayout.hoveredIndex = -1;
 
-    if (m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].activateLeft())
+    /*const */auto& item = m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex];
+    //ugh activate() ought to be const but that's a whole mess of mutables.
+    if (item.activateLeft())
     {
         updateMenuItems();
-        playSound(MenuSoundEvent::Cancel);
+        playSound(item.activatedAudioID);
     }
 }
 
@@ -3616,18 +3622,20 @@ void ProfileStateV2::activateRight()
     //reset mouse hover highlight
     m_menuLayout.hoveredIndex = -1;
 
-    if (m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].activateRight())
+    auto& item = m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex];
+    if (item.activateRight())
     {
         updateMenuItems();
-        playSound(MenuSoundEvent::Activate);
+        playSound(item.activatedAudioID);
     }
 }
 
 void ProfileStateV2::activate()
 {
-    if (m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].activate())
+    auto& item = m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex];
+    if (item.activate())
     {
-        playSound(MenuSoundEvent::Activate);
+        playSound(item.activatedAudioID);
     }
 }
 
