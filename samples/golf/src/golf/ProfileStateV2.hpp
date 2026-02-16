@@ -279,7 +279,9 @@ private:
         };
         std::vector<StatBar> statBars;
         cro::Entity statTitle;
+        cro::Entity manufacturerName;
         cro::Entity manufacturerInfo;
+        cro::Entity manufacturerIcon;
     }m_statLayout;
     void refreshStat(std::uint32_t catID, std::int32_t invID, bool setPointer);
 

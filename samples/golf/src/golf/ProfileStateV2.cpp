@@ -899,18 +899,18 @@ void ProfileStateV2::loadAssets()
 
     if (spriteSheet.loadFromFile("assets/golf/sprites/shop_badges.spt", m_sharedData.sharedResources->textures))
     {
-        m_itemIcons[ItemIcon::Gallawent]   = spriteSheet.getSprite("large_01");
-        m_itemIcons[ItemIcon::Dong]        = spriteSheet.getSprite("large_02");
-        m_itemIcons[ItemIcon::Fellowcraft] = spriteSheet.getSprite("large_03");
-        m_itemIcons[ItemIcon::Akrun]       = spriteSheet.getSprite("large_04");
-        m_itemIcons[ItemIcon::Dannis]      = spriteSheet.getSprite("large_05");
-        m_itemIcons[ItemIcon::Clix]        = spriteSheet.getSprite("large_06");
-        m_itemIcons[ItemIcon::Beytree]     = spriteSheet.getSprite("large_07");
-        m_itemIcons[ItemIcon::Tunnelrock]  = spriteSheet.getSprite("large_08");
-        m_itemIcons[ItemIcon::Flaxen]      = spriteSheet.getSprite("large_09");
-        m_itemIcons[ItemIcon::Hardings]    = spriteSheet.getSprite("large_10");
-        m_itemIcons[ItemIcon::Woodgear]    = spriteSheet.getSprite("large_11");
-        m_itemIcons[ItemIcon::BnS]         = spriteSheet.getSprite("large_12");
+        m_itemIcons[ItemIcon::Gallawent]   = spriteSheet.getSprite("small_01");
+        m_itemIcons[ItemIcon::Dong]        = spriteSheet.getSprite("small_02");
+        m_itemIcons[ItemIcon::Fellowcraft] = spriteSheet.getSprite("small_03");
+        m_itemIcons[ItemIcon::Akrun]       = spriteSheet.getSprite("small_04");
+        m_itemIcons[ItemIcon::Dannis]      = spriteSheet.getSprite("small_05");
+        m_itemIcons[ItemIcon::Clix]        = spriteSheet.getSprite("small_06");
+        m_itemIcons[ItemIcon::Beytree]     = spriteSheet.getSprite("small_07");
+        m_itemIcons[ItemIcon::Tunnelrock]  = spriteSheet.getSprite("small_08");
+        m_itemIcons[ItemIcon::Flaxen]      = spriteSheet.getSprite("small_09");
+        m_itemIcons[ItemIcon::Hardings]    = spriteSheet.getSprite("small_10");
+        m_itemIcons[ItemIcon::Woodgear]    = spriteSheet.getSprite("small_11");
+        m_itemIcons[ItemIcon::BnS]         = spriteSheet.getSprite("small_12");
     }
 
     //this sets the default image shown on the right when the tab is selected
@@ -1760,6 +1760,7 @@ void ProfileStateV2::buildStatScene()
 
     const float UVWidth = spriteUV.width * (EndWidth / spriteSize.width);
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     const auto createStatBar = [&](glm::vec2 pos)
         {
@@ -1845,15 +1846,21 @@ void ProfileStateV2::buildStatScene()
     createStatBar(glm::vec2(20.f, 178.f));
     createStatBar(glm::vec2(20.f, 178.f - (spriteSize.height + 22.f)));
 
-    //TODO these need to re-adjust as the screen resizes.
     auto entity = m_statScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 20.f, 214.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
+    entity.addComponent<cro::Text>(largeFont).setFillColour(TextNormalColour);
     //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     m_statLayout.statTitle = entity;
+
+    entity = m_statScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 160.f, 214.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setString(ManufacturerText.back());
+    m_statLayout.manufacturerName = entity;
 
     entity = m_statScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 160.f, 214.f, 0.1f });
@@ -1861,11 +1868,13 @@ void ProfileStateV2::buildStatScene()
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setString(ManufacturerText.back());
-
     m_statLayout.manufacturerInfo = entity;
 
-
-
+    entity = m_statScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>();
+    m_statLayout.manufacturerIcon = entity;
 
 
     auto camEnt = m_statScene.getActiveCamera();
@@ -2557,18 +2566,6 @@ void ProfileStateV2::createLoadoutItems()
                 {
                     m_activeProfile.loadout.items[i] = itemIndices[menuItem.selectedIndex];
                     refreshStat(i, itemIndices[menuItem.selectedIndex], true);
-
-                    //hmm this would be OK if it didn't move the title text so much.
-                    //maybe set this in the main area instead.
-                    /*if (m_activeProfile.loadout.items[i] > -1)
-                    {
-                        menuItem.texture = m_itemIcons[ItemIcon::Gallawent + itemIndices[menuItem.selectedIndex]].getTexture();
-                        menuItem.uv = m_itemIcons[ItemIcon::Gallawent + itemIndices[menuItem.selectedIndex]].getTextureRect();
-                    }
-                    else
-                    {
-                        menuItem.texture = nullptr;
-                    }*/
                 };
             const auto res = std::find(itemIndices.cbegin(), itemIndices.cend(), m_activeProfile.loadout.items[i]);
             if (res != itemIndices.cend())
@@ -2592,8 +2589,12 @@ void ProfileStateV2::createLoadoutItems()
             item->activated = [](Menu::Item&) {};
             item->selected = [&](const Menu::Item&)
                 {
-                    m_detailsPane.image.getComponent<cro::Sprite>() = m_itemIcons[ItemIcon::Locked];
+                    //this is an awful icon. Maybe we're better off adding it to the item instead
+                    /*m_detailsPane.image.getComponent<cro::Sprite>() = m_itemIcons[ItemIcon::Locked];
+                    m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);*/
                 };
+            item->texture = m_itemIcons[ItemIcon::Locked].getTexture();
+            item->uv = m_itemIcons[ItemIcon::Locked].getTextureRect();
         }
     }
     
@@ -2602,6 +2603,7 @@ void ProfileStateV2::createLoadoutItems()
     item = &m_menuLayout.items[TabID::Loadout].emplace_back();
     item->title = "Go To";
     item->labels.push_back("Equipment Counter");
+    item->description = "Find more upgrades at the Equipment Counter";
     item->activated =
         [&](Menu::Item&)
         {
@@ -3302,7 +3304,10 @@ void ProfileStateV2::resizeItemGraphics()
     //the texture size itself is scaled...
     const glm::vec2 previewSize(CentreWidth * 2.f, std::floor(CentreHeight * 1.25f));
     m_statLayout.statTitle.getComponent<cro::Transform>().setPosition({ 6.f, previewSize.y - 24.f });
-    m_statLayout.manufacturerInfo.getComponent<cro::Transform>().setPosition({ (previewSize.x / 2.f) - 40.f, previewSize.y - 36.f });
+    m_statLayout.manufacturerIcon.getComponent<cro::Transform>().setPosition({ (previewSize.x / 2.f) - 42.f, previewSize.y - 62.f });
+    //this is done in refreshStat()
+    //m_statLayout.manufacturerName.getComponent<cro::Transform>().setPosition({ (previewSize.x / 2.f) - 26.f, previewSize.y - 54.f });
+    m_statLayout.manufacturerInfo.getComponent<cro::Transform>().setPosition({ (previewSize.x / 2.f) - 40.f, previewSize.y - 64.f });
     m_statLayout.statBars[0].bgEnt.getComponent<cro::Transform>().setPosition({ 2.f, previewSize.y - 60.f });
     m_statLayout.statBars[1].bgEnt.getComponent<cro::Transform>().setPosition({ 2.f, previewSize.y - 106.f });
 }
@@ -3753,6 +3758,7 @@ void ProfileStateV2::quitState()
 void ProfileStateV2::refreshStat(std::uint32_t catID, std::int32_t invID, bool setPointer)
 {
     m_statLayout.statTitle.getComponent<cro::Text>().setString(inv::ItemStrings[catID]);
+    const auto baseTextPos = m_statLayout.manufacturerInfo.getComponent<cro::Transform>().getPosition();
 
     if (invID == -1)
     {
@@ -3768,6 +3774,10 @@ void ProfileStateV2::refreshStat(std::uint32_t catID, std::int32_t invID, bool s
 
         m_statLayout.statBars[0].text.getComponent<cro::Text>().setString("Default: 0");
         m_statLayout.manufacturerInfo.getComponent<cro::Text>().setString(ManufacturerText.back());
+
+        m_statLayout.manufacturerIcon.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        m_statLayout.manufacturerName.getComponent<cro::Transform>().setPosition(baseTextPos + glm::vec3(0.f, 12.f, 0.f));
+        m_statLayout.manufacturerName.getComponent<cro::Text>().setString("Default");
 
         if (catID == GearID::Balls)
         {
@@ -3787,6 +3797,12 @@ void ProfileStateV2::refreshStat(std::uint32_t catID, std::int32_t invID, bool s
 
     const auto& item = inv::Items[invID];
     m_statLayout.manufacturerInfo.getComponent<cro::Text>().setString(ManufacturerText[item.manufacturer]);
+    m_statLayout.manufacturerName.getComponent<cro::Text>().setString(inv::Manufacturers[item.manufacturer]);
+    m_statLayout.manufacturerName.getComponent<cro::Transform>().setPosition(baseTextPos + glm::vec3(26.f, 18.f, 0.f));
+
+    m_statLayout.manufacturerIcon.getComponent<cro::Sprite>() =
+        m_itemIcons[ItemIcon::Gallawent + item.manufacturer];
+    m_statLayout.manufacturerIcon.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
     m_statLayout.statBars[0].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat01);
     m_statLayout.statBars[1].bgEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(item.stat02);
