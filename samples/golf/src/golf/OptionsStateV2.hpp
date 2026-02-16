@@ -214,6 +214,5 @@ private:
     void refreshControllerDevices();
 
     void refreshAudioDevices(Menu::Item&);
-    void refreshView();
     void quitState();
 };

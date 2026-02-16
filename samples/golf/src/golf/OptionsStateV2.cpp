@@ -558,7 +558,7 @@ void OptionsStateV2::handleMessage(const cro::Message& msg)
         {
             //hack to force the texture to resize properly
             m_menuLayout.texture.create(1, 1, false);
-            refreshView();
+            updateTabBar();
         }
     }
     m_scene.forwardMessage(msg);
@@ -1218,7 +1218,7 @@ void OptionsStateV2::buildScene()
         pos.y = -(size.y / 2.f);
         tx.setPosition(pos);*/
 
-        refreshView();
+        updateTabBar();
     };
 
     entity = m_scene.createEntity();
@@ -3146,7 +3146,7 @@ void OptionsStateV2::activateTab(std::int32_t idx)
         m_detailsPane.tabDetails[m_tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
     }
 
-    refreshView();
+    updateTabBar();
 
     //set item 0 as focused
     focusToIndex(m_tabBar, m_menuLayout);
@@ -3916,13 +3916,6 @@ void OptionsStateV2::refreshAudioDevices(Menu::Item& item)
         item.selectedIndex = 0;
         item.activated(item);
     }
-}
-
-void OptionsStateV2::refreshView()
-{
-    //heh OK let's say I had grander plans for this funtion...
-
-    updateTabBar();
 }
 
 void OptionsStateV2::quitState()

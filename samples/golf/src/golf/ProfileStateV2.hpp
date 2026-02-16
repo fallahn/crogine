@@ -267,7 +267,6 @@ private:
     void checkMouseOver(glm::vec2);
     void doMouseClick(glm::vec2);
 
-    void refreshView();
     void quitState();
 
     struct StatLayout final

@@ -543,7 +543,7 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
         {
             //hack to force the texture to resize properly
             m_menuLayout.texture.create(1, 1, false);
-            refreshView();
+            updateTabBar();
 
             //realigns the current menu to the new screen size
             cro::Entity entity = m_scene.createEntity();
@@ -1492,7 +1492,7 @@ void ProfileStateV2::buildScene()
         pos.y = -(size.y / 2.f);
         tx.setPosition(pos);*/
 
-        refreshView();
+        updateTabBar();
     };
 
     entity = m_scene.createEntity();
@@ -3089,7 +3089,7 @@ void ProfileStateV2::activateTab(std::int32_t idx)
         m_tabBar.items[m_tabBar.activeIndex].selected();
     }
 
-    refreshView();
+    updateTabBar();
 
     //set item 0 as focused
     focusToIndex(m_tabBar, m_menuLayout);
@@ -3777,13 +3777,6 @@ void ProfileStateV2::doMouseClick(glm::vec2 mousePos)
             }
         }
     }
-}
-
-void ProfileStateV2::refreshView()
-{
-    //heh OK let's say I had grander plans for this funtion...
-
-    updateTabBar();
 }
 
 void ProfileStateV2::quitState()
@@ -4990,7 +4983,7 @@ void ProfileStateV2::updatePalettePreview(std::int32_t paletteID, std::int32_t s
             }
         }
         const float scale = cro::UIElementSystem::getViewScale();
-        m_palettePreview.setPosition(glm::vec2(PreviewSize, m_previewTexture.getSize().y - (((rows + 2) * PreviewSize) * scale)));
+        m_palettePreview.setPosition(glm::vec2(PreviewSize, std::round(m_previewTexture.getSize().y - ((((rows + 2) * PreviewSize) - (PreviewSize / 2.f)) * scale))));
         m_palettePreview.setScale(glm::vec2(scale));
     }
     m_palettePreview.setVertexData(verts);
