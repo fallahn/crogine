@@ -3594,7 +3594,11 @@ void OptionsStateV2::nextItem()
 
     if (m_menuLayout.itemIndex < m_menuLayout.items[m_tabBar.activeIndex].size() - 1)
     {
-        m_menuLayout.itemIndex++;
+        do
+        {
+            m_menuLayout.itemIndex++;
+        } while (m_menuLayout.itemIndex < m_menuLayout.items[m_tabBar.activeIndex].size() - 1
+            && m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].displayType == Menu::Item::Heading);
         updateMenuItems();
 
         playSound(MenuSoundEvent::Switch);
@@ -3609,7 +3613,12 @@ void OptionsStateV2::prevItem()
     //hmm these are uints so we can't use max(0)
     if (m_menuLayout.itemIndex > 0)
     {
-        m_menuLayout.itemIndex--;
+        do
+        {
+            //also hmmm this doesn't work if the heading *is* at 0
+            m_menuLayout.itemIndex--;
+        } while (m_menuLayout.itemIndex > 0
+            && m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].displayType == Menu::Item::Heading);
         updateMenuItems();
 
         playSound(MenuSoundEvent::Switch);
@@ -3718,38 +3727,42 @@ void OptionsStateV2::doMouseClick(glm::vec2 mousePos)
     }
     else
     {
-        if (m_menuLayout.hoveredIndex != -1)
+        if (m_menuLayout.hoveredIndex == -1 ||
+            m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.hoveredIndex].displayType != Menu::Item::Heading)
         {
-            m_menuLayout.itemIndex = m_menuLayout.hoveredIndex;
-            m_menuLayout.hoveredIndex = -1;
-            updateMenuItems();
-
-            playSound(MenuSoundEvent::Activate);
-        }
-        //else
-        {
-            //this is the active item, test for activation click
-            const auto testbox = m_menuLayout.sprite.getComponent<cro::Transform>().getWorldTransform() *
-                m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].hitbox;
-            const auto testpos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(mousePos);
-
-            if (testbox.contains(testpos))
+            if (m_menuLayout.hoveredIndex != -1)
             {
-                //this seems counter intuitive but it stops mouse input
-                //automatically activating items like resolution setting
-                if (!m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].alwaysActivate)
-                {
-                    activate();
-                }
+                m_menuLayout.itemIndex = m_menuLayout.hoveredIndex;
+                m_menuLayout.hoveredIndex = -1;
+                updateMenuItems();
 
-                const float xPos = testpos.x - testbox.left;
-                if (xPos < testbox.width / 2.f)
+                playSound(MenuSoundEvent::Activate);
+            }
+            //else
+            {
+                //this is the active item, test for activation click
+                const auto testbox = m_menuLayout.sprite.getComponent<cro::Transform>().getWorldTransform() *
+                    m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].hitbox;
+                const auto testpos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(mousePos);
+
+                if (testbox.contains(testpos))
                 {
-                    activateLeft();
-                }
-                else
-                {
-                    activateRight();
+                    //this seems counter intuitive but it stops mouse input
+                    //automatically activating items like resolution setting
+                    if (!m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].alwaysActivate)
+                    {
+                        activate();
+                    }
+
+                    const float xPos = testpos.x - testbox.left;
+                    if (xPos < testbox.width / 2.f)
+                    {
+                        activateLeft();
+                    }
+                    else
+                    {
+                        activateRight();
+                    }
                 }
             }
         }
