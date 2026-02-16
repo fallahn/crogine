@@ -777,6 +777,9 @@ void ProfileStateV2::render()
     else
     {
         m_previewScene.render();
+
+        //render palette preview if necessary (these drawable types automatically skip drawing if there are no verts)
+        m_palettePreview.draw();
     }
     m_previewTexture.display();
 
@@ -789,6 +792,7 @@ void ProfileStateV2::loadAssets()
     m_mugshotTexture.create(MugshotTexSize.x, MugshotTexSize.y);
     m_mugshotShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), BorderFrag, "#define TEXTURED\n");
 
+    m_palettePreview.setPrimitiveType(GL_TRIANGLES);
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     m_menuText.setFont(font);
@@ -1961,6 +1965,7 @@ void ProfileStateV2::createBodyItems()
             {
                 m_activeProfile.playerData.avatarFlags[c] = i.selectedIndex;
                 const cro::Colour colour = pc::Palette[m_activeProfile.playerData.avatarFlags[c]];
+                updatePalettePreview(pc::ColourKey::Index(c), i.selectedIndex);
 
                 //set the preview colour
                 i.previewColour = colour;
@@ -1976,6 +1981,18 @@ void ProfileStateV2::createBodyItems()
         }
 
         item->selectedIndex = m_activeProfile.playerData.avatarFlags[c];
+        item->selected =
+            [&, c](const Menu::Item& i)
+            {
+                updatePalettePreview(pc::ColourKey::Index(c), i.selectedIndex);
+
+                //hmm seems silly to repeat this here just because the existence
+                //of this callback prevents it from happening when the items are updated
+                m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                m_detailsPane.image.getComponent<cro::Sprite>() = m_tabBar.items[m_tabBar.activeIndex].sprite;
+                const auto bounds = m_detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
+                m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f,0.f });
+            };
         item->displayType = Menu::Item::Slider;
         item->previewColour = pc::Palette[item->selectedIndex];
         item->texture = &m_colourPreview;
@@ -2428,6 +2445,8 @@ void ProfileStateV2::createEquipmentItems()
     item->activated =
         [&](Menu::Item& i)
         {
+            //*sigh* unfortunately this colour hack means we can't
+            //show the palette on the preview withoput even more hack-arounds
             const auto idx = i.selectedIndex - 1 < 0 ? 255 : i.selectedIndex - 1;
             m_activeProfile.playerData.ballColourIndex = idx; //hack because white is index 0 but expects invalid idx
             const cro::Colour colour = idx < pc::Palette.size() ? pc::Palette[idx] : cro::Colour::White;
@@ -3526,6 +3545,7 @@ void ProfileStateV2::updateMenuItems()
     m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     m_detailsPane.image.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
     m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    updatePalettePreview(-1, -1); //reset this allow item selected callback to update it
 
     m_menuLayout.texture.clear(cro::Colour::Transparent);
     //render current item selection to render texture
@@ -4912,8 +4932,66 @@ void ProfileStateV2::randomise()
     createBodyItems();
     createHeadwearItems();
     createEquipmentItems();
-    //createLoadoutItems();
     createDetailItems();
 
     activateTab(m_tabBar.activeIndex);
+}
+
+void ProfileStateV2::updatePalettePreview(std::int32_t paletteID, std::int32_t selectedIdx)
+{
+    constexpr float PreviewSize = 16.f;
+    constexpr float BorderSize = 1.f;
+
+    std::vector<cro::Vertex2D> verts;
+
+    if (paletteID > -1 && selectedIdx > -1)
+    {
+        const auto rows = std::min(pc::PairCounts[paletteID] / 2, pc::PairCounts[paletteID] / 4);
+        const auto cols = pc::PairCounts[paletteID] / rows;
+
+        const cro::Colour bg = cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha);
+        const float top = (rows + 1) * PreviewSize;
+        constexpr float bottom = PreviewSize;
+        const float width = cols * PreviewSize;
+        verts.emplace_back(glm::vec2(0.f, top), bg);
+        verts.emplace_back(glm::vec2(0.f, bottom), bg);
+        verts.emplace_back(glm::vec2(width, top), bg);
+
+        verts.emplace_back(glm::vec2(width, top), bg);
+        verts.emplace_back(glm::vec2(0.f, bottom), bg);
+        verts.emplace_back(glm::vec2(width, bottom), bg);
+
+        for (auto y = 0u; y < rows; ++y)
+        {
+            for (auto x = 0u; x < cols; ++x)
+            {
+                const auto i = y * cols + x;
+                const glm::vec2 pos(x * PreviewSize, (rows * PreviewSize) - (y * PreviewSize));
+
+                if (i == selectedIdx)
+                {
+                    //draw background tris first
+                    verts.emplace_back(pos + glm::vec2(0.f, PreviewSize), CD32::Colours[CD32::Yellow]);
+                    verts.emplace_back(pos, CD32::Colours[CD32::Yellow]);
+                    verts.emplace_back(pos + glm::vec2(PreviewSize, PreviewSize), CD32::Colours[CD32::Yellow]);
+
+                    verts.emplace_back(pos + glm::vec2(PreviewSize, PreviewSize ), CD32::Colours[CD32::Yellow]);
+                    verts.emplace_back(pos, CD32::Colours[CD32::Yellow]);
+                    verts.emplace_back(pos + glm::vec2(PreviewSize, 0.f), CD32::Colours[CD32::Yellow]);
+                }
+
+                verts.emplace_back(pos + glm::vec2(BorderSize, PreviewSize - BorderSize), pc::Palette[i]);
+                verts.emplace_back(pos + glm::vec2(BorderSize, BorderSize), pc::Palette[i]);
+                verts.emplace_back(pos + glm::vec2((PreviewSize - BorderSize), PreviewSize - BorderSize), pc::Palette[i]);
+
+                verts.emplace_back(pos + glm::vec2((PreviewSize - BorderSize), PreviewSize - BorderSize), pc::Palette[i]);
+                verts.emplace_back(pos + glm::vec2(BorderSize, BorderSize), pc::Palette[i]);
+                verts.emplace_back(pos + glm::vec2((PreviewSize - BorderSize), BorderSize), pc::Palette[i]);
+            }
+        }
+        const float scale = cro::UIElementSystem::getViewScale();
+        m_palettePreview.setPosition(glm::vec2(0.f, m_previewTexture.getSize().y - (((rows + 1) * PreviewSize) * scale)));
+        m_palettePreview.setScale(glm::vec2(scale));
+    }
+    m_palettePreview.setVertexData(verts);
 }

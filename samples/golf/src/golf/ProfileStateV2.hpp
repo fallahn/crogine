@@ -195,6 +195,7 @@ private:
     cro::SimpleVertexArray m_itemBackgroundTitle;
     cro::SimpleVertexArray m_itemSlider;
 
+    cro::SimpleVertexArray m_palettePreview;
 
     cro::Entity m_infoString;
     cro::Entity m_infoSprite;
@@ -314,4 +315,6 @@ private:
     void refreshBio();
     void setBioString(const std::string&);
     void randomise();
+
+    void updatePalettePreview(std::int32_t paletteID, std::int32_t selectedIdx);
 };
