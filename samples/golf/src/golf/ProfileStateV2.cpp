@@ -1892,7 +1892,7 @@ void ProfileStateV2::createBodyItems()
 
     //avatar
     item = &m_menuLayout.items[TabID::Body].emplace_back();
-    item->title = "Body Type";
+    item->title = "Appearance";
     item->displayType = Menu::Item::Slider;
     item->activated =
         [&](Menu::Item& i)
@@ -1925,6 +1925,22 @@ void ProfileStateV2::createBodyItems()
     }
     item->selectedIndex = m_avatarIndex;
     item->description = item->labels[item->selectedIndex] + "/" + std::to_string(m_avatarModels.size() - m_lockedAvatarCount);
+    switch (m_avatarModels[m_avatarIndex].type)
+    {
+    default:
+        item->texture = nullptr;
+        break;
+    case 1: //unlocked
+        item->texture = m_itemIcons[ItemIcon::UnlockedItem].getTexture();
+        item->uv = m_itemIcons[ItemIcon::UnlockedItem].getTextureRect();
+        break;
+    case 2: //from workshop
+        item->texture = m_itemIcons[ItemIcon::WorkshopItem].getTexture();
+        item->uv = m_itemIcons[ItemIcon::WorkshopItem].getTextureRect();
+        break;
+    }
+
+
 
     //colours - somehow Hair ended up with index 0 but hats on index 6...
     for (std::int32_t c = pc::ColourKey::Skin; c < pc::ColourKey::Hat; ++c)
@@ -2013,14 +2029,42 @@ void ProfileStateV2::createHeadwearItems()
                     }
 
                     m_detailsPane.text.getComponent<cro::Text>().setString(i.description);
-                    //TODO could add if this is an unlock/workshop model here
-                    //m_sharedData.hairInfo[i.selectedIndex].type == 1; //1 unlock 2 workshop
+                    
+                    switch (m_sharedData.hairInfo[i.selectedIndex].type)
+                    {
+                    default: 
+                        i.texture = nullptr;
+                        break;
+                    case 1:
+                        i.texture = m_itemIcons[ItemIcon::UnlockedItem].getTexture();
+                        i.uv = m_itemIcons[ItemIcon::UnlockedItem].getTextureRect();
+                        break;
+                    case 2:
+                        i.texture = m_itemIcons[ItemIcon::WorkshopItem].getTexture();
+                        i.uv = m_itemIcons[ItemIcon::WorkshopItem].getTextureRect();
+                        break;
+                    }
                 };
             for (auto i = 0u; i < m_avatarHairModels.size(); ++i)
             {
                 item->labels.push_back(std::to_string(i + 1));
             }
             item->selectedIndex = keyIndex == pc::ColourKey::Hair ? m_avatarModels[m_avatarIndex].hairIndex : m_avatarModels[m_avatarIndex].hatIndex;
+            switch (m_sharedData.hairInfo[item->selectedIndex].type)
+            {
+            default:
+                item->texture = nullptr;
+                break;
+            case 1:
+                item->texture = m_itemIcons[ItemIcon::UnlockedItem].getTexture();
+                item->uv = m_itemIcons[ItemIcon::UnlockedItem].getTextureRect();
+                break;
+            case 2:
+                item->texture = m_itemIcons[ItemIcon::WorkshopItem].getTexture();
+                item->uv = m_itemIcons[ItemIcon::WorkshopItem].getTextureRect();
+                break;
+            }
+            
             item->description = item->labels[item->selectedIndex] + "/" + std::to_string(m_avatarHairModels.size());
             if (!m_sharedData.hairInfo[item->selectedIndex].label.empty())
             {
@@ -2233,7 +2277,7 @@ void ProfileStateV2::createEquipmentItems()
 
     //clubs
     item = &m_menuLayout.items[TabID::Equipment].emplace_back();
-    item->title = "Club Set Appearance";
+    item->title = "Clubset Appearance";
     item->displayType = Menu::Item::Slider;
     item->activated =
         [&](Menu::Item& i)
@@ -2276,6 +2320,15 @@ void ProfileStateV2::createEquipmentItems()
         }
     }
     item->selectedIndex = indexFromClubID(m_activeProfile.playerData.clubID);
+    if (m_clubData[item->selectedIndex].userItem)
+    {
+        item->texture = m_itemIcons[ItemIcon::WorkshopItem].getTexture();
+        item->uv = m_itemIcons[ItemIcon::WorkshopItem].getTextureRect();
+    }
+    else
+    {
+        item->texture = nullptr;
+    }
     item->description = item->labels[item->selectedIndex] + "/" + std::to_string(m_clubData.size() - m_lockedClubCount);
     if (!m_clubData[item->selectedIndex].name.empty())
     {
@@ -2338,6 +2391,20 @@ void ProfileStateV2::createEquipmentItems()
         }
     }
     item->selectedIndex = indexFromBallID(m_activeProfile.playerData.ballID);
+    switch (m_sharedData.ballInfo[item->selectedIndex].type)
+    {
+    default:
+        item->texture = nullptr;
+        break;
+    case 1: //unlocked
+        item->texture = m_itemIcons[ItemIcon::UnlockedItem].getTexture();
+        item->uv = m_itemIcons[ItemIcon::UnlockedItem].getTextureRect();
+        break;
+    case 2: //from workshop
+        item->texture = m_itemIcons[ItemIcon::WorkshopItem].getTexture();
+        item->uv = m_itemIcons[ItemIcon::WorkshopItem].getTextureRect();
+        break;
+    }
     item->description = item->labels[item->selectedIndex] + "/" + std::to_string(m_ballModels.size() - m_lockedBallCount);
     if (!m_sharedData.ballInfo[item->selectedIndex].label.empty())
     {
@@ -2676,6 +2743,15 @@ void ProfileStateV2::createDetailItems()
             }
         };
     item->selectedIndex = m_voiceIndex;
+    if (m_voices[m_voiceIndex].isWorkshop)
+    {
+        item->texture = m_itemIcons[ItemIcon::WorkshopItem].getTexture();
+        item->uv = m_itemIcons[ItemIcon::WorkshopItem].getTextureRect();
+    }
+    else
+    {
+        item->texture = nullptr;
+    }
     item->description = "Voice: " + m_voices[m_voiceIndex].audioScape.getName();
     for (auto i = 0u; i < m_voices.size(); ++i)
     {
@@ -4360,21 +4436,6 @@ void ProfileStateV2::setAvatarIndex(std::int32_t idx)
         m_profileTextures[idx].setColour(pc::ColourKey::Index(i), m_activeProfile.playerData.avatarFlags[i]);
     }
     m_profileTextures[idx].apply();
-
-
-    //although this should never be true as we
-    //assert the selected index when the window opens
-    if (m_activeProfile.playerData.voiceID == 0)
-    {
-        if (!m_avatarModels[m_avatarIndex].previewAudio.empty())
-        {
-            m_avatarModels[m_avatarIndex].previewAudio[cro::Util::Random::value(0u, m_avatarModels[m_avatarIndex].previewAudio.size() - 1)].getComponent<cro::AudioEmitter>().play();
-        }
-    }
-    else
-    {
-        playPreviewAudio();
-    }
 }
 
 void ProfileStateV2::setHairIndex(std::int32_t idx)
