@@ -4990,7 +4990,7 @@ void ProfileStateV2::updatePalettePreview(std::int32_t paletteID, std::int32_t s
             }
         }
         const float scale = cro::UIElementSystem::getViewScale();
-        m_palettePreview.setPosition(glm::vec2(0.f, m_previewTexture.getSize().y - (((rows + 1) * PreviewSize) * scale)));
+        m_palettePreview.setPosition(glm::vec2(PreviewSize, m_previewTexture.getSize().y - (((rows + 2) * PreviewSize) * scale)));
         m_palettePreview.setScale(glm::vec2(scale));
     }
     m_palettePreview.setVertexData(verts);
