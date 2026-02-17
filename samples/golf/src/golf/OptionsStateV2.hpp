@@ -92,8 +92,6 @@ private:
     void prevTab();
     void activateTab(std::int32_t);
 
-    cro::SimpleQuad m_menuQuad; //item image/thumb if it exists
-
     cro::Entity m_infoString;
     cro::Entity m_infoSprite;
     std::array<cro::FloatRect, 2u> m_infoRects = {};
@@ -138,9 +136,7 @@ private:
     };
 
     void resizeItemGraphics();
-    void updateSliderGraphic(std::int32_t amt, std::int32_t total);
 
-    void updateMenuItems();
     void nextItem();
     void prevItem();
     void activateLeft();

@@ -52,6 +52,12 @@ namespace UI
     static constexpr glm::vec2 ItemImage = glm::vec2(ItemHeight - (ItemSpacing * 2.f), ItemHeight - (ItemSpacing * 2.f));
 
     static constexpr float InfoBarHeight = 24.f; //space at the bottom
+
+    static constexpr float DetailBackgroundPadding = 16.f;
+    static constexpr float DetailBackgroundOffset = DetailBackgroundPadding / 4.f;
+
+    static constexpr std::size_t WordWrapLarge = 42;
+    static constexpr std::size_t WordWrapSmall = 36;
 }
 
 namespace cro
@@ -227,6 +233,7 @@ struct DetailsPane final
     glm::vec2 backgroundSize = { 0.f, 0.f };
 };
 
+struct SharedStateData;
 struct UILayout final
 {
     explicit UILayout(std::int32_t tabCount);
@@ -237,6 +244,7 @@ struct UILayout final
 
     cro::SimpleText menuText;
     cro::SimpleText menuTextLarge;
+    cro::SimpleQuad menuQuad; //item image/thumb if it exists
     cro::SimpleVertexArray itemSlider;
 
     const cro::Texture* uiTexture = nullptr;
@@ -252,6 +260,8 @@ struct UILayout final
     cro::SimpleVertexArray itemBackgroundHighlight;
     cro::SimpleVertexArray itemBackgroundTitle;
 
+    cro::SimpleVertexArray palettePreview;
+
     std::array<SpriteSection, 2u> tabActive = {};
     std::array<SpriteSection, 2u> tabInactive = {};
     std::array<SpriteSection, 2u> tabHighlight = {};
@@ -259,9 +269,13 @@ struct UILayout final
     std::array<SpriteSection, BackgroundSection::Count> backgroundSections = {};
 
     void loadAssets(cro::ResourceCollection&);
-    void updateTabBar(const struct SharedStateData&);
+    void updateTabBar(const SharedStateData&);
+    void updateMenuItems(const SharedStateData&);
+    void updateSliderGraphic(std::int32_t amt, std::int32_t total);
+    void updatePalettePreview(std::int32_t paletteID, std::int32_t selectedIdx, float targetHeight);
 };
 
 //returns cropping areas for debugging
 std::pair<cro::FloatRect, cro::FloatRect> scrollToTarget(TabBar&, Menu&, float);
 void focusToIndex(TabBar&, Menu&);
+void playSound(std::int32_t index);

@@ -29,9 +29,12 @@ source distribution.
 
 #include "MenuLayout.hpp"
 #include "../MenuConsts.hpp"
+#include "../MessageIDs.hpp"
+#include "../PlayerColours.hpp"
 #include "../SharedStateData.hpp"
 #include "../../Colordome-32.hpp"
 
+#include <crogine/core/App.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/UIElement.hpp>
@@ -300,10 +303,10 @@ void UILayout::updateTabBar(const SharedStateData& sharedData)
     menuLayout.sprite.getComponent<cro::Transform>().move(-WindowSize / 2.f);
 
     //set the detail text alignment based on active tab
-    //switch (m_uiLayout.tabBar.activeIndex)
+    //switch (tabBar.activeIndex)
     //{
     //default:
-    //    m_uiLayout.detailsPane.text.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
+    //    detailsPane.text.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
     //    break;
     //case TabID::Controller:
     //{
@@ -311,12 +314,332 @@ void UILayout::updateTabBar(const SharedStateData& sharedData)
     //    //case where there are 4 controllers and the resolution of the window is one
     //    //of 3 obscure sizes (1176x664, 1600x1024 and 1680x1050 - that I know of)
     //    /*const float Offset = cro::GameController::getControllerCount() > 3 ? 16.f : 0.f;
-    //    m_uiLayout.detailsPane.text.getComponent<cro::Transform>().setOrigin({ 0.f, Offset });*/
+    //    detailsPane.text.getComponent<cro::Transform>().setOrigin({ 0.f, Offset });*/
     //}
     //    break;
     //}
 }
 
+void UILayout::updateMenuItems(const SharedStateData& sharedData)
+{
+    //NOTE this is all done 1:1 scale and the resulting sprite set to window scale
+    auto& items = menuLayout.items[tabBar.activeIndex];
+    const auto viewScale = cro::UIElementSystem::getViewScale();
+
+
+    //if we didn't resize the actual size might be bigger than we expect
+    //on other tabs...
+    glm::vec2 renderSize = glm::vec2(menuLayout.texture.getSize());
+    renderSize.x = std::round(renderSize.x * tabBar.items[tabBar.activeIndex].displayWidth);
+
+    menuLayout.sprite.getComponent<cro::Sprite>().setTexture(menuLayout.texture.getTexture());
+    menuLayout.sprite.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
+
+    cro::FloatRect crop = { 0.f, UI::InfoBarHeight * viewScale,
+                            static_cast<float>(cro::App::getWindow().getSize().x),
+                            (tabBar.background.getComponent<cro::Transform>().getPosition().y - (UI::InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2) };
+    menuLayout.sprite.getComponent<cro::Drawable2D>().setCroppingArea(crop, true);
+
+    menuText.setFillColour(TextNormalColour);
+
+    constexpr float LineSpacing = 12.f;
+    const auto renderItem =
+        [&](Menu::Item& item, glm::vec2 pos, std::int32_t idx)
+        {
+            auto* background = &itemBackground;
+            if (idx == menuLayout.hoveredIndex
+                && sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+            {
+                background = idx == menuLayout.itemIndex ? &itemBackgroundActiveHighlight : &itemBackgroundHighlight;
+            }
+            else if (idx == menuLayout.itemIndex)
+            {
+                background = &itemBackgroundActive;
+            }
+
+            if (item.displayType == Menu::Item::Heading)
+            {
+                itemBackgroundTitle.setPosition(pos);
+                itemBackgroundTitle.draw();
+            }
+            else
+            {
+                background->setPosition(pos);
+                background->draw();
+            }
+
+            if (item.texture)
+            {
+                if (item.displayType == Menu::Item::TextOnly)
+                {
+                    //achievement icon
+                    menuQuad.setPosition(pos + glm::vec2(UI::ItemSpacing, UI::ItemSpacing));
+                    pos.x += UI::ItemSpacing + UI::ItemImage.x; //moves title text over
+                }
+                else
+                {
+                    //align to the right
+                    menuQuad.setPosition(pos + glm::vec2(tabBar.items[tabBar.activeIndex].renderWidth - (UI::ItemSpacing + UI::ItemImage.x), UI::ItemSpacing));
+                }
+                menuQuad.setTexture(*item.texture);
+                menuQuad.setScale(UI::ItemImage / glm::vec2(item.uv.width, item.uv.height));
+                menuQuad.setTextureRect(item.uv);
+                menuQuad.setColour(item.previewColour);
+
+                menuQuad.draw();
+            }
+
+            pos.x += UI::ItemSpacing;
+            pos.y += UI::ItemHeight - LineSpacing;
+
+            if (idx == menuLayout.itemIndex
+                || idx == menuLayout.hoveredIndex)
+            {
+                menuText.setFillColour(CD32::Colours[CD32::Yellow]);
+                menuTextLarge.setFillColour(CD32::Colours[CD32::Yellow]);
+            }
+            else
+            {
+                menuText.setFillColour(TextNormalColour);
+                menuTextLarge.setFillColour(TextNormalColour);
+            }
+
+            if (item.displayType != Menu::Item::Heading)
+            {
+                menuText.setPosition(pos);
+                menuText.setString(item.title);
+                menuText.draw();
+            }
+
+            switch (item.displayType)
+            {
+            case Menu::Item::Slider:
+                updateSliderGraphic(item.selectedIndex, static_cast<std::int32_t>(item.labels.size() - 1));
+                itemSlider.setPosition({ std::floor(renderSize.x / 2.f), pos.y - 22.f/*std::floor(LineSpacing * 1.7f)*/ });
+                itemSlider.draw();
+                [[fallthrough]];
+            default:
+                if (item.displayType == Menu::Item::Slider)
+                {
+                    menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - (LineSpacing - 1.f) });
+                }
+                else
+                {
+                    menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
+                }
+
+                if (item.labels.size() > 1)
+                {
+                    menuTextLarge.setString("< " + item.labels[item.selectedIndex] + " >");
+                }
+                else
+                {
+                    //this is a button
+                    menuTextLarge.setString(item.labels[item.selectedIndex]);
+                }
+                menuTextLarge.draw();
+
+                {
+                    static constexpr float HitPadding = 4.f;
+                    item.hitbox = menuTextLarge.getLocalBounds();
+                    item.hitbox.left += menuTextLarge.getPosition().x;
+                    item.hitbox.left -= HitPadding;
+                    item.hitbox.bottom += menuTextLarge.getPosition().y;
+                    item.hitbox.bottom -= HitPadding;
+                    item.hitbox.width += (2.f * HitPadding);
+                    item.hitbox.height += (2.f * HitPadding);
+                }
+                break;
+            case Menu::Item::TextOnly:
+                if (!item.description.empty())
+                {
+                    menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
+                    menuTextLarge.setString(item.description);
+                    menuTextLarge.draw();
+                }
+                else
+                {
+                    menuText.move({ 0.f, -(LineSpacing - 1.f) });
+                    menuText.setString(item.subTitle);
+                    menuText.draw();
+                }
+                break;
+            case Menu::Item::Heading:
+                menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
+                menuTextLarge.setString(item.title);
+                menuTextLarge.setFillColour(TextNormalColour);
+                menuTextLarge.draw();
+                break;
+            }
+
+        };
+
+    constexpr float Stride = UI::ItemHeight + UI::ItemSpacing;
+    glm::vec2 pos = { UI::ItemSpacing, renderSize.y - Stride };
+
+    //hide the preview image and let the selection callback
+    //display/update it as needed.
+    detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    detailsPane.image.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    updatePalettePreview(-1, -1, 0.f); //reset this allow item selected callback to update it
+
+    menuLayout.texture.clear(cro::Colour::Transparent);
+    //render current item selection to render texture
+    //this includes either setting item highlight colour or rendering a highlight box
+    auto i = 0;
+    for (auto& item : items)
+    {
+        if (i == menuLayout.itemIndex)
+        {
+            auto txt = item.description;
+            cro::Util::String::wordWrap(txt, UI::WordWrapLarge);
+
+            detailsPane.text.getComponent<cro::Text>().setString(txt);
+
+            const auto b = (cro::Text::getLocalBounds(detailsPane.text).width / viewScale) + UI::DetailBackgroundPadding;
+            if (b > detailsPane.backgroundSize.x)
+            {
+                cro::Util::String::wordWrap(txt, UI::WordWrapSmall);
+                detailsPane.text.getComponent<cro::Text>().setString(txt);
+            }
+
+            if (item.selected)
+            {
+                item.selected(item);
+            }
+            else if (tabBar.items[tabBar.activeIndex].sprite.getTexture())
+            {
+                //set this sprite if it's available
+                detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                detailsPane.image.getComponent<cro::Sprite>() = tabBar.items[tabBar.activeIndex].sprite;
+                const auto bounds = detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
+                detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f,0.f });
+            }
+        }
+
+        //TODO we could skip rendering if this is outside
+        //the visible area, but it's not presenting a problem yet.
+        renderItem(item, pos, i++);
+        pos.y -= Stride;
+    }
+
+    menuLayout.texture.display();
+
+    menuLayout.itemBox = { 0.f, 0.f, renderSize.x - (UI::ItemSpacing * 2.f), UI::ItemHeight };
+    menuLayout.itemBox *= viewScale;
+}
+
+void UILayout::updateSliderGraphic(std::int32_t amt, std::int32_t total)
+{
+    std::vector<cro::Vertex2D> verts;
+
+    if (total)
+    {
+        static constexpr float SliderWidth = 40.f;
+        static constexpr float SliderHeight = 6.f;
+        const float amtNorm = static_cast<float>(amt) / total;
+
+        const float width = std::round(amtNorm * (SliderWidth * 2.f));
+        static constexpr cro::Colour c = CD32::Colours[CD32::Red];
+        static constexpr cro::Colour d = CD32::Colours[CD32::BlueDarkest];
+
+        verts =
+        {
+            cro::Vertex2D(glm::vec2(-(SliderWidth + 1.f), SliderHeight + 1.f), CD32::Colours[CD32::TanDarkest]),
+            cro::Vertex2D(glm::vec2(-(SliderWidth + 1.f), -1.f), CD32::Colours[CD32::TanDarkest]),
+            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), SliderHeight + 1.f), CD32::Colours[CD32::TanDarkest]),
+            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), SliderHeight + 1.f), CD32::Colours[CD32::TanDarkest]),
+            cro::Vertex2D(glm::vec2(-(SliderWidth + 1.f), -1.f), CD32::Colours[CD32::TanDarkest]),
+            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), -1.f), CD32::Colours[CD32::TanDarkest]),
+
+            cro::Vertex2D(glm::vec2(-(SliderWidth), SliderHeight), CD32::Colours[CD32::Olive]),
+            cro::Vertex2D(glm::vec2(-(SliderWidth), -1.f), CD32::Colours[CD32::Olive]),
+            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), SliderHeight), CD32::Colours[CD32::Olive]),
+            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), SliderHeight), CD32::Colours[CD32::Olive]),
+            cro::Vertex2D(glm::vec2(-(SliderWidth), -1.f), CD32::Colours[CD32::Olive]),
+            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), -1.f), CD32::Colours[CD32::Olive]),
+
+
+            cro::Vertex2D(glm::vec2(-SliderWidth, SliderHeight), c),
+            cro::Vertex2D(glm::vec2(-SliderWidth, 0.f), c),
+            cro::Vertex2D(glm::vec2(-SliderWidth + width, SliderHeight), c),
+            cro::Vertex2D(glm::vec2(-SliderWidth + width, SliderHeight), c),
+            cro::Vertex2D(glm::vec2(-SliderWidth, 0.f), c),
+            cro::Vertex2D(glm::vec2(-SliderWidth + width, 0.f), c),
+
+            cro::Vertex2D(glm::vec2(-SliderWidth + width, SliderHeight), d),
+            cro::Vertex2D(glm::vec2(-SliderWidth + width, 0.f), d),
+            cro::Vertex2D(glm::vec2(SliderWidth, SliderHeight), d),
+            cro::Vertex2D(glm::vec2(SliderWidth, SliderHeight), d),
+            cro::Vertex2D(glm::vec2(-SliderWidth + width, 0.f), d),
+            cro::Vertex2D(glm::vec2(SliderWidth, 0.f), d)
+        };
+    }
+    itemSlider.setVertexData(verts);
+}
+
+void UILayout::updatePalettePreview(std::int32_t paletteID, std::int32_t selectedIdx, float targetHeight)
+{
+    constexpr float PreviewSize = 16.f;
+    constexpr float BorderSize = 1.f;
+
+    std::vector<cro::Vertex2D> verts;
+
+    if (paletteID > -1 && selectedIdx > -1)
+    {
+        const auto rows = std::min(pc::PairCounts[paletteID] / 2, pc::PairCounts[paletteID] / 4);
+        const auto cols = pc::PairCounts[paletteID] / rows;
+
+        const cro::Colour bg = cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha);
+        const float top = (rows + 1) * PreviewSize;
+        constexpr float bottom = PreviewSize;
+        const float width = cols * PreviewSize;
+        verts.emplace_back(glm::vec2(0.f, top), bg);
+        verts.emplace_back(glm::vec2(0.f, bottom), bg);
+        verts.emplace_back(glm::vec2(width, top), bg);
+
+        verts.emplace_back(glm::vec2(width, top), bg);
+        verts.emplace_back(glm::vec2(0.f, bottom), bg);
+        verts.emplace_back(glm::vec2(width, bottom), bg);
+
+        for (auto y = 0u; y < rows; ++y)
+        {
+            for (auto x = 0u; x < cols; ++x)
+            {
+                const auto i = y * cols + x;
+                const glm::vec2 pos(x * PreviewSize, (rows * PreviewSize) - (y * PreviewSize));
+
+                if (i == selectedIdx)
+                {
+                    //draw background tris first
+                    verts.emplace_back(pos + glm::vec2(0.f, PreviewSize), CD32::Colours[CD32::Yellow]);
+                    verts.emplace_back(pos, CD32::Colours[CD32::Yellow]);
+                    verts.emplace_back(pos + glm::vec2(PreviewSize, PreviewSize), CD32::Colours[CD32::Yellow]);
+
+                    verts.emplace_back(pos + glm::vec2(PreviewSize, PreviewSize), CD32::Colours[CD32::Yellow]);
+                    verts.emplace_back(pos, CD32::Colours[CD32::Yellow]);
+                    verts.emplace_back(pos + glm::vec2(PreviewSize, 0.f), CD32::Colours[CD32::Yellow]);
+                }
+
+                verts.emplace_back(pos + glm::vec2(BorderSize, PreviewSize - BorderSize), pc::Palette[i]);
+                verts.emplace_back(pos + glm::vec2(BorderSize, BorderSize), pc::Palette[i]);
+                verts.emplace_back(pos + glm::vec2((PreviewSize - BorderSize), PreviewSize - BorderSize), pc::Palette[i]);
+
+                verts.emplace_back(pos + glm::vec2((PreviewSize - BorderSize), PreviewSize - BorderSize), pc::Palette[i]);
+                verts.emplace_back(pos + glm::vec2(BorderSize, BorderSize), pc::Palette[i]);
+                verts.emplace_back(pos + glm::vec2((PreviewSize - BorderSize), BorderSize), pc::Palette[i]);
+            }
+        }
+        const float scale = cro::UIElementSystem::getViewScale();
+        palettePreview.setPosition(glm::vec2(PreviewSize, std::round(targetHeight - ((((rows + 2) * PreviewSize) - (PreviewSize / 2.f)) * scale))));
+        palettePreview.setScale(glm::vec2(scale));
+    }
+    palettePreview.setVertexData(verts);
+}
+
+
+//TODO these could probably be member funcs now
 std::pair<cro::FloatRect, cro::FloatRect> scrollToTarget(TabBar& tabBar, Menu& menuLayout, float dt)
 {
     const float viewScale = cro::UIElementSystem::getViewScale();
@@ -361,4 +684,9 @@ void focusToIndex(TabBar& tabBar, Menu& menuLayout)
     auto origin = menuLayout.sprite.getComponent<cro::Transform>().getOrigin();
     origin.y = target - UI::ItemHeight;
     menuLayout.sprite.getComponent<cro::Transform>().setOrigin(origin);
+}
+
+void playSound(std::int32_t id)
+{
+    cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = id;
 }

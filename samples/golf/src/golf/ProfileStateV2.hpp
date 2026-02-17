@@ -154,11 +154,6 @@ private:
     void prevTab();
     void activateTab(std::int32_t idx);
 
-
-    cro::SimpleQuad m_menuQuad; //item image/thumb if it exists
-
-    cro::SimpleVertexArray m_palettePreview;
-
     cro::Entity m_infoString;
     cro::Entity m_infoSprite;
     std::array<cro::FloatRect, 2u> m_infoRects = {};
@@ -200,9 +195,7 @@ private:
     };
 
     void resizeItemGraphics();
-    void updateSliderGraphic(std::int32_t amt, std::int32_t total);
 
-    void updateMenuItems();
     void nextItem();
     void prevItem();
     void activateLeft();
@@ -259,6 +252,4 @@ private:
     void refreshBio();
     void setBioString(const std::string&);
     void randomise();
-
-    void updatePalettePreview(std::int32_t paletteID, std::int32_t selectedIdx);
 };

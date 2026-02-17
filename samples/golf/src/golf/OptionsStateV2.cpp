@@ -132,21 +132,10 @@ namespace
     constexpr auto BackgroundYellow = cro::Colour(0xf2cf5caf);
     constexpr auto BackgroundRed = cro::Colour(0xb83530af);
 
-    constexpr float DetailBackgroundPadding = 16.f;
-    constexpr float DetailBackgroundOffset = DetailBackgroundPadding / 4.f;
-
-    constexpr std::size_t WordWrapLarge = 42;
-    constexpr std::size_t WordWrapSmall = 36;
-
     static constexpr cro::Time RepeatTimeLong = cro::seconds(0.5f);
     static constexpr cro::Time RepeatTimeShort = cro::seconds(0.05f);
 
     bool audioHackDone = false;
-
-    void playSound(std::int32_t id)
-    {
-        cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = id;
-    }
 }
 
 using namespace UI;
@@ -2855,7 +2844,7 @@ void OptionsStateV2::updateTabBar()
 {
     m_uiLayout.updateTabBar(m_sharedData);
     resizeItemGraphics();
-    updateMenuItems();
+    m_uiLayout.updateMenuItems(m_sharedData);
 }
 
 void OptionsStateV2::nextTab()
@@ -3069,263 +3058,6 @@ void OptionsStateV2::resizeItemGraphics()
     m_uiLayout.detailsPane.background.getComponent<cro::Drawable2D>().setVertexData(verts);
 }
 
-void OptionsStateV2::updateSliderGraphic(std::int32_t amt, std::int32_t total)
-{
-    std::vector<cro::Vertex2D> verts;
-
-    if (total)
-    {
-        static constexpr float SliderWidth = 40.f;
-        static constexpr float SliderHeight = 6.f;
-        const float amtNorm = static_cast<float>(amt) / total;
-
-        const float width = std::round(amtNorm * (SliderWidth * 2.f));
-        static constexpr cro::Colour c = CD32::Colours[CD32::Red];
-        static constexpr cro::Colour d = CD32::Colours[CD32::BlueDarkest];
-
-        verts =
-        {
-            cro::Vertex2D(glm::vec2(-(SliderWidth + 1.f), SliderHeight + 1.f), CD32::Colours[CD32::TanDarkest]),
-            cro::Vertex2D(glm::vec2(-(SliderWidth + 1.f), -1.f), CD32::Colours[CD32::TanDarkest]),
-            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), SliderHeight + 1.f), CD32::Colours[CD32::TanDarkest]),
-            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), SliderHeight + 1.f), CD32::Colours[CD32::TanDarkest]),
-            cro::Vertex2D(glm::vec2(-(SliderWidth + 1.f), -1.f), CD32::Colours[CD32::TanDarkest]),
-            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), -1.f), CD32::Colours[CD32::TanDarkest]),
-
-            cro::Vertex2D(glm::vec2(-(SliderWidth), SliderHeight), CD32::Colours[CD32::Olive]),
-            cro::Vertex2D(glm::vec2(-(SliderWidth), -1.f), CD32::Colours[CD32::Olive]),
-            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), SliderHeight), CD32::Colours[CD32::Olive]),
-            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), SliderHeight), CD32::Colours[CD32::Olive]),
-            cro::Vertex2D(glm::vec2(-(SliderWidth), -1.f), CD32::Colours[CD32::Olive]),
-            cro::Vertex2D(glm::vec2((SliderWidth + 1.f), -1.f), CD32::Colours[CD32::Olive]),
-
-
-            cro::Vertex2D(glm::vec2(-SliderWidth, SliderHeight), c),
-            cro::Vertex2D(glm::vec2(-SliderWidth, 0.f), c),
-            cro::Vertex2D(glm::vec2(-SliderWidth + width, SliderHeight), c),
-            cro::Vertex2D(glm::vec2(-SliderWidth + width, SliderHeight), c),
-            cro::Vertex2D(glm::vec2(-SliderWidth, 0.f), c),
-            cro::Vertex2D(glm::vec2(-SliderWidth + width, 0.f), c),
-
-            cro::Vertex2D(glm::vec2(-SliderWidth + width, SliderHeight), d),
-            cro::Vertex2D(glm::vec2(-SliderWidth + width, 0.f), d),
-            cro::Vertex2D(glm::vec2(SliderWidth, SliderHeight), d),
-            cro::Vertex2D(glm::vec2(SliderWidth, SliderHeight), d),
-            cro::Vertex2D(glm::vec2(-SliderWidth + width, 0.f), d),
-            cro::Vertex2D(glm::vec2(SliderWidth, 0.f), d)
-        };
-    }
-    m_uiLayout.itemSlider.setVertexData(verts);
-}
-
-void OptionsStateV2::updateMenuItems()
-{
-    //NOTE this is all done 1:1 scale and the resulting sprite set to window scale
-    auto& items = m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex];
-    const auto viewScale = cro::UIElementSystem::getViewScale();
-
-
-    //if we didn't resize the actual size might be bigger than we expect
-    //on other tabs...
-    glm::vec2 renderSize = glm::vec2(m_uiLayout.menuLayout.texture.getSize());
-    renderSize.x = std::round(renderSize.x * m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].displayWidth);
-
-    m_uiLayout.menuLayout.sprite.getComponent<cro::Sprite>().setTexture(m_uiLayout.menuLayout.texture.getTexture());
-    m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
-
-    cro::FloatRect crop = { 0.f, InfoBarHeight * viewScale,
-                            static_cast<float>(cro::App::getWindow().getSize().x),
-                            (m_uiLayout.tabBar.background.getComponent<cro::Transform>().getPosition().y - (InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2)};
-    m_uiLayout.menuLayout.sprite.getComponent<cro::Drawable2D>().setCroppingArea(crop, true);
-
-    m_uiLayout.menuText.setFillColour(TextNormalColour);
-
-    constexpr float LineSpacing = 12.f;
-    const auto renderItem =
-        [&](Menu::Item& item, glm::vec2 pos, std::int32_t idx)
-        {
-            auto* background = &m_uiLayout.itemBackground;
-            if (idx == m_uiLayout.menuLayout.hoveredIndex
-                && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
-            {
-                background = idx == m_uiLayout.menuLayout.itemIndex ? &m_uiLayout.itemBackgroundActiveHighlight : &m_uiLayout.itemBackgroundHighlight;
-            }
-            else if (idx == m_uiLayout.menuLayout.itemIndex)
-            {
-                background = &m_uiLayout.itemBackgroundActive;
-            }
-
-            if (item.displayType == Menu::Item::Heading)
-            {
-                m_uiLayout.itemBackgroundTitle.setPosition(pos);
-                m_uiLayout.itemBackgroundTitle.draw();
-            }
-            else
-            {
-                background->setPosition(pos);
-                background->draw();
-            }
-
-            if (item.texture)
-            {
-                if (item.displayType == Menu::Item::TextOnly)
-                {
-                    //achievement icon
-                    m_menuQuad.setPosition(pos + glm::vec2(ItemSpacing, ItemSpacing));
-                    pos.x += ItemSpacing + ItemImage.x; //moves title text over
-                }
-                else
-                {
-                    //align to the right
-                    m_menuQuad.setPosition(pos + glm::vec2(m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].renderWidth - (ItemSpacing + ItemImage.x), ItemSpacing));
-                }
-                m_menuQuad.setTexture(*item.texture);
-                m_menuQuad.setScale(ItemImage / glm::vec2(item.uv.width, item.uv.height));
-                m_menuQuad.setTextureRect(item.uv);
-                m_menuQuad.setColour(item.previewColour);
-
-                m_menuQuad.draw();
-            }
-
-            pos.x += ItemSpacing;
-            pos.y += ItemHeight - LineSpacing;
-
-            if (idx == m_uiLayout.menuLayout.itemIndex
-                || idx == m_uiLayout.menuLayout.hoveredIndex)
-            {
-                m_uiLayout.menuText.setFillColour(CD32::Colours[CD32::Yellow]);
-                m_uiLayout.menuTextLarge.setFillColour(CD32::Colours[CD32::Yellow]);
-            }
-            else
-            {
-                m_uiLayout.menuText.setFillColour(TextNormalColour);
-                m_uiLayout.menuTextLarge.setFillColour(TextNormalColour);
-            }
-
-            if (item.displayType != Menu::Item::Heading)
-            {
-                m_uiLayout.menuText.setPosition(pos);
-                m_uiLayout.menuText.setString(item.title);
-                m_uiLayout.menuText.draw();
-            }
-
-            switch (item.displayType)
-            {
-            case Menu::Item::Slider:
-                updateSliderGraphic(item.selectedIndex, item.labels.size() - 1);
-                m_uiLayout.itemSlider.setPosition({ std::floor(renderSize.x / 2.f), pos.y - 22.f/*std::floor(LineSpacing * 1.7f)*/ });
-                m_uiLayout.itemSlider.draw();
-                [[fallthrough]];
-            default:
-                if (item.displayType == Menu::Item::Slider)
-                {
-                    m_uiLayout.menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - (LineSpacing - 1.f) });
-                }
-                else
-                {
-                    m_uiLayout.menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
-                }
-
-                if (item.labels.size() > 1)
-                {
-                    m_uiLayout.menuTextLarge.setString("< " + item.labels[item.selectedIndex] + " >");
-                }
-                else
-                {
-                    //this is a button
-                    m_uiLayout.menuTextLarge.setString(item.labels[item.selectedIndex]);
-                }
-                m_uiLayout.menuTextLarge.draw();
-
-                {
-                    static constexpr float HitPadding = 4.f;
-                    item.hitbox = m_uiLayout.menuTextLarge.getLocalBounds();
-                    item.hitbox.left += m_uiLayout.menuTextLarge.getPosition().x;
-                    item.hitbox.left -= HitPadding;
-                    item.hitbox.bottom += m_uiLayout.menuTextLarge.getPosition().y;
-                    item.hitbox.bottom -= HitPadding;
-                    item.hitbox.width += (2.f * HitPadding);
-                    item.hitbox.height += (2.f * HitPadding);
-                }
-                break;
-            case Menu::Item::TextOnly:
-                if (!item.description.empty())
-                {
-                    m_uiLayout.menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
-                    m_uiLayout.menuTextLarge.setString(item.description);
-                    m_uiLayout.menuTextLarge.draw();
-                }
-                else
-                {
-                    m_uiLayout.menuText.move({ 0.f, -(LineSpacing - 1.f) });
-                    m_uiLayout.menuText.setString(item.subTitle);
-                    m_uiLayout.menuText.draw();
-                }
-                break;
-            case Menu::Item::Heading:
-                m_uiLayout.menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
-                m_uiLayout.menuTextLarge.setString(item.title);
-                m_uiLayout.menuTextLarge.setFillColour(TextNormalColour);
-                m_uiLayout.menuTextLarge.draw();
-                break;
-            }
-            
-        };
-
-    constexpr float Stride = ItemHeight + ItemSpacing;
-    glm::vec2 pos = { ItemSpacing, renderSize.y - Stride };
-
-    //hide the preview image and let the selection callback
-    //display/update it as needed.
-    m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-    m_uiLayout.detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-
-    m_uiLayout.menuLayout.texture.clear(cro::Colour::Transparent);
-    //render current item selection to render texture
-    //this includes either setting item highlight colour or rendering a highlight box
-    auto i = 0;
-    for (auto& item : items)
-    {
-        if (i == m_uiLayout.menuLayout.itemIndex)
-        {
-            auto txt = item.description;
-            cro::Util::String::wordWrap(txt, WordWrapLarge);
-            
-            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString(txt);
-
-            const auto b = (cro::Text::getLocalBounds(m_uiLayout.detailsPane.text).width / viewScale) + DetailBackgroundPadding;
-            if (b > m_uiLayout.detailsPane.backgroundSize.x)
-            {
-                cro::Util::String::wordWrap(txt, WordWrapSmall);
-                m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString(txt);
-            }
-
-            if (item.selected)
-            {
-                item.selected(item);
-            }
-            else if (m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].sprite.getTexture())
-            {
-                //set this sprite if it's available
-                m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-                m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].sprite;
-                const auto bounds = m_uiLayout.detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
-                m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f,0.f });
-            }
-        }
-
-        //TODO we could skip rendering if this is outside
-        //the visible area, but it's not presenting a problem yet.
-        renderItem(item, pos, i++);
-        pos.y -= Stride;
-    }
-
-    m_uiLayout.menuLayout.texture.display();
-
-    m_uiLayout.menuLayout.itemBox = { 0.f, 0.f, renderSize.x - (ItemSpacing * 2.f), ItemHeight };
-    m_uiLayout.menuLayout.itemBox *= viewScale;
-}
-
 void OptionsStateV2::nextItem()
 {
     //reset mouse hover highlight
@@ -3338,7 +3070,7 @@ void OptionsStateV2::nextItem()
             m_uiLayout.menuLayout.itemIndex++;
         } while (m_uiLayout.menuLayout.itemIndex < m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex].size() - 1
             && m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].displayType == Menu::Item::Heading);
-        updateMenuItems();
+        m_uiLayout.updateMenuItems(m_sharedData);
 
         playSound(MenuSoundEvent::Switch);
     }
@@ -3358,7 +3090,7 @@ void OptionsStateV2::prevItem()
             m_uiLayout.menuLayout.itemIndex--;
         } while (m_uiLayout.menuLayout.itemIndex > 0
             && m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].displayType == Menu::Item::Heading);
-        updateMenuItems();
+        m_uiLayout.updateMenuItems(m_sharedData);
 
         playSound(MenuSoundEvent::Switch);
     }
@@ -3371,7 +3103,7 @@ void OptionsStateV2::activateLeft()
 
     if (m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].activateLeft())
     {
-        updateMenuItems();
+        m_uiLayout.updateMenuItems(m_sharedData);
         playSound(MenuSoundEvent::Cancel);
     }
 }
@@ -3383,7 +3115,7 @@ void OptionsStateV2::activateRight()
 
     if (m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].activateRight())
     {
-        updateMenuItems();
+        m_uiLayout.updateMenuItems(m_sharedData);
         playSound(MenuSoundEvent::Activate);
     }
 }
@@ -3452,7 +3184,7 @@ void OptionsStateV2::checkMouseOver(glm::vec2 screenPos)
     if (selectedItem != m_uiLayout.menuLayout.hoveredIndex)
     {
         m_uiLayout.menuLayout.hoveredIndex = selectedItem;
-        updateMenuItems();
+        m_uiLayout.updateMenuItems(m_sharedData);
     }
 }
 
@@ -3473,7 +3205,7 @@ void OptionsStateV2::doMouseClick(glm::vec2 mousePos)
             {
                 m_uiLayout.menuLayout.itemIndex = m_uiLayout.menuLayout.hoveredIndex;
                 m_uiLayout.menuLayout.hoveredIndex = -1;
-                updateMenuItems();
+                m_uiLayout.updateMenuItems(m_sharedData);
 
                 playSound(MenuSoundEvent::Activate);
             }
@@ -3577,7 +3309,7 @@ void OptionsStateV2::updateKeybind(SDL_Keycode key)
         "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[m_keybindIndex]);
 
     playSound(MenuSoundEvent::Activate);
-    updateMenuItems();
+    m_uiLayout.updateMenuItems(m_sharedData);
 
     m_keybindIndex = -1;
     m_keybindItemIndex = -1;
