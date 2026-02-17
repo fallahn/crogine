@@ -1965,7 +1965,6 @@ void ProfileStateV2::createBodyItems()
             {
                 m_activeProfile.playerData.avatarFlags[c] = i.selectedIndex;
                 const cro::Colour colour = pc::Palette[m_activeProfile.playerData.avatarFlags[c]];
-                updatePalettePreview(pc::ColourKey::Index(c), i.selectedIndex);
 
                 //set the preview colour
                 i.previewColour = colour;
@@ -1973,6 +1972,8 @@ void ProfileStateV2::createBodyItems()
                 //update the texture
                 m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(c), i.selectedIndex);
                 m_profileTextures[m_avatarIndex].apply();
+
+                updatePalettePreview(pc::ColourKey::Index(c), i.selectedIndex);
             };
 
         for (auto i = 0u; i < pc::PairCounts[c]; ++i)
@@ -2113,9 +2114,24 @@ void ProfileStateV2::createHeadwearItems()
                     const auto index = keyIndex == pc::ColourKey::Hair
                         ? m_avatarModels[m_avatarIndex].hairIndex
                         : m_avatarModels[m_avatarIndex].hatIndex;
-                    m_avatarHairModels[index].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.playerData.avatarFlags[keyIndex]]);
-                    m_avatarHairModels[index].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.playerData.avatarFlags[keyIndex]]);
 
+                    if (m_avatarHairModels[index].isValid()) //bald has no model
+                    {
+                        m_avatarHairModels[index].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.playerData.avatarFlags[keyIndex]]);
+                        m_avatarHairModels[index].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.playerData.avatarFlags[keyIndex]]);
+                    }
+                    updatePalettePreview(keyIndex, i.selectedIndex);
+                };
+
+            item->selected =
+                [&, keyIndex](const Menu::Item& i)
+                {
+                    updatePalettePreview(keyIndex, i.selectedIndex);
+
+                    m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                    m_detailsPane.image.getComponent<cro::Sprite>() = m_tabBar.items[m_tabBar.activeIndex].sprite;
+                    const auto bounds = m_detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
+                    m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f,0.f });
                 };
 
             for (auto i = 0u; i < pc::PairCounts[keyIndex]; ++i)
@@ -2124,6 +2140,7 @@ void ProfileStateV2::createHeadwearItems()
             }
 
             item->selectedIndex = m_activeProfile.playerData.avatarFlags[keyIndex];
+            updatePalettePreview(keyIndex, item->selectedIndex);
             item->displayType = Menu::Item::Slider;
             item->previewColour = pc::Palette[item->selectedIndex];
             item->texture = &m_colourPreview;
