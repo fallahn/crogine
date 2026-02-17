@@ -247,10 +247,12 @@ void EditTournamentState::imguiWindow()
         }
         if (ImGui::Button("OK", {(WindowSize.x / 2.f) - 12.f, 0.f}))
         {
-            cro::String s = cro::String::fromUtf8(m_imguiBuffer.begin(), m_imguiBuffer.end());
-            m_tournamentNameEntity.getComponent<cro::Text>().setString(s);
-            m_tournamentInfo.setTitle(s);
-
+            if (!m_imguiBuffer.empty())
+            {
+                cro::String s = cro::String::fromUtf8(m_imguiBuffer.begin(), m_imguiBuffer.end());
+                m_tournamentNameEntity.getComponent<cro::Text>().setString(s);
+                m_tournamentInfo.setTitle(s);
+            }
             m_imguiBuffer.clear();
             m_showImguiInput = false;
         }
@@ -530,8 +532,11 @@ void EditTournamentState::buildScene()
                                     if (submitted)
                                     {
                                         const auto str = cro::String::fromUtf8(buffer, buffer + std::strlen(buffer));
-                                        m_tournamentNameEntity.getComponent<cro::Text>().setString(str);
-                                        m_tournamentInfo.setTitle(str);
+                                        if (!str.empty())
+                                        {
+                                            m_tournamentNameEntity.getComponent<cro::Text>().setString(str);
+                                            m_tournamentInfo.setTitle(str);
+                                        }
                                     }
                                 };
 

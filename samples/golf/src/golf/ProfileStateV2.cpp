@@ -2657,8 +2657,13 @@ void ProfileStateV2::createDetailItems()
                         {
                             if (submitted)
                             {
-                                m_activeProfile.playerData.name = cro::String::fromUtf8(buffer, buffer + std::strlen(buffer));
-                                applyNameString();
+                                const auto s = cro::String::fromUtf8(buffer, buffer + std::strlen(buffer));
+
+                                if (!s.empty())
+                                {
+                                    m_activeProfile.playerData.name = s;
+                                    applyNameString();
+                                }
                             }
                         };
 
@@ -4660,9 +4665,11 @@ void ProfileStateV2::nameInputWindow()
         }
         if (ImGui::Button("OK", { (WindowSize.x / 2.f) - 12.f, 0.f }))
         {
-            m_activeProfile.playerData.name = cro::String::fromUtf8(m_nameBuffer.begin(), m_nameBuffer.end());
-            applyNameString();
-
+            if (!m_nameBuffer.empty())
+            {
+                m_activeProfile.playerData.name = cro::String::fromUtf8(m_nameBuffer.begin(), m_nameBuffer.end());
+                applyNameString();
+            }
             m_nameBuffer.clear();
             m_showNameInput = false;
         }
