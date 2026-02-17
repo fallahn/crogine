@@ -483,7 +483,6 @@ void UILayout::updateMenuItems(const SharedStateData& sharedData)
     //hide the preview image and let the selection callback
     //display/update it as needed.
     detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-    detailsPane.image.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
     detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     updatePalettePreview(-1, -1, 0.f); //reset this allow item selected callback to update it
 

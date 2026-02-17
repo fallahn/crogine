@@ -1450,6 +1450,7 @@ void ProfileStateV2::buildScene()
 
             //hide mugshot
             m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_uiLayout.detailsPane.bioString.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
     m_uiLayout.tabBar.items[TabID::Headwear].selected =
         [&]()
@@ -1491,6 +1492,7 @@ void ProfileStateV2::buildScene()
 
             //hide mugshot
             m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_uiLayout.detailsPane.bioString.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
     m_uiLayout.tabBar.items[TabID::Equipment].selected =
         [&]()
@@ -1510,6 +1512,7 @@ void ProfileStateV2::buildScene()
 
             //hide mugshot
             m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_uiLayout.detailsPane.bioString.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
     m_uiLayout.tabBar.items[TabID::Loadout].selected =
         [&]()
@@ -1526,6 +1529,7 @@ void ProfileStateV2::buildScene()
 
             //hide mugshot
             m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_uiLayout.detailsPane.bioString.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
     m_uiLayout.tabBar.items[TabID::Details].selected =
         [&]()
@@ -1551,6 +1555,7 @@ void ProfileStateV2::buildScene()
             {
                 m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }
+            m_uiLayout.detailsPane.bioString.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         };
 }
 
@@ -2804,6 +2809,10 @@ void ProfileStateV2::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
 
 void ProfileStateV2::resizeCallback(float CentreWidth, float CentreHeight)
 {
+    //as we're rendering 1:1 for the preview we need to reset the scale
+    //applied by the UIElement (sigh)
+    m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
     const auto viewScale = cro::UIElementSystem::getViewScale();
 
     //resize the preview graphic to fit
