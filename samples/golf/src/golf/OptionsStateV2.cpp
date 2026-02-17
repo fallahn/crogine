@@ -155,6 +155,7 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus(), 192),
     m_sharedData        (sd),
+    m_uiLayout          (TabID::Count),
     m_keybindIndex      (-1),
     m_keybindItemIndex  (-1)
 {
@@ -165,9 +166,6 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     std::fill(m_controllerMasks.begin(), m_controllerMasks.end(), 0);
     std::fill(m_controllerPrevMasks.begin(), m_controllerPrevMasks.end(), 0);
-
-    m_uiLayout.tabBar.items.resize(TabID::Count);
-    m_uiLayout.menuLayout.items.resize(TabID::Count);
 
     loadAssets();
     buildScene();
@@ -887,62 +885,62 @@ void OptionsStateV2::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>());
 
     //details window on right side
-    m_detailsPane.root = m_scene.createEntity();
-    m_detailsPane.root.addComponent<cro::Transform>();
-    m_detailsPane.root.addComponent<cro::UIElement>(cro::UIElement::Position, false);
-    m_detailsPane.root.getComponent<cro::UIElement>().relativePosition = { 0.f, 0.f }; //this is set set when updating the active tab, might be right or left aligned
-    rootNode.getComponent<cro::Transform>().addChild(m_detailsPane.root.getComponent<cro::Transform>());
+    m_uiLayout.detailsPane.root = m_scene.createEntity();
+    m_uiLayout.detailsPane.root.addComponent<cro::Transform>();
+    m_uiLayout.detailsPane.root.addComponent<cro::UIElement>(cro::UIElement::Position, false);
+    m_uiLayout.detailsPane.root.getComponent<cro::UIElement>().relativePosition = { 0.f, 0.f }; //this is set set when updating the active tab, might be right or left aligned
+    rootNode.getComponent<cro::Transform>().addChild(m_uiLayout.detailsPane.root.getComponent<cro::Transform>());
 
     //text
-    m_detailsPane.text = m_scene.createEntity();
-    m_detailsPane.text.addComponent<cro::Transform>();
-    m_detailsPane.text.addComponent<cro::Drawable2D>();
-    m_detailsPane.text.addComponent<cro::Text>(largeFont);
-    m_detailsPane.text.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    m_detailsPane.text.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    m_detailsPane.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
-    m_detailsPane.text.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -82.f }; //90
-    m_detailsPane.text.getComponent<cro::UIElement>().characterSize = UITextSize;
-    m_detailsPane.text.getComponent<cro::UIElement>().verticalSpacing = 3.f;
-    m_detailsPane.text.getComponent<cro::UIElement>().depth = 0.2f;
-    m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.text.getComponent<cro::Transform>());
+    m_uiLayout.detailsPane.text = m_scene.createEntity();
+    m_uiLayout.detailsPane.text.addComponent<cro::Transform>();
+    m_uiLayout.detailsPane.text.addComponent<cro::Drawable2D>();
+    m_uiLayout.detailsPane.text.addComponent<cro::Text>(largeFont);
+    m_uiLayout.detailsPane.text.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    m_uiLayout.detailsPane.text.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    m_uiLayout.detailsPane.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
+    m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -82.f }; //90
+    m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().characterSize = UITextSize;
+    m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().verticalSpacing = 3.f;
+    m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().depth = 0.2f;
+    m_uiLayout.detailsPane.root.getComponent<cro::Transform>().addChild(m_uiLayout.detailsPane.text.getComponent<cro::Transform>());
 
     //image
-    m_detailsPane.image = m_scene.createEntity();
-    m_detailsPane.image.addComponent<cro::Transform>();
-    m_detailsPane.image.addComponent<cro::Drawable2D>();
-    m_detailsPane.image.addComponent<cro::Sprite>();
-    m_detailsPane.image.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
-    m_detailsPane.image.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -10.f };
-    m_detailsPane.image.getComponent<cro::UIElement>().depth = 0.2f;
-    m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.image.getComponent<cro::Transform>());
+    m_uiLayout.detailsPane.image = m_scene.createEntity();
+    m_uiLayout.detailsPane.image.addComponent<cro::Transform>();
+    m_uiLayout.detailsPane.image.addComponent<cro::Drawable2D>();
+    m_uiLayout.detailsPane.image.addComponent<cro::Sprite>();
+    m_uiLayout.detailsPane.image.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    m_uiLayout.detailsPane.image.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -10.f };
+    m_uiLayout.detailsPane.image.getComponent<cro::UIElement>().depth = 0.2f;
+    m_uiLayout.detailsPane.root.getComponent<cro::Transform>().addChild(m_uiLayout.detailsPane.image.getComponent<cro::Transform>());
 
     //background/9 patch
-    m_detailsPane.background = m_scene.createEntity();
-    m_detailsPane.background.addComponent<cro::Transform>().setOrigin({ 0.f, InfoBarHeight / 2.f });
-    m_detailsPane.background.addComponent<cro::Drawable2D>().setTexture(m_uiLayout.uiTexture);
-    m_detailsPane.background.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-    m_detailsPane.background.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
-    m_detailsPane.background.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, 8.f };
-    m_detailsPane.background.getComponent<cro::UIElement>().resizeCallback =
+    m_uiLayout.detailsPane.background = m_scene.createEntity();
+    m_uiLayout.detailsPane.background.addComponent<cro::Transform>().setOrigin({ 0.f, InfoBarHeight / 2.f });
+    m_uiLayout.detailsPane.background.addComponent<cro::Drawable2D>().setTexture(m_uiLayout.uiTexture);
+    m_uiLayout.detailsPane.background.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    m_uiLayout.detailsPane.background.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    m_uiLayout.detailsPane.background.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, 8.f };
+    m_uiLayout.detailsPane.background.getComponent<cro::UIElement>().resizeCallback =
         [&](cro::Entity e) 
         {
 
         };
-    m_detailsPane.background.getComponent<cro::UIElement>().depth = -0.3f;
-    m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.background.getComponent<cro::Transform>());
+    m_uiLayout.detailsPane.background.getComponent<cro::UIElement>().depth = -0.3f;
+    m_uiLayout.detailsPane.root.getComponent<cro::Transform>().addChild(m_uiLayout.detailsPane.background.getComponent<cro::Transform>());
 
 
     //displays an Apply icon if an item requests it
-    m_detailsPane.applyButton = m_scene.createEntity();
-    m_detailsPane.applyButton.addComponent<cro::Transform>();
-    m_detailsPane.applyButton.addComponent<cro::Callback>().active = true;
-    m_detailsPane.applyButton.getComponent<cro::Callback>().function =
+    m_uiLayout.detailsPane.applyButton = m_scene.createEntity();
+    m_uiLayout.detailsPane.applyButton.addComponent<cro::Transform>();
+    m_uiLayout.detailsPane.applyButton.addComponent<cro::Callback>().active = true;
+    m_uiLayout.detailsPane.applyButton.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            e.getComponent<cro::Transform>().setPosition(-(m_detailsPane.backgroundSize / 2.f) * cro::UIElementSystem::getViewScale());
+            e.getComponent<cro::Transform>().setPosition(-(m_uiLayout.detailsPane.backgroundSize / 2.f) * cro::UIElementSystem::getViewScale());
         };
-    m_detailsPane.root.getComponent<cro::Transform>().addChild(m_detailsPane.applyButton.getComponent<cro::Transform>());
+    m_uiLayout.detailsPane.root.getComponent<cro::Transform>().addChild(m_uiLayout.detailsPane.applyButton.getComponent<cro::Transform>());
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -961,7 +959,7 @@ void OptionsStateV2::buildScene()
                 m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard ?
                 cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
         };
-    m_detailsPane.applyButton.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_uiLayout.detailsPane.applyButton.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     entity = m_scene.createEntity();
@@ -979,7 +977,7 @@ void OptionsStateV2::buildScene()
                 m_sharedData.activeInput == SharedStateData::ActiveInput::XBox ?
                 cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
         };
-    m_detailsPane.applyButton.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_uiLayout.detailsPane.applyButton.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -996,7 +994,7 @@ void OptionsStateV2::buildScene()
                 m_sharedData.activeInput == SharedStateData::ActiveInput::PS ?
                 cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
         };
-    m_detailsPane.applyButton.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_uiLayout.detailsPane.applyButton.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
 
@@ -1159,9 +1157,9 @@ void OptionsStateV2::createSettingsItems()
     item->selected = 
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BeaconColour];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BeaconColour].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BeaconColour];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BeaconColour].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1177,9 +1175,9 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BeaconColour];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BeaconColour].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BeaconColour];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BeaconColour].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
     item->activated = 
         [&](Menu::Item& i)
@@ -1205,9 +1203,9 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BallTrail];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BallTrail].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BallTrail];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BallTrail].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1223,9 +1221,9 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BallTrail];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BallTrail].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BallTrail];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BallTrail].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1241,9 +1239,9 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::GridDensity];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::GridDensity].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::GridDensity];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::GridDensity].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1278,9 +1276,9 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::TeeMarker];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::TeeMarker].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::TeeMarker];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::TeeMarker].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
     item->activated =
         [&](Menu::Item& i)
@@ -1318,9 +1316,9 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::LargePower];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::LargePower].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::LargePower];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::LargePower].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1336,9 +1334,9 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::HighContrast];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::HighContrast].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::HighContrast];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::HighContrast].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1355,9 +1353,9 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::DecimatePower];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::DecimatePower].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::DecimatePower];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::DecimatePower].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1398,9 +1396,9 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::PuttFollow];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::PuttFollow].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::PuttFollow];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::PuttFollow].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1417,9 +1415,9 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::ZoomFlight];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::ZoomFlight].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::ZoomFlight];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::ZoomFlight].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1445,10 +1443,10 @@ void OptionsStateV2::createSettingsItems()
     const auto selectionCallback =
         [&](const Menu::Item& i)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>().setTexture(m_flagPreview.getTexure());
-            m_detailsPane.image.getComponent<cro::Sprite>().setTextureRect(m_flagPreview.getUV());
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_flagPreview.getSize().x / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>().setTexture(m_flagPreview.getTexure());
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>().setTextureRect(m_flagPreview.getUV());
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_flagPreview.getSize().x / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
 
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
@@ -1463,9 +1461,9 @@ void OptionsStateV2::createSettingsItems()
         {
             //cycle through flags
             m_flagPreview.setIndex(i.selectedIndex);
-            m_detailsPane.image.getComponent<cro::Sprite>().setTextureRect(m_flagPreview.getUV());
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>().setTextureRect(m_flagPreview.getUV());
 
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_flagPreview.getSize().x / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_flagPreview.getSize().x / 2.f, 0.f });
             m_sharedData.flagPath = m_flagPreview.getPath();
         };
 
@@ -1484,8 +1482,8 @@ void OptionsStateV2::createSettingsItems()
         {
             m_sharedData.flagText = i.selectedIndex;
             m_flagPreview.setText(m_sharedData.flagText);
-            m_detailsPane.image.getComponent<cro::Sprite>().setTexture(m_flagPreview.getTexure());
-            m_detailsPane.image.getComponent<cro::Sprite>().setTextureRect(m_flagPreview.getUV());
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>().setTexture(m_flagPreview.getTexure());
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>().setTextureRect(m_flagPreview.getUV());
         };
     item->labels = { "None" , "Black", "White"};
     item->selectedIndex = m_sharedData.flagText;
@@ -1595,9 +1593,9 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::WidgetSpeed];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::WidgetSpeed].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::WidgetSpeed];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::WidgetSpeed].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1634,9 +1632,9 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::PuttAssist];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::PuttAssist].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::PuttAssist];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::PuttAssist].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1666,9 +1664,9 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::RangeIndicator];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::RangeIndicator].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::RangeIndicator];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::RangeIndicator].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1835,12 +1833,12 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].sprite;
-            const auto bounds = m_detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].sprite;
+            const auto bounds = m_uiLayout.detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
 
-            m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            m_uiLayout.detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1848,7 +1846,7 @@ void OptionsStateV2::createSettingsItems()
             m_sharedData.showRosterTip = true;
             m_sharedData.showTutorialTip = true;
 
-            m_detailsPane.text.getComponent<cro::Text>().setString("Tutorials Reset!");
+            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString("Tutorials Reset!");
         };
     item->labels = { "OK" };
     item->selectedIndex = 0;
@@ -1861,11 +1859,11 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::Warning];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::Warning].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::Warning];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::Warning].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
 
-            m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            m_uiLayout.detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1883,11 +1881,11 @@ void OptionsStateV2::createSettingsItems()
     item->selected =
         [&](const Menu::Item&)
         {
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::Warning];
-            m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::Warning].getTextureBounds().width / 2.f, 0.f });
-            m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::Warning];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::Warning].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
 
-            m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            m_uiLayout.detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         };
     item->activated = [&](Menu::Item& i)
         {
@@ -1950,7 +1948,7 @@ void OptionsStateV2::createKeyboardItems()
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString("Press a key");
             m_keybindIndex = InputBinding::PrevClub;
             m_keybindItemIndex = itemIndex;
         };
@@ -1964,7 +1962,7 @@ void OptionsStateV2::createKeyboardItems()
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString("Press a key");
             m_keybindIndex = InputBinding::NextClub;
             m_keybindItemIndex = itemIndex;
         };
@@ -1978,7 +1976,7 @@ void OptionsStateV2::createKeyboardItems()
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString("Press a key");
             m_keybindIndex = InputBinding::Left;
             m_keybindItemIndex = itemIndex;
         };
@@ -1992,7 +1990,7 @@ void OptionsStateV2::createKeyboardItems()
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString("Press a key");
             m_keybindIndex = InputBinding::Right;
             m_keybindItemIndex = itemIndex;
         };
@@ -2006,7 +2004,7 @@ void OptionsStateV2::createKeyboardItems()
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString("Press a key");
             m_keybindIndex = InputBinding::Up;
             m_keybindItemIndex = itemIndex;
         };
@@ -2020,7 +2018,7 @@ void OptionsStateV2::createKeyboardItems()
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString("Press a key");
             m_keybindIndex = InputBinding::Down;
             m_keybindItemIndex = itemIndex;
         };
@@ -2034,7 +2032,7 @@ void OptionsStateV2::createKeyboardItems()
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString("Press a key");
             m_keybindIndex = InputBinding::Action;
             m_keybindItemIndex = itemIndex;
         };
@@ -2048,7 +2046,7 @@ void OptionsStateV2::createKeyboardItems()
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString("Press a key");
             m_keybindIndex = InputBinding::SpinMenu;
             m_keybindItemIndex = itemIndex;
         };
@@ -2062,7 +2060,7 @@ void OptionsStateV2::createKeyboardItems()
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString("Press a key");
             m_keybindIndex = InputBinding::EmoteMenu;
             m_keybindItemIndex = itemIndex;
         };
@@ -2076,7 +2074,7 @@ void OptionsStateV2::createKeyboardItems()
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
         {
-            m_detailsPane.text.getComponent<cro::Text>().setString("Press a key");
+            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString("Press a key");
             m_keybindIndex = InputBinding::CancelShot;
             m_keybindItemIndex = itemIndex;
         };
@@ -2166,8 +2164,8 @@ void OptionsStateV2::createControllerItems()
 {
     auto ent = m_scene.createEntity();
     ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    m_detailsPane.root.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-    m_detailsPane.tabDetails[TabID::Controller] = ent;
+    m_uiLayout.detailsPane.root.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    m_uiLayout.detailsPane.tabDetails[TabID::Controller] = ent;
 
     //set detail image based on input activity
     cro::SpriteSheet controllerSprites;
@@ -2226,7 +2224,7 @@ void OptionsStateV2::createControllerItems()
                 }
             }
         };
-    m_detailsPane.tabDetails[TabID::Controller].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    m_uiLayout.detailsPane.tabDetails[TabID::Controller].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
 
     //set detail text to controller list
@@ -2256,7 +2254,7 @@ void OptionsStateV2::createControllerItems()
             auto posX = std::round(bounds.width / 2.f) + 4.f;
             e.getComponent<cro::Transform>().setOrigin({ posX, 0.f });            
         };
-    m_detailsPane.tabDetails[TabID::Controller].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    m_uiLayout.detailsPane.tabDetails[TabID::Controller].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
     auto textEnt = ent;
 
     //activity icons next to description
@@ -2443,7 +2441,7 @@ void OptionsStateV2::createDisplayItems()
         {
             //TODO display a graphic
 
-            m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            m_uiLayout.detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         };
     item->activated =
         [&](Menu::Item& i)
@@ -2855,183 +2853,7 @@ void OptionsStateV2::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
 
 void OptionsStateV2::updateTabBar()
 {
-    const glm::vec2 WindowSize = cro::App::getWindow().getSize();
-
-    const float Spacing = 1.f / (TabID::Count + 1); //leave equivalent of half a tab either end
-    const float TabWidth = std::round(Spacing * WindowSize.x);
-
-    std::vector<cro::Vertex2D> verts;
-    const auto viewScale = cro::UIElementSystem::getViewScale();
-    
-    if (m_uiLayout.uiTexture)
-    {
-        const auto width = TabWidth - viewScale;
-        const auto height = TabBarHeight * viewScale;
-
-        const auto addQuad = 
-            [&](glm::vec2 position, const SpriteSection& left, const SpriteSection& right)
-            {
-                const auto sectionWidth = left.size.x * viewScale;
-
-                //left section
-                verts.emplace_back(glm::vec2(position.x, position.y + height), glm::vec2(left.uv.left, left.uv.height));
-                verts.emplace_back(position, glm::vec2(left.uv.left, left.uv.bottom));
-                verts.emplace_back(glm::vec2(position.x + sectionWidth, position.y + height), glm::vec2(left.uv.width, left.uv.height));
-                verts.emplace_back(glm::vec2(position.x + sectionWidth, position.y + height), glm::vec2(left.uv.width, left.uv.height));
-                verts.emplace_back(position, glm::vec2(left.uv.left, left.uv.bottom));
-                verts.emplace_back(glm::vec2(position.x + sectionWidth, position.y), glm::vec2(left.uv.width, left.uv.bottom));
-
-
-                //middle section
-                position.x += sectionWidth;
-                const auto centreWidth = (TabWidth - (sectionWidth * 2.f));
-                verts.emplace_back(glm::vec2(position.x, position.y + height), glm::vec2(left.uv.width, left.uv.height));
-                verts.emplace_back(position, glm::vec2(left.uv.width, left.uv.bottom));
-                verts.emplace_back(glm::vec2(position.x + centreWidth, position.y + height), glm::vec2(right.uv.left, right.uv.height));
-                verts.emplace_back(glm::vec2(position.x + centreWidth, position.y + height), glm::vec2(right.uv.left, right.uv.height));
-                verts.emplace_back(position, glm::vec2(left.uv.width, left.uv.bottom));
-                verts.emplace_back(glm::vec2(position.x + centreWidth, position.y), glm::vec2(right.uv.left, right.uv.bottom));
-
-
-                //right section
-                position.x += centreWidth;
-                verts.emplace_back(glm::vec2(position.x, position.y + height), glm::vec2(right.uv.left, right.uv.height));
-                verts.emplace_back(position, glm::vec2(right.uv.left, right.uv.bottom));
-                verts.emplace_back(glm::vec2(position.x + sectionWidth, position.y + height), glm::vec2(right.uv.width, right.uv.height));
-                verts.emplace_back(glm::vec2(position.x + sectionWidth, position.y + height), glm::vec2(right.uv.width, right.uv.height));
-                verts.emplace_back(position, glm::vec2(right.uv.left, right.uv.bottom));
-                verts.emplace_back(glm::vec2(position.x + sectionWidth, position.y), glm::vec2(right.uv.width, right.uv.bottom));
-            };
-
-        for (auto i = 0u; i < m_uiLayout.tabBar.items.size(); ++i)
-        {
-            const auto active = i == m_uiLayout.tabBar.activeIndex;
-            const auto hovered = (i == m_uiLayout.tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
-
-            const float kludgeOffset = (2.f * viewScale);
-            glm::vec2 position = { (std::round(TabWidth / 2.f) + kludgeOffset) + ((i * TabWidth) + viewScale), 0.f };
-            if (active)
-            {
-                addQuad(position, m_uiLayout.tabActive[0], m_uiLayout.tabActive[1]);
-            }
-            else if(hovered)
-            {
-                addQuad(position, m_uiLayout.tabHighlight[0], m_uiLayout.tabHighlight[1]);
-            }
-            else
-            {
-                addQuad(position, m_uiLayout.tabInactive[0], m_uiLayout.tabInactive[1]);
-            }
-
-            //set the text
-            position += glm::vec2(m_uiLayout.tabBar.background.getComponent<cro::Transform>().getPosition());
-            position += WindowSize / 2.f; //screen centre
-            m_uiLayout.tabBar.items[i].hitbox = { position, glm::vec2(width, height)};
-            m_uiLayout.tabBar.items[i].text.getComponent<cro::Text>().setFillColour(active ? TextNormalColour :
-                hovered ? CD32::Colours[CD32::Yellow] : CD32::Colours[CD32::BeigeMid]);
-        }
-
-        //add a quad to the verts as an underline
-        const auto backgroundCentre = m_uiLayout.backgroundSections[BackgroundSection::Centre].uv;
-        const glm::vec2 uv0(backgroundCentre.left, backgroundCentre.bottom);
-        const glm::vec2 uv1(backgroundCentre.width, backgroundCentre.height);
-        verts.emplace_back(glm::vec2(0.f, 0.f), glm::vec2(uv0.x, uv1.y));
-        verts.emplace_back(glm::vec2(0.f, -viewScale), uv0);
-        verts.emplace_back(glm::vec2(WindowSize.x, 0.f), uv1);
-        verts.emplace_back(glm::vec2(WindowSize.x, 0.f), uv1);
-        verts.emplace_back(glm::vec2(0.f, -viewScale), uv0);
-        verts.emplace_back(glm::vec2(WindowSize.x, -viewScale), glm::vec2(uv1.x, uv0.y));
-    }
-    else
-    {
-        const auto addQuad =
-            [&](cro::Colour c, glm::vec2 position, glm::vec2 size)
-            {
-                verts.emplace_back(glm::vec2(position.x, position.y + size.y), c);
-                verts.emplace_back(position, c);
-                verts.emplace_back(position + size, c);
-
-                verts.emplace_back(position + size, c);
-                verts.emplace_back(position, c);
-                verts.emplace_back(glm::vec2(position.x + size.x, position.y), c);
-            };
-
-        //update the verts for the tab bar.
-        for (auto i = 0u; i < m_uiLayout.tabBar.items.size(); ++i)
-        {
-            const auto active = i == m_uiLayout.tabBar.activeIndex;
-            const auto hovered = (i == m_uiLayout.tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
-
-            const auto colour = active ? CD32::Colours[CD32::Brown] :
-                hovered ?
-                CD32::Colours[CD32::Yellow] : CD32::Colours[CD32::TanDarkest];
-
-            glm::vec2 position = { std::round(TabWidth / 2.f) + (i * TabWidth), 0.f };
-            const glm::vec2 size = { TabWidth - viewScale, TabBarHeight * viewScale };
-            addQuad(colour, position, size);
-
-            position += glm::vec2(m_uiLayout.tabBar.background.getComponent<cro::Transform>().getPosition());
-            position += WindowSize / 2.f; //screen centre
-            m_uiLayout.tabBar.items[i].hitbox = { position, size };
-            m_uiLayout.tabBar.items[i].text.getComponent<cro::Text>().setFillColour(active ? TextNormalColour :
-                hovered ? CD32::Colours[CD32::Black] : CD32::Colours[CD32::BeigeMid]);
-        }
-
-        addQuad(CD32::Colours[CD32::Brown], { 0.f, -viewScale }, { WindowSize.x, viewScale });
-    }
-
-    m_uiLayout.tabBar.background.getComponent<cro::Drawable2D>().setVertexData(verts);
-
-    const auto DetailOffset = (((1.f - m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].displayWidth) / 2.f) + m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].displayWidth) - 0.5f;
-
-    switch (m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].alignment)
-    {
-    default:
-    case TabBar::Item::Left:
-        m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().setPosition({ 0.f, 0.f });
-
-        m_detailsPane.root.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        m_detailsPane.root.getComponent<cro::UIElement>().relativePosition.x = DetailOffset;
-        break;
-    case TabBar::Item::Centre:
-    {
-        const float x = std::round((WindowSize.x - (static_cast<float>(m_uiLayout.menuLayout.texture.getSize().x * cro::UIElementSystem::getViewScale()) * m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].displayWidth)) / 2.f);
-        m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().setPosition({ x, 0.f });
-
-        m_detailsPane.root.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    }
-        break;
-    case TabBar::Item::Right:
-    {
-        const float x = std::round(WindowSize.x - ((static_cast<float>(m_uiLayout.menuLayout.texture.getSize().x) * m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].displayWidth) * cro::UIElementSystem::getViewScale()));
-        m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().setPosition({ x, 0.f });
-
-        m_detailsPane.root.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        m_detailsPane.root.getComponent<cro::UIElement>().relativePosition.x = -DetailOffset;
-    }
-        break;
-    }
-    m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().move(-WindowSize / 2.f);
-    
-
-    //set the detail text alignment based on active tab
-    //switch (m_uiLayout.tabBar.activeIndex)
-    //{
-    //default:
-    //    m_detailsPane.text.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
-    //    break;
-    //case TabID::Controller:
-    //{
-    //    //this is hacky but it means the text only goes out of bounds in the edge
-    //    //case where there are 4 controllers and the resolution of the window is one
-    //    //of 3 obscure sizes (1176x664, 1600x1024 and 1680x1050 - that I know of)
-    //    /*const float Offset = cro::GameController::getControllerCount() > 3 ? 16.f : 0.f;
-    //    m_detailsPane.text.getComponent<cro::Transform>().setOrigin({ 0.f, Offset });*/
-    //}
-    //    break;
-    //}
-
-
+    m_uiLayout.updateTabBar(m_sharedData);
     resizeItemGraphics();
     updateMenuItems();
 }
@@ -3050,17 +2872,17 @@ void OptionsStateV2::prevTab()
 
 void OptionsStateV2::activateTab(std::int32_t idx)
 {
-    if (m_detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].isValid())
+    if (m_uiLayout.detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].isValid())
     {
-        m_detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        m_uiLayout.detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
 
     m_uiLayout.tabBar.activeIndex = idx;
     m_uiLayout.menuLayout.itemIndex = 0;
 
-    if (m_detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].isValid())
+    if (m_uiLayout.detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].isValid())
     {
-        m_detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        m_uiLayout.detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
     }
 
     updateTabBar();
@@ -3157,7 +2979,7 @@ void OptionsStateV2::resizeItemGraphics()
 
     backgroundArea.x = std::round(backgroundArea.x / 2.f);
     backgroundArea.y = std::round(backgroundArea.y / 2.f);
-    m_detailsPane.backgroundSize = backgroundArea * 2.f;
+    m_uiLayout.detailsPane.backgroundSize = backgroundArea * 2.f;
 
     const float CentreWidth = backgroundArea.x - m_uiLayout.backgroundSections[BackgroundSection::TL].size.x;
     const float CentreHeight = backgroundArea.y - m_uiLayout.backgroundSections[BackgroundSection::TL].size.y;
@@ -3244,7 +3066,7 @@ void OptionsStateV2::resizeItemGraphics()
     size = { CentreWidth * 2.f, CentreHeight * 2.f };
     addQuad(p, size, m_uiLayout.backgroundSections[BackgroundSection::Centre].uv);
 
-    m_detailsPane.background.getComponent<cro::Drawable2D>().setVertexData(verts);
+    m_uiLayout.detailsPane.background.getComponent<cro::Drawable2D>().setVertexData(verts);
 }
 
 void OptionsStateV2::updateSliderGraphic(std::int32_t amt, std::int32_t total)
@@ -3455,8 +3277,8 @@ void OptionsStateV2::updateMenuItems()
 
     //hide the preview image and let the selection callback
     //display/update it as needed.
-    m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-    m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    m_uiLayout.detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 
     m_uiLayout.menuLayout.texture.clear(cro::Colour::Transparent);
     //render current item selection to render texture
@@ -3469,13 +3291,13 @@ void OptionsStateV2::updateMenuItems()
             auto txt = item.description;
             cro::Util::String::wordWrap(txt, WordWrapLarge);
             
-            m_detailsPane.text.getComponent<cro::Text>().setString(txt);
+            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString(txt);
 
-            const auto b = (cro::Text::getLocalBounds(m_detailsPane.text).width / viewScale) + DetailBackgroundPadding;
-            if (b > m_detailsPane.backgroundSize.x)
+            const auto b = (cro::Text::getLocalBounds(m_uiLayout.detailsPane.text).width / viewScale) + DetailBackgroundPadding;
+            if (b > m_uiLayout.detailsPane.backgroundSize.x)
             {
                 cro::Util::String::wordWrap(txt, WordWrapSmall);
-                m_detailsPane.text.getComponent<cro::Text>().setString(txt);
+                m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString(txt);
             }
 
             if (item.selected)
@@ -3485,10 +3307,10 @@ void OptionsStateV2::updateMenuItems()
             else if (m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].sprite.getTexture())
             {
                 //set this sprite if it's available
-                m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-                m_detailsPane.image.getComponent<cro::Sprite>() = m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].sprite;
-                const auto bounds = m_detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
-                m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f,0.f });
+                m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].sprite;
+                const auto bounds = m_uiLayout.detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
+                m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f,0.f });
             }
         }
 
@@ -3728,7 +3550,7 @@ void OptionsStateV2::updateKeybind(SDL_Keycode key)
     {
         cro::String msg("This key cannot be assigned. Press a key.");
         cro::Util::String::wordWrap(msg, 36);
-        m_detailsPane.text.getComponent<cro::Text>().setString(msg);
+        m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString(msg);
 
         return;
     }
@@ -3740,7 +3562,7 @@ void OptionsStateV2::updateKeybind(SDL_Keycode key)
         cro::String msg = cro::Keyboard::keyString(key);
         msg += " is already bound. Press a key";
         cro::Util::String::wordWrap(msg, 36);
-        m_detailsPane.text.getComponent<cro::Text>().setString(msg);
+        m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString(msg);
 
         return;
     }
@@ -3748,7 +3570,7 @@ void OptionsStateV2::updateKeybind(SDL_Keycode key)
 
     keys[m_keybindIndex] = key;
 
-    //m_detailsPane.text.getComponent<cro::Text>().setString(
+    //m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString(
     //    "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[m_keybindIndex]));
     
     m_uiLayout.menuLayout.items[TabID::Keyboard][m_keybindItemIndex].labels[0] = 
@@ -3765,7 +3587,7 @@ void OptionsStateV2::cancelKeybind()
 {
     playSound(MenuSoundEvent::Cancel);
 
-    m_detailsPane.text.getComponent<cro::Text>().setString("Press Enter to select a new key");
+    m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString("Press Enter to select a new key");
 
     m_keybindIndex = -1;
     m_keybindItemIndex = -1;

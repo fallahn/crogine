@@ -86,23 +86,6 @@ private:
     void resetRepeatTimer(std::int32_t, cro::Time);
 
     UILayout m_uiLayout;
-
-    //const cro::Texture* m_uiTexture;
-    //std::array<SpriteSection, 2u> m_tabActive = {};
-    //std::array<SpriteSection, 2u> m_tabInactive = {};
-    //std::array<SpriteSection, 2u> m_tabHighlight = {};
-
-    //struct BackgroundSection final
-    //{
-    //    enum
-    //    {
-    //        Top, Left, Right, Centre, Bottom,
-    //        TR, TL, BR, BL,
-    //        Count
-    //    };
-    //};
-    //
-    //std::array<SpriteSection, BackgroundSection::Count> m_backgroundSections = {};
     
     void updateTabBar();
     void nextTab();
@@ -110,18 +93,6 @@ private:
     void activateTab(std::int32_t);
 
     cro::SimpleQuad m_menuQuad; //item image/thumb if it exists
-
-    //std::array<SpriteSection, 2u> m_itemSection = {};
-    //std::array<SpriteSection, 2u> m_itemActiveSection = {};
-    //std::array<SpriteSection, 2u> m_itemActiveHighlightSection = {};
-    //std::array<SpriteSection, 2u> m_itemHighlightSection = {};
-    //std::array<SpriteSection, 2u> m_itemTitleSection = {};
-    //cro::SimpleVertexArray m_itemBackground;
-    //cro::SimpleVertexArray m_itemBackgroundActive;
-    //cro::SimpleVertexArray m_itemBackgroundActiveHighlight;
-    //cro::SimpleVertexArray m_itemBackgroundHighlight;
-    //cro::SimpleVertexArray m_itemBackgroundTitle;
-
 
     cro::Entity m_infoString;
     cro::Entity m_infoSprite;
@@ -165,20 +136,6 @@ private:
             Count
         };
     };
-
-    struct DetailsPane final
-    {
-        std::array<cro::Entity, TabID::Count> tabDetails = {};
-        cro::Entity root;
-        cro::Entity text;
-        cro::Entity image;
-        cro::Entity background;
-        cro::Entity applyButton;
-
-        //track this so we can resize items which appear within it
-        //NOTE that is *without* the view scaling
-        glm::vec2 backgroundSize = { 0.f, 0.f };
-    }m_detailsPane;
 
     void resizeItemGraphics();
     void updateSliderGraphic(std::int32_t amt, std::int32_t total);

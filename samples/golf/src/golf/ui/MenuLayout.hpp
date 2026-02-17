@@ -207,10 +207,33 @@ struct Menu final
     cro::FloatRect itemBox; //size is menu coords, position is updated during testing with current scroll position
 };
 
+struct DetailsPane final
+{
+    std::vector<cro::Entity> tabDetails;
+    cro::Entity root;
+    cro::Entity text;
+    cro::Entity image;
+    cro::Entity background;
+    cro::Entity applyButton;
+
+    //TODO these are arbitrary ents in the profile ed
+    //we should probably make this a generic array orsth
+    cro::Entity clubsetImage;
+    cro::Entity mugshotImage;
+    cro::Entity bioString;
+
+    //track this so we can resize items which appear within it
+    //NOTE that is *without* the view scaling
+    glm::vec2 backgroundSize = { 0.f, 0.f };
+};
+
 struct UILayout final
 {
+    explicit UILayout(std::int32_t tabCount);
+
     TabBar tabBar;
     Menu menuLayout;
+    DetailsPane detailsPane;
 
     cro::SimpleText menuText;
     cro::SimpleText menuTextLarge;
@@ -236,6 +259,7 @@ struct UILayout final
     std::array<SpriteSection, BackgroundSection::Count> backgroundSections = {};
 
     void loadAssets(cro::ResourceCollection&);
+    void updateTabBar(const struct SharedStateData&);
 };
 
 //returns cropping areas for debugging

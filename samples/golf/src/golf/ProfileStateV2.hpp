@@ -199,23 +199,6 @@ private:
         };
     };
 
-    struct DetailsPane final
-    {
-        std::array<cro::Entity, TabID::Count> tabDetails = {};
-        cro::Entity root;
-        cro::Entity text;
-        cro::Entity image;
-        cro::Entity background;
-        cro::Entity applyButton;
-        cro::Entity clubsetImage;
-        cro::Entity mugshotImage;
-        cro::Entity bioString;
-
-        //track this so we can resize items which appear within it
-        //NOTE that is *without* the view scaling
-        glm::vec2 backgroundSize = { 0.f, 0.f };
-    }m_detailsPane;
-
     void resizeItemGraphics();
     void updateSliderGraphic(std::int32_t amt, std::int32_t total);
 
