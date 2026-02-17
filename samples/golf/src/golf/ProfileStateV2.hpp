@@ -149,11 +149,6 @@ private:
 
     UILayout m_uiLayout;
 
-    void updateTabBar();
-    void nextTab();
-    void prevTab();
-    void activateTab(std::int32_t idx);
-
     cro::Entity m_infoString;
     cro::Entity m_infoSprite;
     std::array<cro::FloatRect, 2u> m_infoRects = {};
@@ -194,7 +189,7 @@ private:
         };
     };
 
-    void resizeItemGraphics();
+    void resizeCallback(float, float);
 
     void nextItem();
     void prevItem();

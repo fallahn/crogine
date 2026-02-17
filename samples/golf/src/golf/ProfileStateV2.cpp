@@ -151,6 +151,8 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     buildPreviewScene(); //make sure models are loaded first so menu creation can read the data
     buildStatScene();
     buildScene();
+
+    m_uiLayout.resizeCallback = std::bind(&ProfileStateV2::resizeCallback, this, std::placeholders::_1, std::placeholders::_2);
 }
 
 //public
@@ -252,11 +254,11 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         }
         else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
         {
-            nextTab();
+            m_uiLayout.nextTab(m_sharedData);
         }
         else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
         {
-            prevTab();
+            m_uiLayout.prevTab(m_sharedData);
         }
 
         //done on key down event for repeat when held
@@ -360,10 +362,10 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
             activateRight();
             break;
         case cro::GameController::ButtonLeftShoulder:
-            prevTab();
+            m_uiLayout.prevTab(m_sharedData);
             break;
         case cro::GameController::ButtonRightShoulder:
-            nextTab();
+            m_uiLayout.nextTab(m_sharedData);
             break;
         case cro::GameController::ButtonA:
             activate();
@@ -529,7 +531,7 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
         {
             //hack to force the texture to resize properly
             m_uiLayout.menuLayout.texture.create(1, 1, false);
-            updateTabBar();
+            m_uiLayout.updateTabBar(m_sharedData);
 
             //realigns the current menu to the new screen size
             cro::Entity entity = m_scene.createEntity();
@@ -1311,7 +1313,7 @@ void ProfileStateV2::buildScene()
     createLoadoutItems();
     createDetailItems();
 
-    updateTabBar(); //this also updates the menu items
+    m_uiLayout.updateTabBar(m_sharedData); //this also updates the menu items
 
 
     //info string at the bottom
@@ -1396,7 +1398,7 @@ void ProfileStateV2::buildScene()
         pos.y = -(size.y / 2.f);
         tx.setPosition(pos);*/
 
-        updateTabBar();
+        m_uiLayout.updateTabBar(m_sharedData);
     };
 
     entity = m_scene.createEntity();
@@ -2783,7 +2785,7 @@ void ProfileStateV2::onCachedPush()
     createLoadoutItems();
     createDetailItems();
 
-    activateTab(0);
+    m_uiLayout.activateTab(0, m_sharedData);
     //refreshView(); //done by activateTab();
 
     m_rootNode.getComponent<cro::Callback>().active = true;
@@ -2800,227 +2802,9 @@ void ProfileStateV2::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
     m_repeatTimes[i] = resetTime;
 }
 
-void ProfileStateV2::updateTabBar()
+void ProfileStateV2::resizeCallback(float CentreWidth, float CentreHeight)
 {
-    m_uiLayout.updateTabBar(m_sharedData);
-
-    resizeItemGraphics();
-    m_uiLayout.updateMenuItems(m_sharedData);
-}
-
-void ProfileStateV2::nextTab()
-{
-    activateTab((m_uiLayout.tabBar.activeIndex + 1) % TabID::Count);
-    playSound(MenuSoundEvent::Activate);
-}
-
-void ProfileStateV2::prevTab()
-{
-    activateTab((m_uiLayout.tabBar.activeIndex + (TabID::Count - 1)) % TabID::Count);
-    playSound(MenuSoundEvent::Cancel);
-}
-
-void ProfileStateV2::activateTab(std::int32_t idx)
-{
-    if (m_uiLayout.detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].isValid())
-    {
-        m_uiLayout.detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    }
-
-    m_uiLayout.tabBar.activeIndex = idx;
-    m_uiLayout.menuLayout.itemIndex = 0;
-
-    if (m_uiLayout.detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].isValid())
-    {
-        m_uiLayout.detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-    }
-
-    if (m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].selected)
-    {
-        m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].selected();
-    }
-
-    updateTabBar();
-
-    //set item 0 as focused
-    focusToIndex(m_uiLayout.tabBar, m_uiLayout.menuLayout);
-}
-
-void ProfileStateV2::resizeItemGraphics()
-{
-    //this is all done 1:1 as the ui element/nodes scale this for us
-
-    const auto& items = m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex];
     const auto viewScale = cro::UIElementSystem::getViewScale();
-
-    //calc max texture size and resize first if necessary
-    const auto texHeight = static_cast<std::uint32_t>(((ItemHeight + ItemSpacing) * items.size() + ItemSpacing));
-    const auto texWidth = static_cast<std::uint32_t>(static_cast<float>(cro::App::getWindow().getSize().x) / viewScale);
-
-    if (!m_uiLayout.menuLayout.texture.available()
-        || texWidth > m_uiLayout.menuLayout.texture.getSize().x
-        || texHeight > m_uiLayout.menuLayout.texture.getSize().y)
-    {
-        m_uiLayout.menuLayout.texture.create(texWidth, texHeight, false);
-    }
-
-    //update all the item backgrounds based on current window size and selected tab
-    //these aren't scaled by view size here - the target they're rendered to is
-    m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].renderWidth = static_cast<float>(m_uiLayout.menuLayout.texture.getSize().x);
-    m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].renderWidth = std::round(m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].renderWidth * m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].displayWidth);
-
-    std::vector<cro::Vertex2D> verts;
-    const auto calcVerts =
-        [&](const SpriteSection& left, const SpriteSection& right)
-        {
-            glm::vec2 position(0.f);
-            verts.emplace_back(glm::vec2(position.x, left.size.y), glm::vec2(left.uv.left, left.uv.height));
-            verts.emplace_back(position, glm::vec2(left.uv.left, left.uv.bottom));
-            verts.emplace_back(glm::vec2(position.x + left.size.x, left.size.y), glm::vec2(left.uv.width, left.uv.height));
-            verts.emplace_back(glm::vec2(position.x + left.size.x, left.size.y), glm::vec2(left.uv.width, left.uv.height));
-            verts.emplace_back(position, glm::vec2(left.uv.left, left.uv.bottom));
-            verts.emplace_back(glm::vec2(position.x + left.size.x, position.y), glm::vec2(left.uv.width, left.uv.bottom));
-
-            
-            position.x += left.size.x;
-            const auto centreWidth = m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].renderWidth - (left.size.x * 2.f);
-            verts.emplace_back(glm::vec2(position.x, left.size.y), glm::vec2(left.uv.width, left.uv.height));
-            verts.emplace_back(position, glm::vec2(left.uv.width, left.uv.bottom));
-            verts.emplace_back(glm::vec2(position.x + centreWidth, left.size.y), glm::vec2(right.uv.left, right.uv.height));
-            verts.emplace_back(glm::vec2(position.x + centreWidth, left.size.y), glm::vec2(right.uv.left, right.uv.height));
-            verts.emplace_back(position, glm::vec2(left.uv.width, left.uv.bottom));
-            verts.emplace_back(glm::vec2(position.x + centreWidth, position.y), glm::vec2(right.uv.left, right.uv.bottom));
-
-
-            position.x += centreWidth;
-            verts.emplace_back(glm::vec2(position.x, right.size.y), glm::vec2(right.uv.left, right.uv.height));
-            verts.emplace_back(position, glm::vec2(right.uv.left, right.uv.bottom));
-            verts.emplace_back(glm::vec2(position.x + right.size.x, right.size.y), glm::vec2(right.uv.width, right.uv.height));
-            verts.emplace_back(glm::vec2(position.x + right.size.x, right.size.y), glm::vec2(right.uv.width, right.uv.height));
-            verts.emplace_back(position, glm::vec2(right.uv.left, right.uv.bottom));
-            verts.emplace_back(glm::vec2(position.x + right.size.x, position.y), glm::vec2(right.uv.width, right.uv.bottom));
-        };
-
-    calcVerts(m_uiLayout.itemSection[0], m_uiLayout.itemSection[1]);
-    m_uiLayout.itemBackground.setVertexData(verts);
-
-    verts.clear();
-    calcVerts(m_uiLayout.itemActiveSection[0], m_uiLayout.itemActiveSection[1]);
-    m_uiLayout.itemBackgroundActive.setVertexData(verts);
-
-    verts.clear();
-    calcVerts(m_uiLayout.itemActiveHighlightSection[0], m_uiLayout.itemActiveHighlightSection[1]);
-    m_uiLayout.itemBackgroundActiveHighlight.setVertexData(verts);
-
-    verts.clear();
-    calcVerts(m_uiLayout.itemHighlightSection[0], m_uiLayout.itemHighlightSection[1]);
-    m_uiLayout.itemBackgroundHighlight.setVertexData(verts);
-
-    verts.clear();
-    calcVerts(m_uiLayout.itemTitleSection[0], m_uiLayout.itemTitleSection[1]);
-    m_uiLayout.itemBackgroundTitle.setVertexData(verts);
-
-
-    //update detail background
-    glm::vec2 backgroundArea = { static_cast<float>(cro::App::getWindow().getSize().x - (m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].renderWidth * viewScale)),
-                        (m_uiLayout.tabBar.background.getComponent<cro::Transform>().getPosition().y - (InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2) };
-
-    backgroundArea.x -= (DetailBackgroundPadding * viewScale);
-    backgroundArea.y -= (DetailBackgroundPadding * viewScale);
-
-    backgroundArea.x /= viewScale;
-    backgroundArea.y /= viewScale;
-
-    backgroundArea.x = std::round(backgroundArea.x / 2.f);
-    backgroundArea.y = std::round(backgroundArea.y / 2.f);
-    m_uiLayout.detailsPane.backgroundSize = backgroundArea * 2.f;
-
-    const float CentreWidth = backgroundArea.x - m_uiLayout.backgroundSections[BackgroundSection::TL].size.x;
-    const float CentreHeight = backgroundArea.y - m_uiLayout.backgroundSections[BackgroundSection::TL].size.y;
-
-    verts.clear();
-
-    const auto addQuad = 
-        [&](glm::vec2 position, glm::vec2 size, cro::FloatRect uv)
-        {
-            verts.emplace_back(glm::vec2(position.x, position.y + size.y), glm::vec2(uv.left, uv.height));
-            verts.emplace_back(position, glm::vec2(uv.left, uv.bottom));
-            verts.emplace_back(position + size, glm::vec2(uv.width, uv.height));
-
-            verts.emplace_back(position + size, glm::vec2(uv.width, uv.height));
-            verts.emplace_back(position, glm::vec2(uv.left, uv.bottom));
-            verts.emplace_back(glm::vec2(position.x + size.x, position.y), glm::vec2(uv.width, uv.bottom));
-        };
-
-    //top left
-    glm::vec2 p(-backgroundArea.x, CentreHeight);
-    addQuad(p, m_uiLayout.backgroundSections[BackgroundSection::TL].size, m_uiLayout.backgroundSections[BackgroundSection::TL].uv);
-
-    //top right
-    p = { CentreWidth, CentreHeight };
-    addQuad(p, m_uiLayout.backgroundSections[BackgroundSection::TR].size, m_uiLayout.backgroundSections[BackgroundSection::TR].uv);
-
-    //bottom left
-    p = { -backgroundArea.x, -backgroundArea.y };
-    addQuad(p, m_uiLayout.backgroundSections[BackgroundSection::BL].size, m_uiLayout.backgroundSections[BackgroundSection::BL].uv);
-
-    //bottom right
-    p = { CentreWidth, -backgroundArea.y };
-    addQuad(p, m_uiLayout.backgroundSections[BackgroundSection::BR].size, m_uiLayout.backgroundSections[BackgroundSection::BR].uv);
-
-
-    //top
-    p = { -CentreWidth, CentreHeight };
-    glm::vec2 size = { CentreWidth * 2.f, m_uiLayout.backgroundSections[BackgroundSection::Top].size.y };
-    cro::FloatRect uv = 
-    {
-        m_uiLayout.backgroundSections[BackgroundSection::TL].uv.width,
-        m_uiLayout.backgroundSections[BackgroundSection::TL].uv.bottom,
-        m_uiLayout.backgroundSections[BackgroundSection::TR].uv.left,
-        m_uiLayout.backgroundSections[BackgroundSection::TR].uv.height
-    };
-    addQuad(p, size, uv);
-
-    //bottom
-    p = { -CentreWidth, -backgroundArea.y };
-    uv =
-    {
-        m_uiLayout.backgroundSections[BackgroundSection::BL].uv.width,
-        m_uiLayout.backgroundSections[BackgroundSection::BL].uv.bottom,
-        m_uiLayout.backgroundSections[BackgroundSection::BR].uv.left,
-        m_uiLayout.backgroundSections[BackgroundSection::BR].uv.height
-    };
-    addQuad(p, size, uv);
-
-    //left
-    p = { -backgroundArea.x, -CentreHeight };
-    size = { m_uiLayout.backgroundSections[BackgroundSection::Left].size.x, CentreHeight * 2.f };
-    uv =
-    {
-        m_uiLayout.backgroundSections[BackgroundSection::BL].uv.left,
-        m_uiLayout.backgroundSections[BackgroundSection::BL].uv.height,
-        m_uiLayout.backgroundSections[BackgroundSection::TL].uv.width,
-        m_uiLayout.backgroundSections[BackgroundSection::TL].uv.bottom
-    };
-    addQuad(p, size, uv);
-
-    //right
-    p = { CentreWidth, -CentreHeight };
-    uv =
-    {
-        m_uiLayout.backgroundSections[BackgroundSection::BR].uv.left,
-        m_uiLayout.backgroundSections[BackgroundSection::BR].uv.height,
-        m_uiLayout.backgroundSections[BackgroundSection::TR].uv.width,
-        m_uiLayout.backgroundSections[BackgroundSection::TR].uv.bottom
-    };
-    addQuad(p, size, uv);
-
-    //centre
-    p = { -CentreWidth, -CentreHeight };
-    size = { CentreWidth * 2.f, CentreHeight * 2.f };
-    addQuad(p, size, m_uiLayout.backgroundSections[BackgroundSection::Centre].uv);
-
-    m_uiLayout.detailsPane.background.getComponent<cro::Drawable2D>().setVertexData(verts);
 
     //resize the preview graphic to fit
     m_previewTexture.create(static_cast<std::uint32_t>(CentreWidth*2.f * viewScale), static_cast<std::uint32_t>(CentreHeight*1.25f * viewScale));
@@ -3209,7 +2993,7 @@ void ProfileStateV2::checkMouseOver(glm::vec2 screenPos)
     if (selectedTab != m_uiLayout.tabBar.hoveredIndex)
     {
         m_uiLayout.tabBar.hoveredIndex = selectedTab;
-        updateTabBar();
+        m_uiLayout.updateTabBar(m_sharedData);
     }
 
     if (selectedItem != m_uiLayout.menuLayout.hoveredIndex)
@@ -3223,7 +3007,7 @@ void ProfileStateV2::doMouseClick(glm::vec2 mousePos)
 {
     if (m_uiLayout.tabBar.hoveredIndex != -1)
     {
-        activateTab(m_uiLayout.tabBar.hoveredIndex);
+        m_uiLayout.activateTab(m_uiLayout.tabBar.hoveredIndex, m_sharedData);
         m_uiLayout.tabBar.hoveredIndex = -1;
         playSound(MenuSoundEvent::Activate);
     }
@@ -4382,7 +4166,7 @@ void ProfileStateV2::setBioString(const std::string& str)
     m_uiLayout.detailsPane.bioString.getComponent<cro::Text>().setString(s);
 
     const auto left = m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Drawable2D>().getCroppingArea().left;
-    m_uiLayout.detailsPane.bioString.getComponent<cro::Transform>().setPosition(glm::vec2(left/* + 8.f*/, -4.f));
+    m_uiLayout.detailsPane.bioString.getComponent<cro::Transform>().setPosition(glm::vec3(left, -4.f, 0.2f));
 
     //TODO set char size? OR should we be using the UIElement here?
 }
@@ -4421,5 +4205,5 @@ void ProfileStateV2::randomise()
     createEquipmentItems();
     createDetailItems();
 
-    activateTab(m_uiLayout.tabBar.activeIndex);
+    m_uiLayout.activateTab(m_uiLayout.tabBar.activeIndex, m_sharedData);
 }

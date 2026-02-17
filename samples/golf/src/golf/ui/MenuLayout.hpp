@@ -273,6 +273,13 @@ struct UILayout final
     void updateMenuItems(const SharedStateData&);
     void updateSliderGraphic(std::int32_t amt, std::int32_t total);
     void updatePalettePreview(std::int32_t paletteID, std::int32_t selectedIdx, float targetHeight);
+
+    std::function<void(float, float)> resizeCallback;
+    void resizeItemGraphics();
+
+    void nextTab(const SharedStateData&);
+    void prevTab(const SharedStateData&);
+    void activateTab(std::int32_t idx, const SharedStateData&);
 };
 
 //returns cropping areas for debugging

@@ -318,6 +318,9 @@ void UILayout::updateTabBar(const SharedStateData& sharedData)
     //}
     //    break;
     //}
+
+    resizeItemGraphics();
+    updateMenuItems(sharedData);
 }
 
 void UILayout::updateMenuItems(const SharedStateData& sharedData)
@@ -636,6 +639,228 @@ void UILayout::updatePalettePreview(std::int32_t paletteID, std::int32_t selecte
         palettePreview.setScale(glm::vec2(scale));
     }
     palettePreview.setVertexData(verts);
+}
+
+void UILayout::resizeItemGraphics()
+{
+    //this is all done 1:1 as the ui element/nodes scale this for us
+
+    const auto& items = menuLayout.items[tabBar.activeIndex];
+    const auto viewScale = cro::UIElementSystem::getViewScale();
+
+    //calc max texture size and resize first if necessary
+    const auto texHeight = static_cast<std::uint32_t>(((UI::ItemHeight + UI::ItemSpacing) * items.size() + UI::ItemSpacing));
+    const auto texWidth = static_cast<std::uint32_t>(static_cast<float>(cro::App::getWindow().getSize().x) / viewScale);
+
+    if (!menuLayout.texture.available()
+        || texWidth > menuLayout.texture.getSize().x
+        || texHeight > menuLayout.texture.getSize().y)
+    {
+        menuLayout.texture.create(texWidth, texHeight, false);
+    }
+
+
+    //update all the item backgrounds based on current window size and selected tab
+    //these aren't scaled by view size here - the target they're rendered to is
+    tabBar.items[tabBar.activeIndex].renderWidth = static_cast<float>(menuLayout.texture.getSize().x);
+    tabBar.items[tabBar.activeIndex].renderWidth = std::round(tabBar.items[tabBar.activeIndex].renderWidth * tabBar.items[tabBar.activeIndex].displayWidth);
+
+    std::vector<cro::Vertex2D> verts;
+    const auto calcVerts =
+        [&](const SpriteSection& left, const SpriteSection& right)
+        {
+            glm::vec2 position(0.f);
+            verts.emplace_back(glm::vec2(position.x, left.size.y), glm::vec2(left.uv.left, left.uv.height));
+            verts.emplace_back(position, glm::vec2(left.uv.left, left.uv.bottom));
+            verts.emplace_back(glm::vec2(position.x + left.size.x, left.size.y), glm::vec2(left.uv.width, left.uv.height));
+            verts.emplace_back(glm::vec2(position.x + left.size.x, left.size.y), glm::vec2(left.uv.width, left.uv.height));
+            verts.emplace_back(position, glm::vec2(left.uv.left, left.uv.bottom));
+            verts.emplace_back(glm::vec2(position.x + left.size.x, position.y), glm::vec2(left.uv.width, left.uv.bottom));
+
+
+            position.x += left.size.x;
+            const auto centreWidth = tabBar.items[tabBar.activeIndex].renderWidth - (left.size.x * 2.f);
+            verts.emplace_back(glm::vec2(position.x, left.size.y), glm::vec2(left.uv.width, left.uv.height));
+            verts.emplace_back(position, glm::vec2(left.uv.width, left.uv.bottom));
+            verts.emplace_back(glm::vec2(position.x + centreWidth, left.size.y), glm::vec2(right.uv.left, right.uv.height));
+            verts.emplace_back(glm::vec2(position.x + centreWidth, left.size.y), glm::vec2(right.uv.left, right.uv.height));
+            verts.emplace_back(position, glm::vec2(left.uv.width, left.uv.bottom));
+            verts.emplace_back(glm::vec2(position.x + centreWidth, position.y), glm::vec2(right.uv.left, right.uv.bottom));
+
+
+            position.x += centreWidth;
+            verts.emplace_back(glm::vec2(position.x, right.size.y), glm::vec2(right.uv.left, right.uv.height));
+            verts.emplace_back(position, glm::vec2(right.uv.left, right.uv.bottom));
+            verts.emplace_back(glm::vec2(position.x + right.size.x, right.size.y), glm::vec2(right.uv.width, right.uv.height));
+            verts.emplace_back(glm::vec2(position.x + right.size.x, right.size.y), glm::vec2(right.uv.width, right.uv.height));
+            verts.emplace_back(position, glm::vec2(right.uv.left, right.uv.bottom));
+            verts.emplace_back(glm::vec2(position.x + right.size.x, position.y), glm::vec2(right.uv.width, right.uv.bottom));
+        };
+
+    calcVerts(itemSection[0], itemSection[1]);
+    itemBackground.setVertexData(verts);
+
+    verts.clear();
+    calcVerts(itemActiveSection[0], itemActiveSection[1]);
+    itemBackgroundActive.setVertexData(verts);
+
+    verts.clear();
+    calcVerts(itemActiveHighlightSection[0], itemActiveHighlightSection[1]);
+    itemBackgroundActiveHighlight.setVertexData(verts);
+
+    verts.clear();
+    calcVerts(itemHighlightSection[0], itemHighlightSection[1]);
+    itemBackgroundHighlight.setVertexData(verts);
+
+    verts.clear();
+    calcVerts(itemTitleSection[0], itemTitleSection[1]);
+    itemBackgroundTitle.setVertexData(verts);
+
+
+    //update detail background
+    glm::vec2 backgroundArea = { static_cast<float>(cro::App::getWindow().getSize().x - (tabBar.items[tabBar.activeIndex].renderWidth * viewScale)),
+                        (tabBar.background.getComponent<cro::Transform>().getPosition().y - (UI::InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2) };
+
+    backgroundArea.x -= (UI::DetailBackgroundPadding * viewScale);
+    backgroundArea.y -= (UI::DetailBackgroundPadding * viewScale);
+
+    backgroundArea.x /= viewScale;
+    backgroundArea.y /= viewScale;
+
+    backgroundArea.x = std::round(backgroundArea.x / 2.f);
+    backgroundArea.y = std::round(backgroundArea.y / 2.f);
+    detailsPane.backgroundSize = backgroundArea * 2.f;
+
+    const float CentreWidth = backgroundArea.x - backgroundSections[BackgroundSection::TL].size.x;
+    const float CentreHeight = backgroundArea.y - backgroundSections[BackgroundSection::TL].size.y;
+
+    verts.clear();
+
+    const auto addQuad =
+        [&](glm::vec2 position, glm::vec2 size, cro::FloatRect uv)
+        {
+            verts.emplace_back(glm::vec2(position.x, position.y + size.y), glm::vec2(uv.left, uv.height));
+            verts.emplace_back(position, glm::vec2(uv.left, uv.bottom));
+            verts.emplace_back(position + size, glm::vec2(uv.width, uv.height));
+
+            verts.emplace_back(position + size, glm::vec2(uv.width, uv.height));
+            verts.emplace_back(position, glm::vec2(uv.left, uv.bottom));
+            verts.emplace_back(glm::vec2(position.x + size.x, position.y), glm::vec2(uv.width, uv.bottom));
+        };
+
+    //top left
+    glm::vec2 p(-backgroundArea.x, CentreHeight);
+    addQuad(p, backgroundSections[BackgroundSection::TL].size, backgroundSections[BackgroundSection::TL].uv);
+
+    //top right
+    p = { CentreWidth, CentreHeight };
+    addQuad(p, backgroundSections[BackgroundSection::TR].size, backgroundSections[BackgroundSection::TR].uv);
+
+    //bottom left
+    p = { -backgroundArea.x, -backgroundArea.y };
+    addQuad(p, backgroundSections[BackgroundSection::BL].size, backgroundSections[BackgroundSection::BL].uv);
+
+    //bottom right
+    p = { CentreWidth, -backgroundArea.y };
+    addQuad(p, backgroundSections[BackgroundSection::BR].size, backgroundSections[BackgroundSection::BR].uv);
+
+
+    //top
+    p = { -CentreWidth, CentreHeight };
+    glm::vec2 size = { CentreWidth * 2.f, backgroundSections[BackgroundSection::Top].size.y };
+    cro::FloatRect uv =
+    {
+        backgroundSections[BackgroundSection::TL].uv.width,
+        backgroundSections[BackgroundSection::TL].uv.bottom,
+        backgroundSections[BackgroundSection::TR].uv.left,
+        backgroundSections[BackgroundSection::TR].uv.height
+    };
+    addQuad(p, size, uv);
+
+    //bottom
+    p = { -CentreWidth, -backgroundArea.y };
+    uv =
+    {
+        backgroundSections[BackgroundSection::BL].uv.width,
+        backgroundSections[BackgroundSection::BL].uv.bottom,
+        backgroundSections[BackgroundSection::BR].uv.left,
+        backgroundSections[BackgroundSection::BR].uv.height
+    };
+    addQuad(p, size, uv);
+
+    //left
+    p = { -backgroundArea.x, -CentreHeight };
+    size = { backgroundSections[BackgroundSection::Left].size.x, CentreHeight * 2.f };
+    uv =
+    {
+        backgroundSections[BackgroundSection::BL].uv.left,
+        backgroundSections[BackgroundSection::BL].uv.height,
+        backgroundSections[BackgroundSection::TL].uv.width,
+        backgroundSections[BackgroundSection::TL].uv.bottom
+    };
+    addQuad(p, size, uv);
+
+    //right
+    p = { CentreWidth, -CentreHeight };
+    uv =
+    {
+        backgroundSections[BackgroundSection::BR].uv.left,
+        backgroundSections[BackgroundSection::BR].uv.height,
+        backgroundSections[BackgroundSection::TR].uv.width,
+        backgroundSections[BackgroundSection::TR].uv.bottom
+    };
+    addQuad(p, size, uv);
+
+    //centre
+    p = { -CentreWidth, -CentreHeight };
+    size = { CentreWidth * 2.f, CentreHeight * 2.f };
+    addQuad(p, size, backgroundSections[BackgroundSection::Centre].uv);
+
+    detailsPane.background.getComponent<cro::Drawable2D>().setVertexData(verts);
+
+
+    if (resizeCallback)
+    {
+        resizeCallback(CentreWidth, CentreHeight);
+    }
+}
+
+void UILayout::nextTab(const SharedStateData& sharedData)
+{
+    activateTab((tabBar.activeIndex + 1) % tabBar.items.size(), sharedData);
+    playSound(MenuSoundEvent::Activate);
+}
+
+void UILayout::prevTab(const SharedStateData& sharedData)
+{
+    activateTab((tabBar.activeIndex + (tabBar.items.size() - 1)) % tabBar.items.size(), sharedData);
+    playSound(MenuSoundEvent::Cancel);
+}
+
+void UILayout::activateTab(std::int32_t idx, const SharedStateData& sharedData)
+{
+    if (detailsPane.tabDetails[tabBar.activeIndex].isValid())
+    {
+        detailsPane.tabDetails[tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    }
+
+    tabBar.activeIndex = idx;
+    menuLayout.itemIndex = 0;
+
+    if (detailsPane.tabDetails[tabBar.activeIndex].isValid())
+    {
+        detailsPane.tabDetails[tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    }
+
+    if (tabBar.items[tabBar.activeIndex].selected)
+    {
+        tabBar.items[tabBar.activeIndex].selected();
+    }
+
+    updateTabBar(sharedData);
+
+    //set item 0 as focused
+    focusToIndex(tabBar, menuLayout);
 }
 
 
