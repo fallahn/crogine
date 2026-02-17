@@ -2155,7 +2155,7 @@ void ProfileStateV2::createHeadwearItems()
             constexpr std::array<float, 3u> MaxValues = { 0.05f, cro::Util::Const::PI, 1.5f };
             constexpr std::array<float, 3u> MinValues = { -0.05f, -cro::Util::Const::PI, 0.05f };
             static constexpr std::array<float, 3u> CentreValues = { 0.f, 0.f, 1.f };
-            static constexpr std::int32_t SelectionCount = 24; //number of selections is +/- this
+            static constexpr std::int32_t SelectionCount = 36; //number of selections is +/- this
 
             const auto indexToValue =
                 [&](std::int32_t type, std::int32_t selectedIndex)
@@ -2235,7 +2235,7 @@ void ProfileStateV2::createHeadwearItems()
                 item->description = "Resets the " + LabelA[i] + " to its default value";
                 item->labels.push_back("Reset");
                 item->activated =
-                    [&,resetIndex,i,offset](Menu::Item& item)
+                    [&,resetIndex,i,offset,keyIndex](Menu::Item& item)
                     {
                         m_activeProfile.playerData.headwearOffsets[offset] = glm::vec3(CentreValues[i]);
                         if (keyIndex == pc::ColourKey::Hair)
@@ -4645,7 +4645,7 @@ void ProfileStateV2::applyHeadwearTransform(std::size_t idx, std::size_t indexOf
 {
     if (m_avatarHairModels[idx].isValid()) //'bald' at front has no transform
     {
-        const auto rot = m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairRot + indexOffset] * cro::Util::Const::PI;
+        const auto rot = m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairRot + indexOffset]/* * cro::Util::Const::PI*/;
         m_avatarHairModels[idx].getComponent<cro::Transform>().setPosition(m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairTx + indexOffset]);
         m_avatarHairModels[idx].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
         m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
