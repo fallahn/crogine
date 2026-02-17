@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -85,53 +85,42 @@ private:
     std::array<std::uint8_t, 4u> m_controllerPrevMasks = {};
     void resetRepeatTimer(std::int32_t, cro::Time);
 
-    struct SpriteSection final
-    {
-        cro::FloatRect uv;
-        glm::vec2 size = { 0.f, 0.f };
-    };
-    const cro::Texture* m_uiTexture;
-    std::array<SpriteSection, 2u> m_tabActive = {};
-    std::array<SpriteSection, 2u> m_tabInactive = {};
-    std::array<SpriteSection, 2u> m_tabHighlight = {};
+    UILayout m_uiLayout;
 
-    struct BackgroundSection final
-    {
-        enum
-        {
-            Top, Left, Right, Centre, Bottom,
-            TR, TL, BR, BL,
-            Count
-        };
-    };
+    //const cro::Texture* m_uiTexture;
+    //std::array<SpriteSection, 2u> m_tabActive = {};
+    //std::array<SpriteSection, 2u> m_tabInactive = {};
+    //std::array<SpriteSection, 2u> m_tabHighlight = {};
+
+    //struct BackgroundSection final
+    //{
+    //    enum
+    //    {
+    //        Top, Left, Right, Centre, Bottom,
+    //        TR, TL, BR, BL,
+    //        Count
+    //    };
+    //};
+    //
+    //std::array<SpriteSection, BackgroundSection::Count> m_backgroundSections = {};
     
-    std::array<SpriteSection, BackgroundSection::Count> m_backgroundSections = {};
-    
-
-    TabBar m_tabBar;
-
     void updateTabBar();
     void nextTab();
     void prevTab();
     void activateTab(std::int32_t);
 
-    Menu m_menuLayout;
-
     cro::SimpleQuad m_menuQuad; //item image/thumb if it exists
-    cro::SimpleText m_menuText;
-    cro::SimpleText m_menuTextLarge;        
 
-    std::array<SpriteSection, 2u> m_itemSection = {};
-    std::array<SpriteSection, 2u> m_itemActiveSection = {};
-    std::array<SpriteSection, 2u> m_itemActiveHighlightSection = {};
-    std::array<SpriteSection, 2u> m_itemHighlightSection = {};
-    std::array<SpriteSection, 2u> m_itemTitleSection = {};
-    cro::SimpleVertexArray m_itemBackground;
-    cro::SimpleVertexArray m_itemBackgroundActive;
-    cro::SimpleVertexArray m_itemBackgroundActiveHighlight;
-    cro::SimpleVertexArray m_itemBackgroundHighlight;
-    cro::SimpleVertexArray m_itemBackgroundTitle;
-    cro::SimpleVertexArray m_itemSlider;
+    //std::array<SpriteSection, 2u> m_itemSection = {};
+    //std::array<SpriteSection, 2u> m_itemActiveSection = {};
+    //std::array<SpriteSection, 2u> m_itemActiveHighlightSection = {};
+    //std::array<SpriteSection, 2u> m_itemHighlightSection = {};
+    //std::array<SpriteSection, 2u> m_itemTitleSection = {};
+    //cro::SimpleVertexArray m_itemBackground;
+    //cro::SimpleVertexArray m_itemBackgroundActive;
+    //cro::SimpleVertexArray m_itemBackgroundActiveHighlight;
+    //cro::SimpleVertexArray m_itemBackgroundHighlight;
+    //cro::SimpleVertexArray m_itemBackgroundTitle;
 
 
     cro::Entity m_infoString;

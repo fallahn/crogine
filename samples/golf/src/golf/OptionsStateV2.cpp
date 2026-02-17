@@ -155,7 +155,6 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus(), 192),
     m_sharedData        (sd),
-    m_uiTexture         (nullptr),
     m_keybindIndex      (-1),
     m_keybindItemIndex  (-1)
 {
@@ -167,8 +166,8 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     std::fill(m_controllerMasks.begin(), m_controllerMasks.end(), 0);
     std::fill(m_controllerPrevMasks.begin(), m_controllerPrevMasks.end(), 0);
 
-    m_tabBar.items.resize(TabID::Count);
-    m_menuLayout.items.resize(TabID::Count);
+    m_uiLayout.tabBar.items.resize(TabID::Count);
+    m_uiLayout.menuLayout.items.resize(TabID::Count);
 
     loadAssets();
     buildScene();
@@ -209,7 +208,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     if (evt.type == SDL_AUDIODEVICEADDED
         || evt.type == SDL_AUDIODEVICEREMOVED)
     {
-        refreshAudioDevices(m_menuLayout.items[TabID::Audio][1]);
+        refreshAudioDevices(m_uiLayout.menuLayout.items[TabID::Audio][1]);
     }
 
     const auto setActiveInput =
@@ -222,57 +221,57 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
                 m_infoSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                 m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
 
-                m_tabBar.navLeft.getComponent<cro::Text>().setString("< " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
-                m_tabBar.navRight.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + " >");
+                m_uiLayout.tabBar.navLeft.getComponent<cro::Text>().setString("< " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+                m_uiLayout.tabBar.navRight.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + " >");
 
-                m_tabBar.navLeftSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-                m_tabBar.navRightSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                m_uiLayout.tabBar.navLeftSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                m_uiLayout.tabBar.navRightSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
 
                 const auto viewScale = cro::UIElementSystem::getViewScale();
                 const auto charSize = static_cast<std::uint32_t>((UITextSize) * viewScale);
-                m_tabBar.navLeft.getComponent<cro::Text>().setCharacterSize(charSize);
-                m_tabBar.navLeft.getComponent<cro::UIElement>().characterSize = UITextSize;
-                m_tabBar.navLeft.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                m_uiLayout.tabBar.navLeft.getComponent<cro::Text>().setCharacterSize(charSize);
+                m_uiLayout.tabBar.navLeft.getComponent<cro::UIElement>().characterSize = UITextSize;
+                m_uiLayout.tabBar.navLeft.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
 
-                m_tabBar.navRight.getComponent<cro::Text>().setCharacterSize(charSize);
-                m_tabBar.navRight.getComponent<cro::UIElement>().characterSize = UITextSize;
-                m_tabBar.navRight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                m_uiLayout.tabBar.navRight.getComponent<cro::Text>().setCharacterSize(charSize);
+                m_uiLayout.tabBar.navRight.getComponent<cro::UIElement>().characterSize = UITextSize;
+                m_uiLayout.tabBar.navRight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
             }
             else
             {
                 m_infoString.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                 m_infoSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
 
-                m_tabBar.navLeft.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-                m_tabBar.navRight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                m_uiLayout.tabBar.navLeft.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                m_uiLayout.tabBar.navRight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
 
-                m_tabBar.navLeftSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-                m_tabBar.navRightSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                m_uiLayout.tabBar.navLeftSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                m_uiLayout.tabBar.navRightSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
 
                 if (cro::GameController::hasPSLayout(controllerIndex))
                 {
                     m_sharedData.activeInput = SharedStateData::ActiveInput::PS;
                     m_infoSprite.getComponent<cro::Sprite>().setTextureRect(m_infoRects[0]);
 
-                    m_tabBar.navLeftSprite.getComponent<cro::Sprite>().setTextureRect(m_tabBar.navLeftRects[0]);
-                    m_tabBar.navRightSprite.getComponent<cro::Sprite>().setTextureRect(m_tabBar.navRightRects[0]);
+                    m_uiLayout.tabBar.navLeftSprite.getComponent<cro::Sprite>().setTextureRect(m_uiLayout.tabBar.navLeftRects[0]);
+                    m_uiLayout.tabBar.navRightSprite.getComponent<cro::Sprite>().setTextureRect(m_uiLayout.tabBar.navRightRects[0]);
                 }
                 else
                 {
                     m_sharedData.activeInput = SharedStateData::ActiveInput::XBox;
                     m_infoSprite.getComponent<cro::Sprite>().setTextureRect(m_infoRects[1]);
 
-                    m_tabBar.navLeftSprite.getComponent<cro::Sprite>().setTextureRect(m_tabBar.navLeftRects[1]);
-                    m_tabBar.navRightSprite.getComponent<cro::Sprite>().setTextureRect(m_tabBar.navRightRects[1]);
+                    m_uiLayout.tabBar.navLeftSprite.getComponent<cro::Sprite>().setTextureRect(m_uiLayout.tabBar.navLeftRects[1]);
+                    m_uiLayout.tabBar.navRightSprite.getComponent<cro::Sprite>().setTextureRect(m_uiLayout.tabBar.navRightRects[1]);
                 }
 
                 /*const auto viewScale = cro::UIElementSystem::getViewScale();
                 const auto charSize = (LabelTextSize * 2) * viewScale;
-                m_tabBar.navLeft.getComponent<cro::Text>().setCharacterSize(charSize);
-                m_tabBar.navLeft.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2;
+                m_uiLayout.tabBar.navLeft.getComponent<cro::Text>().setCharacterSize(charSize);
+                m_uiLayout.tabBar.navLeft.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2;
 
-                m_tabBar.navRight.getComponent<cro::Text>().setCharacterSize(charSize);
-                m_tabBar.navRight.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2;*/
+                m_uiLayout.tabBar.navRight.getComponent<cro::Text>().setCharacterSize(charSize);
+                m_uiLayout.tabBar.navRight.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2;*/
             }
             cro::App::getWindow().setMouseCaptured(!mouse);
         };
@@ -557,7 +556,7 @@ void OptionsStateV2::handleMessage(const cro::Message& msg)
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
             //hack to force the texture to resize properly
-            m_menuLayout.texture.create(1, 1, false);
+            m_uiLayout.menuLayout.texture.create(1, 1, false);
             updateTabBar();
         }
     }
@@ -567,7 +566,7 @@ void OptionsStateV2::handleMessage(const cro::Message& msg)
 bool OptionsStateV2::simulate(float dt)
 {
     //TODO this doesn't actually do what I wanted, but it's servicable
-    scrollToTarget(m_tabBar, m_menuLayout, dt);
+    scrollToTarget(m_uiLayout.tabBar, m_uiLayout.menuLayout, dt);
 
     const auto maskTest =
         [&](std::int32_t index, std::int32_t flag)
@@ -636,16 +635,7 @@ void OptionsStateV2::render()
 //private
 void OptionsStateV2::loadAssets()
 {
-    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
-    m_menuText.setFont(font);
-    m_menuText.setCharacterSize(InfoTextSize);
-
-    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
-    m_menuTextLarge.setFont(largeFont);
-    m_menuTextLarge.setCharacterSize(UITextSize);
-    m_menuTextLarge.setAlignment(cro::SimpleText::Alignment::Centre);
-
-    m_itemSlider.setPrimitiveType(GL_TRIANGLES);
+    m_uiLayout.loadAssets(*m_sharedData.sharedResources);
 
     cro::Image img;
     img.create(1, 1, cro::Colour::White);
@@ -654,82 +644,9 @@ void OptionsStateV2::loadAssets()
     cro::SpriteSheet spriteSheet;
     if (spriteSheet.loadFromFile("assets/golf/sprites/options_buttons.spt", m_sharedData.sharedResources->textures))
     {
-        m_uiTexture = spriteSheet.getTexture();
-
-        const auto parseSprite = [&](const std::string& spr, SpriteSection& dst)
-            {
-                auto bounds = spriteSheet.getSprite(spr).getTextureBounds();
-                auto uv = spriteSheet.getSprite(spr).getTextureRectNormalised();
-                dst.size = { bounds.width, bounds.height };
-                dst.uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
-            };
-
-        //active tab
-        parseSprite("tab_active_left", m_tabActive[0]);
-        parseSprite("tab_active_right", m_tabActive[1]);
-
-        //inactive tab
-        parseSprite("tab_inactive_left", m_tabInactive[0]);
-        parseSprite("tab_inactive_right", m_tabInactive[1]);
-
-        //highlight tab
-        parseSprite("tab_highlight_left", m_tabHighlight[0]);
-        parseSprite("tab_highlight_right", m_tabHighlight[1]);
-
-
-
-        //background 9-patch
-        parseSprite("background_centre", m_backgroundSections[BackgroundSection::Centre]);
-        parseSprite("background_top", m_backgroundSections[BackgroundSection::Top]);
-        parseSprite("background_left", m_backgroundSections[BackgroundSection::Left]);
-        parseSprite("background_right", m_backgroundSections[BackgroundSection::Right]);
-        parseSprite("background_bottom", m_backgroundSections[BackgroundSection::Bottom]);
-        parseSprite("background_tl", m_backgroundSections[BackgroundSection::TL]);
-        parseSprite("background_tr", m_backgroundSections[BackgroundSection::TR]);
-        parseSprite("background_bl", m_backgroundSections[BackgroundSection::BL]);
-        parseSprite("background_br", m_backgroundSections[BackgroundSection::BR]);
-
-
-
-        //item backgrounds
-        parseSprite("item_background_left", m_itemSection[0]);
-        parseSprite("item_background_right", m_itemSection[1]);
-
-        //item active
-        parseSprite("item_active_left", m_itemActiveSection[0]);
-        parseSprite("item_active_right", m_itemActiveSection[1]);
-
-        //item active highlight
-        parseSprite("item_highlight_active_left", m_itemActiveHighlightSection[0]);
-        parseSprite("item_highlight_active_right", m_itemActiveHighlightSection[1]);
-
-        //item highlight
-        parseSprite("item_highlight_left", m_itemHighlightSection[0]);
-        parseSprite("item_highlight_right", m_itemHighlightSection[1]);
-
-        //item title
-        parseSprite("item_title_left", m_itemTitleSection[0]);
-        parseSprite("item_title_right", m_itemTitleSection[1]);
-
-
-        m_itemBackground.setTexture(*m_uiTexture);
-        m_itemBackground.setPrimitiveType(GL_TRIANGLES);
-
-        m_itemBackgroundActive.setTexture(*m_uiTexture);
-        m_itemBackgroundActive.setPrimitiveType(GL_TRIANGLES);
-        
-        m_itemBackgroundActiveHighlight.setTexture(*m_uiTexture);
-        m_itemBackgroundActiveHighlight.setPrimitiveType(GL_TRIANGLES);
-
-        m_itemBackgroundHighlight.setTexture(*m_uiTexture);
-        m_itemBackgroundHighlight.setPrimitiveType(GL_TRIANGLES);
-
-        m_itemBackgroundTitle.setTexture(*m_uiTexture);
-        m_itemBackgroundTitle.setPrimitiveType(GL_TRIANGLES);
-
-        m_tabBar.items[TabID::Settings].sprite = spriteSheet.getSprite("settings_icon");
-        m_tabBar.items[TabID::Display].sprite = spriteSheet.getSprite("graphics_icon");
-        m_tabBar.items[TabID::Keyboard].sprite = spriteSheet.getSprite("keyboard_icon");
+        m_uiLayout.tabBar.items[TabID::Settings].sprite = spriteSheet.getSprite("settings_icon");
+        m_uiLayout.tabBar.items[TabID::Display].sprite = spriteSheet.getSprite("graphics_icon");
+        m_uiLayout.tabBar.items[TabID::Keyboard].sprite = spriteSheet.getSprite("keyboard_icon");
 
         m_optionIcons[OptionIcon::Warning] = spriteSheet.getSprite("warning_icon");
         m_optionIcons[OptionIcon::SteamIcon] = spriteSheet.getSprite("workshop_button");
@@ -844,20 +761,20 @@ void OptionsStateV2::buildScene()
    
 
     //tab bar - we only create here, cachedPush() will update the drawable
-    m_tabBar.background = m_scene.createEntity();
-    m_tabBar.background.addComponent<cro::Transform>();
-    m_tabBar.background.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-    m_tabBar.background.getComponent<cro::Drawable2D>().setTexture(m_uiTexture);
-    m_tabBar.background.addComponent<cro::UIElement>(cro::UIElement::Position, true);
-    m_tabBar.background.getComponent<cro::UIElement>().relativePosition = { -0.5f, 0.5f };
-    m_tabBar.background.getComponent<cro::UIElement>().absolutePosition = { 0.f, -(TabBarHeight * 2.f) };
-    rootNode.getComponent<cro::Transform>().addChild(m_tabBar.background.getComponent<cro::Transform>());
+    m_uiLayout.tabBar.background = m_scene.createEntity();
+    m_uiLayout.tabBar.background.addComponent<cro::Transform>();
+    m_uiLayout.tabBar.background.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    m_uiLayout.tabBar.background.getComponent<cro::Drawable2D>().setTexture(m_uiLayout.uiTexture);
+    m_uiLayout.tabBar.background.addComponent<cro::UIElement>(cro::UIElement::Position, true);
+    m_uiLayout.tabBar.background.getComponent<cro::UIElement>().relativePosition = { -0.5f, 0.5f };
+    m_uiLayout.tabBar.background.getComponent<cro::UIElement>().absolutePosition = { 0.f, -(TabBarHeight * 2.f) };
+    rootNode.getComponent<cro::Transform>().addChild(m_uiLayout.tabBar.background.getComponent<cro::Transform>());
 
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info); 
     const float Spacing = 1.f / (TabID::Count + 1); //leave equivalent of half a tab either end
     for (auto i = 0; i < TabID::Count; ++i)
     {
-        auto& item = m_tabBar.items[i];
+        auto& item = m_uiLayout.tabBar.items[i];
         item.text = m_scene.createEntity();
         item.text.addComponent<cro::Transform>();
         item.text.addComponent<cro::Drawable2D>();
@@ -877,7 +794,7 @@ void OptionsStateV2::buildScene()
                 e.getComponent<cro::UIElement>().absolutePosition = { x,y };
             };
 
-        m_tabBar.background.getComponent<cro::Transform>().addChild(item.text.getComponent<cro::Transform>());
+        m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(item.text.getComponent<cro::Transform>());
     }
 
     const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -896,8 +813,8 @@ void OptionsStateV2::buildScene()
             const auto y = 14.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
-    m_tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_tabBar.navLeft = entity;
+    m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_uiLayout.tabBar.navLeft = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -910,22 +827,22 @@ void OptionsStateV2::buildScene()
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&, Spacing](cro::Entity e)
         {
-            const auto offset = (Spacing * m_tabBar.items.size()) + (Spacing * 0.75f);
+            const auto offset = (Spacing * m_uiLayout.tabBar.items.size()) + (Spacing * 0.75f);
             const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
             const auto y = 14.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
-    m_tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_tabBar.navRight = entity;
+    m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_uiLayout.tabBar.navRight = entity;
 
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/options_buttons.spt", m_sharedData.sharedResources->textures);
-    m_tabBar.navLeftRects[0] = spriteSheet.getSprite("l1").getTextureRect();
-    m_tabBar.navLeftRects[1] = spriteSheet.getSprite("lb").getTextureRect();
+    m_uiLayout.tabBar.navLeftRects[0] = spriteSheet.getSprite("l1").getTextureRect();
+    m_uiLayout.tabBar.navLeftRects[1] = spriteSheet.getSprite("lb").getTextureRect();
 
-    m_tabBar.navRightRects[0] = spriteSheet.getSprite("r1").getTextureRect();
-    m_tabBar.navRightRects[1] = spriteSheet.getSprite("rb").getTextureRect();
+    m_uiLayout.tabBar.navRightRects[0] = spriteSheet.getSprite("r1").getTextureRect();
+    m_uiLayout.tabBar.navRightRects[1] = spriteSheet.getSprite("rb").getTextureRect();
 
     const auto bounds = spriteSheet.getSprite("l1").getTextureBounds();
 
@@ -942,8 +859,8 @@ void OptionsStateV2::buildScene()
             const auto y = 10.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
-    m_tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_tabBar.navLeftSprite = entity;
+    m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_uiLayout.tabBar.navLeftSprite = entity;
 
 
     entity = m_scene.createEntity();
@@ -955,19 +872,19 @@ void OptionsStateV2::buildScene()
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&, Spacing](cro::Entity e)
         {
-            const auto offset = (Spacing * m_tabBar.items.size()) + (Spacing * 0.75f);
+            const auto offset = (Spacing * m_uiLayout.tabBar.items.size()) + (Spacing * 0.75f);
             const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
             const auto y = 10.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
-    m_tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_tabBar.navRightSprite = entity;
+    m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_uiLayout.tabBar.navRightSprite = entity;
 
-    m_menuLayout.sprite = m_scene.createEntity();
-    m_menuLayout.sprite.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
-    m_menuLayout.sprite.addComponent<cro::Drawable2D>();
-    m_menuLayout.sprite.addComponent<cro::Sprite>();
-    rootNode.getComponent<cro::Transform>().addChild(m_menuLayout.sprite.getComponent<cro::Transform>());
+    m_uiLayout.menuLayout.sprite = m_scene.createEntity();
+    m_uiLayout.menuLayout.sprite.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
+    m_uiLayout.menuLayout.sprite.addComponent<cro::Drawable2D>();
+    m_uiLayout.menuLayout.sprite.addComponent<cro::Sprite>();
+    rootNode.getComponent<cro::Transform>().addChild(m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>());
 
     //details window on right side
     m_detailsPane.root = m_scene.createEntity();
@@ -1003,7 +920,7 @@ void OptionsStateV2::buildScene()
     //background/9 patch
     m_detailsPane.background = m_scene.createEntity();
     m_detailsPane.background.addComponent<cro::Transform>().setOrigin({ 0.f, InfoBarHeight / 2.f });
-    m_detailsPane.background.addComponent<cro::Drawable2D>().setTexture(m_uiTexture);
+    m_detailsPane.background.addComponent<cro::Drawable2D>().setTexture(m_uiLayout.uiTexture);
     m_detailsPane.background.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     m_detailsPane.background.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
     m_detailsPane.background.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, 8.f };
@@ -1212,7 +1129,7 @@ void OptionsStateV2::buildScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
-        /*auto& tx = m_menuLayout.sprite.getComponent<cro::Transform>();
+        /*auto& tx = m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>();
         auto pos = tx.getPosition();
         pos.x = -(size.x / 2.f);
         pos.y = -(size.y / 2.f);
@@ -1230,13 +1147,13 @@ void OptionsStateV2::buildScene()
 
 void OptionsStateV2::createSettingsItems()
 {
-    auto* item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    auto* item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Appearance";
     item->displayType = Menu::Item::Heading;
     item->description = "Customise in-game display settings";
 
     //use flag beacon
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Show Flag Beacon";
     item->description = "Draws a beacon at the pin position, visible from a distance";
     item->selected = 
@@ -1254,7 +1171,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.showBeacon ? 1 : 0;
 
     //beacon colour
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Beacon Colour";
     item->description = "Choose the colour of the beacon";
     item->selected =
@@ -1282,7 +1199,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //use ball trail
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Show Ball Trail";
     item->description = "Draw a trail behind player's ball when it's in flight";
     item->selected =
@@ -1300,7 +1217,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.showBallTrail ? 1 : 0;
 
     //ball trail colour
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Ball Trail Uses Beacon Colour";
     item->description = "Draws the ball trail with the beacon colour, else draws it white";
     item->selected =
@@ -1318,7 +1235,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.trailBeaconColour ? 1 : 0;
 
     //putting grid density
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Putting Grid Density";
     item->description = "Sets the transparency of the putting grid";
     item->selected =
@@ -1355,7 +1272,7 @@ void OptionsStateV2::createSettingsItems()
         m_sharedData.teeColour = ColourIndices[0];
     }
 
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Tee Marker Colour";
     item->description = "Choose the colour of the tee marker. Note that this doesn't affect the tee position, it's purely cosmetic";
     item->selected =
@@ -1384,7 +1301,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //use imperial measurements
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Use Imperial Measurements";
     item->description = "Render distances in Yards, Feet and Inches instead of Metres and Centimetres";
     item->activated = [&](Menu::Item& i)
@@ -1395,7 +1312,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.imperialMeasurements ? 1 : 0;
 
     //large power bar
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Use Large Power Bar";
     item->description = "Draws a larger power bar at the bottom ofthe UI";
     item->selected =
@@ -1413,7 +1330,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.useLargePowerBar ? 1 : 0;
 
     //high contrast power bar
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "High Contrast Power Bar";
     item->description = "Draws the power bar with inverted colours";
     item->selected =
@@ -1432,7 +1349,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //decimated power bar
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Decimate Power Bar";
     item->description = "Draws a power bar with 10 segments instead of 8";
     item->selected =
@@ -1451,7 +1368,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //decimalised distances
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Use Decimalised Distances";
     item->description = "Distances are drawn to the nearest 10th of a metre or yard";
     item->activated = [&](Menu::Item& i)
@@ -1463,7 +1380,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //monthly rival
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Show Monthly Rival";
     item->description = "Shows the current monthly best on the scoreboard, if available";
     item->activated = [&](Menu::Item& i)
@@ -1475,7 +1392,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //follow cam when putting
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Follow Cam When Putting";
     item->description = "The camera follows the ball when putting instead of displaying an overhead view";
     item->selected =
@@ -1494,7 +1411,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //zoom follow cam
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Zoom Follow Cam";
     item->description = "Zoom the follow cam when the ball is in flight for a closer view";
     item->selected =
@@ -1513,7 +1430,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //rotate when aiming
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Rotate When Aiming";
     item->description = "Automatically rotate the player camera when aiming";
     item->activated = [&](Menu::Item& i)
@@ -1534,7 +1451,7 @@ void OptionsStateV2::createSettingsItems()
             m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
         };
 
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Flag Selection";
 #ifdef USE_GNS
     item->description = "More flags are available in the Steam Workshop";
@@ -1560,7 +1477,7 @@ void OptionsStateV2::createSettingsItems()
     item->selected = selectionCallback;
 
     //flag text type
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Flag Text";
     item->description = "Choose how text is displayed on the flag";
     item->activated = [&](Menu::Item& i)
@@ -1576,7 +1493,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //post FX selection (none as an option)
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Post Process";
     item->description = "Choose a visual effect";
     item->activated = [&](Menu::Item& i)
@@ -1618,7 +1535,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //lens flare
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Show Lens Flare";
     item->description = "Display a lens flare effect in sunny weather";
     item->activated = [&](Menu::Item& i)
@@ -1629,7 +1546,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.useLensFlare ? 1 : 0;
 
     //reduced motion transition
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Reduced Motion Transition";
     item->description = "Hides the hole transition behind a loading screen to reduce motion sensitivity";
     item->activated = [&](Menu::Item& i)
@@ -1642,13 +1559,13 @@ void OptionsStateV2::createSettingsItems()
 
 
     //----------control settings--------------//
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Control Settings";
     item->displayType = Menu::Item::Heading;
     item->description = "Configure input settings";
 
     //mouse button for action
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Use Left Mouse as Action Button";
     item->description = "Clicking left mouse button performs the same as the Action button";
     item->activated = [&](Menu::Item& i)
@@ -1659,7 +1576,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
 
     //hold for power
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Hold Action For Power";
     item->description = "Press and hold the Action button to choose swing power instead of the traditional 3-click system";
     item->activated = [&](Menu::Item& i)
@@ -1672,7 +1589,7 @@ void OptionsStateV2::createSettingsItems()
 
     //measure sensitivity
     static constexpr std::array<float, 6u> SpeedValues = { 0.5f, 1.f, 2.f, 3.f, 4.f, 5.f };
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Measure Sensitivity";
     item->description = "Sets the speed of the Measure Widget when putting";
     item->selected =
@@ -1692,7 +1609,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //skip speed
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Shot Animation Skip Speed";
     item->description = "Set the amount of time required to hold the Action button to skip to the end of the current shot";
     item->activated = [&](Menu::Item& i)
@@ -1705,13 +1622,13 @@ void OptionsStateV2::createSettingsItems()
 
 
     //-------difficulty and behaviour-----//
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Gameplay Settings";
     item->displayType = Menu::Item::Heading;
     item->description = "Configure difficulty and accessibility settings";
 
     //putt assist
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Use Putting Assist";
     item->description = "Show a small flag above the power bar when putting to estimate the range";
     item->selected =
@@ -1730,7 +1647,7 @@ void OptionsStateV2::createSettingsItems()
     
     
     //fixed range putter
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Fixed Range Putter";
     item->description = "Fixes the max range of the putter at 10m/33ft";
     item->activated = [&](Menu::Item& i)
@@ -1743,7 +1660,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //precise range indicator
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Use Range Indicator Assist";
     item->description = "The Range Indicator for clubs longer than a Pitch Wedge will account for elevation in terrain and wind conditions";
     item->selected =
@@ -1764,7 +1681,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //minimal UI
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Minimal UI";
     item->description = "Increases difficulty by removing most of the UI elements";
     item->activated = [&](Menu::Item& i)
@@ -1777,7 +1694,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //in-game tips
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Display In-Game Tips";
     item->description = "Shows tips when playing on how to best take your shot";
     item->activated = [&](Menu::Item& i)
@@ -1789,13 +1706,13 @@ void OptionsStateV2::createSettingsItems()
 
 #ifdef USE_GNS
     //---------leaderboard settings----------//
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Leaderboard Settings";
     item->displayType = Menu::Item::Heading;
     item->description = "Filter leaderboards results to display. Note these filters take effect when the Main Menu is next loaded.";
 
     //friends only
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Friends Only";
     item->description = "Leaderboards only display results from players on your Steam friends list. Takes effect next time the Main Menu is loaded.";
     item->activated = [&](Menu::Item& i)
@@ -1806,7 +1723,7 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = Social::getLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly) ? 1 : 0;
 
     //assisted scores
-    /*item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    /*item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "View Assisted Scores";
     item->description = "Leaderboards only display results from players who used the Range Indicator assist, otherwise displays only unassisted scores.";
     item->activated = [&](Menu::Item& i)
@@ -1820,13 +1737,13 @@ void OptionsStateV2::createSettingsItems()
 
 
     //----------config settings---------//
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Configuration";
     item->displayType = Menu::Item::Heading;
 
 
     //web socket
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Enable Web Socket";
     item->description = "See https://github.com/fallahn/svs for more info";
     item->activated = [&](Menu::Item& i)
@@ -1860,7 +1777,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //CSV logging
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Log Scores To CSV";
     item->description = "Files are saved to you user directory";
     item->activated = [&](Menu::Item& i)
@@ -1872,7 +1789,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //disable chat
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Disable Chat";
     item->description = "Removes the in-game chat from multiplayer games";
     item->activated = [&](Menu::Item& i)
@@ -1884,7 +1801,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //log chat
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Log Chat To File";
     item->description = "Logs in-game multiplayer chat to a text file in your user directory";
     item->activated = [&](Menu::Item& i)
@@ -1897,7 +1814,7 @@ void OptionsStateV2::createSettingsItems()
 
 #ifdef USE_GNS
     //enable remote content
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Download Remote Content";
     item->description = "Allow downloading remote content eg Workshop items in multiplayer";
     cro::Util::String::wordWrap(item->description, 36);
@@ -1912,14 +1829,14 @@ void OptionsStateV2::createSettingsItems()
 
 
     //reset hints
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Reset Hints";
     item->description = "Enable all in-game hints which were previously dismissed";
     item->selected =
         [&](const Menu::Item&)
         {
             m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-            m_detailsPane.image.getComponent<cro::Sprite>() = m_tabBar.items[m_tabBar.activeIndex].sprite;
+            m_detailsPane.image.getComponent<cro::Sprite>() = m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].sprite;
             const auto bounds = m_detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
             m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
 
@@ -1938,7 +1855,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //reset career
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Reset Career";
     item->description = "Resets all Career progress, preserving any unlocked items";
     item->selected =
@@ -1960,7 +1877,7 @@ void OptionsStateV2::createSettingsItems()
 
 
     //reset profile
-    item = &m_menuLayout.items[TabID::Settings].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Reset Profile";
     item->description = "WARNING Resets all progress and unlocked items!!";
     item->selected =
@@ -1984,13 +1901,13 @@ void OptionsStateV2::createSettingsItems()
 void OptionsStateV2::createKeyboardItems()
 {
     //config
-    /*auto* item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    /*auto* item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Configuration";
     item->displayType = Menu::Item::Heading;*/
 
     
     ////mouse button for action
-    //item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    //item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     //item->title = "Use Left Mouse as Action Button";
     //item->description = "Clicking left mouse button performs the same as the Action key";
     //cro::Util::String::wordWrap(item->description, 36);
@@ -2003,7 +1920,7 @@ void OptionsStateV2::createKeyboardItems()
     //item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
 
     ////hold for power
-    //item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    //item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     //item->title = "Hold Action For Power";
     //item->description = "Press and hold the Action key to choose swing power instead of the traditional 3-click system";
     //cro::Util::String::wordWrap(item->description, 36);
@@ -2019,7 +1936,7 @@ void OptionsStateV2::createKeyboardItems()
     
     
     //keybinds
-    auto* item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    auto* item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Key Bindings";
     item->displayType = Menu::Item::Heading;
 
@@ -2027,8 +1944,8 @@ void OptionsStateV2::createKeyboardItems()
 
 
     //prev club
-    auto itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    auto itemIndex = static_cast<std::int32_t>(m_uiLayout.menuLayout.items[TabID::Keyboard].size());
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Previous Club";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2041,8 +1958,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //next club
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_uiLayout.menuLayout.items[TabID::Keyboard].size());
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Next Club";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2055,8 +1972,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //aim left
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_uiLayout.menuLayout.items[TabID::Keyboard].size());
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Aim Left";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2069,8 +1986,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //aim right
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_uiLayout.menuLayout.items[TabID::Keyboard].size());
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Aim Right";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2083,8 +2000,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //camera up
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_uiLayout.menuLayout.items[TabID::Keyboard].size());
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Camera Up";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2097,8 +2014,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //camera down
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_uiLayout.menuLayout.items[TabID::Keyboard].size());
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Camera Down";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2111,8 +2028,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //action
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_uiLayout.menuLayout.items[TabID::Keyboard].size());
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Action (Take Shot)";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2125,8 +2042,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //spin menu
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_uiLayout.menuLayout.items[TabID::Keyboard].size());
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Show Spin Menu";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2139,8 +2056,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //emote wheel
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_uiLayout.menuLayout.items[TabID::Keyboard].size());
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Show Emote Wheel";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2153,8 +2070,8 @@ void OptionsStateV2::createKeyboardItems()
     item->selectedIndex = 0;
 
     //cancel shot
-    itemIndex = static_cast<std::int32_t>(m_menuLayout.items[TabID::Keyboard].size());
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    itemIndex = static_cast<std::int32_t>(m_uiLayout.menuLayout.items[TabID::Keyboard].size());
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Cancel Shot In Progress";
     item->description = keybindDesc;
     item->activated = [&, itemIndex](Menu::Item& i)
@@ -2171,75 +2088,75 @@ void OptionsStateV2::createKeyboardItems()
 
 
     //fixed keys
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Fixed Keys";
     item->displayType = Menu::Item::Heading;
 
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Measure Putt";
     item->subTitle = "Displays a distance widget to meaure the green when putting";
     item->description = "Key: Number 1 (Top Row)";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Freecam";
     item->subTitle = "Enter freecam / photo mode";
     item->description = "Key: Number 2 (Top Row)";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Rotate Camera Left";
     item->description = "Key: Number 3 (Top Row)";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Rotate Camera Right";
     item->description = "Key: Number 4 (Top Row)";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Zoom Minimap";
     item->description = "Key: Number 5 (Top Row)";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Show Scores";
     item->description = "Key: Tab";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Open Menu";
     item->description = "Key: Escape";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Toggle Ball Labels";
     item->subTitle = "Show or hide player name labels when putting";
     item->description = "Key: F2";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Toggle UI";
     item->description = "Key: F3";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Toggle Chat";
     item->subTitle = "Show the in-game chat window";
     item->description = "Key: F4";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Take Screenshot";
     item->description = "Key: F5";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Toggle Putting Grid";
     item->description = "Key: F7";
     item->displayType = Menu::Item::TextOnly;
 
-    item = &m_menuLayout.items[TabID::Keyboard].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Toggle Full Screen";
     item->description = "Key: F11";
     item->displayType = Menu::Item::TextOnly;
@@ -2388,12 +2305,12 @@ void OptionsStateV2::createControllerItems()
 
     //menu items
 
-    auto* item = &m_menuLayout.items[TabID::Controller].emplace_back();
+    auto* item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Controller Settings";
     item->displayType = Menu::Item::Heading;
 
     //input sensitivity
-    item = &m_menuLayout.items[TabID::Controller].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Look Sensitivity";
     item->activated = [&](Menu::Item& i)
         {
@@ -2411,7 +2328,7 @@ void OptionsStateV2::createControllerItems()
     //thumbstick deadzone
     static constexpr auto MinDeadZone = -3000;
     static constexpr auto MaxDeadzone = 24000;
-    item = &m_menuLayout.items[TabID::Controller].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Thumbstick Deadzone";
     item->description = "Adjusts the minimum movement of the thumbstick before input is accepted by the game: larger values require more movement.";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2427,7 +2344,7 @@ void OptionsStateV2::createControllerItems()
     
 
     //invert X axis
-    item = &m_menuLayout.items[TabID::Controller].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Invert X axis";
     item->description = "Invert the controller X axis when in camera mode";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2439,7 +2356,7 @@ void OptionsStateV2::createControllerItems()
     item->selectedIndex = m_sharedData.invertX ? 1 : 0;
 
     //invert Y axis
-    item = &m_menuLayout.items[TabID::Controller].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Invert Y axis";
     item->description = "Invert the controller Y axis when in camera mode";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2451,7 +2368,7 @@ void OptionsStateV2::createControllerItems()
     item->selectedIndex = m_sharedData.invertY ? 1 : 0;
 
     //enable swingput
-    item = &m_menuLayout.items[TabID::Controller].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Enable Swingput";
     item->description = "With either trigger held, pull back on a thumbstick to charge the power. Push forward on the stick to take your shot.";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2463,7 +2380,7 @@ void OptionsStateV2::createControllerItems()
     item->selectedIndex = m_sharedData.useSwingput ? 1 : 0;
 
     //vibration
-    item = &m_menuLayout.items[TabID::Controller].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Use Vibration";
     item->description = "Enable vibration effects on supported controllers";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2475,7 +2392,7 @@ void OptionsStateV2::createControllerItems()
     item->selectedIndex = m_sharedData.enableRumble;
 
 #ifdef USE_GNS
-    item = &m_menuLayout.items[TabID::Controller].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Rebind Buttons";
     item->description = "Review a Steam guide on rebinding the controller buttons with Steam Input";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2491,9 +2408,9 @@ void OptionsStateV2::createControllerItems()
 
 void OptionsStateV2::createDisplayItems()
 {
-    m_menuLayout.items[TabID::Display].clear();
+    m_uiLayout.menuLayout.items[TabID::Display].clear();
 
-    auto* item = &m_menuLayout.items[TabID::Display].emplace_back();
+    auto* item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Configuration";
     item->displayType = Menu::Item::Heading;
     if (cro::App::getWindow().getGPUVendor() == cro::GPUVendor::NVidia)
@@ -2505,7 +2422,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //anti-aliasing
-    item = &m_menuLayout.items[TabID::Display].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Antialiasing";
     //item->description = "Switch between billboard and 3D trees. Classic trees are applied when the game is loaded";
     //cro::Util::String::wordWrap(item->description, 36);
@@ -2519,7 +2436,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //Resolution
-    item = &m_menuLayout.items[TabID::Display].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Resolution";
     item->selected = 
         [&](const Menu::Item&)
@@ -2558,7 +2475,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //FOV
-    item = &m_menuLayout.items[TabID::Display].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "FOV";
     item->activated = 
         [&](Menu::Item& i) 
@@ -2581,7 +2498,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //pixel scaling
-    item = &m_menuLayout.items[TabID::Display].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Use Pixel Scaling (Default: OFF)";
     item->description = "Renders the game at a low resolution and then scales the output for a pixelated, retro look. Shortcut +/- on numpad";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2594,7 +2511,7 @@ void OptionsStateV2::createDisplayItems()
     item->selectedIndex = m_sharedData.pixelScale ? 1 : 0;
 
     //vertex snap
-    item = &m_menuLayout.items[TabID::Display].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Use Vertex Snapping (Default: OFF)";
     item->description = "Usually used in conjunction with Pixel Scaling. May cause z-fighting. Requires restart.";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2607,7 +2524,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //full screen
-    item = &m_menuLayout.items[TabID::Display].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Enable Full Screen";
     item->description = "Shortcut: F11 or Alt+Enter";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2620,7 +2537,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //full screen borderless/exclusive
-    item = &m_menuLayout.items[TabID::Display].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Full Screen Mode";
     item->description = "When in full screen run the game in a borderless window at the desktop resolution, or exclusive full screen at the window resolution.";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2640,7 +2557,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //vsync
-    item = &m_menuLayout.items[TabID::Display].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Enable VSync";
     item->description = "Synchronises the game's refresh rate with your monitor";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2652,7 +2569,7 @@ void OptionsStateV2::createDisplayItems()
     item->selectedIndex = cro::App::getWindow().getVsyncEnabled() ? 1 : 0;
 
     //tree quality
-    item = &m_menuLayout.items[TabID::Display].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Tree Quality";
     item->description = "Switch between billboard and 3D trees. Classic trees are applied when the game is loaded";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2667,7 +2584,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //shadow quality
-    item = &m_menuLayout.items[TabID::Display].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Shadow Quality";
     item->description = "NOTE Toggling Classic shadows requires a restart and may cause visual artifacts until done so";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2682,7 +2599,7 @@ void OptionsStateV2::createDisplayItems()
 
 
     //crowd density
-    item = &m_menuLayout.items[TabID::Display].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Crowd Density";
     item->description = "NOTE Very high density crowds may cause a drop in performance";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2698,7 +2615,7 @@ void OptionsStateV2::createDisplayItems()
     if (!Social::isSteamdeck())
     {
         //grass density
-        item = &m_menuLayout.items[TabID::Display].emplace_back();
+        item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
         item->title = "Grass Density";
         item->description = "Changes the appearance of the grass in the rough. Setting this to Low can improve performance";
         cro::Util::String::wordWrap(item->description, 36);
@@ -2715,16 +2632,16 @@ void OptionsStateV2::createDisplayItems()
 
 void OptionsStateV2::createAudioItems()
 {
-    m_tabBar.items[TabID::Audio].displayWidth = 0.7f;
-    m_tabBar.items[TabID::Audio].alignment = TabBar::Item::Centre;
+    m_uiLayout.tabBar.items[TabID::Audio].displayWidth = 0.7f;
+    m_uiLayout.tabBar.items[TabID::Audio].alignment = TabBar::Item::Centre;
 
-    auto* item = &m_menuLayout.items[TabID::Audio].emplace_back();
+    auto* item = &m_uiLayout.menuLayout.items[TabID::Audio].emplace_back();
     item->title = "Configuration";
     item->displayType = Menu::Item::Heading;
 
     //device selection - WARNING we have a hack when handling device
     //disconnect events which indexes this directly!! Don't chage the index!
-    item = &m_menuLayout.items[TabID::Audio].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Audio].emplace_back();
     item->title = "Audio Device";
     //item->description = "Enable text to speech playback for in-game chat";
     //cro::Util::String::wordWrap(item->description, 36);
@@ -2751,7 +2668,7 @@ void OptionsStateV2::createAudioItems()
 
 
     //text to speech
-    item = &m_menuLayout.items[TabID::Audio].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Audio].emplace_back();
     item->title = "Use Text To Speech for Chat";
     item->description = "Enable text to speech playback for in-game chat";
     cro::Util::String::wordWrap(item->description, 36);
@@ -2764,13 +2681,13 @@ void OptionsStateV2::createAudioItems()
 
 
     //mixer
-    item = &m_menuLayout.items[TabID::Audio].emplace_back();
+    item = &m_uiLayout.menuLayout.items[TabID::Audio].emplace_back();
     item->title = "Volume Levels";
     item->displayType = Menu::Item::Heading;
 
     for (auto i = 0; i < MixerChannel::Count; ++i)
     {
-        auto& item = m_menuLayout.items[TabID::Audio].emplace_back();
+        auto& item = m_uiLayout.menuLayout.items[TabID::Audio].emplace_back();
         item.title = MixerLabels[i];
         //item.description = "This is the item description for " + std::to_string(i + 1);
         item.activated = 
@@ -2791,9 +2708,9 @@ void OptionsStateV2::createAudioItems()
 
 void OptionsStateV2::createAchievementItems()
 {
-    m_tabBar.items[TabID::Achievements].displayWidth = 0.9f;
-    m_tabBar.items[TabID::Achievements].alignment = TabBar::Item::Centre;
-    m_menuLayout.items[TabID::Achievements].clear();
+    m_uiLayout.tabBar.items[TabID::Achievements].displayWidth = 0.9f;
+    m_uiLayout.tabBar.items[TabID::Achievements].alignment = TabBar::Item::Centre;
+    m_uiLayout.menuLayout.items[TabID::Achievements].clear();
 
     //TODO display progress of achievements
     //which are based on stats.
@@ -2805,7 +2722,7 @@ void OptionsStateV2::createAchievementItems()
 
         if (ach)
         {
-            auto& item = m_menuLayout.items[TabID::Achievements].emplace_back();
+            auto& item = m_uiLayout.menuLayout.items[TabID::Achievements].emplace_back();
             
             if (!ach->achieved && AchievementDesc[ach->id].second)
             {
@@ -2847,9 +2764,9 @@ void OptionsStateV2::createAchievementItems()
 
 void OptionsStateV2::createStatItems()
 {
-    m_tabBar.items[TabID::Stats].displayWidth = 0.7f;
-    m_tabBar.items[TabID::Stats].alignment = TabBar::Item::Centre;
-    m_menuLayout.items[TabID::Stats].clear();
+    m_uiLayout.tabBar.items[TabID::Stats].displayWidth = 0.7f;
+    m_uiLayout.tabBar.items[TabID::Stats].alignment = TabBar::Item::Centre;
+    m_uiLayout.menuLayout.items[TabID::Stats].clear();
 
     const auto formatValue =
         [](std::int32_t type, float statValue)
@@ -2903,7 +2820,7 @@ void OptionsStateV2::createStatItems()
 
         if (stat)
         {
-            auto& item = m_menuLayout.items[TabID::Stats].emplace_back();
+            auto& item = m_uiLayout.menuLayout.items[TabID::Stats].emplace_back();
             item.title = StatLabels[stat->id];
             item.subTitle = formatValue(StatTypes[stat->id], stat->value);
             item.displayType = Menu::Item::TextOnly;
@@ -2946,7 +2863,7 @@ void OptionsStateV2::updateTabBar()
     std::vector<cro::Vertex2D> verts;
     const auto viewScale = cro::UIElementSystem::getViewScale();
     
-    if (m_uiTexture)
+    if (m_uiLayout.uiTexture)
     {
         const auto width = TabWidth - viewScale;
         const auto height = TabBarHeight * viewScale;
@@ -2986,36 +2903,36 @@ void OptionsStateV2::updateTabBar()
                 verts.emplace_back(glm::vec2(position.x + sectionWidth, position.y), glm::vec2(right.uv.width, right.uv.bottom));
             };
 
-        for (auto i = 0u; i < m_tabBar.items.size(); ++i)
+        for (auto i = 0u; i < m_uiLayout.tabBar.items.size(); ++i)
         {
-            const auto active = i == m_tabBar.activeIndex;
-            const auto hovered = (i == m_tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
+            const auto active = i == m_uiLayout.tabBar.activeIndex;
+            const auto hovered = (i == m_uiLayout.tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
 
             const float kludgeOffset = (2.f * viewScale);
             glm::vec2 position = { (std::round(TabWidth / 2.f) + kludgeOffset) + ((i * TabWidth) + viewScale), 0.f };
             if (active)
             {
-                addQuad(position, m_tabActive[0], m_tabActive[1]);
+                addQuad(position, m_uiLayout.tabActive[0], m_uiLayout.tabActive[1]);
             }
             else if(hovered)
             {
-                addQuad(position, m_tabHighlight[0], m_tabHighlight[1]);
+                addQuad(position, m_uiLayout.tabHighlight[0], m_uiLayout.tabHighlight[1]);
             }
             else
             {
-                addQuad(position, m_tabInactive[0], m_tabInactive[1]);
+                addQuad(position, m_uiLayout.tabInactive[0], m_uiLayout.tabInactive[1]);
             }
 
             //set the text
-            position += glm::vec2(m_tabBar.background.getComponent<cro::Transform>().getPosition());
+            position += glm::vec2(m_uiLayout.tabBar.background.getComponent<cro::Transform>().getPosition());
             position += WindowSize / 2.f; //screen centre
-            m_tabBar.items[i].hitbox = { position, glm::vec2(width, height)};
-            m_tabBar.items[i].text.getComponent<cro::Text>().setFillColour(active ? TextNormalColour :
+            m_uiLayout.tabBar.items[i].hitbox = { position, glm::vec2(width, height)};
+            m_uiLayout.tabBar.items[i].text.getComponent<cro::Text>().setFillColour(active ? TextNormalColour :
                 hovered ? CD32::Colours[CD32::Yellow] : CD32::Colours[CD32::BeigeMid]);
         }
 
         //add a quad to the verts as an underline
-        const auto backgroundCentre = m_backgroundSections[BackgroundSection::Centre].uv;
+        const auto backgroundCentre = m_uiLayout.backgroundSections[BackgroundSection::Centre].uv;
         const glm::vec2 uv0(backgroundCentre.left, backgroundCentre.bottom);
         const glm::vec2 uv1(backgroundCentre.width, backgroundCentre.height);
         verts.emplace_back(glm::vec2(0.f, 0.f), glm::vec2(uv0.x, uv1.y));
@@ -3040,10 +2957,10 @@ void OptionsStateV2::updateTabBar()
             };
 
         //update the verts for the tab bar.
-        for (auto i = 0u; i < m_tabBar.items.size(); ++i)
+        for (auto i = 0u; i < m_uiLayout.tabBar.items.size(); ++i)
         {
-            const auto active = i == m_tabBar.activeIndex;
-            const auto hovered = (i == m_tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
+            const auto active = i == m_uiLayout.tabBar.activeIndex;
+            const auto hovered = (i == m_uiLayout.tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
 
             const auto colour = active ? CD32::Colours[CD32::Brown] :
                 hovered ?
@@ -3053,52 +2970,52 @@ void OptionsStateV2::updateTabBar()
             const glm::vec2 size = { TabWidth - viewScale, TabBarHeight * viewScale };
             addQuad(colour, position, size);
 
-            position += glm::vec2(m_tabBar.background.getComponent<cro::Transform>().getPosition());
+            position += glm::vec2(m_uiLayout.tabBar.background.getComponent<cro::Transform>().getPosition());
             position += WindowSize / 2.f; //screen centre
-            m_tabBar.items[i].hitbox = { position, size };
-            m_tabBar.items[i].text.getComponent<cro::Text>().setFillColour(active ? TextNormalColour :
+            m_uiLayout.tabBar.items[i].hitbox = { position, size };
+            m_uiLayout.tabBar.items[i].text.getComponent<cro::Text>().setFillColour(active ? TextNormalColour :
                 hovered ? CD32::Colours[CD32::Black] : CD32::Colours[CD32::BeigeMid]);
         }
 
         addQuad(CD32::Colours[CD32::Brown], { 0.f, -viewScale }, { WindowSize.x, viewScale });
     }
 
-    m_tabBar.background.getComponent<cro::Drawable2D>().setVertexData(verts);
+    m_uiLayout.tabBar.background.getComponent<cro::Drawable2D>().setVertexData(verts);
 
-    const auto DetailOffset = (((1.f - m_tabBar.items[m_tabBar.activeIndex].displayWidth) / 2.f) + m_tabBar.items[m_tabBar.activeIndex].displayWidth) - 0.5f;
+    const auto DetailOffset = (((1.f - m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].displayWidth) / 2.f) + m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].displayWidth) - 0.5f;
 
-    switch (m_tabBar.items[m_tabBar.activeIndex].alignment)
+    switch (m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].alignment)
     {
     default:
     case TabBar::Item::Left:
-        m_menuLayout.sprite.getComponent<cro::Transform>().setPosition({ 0.f, 0.f });
+        m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().setPosition({ 0.f, 0.f });
 
         m_detailsPane.root.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         m_detailsPane.root.getComponent<cro::UIElement>().relativePosition.x = DetailOffset;
         break;
     case TabBar::Item::Centre:
     {
-        const float x = std::round((WindowSize.x - (static_cast<float>(m_menuLayout.texture.getSize().x * cro::UIElementSystem::getViewScale()) * m_tabBar.items[m_tabBar.activeIndex].displayWidth)) / 2.f);
-        m_menuLayout.sprite.getComponent<cro::Transform>().setPosition({ x, 0.f });
+        const float x = std::round((WindowSize.x - (static_cast<float>(m_uiLayout.menuLayout.texture.getSize().x * cro::UIElementSystem::getViewScale()) * m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].displayWidth)) / 2.f);
+        m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().setPosition({ x, 0.f });
 
         m_detailsPane.root.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
         break;
     case TabBar::Item::Right:
     {
-        const float x = std::round(WindowSize.x - ((static_cast<float>(m_menuLayout.texture.getSize().x) * m_tabBar.items[m_tabBar.activeIndex].displayWidth) * cro::UIElementSystem::getViewScale()));
-        m_menuLayout.sprite.getComponent<cro::Transform>().setPosition({ x, 0.f });
+        const float x = std::round(WindowSize.x - ((static_cast<float>(m_uiLayout.menuLayout.texture.getSize().x) * m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].displayWidth) * cro::UIElementSystem::getViewScale()));
+        m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().setPosition({ x, 0.f });
 
         m_detailsPane.root.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         m_detailsPane.root.getComponent<cro::UIElement>().relativePosition.x = -DetailOffset;
     }
         break;
     }
-    m_menuLayout.sprite.getComponent<cro::Transform>().move(-WindowSize / 2.f);
+    m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().move(-WindowSize / 2.f);
     
 
     //set the detail text alignment based on active tab
-    //switch (m_tabBar.activeIndex)
+    //switch (m_uiLayout.tabBar.activeIndex)
     //{
     //default:
     //    m_detailsPane.text.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
@@ -3121,60 +3038,60 @@ void OptionsStateV2::updateTabBar()
 
 void OptionsStateV2::nextTab()
 {
-    activateTab((m_tabBar.activeIndex + 1) % TabID::Count);
+    activateTab((m_uiLayout.tabBar.activeIndex + 1) % TabID::Count);
     playSound(MenuSoundEvent::Activate);
 }
 
 void OptionsStateV2::prevTab()
 {
-    activateTab((m_tabBar.activeIndex + (TabID::Count - 1)) % TabID::Count);
+    activateTab((m_uiLayout.tabBar.activeIndex + (TabID::Count - 1)) % TabID::Count);
     playSound(MenuSoundEvent::Cancel);
 }
 
 void OptionsStateV2::activateTab(std::int32_t idx)
 {
-    if (m_detailsPane.tabDetails[m_tabBar.activeIndex].isValid())
+    if (m_detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].isValid())
     {
-        m_detailsPane.tabDetails[m_tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        m_detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
 
-    m_tabBar.activeIndex = idx;
-    m_menuLayout.itemIndex = 0;
+    m_uiLayout.tabBar.activeIndex = idx;
+    m_uiLayout.menuLayout.itemIndex = 0;
 
-    if (m_detailsPane.tabDetails[m_tabBar.activeIndex].isValid())
+    if (m_detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].isValid())
     {
-        m_detailsPane.tabDetails[m_tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        m_detailsPane.tabDetails[m_uiLayout.tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
     }
 
     updateTabBar();
 
     //set item 0 as focused
-    focusToIndex(m_tabBar, m_menuLayout);
+    focusToIndex(m_uiLayout.tabBar, m_uiLayout.menuLayout);
 }
 
 void OptionsStateV2::resizeItemGraphics()
 {
     //this is all done 1:1 as the ui element/nodes scale this for us
 
-    const auto& items = m_menuLayout.items[m_tabBar.activeIndex];
+    const auto& items = m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex];
     const auto viewScale = cro::UIElementSystem::getViewScale();
 
     //calc max texture size and resize first if necessary
     const auto texHeight = static_cast<std::uint32_t>(((ItemHeight + ItemSpacing) * items.size() + ItemSpacing));
     const auto texWidth = static_cast<std::uint32_t>(static_cast<float>(cro::App::getWindow().getSize().x) / viewScale);
 
-    if (!m_menuLayout.texture.available()
-        || texWidth > m_menuLayout.texture.getSize().x
-        || texHeight > m_menuLayout.texture.getSize().y)
+    if (!m_uiLayout.menuLayout.texture.available()
+        || texWidth > m_uiLayout.menuLayout.texture.getSize().x
+        || texHeight > m_uiLayout.menuLayout.texture.getSize().y)
     {
-        m_menuLayout.texture.create(texWidth, texHeight, false);
+        m_uiLayout.menuLayout.texture.create(texWidth, texHeight, false);
     }
 
 
     //update all the item backgrounds based on current window size and selected tab
     //these aren't scaled by view size here - the target they're rendered to is
-    m_tabBar.items[m_tabBar.activeIndex].renderWidth = static_cast<float>(m_menuLayout.texture.getSize().x);
-    m_tabBar.items[m_tabBar.activeIndex].renderWidth = std::round(m_tabBar.items[m_tabBar.activeIndex].renderWidth * m_tabBar.items[m_tabBar.activeIndex].displayWidth);
+    m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].renderWidth = static_cast<float>(m_uiLayout.menuLayout.texture.getSize().x);
+    m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].renderWidth = std::round(m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].renderWidth * m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].displayWidth);
 
     std::vector<cro::Vertex2D> verts;
     const auto calcVerts =
@@ -3190,7 +3107,7 @@ void OptionsStateV2::resizeItemGraphics()
 
             
             position.x += left.size.x;
-            const auto centreWidth = m_tabBar.items[m_tabBar.activeIndex].renderWidth - (left.size.x * 2.f);
+            const auto centreWidth = m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].renderWidth - (left.size.x * 2.f);
             verts.emplace_back(glm::vec2(position.x, left.size.y), glm::vec2(left.uv.width, left.uv.height));
             verts.emplace_back(position, glm::vec2(left.uv.width, left.uv.bottom));
             verts.emplace_back(glm::vec2(position.x + centreWidth, left.size.y), glm::vec2(right.uv.left, right.uv.height));
@@ -3208,29 +3125,29 @@ void OptionsStateV2::resizeItemGraphics()
             verts.emplace_back(glm::vec2(position.x + right.size.x, position.y), glm::vec2(right.uv.width, right.uv.bottom));
         };
 
-    calcVerts(m_itemSection[0], m_itemSection[1]);
-    m_itemBackground.setVertexData(verts);
+    calcVerts(m_uiLayout.itemSection[0], m_uiLayout.itemSection[1]);
+    m_uiLayout.itemBackground.setVertexData(verts);
 
     verts.clear();
-    calcVerts(m_itemActiveSection[0], m_itemActiveSection[1]);
-    m_itemBackgroundActive.setVertexData(verts);
+    calcVerts(m_uiLayout.itemActiveSection[0], m_uiLayout.itemActiveSection[1]);
+    m_uiLayout.itemBackgroundActive.setVertexData(verts);
 
     verts.clear();
-    calcVerts(m_itemActiveHighlightSection[0], m_itemActiveHighlightSection[1]);
-    m_itemBackgroundActiveHighlight.setVertexData(verts);
+    calcVerts(m_uiLayout.itemActiveHighlightSection[0], m_uiLayout.itemActiveHighlightSection[1]);
+    m_uiLayout.itemBackgroundActiveHighlight.setVertexData(verts);
 
     verts.clear();
-    calcVerts(m_itemHighlightSection[0], m_itemHighlightSection[1]);
-    m_itemBackgroundHighlight.setVertexData(verts);
+    calcVerts(m_uiLayout.itemHighlightSection[0], m_uiLayout.itemHighlightSection[1]);
+    m_uiLayout.itemBackgroundHighlight.setVertexData(verts);
 
     verts.clear();
-    calcVerts(m_itemTitleSection[0], m_itemTitleSection[1]);
-    m_itemBackgroundTitle.setVertexData(verts);
+    calcVerts(m_uiLayout.itemTitleSection[0], m_uiLayout.itemTitleSection[1]);
+    m_uiLayout.itemBackgroundTitle.setVertexData(verts);
 
 
     //update detail background
-    glm::vec2 backgroundArea = { static_cast<float>(cro::App::getWindow().getSize().x - (m_tabBar.items[m_tabBar.activeIndex].renderWidth * viewScale)),
-                        (m_tabBar.background.getComponent<cro::Transform>().getPosition().y - (InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2) };
+    glm::vec2 backgroundArea = { static_cast<float>(cro::App::getWindow().getSize().x - (m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].renderWidth * viewScale)),
+                        (m_uiLayout.tabBar.background.getComponent<cro::Transform>().getPosition().y - (InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2) };
 
     backgroundArea.x -= (DetailBackgroundPadding * viewScale);
     backgroundArea.y -= (DetailBackgroundPadding * viewScale);
@@ -3242,8 +3159,8 @@ void OptionsStateV2::resizeItemGraphics()
     backgroundArea.y = std::round(backgroundArea.y / 2.f);
     m_detailsPane.backgroundSize = backgroundArea * 2.f;
 
-    const float CentreWidth = backgroundArea.x - m_backgroundSections[BackgroundSection::TL].size.x;
-    const float CentreHeight = backgroundArea.y - m_backgroundSections[BackgroundSection::TL].size.y;
+    const float CentreWidth = backgroundArea.x - m_uiLayout.backgroundSections[BackgroundSection::TL].size.x;
+    const float CentreHeight = backgroundArea.y - m_uiLayout.backgroundSections[BackgroundSection::TL].size.y;
 
     verts.clear();
 
@@ -3261,30 +3178,30 @@ void OptionsStateV2::resizeItemGraphics()
 
     //top left
     glm::vec2 p(-backgroundArea.x, CentreHeight);
-    addQuad(p, m_backgroundSections[BackgroundSection::TL].size, m_backgroundSections[BackgroundSection::TL].uv);
+    addQuad(p, m_uiLayout.backgroundSections[BackgroundSection::TL].size, m_uiLayout.backgroundSections[BackgroundSection::TL].uv);
 
     //top right
     p = { CentreWidth, CentreHeight };
-    addQuad(p, m_backgroundSections[BackgroundSection::TR].size, m_backgroundSections[BackgroundSection::TR].uv);
+    addQuad(p, m_uiLayout.backgroundSections[BackgroundSection::TR].size, m_uiLayout.backgroundSections[BackgroundSection::TR].uv);
 
     //bottom left
     p = { -backgroundArea.x, -backgroundArea.y };
-    addQuad(p, m_backgroundSections[BackgroundSection::BL].size, m_backgroundSections[BackgroundSection::BL].uv);
+    addQuad(p, m_uiLayout.backgroundSections[BackgroundSection::BL].size, m_uiLayout.backgroundSections[BackgroundSection::BL].uv);
 
     //bottom right
     p = { CentreWidth, -backgroundArea.y };
-    addQuad(p, m_backgroundSections[BackgroundSection::BR].size, m_backgroundSections[BackgroundSection::BR].uv);
+    addQuad(p, m_uiLayout.backgroundSections[BackgroundSection::BR].size, m_uiLayout.backgroundSections[BackgroundSection::BR].uv);
 
 
     //top
     p = { -CentreWidth, CentreHeight };
-    glm::vec2 size = { CentreWidth * 2.f, m_backgroundSections[BackgroundSection::Top].size.y };
+    glm::vec2 size = { CentreWidth * 2.f, m_uiLayout.backgroundSections[BackgroundSection::Top].size.y };
     cro::FloatRect uv = 
     {
-        m_backgroundSections[BackgroundSection::TL].uv.width,
-        m_backgroundSections[BackgroundSection::TL].uv.bottom,
-        m_backgroundSections[BackgroundSection::TR].uv.left,
-        m_backgroundSections[BackgroundSection::TR].uv.height
+        m_uiLayout.backgroundSections[BackgroundSection::TL].uv.width,
+        m_uiLayout.backgroundSections[BackgroundSection::TL].uv.bottom,
+        m_uiLayout.backgroundSections[BackgroundSection::TR].uv.left,
+        m_uiLayout.backgroundSections[BackgroundSection::TR].uv.height
     };
     addQuad(p, size, uv);
 
@@ -3292,22 +3209,22 @@ void OptionsStateV2::resizeItemGraphics()
     p = { -CentreWidth, -backgroundArea.y };
     uv =
     {
-        m_backgroundSections[BackgroundSection::BL].uv.width,
-        m_backgroundSections[BackgroundSection::BL].uv.bottom,
-        m_backgroundSections[BackgroundSection::BR].uv.left,
-        m_backgroundSections[BackgroundSection::BR].uv.height
+        m_uiLayout.backgroundSections[BackgroundSection::BL].uv.width,
+        m_uiLayout.backgroundSections[BackgroundSection::BL].uv.bottom,
+        m_uiLayout.backgroundSections[BackgroundSection::BR].uv.left,
+        m_uiLayout.backgroundSections[BackgroundSection::BR].uv.height
     };
     addQuad(p, size, uv);
 
     //left
     p = { -backgroundArea.x, -CentreHeight };
-    size = { m_backgroundSections[BackgroundSection::Left].size.x, CentreHeight * 2.f };
+    size = { m_uiLayout.backgroundSections[BackgroundSection::Left].size.x, CentreHeight * 2.f };
     uv =
     {
-        m_backgroundSections[BackgroundSection::BL].uv.left,
-        m_backgroundSections[BackgroundSection::BL].uv.height,
-        m_backgroundSections[BackgroundSection::TL].uv.width,
-        m_backgroundSections[BackgroundSection::TL].uv.bottom
+        m_uiLayout.backgroundSections[BackgroundSection::BL].uv.left,
+        m_uiLayout.backgroundSections[BackgroundSection::BL].uv.height,
+        m_uiLayout.backgroundSections[BackgroundSection::TL].uv.width,
+        m_uiLayout.backgroundSections[BackgroundSection::TL].uv.bottom
     };
     addQuad(p, size, uv);
 
@@ -3315,17 +3232,17 @@ void OptionsStateV2::resizeItemGraphics()
     p = { CentreWidth, -CentreHeight };
     uv =
     {
-        m_backgroundSections[BackgroundSection::BR].uv.left,
-        m_backgroundSections[BackgroundSection::BR].uv.height,
-        m_backgroundSections[BackgroundSection::TR].uv.width,
-        m_backgroundSections[BackgroundSection::TR].uv.bottom
+        m_uiLayout.backgroundSections[BackgroundSection::BR].uv.left,
+        m_uiLayout.backgroundSections[BackgroundSection::BR].uv.height,
+        m_uiLayout.backgroundSections[BackgroundSection::TR].uv.width,
+        m_uiLayout.backgroundSections[BackgroundSection::TR].uv.bottom
     };
     addQuad(p, size, uv);
 
     //centre
     p = { -CentreWidth, -CentreHeight };
     size = { CentreWidth * 2.f, CentreHeight * 2.f };
-    addQuad(p, size, m_backgroundSections[BackgroundSection::Centre].uv);
+    addQuad(p, size, m_uiLayout.backgroundSections[BackgroundSection::Centre].uv);
 
     m_detailsPane.background.getComponent<cro::Drawable2D>().setVertexData(verts);
 }
@@ -3376,50 +3293,50 @@ void OptionsStateV2::updateSliderGraphic(std::int32_t amt, std::int32_t total)
             cro::Vertex2D(glm::vec2(SliderWidth, 0.f), d)
         };
     }
-    m_itemSlider.setVertexData(verts);
+    m_uiLayout.itemSlider.setVertexData(verts);
 }
 
 void OptionsStateV2::updateMenuItems()
 {
     //NOTE this is all done 1:1 scale and the resulting sprite set to window scale
-    auto& items = m_menuLayout.items[m_tabBar.activeIndex];
+    auto& items = m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex];
     const auto viewScale = cro::UIElementSystem::getViewScale();
 
 
     //if we didn't resize the actual size might be bigger than we expect
     //on other tabs...
-    glm::vec2 renderSize = glm::vec2(m_menuLayout.texture.getSize());
-    renderSize.x = std::round(renderSize.x * m_tabBar.items[m_tabBar.activeIndex].displayWidth);
+    glm::vec2 renderSize = glm::vec2(m_uiLayout.menuLayout.texture.getSize());
+    renderSize.x = std::round(renderSize.x * m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].displayWidth);
 
-    m_menuLayout.sprite.getComponent<cro::Sprite>().setTexture(m_menuLayout.texture.getTexture());
-    m_menuLayout.sprite.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
+    m_uiLayout.menuLayout.sprite.getComponent<cro::Sprite>().setTexture(m_uiLayout.menuLayout.texture.getTexture());
+    m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
 
     cro::FloatRect crop = { 0.f, InfoBarHeight * viewScale,
                             static_cast<float>(cro::App::getWindow().getSize().x),
-                            (m_tabBar.background.getComponent<cro::Transform>().getPosition().y - (InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2)};
-    m_menuLayout.sprite.getComponent<cro::Drawable2D>().setCroppingArea(crop, true);
+                            (m_uiLayout.tabBar.background.getComponent<cro::Transform>().getPosition().y - (InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2)};
+    m_uiLayout.menuLayout.sprite.getComponent<cro::Drawable2D>().setCroppingArea(crop, true);
 
-    m_menuText.setFillColour(TextNormalColour);
+    m_uiLayout.menuText.setFillColour(TextNormalColour);
 
     constexpr float LineSpacing = 12.f;
     const auto renderItem =
         [&](Menu::Item& item, glm::vec2 pos, std::int32_t idx)
         {
-            auto* background = &m_itemBackground;
-            if (idx == m_menuLayout.hoveredIndex
+            auto* background = &m_uiLayout.itemBackground;
+            if (idx == m_uiLayout.menuLayout.hoveredIndex
                 && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
             {
-                background = idx == m_menuLayout.itemIndex ? &m_itemBackgroundActiveHighlight : &m_itemBackgroundHighlight;
+                background = idx == m_uiLayout.menuLayout.itemIndex ? &m_uiLayout.itemBackgroundActiveHighlight : &m_uiLayout.itemBackgroundHighlight;
             }
-            else if (idx == m_menuLayout.itemIndex)
+            else if (idx == m_uiLayout.menuLayout.itemIndex)
             {
-                background = &m_itemBackgroundActive;
+                background = &m_uiLayout.itemBackgroundActive;
             }
 
             if (item.displayType == Menu::Item::Heading)
             {
-                m_itemBackgroundTitle.setPosition(pos);
-                m_itemBackgroundTitle.draw();
+                m_uiLayout.itemBackgroundTitle.setPosition(pos);
+                m_uiLayout.itemBackgroundTitle.draw();
             }
             else
             {
@@ -3438,7 +3355,7 @@ void OptionsStateV2::updateMenuItems()
                 else
                 {
                     //align to the right
-                    m_menuQuad.setPosition(pos + glm::vec2(m_tabBar.items[m_tabBar.activeIndex].renderWidth - (ItemSpacing + ItemImage.x), ItemSpacing));
+                    m_menuQuad.setPosition(pos + glm::vec2(m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].renderWidth - (ItemSpacing + ItemImage.x), ItemSpacing));
                 }
                 m_menuQuad.setTexture(*item.texture);
                 m_menuQuad.setScale(ItemImage / glm::vec2(item.uv.width, item.uv.height));
@@ -3451,59 +3368,59 @@ void OptionsStateV2::updateMenuItems()
             pos.x += ItemSpacing;
             pos.y += ItemHeight - LineSpacing;
 
-            if (idx == m_menuLayout.itemIndex
-                || idx == m_menuLayout.hoveredIndex)
+            if (idx == m_uiLayout.menuLayout.itemIndex
+                || idx == m_uiLayout.menuLayout.hoveredIndex)
             {
-                m_menuText.setFillColour(CD32::Colours[CD32::Yellow]);
-                m_menuTextLarge.setFillColour(CD32::Colours[CD32::Yellow]);
+                m_uiLayout.menuText.setFillColour(CD32::Colours[CD32::Yellow]);
+                m_uiLayout.menuTextLarge.setFillColour(CD32::Colours[CD32::Yellow]);
             }
             else
             {
-                m_menuText.setFillColour(TextNormalColour);
-                m_menuTextLarge.setFillColour(TextNormalColour);
+                m_uiLayout.menuText.setFillColour(TextNormalColour);
+                m_uiLayout.menuTextLarge.setFillColour(TextNormalColour);
             }
 
             if (item.displayType != Menu::Item::Heading)
             {
-                m_menuText.setPosition(pos);
-                m_menuText.setString(item.title);
-                m_menuText.draw();
+                m_uiLayout.menuText.setPosition(pos);
+                m_uiLayout.menuText.setString(item.title);
+                m_uiLayout.menuText.draw();
             }
 
             switch (item.displayType)
             {
             case Menu::Item::Slider:
                 updateSliderGraphic(item.selectedIndex, item.labels.size() - 1);
-                m_itemSlider.setPosition({ std::floor(renderSize.x / 2.f), pos.y - 22.f/*std::floor(LineSpacing * 1.7f)*/ });
-                m_itemSlider.draw();
+                m_uiLayout.itemSlider.setPosition({ std::floor(renderSize.x / 2.f), pos.y - 22.f/*std::floor(LineSpacing * 1.7f)*/ });
+                m_uiLayout.itemSlider.draw();
                 [[fallthrough]];
             default:
                 if (item.displayType == Menu::Item::Slider)
                 {
-                    m_menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - (LineSpacing - 1.f) });
+                    m_uiLayout.menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - (LineSpacing - 1.f) });
                 }
                 else
                 {
-                    m_menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
+                    m_uiLayout.menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
                 }
 
                 if (item.labels.size() > 1)
                 {
-                    m_menuTextLarge.setString("< " + item.labels[item.selectedIndex] + " >");
+                    m_uiLayout.menuTextLarge.setString("< " + item.labels[item.selectedIndex] + " >");
                 }
                 else
                 {
                     //this is a button
-                    m_menuTextLarge.setString(item.labels[item.selectedIndex]);
+                    m_uiLayout.menuTextLarge.setString(item.labels[item.selectedIndex]);
                 }
-                m_menuTextLarge.draw();
+                m_uiLayout.menuTextLarge.draw();
 
                 {
                     static constexpr float HitPadding = 4.f;
-                    item.hitbox = m_menuTextLarge.getLocalBounds();
-                    item.hitbox.left += m_menuTextLarge.getPosition().x;
+                    item.hitbox = m_uiLayout.menuTextLarge.getLocalBounds();
+                    item.hitbox.left += m_uiLayout.menuTextLarge.getPosition().x;
                     item.hitbox.left -= HitPadding;
-                    item.hitbox.bottom += m_menuTextLarge.getPosition().y;
+                    item.hitbox.bottom += m_uiLayout.menuTextLarge.getPosition().y;
                     item.hitbox.bottom -= HitPadding;
                     item.hitbox.width += (2.f * HitPadding);
                     item.hitbox.height += (2.f * HitPadding);
@@ -3512,22 +3429,22 @@ void OptionsStateV2::updateMenuItems()
             case Menu::Item::TextOnly:
                 if (!item.description.empty())
                 {
-                    m_menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
-                    m_menuTextLarge.setString(item.description);
-                    m_menuTextLarge.draw();
+                    m_uiLayout.menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
+                    m_uiLayout.menuTextLarge.setString(item.description);
+                    m_uiLayout.menuTextLarge.draw();
                 }
                 else
                 {
-                    m_menuText.move({ 0.f, -(LineSpacing - 1.f) });
-                    m_menuText.setString(item.subTitle);
-                    m_menuText.draw();
+                    m_uiLayout.menuText.move({ 0.f, -(LineSpacing - 1.f) });
+                    m_uiLayout.menuText.setString(item.subTitle);
+                    m_uiLayout.menuText.draw();
                 }
                 break;
             case Menu::Item::Heading:
-                m_menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
-                m_menuTextLarge.setString(item.title);
-                m_menuTextLarge.setFillColour(TextNormalColour);
-                m_menuTextLarge.draw();
+                m_uiLayout.menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
+                m_uiLayout.menuTextLarge.setString(item.title);
+                m_uiLayout.menuTextLarge.setFillColour(TextNormalColour);
+                m_uiLayout.menuTextLarge.draw();
                 break;
             }
             
@@ -3541,13 +3458,13 @@ void OptionsStateV2::updateMenuItems()
     m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     m_detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 
-    m_menuLayout.texture.clear(cro::Colour::Transparent);
+    m_uiLayout.menuLayout.texture.clear(cro::Colour::Transparent);
     //render current item selection to render texture
     //this includes either setting item highlight colour or rendering a highlight box
     auto i = 0;
     for (auto& item : items)
     {
-        if (i == m_menuLayout.itemIndex)
+        if (i == m_uiLayout.menuLayout.itemIndex)
         {
             auto txt = item.description;
             cro::Util::String::wordWrap(txt, WordWrapLarge);
@@ -3565,11 +3482,11 @@ void OptionsStateV2::updateMenuItems()
             {
                 item.selected(item);
             }
-            else if (m_tabBar.items[m_tabBar.activeIndex].sprite.getTexture())
+            else if (m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].sprite.getTexture())
             {
                 //set this sprite if it's available
                 m_detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-                m_detailsPane.image.getComponent<cro::Sprite>() = m_tabBar.items[m_tabBar.activeIndex].sprite;
+                m_detailsPane.image.getComponent<cro::Sprite>() = m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].sprite;
                 const auto bounds = m_detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
                 m_detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f,0.f });
             }
@@ -3581,24 +3498,24 @@ void OptionsStateV2::updateMenuItems()
         pos.y -= Stride;
     }
 
-    m_menuLayout.texture.display();
+    m_uiLayout.menuLayout.texture.display();
 
-    m_menuLayout.itemBox = { 0.f, 0.f, renderSize.x - (ItemSpacing * 2.f), ItemHeight };
-    m_menuLayout.itemBox *= viewScale;
+    m_uiLayout.menuLayout.itemBox = { 0.f, 0.f, renderSize.x - (ItemSpacing * 2.f), ItemHeight };
+    m_uiLayout.menuLayout.itemBox *= viewScale;
 }
 
 void OptionsStateV2::nextItem()
 {
     //reset mouse hover highlight
-    m_menuLayout.hoveredIndex = -1;
+    m_uiLayout.menuLayout.hoveredIndex = -1;
 
-    if (m_menuLayout.itemIndex < m_menuLayout.items[m_tabBar.activeIndex].size() - 1)
+    if (m_uiLayout.menuLayout.itemIndex < m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex].size() - 1)
     {
         do
         {
-            m_menuLayout.itemIndex++;
-        } while (m_menuLayout.itemIndex < m_menuLayout.items[m_tabBar.activeIndex].size() - 1
-            && m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].displayType == Menu::Item::Heading);
+            m_uiLayout.menuLayout.itemIndex++;
+        } while (m_uiLayout.menuLayout.itemIndex < m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex].size() - 1
+            && m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].displayType == Menu::Item::Heading);
         updateMenuItems();
 
         playSound(MenuSoundEvent::Switch);
@@ -3608,17 +3525,17 @@ void OptionsStateV2::nextItem()
 void OptionsStateV2::prevItem()
 {
     //reset mouse hover highlight
-    m_menuLayout.hoveredIndex = -1;
+    m_uiLayout.menuLayout.hoveredIndex = -1;
     
     //hmm these are uints so we can't use max(0)
-    if (m_menuLayout.itemIndex > 0)
+    if (m_uiLayout.menuLayout.itemIndex > 0)
     {
         do
         {
             //also hmmm this doesn't work if the heading *is* at 0
-            m_menuLayout.itemIndex--;
-        } while (m_menuLayout.itemIndex > 0
-            && m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].displayType == Menu::Item::Heading);
+            m_uiLayout.menuLayout.itemIndex--;
+        } while (m_uiLayout.menuLayout.itemIndex > 0
+            && m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].displayType == Menu::Item::Heading);
         updateMenuItems();
 
         playSound(MenuSoundEvent::Switch);
@@ -3628,9 +3545,9 @@ void OptionsStateV2::prevItem()
 void OptionsStateV2::activateLeft()
 {
     //reset mouse hover highlight
-    m_menuLayout.hoveredIndex = -1;
+    m_uiLayout.menuLayout.hoveredIndex = -1;
 
-    if (m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].activateLeft())
+    if (m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].activateLeft())
     {
         updateMenuItems();
         playSound(MenuSoundEvent::Cancel);
@@ -3640,9 +3557,9 @@ void OptionsStateV2::activateLeft()
 void OptionsStateV2::activateRight()
 {
     //reset mouse hover highlight
-    m_menuLayout.hoveredIndex = -1;
+    m_uiLayout.menuLayout.hoveredIndex = -1;
 
-    if (m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].activateRight())
+    if (m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].activateRight())
     {
         updateMenuItems();
         playSound(MenuSoundEvent::Activate);
@@ -3651,7 +3568,7 @@ void OptionsStateV2::activateRight()
 
 void OptionsStateV2::activate()
 {
-    if (m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].activate())
+    if (m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].activate())
     {
         playSound(MenuSoundEvent::Activate);
     }
@@ -3662,12 +3579,12 @@ void OptionsStateV2::checkMouseOver(glm::vec2 screenPos)
     std::int32_t selectedTab = -1;
     std::int32_t selectedItem = -1;
 
-    if (screenPos.y > m_tabBar.background.getComponent<cro::Transform>().getWorldPosition().y)
+    if (screenPos.y > m_uiLayout.tabBar.background.getComponent<cro::Transform>().getWorldPosition().y)
     {
         //check the tab bar
-        for (auto i = 0u; i < m_tabBar.items.size(); ++i)
+        for (auto i = 0u; i < m_uiLayout.tabBar.items.size(); ++i)
         {
-            if (m_tabBar.items[i].hitbox.contains(screenPos))
+            if (m_uiLayout.tabBar.items[i].hitbox.contains(screenPos))
             {
                 selectedTab = static_cast<std::int32_t>(i);
                 break;
@@ -3680,17 +3597,17 @@ void OptionsStateV2::checkMouseOver(glm::vec2 screenPos)
 
         //check the item list - TODO only check against visible
         const glm::vec2 WindowOffset = cro::App::getWindow().getSize() / 2u;
-        glm::vec2 basePos = m_menuLayout.sprite.getComponent<cro::Transform>().getPosition();
+        glm::vec2 basePos = m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().getPosition();
         basePos += WindowOffset;
-        basePos.y -= m_menuLayout.sprite.getComponent<cro::Transform>().getOrigin().y * viewScale;
+        basePos.y -= m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().getOrigin().y * viewScale;
 
-        const auto menuHeight = static_cast<float>(m_menuLayout.texture.getSize().y);
+        const auto menuHeight = static_cast<float>(m_uiLayout.menuLayout.texture.getSize().y);
 
-        for (auto i = 0u; i < m_menuLayout.items[m_tabBar.activeIndex].size(); ++i)
+        for (auto i = 0u; i < m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex].size(); ++i)
         {
             //TODO skip this if it's outside the drawable area
             const float vertOffset = (menuHeight - ((i * (ItemHeight + ItemSpacing))) - (ItemHeight + ItemSpacing)) * viewScale;
-            auto testBox = m_menuLayout.itemBox;
+            auto testBox = m_uiLayout.menuLayout.itemBox;
             testBox.left += basePos.x;
             testBox.bottom += basePos.y + vertOffset;
 
@@ -3704,36 +3621,36 @@ void OptionsStateV2::checkMouseOver(glm::vec2 screenPos)
 
 
     //we may have switched from tab to item list so we still need to redraw
-    if (selectedTab != m_tabBar.hoveredIndex)
+    if (selectedTab != m_uiLayout.tabBar.hoveredIndex)
     {
-        m_tabBar.hoveredIndex = selectedTab;
+        m_uiLayout.tabBar.hoveredIndex = selectedTab;
         updateTabBar();
     }
 
-    if (selectedItem != m_menuLayout.hoveredIndex)
+    if (selectedItem != m_uiLayout.menuLayout.hoveredIndex)
     {
-        m_menuLayout.hoveredIndex = selectedItem;
+        m_uiLayout.menuLayout.hoveredIndex = selectedItem;
         updateMenuItems();
     }
 }
 
 void OptionsStateV2::doMouseClick(glm::vec2 mousePos)
 {
-    if (m_tabBar.hoveredIndex != -1)
+    if (m_uiLayout.tabBar.hoveredIndex != -1)
     {
-        activateTab(m_tabBar.hoveredIndex);
-        m_tabBar.hoveredIndex = -1;
+        activateTab(m_uiLayout.tabBar.hoveredIndex);
+        m_uiLayout.tabBar.hoveredIndex = -1;
         playSound(MenuSoundEvent::Activate);
     }
     else
     {
-        if (m_menuLayout.hoveredIndex == -1 ||
-            m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.hoveredIndex].displayType != Menu::Item::Heading)
+        if (m_uiLayout.menuLayout.hoveredIndex == -1 ||
+            m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.hoveredIndex].displayType != Menu::Item::Heading)
         {
-            if (m_menuLayout.hoveredIndex != -1)
+            if (m_uiLayout.menuLayout.hoveredIndex != -1)
             {
-                m_menuLayout.itemIndex = m_menuLayout.hoveredIndex;
-                m_menuLayout.hoveredIndex = -1;
+                m_uiLayout.menuLayout.itemIndex = m_uiLayout.menuLayout.hoveredIndex;
+                m_uiLayout.menuLayout.hoveredIndex = -1;
                 updateMenuItems();
 
                 playSound(MenuSoundEvent::Activate);
@@ -3741,15 +3658,15 @@ void OptionsStateV2::doMouseClick(glm::vec2 mousePos)
             //else
             {
                 //this is the active item, test for activation click
-                const auto testbox = m_menuLayout.sprite.getComponent<cro::Transform>().getWorldTransform() *
-                    m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].hitbox;
+                const auto testbox = m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().getWorldTransform() *
+                    m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].hitbox;
                 const auto testpos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(mousePos);
 
                 if (testbox.contains(testpos))
                 {
                     //this seems counter intuitive but it stops mouse input
                     //automatically activating items like resolution setting
-                    if (!m_menuLayout.items[m_tabBar.activeIndex][m_menuLayout.itemIndex].alwaysActivate)
+                    if (!m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].alwaysActivate)
                     {
                         activate();
                     }
@@ -3834,7 +3751,7 @@ void OptionsStateV2::updateKeybind(SDL_Keycode key)
     //m_detailsPane.text.getComponent<cro::Text>().setString(
     //    "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[m_keybindIndex]));
     
-    m_menuLayout.items[TabID::Keyboard][m_keybindItemIndex].labels[0] = 
+    m_uiLayout.menuLayout.items[TabID::Keyboard][m_keybindItemIndex].labels[0] = 
         "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[m_keybindIndex]);
 
     playSound(MenuSoundEvent::Activate);

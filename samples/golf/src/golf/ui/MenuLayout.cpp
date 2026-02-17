@@ -28,10 +28,106 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MenuLayout.hpp"
+#include "../MenuConsts.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/systems/UIElementSystem.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
+
+#include <crogine/detail/OpenGL.hpp>
+
+void UILayout::loadAssets(cro::ResourceCollection & resources)
+{
+    const auto& font = resources.fonts.get(FontID::Info);
+    menuText.setFont(font);
+    menuText.setCharacterSize(InfoTextSize);
+
+    const auto& largeFont = resources.fonts.get(FontID::UI);
+    menuTextLarge.setFont(largeFont);
+    menuTextLarge.setCharacterSize(UITextSize);
+    menuTextLarge.setAlignment(cro::SimpleText::Alignment::Centre);
+
+    itemSlider.setPrimitiveType(GL_TRIANGLES);
+
+    cro::SpriteSheet spriteSheet;
+    if (spriteSheet.loadFromFile("assets/golf/sprites/options_buttons.spt", resources.textures))
+    {
+        uiTexture = spriteSheet.getTexture();
+
+        const auto parseSprite = [&](const std::string& spr, SpriteSection& dst)
+            {
+                auto bounds = spriteSheet.getSprite(spr).getTextureBounds();
+                auto uv = spriteSheet.getSprite(spr).getTextureRectNormalised();
+                dst.size = { bounds.width, bounds.height };
+                dst.uv = { uv.left, uv.bottom, uv.left + uv.width, uv.bottom + uv.height };
+            };
+
+        //active tab
+        parseSprite("tab_active_left", tabActive[0]);
+        parseSprite("tab_active_right", tabActive[1]);
+
+        //inactive tab
+        parseSprite("tab_inactive_left", tabInactive[0]);
+        parseSprite("tab_inactive_right", tabInactive[1]);
+
+        //highlight tab
+        parseSprite("tab_highlight_left", tabHighlight[0]);
+        parseSprite("tab_highlight_right", tabHighlight[1]);
+
+
+
+        //background 9-patch
+        parseSprite("background_centre", backgroundSections[BackgroundSection::Centre]);
+        parseSprite("background_top", backgroundSections[BackgroundSection::Top]);
+        parseSprite("background_left", backgroundSections[BackgroundSection::Left]);
+        parseSprite("background_right", backgroundSections[BackgroundSection::Right]);
+        parseSprite("background_bottom", backgroundSections[BackgroundSection::Bottom]);
+        parseSprite("background_tl", backgroundSections[BackgroundSection::TL]);
+        parseSprite("background_tr", backgroundSections[BackgroundSection::TR]);
+        parseSprite("background_bl", backgroundSections[BackgroundSection::BL]);
+        parseSprite("background_br", backgroundSections[BackgroundSection::BR]);
+
+
+
+        //item backgrounds
+        parseSprite("item_background_left", itemSection[0]);
+        parseSprite("item_background_right", itemSection[1]);
+
+        //item active
+        parseSprite("item_active_left", itemActiveSection[0]);
+        parseSprite("item_active_right", itemActiveSection[1]);
+
+        //item active highlight
+        parseSprite("item_highlight_active_left", itemActiveHighlightSection[0]);
+        parseSprite("item_highlight_active_right", itemActiveHighlightSection[1]);
+
+        //item highlight
+        parseSprite("item_highlight_left", itemHighlightSection[0]);
+        parseSprite("item_highlight_right", itemHighlightSection[1]);
+
+        //item title
+        parseSprite("item_title_left", itemTitleSection[0]);
+        parseSprite("item_title_right", itemTitleSection[1]);
+
+
+        itemBackground.setTexture(*uiTexture);
+        itemBackground.setPrimitiveType(GL_TRIANGLES);
+
+        itemBackgroundActive.setTexture(*uiTexture);
+        itemBackgroundActive.setPrimitiveType(GL_TRIANGLES);
+
+        itemBackgroundActiveHighlight.setTexture(*uiTexture);
+        itemBackgroundActiveHighlight.setPrimitiveType(GL_TRIANGLES);
+
+        itemBackgroundHighlight.setTexture(*uiTexture);
+        itemBackgroundHighlight.setPrimitiveType(GL_TRIANGLES);
+
+        itemBackgroundTitle.setTexture(*uiTexture);
+        itemBackgroundTitle.setPrimitiveType(GL_TRIANGLES);
+    }
+}
 
 std::pair<cro::FloatRect, cro::FloatRect> scrollToTarget(TabBar& tabBar, Menu& menuLayout, float dt)
 {

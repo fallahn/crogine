@@ -35,6 +35,9 @@ source distribution.
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/SimpleText.hpp>
+#include <crogine/graphics/SimpleVertexArray.hpp>
 
 #include <array>
 #include <functional>
@@ -50,6 +53,27 @@ namespace UI
 
     static constexpr float InfoBarHeight = 24.f; //space at the bottom
 }
+
+namespace cro
+{
+    struct ResourceCollection;
+}
+
+struct SpriteSection final
+{
+    cro::FloatRect uv;
+    glm::vec2 size = { 0.f, 0.f };
+};
+
+struct BackgroundSection final
+{
+    enum
+    {
+        Top, Left, Right, Centre, Bottom,
+        TR, TL, BR, BL,
+        Count
+    };
+};
 
 struct TabBar final
 {
@@ -182,6 +206,38 @@ struct Menu final
 
     cro::FloatRect itemBox; //size is menu coords, position is updated during testing with current scroll position
 };
+
+struct UILayout final
+{
+    TabBar tabBar;
+    Menu menuLayout;
+
+    cro::SimpleText menuText;
+    cro::SimpleText menuTextLarge;
+    cro::SimpleVertexArray itemSlider;
+
+    const cro::Texture* uiTexture = nullptr;
+
+    std::array<SpriteSection, 2u> itemSection = {};
+    std::array<SpriteSection, 2u> itemActiveSection = {};
+    std::array<SpriteSection, 2u> itemActiveHighlightSection = {};
+    std::array<SpriteSection, 2u> itemHighlightSection = {};
+    std::array<SpriteSection, 2u> itemTitleSection = {};
+    cro::SimpleVertexArray itemBackground;
+    cro::SimpleVertexArray itemBackgroundActive;
+    cro::SimpleVertexArray itemBackgroundActiveHighlight;
+    cro::SimpleVertexArray itemBackgroundHighlight;
+    cro::SimpleVertexArray itemBackgroundTitle;
+
+    std::array<SpriteSection, 2u> tabActive = {};
+    std::array<SpriteSection, 2u> tabInactive = {};
+    std::array<SpriteSection, 2u> tabHighlight = {};
+
+    std::array<SpriteSection, BackgroundSection::Count> backgroundSections = {};
+
+    void loadAssets(cro::ResourceCollection&);
+};
+
 //returns cropping areas for debugging
 std::pair<cro::FloatRect, cro::FloatRect> scrollToTarget(TabBar&, Menu&, float);
 void focusToIndex(TabBar&, Menu&);
