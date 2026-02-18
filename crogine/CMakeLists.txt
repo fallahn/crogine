@@ -118,6 +118,7 @@ else()
   find_package(SDL2_mixer REQUIRED)
 endif()
 
+
 #used in dumping stack traces
 if(MSVC)
   find_package(DbgHelp REQUIRED)
@@ -151,13 +152,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fetch_ktx)
 
 else()
-  #use the included versions for brevity
-  link_directories(${CMAKE_SOURCE_DIR}/extlibs/ktx/linux-x86_64/lib
-                   ${CMAKE_SOURCE_DIR}/extlibs/ktx/win64/lib)
-
-  #sigh
-  link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../extlibs/ktx/linux-x86_64/lib
-                   ${CMAKE_CURRENT_SOURCE_DIR}/../extlibs/ktx/win64/lib)
+  find_package(KTX, REQUIRED)
 endif()
 
 
@@ -173,8 +168,7 @@ if (APPLE OR BUILD_KTX)
 
 else()
 
-  include_directories(${CMAKE_SOURCE_DIR}/extlibs/ktx/include)
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../extlibs/ktx/include)
+  include_directories(${KTX_INCLUDE_DIR})
 
 endif()
 
@@ -231,8 +225,13 @@ if(NOT TARGET crogine)
     ${SDL2_LIBRARY} 
     ${FREETYPE_LIBRARIES}
     ${OPUS_LIBRARIES}
-    ${OPENGL_LIBRARIES}
-    ktx)
+    ${OPENGL_LIBRARIES})
+
+  #if (APPLE OR BUILD_KTX)
+    target_link_libraries(${PROJECT_NAME} ktx)
+  #else()
+    target_link_libraries(${PROJECT_NAME} ${KTX_LIBRARIES})
+  #endif()
 
   if(USE_OPENAL)
     target_link_libraries(${PROJECT_NAME} ${OPENAL_LIBRARY})
