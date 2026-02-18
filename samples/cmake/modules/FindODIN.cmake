@@ -5,9 +5,12 @@
 #  ODIN_INCLUDE_DIR - the ODIN include directory
 #  ODIN_LIBRARIES - The libraries needed to use ODIN
 
+#SET(SEARCH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../extlibs/odin-sdk/bin/linux-x86_64)
 
+#include(CMakePrintHelpers)
+#cmake_print_variables(SEARCH_DIR)
 
-if (NOT ODIN_INCLUDE_DIR OR NOT ODIN_LIBRARIES)
+if(NOT ODIN_INCLUDE_DIR OR NOT ODIN_LIBRARIES)
     set(LIB_SEARCH_PATHS
         ~/Library/Frameworks
         /Library/Frameworks
@@ -15,41 +18,40 @@ if (NOT ODIN_INCLUDE_DIR OR NOT ODIN_LIBRARIES)
         /usr/lib64
         /usr/local/lib
         /usr/local/lib64
-        ${CMAKE_SOURCE_DIR}/../../extlibs/odin-sdk/bin/linux-x86_64
-        ${CMAKE_SOURCE_DIR}/../../extlibs/odin-sdk/bin/windows-x86_64
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../extlibs/odin-sdk/bin/linux-x86_64
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../extlibs/odin-sdk/bin/windows-x86_64
     )
     FIND_PATH(ODIN_INCLUDE_DIR odin.h
         /usr/include
         /usr/local/include
-        ${CMAKE_SOURCE_DIR}/../../extlibs/odin-sdk/include/
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../extlibs/odin-sdk/include/
         DOC "Include path for ODIN"
     )
 
 
 
-    if (Windows)
+    if(Windows)
 
         FIND_LIBRARY(ODIN_LIBRARY NAMES odin
             PATHS
-            ${CMAKE_SOURCE_DIR}/../../extlibs/odin-sdk/bin/windows-x86_64
+            ${CMAKE_CURRENT_SOURCE_DIR}/../../extlibs/odin-sdk/bin/windows-x86_64
             DOC "ODIN library name"
         )
 
-    else ()
-        FIND_LIBRARY(ODIN_LIBRARY NAMES libodin
-            PATHS 
-            ${LIB_SEARCH_PATHS}
+    else()
+        FIND_LIBRARY(ODIN_LIBRARY NAMES libodin.so
+            PATHS ${LIB_SEARCH_PATHS}
             DOC "ODIN library name"
         )
-    endif ()
+    endif()
 
-    if (ODIN_LIBRARY)
+    if(ODIN_LIBRARY)
         set(ODIN_LIBRARIES ${ODIN_LIBRARY})
-    endif ()
+    endif()
 
     MARK_AS_ADVANCED(ODIN_INCLUDE_DIR ODIN_LIBRARIES)
     
-endif ()
+endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(ODIN DEFAULT_MSG ODIN_INCLUDE_DIR ODIN_LIBRARIES)
