@@ -1003,16 +1003,16 @@ void OptionsStateV2::buildScene()
     //displays a cancel message when a keybind is in progress
     auto msgRoot = m_scene.createEntity();
     msgRoot.addComponent<cro::Transform>();
-    msgRoot.addComponent<cro::UIElement>(cro::UIElement::Position, false);
-    msgRoot.getComponent<cro::UIElement>().relativePosition = { 0.03f, -0.37f };
     msgRoot.addComponent<cro::Callback>().active = true;
     msgRoot.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
             const float scale = m_keybindIndex == -1 ? 0.f : 1.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+            e.getComponent<cro::Transform>().setPosition(-(m_uiLayout.detailsPane.backgroundSize / 2.f) * cro::UIElementSystem::getViewScale());
         };
-    rootNode.getComponent<cro::Transform>().addChild(msgRoot.getComponent<cro::Transform>());
+    m_uiLayout.detailsPane.root.getComponent<cro::Transform>().addChild(msgRoot.getComponent<cro::Transform>());
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1022,6 +1022,7 @@ void OptionsStateV2::buildScene()
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     entity.getComponent<cro::UIElement>().characterSize = UITextSize;
     entity.getComponent<cro::UIElement>().depth = 0.2f;
+    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 12.f };
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -1038,7 +1039,8 @@ void OptionsStateV2::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("cancel_xbox");
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
-    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, -8.f };
+    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 4.f };
+    //entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, -8.f };
     entity.getComponent<cro::UIElement>().depth = 0.2f;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -1055,7 +1057,8 @@ void OptionsStateV2::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("cancel_ps");
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
-    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, -8.f };
+    //entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, -8.f };
+    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 4.f };
     entity.getComponent<cro::UIElement>().depth = 0.2f;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
