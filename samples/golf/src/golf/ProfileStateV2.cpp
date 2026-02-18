@@ -701,71 +701,74 @@ bool ProfileStateV2::simulate(float dt)
             return ((m_controllerMasks[index] & flag) != 0) && ((m_controllerPrevMasks[index] & flag) == 0);
         };
 
-    for (auto i = 0; i < cro::GameController::getControllerCount(); ++i)
+    if (!m_showOSK)
     {
-        //check stick input
-        if (maskTest(i, InputFlag::Left))
+        for (auto i = 0; i < cro::GameController::getControllerCount(); ++i)
         {
-            m_uiLayout.activateLeft();
-        }
-
-        if (maskTest(i, InputFlag::Right))
-        {
-            m_uiLayout.activateRight();
-        }
-
-        if (maskTest(i, InputFlag::Up))
-        {
-            m_uiLayout.prevItem();
-            resetRepeatTimer(i, RepeatTimeLong);
-        }
-
-        if (maskTest(i, InputFlag::Down))
-        {
-            m_uiLayout.nextItem();
-            resetRepeatTimer(i, RepeatTimeLong);
-        }
-
-        m_controllerPrevMasks[i] = m_controllerMasks[i];
-        
-        //check for repeat inputs
-        if (cro::GameController::isButtonPressed(i, cro::GameController::DPadDown)
-            || (m_controllerMasks[i] & InputFlag::Down))
-        {
-            if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
-            {
-                m_uiLayout.nextItem();
-                resetRepeatTimer(i, RepeatTimeShort);
-            }
-        }
-
-        if (cro::GameController::isButtonPressed(i, cro::GameController::DPadUp)
-            || (m_controllerMasks[i] & InputFlag::Up))
-        {
-            if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
-            {
-                m_uiLayout.prevItem();
-                resetRepeatTimer(i, RepeatTimeShort);
-            }
-        }
-
-        if (cro::GameController::isButtonPressed(i, cro::GameController::DPadLeft)
-            /*|| (m_controllerMasks[i] & InputFlag::Down)*/)
-        {
-            if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
+            //check stick input
+            if (maskTest(i, InputFlag::Left))
             {
                 m_uiLayout.activateLeft();
-                resetRepeatTimer(i, RepeatTimeShort);
             }
-        }
 
-        if (cro::GameController::isButtonPressed(i, cro::GameController::DPadRight)
-            /*|| (m_controllerMasks[i] & InputFlag::Up)*/)
-        {
-            if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
+            if (maskTest(i, InputFlag::Right))
             {
                 m_uiLayout.activateRight();
-                resetRepeatTimer(i, RepeatTimeShort);
+            }
+
+            if (maskTest(i, InputFlag::Up))
+            {
+                m_uiLayout.prevItem();
+                resetRepeatTimer(i, RepeatTimeLong);
+            }
+
+            if (maskTest(i, InputFlag::Down))
+            {
+                m_uiLayout.nextItem();
+                resetRepeatTimer(i, RepeatTimeLong);
+            }
+
+            m_controllerPrevMasks[i] = m_controllerMasks[i];
+
+            //check for repeat inputs
+            if (cro::GameController::isButtonPressed(i, cro::GameController::DPadDown)
+                || (m_controllerMasks[i] & InputFlag::Down))
+            {
+                if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
+                {
+                    m_uiLayout.nextItem();
+                    resetRepeatTimer(i, RepeatTimeShort);
+                }
+            }
+
+            if (cro::GameController::isButtonPressed(i, cro::GameController::DPadUp)
+                || (m_controllerMasks[i] & InputFlag::Up))
+            {
+                if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
+                {
+                    m_uiLayout.prevItem();
+                    resetRepeatTimer(i, RepeatTimeShort);
+                }
+            }
+
+            if (cro::GameController::isButtonPressed(i, cro::GameController::DPadLeft)
+                /*|| (m_controllerMasks[i] & InputFlag::Down)*/)
+            {
+                if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
+                {
+                    m_uiLayout.activateLeft();
+                    resetRepeatTimer(i, RepeatTimeShort);
+                }
+            }
+
+            if (cro::GameController::isButtonPressed(i, cro::GameController::DPadRight)
+                /*|| (m_controllerMasks[i] & InputFlag::Up)*/)
+            {
+                if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
+                {
+                    m_uiLayout.activateRight();
+                    resetRepeatTimer(i, RepeatTimeShort);
+                }
             }
         }
     }
