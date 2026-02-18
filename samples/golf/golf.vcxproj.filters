@@ -381,9 +381,6 @@
     <ClCompile Include="src\golf\MenuAvatars.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
-    <ClCompile Include="src\golf\ProfileState.cpp">
-      <Filter>Source Files\golf\client\states</Filter>
-    </ClCompile>
     <ClCompile Include="src\golf\PlayerData.cpp">
       <Filter>Source Files\golf\client</Filter>
     </ClCompile>
@@ -1066,9 +1063,6 @@
     </ClInclude>
     <ClInclude Include="src\golf\MinimapZoom.hpp">
       <Filter>Header Files\golf</Filter>
-    </ClInclude>
-    <ClInclude Include="src\golf\ProfileState.hpp">
-      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\PlayerData.hpp">
       <Filter>Header Files\golf\client</Filter>

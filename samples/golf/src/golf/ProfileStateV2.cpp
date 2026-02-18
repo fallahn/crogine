@@ -1196,10 +1196,11 @@ void ProfileStateV2::buildScene()
     m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage] = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setString(generateRandomBio());
     m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_uiLayout.detailsPane.optionalEntities[ExtraDetail::BioString] = entity;
 
@@ -1593,6 +1594,12 @@ void ProfileStateV2::buildScene()
                 m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }
             m_uiLayout.detailsPane.optionalEntities[ExtraDetail::BioString].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+            //for some reason the very first time the editor is shown this text is invisible
+            //unless we do this inexplicable hack...
+            const auto s = m_uiLayout.detailsPane.optionalEntities[ExtraDetail::BioString].getComponent<cro::Text>().getString();
+            setBioString("SDFGDFFGGFDGDFGDF");
+            setBioString(s);
         };
 }
 

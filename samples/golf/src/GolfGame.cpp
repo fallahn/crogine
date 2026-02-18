@@ -61,7 +61,6 @@ source distribution.
 #include "golf/PlayerManagementState.hpp"
 #include "golf/CreditsState.hpp"
 #include "golf/UnlockState.hpp"
-#include "golf/ProfileState.hpp"
 #include "golf/ProfileStateV2.hpp"
 #include "golf/LeaderboardState.hpp"
 #include "golf/StatsState.hpp"
@@ -221,11 +220,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<KeyboardState>(StateID::Keyboard, m_sharedData);
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData, m_profileData);
-//#ifdef USE_GNS
     m_stateStack.registerState<ProfileStateV2>(StateID::Profile, m_sharedData, m_profileData);
-//#else
-//    m_stateStack.registerState<ProfileStateV2>(StateID::Profile, m_sharedData, m_profileData);
-//#endif
     m_stateStack.registerState<OptionsStateV2>(StateID::Options, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);

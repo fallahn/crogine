@@ -45,6 +45,27 @@ source distribution.
 
 #include <crogine/detail/OpenGL.hpp>
 
+static constexpr float RatioX = 4.f; //21.f
+static constexpr float RatioY = 3.f; //9.f
+static constexpr float MaxRatio = RatioX / RatioY;
+
+static inline glm::vec2 getWindowSize()
+{
+    //this *almost* works - so perhaps we'll revisit it sometime
+
+    /*glm::vec2 ret = cro::App::getWindow().getSize();
+    const auto ratio = ret.x / ret.y;
+
+    if (ratio > MaxRatio)
+    {
+        ret.x = std::floor((ret.y / RatioY) * RatioX);
+    }
+
+    return ret;*/
+
+    return cro::App::getWindow().getSize();
+}
+
 UILayout::UILayout(std::int32_t tabCount, const SharedStateData& sd)
     : m_sharedData(sd)
 {
@@ -146,7 +167,7 @@ void UILayout::loadAssets(cro::ResourceCollection & resources)
 
 void UILayout::updateTabBar()
 {
-    const glm::vec2 WindowSize = cro::App::getWindow().getSize();
+    const glm::vec2 WindowSize = cro::App::getWindow().getSize();// getWindowSize();
 
     const float Spacing = 1.f / (tabBar.items.size() + 1); //leave equivalent of half a tab either end
     const float TabWidth = std::round(Spacing * WindowSize.x);
@@ -341,8 +362,8 @@ void UILayout::updateMenuItems()
     menuLayout.sprite.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
 
     cro::FloatRect crop = { 0.f, UI::InfoBarHeight * viewScale,
-                            static_cast<float>(cro::App::getWindow().getSize().x),
-                            (tabBar.background.getComponent<cro::Transform>().getPosition().y - (UI::InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2) };
+                            getWindowSize().x,
+                            (tabBar.background.getComponent<cro::Transform>().getPosition().y - (UI::InfoBarHeight * viewScale)) + (getWindowSize().y / 2.f) };
     menuLayout.sprite.getComponent<cro::Drawable2D>().setCroppingArea(crop, true);
 
     m_menuText.setFillColour(TextNormalColour);
@@ -651,7 +672,7 @@ void UILayout::resizeItemGraphics()
 
     //calc max texture size and resize first if necessary
     const auto texHeight = static_cast<std::uint32_t>(((UI::ItemHeight + UI::ItemSpacing) * items.size() + UI::ItemSpacing));
-    const auto texWidth = static_cast<std::uint32_t>(static_cast<float>(cro::App::getWindow().getSize().x) / viewScale);
+    const auto texWidth = static_cast<std::uint32_t>(getWindowSize().x / viewScale);
 
     if (!menuLayout.texture.available()
         || texWidth > menuLayout.texture.getSize().x
@@ -719,8 +740,8 @@ void UILayout::resizeItemGraphics()
 
 
     //update detail background
-    glm::vec2 backgroundArea = { static_cast<float>(cro::App::getWindow().getSize().x - (tabBar.items[tabBar.activeIndex].renderWidth * viewScale)),
-                        (tabBar.background.getComponent<cro::Transform>().getPosition().y - (UI::InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2) };
+    glm::vec2 backgroundArea = { getWindowSize().x - (tabBar.items[tabBar.activeIndex].renderWidth * viewScale),
+                        (tabBar.background.getComponent<cro::Transform>().getPosition().y - (UI::InfoBarHeight * viewScale)) + (getWindowSize().y / 2.f) };
 
     backgroundArea.x -= (UI::DetailBackgroundPadding * viewScale);
     backgroundArea.y -= (UI::DetailBackgroundPadding * viewScale);

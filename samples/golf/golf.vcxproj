@@ -686,7 +686,6 @@
     <ClCompile Include="src\golf\PlaylistState.cpp" />
     <ClCompile Include="src\golf\PocketBallSystem.cpp" />
     <ClCompile Include="src\golf\PracticeState.cpp" />
-    <ClCompile Include="src\golf\ProfileState.cpp" />
     <ClCompile Include="src\golf\ProfileStateV2.cpp" />
     <ClCompile Include="src\golf\ProgressIcon.cpp" />
     <ClCompile Include="src\golf\ProLeagueState.cpp" />
@@ -901,7 +900,6 @@
     <ClInclude Include="src\golf\PocketBallSystem.hpp" />
     <ClInclude Include="src\golf\PoissonDisk.hpp" />
     <ClInclude Include="src\golf\PracticeState.hpp" />
-    <ClInclude Include="src\golf\ProfileState.hpp" />
     <ClInclude Include="src\golf\ProfileStateV2.hpp" />
     <ClInclude Include="src\golf\ProgressIcon.hpp" />
     <ClInclude Include="src\golf\ProLeagueState.hpp" />

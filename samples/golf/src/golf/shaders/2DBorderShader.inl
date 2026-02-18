@@ -49,7 +49,7 @@ void main()
 {
     vec2 texSize = textureSize(u_texture, 0);
     vec2 px = floor(texSize * v_texCoord);
-    vec4 colour = TEXTURE(u_texture, v_texCoord);
+    vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
 
     float border = step(u_croppingArea.x + BorderThickness, px.x);
     colour = mix(Dark, colour, border);
@@ -64,5 +64,5 @@ void main()
     border = 1.0 - step((u_croppingArea.y + u_croppingArea.w) - BorderThickness, px.y);
     colour = mix(Dark, colour, border);
 
-    FRAG_OUT = colour * v_colour;
+    FRAG_OUT = colour;
 })";
