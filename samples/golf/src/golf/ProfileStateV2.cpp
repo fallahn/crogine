@@ -98,6 +98,17 @@ namespace
     static constexpr cro::Time RepeatTimeLong = cro::seconds(0.5f);
     static constexpr cro::Time RepeatTimeShort = cro::seconds(0.05f);
 
+    struct ExtraDetail final
+    {
+        enum
+        {
+            MugshotImage, ClubsetImage,
+            BioString,
+
+            Count
+        };
+    };
+
     const std::array ManufacturerText =
     {
         cro::String("The original Scottish golf manufacturers,\nGallawent have only the firmest of woods\nand toughest of drivers to back them up.\n\nGrab a caber, aye?"),
@@ -145,6 +156,8 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     std::fill(m_controllerMasks.begin(), m_controllerMasks.end(), 0);
     std::fill(m_controllerPrevMasks.begin(), m_controllerPrevMasks.end(), 0);
+
+    m_uiLayout.detailsPane.optionalEntities.resize(ExtraDetail::Count);
 
     registerWindow(std::bind(&ProfileStateV2::nameInputWindow, this));
 
@@ -1133,7 +1146,7 @@ void ProfileStateV2::buildScene()
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>(m_clubTexture.getTexture());
         m_uiLayout.detailsPane.image.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        m_uiLayout.detailsPane.clubsetImage = entity;
+        m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage] = entity;
     }
 
     //displays the mugshot if available
@@ -1158,15 +1171,15 @@ void ProfileStateV2::buildScene()
             }
         };
     m_uiLayout.detailsPane.image.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_uiLayout.detailsPane.mugshotImage = entity;
+    m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage] = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_uiLayout.detailsPane.bioString = entity;
+    m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_uiLayout.detailsPane.optionalEntities[ExtraDetail::BioString] = entity;
 
 
     //displays an Apply icon if an item requests it
@@ -1445,14 +1458,14 @@ void ProfileStateV2::buildScene()
             m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().play(idx);
 
             //hide club preview
-            if (m_uiLayout.detailsPane.clubsetImage.isValid())
+            if (m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].isValid())
             {
-                m_uiLayout.detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
 
             //hide mugshot
-            m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-            m_uiLayout.detailsPane.bioString.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_uiLayout.detailsPane.optionalEntities[ExtraDetail::BioString].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
     m_uiLayout.tabBar.items[TabID::Headwear].selected =
         [&]()
@@ -1487,14 +1500,14 @@ void ProfileStateV2::buildScene()
             m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().gotoFrame(0);
 
             //hide club preview
-            if (m_uiLayout.detailsPane.clubsetImage.isValid())
+            if (m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].isValid())
             {
-                m_uiLayout.detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
 
             //hide mugshot
-            m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-            m_uiLayout.detailsPane.bioString.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_uiLayout.detailsPane.optionalEntities[ExtraDetail::BioString].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
     m_uiLayout.tabBar.items[TabID::Equipment].selected =
         [&]()
@@ -1507,14 +1520,14 @@ void ProfileStateV2::buildScene()
             m_previewCameras[PreviewCamera::Ball].getComponent<cro::Camera>().active = true;
             m_previewScene.setActiveCamera(m_previewCameras[PreviewCamera::Ball]);
 
-            if (m_uiLayout.detailsPane.clubsetImage.isValid())
+            if (m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].isValid())
             {
-                m_uiLayout.detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }
 
             //hide mugshot
-            m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-            m_uiLayout.detailsPane.bioString.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_uiLayout.detailsPane.optionalEntities[ExtraDetail::BioString].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
     m_uiLayout.tabBar.items[TabID::Loadout].selected =
         [&]()
@@ -1524,14 +1537,14 @@ void ProfileStateV2::buildScene()
                 c.getComponent<cro::Camera>().active = false;
             }
 
-            if (m_uiLayout.detailsPane.clubsetImage.isValid())
+            if (m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].isValid())
             {
-                m_uiLayout.detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
 
             //hide mugshot
-            m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-            m_uiLayout.detailsPane.bioString.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_uiLayout.detailsPane.optionalEntities[ExtraDetail::BioString].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
     m_uiLayout.tabBar.items[TabID::Details].selected =
         [&]()
@@ -1547,17 +1560,17 @@ void ProfileStateV2::buildScene()
             const auto idx = m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().getAnimationIndex("idle_standing");
             m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().play(idx);
 
-            if (m_uiLayout.detailsPane.clubsetImage.isValid())
+            if (m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].isValid())
             {
-                m_uiLayout.detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
 
             //show the mughot if the profile currently has one
             if (!m_activeProfile.playerData.mugshot.empty())
             {
-                m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }
-            m_uiLayout.detailsPane.bioString.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            m_uiLayout.detailsPane.optionalEntities[ExtraDetail::BioString].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         };
 }
 
@@ -2632,12 +2645,12 @@ void ProfileStateV2::createDetailItems()
 
         //const glm::vec2 texSize(tex.getSize());
         //const glm::vec2 scale = glm::vec2(96.f, 48.f) / texSize;
-        m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Sprite>().setTexture(tex);
+        m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Sprite>().setTexture(tex);
     }
     else
     {
-        m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
 
 
@@ -2839,15 +2852,15 @@ void ProfileStateV2::resizeCallback(float CentreWidth, float CentreHeight)
 
     //reposition club sprite
     const glm::vec2 bgSize = m_previewTexture.getSize();
-    if (m_uiLayout.detailsPane.clubsetImage.isValid())
+    if (m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].isValid())
     {
-        //m_uiLayout.detailsPane.clubsetImage.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
+        //m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
         const glm::vec2 thumbSize = { m_clubData[0].uv.width /** viewScale*/, m_clubData[0].uv.height /** viewScale*/ };
         glm::vec2 pos = { ((bgSize.x / 2.f) - thumbSize.x) / 2.f, (bgSize.y - thumbSize.y) / 2.f };
         pos.x = std::floor(pos.x);
         pos.y = std::floor(pos.y);
-        m_uiLayout.detailsPane.clubsetImage.getComponent<cro::Transform>().setPosition(pos);
-        m_uiLayout.detailsPane.clubsetImage.getComponent<cro::Drawable2D>().setCroppingArea({ std::abs(std::min(pos.x, 0.f)), std::abs(std::min(pos.y, 0.f)),
+        m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].getComponent<cro::Transform>().setPosition(pos);
+        m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].getComponent<cro::Drawable2D>().setCroppingArea({ std::abs(std::min(pos.x, 0.f)), std::abs(std::min(pos.y, 0.f)),
                                                                                         bgSize.x / 2.f, bgSize.y });
     }
 
@@ -2856,15 +2869,15 @@ void ProfileStateV2::resizeCallback(float CentreWidth, float CentreHeight)
     glm::vec2 pos = { (((bgSize.x / 2.f) - texSize.x) / 2.f) + (bgSize.x / 2.f), (bgSize.y - texSize.y) };
     pos.x = std::floor(pos.x);
     pos.y = std::floor(pos.y);
-    m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setPosition(pos);
-    m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Callback>().setUserData<float>(viewScale);
+    m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Transform>().setPosition(pos);
+    m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Callback>().setUserData<float>(viewScale);
 
     cro::FloatRect crop = { glm::vec2(0.f), glm::vec2(MugshotTexSize) };
     crop.left = std::abs(std::min(0.f, pos.x - (bgSize.x / 2.f))) * 2.f;
     crop.width -= (crop.left * 2.f);
 
-    m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Drawable2D>().setCroppingArea(crop);
-    m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Drawable2D>().bindUniform("u_croppingArea", glm::vec4(crop.left, crop.bottom, crop.width, crop.height));
+    m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Drawable2D>().setCroppingArea(crop);
+    m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Drawable2D>().bindUniform("u_croppingArea", glm::vec4(crop.left, crop.bottom, crop.width, crop.height));
 
     //and update the layout of stat items
     //confusingly these are done pre-scale whereas
@@ -3710,9 +3723,9 @@ void ProfileStateV2::setClubIndex(std::int32_t idx)
     }
 
     //update the thumbnail preview
-    if (m_uiLayout.detailsPane.clubsetImage.isValid())
+    if (m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].isValid())
     {
-        m_uiLayout.detailsPane.clubsetImage.getComponent<cro::Sprite>().setTextureRect(m_clubData[idx].uv);
+        m_uiLayout.detailsPane.optionalEntities[ExtraDetail::ClubsetImage].getComponent<cro::Sprite>().setTextureRect(m_clubData[idx].uv);
     }
 
     m_clubIndex = idx;
@@ -3869,8 +3882,8 @@ void ProfileStateV2::updateMugshot()
 
     const auto idx = m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().getAnimationIndex("idle_standing");
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().play(idx);
-    m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Sprite>().setTexture(m_mugshotTexture.getTexture());
-    //m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
+    m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Sprite>().setTexture(m_mugshotTexture.getTexture());
+    //m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
 }
 
 void ProfileStateV2::clearMugshot()
@@ -3896,7 +3909,7 @@ void ProfileStateV2::clearMugshot()
     m_mugshotTexture.display();
 
     //hide any preview sprite - this is done by the sprite callback now
-    //m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    //m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 }
 
 std::string ProfileStateV2::generateRandomBio() const
@@ -3987,10 +4000,10 @@ void ProfileStateV2::setBioString(const std::string& str)
     cro::String s = str;
     cro::Util::String::wordWrap(s, 36);
 
-    m_uiLayout.detailsPane.bioString.getComponent<cro::Text>().setString(s);
+    m_uiLayout.detailsPane.optionalEntities[ExtraDetail::BioString].getComponent<cro::Text>().setString(s);
 
-    const auto left = m_uiLayout.detailsPane.mugshotImage.getComponent<cro::Drawable2D>().getCroppingArea().left;
-    m_uiLayout.detailsPane.bioString.getComponent<cro::Transform>().setPosition(glm::vec3(left, -4.f, 0.2f));
+    const auto left = m_uiLayout.detailsPane.optionalEntities[ExtraDetail::MugshotImage].getComponent<cro::Drawable2D>().getCroppingArea().left;
+    m_uiLayout.detailsPane.optionalEntities[ExtraDetail::BioString].getComponent<cro::Transform>().setPosition(glm::vec3(left, -4.f, 0.2f));
 
     //TODO set char size? OR should we be using the UIElement here?
 }

@@ -223,11 +223,7 @@ struct DetailsPane final
     cro::Entity background;
     cro::Entity applyButton;
 
-    //TODO these are arbitrary ents in the profile ed
-    //we should probably make this a generic array orsth
-    cro::Entity clubsetImage;
-    cro::Entity mugshotImage;
-    cro::Entity bioString;
+    std::vector<cro::Entity> optionalEntities;
 
     //track this so we can resize items which appear within it
     //NOTE that is *without* the view scaling
