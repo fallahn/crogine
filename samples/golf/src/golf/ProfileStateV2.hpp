@@ -103,6 +103,7 @@ private:
 
     std::string m_nameBuffer;
     bool m_showNameInput;
+    bool m_showOSK;
 
     struct VoiceData final
     {

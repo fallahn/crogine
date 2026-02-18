@@ -136,6 +136,7 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_lockedClubCount   (0),
     m_clubIndex         (0),
     m_showNameInput     (false),
+    m_showOSK           (false),
     m_voiceIndex        (0),
     m_saveMugshotOnExit (false),
     m_uiLayout          (TabID::Count)
@@ -161,7 +162,8 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
     if (ImGui::GetIO().WantCaptureKeyboard
         || ImGui::GetIO().WantCaptureMouse
         || m_rootNode.getComponent<cro::Callback>().active
-        || m_showNameInput)
+        || m_showNameInput
+        || m_showOSK)
     {
         return false;
     }
@@ -553,12 +555,12 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
         if (data.type == SystemEvent::CancelOSK)
         {
             m_sharedData.useOSKBuffer = false;
-            //m_showOSK = false;
+            m_showOSK = false;
         }
         else if (data.type == SystemEvent::SubmitOSK)
         {
             m_sharedData.useOSKBuffer = false;
-            //m_showOSK = false;
+            m_showOSK = false;
 
             if (!m_sharedData.OSKBuffer.empty())
             {
@@ -2602,7 +2604,7 @@ void ProfileStateV2::createDetailItems()
                 else
 #endif
                 {
-                    //m_showOSK = true; // hmm this is used to block input, but OSK state shouldn't be forwarding it?
+                    m_showOSK = true; // hmm this is used to block input, but OSK state shouldn't be forwarding it?
                     m_sharedData.useOSKBuffer = true;
                     m_sharedData.OSKBuffer = m_activeProfile.playerData.name;
                     requestStackPush(StateID::Keyboard);
