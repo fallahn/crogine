@@ -144,7 +144,7 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus(), 192),
     m_sharedData        (sd),
-    m_uiLayout          (TabID::Count),
+    m_uiLayout          (TabID::Count, sd),
     m_keybindIndex      (-1),
     m_keybindItemIndex  (-1)
 {
@@ -289,40 +289,40 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         }
         else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
         {
-            m_uiLayout.nextTab(m_sharedData);
+            m_uiLayout.nextTab();
         }
         else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
         {
-            m_uiLayout.prevTab(m_sharedData);
+            m_uiLayout.prevTab();
         }
 
         //done on key down evet for repeat when held
         /*else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down]
             || evt.key.keysym.sym == SDLK_DOWN)
         {
-            nextItem();
+            m_uiLayout.nextItem();
         }
         else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up]
             || evt.key.keysym.sym == SDLK_UP)
         {
-            prevItem();
+            m_uiLayout.prevItem();
         }*/
 
         else if (/*evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left]
             || */evt.key.keysym.sym == SDLK_LEFT)
         {
-            activateLeft();
+            m_uiLayout.activateLeft();
         }
         else if (/*evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right]
             || */evt.key.keysym.sym == SDLK_RIGHT)
         {
-            activateRight();
+            m_uiLayout.activateRight();
         }
 
         else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action]
             || evt.key.keysym.sym == SDLK_RETURN)
         {
-            activate();
+            m_uiLayout.activate();
         }
 
         switch (evt.key.keysym.sym)
@@ -345,12 +345,12 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         if (/*evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down]
             || */evt.key.keysym.sym == SDLK_DOWN)
         {
-            nextItem();
+            m_uiLayout.nextItem();
         }
         else if (/*evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up]
             ||*/ evt.key.keysym.sym == SDLK_UP)
         {
-            prevItem();
+            m_uiLayout.prevItem();
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
@@ -362,11 +362,11 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         {
         default: break;
         case cro::GameController::DPadUp:
-            prevItem();
+            m_uiLayout.prevItem();
             resetRepeatTimer(controllerID, RepeatTimeLong);
             break;
         case cro::GameController::DPadDown:
-            nextItem();
+            m_uiLayout.nextItem();
             resetRepeatTimer(controllerID, RepeatTimeLong);
             break;
         }
@@ -377,16 +377,16 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         {
         default: break;
         case cro::GameController::DPadLeft:
-            activateLeft();
+            m_uiLayout.activateLeft();
             break;
         case cro::GameController::DPadRight:
-            activateRight();
+            m_uiLayout.activateRight();
             break;
         case cro::GameController::ButtonLeftShoulder:
-            m_uiLayout.prevTab(m_sharedData);
+            m_uiLayout.prevTab();
             break;
         case cro::GameController::ButtonRightShoulder:
-            m_uiLayout.nextTab(m_sharedData);
+            m_uiLayout.nextTab();
             break;
         case cro::GameController::ButtonX:
             showCredits();
@@ -395,7 +395,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
             showHelp();
             break;
         case cro::GameController::ButtonA:
-            activate();
+            m_uiLayout.activate();
             break;
         case cro::GameController::ButtonB:
             quitState();
@@ -407,7 +407,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
-            doMouseClick({ evt.motion.x, evt.motion.y });
+            m_uiLayout.doMouseClick({ evt.motion.x, evt.motion.y }, m_scene.getActiveCamera().getComponent<cro::Camera>());
         }
         else if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -421,7 +421,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         setActiveInput(true, 0);
 
         glm::vec2 pos(evt.motion.x, cro::App::getWindow().getSize().y - evt.motion.y);
-        checkMouseOver(pos);
+        m_uiLayout.checkMouseOver(pos);
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
@@ -488,11 +488,11 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     {
         if (evt.wheel.y > 0)
         {
-            prevItem();
+            m_uiLayout.prevItem();
         }
         else if (evt.wheel.y < 0)
         {
-            nextItem();
+            m_uiLayout.nextItem();
         }
     }
 
@@ -544,7 +544,20 @@ void OptionsStateV2::handleMessage(const cro::Message& msg)
         {
             //hack to force the texture to resize properly
             m_uiLayout.menuLayout.texture.create(1, 1, false);
-            m_uiLayout.updateTabBar(m_sharedData);
+            m_uiLayout.updateTabBar();
+
+            //realigns the current menu to the new screen size
+            cro::Entity entity = m_scene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float)
+                {
+                    m_uiLayout.menuLayout.itemIndex = 0;
+                    focusToIndex(m_uiLayout.tabBar, m_uiLayout.menuLayout);
+
+                    e.getComponent<cro::Callback>().active = false;
+                    m_scene.destroyEntity(e);
+                };
         }
     }
     m_scene.forwardMessage(msg);
@@ -566,23 +579,23 @@ bool OptionsStateV2::simulate(float dt)
         //check stick input
         if (maskTest(i, InputFlag::Left))
         {
-            activateLeft();
+            m_uiLayout.activateLeft();
         }
 
         if (maskTest(i, InputFlag::Right))
         {
-            activateRight();
+            m_uiLayout.activateRight();
         }
 
         if (maskTest(i, InputFlag::Up))
         {
-            prevItem();
+            m_uiLayout.prevItem();
             resetRepeatTimer(i, RepeatTimeLong);
         }
 
         if (maskTest(i, InputFlag::Down))
         {
-            nextItem();
+            m_uiLayout.nextItem();
             resetRepeatTimer(i, RepeatTimeLong);
         }
 
@@ -594,7 +607,7 @@ bool OptionsStateV2::simulate(float dt)
         {
             if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
             {
-                nextItem();
+                m_uiLayout.nextItem();
                 resetRepeatTimer(i, RepeatTimeShort);
             }
         }
@@ -604,7 +617,7 @@ bool OptionsStateV2::simulate(float dt)
         {
             if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
             {
-                prevItem();
+                m_uiLayout.prevItem();
                 resetRepeatTimer(i, RepeatTimeShort);
             }
         }
@@ -1065,7 +1078,7 @@ void OptionsStateV2::buildScene()
     createAchievementItems();
     createStatItems();
 
-    m_uiLayout.updateTabBar(m_sharedData); //this also updates the menu items
+    m_uiLayout.updateTabBar(); //this also updates the menu items
 
 
     //info string at the bottom
@@ -1122,7 +1135,7 @@ void OptionsStateV2::buildScene()
         pos.y = -(size.y / 2.f);
         tx.setPosition(pos);*/
 
-        m_uiLayout.updateTabBar(m_sharedData);
+        m_uiLayout.updateTabBar();
     };
 
     entity = m_scene.createEntity();
@@ -2824,7 +2837,7 @@ void OptionsStateV2::onCachedPush()
     createStatItems();
 
     refreshControllerDevices();
-    m_uiLayout.activateTab(0, m_sharedData);
+    m_uiLayout.activateTab(0);
 
     m_rootNode.getComponent<cro::Callback>().active = true;
 }
@@ -2838,188 +2851,6 @@ void OptionsStateV2::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
 {
     m_inputRepeatClocks[i].restart();
     m_repeatTimes[i] = resetTime;
-}
-
-void OptionsStateV2::nextItem()
-{
-    //reset mouse hover highlight
-    m_uiLayout.menuLayout.hoveredIndex = -1;
-
-    if (m_uiLayout.menuLayout.itemIndex < m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex].size() - 1)
-    {
-        do
-        {
-            m_uiLayout.menuLayout.itemIndex++;
-        } while (m_uiLayout.menuLayout.itemIndex < m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex].size() - 1
-            && m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].displayType == Menu::Item::Heading);
-        m_uiLayout.updateMenuItems(m_sharedData);
-
-        playSound(MenuSoundEvent::Switch);
-    }
-}
-
-void OptionsStateV2::prevItem()
-{
-    //reset mouse hover highlight
-    m_uiLayout.menuLayout.hoveredIndex = -1;
-    
-    //hmm these are uints so we can't use max(0)
-    if (m_uiLayout.menuLayout.itemIndex > 0)
-    {
-        do
-        {
-            //also hmmm this doesn't work if the heading *is* at 0
-            m_uiLayout.menuLayout.itemIndex--;
-        } while (m_uiLayout.menuLayout.itemIndex > 0
-            && m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].displayType == Menu::Item::Heading);
-        m_uiLayout.updateMenuItems(m_sharedData);
-
-        playSound(MenuSoundEvent::Switch);
-    }
-}
-
-void OptionsStateV2::activateLeft()
-{
-    //reset mouse hover highlight
-    m_uiLayout.menuLayout.hoveredIndex = -1;
-
-    if (m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].activateLeft())
-    {
-        m_uiLayout.updateMenuItems(m_sharedData);
-        playSound(MenuSoundEvent::Cancel);
-    }
-}
-
-void OptionsStateV2::activateRight()
-{
-    //reset mouse hover highlight
-    m_uiLayout.menuLayout.hoveredIndex = -1;
-
-    if (m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].activateRight())
-    {
-        m_uiLayout.updateMenuItems(m_sharedData);
-        playSound(MenuSoundEvent::Activate);
-    }
-}
-
-void OptionsStateV2::activate()
-{
-    if (m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].activate())
-    {
-        playSound(MenuSoundEvent::Activate);
-    }
-}
-
-void OptionsStateV2::checkMouseOver(glm::vec2 screenPos)
-{
-    std::int32_t selectedTab = -1;
-    std::int32_t selectedItem = -1;
-
-    if (screenPos.y > m_uiLayout.tabBar.background.getComponent<cro::Transform>().getWorldPosition().y)
-    {
-        //check the tab bar
-        for (auto i = 0u; i < m_uiLayout.tabBar.items.size(); ++i)
-        {
-            if (m_uiLayout.tabBar.items[i].hitbox.contains(screenPos))
-            {
-                selectedTab = static_cast<std::int32_t>(i);
-                break;
-            }
-        }   
-    }
-    else
-    {
-        const auto viewScale = cro::UIElementSystem::getViewScale();
-
-        //check the item list - TODO only check against visible
-        const glm::vec2 WindowOffset = cro::App::getWindow().getSize() / 2u;
-        glm::vec2 basePos = m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().getPosition();
-        basePos += WindowOffset;
-        basePos.y -= m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().getOrigin().y * viewScale;
-
-        const auto menuHeight = static_cast<float>(m_uiLayout.menuLayout.texture.getSize().y);
-
-        for (auto i = 0u; i < m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex].size(); ++i)
-        {
-            //TODO skip this if it's outside the drawable area
-            const float vertOffset = (menuHeight - ((i * (ItemHeight + ItemSpacing))) - (ItemHeight + ItemSpacing)) * viewScale;
-            auto testBox = m_uiLayout.menuLayout.itemBox;
-            testBox.left += basePos.x;
-            testBox.bottom += basePos.y + vertOffset;
-
-            if (testBox.contains(screenPos))
-            {
-                selectedItem = i;
-                break;
-            }
-        }
-    }
-
-
-    //we may have switched from tab to item list so we still need to redraw
-    if (selectedTab != m_uiLayout.tabBar.hoveredIndex)
-    {
-        m_uiLayout.tabBar.hoveredIndex = selectedTab;
-        m_uiLayout.updateTabBar(m_sharedData);
-    }
-
-    if (selectedItem != m_uiLayout.menuLayout.hoveredIndex)
-    {
-        m_uiLayout.menuLayout.hoveredIndex = selectedItem;
-        m_uiLayout.updateMenuItems(m_sharedData);
-    }
-}
-
-void OptionsStateV2::doMouseClick(glm::vec2 mousePos)
-{
-    if (m_uiLayout.tabBar.hoveredIndex != -1)
-    {
-        m_uiLayout.activateTab(m_uiLayout.tabBar.hoveredIndex, m_sharedData);
-        m_uiLayout.tabBar.hoveredIndex = -1;
-        playSound(MenuSoundEvent::Activate);
-    }
-    else
-    {
-        if (m_uiLayout.menuLayout.hoveredIndex == -1 ||
-            m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.hoveredIndex].displayType != Menu::Item::Heading)
-        {
-            if (m_uiLayout.menuLayout.hoveredIndex != -1)
-            {
-                m_uiLayout.menuLayout.itemIndex = m_uiLayout.menuLayout.hoveredIndex;
-                m_uiLayout.menuLayout.hoveredIndex = -1;
-                m_uiLayout.updateMenuItems(m_sharedData);
-
-                playSound(MenuSoundEvent::Activate);
-            }
-            //else
-            {
-                //this is the active item, test for activation click
-                const auto testbox = m_uiLayout.menuLayout.sprite.getComponent<cro::Transform>().getWorldTransform() *
-                    m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].hitbox;
-                const auto testpos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(mousePos);
-
-                if (testbox.contains(testpos))
-                {
-                    //this seems counter intuitive but it stops mouse input
-                    //automatically activating items like resolution setting
-                    if (!m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex][m_uiLayout.menuLayout.itemIndex].alwaysActivate)
-                    {
-                        activate();
-                    }
-
-                    const float xPos = testpos.x - testbox.left;
-                    if (xPos < testbox.width / 2.f)
-                    {
-                        activateLeft();
-                    }
-                    else
-                    {
-                        activateRight();
-                    }
-                }
-            }
-        }
-    }
 }
 
 void OptionsStateV2::updateKeybind(SDL_Keycode key)
@@ -3091,7 +2922,7 @@ void OptionsStateV2::updateKeybind(SDL_Keycode key)
         "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[m_keybindIndex]);
 
     playSound(MenuSoundEvent::Activate);
-    m_uiLayout.updateMenuItems(m_sharedData);
+    m_uiLayout.updateMenuItems();
 
     m_keybindIndex = -1;
     m_keybindItemIndex = -1;

@@ -191,16 +191,6 @@ private:
     };
 
     void resizeCallback(float, float);
-
-    void nextItem();
-    void prevItem();
-    void activateLeft();
-    void activateRight();
-    void activate();
-
-    void checkMouseOver(glm::vec2);
-    void doMouseClick(glm::vec2);
-
     void quitState();
 
     struct StatLayout final

@@ -130,15 +130,6 @@ private:
         };
     };
 
-    void nextItem();
-    void prevItem();
-    void activateLeft();
-    void activateRight();
-    void activate();
-
-    void checkMouseOver(glm::vec2);
-    void doMouseClick(glm::vec2);
-
     std::int32_t m_keybindIndex;
     std::int32_t m_keybindItemIndex; //the menu item to update
     void updateKeybind(SDL_Keycode key);

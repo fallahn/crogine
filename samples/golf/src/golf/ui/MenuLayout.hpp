@@ -63,6 +63,7 @@ namespace UI
 namespace cro
 {
     struct ResourceCollection;
+    struct Camera;
 }
 
 struct SpriteSection final
@@ -236,7 +237,7 @@ struct DetailsPane final
 struct SharedStateData;
 struct UILayout final
 {
-    explicit UILayout(std::int32_t tabCount);
+    explicit UILayout(std::int32_t tabCount, const SharedStateData&);
 
     TabBar tabBar;
     Menu menuLayout;
@@ -269,17 +270,28 @@ struct UILayout final
     std::array<SpriteSection, BackgroundSection::Count> backgroundSections = {};
 
     void loadAssets(cro::ResourceCollection&);
-    void updateTabBar(const SharedStateData&);
-    void updateMenuItems(const SharedStateData&);
+    void updateTabBar();
+    void updateMenuItems();
     void updateSliderGraphic(std::int32_t amt, std::int32_t total);
     void updatePalettePreview(std::int32_t paletteID, std::int32_t selectedIdx, float targetHeight);
 
     std::function<void(float, float)> resizeCallback;
     void resizeItemGraphics();
 
-    void nextTab(const SharedStateData&);
-    void prevTab(const SharedStateData&);
-    void activateTab(std::int32_t idx, const SharedStateData&);
+    void nextTab();
+    void prevTab();
+    void activateTab(std::int32_t idx);
+    void nextItem();
+    void prevItem();
+    void activateLeft();
+    void activateRight();
+    void activate();
+
+    void checkMouseOver(glm::vec2);
+    void doMouseClick(glm::vec2, const cro::Camera&);
+
+private: 
+    const SharedStateData& m_sharedData;
 };
 
 //returns cropping areas for debugging

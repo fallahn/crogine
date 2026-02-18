@@ -35,8 +35,9 @@ source distribution.
 #include "../../Colordome-32.hpp"
 
 #include <crogine/core/App.hpp>
-#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/UIElement.hpp>
 #include <crogine/ecs/systems/UIElementSystem.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -44,7 +45,8 @@ source distribution.
 
 #include <crogine/detail/OpenGL.hpp>
 
-UILayout::UILayout(std::int32_t tabCount)
+UILayout::UILayout(std::int32_t tabCount, const SharedStateData& sd)
+    : m_sharedData(sd)
 {
     tabBar.items.resize(tabCount);
     menuLayout.items.resize(tabCount);
@@ -142,7 +144,7 @@ void UILayout::loadAssets(cro::ResourceCollection & resources)
     }
 }
 
-void UILayout::updateTabBar(const SharedStateData& sharedData)
+void UILayout::updateTabBar()
 {
     const glm::vec2 WindowSize = cro::App::getWindow().getSize();
 
@@ -195,7 +197,7 @@ void UILayout::updateTabBar(const SharedStateData& sharedData)
         for (auto i = 0u; i < tabBar.items.size(); ++i)
         {
             const auto active = i == tabBar.activeIndex;
-            const auto hovered = (i == tabBar.hoveredIndex && sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
+            const auto hovered = (i == tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
 
             const float kludgeOffset = (2.f * viewScale);
             glm::vec2 position = { (std::round(TabWidth / 2.f) + kludgeOffset) + ((i * TabWidth) + viewScale), 0.f };
@@ -249,7 +251,7 @@ void UILayout::updateTabBar(const SharedStateData& sharedData)
         for (auto i = 0u; i < tabBar.items.size(); ++i)
         {
             const auto active = i == tabBar.activeIndex;
-            const auto hovered = (i == tabBar.hoveredIndex && sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
+            const auto hovered = (i == tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
 
             const auto colour = active ? CD32::Colours[CD32::Brown] :
                 hovered ?
@@ -320,10 +322,10 @@ void UILayout::updateTabBar(const SharedStateData& sharedData)
     //}
 
     resizeItemGraphics();
-    updateMenuItems(sharedData);
+    updateMenuItems();
 }
 
-void UILayout::updateMenuItems(const SharedStateData& sharedData)
+void UILayout::updateMenuItems()
 {
     //NOTE this is all done 1:1 scale and the resulting sprite set to window scale
     auto& items = menuLayout.items[tabBar.activeIndex];
@@ -351,7 +353,7 @@ void UILayout::updateMenuItems(const SharedStateData& sharedData)
         {
             auto* background = &itemBackground;
             if (idx == menuLayout.hoveredIndex
-                && sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+                && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
             {
                 background = idx == menuLayout.itemIndex ? &itemBackgroundActiveHighlight : &itemBackgroundHighlight;
             }
@@ -824,19 +826,19 @@ void UILayout::resizeItemGraphics()
     }
 }
 
-void UILayout::nextTab(const SharedStateData& sharedData)
+void UILayout::nextTab()
 {
-    activateTab((tabBar.activeIndex + 1) % tabBar.items.size(), sharedData);
+    activateTab((tabBar.activeIndex + 1) % tabBar.items.size());
     playSound(MenuSoundEvent::Activate);
 }
 
-void UILayout::prevTab(const SharedStateData& sharedData)
+void UILayout::prevTab()
 {
-    activateTab((tabBar.activeIndex + (tabBar.items.size() - 1)) % tabBar.items.size(), sharedData);
+    activateTab((tabBar.activeIndex + (tabBar.items.size() - 1)) % tabBar.items.size());
     playSound(MenuSoundEvent::Cancel);
 }
 
-void UILayout::activateTab(std::int32_t idx, const SharedStateData& sharedData)
+void UILayout::activateTab(std::int32_t idx)
 {
     if (detailsPane.tabDetails[tabBar.activeIndex].isValid())
     {
@@ -856,10 +858,196 @@ void UILayout::activateTab(std::int32_t idx, const SharedStateData& sharedData)
         tabBar.items[tabBar.activeIndex].selected();
     }
 
-    updateTabBar(sharedData);
+    updateTabBar();
 
     //set item 0 as focused
     focusToIndex(tabBar, menuLayout);
+}
+
+void UILayout::nextItem()
+{
+    //reset mouse hover highlight
+   menuLayout.hoveredIndex = -1;
+
+    if (menuLayout.itemIndex < menuLayout.items[tabBar.activeIndex].size() - 1)
+    {
+        do
+        {
+            menuLayout.itemIndex++;
+        } while (menuLayout.itemIndex < menuLayout.items[tabBar.activeIndex].size() - 1
+            && menuLayout.items[tabBar.activeIndex][menuLayout.itemIndex].displayType == Menu::Item::Heading);
+        updateMenuItems();
+
+        playSound(MenuSoundEvent::Switch);
+    }
+}
+
+void UILayout::prevItem()
+{
+    //reset mouse hover highlight
+    menuLayout.hoveredIndex = -1;
+
+    //hmm these are uints so we can't use max(0)
+    if (menuLayout.itemIndex > 0)
+    {
+        do
+        {
+            //also hmmm this doesn't work if the heading *is* at 0
+            menuLayout.itemIndex--;
+        } while (menuLayout.itemIndex > 0
+            && menuLayout.items[tabBar.activeIndex][menuLayout.itemIndex].displayType == Menu::Item::Heading);
+        updateMenuItems();
+
+        playSound(MenuSoundEvent::Switch);
+    }
+}
+
+void UILayout::activateLeft()
+{
+    //reset mouse hover highlight
+    menuLayout.hoveredIndex = -1;
+
+    /*const */auto& item = menuLayout.items[tabBar.activeIndex][menuLayout.itemIndex];
+    //ugh activate() ought to be const but that's a whole mess of mutables.
+    if (item.activateLeft())
+    {
+        updateMenuItems();
+        playSound(item.activatedAudioID);
+    }
+}
+
+void UILayout::activateRight()
+{
+    //reset mouse hover highlight
+    menuLayout.hoveredIndex = -1;
+
+    auto& item = menuLayout.items[tabBar.activeIndex][menuLayout.itemIndex];
+    if (item.activateRight())
+    {
+        updateMenuItems();
+        playSound(item.activatedAudioID);
+    }
+}
+
+void UILayout::activate()
+{
+    auto& item = menuLayout.items[tabBar.activeIndex][menuLayout.itemIndex];
+    if (item.activate())
+    {
+        playSound(item.activatedAudioID);
+    }
+}
+
+void UILayout::checkMouseOver(glm::vec2 screenPos)
+{
+    std::int32_t selectedTab = -1;
+    std::int32_t selectedItem = -1;
+
+    if (screenPos.y > tabBar.background.getComponent<cro::Transform>().getWorldPosition().y)
+    {
+        //check the tab bar
+        for (auto i = 0u; i < tabBar.items.size(); ++i)
+        {
+            if (tabBar.items[i].hitbox.contains(screenPos))
+            {
+                selectedTab = static_cast<std::int32_t>(i);
+                break;
+            }
+        }
+    }
+    else
+    {
+        const auto viewScale = cro::UIElementSystem::getViewScale();
+
+        //check the item list - TODO only check against visible
+        const glm::vec2 WindowOffset = cro::App::getWindow().getSize() / 2u;
+        glm::vec2 basePos = menuLayout.sprite.getComponent<cro::Transform>().getPosition();
+        basePos += WindowOffset;
+        basePos.y -= menuLayout.sprite.getComponent<cro::Transform>().getOrigin().y * viewScale;
+
+        const auto menuHeight = static_cast<float>(menuLayout.texture.getSize().y);
+
+        for (auto i = 0u; i < menuLayout.items[tabBar.activeIndex].size(); ++i)
+        {
+            //TODO skip this if it's outside the drawable area
+            const float vertOffset = (menuHeight - ((i * (UI::ItemHeight + UI::ItemSpacing))) - (UI::ItemHeight + UI::ItemSpacing)) * viewScale;
+            auto testBox = menuLayout.itemBox;
+            testBox.left += basePos.x;
+            testBox.bottom += basePos.y + vertOffset;
+
+            if (testBox.contains(screenPos))
+            {
+                selectedItem = i;
+                break;
+            }
+        }
+    }
+
+
+    //we may have switched from tab to item list so we still need to redraw
+    if (selectedTab != tabBar.hoveredIndex)
+    {
+        tabBar.hoveredIndex = selectedTab;
+        updateTabBar();
+    }
+
+    if (selectedItem != menuLayout.hoveredIndex)
+    {
+        menuLayout.hoveredIndex = selectedItem;
+        updateMenuItems();
+    }
+}
+
+void UILayout::doMouseClick(glm::vec2 mousePos, const cro::Camera& cam)
+{
+    if (tabBar.hoveredIndex != -1)
+    {
+        activateTab(tabBar.hoveredIndex);
+        tabBar.hoveredIndex = -1;
+        playSound(MenuSoundEvent::Activate);
+    }
+    else
+    {
+        if (menuLayout.hoveredIndex == -1 ||
+            menuLayout.items[tabBar.activeIndex][menuLayout.hoveredIndex].displayType != Menu::Item::Heading)
+        {
+            if (menuLayout.hoveredIndex != -1)
+            {
+                menuLayout.itemIndex = menuLayout.hoveredIndex;
+                menuLayout.hoveredIndex = -1;
+                updateMenuItems();
+
+                playSound(MenuSoundEvent::Activate);
+            }
+            //else
+            {
+                //this is the active item, test for activation click
+                const auto testbox = menuLayout.sprite.getComponent<cro::Transform>().getWorldTransform() *
+                    menuLayout.items[tabBar.activeIndex][menuLayout.itemIndex].hitbox;
+                const auto testpos = cam.pixelToCoords(mousePos);
+
+                if (testbox.contains(testpos))
+                {
+                    //this seems counter intuitive but it stops mouse input
+                    //automatically activating items like resolution setting
+                    if (!menuLayout.items[tabBar.activeIndex][menuLayout.itemIndex].alwaysActivate)
+                    {
+                        activate();
+                    }
+
+                    const float xPos = testpos.x - testbox.left;
+                    if (xPos < testbox.width / 2.f)
+                    {
+                        activateLeft();
+                    }
+                    else
+                    {
+                        activateRight();
+                    }
+                }
+            }
+        }
+    }
 }
 
 
