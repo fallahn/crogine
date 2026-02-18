@@ -287,18 +287,6 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         {
             prevItem();
         }*/
-
-        else if (/*evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left]
-            || */evt.key.keysym.sym == SDLK_LEFT)
-        {
-            m_uiLayout.activateLeft();
-        }
-        else if (/*evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right]
-            || */evt.key.keysym.sym == SDLK_RIGHT)
-        {
-            m_uiLayout.activateRight();
-        }
-
         else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action]
             || evt.key.keysym.sym == SDLK_RETURN)
         {
@@ -310,15 +298,21 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         setActiveInput(true, 0);
 
         //do this here to take advantageof key repeat
-        if (/*evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down]
-            || */evt.key.keysym.sym == SDLK_DOWN)
+        if (evt.key.keysym.sym == SDLK_DOWN)
         {
             m_uiLayout.nextItem();
         }
-        else if (/*evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up]
-            ||*/ evt.key.keysym.sym == SDLK_UP)
+        else if (evt.key.keysym.sym == SDLK_UP)
         {
             m_uiLayout.prevItem();
+        }
+        else if (evt.key.keysym.sym == SDLK_LEFT)
+        {
+            m_uiLayout.activateLeft();
+        }
+        else if (evt.key.keysym.sym == SDLK_RIGHT)
+        {
+            m_uiLayout.activateRight();
         }
 
         else if (evt.key.keysym.sym == SDLK_BACKSPACE
@@ -354,6 +348,14 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
             m_uiLayout.nextItem();
             resetRepeatTimer(controllerID, RepeatTimeLong);
             break;
+        case cro::GameController::DPadLeft:
+            m_uiLayout.activateLeft();
+            resetRepeatTimer(controllerID, RepeatTimeLong);
+            break;
+        case cro::GameController::DPadRight:
+            m_uiLayout.activateRight();
+            resetRepeatTimer(controllerID, RepeatTimeLong);
+            break;
         case cro::GameController::ButtonB:
             m_exitFlags |= ExitFlagQuit;
             break;
@@ -370,12 +372,12 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         switch (evt.cbutton.button)
         {
         default: break;
-        case cro::GameController::DPadLeft:
+        /*case cro::GameController::DPadLeft:
             m_uiLayout.activateLeft();
             break;
         case cro::GameController::DPadRight:
             m_uiLayout.activateRight();
-            break;
+            break;*/
         case cro::GameController::ButtonLeftShoulder:
             m_uiLayout.prevTab();
             break;
@@ -743,6 +745,26 @@ bool ProfileStateV2::simulate(float dt)
             if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
             {
                 m_uiLayout.prevItem();
+                resetRepeatTimer(i, RepeatTimeShort);
+            }
+        }
+
+        if (cro::GameController::isButtonPressed(i, cro::GameController::DPadLeft)
+            /*|| (m_controllerMasks[i] & InputFlag::Down)*/)
+        {
+            if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
+            {
+                m_uiLayout.activateLeft();
+                resetRepeatTimer(i, RepeatTimeShort);
+            }
+        }
+
+        if (cro::GameController::isButtonPressed(i, cro::GameController::DPadRight)
+            /*|| (m_controllerMasks[i] & InputFlag::Up)*/)
+        {
+            if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
+            {
+                m_uiLayout.activateRight();
                 resetRepeatTimer(i, RepeatTimeShort);
             }
         }
