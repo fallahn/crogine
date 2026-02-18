@@ -121,6 +121,7 @@ endif()
 else()
   SET(SOCIAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/src)
   SET(SOCIAL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/include)
+  find_package(ODIN REQUIRED)
 endif()
 
 #don't do this it mangles the rpath
@@ -146,6 +147,8 @@ if(USE_STEAM)
   include_directories(${GNS_DIR}/golf_workshop/include)
   include_directories(${GNS_DIR}/libgns/include)
   include_directories(${DISCORD_SDK_INCLUDE_DIR})
+else()
+  include_directories(${ODIN_INCLUDE_DIR})
 endif()
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -255,7 +258,7 @@ if(USE_STEAM)
     target_link_libraries(${PROJECT_NAME} ${DISCORD_LIB_PATH})
   endif()
 else()
-  target_link_libraries(${PROJECT_NAME} CURL::libcurl)
+  target_link_libraries(${PROJECT_NAME} CURL::libcurl ${ODIN_LIBRARIES})
 endif()
 
 
