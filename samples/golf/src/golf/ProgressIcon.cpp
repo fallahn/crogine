@@ -198,7 +198,10 @@ void ProgressIcon::update(float dt)
             break;
         }
 
-        const auto scale = std::floor(cro::UIElementSystem::getViewScale() / 3.f) + 1.f;
+        /*std::floor(cro::UIElementSystem::getViewScale() / 3.f)*/
+        static constexpr float MinHeight = 1440.f;
+        const auto height = static_cast<float>(cro::App::getWindow().getSize().y);
+        const auto scale = height < MinHeight ? 1.f : std::ceil(height / MinHeight) + 1.f;
         setScale(glm::vec2(scale));
 
         const auto windowSize = glm::vec2(cro::App::getWindow().getSize());

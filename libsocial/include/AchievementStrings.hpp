@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -702,7 +702,8 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "average_putt",
     "longest_putt",
     "longest_chip_in",
-    "credits_spent"
+    "credits_spent",
+    "challenge_completed"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -764,7 +765,8 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Average Putt Distance (metres)",
     "Longest Putt Distance (metres)",
     "Longest Chip-in (metres)",
-    "Credits Spent At The Equipment Counter"
+    "Credits Spent At The Equipment Counter",
+    "Number Of Time The Monthly Challenge Has Been Completed"
 };
 
 struct StatType final
@@ -836,7 +838,8 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Float,
     StatType::Float,
     StatType::Float,
-    StatType::Integer
+    StatType::Integer,
+    StatType::Integer,
 };
 
 struct StatTrigger final

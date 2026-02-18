@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -270,6 +270,7 @@ namespace StatID
         LongestPutt,
         LongestChipIn,
         CreditsSpent,
+        ChallengeComplete,
 
         Count
     };

@@ -508,6 +508,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
                 {
                     Social::awardXP(1000, XPStringID::ChallengeComplete);
                     Achievements::awardAchievement(AchievementStrings[AchievementID::UpForTheChallenge]);
+                    Achievements::incrementStat(StatStrings[StatID::ChallengeComplete]);
                 }
                 else
                 {

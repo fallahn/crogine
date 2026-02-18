@@ -152,7 +152,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fetch_ktx)
 
 else()
-  find_package(KTX, REQUIRED)
+  find_package(KTX REQUIRED)
 endif()
 
 
