@@ -553,7 +553,7 @@ void OptionsStateV2::handleMessage(const cro::Message& msg)
                 [&](cro::Entity e, float)
                 {
                     m_uiLayout.menuLayout.itemIndex = 0;
-                    focusToIndex(m_uiLayout.tabBar, m_uiLayout.menuLayout);
+                    m_uiLayout.focusToIndex();
 
                     e.getComponent<cro::Callback>().active = false;
                     m_scene.destroyEntity(e);
@@ -565,8 +565,7 @@ void OptionsStateV2::handleMessage(const cro::Message& msg)
 
 bool OptionsStateV2::simulate(float dt)
 {
-    //TODO this doesn't actually do what I wanted, but it's servicable
-    scrollToTarget(m_uiLayout.tabBar, m_uiLayout.menuLayout, dt);
+    m_uiLayout.scrollToTarget(dt);
 
     const auto maskTest =
         [&](std::int32_t index, std::int32_t flag)

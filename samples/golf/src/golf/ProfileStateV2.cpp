@@ -542,7 +542,7 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
                 [&](cro::Entity e, float)
                 {
                     m_uiLayout.menuLayout.itemIndex = 0;
-                    focusToIndex(m_uiLayout.tabBar, m_uiLayout.menuLayout);
+                    m_uiLayout.focusToIndex();
 
                     e.getComponent<cro::Callback>().active = false;
                     m_scene.destroyEntity(e);
@@ -678,7 +678,7 @@ bool ProfileStateV2::simulate(float dt)
     }
 
 
-    scrollToTarget(m_uiLayout.tabBar, m_uiLayout.menuLayout, dt);
+    m_uiLayout.scrollToTarget(dt);
 
     const auto maskTest =
         [&](std::int32_t index, std::int32_t flag)

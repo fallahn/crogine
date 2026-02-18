@@ -142,6 +142,9 @@ private:
     void onCachedPush() override;
     void onCachedPop() override;
 
+    //TODO this is repeated in the other menus too...
+    //so it *could* be moved to UILayout - although all it
+    //really does is add another level of indirection
     std::array<cro::Clock, 4u> m_inputRepeatClocks = {};
     std::array<cro::Time, 4u> m_repeatTimes = {};
     std::array<std::uint8_t, 4u> m_controllerMasks = {};

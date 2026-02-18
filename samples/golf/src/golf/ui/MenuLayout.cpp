@@ -56,15 +56,15 @@ UILayout::UILayout(std::int32_t tabCount, const SharedStateData& sd)
 void UILayout::loadAssets(cro::ResourceCollection & resources)
 {
     const auto& font = resources.fonts.get(FontID::Info);
-    menuText.setFont(font);
-    menuText.setCharacterSize(InfoTextSize);
+    m_menuText.setFont(font);
+    m_menuText.setCharacterSize(InfoTextSize);
 
     const auto& largeFont = resources.fonts.get(FontID::UI);
-    menuTextLarge.setFont(largeFont);
-    menuTextLarge.setCharacterSize(UITextSize);
-    menuTextLarge.setAlignment(cro::SimpleText::Alignment::Centre);
+    m_menuTextLarge.setFont(largeFont);
+    m_menuTextLarge.setCharacterSize(UITextSize);
+    m_menuTextLarge.setAlignment(cro::SimpleText::Alignment::Centre);
 
-    itemSlider.setPrimitiveType(GL_TRIANGLES);
+    m_itemSlider.setPrimitiveType(GL_TRIANGLES);
 
     cro::SpriteSheet spriteSheet;
     if (spriteSheet.loadFromFile("assets/golf/sprites/options_buttons.spt", resources.textures))
@@ -80,67 +80,67 @@ void UILayout::loadAssets(cro::ResourceCollection & resources)
             };
 
         //active tab
-        parseSprite("tab_active_left", tabActive[0]);
-        parseSprite("tab_active_right", tabActive[1]);
+        parseSprite("tab_active_left", m_tabActive[0]);
+        parseSprite("tab_active_right", m_tabActive[1]);
 
         //inactive tab
-        parseSprite("tab_inactive_left", tabInactive[0]);
-        parseSprite("tab_inactive_right", tabInactive[1]);
+        parseSprite("tab_inactive_left", m_tabInactive[0]);
+        parseSprite("tab_inactive_right", m_tabInactive[1]);
 
         //highlight tab
-        parseSprite("tab_highlight_left", tabHighlight[0]);
-        parseSprite("tab_highlight_right", tabHighlight[1]);
+        parseSprite("tab_highlight_left", m_tabHighlight[0]);
+        parseSprite("tab_highlight_right", m_tabHighlight[1]);
 
 
 
         //background 9-patch
-        parseSprite("background_centre", backgroundSections[BackgroundSection::Centre]);
-        parseSprite("background_top", backgroundSections[BackgroundSection::Top]);
-        parseSprite("background_left", backgroundSections[BackgroundSection::Left]);
-        parseSprite("background_right", backgroundSections[BackgroundSection::Right]);
-        parseSprite("background_bottom", backgroundSections[BackgroundSection::Bottom]);
-        parseSprite("background_tl", backgroundSections[BackgroundSection::TL]);
-        parseSprite("background_tr", backgroundSections[BackgroundSection::TR]);
-        parseSprite("background_bl", backgroundSections[BackgroundSection::BL]);
-        parseSprite("background_br", backgroundSections[BackgroundSection::BR]);
+        parseSprite("background_centre", m_backgroundSections[BackgroundSection::Centre]);
+        parseSprite("background_top", m_backgroundSections[BackgroundSection::Top]);
+        parseSprite("background_left", m_backgroundSections[BackgroundSection::Left]);
+        parseSprite("background_right", m_backgroundSections[BackgroundSection::Right]);
+        parseSprite("background_bottom", m_backgroundSections[BackgroundSection::Bottom]);
+        parseSprite("background_tl", m_backgroundSections[BackgroundSection::TL]);
+        parseSprite("background_tr", m_backgroundSections[BackgroundSection::TR]);
+        parseSprite("background_bl", m_backgroundSections[BackgroundSection::BL]);
+        parseSprite("background_br", m_backgroundSections[BackgroundSection::BR]);
 
 
 
         //item backgrounds
-        parseSprite("item_background_left", itemSection[0]);
-        parseSprite("item_background_right", itemSection[1]);
+        parseSprite("item_background_left", m_itemSection[0]);
+        parseSprite("item_background_right", m_itemSection[1]);
 
         //item active
-        parseSprite("item_active_left", itemActiveSection[0]);
-        parseSprite("item_active_right", itemActiveSection[1]);
+        parseSprite("item_active_left", m_itemActiveSection[0]);
+        parseSprite("item_active_right", m_itemActiveSection[1]);
 
         //item active highlight
-        parseSprite("item_highlight_active_left", itemActiveHighlightSection[0]);
-        parseSprite("item_highlight_active_right", itemActiveHighlightSection[1]);
+        parseSprite("item_highlight_active_left", m_itemActiveHighlightSection[0]);
+        parseSprite("item_highlight_active_right", m_itemActiveHighlightSection[1]);
 
         //item highlight
-        parseSprite("item_highlight_left", itemHighlightSection[0]);
-        parseSprite("item_highlight_right", itemHighlightSection[1]);
+        parseSprite("item_highlight_left", m_itemHighlightSection[0]);
+        parseSprite("item_highlight_right", m_itemHighlightSection[1]);
 
         //item title
-        parseSprite("item_title_left", itemTitleSection[0]);
-        parseSprite("item_title_right", itemTitleSection[1]);
+        parseSprite("item_title_left", m_itemTitleSection[0]);
+        parseSprite("item_title_right", m_itemTitleSection[1]);
 
 
-        itemBackground.setTexture(*uiTexture);
-        itemBackground.setPrimitiveType(GL_TRIANGLES);
+        m_itemBackground.setTexture(*uiTexture);
+        m_itemBackground.setPrimitiveType(GL_TRIANGLES);
 
-        itemBackgroundActive.setTexture(*uiTexture);
-        itemBackgroundActive.setPrimitiveType(GL_TRIANGLES);
+        m_itemBackgroundActive.setTexture(*uiTexture);
+        m_itemBackgroundActive.setPrimitiveType(GL_TRIANGLES);
 
-        itemBackgroundActiveHighlight.setTexture(*uiTexture);
-        itemBackgroundActiveHighlight.setPrimitiveType(GL_TRIANGLES);
+        m_itemBackgroundActiveHighlight.setTexture(*uiTexture);
+        m_itemBackgroundActiveHighlight.setPrimitiveType(GL_TRIANGLES);
 
-        itemBackgroundHighlight.setTexture(*uiTexture);
-        itemBackgroundHighlight.setPrimitiveType(GL_TRIANGLES);
+        m_itemBackgroundHighlight.setTexture(*uiTexture);
+        m_itemBackgroundHighlight.setPrimitiveType(GL_TRIANGLES);
 
-        itemBackgroundTitle.setTexture(*uiTexture);
-        itemBackgroundTitle.setPrimitiveType(GL_TRIANGLES);
+        m_itemBackgroundTitle.setTexture(*uiTexture);
+        m_itemBackgroundTitle.setPrimitiveType(GL_TRIANGLES);
     }
 }
 
@@ -203,15 +203,15 @@ void UILayout::updateTabBar()
             glm::vec2 position = { (std::round(TabWidth / 2.f) + kludgeOffset) + ((i * TabWidth) + viewScale), 0.f };
             if (active)
             {
-                addQuad(position, tabActive[0], tabActive[1]);
+                addQuad(position, m_tabActive[0], m_tabActive[1]);
             }
             else if (hovered)
             {
-                addQuad(position, tabHighlight[0], tabHighlight[1]);
+                addQuad(position, m_tabHighlight[0], m_tabHighlight[1]);
             }
             else
             {
-                addQuad(position, tabInactive[0], tabInactive[1]);
+                addQuad(position, m_tabInactive[0], m_tabInactive[1]);
             }
 
             //set the text
@@ -223,7 +223,7 @@ void UILayout::updateTabBar()
         }
 
         //add a quad to the verts as an underline
-        const auto backgroundCentre = backgroundSections[BackgroundSection::Centre].uv;
+        const auto backgroundCentre = m_backgroundSections[BackgroundSection::Centre].uv;
         const glm::vec2 uv0(backgroundCentre.left, backgroundCentre.bottom);
         const glm::vec2 uv1(backgroundCentre.width, backgroundCentre.height);
         verts.emplace_back(glm::vec2(0.f, 0.f), glm::vec2(uv0.x, uv1.y));
@@ -345,27 +345,27 @@ void UILayout::updateMenuItems()
                             (tabBar.background.getComponent<cro::Transform>().getPosition().y - (UI::InfoBarHeight * viewScale)) + (cro::App::getWindow().getSize().y / 2) };
     menuLayout.sprite.getComponent<cro::Drawable2D>().setCroppingArea(crop, true);
 
-    menuText.setFillColour(TextNormalColour);
+    m_menuText.setFillColour(TextNormalColour);
 
     constexpr float LineSpacing = 12.f;
     const auto renderItem =
         [&](Menu::Item& item, glm::vec2 pos, std::int32_t idx)
         {
-            auto* background = &itemBackground;
+            auto* background = &m_itemBackground;
             if (idx == menuLayout.hoveredIndex
                 && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
             {
-                background = idx == menuLayout.itemIndex ? &itemBackgroundActiveHighlight : &itemBackgroundHighlight;
+                background = idx == menuLayout.itemIndex ? &m_itemBackgroundActiveHighlight : &m_itemBackgroundHighlight;
             }
             else if (idx == menuLayout.itemIndex)
             {
-                background = &itemBackgroundActive;
+                background = &m_itemBackgroundActive;
             }
 
             if (item.displayType == Menu::Item::Heading)
             {
-                itemBackgroundTitle.setPosition(pos);
-                itemBackgroundTitle.draw();
+                m_itemBackgroundTitle.setPosition(pos);
+                m_itemBackgroundTitle.draw();
             }
             else
             {
@@ -378,20 +378,20 @@ void UILayout::updateMenuItems()
                 if (item.displayType == Menu::Item::TextOnly)
                 {
                     //achievement icon
-                    menuQuad.setPosition(pos + glm::vec2(UI::ItemSpacing, UI::ItemSpacing));
+                    m_menuQuad.setPosition(pos + glm::vec2(UI::ItemSpacing, UI::ItemSpacing));
                     pos.x += UI::ItemSpacing + UI::ItemImage.x; //moves title text over
                 }
                 else
                 {
                     //align to the right
-                    menuQuad.setPosition(pos + glm::vec2(tabBar.items[tabBar.activeIndex].renderWidth - (UI::ItemSpacing + UI::ItemImage.x), UI::ItemSpacing));
+                    m_menuQuad.setPosition(pos + glm::vec2(tabBar.items[tabBar.activeIndex].renderWidth - (UI::ItemSpacing + UI::ItemImage.x), UI::ItemSpacing));
                 }
-                menuQuad.setTexture(*item.texture);
-                menuQuad.setScale(UI::ItemImage / glm::vec2(item.uv.width, item.uv.height));
-                menuQuad.setTextureRect(item.uv);
-                menuQuad.setColour(item.previewColour);
+                m_menuQuad.setTexture(*item.texture);
+                m_menuQuad.setScale(UI::ItemImage / glm::vec2(item.uv.width, item.uv.height));
+                m_menuQuad.setTextureRect(item.uv);
+                m_menuQuad.setColour(item.previewColour);
 
-                menuQuad.draw();
+                m_menuQuad.draw();
             }
 
             pos.x += UI::ItemSpacing;
@@ -400,56 +400,56 @@ void UILayout::updateMenuItems()
             if (idx == menuLayout.itemIndex
                 || idx == menuLayout.hoveredIndex)
             {
-                menuText.setFillColour(CD32::Colours[CD32::Yellow]);
-                menuTextLarge.setFillColour(CD32::Colours[CD32::Yellow]);
+                m_menuText.setFillColour(CD32::Colours[CD32::Yellow]);
+                m_menuTextLarge.setFillColour(CD32::Colours[CD32::Yellow]);
             }
             else
             {
-                menuText.setFillColour(TextNormalColour);
-                menuTextLarge.setFillColour(TextNormalColour);
+                m_menuText.setFillColour(TextNormalColour);
+                m_menuTextLarge.setFillColour(TextNormalColour);
             }
 
             if (item.displayType != Menu::Item::Heading)
             {
-                menuText.setPosition(pos);
-                menuText.setString(item.title);
-                menuText.draw();
+                m_menuText.setPosition(pos);
+                m_menuText.setString(item.title);
+                m_menuText.draw();
             }
 
             switch (item.displayType)
             {
             case Menu::Item::Slider:
                 updateSliderGraphic(item.selectedIndex, static_cast<std::int32_t>(item.labels.size() - 1));
-                itemSlider.setPosition({ std::floor(renderSize.x / 2.f), pos.y - 22.f/*std::floor(LineSpacing * 1.7f)*/ });
-                itemSlider.draw();
+                m_itemSlider.setPosition({ std::floor(renderSize.x / 2.f), pos.y - 22.f/*std::floor(LineSpacing * 1.7f)*/ });
+                m_itemSlider.draw();
                 [[fallthrough]];
             default:
                 if (item.displayType == Menu::Item::Slider)
                 {
-                    menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - (LineSpacing - 1.f) });
+                    m_menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - (LineSpacing - 1.f) });
                 }
                 else
                 {
-                    menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
+                    m_menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
                 }
 
                 if (item.labels.size() > 1)
                 {
-                    menuTextLarge.setString("< " + item.labels[item.selectedIndex] + " >");
+                    m_menuTextLarge.setString("< " + item.labels[item.selectedIndex] + " >");
                 }
                 else
                 {
                     //this is a button
-                    menuTextLarge.setString(item.labels[item.selectedIndex]);
+                    m_menuTextLarge.setString(item.labels[item.selectedIndex]);
                 }
-                menuTextLarge.draw();
+                m_menuTextLarge.draw();
 
                 {
                     static constexpr float HitPadding = 4.f;
-                    item.hitbox = menuTextLarge.getLocalBounds();
-                    item.hitbox.left += menuTextLarge.getPosition().x;
+                    item.hitbox = m_menuTextLarge.getLocalBounds();
+                    item.hitbox.left += m_menuTextLarge.getPosition().x;
                     item.hitbox.left -= HitPadding;
-                    item.hitbox.bottom += menuTextLarge.getPosition().y;
+                    item.hitbox.bottom += m_menuTextLarge.getPosition().y;
                     item.hitbox.bottom -= HitPadding;
                     item.hitbox.width += (2.f * HitPadding);
                     item.hitbox.height += (2.f * HitPadding);
@@ -458,22 +458,22 @@ void UILayout::updateMenuItems()
             case Menu::Item::TextOnly:
                 if (!item.description.empty())
                 {
-                    menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
-                    menuTextLarge.setString(item.description);
-                    menuTextLarge.draw();
+                    m_menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
+                    m_menuTextLarge.setString(item.description);
+                    m_menuTextLarge.draw();
                 }
                 else
                 {
-                    menuText.move({ 0.f, -(LineSpacing - 1.f) });
-                    menuText.setString(item.subTitle);
-                    menuText.draw();
+                    m_menuText.move({ 0.f, -(LineSpacing - 1.f) });
+                    m_menuText.setString(item.subTitle);
+                    m_menuText.draw();
                 }
                 break;
             case Menu::Item::Heading:
-                menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
-                menuTextLarge.setString(item.title);
-                menuTextLarge.setFillColour(TextNormalColour);
-                menuTextLarge.draw();
+                m_menuTextLarge.setPosition({ std::round(renderSize.x / 2.f), pos.y - std::round(LineSpacing * 1.7f) });
+                m_menuTextLarge.setString(item.title);
+                m_menuTextLarge.setFillColour(TextNormalColour);
+                m_menuTextLarge.draw();
                 break;
             }
 
@@ -580,7 +580,7 @@ void UILayout::updateSliderGraphic(std::int32_t amt, std::int32_t total)
             cro::Vertex2D(glm::vec2(SliderWidth, 0.f), d)
         };
     }
-    itemSlider.setVertexData(verts);
+    m_itemSlider.setVertexData(verts);
 }
 
 void UILayout::updatePalettePreview(std::int32_t paletteID, std::int32_t selectedIdx, float targetHeight)
@@ -698,24 +698,24 @@ void UILayout::resizeItemGraphics()
             verts.emplace_back(glm::vec2(position.x + right.size.x, position.y), glm::vec2(right.uv.width, right.uv.bottom));
         };
 
-    calcVerts(itemSection[0], itemSection[1]);
-    itemBackground.setVertexData(verts);
+    calcVerts(m_itemSection[0], m_itemSection[1]);
+    m_itemBackground.setVertexData(verts);
 
     verts.clear();
-    calcVerts(itemActiveSection[0], itemActiveSection[1]);
-    itemBackgroundActive.setVertexData(verts);
+    calcVerts(m_itemActiveSection[0], m_itemActiveSection[1]);
+    m_itemBackgroundActive.setVertexData(verts);
 
     verts.clear();
-    calcVerts(itemActiveHighlightSection[0], itemActiveHighlightSection[1]);
-    itemBackgroundActiveHighlight.setVertexData(verts);
+    calcVerts(m_itemActiveHighlightSection[0], m_itemActiveHighlightSection[1]);
+    m_itemBackgroundActiveHighlight.setVertexData(verts);
 
     verts.clear();
-    calcVerts(itemHighlightSection[0], itemHighlightSection[1]);
-    itemBackgroundHighlight.setVertexData(verts);
+    calcVerts(m_itemHighlightSection[0], m_itemHighlightSection[1]);
+    m_itemBackgroundHighlight.setVertexData(verts);
 
     verts.clear();
-    calcVerts(itemTitleSection[0], itemTitleSection[1]);
-    itemBackgroundTitle.setVertexData(verts);
+    calcVerts(m_itemTitleSection[0], m_itemTitleSection[1]);
+    m_itemBackgroundTitle.setVertexData(verts);
 
 
     //update detail background
@@ -732,8 +732,8 @@ void UILayout::resizeItemGraphics()
     backgroundArea.y = std::round(backgroundArea.y / 2.f);
     detailsPane.backgroundSize = backgroundArea * 2.f;
 
-    const float CentreWidth = backgroundArea.x - backgroundSections[BackgroundSection::TL].size.x;
-    const float CentreHeight = backgroundArea.y - backgroundSections[BackgroundSection::TL].size.y;
+    const float CentreWidth = backgroundArea.x - m_backgroundSections[BackgroundSection::TL].size.x;
+    const float CentreHeight = backgroundArea.y - m_backgroundSections[BackgroundSection::TL].size.y;
 
     verts.clear();
 
@@ -751,30 +751,30 @@ void UILayout::resizeItemGraphics()
 
     //top left
     glm::vec2 p(-backgroundArea.x, CentreHeight);
-    addQuad(p, backgroundSections[BackgroundSection::TL].size, backgroundSections[BackgroundSection::TL].uv);
+    addQuad(p, m_backgroundSections[BackgroundSection::TL].size, m_backgroundSections[BackgroundSection::TL].uv);
 
     //top right
     p = { CentreWidth, CentreHeight };
-    addQuad(p, backgroundSections[BackgroundSection::TR].size, backgroundSections[BackgroundSection::TR].uv);
+    addQuad(p, m_backgroundSections[BackgroundSection::TR].size, m_backgroundSections[BackgroundSection::TR].uv);
 
     //bottom left
     p = { -backgroundArea.x, -backgroundArea.y };
-    addQuad(p, backgroundSections[BackgroundSection::BL].size, backgroundSections[BackgroundSection::BL].uv);
+    addQuad(p, m_backgroundSections[BackgroundSection::BL].size, m_backgroundSections[BackgroundSection::BL].uv);
 
     //bottom right
     p = { CentreWidth, -backgroundArea.y };
-    addQuad(p, backgroundSections[BackgroundSection::BR].size, backgroundSections[BackgroundSection::BR].uv);
+    addQuad(p, m_backgroundSections[BackgroundSection::BR].size, m_backgroundSections[BackgroundSection::BR].uv);
 
 
     //top
     p = { -CentreWidth, CentreHeight };
-    glm::vec2 size = { CentreWidth * 2.f, backgroundSections[BackgroundSection::Top].size.y };
+    glm::vec2 size = { CentreWidth * 2.f, m_backgroundSections[BackgroundSection::Top].size.y };
     cro::FloatRect uv =
     {
-        backgroundSections[BackgroundSection::TL].uv.width,
-        backgroundSections[BackgroundSection::TL].uv.bottom,
-        backgroundSections[BackgroundSection::TR].uv.left,
-        backgroundSections[BackgroundSection::TR].uv.height
+        m_backgroundSections[BackgroundSection::TL].uv.width,
+        m_backgroundSections[BackgroundSection::TL].uv.bottom,
+        m_backgroundSections[BackgroundSection::TR].uv.left,
+        m_backgroundSections[BackgroundSection::TR].uv.height
     };
     addQuad(p, size, uv);
 
@@ -782,22 +782,22 @@ void UILayout::resizeItemGraphics()
     p = { -CentreWidth, -backgroundArea.y };
     uv =
     {
-        backgroundSections[BackgroundSection::BL].uv.width,
-        backgroundSections[BackgroundSection::BL].uv.bottom,
-        backgroundSections[BackgroundSection::BR].uv.left,
-        backgroundSections[BackgroundSection::BR].uv.height
+        m_backgroundSections[BackgroundSection::BL].uv.width,
+        m_backgroundSections[BackgroundSection::BL].uv.bottom,
+        m_backgroundSections[BackgroundSection::BR].uv.left,
+        m_backgroundSections[BackgroundSection::BR].uv.height
     };
     addQuad(p, size, uv);
 
     //left
     p = { -backgroundArea.x, -CentreHeight };
-    size = { backgroundSections[BackgroundSection::Left].size.x, CentreHeight * 2.f };
+    size = { m_backgroundSections[BackgroundSection::Left].size.x, CentreHeight * 2.f };
     uv =
     {
-        backgroundSections[BackgroundSection::BL].uv.left,
-        backgroundSections[BackgroundSection::BL].uv.height,
-        backgroundSections[BackgroundSection::TL].uv.width,
-        backgroundSections[BackgroundSection::TL].uv.bottom
+        m_backgroundSections[BackgroundSection::BL].uv.left,
+        m_backgroundSections[BackgroundSection::BL].uv.height,
+        m_backgroundSections[BackgroundSection::TL].uv.width,
+        m_backgroundSections[BackgroundSection::TL].uv.bottom
     };
     addQuad(p, size, uv);
 
@@ -805,17 +805,17 @@ void UILayout::resizeItemGraphics()
     p = { CentreWidth, -CentreHeight };
     uv =
     {
-        backgroundSections[BackgroundSection::BR].uv.left,
-        backgroundSections[BackgroundSection::BR].uv.height,
-        backgroundSections[BackgroundSection::TR].uv.width,
-        backgroundSections[BackgroundSection::TR].uv.bottom
+        m_backgroundSections[BackgroundSection::BR].uv.left,
+        m_backgroundSections[BackgroundSection::BR].uv.height,
+        m_backgroundSections[BackgroundSection::TR].uv.width,
+        m_backgroundSections[BackgroundSection::TR].uv.bottom
     };
     addQuad(p, size, uv);
 
     //centre
     p = { -CentreWidth, -CentreHeight };
     size = { CentreWidth * 2.f, CentreHeight * 2.f };
-    addQuad(p, size, backgroundSections[BackgroundSection::Centre].uv);
+    addQuad(p, size, m_backgroundSections[BackgroundSection::Centre].uv);
 
     detailsPane.background.getComponent<cro::Drawable2D>().setVertexData(verts);
 
@@ -861,7 +861,7 @@ void UILayout::activateTab(std::int32_t idx)
     updateTabBar();
 
     //set item 0 as focused
-    focusToIndex(tabBar, menuLayout);
+    focusToIndex();
 }
 
 void UILayout::nextItem()
@@ -1050,9 +1050,7 @@ void UILayout::doMouseClick(glm::vec2 mousePos, const cro::Camera& cam)
     }
 }
 
-
-//TODO these could probably be member funcs now
-std::pair<cro::FloatRect, cro::FloatRect> scrollToTarget(TabBar& tabBar, Menu& menuLayout, float dt)
+std::pair<cro::FloatRect, cro::FloatRect> UILayout::scrollToTarget(float dt)
 {
     const float viewScale = cro::UIElementSystem::getViewScale();
     const float texHeight = static_cast<float>(menuLayout.texture.getSize().y);
@@ -1085,7 +1083,7 @@ std::pair<cro::FloatRect, cro::FloatRect> scrollToTarget(TabBar& tabBar, Menu& m
     return { viewRect, itemRect };
 }
 
-void focusToIndex(TabBar& tabBar, Menu& menuLayout)
+void UILayout::focusToIndex()
 {
     const float viewScale = cro::UIElementSystem::getViewScale();
     const float texHeight = static_cast<float>(menuLayout.texture.getSize().y);

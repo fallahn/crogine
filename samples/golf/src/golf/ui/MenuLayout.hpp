@@ -235,39 +235,17 @@ struct DetailsPane final
 };
 
 struct SharedStateData;
-struct UILayout final
+class UILayout final
 {
+public:
     explicit UILayout(std::int32_t tabCount, const SharedStateData&);
 
     TabBar tabBar;
     Menu menuLayout;
     DetailsPane detailsPane;
 
-    cro::SimpleText menuText;
-    cro::SimpleText menuTextLarge;
-    cro::SimpleQuad menuQuad; //item image/thumb if it exists
-    cro::SimpleVertexArray itemSlider;
-
     const cro::Texture* uiTexture = nullptr;
-
-    std::array<SpriteSection, 2u> itemSection = {};
-    std::array<SpriteSection, 2u> itemActiveSection = {};
-    std::array<SpriteSection, 2u> itemActiveHighlightSection = {};
-    std::array<SpriteSection, 2u> itemHighlightSection = {};
-    std::array<SpriteSection, 2u> itemTitleSection = {};
-    cro::SimpleVertexArray itemBackground;
-    cro::SimpleVertexArray itemBackgroundActive;
-    cro::SimpleVertexArray itemBackgroundActiveHighlight;
-    cro::SimpleVertexArray itemBackgroundHighlight;
-    cro::SimpleVertexArray itemBackgroundTitle;
-
     cro::SimpleVertexArray palettePreview;
-
-    std::array<SpriteSection, 2u> tabActive = {};
-    std::array<SpriteSection, 2u> tabInactive = {};
-    std::array<SpriteSection, 2u> tabHighlight = {};
-
-    std::array<SpriteSection, BackgroundSection::Count> backgroundSections = {};
 
     void loadAssets(cro::ResourceCollection&);
     void updateTabBar();
@@ -290,11 +268,34 @@ struct UILayout final
     void checkMouseOver(glm::vec2);
     void doMouseClick(glm::vec2, const cro::Camera&);
 
+    //returns cropping areas for debugging
+    std::pair<cro::FloatRect, cro::FloatRect> scrollToTarget(float);
+    void focusToIndex();
+
 private: 
     const SharedStateData& m_sharedData;
+
+    cro::SimpleText m_menuText;
+    cro::SimpleText m_menuTextLarge;
+    cro::SimpleQuad m_menuQuad; //item image/thumb if it exists
+    cro::SimpleVertexArray m_itemSlider;
+
+    std::array<SpriteSection, 2u> m_itemSection = {};
+    std::array<SpriteSection, 2u> m_itemActiveSection = {};
+    std::array<SpriteSection, 2u> m_itemActiveHighlightSection = {};
+    std::array<SpriteSection, 2u> m_itemHighlightSection = {};
+    std::array<SpriteSection, 2u> m_itemTitleSection = {};
+    cro::SimpleVertexArray m_itemBackground;
+    cro::SimpleVertexArray m_itemBackgroundActive;
+    cro::SimpleVertexArray m_itemBackgroundActiveHighlight;
+    cro::SimpleVertexArray m_itemBackgroundHighlight;
+    cro::SimpleVertexArray m_itemBackgroundTitle;
+
+    std::array<SpriteSection, 2u> m_tabActive = {};
+    std::array<SpriteSection, 2u> m_tabInactive = {};
+    std::array<SpriteSection, 2u> m_tabHighlight = {};
+
+    std::array<SpriteSection, BackgroundSection::Count> m_backgroundSections = {};
 };
 
-//returns cropping areas for debugging
-std::pair<cro::FloatRect, cro::FloatRect> scrollToTarget(TabBar&, Menu&, float);
-void focusToIndex(TabBar&, Menu&);
 void playSound(std::int32_t index);
