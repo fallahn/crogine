@@ -2494,7 +2494,7 @@ void ProfileStateV2::createLoadoutItems()
         };
     
     //TODO slight problem here in that the equipment counter doesn't cover the lob wedge...
-    const std::array titles =
+    static const std::array titles =
     {
         std::string("Driver"),
         std::string("3 Wood"),
@@ -2559,6 +2559,8 @@ void ProfileStateV2::createLoadoutItems()
                 {
                     m_activeProfile.loadout.items[i] = itemIndices[menuItem.selectedIndex];
                     refreshStat(i, itemIndices[menuItem.selectedIndex], true);
+
+                    menuItem.title = titles[i] + " " + std::to_string(menuItem.selectedIndex + 1) + "/" + std::to_string(itemIndices.size());
                 };
             const auto res = std::find(itemIndices.cbegin(), itemIndices.cend(), m_activeProfile.loadout.items[i]);
             if (res != itemIndices.cend())
@@ -2574,6 +2576,7 @@ void ProfileStateV2::createLoadoutItems()
                     m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_uiLayout.detailsPane.image.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 0.f });
                     m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
                 };
+            item->title += " " + std::to_string(item->selectedIndex + 1) + "/" + std::to_string(items.size());
         }
         else
         {
