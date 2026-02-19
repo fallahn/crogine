@@ -190,6 +190,14 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
                 m_infoString.getComponent<cro::Text>().setString(KeyInfo); //garbled font bug strikes again!!
                 m_infoString.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
                 m_infoSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                
+                m_infoString.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::BlueLight]);
+                m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour, 1);
+                m_infoString.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Yellow], 23);
+                m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour, 24);
+                m_infoString.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red], 42);
+                m_infoString.getComponent<cro::Text>().setFillColour(TextNormalColour, 43);
+                
                 m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
 
                 m_uiLayout.tabBar.navLeft.getComponent<cro::Text>().setString("< " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
