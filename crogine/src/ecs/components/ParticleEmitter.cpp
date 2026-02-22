@@ -37,18 +37,19 @@ using namespace cro;
 ParticleEmitter::ParticleEmitter()
     : m_vbo                 (0),
     m_vao                   (0),
-    m_particles             (MaxParticles),
-    m_nextFreeParticle      (0),
     m_culledLastFrame       (false),
     m_running               (false),
+    m_wasRestarted          (true),
+    m_particles             (MaxParticles),
+    m_nextFreeParticle      (0),
     m_emissionTime          (0.f),
     m_previousPosition      (0.f),
     m_prevTimestamp         (0.f),
     m_currentTimestamp      (0.f),
     m_emissionTimestamp     (0.f),
+    m_releaseCount          (-1),
     //m_pendingUpdate         (true),
-    m_renderFlags           (std::numeric_limits<std::uint64_t>::max()),
-    m_releaseCount          (-1)
+    m_renderFlags           (std::numeric_limits<std::uint64_t>::max())
 {
 
 }
@@ -63,14 +64,16 @@ ParticleEmitter::ParticleEmitter()
 
 void ParticleEmitter::start()
 {
-    m_running = true;
+    //fast forward time to emit the first particle immediately
+    m_emissionTime = 1.f / settings.emitRate;
     m_emissionTimestamp = m_prevTimestamp;
-    m_emissionTime = 1.f / settings.emitRate;// means we'll emit the first particle immediately
 
     if (settings.releaseCount)
     {
         m_releaseCount = settings.releaseCount;
     }
+    m_running = true;
+    m_wasRestarted = true;
 }
 
 void ParticleEmitter::stop()

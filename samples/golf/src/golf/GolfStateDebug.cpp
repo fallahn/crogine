@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -36,6 +36,7 @@ source distribution.
 #include "ChunkVisSystem.hpp"
 #include "Career.hpp"
 #include "Clubs.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -303,6 +304,17 @@ void GolfState::registerDebugCommands()
     //            glm::vec2 s(m_gameSceneMRTexture.getSize() / 4u);
     //            ImGui::Image(m_gameSceneMRTexture.getDepthTexture(), {s.x, s.y}, {0.f,1.f}, {1.f, 0.f});
     //        }*/
+    //        /*const auto pos = m_currentPlayer.position;
+    //        ImGui::Text("Pos %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+
+    //        if (ImGui::Button("Buns"))
+    //        {
+    //            auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(cl::MessageID::GolfMessage);
+    //            msg3->type = GolfEvent::PowerShot;
+    //            msg3->position = m_currentPlayer.position;
+    //            msg3->club = ClubID::Driver;
+    //        }*/
+
     //        ImGui::End();
     //    });
 

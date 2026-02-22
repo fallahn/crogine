@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -180,13 +180,14 @@ namespace cro
         std::uint32_t m_vbo;
         std::uint32_t m_vao; //< used on desktop
         
+        bool m_culledLastFrame;
+        bool m_running;
+        bool m_wasRestarted; //kludge to reset the position when the emitter is started
+
         //std::array<Particle, MaxParticles> m_particles;
         std::vector<Particle> m_particles;
         std::size_t m_nextFreeParticle;
 
-        bool m_culledLastFrame;
-
-        bool m_running;
         float m_emissionTime;
         Sphere m_bounds;
         glm::vec3 m_previousPosition; //used to interpolate spawn position if emit rate is > frame rate
@@ -194,10 +195,10 @@ namespace cro
         float m_currentTimestamp;
         float m_emissionTimestamp;
 
+        std::int32_t m_releaseCount;
+
         //bool m_pendingUpdate;
         std::uint64_t m_renderFlags;
-
-        std::int32_t m_releaseCount;
 
         friend class ParticleSystem;
     };

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -486,6 +486,12 @@ void ParticleSystem::process(float dt)
             const auto worldScale = tx.getWorldScale();
             const auto EmitterScale = std::abs((worldScale.x + worldScale.y) / 2.f);
 
+            if (emitter.m_wasRestarted)
+            {
+                emitter.m_previousPosition = worldPos;
+                emitter.m_wasRestarted = false;
+            }
+
             emitter.m_emissionTime += dt;
 
             while (emitter.m_emissionTime > rate)
@@ -507,7 +513,7 @@ void ParticleSystem::process(float dt)
                 emitter.m_emissionTimestamp += rate;
 
                 const float t = (emitter.m_emissionTimestamp - emitter.m_prevTimestamp) / (emitter.m_currentTimestamp - emitter.m_prevTimestamp);
-                auto basePosition = glm::mix(emitter.m_previousPosition, worldPos, t);
+                const auto basePosition = glm::mix(emitter.m_previousPosition, worldPos, t);
 
                 static const float epsilon = 0.0001f;
                 auto emitCount = emitter.settings.emitCount;

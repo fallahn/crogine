@@ -104,6 +104,7 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
         auto entity = getNextEntity();
         entity.getComponent<cro::Transform>().setPosition(position);
         entity.getComponent<cro::ParticleEmitter>().settings = m_emitterSettings[id];
+        entity.getComponent<cro::ParticleEmitter>().parentVelocity = glm::vec3(0.f);
         entity.getComponent<cro::ParticleEmitter>().start();
         return entity;
     };
