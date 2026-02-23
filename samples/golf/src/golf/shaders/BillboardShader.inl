@@ -36,7 +36,7 @@ source distribution.
 static inline const std::string BillboardVertexShader = R"(
     ATTRIBUTE vec4 a_position; //relative to root position (below)
     ATTRIBUTE vec3 a_normal; //actually contains root position of billboard
-    ATTRIBUTE vec4 a_colour;
+    ATTRIBUTE vec4 a_colour; //this is actually supplied by the sprite colour when the mesh is built
 
     ATTRIBUTE MED vec2 a_texCoord0;
 
@@ -180,7 +180,7 @@ static inline const std::string BillboardVertexShader = R"(
         float fadeDistance = u_nearFadeDistance * 5.0;
         float distance = length(position - u_cameraWorldPosition);
 
-        v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 5.0);
+        v_ditherAmount = mix(1.0, pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 5.0), a_colour.a);
         v_ditherAmount *= 1.0 - clamp((distance - FarFadeDistance) / fadeDistance, 0.0, 1.0);
 
 #if !defined(SHADOW_MAPPING)

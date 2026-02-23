@@ -63,7 +63,9 @@ source distribution.
 
 #include <chrono>
 
-#define GEN_GRASS
+//this disables the grass position gen etc
+//but not all the other glue logic.
+//#define GEN_GRASS
 
 using namespace cl;
 
@@ -76,7 +78,7 @@ namespace
     constexpr glm::vec2 ChunkSize(static_cast<float>(MapSize.x) / ChunkVisSystem::ColCount, static_cast<float>(MapSize.y) / ChunkVisSystem::RowCount);
 
     //params for poisson disk samples
-    static constexpr float GrassDensity = 1.4f;// 1.7f; //radius for PD sampler //TODO a 'high density' setting at 0.9f
+    static constexpr float GrassDensity = 0.9f;// 1.4f;// 1.7f; //radius for PD sampler //TODO a 'high density' setting at 0.9f
     static constexpr float TreeDensity = 4.f;
 
     static constexpr std::array MinBounds = { 0.f, 0.f };

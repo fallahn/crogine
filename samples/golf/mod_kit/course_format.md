@@ -134,32 +134,32 @@ Props.include
 
 
 
-01.hole
-    
-    hole 01 //hole ID
-    {
-        map = "assets/golf/holes/01.png"
-        model = "assets/golf/models/hole_01.cmt"
-        pin = 22, 0, -172
-        target = 22, 0, -172
-        tee = 243, 2.5, -30
-        par = 3
-        include = "assets/golf/holes/props.include"
-    }
+    01.hole
+        
+        hole 01 //hole ID
+        {
+            map = "assets/golf/holes/01.png"
+            model = "assets/golf/models/hole_01.cmt"
+            pin = 22, 0, -172
+            target = 22, 0, -172
+            tee = 243, 2.5, -30
+            par = 3
+            include = "assets/golf/holes/props.include"
+        }
 
 
-02.hole
-    
-    hole 02
-    {
-        map = "assets/golf/holes/02.png"
-        model = "assets/golf/models/hole_01.cmt"
-        pin = 42, 0.5, -24
-        target = 28, 1.05, -72
-        tee = 243, 2.5, -60
-        par = 4
-        include = "assets/golf/holes/props.include"
-    }
+    02.hole
+        
+        hole 02
+        {
+            map = "assets/golf/holes/02.png"
+            model = "assets/golf/models/hole_01.cmt"
+            pin = 42, 0.5, -24
+            target = 28, 1.05, -72
+            tee = 243, 2.5, -60
+            par = 4
+            include = "assets/golf/holes/props.include"
+        }
 
 
 This way it is possible to use one definition for properties in multiple holes, useful particularly when these holes share the same model, eg the pitch n putt courses.
@@ -233,7 +233,7 @@ Shrub files have the extension `*.shb` and should be stored in `assets/golf/shru
  - tree03
  - tree04
 
-The sprites are mapped to the billboards at 64 pixels per metre (game unit). The tree sprites will be substituted with a treeset if it is available and the tree quality is set to 'high' in the game options. It is also possible to supply a second model and spritesheet definition for 'classic' rendering - ie when the game option for tree quality is set to 'classic'. To do this add a second definition file for each with the same name appended with `_low`. For example `shrubbery_autumm_low.cmt` and `shrubbery_autumn_low.spt`. These are automatically loaded by the game if they are found. Each sprite has a colour property in its sprite sheet entry, which can be used to determine how much the wind affects the billboard when it is rendered. Colour values are RGBA normalised, and default to {1,1,1,1} (White). Reducing the value of the red channel *increases* the effect of low frequency movement, reducing the value of the green channel increases the amount of high frequency movement, and decreasing the blue channel value increases the amount of bend applied along the wind direction vector. The mod kit contains a palette file named `shrub_wind_colours.ase` which contains presets found to be generally acceptable for hedge, flower and grass type billboards. Any values deemed fit can be used, of course.
+The sprites are mapped to the billboards at 64 pixels per metre (game unit). The tree sprites will be substituted with a treeset if it is available and the tree quality is set to 'high' in the game options. It is also possible to supply a second model and spritesheet definition for 'classic' rendering - ie when the game option for tree quality is set to 'classic'. To do this add a second definition file for each with the same name appended with `_low`. For example `shrubbery_autumm_low.cmt` and `shrubbery_autumn_low.spt`. These are automatically loaded by the game if they are found. Each sprite has a colour property in its sprite sheet entry, which can be used to determine how much the wind affects the billboard when it is rendered. Colour values are RGBA normalised, and default to {1,1,1,1} (White). Reducing the value of the red channel *increases* the effect of low frequency movement, reducing the value of the green channel increases the amount of high frequency movement, and decreasing the blue channel value increases the amount of bend applied along the wind direction vector. The mod kit contains a palette file named `shrub_wind_colours.ase` which contains presets found to be generally acceptable for hedge, flower and grass type billboards. Any values deemed fit can be used, of course. Since 1.22 the alpha channel controls the near fade amount of billboards so that, eg, grass billboards with an alpha of zero do not fade when close to the camera.
 
 
 ###### Treesets (since 1.8.0)

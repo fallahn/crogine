@@ -2636,22 +2636,22 @@ void OptionsStateV2::createDisplayItems()
     item->labels = { "Low", "Normal", "High", "Extreme", "None" };
     item->selectedIndex = m_sharedData.crowdDensity;
 
-    if (!Social::isSteamdeck())
-    {
-        //grass density
-        item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
-        item->title = "Grass Density";
-        item->description = "Changes the appearance of the grass in the rough. Setting this to Low can improve performance";
-        cro::Util::String::wordWrap(item->description, 36);
-        item->activated = [&](Menu::Item& i)
-            {
-                m_sharedData.grassDensity = i.selectedIndex;
-                auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
-                msg->type = SystemEvent::GrassDensityChanged;
-            };
-        item->labels = { "Low", "High" };
-        item->selectedIndex = m_sharedData.grassDensity;
-    }
+    //if (!Social::isSteamdeck())
+    //{
+    //    //grass density
+    //    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
+    //    item->title = "Grass Density";
+    //    item->description = "Changes the appearance of the grass in the rough. Setting this to Low can improve performance";
+    //    cro::Util::String::wordWrap(item->description, 36);
+    //    item->activated = [&](Menu::Item& i)
+    //        {
+    //            m_sharedData.grassDensity = i.selectedIndex;
+    //            auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+    //            msg->type = SystemEvent::GrassDensityChanged;
+    //        };
+    //    item->labels = { "Low", "High" };
+    //    item->selectedIndex = m_sharedData.grassDensity;
+    //}
 }
 
 void OptionsStateV2::createAudioItems()
