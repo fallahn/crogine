@@ -606,6 +606,49 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function = CogitationCallback(nameEnt);
     nameEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    if (m_sharedData.clubSet == 2)
+    {
+        //show the no balls icon if we're on pros and run out of balls
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::NoBalls];
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+        entity.addComponent<UIElement>().relativePosition = { 1.f, 0.f };
+        entity.getComponent<UIElement>().absolutePosition = { -18.f, 6.f };
+        entity.getComponent<UIElement>().depth = 0.05f;
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt) 
+            {
+                const auto& pf = m_sharedProfiles.playerProfiles[m_sharedData.profileIndices[m_currentPlayer.player]];
+                const auto& loadout = pf.loadout;
+
+                if (loadout.items[inv::Ball] == -1 || //nothing assigned
+                    m_sharedData.inventory.inventory[loadout.items[inv::Ball]] < 1) //or quantity == 0
+                {
+                    //warn there's no balls
+                    static constexpr float BlinkTime = 1.f;
+                    auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+                    ct -= dt;
+                    if (ct < 0.f)
+                    {
+                        ct += BlinkTime;
+                        const auto scale = e.getComponent<cro::Transform>().getScale().x == 0 ? 1.f : 0.f;
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                    }
+                }
+                else
+                {
+                    //hide
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                }
+            };
+        infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
+
     //hole distance
     //const auto uiScale = m_sharedData.showMinimap ? 1.f : 0.f;
     entity = m_uiScene.createEntity();

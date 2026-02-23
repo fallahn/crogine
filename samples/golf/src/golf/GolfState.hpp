@@ -644,6 +644,7 @@ private:
             AlbatrossLeft,
             AlbatrossRight,
             Hio,
+            NoBalls,
             BounceAnim,
 
             Count

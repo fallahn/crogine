@@ -2514,7 +2514,7 @@ void GolfState::loadSprites()
     m_sprites[SpriteID::HookBarDouble] = spriteSheet.getSprite("hook_bar_double");
 
     //most of these are loaded once or not at all so not really sure why
-    //we keep these hanging around in an array ike this
+    //we keep these hanging around in an array like this
     m_sprites[SpriteID::SlopeStrength] = spriteSheet.getSprite("slope_indicator");
     m_sprites[SpriteID::BallSpeed] = spriteSheet.getSprite("ball_speed");
     m_sprites[SpriteID::MapFlag] = spriteSheet.getSprite("flag03");
@@ -2541,6 +2541,7 @@ void GolfState::loadSprites()
     m_sprites[SpriteID::AlbatrossLeft] = spriteSheet.getSprite("albatross_left");
     m_sprites[SpriteID::AlbatrossRight] = spriteSheet.getSprite("albatross_right");
     m_sprites[SpriteID::Hio] = spriteSheet.getSprite("hio");
+    m_sprites[SpriteID::NoBalls] = spriteSheet.getSprite("no_balls");
 
     spriteSheet.loadFromFile("assets/golf/sprites/bounce.spt", m_resources.textures);
     m_sprites[SpriteID::BounceAnim] = spriteSheet.getSprite("bounce");
