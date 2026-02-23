@@ -2087,6 +2087,13 @@ void ProfileStateV2::createHeadwearItems()
                         m_avatarHairModels[index].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.playerData.avatarFlags[keyIndex]]);
                     }
                     m_uiLayout.updatePalettePreview(keyIndex, i.selectedIndex, static_cast<float>(m_previewTexture.getSize().y));
+
+                    if (keyIndex == pc::ColourKey::Hair)
+                    {
+                        //update hair on the AV model too
+                        m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Hair, i.selectedIndex);
+                        m_profileTextures[m_avatarIndex].apply();
+                    }
                 };
 
             item->selected =
