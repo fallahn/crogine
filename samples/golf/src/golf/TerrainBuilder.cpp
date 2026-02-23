@@ -78,7 +78,8 @@ namespace
     constexpr glm::vec2 ChunkSize(static_cast<float>(MapSize.x) / ChunkVisSystem::ColCount, static_cast<float>(MapSize.y) / ChunkVisSystem::RowCount);
 
     //params for poisson disk samples
-    static constexpr float GrassDensity = 0.9f;// 1.4f;// 1.7f; //radius for PD sampler //TODO a 'high density' setting at 0.9f
+    static constexpr float GrassDensity = 1.4f;// 1.7f; //radius for PD sampler
+    static constexpr float GrassDensityHigh = 0.9f;
     static constexpr float TreeDensity = 4.f;
 
     static constexpr std::array MinBounds = { 0.f, 0.f };
@@ -1283,7 +1284,7 @@ void TerrainBuilder::threadFunc()
 
                 //recreate the distribution(s)
                 const auto seed = static_cast<std::uint32_t>(std::time(nullptr));
-                const auto grass = pd::PoissonDiskSampling(GrassDensity, MinBounds, MaxBounds, 30u, seed);
+                const auto grass = pd::PoissonDiskSampling(m_sharedData.grassDensity == 0 ? GrassDensity : GrassDensityHigh, MinBounds, MaxBounds, 30u, seed);
                 const auto trees = pd::PoissonDiskSampling(TreeDensity, MinBounds, MaxBounds);
                 const auto flowers = pd::PoissonDiskSampling(TreeDensity * 0.5f, MinBounds, MaxBounds, 30u, seed / 2);
 
