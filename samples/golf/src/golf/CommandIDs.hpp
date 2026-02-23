@@ -53,7 +53,8 @@ struct CommandID final
         HoleRing        = 0x20000,
         BullsEye        = 0x40000,
         Ghost           = 0x80000, //20
-        MeasureWidget   = 0x100000
+        MeasureWidget   = 0x100000,
+        TeeLight        = 0x200000
     };
 
     struct UI final

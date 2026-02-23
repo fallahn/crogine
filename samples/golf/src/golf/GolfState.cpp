@@ -2534,17 +2534,24 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                 m_spectateGhost.getComponent<cro::Model>().setMaterialProperty(0, "u_rimColour", getBeaconColour(m_sharedData.beaconColour));
 
-                cmd.targetFlags = CommandID::Tee;
+                cmd.targetFlags = CommandID::Tee | CommandID::TeeLight;
                 cmd.action = [&](cro::Entity e, float)
                     {
-                        if (cro::SysTime::now().months() == 10 && cro::SysTime::now().days() > 22)
+                        if (e.hasComponent<cro::LightVolume>())
                         {
-                            //we have a spooky tee so an't set the colour
-                            e.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", cro::Colour::White);
+                            e.getComponent<cro::LightVolume>().colour = CD32::Colours[m_sharedData.teeColour];
                         }
                         else
                         {
-                            e.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", CD32::Colours[m_sharedData.teeColour]);
+                            if (cro::SysTime::now().months() == 10 && cro::SysTime::now().days() > 22)
+                            {
+                                //we have a spooky tee so can't set the colour
+                                e.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", cro::Colour::White);
+                            }
+                            else
+                            {
+                                e.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", CD32::Colours[m_sharedData.teeColour]);
+                            }
                         }
                     };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -4101,7 +4108,7 @@ void GolfState::buildScene()
     m_skyScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.create(2, 2);
 
     //tee marker
-    material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+    material = m_resources.materials.get(m_materialIDs[m_sharedData.nightTime ? MaterialID::BallNight : MaterialID::Ball]);
     const bool spooky = cro::SysTime::now().months() == 10 && cro::SysTime::now().days() > 22;
     if (spooky)
     {
@@ -4148,7 +4155,7 @@ void GolfState::buildScene()
 
 
     auto teeEnt = entity;
-    if (spooky && m_lightVolumeDefinition.isLoaded()
+    if (m_lightVolumeDefinition.isLoaded()
         && m_sharedData.nightTime)
     {
         static constexpr float LightRadius = 3.5f;
@@ -4167,12 +4174,25 @@ void GolfState::buildScene()
             entity.getComponent<cro::Model>().setHidden(true);
             entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::Reflection));
             entity.addComponent<cro::LightVolume>().radius = LightRadius;
-            entity.getComponent<cro::LightVolume>().colour = cro::Colour(1.f, 0.55f, 0.1f);
-            entity.addComponent<LightAnimation>(0.7f, 1.f);// .setPattern(LightAnimation::FlickerA);
+
+            if (spooky)
+            {
+                entity.getComponent<cro::LightVolume>().colour = cro::Colour(1.f, 0.55f, 0.1f);
+                entity.addComponent<LightAnimation>(0.7f, 1.f);// .setPattern(LightAnimation::FlickerA);
+            }
+            else
+            {
+                entity.getComponent<cro::LightVolume>().colour = CD32::Colours[m_sharedData.teeColour];
+                entity.addComponent<LightAnimation>(); //prevents lens flares being added
+                entity.addComponent<cro::CommandTarget>().ID = CommandID::TeeLight;
+            }
             teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
 
-        setFog(0.5f);
+        if (spooky)
+        {
+            setFog(0.5f);
+        }
     }
 
     
