@@ -4199,6 +4199,7 @@ void GolfState::buildScene()
     
 
     //golf bags
+    material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
     material.setProperty("u_ballColour", cro::Colour::White);
     material.doubleSided = true;
     md.loadFromFile("assets/golf/models/golfbag02.cmt");
