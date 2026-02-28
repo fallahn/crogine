@@ -430,12 +430,14 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     noiseTex.setRepeated(true);
     noiseTex.setSmooth(true);
 
+#ifdef GEN_GRASS
     if (!Social::isSteamdeck())
     {
         resources.materials.get(grassID).setProperty("u_noiseTexture", noiseTex);
         resources.materials.get(grassID).addCustomSetting(GL_CLIP_DISTANCE1);
         createGrassChunks(resources, scene, resources.materials.get(grassID));
     }
+#endif
 
     auto b = 0;
     for (auto& entity : m_propRootEntities)
@@ -924,6 +926,7 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
         
         m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
 
+#ifdef GEN_GRASS
         //if we have any transforms update the chunks
         if (!Social::isSteamdeck()
             /*&& m_sharedData.grassDensity == 1*/) //hmm, we always have to do this in case the user changes the setting mid-round
@@ -942,6 +945,7 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
                 }
             }
         }
+#endif
 
         //signal to the thread we want to update the buffers
         //ready for next time - this will also recreate the grass transforms
@@ -1052,15 +1056,18 @@ void TerrainBuilder::applyCrowdDensity()
 
 void TerrainBuilder::applyGrassDensity()
 {
+#ifdef GEN_GRASS
     for (auto e : m_grassChunks)
     {
         e.getComponent<cro::Model>().setHidden(m_sharedData.grassDensity == 0);
     }
+#endif
 }
 
 //private
 void TerrainBuilder::readGrassData()
 {
+#ifdef GEN_GRASS
     for (auto& tx : m_grassTransforms)
     {
         tx.clear();
@@ -1091,10 +1098,12 @@ void TerrainBuilder::readGrassData()
             }
         }
     }
+#endif
 }
 
 void TerrainBuilder::createGrassChunks(cro::ResourceCollection& resources, cro::Scene& scene, cro::Material::Data& material)
 {
+#ifdef GEN_GRASS
     const auto& shader = resources.shaders.get(ShaderID::Grass);
     grassUniform.shader = shader.getGLHandle();
     grassUniform.alpha = shader.getUniformID("u_alpha");
@@ -1124,10 +1133,12 @@ void TerrainBuilder::createGrassChunks(cro::ResourceCollection& resources, cro::
     }
 
     applyGrassDensity();
+#endif
 }
 
 void TerrainBuilder::setVisibilityStates(const ChunkVisSystem::VisStates& states)
 {
+#ifdef GEN_GRASS
     if (!Social::isSteamdeck() &&
         m_sharedData.grassDensity)
     {
@@ -1149,6 +1160,7 @@ void TerrainBuilder::setVisibilityStates(const ChunkVisSystem::VisStates& states
             }
         }
     }
+#endif
 }
 
 void TerrainBuilder::onChunkUpdate(const std::vector<std::int32_t>& visibleChunks)

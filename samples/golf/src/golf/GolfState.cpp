@@ -1435,8 +1435,9 @@ void GolfState::handleMessage(const cro::Message& msg)
         }
         else if (data.type == SystemEvent::GrassDensityChanged)
         {
-            m_terrainBuilder.applyGrassDensity();
-            m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::TreeQuality::High || m_sharedData.grassDensity != 0);
+            //currently moot and crashes the Deck
+            //m_terrainBuilder.applyGrassDensity();
+            //m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::TreeQuality::High || m_sharedData.grassDensity != 0);
         }
     }
         break;
