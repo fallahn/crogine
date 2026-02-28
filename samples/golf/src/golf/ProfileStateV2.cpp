@@ -2008,10 +2008,16 @@ void ProfileStateV2::createHeadwearItems()
                     if (keyIndex == pc::ColourKey::Hair)
                     {
                         setHairIndex(i.selectedIndex);
+
+                        //the above may have corrected the index to prevent
+                        //the same model being used on both nodes, so we need to
+                        //correct the index in the UI *sigh*
+                        i.selectedIndex = m_avatarModels[m_avatarIndex].hairIndex;
                     }
                     else
                     {
                         setHatIndex(i.selectedIndex);
+                        i.selectedIndex = m_avatarModels[m_avatarIndex].hatIndex;
                     }
 
                     i.description = i.labels[i.selectedIndex] + "/" + std::to_string(m_avatarHairModels.size());
@@ -2036,6 +2042,8 @@ void ProfileStateV2::createHeadwearItems()
                         i.uv = m_itemIcons[ItemIcon::WorkshopItem].getTextureRect();
                         break;
                     }
+                    LogI << "Hair Idx: " << m_avatarModels[m_avatarIndex].hairIndex << std::endl;
+                    LogI << "Hat Idx: " << m_avatarModels[m_avatarIndex].hatIndex << std::endl;
                 };
             for (auto i = 0u; i < m_avatarHairModels.size(); ++i)
             {
@@ -3652,17 +3660,28 @@ void ProfileStateV2::setAvatarIndex(std::int32_t idx)
 
 void ProfileStateV2::setHairIndex(std::int32_t idx)
 {
-    //don't set the same as the hat
-    if (idx == m_avatarModels[m_avatarIndex].hatIndex)
-    {
-        idx = 0;
-    }
+
     auto hairIndex = m_avatarModels[m_avatarIndex].hairIndex;
 
     if (m_avatarHairModels[hairIndex].isValid())
     {
         m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(true);
     }
+
+    //don't set the same as the hat
+    if (idx == m_avatarModels[m_avatarIndex].hatIndex)
+    {
+        if (idx > hairIndex)
+        {
+            //we went up
+            idx = (idx + 1) % m_avatarHairModels.size();
+        }
+        else
+        {
+            idx = (idx + (m_avatarHairModels.size() - 1)) % m_avatarHairModels.size();
+        }
+    }
+
     hairIndex = idx;
     if (m_avatarHairModels[hairIndex].isValid())
     {
@@ -3687,18 +3706,27 @@ void ProfileStateV2::setHairIndex(std::int32_t idx)
 
 void ProfileStateV2::setHatIndex(std::int32_t idx)
 {
-    //don't set the same as hair
-    if (idx == m_avatarModels[m_avatarIndex].hairIndex)
-    {
-        idx = 0;
-    }
-
     auto hatIndex = m_avatarModels[m_avatarIndex].hatIndex;
 
     if (m_avatarHairModels[hatIndex].isValid())
     {
         m_avatarHairModels[hatIndex].getComponent<cro::Model>().setHidden(true);
     }
+    
+    //don't set the same as the hat
+    if (idx == m_avatarModels[m_avatarIndex].hairIndex)
+    {
+        if (idx > hatIndex)
+        {
+            //we went up
+            idx = (idx + 1) % m_avatarHairModels.size();
+        }
+        else
+        {
+            idx = (idx + (m_avatarHairModels.size() - 1)) % m_avatarHairModels.size();
+        }
+    }
+    
     hatIndex = idx;
     if (m_avatarHairModels[hatIndex].isValid())
     {
