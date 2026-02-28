@@ -2042,8 +2042,6 @@ void ProfileStateV2::createHeadwearItems()
                         i.uv = m_itemIcons[ItemIcon::WorkshopItem].getTextureRect();
                         break;
                     }
-                    LogI << "Hair Idx: " << m_avatarModels[m_avatarIndex].hairIndex << std::endl;
-                    LogI << "Hat Idx: " << m_avatarModels[m_avatarIndex].hatIndex << std::endl;
                 };
             for (auto i = 0u; i < m_avatarHairModels.size(); ++i)
             {
@@ -2133,13 +2131,13 @@ void ProfileStateV2::createHeadwearItems()
 
             const std::array<std::string, 3u> LabelA = { "Position","Rotation","Scale" };
             const std::array<std::string, 3u> LabelB = { " X"," Y"," Z" };
-            constexpr std::array<float, 3u> MaxValues = { 0.05f, cro::Util::Const::PI, 1.5f };
-            constexpr std::array<float, 3u> MinValues = { -0.05f, -cro::Util::Const::PI, 0.05f };
+            static constexpr std::array<float, 3u> MaxValues = { 0.05f, cro::Util::Const::PI, 1.5f };
+            static constexpr std::array<float, 3u> MinValues = { -0.05f, -cro::Util::Const::PI, 0.05f };
             static constexpr std::array<float, 3u> CentreValues = { 0.f, 0.f, 1.f };
             static constexpr std::int32_t SelectionCount = 36; //number of selections is +/- this
 
             const auto indexToValue =
-                [&](std::int32_t type, std::int32_t selectedIndex)
+                [](std::int32_t type, std::int32_t selectedIndex)
                 {
                     //type is pos/rot/scale selectedIndex is the selection in the widget
                     const auto offsetIndex = selectedIndex - SelectionCount;
@@ -3822,6 +3820,10 @@ void ProfileStateV2::applyHeadwearTransform(std::size_t idx, std::size_t indexOf
         m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
         m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
         m_avatarHairModels[idx].getComponent<cro::Transform>().setScale(m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairScale + indexOffset]);
+
+        LogI << "Translation: " << m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairTx + indexOffset] << std::endl;
+        LogI << "Rotation: " << rot << std::endl;
+        LogI << "Scale: " << m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairScale + indexOffset] << std::endl;
     }
 }
 

@@ -716,6 +716,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         m_sharedData.minimapData.targetPos *= m_inputParser.getEstimatedDistance();
         m_sharedData.minimapData.targetPos += m_currentPlayer.position;
 
+        auto* msg = postMessage<MenuSoundEvent>(MessageID::MenuSoundMessage);
+        msg->type = MenuSoundEvent::Activate;
+
         requestStackPush(StateID::Pause);
     };
 
