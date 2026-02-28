@@ -3820,10 +3820,6 @@ void ProfileStateV2::applyHeadwearTransform(std::size_t idx, std::size_t indexOf
         m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
         m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
         m_avatarHairModels[idx].getComponent<cro::Transform>().setScale(m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairScale + indexOffset]);
-
-        LogI << "Translation: " << m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairTx + indexOffset] << std::endl;
-        LogI << "Rotation: " << rot << std::endl;
-        LogI << "Scale: " << m_activeProfile.playerData.headwearOffsets[PlayerData::HeadwearOffset::HairScale + indexOffset] << std::endl;
     }
 }
 
