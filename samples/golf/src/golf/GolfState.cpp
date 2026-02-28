@@ -4195,6 +4195,19 @@ void GolfState::buildScene()
             setFog(0.5f);
         }
     }
+    else
+    {
+        if (!teeEnt.hasComponent<cro::ShadowCaster>())
+        {
+            teeEnt.addComponent<cro::ShadowCaster>();
+            //if the resource allocator is doing its job this just returns
+            //the existing shadow mapping material
+            const auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
+            const auto matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+            auto shadowMaterial = m_resources.materials.get(matID);
+            teeEnt.getComponent<cro::Model>().setShadowMaterial(0, shadowMaterial);
+        }
+    }
 
     
 
