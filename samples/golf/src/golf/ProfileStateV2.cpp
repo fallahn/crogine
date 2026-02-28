@@ -3669,7 +3669,8 @@ void ProfileStateV2::setHairIndex(std::int32_t idx)
     }
 
     //don't set the same as the hat
-    if (idx == m_avatarModels[m_avatarIndex].hatIndex)
+    if (idx != 0 && //we allow bald as it's an empty model so won't clash
+        idx == m_avatarModels[m_avatarIndex].hatIndex)
     {
         if (idx > hairIndex)
         {
@@ -3714,7 +3715,8 @@ void ProfileStateV2::setHatIndex(std::int32_t idx)
     }
     
     //don't set the same as the hat
-    if (idx == m_avatarModels[m_avatarIndex].hairIndex)
+    if (idx != 0 &&
+        idx == m_avatarModels[m_avatarIndex].hairIndex)
     {
         if (idx > hatIndex)
         {
