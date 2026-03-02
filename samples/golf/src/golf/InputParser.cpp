@@ -756,7 +756,8 @@ void InputParser::setMaxClub(float dist, bool atTee)
             dist = 1000.f;
         }
 
-        if (m_terrain == TerrainID::Rough)
+        if (m_terrain == TerrainID::Rough
+            && Club::getClubLevel() == 2)
         {
             maxClub = ClubID::ThreeWood;
         }
@@ -1146,7 +1147,7 @@ float InputParser::getDampening() const
         case ClubID::Driver:
         case ClubID::ThreeWood:
         case ClubID::FiveWood:
-            dampening *= 1.f - (0.00375f * clubLevel);// 0.85f;
+            dampening *= 1.f - (0.00345f * clubLevel);// 0.85f;
             break;
         }
         break;
