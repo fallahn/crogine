@@ -209,13 +209,13 @@ void Drawable2D::updateLocalBounds()
 {
     if (m_vertices.empty()) return;
 
-    auto xExtremes = std::minmax_element(m_vertices.begin(), m_vertices.end(),
+    const auto xExtremes = std::minmax_element(m_vertices.begin(), m_vertices.end(),
         [](const Vertex2D& lhs, const Vertex2D& rhs)
         {
             return lhs.position.x < rhs.position.x;
         });
 
-    auto yExtremes = std::minmax_element(m_vertices.begin(), m_vertices.end(),
+    const auto yExtremes = std::minmax_element(m_vertices.begin(), m_vertices.end(),
         [](const Vertex2D& lhs, const Vertex2D& rhs)
         {
             return lhs.position.y < rhs.position.y;
