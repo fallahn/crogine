@@ -50,7 +50,7 @@ namespace cro
     \brief Abstract base class for states.
 
     States, when used in conjunction with the state stack, are used
-    to encapsulate game states, such as menus or pausing mode.
+    to encapsulate game states, such as menus or pause mode.
     Concrete states should provide a unique ID using the StateID type.
     */
     class CRO_EXPORT_API State
