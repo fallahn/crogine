@@ -1,6 +1,6 @@
 ﻿/*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -6308,7 +6308,8 @@ void GolfState::buildTrophyScene()
 void GolfState::updateMinimapTexture()
 {
     //TODO assert if we need to do this every pass
-    if (m_sharedData.scoreType == ScoreType::MultiTarget)
+    if (m_sharedData.scoreType == ScoreType::MultiTarget
+        /*|| Social::getMonth() == 2*/) //we can't do this as we don't know if the hole has a random target yet...
     {
         auto* shader = &m_resources.shaders.get(ShaderID::MinimapModel);
         m_targetShader.shaderID = shader->getGLHandle();

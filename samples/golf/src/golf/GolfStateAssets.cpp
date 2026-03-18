@@ -1,6 +1,6 @@
 ﻿/*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -2131,7 +2131,12 @@ void GolfState::loadMaterials()
     shader = &m_resources.shaders.get(ShaderID::MinimapModel);
     m_materialIDs[MaterialID::Minimap] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Minimap]).setProperty("u_angleTex", shaleTex);
-
+    //hide  this if it's the monthly challenge (else the minimap goes pink)
+    if (Social::getMonth() == 2
+        && m_sharedData.scoreType != ScoreType::MultiTarget)
+    {
+        m_resources.materials.get(m_materialIDs[MaterialID::Minimap]).setProperty("u_targetViewProjectionMatrix", glm::mat4(1.f));
+    }
 
     //m_ballShadows.shaders[0].shader = shader->getGLHandle();
     //m_ballShadows.shaders[0].uniform = shader->getUniformID("u_ballPosition");

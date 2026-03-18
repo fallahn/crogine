@@ -527,7 +527,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Release;$(SolutionDir)extlibs\curl\release\lib;$(SolutionDir)extlibs\libgns\bin;$(SolutionDir)extlibs\sqlite\bin;$(SolutionDir)..\libgns\x64\Release</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sapi.lib;libgjs.lib;libsocial.lib;libgns.lib;libcurl.lib;crogine.lib;SDL2.lib;SDL2main.lib;BulletCollision.lib;BulletDynamics.lib;LinearMath.lib;sqlite3.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sapi.lib;libsocial.lib;libgns.lib;libcurl.lib;crogine.lib;SDL2.lib;SDL2main.lib;BulletCollision.lib;BulletDynamics.lib;LinearMath.lib;sqlite3.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGNS|x64'">
