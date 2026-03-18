@@ -228,8 +228,8 @@ std::int32_t Social::doubleXP()
 {
     auto ts = std::time(nullptr);
     const auto* tm = std::localtime(&ts);
-    if ((tm->tm_wday == 0 && (tm->tm_mday > 14 && tm->tm_mday < 22))
-        || (tm->tm_wday == 6 && (tm->tm_mday > 13 && tm->tm_mday < 21)))
+    if ((tm->tm_wday == 0 && (tm->tm_mday > 13 && tm->tm_mday < 22))
+        || (tm->tm_wday == 6 && (tm->tm_mday > 12 && tm->tm_mday < 21)))
     {
         return 2;
     }
