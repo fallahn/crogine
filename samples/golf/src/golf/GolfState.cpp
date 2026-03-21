@@ -899,17 +899,17 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
             break;
 #ifdef CRO_DEBUG_
-        case SDLK_F7:
-            //m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
-            
-            m_sharedData.connectionData[0].playerData[0].skinScore = 10;
-            m_sharedData.connectionData[0].playerData[1].skinScore = 1;
-            showCountdown(30);
-            //showMessageBoard(MessageBoardID::Scrub);
-            //requestStackPush(StateID::Tutorial);
-            //showNotification("buns");
-            //Achievements::awardAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
-            break;
+        //case SDLK_F7:
+        //    //m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
+        //    
+        //    m_sharedData.connectionData[0].playerData[0].skinScore = 10;
+        //    m_sharedData.connectionData[0].playerData[1].skinScore = 1;
+        //    showCountdown(30);
+        //    //showMessageBoard(MessageBoardID::Scrub);
+        //    //requestStackPush(StateID::Tutorial);
+        //    //showNotification("buns");
+        //    //Achievements::awardAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
+        //    break;
         case SDLK_F10:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::ChangeWind), net::NetFlag::Reliable);
             break;

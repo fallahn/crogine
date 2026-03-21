@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1140,7 +1140,7 @@ void InputParser::updateDistanceEstimation()
 
     static constexpr float dt = 1.f / 60.f; //I'm sure we're redefining this...
     const auto stepVel = impulse * dt;
-    constexpr auto stepGrav = BallSystem::Gravity * dt * dt;
+    constexpr auto stepGrav = Gravity * dt * dt;
 
     glm::vec3 endPos(1.f);
     //run the estimation until we get a time where the final result has a height < 0 again

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -180,6 +180,8 @@ static constexpr glm::uvec2 FlagTextureSize(336u, 240u);
 static constexpr std::uint32_t ShadowMapLowest = 512;
 static constexpr std::uint32_t ShadowMapLow = 2048;
 static constexpr std::uint32_t ShadowMapHigh = 3072;
+
+static constexpr glm::vec3 Gravity = glm::vec3(0.f, -9.8f, 0.f);
 
 static inline void createKeystroke(std::int32_t key, bool down)
 {
