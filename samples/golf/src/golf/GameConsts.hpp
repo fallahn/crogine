@@ -413,6 +413,8 @@ struct ShaderID final
         Lava,
         LavaFall,
         Umbrella,
+        Cloth,
+        Shore,
         Moon,
         Earth
     };

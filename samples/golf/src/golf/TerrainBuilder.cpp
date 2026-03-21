@@ -435,14 +435,16 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
         //this contains the regular billboards (always visible)
         auto bbe = createBillboardEnt();
-        if (bbe.hasComponent<cro::Model>())
+        if (bbe.isValid() &&
+            bbe.hasComponent<cro::Model>())
         {
             m_billboardEntities[b] = bbe;
         }
         //these have billboarded trees used for flight cam and when
         //tree quality is set to low.
         bbe = createBillboardEnt();
-        if (bbe.hasComponent<cro::Model>())
+        if (bbe.isValid() &&
+            bbe.hasComponent<cro::Model>())
         {
             bbe.getComponent<cro::Model>().setRenderFlags(RenderFlags::FlightCam);
             m_billboardTreeEntities[b] = bbe;

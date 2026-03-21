@@ -7463,6 +7463,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_inputParser.setMaxRotation(m_holeData[m_currentHole].puttFromTee ? MaxPuttRotation : 
         player.terrain == TerrainID::Green ? rotation / 3.f : rotation);
 
+
     auto midTarget = findTargetPos(player.position);
 
     //set this separately because target might not necessarily be the pin.

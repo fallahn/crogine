@@ -84,6 +84,8 @@ namespace
 #include "shaders/Hologram.inl"
 #include "shaders/TerrainMaterials.inl"
 #include "shaders/Weather.inl"
+#include "shaders/Shore.inl"
+#include "shaders/ClothShader.inl"
 
     //colour is normal colour with dark shadow
     const std::array BannerStrings =
@@ -1787,7 +1789,11 @@ void GolfState::loadMaterials()
     m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
 
 
-
+    std::string mrt;
+    if (m_sharedData.nightTime)
+    {
+        mrt = "#define USE_MRT\n";
+    }
 
     //special prop materials
     if (m_resources.shaders.loadFromString(ShaderID::Lava,
@@ -1847,6 +1853,25 @@ void GolfState::loadMaterials()
         auto* shader = &m_resources.shaders.get(ShaderID::Umbrella);
         m_resolutionBuffer.addShader(*shader);
     }
+
+    if (m_resources.shaders.loadFromString(ShaderID::Cloth, ClothVertex, ClothFragment, wobble + mrt))
+    {
+        m_resources.shaders.mapStringID("sail", ShaderID::Cloth);
+        m_windBuffer.addShader(m_resources.shaders.get(ShaderID::Cloth));
+        m_resolutionBuffer.addShader(m_resources.shaders.get(ShaderID::Cloth));
+        //TODO this is missing the noise texture at u_noiseTexture - but it's not very noticeable
+    }
+
+    if (m_resources.shaders.loadFromString(ShaderID::Shore, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit),
+        ShoreFragment, "#define TEXTURED\n#define RIMMING\n" + mrt/*wobble*/))
+    {
+        m_resources.shaders.mapStringID("shore", ShaderID::Shore);
+        m_windBuffer.addShader(m_resources.shaders.get(ShaderID::Shore));
+    }
+
+    
+
+
 
     //create compile time constants from moon phase data
     const MoonPhase mp(std::time(nullptr));
@@ -2216,12 +2241,6 @@ void GolfState::loadMaterials()
 
 
     //HQ tree shaders - wasted if the whole game is LQ, but we want to be able to swap mid-game...
-    std::string mrt;
-    if (m_sharedData.nightTime)
-    {
-        mrt = "#define USE_MRT\n";
-    }
-
     m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define ALPHA_CLIP\n#define INSTANCING\n" + wobble + mrt + FadeDistanceHQ);
     shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
     m_scaleBuffer.addShader(*shader);

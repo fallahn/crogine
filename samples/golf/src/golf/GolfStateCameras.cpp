@@ -1374,7 +1374,23 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
                 const float MinDist = m_holeData[m_currentHole].puttFromTee ? 9.f : 2500.f;
                 if (targetDist < MinDist) //remember this in len2
                 {
-                    targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+                    //targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+                    if (!m_holeData[m_currentHole].puttFromTee)
+                    {
+                        targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+                    }
+                    else
+                    {
+                        if (glm::length2(m_currentPlayer.position - m_holeData[m_currentHole].tee) < (0.01f * 0.01f))
+                        {
+                            //we're on the tee always look at the target
+                            targetInfo.targetLookAt = activeTarget;
+                        }
+                        else
+                        {
+                            targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+                        }
+                    }
                 }
                 else
                 {

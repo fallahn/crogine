@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -687,16 +687,20 @@ float contour = clamp(contourX + contourY, 0.0, 1.0);
 
 #else //putting green
 
-    vec3 f = fract(v_worldPosition * 2.0);
-    vec3 df = fwidth(v_worldPosition * 2.0);
+    vec2 f = fract(v_worldPosition.xz * 2.0);
+    vec2 df = fwidth(v_worldPosition.xz * 2.0);
     //df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
-    vec3 g = step(df * u_pixelScale, f);
+    //vec2 g = step(df * u_pixelScale, f);
+    vec2 g = smoothstep(df, df * 2.0, f);
+    vec2 h = smoothstep(df * 0.25, df * 0.5, f);
 
-    float contour = 1.0 - (g.x * g.y * g.z);
+    float contour = (1.0 - (g.x * g.y)) * (h.x * h.y);
 
-    vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
+    //float contour = pristineGrid(v_worldPosition.xz*2.0,vec2(1.0/40.0));
+
     //these magic numbers are distance sqr
-    float fade = (1.0 - smoothstep(81.0, 144.0, dot(distance, distance))) * u_transparency * 0.75;
+    vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
+    float fade = (1.0 - smoothstep(81.0, 100.0, dot(distance, distance))) * u_transparency * 0.75;
 
     vec3 contourColour = BaseContourColour;
     contourColour.x += mod(v_worldPosition.y * 3.0, 1.0);
