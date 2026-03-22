@@ -47,7 +47,7 @@ source distribution.
 
 namespace
 {
-    const std::array<std::string, 13u> CourseNames =
+    const std::array<std::string, 14u> CourseNames =
     {
         "course_01",
         "course_02",
@@ -63,6 +63,7 @@ namespace
         "course_12",
 
         "course_13",
+        "course_14",
     };
 
     std::unique_ptr<PersonalBest> personalBest;
