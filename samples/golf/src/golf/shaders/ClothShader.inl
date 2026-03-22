@@ -193,7 +193,7 @@ void main()
 #if defined(VIEW_POS)
     POS_OUT.r = v_viewPosition.z;
 #else
-    POS_OUT = v_worldPosition;
+    POS_OUT.rgb = v_worldPosition;
 #endif
 #endif
 })";
