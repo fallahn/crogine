@@ -3331,6 +3331,7 @@ void GolfState::loadSpectators()
                                     [entity](cro::Entity e, float)
                                     {
                                         e.getComponent<cro::Model>().setHidden(entity.getComponent<cro::Model>().isHidden());
+                                        e.getComponent<cro::Transform>().setScale(entity.getComponent<cro::Transform>().getScale()); //hides umbrella when crowd is set to zero
                                     };
                                 skel.getAttachments()[attachmentIdx].setModel(childEnt);
                             }

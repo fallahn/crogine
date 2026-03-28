@@ -897,7 +897,8 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
                     }
                 }
 
-                if (m_umbrellaEntities[first].isValid())
+                if (m_umbrellaEntities[first].isValid()
+                    && !positions[0].empty())
                 {
                     m_umbrellaEntities[first].getComponent<cro::Model>().setInstanceTransforms(positions[0]);
                     m_umbrellaEntities[first].getComponent<cro::Model>().setHidden(false);

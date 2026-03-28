@@ -76,6 +76,12 @@ void BillboardSystem::process(float)
                 //do this first else we'll be off by one quad...
                 const auto baseIndex = static_cast<std::uint32_t>(vertexData.size());
 
+                if (baseIndex > std::numeric_limits<std::uint16_t>::max()-4)
+                {
+                    LogW << "[Billboards] Index count reached " << baseIndex << ": no more billboards can be added" << std::endl;
+                    break;
+                }
+
                 //two tris
                 indexData.push_back(baseIndex);
                 indexData.push_back(baseIndex + 2);
