@@ -136,6 +136,8 @@ namespace
     static constexpr cro::Time RepeatTimeShort = cro::seconds(0.05f);
 
     bool audioHackDone = false;
+
+    glm::uvec2 lastWindowSize = { 0u,0u };
 }
 
 using namespace UI;
@@ -148,6 +150,11 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_keybindIndex      (-1),
     m_keybindItemIndex  (-1)
 {
+    //sigh, the window resized event might not necessarily mean
+    //that the window resized (I know, I know,) so we track the
+    //previous size and only update the layout when we need to
+    lastWindowSize = cro::App::getWindow().getSize();
+    
     ctx.mainWindow.setMouseCaptured(false);
 
     m_flagPreview.init(sd.flagPath);
@@ -532,7 +539,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         }
     }
 
-    //m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
+
     m_scene.forwardEvent(evt);
     return false;
 }
@@ -544,22 +551,27 @@ void OptionsStateV2::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::WindowEvent>();
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
-            //hack to force the texture to resize properly
-            m_uiLayout.menuLayout.texture.create(1, 1, false);
-            m_uiLayout.updateTabBar();
+            if (const auto newSize = glm::uvec2(data.data0, data.data1);
+                newSize != lastWindowSize)
+            {
+                //hack to force the texture to resize properly
+                m_uiLayout.menuLayout.texture.create(1, 1, false);
+                m_uiLayout.updateTabBar();
 
-            //realigns the current menu to the new screen size
-            cro::Entity entity = m_scene.createEntity();
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().function =
-                [&](cro::Entity e, float)
-                {
-                    m_uiLayout.menuLayout.itemIndex = 0;
-                    m_uiLayout.focusToIndex();
+                //realigns the current menu to the new screen size
+                cro::Entity entity = m_scene.createEntity();
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().function =
+                    [&](cro::Entity e, float)
+                    {
+                        m_uiLayout.activateTab(m_uiLayout.tabBar.activeIndex);
 
-                    e.getComponent<cro::Callback>().active = false;
-                    m_scene.destroyEntity(e);
-                };
+                        e.getComponent<cro::Callback>().active = false;
+                        m_scene.destroyEntity(e);
+                    };
+
+                lastWindowSize = newSize;
+            }
         }
     }
     m_scene.forwardMessage(msg);

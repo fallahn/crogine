@@ -869,6 +869,16 @@ void UILayout::activateTab(std::int32_t idx)
     tabBar.activeIndex = idx;
     menuLayout.itemIndex = 0;
 
+    //skip over any title items if there's room
+    if (!menuLayout.items[tabBar.activeIndex].empty())
+    {
+        while (menuLayout.itemIndex < menuLayout.items[tabBar.activeIndex].size() - 1
+            && menuLayout.items[tabBar.activeIndex][menuLayout.itemIndex].displayType == Menu::Item::Heading)
+        {
+            menuLayout.itemIndex++;
+        }
+    }
+
     if (detailsPane.tabDetails[tabBar.activeIndex].isValid())
     {
         detailsPane.tabDetails[tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
