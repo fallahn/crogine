@@ -42,8 +42,8 @@ std::array<const RenderTarget*, RenderTarget::MaxActiveTargets> RenderTarget::m_
 
 IntRect RenderTarget::getViewport(FloatRect normalised) const
 {
-    float width = static_cast<float>(getSize().x);
-    float height = static_cast<float>(getSize().y);
+    const float width = static_cast<float>(getSize().x);
+    const float height = static_cast<float>(getSize().y);
 
     return IntRect(static_cast<int>(0.5f + width * normalised.left),
         static_cast<int>(0.5f + height * normalised.bottom),
