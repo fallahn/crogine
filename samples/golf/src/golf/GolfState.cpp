@@ -1255,6 +1255,15 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
             closeMessage();
         }
+        //else if (evt.button.button == SDL_BUTTON_MIDDLE)
+        //{
+        //    if (!m_textChat.isVisible()
+        //        && !emoteHandled
+        //        && !m_photoMode) //mmouse jumps to target
+        //    {
+        //        toggleFreeCam();
+        //    }
+        //}
     }
 
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
