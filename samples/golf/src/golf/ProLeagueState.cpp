@@ -395,11 +395,13 @@ void ProLeagueState::buildScene()
 
     //title text
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), 224.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), 210.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setString("Welcome to the Pro League!");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour, 15);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour, 18);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -407,7 +409,7 @@ void ProLeagueState::buildScene()
 
     const std::string info = 
         R"(
-Rules:
+  Rules:
 
     The Pro League is an online only leaderboard, and lasts one calendar month.
     There are 12 rounds, one on each course, made up of 18 holes.
@@ -420,11 +422,13 @@ Rules:
 
     //menu text
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 16.f, 216.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 16.f, 202.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(info);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //progress info (score, current position etc)
@@ -443,7 +447,7 @@ Rules:
 
     //display course info for next round
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), 70.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), 58.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -724,6 +728,51 @@ Rules:
                 }
             });
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    bounds = bgEnt.getComponent<cro::Sprite>().getTextureBounds();
+
+    //animated decorations
+    spriteSheet.loadFromFile("assets/golf/sprites/main_menu.spt", m_sharedData.sharedResources->textures);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) - 19.f, 20.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag_base");
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) + 1.f, 25.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag");
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    spriteSheet.loadFromFile("assets/golf/sprites/bounce.spt", m_sharedData.sharedResources->textures);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 95.f, 20.f, 0.05f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bounce");
+    entity.getComponent<cro::Sprite>().getAnimations()[0].looped = false;
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(10.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime -= dt;
+            if (currTime < 0.f)
+            {
+                currTime += 22.f + cro::Util::Random::value(-4, 3);
+                e.getComponent<cro::SpriteAnimation>().play(0);
+            }
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
 
 
     auto updateView = [&, rootNode, bannerEnt](cro::Camera& cam) mutable
