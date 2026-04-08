@@ -288,7 +288,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
     m_musicName = "No File";
 
 
-    registerWindow(std::bind(&MenuState::odinWindow, this));
+    //registerWindow(std::bind(&MenuState::odinWindow, this));
 
     /*auto* fonts = ImGui::GetIO().Fonts;
     static const std::vector<ImWchar> rangesB = { 0x231a, 0x23fe, 0x256d, 0x2bd1, 0x10000, 0x10FFFF, 0 };
@@ -543,8 +543,8 @@ void MenuState::render()
 {
     //draw any renderable systems
     m_scene.render();
-    /*m_simpleQuad.draw();
-    m_simpleText.draw();*/
+    /*m_simpleQuad.draw();*/
+    m_simpleText.draw();
 
     if (m_quantizeOutput.available())
     {
@@ -928,6 +928,26 @@ void MenuState::createScene()
 //    m_resources.shaders.loadFromString(0, cro::RenderSystem2D::getDefaultVertexShader(), f, "#define TEXTURED\n");
 //    entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(0));
 
+    m_simpleText.setFont(font);
+    m_simpleText.setString("SimpleText");
+    m_simpleText.setPosition({ 20.f, 20.f });
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt) mutable
+        {
+            static std::uint32_t charSize = 10;
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct += dt;
+            if (ct > 2.f)
+            {
+                ct -= 2.f;
+                charSize = charSize == 10 ? 26 : 10;
+                m_simpleText.setCharacterSize(charSize);
+            }
+        };
 
 
 

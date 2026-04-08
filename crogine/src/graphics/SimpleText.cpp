@@ -262,7 +262,7 @@ void SimpleText::updateVertices()
 
 void SimpleText::onFontUpdate()
 {
-    updateVertices();
+    //updateVertices(); //don't do this else we enter recursive hell
     m_dirtyFlags |= DirtyFlags::All;
 }
 
