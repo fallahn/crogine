@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -57,6 +57,7 @@ using namespace cro;
 namespace
 {
     constexpr float MagicNumber = static_cast<float>(1 << 6);
+    constexpr std::uint32_t GlyphPadding = 2;
 
     //used to create a unique key for bold/outline/codepoint glyphs
     //see https://github.com/SFML/SFML/blob/master/src/SFML/Graphics/Font.cpp#L66
@@ -253,9 +254,18 @@ bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx
 
 Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold, float outlineThickness) const
 {
+    const auto oldSize = m_pages.size();
+
     auto& fontData = getFontData(codepoint);
     auto& currentGlyphs = m_pages[charSize].glyphs;
-    auto key = combine(outlineThickness, bold, FT_Get_Char_Index(std::any_cast<FT_Face>(fontData.face), codepoint));
+    const auto key = combine(outlineThickness, bold, FT_Get_Char_Index(std::any_cast<FT_Face>(fontData.face), codepoint));
+
+    /*if (m_pages.size() > oldSize
+        || m_textureArray.getTextureCount() == 0)
+    {
+        DLogI("Created new glyph page");
+        rebuildTextureArray();
+    }*/
 
     auto result = currentGlyphs.find(key);
     if (result != currentGlyphs.end())
@@ -274,11 +284,12 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold,
 
 const Texture& Font::getTexture(std::uint32_t charSize) const
 {
-    //CRO_ASSERT(m_pages.count(charSize) != 0, "Page doesn't exist");
-    //TODO this may return an invalid texture if the
-    //current charSize is not inserted in the page map
-    //and is automatically created
-    return m_pages[charSize].texture;
+    if (m_pages.count(charSize) == 0)
+    {
+        m_pages.insert(std::make_pair(charSize, Page()));
+    }
+
+    return m_pages.at(charSize).texture;
 }
 
 float Font::getLineHeight(std::uint32_t charSize) const
@@ -464,24 +475,22 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
 
     if (width > 0 && height > 0)
     {
-        const std::uint32_t padding = 2;
-
         //pad the glyph to stop potential bleed
-        width += 2 * padding;
-        height += 2 * padding;
+        width += 2 * GlyphPadding;
+        height += 2 * GlyphPadding;
 
         //get the current page
-        auto& page = m_pages[charSize];
+        auto& page = m_pages.at(charSize);
         page.texture.setSmooth(m_useSmoothing);
 
         //find somewhere to insert the glyph
         retVal.textureBounds = getGlyphRect(page, width, height);
 
         //readjust texture rect for padding
-        retVal.textureBounds.left += padding;
-        retVal.textureBounds.bottom += padding;
-        retVal.textureBounds.width -= padding * 2;
-        retVal.textureBounds.height -= padding * 2;
+        retVal.textureBounds.left += GlyphPadding;
+        retVal.textureBounds.bottom += GlyphPadding;
+        retVal.textureBounds.width -= GlyphPadding * 2;
+        retVal.textureBounds.height -= GlyphPadding * 2;
 
         retVal.bounds.left = static_cast<float>(face->glyph->metrics.horiBearingX) / MagicNumber;
         retVal.bounds.bottom = static_cast<float>(face->glyph->metrics.horiBearingY) / MagicNumber;
@@ -512,24 +521,24 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
         if (bitmap->pixel_mode == FT_PIXEL_MODE_MONO)
         {
             //for(auto y = height - padding - 1; y >= padding; --y)
-            for(auto y = padding; y < height - padding; ++y)
+            for(auto y = GlyphPadding; y < height - GlyphPadding; ++y)
             {
-                for (auto x = padding; x < width - padding; ++x)
+                for (auto x = GlyphPadding; x < width - GlyphPadding; ++x)
                 {
                     const std::size_t index = x + y * width;
-                    m_pixelBuffer[index * 4 + 3] = ((pixels[(x - padding) / 8]) & (1 << (7 - ((x - padding) % 8)))) ? 255 : 0;
+                    m_pixelBuffer[index * 4 + 3] = ((pixels[(x - GlyphPadding) / 8]) & (1 << (7 - ((x - GlyphPadding) % 8)))) ? 255 : 0;
                 }
                 pixels += bitmap->pitch;
             }
         }
         else if (bitmap->pixel_mode == FT_PIXEL_MODE_BGRA)
         {
-            for (auto y = padding; y < height - padding; ++y)
+            for (auto y = GlyphPadding; y < height - GlyphPadding; ++y)
             {
-                for (auto x = padding; x < width - padding; ++x)
+                for (auto x = GlyphPadding; x < width - GlyphPadding; ++x)
                 {
                     const std::size_t index = (x + y * width)* 4;
-                    const std::size_t xIndex = (x - padding) * 4;
+                    const std::size_t xIndex = (x - GlyphPadding) * 4;
 
                     m_pixelBuffer[index] = pixels[xIndex + 2];
                     m_pixelBuffer[index + 1] = pixels[xIndex + 1];
@@ -543,26 +552,26 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
         else
         {
             //for (auto y = height - padding - 1; y >= padding; --y)
-            for (auto y = padding; y < height - padding; ++y)
+            for (auto y = GlyphPadding; y < height - GlyphPadding; ++y)
             {
-                for (auto x = padding; x < width - padding; ++x)
+                for (auto x = GlyphPadding; x < width - GlyphPadding; ++x)
                 {
                     const std::size_t index = (x + y * width) * 4;
                     
                     m_pixelBuffer[index] = 255;
                     m_pixelBuffer[index + 1] = 255;
                     m_pixelBuffer[index + 2] = 255;
-                    m_pixelBuffer[index + 3] = pixels[x - padding];
+                    m_pixelBuffer[index + 3] = pixels[x - GlyphPadding];
                 }
                 pixels += bitmap->pitch;
             }
         }
 
         //finally copy to texture
-        auto x = static_cast<std::uint32_t>(retVal.textureBounds.left) - padding;
-        auto y = static_cast<std::uint32_t>(retVal.textureBounds.bottom) - padding;
-        auto w = static_cast<std::uint32_t>(retVal.textureBounds.width) + padding * 2;
-        auto h = static_cast<std::uint32_t>(retVal.textureBounds.height) + padding * 2;
+        auto x = static_cast<std::uint32_t>(retVal.textureBounds.left) - GlyphPadding;
+        auto y = static_cast<std::uint32_t>(retVal.textureBounds.bottom) - GlyphPadding;
+        auto w = static_cast<std::uint32_t>(retVal.textureBounds.width) + GlyphPadding * 2;
+        auto h = static_cast<std::uint32_t>(retVal.textureBounds.height) + GlyphPadding * 2;
         page.texture.update(m_pixelBuffer.data(), false, { x,y,w,h });
     }
 
@@ -602,21 +611,35 @@ FloatRect Font::getGlyphRect(Page& page, std::uint32_t width, std::uint32_t heig
     }
 
     //if we didn't find a row, insert one 10% bigger than the glyph
-    if (!row)
+    if (!row
+        || (row->width + width) >= page.texture.getSize().x)
     {
-        std::int32_t rowHeight = height + (height / 10);
+        /*std::int32_t rowHeight = height + (height / 10);
         while (page.nextRow + rowHeight > page.texture.getSize().y
             || width >= page.texture.getSize().x)
-        {
+        {*/
+            const std::uint32_t rowWidth = row == nullptr ? (width + (GlyphPadding * 2)) : (row->width + (width + (GlyphPadding * 2)));
+            const std::uint32_t rowHeight = height + (height / 10);
+
             auto texWidth = page.texture.getSize().x;
             auto texHeight = page.texture.getSize().y;
 
-            if (texWidth * 2 <= Texture::getMaxTextureSize()
-                && texHeight * 2 <= Texture::getMaxTextureSize())
+            while (rowWidth >= texWidth)
+            {
+                texWidth *= 2;
+            }
+
+            while (page.nextRow + rowHeight > texHeight)
+            {
+                texHeight *= 2;
+            }
+
+            if (texWidth <= Texture::getMaxTextureSize()
+                && texHeight <= Texture::getMaxTextureSize())
             {
                 //increase texture 4 fold
                 Texture texture;
-                texture.create(texWidth * 2, texHeight * 2);
+                texture.create(texWidth, texHeight);
                 texture.setSmooth(page.texture.isSmooth());
                 texture.update(page.texture);
                 
@@ -634,7 +657,7 @@ FloatRect Font::getGlyphRect(Page& page, std::uint32_t width, std::uint32_t heig
                 Logger::log("Failed to add new character to font - max texture size reached.", Logger::Type::Error);
                 return { 0.f, 0.f, 2.f, 2.f };
             }
-        }
+        //}
 
         row = &page.rows.emplace_back(page.nextRow, rowHeight);
         page.nextRow += rowHeight;
@@ -717,12 +740,12 @@ void Font::cleanup()
 
 bool Font::pageUpdated(std::uint32_t charSize) const
 {
-    return m_pages[charSize].updated;
+    return m_pages.count(charSize) != 0 && m_pages.at(charSize).updated;
 }
 
 void Font::markPageRead(std::uint32_t charSize) const
 {
-    m_pages[charSize].updated = false;
+    m_pages.at(charSize).updated = false;
 }
 
 void Font::registerObserver(FontObserver* o) const

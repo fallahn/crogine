@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -102,9 +102,8 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
         }
     };
 
-    const auto& texture = context.font->getTexture(context.charSize);
-    float xOffset = static_cast<float>(context.font->getGlyph(L' ', context.charSize, context.bold, context.outlineThickness).advance);
-    float yOffset = static_cast<float>(context.font->getLineHeight(context.charSize));
+    const float xOffset = static_cast<float>(context.font->getGlyph(L' ', context.charSize, context.bold, context.outlineThickness).advance);
+    const float yOffset = static_cast<float>(context.font->getLineHeight(context.charSize));
     float x = 0.f;
     float y = 0.f;// static_cast<float>(m_charSize);
 
@@ -158,6 +157,8 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
             continue; //skip quad for whitespace
         }
 
+        const auto textureSize = context.font->getTexture(context.charSize).getSize();
+
         //create the quads.
         auto addOutline = [&]()
         {
@@ -172,7 +173,7 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
             float bottom = glyph.bounds.bottom;*/
 
             //add the outline glyph to the vertices
-            Detail::Text::addQuad(outlineVerts, glm::vec2(x, y), context.outlineColour, glyph, texture.getSize(), context.outlineThickness);
+            Detail::Text::addQuad(outlineVerts, glm::vec2(x, y), context.outlineColour, glyph, textureSize, context.outlineThickness);
 
             /*minX = std::min(minX, x + left - m_outlineThickness);
             maxX = std::max(maxX, x + right + m_outlineThickness);
@@ -190,11 +191,11 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
         else if (glm::length2(context.shadowOffset) != 0)
         {
             //add a shadow if only no outline
-            Detail::Text::addQuad(shadowVerts, glm::vec2(x, y) + context.shadowOffset, context.shadowColour, glyph, texture.getSize());
+            Detail::Text::addQuad(shadowVerts, glm::vec2(x, y) + context.shadowOffset, context.shadowColour, glyph, textureSize);
         }
         
         const auto colour = glyph.useFillColour ? context.fillColour.getColour(i) : cro::Colour(1.f, 1.f, 1.f, context.fillColour.getColour(i).getAlpha());
-        Detail::Text::addQuad(characterVerts, glm::vec2(x, y), colour, glyph, texture.getSize());
+        Detail::Text::addQuad(characterVerts, glm::vec2(x, y), colour, glyph, textureSize);
 
         //only do this if not outlined
         //if (context.outlineThickness == 0)
