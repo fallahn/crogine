@@ -470,7 +470,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         //show the monthly rival if opted in
         else if (sd.showRival
             && !m_sharedData.teamMode
-            && humanCount)
+            && humanCount
+            && !m_sharedData.competitionLeague) //TODO this really needs a specific monthly rival
         {
             if (sd.gameMode == GameMode::FreePlay
                 && sd.scoreType == ScoreType::Stroke
@@ -478,7 +479,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 && playerCount < 8)
             {
                 cro::String rivalName;
-                auto scores = Social::getMonthlyHoleScores(sd.mapDirectory, sd.holeCount, rivalName);
+                const auto scores = Social::getMonthlyHoleScores(sd.mapDirectory, sd.holeCount, rivalName);
                 if (!scores.empty()
                     && scores[0] != 0)
                 {
