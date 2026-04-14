@@ -479,7 +479,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 && playerCount < 8)
             {
                 cro::String rivalName;
-                const auto scores = Social::getMonthlyHoleScores(sd.mapDirectory, sd.holeCount, rivalName);
+                auto scores = Social::getMonthlyHoleScores(sd.mapDirectory, sd.holeCount, rivalName);
                 if (!scores.empty()
                     && scores[0] != 0)
                 {
