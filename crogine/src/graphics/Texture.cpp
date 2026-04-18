@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -238,7 +238,7 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool
             if (const auto result = ktxLoadOpenGL((PFNGLGETPROCADDRESS)SDL_GL_GetProcAddress);
                 result != 0)
             {
-                LogE << "[KTX] Failed to load OpenGL functions: " << KTXError[result] << std::endl;
+                LogE << "[KTX] " << FileSystem::getFileName(path) << " Failed to load OpenGL functions: " << KTXError[result] << std::endl;
                 return false;
             }
             ktxFunctionsLoaded = true;
@@ -248,7 +248,7 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool
         if (const auto result = ktxTexture_CreateFromNamedFile(path.c_str(), KTX_TEXTURE_CREATE_NO_FLAGS, &kTex);
             result != 0)
         {
-            LogE << "[KTX] Failed to create ktx texture: " << KTXError[result] << std::endl;
+            LogE << "[KTX] " << FileSystem::getFileName(path) << " Failed to create ktx texture: " << KTXError[result] << std::endl;
             return false;
         }
 
@@ -265,7 +265,11 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool
         {
             ktxTexture_Destroy(kTex);
 
-            LogE << "[KTX] Failed to upload ktx texture: " << KTXError[result] << std::endl;
+            LogE << "[KTX] " << FileSystem::getFileName(path) << " Failed to upload ktx texture: " << KTXError[result] << std::endl;
+            if (error)
+            {
+                LogE << "[KTX] GL Error: " << Detail::glErrorString(error) << std::endl;
+            }
             return false;
         }
         m_size = { kTex->baseWidth, kTex->baseHeight };

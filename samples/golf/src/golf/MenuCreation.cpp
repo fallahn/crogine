@@ -4375,7 +4375,7 @@ void MenuState::quitLobby()
     m_sharedData.clientConnection.ready = false;
     m_sharedData.clientConnection.netClient.disconnect();
 
-    m_voiceChat.disconnect();
+    //m_voiceChat.disconnect();
 
     m_matchMaking.leaveLobby();
     m_sharedData.lobbyID = 0;

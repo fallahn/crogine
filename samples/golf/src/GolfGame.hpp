@@ -71,6 +71,7 @@ private:
     SharedProfileData m_profileData;
     SharedMinigameData m_minigameData;
     cro::StateStack m_stateStack;
+    cro::Cursor m_cursor;
 
     std::vector<std::string> m_hostAddresses;
 

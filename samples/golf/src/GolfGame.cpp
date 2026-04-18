@@ -208,9 +208,12 @@ cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
 
 GolfGame::GolfGame()
     : m_stateStack  ({*this, getWindow()}),
-    //m_cursor        (/*cro::SystemCursor::Hand*/"assets/images/cursor.png", 0, 0),
+    m_cursor        (/*cro::SystemCursor::Hand*/"assets/images/cursor.png", 0, 0),
     m_activeIndex   (0)
 {
+#ifdef _WIN32
+    getWindow().setCursor(&m_cursor);
+#endif
     //must be set before anything, else cfg is still loaded from default path
     setApplicationStrings("Trederia", "golf");
 

@@ -7687,7 +7687,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     const bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
         && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
     const auto clubTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
-    m_inputParser.setClub(glm::length(clubTarget - player.position));
+    m_inputParser.setClub(glm::length(clubTarget - player.position), m_currentPlayer.terrain);
 
 
     cmd.targetFlags = CommandID::BullsEye;

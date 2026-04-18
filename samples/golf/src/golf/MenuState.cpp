@@ -189,7 +189,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_connectedPlayerCount  (0),
     m_canActive             (false),
     m_textChat              (m_uiScene, sd),
-    m_voiceChat             (m_sharedData),
+    //m_voiceChat             (m_sharedData),
     m_matchMaking           (context.appInstance.getMessageBus(), checkCommandLine),
     m_uiScene               (context.appInstance.getMessageBus(), 1024),
     m_backgroundScene       (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
@@ -357,7 +357,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 requestStackPush(StateID::MessageOverlay);
             }
 
-            m_voiceChat.disconnect();
+            //m_voiceChat.disconnect();
 
             sd.serverInstance.stop();
             sd.hosting = false;
@@ -1900,10 +1900,10 @@ bool MenuState::simulate(float dt)
 
     m_textChat.update(dt);
 
-    if (cro::Keyboard::isKeyPressed(SDLK_j))
+    /*if (cro::Keyboard::isKeyPressed(SDLK_j))
     {
         m_voiceChat.captureVoice();
-    }
+    }*/
 
     if (m_sharedData.clientConnection.connected)
     {
@@ -1920,7 +1920,7 @@ bool MenuState::simulate(float dt)
             handleNetEvent(evt);
         }
 
-        m_voiceChat.process();
+        //m_voiceChat.process();
     }
 
     //update the scroll speed of lobby text
@@ -3498,39 +3498,39 @@ void MenuState::createSnow()
 
 void MenuState::setVoiceCallbacks()
 {
-    const auto voiceCreate =
-        [&](const VoiceChat& vc, std::size_t idx)
-        {
-            if (!m_voiceEntities[idx].isValid())
-            {
-                m_voiceEntities[idx] = m_backgroundScene.createEntity();
-                m_voiceEntities[idx].addComponent<cro::Transform>();
-                m_voiceEntities[idx].addComponent<cro::AudioEmitter>().setSource(*vc.getStream(idx));
-                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().play();
-                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setLooped(true);
-                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setRolloff(0.f);
-                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+    //const auto voiceCreate =
+    //    [&](const VoiceChat& vc, std::size_t idx)
+    //    {
+    //        if (!m_voiceEntities[idx].isValid())
+    //        {
+    //            m_voiceEntities[idx] = m_backgroundScene.createEntity();
+    //            m_voiceEntities[idx].addComponent<cro::Transform>();
+    //            m_voiceEntities[idx].addComponent<cro::AudioEmitter>().setSource(*vc.getStream(idx));
+    //            m_voiceEntities[idx].getComponent<cro::AudioEmitter>().play();
+    //            m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setLooped(true);
+    //            m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setRolloff(0.f);
+    //            m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
 
-                LogI << "Created voice entity" << std::endl;
-            }
-        };
-    m_voiceChat.setCreationCallback(voiceCreate);
+    //            LogI << "Created voice entity" << std::endl;
+    //        }
+    //    };
+    //m_voiceChat.setCreationCallback(voiceCreate);
 
-    const auto voiceDelete =
-        [&](std::size_t idx)
-        {
-            if (m_voiceEntities[idx].isValid())
-            {
-                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().stop();
-                m_backgroundScene.destroyEntity(m_voiceEntities[idx]);
-                m_backgroundScene.simulate(0.f);
+    //const auto voiceDelete =
+    //    [&](std::size_t idx)
+    //    {
+    //        if (m_voiceEntities[idx].isValid())
+    //        {
+    //            m_voiceEntities[idx].getComponent<cro::AudioEmitter>().stop();
+    //            m_backgroundScene.destroyEntity(m_voiceEntities[idx]);
+    //            m_backgroundScene.simulate(0.f);
 
-                m_voiceEntities[idx] = {};
+    //            m_voiceEntities[idx] = {};
 
-                LogI << "Remove voice entity" << std::endl;
-            }
-        };
-    m_voiceChat.setDeletionCallback(voiceDelete);
+    //            LogI << "Remove voice entity" << std::endl;
+    //        }
+    //    };
+    //m_voiceChat.setDeletionCallback(voiceDelete);
 }
 
 #ifdef USE_GNS
@@ -4069,7 +4069,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             m_sharedData.clientConnection.netClient.disconnect();
             m_sharedData.clientConnection.connected = false;
 
-            m_voiceChat.disconnect();
+            //m_voiceChat.disconnect();
         }
             break;
         case PacketID::LobbyUpdate:
@@ -4580,7 +4580,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 #endif
     if (!m_sharedData.clientConnection.connected)
     {
-        m_voiceChat.disconnect();
+        //m_voiceChat.disconnect();
 
         m_sharedData.serverInstance.stop();
         m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "

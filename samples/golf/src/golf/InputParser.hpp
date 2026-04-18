@@ -55,7 +55,7 @@ public:
     void handleEvent(const cro::Event&);
     void setHoleDirection(glm::vec3);
     void setDistanceToHole(float d) { m_distanceToHole = d; }
-    void setClub(float); //picks closest club to given distance
+    void setClub(float, std::uint8_t terrain); //picks closest club to given distance
     void syncClub(std::int32_t); //matches the club to the remote player's
     float getYaw() const; //yaw in world space (includes facing direction)
     float getRotation() const; //relative rotation

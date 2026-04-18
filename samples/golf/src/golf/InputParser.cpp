@@ -538,8 +538,12 @@ void InputParser::setHoleDirection(glm::vec3 dir)
     }
 }
 
-void InputParser::setClub(float dist)
+void InputParser::setClub(float dist, std::uint8_t terrain)
 {
+    //the terrain needs setting first to get the correct dampening
+    m_terrain = terrain;
+    dist *= 1.f/getDampening();
+
     const auto oldClub = m_currentClub;
 
     //assume each club can go a little further than its rating
