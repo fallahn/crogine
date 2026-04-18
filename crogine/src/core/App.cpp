@@ -233,7 +233,7 @@ namespace
             LogW << ss.str() << std::endl;
             break;
         case GL_DEBUG_SEVERITY_HIGH:
-            LogE << ss.str() << std::endl;
+            LogW << ss.str() << std::endl; //this should be an error but it causes confusion printing the file/line
             break;
         }
     }

@@ -297,6 +297,13 @@ void Detail::UniformBufferImpl::setData(const void* data)
     CRO_ASSERT(m_bufferSize, "");
     CRO_ASSERT(m_ubo, "");
 
+    //GLint prog = 0;
+    //glGetIntegerv(GL_CURRENT_PROGRAM, &prog);
+    //if (prog == 0)
+    //{
+    //    LogW << "No program bound" << std::endl;
+    //}
+
     glCheck(glBindBuffer(GL_UNIFORM_BUFFER, m_ubo));
     glCheck(glBufferSubData(GL_UNIFORM_BUFFER, 0, m_bufferSize, data));
 

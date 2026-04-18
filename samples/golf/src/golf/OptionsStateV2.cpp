@@ -2691,7 +2691,11 @@ void OptionsStateV2::createAudioItems()
             }
 
             it.selectedIndex %= devices.size();
-            cro::AudioDevice::setActiveDevice(devices[it.selectedIndex]);
+
+            //we have to copy the device name else this function
+            //will *rearrange* the devices list while we're referencing it!!!
+            const std::string deviceName = devices[it.selectedIndex];
+            cro::AudioDevice::setActiveDevice(deviceName);
         };
     refreshAudioDevices(*item);
 

@@ -263,6 +263,9 @@ void SimpleText::updateVertices()
 void SimpleText::onFontUpdate()
 {
     //updateVertices(); //don't do this else we enter recursive hell
+    m_fontTexture = &m_context.font->getTexture(m_context.charSize);
+    setTexture(*m_fontTexture);
+
     m_dirtyFlags |= DirtyFlags::All;
 }
 

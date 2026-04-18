@@ -40,7 +40,7 @@ namespace
 TextureResource::TextureResource()
     : m_fallbackColour(Colour::Magenta)
 {
-
+    m_textures.reserve(3000);
 }
 
 //public

@@ -122,7 +122,7 @@ private:
     bool setShader(const char*);
 
     std::vector<pg::Chapter> m_guideChapters;
-    cro::TextureResource m_guideTextures;
+    std::unique_ptr<cro::TextureResource> m_guideTextures;
     void createHowTo();
 
 #ifdef _WIN32

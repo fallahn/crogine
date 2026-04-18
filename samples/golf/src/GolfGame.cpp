@@ -573,7 +573,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
             m_progressIcon->queueMessage(m);
         }
     }
-    else if (msg.id == cro::Message::SystemMessage)
+    /*else if (msg.id == cro::Message::SystemMessage)
     {
         const auto& data = msg.getData<cro::Message::SystemEvent>();
         if (data.type == cro::Message::SystemEvent::ScreenshotTaken)
@@ -585,7 +585,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
             m.audioID = ProgressMessage::ScreenShot;
             m_progressIcon->queueMessage(m);
         }
-    }
+    }*/
 
 
     m_stateStack.handleMessage(msg);
@@ -1240,6 +1240,9 @@ bool GolfGame::initialise()
 
 void GolfGame::finalise()
 {
+    m_progressIcon.reset();
+    m_guideTextures.reset();
+
     m_sharedData.clientConnection.netClient.disconnect();
     m_sharedData.serverInstance.stop(); //this waits for any threads to finish first.
 
@@ -2462,7 +2465,8 @@ void GolfGame::createHowTo()
     auto filePaths = cro::FileSystem::listFiles(rootPath);
     std::sort(filePaths.begin(), filePaths.end());
 
-    const auto& controlTex = m_guideTextures.get(imagePath + "controls.png");
+    m_guideTextures = std::make_unique<cro::TextureResource>();
+    const auto& controlTex = m_guideTextures->get(imagePath + "controls.png");
 
     pugi::xml_document doc;
     for (const auto& path : filePaths)
@@ -2500,7 +2504,7 @@ void GolfGame::createHowTo()
             else if (std::strcmp(c.name(), "image") == 0)
             {
                 const std::string imgName = c.text().as_string();
-                const auto& img = m_guideTextures.get(imagePath + imgName);
+                const auto& img = m_guideTextures->get(imagePath + imgName);
                 auto& item = chapter.items.emplace_back();
                 item.type = pg::Item::Image;
                 item.image = &img;

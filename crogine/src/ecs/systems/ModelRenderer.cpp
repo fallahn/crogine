@@ -214,6 +214,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
             block.viewProjectionMatrix = pass.viewProjectionMatrix;
             block.clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
 
+            //ubo->bind();
             ubo->setData(block);
         }
 #endif
