@@ -195,10 +195,6 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     //DPRINT("Visible 3D ents in Scene " + std::to_string(getScene()->getInstanceID()) 
     //    + ", Camera " + std::to_string(cameraEnt.getIndex()), std::to_string(m_drawLists[camComponent.getDrawListIndex()][0].size()));
 
-    //sort lists by depth
-    //flag values make sure transparent materials are rendered last
-    //with opaque going front to back and transparent back to front
-    auto& drawList = m_drawLists[camIndex];
     for (auto i = 0; i < passCount; ++i)
     {
 #ifdef PLATFORM_DESKTOP
@@ -229,6 +225,11 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
 #endif //USE_PARALLEL_PROCESSING
 #endif //__GNUC__
 #endif //_MSC_VER
+
+        //sort lists by depth
+        //flag values make sure transparent materials are rendered last
+        //with opaque going front to back and transparent back to front
+        auto& drawList = m_drawLists[camIndex];
 
 #if defined USE_PARALLEL_PROCESSING
         std::sort(std::execution::par, std::begin(drawList[i].renderables), std::end(drawList[i].renderables),

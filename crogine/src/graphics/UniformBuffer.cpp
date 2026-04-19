@@ -264,16 +264,15 @@ void Detail::UniformBufferImpl::bind()
 #ifdef CRO_DEBUG_
         CRO_ASSERT(m_bindPoint < maxBindings, "");
 #endif
-
-        //bind ubo to bind point
-        glCheck(glBindBufferBase(GL_UNIFORM_BUFFER, m_bindPoint, m_ubo));
-        activeBindings[m_bindPoint] = m_ubo;
-
         for (auto [shader, blockID] : m_shaders)
         {
             //bind to bind point
             glCheck(glUniformBlockBinding(shader, blockID, m_bindPoint));
         }
+
+        //bind ubo to bind point
+        glCheck(glBindBufferBase(GL_UNIFORM_BUFFER, m_bindPoint, m_ubo));
+        activeBindings[m_bindPoint] = m_ubo;
     }
 #endif
 }
