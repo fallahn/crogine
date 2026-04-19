@@ -162,6 +162,7 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
     //width = ensurePOW2(width);
     //height = ensurePOW2(height);
+    m_resourcePath = {};
 
     width = std::min(width, getMaxTextureSize());
     height = std::min(height, getMaxTextureSize());
@@ -294,6 +295,8 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool
         const auto repeated = m_repeated;
         m_repeated = !m_repeated;
         setRepeated(repeated);
+
+        m_resourcePath = path;
         return true;
     }
 
@@ -307,6 +310,8 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool
         auto size = arr.getDimensions();
         CRO_ASSERT(size.x * size.y * arr.getChannels() == arr.size(), "");
         create(size.x, size.y, arr.getFormat());
+
+        m_resourcePath = path;
         return update(arr.data(), createMipMaps);
     }
 

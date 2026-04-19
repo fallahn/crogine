@@ -105,18 +105,34 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
                         texPath = texPath.substr(1);
                     }
                     auto compressedPath = texPath;
-                    const auto ext = cro::FileSystem::getFileExtension(texPath);
-                    cro::Util::String::replace(compressedPath, ext, ".ktx2");
-                    if (cro::FileSystem::fileExists(compressedPath))
+                    const auto ext = FileSystem::getFileExtension(texPath);
+                    Util::String::replace(compressedPath, ext, ".ktx2");
+                    
+                    Texture* texture = nullptr;
+                    if (FileSystem::fileExists(compressedPath))
                     {
-                        texPath.swap(compressedPath);
+                        texture = &textures.get(compressedPath);
+                        if (texture->getResourcePath().empty())
+                        {
+                            //loading failed and we have a fallback texture
+                            LogW << "[Particle Settings] Failed to open compressed texture " << FileSystem::getFileName(compressedPath) << " - trying " << FileSystem::getFileName(texPath) << std::endl;;
+                            texture = &textures.get(texPath);
+                        }
+                        else
+                        {
+                            texPath.swap(compressedPath);
+                        }
                     }
-
+                    else
+                    {
+                        texture = &textures.get(texPath);
+                    }
+                    
                     texturePath = texPath;
-                    textureID = textures.get(texPath).getGLHandle();
-                    textureSize = textures.get(texPath).getSize();  
-                    textures.get(texturePath).setSmooth(textureSmoothing);
-                    textures.get(texturePath).setRepeated(true);
+                    textureID = texture->getGLHandle();
+                    textureSize = texture->getSize();  
+                    texture->setSmooth(textureSmoothing);
+                    texture->setRepeated(true);
                 }
             }
             else if (name == "texture_smoothing")

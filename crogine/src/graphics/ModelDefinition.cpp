@@ -608,6 +608,33 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
         Texture* diffuseTex = nullptr;
         float alphaClip = 0.f;
 
+        const auto loadTexture = 
+            [&](std::string filepath, bool createMipmaps)
+            {
+                Texture* tex = nullptr;
+                auto temp = filepath;
+                if (Util::String::replace(temp, ".png", ".ktx2")
+                    && FileSystem::fileExists(temp))
+                {
+                    //try using compressed texture instead
+                    tex = &m_resources.textures.get(temp);
+                    if (tex->getResourcePath().empty())
+                    {
+                        tex = &m_resources.textures.get(filepath);
+                        LogW << "[Model Definition] Failed opening " << FileSystem::getFileName(temp) << " - Trying " << FileSystem::getFileName(filepath) << std::endl;
+                    }
+                    else
+                    {
+                        filepath.swap(temp);
+                    }
+                }
+                else
+                {
+                    tex = &m_resources.textures.get(filepath);
+                }
+                return tex;
+            };
+
         for (const auto& p : properties)
         {
             const auto& name = Util::String::toLower(p.getName());
@@ -616,15 +643,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 auto filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
 
-                auto temp = filepath;
-                if (cro::Util::String::replace(temp, ".png", ".ktx2")
-                 && cro::FileSystem::fileExists(temp))
-                {
-                    //try using compressed texture instead
-                    filepath.swap(temp);
-                }
-
-                auto& tex = m_resources.textures.get(filepath, createMipmaps/*, true*/);
+                auto& tex = *loadTexture(filepath, createMipmaps/*, true*/);
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_diffuseMap", tex);
@@ -636,15 +655,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 auto filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
 
-                auto temp = filepath;
-                if (cro::Util::String::replace(temp, ".png", ".ktx2")
-                    && cro::FileSystem::fileExists(temp))
-                {
-                    //try using compressed texture instead
-                    filepath.swap(temp);
-                }
-
-                auto& tex = m_resources.textures.get(filepath, createMipmaps/*, true*/);
+                auto& tex = *loadTexture(filepath, createMipmaps/*, true*/);
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_maskMap", tex);
@@ -654,6 +665,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 auto filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
                 //TODO normal maps require specific compression
+                //so we ignore any ktx files
                 auto& tex = m_resources.textures.get(filepath, createMipmaps);
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
@@ -664,7 +676,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 auto filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
 
-                auto& tex = m_resources.textures.get(filepath, createMipmaps);
+                auto& tex = *loadTexture(filepath, createMipmaps);
                 tex.setSmooth(true);
                 material.setProperty("u_lightMap", tex);
             }

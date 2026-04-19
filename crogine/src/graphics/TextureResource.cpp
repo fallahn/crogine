@@ -131,7 +131,7 @@ Colour TextureResource::getFallbackColour() const
     return m_fallbackColour;
 }
 
-//provate
+//private
 Texture& TextureResource::getFallbackTexture()
 {
     if (m_fallbackTextures.count(m_fallbackColour) == 0)

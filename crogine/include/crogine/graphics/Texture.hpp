@@ -205,6 +205,11 @@ namespace cro
         */
         bool saveToBuffer(std::vector<float>& dst) const;
 
+        /*!
+        \brief Returns the file path this texture was loaded from, or an empty string
+        */
+        const std::string& getResourcePath() const { return m_resourcePath; }
+
     private:
         glm::uvec2 m_size;
         ImageFormat::Type m_format;
@@ -215,6 +220,7 @@ namespace cro
         bool m_hasMipMaps;
 
         bool m_useCompression;
+        std::string m_resourcePath;
 
         bool update(const void* pixels, bool createMipMaps, URect area);
         void generateMipMaps();
