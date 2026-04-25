@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -748,6 +748,8 @@ void GolfState::handleWeatherChange(std::uint8_t v)
             glUniform1f(minimap.end, 280.f);
             glUniform1f(minimap.density, current);
             glUniform4f(minimap.colour, skyColour.r, skyColour.g, skyColour.b, skyColour.a);
+
+            m_waterEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_rainAmount", current);
 
             if (current == target)
             {

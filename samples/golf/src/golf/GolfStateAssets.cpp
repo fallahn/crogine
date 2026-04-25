@@ -2443,12 +2443,12 @@ void GolfState::loadMaterials()
     //m_minimapZoom.matrixUniformID = shader->getUniformID("u_coordMatrix");
 
     //water - this is if we ever get the rain splash pattern working
-    //std::string waterDefines;
-    //if (m_sharedData.weatherType == WeatherType::Rain
-    //    || m_sharedData.weatherType == WeatherType::Showers)
-    //{
-    //    waterDefines = "#define RAIN\n";
-    //}
+    std::string waterDefines;
+    if (m_sharedData.weatherType == WeatherType::Rain
+        || m_sharedData.weatherType == WeatherType::Showers)
+    {
+        waterDefines = "#define RAIN\n";
+    }
 
     /*static const std::string DepthConsts = "\nconst float ColCount = " + std::to_string(m_depthMap.getGridCount().x) 
         + ".0;\nconst float MetresPerTexture = "+ std::to_string(m_depthMap.getMetresPerTile())
@@ -2456,17 +2456,52 @@ void GolfState::loadMaterials()
         + std::to_string(m_depthMap.getTileCount() - 1) + ".0;\n";
     m_resources.shaders.addInclude("DEPTH_CONSTS", DepthConsts.c_str());*/
 
-    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define NO_DEPTH\n#define USE_MRT\n" + lightingDefs/* + waterDefines*/);
+    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define NO_DEPTH\n#define USE_MRT\n" + lightingDefs + waterDefines);
     shader = &m_resources.shaders.get(ShaderID::Water);
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(*shader);
-    //if (!waterDefines.empty())
-    //{
-    //    auto& waterTex = m_resources.textures.get("assets/golf/images/rain_water.png");
-    //    m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainTexture", waterTex);
-    //    m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainAmount", 1.f);
-    //}
+
+    if (!waterDefines.empty())
+    {
+        static constexpr auto TileSize = 128;
+        static const std::array<std::string, 18u> paths =
+        {
+            "assets/golf/images/rain/rain01.png",
+            "assets/golf/images/rain/rain02.png",
+            "assets/golf/images/rain/rain03.png",
+            "assets/golf/images/rain/rain04.png",
+            "assets/golf/images/rain/rain05.png",
+            "assets/golf/images/rain/rain06.png",
+            "assets/golf/images/rain/rain07.png",
+            "assets/golf/images/rain/rain08.png",
+            "assets/golf/images/rain/rain09.png",
+            "assets/golf/images/rain/rain10.png",
+            "assets/golf/images/rain/rain11.png",
+            "assets/golf/images/rain/rain12.png",
+            "assets/golf/images/rain/rain13.png",
+            "assets/golf/images/rain/rain14.png",
+            "assets/golf/images/rain/rain15.png",
+            "assets/golf/images/rain/rain16.png",
+            "assets/golf/images/rain/rain17.png",
+            "assets/golf/images/rain/rain18.png",
+        };
+        cro::ImageArray<std::uint8_t> arr;
+
+        //ofc template params are compile time...
+        m_rainSurfaceTexture.create(TileSize, TileSize);
+        for (auto i = 0u; i < paths.size(); ++i)
+        {
+            arr.loadFromFile(paths[i]);
+            m_rainSurfaceTexture.insertLayer(arr, i);
+        }
+        auto waterTex = cro::TextureID(m_rainSurfaceTexture.getGLHandle(), true);
+
+        //auto& waterTex = m_resources.textures.get("assets/golf/images/rain_water.png");
+        //waterTex.setRepeated(true);
+        m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainTexture", waterTex);
+        m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainAmount", 1.f);
+    }
 
  
     //std::string horizonDefs;

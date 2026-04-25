@@ -89,8 +89,8 @@ static inline const std::string WaterFragment = R"(
 
     uniform sampler2D u_reflectionMap;
 #if defined(RAIN)
-    uniform sampler2D u_rainTexture;
-    uniform float u_rainAmount;
+    uniform sampler2DArray u_rainTexture;
+    uniform float u_rainAmount = 1.0;
 #endif
 
 #if !defined(NO_DEPTH)
@@ -121,8 +121,9 @@ uniform sampler2DArray u_depthMap;
     //pixels per metre
 #include MAP_SIZE
     const vec2 PixelCount = vec2(1280.0, 800.0);
-    const vec2 TileCount = MapSize; //tiles of rain animation
-
+    const vec2 TileCount = MapSize / 4.0; //tiles of rain animation
+    const float FrameRate = 1.0 / 16.0;
+    
     const vec3 WaterColour = vec3(0.02, 0.078, 0.578);
     //const vec3 WaterColour = vec3(0.2, 0.278, 0.278);
     //const vec3 WaterColour = vec3(0.137, 0.267, 0.53);
@@ -209,7 +210,8 @@ uniform sampler2DArray u_depthMap;
         blendedColour.rgb += wave;
 
         //edge feather
-        float amount = 1.0 - smoothstep(u_radius * 0.625, u_radius, length(v_vertDistance));
+        float viewDistance = length(v_vertDistance);
+        float amount = 1.0 - smoothstep(u_radius * 0.625, u_radius, viewDistance);
 
         vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
@@ -235,7 +237,10 @@ uniform sampler2DArray u_depthMap;
 #endif
 
 #if defined(RAIN)
-        blendedColour = (TEXTURE(u_rainTexture, v_texCoord /** TileCount*/).rgb * u_rainAmount) + (blendedColour);
+        float frame = mod(floor(u_windData.w / FrameRate), 18.0);
+
+        float fadeAmount = 1.0 - smoothstep(u_radius * 0.05, u_radius * 0.15, length(u_cameraWorldPosition.xz - v_worldPosition.xz));
+        blendedColour = (TEXTURE(u_rainTexture, vec3(v_texCoord * TileCount, frame)).rgb * u_rainAmount * fadeAmount) / 3.0 + (blendedColour);
 #endif
 
         FRAG_OUT = vec4(blendedColour, 1.0);

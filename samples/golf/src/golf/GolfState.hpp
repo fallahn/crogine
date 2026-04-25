@@ -200,6 +200,8 @@ private:
     cro::RenderTexture m_trophySceneTexture;
     cro::CubemapTexture m_reflectionMap;
 
+    cro::ArrayTexture<std::uint8_t, 18> m_rainSurfaceTexture;
+
     //renders 'out of focus'
     cro::RenderTexture m_focusTexture;
     cro::SimpleQuad m_focusQuad;
