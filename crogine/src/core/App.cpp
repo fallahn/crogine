@@ -553,7 +553,8 @@ void App::run(bool resetSettings)
             framesRendered = 0;
         }
 
-        if (framesRendered++ < MaxFrames)
+        if (m_window.getVsyncEnabled()
+            || framesRendered++ < /*MaxFrames*/Console::getMaxFrames())
         {
             doImGui();
 
@@ -782,7 +783,7 @@ void App::handleEvents()
         //of those events, which severely puts this out.
         //we probably should have been using SDL_NumJoysticks() all along
         //howvever this can report *more* than there are connected if a
-        //device counts as a jojystick but not a game controller *sigh*
+        //device counts as a joystick but not a game controller *sigh*
         if (evt.type == SDL_CONTROLLERDEVICEADDED)
         {
             //m_controllerCount++;
@@ -1173,6 +1174,10 @@ App::WindowSettings App::loadSettings() const
             {
                 cro::GameController::TriggerDeadZone.setOffset(prop.getValue<std::int32_t>());
             }
+            else if (prop.getName() == "max_frames")
+            {
+                Console::setMaxFrames(prop.getValue<std::int32_t>());
+            }
         }
 
         //load mixer settings
@@ -1234,6 +1239,7 @@ void App::saveSettings()
     saveSettings.addProperty("left_deadzone").setValue(cro::GameController::LeftThumbDeadZone.getOffset());
     saveSettings.addProperty("right_deadzone").setValue(cro::GameController::RightThumbDeadZone.getOffset());
     saveSettings.addProperty("trigger_deadzone").setValue(cro::GameController::TriggerDeadZone.getOffset());
+    saveSettings.addProperty("max_frames").setValue(Console::getMaxFrames());
 
     auto* aObj = saveSettings.addObject("audio");
     aObj->addProperty("master").setValue(AudioMixer::getMasterVolume());

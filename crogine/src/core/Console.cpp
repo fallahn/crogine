@@ -81,6 +81,8 @@ namespace
     bool isNewFrame = true;
     bool showDemoWindow = false;
 
+    std::int32_t MaxFrames = 4;
+
     ImVector<const char*> Commands;
     std::int32_t Strnicmp(const char* s1, const char* s2, int n)
     {
@@ -262,6 +264,16 @@ void Console::dumpBuffer(const std::string& str)
     }
 }
 
+std::int32_t Console::getMaxFrames()
+{
+    return MaxFrames;
+}
+
+void Console::setMaxFrames(std::int32_t mf)
+{
+    MaxFrames = std::clamp(mf, 0, 20);
+}
+
 //private
 void Console::addCommand(const std::string& name, const Command& command, const ConsoleClient* client = nullptr)
 {
@@ -391,6 +403,14 @@ void Console::draw()
                         frameLimit = std::clamp(frameLimit, 0.f, 1000.f);
                         App::getWindow().setFramerateLimit(frameLimit);
                     }*/
+                    std::int32_t v = MaxFrames * 60;
+                    const auto flags = vsync ? ImGuiInputTextFlags_ReadOnly : 0;
+                    ImGui::SetNextItemWidth(120.f);
+                    if (ImGui::InputInt("Frame Limit (disable VSync first)", &v, 60, 120, flags))
+                    {
+                        v = std::clamp(v, 60, 1200);
+                        MaxFrames = v / 60;
+                    }
 
                     bool aa = App::getWindow().getMultisamplingEnabled();
                     if (ImGui::Checkbox("Multisampling", &aa))
