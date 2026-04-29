@@ -1381,25 +1381,25 @@ void TerrainBuilder::threadFunc()
                             if (!isNearProp)
                             {
                                 static std::size_t shrubIdx = 0;
-                                auto currIndex = shrubIdx % MaxShrubInstances;
+                                const auto currIndex = shrubIdx % MaxShrubInstances;
 
                                 if (m_instancedShrubs[0][currIndex].isValid())
                                 {
                                     glm::vec3 position(x, height - 0.05f, -y);
-                                    float rotation = static_cast<float>(cro::Util::Random::value(0, 36) * 10) * cro::Util::Const::degToRad;
-                                    float scale = static_cast<float>(cro::Util::Random::value(16, 20)) / 10.f;
+                                    const float rotation = static_cast<float>(cro::Util::Random::value(0, 36) * 10) * cro::Util::Const::degToRad;
+                                    const float scale = static_cast<float>(cro::Util::Random::value(16, 20)) / 10.f;
 
                                     auto& mat4 = m_shrubTransforms[currIndex].emplace_back(1.f);
                                     mat4 = glm::translate(mat4, position);
                                     mat4 = glm::rotate(mat4, rotation, cro::Transform::Y_AXIS);
-                                    mat4 = glm::scale(mat4, glm::vec3(scale));
+                                    mat4 = glm::scale(mat4, glm::vec3(scale) * 1.5f);
 
                                     //find which chunk this is in based on position and update the 
                                     //appropriate cell data for culling
-                                    auto norm = glm::inverseTranspose(mat4);
+                                    const auto norm = glm::inverseTranspose(mat4);
 
-                                    auto xCell = std::floor(x / ChunkSize.x);
-                                    auto yCell = std::floor(y / ChunkSize.y);
+                                    const auto xCell = std::floor(x / ChunkSize.x);
+                                    const auto yCell = std::floor(y / ChunkSize.y);
 
                                     auto idx = static_cast<std::int32_t>(yCell * ChunkVisSystem::ColCount + xCell);
                                     //LogI << idx <<std::endl;
@@ -1410,7 +1410,7 @@ void TerrainBuilder::threadFunc()
                                 //low quality version - always rendered on flight cam and optionally on LQ settings
                                 glm::vec3 bbPos({ x, height - 0.05f, -y });
 
-                                float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+                                const float scale = (static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f) * 1.5f;
                                 auto& bb = m_billboardTreeBuffer.emplace_back(m_billboardTemplates[BillboardID::Tree01 + currIndex]);
                                 bb.position = bbPos; //small vertical offset to stop floating billboards
                                 bb.size *= scale;
