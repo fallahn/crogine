@@ -1392,7 +1392,7 @@ void TerrainBuilder::threadFunc()
                                     auto& mat4 = m_shrubTransforms[currIndex].emplace_back(1.f);
                                     mat4 = glm::translate(mat4, position);
                                     mat4 = glm::rotate(mat4, rotation, cro::Transform::Y_AXIS);
-                                    mat4 = glm::scale(mat4, glm::vec3(scale) * 1.5f);
+                                    mat4 = glm::scale(mat4, glm::vec3(scale) * 1.2f);
 
                                     //find which chunk this is in based on position and update the 
                                     //appropriate cell data for culling
@@ -1410,7 +1410,7 @@ void TerrainBuilder::threadFunc()
                                 //low quality version - always rendered on flight cam and optionally on LQ settings
                                 glm::vec3 bbPos({ x, height - 0.05f, -y });
 
-                                const float scale = (static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f) * 1.5f;
+                                const float scale = (static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f) * 1.2f;
                                 auto& bb = m_billboardTreeBuffer.emplace_back(m_billboardTemplates[BillboardID::Tree01 + currIndex]);
                                 bb.position = bbPos; //small vertical offset to stop floating billboards
                                 bb.size *= scale;
