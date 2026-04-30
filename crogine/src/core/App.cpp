@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -493,24 +493,25 @@ void App::run(bool resetSettings)
                 }
             }, nullptr);
 
-        Console::addCommand("r_framelimit", [&](const std::string& limit)
-            {
-                try
-                {
-                    const auto limitVal = std::max(0.f, std::stof(limit.c_str()));
-                    m_window.setFramerateLimit(limitVal);
-                    Console::print("Frame limit set to " + std::to_string(limitVal));
-                }
-                catch (...)
-                {
-                    if (!limit.empty())
-                    {
-                        Console::print(limit + ": invalid value.");
-                    }
-                    Console::print("Usage: r_frameLimit <max_frames>. Note setting this to zero removes all limit.");
-                    Console::print("Limit is only approximate, and only applies when v-sync is disabled.");
-                }
-            }, nullptr);
+        //this doesn't do the same thing as the actual working frame limiter
+        //Console::addCommand("r_framelimit", [&](const std::string& limit)
+        //    {
+        //        try
+        //        {
+        //            const auto limitVal = std::max(0.f, std::stof(limit.c_str()));
+        //            m_window.setFramerateLimit(limitVal);
+        //            Console::print("Frame limit set to " + std::to_string(limitVal));
+        //        }
+        //        catch (...)
+        //        {
+        //            if (!limit.empty())
+        //            {
+        //                Console::print(limit + ": invalid value.");
+        //            }
+        //            Console::print("Usage: r_frameLimit <max_frames>. Note setting this to zero removes all limit.");
+        //            Console::print("Limit is only approximate, and only applies when v-sync is disabled.");
+        //        }
+        //    }, nullptr);
     }
     else
     {
