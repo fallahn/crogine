@@ -2726,6 +2726,25 @@ void OptionsStateV2::createAudioItems()
     item->title = "Volume Levels";
     item->displayType = Menu::Item::Heading;
 
+
+    //main vol
+    item = &m_uiLayout.menuLayout.items[TabID::Audio].emplace_back();
+    item->title = "Master Volume";
+    item->activated =
+        [](Menu::Item& it)
+        {
+            cro::AudioMixer::setMasterVolume(static_cast<float>(it.selectedIndex) / 10.f);
+        };
+
+    for (auto j = 0; j < 11; ++j)
+    {
+        item->labels.push_back("Vol: " + std::to_string(j));
+    }
+    item->selectedIndex = std::clamp(static_cast<std::int32_t>(cro::AudioMixer::getMasterVolume() * 10.f), 0, 10);
+    item->displayType = Menu::Item::Slider;
+    item->wrapValue = false;
+
+
     for (auto i = 0; i < MixerChannel::Count; ++i)
     {
         auto& item = m_uiLayout.menuLayout.items[TabID::Audio].emplace_back();
