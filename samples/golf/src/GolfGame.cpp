@@ -644,6 +644,11 @@ void GolfGame::simulate(float dt)
 
     Achievements::update();
     m_progressIcon->update(dt);
+
+    if (Social::isSteamdeck())
+    {
+        cro::Console::setMaxFrames(4);
+    }
 }
 
 void GolfGame::render()
