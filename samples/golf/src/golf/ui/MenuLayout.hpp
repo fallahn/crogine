@@ -223,6 +223,8 @@ struct DetailsPane final
     cro::Entity background;
     cro::Entity applyButton;
 
+    cro::Entity scrollIcon;
+
     std::vector<cro::Entity> optionalEntities;
 
     //track this so we can resize items which appear within it

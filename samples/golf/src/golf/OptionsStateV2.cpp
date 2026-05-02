@@ -47,6 +47,7 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/SimpleText.hpp>
 #include <crogine/graphics/SimpleVertexArray.hpp>
+#include <crogine/graphics/Shape2D.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/UIElement.hpp>
@@ -964,6 +965,45 @@ void OptionsStateV2::buildScene()
         };
     m_uiLayout.detailsPane.background.getComponent<cro::UIElement>().depth = -0.3f;
     m_uiLayout.detailsPane.root.getComponent<cro::Transform>().addChild(m_uiLayout.detailsPane.background.getComponent<cro::Transform>());
+
+    
+    //displays a scroll icon so we can see how far down the items list we are
+    //TODO this is identical to the Profile state so we can share this code
+    struct ScrollData final
+    {
+        std::uint32_t lastIdx = 0;
+        float amount = 0.f;
+    };
+    m_uiLayout.detailsPane.scrollIcon = m_scene.createEntity();
+    m_uiLayout.detailsPane.scrollIcon.addComponent<cro::Transform>().setOrigin({ 2.f, 7.f });
+    m_uiLayout.detailsPane.scrollIcon.addComponent<cro::Drawable2D>();
+    m_uiLayout.detailsPane.scrollIcon.addComponent<cro::Sprite>() = spriteSheet.getSprite("scroll_handle");
+    m_uiLayout.detailsPane.scrollIcon.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    m_uiLayout.detailsPane.scrollIcon.getComponent<cro::UIElement>().depth = 0.2f;
+    m_uiLayout.detailsPane.scrollIcon.addComponent<cro::Callback>().active = true;
+    m_uiLayout.detailsPane.scrollIcon.getComponent<cro::Callback>().setUserData<ScrollData>();
+    m_uiLayout.detailsPane.scrollIcon.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& [idx, ct] = e.getComponent<cro::Callback>().getUserData<ScrollData>();
+            if (idx != m_uiLayout.menuLayout.itemIndex)
+            {
+                idx = m_uiLayout.menuLayout.itemIndex;
+                ct = 1.f;
+            }
+
+            ct = std::max(0.f, ct - dt);
+            auto c = cro::Colour::White;
+            c.setAlpha(ct);
+            e.getComponent<cro::Sprite>().setColour(c);
+
+            const float ratio = static_cast<float>(std::max(1u, m_uiLayout.menuLayout.itemIndex)) / (m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex].size() - 1);
+            glm::vec2 pos = { -m_uiLayout.detailsPane.backgroundSize.x / 2.f, -m_uiLayout.detailsPane.backgroundSize.y * ratio };
+            pos.y += m_uiLayout.detailsPane.backgroundSize.y / 2.f;
+
+            e.getComponent<cro::Transform>().setPosition(pos * e.getComponent<cro::Transform>().getScale().x);
+        };
+    m_uiLayout.detailsPane.root.getComponent<cro::Transform>().addChild(m_uiLayout.detailsPane.scrollIcon.getComponent<cro::Transform>());
 
 
     //displays an Apply icon if an item requests it
