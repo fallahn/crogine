@@ -560,6 +560,14 @@ void InputParser::setClub(float dist, std::uint8_t terrain)
             && m_currentClub != m_firstClub);//prevent inf loop
     }
 
+    //give a longer club if in the bunker
+    if (terrain == TerrainID::Bunker
+        && m_currentClub > ClubID::NineIron
+        && dist > 18.f)
+    {
+        m_currentClub--;
+    }
+
     //fudge to prevent picking driver in clubset shuffle mode
     if (m_sharedData.scoreType == ScoreType::ClubShuffle)
     {

@@ -4126,6 +4126,7 @@ void GolfState::buildScene()
     const bool spooky = cro::SysTime::now().months() == 10 && cro::SysTime::now().days() > 22;
     if (spooky)
     {
+        material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
         md.loadFromFile("assets/golf/models/tee_balls02.cmt");
     }
     else
