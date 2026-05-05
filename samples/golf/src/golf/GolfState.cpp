@@ -4122,7 +4122,7 @@ void GolfState::buildScene()
     m_skyScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.create(2, 2);
 
     //tee marker
-    material = m_resources.materials.get(m_materialIDs[m_sharedData.nightTime ? MaterialID::BallNight : MaterialID::Ball]);
+    material = m_resources.materials.get(m_materialIDs[m_sharedData.nightTime ? MaterialID::TeeNight : MaterialID::Ball]);
     const bool spooky = cro::SysTime::now().months() == 10 && cro::SysTime::now().days() > 22;
     if (spooky)
     {

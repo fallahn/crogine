@@ -325,6 +325,7 @@ private:
             BallNight,
             BallNightSkinned,
             BallWasher,
+            TeeNight,
             Billboard,
             Trophy,
             Beacon,

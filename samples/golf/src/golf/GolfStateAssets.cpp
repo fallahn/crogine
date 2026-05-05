@@ -66,6 +66,7 @@ namespace
 #include "shaders/ShaderIncludes.inl"
 #include "shaders/CelShader.inl"
 #include "shaders/GlowShader.inl"
+#include "shaders/Lantern.inl"
 #include "shaders/ShadowMapping.inl"
 #include "shaders/BillboardShader.inl"
 #include "shaders/TreeShader.inl"
@@ -2021,6 +2022,10 @@ void GolfState::loadMaterials()
         m_resources.shaders.loadFromString(ShaderID::Emissive, CelVertexShader, EmissiveFragment, "#define VERTEX_COLOURED\n" + wobble);
         shader = &m_resources.shaders.get(ShaderID::Emissive);
         m_materialIDs[MaterialID::Emissive] = m_resources.materials.add(*shader);
+
+        m_resources.shaders.loadFromString(ShaderID::TeeNight, LanternVert, LanternFrag, "#define USE_MRT\n");
+        shader = &m_resources.shaders.get(ShaderID::TeeNight);
+        m_materialIDs[MaterialID::TeeNight] = m_resources.materials.add(*shader);
     }
 
 

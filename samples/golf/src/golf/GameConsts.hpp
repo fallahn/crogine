@@ -378,6 +378,7 @@ struct ShaderID final
         BallNight,
         BallNightSkinned,
         BallWasher,
+        TeeNight,
         Slope,
         Minimap,
         MinimapModel,
