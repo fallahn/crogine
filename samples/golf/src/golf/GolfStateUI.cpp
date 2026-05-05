@@ -203,6 +203,7 @@ namespace
         return expansion;
     }
 }
+
 void GolfState::buildUI()
 {
     if (m_holeData.empty())
@@ -1727,6 +1728,37 @@ void GolfState::buildUI()
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
+
+    //marks first impact of the ball
+    static constexpr float CrossSize = 24.f;
+    static constexpr float CrossWidth = 4.5f;
+    static constexpr cro::Colour CrossColour = TextHighlightColour;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.35f });
+    //entity.getComponent<cro::Transform>().setRotation(45.f * cro::Util::Const::degToRad);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniCross;
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-CrossWidth, CrossSize), CrossColour),
+            cro::Vertex2D(glm::vec2(0.f), CrossColour),
+            cro::Vertex2D(glm::vec2(CrossWidth, CrossSize), CrossColour),
+            
+            cro::Vertex2D(glm::vec2(-CrossWidth, -CrossSize), CrossColour),
+            cro::Vertex2D(glm::vec2(CrossWidth, -CrossSize), CrossColour),
+            cro::Vertex2D(glm::vec2(0.f), CrossColour),
+
+            cro::Vertex2D(glm::vec2(0.f), CrossColour),
+            cro::Vertex2D(glm::vec2(CrossSize, -CrossWidth), CrossColour),
+            cro::Vertex2D(glm::vec2(CrossSize, CrossWidth), CrossColour),
+
+            cro::Vertex2D(glm::vec2(-CrossSize, CrossWidth), CrossColour),
+            cro::Vertex2D(glm::vec2(-CrossSize, -CrossWidth), CrossColour),
+            cro::Vertex2D(glm::vec2(0.f), CrossColour),
+        });
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     /*auto dbEnt = m_uiScene.createEntity();
     dbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
     dbEnt.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);*/

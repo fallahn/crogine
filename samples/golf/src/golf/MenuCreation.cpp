@@ -6122,8 +6122,18 @@ void MenuState::createPreviousScoreCard()
                 }
                 else
                 {
-                    str += "\n" + std::to_string(score);
+                    const auto scoreStr = std::to_string(score);
+                    const auto sCol = str.size();
+                    const auto eCol = sCol + scoreStr.size();
+
+                    str += "\n" + scoreStr;
                     redStr += "\n";
+
+                    if (score < courseData.parVals[parOffset + i])
+                    {
+                        entity.getComponent<cro::Text>().setFillColour(TextGreenColour, sCol);
+                        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark, eCol);
+                    }
                 }
                 break;
             case ScoreType::Stableford:

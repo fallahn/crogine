@@ -122,6 +122,16 @@ void GolfState::updateMiniMap()
 
 void GolfState::retargetMinimap(bool reset)
 {
+    //hide impact icon
+    auto cmd = cro::Command();
+    cmd.targetFlags = CommandID::UI::MiniCross;
+    cmd.action =
+        [](cro::Entity e, float)
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
     if (m_minimapZoom.activeAnimation.isValid())
     {
         //remove existing animation

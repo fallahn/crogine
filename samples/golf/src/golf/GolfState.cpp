@@ -2818,6 +2818,25 @@ void GolfState::handleMessage(const cro::Message& msg)
                 && m_currentPlayer.client == m_sharedData.clientConnection.connectionID
                 && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
             {
+                if (getClub() != ClubID::Putter)
+                {
+                    const auto pos = data.position;
+
+                    //update minimap cross for impact
+                    auto cmd = cro::Command();
+                    cmd.targetFlags = CommandID::UI::MiniCross;
+                    cmd.action =
+                        [&, pos](cro::Entity e, float)
+                        {
+                            if (e.getComponent<cro::Transform>().getScale().x == 0)
+                            {
+                                e.getComponent<cro::Transform>().setPosition(m_minimapZoom.toMapCoords(pos));
+                                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                            }
+                        };
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                }
+
                 switch (data.terrain)
                 {
                 default: break;
