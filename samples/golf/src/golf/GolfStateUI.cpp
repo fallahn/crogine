@@ -1735,7 +1735,7 @@ void GolfState::buildUI()
     static constexpr cro::Colour CrossColour = TextHighlightColour;
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.35f });
-    //entity.getComponent<cro::Transform>().setRotation(45.f * cro::Util::Const::degToRad);
+    entity.getComponent<cro::Transform>().setRotation(45.f * cro::Util::Const::degToRad);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniCross;
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {

@@ -6108,6 +6108,9 @@ void MenuState::createPreviousScoreCard()
 
         redStr = "\n";
 
+        //we need to apply the colours *after* we compiled and set the string...
+        std::vector<std::pair<cro::Colour, std::size_t>> textColours;
+
         for (const auto& entry : scoreEntries)
         {
             auto score = entry.holeScores[i];
@@ -6124,15 +6127,15 @@ void MenuState::createPreviousScoreCard()
                 {
                     const auto scoreStr = std::to_string(score);
                     const auto sCol = str.size();
-                    const auto eCol = sCol + scoreStr.size();
+                    const auto eCol = sCol + scoreStr.size() + 1;
 
                     str += "\n" + scoreStr;
                     redStr += "\n";
 
                     if (score < courseData.parVals[parOffset + i])
                     {
-                        entity.getComponent<cro::Text>().setFillColour(TextGreenColour, sCol);
-                        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark, eCol);
+                        textColours.emplace_back(CD32::Colours[CD32::GreenMid], sCol);
+                        textColours.emplace_back(LeaderboardTextDark, eCol);
                     }
                 }
                 break;
@@ -6217,8 +6220,20 @@ void MenuState::createPreviousScoreCard()
                         }
                         else
                         {
-                            str += "\n" + std::to_string(score);
+                            /*str += "\n" + std::to_string(score);
+                            redStr += "\n";*/
+                            const auto scoreStr = std::to_string(score);
+                            const auto sCol = str.size();
+                            const auto eCol = sCol + scoreStr.size() + 1;
+
+                            str += "\n" + scoreStr;
                             redStr += "\n";
+
+                            if (score < courseData.parVals[parOffset + i + 9])
+                            {
+                                textColours.emplace_back(CD32::Colours[CD32::GreenMid], sCol);
+                                textColours.emplace_back(LeaderboardTextDark, eCol);
+                            }
                         }
                         break;
                     case ScoreType::Stableford:
@@ -6258,6 +6273,11 @@ void MenuState::createPreviousScoreCard()
         }
         entity.getComponent<cro::Text>().setString(str);
         redEnt.getComponent<cro::Text>().setString(redStr);
+
+        for (const auto& [colour, idx] : textColours)
+        {
+            entity.getComponent<cro::Text>().setFillColour(colour, idx);
+        }
 
         if (page2)
         {
