@@ -106,6 +106,41 @@ namespace
 
     //bool spawnActive = true;
 
+    const std::string CloudFrag =
+R"(
+uniform sampler2D u_texture;
+uniform float u_time = 0.0;
+
+VARYING_IN vec2 v_texCoord;
+
+OUTPUT
+
+const float BlendMultiplier = 0.5;
+
+vec4 fetchColour(float offset, float speedMultiplier)
+{
+    vec4 colour = texture(u_texture, v_texCoord + vec2((u_time * speedMultiplier) + offset, 0.0)) * BlendMultiplier;
+    colour.rgb *= colour.a;
+
+    return colour;
+}
+
+void main()
+{
+    vec4 colour = fetchColour(0.0, 0.01);
+    colour += fetchColour(0.35, 0.012);
+
+    float mask = texture(u_texture, v_texCoord + vec2(sin(u_time * 0.01) * 0.01, 0.0)).a;
+    colour.rgb *= (mask * mask * mask);
+    colour.a = 1.0;
+
+    FRAG_OUT = colour;
+})";
+
+    std::int32_t cloudUniform = -1;
+    std::uint32_t cloudID = 0;
+
+
     const std::string QuantizeFrag =
 R"(
 uniform sampler2D u_texture;
@@ -533,6 +568,11 @@ bool MenuState::simulate(float dt)
     }
 
 
+    static float accum = 0.f;
+    accum += dt;
+    glUseProgram(cloudID);
+    glUniform1f(cloudUniform, accum);
+
     m_video.update(dt);
     m_scene.simulate(dt);
 
@@ -543,7 +583,7 @@ void MenuState::render()
 {
     //draw any renderable systems
     m_scene.render();
-    /*m_simpleQuad.draw();*/
+    m_simpleQuad.draw();
     m_simpleText.draw();
 
     if (m_quantizeOutput.available())
@@ -599,7 +639,18 @@ void MenuState::loadAssets()
         }
     }
 
-    //m_simpleQuad.setTexture(m_resources.textures.get("assets/strawman_preview.png"));
+
+    m_resources.shaders.loadFromString(10000, cro::SimpleQuad::getDefaultVertexShader(), CloudFrag);
+    auto& shader = m_resources.shaders.get(10000);
+    cloudID = shader.getGLHandle();
+    cloudUniform = shader.getUniformID("u_time");
+
+    auto& tex = m_resources.textures.get("assets/images/cloud_mask.png");
+    tex.setRepeated(true);
+    m_simpleQuad.setTexture(tex);
+    m_simpleQuad.setBlendMode(cro::Material::BlendMode::Additive);
+    m_simpleQuad.setShader(shader);
+    m_simpleQuad.setPosition({ 0.f, 60.f });
 
     //m_simpleText.setFont(font);
     //m_simpleText.setString("Simple Text");

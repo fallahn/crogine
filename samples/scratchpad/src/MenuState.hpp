@@ -68,7 +68,7 @@ namespace sp
 
         cro::ResourceCollection& m_resources;
 
-        //cro::SimpleQuad m_simpleQuad;
+        cro::SimpleQuad m_simpleQuad;
         cro::SimpleText m_simpleText;
 
         cro::Scene m_scene;

@@ -39,6 +39,7 @@ namespace
     {
         std::string("dlc/adventurer/"),
         std::string("dlc/island/"),
+        std::string("dlc/craewall/"),
     };
 }
 

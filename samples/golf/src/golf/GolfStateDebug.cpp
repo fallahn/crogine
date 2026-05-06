@@ -71,6 +71,9 @@ namespace
 
 #include "../ErrorCheck.hpp"
 
+//defines for enabling various debug windows
+//#define SKY_PICKER
+
 #ifdef PATH_TRACING
 namespace
 {
@@ -969,76 +972,78 @@ void GolfState::registerDebugCommands()
 
 void GolfState::registerDebugWindows()
 {
-    //registerWindow([&]()
-    //    {
-    //        /*ImGui::Begin("Sky Colour");
-    //        auto colours = m_skyScene.getSkyboxColours();
-    //        glm::vec4 skyTop = colours.top.getVec4();
+#ifdef SKY_PICKER
+    registerWindow([&]()
+        {
+            ImGui::Begin("Sky Colour");
+            auto colours = m_skyScene.getSkyboxColours();
+            glm::vec4 skyTop = colours.top.getVec4();
 
-    //        if (ImGui::ColorEdit3("Top", &skyTop[0]))
-    //        {
-    //            colours.top = skyTop;
-    //            m_skyScene.setSkyboxColours(colours);
-    //        }
+            if (ImGui::ColorEdit3("Top", &skyTop[0]))
+            {
+                colours.top = skyTop;
+                m_skyScene.setSkyboxColours(colours);
+            }
 
-    //        glm::vec4 skyMid = colours.middle.getVec4();
-    //        if (ImGui::ColorEdit3("Middle", &skyMid[0]))
-    //        {
-    //            colours.middle = skyMid;
-    //            m_skyScene.setSkyboxColours(colours);
-    //        }
+            glm::vec4 skyMid = colours.middle.getVec4();
+            if (ImGui::ColorEdit3("Middle", &skyMid[0]))
+            {
+                colours.middle = skyMid;
+                m_skyScene.setSkyboxColours(colours);
+            }
 
-    //        auto sunColour = m_skyScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
-    //        if (ImGui::ColorEdit3("Sun", &sunColour[0]))
-    //        {
-    //            m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(sunColour);
-    //            m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(sunColour);
-    //        }
+            auto sunColour = m_skyScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
+            if (ImGui::ColorEdit3("Sun", &sunColour[0]))
+            {
+                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(sunColour);
+                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(sunColour);
+            }
 
 
-    //        ImGui::End();*/
+            ImGui::End();
 
-    //        //if (ImGui::Begin("Ball Cam"))
-    //        //{
-    //        //    glm::vec2 size(m_flightTexture.getSize());
-    //        //    ImGui::Image(m_flightTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+            //if (ImGui::Begin("Ball Cam"))
+            //{
+            //    glm::vec2 size(m_flightTexture.getSize());
+            //    ImGui::Image(m_flightTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
 
-    //        //    auto& cam = m_flightCam.getComponent<cro::Camera>();
-    //        //    static float fov = 60.f;
-    //        //    if (ImGui::SliderFloat("FOV", &fov, 40.f, 90.f))
-    //        //    {
-    //        //        cam.setPerspective(fov * cro::Util::Const::degToRad, 1.f, 0.001f, static_cast<float>(MapSize.x) * 1.25f/*, m_shadowQuality.cascadeCount*/);
-    //        //    }
+            //    auto& cam = m_flightCam.getComponent<cro::Camera>();
+            //    static float fov = 60.f;
+            //    if (ImGui::SliderFloat("FOV", &fov, 40.f, 90.f))
+            //    {
+            //        cam.setPerspective(fov * cro::Util::Const::degToRad, 1.f, 0.001f, static_cast<float>(MapSize.x) * 1.25f/*, m_shadowQuality.cascadeCount*/);
+            //    }
 
-    //        //    static glm::vec3 pos(0.f);
-    //        //    if (ImGui::SliderFloat("Y", &pos.y, 0.f, 0.1f))
-    //        //    {
-    //        //        m_flightCam.getComponent<cro::Transform>().setPosition(m_currentPlayer.position + pos);
-    //        //    }
-    //        //    if (ImGui::SliderFloat("Z", &pos.z, 0.f, 0.1f))
-    //        //    {
-    //        //        m_flightCam.getComponent<cro::Transform>().setPosition(m_currentPlayer.position + pos);
-    //        //    }
+            //    static glm::vec3 pos(0.f);
+            //    if (ImGui::SliderFloat("Y", &pos.y, 0.f, 0.1f))
+            //    {
+            //        m_flightCam.getComponent<cro::Transform>().setPosition(m_currentPlayer.position + pos);
+            //    }
+            //    if (ImGui::SliderFloat("Z", &pos.z, 0.f, 0.1f))
+            //    {
+            //        m_flightCam.getComponent<cro::Transform>().setPosition(m_currentPlayer.position + pos);
+            //    }
 
-    //        //    static float rotation = 0.f;
-    //        //    if (ImGui::SliderFloat("Rotation", &rotation, -0.2f, 0.2f))
-    //        //    {
-    //        //        m_flightCam.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rotation);
-    //        //    }
-    //        //}
-    //        //ImGui::End();
+            //    static float rotation = 0.f;
+            //    if (ImGui::SliderFloat("Rotation", &rotation, -0.2f, 0.2f))
+            //    {
+            //        m_flightCam.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rotation);
+            //    }
+            //}
+            //ImGui::End();
 
-    //        //if (ImGui::Begin("Ach Track"))
-    //        //{
-    //        //    ImGui::Text("No holes over par %s", m_achievementTracker.noHolesOverPar ? "true" : "false");
-    //        //    ImGui::Text("No gimme used %s", m_achievementTracker.noGimmeUsed ? "true" : "false");
-    //        //    ImGui::Text("Two shots spare %s", m_achievementTracker.twoShotsSpare ? "true" : "false");
-    //        //    ImGui::Text("Consistency %s", m_achievementTracker.alwaysOnTheCourse ? "true" : "false");
-    //        //    ImGui::Text("Under two putts %s", m_achievementTracker.underTwoPutts ? "true" : "false");
-    //        //    ImGui::Text("Putt count %d", m_achievementTracker.puttCount);
-    //        //}
-    //        //ImGui::End();
-    //    });
+            //if (ImGui::Begin("Ach Track"))
+            //{
+            //    ImGui::Text("No holes over par %s", m_achievementTracker.noHolesOverPar ? "true" : "false");
+            //    ImGui::Text("No gimme used %s", m_achievementTracker.noGimmeUsed ? "true" : "false");
+            //    ImGui::Text("Two shots spare %s", m_achievementTracker.twoShotsSpare ? "true" : "false");
+            //    ImGui::Text("Consistency %s", m_achievementTracker.alwaysOnTheCourse ? "true" : "false");
+            //    ImGui::Text("Under two putts %s", m_achievementTracker.underTwoPutts ? "true" : "false");
+            //    ImGui::Text("Putt count %d", m_achievementTracker.puttCount);
+            //}
+            //ImGui::End();
+        });
+#endif
 
     //registerWindow([&]()
     //    {
