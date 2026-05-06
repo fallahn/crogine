@@ -561,7 +561,7 @@ void InputParser::setClub(float dist, std::uint8_t terrain)
     }
 
     //give a longer club if in the bunker
-    if (terrain == TerrainID::Bunker
+    if ((terrain == TerrainID::Bunker || terrain == TerrainID::Rough)
         && m_currentClub > ClubID::NineIron
         && dist > 18.f)
     {
