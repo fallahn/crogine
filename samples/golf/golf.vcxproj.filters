@@ -1642,6 +1642,9 @@
     <None Include="src\golf\shaders\2DBorderShader.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
+    <None Include="src\golf\shaders\VapourShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="golf.rc">

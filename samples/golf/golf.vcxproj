@@ -1104,6 +1104,7 @@
     <None Include="src\golf\shaders\TutorialShaders.inl" />
     <None Include="src\golf\shaders\TVShader.inl" />
     <None Include="src\golf\shaders\UnlockShader.inl" />
+    <None Include="src\golf\shaders\VapourShader.inl" />
     <None Include="src\golf\shaders\WaterShader.inl" />
     <None Include="src\golf\shaders\Weather.inl" />
     <None Include="src\golf\shaders\WireframeShader.inl" />

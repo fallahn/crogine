@@ -91,6 +91,7 @@ namespace
 #include "shaders/MinimapModel.inl"
 #include "shaders/GrassShader.inl"
 #include "shaders/Shore.inl"
+#include "shaders/VapourShader.inl"
 
     //colour is normal colour with dark shadow
     const std::array BannerStrings =
@@ -1956,6 +1957,16 @@ void GolfState::loadMaterials()
         m_resources.shaders.addLazyLoader(ShaderID::Moon, lazyLoadMoon);
         m_resources.shaders.mapStringID("moon", ShaderID::Moon);
     }
+
+    const auto lazyLoadVapour = 
+        [this](cro::ShaderResource& shaders)
+        {
+            shaders.loadFromString(ShaderID::Vapour,
+                cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), VapourFrag, "#define TEXTURED\n");
+            m_windBuffer.addShader(shaders.get(ShaderID::Vapour));
+        };
+    m_resources.shaders.addLazyLoader(ShaderID::Vapour, lazyLoadVapour);
+    m_resources.shaders.mapStringID("vapour", ShaderID::Vapour);
 
     //cel shaded material
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define TERRAIN_CLIP\n#define BALL_COLOUR\n" + wobble);

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -427,7 +427,8 @@ struct ShaderID final
         Moon,
         Earth,
         Cloth,
-        Shore
+        Shore,
+        Vapour
     };
 };
 
@@ -1187,8 +1188,12 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
                     }
                     else
                     {
-                        applyMaterialData(md, material, i);
-                        entity.getComponent<cro::Model>().setMaterial(i, material);
+                        //don't apply this material if a custom one was loaded with the model
+                        if (!entity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Final, i).customShader)
+                        {
+                            applyMaterialData(md, material, i);
+                            entity.getComponent<cro::Model>().setMaterial(i, material);
+                        }
                     }
                 }
             }
