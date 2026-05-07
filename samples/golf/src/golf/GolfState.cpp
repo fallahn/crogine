@@ -1784,7 +1784,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             ent.getComponent<cro::Callback>().active = true;
         }
     }
-    break;
+        break;
     case MessageID::SceneMessage:
     {
         const auto& data = msg.getData<SceneEvent>();
@@ -2430,7 +2430,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         break;
         }
     }
-    break;
+        break;
     case cro::Message::ConsoleMessage:
     {
         const auto& data = msg.getData<cro::Message::ConsoleEvent>();
@@ -2756,7 +2756,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         };
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::AchievementGet, packet, net::NetFlag::Reliable);
     }
-    break;
+        break;
 
     case MessageID::AIMessage:
     {
@@ -8503,7 +8503,10 @@ std::int32_t GolfState::getClub() const
 
 float GolfState::getDampening() const
 {
-    return m_inputParser.getDampening();// Dampening[m_currentPlayer.terrain] * LieDampening[m_currentPlayer.terrain][m_inputParser.getLie()];
+    //this is supposed to correct the label for clubs
+    //which have been shortened by the terrain
+    //TODO this is incorrect for bunker/rough
+    return m_inputParser.getDampening() * Dampening[m_currentPlayer.terrain] * LieDampening[m_currentPlayer.terrain][m_inputParser.getLie()];//;
 }
 
 void GolfState::gamepadNotify(std::int32_t type)
