@@ -35,6 +35,7 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/MultiRenderTexture.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -77,6 +78,9 @@ private:
 
     cro::Entity m_smaaRoot;
 
+    cro::CubemapTexture m_cubemapTexture;
+    cro::Shader m_reflectionShader;
+
     void addSystems();
     void loadAssets();
     void createScene();
@@ -84,6 +88,7 @@ private:
 
     void createGrass();
     void createTestModels();
+    void createReflectionScene();
 
     void calcViewport(cro::Camera&);
     void updateView(cro::Camera&);

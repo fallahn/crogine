@@ -407,14 +407,14 @@ void GolfState::registerDebugCommands()
 
 
             //create 3 cubemaps based on pin/tee position etc
-            const std::array<glm::vec3, 3u> Positions =
+            const std::array/*<glm::vec3, 3u>*/ Positions =
             {
-                m_holeData[m_currentHole].tee,
+                //m_holeData[m_currentHole].tee,
                 m_holeData[m_currentHole].target,
-                m_holeData[m_currentHole].pin,
+                //m_holeData[m_currentHole].pin,
             };
 
-            for (auto i = 0; i < 3; ++i)
+            for (auto i = 0u; i < Positions.size(); ++i)
             {
                 auto path = courseDir + std::to_string(i);
                 if (!cro::FileSystem::directoryExists(path))
@@ -454,7 +454,8 @@ void GolfState::registerDebugCommands()
                 };
 
                 auto position = Positions[i];
-                position.y += 0.5f;
+                //position.y += 0.5f;
+                position.y += 5.f;
 
                 cam.getComponent<cro::Transform>().setPosition(position);
                 for (auto j = 0; j < 6; ++j)

@@ -568,6 +568,11 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
     cro::App::getInstance().resetFrameTime();
     simulate(0.f);
+
+    if (!m_sharedData.nightTime)
+    {
+        m_gameSceneTexture.setSmooth(false);
+    }
 }
 
 GolfState::~GolfState()

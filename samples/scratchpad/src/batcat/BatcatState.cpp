@@ -460,6 +460,8 @@ void BatcatState::createScene()
 
     //createTestModels();
 
+    createReflectionScene();
+
     cro::ModelDefinition md(m_resources);
 
     std::vector<glm::mat4> tx;
@@ -546,7 +548,7 @@ void BatcatState::createScene()
         m_modelDefs[GameModelID::TestRoom]->createModel(entity);
         entity.addComponent<TerrainChunk>().width = 200.f;
 
-        entity.getComponent<cro::Model>().setMaterial(0, material);
+        //entity.getComponent<cro::Model>().setMaterial(0, material);
 
         bbEnt = m_scene.createEntity();
         bbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 3.f + (3.f * i) });
@@ -1143,6 +1145,39 @@ void BatcatState::createTestModels()
         entity.getComponent<cro::Transform>().setPosition({ 7.f, 0.f, 8.f });
         md.createModel(entity);
     }
+}
+
+void BatcatState::createReflectionScene()
+{
+    m_cubemapTexture.loadFromFile("assets/images/skybox/sky.ccm");
+
+    cro::Entity entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 3.f, -6.f });
+
+    cro::ModelDefinition md(m_resources);
+    md.loadFromFile("assets/models/sphere_1m.cmt");
+    md.createModel(entity);
+
+
+    m_reflectionShader.loadFromString(ReflectionVert, ReflectionFrag, "#define RIMMING\n");
+
+    auto matID = m_resources.materials.add(m_reflectionShader);
+    auto material = m_resources.materials.get(matID);
+    material.setProperty("u_reflectMap", cro::CubemapID(m_cubemapTexture));
+    entity.getComponent<cro::Model>().setMaterial(0, material);
+
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float) 
+        {
+            static const auto table = cro::Util::Wavetable::sine(0.5f, 4.f);
+            static std::size_t idx = 0;
+            static constexpr glm::vec3 BasePos(0.f, 6.f, -6.f);
+
+            e.getComponent<cro::Transform>().setPosition(BasePos + glm::vec3(0.f, table[idx], 0.f));
+            idx = (idx + 1) % table.size();
+        };
 }
 
 void BatcatState::calcViewport(cro::Camera& cam)

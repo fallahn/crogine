@@ -187,7 +187,7 @@ void GolfState::loadAssets()
     BannerIndex = (BannerIndex + 1) % BannerStrings.size();
 
     std::string skyboxPath = "assets/golf/images/skybox/billiards/trophy.ccm";
-    //std::string skyboxPath = "assets/golf/courses/course_10/cmap/01/d/1/cmap.ccm";
+    //std::string skyboxPath = "assets/golf/courses/course_03/cmap/01/d/0/cmap.ccm";
 
     if (m_sharedData.nightTime)
     {
@@ -1014,7 +1014,7 @@ void GolfState::loadMap()
                                             }
                                         }
                                         ent.getComponent<cro::Model>().setHidden(true);
-                                        ent.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+                                        ent.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::CubeMap));
 
                                         holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
                                         holeData.propEntities.push_back(ent);
