@@ -592,6 +592,7 @@ void GolfState::loadMap()
     std::vector<cro::Entity> leaderboardProps;
     std::int32_t holeModelCount = 0; //use this to get a guestimate of how many holes per model there are to adjust the camera offset
     cro::ModelDefinition md(m_resources);
+    std::int32_t cubemapUID = 0; //creates a UID for multiple instances of a model which require unique cubemaps
 
     cro::AudioScape propAudio;
     propAudio.loadFromFile("assets/golf/sound/props.xas", m_resources.audio);
@@ -616,6 +617,8 @@ void GolfState::loadMap()
         std::int32_t propCount = 0;
         auto& holeData = m_holeData.emplace_back();
         bool duplicate = false;
+
+        auto& pendingCubemaps = m_pendingCubemaps.emplace_back();
 
         std::vector<std::string> includeFiles;
 
@@ -1000,6 +1003,30 @@ void GolfState::loadMap()
                                                         texturedMat.setProperty("u_speed", loopSpeed / 4.f/*std::clamp(loopSpeed, 0.f, 1.f)*/);
                                                     }
 
+                                                    //if (modelDef.hasTag(i, "cubemap"))
+                                                    //{
+                                                    //    const std::string tod = m_sharedData.nightTime ? "/n/" : "/d/";
+                                                    //    const std::string uid = std::to_string(cubemapUID++);
+
+                                                    //    const auto cmapDir = "assets/golf/courses/" + m_sharedData.mapDirectory + "/cmap/" + uid + tod;
+                                                    //    
+                                                    //    //check if cubemap exists and load it
+                                                    //    if (cro::FileSystem::fileExists(cmapDir + "/cmap.ccm"))
+                                                    //    {
+                                                    //        //if load successful set the material uniform
+                                                    //        auto& cmap = m_cubemaps.emplace_back();
+                                                    //        if (cmap.loadFromFile(cmapDir + "/cmap.ccm"))
+                                                    //        {
+                                                    //            texturedMat.setProperty("u_reflectMap", cro::CubemapID(cmap));
+                                                    //        }
+                                                    //    }
+                                                    //    else
+                                                    //    {
+                                                    //        /*const auto& [n, p] = */pendingCubemaps.emplace_back(cmapDir, ent.getComponent<cro::Transform>().getPosition());
+                                                    //        //LogI << "Found prop with custom cubemap " << n << " at " << p << std::endl;
+                                                    //    }
+                                                    //}
+
                                                     applyMaterialData(modelDef, texturedMat, i);
                                                     ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
 
@@ -1014,7 +1041,7 @@ void GolfState::loadMap()
                                             }
                                         }
                                         ent.getComponent<cro::Model>().setHidden(true);
-                                        ent.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::CubeMap));
+                                        ent.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap/* | RenderFlags::CubeMap*/));
 
                                         holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
                                         holeData.propEntities.push_back(ent);

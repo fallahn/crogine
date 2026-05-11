@@ -373,116 +373,11 @@ void GolfState::registerDebugCommands()
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::SkipTurn), net::NetFlag::Reliable);
         });
 
-    registerCommand("build_cubemaps",
-        [&](const std::string&)
-        {
-            std::string holeNumber = std::to_string(m_currentHole + 1);
-            if (m_currentHole < 9)
-            {
-                holeNumber = "0" + holeNumber;
-            }
-
-            std::string tod = "/d/";
-            //TODO if night tod = "/n/"
-
-            auto courseDir = "assets/golf/courses/" + m_sharedData.mapDirectory + "/cmap/" + holeNumber + tod;
-            if (!cro::FileSystem::directoryExists(courseDir))
-            {
-                cro::FileSystem::createDirectory(courseDir);
-            }
-
-            cro::Entity cam = m_gameScene.createEntity();
-            cam.addComponent<cro::Transform>();
-            cam.addComponent<cro::Camera>().setPerspective(90.f * cro::Util::Const::degToRad, 1.f, 0.1f, 280.f);
-            cam.getComponent<cro::Camera>().viewport = { 0.f, 0.f, 1.f, 1.f };
-            cam.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::CubeMap);
-            m_gameScene.simulate(0.f); //do this once to integrate the new entity;
-
-            auto oldCam = m_gameScene.setActiveCamera(cam);
-            m_skyScene.setActiveCamera(m_skyCameras[SkyCam::Flight]);
-
-            static const std::uint32_t TexSize = 256;
-            cro::RenderTexture rt;
-            rt.create(TexSize, TexSize);
-
-
-            //create 3 cubemaps based on pin/tee position etc
-            const std::array/*<glm::vec3, 3u>*/ Positions =
-            {
-                //m_holeData[m_currentHole].tee,
-                m_holeData[m_currentHole].target,
-                //m_holeData[m_currentHole].pin,
-            };
-
-            for (auto i = 0u; i < Positions.size(); ++i)
-            {
-                auto path = courseDir + std::to_string(i);
-                if (!cro::FileSystem::directoryExists(path))
-                {
-                    cro::FileSystem::createDirectory(path);
-                }
-
-                cro::ConfigFile cfg("cubemap");
-                cfg.addProperty("up").setValue(path + "/py.png");
-                cfg.addProperty("down").setValue(path + "/ny.png");
-                cfg.addProperty("left").setValue(path + "/nx.png");
-                cfg.addProperty("right").setValue(path + "/px.png");
-                cfg.addProperty("front").setValue(path + "/pz.png");
-                cfg.addProperty("back").setValue(path + "/nz.png");
-                cfg.save(path + "/cmap.ccm");
-
-
-                struct Rotation final
-                {
-                    glm::vec3 axis = glm::vec3(0.f);
-                    float angle = 0.f;
-                    constexpr Rotation(glm::vec3 a, float r) : axis(a), angle(r) {};
-                };
-                static constexpr std::array<Rotation, 6u> Rotations =
-                {
-                    Rotation(cro::Transform::Y_AXIS, 0.f),
-                    Rotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f),
-                    Rotation(cro::Transform::Y_AXIS, cro::Util::Const::PI),
-                    Rotation(cro::Transform::Y_AXIS, -cro::Util::Const::PI / 2.f),
-                    Rotation(cro::Transform::X_AXIS, cro::Util::Const::PI / 2.f),
-                    Rotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f)
-                };
-
-                static const std::array<std::string, 6u> FileNames =
-                {
-                    "/pz.png", "/nx.png", "/nz.png", "/px.png", "/py.png", "/ny.png"
-                };
-
-                auto position = Positions[i];
-                //position.y += 0.5f;
-                position.y += 5.f;
-
-                cam.getComponent<cro::Transform>().setPosition(position);
-                for (auto j = 0; j < 6; ++j)
-                {
-                    cam.getComponent<cro::Transform>().setRotation(Rotations[j].axis, Rotations[j].angle);
-                    m_gameScene.simulate(0.f);
-
-                    //we'll use the existing cam as it happens to have the same FOV
-                    m_skyCameras[SkyCam::Flight].getComponent<cro::Transform>().setRotation(cam.getComponent<cro::Transform>().getWorldRotation());
-                    m_skyCameras[SkyCam::Flight].getComponent<cro::Transform>().setPosition({0.f, position.y / 64.f, 0.f});
-                    m_skyScene.simulate(0.f);
-
-                    rt.clear();
-                    m_skyScene.render();
-                    glClear(GL_DEPTH_BUFFER_BIT);
-                    m_gameScene.render();
-                    rt.display();
-
-                    rt.saveToFile(path + FileNames[j]);
-                }
-            }
-
-            m_gameScene.setActiveCamera(oldCam);
-            m_gameScene.destroyEntity(cam);
-
-            cro::Console::print("Done!");
-        });
+    //registerCommand("build_cubemaps",
+    //    [&](const std::string&)
+    //    {
+    //        buiildCubemap();
+    //    });
 
     registerCommand("noclip", [&](const std::string&)
         {
@@ -1081,6 +976,110 @@ void GolfState::registerDebugWindows()
     //            ImGui::End();
     //        }
     //    });
+}
+
+void GolfState::buildCubemap(glm::vec3 position, const std::string& path)
+{
+    if (!cro::FileSystem::directoryExists(path))
+    {
+        cro::FileSystem::createDirectory(path);
+    }
+    m_gameScene.setSystemActive<ChunkVisSystem>(false);
+
+    cro::Entity cam = m_gameScene.createEntity();
+    cam.addComponent<cro::Transform>();
+    cam.addComponent<cro::Camera>().setPerspective(90.f * cro::Util::Const::degToRad, 1.f, 0.1f, 280.f);
+    cam.getComponent<cro::Camera>().viewport = { 0.f, 0.f, 1.f, 1.f };
+    cam.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::All);
+    m_gameScene.simulate(0.f); //do this once to integrate the new entity;
+
+    auto oldCam = m_gameScene.setActiveCamera(cam);
+    m_skyScene.setActiveCamera(m_skyCameras[SkyCam::Flight]);
+
+    static const std::uint32_t TexSize = 256;
+    cro::RenderTexture rt;
+    rt.create(TexSize, TexSize);
+
+
+    //create 3 cubemaps based on pin/tee position etc
+    //const std::array/*<glm::vec3, 3u>*/ Positions =
+    //{
+    //    //m_holeData[m_currentHole].tee,
+    //    m_holeData[m_currentHole].target,
+    //    //m_holeData[m_currentHole].pin,
+    //};
+
+    //for (auto i = 0u; i < Positions.size(); ++i)
+    {
+        //auto path = courseDir + "/" + name + "/" + std::to_string(instanceID);// +std::to_string(i);
+        /*if (!cro::FileSystem::directoryExists(path))
+        {
+            cro::FileSystem::createDirectory(path);
+        }*/
+
+        cro::ConfigFile cfg("cubemap");
+        cfg.addProperty("up").setValue(path + "/py.png");
+        cfg.addProperty("down").setValue(path + "/ny.png");
+        cfg.addProperty("left").setValue(path + "/nx.png");
+        cfg.addProperty("right").setValue(path + "/px.png");
+        cfg.addProperty("front").setValue(path + "/pz.png");
+        cfg.addProperty("back").setValue(path + "/nz.png");
+        cfg.save(path + "/cmap.ccm");
+
+
+        struct Rotation final
+        {
+            glm::vec3 axis = glm::vec3(0.f);
+            float angle = 0.f;
+            constexpr Rotation(glm::vec3 a, float r) : axis(a), angle(r) {};
+        };
+        static constexpr std::array<Rotation, 6u> Rotations =
+        {
+            Rotation(cro::Transform::Y_AXIS, 0.f),
+            Rotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f),
+            Rotation(cro::Transform::Y_AXIS, cro::Util::Const::PI),
+            Rotation(cro::Transform::Y_AXIS, -cro::Util::Const::PI / 2.f),
+            Rotation(cro::Transform::X_AXIS, cro::Util::Const::PI / 2.f),
+            Rotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f)
+        };
+
+        static const std::array<std::string, 6u> FileNames =
+        {
+            "/pz.png", "/nx.png", "/nz.png", "/px.png", "/py.png", "/ny.png"
+        };
+
+        //auto position = Positions[i];
+        position.y += 0.5f;
+        //position.y += 5.f;
+
+        
+        cam.getComponent<cro::Transform>().setPosition(position);
+        for (auto j = 0; j < 6; ++j)
+        {
+            cam.getComponent<cro::Transform>().setRotation(Rotations[j].axis, Rotations[j].angle);
+            m_gameScene.simulate(0.f);
+
+            //we'll use the existing cam as it happens to have the same FOV
+            m_skyCameras[SkyCam::Flight].getComponent<cro::Transform>().setRotation(cam.getComponent<cro::Transform>().getWorldRotation());
+            m_skyCameras[SkyCam::Flight].getComponent<cro::Transform>().setPosition({ 0.f, position.y / 64.f, 0.f });
+            m_skyScene.simulate(0.f);
+
+            rt.clear();
+            m_skyScene.render();
+            glClear(GL_DEPTH_BUFFER_BIT);
+            m_gameScene.render();
+            rt.display();
+
+            rt.saveToFile(path + FileNames[j]);
+        }
+        m_gameScene.setSystemActive<ChunkVisSystem>(true);
+    }
+
+    m_gameScene.setActiveCamera(oldCam);
+    m_gameScene.destroyEntity(cam);
+
+    //LogI << "Built cubemap for " << path << std::endl;
+    //cro::Console::print("Done!");
 }
 
 void GolfState::dumpBenchmark()

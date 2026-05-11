@@ -909,6 +909,9 @@ private:
     void addCameraDebugging();
     void registerDebugCommands();
     void registerDebugWindows();
+    std::vector<std::vector<std::pair<std::string, glm::vec3>>> m_pendingCubemaps;
+    std::vector<cro::CubemapTexture> m_cubemaps;
+    void buildCubemap(glm::vec3 position, const std::string& filePath);
 
     //bool m_drawDepthMaps = false; //TODO remove me when done
     bool m_drawDebugMesh;

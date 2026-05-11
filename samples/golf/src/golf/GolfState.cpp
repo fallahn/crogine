@@ -1464,6 +1464,16 @@ void GolfState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
         if (data.userType == SpriteAnimID::Swing)
         {
+            //build any pending cubemaps
+            /*if (!m_pendingCubemaps[m_currentHole].empty())
+            {
+                for (const auto& [path, pos] : m_pendingCubemaps[m_currentHole])
+                {
+                    buildCubemap(pos, path);
+                }
+                m_pendingCubemaps.clear();
+            }*/
+
             m_windTracker.reset();
 
             //switch to flight cam if requested when putting
