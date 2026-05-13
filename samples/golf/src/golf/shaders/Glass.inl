@@ -63,6 +63,7 @@ void main()
     vec4 colour = u_colour;
 #endif
     vec3 reflectColour = TEXTURE_CUBE(u_reflectMap, reflect(eyeDir, normal)).rgb;
+    reflectColour *= (0.9 * (1.0 - pow(clamp(dot(eyeDir, normal), 0.0, 1.0), 5.0))) + 0.1;
 
     colour.rgb = mix(reflectColour, colour.rgb, u_maskColour.a);
 

@@ -451,6 +451,12 @@ static inline const std::string CelFragmentShader = R"(
 #endif
 #endif
 
+    float calcFresnel(vec3 viewDirection, vec3 normal)
+    {
+        float f = 1.0 - pow(clamp(dot(viewDirection, normal), 0.0, 1.0), 5.0);
+        return (f * 0.8) + 0.2;
+    }
+
     void main()
     {
 #if defined(NO_SUN_COLOUR)
@@ -610,7 +616,8 @@ static inline const std::string CelFragmentShader = R"(
 #endif
 
 #if defined(REFLECTIONS)
-        colour.rgb = (TEXTURE_CUBE(u_reflectMap, reflect(-viewDirection, normal)).rgb * 0.25) + colour.rgb;
+        viewDirection = normalize(viewDirection);
+        colour.rgb += calcFresnel(viewDirection, normal) * (TEXTURE_CUBE(u_reflectMap, reflect(-viewDirection, normal)).rgb * 0.25); + colour.rgb;
 #endif
 
         FRAG_OUT = vec4(colour.rgb, 1.0);
@@ -734,6 +741,7 @@ FRAG_OUT.rgb *= ao;
     //we assume 12 LODs for a 1024 texture as textureQueryLevels() requires GLSL 4.3 :(
     float lod = clamp(((1.0 - mask.r) * 2.0), 0.0, 1.0) * 11.0;
     vec3 reflectColour = textureLod(u_reflectMap, reflect(-viewDirection, normal), lod).rgb * 0.25;
+    reflectColour *= calcFresnel(viewDirection, normal);
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, reflectColour + FRAG_OUT.rgb, mask.r);
 #endif
