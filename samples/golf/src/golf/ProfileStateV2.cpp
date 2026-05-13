@@ -2862,6 +2862,18 @@ void ProfileStateV2::createDetailItems()
         };
     item->activatedAudioID = -1; //mutes the menu sound
 
+    //stance
+    item = &m_uiLayout.menuLayout.items[TabID::Details].emplace_back();
+    item->title = "Stance";
+    item->activated =
+        [&](Menu::Item& i)
+        {
+            m_activeProfile.playerData.flipped = i.selectedIndex == 0 ? false : true;
+        };
+    item->selectedIndex = m_activeProfile.playerData.flipped ? 1 : 0;
+    item->labels = { "Right Handed", "Left Handed" };
+
+
 #ifdef USE_GNS
     //workshop button if steam
     item = &m_uiLayout.menuLayout.items[TabID::Details].emplace_back();
