@@ -505,6 +505,17 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         if (bbe.hasComponent<cro::Model>())
         {
             bbe.getComponent<cro::Model>().setRenderFlags(RenderFlags::FlightCam);
+            bbe.addComponent<cro::Callback>().active = true;
+            bbe.getComponent<cro::Callback>().function =
+                [entity](cro::Entity e, float)
+                {
+                    if (entity.getComponent<cro::Callback>().active)
+                    {
+                        const auto pos = entity.getComponent<cro::Transform>().getPosition();
+                        float alpha = 1.f - std::clamp(pos.y / -MaxShrubOffset, 0.f, 1.f);
+                        e.getComponent<cro::Model>().setMaterialProperty(0, "u_alpha", alpha);
+                    }
+                };
             m_billboardTreeEntities[b] = bbe;
         }
         b++;
@@ -588,6 +599,24 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
                 childEnt.getComponent<cro::Model>().setHidden(true);
                 childEnt.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen | RenderFlags::FlightCam));
+                //updates transparency during transition - ideally this should be a UBO
+                childEnt.addComponent<cro::Callback>().active = true;
+                childEnt.getComponent<cro::Callback>().function =
+                    [entity](cro::Entity e, float)
+                    {
+                        if (entity.getComponent<cro::Callback>().active)
+                        {
+                            const auto pos = entity.getComponent<cro::Transform>().getPosition();
+                            float alpha = 1.f - std::clamp(pos.y / -MaxShrubOffset, 0.f, 1.f);
+                            
+                            auto& model = e.getComponent<cro::Model>();
+                            for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+                            {
+                                model.setMaterialProperty(i, "u_alpha", alpha);
+                            }
+                        }
+                    };
+                
                 entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
                 m_instancedShrubs[i][j] = childEnt;
             }

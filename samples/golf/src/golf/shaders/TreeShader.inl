@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -354,6 +354,7 @@ R"(
 #include LIGHT_COLOUR
 
 uniform float u_rotation = 0.25;
+uniform float u_alpha = 1.0;
 
 #include HSV
     vec3 complementaryColour(vec3 c)
@@ -396,7 +397,7 @@ uniform float u_rotation = 0.25;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
 
-        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_data.ditherAmount));
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_data.ditherAmount) * u_alpha);
         if (textureColour.a * alpha < 0.3) discard;
 
 //* step(WaterLevel - 0.001, v_data.worldPos.y)
@@ -528,6 +529,7 @@ static inline const std::string BranchFragment = R"(
 #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
+    uniform float u_alpha = 1.0;
 
 #include LIGHT_UBO
 #include SCALE_BUFFER
@@ -576,7 +578,7 @@ static inline const std::string BranchFragment = R"(
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
 
-        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount) * u_alpha);
 #if defined ALPHA_CLIP
         alpha *= colour.a;// * step(WaterLevel - 0.001, v_worldPosition.y);
 #endif

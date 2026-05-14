@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -196,6 +196,7 @@ static inline const std::string BillboardFragmentShader = R"(
 #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
+    uniform float u_alpha = 1.0;
 
 #if defined (SKY_COLOUR)
     uniform vec4 u_skyColour = vec4(1.0);
@@ -245,7 +246,7 @@ static inline const std::string BillboardFragmentShader = R"(
         vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
-        float alpha = findClosest(x, y, smoothstep(0.1, 0.999, v_ditherAmount));
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.999, v_ditherAmount) * u_alpha);
         FRAG_OUT.a *= alpha;// * step(WaterLevel - 0.001, v_worldPosition.y);
 
         if(FRAG_OUT.a < 0.3) discard;
