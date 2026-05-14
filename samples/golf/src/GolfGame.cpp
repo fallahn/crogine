@@ -1383,6 +1383,15 @@ void GolfGame::initFonts()
             m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(path, ctx);
         }
     }
+
+
+    //attempt to prime the font with some characters to prevent
+    //resizing the first time the loading screen shows (and garbled
+    //characters appearing)
+    cro::SimpleText text(m_sharedData.sharedResources->fonts.get(FontID::Info));
+    text.setCharacterSize(InfoTextSize);
+    text.setString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+    text.getLocalBounds(); //this updates the vertices / font texture without drawing
 }
 
 void GolfGame::convertPreferences() const
