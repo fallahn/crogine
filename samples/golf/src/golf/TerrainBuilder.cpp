@@ -505,6 +505,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         if (bbe.hasComponent<cro::Model>())
         {
             bbe.getComponent<cro::Model>().setRenderFlags(RenderFlags::FlightCam);
+            bbe.getComponent<cro::Model>().setMaterialProperty(0, "u_alpha", 0.f);
             bbe.addComponent<cro::Callback>().active = true;
             bbe.getComponent<cro::Callback>().function =
                 [entity](cro::Entity e, float)
@@ -564,6 +565,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     auto material = resources.materials.get(branchMaterialID);
                     applyMaterialData(shrubDef, material, idx);
                     material.setProperty("u_noiseTexture", noiseTex);
+                    material.setProperty("u_alpha", 0.f);
                     material.addCustomSetting(GL_CLIP_DISTANCE1);
                     childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
@@ -584,6 +586,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     material.setProperty("u_colour", theme.treesets[j].colour);
                     material.setProperty("u_rotation", theme.treesets[j].colourRotation);
                     material.setProperty("u_noiseTexture", noiseTex);
+                    material.setProperty("u_alpha", 0.f);
                     material.addCustomSetting(GL_CLIP_DISTANCE1);
                     childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
