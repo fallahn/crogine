@@ -346,6 +346,7 @@ struct ShaderID final
         BillboardShadow,
         Grass,
         Cel,
+        CelBumped,
         CelSkinned,
         CelTextured,
         CelTexturedNoWind,

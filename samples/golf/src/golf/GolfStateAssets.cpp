@@ -1944,6 +1944,16 @@ void GolfState::loadMaterials()
     m_resources.shaders.addLazyLoader(ShaderID::Shore, lazyLoad6);
     m_resources.shaders.mapStringID("shore", ShaderID::Shore);
 
+    const auto lazyLoad7 =
+        [](cro::ShaderResource& shaders)
+        {
+        //TODO load bump mapped variation of Cel Shader
+        };
+    m_resources.shaders.addLazyLoader(ShaderID::CelBumped, lazyLoad7);
+    m_resources.shaders.mapStringID("prop_normal_mapped", ShaderID::CelBumped);
+
+
+
     //create compile time constants from moon phase data
     const MoonPhase mp(std::time(nullptr));
     const auto normalisedPhase = ((mp.getPhase() * 2.f) - 1.f);
