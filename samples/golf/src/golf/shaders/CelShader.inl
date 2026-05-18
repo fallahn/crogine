@@ -35,6 +35,11 @@ static inline const std::string CelVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
+#if defined(BUMP)
+    ATTRIBUTE vec3 a_tangent;
+    ATTRIBUTE vec3 a_bitangent;
+#endif
+
 #if defined (TEXTURED)
     ATTRIBUTE vec2 a_texCoord0;
 #endif
@@ -120,8 +125,8 @@ VARYING_OUT vec4 v_menuProjection;
 #include SHADOWMAP_OUTPUTS
 #endif
 
-#if defined (NORMAL_MAP)
-    VARYING_OUT vec2 v_normalTexCoord;
+#if defined (BUMP)
+    VARYING_OUT vec3 v_tbn[3];
 #endif
 
 #if defined(INSTANCING)
@@ -246,8 +251,10 @@ flat out int v_instanceID;
 #endif
 #endif
 
-#if defined (NORMAL_MAP)
-        v_normalTexCoord = vec2(worldPosition.x / MapSize.x, -worldPosition.z / MapSize.y);
+#if defined (BUMP)
+        v_tbn[0] = normalize(normalMatrix * a_tangent);
+        v_tbn[1] = normalize(normalMatrix * a_bitangent);
+        v_tbn[2] = normalize(normalMatrix * normal);
 #endif
         gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
 
@@ -346,9 +353,9 @@ static inline const std::string CelFragmentShader = R"(
     uniform sampler2D u_angleTex;
 #endif
 
-#if defined (NORMAL_MAP)
+#if defined (BUMP)
     uniform sampler2D u_normalMap;
-    VARYING_IN vec2 v_normalTexCoord;
+    VARYING_IN vec3 v_tbn[3];
 #endif
 
     VARYING_IN vec3 v_normal;
@@ -494,8 +501,9 @@ static inline const std::string CelFragmentShader = R"(
         colour *= u_ballColour;
 #endif
 
-#if defined (NORMAL_MAP)
-        vec3 normal = TEXTURE(u_normalMap, v_normalTexCoord).rgb * 2.0 - 1.0;
+#if defined (BUMP)
+        vec3 texNormal = TEXTURE(u_normalMap, v_texCoord).rgb * 2.0 - 1.0;
+        vec3 normal = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
 #else
         vec3 normal = normalize(v_normal);
 #endif

@@ -1945,13 +1945,18 @@ void GolfState::loadMaterials()
     m_resources.shaders.mapStringID("shore", ShaderID::Shore);
 
     const auto lazyLoad7 =
-        [](cro::ShaderResource& shaders)
+        [this,wobble](cro::ShaderResource& shaders)
         {
-        //TODO load bump mapped variation of Cel Shader
+            if (shaders.loadFromString(ShaderID::CelBumped, CelVertexShader, CelFragmentShader,
+                "#define TEXTURED\n#define DITHERED\n#define TERRAIN_CLIP\n#define BUMP\n" + wobble))
+            {
+                const auto& shader = shaders.get(ShaderID::CelBumped);
+                m_scaleBuffer.addShader(shader);
+                m_resolutionBuffer.addShader(shader);
+            }
         };
     m_resources.shaders.addLazyLoader(ShaderID::CelBumped, lazyLoad7);
     m_resources.shaders.mapStringID("prop_normal_mapped", ShaderID::CelBumped);
-
 
 
     //create compile time constants from moon phase data

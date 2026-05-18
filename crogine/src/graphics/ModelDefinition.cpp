@@ -666,8 +666,9 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 updateLocalPath(filepath);
                 //TODO normal maps require specific compression
                 //so we ignore any ktx files
-                auto& tex = m_resources.textures.get(filepath, createMipmaps);
-                tex.setSmooth(smoothTextures);
+                auto& tex = m_resources.textures.get(filepath/*, createMipmaps*/);
+                //tex.setSmooth(smoothTextures);
+                tex.setSmooth(false);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_normalMap", tex);
             }
