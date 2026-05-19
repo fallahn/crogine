@@ -181,7 +181,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "get_this_over",
     "another_level",
     "tag",
-    "party_planner"
+    "party_planner",
+    "what_a_banger"
 };
 
 //appears on the notification
@@ -321,7 +322,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Let's Get This Over With",
     "Another Level",
     "Tag!",
-    "Party Planner"
+    "Party Planner",
+    "What A Banger!"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -462,6 +464,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Reach Level 2 or higher at Sports Ball", false),
     std::make_pair("Play a Teams round in Freeplay", false),
     std::make_pair("Create a Custom Tournament", false),
+    std::make_pair("Get a Beef Stick from a tee shot", false),
 };
 
 //assuming trophies load correctly they are:
@@ -640,6 +643,7 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*133*/TrophyID::SilverFigure,
     /*134*/TrophyID::BronzeCup,
     /*135*/TrophyID::BronzeCup,
+    /*136*/TrophyID::GoldFigure,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

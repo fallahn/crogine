@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -1178,6 +1178,22 @@ void BatcatState::createReflectionScene()
             e.getComponent<cro::Transform>().setPosition(BasePos + glm::vec3(0.f, table[idx], 0.f));
             idx = (idx + 1) % table.size();
         };
+
+
+    //cro::Entity entity = m_scene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -2.f });
+    //entity.getComponent<cro::Transform>().setScale(glm::vec3(8.f));
+
+    //cro::ModelDefinition md(m_resources);
+    //md.loadFromFile("dlc/craewall/models/props/rubble_small.cmt");
+    //md.createModel(entity);
+
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().function =
+    //    [](cro::Entity e, float dt) 
+    //    {
+    //        e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+    //    };
 }
 
 void BatcatState::calcViewport(cro::Camera& cam)

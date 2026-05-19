@@ -2874,6 +2874,17 @@ void GolfState::handleMessage(const cro::Message& msg)
                         break;
                     }
                 }
+
+                //achievement for beef stick off tee
+                if (data.terrain == CollisionEvent::FlagPole)
+                {
+                    if (m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] == 1
+                        && !m_holeData[m_currentHole].puttFromTee)
+                    {
+                        //we got this from a tee shot
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::WhatABanger]);
+                    }
+                }
             }
         }
         else if (data.type == CollisionEvent::End)

@@ -790,8 +790,8 @@ Global
 		{155BC29B-5143-44CF-AC90-82B82B056E48}.Release-asan|ARM.Build.0 = Release|x64
 		{155BC29B-5143-44CF-AC90-82B82B056E48}.Release-asan|ARM64.ActiveCfg = Release|x64
 		{155BC29B-5143-44CF-AC90-82B82B056E48}.Release-asan|ARM64.Build.0 = Release|x64
-		{155BC29B-5143-44CF-AC90-82B82B056E48}.Release-asan|x64.ActiveCfg = Release|x64
-		{155BC29B-5143-44CF-AC90-82B82B056E48}.Release-asan|x64.Build.0 = Release|x64
+		{155BC29B-5143-44CF-AC90-82B82B056E48}.Release-asan|x64.ActiveCfg = Release-Asan|x64
+		{155BC29B-5143-44CF-AC90-82B82B056E48}.Release-asan|x64.Build.0 = Release-Asan|x64
 		{155BC29B-5143-44CF-AC90-82B82B056E48}.Release-asan|x86.ActiveCfg = Release|Win32
 		{155BC29B-5143-44CF-AC90-82B82B056E48}.Release-asan|x86.Build.0 = Release|Win32
 		{155BC29B-5143-44CF-AC90-82B82B056E48}.ReleaseGNS|Any CPU.ActiveCfg = Release-Asan|x64
@@ -869,7 +869,6 @@ Global
 		{CF0C4EFD-AC40-426F-9751-15B73E07008D}.Release-asan|ARM64.ActiveCfg = Release|x64
 		{CF0C4EFD-AC40-426F-9751-15B73E07008D}.Release-asan|ARM64.Build.0 = Release|x64
 		{CF0C4EFD-AC40-426F-9751-15B73E07008D}.Release-asan|x64.ActiveCfg = Release|x64
-		{CF0C4EFD-AC40-426F-9751-15B73E07008D}.Release-asan|x64.Build.0 = Release|x64
 		{CF0C4EFD-AC40-426F-9751-15B73E07008D}.Release-asan|x86.ActiveCfg = Release|Win32
 		{CF0C4EFD-AC40-426F-9751-15B73E07008D}.Release-asan|x86.Build.0 = Release|Win32
 		{CF0C4EFD-AC40-426F-9751-15B73E07008D}.ReleaseGNS|Any CPU.ActiveCfg = Release|x64

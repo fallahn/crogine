@@ -196,6 +196,7 @@ namespace AchievementID
         AnotherLevel,
         Tag,
         PartyPlanner,
+        WhatABanger,
 
         Count
     };
