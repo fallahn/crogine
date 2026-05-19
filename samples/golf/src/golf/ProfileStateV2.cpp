@@ -670,36 +670,37 @@ bool ProfileStateV2::simulate(float dt)
     glUseProgram(m_progressShader.getGLHandle());
     glUniform1f(m_progressUniform, m_exitHoldTimer / MaxHoldTime);
 
-
-    //rotate preview
-    const auto rotateModel =
-        [&](float v)
+    if (!m_showOSK)
+    {
+        //rotate preview
+        const auto rotateModel =
+            [&](float v)
+            {
+                m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, v);
+            };
+        constexpr auto threshold = std::numeric_limits<std::int16_t>::max() / 6;
+        constexpr float SpeedMultiplier = 2.f;
+        if (const auto v = cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft);
+            v > threshold)
         {
-            m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, v);
-        };
-    constexpr auto threshold = std::numeric_limits<std::int16_t>::max() / 6;
-    constexpr float SpeedMultiplier = 2.f;
-    if (const auto v = cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft);
-                v > threshold)
-    {
-        const float speed = cro::Util::Easing::easeInQuart(static_cast<float>(v) / std::numeric_limits<std::int16_t>::max());
-        rotateModel(-dt * speed * SpeedMultiplier);
+            const float speed = cro::Util::Easing::easeInQuart(static_cast<float>(v) / std::numeric_limits<std::int16_t>::max());
+            rotateModel(-dt * speed * SpeedMultiplier);
+        }
+        if (const auto v = cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight);
+            v > threshold)
+        {
+            const float speed = cro::Util::Easing::easeInQuart(static_cast<float>(v) / std::numeric_limits<std::int16_t>::max());
+            rotateModel(dt * speed * SpeedMultiplier);
+        }
+        if (cro::Keyboard::isKeyPressed(SDLK_1))
+        {
+            rotateModel(-dt * SpeedMultiplier);
+        }
+        if (cro::Keyboard::isKeyPressed(SDLK_2))
+        {
+            rotateModel(dt * SpeedMultiplier);
+        }
     }
-    if (const auto v = cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight);
-                v > threshold)
-    {
-        const float speed = cro::Util::Easing::easeInQuart(static_cast<float>(v) / std::numeric_limits<std::int16_t>::max());
-        rotateModel(dt * speed * SpeedMultiplier);
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_1))
-    {
-        rotateModel(-dt * SpeedMultiplier);
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_2))
-    {
-        rotateModel(dt * SpeedMultiplier);
-    }
-
 
     m_uiLayout.scrollToTarget(dt);
 
@@ -2704,7 +2705,10 @@ void ProfileStateV2::createDetailItems()
                                     applyNameString();
                                 }
                             }
+                            m_showOSK = false;
                         };
+
+                    m_showOSK = true;
 
                     //this only shows the overlay as Steam takes care of dismissing it
                     const auto utf = m_activeProfile.playerData.name.toUtf8Char();
