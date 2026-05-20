@@ -591,7 +591,7 @@ void KeyboardState::buildScene()
 
         float scale = 3.f - std::ceil((winSize.y / 2.f) / keyboardSize.height);
         winSize *= scale;
-        cam.setOrthographic(0.f, winSize.x, 0.f, winSize.y, -0.2f, 1.f);
+        cam.setOrthographic(0.f, winSize.x, 0.f, winSize.y, -20.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         entity.getComponent<cro::Transform>().setPosition({ winSize.x / 2.f, 0.f });

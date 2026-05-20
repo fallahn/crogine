@@ -2683,11 +2683,9 @@ void ProfileStateV2::createDetailItems()
     //name - sigh applyNameString() has this index hardcoded...
     item = &m_uiLayout.menuLayout.items[TabID::Details].emplace_back();
     item->title = "Profile Name";
-    item->activated = 
+    item->activated =
         [&](Menu::Item& i)
         {
-            if (m_sharedData.activeInput != SharedStateData::ActiveInput::Keyboard)
-            {
 #ifdef USE_GNS
                 if (Social::isSteamdeck(true))
                 {
@@ -2715,21 +2713,28 @@ void ProfileStateV2::createDetailItems()
                     Social::showTextInput(cb, "Profile Name", ConstVal::MaxStringChars * 2, utf.data());
                 }
                 else
-#endif
+                {
+                    //keyboard
+                    cro::App::getWindow().setMouseCaptured(false);
+                    m_nameBuffer = m_activeProfile.playerData.name.toUtf8Char();
+                    m_showNameInput = true;
+                }
+#else
+                if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+                {
+                    //show ImGuiWindow
+                    cro::App::getWindow().setMouseCaptured(false);
+                    m_nameBuffer = m_activeProfile.playerData.name.toUtf8Char();
+                    m_showNameInput = true;
+                }
+                else
                 {
                     m_showOSK = true; // hmm this is used to block input, but OSK state shouldn't be forwarding it?
                     m_sharedData.useOSKBuffer = true;
                     m_sharedData.OSKBuffer = m_activeProfile.playerData.name;
                     requestStackPush(StateID::Keyboard);
                 }
-            }
-            else
-            {
-                //show ImGuiWindow
-                cro::App::getWindow().setMouseCaptured(false);
-                m_nameBuffer = m_activeProfile.playerData.name.toUtf8Char();
-                m_showNameInput = true;
-            }
+#endif
         };
     item->labels.push_back(m_activeProfile.playerData.name);
     item->description = "Choose a profile name";
