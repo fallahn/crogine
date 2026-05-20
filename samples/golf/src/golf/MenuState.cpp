@@ -948,6 +948,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                 i = (i + 1) % m_profileData.playerProfiles.size();
                 setProfileIndex(i);
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         };
 
@@ -970,6 +971,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                 i = (i + (m_profileData.playerProfiles.size() - 1)) % m_profileData.playerProfiles.size();
                 setProfileIndex(i);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         };
 
