@@ -84,24 +84,27 @@ static inline bool checkError(NvAPI_Status status)
 void applyNVSettings()
 {
     NvAPI_Status status = {};
-    NvDRSSessionHandle hSession = 0;
+    NvDRSSessionHandle hSession = nullptr;
 
     status = NvAPI_Initialize();
     if (checkError(status))
     {
-        log("Failed initialising");
+        log("NVAPI: Failed initialising. This can be ignored on non-nvidia GPUs.");
+        return;
     }
 
     status = NvAPI_DRS_CreateSession(&hSession);
     if (checkError(status))
     {
-        log("failed create session");
+        log("NVAPI: Failed creating session");
+        return;
     }
 
     status = NvAPI_DRS_LoadSettings(hSession);
     if (checkError(status))
     {
-        log("Failed loading settings");
+        log("NVAPI: Failed loading settings");
+        //don't return here, we'll create our settings manually
     }
 
 
@@ -114,14 +117,14 @@ void applyNVSettings()
     setStr(profileInfo.profileName, profileName);
 
     //create Profile
-    NvDRSProfileHandle hProfile = 0;
+    NvDRSProfileHandle hProfile = nullptr;
     status = NvAPI_DRS_FindProfileByName(hSession, profileInfo.profileName, &hProfile);
     if (checkError(status))
     {
         status = NvAPI_DRS_CreateProfile(hSession, &profileInfo, &hProfile);
         if (checkError(status))
         {
-            log("Failed creating profile");
+            log("NVAPI: Failed creating profile");
         }
     }
 
@@ -142,7 +145,7 @@ void applyNVSettings()
         status = NvAPI_DRS_CreateApplication(hSession, hProfile, &app);
         if (checkError(status))
         {
-            log("Failed creating application");
+            log(" NVAPI: Failed creating application");
         }
     }
 
@@ -161,7 +164,7 @@ void applyNVSettings()
     status = NvAPI_DRS_SetSetting(hSession, hProfile, &setting);
     if (checkError(status))
     {
-        log("Failed applying setting");
+        log("NVAPI: Failed applying settings");
     }
 
 
@@ -169,7 +172,7 @@ void applyNVSettings()
     status = NvAPI_DRS_SaveSettings(hSession);
     if (checkError(status))
     {
-        log("Failed saving settings");
+        log("NVAPI: Failed saving settings");
     }
 
     NvAPI_DRS_DestroySession(hSession);
