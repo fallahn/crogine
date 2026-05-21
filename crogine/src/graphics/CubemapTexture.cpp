@@ -120,7 +120,7 @@ bool CubemapTexture::loadFromFile(const std::string& path)
         Image fallback;
         fallback.create(2, 2, Colour::Magenta, ImageFormat::RGB);
 
-        Image side(true);
+        Image side;// (true);
 
         glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_handle));
 

@@ -165,10 +165,14 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
 #ifdef GL41
         //resize the buffer
         glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_depthID));
-        glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, width, height, layers, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
+        glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT16, width, height, layers, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
 
         if (!m_depthOnly)
         {
+            //Dear Future Me: if you come here looking to optimise on memory usage
+            //know that you've already tried reducing the depth to RG16F and the
+            //results are terrible. Sincerely, past you.
+
             glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_colourID));
             glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, layers, 0, GL_RG, /*GL_FLOAT*/GL_HALF_FLOAT, NULL));
         }
@@ -201,7 +205,7 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
     glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_depthID));
 #ifdef GL41
     //apple drivers don't support immutable textures.
-    glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, width, height, layers, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
+    glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT16, width, height, layers, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
 #else
     glCheck(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT24, width, height, layers));
 #endif

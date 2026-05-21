@@ -187,4 +187,17 @@ Models in crogine are described in a text format that can be loaded via the `Mod
             //see VertexLit for properties.
         }
 
+All materials can also have a custom shader assigned to them which will override their default type. To assign a custom shader use the `shader_id` property in a material, and set it to a custom string. This custom string can be then mapped to a ShaderID using the shader resource (see ShaderResource::mapStringID()). Shaders need to be pre-loaded or have a lazy-loader function assigned to them before attempting to load the model definition.
+
+Materials may also have custom uniform values assigned to them in the fillowing format:
+
+    uniform
+    {
+        type = 0 // 0-3 are float through vec4, 4 is a path to a texture.
+        value = 0,0,0,0 //can be up to a 4 component array for float types, or a string containing the path to a texture/image
+        name = "u_customProperty" //the name of the uniform as it appears in the destination shader
+    }
+
+Multiple uniforms can appear in a single material.
+
     }

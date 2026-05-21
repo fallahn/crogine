@@ -954,6 +954,7 @@ void DrivingState::createUI()
         }
     };
     miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     auto ballEnt = entity;
 
     //draws a trail on the mini map when the balls are in flight
@@ -1011,6 +1012,87 @@ void DrivingState::createUI()
 
     //stroke indicator
     entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 50.f, 0.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            if (!m_sharedData.calculateRange)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                return;
+            }
+
+            auto impulses = m_inputParser.getImpulseForArc();
+            auto windDir = m_gameScene.getSystem<BallSystem>()->getWindDirection();
+            windDir *= windDir.y;
+            windDir.y = 0.f;
+
+            const auto sidespin = m_inputParser.getSpin().x * Clubs[m_inputParser.getClub()].getSideSpinMultiplier() / 2.f;
+
+            std::vector<glm::vec3> points;
+            for (auto& i : impulses)
+            {
+                points.push_back(getImpactPoint(PlayerPosition, i, sidespin, windDir, m_holeData[m_targetIndex].pin, m_collisionMesh));
+            }
+            points.push_back(points.back() + (impulses.back()/* / 2.f*/)); //the impulses are converted to reflected vectors
+
+            std::vector<glm::vec2> mapPoints;
+            const auto playerMapPos = toMinimapCoords(PlayerPosition);
+            mapPoints.push_back(glm::vec2(0.f));
+            for (const auto& p : points)
+            {
+                //put these in relative to player space
+                //so we can rotate the entity on the map without deformation
+                auto mapPos = toMinimapCoords(p);
+                mapPos -= playerMapPos;
+                mapPos = (glm::rotate(glm::mat4(1.f), -m_inputParser.getYaw(), cro::Transform::Z_AXIS) * glm::vec4(mapPos, 0.f, 0.f));
+                mapPoints.push_back(mapPos);
+            }
+
+            const auto verts = strokeIndicatorFromPoints(mapPoints);
+            e.getComponent<cro::Drawable2D>().setVertexData(verts);
+            e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
+
+
+            //scales the show/hide
+            float scale = e.getComponent<cro::Transform>().getScale().x;
+            //wild attempt at an animation
+            float& targetScale = e.getComponent<cro::Callback>().getUserData<float>();
+            const float scaleSpeed = dt * 4.f;
+            if (targetScale < 1)
+            {
+                targetScale = std::min(1.f, targetScale + scaleSpeed);
+            }
+            else if (targetScale > 1)
+            {
+                targetScale = std::max(1.f, targetScale - scaleSpeed);
+            }
+
+            if (m_inputParser.getActive())
+            {
+                if (scale < targetScale)
+                {
+                    scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
+                }
+                else
+                {
+                    scale = std::max(targetScale, scale - ((scale * dt) * 2.f));
+                }
+            }
+            else
+            {
+                scale = std::max(0.f, scale - ((scale * dt) * 8.f));
+            }
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+        };
+    miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //m_minimapIndicatorEnt = entity;
+    
+    //TODO make this an option for 'low accuracy'
+    entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ PlayerPosition.x / 2.f, -PlayerPosition.z / 2.f, 0.01f });
     entity.getComponent<cro::Transform>().move(RangeSize / 4.f);
     auto endColour = TextGoldColour;
@@ -1021,7 +1103,16 @@ void DrivingState::createUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
-        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
+        if (m_sharedData.calculateRange)
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            return;
+        }
+
+        //some sort of estimate rotation offset based on side spin
+        const auto spin = m_inputParser.getSpin().x * Clubs[m_inputParser.getClub()].getSideSpinMultiplier() * 0.18f;
+
+        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() - spin);
         float scale = e.getComponent<cro::Transform>().getScale().x;
 
         //more magic numbers than Ken Dodd's tax return.
@@ -1271,7 +1362,7 @@ void DrivingState::createGameOptions()
 
 
     //background
-    auto& tex = m_resources.textures.get("assets/golf/images/driving_range_menu.png");
+    auto& tex = m_resources.textures.get("assets/golf/images/ui/driving_range_menu.png");
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
@@ -2395,7 +2486,7 @@ void DrivingState::createSummary()
     //background
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
-    auto bgSprite = cro::Sprite(m_resources.textures.get("assets/golf/images/driving_range_menu.png"));
+    auto bgSprite = cro::Sprite(m_resources.textures.get("assets/golf/images/ui/driving_range_menu.png"));
 
     auto bounds = bgSprite.getTextureBounds();
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
@@ -2649,6 +2740,15 @@ void DrivingState::createSummary()
     m_summaryScreen.root = bgEntity;
 }
 
+glm::vec2 DrivingState::toMinimapCoords(glm::vec3 p) const
+{
+    //need to tie into the fact the mini map is 1/2 scale
+    //and has the origin in the centre
+    glm::vec2 r = glm::vec2(p.x, -p.z) / 2.f;
+    r += (RangeSize / 4.f);
+    return r;
+}
+
 void DrivingState::updateMinimap()
 {
     auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
@@ -2656,9 +2756,8 @@ void DrivingState::updateMinimap()
     m_mapTexture.clear(TextNormalColour);
     m_gameScene.render();
 
-    auto holePos = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin / 2.f;
-    m_flagQuad.setPosition({ holePos.x, -holePos.z });
-    m_flagQuad.move(RangeSize / 4.f);
+    auto holePos = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin;
+    m_flagQuad.setPosition(toMinimapCoords(holePos));
     m_flagQuad.draw();
 
     m_mapTexture.display();

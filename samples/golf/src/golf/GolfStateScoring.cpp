@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -35,6 +35,7 @@ source distribution.
 #include "XPAwardStrings.hpp"
 
 #include <AchievementStrings.hpp>
+#include <CompetitionLeague.hpp>
 
 using namespace cl;
 
@@ -190,7 +191,13 @@ void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestStri
                     std::reverse(scoreData.begin(), scoreData.end());
                 }
 
-                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score, stableford, scoreData);
+                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score, stableford, scoreData, 
+                    (m_achievementTracker.usedAssist && !m_sharedData.competitionLeague));
+
+                if (m_sharedData.competitionLeague)
+                {
+                    CompetitionLeague::insertScore(stableford, m_courseIndex);
+                }
                 break;
             }
         }
@@ -266,7 +273,8 @@ void GolfState::updateTournament(bool playerWon)
                             else
                             {
                                 const auto hole = j + (cpuOffset * 9);
-                                const auto par = TierPars[m_sharedData.activeTournament][tournament.round][hole];
+                                //const auto par = TierPars[m_sharedData.activeTournament][tournament.round][hole];
+                                const auto par = m_sharedData.tournamentPars[hole];
                                 scoreCalc.calculate(player0, hole, par, false, scores0);
                                 scoreCalc.calculate(player1, hole, par, false, scores1);
 
@@ -350,7 +358,8 @@ void GolfState::updateTournament(bool playerWon)
                     {
                         tournament.currentBest = tournament.winner == -1 ? 1 : 2;
 
-                        if (tournament.currentBest == 1)
+                        if (tournament.currentBest == 1
+                            && m_sharedData.activeTournament != TournamentIndex::Custom)
                         {
                             Achievements::awardAchievement(AchievementStrings[AchievementID::Unreal + m_sharedData.activeTournament]);
                             Achievements::incrementStat(StatStrings[StatID::UnrealWon + m_sharedData.activeTournament]);
@@ -396,7 +405,16 @@ void GolfState::updateTournament(bool playerWon)
         std::fill(tournament.scores.begin(), tournament.scores.end(), 0);
         std::fill(tournament.opponentScores.begin(), tournament.opponentScores.end(), 0);
         tournament.mulliganCount = 1;
-        writeTournamentData(tournament);
+
+        if (m_sharedData.activeTournament == TournamentIndex::Custom)
+        {
+            const auto path = m_sharedData.tournamentPath + TournamentDataFile;
+            writeTournamentData(tournament, path.c_str());
+        }
+        else
+        {
+            writeTournamentData(tournament);
+        }
     }
     /*else
     {

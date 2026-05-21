@@ -44,6 +44,7 @@ struct Treeset final
     float randomness = 0.2f;
     float leafSize = 0.2f;
     float colourRotation = 0.25f;
+    float scale = 1.f;
 
     //indices of sub meshes with branch material
     std::vector<std::uint32_t> branchIndices;
@@ -103,6 +104,10 @@ struct Treeset final
             else if (name == "leaf_index")
             {
                 leafIndices.push_back(p.getValue<std::uint32_t>());
+            }
+            else if (name == "scale")
+            {
+                scale = std::clamp(p.getValue<float>(), 0.1f, 3.f);
             }
         }
 

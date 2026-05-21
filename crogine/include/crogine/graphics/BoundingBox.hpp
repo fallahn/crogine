@@ -69,7 +69,7 @@ namespace cro
         Box(FloatRect rect, float thickness = 1.f);
 
         /*!
-        \brief Returns the centre of the box in local coordinates
+        \brief Returns the centre of the box in world coordinates
         */
         glm::vec3 getCentre() const;
 

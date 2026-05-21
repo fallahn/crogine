@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -89,13 +89,12 @@ bool Mp3Loader::open(const std::string& path)
 
     if (m_decoder->info.channels > 2)
     {
-        mp3dec_ex_close(m_decoder.get());
-
-        //TODO do we really need to do this?
-        m_decoder.reset();
-
         Logger::log("Found " + std::to_string(m_decoder->info.channels) + " channels in " + path + ", currently only mono and stereo files are supported.", Logger::Type::Error);
         Logger::log(path + ": not loaded.", Logger::Type::Error);
+
+        mp3dec_ex_close(m_decoder.get());
+        m_decoder.reset();
+
         return false;
     }
 

@@ -90,7 +90,7 @@ void GolfState::createCameras()
             auto winSize = glm::vec2(cro::App::getWindow().getSize());
             float maxScale = getViewScale();
             float scale = m_sharedData.pixelScale ? maxScale : 1.f;
-            auto texSize = winSize / scale;
+            auto texSize = (winSize / scale) * Upscale;
 
             //only want to resize the buffer once !!
             if (cam == m_cameras[CameraID::Player].getComponent<cro::Camera>())
@@ -100,15 +100,23 @@ void GolfState::createCameras()
 
                 if (m_sharedData.nightTime)
                 {
-                    m_gameSceneMRTexture.setPrecision(m_sharedData.lightmapQuality);
+                    m_gameSceneMRTexture.setPrecision(MRTIndex::Normal, cro::TexturePrecision::Default);
+                    m_gameSceneMRTexture.setPrecision(MRTIndex::Light, cro::TexturePrecision::Default);
+                    m_gameSceneMRTexture.setChannelCount(MRTIndex::Light, 3);
+#ifdef VIEW_SPACE_LIGHTING
+                    m_gameSceneMRTexture.setPrecision(MRTIndex::Position, cro::TexturePrecision::Low);
+                    m_gameSceneMRTexture.setChannelCount(MRTIndex::Position, 1);
+#endif // VIEW_SPACE_LIGHTING
 
                     glm::uvec2 usize(texSize);
                     m_sharedData.antialias =
                         m_gameSceneMRTexture.create(usize.x, usize.y, MRTIndex::Count)
                         && m_sharedData.multisamples != 0
                         && !m_sharedData.pixelScale;
+                    
+                    //m_gameSceneMRTexture.setSmooth(false);
 
-                    m_renderTarget.clear = [&](cro::Colour c) { m_gameSceneMRTexture.clear(c); };
+                    m_renderTarget.clear = [&](cro::Colour c){ m_gameSceneMRTexture.clear(c); };
                     m_renderTarget.display = std::bind(&cro::MultiRenderTexture::display, &m_gameSceneMRTexture);
                     m_renderTarget.getSize = std::bind(&cro::MultiRenderTexture::getSize, &m_gameSceneMRTexture);
 
@@ -143,7 +151,7 @@ void GolfState::createCameras()
                         && m_sharedData.multisamples != 0
                         && !m_sharedData.pixelScale;
                     
-
+                    m_gameSceneTexture.setSmooth(false);
                     m_renderTarget.clear = std::bind(&cro::RenderTexture::clear, &m_gameSceneTexture, std::placeholders::_1);
                     m_renderTarget.display = std::bind(&cro::RenderTexture::display, &m_gameSceneTexture);
                     m_renderTarget.getSize = std::bind(&cro::RenderTexture::getSize, &m_gameSceneTexture);
@@ -589,8 +597,8 @@ void GolfState::setGreenCamPosition()
 
     if (m_holeData[m_currentHole].puttFromTee)
     {
-        auto teePos = m_holeData[m_currentHole].tee;
-        auto targetPos = m_holeData[m_currentHole].target;
+        const auto teePos = m_holeData[m_currentHole].tee;
+        const auto targetPos = m_holeData[m_currentHole].target;
 
         if ((glm::length2(m_currentPlayer.position - teePos) <
             glm::length2(m_currentPlayer.position - holePos))
@@ -1342,8 +1350,8 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
     auto activeTarget = findTargetPos(playerData.position);
 
 
-    auto targetDir = activeTarget - playerData.position;
-    auto pinDir = m_holeData[m_currentHole].pin - playerData.position;
+    const auto targetDir = activeTarget - playerData.position;
+    const auto pinDir = m_holeData[m_currentHole].pin - playerData.position;
     targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
 
     //always look at the target in mult-target mode and target not yet hit
@@ -1358,8 +1366,8 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
         if (glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)) > 0.4)
         {
             //set the target depending on how close it is
-            auto pinDist = glm::length2(pinDir);
-            auto targetDist = glm::length2(targetDir);
+            const auto pinDist = glm::length2(pinDir);
+            const auto targetDist = glm::length2(targetDir);
             if (pinDist < targetDist)
             {
                 //always target pin if its closer
@@ -1374,7 +1382,22 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
                 const float MinDist = m_holeData[m_currentHole].puttFromTee ? 9.f : 2500.f;
                 if (targetDist < MinDist) //remember this in len2
                 {
-                    targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+                    if (!m_holeData[m_currentHole].puttFromTee)
+                    {
+                        targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+                    }
+                    else
+                    {
+                        if (glm::length2(m_currentPlayer.position - m_holeData[m_currentHole].tee) < (0.01f * 0.01f))
+                        {
+                            //we're on the tee always look at the target
+                            targetInfo.targetLookAt = activeTarget;
+                        }
+                        else
+                        {
+                            targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+                        }
+                    }
                 }
                 else
                 {
@@ -1629,9 +1652,83 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
         };
 }
 
-
 void GolfState::startFlyBy()
 {
+    cro::Entity loadingEnt;
+    struct FlybyData final
+    {
+        std::int32_t state = 0;
+        float progress = 0.f;
+    };
+
+    if (m_sharedData.miniLoadingScreen)
+    {
+        if (m_currentHole != 0)
+        {
+            m_textChat.printToScreen("Loading...", TextGoldColour);
+        }
+
+        const auto& tex = m_resources.textures.get("assets/images/loading/07.png");
+
+        auto mapEnt = m_uiScene.createEntity();
+        mapEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 4.1f });
+        mapEnt.addComponent<cro::Drawable2D>();
+        mapEnt.addComponent<cro::Sprite>(tex);
+        const auto mapSize = glm::vec2(tex.getSize());
+        mapEnt.getComponent<cro::Transform>().setOrigin(mapSize / 2.f);
+
+        loadingEnt = m_uiScene.createEntity();
+        loadingEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 4.f });
+        loadingEnt.addComponent<cro::Drawable2D>().setVertexData(
+            {
+                cro::Vertex2D(glm::vec2(-0.5f, 0.5f), cro::Colour::Black),
+                cro::Vertex2D(glm::vec2(-0.5f), cro::Colour::Black),
+                cro::Vertex2D(glm::vec2(0.5f), cro::Colour::Black),
+                cro::Vertex2D(glm::vec2(0.5f, -0.5f), cro::Colour::Black)
+            });
+        loadingEnt.addComponent<cro::Callback>().active = true;
+        loadingEnt.getComponent<cro::Callback>().setUserData<FlybyData>();
+        loadingEnt.getComponent<cro::Callback>().function =
+            [&, mapEnt, mapSize](cro::Entity e, float dt) mutable
+            {
+                const auto size = glm::vec2(cro::App::getWindow().getSize());
+                auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<FlybyData>();
+
+                const auto Speed = dt * 4.f;
+                switch (state)
+                {
+                default:
+                case 0:
+                    //in
+                    currTime = std::min(1.f, currTime + Speed);
+                    if (currTime == 1)
+                    {
+                        state = 1;
+                    }
+                    break;
+                case 1:
+                    //hold
+                    break;
+                case 2:
+                    //out
+                    currTime = std::max(0.f, currTime - Speed);
+                    if (currTime == 1)
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                        m_uiScene.destroyEntity(e);
+                        m_uiScene.destroyEntity(mapEnt);
+                    }
+                    break;
+                }
+
+                e.getComponent<cro::Transform>().setScale(size * currTime);
+                e.getComponent<cro::Transform>().setPosition(size / 2.f);
+
+                mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(size.x / mapSize.x) * currTime);
+                mapEnt.getComponent<cro::Transform>().setPosition(size / 2.f);
+            };
+    }
+
     m_idleTimer.restart();
     m_idleTime = cro::seconds(90.f);
 
@@ -1723,7 +1820,7 @@ void GolfState::startFlyBy()
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<FlyByTarget>(targetData);
     entity.getComponent<cro::Callback>().function =
-        [&, SpeedMultiplier](cro::Entity e, float dt)
+        [&, SpeedMultiplier, loadingEnt](cro::Entity e, float dt) mutable
         {
             //keep the balls hidden during transition
             cro::Command c;
@@ -1823,6 +1920,11 @@ void GolfState::startFlyBy()
                         }
                         e.getComponent<cro::Callback>().active = false;
                         m_gameScene.destroyEntity(e);
+
+                        if (loadingEnt.isValid())
+                        {
+                            loadingEnt.getComponent<cro::Callback>().getUserData<FlybyData>().state = 2;
+                        }
                     }
                     break;
                 }
@@ -2174,7 +2276,7 @@ void GolfState::spectateGroup(std::uint8_t group)
         setCameraTarget(pPos);
         createTransition(pPos, false);
 
-        retargetMinimap(true);
+        retargetMinimap(/*true*/!m_holeData[m_currentHole].puttFromTee);
 
         //hm, doesn't really work
         //m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(group);

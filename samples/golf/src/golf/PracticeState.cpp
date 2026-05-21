@@ -399,7 +399,7 @@ void PracticeState::buildScene()
 
 
     entity = createItem(position, "Clubhouse", menuEntity);
-    if (Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
+    //if (Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
     {
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -417,29 +417,29 @@ void PracticeState::buildScene()
                     }
                 });
     }
-    else
-    {
-        //add padlock icon and help text (override selected/unselected event)
-        entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedLockedID;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 
-            uiSystem.addCallback([helpText](cro::Entity e) mutable
-            {
-                helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                helpText.getComponent<cro::Text>().setString("Achieve Join The Club");
-                centreText(helpText);
+    //else
+    //{
+    //    //add padlock icon and help text (override selected/unselected event)
+    //    entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+    //    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedLockedID;
+    //    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 
+    //        uiSystem.addCallback([helpText](cro::Entity e) mutable
+    //        {
+    //            helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    //            helpText.getComponent<cro::Text>().setString("Achieve Join The Club");
+    //            centreText(helpText);
 
-                e.getComponent<cro::AudioEmitter>().play();
-                e.getComponent<cro::Callback>().setUserData<float>(0.f);
-                e.getComponent<cro::Callback>().active = true;
-            });
+    //            e.getComponent<cro::AudioEmitter>().play();
+    //            e.getComponent<cro::Callback>().setUserData<float>(0.f);
+    //            e.getComponent<cro::Callback>().active = true;
+    //        });
 
-        auto padlock = m_scene.createEntity();
-        padlock.addComponent<cro::Transform>().setPosition(glm::vec3(PadlockOffset, position.y - ItemHeight + 2.f, 0.1f));
-        padlock.addComponent<cro::Drawable2D>();
-        padlock.addComponent<cro::Sprite>() = spriteSheet.getSprite("padlock");
-        menuEntity.getComponent<cro::Transform>().addChild(padlock.getComponent<cro::Transform>());
-    }
+    //    auto padlock = m_scene.createEntity();
+    //    padlock.addComponent<cro::Transform>().setPosition(glm::vec3(PadlockOffset, position.y - ItemHeight + 2.f, 0.1f));
+    //    padlock.addComponent<cro::Drawable2D>();
+    //    padlock.addComponent<cro::Sprite>() = spriteSheet.getSprite("padlock");
+    //    menuEntity.getComponent<cro::Transform>().addChild(padlock.getComponent<cro::Transform>());
+    //}
     position.y -= ItemHeight;
 
     //course editor

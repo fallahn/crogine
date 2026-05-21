@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -150,6 +150,16 @@ namespace cro
         \param str Optional string to append to file name (eg a timestamp)
         */
         static void dumpBuffer(const std::string& str);
+
+        /*!
+        \brief Returns the current frame limiter value
+        */
+        static std::int32_t getMaxFrames();
+
+        /*!
+        \brief Sets the frame limiter value
+        */
+        static void setMaxFrames(std::int32_t);
 
     private:
         friend class App;

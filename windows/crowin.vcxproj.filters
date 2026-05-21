@@ -115,6 +115,24 @@
     <Filter Include="Source Files\detail\clipboard">
       <UniqueIdentifier>{fd22cd03-9f11-4ab0-a4a1-d3b89863e060}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\graphics\mesh builders">
+      <UniqueIdentifier>{f1d35de2-4e5b-4838-adf2-1bec909698b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\graphics\mesh builders">
+      <UniqueIdentifier>{d6e1eb74-9de4-48ad-b087-e8e7c2a6fa55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\graphics\textures">
+      <UniqueIdentifier>{5c5631a4-1820-481a-ade1-0e1366c87127}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graphics\textures">
+      <UniqueIdentifier>{8770b842-0bc0-436d-ac35-c9ff85044292}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\graphics\drawables">
+      <UniqueIdentifier>{061af043-57bd-4357-8dfb-dd2df14a4635}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graphics\drawables">
+      <UniqueIdentifier>{ef4be14a-83f6-439b-bfed-3729f13ec06c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\crogine\include\crogine\Config.hpp">
@@ -151,9 +169,6 @@
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\Image.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\Texture.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\Shader.hpp">
@@ -204,19 +219,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\MaterialData.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\TextureResource.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\MeshBuilder.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\QuadBuilder.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\CubeBuilder.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\SphereBuilder.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\src\imgui\imconfig.h">
@@ -229,9 +232,6 @@
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\Spatial.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\StaticMeshBuilder.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Sprite.hpp">
@@ -297,9 +297,6 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\Renderable.hpp">
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\RenderTexture.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\LoadingScreen.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
@@ -320,9 +317,6 @@
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\core\GameController.hpp">
       <Filter>Header Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\IqmBuilder.hpp">
-      <Filter>Header Files\graphics</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Skeleton.hpp">
       <Filter>Header Files\ecs\components</Filter>
@@ -483,9 +477,6 @@
     <ClInclude Include="..\crogine\include\crogine\util\Rectangle.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\DynamicMeshBuilder.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\components\DynamicTreeComponent.hpp">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
@@ -516,9 +507,6 @@
     <ClInclude Include="..\crogine\src\graphics\shaders\PBR.hpp">
       <Filter>Header Files\graphics\shaders</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\EnvironmentMap.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\src\detail\SDLImageRead.hpp">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
@@ -530,15 +518,6 @@
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\core\Keyboard.hpp">
       <Filter>Header Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\GridMeshBuilder.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\CircleMeshBuilder.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\DepthTexture.hpp">
-      <Filter>Header Files\graphics</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\MeshBatch.hpp">
       <Filter>Header Files\graphics</Filter>
@@ -561,23 +540,14 @@
     <ClInclude Include="..\crogine\include\crogine\detail\ModelBinary.hpp">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\BinaryMeshBuilder.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\util\Network.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\Shape2D.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\SimpleQuad.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\src\graphics\shaders\GBuffer.hpp">
       <Filter>Header Files\graphics\shaders</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\MultiRenderTexture.hpp">
-      <Filter>Header Files\graphics</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostVertex.hpp">
       <Filter>Header Files\graphics\post process</Filter>
@@ -600,12 +570,6 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\Transformable2D.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\SimpleDrawable.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\SimpleText.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\util\Frustum.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
@@ -614,9 +578,6 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\SimpleVertexArray.hpp">
-      <Filter>Header Files\graphics</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\gui\detail\GraphEditor.h">
       <Filter>Header Files\imgui</Filter>
@@ -631,9 +592,6 @@
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\UniformBuffer.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\CubemapTexture.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\audio\AudioBuffer.hpp">
@@ -702,9 +660,6 @@
     <ClInclude Include="..\crogine\include\crogine\core\ProfileTimer.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\ArrayTexture.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\LightVolumeSystem.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
@@ -771,6 +726,90 @@
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGuiDatePicker.hpp">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\VBOAllocation.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\VAOAllocation.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\BufferAllocation.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\IBOAllocation.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\AllocationResource.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\BillboardMeshBuilder.hpp">
+      <Filter>Header Files\graphics\mesh builders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\BinaryMeshBuilder.hpp">
+      <Filter>Header Files\graphics\mesh builders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\CircleMeshBuilder.hpp">
+      <Filter>Header Files\graphics\mesh builders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\CubeBuilder.hpp">
+      <Filter>Header Files\graphics\mesh builders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\DynamicMeshBuilder.hpp">
+      <Filter>Header Files\graphics\mesh builders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\GridMeshBuilder.hpp">
+      <Filter>Header Files\graphics\mesh builders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\MeshBuilder.hpp">
+      <Filter>Header Files\graphics\mesh builders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\SphereBuilder.hpp">
+      <Filter>Header Files\graphics\mesh builders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\SpriteMeshBuilder.hpp">
+      <Filter>Header Files\graphics\mesh builders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\StaticMeshBuilder.hpp">
+      <Filter>Header Files\graphics\mesh builders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\ArrayTexture.hpp">
+      <Filter>Header Files\graphics\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\CubemapTexture.hpp">
+      <Filter>Header Files\graphics\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\DepthTexture.hpp">
+      <Filter>Header Files\graphics\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\EnvironmentMap.hpp">
+      <Filter>Header Files\graphics\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\MultiRenderTexture.hpp">
+      <Filter>Header Files\graphics\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\RenderTexture.hpp">
+      <Filter>Header Files\graphics\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\Texture.hpp">
+      <Filter>Header Files\graphics\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\TextureResource.hpp">
+      <Filter>Header Files\graphics\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\IqmBuilder.hpp">
+      <Filter>Header Files\graphics\mesh builders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\SimpleVertexArray.hpp">
+      <Filter>Header Files\graphics\drawables</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\SimpleText.hpp">
+      <Filter>Header Files\graphics\drawables</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\SimpleQuad.hpp">
+      <Filter>Header Files\graphics\drawables</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\SimpleDrawable.hpp">
+      <Filter>Header Files\graphics\drawables</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -797,9 +836,6 @@
     <ClCompile Include="..\crogine\src\graphics\Image.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\Texture.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\Shader.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
@@ -821,12 +857,6 @@
     <ClCompile Include="..\crogine\src\graphics\TextureResource.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\MeshBuilder.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\PrimitiveBuilders.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\imgui\imgui.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
@@ -837,9 +867,6 @@
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\Spatial.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\StaticMeshBuilder.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\android\Android.cpp">
@@ -896,9 +923,6 @@
     <ClCompile Include="..\crogine\src\util\Random.cpp">
       <Filter>Source Files\util</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\RenderTexture.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\core\DefaultLoadingScreen.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
@@ -916,9 +940,6 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\core\GameController.cpp">
       <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\IqmBuilder.cpp">
-      <Filter>Source Files\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\systems\SkeletalAnimator.cpp">
       <Filter>Source Files\ecs\systems</Filter>
@@ -1055,9 +1076,6 @@
     <ClCompile Include="..\crogine\src\ecs\systems\TextSystem.cpp">
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\DynamicMeshBuilder.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\core\Log.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
@@ -1076,23 +1094,11 @@
     <ClCompile Include="..\crogine\src\imgui\imgui_stdlib.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\EnvironmentMap.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\detail\SDLImageRead.cpp">
       <Filter>Source Files\detail</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\GridMeshBuilder.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\CircleMeshBuilder.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\components\Camera.cpp">
       <Filter>Source Files\ecs\components</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\DepthTexture.cpp">
-      <Filter>Source Files\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\MeshBatch.cpp">
       <Filter>Source Files\graphics</Filter>
@@ -1115,16 +1121,7 @@
     <ClCompile Include="..\crogine\src\detail\ModelBinary.cpp">
       <Filter>Source Files\detail</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\BinaryMeshBuilder.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\Shape2D.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\SimpleQuad.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\MultiRenderTexture.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\systems\DeferredRenderSystem.cpp">
@@ -1137,12 +1134,6 @@
       <Filter>Source Files\detail</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\Transformable2D.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\SimpleDrawable.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\SimpleText.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\util\Network.cpp">
@@ -1160,9 +1151,6 @@
     <ClCompile Include="..\crogine\src\graphics\RenderTarget.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\SimpleVertexArray.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\imgui\GraphEditor.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
@@ -1170,9 +1158,6 @@
       <Filter>Source Files\detail</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\UniformBuffer.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\CubemapTexture.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\audio\AudioBuffer.cpp">
@@ -1307,6 +1292,78 @@
     <ClCompile Include="..\crogine\src\imgui\ImGuiDatePicker.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\VBOAllocation.cpp">
+      <Filter>Source Files\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\VAOAllocation.cpp">
+      <Filter>Source Files\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\BufferAllocation.cpp">
+      <Filter>Source Files\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\IBOAllocation.cpp">
+      <Filter>Source Files\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\BillboardMeshBuilder.cpp">
+      <Filter>Source Files\graphics\mesh builders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\BinaryMeshBuilder.cpp">
+      <Filter>Source Files\graphics\mesh builders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\CircleMeshBuilder.cpp">
+      <Filter>Source Files\graphics\mesh builders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\DynamicMeshBuilder.cpp">
+      <Filter>Source Files\graphics\mesh builders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\GridMeshBuilder.cpp">
+      <Filter>Source Files\graphics\mesh builders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\IqmBuilder.cpp">
+      <Filter>Source Files\graphics\mesh builders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\MeshBuilder.cpp">
+      <Filter>Source Files\graphics\mesh builders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\PrimitiveBuilders.cpp">
+      <Filter>Source Files\graphics\mesh builders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\StaticMeshBuilder.cpp">
+      <Filter>Source Files\graphics\mesh builders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\CubemapTexture.cpp">
+      <Filter>Source Files\graphics\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\DepthTexture.cpp">
+      <Filter>Source Files\graphics\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\EnvironmentMap.cpp">
+      <Filter>Source Files\graphics\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\MultiRenderTexture.cpp">
+      <Filter>Source Files\graphics\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\RenderTexture.cpp">
+      <Filter>Source Files\graphics\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\Texture.cpp">
+      <Filter>Source Files\graphics\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\SimpleVertexArray.cpp">
+      <Filter>Source Files\graphics\drawables</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\SimpleText.cpp">
+      <Filter>Source Files\graphics\drawables</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\SimpleQuad.cpp">
+      <Filter>Source Files\graphics\drawables</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\SimpleDrawable.cpp">
+      <Filter>Source Files\graphics\drawables</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\SpriteMeshBuilder.cpp">
+      <Filter>Source Files\graphics\mesh builders</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\crogine\include\crogine\ecs\Entity.inl">
@@ -1351,11 +1408,11 @@
     <None Include="..\crogine\include\crogine\graphics\MeshData.inl">
       <Filter>Header Files\graphics</Filter>
     </None>
-    <None Include="..\crogine\include\crogine\graphics\SimpleDrawable.inl">
-      <Filter>Header Files\graphics</Filter>
-    </None>
     <None Include="..\crogine\src\graphics\shaders\ShaderIncludes.inl">
       <Filter>Header Files\graphics\shaders</Filter>
+    </None>
+    <None Include="..\crogine\include\crogine\graphics\SimpleDrawable.inl">
+      <Filter>Header Files\graphics\drawables</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

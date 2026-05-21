@@ -379,10 +379,13 @@ void SpriteState::drawSpriteWindow()
     {
         auto& [name, sprite] = *m_activeSprite;
 
-        ImGui::SetNextWindowSize({ 480.f, 600.f });
+        const ImVec2 windowSize = { 480.f, 600.f };
+        ImGui::SetNextWindowSize(windowSize);
         std::string title("Edit Sprite - ");
         title += name;
 
+        const auto pos = ImGui::GetIO().DisplaySize - windowSize;
+        ImGui::SetNextWindowPos(pos, ImGuiCond_FirstUseEver);
         ImGui::Begin(title.c_str());
 
         auto* texture = sprite.getTexture();
@@ -448,6 +451,17 @@ void SpriteState::drawSpriteWindow()
                     {
                         m_spriteSheet.getSprites().at(newSpriteName) = sprite;
                         nameNumber++; //only increment this if accepted...
+
+                        //ugh can't remember how to access pair directly
+                        for (auto& pair : m_spriteSheet.getSprites())
+                        {
+                            if (pair.first == newSpriteName)
+                            {
+                                m_activeSprite = &pair;
+                                updateBoundsEntity();
+                                break;
+                            }
+                        }
 
                         cro::FileSystem::showMessageBox("Success", "Added Sprite " + newSpriteName);
                     }
@@ -528,8 +542,6 @@ void SpriteState::drawSpriteWindow()
             ImGui::BeginChild("##tex", ImVec2(460.f, 200.f));
             ImGui::ImageButton(*texture, size, uv0, uv1);
             ImGui::EndChild();
-
-
         }
 
         ImGui::End();

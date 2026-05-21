@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -44,7 +44,7 @@ GridMeshBuilder::GridMeshBuilder(glm::vec2 size, std::uint32_t subDivisions, glm
 }
 
 //private
-Mesh::Data GridMeshBuilder::build() const
+Mesh::Data GridMeshBuilder::build(AllocationResource*) const
 {
     glm::vec2 stride = m_size / static_cast<float>(m_subDivisions);
 
@@ -110,22 +110,22 @@ Mesh::Data GridMeshBuilder::build() const
 
 
     Mesh::Data meshData;
-    meshData.attributes[Mesh::Position] = 3;
+    meshData.attributes[Mesh::Attribute::Position].componentCount = 3;
 
     if (m_colouredVerts)
     {
-        meshData.attributes[Mesh::Colour] = 4;
+        meshData.attributes[Mesh::Attribute::Colour].componentCount = 4;
         meshData.attributeFlags = VertexProperty::Colour;
     }
 
-    meshData.attributes[Mesh::Normal] = 3;
-    meshData.attributes[Mesh::Tangent] = 3;
-    meshData.attributes[Mesh::Bitangent] = 3;
-    meshData.attributes[Mesh::UV0] = 2;
+    meshData.attributes[Mesh::Attribute::Normal].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Tangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Bitangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::UV0].componentCount = 2;
     meshData.attributeFlags |= (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
 
     meshData.primitiveType = GL_TRIANGLE_STRIP;
-    meshData.vertexCount = verts.size() / getAttributeSize(meshData.attributes);
+    meshData.vertexCount = verts.size() / getComponentCount(meshData.attributes);
     meshData.vertexSize = getVertexSize(meshData.attributes);
     createVBO(meshData, verts);
 

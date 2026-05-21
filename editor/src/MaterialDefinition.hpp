@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -61,6 +61,30 @@ struct MaterialDefinition final
     std::array<std::uint32_t, TextureID::Size> textureIDs = {};
 
     std::string shaderStringID; //used for overriding the material type shader with a custom one
+
+    struct Uniform final
+    {
+        enum
+        {
+            Float1, Float2,
+            Float3, Float4,
+            Texture,
+
+            MaxType
+        };
+        std::int32_t type = 0;
+        std::array<float, 4> value = {};
+        std::string stringValue;
+
+        std::string name;
+
+        Uniform()
+        {
+            std::fill(value.begin(), value.end(), 0.f);
+            stringValue = "None";
+        }
+    };
+    std::vector<Uniform> uniformValues;
 
     cro::Colour colour = glm::vec4(1.f, 1.f, 1.f, 1.f);
     cro::Colour maskColour = glm::vec4(1.f, 1.f, 0.f, 1.f);

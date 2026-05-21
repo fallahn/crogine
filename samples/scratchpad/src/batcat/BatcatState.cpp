@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -28,9 +28,10 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "BatcatState.hpp"
-#include "ResourceIDs.hpp"
 #include "Messages.hpp"
 #include "PlayerDirector.hpp"
+#include "PoissonDisk.hpp"
+#include "ResourceIDs.hpp"
 #include "TerrainChunk.hpp"
 #include "TerrainSystem.hpp"
 
@@ -53,6 +54,8 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/ProjectionMapSystem.hpp>
+#include <crogine/ecs/systems/SpriteSystem3D.hpp>
+#include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
@@ -73,6 +76,7 @@ source distribution.
 #include <crogine/ecs/components/Skeleton.hpp>
 #include <crogine/ecs/components/ProjectionMap.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
@@ -85,6 +89,7 @@ source distribution.
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 #include <crogine/detail/glm/gtx/norm.hpp>
 #include <crogine/detail/OpenGL.hpp>
@@ -94,6 +99,8 @@ source distribution.
 namespace
 {
 #include "TestShaders.inl"
+#include "GrassShader.inl"
+#include "GridShader.inl"
 
     //cro::UISystem* uiSystem = nullptr;
     cro::CommandSystem* commandSystem = nullptr;
@@ -167,7 +174,137 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
                 ImGui::End();
             });
 
+
+        const std::vector<std::string> searchPaths =
+        {
+            "assets/golf/images/particles/",
+            //"assets/golf/images/billboards/",
+            //"assets/golf/images/props/",
+            //"assets/golf/images/terrain/",
+            //"assets/golf/images/ui/",
+        };
+
+        std::vector<std::vector<std::string>> searchResults;
+        for(const auto& path : searchPaths)
+        { 
+            searchResults.push_back(cro::FileSystem::listFiles(path));
+        }
+
+        const auto searchModels = [&](const std::string& src)
+            {
+                const auto files = cro::FileSystem::listFiles(src);
+
+                for (const auto& file : files)
+                {
+                    if (cro::FileSystem::getFileExtension(file) == ".cmt")
+                    {
+                        bool cfgModified = false;
+
+                        cro::ConfigFile cfg;
+                        if (cfg.loadFromFile(src + file))
+                        {
+                            for (auto& obj : cfg.getObjects())
+                            {
+                                if (obj.getName() == "material")
+                                {
+                                    for (auto& prop : obj.getProperties())
+                                    {
+                                        const auto& name = prop.getName();
+                                        if (name == "mask" || name == "diffuse")
+                                        {
+                                            auto imagePath = prop.getValue<std::string>();
+                                            if (!cro::FileSystem::fileExists(imagePath))
+                                            {
+                                                auto imageFile = cro::FileSystem::getFileName(imagePath);
+                                                for (auto i = 0u; i < searchResults.size(); ++i)
+                                                {
+                                                    if (auto result = std::find(searchResults[i].begin(), searchResults[i].end(), imageFile);
+                                                        result != searchResults[i].end())
+                                                    {
+                                                        imagePath = searchPaths[i] + imageFile;
+                                                        LogI << "Found new path for " << imagePath << std::endl;
+
+                                                        prop.setValue(imagePath);
+                                                        cfgModified = true;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (cfgModified)
+                            {
+                                cfg.save(src + file);
+                            }
+                        }
+                    }
+                }
+            };
+
+        //const std::string modelDir = "dlc/adventurer/models/";
+        const std::string modelDir = "assets/golf/models/";
+        const auto& dirs = cro::FileSystem::listDirectories(modelDir);
+        for (const auto& dir : dirs)
+        {
+            searchModels(modelDir + dir + "/");
+        }
+        searchModels(modelDir);
+
+        const auto searchSprites =
+            [&](const std::string& src) 
+            {
+                const auto files = cro::FileSystem::listFiles(src);
+
+                for (const auto& file : files)
+                {
+                    if (cro::FileSystem::getFileExtension(file) == ".spt"
+                        || cro::FileSystem::getFileExtension(file) == ".cps")
+                    {
+                        bool cfgModified = false;
+
+                        cro::ConfigFile cfg;
+                        if (cfg.loadFromFile(src + file))
+                        {
+                            for (auto& prop : cfg.getProperties())
+                            {
+                                const auto& name = prop.getName();
+                                if (name == "src")
+                                {
+                                    auto imagePath = prop.getValue<std::string>();
+                                    if (!cro::FileSystem::fileExists(imagePath))
+                                    {
+                                        auto imageFile = cro::FileSystem::getFileName(imagePath);
+                                        for (auto i = 0u; i < searchResults.size(); ++i)
+                                        {
+                                            if (auto result = std::find(searchResults[i].begin(), searchResults[i].end(), imageFile);
+                                                result != searchResults[i].end())
+                                            {
+                                                imagePath = searchPaths[i] + imageFile;
+                                                LogI << "Found new path for " << imagePath << std::endl;
+
+                                                prop.setValue(imagePath);
+                                                cfgModified = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (cfgModified)
+                            {
+                                cfg.save(src + file);
+                            }
+                        }
+                    }
+                }
+            };
+
+        searchSprites("assets/golf/particles/");
     });
+
+
 
     auto* msg = getContext().appInstance.getMessageBus().post<GameEvent>(MessageID::GameMessage);
     msg->type = GameEvent::RoundStart;
@@ -205,6 +342,19 @@ bool BatcatState::handleEvent(const cro::Event& evt)
             requestStackClear();
             requestStackPush(States::ScratchPad::MainMenu);
             break;
+        case SDLK_p:
+        {
+            static constexpr std::array<glm::vec3, 2u> Pos =
+            {
+                glm::vec3(0.f, 10.f, 50.f),
+                glm::vec3(0.f, 1.f, 5.f),
+            };
+            static std::size_t idx = 0;
+
+            idx = (idx + 1) % 2;
+            m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition(Pos[idx]);
+        }
+            break;
         }
     }
 
@@ -223,14 +373,14 @@ bool BatcatState::simulate(float dt)
     static float accum = 0.f;
     accum += dt;
 
-    glUseProgram(holoShader.ID);
-    glUniform1f(holoShader.timeUniform, accum);
+    //glUseProgram(holoShader.ID);
+    //glUniform1f(holoShader.timeUniform, accum);
 
-    glUseProgram(lavaShader.ID);
-    glUniform1f(lavaShader.timeUniform, accum);
+    //glUseProgram(lavaShader.ID);
+    //glUniform1f(lavaShader.timeUniform, accum);
 
-    glUseProgram(lavaFallShader.ID);
-    glUniform1f(lavaFallShader.timeUniform, accum);
+    //glUseProgram(lavaFallShader.ID);
+    //glUniform1f(lavaFallShader.timeUniform, accum);
 
     m_scene.simulate(dt);
     m_overlayScene.simulate(dt);
@@ -257,6 +407,8 @@ void BatcatState::addSystems()
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::BillboardSystem>(mb);
+    m_scene.addSystem<cro::SpriteAnimator>(mb);
+    m_scene.addSystem<cro::SpriteSystem3D>(mb, 32.f);
     m_scene.addSystem<TerrainSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
@@ -281,6 +433,7 @@ void BatcatState::loadAssets()
     for (auto& md : m_modelDefs)
     {
         md = std::make_unique<cro::ModelDefinition>(m_resources);
+        //md->optimiseOnLoad(false);
     }
 
     m_modelDefs[GameModelID::BatCat]->loadFromFile("assets/batcat/models/batcat02.cmt", true);
@@ -295,68 +448,21 @@ void BatcatState::loadAssets()
     //CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
 
     m_audioBuffer.loadFromFile("assets/batcat/sound/laser.wav");
+
+    //rimming enables passing world pos to frag shader
+    m_resources.shaders.loadFromString(ShaderID::Grid,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), GridFrag, "#define TEXTURED\n#define RIMMING\n");
 }
 
 void BatcatState::createScene()
 {
-    
+    //createGrass();
 
-    if (m_resources.shaders.loadFromString(ShaderID::Holo, 
-        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag, "#define TEXTURED\n#define RIMMING\n"))
-    {
-        m_resources.shaders.mapStringID("holo_shader", ShaderID::Holo);
+    //createTestModels();
 
-        holoShader.ID = m_resources.shaders.get(ShaderID::Holo).getGLHandle();
-        holoShader.timeUniform = m_resources.shaders.get(ShaderID::Holo).getUniformID("u_time");
-    }
-
-    
-
-    if (m_resources.shaders.loadFromString(ShaderID::Lava,
-        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFragV2, "#define TEXTURED\n"))
-    {
-        m_resources.shaders.mapStringID("lava", ShaderID::Lava);
-
-        lavaShader.ID = m_resources.shaders.get(ShaderID::Lava).getGLHandle();
-        lavaShader.timeUniform = m_resources.shaders.get(ShaderID::Lava).getUniformID("u_time");
-    }
-    
-    if (m_resources.shaders.loadFromString(ShaderID::LavaFall,
-        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFallFrag, "#define TEXTURED\n"))
-    {
-        m_resources.shaders.mapStringID("lavafall", ShaderID::LavaFall);
-
-        lavaFallShader.ID = m_resources.shaders.get(ShaderID::LavaFall).getGLHandle();
-        lavaFallShader.timeUniform = m_resources.shaders.get(ShaderID::LavaFall).getUniformID("u_time");
-    }
-
-
+    createReflectionScene();
 
     cro::ModelDefinition md(m_resources);
-    /*if (md.loadFromFile("assets/batcat/models/holo.cmt"))
-    {
-        auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
-        entity.getComponent<cro::Transform>().setPosition({ 7.f, 0.f, 8.f });
-        md.createModel(entity);
-    }*/
-
-    if (md.loadFromFile("assets/golf/plane.cmt"))
-    {
-        auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
-        entity.getComponent<cro::Transform>().setPosition({ -7.f, 0.f, 8.f });
-        md.createModel(entity);
-    }
-
-    if (md.loadFromFile("assets/golf/models/lavafall_small.cmt"))
-    {
-        auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
-        entity.getComponent<cro::Transform>().setPosition({ 7.f, 0.f, 8.f });
-        md.createModel(entity);
-    }
-
 
     std::vector<glm::mat4> tx;
     for (auto i = 0; i < 7; ++i)
@@ -429,6 +535,9 @@ void BatcatState::createScene()
     entity.getComponent<cro::Transform>().addChild(bbEnt.getComponent<cro::Transform>());
 
     //TODO these will be different types of chunk
+    const auto gridID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Grid));
+    auto material = m_resources.materials.get(gridID);
+
     const int count = 3;
     for (auto i = 0; i < count; ++i)
     {
@@ -438,6 +547,8 @@ void BatcatState::createScene()
         //auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
         m_modelDefs[GameModelID::TestRoom]->createModel(entity);
         entity.addComponent<TerrainChunk>().width = 200.f;
+
+        //entity.getComponent<cro::Model>().setMaterial(0, material);
 
         bbEnt = m_scene.createEntity();
         bbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 3.f + (3.f * i) });
@@ -563,18 +674,34 @@ void BatcatState::createScene()
     m_scene.setActiveCamera(ent);
     m_scene.setActiveListener(ent);
 
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/rockit.spt", m_resources.textures);
+    auto sprite = spriteSheet.getSprite("rockit");
+
+    //shadow material fo 3D sprites
+    const auto flags = cro::ShaderResource::DepthMap | cro::ShaderResource::AlphaClip | cro::ShaderResource::DiffuseMap;
+    const auto sID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, flags);
+    const auto matID = m_resources.materials.add(m_resources.shaders.get(sID));
+    auto shadowMat = m_resources.materials.get(matID);
+    shadowMat.setProperty("u_alphaClip", 0.5f);
 
     //function for creating sound ents
-    auto launchEnt = [&]()
+    auto launchEnt = [&, sprite, shadowMat]()
     {
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(sourcePosition);
-        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, sourceRotation);
-        m_modelDefs[GameModelID::Cube]->createModel(e);
+        //e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, sourceRotation);
+        //m_modelDefs[GameModelID::Cube]->createModel(e);
+
+        e.addComponent<cro::Sprite>() = sprite;
+        e.addComponent<cro::SpriteAnimation>().play(0);
+        e.addComponent<cro::Model>().setShadowMaterial(0, shadowMat);
+        e.addComponent<cro::ShadowCaster>();
 
         static const float Speed = 35.f;
 
-        auto velocity = e.getComponent<cro::Transform>().getForwardVector() * Speed;
+        //auto velocity = e.getComponent<cro::Transform>().getForwardVector() * Speed;
+        auto velocity = glm::vec3(25.f, 0.f, 0.f);
         e.addComponent<cro::Callback>().active = true;
         e.getComponent<cro::Callback>().setUserData<std::pair<float, glm::vec3>>(0.f, velocity);
         e.getComponent<cro::Callback>().function =
@@ -916,6 +1043,157 @@ void BatcatState::createUI()
     ui4.callbacks[cro::UIInput::MouseDown] = mouseDown;
     ui4.callbacks[cro::UIInput::MouseUp] = mouseUp;
 #endif //PLATFORM_MOBILE
+}
+
+void BatcatState::createGrass()
+{
+    if (m_resources.shaders.loadFromString(ShaderID::Grass,
+        GrassVert/*cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit)*/,
+        GrassFrag/*cro::ModelRenderer::getDefaultFragmentShader(cro::ModelRenderer::FragmentShaderID::VertexLit)*/,
+        "#define INSTANCING\n"))
+    {
+        m_resources.shaders.mapStringID("grass_instance", ShaderID::Grass);
+    }
+
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/golf/models/grass_dense.cmt", true))
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
+        entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
+        md.createModel(entity);
+
+        static constexpr std::array<float, 2u> minb = { -5.f, -2.f };
+        static constexpr std::array<float, 2u> maxb = { 5.f, 2.f };
+        const auto points = pd::PoissonDiskSampling(/*0.02f*/0.25f, minb, maxb);
+
+        std::vector<glm::mat4> tx;
+        for (const auto& [x,y] : points)
+        {
+            auto t = glm::translate(glm::mat4(1.f), glm::vec3(x, 0.f, -y));
+            t = glm::rotate(t, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI), cro::Transform::Y_AXIS);
+            t = glm::scale(t, glm::vec3(cro::Util::Random::value(0.8f, 1.1f)));
+            tx.emplace_back(t);
+        }
+        entity.getComponent<cro::Model>().setInstanceTransforms(tx);
+
+        /*entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<std::size_t>(0);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+            {
+                static const std::vector<float> table = cro::Util::Wavetable::sine(0.15f);
+                auto& idx = e.getComponent<cro::Callback>().getUserData<std::size_t>();
+                const float r = table[idx] * cro::Util::Const::PI * 0.25f;
+                idx = (idx + 1) % table.size();
+
+                e.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, r);
+            };*/
+    }
+}
+
+void BatcatState::createTestModels()
+{
+    if (m_resources.shaders.loadFromString(ShaderID::Holo, 
+            cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), HoloFrag, "#define TEXTURED\n#define RIMMING\n"))
+    {
+        m_resources.shaders.mapStringID("holo_shader", ShaderID::Holo);
+
+        holoShader.ID = m_resources.shaders.get(ShaderID::Holo).getGLHandle();
+        holoShader.timeUniform = m_resources.shaders.get(ShaderID::Holo).getUniformID("u_time");
+    }
+
+    if (m_resources.shaders.loadFromString(ShaderID::Lava,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFragV2, "#define TEXTURED\n"))
+    {
+        m_resources.shaders.mapStringID("lava", ShaderID::Lava);
+
+        lavaShader.ID = m_resources.shaders.get(ShaderID::Lava).getGLHandle();
+        lavaShader.timeUniform = m_resources.shaders.get(ShaderID::Lava).getUniformID("u_time");
+    }
+        
+    if (m_resources.shaders.loadFromString(ShaderID::LavaFall,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), LavaFallFrag, "#define TEXTURED\n"))
+    {
+        m_resources.shaders.mapStringID("lavafall", ShaderID::LavaFall);
+
+        lavaFallShader.ID = m_resources.shaders.get(ShaderID::LavaFall).getGLHandle();
+        lavaFallShader.timeUniform = m_resources.shaders.get(ShaderID::LavaFall).getUniformID("u_time");
+    }
+
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/batcat/models/holo.cmt"))
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
+        entity.getComponent<cro::Transform>().setPosition({ 7.f, 0.f, 8.f });
+        md.createModel(entity);
+    }
+
+    if (md.loadFromFile("assets/golf/plane.cmt"))
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
+        entity.getComponent<cro::Transform>().setPosition({ -7.f, 0.f, 8.f });
+        md.createModel(entity);
+    }
+
+    if (md.loadFromFile("assets/golf/models/lavafall_small.cmt"))
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(5.f));
+        entity.getComponent<cro::Transform>().setPosition({ 7.f, 0.f, 8.f });
+        md.createModel(entity);
+    }
+}
+
+void BatcatState::createReflectionScene()
+{
+    m_cubemapTexture.loadFromFile("assets/images/skybox/sky.ccm");
+
+    cro::Entity entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 3.f, -6.f });
+
+    cro::ModelDefinition md(m_resources);
+    md.loadFromFile("assets/models/sphere_1m.cmt");
+    md.createModel(entity);
+
+
+    m_reflectionShader.loadFromString(ReflectionVert, ReflectionFrag, "#define RIMMING\n");
+
+    auto matID = m_resources.materials.add(m_reflectionShader);
+    auto material = m_resources.materials.get(matID);
+    material.setProperty("u_reflectMap", cro::CubemapID(m_cubemapTexture));
+    entity.getComponent<cro::Model>().setMaterial(0, material);
+
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float) 
+        {
+            static const auto table = cro::Util::Wavetable::sine(0.5f, 4.f);
+            static std::size_t idx = 0;
+            static constexpr glm::vec3 BasePos(0.f, 6.f, -6.f);
+
+            e.getComponent<cro::Transform>().setPosition(BasePos + glm::vec3(0.f, table[idx], 0.f));
+            idx = (idx + 1) % table.size();
+        };
+
+
+    //cro::Entity entity = m_scene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -2.f });
+    //entity.getComponent<cro::Transform>().setScale(glm::vec3(8.f));
+
+    //cro::ModelDefinition md(m_resources);
+    //md.loadFromFile("dlc/craewall/models/props/rubble_small.cmt");
+    //md.createModel(entity);
+
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().function =
+    //    [](cro::Entity e, float dt) 
+    //    {
+    //        e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+    //    };
 }
 
 void BatcatState::calcViewport(cro::Camera& cam)

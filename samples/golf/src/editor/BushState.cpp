@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "BushState.hpp"
+#include "GrassProcessing.hpp"
 #include "../golf/GameConsts.hpp"
 #include "../golf/SharedStateData.hpp"
 
@@ -74,6 +75,7 @@ namespace
         float leafSize = 0.25f; //metres
         float randomAmount = 0.2f;
         float colourRotation = 0.25f;
+        float scale = 1.f;
         glm::vec3 colour = glm::vec3(1.f);
 
         std::string modelPath;
@@ -109,6 +111,8 @@ namespace
     float billboardScaleMultiplier = 0.46f;
 
 
+    constexpr float MinModelScale = 0.1f;
+
     std::uint64_t RenderFlagsBillboard = 1;
     std::uint64_t RenderFlagsThumbnail = 2;
 
@@ -139,6 +143,31 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
     registerWindow([&]() 
         {
             drawUI();
+        });
+
+    registerCommand("process_grass", 
+        [](const std::string& param)
+        {
+            const std::string path = "assets/golf/models/" + param;
+            if (!cro::FileSystem::directoryExists(path))
+            {
+                cro::Console::print(param + ": path doesn't exist");
+            }
+            else
+            {
+                std::thread t([path]()
+                    {
+                        GrassProcessor processor;
+                        processor.begin(path);
+
+                        while (!processor.process())
+                        {
+                            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                        }
+                        LogI << "Process complete!" << std::endl;
+                    });
+                t.detach();
+            }
         });
 
     palette.loadFromFile("assets/workshop/colordome-32.ase");
@@ -612,6 +641,18 @@ void BushState::drawUI()
             glUniform1f(shaderUniform.randomness, treeset.randomAmount);
         }
 
+        if (ImGui::SliderFloat("Scale", &treeset.scale, MinModelScale, 3.f))
+        {
+            treeset.scale = std::max(MinModelScale, treeset.scale);
+            for (auto e : m_models)
+            {
+                if (e.isValid())
+                {
+                    e.getComponent<cro::Transform>().setScale(glm::vec3(treeset.scale));
+                }
+            }
+        }
+
         if(ImGui::SliderFloat("Colour Rotation", &treeset.colourRotation, 0.f, 1.f))
         { 
             glUseProgram(shaderUniform.shaderID);
@@ -869,7 +910,7 @@ void BushState::loadModel(const std::string& path)
         for (auto i = 1u; i < m_models.size(); ++i)
         {
             entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::Transform>().setScale(glm::vec3(treeset.scale));
             md.createModel(entity);
             entity.getComponent<cro::Model>().setRenderFlags(~RenderFlagsThumbnail);
 
@@ -917,6 +958,7 @@ void BushState::loadModel(const std::string& path)
 void BushState::loadPreset(const std::string& path)
 {
     auto workingDir = cro::FileSystem::getFilePath(path);
+    treeset.scale = 1.f;
 
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path))
@@ -965,6 +1007,10 @@ void BushState::loadPreset(const std::string& path)
             else if (name == "leaf_index")
             {
                 leafIndices.push_back(p.getValue<std::uint32_t>());
+            }
+            else if (name == "scale")
+            {
+                treeset.scale = std::max(MinModelScale, p.getValue<float>());
             }
         }
 
@@ -1021,6 +1067,7 @@ void BushState::savePreset(const std::string& path)
     cfg.addProperty("colour_rotation").setValue(treeset.colourRotation);
     cfg.addProperty("randomness").setValue(treeset.randomAmount);
     cfg.addProperty("leaf_size").setValue(treeset.leafSize);
+    cfg.addProperty("scale").setValue(treeset.scale);
 
     for (auto i = 0u; i < m_materials.size(); ++i)
     {
@@ -1126,7 +1173,7 @@ void BushState::createThumbnails()
     auto dirs = cro::FileSystem::listDirectories("assets/golf/courses");
     dirs.erase(std::remove_if(dirs.begin(), dirs.end(), [](const std::string& s) {return s.find("course_") == std::string::npos; }), dirs.end());
 
-    for (auto dir : dirs)
+    for (const auto& dir : dirs)
     {
         auto path = "assets/golf/courses/" + dir + "/course.data";
         if (cro::FileSystem::fileExists(path))
@@ -1209,7 +1256,6 @@ void BushState::createThumbnails()
 
                     if (md.loadFromFile(modelPath))
                     {
-                        
                         auto entity = m_gameScene.createEntity();
                         entity.addComponent<cro::Transform>().setPosition(MapCentre);
                         md.createModel(entity);
@@ -1231,14 +1277,13 @@ void BushState::createThumbnails()
                         entity.getComponent<cro::Transform>().setOrigin(o);
 
                         auto size = bounds[1] - bounds[0];
-                        size.z *= -1.f;
+                        //size.z *= -1.f;
 
-                        const float scaleX = std::max(1.f, std::floor(MapSizeFloat.x / size.x));
-                        const float scaleY = std::max(1.f, std::floor(MapSizeFloat.y / size.z));
+                        const float scaleX = /*std::max(1.f, std::floor*/(MapSizeFloat.x / size.x);//);
+                        const float scaleY = /*std::max(1.f, std::floor*/(MapSizeFloat.y / size.z);//);
 
                         const float scale = std::min(scaleX, scaleY);
                         entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-
 
                         glm::vec3 flagPos = glm::vec3(0.f);
                         auto* flag = holeFile.findProperty("pin");

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com  
 
 crogine - Zlib license.
@@ -38,6 +38,7 @@ source distribution.
 
 #if defined  __ANDROID__ || TARGET_OS_IPHONE
 #define PLATFORM_MOBILE 1
+static_assert(false, "Mobile support is currently deprecated.");
 #else
 #define PLATFORM_DESKTOP 1
 #endif //platform check
@@ -54,7 +55,6 @@ source distribution.
 #if !defined(CRO_STATIC)
 
 #if defined(_WIN32)
-
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -73,9 +73,12 @@ source distribution.
 #endif //BUILD_CRO
 
 
-//for vc compilers we also need to turn off this annoying C4251 warning
 #ifdef _MSC_VER
+//for vc compilers we also need to turn off this annoying C4251 warning
 #pragma warning(disable: 4251)
+//error on nodiscard - use std::ignore to properly discard return values.
+#pragma warning(error: 4834)
+
 #endif //_MSC_VER
 
 #else //linux, FreeBSD, Mac OS X

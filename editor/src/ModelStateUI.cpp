@@ -92,18 +92,6 @@ namespace
         std::make_pair(glm::vec2(0.f), glm::vec2(0.f))
     };
 
-    void helpMarker(const char* desc)
-    {
-        ImGui::TextDisabled("(?)");
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::BeginTooltip();
-            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-            ImGui::TextUnformatted(desc);
-            ImGui::PopTextWrapPos();
-            ImGui::EndTooltip();
-        }
-    }
 
     void toolTip(const char* desc)
     {
@@ -116,6 +104,23 @@ namespace
             ImGui::EndTooltip();
         }
     }
+
+
+    void helpMarker(const char* desc)
+    {
+        ImGui::TextDisabled("(?)");
+        toolTip(desc);
+        //if (ImGui::IsItemHovered())
+        //{
+        //    ImGui::BeginTooltip();
+        //    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        //    ImGui::TextUnformatted(desc);
+        //    ImGui::PopTextWrapPos();
+        //    ImGui::EndTooltip();
+        //}
+    }
+
+
 
     //returns true if texture was changed
     bool drawTextureSlot(const std::string label, std::uint32_t& dest, std::uint32_t thumbnail)
@@ -659,7 +664,7 @@ void ModelState::buildUI()
                 ImGui::Begin("AO Baker##0", &m_showBakingWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
                 const auto& meshData = m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
-                if (meshData.attributes[cro::Mesh::UV1] > 0)
+                if (meshData.attributes[cro::Mesh::Attribute::UV1].componentCount > 0)
                 {
                     //TODO show combo to select which UV coords to use
                 }
@@ -967,7 +972,7 @@ void ModelState::drawInspector()
                     for (auto i = 0u; i < meshData.attributes.size(); ++i)
                     {
                         auto colour = ImGui::GetStyle().Colors[ImGuiCol_TextDisabled];
-                        if (meshData.attributes[i] > 0)
+                        if (meshData.attributes[i].componentCount > 0)
                         {
 
                             colour = ImGui::GetStyle().Colors[ImGuiCol_Text];
@@ -1173,7 +1178,7 @@ void ModelState::drawInspector()
                     if (m_entities[EntityID::ActiveModel].isValid())
                     {
                         const auto& meshData = m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
-                        if (meshData.attributes[cro::Mesh::UV1] == 0)
+                        if (meshData.attributes[cro::Mesh::Attribute::UV1].componentCount == 0)
                         {
                             ImGui::SameLine();
                             ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 0.f, 0.f, 1.f });
@@ -1513,7 +1518,157 @@ void ModelState::drawInspector()
                 }
 
 
+                //material uniforms list - TODO could probably move this to own func if only for readability
+                ImGui::NewLine();
+                ImGui::Text("Uniforms");
 
+                static const std::array<std::string, MaterialDefinition::Uniform::MaxType> TypeStrings =
+                {
+                    "Float", "Vec2", "Vec3", "Vec4", "Texture"
+                };
+                static const auto centrePopup =
+                    []() 
+                    {
+                        constexpr ImVec2 WindowSize(320.f, 200.f);
+                        const auto ViewSize = ImGui::GetIO().DisplaySize;
+                        ImGui::SetNextWindowPos({ (ViewSize.x - WindowSize.x) / 2.f, (ViewSize.y - WindowSize.y) / 2.f });
+                        ImGui::SetNextWindowSize(WindowSize);
+                    };
+
+                static MaterialDefinition::Uniform* newUniform = nullptr;
+                static const auto drawPopup =
+                    [&](MaterialDefinition::Uniform& uniform, bool showCancel)
+                    {
+                        ImGui::InputText("##edit_name", &uniform.name);
+                        if (ImGui::BeginCombo("Type", TypeStrings[uniform.type].c_str()))
+                        {
+                            for (auto i = 0u; i < TypeStrings.size(); ++i)
+                            {
+                                const bool selected = i == uniform.type;
+                                if (ImGui::Selectable(TypeStrings[i].c_str()))
+                                {
+                                    uniform.type = i;
+                                }
+                            }
+                            ImGui::EndCombo();
+                        }
+                        switch (uniform.type)
+                        {
+                        default: break;
+                        case MaterialDefinition::Uniform::Float1:
+                            ImGui::InputFloat("float", uniform.value.data());
+                            break;
+                        case MaterialDefinition::Uniform::Float2:
+                            ImGui::InputFloat2("vec2", uniform.value.data());
+                            break;
+                        case MaterialDefinition::Uniform::Float3:
+                            ImGui::InputFloat3("vec3", uniform.value.data());
+                            break;
+                        case MaterialDefinition::Uniform::Float4:
+                            //TODO add a checkbox to make this a colour selector?
+                            ImGui::InputFloat4("vec4", uniform.value.data());
+                            break;
+                        case MaterialDefinition::Uniform::Texture:
+                            if (ImGui::Button("Browse"))
+                            {
+                                auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
+                                if (!path.empty())
+                                {
+                                    std::replace(path.begin(), path.end(), '\\', '/');
+                                    if (path.find(m_sharedData.workingDirectory) != std::string::npos)
+                                    {
+                                        path = path.substr(m_sharedData.workingDirectory.size());
+                                    }
+                                    uniform.stringValue = path;
+                                }
+                            }
+                            ImGui::SameLine();
+                            ImGui::Text("%s", uniform.stringValue.c_str());
+                            break;
+                        }
+
+                        if (ImGui::Button("Save##uniform"))
+                        {
+                            ImGui::CloseCurrentPopup();
+                            newUniform = nullptr;
+                        }
+
+                        if (showCancel)
+                        {
+                            ImGui::SameLine();
+                            if (ImGui::Button("Cancel##uniform"))
+                            {
+                                newUniform = nullptr;
+                                matDef.uniformValues.pop_back();
+                                ImGui::CloseCurrentPopup();
+                            }
+                        }
+                    };
+
+                if (ImGui::Button("Add##uniform"))
+                {
+                    ImGui::OpenPopup("Add Uniform");
+                    newUniform = &matDef.uniformValues.emplace_back();
+                    newUniform->name = "u_##" + std::to_string(matDef.uniformValues.size());
+                }
+
+                static std::size_t uniformIndex = 0;
+                if (matDef.uniformValues.empty())
+                {
+                    uniformIndex = 0;
+                }
+                else
+                {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Delete##uniform"))
+                    {
+                        matDef.uniformValues.erase(matDef.uniformValues.begin() + uniformIndex);
+                        if (uniformIndex != 0)
+                        {
+                            uniformIndex--;
+                        }
+                    }
+                    bool showPopup = false;
+                    uniformIndex = std::min(uniformIndex, (matDef.uniformValues.size() - 1));
+                    if (ImGui::BeginListBox("##uniforms"))
+                    {
+                        for (auto i = 0u; i < matDef.uniformValues.size(); ++i)
+                        {
+                            const bool selected = uniformIndex == i;
+                            if (ImGui::Selectable(matDef.uniformValues[i].name.c_str(), selected, ImGuiSelectableFlags_AllowDoubleClick))
+                            {
+                                uniformIndex = i;
+                                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                                {
+                                    showPopup = true;
+                                }
+                            }
+                        }
+
+                        ImGui::EndListBox();
+                    }
+
+                    if (showPopup)
+                    {
+                        ImGui::OpenPopup("Edit Uniform");
+                    }
+
+                    centrePopup();
+                    if (ImGui::BeginPopupModal("Edit Uniform", nullptr, ImGuiWindowFlags_NoResize))
+                    {
+                        drawPopup(matDef.uniformValues[uniformIndex], false);
+                        ImGui::EndPopup();
+                    }
+                }
+
+                centrePopup();
+                if (ImGui::BeginPopupModal("Add Uniform", nullptr, ImGuiWindowFlags_NoResize))
+                {
+                    drawPopup(*newUniform, true);
+                    ImGui::EndPopup();
+                }
+
+                ImGui::Separator();
                 ImGui::NewLine();
                 if (ImGui::Button("Export"))
                 {

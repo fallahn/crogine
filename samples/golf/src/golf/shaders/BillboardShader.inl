@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -36,7 +36,7 @@ source distribution.
 static inline const std::string BillboardVertexShader = R"(
     ATTRIBUTE vec4 a_position; //relative to root position (below)
     ATTRIBUTE vec3 a_normal; //actually contains root position of billboard
-    ATTRIBUTE vec4 a_colour;
+    ATTRIBUTE vec4 a_colour; //this is actually supplied by the sprite colour when the mesh is built
 
     ATTRIBUTE MED vec2 a_texCoord0;
 
@@ -56,7 +56,6 @@ static inline const std::string BillboardVertexShader = R"(
     uniform sampler2D u_noiseTexture;
 
 
-
 #include WIND_BUFFER
 #include RESOLUTION_BUFFER
 
@@ -65,8 +64,11 @@ static inline const std::string BillboardVertexShader = R"(
 
     VARYING_OUT float v_ditherAmount;
 
-    VARYING_OUT vec3 v_normalVector;
     VARYING_OUT vec3 v_worldPosition;
+#if defined(USE_MRT)
+    VARYING_OUT vec3 v_viewPosition;
+    VARYING_OUT vec3 v_normalVector;
+#endif
 
 #include WIND_CALC
 #include WATER_LEVEL
@@ -154,6 +156,9 @@ static inline const std::string BillboardVertexShader = R"(
 
         v_worldPosition = position.xyz;
 #if defined(USE_MRT)
+#if defined (VIEW_POS)
+        v_viewPosition = (viewMatrix * vec4(position, 1.0)).xyz;
+#endif
         v_normalVector = cross(camRight, camUp);
 #endif
 
@@ -172,11 +177,10 @@ static inline const std::string BillboardVertexShader = R"(
 #endif
         v_texCoord0 = a_texCoord0;
 
-
         float fadeDistance = u_nearFadeDistance * 5.0;
         float distance = length(position - u_cameraWorldPosition);
 
-        v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 5.0);
+        v_ditherAmount = mix(1.0, pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 5.0), a_colour.a);
         v_ditherAmount *= 1.0 - clamp((distance - FarFadeDistance) / fadeDistance, 0.0, 1.0);
 
 #if !defined(SHADOW_MAPPING)
@@ -192,6 +196,7 @@ static inline const std::string BillboardFragmentShader = R"(
 #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
+    uniform float u_alpha = 1.0;
 
 #if defined (SKY_COLOUR)
     uniform vec4 u_skyColour = vec4(1.0);
@@ -204,19 +209,25 @@ static inline const std::string BillboardFragmentShader = R"(
     VARYING_IN MED vec2 v_texCoord0;
 
     VARYING_IN float v_ditherAmount;
-    VARYING_IN vec3 v_normalVector;
     VARYING_IN vec3 v_worldPosition;
+#if defined(USE_MRT)
+    VARYING_IN vec3 v_viewPosition;
+    VARYING_IN vec3 v_normalVector;
+#endif
 
 #include BAYER_MATRIX
 #include LIGHT_COLOUR
-
 #include WATER_LEVEL
 
     void main()
     {
 #if defined(USE_MRT)
+#if defined (VIEW_POS)
+    POS_OUT.r = v_viewPosition.z;
+#else
     POS_OUT = vec4(v_worldPosition, 1.0);
-    NORM_OUT = vec4(normalize(v_normalVector), 1.0);
+#endif
+    NORM_OUT = vec4(normalize(v_normalVector) * 0.5 + 0.5, 1.0);
     LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 
@@ -235,8 +246,8 @@ static inline const std::string BillboardFragmentShader = R"(
         vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
-        float alpha = findClosest(x, y, smoothstep(0.1, 0.999, v_ditherAmount));
-        FRAG_OUT.a *= alpha * step(WaterLevel - 0.001, v_worldPosition.y);
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.999, v_ditherAmount) * u_alpha);
+        FRAG_OUT.a *= alpha;// * step(WaterLevel - 0.001, v_worldPosition.y);
 
         if(FRAG_OUT.a < 0.3) discard;
     })";

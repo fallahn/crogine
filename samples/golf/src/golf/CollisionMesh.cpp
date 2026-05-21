@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,6 +31,7 @@ source distribution.
 #include "RayResultCallback.hpp"
 #include "GameConsts.hpp"
 
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/mat4x4.hpp>
 
 namespace
@@ -51,50 +52,65 @@ CollisionMesh::~CollisionMesh()
 //public
 void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
 {
-    clearCollisionObjects();
-    cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
+    m_vertexData.clear();
+    m_indexData.clear();
 
-    std::int32_t colourOffset = 0;
-    for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
+    //OK so most (if not all) of the time terrain is large enough to
+    //require 16 bit indexing - however during dev/debug there *are*
+    //some models small enough that the indexing is optimised to 8-bit
+    //so we have to undo that here...
+    if (meshData.indexData[0].format == GL_UNSIGNED_BYTE)
     {
-        colourOffset += static_cast<std::int32_t>(meshData.attributes[i]);
+        LogI << "correcting for index data..." << std::endl;
+        std::vector<std::vector<std::uint8_t>> temp;
+        const auto vertStride = cro::Mesh::readVertexData(meshData, m_vertexData, temp);
+
+        for (auto i = 0u; i < temp.size(); ++i)
+        {
+            auto& indices = m_indexData.emplace_back();
+            for (auto j = 0u; j < temp[i].size(); ++j)
+            {
+                indices.push_back(temp[i][j]);
+            }
+        }
+
+        setCollisionMesh(meshData, vertStride);
+
+        return;
     }
 
+    const auto vertStride = cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
+    if ((m_vertexData.size() / vertStride) > std::numeric_limits<std::uint16_t>::max()) LogW << "Collision Mesh: Terrain has more vertices than can be indexed in 16 bits!!" << std::endl;
+    setCollisionMesh(meshData, vertStride);
+}
 
-    //we have to create a specific object for each sub mesh
-    //to be able to tag it with a different terrain...
+void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData, const std::vector<float>& verts, const std::vector<std::vector<std::uint32_t>>& indices)
+{
+    //this is only for pre-processing verts in offline mode!
+    //use this for tooling when opengl isn't available (eg we're in another thread)
+    m_vertexData = verts;
 
-    //TODO this is basically the same as the BallSystem - so we probably ought
-    //to make this class a member of BallSystem
-    for (auto i = 0u; i < m_indexData.size(); ++i)
+    m_indexData.clear();
+    for (const auto& ia : indices)
     {
-        btIndexedMesh groundMesh;
-        groundMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
-        groundMesh.m_numVertices = static_cast<int>(meshData.vertexCount);
-        groundMesh.m_vertexStride = static_cast<int>(meshData.vertexSize);
-
-        groundMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
-        groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
-        groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
-
-        m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh);
-        m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
-        m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
-        m_groundObjects.back()->setUserIndex(colourOffset); //used by RayResultCallback to read the terrain type
-        m_collisionWorld->addCollisionObject(m_groundObjects.back().get(), CollisionGroup::Terrain, CollisionGroup::Ball);
+        auto& i = m_indexData.emplace_back();
+        for (auto idx : ia)
+        {
+            assert(idx < std::numeric_limits<std::uint16_t>::max());
+            i.push_back(static_cast<std::uint16_t>(idx));
+        }
     }
+    //we fudged the indices into 16 bits so we need
+    //to hack aruond this...
+    auto data = meshData;
+    data.indexData[0].format = GL_UNSIGNED_SHORT;
 
-#ifdef CRO_DEBUG_
-    if (m_collisionWorld->getDebugDrawer()->getDebugMode())
-    {
-        m_collisionWorld->debugDrawWorld();
-    }
-#endif
+    setCollisionMesh(data, meshData.vertexSize);
 }
 
 TerrainResult CollisionMesh::getTerrain(glm::vec3 position) const
 {
-    static const btVector3 RayLength(0.f, -50.f, 0.f);
+    static const btVector3 RayLength(0.f, -60.f, 0.f);
     auto worldPos = glmToBt(position);
     worldPos -= (RayLength / 2.f);
 
@@ -110,11 +126,17 @@ TerrainResult CollisionMesh::getTerrain(glm::vec3 position) const
 
     if (res.hasHit())
     {
-        retVal.height = res.m_hitPointWorld.y();
-        retVal.terrain = (res.m_collisionType >> 24);
-        retVal.trigger = ((res.m_collisionType & 0x00ff0000) >> 16);
-        retVal.normal = { res.m_hitNormalWorld.getX(), res.m_hitNormalWorld.getY(), res.m_hitNormalWorld.getZ() };
-        retVal.wasRayHit = true;
+        for (auto i = 0u; i < res.m_hitPointWorld.size(); ++i)
+        {
+            if (res.m_hitPointWorld[i].y() > retVal.height)
+            {
+                retVal.height = res.m_hitPointWorld[i].y();
+                retVal.terrain = (res.m_collisionType[i] >> 24);
+                retVal.trigger = ((res.m_collisionType[i] & 0x00ff0000) >> 16);
+                retVal.normal = { res.m_hitNormalWorld[i].getX(), res.m_hitNormalWorld[i].getY(), res.m_hitNormalWorld[i].getZ()};
+                retVal.wasRayHit = true;
+            }
+        }
     }
 
     return retVal;
@@ -132,11 +154,17 @@ TerrainResult CollisionMesh::getTerrain(glm::vec3 rayStart, glm::vec3 rayDir) co
 
     if (res.hasHit())
     {
-        retVal.height = res.m_hitPointWorld.y();
-        retVal.terrain = (res.m_collisionType >> 24);
-        retVal.trigger = ((res.m_collisionType & 0x00ff0000) >> 16);
-        retVal.normal = { res.m_hitNormalWorld.getX(), res.m_hitNormalWorld.getY(), res.m_hitNormalWorld.getZ() };
-        retVal.wasRayHit = true;
+        for (auto i = 0u; i < res.m_hitPointWorld.size(); ++i)
+        {
+            if (res.m_hitPointWorld[i].y() > retVal.height)
+            {
+                retVal.height = res.m_hitPointWorld[i].y();
+                retVal.terrain = (res.m_collisionType[i] >> 24);
+                retVal.trigger = ((res.m_collisionType[i] & 0x00ff0000) >> 16);
+                retVal.normal = { res.m_hitNormalWorld[i].getX(), res.m_hitNormalWorld[i].getY(), res.m_hitNormalWorld[i].getZ()};
+                retVal.wasRayHit = true;
+            }
+        }
     }
 
     return retVal;
@@ -175,7 +203,62 @@ void CollisionMesh::clearCollisionObjects()
     m_groundObjects.clear();
     m_groundShapes.clear();
     m_groundVertices.clear();
+}
 
-    m_vertexData.clear();
-    m_indexData.clear();
+void CollisionMesh::setCollisionMesh(const cro::Mesh::Data& meshData, std::uint32_t vertStride)
+{
+    clearCollisionObjects();
+
+    std::int32_t colourOffset = 0;
+    for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
+    {
+        colourOffset += static_cast<std::int32_t>(meshData.attributes[i].componentCount);
+    }
+
+    //we have to create a specific object for each sub mesh
+    //to be able to tag it with a different terrain...
+
+    //TODO this is basically the same as the BallSystem - so we probably ought
+    //to make this class a member of BallSystem
+    for (auto i = 0u; i < m_indexData.size(); ++i)
+    {
+        btIndexedMesh groundMesh;
+        groundMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
+        groundMesh.m_numVertices = static_cast<int>(meshData.vertexCount);
+        //readVertexData unpacks everything to float so vert size is larger than meshData believes
+        groundMesh.m_vertexStride = static_cast<int>(/*meshData.vertexSize*/vertStride);
+
+        std::int32_t stride = 3;
+        PHY_ScalarType indexType = PHY_UCHAR;
+        switch (meshData.indexData[0].format)
+        {
+        default: break;
+        case GL_UNSIGNED_SHORT:
+            stride *= 2;
+            indexType = PHY_SHORT;
+            break;
+        case GL_UNSIGNED_INT:
+            stride *= 4;
+            indexType = PHY_INTEGER;
+            LogW << "Found integer indexing in collision mesh" << std::endl;
+            break;
+        }
+
+        groundMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
+        groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
+        groundMesh.m_triangleIndexStride = stride;
+
+        m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh, indexType);
+        m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
+        m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
+        m_groundObjects.back()->setUserIndex(colourOffset); //used by RayResultCallback to read the terrain type
+        m_collisionWorld->addCollisionObject(m_groundObjects.back().get(), CollisionGroup::Terrain, CollisionGroup::Ball);
+    }
+
+#ifdef CRO_DEBUG_
+    if (m_collisionWorld->getDebugDrawer()->getDebugMode())
+    {
+        m_collisionWorld->debugDrawWorld();
+    }
+#endif
 }

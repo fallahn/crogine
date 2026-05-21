@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,9 +31,14 @@ source distribution.
 
 #include <crogine/Config.hpp>
 
+#include <crogine/detail/Assert.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/graphics/Colour.hpp>
+
+#include <crogine/util/Maths.hpp>
+
+#include <limits>
 
 namespace cro
 {
@@ -61,8 +66,6 @@ namespace cro
 
         glm::vec2 position = glm::vec2(0.f);
         glm::vec2 UV = glm::vec2(0.f);
-        cro::Colour colour = cro::Colour(cro::Detail::White);
-
-        static constexpr std::size_t Size = (sizeof(float) * 4) + sizeof(cro::Colour);
+        Detail::ColourLowP colour = Colour(Detail::White);
     };
 }

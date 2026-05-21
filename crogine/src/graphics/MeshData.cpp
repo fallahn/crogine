@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -27,11 +27,13 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include <crogine/detail/glm/packing.hpp>
 #include <crogine/graphics/MeshData.hpp>
 
 #include "../detail/GLCheck.hpp"
 
 #include <type_traits>
+#include <cstring>
 
 /*
 OK So this is basically esoteric template specialisation
@@ -42,18 +44,152 @@ using namespace cro::Mesh;
 
 namespace
 {
+    /*
+    As this func unpacks the vert data to float we return the size of the unpacked vertex in bytes
+    */
     template <typename T>
-    void read(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<T>>& destIndices)
+    std::uint32_t read(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<T>>& destIndices)
     {
         static_assert(std::is_same<T, std::uint8_t>::value
             || std::is_same<T, std::uint16_t>::value
             || std::is_same<T, std::uint32_t>::value, "must be uint8, uint16 or uint32");
 
-        destVerts.clear();
-        destVerts.resize(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-        glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, 0, meshData.vertexCount * meshData.vertexSize, destVerts.data()));
+        //TODO this currently undoes any vertex optimisation to return all-float vertex
+        //data. This is for backwards compat - but really it should be up to the caller
+        //of this func to decide if it should unpack everything into floats.
+
+        std::vector<std::uint8_t> byteData(meshData.vertexCount * meshData.vertexSize);
+
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
+        glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, meshData.vertexCount * meshData.vertexSize, byteData.data()));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+        destVerts.clear();
+        for (auto i = 0u; i < meshData.vertexCount; ++i)
+        {
+            const auto idx = i * meshData.vertexSize;
+            for (auto j = 0u; j < Attribute::Total; ++j)
+            {
+                if ((meshData.attributeFlags & (1 << j)) != 0)
+                {
+                    if (j != 0)
+                    {
+                        //if this is 0 we haven't updated the mesh
+                        //builder used for the mesh we're downloading!
+                        assert(meshData.attributes[j].byteOffset);
+                    }
+
+                    switch (meshData.attributes[j].glType)
+                    {
+                    default:break;
+                    case GL_UNSIGNED_BYTE:
+
+                    {
+                        std::uint32_t c = 0;
+                        std::memcpy(&c, &byteData[idx + meshData.attributes[j].byteOffset], sizeof(c));
+
+                        switch (j)
+                        {
+                        default:
+                        {
+                            //blend indices
+                            destVerts.push_back(static_cast<float>(c & 0x000000ff));
+                            destVerts.push_back(static_cast<float>((c & 0x0000ff00) >> 8));
+                            destVerts.push_back(static_cast<float>((c & 0x00ff0000) >> 16));
+                            destVerts.push_back(static_cast<float>((c & 0xff000000) >> 24));
+                        }
+                            break;
+                        case Attribute::Colour:
+                        case Attribute::BlendWeights:
+                        {
+                            const auto v = glm::unpackUnorm4x8(c);
+                            for (auto k = 0; k < 4; ++k)
+                            {
+                                destVerts.push_back(static_cast<float>(v[k]));
+                            }
+                        }
+                            break;
+                        }                        
+                    }
+                        break;
+                    case GL_BYTE:
+                        
+                        break;
+                    case GL_UNSIGNED_SHORT:
+
+                        break;
+                    case GL_SHORT:
+
+                        break;
+                    case GL_HALF_FLOAT:
+                    {
+                        switch (j)
+                        {
+                        default: break;
+                        case Attribute::UV0:
+                        case Attribute::UV1:
+                        {
+                            std::uint32_t uv = 0;
+                            std::memcpy(&uv, &byteData[idx + meshData.attributes[j].byteOffset], sizeof(uv));
+
+                            const auto v = glm::unpackHalf2x16(uv);
+                            for (auto k = 0; k < 2; ++k)
+                            {
+                                destVerts.push_back(static_cast<float>(v[k]));
+                            }
+                        }
+                        break;
+                        case Attribute::Normal:
+                        {
+                            std::array<std::uint32_t, 2> norm = { 0,0 };
+                            std::memcpy(norm.data(), &byteData[idx + meshData.attributes[j].byteOffset], sizeof(norm));
+
+                            //hm, output mesh only expect 3 components
+                            auto v = glm::unpackHalf2x16(norm[0]);
+                            destVerts.push_back(static_cast<float>(v[0]));
+                            destVerts.push_back(static_cast<float>(v[1]));
+
+                            v = glm::unpackHalf2x16(norm[1]);
+                            destVerts.push_back(static_cast<float>(v[0]));
+                        }
+                            break;
+                        }
+                    }
+                        break;
+                    case GL_UNSIGNED_INT:
+                    {
+
+                    }
+                        break;
+                    case GL_INT:
+
+                        break;
+                    case GL_UNSIGNED_INT_10_10_10_2:
+
+                        break;
+                    case GL_UNSIGNED_INT_2_10_10_10_REV:
+
+                        break;
+                    case GL_INT_2_10_10_10_REV:
+                    {
+                        //OK this is apparently a dark art so I'm just going to use half floats instead
+                        //normal/tan/bitan
+                        //std::uint32_t c = 0;
+                        //std::memcpy(&c, &byteData[idx + meshData.attributes[j].byteOffset], sizeof(c));
+                        //const auto v = 
+                    }
+                        break;
+                    case GL_FLOAT:
+                    {
+                        std::vector<float> temp(meshData.attributes[j].componentCount);
+                        std::memcpy(temp.data(), &byteData[idx + meshData.attributes[j].byteOffset], meshData.attributes[j].componentCount * sizeof(float));
+                        destVerts.insert(destVerts.end(), temp.begin(), temp.end());
+                    }
+                        break;
+                    }
+                }
+            }
+        }
 
         destIndices.clear();
         destIndices.resize(meshData.submeshCount);
@@ -61,25 +197,81 @@ namespace
         for (auto i = 0u; i < meshData.submeshCount; ++i)
         {
             destIndices[i].resize(meshData.indexData[i].indexCount);
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
-            glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount * sizeof(T), destIndices[i].data()));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
+            glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.offset, meshData.indexData[i].indexCount * sizeof(T), destIndices[i].data()));
         }
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+        
+        std::uint32_t unpackedSize = 0;
+        for (auto i = 0u; i < Attribute::Total; ++i)
+        {
+            if ((meshData.attributeFlags & (1 << i)) != 0)
+            {
+                switch (i)
+                {
+                default: break;
+                case Attribute::Position:
+                case Attribute::Normal:
+                case Attribute::Tangent:
+                case Attribute::Bitangent: 
+                    unpackedSize += 3 * sizeof(float);
+                    break;
+                case Attribute::UV0:
+                case Attribute::UV1: 
+                    unpackedSize += 2 * sizeof(float);
+                    break;
+                case Attribute::Colour:
+                case Attribute::BlendIndices:
+                case Attribute::BlendWeights:
+                    unpackedSize += 4 * sizeof(float);
+                    break;
+                }
+            }
+        }
+
+        return unpackedSize;
     }
 }
 
-
-void cro::Mesh::readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint8_t>>& destIndices)
+std::uint32_t Attribute::getSize() const
 {
-    read(meshData, destVerts, destIndices);
+    switch (glType)
+    {
+    default:
+        LogW << "getVertexSize(): " << glType << " - unhandled data type" << std::endl;
+        return 0;
+    case GL_UNSIGNED_BYTE:
+    case GL_BYTE:
+        return componentCount;
+    case GL_UNSIGNED_SHORT:
+    case GL_SHORT:
+    case GL_HALF_FLOAT:
+        return componentCount * 2;
+    case GL_UNSIGNED_INT:
+    case GL_INT:
+    case GL_UNSIGNED_INT_10_10_10_2:
+    case GL_UNSIGNED_INT_2_10_10_10_REV:
+    case GL_INT_2_10_10_10_REV:
+    case GL_FLOAT:
+        return componentCount * 4;
+    }
 }
 
-void cro::Mesh::readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint16_t>>& destIndices)
+//NOTE!!! The size of the vertex in the returned data may be LARGER than stated in the Data struct
+//as all vertex attributes are currently unpacked to float!!! So we return the unpacked size (in bytes) here
+std::uint32_t cro::Mesh::readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint8_t>>& destIndices)
 {
-    read(meshData, destVerts, destIndices);
+    return read(meshData, destVerts, destIndices);
 }
-
-void cro::Mesh::readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint32_t>>& destIndices)
+//NOTE!!! The size of the vertex in the returned data may be LARGER than stated in the Data struct
+//as all vertex attributes are currently unpacked to float!!! So we return the unpacked size (in bytes) here
+std::uint32_t cro::Mesh::readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint16_t>>& destIndices)
 {
-    read(meshData, destVerts, destIndices);
+    return read(meshData, destVerts, destIndices);
+}
+//NOTE!!! The size of the vertex in the returned data may be LARGER than stated in the Data struct
+//as all vertex attributes are currently unpacked to float!!! So we return the unpacked size (in bytes) here
+std::uint32_t cro::Mesh::readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint32_t>>& destIndices)
+{
+    return read(meshData, destVerts, destIndices);
 }

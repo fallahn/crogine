@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,8 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/Spatial.hpp>
 
+#include <crogine/detail/IBOAllocation.hpp>
+#include <crogine/detail/VBOAllocation.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 #include <cctype>
@@ -41,6 +43,31 @@ source distribution.
 
 namespace cro
 {
+    namespace Detail
+    {
+        //normal packing functions - these are different depending on GL version
+#ifdef GL41
+        static inline std::uint32_t packInt2x10x10x10xRev(glm::vec4 v)
+        {
+            //generate sign bits
+            const std::uint32_t xs = v.x < 0;
+            const std::uint32_t ys = v.y < 0;
+            const std::uint32_t zs = v.z < 0;
+            const std::uint32_t ws = v.w < 0;
+            
+            //shift and OR results
+            const std::uint32_t ret =
+                ws << 31 | ((std::uint32_t)(v.w + (ws << 1)) & 1) << 30 |
+                zs << 29 | ((std::uint32_t)(v.z * 511 + (zs << 9)) & 511) << 20 |
+                ys << 19 | ((std::uint32_t)(v.y * 511 + (ys << 9)) & 511) << 10 |
+                xs << 9 |  ((std::uint32_t)(v.x * 511 + (xs << 9)) & 511);
+            return ret;
+        }
+#else
+
+#endif
+    }
+
     namespace Mesh
     {
         /*!
@@ -57,31 +84,17 @@ namespace cro
             Count
         };
 
-        /*!
-        \brief used to map vertex attributes to shader input
-        */
-        enum Attribute
-        {
-            Invalid = -1,
-            Position = 0,
-            Colour,
-            Normal,
-            Tangent,
-            Bitangent,
-            UV0,
-            UV1,
-            BlendIndices,
-            BlendWeights,
-
-            Total
-        };
 
         /*!
         \brief Index data for sub-mesh
         */
         struct CRO_EXPORT_API IndexData final
         {
-            std::uint32_t ibo = 0;
+            //if the iboAllocation bufferID is valid but the
+            //ibo allocator in the MeshData is nullptr, IBOs
+            //need to be deleted manually, else the allocator
+            //will automatically tidy up for us.
+            Detail::IBOAllocation iboAllocation;
             enum Pass
             {
                 Final, Shadow, Count
@@ -101,20 +114,58 @@ namespace cro
         };
 
         /*!
+        \brief Contains the size and type of a vertex attribute if it exists.
+        */
+        struct CRO_EXPORT_API Attribute final
+        {
+            std::uint32_t componentCount = 0; //number of components
+            std::uint32_t glType = 0x1406; //GL_FLOAT;
+            std::uint32_t glNormalised = 0; // GL_FALSE;
+            std::uint32_t byteOffset = 0; //offset into the vertex
+
+            enum
+            {
+                Invalid = -1,
+                Position = 0,
+                Colour,
+                Normal,
+                Tangent,
+                Bitangent,
+                UV0,
+                UV1,
+                BlendIndices,
+                BlendWeights,
+
+                Total
+            };
+
+            /*!
+            \brief returns the size of the Attribute in bytes
+            */
+            std::uint32_t getSize() const;
+        };
+
+        /*!
         \brief Struct of mesh data used by Model components
         */
         struct CRO_EXPORT_API Data final
         {
+            //it's up to a specific MeshBuilder implementation
+            //to use this - if vboAllocator is nullptr
+            //block allocations have a unique VBO (if the ID 
+            //is valid) rather than a shared one
+            Detail::VBOAllocation vboAllocation;
+            Detail::VBOAllocator* vboAllocator = nullptr;
             std::size_t vertexCount = 0;
             std::size_t vertexSize = 0; //!< size of a single vertex *in bytes*
-            std::uint32_t vbo = 0;
             std::uint32_t primitiveType = 0;
-            std::array<std::size_t, Mesh::Attribute::Total> attributes{}; //!< size of attribute if it exists
+            std::array<Attribute, Attribute::Total> attributes{}; //!< size of attribute if it exists
             std::uint32_t attributeFlags = 0; //!< bitmask of VertexProperty flags indicating the current properties of the vertex data.
 
-            //index arrays
+            Detail::IBOAllocator* iboAllocator = nullptr;
+
             std::size_t submeshCount = 0;
-            std::array<Mesh::IndexData, Mesh::IndexData::MaxBuffers> indexData{};
+            std::array<IndexData, IndexData::MaxBuffers> indexData{};
 
             //spatial bounds
             Box boundingBox;
@@ -123,9 +174,14 @@ namespace cro
 
         /*!
         \brief Utility to read back vertex data and index data
+        As this may unpack model data to floats it returns the vertex
+        size in bytes, which MAY BE BIGGER than stated in meshData
         */
-        void CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint8_t>>& destIndices);
-        void CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint16_t>>& destIndices);
-        void CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint32_t>>& destIndices);
+        [[nodiscard]]
+        std::uint32_t CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint8_t>>& destIndices);
+        [[nodiscard]]
+        std::uint32_t CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint16_t>>& destIndices);
+        [[nodiscard]]
+        std::uint32_t CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint32_t>>& destIndices);
     }
 }

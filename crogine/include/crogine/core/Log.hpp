@@ -42,6 +42,7 @@ source distribution.
 #include <list>
 #include <ostream>
 #include <streambuf>
+#include <mutex>
 
 #ifdef _MSC_VER
 #define NOMINMAX
@@ -93,6 +94,7 @@ namespace cro
     private:
         static std::list<std::string> m_buffer;
         static std::string m_output;
+        static std::mutex m_mutex;
 
         static void updateOutString(std::size_t maxBuffer);
     };

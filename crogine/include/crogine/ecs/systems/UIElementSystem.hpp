@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include <crogine/core/App.hpp>
 #include <crogine/ecs/System.hpp>
 
 namespace cro
@@ -45,7 +46,7 @@ namespace cro
         void handleMessage(const Message&) override;
 
         /*!
-        \brief returns a rounded scale value basedon the given view size
+        \brief returns a rounded scale value based on the given view size
         */
         static float getViewScale(glm::vec2 viewSize = App::getWindow().getSize());
 

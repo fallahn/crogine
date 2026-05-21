@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -137,7 +137,6 @@ namespace cro
         samples * channel count)
         */
         const std::int16_t* getPCMData(std::int32_t* count) const;
-
 
         /*!
         \brief Returns the number of audio channels with which the audio

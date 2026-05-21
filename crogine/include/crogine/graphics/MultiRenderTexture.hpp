@@ -154,11 +154,21 @@ namespace cro
 
         /*!
         \brief Sets the precision of attachments 1 and upwards
-        \param precision TexturePrecision::High or TexturePrecision::Low
-        When set to low 16bit floating point attachments are created, else
-        32bit textures are used. Defaults to 32bit.
+        \param index The image buffer index to set the precision. Index
+        zero cannot be changed.
+        \param precision 
+        TexturePrecision::High is 32bit floating point (default)
+        TexturePrecision::Low is 16bit floating point
+        TexturePrecision::Default is 8bit unsigned integer
         */
-        void setPrecision(std::uint32_t precision);
+        void setPrecision(std::uint32_t index, std::uint32_t precision);
+
+        /*!
+        \brief Sets the number of channels used for a particular target.
+        \param index The target layer to modify. Layer zero cannot be updated.
+        \param count The number of requested channels between 1 and 4.
+        */
+        void setChannelCount(std::uint32_t index, std::uint32_t count);
 
         /*!
         \brief Hack to enable target for rendering without clearing it
@@ -166,11 +176,12 @@ namespace cro
         void activate(bool b) { setActive(b); }
 
     private:
-        std::uint32_t m_precision;
-        
         std::uint32_t m_fboID;
         mutable std::int32_t m_maxAttachments;
         
+        std::vector<std::uint32_t> m_texturePrecision;
+        std::vector<std::uint32_t> m_textureChannels; //this is used as an index so the value is channelCount - 1
+        std::vector<std::uint32_t> m_textureFormat;
         std::vector<std::uint32_t> m_textureIDs;
         std::uint32_t m_depthTextureID;
 

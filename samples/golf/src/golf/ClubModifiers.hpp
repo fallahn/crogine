@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -74,6 +74,9 @@ static constexpr std::array<ShotModifier, ClubID::Count> pA =
     ShotModifier(-0.290f, 0.993f, 0.660f),
     ShotModifier(-0.290f, 1.007f, 0.667f),
     ShotModifier(-0.503f, 1.129f, 1.143f),
+#ifdef LOB_WEDGE
+    ShotModifier(-0.297f, 1.109f, 1.204f),//lob
+#endif
     ShotModifier(-0.686f, 1.217f, 1.333f),
     ShotModifier(-0.686f, 1.306f, 1.500f),
     ShotModifier(0.000f, 1.000f, 1.000f),
@@ -91,6 +94,9 @@ static constexpr std::array<ShotModifier, ClubID::Count> fA =
     ShotModifier(0.343f, 0.850f, 0.701f),
     ShotModifier(0.373f, 0.837f, 0.674f),
     ShotModifier(0.298f, 0.871f, 0.429f),
+#ifdef LOB_WEDGE
+    ShotModifier(0.290f, 0.831f, 0.524f),//lob
+#endif
     ShotModifier(0.252f, 0.966f, 0.504f),
     ShotModifier(0.313f, 1.000f, 0.511f),
     ShotModifier(0.000f, 1.000f, 1.000f),
@@ -108,6 +114,9 @@ static constexpr std::array<ShotModifier, ClubID::Count> pB =
     ShotModifier(-0.290f, 1.000f, 0.660f),
     ShotModifier(-0.305f, 1.027f, 0.660f),
     ShotModifier(-0.412f, 1.054f, 1.136f),
+#ifdef LOB_WEDGE
+    ShotModifier(-0.412f, 1.170f, 1.183f),//lob
+#endif
     ShotModifier(-0.496f, 1.075f, 1.313f),
     ShotModifier(-0.686f, 1.306f, 1.500f),
     ShotModifier(0.000f, 1.000f, 1.000f),
@@ -125,6 +134,9 @@ static constexpr std::array<ShotModifier, ClubID::Count> fB =
     ShotModifier(0.274f, 0.850f, 0.728f),
     ShotModifier(0.328f, 0.844f, 0.708f),
     ShotModifier(0.274f, 0.864f, 0.470f),
+#ifdef LOB_WEDGE
+    ShotModifier(0.282f, 0.824f, 0.483f),//lob
+#endif
     ShotModifier(0.236f, 0.933f, 0.504f),
     ShotModifier(0.313f, 1.000f, 0.511f),
     ShotModifier(0.000f, 1.000f, 1.000f),
@@ -142,6 +154,9 @@ static constexpr std::array<ShotModifier, ClubID::Count> pC =
     ShotModifier(-0.336f, 1.061f, 0.667f),
     ShotModifier(-0.289f, 1.000f, 0.660f),
     ShotModifier(-0.419f, 1.061f, 1.136f),
+#ifdef LOB_WEDGE
+    ShotModifier(-0.420f, 1.164f, 1.170f),//lob
+#endif
     ShotModifier(-0.511f, 1.061f, 1.285f),
     ShotModifier(-0.686f, 1.306f, 1.500f),
     ShotModifier(0.000f, 1.000f, 1.000f),
@@ -159,6 +174,9 @@ static constexpr std::array<ShotModifier, ClubID::Count> fC =
     ShotModifier(0.251f, 0.857f, 0.755f),
     ShotModifier(0.290f, 0.843f, 0.728f),
     ShotModifier(0.275f, 0.898f, 0.504f),
+#ifdef LOB_WEDGE
+    ShotModifier(0.275f, 0.831f, 0.517f),//lob
+#endif
     ShotModifier(0.244f, 0.939f, 0.490f),
     ShotModifier(0.313f, 1.000f, 0.511f),
     ShotModifier(0.000f, 1.000f, 1.000f),

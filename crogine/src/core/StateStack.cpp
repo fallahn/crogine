@@ -89,6 +89,13 @@ void StateStack::simulate(float dt)
     {
         if (!(*i)->simulate(dt)) break;
     }
+
+    //auto i = m_stack.end();
+    //while (i != m_stack.begin())
+    //{
+    //    i--;
+    //    if (!(*i)->simulate(dt)) break;
+    //}
 }
 
 void StateStack::render()

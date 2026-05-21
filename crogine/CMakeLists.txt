@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.16)
 
 
 if(APPLE)
@@ -28,6 +28,7 @@ SET(TARGET_ANDROID FALSE CACHE BOOL "Build the library for Android devices")
 
 SET(USE_GL_41 FALSE CACHE BOOL "Use OpenGL 4.1 instead of 4.6 on desktop builds.")
 SET(USE_PARALLEL_EXECUTION TRUE CACHE BOOL "Enable parallel execution, requires compiler support")
+SET(BUILD_KTX TRUE CACHE BOOL "Choose to fetch and build libktx instead of using the binary inclued in the repository")
 
 if(${TARGET_ANDROID})
   SET(${CMAKE_TOOLCHAIN_FILE} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchains/android-arm.cmake")
@@ -45,6 +46,15 @@ endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-potentially-evaluated-expression")
+endif()
+
+#glm wants this now
+add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
+
+#OK this really only wants to be done if we're building on Steam Deck
+#in release mode but I'm looking for a QaD hack right now...
+if(LINUX)
+  add_definitions(-DNO_IM_ASSERT)
 endif()
 
 if(USE_OPENAL)
@@ -108,6 +118,7 @@ else()
   find_package(SDL2_mixer REQUIRED)
 endif()
 
+
 #used in dumping stack traces
 if(MSVC)
   find_package(DbgHelp REQUIRED)
@@ -118,11 +129,49 @@ elseif(LINUX)
   endif()
 endif()
 
+
+#ktx texture compression
+if (APPLE OR BUILD_KTX)
+
+include(FetchContent)
+#set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "Build KTX as a static library" FORCE)
+
+#hmmm this clashes with the crogine property...
+#set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build as a static library" FORCE)
+set(BUILD_TESTING OFF CACHE BOOL "Build the testing tree" FORCE)
+set(KTX_FEATURE_TESTS OFF CACHE BOOL "Build Unit Tests" FORCE)
+set(KTX_FEATURE_TOOLS OFF CACHE BOOL "Build KTX Tools" FORCE)
+
+set(ASTCENC_ISA_AVX2 OFF CACHE BOOL "Use AVX2 extensions" FORCE)
+set(ASTCENC_ISA_NONE ON CACHE BOOL "Use No extensions" FORCE)
+FetchContent_Declare(
+        fetch_ktx
+        GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
+        GIT_TAG        v4.4.2
+)
+FetchContent_MakeAvailable(fetch_ktx)
+
+else()
+  find_package(KTX REQUIRED)
+endif()
+
+
 include_directories(
   ${SDL2_INCLUDE_DIR}  
   ${FREETYPE_INCLUDE_DIRS} 
   ${OPUS_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}/crogine/include)
+
+if (APPLE OR BUILD_KTX)
+
+  include_directories(${fetch_ktx_SOURCE_DIR}/include)
+
+else()
+
+  include_directories(${KTX_INCLUDE_DIR})
+
+endif()
+
   
 if(MSVC)
   include_directories(${CMAKE_SOURCE_DIR}/extlibs/openal/include ${DBGHELP_INCLUDE_DIR})
@@ -177,6 +226,12 @@ if(NOT TARGET crogine)
     ${FREETYPE_LIBRARIES}
     ${OPUS_LIBRARIES}
     ${OPENGL_LIBRARIES})
+
+  #if (APPLE OR BUILD_KTX)
+    target_link_libraries(${PROJECT_NAME} ktx)
+  #else()
+    target_link_libraries(${PROJECT_NAME} ${KTX_LIBRARIES})
+  #endif()
 
   if(USE_OPENAL)
     target_link_libraries(${PROJECT_NAME} ${OPENAL_LIBRARY})

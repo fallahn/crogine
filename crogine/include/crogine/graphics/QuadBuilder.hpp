@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -55,6 +55,6 @@ namespace cro
         glm::vec2 m_size = glm::vec2(0.f);
         FloatRect m_textureRect;
         std::size_t m_uid;
-        Mesh::Data build() const override;
+        Mesh::Data build(AllocationResource*) const override;
     };
 }

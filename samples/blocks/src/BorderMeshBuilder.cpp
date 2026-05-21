@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,7 +35,7 @@ source distribution.
 
 using namespace WorldConst;
 
-cro::Mesh::Data BorderMeshBuilder::build() const
+cro::Mesh::Data BorderMeshBuilder::build(cro::AllocationResource*) const
 {
 
     std::vector<float> verts =
@@ -62,8 +62,8 @@ cro::Mesh::Data BorderMeshBuilder::build() const
 
     cro::Mesh::Data data;
 
-    data.attributes[cro::Mesh::Position] = 3;
-    data.attributes[cro::Mesh::Colour] = 3;
+    data.attributes[cro::Mesh::Attribute::Position].componentCount = 3;
+    data.attributes[cro::Mesh::Attribute::Colour].componentCount = 3;
     data.attributeFlags |= (cro::VertexProperty::Position | cro::VertexProperty::Colour);
 
     data.primitiveType = GL_LINES;

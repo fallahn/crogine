@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "../golf/GameConsts.hpp"
 
+#include <crogine/core/ConsoleClient.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -48,7 +49,7 @@ namespace cro
 }
 
 struct SharedStateData;
-class BushState final : public cro::State, public cro::GuiClient
+class BushState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
     BushState(cro::StateStack&, cro::State::Context, const SharedStateData&);

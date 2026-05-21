@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -37,18 +37,19 @@ using namespace cro;
 ParticleEmitter::ParticleEmitter()
     : m_vbo                 (0),
     m_vao                   (0),
-    m_particles             (MaxParticles),
-    m_nextFreeParticle      (0),
     m_culledLastFrame       (false),
     m_running               (false),
+    m_wasRestarted          (true),
+    m_particles             (MaxParticles),
+    m_nextFreeParticle      (0),
     m_emissionTime          (0.f),
     m_previousPosition      (0.f),
     m_prevTimestamp         (0.f),
     m_currentTimestamp      (0.f),
     m_emissionTimestamp     (0.f),
+    m_releaseCount          (-1),
     //m_pendingUpdate         (true),
-    m_renderFlags           (std::numeric_limits<std::uint64_t>::max()),
-    m_releaseCount          (-1)
+    m_renderFlags           (std::numeric_limits<std::uint64_t>::max())
 {
 
 }
@@ -63,14 +64,16 @@ ParticleEmitter::ParticleEmitter()
 
 void ParticleEmitter::start()
 {
-    m_running = true;
+    //fast forward time to emit the first particle immediately
+    m_emissionTime = 1.f / settings.emitRate;
     m_emissionTimestamp = m_prevTimestamp;
-    m_emissionTime = 0.f;
 
     if (settings.releaseCount)
     {
         m_releaseCount = settings.releaseCount;
     }
+    m_running = true;
+    m_wasRestarted = true;
 }
 
 void ParticleEmitter::stop()
@@ -101,11 +104,35 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
                     {
                         texPath = texPath.substr(1);
                     }
+                    auto compressedPath = texPath;
+                    const auto ext = FileSystem::getFileExtension(texPath);
+                    Util::String::replace(compressedPath, ext, ".ktx2");
+                    
+                    Texture* texture = nullptr;
+                    if (FileSystem::fileExists(compressedPath))
+                    {
+                        texture = &textures.get(compressedPath);
+                        if (texture->getResourcePath().empty())
+                        {
+                            //loading failed and we have a fallback texture
+                            LogW << "[Particle Settings] Failed to open compressed texture " << FileSystem::getFileName(compressedPath) << " - trying " << FileSystem::getFileName(texPath) << std::endl;;
+                            texture = &textures.get(texPath);
+                        }
+                        else
+                        {
+                            texPath.swap(compressedPath);
+                        }
+                    }
+                    else
+                    {
+                        texture = &textures.get(texPath);
+                    }
+                    
                     texturePath = texPath;
-                    textureID = textures.get(texPath).getGLHandle();
-                    textureSize = textures.get(texPath).getSize();  
-                    textures.get(texturePath).setSmooth(textureSmoothing);
-                    textures.get(texturePath).setRepeated(true);
+                    textureID = texture->getGLHandle();
+                    textureSize = texture->getSize();  
+                    texture->setSmooth(textureSmoothing);
+                    texture->setRepeated(true);
                 }
             }
             else if (name == "texture_smoothing")

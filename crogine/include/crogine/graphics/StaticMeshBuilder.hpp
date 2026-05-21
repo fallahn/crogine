@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -75,6 +75,9 @@ namespace cro
 
     Be Aware: binary files are little endian (intel) by default.
 
+    TODO this is deprecated in favour of the cmb/BinaryMesh
+    TODO needs shared buffer optimisation
+    TODO needs vertex size optimisation
     */
 
     class CRO_EXPORT_API StaticMeshBuilder final : public MeshBuilder
@@ -94,6 +97,6 @@ namespace cro
     private:
         std::string m_path;
         std::size_t m_uid;
-        Mesh::Data build() const override;
+        Mesh::Data build(AllocationResource*) const override;
     };
 }

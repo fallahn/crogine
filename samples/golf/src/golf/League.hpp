@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -92,6 +92,8 @@ struct LeagueRoundID final
         RoundFour,
         RoundFive,
         RoundSix,
+
+        //Custom,
 
         Count
     };

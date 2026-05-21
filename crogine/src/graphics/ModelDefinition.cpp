@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/CircleMeshBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/graphics/BillboardMeshBuilder.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 
 #include <crogine/core/ConfigFile.hpp>
@@ -64,12 +65,37 @@ namespace
 #ifdef CRO_DEBUG_
     bool billboardsWarned = false;
 #endif
+
+    //TODO this is a duplicate of the MaterialDefinition::Uniform
+    //struct found in the model/material editor....
+    struct Uniform final
+    {
+        enum
+        {
+            Float1, Float2,
+            Float3, Float4,
+            Texture,
+
+
+            MaxType
+        };
+        std::int32_t type = Float1;
+        std::string name;
+        std::array<float, 4> value = {};
+        std::string strValue = "None";
+
+        Uniform()
+        {
+            std::fill(value.begin(), value.end(), 0.f);
+        }
+    };
 }
 
 ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap, const std::string& workingDir)
     : m_resources   (rc),
     m_envMap        (envMap),
     m_workingDir    (workingDir),
+    m_optimiseOnLoad(true),
     m_materialCount (0),
     m_castShadows   (false),
     m_billboard     (false),
@@ -171,7 +197,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
     {
         //binary model
         updateLocalPath(meshValue);
-        meshBuilder = std::make_unique<BinaryMeshBuilder>(meshValue);
+        meshBuilder = std::make_unique<BinaryMeshBuilder>(meshValue, m_optimiseOnLoad);
     }
     else if (ext == ".iqm")
     {
@@ -235,8 +261,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
     }
     else if (Util::String::toLower(meshValue) == "billboard")
     {
-        auto flags = VertexProperty::Position | VertexProperty::Normal | VertexProperty::Colour | VertexProperty::UV0 | VertexProperty::UV1;
-        meshBuilder = std::make_unique<DynamicMeshBuilder>(flags, 1, GL_TRIANGLES);
+        meshBuilder = std::make_unique<BillboardMeshBuilder>();
         m_billboard = true;
 
 #ifdef CRO_DEBUG_
@@ -511,7 +536,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
             else if (name == "shader_string_id")
             {
                 shaderStringID = p.getValue<std::string>();
-                }
+            }
         }
 
         if (lockRotation)
@@ -583,6 +608,33 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
         Texture* diffuseTex = nullptr;
         float alphaClip = 0.f;
 
+        const auto loadTexture = 
+            [&](std::string filepath, bool createMipmaps)
+            {
+                Texture* tex = nullptr;
+                auto temp = filepath;
+                if (Util::String::replace(temp, ".png", ".ktx2")
+                    && FileSystem::fileExists(temp))
+                {
+                    //try using compressed texture instead
+                    tex = &m_resources.textures.get(temp);
+                    if (tex->getResourcePath().empty())
+                    {
+                        tex = &m_resources.textures.get(filepath);
+                        LogW << "[Model Definition] Failed opening " << FileSystem::getFileName(temp) << " - Trying " << FileSystem::getFileName(filepath) << std::endl;
+                    }
+                    else
+                    {
+                        filepath.swap(temp);
+                    }
+                }
+                else
+                {
+                    tex = &m_resources.textures.get(filepath);
+                }
+                return tex;
+            };
+
         for (const auto& p : properties)
         {
             const auto& name = Util::String::toLower(p.getName());
@@ -591,7 +643,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 auto filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
 
-                auto& tex = m_resources.textures.get(filepath, createMipmaps);
+                auto& tex = *loadTexture(filepath, createMipmaps/*, true*/);
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_diffuseMap", tex);
@@ -603,7 +655,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 auto filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
 
-                auto& tex = m_resources.textures.get(filepath, createMipmaps);
+                auto& tex = *loadTexture(filepath, createMipmaps/*, true*/);
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_maskMap", tex);
@@ -612,9 +664,11 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
             {
                 auto filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
-
-                auto& tex = m_resources.textures.get(filepath, createMipmaps);
+                //TODO normal maps require specific compression
+                //so we ignore any ktx files
+                auto& tex = m_resources.textures.get(filepath/*, createMipmaps*/);
                 tex.setSmooth(smoothTextures);
+                //tex.setSmooth(false);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_normalMap", tex);
             }
@@ -623,7 +677,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 auto filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
 
-                auto& tex = m_resources.textures.get(filepath, createMipmaps);
+                auto& tex = *loadTexture(filepath, createMipmaps);
                 tex.setSmooth(true);
                 material.setProperty("u_lightMap", tex);
             }
@@ -733,6 +787,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
 
         m_materialIDs[m_materialCount] = matID;
 
+        std::vector<Uniform> uniforms;
         const auto& tObjs = mat.getObjects();
         for (const auto& obj : tObjs)
         {
@@ -746,6 +801,100 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                         m_materialTags[m_materialCount].push_back(tag.getValue<std::string>());
                     }
                 }
+            }
+            else if (obj.getName() == "uniform")
+            {
+                //*sigh* more code repetition from Model editor...
+                auto& uniform = uniforms.emplace_back();
+
+                //only one of these will be valid but we
+                //don't know which until the type property
+                //has be properly parsed..
+                std::string strValue;
+                float fValue = 0.f;
+                glm::vec2 v2Value = glm::vec2(0.f);
+                glm::vec3 v3Value = glm::vec3(0.f);
+                glm::vec4 v4Value = glm::vec4(0.f);
+
+                for (const auto& p : obj.getProperties())
+                {
+                    if (p.getName() == "type")
+                    {
+                        uniform.type = p.getValue<std::int32_t>();
+                        uniform.type = std::clamp(uniform.type, 0, Uniform::MaxType - 1);
+                    }
+                    else if (p.getName() == "name")
+                    {
+                        uniform.name = p.getValue<std::string>();
+                    }
+                    else if (p.getName() == "value")
+                    {
+                        strValue = p.getValue<std::string>();
+                        fValue = p.getValue<float>();
+                        v2Value = p.getValue<glm::vec2>();
+                        v3Value = p.getValue<glm::vec3>();
+                        v4Value = p.getValue<glm::vec4>();
+                    }
+                }
+
+
+                switch (uniform.type)
+                {
+                default: break;
+                case Uniform::Float1:
+                    uniform.value[0] = fValue;
+                    break;
+                case Uniform::Float2:
+                    uniform.value[0] = v2Value.x;
+                    uniform.value[1] = v2Value.y;
+                    break;
+                case Uniform::Float3:
+                    uniform.value[0] = v3Value.x;
+                    uniform.value[1] = v3Value.y;
+                    uniform.value[2] = v3Value.z;
+                    break;
+                case Uniform::Float4:
+                    uniform.value[0] = v4Value.x;
+                    uniform.value[1] = v4Value.y;
+                    uniform.value[2] = v4Value.z;
+                    uniform.value[3] = v4Value.w;
+                    break;
+                case Uniform::Texture:
+                    uniform.strValue = strValue;
+                    break;
+                }
+            }
+        }
+
+        for (const auto& uniform : uniforms)
+        {
+            switch (uniform.type)
+            {
+            default: break;
+            case Uniform::Float1:
+                material.setProperty(uniform.name, uniform.value[0]);
+                break;
+            case Uniform::Float2:
+                material.setProperty(uniform.name, 
+                    glm::vec2(uniform.value[0], uniform.value[1]));
+                break;
+            case Uniform::Float3:
+                material.setProperty(uniform.name,
+                    glm::vec3(uniform.value[0], uniform.value[1], uniform.value[2]));
+                break;
+            case Uniform::Float4:
+                material.setProperty(uniform.name,
+                    glm::vec4(uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]));
+                break;
+            case Uniform::Texture:
+            {
+                if (material.properties.count(uniform.name) != 0)
+                {
+                    const auto& t = m_resources.textures.get(uniform.strValue);
+                    material.setProperty(uniform.name, t);
+                }
+            }
+                break;
             }
         }
 
@@ -833,6 +982,9 @@ bool ModelDefinition::createModel(Entity entity) const
             {
                 glm::mat4(1.f)
             };
+
+            //entity.getComponent<cro::Model>().m_instanceBuffers.transformAllocator = m_resources.meshes.getAllocationResource().getVBOAllocator(16, sizeof(float));
+            //entity.getComponent<cro::Model>().m_instanceBuffers.normalAllocator = m_resources.meshes.getAllocationResource().getVBOAllocator(9, sizeof(float));
 
             entity.getComponent<cro::Model>().setInstanceTransforms(tx);
         }

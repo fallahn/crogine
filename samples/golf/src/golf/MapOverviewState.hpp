@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -39,6 +39,8 @@ source distribution.
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/SimpleText.hpp>
 
+#include <crogine/gui/GuiClient.hpp>
+
 struct SharedStateData;
 
 //TODO move this to own file if we use it elsewhere
@@ -48,7 +50,7 @@ struct TrackpadFinger final
     glm::vec2 currPosition = glm::vec2(0.f);
 };
 
-class MapOverviewState final : public cro::State
+class MapOverviewState final : public cro::State, public cro::GuiClient
 {
 public:
     MapOverviewState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -82,41 +84,18 @@ private:
     };
     std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
+    cro::Entity m_mapCamera;
+    cro::RenderTexture m_mapBuffer;
+
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
-    cro::Entity m_mapEnt;
-    cro::Entity m_mapText;
-    cro::Entity m_mapNormals;
-    cro::Entity m_ballLandingArea;
+    cro::Entity m_mapTitleText;
 
     cro::Entity m_controlIcon;
     cro::Entity m_controlText;
 
-    cro::RenderTexture m_renderBuffer;
-    cro::SimpleQuad m_mapQuad;
-    cro::SimpleText m_mapString;
-
-    cro::Shader m_mapShader;
-    cro::Shader m_slopeShader;
-
-    struct ShaderUniforms final
-    {
-        std::int32_t posMap = -1;
-        std::int32_t maskMap = -1;
-        std::int32_t normalMap = -1;
-        std::int32_t transparency = -1;
-        std::int32_t gridAmount = -1;
-        std::int32_t gridScale = -1;
-        std::int32_t heatAmount = -1;
-    }m_shaderUniforms;
-
-    static constexpr std::array<std::pair<float, float>, 2u> m_shaderValues =
-    {
-        std::make_pair<float, float>(0.f, 0.f),
-        std::make_pair<float, float>(0.f, 1.f),
-        //std::make_pair<float, float>(1.f, 0.f)
-    };
-    std::size_t m_shaderValueIndex;
+    float m_heatTarget;
+    float m_heatAmount;
 
     float m_zoomScale;
     bool m_transitionActive;
@@ -126,18 +105,22 @@ private:
 
     Thumbsticks m_thumbsticks;
 
+    cro::Shader m_ditherShader;
+    std::int32_t m_ditherUniform;
+
     void addSystems();
     void loadAssets();
     void buildScene();
     void quitState();
 
     void recentreMap();
-    void rescaleMap();
-    void refreshMap();
     void updateNormals();
     void onCachedPush() override;
+    void onCachedPop() override;
 
-    void pan(glm::vec2);
-    glm::vec2 toMapCoords(glm::vec3);
+    void zoomCamera();
+    void panCamera(glm::vec2);
+
+    float pixelsPerMetre() const;
     void gotoTarget();
 };

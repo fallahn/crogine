@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -30,12 +30,16 @@ source distribution.
 #include "MenuState.hpp"
 #include "MyApp.hpp"
 #include "rapidcsv.h"
+#include "odin.h"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/SysTime.hpp>
+#include <crogine/core/Mouse.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
@@ -44,11 +48,16 @@ source distribution.
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
+#include <crogine/graphics/SpriteSheet.hpp>
+
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Random.hpp>
 #include <crogine/util/String.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
@@ -64,6 +73,7 @@ using namespace sp;
 namespace
 {
     constexpr glm::vec2 ViewSize(1920.f, 1080.f);
+    //constexpr glm::vec2 ViewSize(1280.f, 720.f);
     constexpr float MenuSpacing = 40.f;
 
     bool activated(const cro::ButtonEvent& evt)
@@ -93,6 +103,43 @@ namespace
     bool showMoonPhase = true;
 
     cro::ConfigFile testFile;
+
+    //bool spawnActive = true;
+
+    const std::string CloudFrag =
+R"(
+uniform sampler2D u_texture;
+uniform float u_time = 0.0;
+
+VARYING_IN vec2 v_texCoord;
+
+OUTPUT
+
+const float BlendMultiplier = 0.5;
+
+vec4 fetchColour(float offset, float speedMultiplier)
+{
+    vec4 colour = texture(u_texture, v_texCoord + vec2((u_time * speedMultiplier) + offset, 0.0)) * BlendMultiplier;
+    colour.rgb *= colour.a;
+
+    return colour;
+}
+
+void main()
+{
+    vec4 colour = fetchColour(0.0, 0.01);
+    colour += fetchColour(0.35, 0.012);
+
+    float mask = texture(u_texture, v_texCoord + vec2(sin(u_time * 0.01) * 0.01, 0.0)).a;
+    colour.rgb *= (mask * mask * mask);
+    colour.a = 1.0;
+
+    FRAG_OUT = colour;
+})";
+
+    std::int32_t cloudUniform = -1;
+    std::uint32_t cloudID = 0;
+
 
     const std::string QuantizeFrag =
 R"(
@@ -170,11 +217,88 @@ void main()
     }quantizeUniform;
 
     ShaderUniform moonUniform;
+
+    struct OdinObject final
+    {
+        OdinEncoder* encoder = nullptr;
+        OdinDecoder* decoder = nullptr;
+
+        std::int32_t playbackDevice = 0; //SDL Playback device
+        std::int32_t recordDevice = 0; //SDL Record device
+        bool active = false;
+
+        OdinObject()
+        {
+            if (const auto res = odin_initialize(ODIN_VERSION); res != ODIN_ERROR_SUCCESS)
+            {
+                LogI << "Failed init Odin: " << res << std::endl;
+            }
+            else
+            {
+                if (const auto encRes = odin_encoder_create(1234, 48000, false, &encoder); encRes != ODIN_ERROR_SUCCESS)
+                {
+                    LogI << "Failed creating encoder: " << encRes << std::endl;
+                }
+                else
+                {
+                    auto pipeline = odin_encoder_get_pipeline(encoder);
+                    
+                    //TODO insert the voice activation effect here
+                    
+                    
+                    std::uint32_t apm_id = 0;
+                    odin_pipeline_insert_apm_effect(pipeline, 0, 48000, false, &apm_id);
+
+                    OdinApmConfig config = {};
+                    config.echo_canceller = false; //don't know how to get the loopback audio in order to feed this...
+                    config.high_pass_filter = true;
+                    config.transient_suppressor = true;
+                    config.noise_suppression_level = ODIN_NOISE_SUPPRESSION_LEVEL_MODERATE;
+                    config.gain_controller_version = ODIN_GAIN_CONTROLLER_VERSION_V2;
+
+                    odin_pipeline_set_apm_config(pipeline, apm_id, &config);
+
+                    //hmm trying to use mono playback causes the audio to break up
+                    if (const auto decRes = odin_decoder_create(48000, true, &decoder); decRes != ODIN_ERROR_SUCCESS)
+                    {
+                        LogI << "Failed creating decoder: " << decRes << std::endl;
+                    }
+                }
+            }
+        }
+
+
+        ~OdinObject()
+        {
+            if (decoder)
+            {
+                odin_decoder_free(decoder);
+            }
+
+            if (encoder)
+            {
+                odin_encoder_free(encoder);
+            }
+
+            if (recordDevice)
+            {
+                SDL_CloseAudioDevice(recordDevice);
+            }
+
+            if (playbackDevice)
+            {
+                SDL_CloseAudioDevice(playbackDevice);
+            }
+            odin_shutdown();
+        }
+    };
+    std::unique_ptr<OdinObject> odin;
 }
 
-MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp& app)
+MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp& app, cro::ResourceCollection& rc)
     : cro::State    (stack, context),
     m_gameInstance  (app),
+    m_resources     (rc),
     m_scene         (context.appInstance.getMessageBus()),
     m_timePicker    ()
 {
@@ -198,6 +322,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
 
     m_musicName = "No File";
 
+
+    //registerWindow(std::bind(&MenuState::odinWindow, this));
 
     /*auto* fonts = ImGui::GetIO().Fonts;
     static const std::vector<ImWchar> rangesB = { 0x231a, 0x23fe, 0x256d, 0x2bd1, 0x10000, 0x10FFFF, 0 };
@@ -273,6 +399,100 @@ bool MenuState::handleEvent(const cro::Event& evt)
         return true;
     }
 
+    const auto fw = 
+        []()
+        {
+            if (cro::GameController::hasPSLayout(0))
+            {
+                cro::GameController::rumbleStart(0, (std::numeric_limits<std::uint16_t>::max() / 5) * 3, 0, 150);
+            }
+            else
+            {
+                cro::GameController::rumbleStart(0, 10000, (std::numeric_limits<std::uint16_t>::max() / 5) * 2, 150);
+            }
+        };
+
+    const auto hio =
+        []()
+        {
+            if (cro::GameController::hasPSLayout(0))
+            {
+                cro::GameController::rumbleStart(0, (std::numeric_limits<std::uint16_t>::max() / 5) * 4, 0, 1500);
+            }
+            else
+            {
+                cro::GameController::rumbleStart(0, 8000, (std::numeric_limits<std::uint16_t>::max() / 5)/2, 1500);
+            }
+        };
+
+    const auto bounce =
+        []()
+        {
+            if (cro::GameController::hasPSLayout(0))
+            {
+                cro::GameController::rumbleStart(0, 1000, (std::numeric_limits<std::uint16_t>::max() / 5) * 3, 100);
+            }
+            else
+            {
+                cro::GameController::rumbleStart(0, 6000, (std::numeric_limits<std::uint16_t>::max() / 5) * 1, 150);
+            }
+        };
+
+
+    const auto rumbleLow = [](std::uint16_t strength, std::uint16_t dur = 500)
+        {
+            cro::GameController::rumbleStart(0, (std::numeric_limits<std::uint16_t>::max() / 5) * strength, 0, dur);
+        };
+
+    const auto rumbleHigh = [](std::uint16_t strength, std::uint16_t dur = 500)
+        {
+            cro::GameController::rumbleStart(0, 0, (std::numeric_limits<std::uint16_t>::max() / 5) * strength, dur);
+        };
+
+    if (evt.type == SDL_KEYDOWN)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_1:
+            //rumbleLow(1);
+            fw();
+            break;
+        case SDLK_2:
+            //rumbleLow(2);
+            hio();
+            break;
+        case SDLK_3:
+            //rumbleLow(3, 150);
+            bounce();
+            break;
+        case SDLK_4:
+            rumbleLow(4, 1500);
+            break;
+        case SDLK_5:
+            rumbleLow(5);
+            break;
+        case SDLK_6:
+            rumbleHigh(1, 100);
+            break;
+        case SDLK_7:
+            rumbleHigh(2, 100);
+            break;
+        case SDLK_8:
+            rumbleHigh(3, 1500);
+            break;
+        case SDLK_9:
+            rumbleHigh(4, 150);
+            break;
+        case SDLK_0:
+            rumbleHigh(5);
+            break;
+        /*case SDLK_p:
+            spawnActive = !spawnActive;
+            break;*/
+        }
+    }
+
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
 
     m_scene.forwardEvent(evt);
@@ -286,6 +506,73 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
+    //TODO this needs the speaker output samples which are fed in here
+    //to negate the echo caused by the mic picking up the speaker output.
+    //HOWEVER I have no idea how to get this from libSDL AND I have no
+    //idea how I would calculate the latency if I could.
+    //Looks like SDL3 can do this - another reason to migrate?
+    //odin_pipeline_update_apm_playback();
+
+    static constexpr std::uint32_t FRAME_COUNT = 2048;
+    if (odin)
+    {
+        static std::array<std::uint8_t, FRAME_COUNT * sizeof(float)> encodeBuffer = {};
+        m_recorderDebug.captureAvailable = SDL_DequeueAudio(odin->recordDevice, encodeBuffer.data(), FRAME_COUNT*sizeof(float));
+        if (m_recorderDebug.captureAvailable != 0
+            && cro::Mouse::isButtonPressed(cro::Mouse::Button::Right)) //crude but proves a point. probably wants a slight delay after releasing the button
+        {
+            const auto res = odin_encoder_push(odin->encoder, (float*)encodeBuffer.data(), m_recorderDebug.captureAvailable / sizeof(float));
+            if (res != ODIN_ERROR_SUCCESS)
+            {
+                LogI << "Encode error: " << res << std::endl;
+            }
+        }
+    }
+
+    static constexpr std::uint32_t PACKET_SIZE = 2048;
+    static std::array<std::uint8_t, PACKET_SIZE> packetBuffer = {};
+    //though this returns the size encoded it must be initialised to the size of the buffer for encoding to take place!
+    m_recorderDebug.encodedPacketSize = PACKET_SIZE;
+    if (odin)
+    {
+        std::vector<std::vector<std::uint8_t>> pretendPacketQueue; //emulates the incoming network data
+
+        while (odin_encoder_pop(odin->encoder, packetBuffer.data(), &m_recorderDebug.encodedPacketSize) == ODIN_ERROR_SUCCESS)
+        {
+            //note for future: we want a decoder per *peer* and need to check the source of the packet
+            //before we can know to which decoder this should be pushed.
+            //odin_decoder_push(odin->decoder, packetBuffer.data(), m_recorderDebug.encodedPacketSize);
+
+            auto& v = pretendPacketQueue.emplace_back();
+            v.resize(m_recorderDebug.encodedPacketSize);
+            std::memcpy(v.data(), packetBuffer.data(), v.size());
+        }
+
+
+        for (const auto& packet : pretendPacketQueue)
+        {
+            //TODO in a proper network scenario we need to check the packet's peer
+            //and then use a decoder *specifically* for that peer.
+            odin_decoder_push(odin->decoder, packet.data(), packet.size());
+
+            static std::array<float, FRAME_COUNT> decodeBuffer = {};
+            bool isSilent = false;
+            m_recorderDebug.decoderErrorID = odin_decoder_pop(odin->decoder, decodeBuffer.data(), FRAME_COUNT, &isSilent);
+
+            if (m_recorderDebug.decoderErrorID == ODIN_ERROR_SUCCESS)
+            {
+                SDL_QueueAudio(odin->playbackDevice, decodeBuffer.data(), decodeBuffer.size() * sizeof(float));
+            }
+        }
+        pretendPacketQueue.clear();
+    }
+
+
+    static float accum = 0.f;
+    accum += dt;
+    glUseProgram(cloudID);
+    glUniform1f(cloudUniform, accum);
+
     m_video.update(dt);
     m_scene.simulate(dt);
 
@@ -296,6 +583,8 @@ void MenuState::render()
 {
     //draw any renderable systems
     m_scene.render();
+    m_simpleQuad.draw();
+    m_simpleText.draw();
 
     if (m_quantizeOutput.available())
     {
@@ -318,6 +607,8 @@ void MenuState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::TextSystem>(mb);
+    m_scene.addSystem<cro::SpriteSystem2D>(mb);
+    m_scene.addSystem<cro::SpriteAnimator>(mb);
     m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
@@ -325,7 +616,8 @@ void MenuState::addSystems()
 
 void MenuState::loadAssets()
 {
-    m_font.loadFromFile("assets/fonts/VeraMono.ttf");
+    m_resources.fonts.load(0, "assets/fonts/VeraMono.ttf");
+    const auto& font = m_resources.fonts.get(0);
 
     if (m_quantizeShader.loadFromString(cro::SimpleDrawable::getDefaultVertexShader(), QuantizeFrag, "#define TEXTURED\n"))
     {
@@ -346,6 +638,22 @@ void MenuState::loadAssets()
             m_moonOutput.create(m_moonInput.getSize().x, m_moonInput.getSize().y, false);
         }
     }
+
+
+    m_resources.shaders.loadFromString(10000, cro::SimpleQuad::getDefaultVertexShader(), CloudFrag);
+    auto& shader = m_resources.shaders.get(10000);
+    cloudID = shader.getGLHandle();
+    cloudUniform = shader.getUniformID("u_time");
+
+    auto& tex = m_resources.textures.get("assets/images/cloud_mask.png");
+    tex.setRepeated(true);
+    m_simpleQuad.setTexture(tex);
+    m_simpleQuad.setBlendMode(cro::Material::BlendMode::Additive);
+    m_simpleQuad.setShader(shader);
+    m_simpleQuad.setPosition({ 0.f, 60.f });
+
+    //m_simpleText.setFont(font);
+    //m_simpleText.setString("Simple Text");
 }
 
 void MenuState::createScene()
@@ -363,12 +671,13 @@ void MenuState::createScene()
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
  
 
+    const auto& font = m_resources.fonts.get(0);
 
     //menu
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(200.f, 960.f));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Scratchpad");
+    entity.addComponent<cro::Text>(font).setString("Scratchpad");
     entity.getComponent<cro::Text>().setCharacterSize(80);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::Green, 4);
@@ -417,7 +726,7 @@ void MenuState::createScene()
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(position);
         e.addComponent<cro::Drawable2D>();
-        e.addComponent<cro::Text>(m_font).setString(label);
+        e.addComponent<cro::Text>(font).setString(label);
         e.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
         e.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
         e.getComponent<cro::Text>().setOutlineThickness(1.f);
@@ -645,6 +954,54 @@ void MenuState::createScene()
             });
 
 
+    //test custom shader assignment
+//    cro::SpriteSheet sheet;
+//    sheet.loadFromFile("assets/golf/sprites/rockit.spt", m_resources.textures);
+//
+//    entity = m_scene.createEntity();
+//    entity.addComponent<cro::Transform>().setPosition({ 600.f, 400.f });
+//    entity.addComponent<cro::Drawable2D>();
+//    entity.addComponent<cro::Sprite>() = sheet.getSprite("rockit");
+//    entity.addComponent<cro::SpriteAnimation>().play(0);
+//
+//    const std::string f = 
+//        R"(
+//OUTPUT
+//uniform sampler2D u_texture;
+//VARYING_IN vec2 v_texCoord;
+//VARYING_IN vec4 v_colour;
+//
+//void main()
+//{
+//FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour + vec4(1.0, 0.0, 0.0, 0.0);
+//})";
+//
+//    m_resources.shaders.loadFromString(0, cro::RenderSystem2D::getDefaultVertexShader(), f, "#define TEXTURED\n");
+//    entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(0));
+
+    m_simpleText.setFont(font);
+    m_simpleText.setString("SimpleText");
+    m_simpleText.setPosition({ 20.f, 20.f });
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt) mutable
+        {
+            static std::uint32_t charSize = 10;
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct += dt;
+            if (ct > 2.f)
+            {
+                ct -= 2.f;
+                charSize = charSize == 10 ? 26 : 10;
+                m_simpleText.setCharacterSize(charSize);
+            }
+        };
+
+
+
     //camera
     auto updateCam = [&](cro::Camera& cam)
     {
@@ -672,6 +1029,62 @@ void MenuState::createScene()
             cam.viewport.bottom = (1.f - cam.viewport.height) / 2.f;
         }
     };
+
+    //spawns random stuff to test Drawable2D (re)allocation of vertex data
+    /*const auto spawnRandom = 
+        [&, sheet]()
+        {
+            auto e = m_scene.createEntity();
+            e.addComponent<cro::Transform>().setPosition(ViewSize / 2.f);
+            e.addComponent<cro::Callback>().active = true;
+            e.getComponent<cro::Callback>().setUserData<glm::vec2>(cro::Util::Random::value(100,200), 0);
+            e.getComponent<cro::Callback>().function =
+                [&](cro::Entity f, float dt)
+                {
+                    if (!spawnActive) return;
+
+                    auto& vel = f.getComponent<cro::Callback>().getUserData<glm::vec2>();
+                    f.getComponent<cro::Transform>().move(vel * dt);
+                    vel.y -= 900.f * dt;
+
+                    if (f.getComponent<cro::Transform>().getPosition().y < 0)
+                    {
+                        f.getComponent<cro::Callback>().active = false;
+                        m_scene.destroyEntity(f);
+                    }
+                };
+
+            e.addComponent<cro::Drawable2D>();
+
+            if (cro::Util::Random::value(0, 1) == 0)
+            {
+                const auto& font = m_resources.fonts.get(0);
+                e.addComponent<cro::Text>(font).setString("CLEFT");
+            }
+            else
+            {
+                e.addComponent<cro::Sprite>() = sheet.getSprite("rockit");
+            }
+        };
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(4.f);
+    entity.getComponent<cro::Callback>().function =
+        [spawnRandom](cro::Entity e, float dt)
+        {
+            if (!spawnActive) return;
+
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct -= dt;
+
+            if (ct < 0)
+            {
+                ct += cro::Util::Random::value(0.25f, 0.5f);
+                spawnRandom();
+            }
+        };*/
+
 
     auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = updateCam;
@@ -1370,4 +1783,104 @@ void MenuState::moonPhase()
         }
     }
     ImGui::End();
+}
+
+void MenuState::odinWindow()
+{
+    if (ImGui::Begin("Odin"))
+    {
+        const auto& devList = m_soundRecorder.listDevices();
+        static std::uint32_t idx = 0;
+        if (ImGui::BeginCombo("Input Device", devList[idx].c_str()))
+        {
+            for (auto i = 0u; i < devList.size(); ++i)
+            {
+                const bool selected = idx == i;
+                if (ImGui::Selectable(devList[i].c_str(), selected))
+                {
+                    idx = i;
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        if (ImGui::Button("Init"))
+        {
+            if (!odin)
+            {
+                odin = std::make_unique<OdinObject>();
+            }
+
+
+            SDL_AudioSpec spec = {};
+            spec.freq = 48000;
+            spec.format = AUDIO_F32;
+            spec.channels = 2; //TODO if we want to play this through the AudioSystem (for positional) we need an SDL stream to resmaple to mono/16bit
+            spec.samples = 2048;
+
+            SDL_AudioSpec obtained = {};
+
+
+            if (!odin->playbackDevice)
+            {
+                odin->playbackDevice = SDL_OpenAudioDevice(nullptr, 0, &spec, &obtained, 0);
+            }
+            spec.channels = 1;
+            if (!odin->recordDevice)
+            {
+                odin->recordDevice = SDL_OpenAudioDevice(devList[idx].c_str(), SDL_TRUE, &spec, &obtained, 0);
+            }
+        }
+
+        if (odin)
+        {
+            ImGui::Text("Odin Active");
+
+            if (odin->playbackDevice
+                && odin->recordDevice)
+            {
+                if (!odin->active)
+                {
+                    if (ImGui::Button("Record"))
+                    {
+                        //NOTE TO SELF pausing the audio device doesn't flush
+                        //the buffer, so anything not yet output to speakers
+                        //will be put out AFTER unpausing the device, causing
+                        //potentially severe lag.
+                        //m_soundRecorder.openDevice(devList[idx], 2, 48000);
+                        SDL_PauseAudioDevice(odin->playbackDevice, 0);
+                        SDL_PauseAudioDevice(odin->recordDevice, 0);
+                        odin->active = true;
+                    }
+                }
+                else
+                {
+                    if (ImGui::Button("Stop"))
+                    {
+                        SDL_PauseAudioDevice(odin->playbackDevice, 1);
+                        SDL_PauseAudioDevice(odin->recordDevice, 1);
+                        //m_soundRecorder.closeDevice();
+                        odin->active = false;
+                    }
+                }
+
+                ImGui::Text("Captured samples: %d", m_recorderDebug.captureAvailable);
+                ImGui::Text("Encoded Packet Size %u", m_recorderDebug.encodedPacketSize);
+
+                if (m_soundRecorder.isActive())
+                {
+                    ImGui::Text("Encoder Error ID: %d", m_recorderDebug.packetErrorID);
+                }
+            }
+            else
+            {
+                ImGui::Text("No output device");
+            }
+        }
+        else
+        {
+            ImGui::Text("Odin Inactive");
+        }
+        ImGui::End();
+    }
 }

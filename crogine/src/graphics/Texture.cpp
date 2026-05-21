@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -39,6 +39,8 @@ source distribution.
 #include "../detail/SDLImageRead.hpp"
 #include <SDL_rwops.h>
 
+#include <ktx.h>
+
 #include <algorithm>
 #include <filesystem>
 
@@ -56,6 +58,31 @@ namespace
     //    return pow2;*/
     //    return size; //TODO this needs to not exlude combination resolutions such as 768
     //}
+
+    bool ktxFunctionsLoaded = false;
+    const std::array<std::string, ktx_error_code_e::KTX_ERROR_MAX_ENUM + 1> KTXError =
+    {
+        "Operation was successful.",
+        "The data in the file is inconsistent with the spec.",
+        "The file is a pipe or named pipe.",
+        "The target file could not be opened.",
+        "The operation would exceed the max file size.",
+        "An error occurred while reading from the file.",
+        "An error occurred while seeking in the file.",
+        "File does not have enough data to satisfy request.",
+        "An error occurred while writing to the file.",
+        "GL operations resulted in an error.",
+        "The operation is not allowed in the current state.",
+        "A parameter value was not valid.",
+        "Requested metadata key or required dynamically loaded GPU function was not found.",
+        "Not enough memory to complete the operation.",
+        "Transcoding of block compressed texture failed.",
+        "The file not a KTX file",
+        "The KTX file specifies an unsupported texture type.",
+        "Feature not included in in-use library or not yet implemented.",
+        "Library dependency (OpenGL or Vulkan) not linked into application.",
+        "Decompressed byte count does not match expected byte size",
+    };
 }
 
 Texture::Texture()
@@ -65,19 +92,21 @@ Texture::Texture()
     m_type          (GL_UNSIGNED_BYTE),
     m_smooth        (false),
     m_repeated      (false),
-    m_hasMipMaps    (false)
+    m_hasMipMaps    (false),
+    m_useCompression(false)
 {
 
 }
 
 Texture::Texture(Texture&& other) noexcept
-    : m_size    (other.m_size),
-    m_format    (other.m_format),
-    m_handle    (other.m_handle),
-    m_type      (other.m_type),
-    m_smooth    (other.m_smooth),
-    m_repeated  (other.m_repeated),
-    m_hasMipMaps(other.m_hasMipMaps)
+    : m_size            (other.m_size),
+    m_format            (other.m_format),
+    m_handle            (other.m_handle),
+    m_type              (other.m_type),
+    m_smooth            (other.m_smooth),
+    m_repeated          (other.m_repeated),
+    m_hasMipMaps        (other.m_hasMipMaps),
+    m_useCompression    (other.m_useCompression)
 {
     other.m_size = glm::uvec2(0);
     other.m_format = ImageFormat::None;
@@ -86,6 +115,7 @@ Texture::Texture(Texture&& other) noexcept
     other.m_smooth = false;
     other.m_repeated = false;
     other.m_hasMipMaps = false;
+    other.m_useCompression = false;
 }
 
 Texture& Texture::operator=(Texture&& other) noexcept
@@ -102,6 +132,7 @@ Texture& Texture::operator=(Texture&& other) noexcept
         m_smooth = other.m_smooth;
         m_repeated = other.m_repeated;
         m_hasMipMaps = other.m_hasMipMaps;
+        m_useCompression = other.m_useCompression;
 
         other.m_size = glm::uvec2(0);
         other.m_format = ImageFormat::None;
@@ -110,13 +141,14 @@ Texture& Texture::operator=(Texture&& other) noexcept
         other.m_smooth = false;
         other.m_repeated = false;
         other.m_hasMipMaps = false;
+        other.m_useCompression = false;
     }
     return *this;
 }
 
 Texture::~Texture()
 {
-    if(m_handle)
+    if (m_handle)
     {
         glCheck(glDeleteTextures(1, &m_handle));
     }
@@ -130,6 +162,7 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
     //width = ensurePOW2(width);
     //height = ensurePOW2(height);
+    m_resourcePath = {};
 
     width = std::min(width, getMaxTextureSize());
     height = std::min(height, getMaxTextureSize());
@@ -146,23 +179,21 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
     auto wrap = m_repeated ? GL_REPEAT : GL_CLAMP_TO_EDGE;
     auto smooth = m_smooth ? GL_LINEAR : GL_NEAREST;
-    //GLint texFormat = GL_RGB8;
+
     GLint uploadFormat = GL_RGB;
-    GLint internalFormat = GL_RGB16F;
+    GLint internalFormat = m_useCompression ? GL_COMPRESSED_RGB : GL_RGB16F; //we supply this as an arg if the floating point option is set
 
     std::int32_t pixelSize = 3;
     if (format == ImageFormat::RGBA)
     {
-        //texFormat = GL_RGBA8;
         uploadFormat = GL_RGBA;
-        internalFormat = GL_RGBA16F;
+        internalFormat = m_useCompression ? GL_COMPRESSED_RGBA : GL_RGBA16F;
         pixelSize = 4;
     }
     else if(format == ImageFormat::A)
     {
-        //texFormat = GL_R8;
         uploadFormat = GL_RED;
-        internalFormat = GL_R16F;
+        internalFormat = m_useCompression ? GL_COMPRESSED_RED : GL_R16F;
         pixelSize = 1;
     }
 
@@ -173,7 +204,7 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
     glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
 //#ifdef GL41
-    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, floatingPoint ? internalFormat : uploadFormat, width, height, 0, uploadFormat, m_type, buffer.data()));
+    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, (floatingPoint || m_useCompression) ? internalFormat : uploadFormat, width, height, 0, uploadFormat, m_type, buffer.data()));
 //#else
 //    glCheck(glTexStorage2D(GL_TEXTURE_2D, 1, texFormat, width, height));
 //    glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
@@ -186,7 +217,7 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
     glCheck(glBindTexture(GL_TEXTURE_2D, 0));
 }
 
-bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps)
+bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool useCompression)
 {
     std::filesystem::path p(filePath);
     auto path = FileSystem::getResourcePath();
@@ -201,14 +232,86 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps)
         path = filePath;
     }
 
+    if (FileSystem::getFileExtension(path).find("ktx") != std::string::npos)
+    {
+        if (!ktxFunctionsLoaded)
+        {
+            if (const auto result = ktxLoadOpenGL((PFNGLGETPROCADDRESS)SDL_GL_GetProcAddress);
+                result != 0)
+            {
+                LogE << "[KTX] " << FileSystem::getFileName(path) << " Failed to load OpenGL functions: " << KTXError[result] << std::endl;
+                return false;
+            }
+            ktxFunctionsLoaded = true;
+        }
+
+        ktxTexture* kTex = nullptr;
+        if (const auto result = ktxTexture_CreateFromNamedFile(path.c_str(), KTX_TEXTURE_CREATE_NO_FLAGS, &kTex);
+            result != 0)
+        {
+            LogE << "[KTX] " << FileSystem::getFileName(path) << " Failed to create ktx texture: " << KTXError[result] << std::endl;
+            return false;
+        }
+
+        if (m_handle)
+        {
+            glCheck(glDeleteTextures(1, &m_handle));
+        }
+        glCheck(glGenTextures(1, &m_handle));
+
+        GLenum target = 0;
+        GLenum error = 0;
+        if (const auto result = ktxTexture_GLUpload(kTex, &m_handle, &target, &error);
+            result != 0)
+        {
+            ktxTexture_Destroy(kTex);
+
+            LogE << "[KTX] " << FileSystem::getFileName(path) << " Failed to upload ktx texture: " << KTXError[result] << std::endl;
+            if (error)
+            {
+                LogE << "[KTX] GL Error: " << Detail::glErrorString(error) << std::endl;
+            }
+            return false;
+        }
+        m_size = { kTex->baseWidth, kTex->baseHeight };
+        m_hasMipMaps = kTex->numLevels > 1;
+        CRO_ASSERT(target == GL_TEXTURE_2D, "TODO we need to handle array textures differently");
+        ktxTexture_Destroy(kTex);
+
+        //best way I can find to detect the depth is to readback the channel sizes
+        //TODO improve this so we can detect other channel counts
+        std::int32_t out = 0;
+        glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
+        glCheck(glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_ALPHA_SIZE, &out));
+        glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+
+        m_format = out == 0 ? ImageFormat::RGB : ImageFormat::RGBA;
+
+        //to force a refresh of this setting we flip what it currently thinks it is internally
+        const auto smooth = m_smooth;
+        m_smooth = !m_smooth;
+        setSmooth(smooth);
+
+        const auto repeated = m_repeated;
+        m_repeated = !m_repeated;
+        setRepeated(repeated);
+
+        m_resourcePath = path;
+        return true;
+    }
+
+
     ImageArray<std::uint8_t> arr;
     if (arr.loadFromFile(path, true))
     {
         m_type = GL_UNSIGNED_BYTE;
+        m_useCompression = useCompression;
 
         auto size = arr.getDimensions();
         CRO_ASSERT(size.x * size.y * arr.getChannels() == arr.size(), "");
         create(size.x, size.y, arr.getFormat());
+
+        m_resourcePath = path;
         return update(arr.data(), createMipMaps);
     }
 
@@ -227,6 +330,12 @@ bool Texture::loadFromImage(const Image& image, bool createMipMaps)
 
     create(size.x, size.y, image.getFormat());
     return update(image.getPixelData(), createMipMaps);
+}
+
+bool Texture::update(const Detail::ColourLowP* pixels, bool createMipMaps, URect area)
+{
+    m_type = GL_UNSIGNED_BYTE;
+    return update(static_cast<const void*>(pixels), createMipMaps, area);
 }
 
 bool Texture::update(const std::uint8_t* pixels, bool createMipMaps, URect area)

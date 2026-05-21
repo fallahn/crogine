@@ -42,17 +42,11 @@ source distribution.
 
 namespace cro
 {
-    struct TexturePrecision final
-    {
-        static constexpr std::uint32_t High = 0;
-        static constexpr std::uint32_t Low = 1;
-    };
-
     /*!
     \brief Template class for creating array textures
 
     Currently only supports 4 channel image data. Precision
-    paramater only affects float textures, where low precision
+    parameter only affects float textures, where low precision
     uses 16 bit floats instead of 32 bit.
     */
     template <class T, std::uint32_t Layers, std::uint32_t Precision = TexturePrecision::High>

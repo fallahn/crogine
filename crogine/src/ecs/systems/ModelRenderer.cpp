@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -73,11 +73,12 @@ namespace
 
 
 ModelRenderer::ModelRenderer(MessageBus& mb)
-    : System                (mb, typeid(ModelRenderer)),
-    m_drawLists             (),
-    m_pass                  (Mesh::IndexData::Final),
-    m_lightUBO              ("LightUniforms")/*,
-    m_tree          (1.f),
+    : System                    (mb, typeid(ModelRenderer)),
+    m_drawLists                 (),
+    m_pass                      (Mesh::IndexData::Final),
+    m_lightUBO                  ("LightUniforms")/*,
+    m_instanceNormalAllocator   (9, sizeof(float))*/
+    /*m_tree          (1.f),
     m_useTreeQueries(false)*/
 {
     requireComponent<Transform>();
@@ -194,10 +195,6 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     //DPRINT("Visible 3D ents in Scene " + std::to_string(getScene()->getInstanceID()) 
     //    + ", Camera " + std::to_string(cameraEnt.getIndex()), std::to_string(m_drawLists[camComponent.getDrawListIndex()][0].size()));
 
-    //sort lists by depth
-    //flag values make sure transparent materials are rendered last
-    //with opaque going front to back and transparent back to front
-    auto& drawList = m_drawLists[camIndex];
     for (auto i = 0; i < passCount; ++i)
     {
 #ifdef PLATFORM_DESKTOP
@@ -213,6 +210,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
             block.viewProjectionMatrix = pass.viewProjectionMatrix;
             block.clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
 
+            //ubo->bind();
             ubo->setData(block);
         }
 #endif
@@ -228,12 +226,17 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
 #endif //__GNUC__
 #endif //_MSC_VER
 
+        //sort lists by depth
+        //flag values make sure transparent materials are rendered last
+        //with opaque going front to back and transparent back to front
+        auto& drawList = m_drawLists[camIndex];
+
 #if defined USE_PARALLEL_PROCESSING
         std::sort(std::execution::par, std::begin(drawList[i].renderables), std::end(drawList[i].renderables),
 #else
         std::sort(std::begin(drawList[i].renderables), std::end(drawList[i].renderables),
 #endif
-            [](MaterialPair& a, MaterialPair& b)
+            [](const MaterialPair& a, const MaterialPair& b)
             {
                 return a.second.flags < b.second.flags;
             });

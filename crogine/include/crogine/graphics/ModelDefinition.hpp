@@ -117,6 +117,15 @@ namespace cro
         */
         explicit ModelDefinition(ResourceCollection& resources, EnvironmentMap* envMap = nullptr, const std::string& workingDir = "");
 
+        /*!
+        \brief Requests the internal MeshBuilder to optimise the vertex layout on load.
+        This is currently only available for ModelBinary type (eg *.cmb files).
+        The value is defaulted to true, but may be required to be disabled in cases
+        where the loaded model data is to be modified then saved again, such as in the
+        model editor. This needs to be set *before* calling loadFromFile()
+        */
+        void optimiseOnLoad(bool optimise) { m_optimiseOnLoad = optimise; }
+
 
         /*!
         \brief Attempts to load a definition from a ConfigFile at a given path.
@@ -203,6 +212,7 @@ namespace cro
         EnvironmentMap* m_envMap;
         std::string m_workingDir;
         std::string m_fileName;
+        bool m_optimiseOnLoad;
 
         std::size_t m_meshID = 0; //!< ID of the mesh in the mesh resource
         std::array<std::int32_t, Mesh::IndexData::MaxBuffers> m_materialIDs = {}; //!< list of material IDs in the order in which they appear on the model

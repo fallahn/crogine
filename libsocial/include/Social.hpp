@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -52,11 +52,11 @@ source distribution.
 //(player avatar data format changed 1170 -> 1180)
 //(course data changed 1180 -> 1181)
 //(player profile data changed 1190 -> 1200)
-static constexpr std::uint16_t CURRENT_VER = 1212;
+static constexpr std::uint16_t CURRENT_VER = 1220;
 #ifdef __APPLE__
-static const std::string StringVer("1.21.2 (macOS beta)");
+static const std::string StringVer("1.22.0 (macOS beta)");
 #else
-static const std::string StringVer("1.21.2");
+static const std::string StringVer("1.22.0");
 #endif
 
 struct HallEntry final
@@ -106,6 +106,7 @@ public:
             AwardsReceived,
             RequestRestart,
             LeagueReceived,
+            CompetitionLeagueReceived,
             ScrubScoresReceived,
             SBallScoresReceived,
         }type = StatsReceived;
@@ -192,7 +193,7 @@ public:
     static void findLeaderboards(std::int32_t) {}
     static void setLeaderboardsEnabled(bool);
     static bool getLeaderboardsEnabled();
-    static void insertScore(const std::string&, std::uint8_t, std::int32_t, std::int32_t, const std::vector<std::uint8_t>&);
+    static void insertScore(const std::string&, std::uint8_t, std::int32_t, std::int32_t, const std::vector<std::uint8_t>&, bool);
     static cro::String getLeader(const std::string&, std::uint8_t);
     static cro::String getTopFive(const std::string& course, std::uint8_t holeCount);
     static void invalidateTopFive(const std::string& course, std::uint8_t holeCount);
@@ -217,6 +218,16 @@ public:
     static cro::String getTickerMessage() { return {}; }
 
     static float getCompletionCount(const std::string&, bool);
+
+    struct LeaderboardFilterValue final
+    {
+        enum
+        {
+            FriendsOnly, NoAssist
+        };
+    };
+    static void setLeaderboardFilter(std::int32_t filter, bool) {}
+    static bool getLeaderboardFilter(std::int32_t filter) { return false; }
 
     //awards (inventory items) to display in clubhouse
     struct Award final

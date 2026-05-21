@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -166,6 +166,10 @@ namespace cro
         static const std::uint32_t MaxParticles = 10000u;
         EmitterSettings settings;
 
+        //added to settings velocity when spawning particle
+        //this should be in world space
+        glm::vec3 parentVelocity = glm::vec3(0.f);
+
 #ifdef CRO_DEBUG_
         bool wasCulledLastFrame() const { return m_culledLastFrame; }
         std::size_t getParticleCount() const { return m_nextFreeParticle; }
@@ -176,13 +180,14 @@ namespace cro
         std::uint32_t m_vbo;
         std::uint32_t m_vao; //< used on desktop
         
+        bool m_culledLastFrame;
+        bool m_running;
+        bool m_wasRestarted; //kludge to reset the position when the emitter is started
+
         //std::array<Particle, MaxParticles> m_particles;
         std::vector<Particle> m_particles;
         std::size_t m_nextFreeParticle;
 
-        bool m_culledLastFrame;
-
-        bool m_running;
         float m_emissionTime;
         Sphere m_bounds;
         glm::vec3 m_previousPosition; //used to interpolate spawn position if emit rate is > frame rate
@@ -190,10 +195,10 @@ namespace cro
         float m_currentTimestamp;
         float m_emissionTimestamp;
 
+        std::int32_t m_releaseCount;
+
         //bool m_pendingUpdate;
         std::uint64_t m_renderFlags;
-
-        std::int32_t m_releaseCount;
 
         friend class ParticleSystem;
     };

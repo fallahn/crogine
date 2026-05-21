@@ -329,7 +329,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
             if (m_drawWindow)
             {
                 //used to detect if we had any input
-                auto buffSize = m_inputBuffer.size();
+                const auto buffSize = m_inputBuffer.size();
 
                 const auto viewScale = getViewScale();
                 const glm::vec2 OutputSize = glm::vec2(cro::App::getWindow().getSize());
@@ -856,7 +856,13 @@ void TextChat::initLog()
         auto t = std::time(nullptr);
         auto* tm = std::localtime(&t);
 
-        std::string filename = "chat_log_" + std::to_string(tm->tm_year + 1900) + "-" + std::to_string(tm->tm_mon + 1) + "-" + std::to_string(tm->tm_mday) + ".txt";
+        const auto contentPath = Content::getUserContentPath(Content::UserContent::TextChat);
+        if (!cro::FileSystem::directoryExists(contentPath))
+        {
+            cro::FileSystem::createDirectory(contentPath);
+        }
+
+        const std::string filename = contentPath +  "chat_log_" + std::to_string(tm->tm_year + 1900) + "-" + std::to_string(tm->tm_mon + 1) + "-" + std::to_string(tm->tm_mday) + ".txt";
         m_logFile.open(filename, std::ios::app);
     }
 }

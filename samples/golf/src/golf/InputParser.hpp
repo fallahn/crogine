@@ -55,7 +55,7 @@ public:
     void handleEvent(const cro::Event&);
     void setHoleDirection(glm::vec3);
     void setDistanceToHole(float d) { m_distanceToHole = d; }
-    void setClub(float); //picks closest club to given distance
+    void setClub(float, std::uint8_t terrain); //picks closest club to given distance
     void syncClub(std::int32_t); //matches the club to the remote player's
     float getYaw() const; //yaw in world space (includes facing direction)
     float getRotation() const; //relative rotation
@@ -67,7 +67,8 @@ public:
 
     float getPower() const; //0-1 multiplied by selected club
     float getHook() const; //-1 to -1 * some angle, club defined
-    float getCalculatedHook() const { return m_lastCalculatedHook; } //used by UI to display if current player hooked
+    float getCalculatedHook() const; //used by UI to display if current player hooked
+    std::uint8_t getLie() const { return m_lie; } //lie of the ball as it was when last activated
 
     std::int32_t getClub() const;
     void setHumanCount(std::int32_t); //if there's only one human count we can use input from any controller
@@ -107,6 +108,13 @@ public:
     };
     StrokeResult getStroke(std::int32_t club, std::int32_t facing, float holeDistance) const; //facing is -1 or 1 to decide on slice/hook
 
+    //returns the stroke dampening based on the current lie and terrain
+    float getDampening() const;
+
+    //returns a series of impulse vectors for the current club
+    //for each power setting along the prediction curve, ie 8 or 10
+    std::vector<glm::vec3> getImpulseForArc() const;
+
     float getEstimatedDistance() const; //projected magnitude of distance vector of the current club with the current spin setting
 
     static constexpr std::uint32_t CPU_ID = 1337u;
@@ -134,6 +142,7 @@ private:
     float m_analogueAmount;
     float m_inputAcceleration;
     float m_camMotion;
+    float m_widgetMultiplier;
 
     std::int32_t m_mouseWheel;
     std::int32_t m_prevMouseWheel;
@@ -178,7 +187,7 @@ private:
     float m_estimatedDistance;
     void updateDistanceEstimation();
 
-
+    glm::vec3 getImpulse(float pitch, float yaw) const;
     void updateStroke(float);
     void updateDroneCam(float);
     void updateSpin(float);

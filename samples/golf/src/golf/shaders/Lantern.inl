@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024 - 2025
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -73,11 +73,23 @@ VARYING_IN vec3 v_worldPosition;
 VARYING_IN vec4 v_colour;
 VARYING_IN vec3 v_normalVector;
 
+#if defined(USE_MRT)
+#include OUTPUT_LOCATION
+#else
 OUTPUT
+#endif
 
+//hacky way of working around different rim constants
+//when using this shader with the tee markers
+#if defined(USE_MRT)
+const float RimStart = 0.15;
+const float RimEnd = 0.99;
+const float RimAttenuation = 0.4;
+#else
 const float RimStart = 0.5;
 const float RimEnd = 0.99;
 const float RimAttenuation = 0.4;
+#endif
 
 void main()
 {
@@ -88,4 +100,16 @@ void main()
 
     FRAG_OUT = (v_colour * u_ballColour) + vec4(rim);
     FRAG_OUT.a = 1.0;
+
+#if defined(USE_MRT)
+//this is tee markers at night
+
+#if defined(VIEW_POS)
+    POS_OUT.r = v_viewPosition.z;
+#else
+    POS_OUT = vec4(v_worldPosition, 1.0);
+#endif
+LIGHT_OUT = vec4(FRAG_OUT.rgb, 1.0);
+#endif
+
 })";

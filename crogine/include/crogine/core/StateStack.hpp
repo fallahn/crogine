@@ -50,10 +50,10 @@ namespace cro
     game state is not updated - hence paused - without losing its state altogether.
 
     A game or app derived from the App class usually has just one state stack
-    to manage any customs states which are created by inheriting the abstract
+    to manage any custom states which are created by inheriting the abstract
     base class State. Custom states should be assigned a unique 32 bit ID
     and registered with the state stack.
-    \see App::registerStates
+    \see registerState()
     */
     class CRO_EXPORT_API StateStack final
     {

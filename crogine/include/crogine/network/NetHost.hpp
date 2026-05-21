@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,6 +41,7 @@ namespace cro
 {
     struct NetEvent;
     struct NetPeer;
+    class NetClient;
     
     /*!
     \brief Creates a network host.
@@ -164,6 +165,10 @@ namespace cro
         */
         void disconnectLater(NetPeer& peer);
 
+        /*
+        \brief Connects a NetClient directly, bypassing a local loopback connection
+        */
+        bool addLocalConnection(NetClient&);
     private:
 
         _ENetHost* m_host;

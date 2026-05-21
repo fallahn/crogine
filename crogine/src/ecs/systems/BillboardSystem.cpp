@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,13 +34,22 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/detail/AllocationResource.hpp>
+
+#include <crogine/graphics/BillboardMeshBuilder.hpp>
 
 using namespace cro;
+
+namespace
+{
+
+}
 
 BillboardSystem::BillboardSystem(MessageBus& mb)
     : System(mb, typeid(BillboardSystem))
 {
     requireComponent<BillboardCollection>();
+    requireComponent<Model>();
 }
 
 //public
@@ -53,8 +62,8 @@ void BillboardSystem::process(float)
         if (bbc.m_dirty)
         {
             //update the model data
-            std::vector<float> vertexData;
-            std::vector<std::uint32_t> indexData;
+            std::vector<BillboardMeshBuilder::VertexLayout> vertexData;
+            std::vector<std::uint16_t> indexData;
             auto& meshData = entity.getComponent<cro::Model>().getMeshData();
 
             //boundingbox
@@ -64,111 +73,100 @@ void BillboardSystem::process(float)
             const auto& quads = bbc.m_billboards;
             for (const auto& quad : quads)
             {
+                //do this first else we'll be off by one quad...
+                const auto baseIndex = static_cast<std::uint32_t>(vertexData.size());
+
+                if (baseIndex > std::numeric_limits<std::uint16_t>::max()-4)
+                {
+                    LogW << "[Billboards] Index count reached " << baseIndex << ": no more billboards can be added" << std::endl;
+                    break;
+                }
+
+                //two tris
+                indexData.push_back(baseIndex);
+                indexData.push_back(baseIndex + 2);
+                indexData.push_back(baseIndex + 3);
+
+                indexData.push_back(baseIndex + 2);
+                indexData.push_back(baseIndex);
+                indexData.push_back(baseIndex + 1);
+
                 //the base position of the quad is stored in the vertex Normal data
                 //rather than any actual normal data.
-                auto baseIndex = static_cast<std::uint32_t>(vertexData.size() / (meshData.vertexSize / sizeof(float)));
 
-                //position
-                vertexData.push_back(-quad.origin.x);
-                vertexData.push_back(-quad.origin.y);
-                vertexData.push_back(0.f);
+                auto& v1 = vertexData.emplace_back();
+                v1.pos =
+                {
+                    -quad.origin.x,
+                    -quad.origin.y,
+                    0.f
+                };
+                v1.colour = quad.colour;                
+                v1.rootPos = quad.position;
+                v1.uvCoords = glm::packSnorm2x16(
+                {
+                    quad.textureRect.left,
+                    quad.textureRect.bottom
+                });
+                v1.size = glm::packHalf2x16(quad.size);
 
-                //colour
-                vertexData.push_back(quad.colour.getRed());
-                vertexData.push_back(quad.colour.getGreen());
-                vertexData.push_back(quad.colour.getBlue());
-                vertexData.push_back(quad.colour.getAlpha());
-
-                //normal (actually root position)
-                vertexData.push_back(quad.position.x);
-                vertexData.push_back(quad.position.y);
-                vertexData.push_back(quad.position.z);
-
-                //tex coords
-                vertexData.push_back(quad.textureRect.left);
-                vertexData.push_back(quad.textureRect.bottom);
-
-                //quad size (used when billboards are fixed to screen size)
-                vertexData.push_back(quad.size.x);
-                vertexData.push_back(quad.size.y);
 
                 //--------------------
 
-                //position
-                vertexData.push_back(-quad.origin.x + quad.size.x);
-                vertexData.push_back(-quad.origin.y);
-                vertexData.push_back(0.f);
-
-                //colour
-                vertexData.push_back(quad.colour.getRed());
-                vertexData.push_back(quad.colour.getGreen());
-                vertexData.push_back(quad.colour.getBlue());
-                vertexData.push_back(quad.colour.getAlpha());
-
-                //normal (actually root position)
-                vertexData.push_back(quad.position.x);
-                vertexData.push_back(quad.position.y);
-                vertexData.push_back(quad.position.z);
-
-                //tex coords
-                vertexData.push_back(quad.textureRect.left + quad.textureRect.width);
-                vertexData.push_back(quad.textureRect.bottom);
-
-                //quad size (used when billboards are fixed to screen size)
-                vertexData.push_back(quad.size.x);
-                vertexData.push_back(quad.size.y);
+                auto& v2 = vertexData.emplace_back();
+                v2.pos =
+                {
+                    -quad.origin.x + quad.size.x,
+                    -quad.origin.y,
+                    0.f
+                };
+                v2.colour = quad.colour;
+                v2.rootPos = quad.position;
+                v2.uvCoords = glm::packSnorm2x16(
+                {
+                    quad.textureRect.left + quad.textureRect.width,
+                    quad.textureRect.bottom
+                });
+                v2.size = glm::packHalf2x16(quad.size);
 
                 //--------------------
 
-                //position
-                vertexData.push_back(-quad.origin.x + quad.size.x);
-                vertexData.push_back(-quad.origin.y + quad.size.y);
-                vertexData.push_back(0.f);
+                auto& v3 = vertexData.emplace_back();
+                v3.pos =
+                {
+                    -quad.origin.x + quad.size.x,
+                    -quad.origin.y + quad.size.y,
+                    0.f
+                };
+                v3.colour = quad.colour;
+                v3.rootPos = quad.position;
+                v3.uvCoords = glm::packSnorm2x16(
+                {
+                    quad.textureRect.left + quad.textureRect.width,
+                    quad.textureRect.bottom + quad.textureRect.height
+                });
+                v3.size = glm::packHalf2x16(quad.size);
 
-                //colour
-                vertexData.push_back(quad.colour.getRed());
-                vertexData.push_back(quad.colour.getGreen());
-                vertexData.push_back(quad.colour.getBlue());
-                vertexData.push_back(quad.colour.getAlpha());
-
-                //normal (actually root position)
-                vertexData.push_back(quad.position.x);
-                vertexData.push_back(quad.position.y);
-                vertexData.push_back(quad.position.z);
-
-                //tex coords
-                vertexData.push_back(quad.textureRect.left + quad.textureRect.width);
-                vertexData.push_back(quad.textureRect.bottom + quad.textureRect.height);
-
-                //quad size (used when billboards are fixed to screen size)
-                vertexData.push_back(quad.size.x);
-                vertexData.push_back(quad.size.y);
 
                 //-------------------
 
-                //position
-                vertexData.push_back(-quad.origin.x);
-                vertexData.push_back(-quad.origin.y + quad.size.y);
-                vertexData.push_back(0.f);
+                auto& v4 = vertexData.emplace_back();
+                v4.pos =
+                {
+                    -quad.origin.x,
+                    -quad.origin.y + quad.size.y,
+                    0.f
+                };
+                v4.colour = quad.colour;
+                v4.rootPos = quad.position;
+                v4.uvCoords = glm::packSnorm2x16(
+                {
+                    quad.textureRect.left,
+                    quad.textureRect.bottom + quad.textureRect.height
+                });
+                v4.size = glm::packHalf2x16(quad.size);
 
-                //colour
-                vertexData.push_back(quad.colour.getRed());
-                vertexData.push_back(quad.colour.getGreen());
-                vertexData.push_back(quad.colour.getBlue());
-                vertexData.push_back(quad.colour.getAlpha());
 
-                //normal (actually root position)
-                vertexData.push_back(quad.position.x);
-                vertexData.push_back(quad.position.y);
-                vertexData.push_back(quad.position.z);
-
-                //tex coords
-                vertexData.push_back(quad.textureRect.left);
-                vertexData.push_back(quad.textureRect.bottom + quad.textureRect.height);
-
-                //quad size (used when billboards are fixed to screen size)
-                vertexData.push_back(quad.size.x);
-                vertexData.push_back(quad.size.y);
 
                 //min point - not strictly accurate but enough to encompass the bounds
                 if (meshData.boundingBox[0].x > quad.position.x - quad.size.x)
@@ -197,30 +195,45 @@ void BillboardSystem::process(float)
                 {
                     meshData.boundingBox[1].z = quad.position.z;
                 }
-
-
-                //two tris
-                indexData.push_back(baseIndex);
-                indexData.push_back(baseIndex + 2);
-                indexData.push_back(baseIndex + 3);
-
-                indexData.push_back(baseIndex + 2);
-                indexData.push_back(baseIndex);
-                indexData.push_back(baseIndex + 1);
-
             }
 
-            meshData.vertexCount = vertexData.size() / (meshData.vertexSize / sizeof(float));
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-            glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW));
+            meshData.vertexCount = vertexData.size();
+
+            if (meshData.vertexCount > std::numeric_limits<std::uint16_t>::max())
+            {
+                LogW << "More vertices were added to billboard mesh than can be indexed" << std::endl;
+            }
+
+            //we need to resize if larger than previous
+            if (meshData.vboAllocator->getBlockCount(vertexData.size()) >
+                meshData.vboAllocation.blockCount)
+            {
+                meshData.vboAllocator->freeAllocation(meshData.vboAllocation);
+                meshData.vboAllocation = meshData.vboAllocator->newAllocation(vertexData.size());
+
+                entity.getComponent<cro::Model>().refreshVAO();
+            }
+
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
+            glCheck(glBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, vertexData.size() * sizeof(BillboardMeshBuilder::VertexLayout), vertexData.data()));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
+            //resize IBO if needed
             meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indexData.size());
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo));
-            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(std::uint32_t), indexData.data(), GL_DYNAMIC_DRAW));
+            if (meshData.iboAllocator->getBlockCount(indexData.size()) >
+                meshData.indexData[0].iboAllocation.blockCount)
+            {
+                meshData.iboAllocator->freeAllocation(meshData.indexData[0].iboAllocation);
+                meshData.indexData[0].iboAllocation = meshData.iboAllocator->newAllocation(indexData.size());
+                //entity.getComponent<cro::Model>().refreshVAO();
+            }
+
+            meshData.indexData[0].iboAllocation.baseVertex = meshData.indexData[0].iboAllocation.offset / sizeof(std::uint16_t);
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].iboAllocation.bufferID));
+            glCheck(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].iboAllocation.offset, indexData.size() * sizeof(std::uint16_t), indexData.data()));
 
             //update bounding sphere
-            auto rad = (meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f;
+            const auto rad = (meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f;
             meshData.boundingSphere.centre = meshData.boundingBox[0] + rad;
             meshData.boundingSphere.radius = glm::length(rad);
 

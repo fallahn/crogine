@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/Shader.hpp>
+
+#include <crogine/detail/VBOAllocation.hpp>
 
 #include <vector>
 
@@ -127,7 +129,7 @@ namespace cro
         particular have a *negative* bottom value as text is drawn (usually)
         from top to bottom.
         \param area The area to which crop the drawable
-        \param abosolute If true the area is assume to be in absolute coordintates
+        \param absolute If true the area is assumed to be in absolute coordintates
         and is transformed as-is to screen coords. If false the area is assumed to
         be local to the Drawable and is first transformed into global space
         by the Drawable's world transform before being converted to screen coords
@@ -327,6 +329,7 @@ namespace cro
         Shader* m_shader;
         bool m_customShader;
         bool m_applyDefaultShader;
+        bool m_shaderNeedsUpdate; //shader/texture was changed and we need to apply the VAO
         bool m_autoCrop;
         std::int32_t m_textureUniform;
         std::int32_t m_worldUniform;
@@ -340,7 +343,6 @@ namespace cro
         std::uint32_t m_primitiveType;
         std::vector<Vertex2D> m_vertices;
 
-        std::uint32_t m_vbo;
         std::uint32_t m_vao; //!< only used in desktop builds
         bool m_updateBufferData;
 
@@ -349,6 +351,9 @@ namespace cro
             std::int32_t id = -1;
             std::uint32_t size = 0;
             std::uint32_t offset = 0;
+
+            std::uint32_t glType = 0; //GL_FLOAT etc
+            std::uint32_t glNormalised = 0; //GL_TRUE / GL_FALSE
         };
         std::vector<AttribData> m_vertexAttributes;
 
@@ -438,6 +443,14 @@ namespace cro
 
         friend class RenderSystem2D;
 
-        void applyShader();
+        //used by RenderSystem2D to tell this drawble
+        //to update its vertex data to the VBO and to
+        //release the VBO assignment when it's done.
+        Detail::VBOAllocator* m_vboAllocator;
+        Detail::VBOAllocation m_vboAllocation;
+
+        void applyShader(); //update the vertex attribute data based on shader requirements
+        void updateVAO(); //binds the attribute data to the VAO
+        void updateVBO(); //tells the drawable to re-upload its data to the VBO
     };
 }

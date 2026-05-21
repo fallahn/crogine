@@ -48,6 +48,7 @@ ATTRIBUTE vec4 a_colour;
 VARYING_OUT vec4 v_colour;
 VARYING_OUT vec3 v_normal;
 VARYING_OUT vec3 v_worldPosition;
+VARYING_OUT vec3 v_viewPosition;
 
 void main()
 {
@@ -57,7 +58,13 @@ void main()
     position = skinMatrix * position;
 #endif
     gl_Position = u_projectionMatrix * u_worldViewMatrix * position;
-    v_worldPosition = (u_worldMatrix * position).xyz;
+    
+    vec4 worldPos = u_worldMatrix * position;
+    v_worldPosition = worldPos.xyz;
+#if defined(VIEW_POS)
+    v_viewPosition = (u_viewMatrix * worldPos).xyz;
+#endif
+
     vec3 normal = a_normal;
 #if defined(SKINNED)
     normal = (skinMatrix * vec4(normal, 0.0)).xyz;
@@ -80,6 +87,9 @@ uniform vec4 u_ballColour = vec4(1.0);
 VARYING_IN vec4 v_colour;
 VARYING_IN vec3 v_normal;
 VARYING_IN vec3 v_worldPosition;
+#if defined(VIEW_POS)
+VARYING_IN vec3 v_viewPosition;
+#endif
 
 #include HSV
 
@@ -87,8 +97,12 @@ void main()
 {
     vec3 normal = normalize(v_normal);
 
-    NORM_OUT = vec4(normal, 0.0);
+    NORM_OUT = vec4(normal * 0.5 + 0.5, 0.0);
+#if defined(VIEW_POS)
+    POS_OUT.r = v_viewPosition.z;
+#else
     POS_OUT = vec4(v_worldPosition, 1.0);
+#endif
 
     vec3 viewDist = u_cameraWorldPosition - v_worldPosition;
     

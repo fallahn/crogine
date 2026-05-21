@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -180,7 +180,9 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "fickle",
     "get_this_over",
     "another_level",
-    "tag"
+    "tag",
+    "party_planner",
+    "what_a_banger"
 };
 
 //appears on the notification
@@ -319,7 +321,9 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Fickle",
     "Let's Get This Over With",
     "Another Level",
-    "Tag!"
+    "Tag!",
+    "Party Planner",
+    "What A Banger!"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -429,7 +433,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Win a round of Nearest the Pin", false),
     std::make_pair("Finish 9 holes on a full size course with less than 15m in Nearest the Pin", false),
     std::make_pair("Finish 18 holes on a full size course with less than 15m in Nearest the Pin", false),
-    std::make_pair("Take at least one screenshot on each course using freecam", false),
+    std::make_pair("Take at least one screenshot on each (non-DLC) course using freecam", false),
     std::make_pair("Come first in any Career league round on Casual difficulty", false),
     std::make_pair("Come first in any Career league round on Regular difficulty", false),
     std::make_pair("Come first in any Career league round on Pro difficulty", false),
@@ -459,6 +463,8 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Take a Gimme from a tee shot", false),
     std::make_pair("Reach Level 2 or higher at Sports Ball", false),
     std::make_pair("Play a Teams round in Freeplay", false),
+    std::make_pair("Create a Custom Tournament", false),
+    std::make_pair("Get a Beef Stick from a tee shot", false),
 };
 
 //assuming trophies load correctly they are:
@@ -635,7 +641,9 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*131*/TrophyID::GoldCup,
     /*132*/TrophyID::SilverCup,
     /*133*/TrophyID::SilverFigure,
-    /*143*/TrophyID::BronzeCup
+    /*134*/TrophyID::BronzeCup,
+    /*135*/TrophyID::BronzeCup,
+    /*136*/TrophyID::GoldFigure,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
@@ -698,7 +706,8 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "average_putt",
     "longest_putt",
     "longest_chip_in",
-    "credits_spent"
+    "credits_spent",
+    "challenge_completed"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -760,7 +769,8 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Average Putt Distance (metres)",
     "Longest Putt Distance (metres)",
     "Longest Chip-in (metres)",
-    "Credits Spent At The Equipment Counter"
+    "Credits Spent At The Equipment Counter",
+    "Number Of Time The Monthly Challenge Has Been Completed"
 };
 
 struct StatType final
@@ -832,7 +842,8 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Float,
     StatType::Float,
     StatType::Float,
-    StatType::Integer
+    StatType::Integer,
+    StatType::Integer,
 };
 
 struct StatTrigger final

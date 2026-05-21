@@ -178,6 +178,12 @@
     <Filter Include="Source Files\moon phase">
       <UniqueIdentifier>{55d7affa-e295-42f7-bdfe-5e8e5f6494a4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\deck intro">
+      <UniqueIdentifier>{87307a25-b818-4055-94b5-2673b5dcd223}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\deck intro">
+      <UniqueIdentifier>{86a33369-00a9-4aed-a4ab-3c022c818a5d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -359,6 +365,12 @@
     </ClCompile>
     <ClCompile Include="src\moonphase\MoonPhase.cpp">
       <Filter>Source Files\moon phase</Filter>
+    </ClCompile>
+    <ClCompile Include="src\deckintro\DeckintroState.cpp">
+      <Filter>Source Files\deck intro</Filter>
+    </ClCompile>
+    <ClCompile Include="src\trackoverlay\pugixml.cpp">
+      <Filter>Source Files\track overlay</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -593,6 +605,9 @@
     <ClInclude Include="src\moonphase\MoonPhase.hpp">
       <Filter>Header Files\moon phase</Filter>
     </ClInclude>
+    <ClInclude Include="src\deckintro\DeckintroState.hpp">
+      <Filter>Header Files\deck intro</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\voxels\Tables.inl">
@@ -635,6 +650,12 @@
       <Filter>Header Files\swingput</Filter>
     </None>
     <None Include="src\batcat\TestShaders.inl">
+      <Filter>Header Files\batcat</Filter>
+    </None>
+    <None Include="src\batcat\GrassShader.inl">
+      <Filter>Header Files\batcat</Filter>
+    </None>
+    <None Include="src\batcat\GridShader.inl">
       <Filter>Header Files\batcat</Filter>
     </None>
   </ItemGroup>

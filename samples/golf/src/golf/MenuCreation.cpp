@@ -1,6 +1,6 @@
 ﻿/*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -605,7 +605,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
     //menu text background
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 26.f, -0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 22.f, -0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("banner");
     auto textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
@@ -759,7 +759,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     if (Social::doubleXP() == 2)
     {
         entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 48.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 56.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(font).setString("Double XP\nWeekend!");
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
@@ -811,7 +811,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
     static constexpr float TextOffset = 26.f;
     static constexpr float LineSpacing = 10.f;
-    glm::vec3 textPos = { TextOffset, 54.f, 0.1f };
+    glm::vec3 textPos = { TextOffset, 64.f, 0.1f };
 
     auto createButton = [&](const std::string& label)
     {
@@ -1120,6 +1120,47 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     }
                 });
 
+#ifdef USE_GNS
+        //competition league
+        entity = createButton("Pro League");
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
+                {
+                    if (activated(evt))
+                    {
+                        //make sure to always play with default profile
+                        m_rosterMenu.activeIndex = 0;
+                        setProfileIndex(0, false);
+                        m_profileData.activeProfileIndex = 0;
+                        m_sharedData.localConnectionData.playerData[0].isCPU = false;
+                        m_profileData.playerProfiles[0].playerData.isCPU = false;
+                        m_profileData.playerProfiles[0].playerData.saveProfile();
+
+                        requestStackPush(StateID::ProLeague);
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                        //scales down main menu
+                        auto ent = m_uiScene.createEntity();
+                        ent.addComponent<cro::Callback>().active = true;
+                        ent.getComponent<cro::Callback>().setUserData<float>(1.f);
+                        ent.getComponent<cro::Callback>().function =
+                            [&](cro::Entity e, float dt)
+                            {
+                                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                                currTime = std::max(0.f, currTime - (dt * 2.f));
+
+                                const float scale = cro::Util::Easing::easeInCubic(currTime);
+                                m_menuEntities[MenuID::Main].getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+
+                                if (currTime == 0)
+                                {
+                                    e.getComponent<cro::Callback>().active = false;
+                                    m_uiScene.destroyEntity(e);
+                                }
+                            };
+                    }
+                });
+#endif
 
         //facilities menu
         entity = createButton("19th Hole");
@@ -1177,6 +1218,9 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 }
             });
 
+#ifndef USE_GNS
+    textPos.y -= LineSpacing;
+#endif
 
     //quit
     entity = createButton("Quit");
@@ -1188,71 +1232,6 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     cro::App::quit();
                 }
             });
-
-#ifdef USE_GNS
-    //join chat button
-    //if (!Social::isSteamdeck())
-    //{
-    //    entity = m_uiScene.createEntity();
-    //    entity.addComponent<cro::Transform>();
-    //    entity.addComponent<UIElement>().absolutePosition = { 0.f, 0.f };
-    //    entity.getComponent<UIElement>().relativePosition = { 0.12f, 0.89f };
-    //    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
-
-    //    entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
-    //    entity.addComponent<cro::Callback>().active = true;
-    //    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    //    entity.getComponent<cro::Callback>().function = TitleTextCallback();
-    //    menuTransform.addChild(entity.getComponent<cro::Transform>());
-
-    //    auto buttonNode = entity;
-
-    //    entity = m_uiScene.createEntity();
-    //    entity.addComponent<cro::Transform>();
-    //    entity.addComponent<cro::Drawable2D>();
-    //    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("chat_button");
-    //    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    //    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-    //    entity.addComponent<cro::Callback>().active = true;
-    //    entity.getComponent<cro::Callback>().function =
-    //        [buttonNode](cro::Entity e, float dt)
-    //        {
-    //            if (buttonNode.getComponent<cro::Callback>().active)
-    //            {
-    //                //rotate with scale
-    //                const float scale = -buttonNode.getComponent<cro::Transform>().getScale().x;
-    //                e.getComponent<cro::Transform>().setRotation(cro::Util::Const::PI * scale);
-    //            }
-    //            else
-    //            {
-    //                //gently rotate
-    //                e.getComponent<cro::Transform>().rotate(-dt * 0.1f);
-    //            }
-    //        };
-    //    buttonNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-    //    entity = createButton("Join\nChatroom");
-    //    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    //    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-    //    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    //    bounds = cro::Text::getLocalBounds(entity);
-    //    entity.getComponent<cro::Transform>().setRotation(0.09f);
-    //    entity.getComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, 0.1f));
-    //    entity.getComponent<cro::Transform>().setOrigin({ 0.f, std::floor(-bounds.height / 2.f) - 2.f});
-    //    entity.getComponent<cro::UIInput>().area = bounds;
-    //    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-    //        m_uiScene.getSystem<cro::UISystem>()->addCallback([](cro::Entity, const cro::ButtonEvent& evt)
-    //            {
-    //                if (activated(evt))
-    //                {
-    //                    Social::joinChatroom();
-    //                }
-    //            });
-    //    buttonNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    //}
-#endif
-
 }
 
 void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
@@ -3967,6 +3946,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     std::vector<ScoreInfo> scoreInfo;
     const auto& courseData = m_sharedCourseData.courseData[m_sharedData.courseIndex];
     cro::String str = "Welcome To Super Video Golf!";
+#ifdef USE_GNS
+    bool showReadyMessage = true;
+#else
+    bool showReadyMessage = false;
+#endif
 
     //only tally scores if we returned from a previous game
     //rather than quitting one, or completing the tutorial
@@ -4095,6 +4079,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 str += " >< " + names[i];
             }
             str += " >";
+
+            showReadyMessage = false;
         }
     }
 
@@ -4107,7 +4093,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&, bounds](cro::Entity e, float dt)
+        [&, bounds, showReadyMessage](cro::Entity e, float dt)
     {
         if (m_currentMenu == MenuID::Lobby)
         {
@@ -4129,6 +4115,12 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 
             cro::FloatRect cropping = { -pos.x + Offset, -16.f, (cro::App::getWindow().getSize().x / m_viewScale.x) - (Offset * 2.f), 18.f };
             e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+
+            if (!m_sharedData.hosting
+                && showReadyMessage)
+            {
+                e.getComponent<cro::Text>().setString("Can't ready up? Try opening then closing the Steam Overlay.");
+            }
         }
     };
 
@@ -4383,7 +4375,7 @@ void MenuState::quitLobby()
     m_sharedData.clientConnection.ready = false;
     m_sharedData.clientConnection.netClient.disconnect();
 
-    m_voiceChat.disconnect();
+    //m_voiceChat.disconnect();
 
     m_matchMaking.leaveLobby();
     m_sharedData.lobbyID = 0;
@@ -5180,7 +5172,8 @@ void MenuState::updateCourseRuleString(bool updateScoreboard)
             if (updateScoreboard)
             {
                 const float scale = m_sharedData.scoreType == ScoreType::Stroke ? 1.f : 0.f;
-                auto scoreStr = Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
+                const auto scoreStr = Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
+
                 m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString(scoreStr);
                 m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(scale));
 #ifdef USE_GNS
@@ -5225,12 +5218,13 @@ void MenuState::updateUnlockedItems()
     auto clubFlags = Social::getUnlockStatus(Social::UnlockType::Club);
     if (clubFlags != -1)
     {
-        if (clubFlags == 0)
+        //if (clubFlags == 0)
+        //make sure we always at least have the default set
         {
-            clubFlags = ClubID::DefaultSet;
+            clubFlags |= ClubID::DefaultSet;
         }
         //this is a fudge for people who miss putters from their set...
-        clubFlags |= ClubID::Flags[ClubID::Putter];
+        //clubFlags |= ClubID::Flags[ClubID::Putter];
         auto clubCount = std::min(ClubID::LockedSet.size(), static_cast<std::size_t>(level / Social::ClubStepLevel));
         for (auto i = 0u; i < clubCount; ++i)
         {
@@ -5344,12 +5338,12 @@ void MenuState::updateUnlockedItems()
         //}
 
         auto flag = (1 << (ul::UnlockID::Clubhouse - genericBase));
-        if ((genericFlags & flag) == 0 &&
+        /*if ((genericFlags & flag) == 0 &&
             Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
         {
             genericFlags |= flag;
             m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Clubhouse;
-        }
+        }*/
 
         flag = (1 << (ul::UnlockID::CourseEditor - genericBase));
         if ((genericFlags & flag) == 0 &&
@@ -5512,7 +5506,7 @@ void MenuState::updateUnlockedItems()
     }
 
 
-    //tournament unlocks
+    //tournament unlocks - ignores any custom tournament
     for (auto i = 0; i < 2; ++i)
     {
         if (m_sharedData.tournaments[i].currentBest <
@@ -5568,8 +5562,12 @@ void MenuState::updateUnlockedItems()
             item.xp = 1000;
             Social::awardXP(item.xp);
 
-            Achievements::incrementStat(StatStrings[StatID::UnrealPlayed + m_sharedData.activeTournament]);
-            Achievements::setStat(StatStrings[StatID::UnrealBest + m_sharedData.activeTournament], 3);
+            if (m_sharedData.activeTournament != TournamentIndex::Custom)
+            {
+                Achievements::incrementStat(StatStrings[StatID::UnrealPlayed + m_sharedData.activeTournament]);
+                Achievements::setStat(StatStrings[StatID::UnrealBest + m_sharedData.activeTournament], 3);
+            }
+            //TODO store custom stats in the active tournament dir
         }
         else if (t.winner == -2)
         {
@@ -5584,8 +5582,12 @@ void MenuState::updateUnlockedItems()
         else
         {
             //the tournament has ended with a CPU victory
-            Achievements::incrementStat(StatStrings[StatID::UnrealPlayed + m_sharedData.activeTournament]);
-            Achievements::setStat(StatStrings[StatID::UnrealBest + m_sharedData.activeTournament], std::min(t.round, 2));
+            if (m_sharedData.activeTournament != TournamentIndex::Custom)
+            {
+                Achievements::incrementStat(StatStrings[StatID::UnrealPlayed + m_sharedData.activeTournament]);
+                Achievements::setStat(StatStrings[StatID::UnrealBest + m_sharedData.activeTournament], std::min(t.round, 2));
+            }
+            //TODO update custom stats
         }
     }
 
@@ -5596,7 +5598,7 @@ void MenuState::createPreviousScoreCard()
     static constexpr float OffscreenPos = -360.f;
 
     //background image
-    auto& tex = m_resources.textures.get("assets/golf/images/lobby_scoreboard.png");
+    auto& tex = m_resources.textures.get("assets/golf/images/ui/lobby_scoreboard.png");
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
@@ -6106,6 +6108,9 @@ void MenuState::createPreviousScoreCard()
 
         redStr = "\n";
 
+        //we need to apply the colours *after* we compiled and set the string...
+        std::vector<std::pair<cro::Colour, std::size_t>> textColours;
+
         for (const auto& entry : scoreEntries)
         {
             auto score = entry.holeScores[i];
@@ -6120,8 +6125,18 @@ void MenuState::createPreviousScoreCard()
                 }
                 else
                 {
-                    str += "\n" + std::to_string(score);
+                    const auto scoreStr = std::to_string(score);
+                    const auto sCol = str.size();
+                    const auto eCol = sCol + scoreStr.size() + 1;
+
+                    str += "\n" + scoreStr;
                     redStr += "\n";
+
+                    if (score < courseData.parVals[parOffset + i])
+                    {
+                        textColours.emplace_back(CD32::Colours[CD32::GreenMid], sCol);
+                        textColours.emplace_back(LeaderboardTextDark, eCol);
+                    }
                 }
                 break;
             case ScoreType::Stableford:
@@ -6205,8 +6220,20 @@ void MenuState::createPreviousScoreCard()
                         }
                         else
                         {
-                            str += "\n" + std::to_string(score);
+                            /*str += "\n" + std::to_string(score);
+                            redStr += "\n";*/
+                            const auto scoreStr = std::to_string(score);
+                            const auto sCol = str.size();
+                            const auto eCol = sCol + scoreStr.size() + 1;
+
+                            str += "\n" + scoreStr;
                             redStr += "\n";
+
+                            if (score < courseData.parVals[parOffset + i + 9])
+                            {
+                                textColours.emplace_back(CD32::Colours[CD32::GreenMid], sCol);
+                                textColours.emplace_back(LeaderboardTextDark, eCol);
+                            }
                         }
                         break;
                     case ScoreType::Stableford:
@@ -6246,6 +6273,11 @@ void MenuState::createPreviousScoreCard()
         }
         entity.getComponent<cro::Text>().setString(str);
         redEnt.getComponent<cro::Text>().setString(redStr);
+
+        for (const auto& [colour, idx] : textColours)
+        {
+            entity.getComponent<cro::Text>().setFillColour(colour, idx);
+        }
 
         if (page2)
         {

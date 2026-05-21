@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -314,7 +314,6 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             case cro::GameController::ButtonLeftShoulder:
             case cro::GameController::ButtonBack:
             {
-                //raises a message to say we want to accept the buffer (if buffered)
                 auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                 msg->type = SystemEvent::CancelOSK;
             }
@@ -375,7 +374,7 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
                 }
             }
             return false;
-#ifdef CRO_DEBUG_
+//#ifdef CRO_DEBUG_
         case SDL_KEYDOWN:
             switch (evt.key.keysym.sym)
             {
@@ -418,21 +417,35 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             case SDLK_TAB:
                 return false;
             case SDLK_ESCAPE:
+            {
+                auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                msg->type = SystemEvent::CancelOSK;
+            }
+                quitState();
+                return false;
+            case SDLK_KP_ENTER:
+            {
+                auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                msg->type = SystemEvent::SubmitOSK;
+            }
                 quitState();
                 return false;
             }
             break;
-#endif
+//#endif
         }
     }
 
     if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
     {
+        auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+        msg->type = SystemEvent::CancelOSK;
         quitState();
     }
 
     m_scene.forwardEvent(evt);
     return true;
+    //return false; //hmm this should always consume events, no?
 }
 
 void KeyboardState::handleMessage(const cro::Message& msg)
@@ -578,7 +591,7 @@ void KeyboardState::buildScene()
 
         float scale = 3.f - std::ceil((winSize.y / 2.f) / keyboardSize.height);
         winSize *= scale;
-        cam.setOrthographic(0.f, winSize.x, 0.f, winSize.y, -0.2f, 1.f);
+        cam.setOrthographic(0.f, winSize.x, 0.f, winSize.y, -20.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         entity.getComponent<cro::Transform>().setPosition({ winSize.x / 2.f, 0.f });
@@ -702,6 +715,7 @@ void KeyboardState::buildScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>().setSource(m_sharedData.sharedResources->audio.get(audioID));
     entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+    entity.getComponent<cro::AudioEmitter>().setVolume(0.5f);
     m_audioEnts[AudioID::Select] = entity;
 
 
@@ -711,6 +725,7 @@ void KeyboardState::buildScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>().setSource(m_sharedData.sharedResources->audio.get(audioID));
     entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+    entity.getComponent<cro::AudioEmitter>().setVolume(0.5f);
     m_audioEnts[AudioID::Move] = entity;
 
 
@@ -720,6 +735,7 @@ void KeyboardState::buildScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>().setSource(m_sharedData.sharedResources->audio.get(audioID));
     entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+    entity.getComponent<cro::AudioEmitter>().setVolume(0.5f);
     m_audioEnts[AudioID::Space] = entity;
 }
 
@@ -1096,4 +1112,12 @@ void KeyboardState::sendSpace()
     m_buttonEnts[ButtonID::Space].getComponent<cro::Callback>().setUserData<float>(1.f);
 
     m_audioEnts[AudioID::Space].getComponent<cro::AudioEmitter>().play();
+}
+
+void KeyboardState::onCachedPush()
+{
+    if (m_sharedData.useOSKBuffer)
+    {
+        m_inputBuffer.string.getComponent<cro::Text>().setString(m_sharedData.OSKBuffer);
+    }
 }

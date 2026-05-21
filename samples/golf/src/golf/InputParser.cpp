@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -91,6 +91,7 @@ InputParser::InputParser(SharedStateData& sd, cro::Scene* s)
     m_analogueAmount    (0.f),
     m_inputAcceleration (0.f),
     m_camMotion         (0.f),
+    m_widgetMultiplier  (1.f),
     m_mouseWheel        (0),
     m_prevMouseWheel    (0),
     //m_mouseMove         (0),
@@ -185,6 +186,15 @@ void InputParser::handleEvent(const cro::Event& evt)
                     || (m_humanCount == 1 && (m_activeController == -1 || m_activeController == joyID))); //allow input from any controller if only one local player
         };
 
+    const auto toggleWidgetSpeed =
+        [&]()
+        {
+            if (m_state == State::Measure)
+            {
+                m_widgetMultiplier = m_widgetMultiplier == 1 ? 2.f : 1.f;
+            }
+        };
+
     if (m_active &&
         !m_swingput.handleEvent(evt, m_inputFlags, static_cast<std::int32_t>(m_state)))
     {
@@ -236,6 +246,10 @@ void InputParser::handleEvent(const cro::Event& evt)
             {
                 m_inputFlags |= InputFlag::Cancel;
                 //cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                if (m_state == State::Measure)
+                {
+                    toggleWidgetSpeed();
+                }
             }
             else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::SpinMenu])
             {
@@ -454,10 +468,11 @@ void InputParser::handleEvent(const cro::Event& evt)
                     //}
                 }
 
-                /*else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
+                else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
                 {
-                    m_inputFlags &= ~InputFlag::MiniMap;
-                }*/
+                    //m_inputFlags &= ~InputFlag::MiniMap;
+                    toggleWidgetSpeed();
+                }
             }
         }
 
@@ -487,10 +502,16 @@ void InputParser::handleEvent(const cro::Event& evt)
             m_inputFlags |= InputFlag::Action;
         }
         else if (evt.type == SDL_MOUSEBUTTONUP
-            && !m_isCPU
-            && evt.button.button == SDL_BUTTON_LEFT)
+            && !m_isCPU)
         {
-            m_inputFlags &= ~InputFlag::Action;
+            if (evt.button.button == SDL_BUTTON_LEFT)
+            {
+                m_inputFlags &= ~InputFlag::Action;
+            }
+            else if (evt.button.button == SDL_BUTTON_RIGHT)
+            {
+                toggleWidgetSpeed();
+            }
         }
         /*else if (evt.type == SDL_MOUSEMOTION)
         {
@@ -517,8 +538,14 @@ void InputParser::setHoleDirection(glm::vec3 dir)
     }
 }
 
-void InputParser::setClub(float dist)
+void InputParser::setClub(float dist, std::uint8_t terrain)
 {
+    //the terrain needs setting first to get the correct dampening
+    m_terrain = terrain;
+    dist *= 1.f/getDampening();
+
+    const auto oldClub = m_currentClub;
+
     //assume each club can go a little further than its rating
     m_currentClub = ClubID::SandWedge;
     while ((Clubs[m_currentClub].getTarget(dist) * 1.04f) < dist
@@ -531,6 +558,14 @@ void InputParser::setClub(float dist)
             m_currentClub = m_firstClub + m_clubOffset;
         } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0
             && m_currentClub != m_firstClub);//prevent inf loop
+    }
+
+    //give a longer club if in the bunker
+    if ((terrain == TerrainID::Bunker || terrain == TerrainID::Rough)
+        && m_currentClub > ClubID::NineIron
+        && dist > 18.f)
+    {
+        m_currentClub--;
     }
 
     //fudge to prevent picking driver in clubset shuffle mode
@@ -550,6 +585,7 @@ void InputParser::setClub(float dist)
 
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
+    msg->club = oldClub;
 
     if (m_terrain == TerrainID::Stone
         && (ClubShot[m_currentClub] & ShotType::Punch))
@@ -565,10 +601,12 @@ void InputParser::setClub(float dist)
 
 void InputParser::syncClub(std::int32_t club)
 {
+    const auto oldClub = m_currentClub;
     m_currentClub = club;
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
     msg->score = 0; //pretends to be CPU so we don't get sound effect played
+    msg->club = oldClub;
 }
 
 float InputParser::getYaw() const
@@ -637,7 +675,7 @@ bool InputParser::getButtonState(std::int32_t binding) const
 
 float InputParser::getPower() const
 {
-    return MinPower + (MaxPower * cro::Util::Easing::easeInSine(std::min(m_power, 1.f)));
+    return (MinPower + (MaxPower * cro::Util::Easing::easeInSine(std::min(m_power, 1.f))));
 }
 
 float InputParser::getHook() const
@@ -651,6 +689,11 @@ float InputParser::getHook() const
     }
     
     return hook * 2.f - 1.f;
+}
+
+float InputParser::getCalculatedHook() const
+{
+    return m_lastCalculatedHook;
 }
 
 std::int32_t InputParser::getClub() const
@@ -717,11 +760,18 @@ void InputParser::setEnableFlags(std::uint16_t flags)
 void InputParser::setMaxClub(float dist, bool atTee)
 {
     //a fudge to allow a full set on any hole bigger than pitch n putt
+    std::int32_t maxClub = ClubID::Driver;
     if (!atTee)
     {
         if (dist > 115.f)
         {
             dist = 1000.f;
+        }
+
+        if (m_terrain == TerrainID::Rough
+            && Club::getClubLevel() == 2)
+        {
+            maxClub = ClubID::ThreeWood;
         }
     }
     else
@@ -742,26 +792,28 @@ void InputParser::setMaxClub(float dist, bool atTee)
     m_firstClub = ClubID::SandWedge;
 
     while ((Clubs[m_firstClub].getBaseTarget()/* * 1.05f*/) < dist
-        && m_firstClub != ClubID::Driver)
+        && m_firstClub != /*ClubID::Driver*/maxClub)
     {
         //this WILL get stuck in an infinite loop if the clubset is 0 for some reason
         do
         {
             m_firstClub--;
         } while ((m_inputBinding.clubset & ClubID::Flags[m_firstClub]) == 0
-            && m_firstClub != ClubID::Driver);
+            && m_firstClub != /*ClubID::Driver*/maxClub);
     }
 
     //this isn't perfect so give one extra club wiggle room
     //if (!atTee)
     {
-        m_firstClub = std::max(0, m_firstClub - 1);
+        m_firstClub = std::max(maxClub, m_firstClub - 1);
     }
+    const auto oldClub = m_currentClub;
     m_currentClub = m_firstClub;
     m_clubOffset = 0;
 
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
+    msg->club = oldClub;
 
     if (m_terrain == TerrainID::Stone
         && (ClubShot[m_currentClub] & ShotType::Punch))
@@ -786,11 +838,13 @@ void InputParser::setMaxClub(std::int32_t clubID)
         m_firstClub++;
     }
 
+    const auto oldClub = m_currentClub;
     m_currentClub = m_firstClub;
     m_clubOffset = 0;
 
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
+    msg->club = oldClub;
 
     if (m_terrain == TerrainID::Stone
         && (ClubShot[m_currentClub] & ShotType::Punch))
@@ -886,7 +940,7 @@ void InputParser::setMaxRotation(float rotation)
 
 InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t facing, float distanceToHole) const
 {
-    auto pitch = Clubs[club].getAngle();
+    const auto pitch = Clubs[club].getAngle();
     auto yaw = getYaw();
     auto power = Clubs[club].getPower(distanceToHole, m_sharedData.imperialMeasurements);
 
@@ -930,11 +984,11 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     default: break;
     case TerrainID::Rough:
         maxHook -= 0.01f;
-        powerMod = 0.05f;
+        powerMod = 0.1f;
         break;
     case TerrainID::Bunker:
         maxHook -= 0.04f;
-        powerMod = 0.1f;
+        powerMod = 0.2f;
         break;
     }
     powerMod *= clubLevel;
@@ -1045,7 +1099,8 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
         sideSpin *= 0.995f;
     }
 
-    float accuracy = 1.f - std::abs(hook);
+    const float absHook = std::abs(hook);
+    const float accuracy = 1.f - absHook;
     auto spin = getSpin() * accuracy * spinBuff;
 
     //modulate pitch with topspin
@@ -1057,16 +1112,94 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     power *= (1.f - (SideSpinReduction * std::abs(spin.x)));
 
-    glm::vec3 impulse(1.f, 0.f, 0.f);
-    auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
-    rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
-    impulse = glm::toMat3(rotation) * impulse;
-
-    impulse *= power;
+    auto impulse = getImpulse(pitch, yaw) * power * getDampening();
 
     m_lastCalculatedHook = hook;
     m_activeLoadout = nullptr;
+
+
+    //fluff the shot if we hook / slice
+    if (absHook > (MinHook / (1.f + Club::getClubLevel())))
+    {
+        if (m_terrain == TerrainID::Bunker)
+        {
+            impulse *= (m_lie == 0) ? 0.2f : 0.9f;
+            spin.x = std::clamp(spin.x * 1.4f, -1.f, 1.f);
+        }
+        else if (m_terrain == TerrainID::Rough
+            && m_currentClub < ClubID::FourIron)
+        {
+            impulse *= std::max(0.9f, (1.f - (absHook * 0.5f)));
+            spin.x = std::clamp(spin.x * 2.f, -1.f, 1.f);
+        }
+        /*else
+        {
+            spin.x = std::clamp(spin.x * 1.1f, -1.f, 1.f);
+        }*/
+    }
+
     return { impulse, spin, hook };
+}
+
+float InputParser::getDampening() const
+{
+    auto clubLevel = Club::getClubLevel();
+    clubLevel *= clubLevel;
+
+    float dampening = 1.f;
+    switch (m_terrain)
+    {
+    default: break;
+    case TerrainID::Rough:
+        switch (m_currentClub)
+        {
+        default:
+            dampening *= 0.95f;
+            break;
+        case ClubID::Driver:
+        case ClubID::ThreeWood:
+        case ClubID::FiveWood:
+            dampening *= 1.f - (0.00345f * clubLevel);// 0.85f;
+            break;
+        }
+        break;
+    case TerrainID::Bunker:
+        dampening *= (0.8f - (0.025f * clubLevel));
+        break;
+    }
+
+    return Dampening[m_terrain] * LieDampening[m_terrain][m_lie] * dampening;
+}
+
+std::vector<glm::vec3> InputParser::getImpulseForArc() const
+{
+    const auto pitch = Clubs[m_currentClub].getAngle();
+    const auto yaw = getYaw();
+    const auto power = Clubs[m_currentClub].getPower(m_distanceToHole, m_sharedData.imperialMeasurements);
+    const auto sidespin = 1.f - (std::abs(getSpin().x * (Clubs[m_currentClub].getSideSpinMultiplier() / 2.f)) * SideSpinReduction);
+
+    std::vector<glm::vec3> ret;
+
+    const auto generateImpulse =
+        [&](std::int32_t stepCount)
+        {
+            const auto step = 1.f / stepCount;
+            for (auto i = 1; i < (stepCount + 1); ++i)
+            {
+                const auto p = cro::Util::Easing::easeOutSine(step * i);
+                ret.push_back(getImpulse(pitch, yaw) * power * p * getDampening() * sidespin);
+            }
+        };
+
+    if (m_sharedData.decimatePowerBar)
+    {
+        generateImpulse(10);
+    }
+    else
+    {
+        generateImpulse(8);
+    }
+    return ret;
 }
 
 float InputParser::getEstimatedDistance() const
@@ -1114,6 +1247,14 @@ std::int32_t InputParser::getLastActiveController() const
 }
 
 //private
+glm::vec3 InputParser::getImpulse(float pitch, float yaw) const
+{
+    glm::vec3 impulse(1.f, 0.f, 0.f);
+    auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
+    rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
+    return glm::toMat3(rotation) * impulse;
+}
+
 void InputParser::updateDistanceEstimation()
 {
     //https://www.iforce2d.net/b2dtut/projected-trajectory
@@ -1136,11 +1277,11 @@ void InputParser::updateDistanceEstimation()
     impulse *= power;
 
     //multiply the terrain dampening
-    impulse *= Dampening[m_terrain] * LieDampening[m_terrain][m_lie];
+    impulse *= getDampening();
 
     static constexpr float dt = 1.f / 60.f; //I'm sure we're redefining this...
     const auto stepVel = impulse * dt;
-    constexpr auto stepGrav = BallSystem::Gravity * dt * dt;
+    constexpr auto stepGrav = Gravity * dt * dt;
 
     glm::vec3 endPos(1.f);
     //run the estimation until we get a time where the final result has a height < 0 again
@@ -1277,6 +1418,8 @@ void InputParser::updateStroke(float dt)
                 const auto MinClub = m_terrain == TerrainID::Fairway && m_distanceToHole < 11.f ? 
                     ClubID::Count : ClubID::Putter;
 
+                const auto oldClub = m_currentClub;
+
                 do
                 {
                     auto clubCount = MinClub - m_firstClub;
@@ -1299,13 +1442,14 @@ void InputParser::updateStroke(float dt)
 
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
-                msg->score = m_isCPU ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
+                msg->score = (m_isCPU || m_terrain == TerrainID::Green) ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
+                msg->club = oldClub;
 
                 //if we're on the green toggle putt assist
-                if (m_terrain == TerrainID::Green)
+                /*if (m_terrain == TerrainID::Green)
                 {
                     m_sharedData.showPuttingPower = !m_sharedData.showPuttingPower;
-                }
+                }*/
 
                 updateDistanceEstimation();
                 beginIcon();
@@ -1316,6 +1460,8 @@ void InputParser::updateStroke(float dt)
             {
                 const auto MinClub = m_terrain == TerrainID::Fairway && m_distanceToHole < 11.f ?
                     ClubID::Count : ClubID::Putter;
+
+                const auto oldClub = m_currentClub;
 
                 do
                 {
@@ -1337,12 +1483,13 @@ void InputParser::updateStroke(float dt)
 
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
-                msg->score = m_isCPU? 0 : 1;
+                msg->score = (m_isCPU || m_terrain == TerrainID::Green) ? 0 : 1;
+                msg->club = oldClub;
                 
-                if (m_terrain == TerrainID::Green)
+                /*if (m_terrain == TerrainID::Green)
                 {
                     m_sharedData.showPuttingPower = !m_sharedData.showPuttingPower;
-                }
+                }*/
                 
                 updateDistanceEstimation();
                 beginIcon();
@@ -1559,6 +1706,8 @@ void InputParser::updateDroneCam(float dt)
 
 void InputParser::updateSpin(float dt)
 {
+    const auto oldClub = m_currentClub;
+
     if ((m_inputFlags & InputFlag::PrevClub)
         && ((m_prevFlags & InputFlag::PrevClub) == 0))
     {
@@ -1571,7 +1720,8 @@ void InputParser::updateSpin(float dt)
 
             auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
             msg->type = GolfEvent::ClubChanged;
-            msg->score = m_isCPU ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
+            msg->score = (m_isCPU || m_terrain == TerrainID::Green) ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
+            msg->club = oldClub;
         }
     }
     if ((m_inputFlags & InputFlag::NextClub)
@@ -1585,7 +1735,8 @@ void InputParser::updateSpin(float dt)
 
             auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
             msg->type = GolfEvent::ClubChanged;
-            msg->score = m_isCPU ? 0 : 1;
+            msg->score = (m_isCPU || m_terrain == TerrainID::Green) ? 0 : 1;
+            msg->club = oldClub;
         }
     }
 
@@ -1894,6 +2045,7 @@ void InputParser::updateMeasure()
     {
         v /= std::sqrt(l2);
         v *= m_analogueAmount;
+        v *= m_widgetMultiplier;
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::MeasureWidget;

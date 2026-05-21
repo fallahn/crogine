@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -48,28 +48,6 @@ namespace cro
 {
     class SpriteSheet;
 }
-
-struct BallPreview final
-{
-    cro::Entity root;
-    cro::Entity ball;
-
-    std::int32_t type = 0;
-    std::int32_t infoIndex = -1;
-};
-
-struct AvatarPreview final
-{
-    std::int32_t type = 0;
-    std::size_t hairIndex = 0; //TODO this doesn't really need to be per model...
-    std::size_t hatIndex = 0; //TODO this doesn't really need to be per model...
-    cro::Attachment* hairAttachment = nullptr;
-    cro::Attachment* hatAttachment = nullptr;
-    cro::Entity previewModel;
-    std::vector<cro::Entity> previewAudio;
-    std::uint32_t audioUID = 0;
-    std::size_t previewIndex = 0; //actual index may differ because of locked models
-};
 
 class ProfileState final : public cro::State, public cro::GuiClient
 {
@@ -164,15 +142,6 @@ private:
 
     std::vector<ProfileTexture> m_profileTextures;
 
-    //TODO move to common header
-    struct ClubData final
-    {
-        std::uint32_t uid = 0;
-        std::int32_t man = -1;
-        std::string name;
-        std::string thumbnail;
-        bool userItem = false;
-    };
     std::vector<ClubData> m_clubData;
 
     struct PaletteID final
@@ -321,19 +290,6 @@ private:
     void refreshBio();
 
     void onCachedPush() override;
-
-    struct GearID final
-    {
-        enum
-        {
-            Driver, ThreeW, FiveW, FourI,
-            FiveI, SixI, SevenI, EightI,
-            NineI, PitchWedge, GapWedge,
-            SandWedge, Balls,
-
-            Count
-        };
-    };
 
     struct GearMenu final
     {

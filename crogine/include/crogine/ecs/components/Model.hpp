@@ -39,6 +39,10 @@ source distribution.
 
 #include <functional>
 
+//use shared VBOs for instanced transforms
+//TODO currently bugged.
+//#define SHARED_TRANSFORMS
+
 namespace cro
 {
     class CRO_EXPORT_API Model final
@@ -210,8 +214,9 @@ namespace cro
         containing the transform and normal matrix data is completely recalculated, which
         can take a long time for large arrays.
         Transform data is copied from the vector, so the data may safely be discarded
+        \returns A vector containing all of the normal matrices generated for the transforms
         */
-        void setInstanceTransforms(const std::vector<glm::mat4>& transforms);
+        std::vector<glm::mat3> setInstanceTransforms(const std::vector<glm::mat4>& transforms);
 
         /*!
         \brief Updates the transform data for an instanced model.
@@ -260,6 +265,11 @@ namespace cro
         */
         std::int32_t getDrawlistCount() const { return m_drawlistCount; }
 
+        /*!
+        \brief Refreshes the VAO bindings (call this if the VBO was updated with an allocator)
+        */
+        void refreshVAO();
+
     private:
 
         mutable std::int32_t m_drawlistCount;
@@ -306,8 +316,16 @@ namespace cro
 
         struct InstanceBuffers final
         {
+#ifdef SHARED_TRANSFORMS
+            Detail::VBOAllocator* transformAllocator = nullptr;
+            Detail::VBOAllocation transformBuffer;
+
+            Detail::VBOAllocator* normalAllocator = nullptr;
+            Detail::VBOAllocation normalBuffer;
+#else
             std::uint32_t transformBuffer = 0;
             std::uint32_t normalBuffer = 0;
+#endif
             std::uint32_t instanceCount = 0;
         }m_instanceBuffers;
 
@@ -331,5 +349,6 @@ namespace cro
         friend class ModelRenderer;
         friend class ShadowMapRenderer;
         friend class DeferredRenderSystem;
+        friend class ModelDefinition; //TODO if we prove this works use a proper setter and remove this
     };
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -54,6 +54,7 @@ source distribution.
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
+#include <CompetitionLeague.hpp>
 #include <Social.hpp>
 #include <Timeline.hpp>
 
@@ -113,6 +114,7 @@ namespace
 {
 #include "shaders/CelShader.inl"
 #include "shaders/BillboardShader.inl"
+//#include "shaders/ClothShader.inl"
 #include "shaders/CloudShader.inl"
 #include "shaders/Glass.inl"
 #include "shaders/ShaderIncludes.inl"
@@ -144,9 +146,9 @@ namespace
     {
         //TODO HMMMMMM the stat IDs aren't in order for non-gns
 #ifdef USE_GNS
-        std::int32_t MaxStat = StatID::Course12Complete;
+        constexpr std::int32_t MaxStat = StatID::Course12Complete;
 #else
-        std::int32_t MaxStat = StatID::Course10Complete;
+        constexpr std::int32_t MaxStat = StatID::Course10Complete;
 #endif
         bool awarded = true;
         for (std::int32_t i = StatID::Course01Complete; i < MaxStat + 1; ++i)
@@ -187,7 +189,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_connectedPlayerCount  (0),
     m_canActive             (false),
     m_textChat              (m_uiScene, sd),
-    m_voiceChat             (m_sharedData),
+    //m_voiceChat             (m_sharedData),
     m_matchMaking           (context.appInstance.getMessageBus(), checkCommandLine),
     m_uiScene               (context.appInstance.getMessageBus(), 1024),
     m_backgroundScene       (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
@@ -205,16 +207,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_serverMapAvailable    (true),
     m_avUpdateCount         (0)
 {
-    //registerWindow([]()
-    //    {
-    //        ImGui::Begin("Moon");
-    //        static float moon = -1.f;
-    //        ImGui::Text("%3.2f", moon);
-    //        ImGui::SliderFloat("M", &moon, -1.f, 1.f);
-    //        const float brightness = std::clamp(1.f - std::pow(std::abs(moon), 10.f), 0.f, 1.f);;
-    //        ImGui::Text("Brightness: %3.2f", brightness);
-    //        ImGui::End();
-    //    });
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     Timeline::setTimelineDesc("Main Menu");
 
@@ -255,6 +247,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             Achievements::update();
         }
+        CompetitionLeague::refreshTotal(CompetitionLeague::getCourseIndex());
         checkBeta();
 #endif
 
@@ -270,6 +263,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Practice);
         cacheState(StateID::Career);
         cacheState(StateID::Tournament);
+        cacheState(StateID::ProLeague);
+        cacheState(StateID::EditTournament);
         cacheState(StateID::FreePlay);
         cacheState(StateID::Keyboard);
         cacheState(StateID::Leaderboard);
@@ -303,9 +298,12 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         //if we returned from a career game create a delayed
         //entity to push the correct state
         if (sd.gameMode == GameMode::Career
-            || sd.gameMode == GameMode::Tournament)
+            || sd.gameMode == GameMode::Tournament
+            || sd.competitionLeague)
         {
-            const auto state = sd.gameMode == GameMode::Career ? StateID::Career : StateID::Tournament;
+            const auto state = sd.gameMode == GameMode::Career ? 
+                StateID::Career : 
+                sd.competitionLeague ? StateID::ProLeague : StateID::Tournament;
 
             auto entity = m_uiScene.createEntity();
             entity.addComponent<cro::Callback>().active = true;
@@ -337,14 +335,20 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                         m_uiScene.destroyEntity(e);
                     }
                 };
+
+            sd.clientConnection.connected = false;
+            sd.clientConnection.connectionID = ConstVal::NullValue;
+            sd.clientConnection.ready = false;
+            sd.clientConnection.netClient.disconnect();
         }
 
 
         //reset the state if we came from the tutorial (this is
         //also set if the player quit the game from the pause menu)
-        if (sd.gameMode != GameMode::FreePlay
+        if ((sd.gameMode != GameMode::FreePlay
             || sd.quickplayOpponents != 0 //we were playing quickplay
             || sd.activeTournament != TournamentIndex::NullVal) //or a tournament (although the above ought to be set to 1 in this case...)
+            && !sd.competitionLeague)
         {
             if (sd.gameMode == GameMode::Tutorial)
             {
@@ -353,7 +357,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 requestStackPush(StateID::MessageOverlay);
             }
 
-            m_voiceChat.disconnect();
+            //m_voiceChat.disconnect();
 
             sd.serverInstance.stop();
             sd.hosting = false;
@@ -372,7 +376,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         }
         sd.quickplayOpponents = 0; //make sure to always reset this
         sd.activeTournament = TournamentIndex::NullVal; //make sure to always reset this
-
+        sd.competitionLeague = false;
 
         //we returned from a previous game (this will have been disconnected above, otherwise)
         if (sd.clientConnection.connected)
@@ -944,6 +948,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                 i = (i + 1) % m_profileData.playerProfiles.size();
                 setProfileIndex(i);
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         };
 
@@ -966,6 +971,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                 i = (i + (m_profileData.playerProfiles.size() - 1)) % m_profileData.playerProfiles.size();
                 setProfileIndex(i);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         };
 
@@ -1220,6 +1226,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_PAGEUP:
             /*m_sharedData.useOSKBuffer = true;
             requestStackPush(StateID::Keyboard);*/
+            //requestStackPush(StateID::Profile);
             break;
         case SDLK_PAUSE:
             if (evt.key.keysym.mod & KMOD_SHIFT)
@@ -1786,6 +1793,10 @@ void MenuState::handleMessage(const cro::Message& msg)
             {
                 launchTournament(m_sharedData.activeTournament);
             }
+            else if (data.data == RequestID::ProLeague)
+            {
+                launchProLeague();
+            }
         }
         else if (data.type == SystemEvent::ShadowQualityChanged)
         {
@@ -1891,10 +1902,10 @@ bool MenuState::simulate(float dt)
 
     m_textChat.update(dt);
 
-    if (cro::Keyboard::isKeyPressed(SDLK_j))
+    /*if (cro::Keyboard::isKeyPressed(SDLK_j))
     {
         m_voiceChat.captureVoice();
-    }
+    }*/
 
     if (m_sharedData.clientConnection.connected)
     {
@@ -1911,7 +1922,7 @@ bool MenuState::simulate(float dt)
             handleNetEvent(evt);
         }
 
-        m_voiceChat.process();
+        //m_voiceChat.process();
     }
 
     //update the scroll speed of lobby text
@@ -2123,6 +2134,16 @@ void MenuState::loadAssets()
     m_lightProjectionMap.create(LightMapSize.x, LightMapSize.y, false);
     m_lightProjectionMap.setBorderColour(cro::Colour::Black);
 
+
+    /*{
+        m_resources.shaders.loadFromString(ShaderID::Cloth, ClothVertex, ClothFragment);
+        auto& shader = m_resources.shaders.get(ShaderID::Cloth);
+        m_windBuffer.addShader(shader);
+        m_resolutionBuffer.addShader(shader);
+        m_materialIDs[MaterialID::Cloth] = m_resources.materials.add(shader);
+    }*/
+
+
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -2161,6 +2182,8 @@ void MenuState::loadAssets()
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]).setProperty("u_menuTexture", m_lightProjectionMap.getTexture());
     m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]).setProperty("u_noiseTexture", noiseTex);
+    
+    //m_resources.materials.get(m_materialIDs[MaterialID::Cloth]).setProperty("u_noiseTexture", noiseTex);
 
     shader = &m_resources.shaders.get(ShaderID::CelTexturedMasked);
     m_scaleBuffer.addShader(*shader);
@@ -2703,6 +2726,7 @@ void MenuState::createScene()
     }
 
     if (md.loadFromFile("assets/golf/models/sign_post.cmt"))
+    //if (md.loadFromFile("assets/golf/models/rowboat.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ -10.f, 0.f, 12.f });
@@ -2712,6 +2736,10 @@ void MenuState::createScene()
         auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+
+        /*auto clothMat = m_resources.materials.get(m_materialIDs[MaterialID::Cloth]);
+        applyMaterialData(md, clothMat, 1);
+        entity.getComponent<cro::Model>().setMaterial(1, clothMat);*/
     }
 
     if (md.loadFromFile("assets/golf/models/skybox/horizon01.cmt"))
@@ -3093,6 +3121,7 @@ MenuState::PropFileData MenuState::getPropPath() const
     {
         ret.propFilePath = "spooky.bgd";
         ret.timeOfDay = TimeOfDay::Night;
+        ret.fireworks = day == 24;
         m_sharedData.menuSky = Skies[TimeOfDay::Night];
         return ret;
     }
@@ -3257,7 +3286,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                     //position only, triangle strip
                     auto entity = m_backgroundScene.createEntity();
                     entity.addComponent<cro::Transform>().setPosition(pos);
-                    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP));
+                    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP, GL_UNSIGNED_BYTE));
                     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
 
                     if (timeOfDay != TimeOfDay::Night)
@@ -3267,7 +3296,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                     }
 
                     //indices are fixed at nodecount + 2 for anchors
-                    std::vector<std::uint32_t> indices;
+                    std::vector<std::uint8_t> indices;
                     for (auto i = 0; i < NodeCount + 2; ++i)
                     {
                         indices.push_back(i);
@@ -3275,9 +3304,10 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
                     auto* submesh = &meshData->indexData[0];
                     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+                    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
+                    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
                     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
-                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
                     
                     //just has to pass culling
                     meshData->boundingBox = { glm::vec3(-15.f), glm::vec3(15.f) };
@@ -3295,9 +3325,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                             const auto& verts = m_backgroundScene.getSystem<RopeSystem>()->getNodePositions(ropeID);
 
                             meshData->vertexCount = verts.size();
-                            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-                            glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_DYNAMIC_DRAW));
-                            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+                            cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
                         };
                 };
 
@@ -3412,37 +3440,42 @@ void MenuState::createSnow()
     const std::array<float, 3u> AreaStart = { -30.f, 0.f, -10.f };
     const std::array<float, 3u> AreaEnd = { 30.f, 50.f, 30.f }; //NOTE the height has to be set as a shader define, below
 
-    auto points = pd::PoissonDiskSampling(2.3f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
+    const auto points = pd::PoissonDiskSampling(2.3f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
 
-    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+    const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_SHORT));
+
+    //TODO this is just repeated from Weather.cpp so we can do some code reuse here instead.
+    struct Vertex final
+    {
+        glm::vec3 position = glm::vec3(0.f);
+        cro::Detail::ColourLowP colour = cro::Colour::White;
+
+        Vertex() = default;
+        Vertex(float x, float y, float z)
+            : position(x, y, z) {
+        }
+    };
 
     auto* meshData = &m_resources.meshes.getMesh(meshID);
-    std::vector<float> verts;
-    std::vector<std::uint32_t> indices;
+    meshData->attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
+    meshData->attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+    meshData->vertexSize = cro::MeshBuilder::getVertexSize(meshData->attributes);
+
+    std::vector<Vertex> verts;
+    std::vector<std::uint16_t> indices;
     const std::uint32_t stride = 1;
     for (auto i = 0u; i < points.size(); i += stride)
     {
-        verts.push_back(points[i][0]);
-        verts.push_back(points[i][1]);
-        verts.push_back(points[i][2]);
-        verts.push_back(1.f);
-        verts.push_back(1.f);
-        verts.push_back(1.f);
-        verts.push_back(1.f);
-
+        verts.emplace_back(points[i][0], points[i][1], points[i][2]);
         indices.push_back(i);
     }
 
     meshData->vertexCount = points.size() / stride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
 
     meshData->boundingBox[0] = { AreaStart[0], AreaStart[1], AreaStart[2] };
     meshData->boundingBox[1] = { AreaEnd[0], AreaEnd[1], AreaEnd[2] };
@@ -3467,39 +3500,39 @@ void MenuState::createSnow()
 
 void MenuState::setVoiceCallbacks()
 {
-    const auto voiceCreate =
-        [&](const VoiceChat& vc, std::size_t idx)
-        {
-            if (!m_voiceEntities[idx].isValid())
-            {
-                m_voiceEntities[idx] = m_backgroundScene.createEntity();
-                m_voiceEntities[idx].addComponent<cro::Transform>();
-                m_voiceEntities[idx].addComponent<cro::AudioEmitter>().setSource(*vc.getStream(idx));
-                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().play();
-                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setLooped(true);
-                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setRolloff(0.f);
-                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+    //const auto voiceCreate =
+    //    [&](const VoiceChat& vc, std::size_t idx)
+    //    {
+    //        if (!m_voiceEntities[idx].isValid())
+    //        {
+    //            m_voiceEntities[idx] = m_backgroundScene.createEntity();
+    //            m_voiceEntities[idx].addComponent<cro::Transform>();
+    //            m_voiceEntities[idx].addComponent<cro::AudioEmitter>().setSource(*vc.getStream(idx));
+    //            m_voiceEntities[idx].getComponent<cro::AudioEmitter>().play();
+    //            m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setLooped(true);
+    //            m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setRolloff(0.f);
+    //            m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
 
-                LogI << "Created voice entity" << std::endl;
-            }
-        };
-    m_voiceChat.setCreationCallback(voiceCreate);
+    //            LogI << "Created voice entity" << std::endl;
+    //        }
+    //    };
+    //m_voiceChat.setCreationCallback(voiceCreate);
 
-    const auto voiceDelete =
-        [&](std::size_t idx)
-        {
-            if (m_voiceEntities[idx].isValid())
-            {
-                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().stop();
-                m_backgroundScene.destroyEntity(m_voiceEntities[idx]);
-                m_backgroundScene.simulate(0.f);
+    //const auto voiceDelete =
+    //    [&](std::size_t idx)
+    //    {
+    //        if (m_voiceEntities[idx].isValid())
+    //        {
+    //            m_voiceEntities[idx].getComponent<cro::AudioEmitter>().stop();
+    //            m_backgroundScene.destroyEntity(m_voiceEntities[idx]);
+    //            m_backgroundScene.simulate(0.f);
 
-                m_voiceEntities[idx] = {};
+    //            m_voiceEntities[idx] = {};
 
-                LogI << "Remove voice entity" << std::endl;
-            }
-        };
-    m_voiceChat.setDeletionCallback(voiceDelete);
+    //            LogI << "Remove voice entity" << std::endl;
+    //        }
+    //    };
+    //m_voiceChat.setDeletionCallback(voiceDelete);
 }
 
 #ifdef USE_GNS
@@ -3611,7 +3644,7 @@ void MenuState::launchQuickPlay()
 
 void MenuState::launchTournament(std::int32_t tournamentID)
 {
-    CRO_ASSERT(tournamentID == 0 || tournamentID == 1, "");
+    CRO_ASSERT(tournamentID == 0 || tournamentID == 1 || tournamentID == 2, "");
 
     if (m_sharedData.tournaments[tournamentID].winner != -2)
     {
@@ -3620,7 +3653,10 @@ void MenuState::launchTournament(std::int32_t tournamentID)
         //m_sharedData.tournaments[tournamentID] = {}; //don't do this, it erases the id
         //m_sharedData.tournaments[tournamentID].id = tournamentID;
         resetTournament(m_sharedData.tournaments[tournamentID]);
-        writeTournamentData(m_sharedData.tournaments[tournamentID]);
+        //load the path if we have a custom tourny
+        const char* path = tournamentID == TournamentIndex::Custom ?
+            (m_sharedData.tournamentPath + TournamentDataFile).c_str() : nullptr;
+        writeTournamentData(m_sharedData.tournaments[tournamentID], path);
     }
 
 
@@ -3644,6 +3680,24 @@ void MenuState::launchTournament(std::int32_t tournamentID)
     m_sharedData.hosting = true;
     m_sharedData.gameMode = GameMode::Tournament; //ensures leaderboards are disabled and we return to correct menu
     m_sharedData.activeTournament = tournamentID;
+
+    const auto& course = m_sharedData.customTournament.getCourse(m_sharedData.tournaments[m_sharedData.activeTournament].round);
+    auto c = std::find_if(m_sharedCourseData.courseData.cbegin(), m_sharedCourseData.courseData.cend(),
+        [&course](const SharedCourseData::CourseData& cd) 
+        {
+            return cd.directory == course;
+        });
+    if (c != m_sharedCourseData.courseData.cend())
+    {
+        for (auto i = 0u; i < m_sharedData.tournamentPars.size() && i < c->parVals.size(); ++i)
+        {
+            m_sharedData.tournamentPars[i] = c->parVals[i];
+        }
+
+        /*m_sharedData.tournamentPars = tournamentID == TournamentIndex::Custom
+            ? m_sharedData.customTournament.getParValues()[m_sharedData.tournaments[m_sharedData.activeTournament].round]
+            : TierPars[m_sharedData.activeTournament][m_sharedData.tournaments[m_sharedData.activeTournament].round];*/
+    }
     m_sharedData.localConnectionData.playerCount = 1;
     m_sharedData.localConnectionData.playerData[0].isCPU = false;
 
@@ -3657,7 +3711,9 @@ void MenuState::launchTournament(std::int32_t tournamentID)
     //start a local server and connect
     if (quickConnect(m_sharedData))
     {
-        m_sharedData.mapDirectory = TournamentCourses[m_sharedData.tournaments[tournamentID].id][m_sharedData.tournaments[tournamentID].round];
+        m_sharedData.mapDirectory = tournamentID == TournamentIndex::Custom
+            ? m_sharedData.customTournament.getCourse(m_sharedData.tournaments[tournamentID].round)
+             : TournamentCourses[m_sharedData.tournaments[tournamentID].id][m_sharedData.tournaments[tournamentID].round];
         auto res = std::find_if(m_sharedCourseData.courseData.begin(), m_sharedCourseData.courseData.end(),
             [&](const SharedCourseData::CourseData& d)
             {
@@ -3682,6 +3738,40 @@ void MenuState::launchTournament(std::int32_t tournamentID)
 
     //MUST restore this
     m_sharedData.leagueRoundID = LeagueRoundID::Club;
+}
+
+void MenuState::launchProLeague()
+{
+    m_sharedData.quickplayOpponents = 0;
+
+    m_sharedData.hosting = true;
+    m_sharedData.gameMode = GameMode::FreePlay;
+    m_sharedData.competitionLeague = true;
+    m_sharedData.localConnectionData.playerCount = 1;
+    m_sharedData.localConnectionData.playerData[0].isCPU = false;
+
+    m_sharedData.leagueRoundID = LeagueRoundID::Club;
+    m_sharedData.clubLimit = 0;
+
+    //start a local server and connect
+    if (quickConnect(m_sharedData))
+    {
+        //set the course
+        m_sharedData.courseIndex = CompetitionLeague::getCourseIndex();
+        m_sharedData.mapDirectory = m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
+        m_sharedData.holeCount = 0;
+
+        auto data = serialiseString(m_sharedData.mapDirectory);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+        //now we wait for the server to send us the map name so we know the
+        //know the course has been set. Then the network event handler 
+        //sends the game rules and launches the game.
+    }
+    else
+    {
+        requestStackPush(StateID::Error); //error makes sure to reset any connection (message set by quickConnect())
+    }
 }
 
 void MenuState::handleNetEvent(const net::NetEvent& evt)
@@ -3830,10 +3920,18 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::PlayerXP:
         {
-            auto value = evt.packet.as<std::uint16_t>();
+            const auto value = evt.packet.as<std::uint16_t>();
             std::uint8_t client = value & 0xff;
             std::uint8_t level = value >> 8;
-            m_sharedData.connectionData[client].level = level;
+
+            if (client < ConstVal::MaxClients)
+            {
+                m_sharedData.connectionData[client].level = level;
+            }
+            else
+            {
+                LogW << "Recieved XP value of " << (int)level << " for client " << (int)client << ": client out of range...";
+            }
         }
             break;
         case PacketID::NewLobbyReady:
@@ -3906,6 +4004,10 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 {
                     applyTournamentConnection();
                 }
+                else if (m_sharedData.competitionLeague)
+                {
+                    applyProLeagueConnection();
+                }
                 else if (m_sharedData.quickplayOpponents != 0)
                 {
                     //this will also be true if we're in a tournament,
@@ -3957,6 +4059,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 break;
             case MessageType::VersionMismatch:
                 err += "Client/Server Mismatch";
+#ifdef USE_GNS
+                err += "\nEnsure all players are on the\nsame branch in Steam";
+#endif
                 break;
             }
             LogE << err << std::endl;
@@ -3966,7 +4071,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             m_sharedData.clientConnection.netClient.disconnect();
             m_sharedData.clientConnection.connected = false;
 
-            m_voiceChat.disconnect();
+            //m_voiceChat.disconnect();
         }
             break;
         case PacketID::LobbyUpdate:
@@ -4468,6 +4573,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
     cro::App::getWindow().setTitle(std::to_string(msgData.hostID));
 #endif
 #else
+    //m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
     if (!m_sharedData.clientConnection.connected)
     {
@@ -4476,7 +4582,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 #endif
     if (!m_sharedData.clientConnection.connected)
     {
-        m_voiceChat.disconnect();
+        //m_voiceChat.disconnect();
 
         m_sharedData.serverInstance.stop();
         m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
@@ -4897,6 +5003,32 @@ void MenuState::applyTournamentConnection()
     applyCareerConnection();
 }
 
+void MenuState::applyProLeagueConnection()
+{
+    m_sharedData.reverseCourse = 0;
+    m_sharedData.scoreType = ScoreType::Stroke;
+    m_sharedData.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
+    m_sharedData.holeCount = 0;
+    m_sharedData.gimmeRadius = GimmeSize::None;
+    m_sharedData.teamMode = 0;
+    m_sharedData.clubSet = m_sharedData.preferredClubSet = 2;
+
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, m_sharedData.weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::NightTime, m_sharedData.nightTime, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RandomWind, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    //TODO we may need to delay this a frame?
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
 //from MenuConsts.hpp - used for quick launching
 //career, tutorial, quick play and tournament
 bool quickConnect(SharedStateData& sharedData)
@@ -4927,6 +5059,7 @@ bool quickConnect(SharedStateData& sharedData)
 
         sharedData.serverInstance.setHostID(sharedData.clientConnection.netClient.getPeer().getID());
         sharedData.serverInstance.setLeagueID(sharedData.leagueRoundID);
+        sharedData.serverInstance.setCustomTournament(sharedData.tournamentPath + TournamentDataFile);
     }
     return true;
 }

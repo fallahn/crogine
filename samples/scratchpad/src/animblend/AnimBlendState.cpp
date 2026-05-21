@@ -51,8 +51,10 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Wavetable.hpp>
+#include <crogine/util/Maths.hpp>
 
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/Vertex2D.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/detail/OpenGL.hpp>
 
@@ -359,13 +361,13 @@ void AnimBlendState::loadAssets()
 
     auto vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = static_cast<std::uint32_t>(vertData.size());
-    (glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    (glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
     (glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, vertData.data(), GL_STATIC_DRAW));
     (glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indexData.size());
-    (glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    (glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
     (glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indexData.data(), GL_STATIC_DRAW));
     (glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
@@ -443,9 +445,11 @@ void AnimBlendState::createScene()
     entity.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
     {
-        static const auto WaveTable = cro::Util::Wavetable::sine(1.f);
+            static const auto WaveTable = cro::Util::Wavetable::sine(1.f);// , 1.f, 240.f);
         static std::size_t s = 0;
         static std::size_t c = WaveTable.size() / 4;
+
+        const auto prevPos = e.getComponent<cro::Transform>().getPosition();
 
         glm::vec3 pos(WaveTable[c], 1.f, WaveTable[s]);
         e.getComponent<cro::Transform>().setPosition(pos);
@@ -458,8 +462,10 @@ void AnimBlendState::createScene()
         if (pos.x > 2.f)
         {
             pos.x -= 4.f;
-        }*/
-        e.getComponent<cro::Transform>().setPosition(pos);
+        }
+        e.getComponent<cro::Transform>().setPosition(pos);*/
+
+        e.getComponent<cro::ParticleEmitter>().parentVelocity = (pos - prevPos) * (0.125f / dt);
     };
 
     registerWindow([entity]() mutable
@@ -471,6 +477,9 @@ void AnimBlendState::createScene()
                 {
                     entity.getComponent<cro::ParticleEmitter>().settings.emitRate = rate;
                 }
+
+                const auto vel = entity.getComponent<cro::ParticleEmitter>().parentVelocity;
+                ImGui::Text("Vel: %3.3f, %3.3f, %3.3f", vel.x, vel.y, vel.z);
             }
             ImGui::End();
         

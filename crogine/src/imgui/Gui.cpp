@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -27,6 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "imgui_internal.h"
 #include <crogine/gui/Gui.hpp>
 
 using namespace cro;
@@ -59,4 +60,55 @@ bool ui::wantsMouse()
 bool ui::wantsKeyboard()
 {
     return ImGui::GetIO().WantCaptureKeyboard;
+}
+
+/*
+These are used to expose some internal functionality so we can test
+when items have changed and trigger sound events.
+
+Note also there are a series of other changes (which, admittedly, make
+upgrading ImGui a bit more tricky) so I'll attempt to list them all
+here - although I'm bound to forget a few:
+
+imgui.h is moved to include/crogine/gui/detail
+imgui.h includes imconfig_cro.h instead of imconfig.h
+
+imgui.cpp 
+include path to imgui.h is updated to the above
+#define WINSOCKAPI_ is added before each include of windows.h
+NavUpdate() - controller thumbstick is set to right thumb for scrolling
+RenderNavHighlight() - the clip box is expanded as it clips too much
+NavUpdateCreateMoveRequest() - analgue navigation is added
+
+imgui_demo.cpp - include path to imgui.h is updated
+imgui_draw.cpp include path for imgui.h and imgui_freetype.h is updated
+imgui_internal.h - path to imgui.h is updated
+
+imgui_impl_opengl3.cpp - path to imgui.h updated to crogine/gui/detail
+imgui_impl_opengl3.h - path to imgui.h commented out
+
+imgui_impl_sdl2 h/cpp renamed imgui_impl_sdl
+imgui_impl_sdl.cpp - path to imgui.h updated and include file renamed
+imgui_impl_sdl.h - path to imgui.h updated
+
+It's also helpful to find the ImGui release the current version is based
+on and perform a diff with the files included in this repo.
+*/
+
+namespace ImGui
+{
+    std::int32_t getFocusID()
+    {
+        return ImGui::GetFocusID();
+    }
+
+    std::int32_t getHoveredID()
+    {
+        return ImGui::GetHoveredID();
+    }
+
+    std::int32_t getActiveID()
+    {
+        return ImGui::GetActiveID();
+    }
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -81,14 +81,14 @@ bool MeshBatch::addMesh(const std::string& path, const std::vector<glm::mat4>& t
 
     //check the vertex size
     std::uint32_t stride = 0;
-    for (auto i = 0u; i < Mesh::UV0; ++i)
+    for (auto i = 0u; i < Mesh::Attribute::UV0; ++i)
     {
         if (meshFile.flags & (1 << i))
         {
             stride += 3;
         }
     }
-    for (auto i = static_cast<std::int32_t>(Mesh::UV0); i < Mesh::UV1; ++i)
+    for (auto i = static_cast<std::int32_t>(Mesh::Attribute::UV0); i < Mesh::Attribute::UV1; ++i)
     {
         if (meshFile.flags & (1 << i))
         {
@@ -186,7 +186,7 @@ bool MeshBatch::addMesh(const std::string& path, const std::vector<glm::mat4>& t
 void MeshBatch::updateMeshData(Mesh::Data& data) const
 {
     CRO_ASSERT(data.attributeFlags == m_flags, "Flags do not match!");
-    CRO_ASSERT(data.vbo != 0, "Not a valid vertex buffer. Must be created with a MeshResource first");
+    CRO_ASSERT(data.vboAllocation.bufferID != 0, "Not a valid vertex buffer. Must be created with a MeshResource first");
     CRO_ASSERT(data.submeshCount > 0, "Not a valid mesh");
 
     if (data.attributeFlags == m_flags)
@@ -194,7 +194,7 @@ void MeshBatch::updateMeshData(Mesh::Data& data) const
         //upload to vbo/ibo
         data.vertexCount = m_vertexData.size() / (data.vertexSize / sizeof(float));
         
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vbo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vboAllocation.bufferID));
         glCheck(glBufferData(GL_ARRAY_BUFFER, data.vertexSize * data.vertexCount, m_vertexData.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -202,7 +202,7 @@ void MeshBatch::updateMeshData(Mesh::Data& data) const
         {
             data.indexData[i].indexCount = static_cast<std::uint32_t>(m_indexData[i].size());
             
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[i].ibo));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[i].iboAllocation.bufferID));
             glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.indexData[i].indexCount * sizeof(std::uint32_t), m_indexData[i].data(), GL_STATIC_DRAW));
         }
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));

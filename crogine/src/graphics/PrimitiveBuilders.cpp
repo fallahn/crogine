@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -60,7 +60,7 @@ QuadBuilder::QuadBuilder(glm::vec2 size, FloatRect textureRect)
     m_uid = hashIt(std::to_string(size.x) + std::to_string(size.y) + std::to_string(textureRect.left) + std::to_string(textureRect.height));
 }
 
-Mesh::Data QuadBuilder::build() const
+Mesh::Data QuadBuilder::build(AllocationResource*) const
 {
     Mesh::Data meshData;
 
@@ -74,11 +74,11 @@ Mesh::Data QuadBuilder::build() const
         halfSizeX, -halfSizeY, 0.f,   0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     m_textureRect.left + m_textureRect.width, m_textureRect.bottom
     };
 
-    meshData.attributes[Mesh::Position] = 3;
-    meshData.attributes[Mesh::Normal] = 3;
-    meshData.attributes[Mesh::Tangent] = 3;
-    meshData.attributes[Mesh::Bitangent] = 3;
-    meshData.attributes[Mesh::UV0] = 2;
+    meshData.attributes[Mesh::Attribute::Position].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Normal].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Tangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Bitangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::UV0].componentCount = 2;
     meshData.attributeFlags = (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
     meshData.primitiveType = GL_TRIANGLE_STRIP;
     meshData.vertexCount = 4;
@@ -118,7 +118,7 @@ CubeBuilder::CubeBuilder(glm::vec3 dimensions)
     m_uid = x << 32 | y << 16 | z;
 }
 
-Mesh::Data CubeBuilder::build() const
+Mesh::Data CubeBuilder::build(AllocationResource*) const
 {
     Mesh::Data meshData;
 
@@ -158,11 +158,11 @@ Mesh::Data CubeBuilder::build() const
         dim.x, -dim.y, -dim.z,   0.f,-1.f,0.f,   -1.f,0.f,0.f,   0.f,0.f,-1.f,     1.f, 0.f
     };
 
-    meshData.attributes[Mesh::Position] = 3;
-    meshData.attributes[Mesh::Normal] = 3;
-    meshData.attributes[Mesh::Tangent] = 3;
-    meshData.attributes[Mesh::Bitangent] = 3;
-    meshData.attributes[Mesh::UV0] = 2;
+    meshData.attributes[Mesh::Attribute::Position].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Normal].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Tangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Bitangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::UV0].componentCount = 2;
     meshData.attributeFlags = (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
     meshData.primitiveType = GL_TRIANGLES;
     meshData.vertexCount = 24;
@@ -208,7 +208,7 @@ SphereBuilder::SphereBuilder(float radius, std::size_t resolution)
     m_uid = hashIt(std::to_string(radius) + std::to_string(resolution));
 }
 
-Mesh::Data SphereBuilder::build() const
+Mesh::Data SphereBuilder::build(AllocationResource*) const
 {
     Mesh::Data meshData;
     std::vector<float> vertexData;
@@ -317,11 +317,11 @@ Mesh::Data SphereBuilder::build() const
     buildFace(rotation, { 0.f, v }); //Y+
 
 
-    meshData.attributes[Mesh::Position] = 3;
-    meshData.attributes[Mesh::Normal] = 3;
-    meshData.attributes[Mesh::Tangent] = 3;
-    meshData.attributes[Mesh::Bitangent] = 3;
-    meshData.attributes[Mesh::UV0] = 2;
+    meshData.attributes[Mesh::Attribute::Position].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Normal].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Tangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Bitangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::UV0].componentCount = 2;
     meshData.attributeFlags = (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
     meshData.primitiveType = GL_TRIANGLE_STRIP;
     

@@ -140,6 +140,7 @@ bool NewsState::handleEvent(const cro::Event& evt)
     {
         if (evt.key.keysym.sym == SDLK_BACKSPACE
             || evt.key.keysym.sym == SDLK_ESCAPE
+            || evt.key.keysym.sym == SDLK_SPACE
             || evt.key.keysym.sym == SDLK_p)
         {
             quitState();
@@ -594,7 +595,7 @@ void NewsState::buildScene()
     entity.addComponent<cro::Transform>().setPosition({ -6.f, -77.f, 0.1f });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.25f));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_sharedData.sharedResources->textures.get("assets/golf/images/news_thumbs.png"));
+    entity.addComponent<cro::Sprite>(m_sharedData.sharedResources->textures.get("assets/golf/images/ui/news_thumbs.png"));
     bounds = entity.getComponent<cro::Sprite>().getTextureRect();
     bounds.height /= 2.f;
     entity.getComponent<cro::Sprite>().setTextureRect(bounds);

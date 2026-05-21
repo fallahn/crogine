@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -34,7 +34,7 @@ source distribution.
 NormalVisMeshBuilder::NormalVisMeshBuilder(cro::Mesh::Data data, const std::vector<float>& vbo)
     : m_sourceData(data), m_sourceBuffer(vbo){}
 
-cro::Mesh::Data NormalVisMeshBuilder::build() const
+cro::Mesh::Data NormalVisMeshBuilder::build(cro::AllocationResource*) const
 {
     auto vertexSize = m_sourceData.vertexSize / sizeof(float);
 
@@ -44,27 +44,27 @@ cro::Mesh::Data NormalVisMeshBuilder::build() const
 
     //calculate the offset index into a single vertex which points
     //to any normal / tan / bitan values
-    if (m_sourceData.attributes[cro::Mesh::Attribute::Normal] != 0)
+    if (m_sourceData.attributes[cro::Mesh::Attribute::Normal].componentCount != 0)
     {
         for (auto i = 0; i < cro::Mesh::Attribute::Normal; ++i)
         {
-            normalOffset += m_sourceData.attributes[i];
+            normalOffset += m_sourceData.attributes[i].componentCount;
         }
     }
 
-    if (m_sourceData.attributes[cro::Mesh::Attribute::Tangent] != 0)
+    if (m_sourceData.attributes[cro::Mesh::Attribute::Tangent].componentCount != 0)
     {
         for (auto i = 0; i < cro::Mesh::Attribute::Tangent; ++i)
         {
-            tanOffset += m_sourceData.attributes[i];
+            tanOffset += m_sourceData.attributes[i].componentCount;
         }
     }
 
-    if (m_sourceData.attributes[cro::Mesh::Attribute::Bitangent] != 0)
+    if (m_sourceData.attributes[cro::Mesh::Attribute::Bitangent].componentCount != 0)
     {
         for (auto i = 0; i < cro::Mesh::Attribute::Bitangent; ++i)
         {
-            bitanOffset += m_sourceData.attributes[i];
+            bitanOffset += m_sourceData.attributes[i].componentCount;
         }
     }
 
@@ -117,8 +117,8 @@ cro::Mesh::Data NormalVisMeshBuilder::build() const
     }
 
     cro::Mesh::Data meshData;
-    meshData.attributes[cro::Mesh::Position] = 3;
-    meshData.attributes[cro::Mesh::Colour] = 3;
+    meshData.attributes[cro::Mesh::Attribute::Position].componentCount = 3;
+    meshData.attributes[cro::Mesh::Attribute::Colour].componentCount = 3;
     meshData.attributeFlags = cro::VertexProperty::Position | cro::VertexProperty::Colour;
     meshData.primitiveType = GL_LINES;
     meshData.vertexSize = getVertexSize(meshData.attributes);

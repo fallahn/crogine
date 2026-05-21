@@ -214,7 +214,7 @@ void ErrorState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_sharedData.sharedResources->textures.get("assets/golf/images/news_background.png"));
+    entity.addComponent<cro::Sprite>(m_sharedData.sharedResources->textures.get("assets/golf/images/ui/news_background.png"));
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
@@ -294,6 +294,7 @@ void ErrorState::quitState()
     m_sharedData.clientConnection.netClient.disconnect();
     m_sharedData.clientConnection.connectionID = ConstVal::NullValue;
     m_sharedData.clientConnection.ready = false;
+    m_sharedData.competitionLeague = false;
 
     for (auto& cd : m_sharedData.connectionData)
     {

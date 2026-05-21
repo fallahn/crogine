@@ -204,18 +204,18 @@ bool RollingState::simulate(float dt)
         }
 
         auto& meshData = m_debugMesh.getComponent<cro::Model>().getMeshData();
-        glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID);
         glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(Vertex), verts.data(), GL_DYNAMIC_DRAW);
 
         auto* submesh = &meshData.indexData[0];
         submesh->indexCount = static_cast<std::uint32_t>(indices[0].size());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices[0].data(), GL_DYNAMIC_DRAW);
 
         submesh = &meshData.indexData[1];
         //submesh->primitiveType = GL_TRIANGLES;
         submesh->indexCount = static_cast<std::uint32_t>(indices[1].size());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices[1].data(), GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
@@ -250,7 +250,7 @@ void RollingState::addSystems()
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
-    ShaderIDs[ShaderID::Wireframe] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::Mesh::Position | cro::Mesh::Colour);
+    ShaderIDs[ShaderID::Wireframe] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::Mesh::Attribute::Position | cro::Mesh::Attribute::Colour);
     MaterialIDs[MaterialID::Wireframe] = m_resources.materials.add(m_resources.shaders.get(ShaderIDs[ShaderID::Wireframe]));
 }
 
@@ -372,13 +372,14 @@ void RollingState::parseStaticMesh(cro::Entity entity)
     //needs updating if the model changes or more models are added.
 
     const auto& meshData = entity.getComponent<cro::Model>().getMeshData();
-    cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
+    const auto vertSize = cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
 
     //this makes my whiskers itch.
     m_triangleVerts = std::make_unique<rp::TriangleVertexArray>(
         static_cast<std::uint32_t>(m_vertexData.size()),
         (void*)m_vertexData.data(),
-        static_cast<std::uint32_t>(meshData.vertexSize),
+        //static_cast<std::uint32_t>(meshData.vertexSize),
+        vertSize,
         static_cast<std::uint32_t>(m_indexData[0].size() / 3),
         (void*)m_indexData[0].data(),
         static_cast<std::uint32_t>(3 * sizeof(std::uint32_t)),

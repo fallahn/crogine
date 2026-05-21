@@ -142,7 +142,7 @@ void BilliardsSystem::process(float dt)
 
 void BilliardsSystem::initTable(const cro::Mesh::Data& meshData, const std::vector<PocketInfo>& pocketInfo)
 {
-    cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
+    const auto vertSize = cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
     if (m_vertexData.empty() || m_indexData.empty())
     {
         LogE << "No collision mesh was loaded" << std::endl;
@@ -158,7 +158,7 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData, const std::vect
         btIndexedMesh tableMesh;
         tableMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
         tableMesh.m_numVertices = static_cast<std::int32_t>(meshData.vertexCount);
-        tableMesh.m_vertexStride = static_cast<std::int32_t>(meshData.vertexSize);
+        tableMesh.m_vertexStride = static_cast<std::int32_t>(/*meshData.vertexSize*/vertSize);
 
         tableMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
         tableMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());

@@ -74,7 +74,9 @@ source distribution.
 #ifdef CRO_DEBUG_
 //#define PATH_TRACING
 #endif
+#define VIEW_SPACE_LIGHTING
 
+static constexpr float Upscale = 1.f;
 
 struct BullsEye;
 struct BullHit;
@@ -82,6 +84,17 @@ namespace cro
 {
     struct NetEvent;
 }
+
+//minimap callack data
+struct MinimapData final
+{
+    std::int32_t state = 0;
+    float scale = 0.001f;
+    float rotation = -1.f;
+
+    //pixels per metre in the minimap texture * 2
+    float textureRatio = 1.f; 
+};
 
 //sprite which carries green overhead view
 struct GreenCallbackData final
@@ -105,6 +118,13 @@ struct PlayerCallbackData final
 {
     std::int32_t direction = 0; //grow or shrink
     float scale = 0.f;
+};
+
+//animation for strok indicator
+struct StrokeData final
+{
+    float scale = 1.f;
+    float targetScale = 1.f;
 };
 
 class GolfState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
@@ -162,6 +182,7 @@ private:
 
     bool m_wantsGameState;
     bool m_groupIdle; //in group play we're waiting for other clients to finish
+    bool m_fastPlayerSwitch; //in solo play we skip the player name message between turns
     std::uint8_t m_serverGroup;
     bool m_allowAchievements;
     cro::Clock m_readyClock; //pings ready state until ack'd
@@ -178,6 +199,8 @@ private:
     cro::MultiRenderTexture m_gameSceneMRTexture;
     cro::RenderTexture m_trophySceneTexture;
     cro::CubemapTexture m_reflectionMap;
+
+    cro::ArrayTexture<std::uint8_t, 18> m_rainSurfaceTexture;
 
     //renders 'out of focus'
     cro::RenderTexture m_focusTexture;
@@ -202,8 +225,18 @@ private:
     {
         static constexpr float Epsilon = 0.0001f;
 
-        std::uint32_t shaderID = 0;
-        std::int32_t vpUniform = -1;
+        struct ShaderUniform final
+        {
+            std::uint32_t shaderID = 0;
+            std::int32_t vpUniform = -1;
+
+            enum
+            {
+                Course, Map, Count
+            };
+        };
+        //one for game view, one for minimap - TODO consolidate these
+        std::array<ShaderUniform, ShaderUniform::Count> shaders = {};
 
         glm::vec3 position = glm::vec3(0.f);
         float size = Epsilon;
@@ -292,6 +325,7 @@ private:
             BallNight,
             BallNightSkinned,
             BallWasher,
+            TeeNight,
             Billboard,
             Trophy,
             Beacon,
@@ -383,6 +417,16 @@ private:
     void buildScene();
 
     //weather.cpp
+    struct Swarm final
+    {
+        std::string texture;
+        std::string mask;
+        std::int32_t frameCount = 1;
+        std::int32_t frameRate = 18;
+        glm::vec3 position;
+    };
+    std::size_t m_swarmMesh;
+    cro::Entity createSwarm(const Swarm&); //butterflies etc
     void createWeather(std::int32_t);
     void setFog(float density);
     void createClouds();
@@ -411,6 +455,7 @@ private:
     void remoteRotation(std::uint32_t); //rotates the avatar based on remote player input
     float getGroundRotation(glm::vec3 playerPos, float yRot, bool flipped) const; //rotates the player to reduce feet clipping/floating
     std::int32_t getClub() const;
+    float getDampening() const;
 
 
     struct ShadowQuality final
@@ -431,7 +476,7 @@ private:
                 switch (camID)
                 {
                 //assumes default is freecam which has no ID
-                default: return 11.f;
+                default: return 20.f;
                 case CameraID::Player:
                 case CameraID::Green: 
                     return 10.f;
@@ -450,7 +495,7 @@ private:
                 float val = 90.f;
                 switch (camID)
                 {
-                default: break;;
+                default: break;
                 case CameraID::Player:
                 case CameraID::Green:
                 case CameraID::Bystander:
@@ -602,6 +647,7 @@ private:
             AlbatrossLeft,
             AlbatrossRight,
             Hio,
+            NoBalls,
             BounceAnim,
 
             Count
@@ -627,7 +673,7 @@ private:
     cro::Entity m_courseEnt;
     cro::Entity m_waterEnt;
     cro::Entity m_minimapEnt;
-    cro::Entity m_minimapIndicatorEnt;
+    cro::Entity m_minimapIndicatorEnt; //used by the estimated version when recreating verts
     cro::Entity m_miniGreenEnt;
     cro::Entity m_strokeDistanceEnt;
     cro::Entity m_scoreboardEnt;
@@ -734,18 +780,17 @@ private:
     //-----------
 
     cro::Entity m_mapRoot;
-    cro::MultiRenderTexture m_mapTextureMRT; //hack to create images for map explorer
-    
     std::vector<cro::Entity> m_minimapModels;
     cro::Entity m_minimapTrail;
 
-    std::int32_t m_minimapTexturePass;
-    static constexpr std::int32_t MaxMinimapPasses = 1;
-    void updateMinimapTexture();
-    void updateMiniMap();
-
     MinimapZoom m_minimapZoom;
+
+    //GolfStateMinimap.cpp
+    void createMinimapCamera();
+    void updateMinimapModel();
+    void updateMiniMap();
     void retargetMinimap(bool reset);
+
 
     cro::Entity m_greenCam;
     cro::MultiRenderTexture m_overheadBuffer;
@@ -800,6 +845,7 @@ private:
         bool nearMissChallenge = false;
         bool bullseyeChallenge = false;
         bool leadingCareerRound = false;
+        bool usedAssist = false;
     }m_achievementTracker;
     cro::Clock m_playTimer; //track avg play time stat
     cro::Time m_playTime;
@@ -814,6 +860,9 @@ private:
         float distance = 0.f;
     };
     std::vector<StatBoardEntry> m_statBoardScores;
+
+    //for displaying player score on the UI
+    std::array<std::array<std::string, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_uiScores = {};
 
     void updateLeague();
     void updateLeagueHole();
@@ -860,6 +909,9 @@ private:
     void addCameraDebugging();
     void registerDebugCommands();
     void registerDebugWindows();
+    std::vector<std::vector<std::pair<std::string, glm::vec3>>> m_pendingCubemaps;
+    std::vector<cro::CubemapTexture> m_cubemaps;
+    void buildCubemap(glm::vec3 position, const std::string& filePath);
 
     //bool m_drawDepthMaps = false; //TODO remove me when done
     bool m_drawDebugMesh;

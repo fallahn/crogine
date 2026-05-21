@@ -503,24 +503,24 @@ void VatsState::createNormalTexture()
 
         std::vector<float> verts;
         std::vector<std::vector<std::uint32_t>> indices;
-        cro::Mesh::readVertexData(meshData, verts, indices);
+        const auto vertSize = cro::Mesh::readVertexData(meshData, verts, indices);
 
-        if (meshData.attributes[cro::Mesh::Attribute::UV1] != 0)
+        if (meshData.attributes[cro::Mesh::Attribute::UV1].componentCount != 0)
         {
             std::vector<std::uint8_t> positionBuffer(meshData.vertexCount * 3);
             std::vector<std::uint8_t> normalBuffer(meshData.vertexCount * 3);
-            const auto stride = meshData.vertexSize / sizeof(float);
+            const auto stride = /*meshData.vertexSize*/vertSize / sizeof(float);
 
             std::size_t normalOffset = 0;
             for (auto i = 0u; i < cro::Mesh::Attribute::Normal; ++i)
             {
-                normalOffset += meshData.attributes[i];
+                normalOffset += meshData.attributes[i].componentCount;
             }
 
             std::size_t uv1Offset = 0;
             for (auto i = 0u; i < cro::Mesh::Attribute::UV1; ++i)
             {
-                uv1Offset += meshData.attributes[i];
+                uv1Offset += meshData.attributes[i].componentCount;
             }
 
             const auto unsign = [](float v)
@@ -559,7 +559,7 @@ void VatsState::createNormalTexture()
             img.loadFromMemory(positionBuffer.data(), meshData.vertexCount, 1, cro::ImageFormat::RGB);
             m_positionTexture.loadFromImage(img);
 
-            glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+            glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID);
             glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
         }

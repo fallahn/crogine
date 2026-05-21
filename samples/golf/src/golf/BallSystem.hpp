@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -155,7 +155,7 @@ public:
         std::uint8_t terrain = TerrainID::Scrub;
         std::uint8_t trigger = TriggerID::Count;
         glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
-        glm::vec3 intersection = glm::vec3(0.f);
+        glm::vec3 intersection = glm::vec3(0.f, -500.f, 0.f);
         float penetration = 0.f; //positive values are down into the ground
     };
     TerrainResult getTerrain(glm::vec3 position, glm::vec3 forward = glm::vec3(0.f, -1.f, 0.f), float rayLength = 50.f) const;
@@ -167,12 +167,14 @@ public:
 
     void fastForward(cro::Entity);
 
+    //used to predict the flight for range indicator
+    static float estimateSidespin(float& spin);
+
 #ifdef CRO_DEBUG_
     void setDebugFlags(std::int32_t);
     void renderDebug(const glm::mat4&, glm::uvec2);
 #endif
 
-    static constexpr glm::vec3 Gravity = glm::vec3(0.f, -9.8f, 0.f);
 
 private:
 
@@ -222,7 +224,12 @@ private:
     std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_groundVertices;
 
     std::vector<float> m_vertexData;
-    std::vector<std::vector<std::uint32_t>> m_indexData;
+    std::vector<std::vector<std::uint16_t>> m_indexData;
+
+    std::unique_ptr<btCollisionShape> m_ballCollisionShape;
+    std::unique_ptr<btCollisionObject> m_ballCollider;
+
+    std::vector<SphereResult::Manifold> doSphereCollision(glm::vec3 position, float maxWallAngle = SphereResult::MaxAngle);
 
 #ifdef CRO_DEBUG_
     std::unique_ptr<BulletDebug> m_debugDraw;

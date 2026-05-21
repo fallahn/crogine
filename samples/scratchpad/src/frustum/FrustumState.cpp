@@ -806,13 +806,13 @@ void FrustumState::updateFrustumVis(glm::mat4 worldMat, const std::array<glm::ve
     auto* indices = meshData.primitiveType == GL_LINES ? &lineIndices : &triangleIndices;
 
     meshData.vertexCount = vertices.size();
-    glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID);
     glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, vertices.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     auto& submesh = meshData.indexData[0];
     submesh.indexCount = static_cast<std::uint32_t>(indices->size());
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices->data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 

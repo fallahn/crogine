@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,7 +30,6 @@ source distribution.
 #include "BallTrail.hpp"
 #include "CommandIDs.hpp"
 #include "Terrain.hpp"
-#include "GameConsts.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -40,15 +39,13 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 
-#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 
 #include "../ErrorCheck.hpp"
 
 namespace
 {
-    const std::uint32_t VertexSize = 7; //num floats
-
     //std::size_t insertedIndex = 0;
     //std::size_t insertCount = 0;
 
@@ -107,13 +104,17 @@ void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, st
     {
         //this is the driving range
         glm::vec2 rangeSize(RangeSize);
-        boundingBox = { glm::vec3(-rangeSize.x, 100.f, rangeSize.y), glm::vec3(rangeSize.x, 100.f, -rangeSize.y) };
+        boundingBox = { glm::vec3(-rangeSize.x, /*100.f*/0.f, rangeSize.y), glm::vec3(rangeSize.x, 100.f, -rangeSize.y) };
     }
 
     for (auto i = 0u; i < BufferCount; ++i)
     {
-        auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+        const auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP, GL_UNSIGNED_SHORT));
         auto meshData = resources.meshes.getMesh(meshID);
+        meshData.attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
+        meshData.attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+        meshData.vertexSize = cro::MeshBuilder::getVertexSize(meshData.attributes);
+
         meshData.boundingBox = boundingBox;
         meshData.boundingSphere = meshData.boundingBox;
 
@@ -150,7 +151,6 @@ void BallTrail::setNext()
 void BallTrail::addPoint(glm::vec3 position, std::uint32_t callerIndex)
 {
     m_trails[m_bufferIndex].vertexData.emplace_back(position, m_baseColour);
-
     m_trails[m_bufferIndex].indices.push_back(static_cast<std::uint32_t>(m_trails[m_bufferIndex].indices.size()));
 
     if (m_trails[m_bufferIndex].indices.size() > 120)
@@ -186,9 +186,6 @@ void BallTrail::update()
 
                 auto* submesh = &trail.meshData->indexData[0];
                 submesh->indexCount = static_cast<std::uint32_t>(trail.indices.size() - trail.front);
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-                glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
                 //TODO track parent entity and set to hidden.
             }
@@ -202,21 +199,17 @@ void BallTrail::update()
                 for (auto i = 0u; i < (end - start); ++i)
                 {
                     float a = static_cast<float>(i) / (end - start);
-                    trail.vertexData[start + i].c = m_baseColour * a;
+                    trail.vertexData[start + i].colour = m_baseColour * a;
                 }
 
 
                 //TODO we could sub buffer this and only add what's new
                 trail.meshData->vertexCount = trail.indices.size();
-                glCheck(glBindBuffer(GL_ARRAY_BUFFER, trail.meshData->vbo));
-                glCheck(glBufferData(GL_ARRAY_BUFFER, trail.meshData->vertexSize * trail.meshData->vertexCount, trail.vertexData.data(), GL_DYNAMIC_DRAW));
-                glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+                cro::DynamicMeshBuilder::setVertexData(*trail.meshData, cro::DataArray(trail.vertexData.data(), trail.vertexData.size()));
 
                 auto* submesh = &trail.meshData->indexData[0];
                 submesh->indexCount = static_cast<std::uint32_t>(trail.indices.size() - trail.front);
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-                glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), trail.indices.data() + trail.front, GL_DYNAMIC_DRAW));
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+                cro::DynamicMeshBuilder::setIndexData(*trail.meshData, { cro::DataArray(trail.indices.data() + trail.front, submesh->indexCount) });
             }
         }
     }

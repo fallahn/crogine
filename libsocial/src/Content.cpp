@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -37,7 +37,9 @@ namespace
 {
     const std::array SearchPaths =
     {
-        std::string("dlc/adventurer/")
+        std::string("dlc/adventurer/"),
+        std::string("dlc/island/"),
+        std::string("dlc/craewall/"),
     };
 }
 
@@ -86,5 +88,9 @@ std::string Content::getUserContentPath(std::int32_t contentType)
         return getBaseContentPath() + "clubs/";
     case Content::UserContent::Voice:
         return getBaseContentPath() + "voice/";
+    case Content::UserContent::Tournament:
+        return getBaseContentPath() + "tournaments/";
+    case Content::UserContent::TextChat:
+        return getBaseContentPath() + "chat_logs/";
     }
 }

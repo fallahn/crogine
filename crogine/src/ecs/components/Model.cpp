@@ -130,8 +130,13 @@ Model::~Model()
 
     if (m_instanceBuffers.instanceCount != 0)
     {
+#ifdef SHARED_TRANSFORMS
+        m_instanceBuffers.normalAllocator->freeAllocation(m_instanceBuffers.normalBuffer);
+        m_instanceBuffers.transformAllocator->freeAllocation(m_instanceBuffers.transformBuffer);
+#else
         glCheck(glDeleteBuffers(1, &m_instanceBuffers.normalBuffer));
         glCheck(glDeleteBuffers(1, &m_instanceBuffers.transformBuffer));
+#endif
         m_instanceBuffers.instanceCount = 0;
     }
 }
@@ -210,8 +215,13 @@ Model& Model::operator=(Model&& other) noexcept
 
         if (m_instanceBuffers.instanceCount != 0)
         {
+#ifdef SHARED_TRANSFORMS
+            m_instanceBuffers.normalAllocator->freeAllocation(m_instanceBuffers.normalBuffer);
+            m_instanceBuffers.transformAllocator->freeAllocation(m_instanceBuffers.transformBuffer);
+#else
             glCheck(glDeleteBuffers(1, &m_instanceBuffers.normalBuffer));
             glCheck(glDeleteBuffers(1, &m_instanceBuffers.transformBuffer));
+#endif
             m_instanceBuffers.instanceCount = 0;
         }
         m_instanceBuffers = other.m_instanceBuffers;
@@ -237,7 +247,7 @@ void Model::setMaterial(std::size_t idx, Material::Data data)
 {
     CRO_ASSERT(idx < m_materials[Mesh::IndexData::Final].size(), "Index out of range");
     
-    if (m_meshData.vbo)
+    if (m_meshData.vboAllocation.bufferID)
     {
         //remove any existing animations
         m_animations.erase(std::remove_if(m_animations.begin(), m_animations.end(),
@@ -341,26 +351,45 @@ Material::Data& Model::getMaterialData(Mesh::IndexData::Pass pass, std::size_t s
     return m_materials[pass][submesh];
 }
 
-void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
+std::vector<glm::mat3> Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
 {
 #ifdef PLATFORM_DESKTOP
     if (transforms.empty())
     {
         LogW << "Attempt to set empty instance transform array on model" << std::endl;
-        return;
+        return {};
     }
 
     //create VBOs if needed
-    if (m_instanceBuffers.instanceCount == 0)
+    if (m_instanceBuffers.instanceCount < transforms.size())
     {
+#ifdef SHARED_TRANSFORMS
+        if (m_instanceBuffers.instanceCount != 0)
+        {
+            //if this is nullptr remember to set the allocator in ModelDefinition 856
+
+            //resize
+            m_instanceBuffers.normalAllocator->freeAllocation(m_instanceBuffers.normalBuffer);
+            m_instanceBuffers.transformAllocator->freeAllocation(m_instanceBuffers.transformBuffer);
+        }
+
+        m_instanceBuffers.normalBuffer = m_instanceBuffers.normalAllocator->newAllocation(transforms.size());
+        m_instanceBuffers.transformBuffer = m_instanceBuffers.transformAllocator->newAllocation(transforms.size());
+#else
         glCheck(glGenBuffers(1, &m_instanceBuffers.normalBuffer));
         glCheck(glGenBuffers(1, &m_instanceBuffers.transformBuffer));
+#endif
     }
     m_instanceBuffers.instanceCount = static_cast<std::uint32_t>(transforms.size());
 
     //upload transform data
+#ifdef SHARED_TRANSFORMS
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer.bufferID));
+    glCheck(glBufferSubData(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer.offset, m_instanceBuffers.instanceCount * sizeof(glm::mat4), transforms.data()));
+#else
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_instanceBuffers.instanceCount * sizeof(glm::mat4), transforms.data(), GL_STATIC_DRAW));
+#endif
 
     auto bb = m_meshData.boundingBox;
     cro::Box newBB;
@@ -379,9 +408,13 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
     assertAABB(m_boundingBox);
     m_boundingSphere = m_boundingBox;
 
+#ifdef SHARED_TRANSFORMS
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.bufferID));
+    glCheck(glBufferSubData(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.offset, m_instanceBuffers.instanceCount * sizeof(glm::mat3), normalMatrices.data()));
+#else
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_instanceBuffers.instanceCount * sizeof(glm::mat3), normalMatrices.data(), GL_STATIC_DRAW));
-
+#endif
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     //update VAOs if material is set
@@ -400,6 +433,10 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
             updateVAO(i, Mesh::IndexData::Shadow);
         }
     }
+
+    return normalMatrices;
+#else
+    return {};
 #endif
 }
 
@@ -408,30 +445,51 @@ void Model::updateInstanceTransforms(const std::vector<const std::vector<glm::ma
     //as this is intended for speed we'll assert rather than conditional
     CRO_ASSERT(!transforms.empty() && transforms.size() == normalMatrices.size(), "Invalid transform data");
     CRO_ASSERT(m_instanceBuffers.normalBuffer && m_instanceBuffers.transformBuffer, "setInstanceTransforms() must be used at least once");
-    //CRO_ASSERT(transforms.size() <= initialInstanceCount, "We're using sub-data so no resizing!");
+
+#ifdef SHARED_TRANSFORMS
+    //hmmmmmm I'd prefer to make sure to fully allocate up front, but this is less simple with shared VBOs
+
+
+#endif
+
 
     //TODO we could double buffer and swap this
-
     std::uint32_t offset = 0;
     std::uint32_t instanceCount = 0;
 
     //upload transform data
+#ifdef SHARED_TRANSFORMS
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer.bufferID));
+#else
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
+#endif
     for (const auto* v : transforms)
     {
         auto size = v->size() * sizeof(glm::mat4);
+#ifdef SHARED_TRANSFORMS
+        glCheck(glBufferSubData(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer.offset + offset, size, v->data()));
+#else
         glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset, size, v->data()));
+#endif
 
         offset += size;
         instanceCount += v->size();
     }
 
     offset = 0;
+#ifdef SHARED_TRANSFORMS
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.bufferID));
+#else
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
+#endif
     for (const auto& v : normalMatrices)
     {
         auto size = v->size() * sizeof(glm::mat3);
+#ifdef SHARED_TRANSFORMS
+        glCheck(glBufferSubData(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.offset + offset, size, v->data()));
+#else
         glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset, size, v->data()));
+#endif
 
         offset += size;
     }
@@ -483,34 +541,40 @@ void Model::bindMaterial(Material::Data& material)
     {
         if (material.attribs[i][Material::Data::Index] > -1)
         {
-            //attrib exists in shader so map its size
-            material.attribs[i][Material::Data::Size] = static_cast<std::int32_t>(m_meshData.attributes[i]);
+            //attrib exists in shader so map its size/type
+            material.attribs[i][Material::Data::ComponentCount] = static_cast<std::int32_t>(m_meshData.attributes[i].componentCount);
+            material.attribs[i][Material::Data::GLType] = static_cast<std::int32_t>(m_meshData.attributes[i].glType);
+            material.attribs[i][Material::Data::GLNormalised] = static_cast<std::int32_t>(m_meshData.attributes[i].glNormalised);
 
             //calc the pointer offset for each attrib
-            material.attribs[i][Material::Data::Offset] = static_cast<std::int32_t>(pointerOffset * sizeof(float));
+            material.attribs[i][Material::Data::Offset] = static_cast<std::int32_t>(pointerOffset);
         }
         else
         {
             //reset the values in case we're re-mapping an existing material
             //with a new shader
-            material.attribs[i][Material::Data::Size] = 0;
+            material.attribs[i][Material::Data::ComponentCount] = 0;
+            material.attribs[i][Material::Data::GLType] = GL_FLOAT;
+            material.attribs[i][Material::Data::GLNormalised] = GL_FALSE;
             material.attribs[i][Material::Data::Offset] = 0;
         }
-        pointerOffset += m_meshData.attributes[i]; //count the offset regardless as the mesh may have more attributes than material
+
+        //count the offset regardless as the mesh may have more attributes than material
+        pointerOffset += m_meshData.attributes[i].getSize();
     }
 
     //sort by size
     std::sort(std::begin(material.attribs), std::end(material.attribs),
-        [](const std::array<std::int32_t, 3>& ip,
-            const std::array<std::int32_t, 3>& op)
+        [](const std::array<std::int32_t, Material::Data::Count>& ip,
+            const std::array<std::int32_t, Material::Data::Count>& op)
         {
-            return ip[Material::Data::Size] > op[Material::Data::Size];
+            return ip[Material::Data::ComponentCount] > op[Material::Data::ComponentCount];
         });
 
     //count attribs with size > 0
     std::int32_t i = 0;
     material.attribCount = 0;
-    while (material.attribs[i++][Material::Data::Size] != 0)
+    while (material.attribs[i++][Material::Data::ComponentCount] != 0)
     {
         material.attribCount++;
     }
@@ -538,6 +602,23 @@ void Model::updateBounds()
     m_boundingSphere = m_boundingBox;
 }
 
+void Model::refreshVAO()
+{
+#ifdef PLATFORM_DESKTOP
+
+    for (auto i = 0u; i < m_meshData.submeshCount; ++i)
+    {
+        updateVAO(i, Mesh::IndexData::Final);
+
+        const auto instanceAttrib = m_materials[Mesh::IndexData::Shadow][i].attribs[Mesh::Attribute::Position][Material::Data::Index];
+        if (instanceAttrib != -1)
+        {
+            updateVAO(i, Mesh::IndexData::Shadow);
+        }
+    }
+#endif //DESKTOP
+}
+
     //if we're on desktop core opengl profile requires VAOs
 #ifdef PLATFORM_DESKTOP
 void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
@@ -546,26 +627,41 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
     auto& vaoPair = m_vaos[idx];
 
     //I guess we have to remove any old binding
-    //if there's an existing material
+    //if there's an existing material, else it can get
+    //re-bound to a different model (and things just get *weird*)
     if (vaoPair[passIndex] != 0)
     {
         glCheck(glDeleteVertexArrays(1, &vaoPair[passIndex]));
         vaoPair[passIndex] = 0;
     }
 
-    glCheck(glGenVertexArrays(1, &vaoPair[passIndex]));
+    if (vaoPair[passIndex] == 0)
+    {
+        glCheck(glGenVertexArrays(1, &vaoPair[passIndex]));
+    }
 
     glCheck(glBindVertexArray(vaoPair[passIndex]));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vbo));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+    //disable all the existing attrib arrays in case the material changed
+    //(this prevents us having to delete and create a new one)
+    //TODO doesn't quite work - need to figure out what else needs resetting
+    //but at ths point the hit from deleting a VAO is negligable
+    /*for (auto i = 0; i < Shader::AttributeID::Count; ++i)
+    {
+        glCheck(glDisableVertexAttribArray(i));
+    }*/
+
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vboAllocation.bufferID));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID));
 
     const auto& attribs = m_materials[passIndex][idx].attribs;
     for (auto j = 0u; j < m_materials[passIndex][idx].attribCount; ++j)
     {
         glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
-        glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],
-            GL_FLOAT, GL_FALSE, static_cast<GLsizei>(m_meshData.vertexSize),
-            reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
+        glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::ComponentCount],
+            attribs[j][Material::Data::GLType], attribs[j][Material::Data::GLNormalised],
+            static_cast<GLsizei>(m_meshData.vertexSize),
+            reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset] + m_meshData.vboAllocation.offset))));
     }
     
     //bind instance buffers if they exist
@@ -574,23 +670,58 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
         auto attribIndex = attribs[Shader::AttributeID::InstanceNormal][Material::Data::Index];
 
         //attribs are labelled as mat3/4 in shader but are actually 3*vec3 and 4*vec4
+        //TODO can we shave a vec4 off the transforms?
         if (attribIndex != -1)
         {
+#ifdef SHARED_TRANSFORMS
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer.bufferID));
+#else
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
+#endif
             for (auto j = 0u; j < 3u; ++j)
             {
+#ifdef SHARED_TRANSFORMS
                 glCheck(glEnableVertexAttribArray(attribIndex + j));
-                glCheck(glVertexAttribPointer(attribIndex + j, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec3), reinterpret_cast<void*>(static_cast<intptr_t>(j * sizeof(glm::vec3)))));
+                glCheck(glVertexAttribPointer(attribIndex + j, 
+                    3, GL_FLOAT, GL_FALSE,
+                    3 * sizeof(glm::vec3),
+                    reinterpret_cast<void*>(static_cast<intptr_t>((j * sizeof(glm::vec3) + m_instanceBuffers.normalBuffer.offset)))));
+
                 glCheck(glVertexAttribDivisor(attribIndex + j, 1));
+#else
+                glCheck(glEnableVertexAttribArray(attribIndex + j));
+                glCheck(glVertexAttribPointer(attribIndex + j,
+                    3, GL_FLOAT, GL_FALSE,
+                    3 * sizeof(glm::vec3),
+                    reinterpret_cast<void*>(static_cast<intptr_t>((j * sizeof(glm::vec3))))));
+
+                glCheck(glVertexAttribDivisor(attribIndex + j, 1));
+#endif
             }
         }
 
+#ifdef SHARED_TRANSFORMS
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer.bufferID));
+#else
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
+#endif
         for (auto j = 0u; j < 4u; ++j)
         {
+#ifdef SHARED_TRANSFORMS
             glCheck(glEnableVertexAttribArray(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j));
-            glCheck(glVertexAttribPointer(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), reinterpret_cast<void*>(static_cast<intptr_t>(j * sizeof(glm::vec4)))));
+            glCheck(glVertexAttribPointer(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j,
+                4, GL_FLOAT, GL_FALSE,
+                4 * sizeof(glm::vec4),
+                reinterpret_cast<void*>(static_cast<intptr_t>((j * sizeof(glm::vec4)) + m_instanceBuffers.transformBuffer.offset))));
             glCheck(glVertexAttribDivisor(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j, 1));
+#else
+            glCheck(glEnableVertexAttribArray(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j));
+            glCheck(glVertexAttribPointer(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j,
+                4, GL_FLOAT, GL_FALSE,
+                4 * sizeof(glm::vec4),
+                reinterpret_cast<void*>(static_cast<intptr_t>((j * sizeof(glm::vec4))))));
+            glCheck(glVertexAttribDivisor(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j, 1));
+#endif
         }
         draw = DrawInstanced(*this);
     }
@@ -607,16 +738,29 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
 //draw functions
 void Model::DrawSingle::operator()(std::int32_t matID, std::int32_t pass) const
 {
+    /*const auto& md = m_model.getMeshData();
+    if (md.vboAllocator && md.vboAllocation.blockCount == 0)
+    {
+        throw("Did you forget to assign a VBO block to a Dynamic Mesh?");
+    }*/
+
     const auto& indexData = m_model.m_meshData.indexData[matID];
+    /*if (md.iboAllocator && indexData.iboAllocation.blockCount == 0)
+    {
+        throw("Did you forget to assign an IBO block to a Dynamic Mesh?");
+    }*/
+
     glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
-    glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), NULL));
+    glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount,
+        static_cast<GLenum>(indexData.format), reinterpret_cast<void*>(indexData.iboAllocation.offset)));
 }
 
 void Model::DrawInstanced::operator()(std::int32_t matID, std::int32_t pass) const
 {
     const auto& indexData = m_model.m_meshData.indexData[matID];
     glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
-    glCheck(glDrawElementsInstanced(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), NULL, m_model.m_instanceBuffers.instanceCount));
+    glCheck(glDrawElementsInstanced(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount,
+        static_cast<GLenum>(indexData.format), reinterpret_cast<void*>(indexData.iboAllocation.offset), m_model.m_instanceBuffers.instanceCount));
 }
 
 #endif //DESKTOP

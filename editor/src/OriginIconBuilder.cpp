@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -33,7 +33,7 @@ source distribution.
 
 #include <vector>
 
-cro::Mesh::Data OriginIconBuilder::build() const
+cro::Mesh::Data OriginIconBuilder::build(cro::AllocationResource*) const
 {
     //position/colour
     std::vector<float> vboData =
@@ -47,8 +47,8 @@ cro::Mesh::Data OriginIconBuilder::build() const
     };
 
     cro::Mesh::Data retVal;
-    retVal.attributes[cro::Mesh::Position] = 3;
-    retVal.attributes[cro::Mesh::Colour] = 3;
+    retVal.attributes[cro::Mesh::Attribute::Position].componentCount = 3;
+    retVal.attributes[cro::Mesh::Attribute::Colour].componentCount = 3;
     retVal.attributeFlags = cro::VertexProperty::Position | cro::VertexProperty::Colour;
 
     retVal.primitiveType = GL_LINES;

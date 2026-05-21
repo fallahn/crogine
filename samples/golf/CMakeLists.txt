@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.2)
+cmake_minimum_required(VERSION 3.10)
 
 #Xcode 10 will default to Mojave (must be done BEFORE project())
 if (APPLE)
@@ -74,6 +74,9 @@ if(NOT TARGET crogine)
 endif()
 
 
+#glm wants this now
+add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
+
 if(USE_STEAM)
 
   add_compile_definitions(USE_GNS USE_WORKSHOP)
@@ -118,8 +121,17 @@ endif()
 else()
   SET(SOCIAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/src)
   SET(SOCIAL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/include)
+  find_package(ODIN REQUIRED)
 endif()
 
+#don't do this it mangles the rpath
+#use the included versions for brevity
+#link_directories(${CMAKE_SOURCE_DIR}/../extlibs/ktx/linux-x86_64/lib
+#                  ${CMAKE_SOURCE_DIR}/../extlibs/ktx/win64/lib)
+
+#sigh
+#link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../extlibs/ktx/linux-x86_64/lib
+#                  ${CMAKE_CURRENT_SOURCE_DIR}/../../extlibs/ktx/win64/lib)
 
 include_directories(
   ${CROGINE_INCLUDE_DIR}
@@ -135,6 +147,8 @@ if(USE_STEAM)
   include_directories(${GNS_DIR}/golf_workshop/include)
   include_directories(${GNS_DIR}/libgns/include)
   include_directories(${DISCORD_SDK_INCLUDE_DIR})
+else()
+  include_directories(${ODIN_INCLUDE_DIR})
 endif()
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -244,7 +258,7 @@ if(USE_STEAM)
     target_link_libraries(${PROJECT_NAME} ${DISCORD_LIB_PATH})
   endif()
 else()
-  target_link_libraries(${PROJECT_NAME} CURL::libcurl)
+  target_link_libraries(${PROJECT_NAME} CURL::libcurl ${ODIN_LIBRARIES})
 endif()
 
 

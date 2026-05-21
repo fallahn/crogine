@@ -28,7 +28,7 @@
 
 namespace
 {
-    const std::array SRGB_8BIT_TO_LINEAR_FLOAT =
+    constexpr std::array SRGB_8BIT_TO_LINEAR_FLOAT =
     {
         0.0f, 3.03527e-4f, 6.07054e-4f, 9.10581e-4f,
         0.001214108f, 0.001517635f, 0.001821162f, 0.0021246888f,
@@ -97,7 +97,7 @@ namespace
     };
 
 
-    const std::array SRGB_8BIT_TO_LINEAR_DOUBLE =
+    constexpr std::array SRGB_8BIT_TO_LINEAR_DOUBLE =
     {
         0.0, 3.035269835488375e-4, 6.07053967097675e-4, 9.105809506465125e-4,
         0.00121410793419535, 0.0015176349177441874, 0.001821161901293025, 0.0021246888848418626,

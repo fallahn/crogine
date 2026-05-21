@@ -65,13 +65,13 @@ namespace cro
         //<! base vertical spacing for Text type elements
         float verticalSpacing = 0.f;
 
-        //<!absolute in units offset from relative position
+        //<! absolute in units offset from relative position
         glm::vec2 absolutePosition = glm::vec2(0.f); 
-        //<!normalised relative to screen size (ignored by Sprite and Text types)
+        //<! normalised relative to screen size (ignored by Sprite and Text types)
         glm::vec2 relativePosition = glm::vec2(0.f); 
-        //<!z depth
+        //<! z depth
         float depth = 0.f; 
-        //<!optional callback. This is called before the component
+        //<! optional callback. This is called before the component
         //is updated so that placement vars may be modified first
         //for example switching a sprite texture to a higher resolution
         //image depending on the current screen scale

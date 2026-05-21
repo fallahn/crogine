@@ -56,6 +56,38 @@ std::int32_t GameController::controllerID(std::int32_t joystickID)
     return SDL_GameControllerGetPlayerIndex(SDL_GameControllerFromInstanceID(joystickID));
 }
 
+void GameController::swapControllers(std::int32_t currentIndex, std::int32_t dstIndex)
+{
+    auto temp = App::m_instance->m_controllers[dstIndex];
+    SDL_GameControllerSetPlayerIndex(temp.controller, -1);
+    SDL_GameControllerUpdate();
+
+    App::m_instance->m_controllers[dstIndex] = App::m_instance->m_controllers[currentIndex];
+    App::m_instance->m_controllers[currentIndex] = temp;
+
+    SDL_GameControllerSetPlayerIndex(App::m_instance->m_controllers[dstIndex].controller, dstIndex);
+    SDL_GameControllerSetPlayerIndex(App::m_instance->m_controllers[currentIndex].controller, currentIndex);
+    SDL_GameControllerUpdate();
+}
+
+void GameController::moveControllerIndexDown(std::int32_t currentIndex)
+{
+    if (currentIndex > 0 && currentIndex < getControllerCount() - 1)
+    {
+        const auto dstIndex = currentIndex - 1;
+        swapControllers(currentIndex, dstIndex);
+    }
+}
+
+void GameController::moveControllerIndexUp(std::int32_t currentIndex)
+{
+    if (currentIndex < (getControllerCount() - 2))
+    {
+        const auto dstIndex = currentIndex + 1;
+        swapControllers(currentIndex, dstIndex);
+    }
+}
+
 std::int16_t GameController::getAxisPosition(std::int32_t controllerIndex, std::int32_t axis)
 {
     CRO_ASSERT(App::m_instance, "No app running");

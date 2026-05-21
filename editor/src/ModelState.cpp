@@ -426,11 +426,11 @@ void ModelState::createScene()
     entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::DefaultShadow]));
     auto* mesh = &entity.getComponent<cro::Model>().getMeshData();
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh->vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexData[0].ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexData[0].iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
@@ -471,11 +471,11 @@ void ModelState::createScene()
     verts = { 0.f,0.f,0.f, 0.f,1.f,1.f,1.f };
     indices = { 0 };
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh->vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexData[0].ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexData[0].iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
@@ -849,13 +849,13 @@ void ModelState::updateGridMesh(cro::Mesh::Data& meshData, std::optional<cro::Sp
 
 
     meshData.vertexCount = verts.size() / vertStride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     auto& submesh = meshData.indexData[0];
     submesh.indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
@@ -920,14 +920,14 @@ void ModelState::bakeLightmap()
 
     for (auto i = 0u; i < meshData.attributes.size(); ++i)
     {
-        if (i < cro::Mesh::Normal)
+        if (i < cro::Mesh::Attribute::Normal)
         {
-            normalOffset += meshData.attributes[i];
+            normalOffset += meshData.attributes[i].componentCount;
         }
 
-        if (i < cro::Mesh::UV0)
+        if (i < cro::Mesh::Attribute::UV0)
         {
-            uvOffset += meshData.attributes[i];
+            uvOffset += meshData.attributes[i].componentCount;
         }
     }
     normalOffset *= sizeof(float);

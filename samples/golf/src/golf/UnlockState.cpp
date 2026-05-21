@@ -473,8 +473,11 @@ void UnlockState::buildUI()
                     data.stateTime = 0.f;
                     data.state = ItemCallbackData::Hold;
 
-                    cro::GameController::rumbleStart(0, 30000, 50000, 200);
-                    
+                    if (m_sharedData.enableRumble)
+                    {
+                        cro::GameController::rumbleStart(0, 30000, 50000, 200);
+                    }
+
                     m_particleNode.getComponent<cro::ParticleEmitter>().start();
                     m_audioEnts[AudioID::Fireworks].getComponent<cro::AudioEmitter>().play();
                 }

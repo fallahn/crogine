@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -58,6 +58,8 @@ Window::Window()
     : m_window              (nullptr),
     m_threadContext         (nullptr),
     m_mainContext           (nullptr),
+    m_gpuVendor             (GPUVendor::Unknown),
+    m_framerateLimit        (1.f/240.f),
     m_fullscreen            (false),
     m_exclusiveFullScreen   (false),
     m_multisamplingEnabled  (false),
@@ -162,6 +164,18 @@ void Window::setVsyncEnabled(bool enabled)
 bool Window::getVsyncEnabled() const
 {
     return SDL_GL_GetSwapInterval() != 0;
+}
+
+void Window::setFramerateLimit(float fps)
+{
+    if (fps > 0)
+    {
+        m_framerateLimit = 1.f / fps;
+    }
+    else
+    {
+        m_framerateLimit = 0.f;
+    }
 }
 
 void Window::setMultisamplingEnabled(bool enabled)
@@ -568,6 +582,29 @@ void Window::setWindowedSize(glm::uvec2 size)
 glm::uvec2 Window::getWindowedSize() const
 {
     return m_previousWindowSize;
+}
+
+GPUVendor Window::getGPUVendor() const
+{
+    if (m_gpuVendor == GPUVendor::Unknown)
+    {
+        //query vendor information
+        const std::string vendor = Util::String::toLower(reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
+        if (vendor.find("amd") != std::string::npos)
+        {
+            m_gpuVendor = GPUVendor::AMD;
+        }
+        else if (vendor.find("nvidia") != std::string::npos)
+        {
+            m_gpuVendor = GPUVendor::NVidia;
+        }
+        else if (vendor.find("intel") != std::string::npos)
+        {
+            m_gpuVendor = GPUVendor::Intel;
+        }
+    }
+
+    return m_gpuVendor;
 }
 
 //private

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -129,46 +129,6 @@ void cro::Colour::setAlpha(float alpha)
 {
     CRO_ASSERT(alpha >= 0 && alpha <= 1, "Value must be normalised");
     a = alpha;
-}
-
-std::uint8_t cro::Colour::getRedByte() const
-{
-    return static_cast<std::uint8_t>(255.f * r);
-}
-
-std::uint8_t cro::Colour::getGreenByte() const
-{
-    return static_cast<std::uint8_t>(255.f * g);
-}
-
-std::uint8_t cro::Colour::getBlueByte() const
-{
-    return static_cast<std::uint8_t>(255.f * b);
-}
-
-std::uint8_t cro::Colour::getAlphaByte() const
-{
-    return static_cast<std::uint8_t>(255.f * a);
-}
-
-float cro::Colour::getRed() const
-{
-    return r;
-}
-
-float cro::Colour::getGreen() const
-{
-    return g;
-}
-
-float cro::Colour::getBlue() const
-{
-    return b;
-}
-
-float cro::Colour::getAlpha() const
-{
-    return a;
 }
 
 std::uint32_t cro::Colour::getPacked() const

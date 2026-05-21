@@ -115,6 +115,9 @@ namespace sv
         std::atomic_uint64_t hostID = 0;
 
         std::int32_t bigBalls = 0;
+
+        std::mutex mutex;
+        std::string customTournament;
     };
 
     namespace StateID

@@ -41,21 +41,20 @@ static inline const std::string Vertex = R"(
         ATTRIBUTE MED vec2 a_texCoord0;
         ATTRIBUTE MED vec2 a_texCoord1; //contains the size of the billboard to which this vertex belongs
 
-//shadow map renderer doesn't use a UBO
-#if defined (SHADOW_MAPPING)
-uniform HIGH mat4 u_viewMatrix;
-uniform HIGH mat4 u_viewProjectionMatrix;
-uniform HIGH mat4 u_projectionMatrix;
-uniform MED vec4 u_clipPlane;
-uniform MED vec3 u_cameraWorldPosition;
+    //shadow map renderer doesn't use a UBO
+    #if defined (SHADOW_MAPPING)
+        uniform HIGH mat4 u_viewMatrix;
+        uniform HIGH mat4 u_viewProjectionMatrix;
+        uniform HIGH mat4 u_projectionMatrix;
+        uniform MED vec4 u_clipPlane;
+        uniform MED vec3 u_cameraWorldPosition;
 
-uniform mat4 u_cameraViewMatrix;
+        uniform mat4 u_cameraViewMatrix;
 
-VARYING_OUT vec4 v_position;
-
-#else
+        VARYING_OUT vec4 v_position;
+    #else
 #include CAMERA_UBO
-#endif
+    #endif
         uniform mat4 u_worldMatrix;
 
     #if defined (LOCK_SCALE)

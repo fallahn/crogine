@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -44,6 +44,7 @@ source distribution.
 #if defined(PLATFORM_DESKTOP) && !defined(GL41)
 //use the gl debug context instead (see App.cpp)
 #define glCheck(x) do{x; cro::Detail::printLocation(__FILE__, __LINE__, #x);}while (false)
+//#define glCheck(x) do{x; cro::Detail::glErrorCheck(__FILE__, __LINE__, #x);}while (false)
 #else
 #define glCheck(x) do{x; cro::Detail::glErrorCheck(__FILE__, __LINE__, #x);}while (false)
 #endif
@@ -55,15 +56,36 @@ namespace cro
 {
     namespace Detail
     {
+        static inline std::string glErrorString(GLenum err)
+        {
+            switch (err)
+            {
+            case GL_NO_ERROR:                      return "GL_NO_ERROR";
+            case GL_INVALID_ENUM:                  return "GL_INVALID_ENUM";
+            case GL_INVALID_VALUE:                 return "GL_INVALID_VALUE";
+            case GL_INVALID_OPERATION:             return "GL_INVALID_OPERATION";
+            case GL_STACK_OVERFLOW:                return "GL_STACK_OVERFLOW";
+            case GL_STACK_UNDERFLOW:               return "GL_STACK_UNDERFLOW";
+            case GL_OUT_OF_MEMORY:                 return "GL_OUT_OF_MEMORY";
+                //case 0x8031: /* not core */            return "GL_TABLE_TOO_LARGE_EXT";
+                //case 0x8065: /* not core */            return "GL_TEXTURE_TOO_LARGE_EXT";
+            case GL_INVALID_FRAMEBUFFER_OPERATION: return "GL_INVALID_FRAMEBUFFER_OPERATION";
+            default: return std::to_string(err) + ": Unknown error code";
+            }
+        }
+
+
         static inline void printLocation(const char* file, unsigned int line, const char* expression)
         {
-            if (glGetError() != GL_NO_ERROR)
+            const GLenum errorCode = glGetError();
+            if (errorCode != GL_NO_ERROR)
             {
                 std::string fileString = file;
 
                 std::stringstream ss;
-                ss << fileString.substr(fileString.find_last_of("\\/") + 1) << "(" << line << ")."
-                    << "\nExpression: " << expression
+                ss << fileString.substr(fileString.find_last_of("\\/") + 1) << "(" << line << ").\n" 
+                    << glErrorString(errorCode)
+                    << " Expression: " << expression
                     << std::endl;
                 Logger::log(ss.str(), Logger::Type::Error);
             }

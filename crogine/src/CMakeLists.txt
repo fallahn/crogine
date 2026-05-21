@@ -49,7 +49,9 @@ set(PROJECT_SRC
 
   ${PROJECT_DIR}/detail/backward.cpp
   ${PROJECT_DIR}/detail/BalancedTree.cpp
+  ${PROJECT_DIR}/detail/BufferAllocation.cpp
   ${PROJECT_DIR}/detail/DistanceField.cpp
+  ${PROJECT_DIR}/detail/IBOAllocation.cpp
   #${PROJECT_DIR}/detail/glad.c
   ${PROJECT_DIR}/detail/ModelBinary.cpp
   ${PROJECT_DIR}/detail/PoolLog.cpp
@@ -59,6 +61,8 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/detail/StaticMeshFile.cpp
   ${PROJECT_DIR}/detail/TextConstruction.cpp
   ${PROJECT_DIR}/detail/QuadTree.cpp
+  ${PROJECT_DIR}/detail/VAOAllocation.cpp
+  ${PROJECT_DIR}/detail/VBOAllocation.cpp
 
   ${PROJECT_DIR}/detail/enet/callbacks.c
   ${PROJECT_DIR}/detail/enet/compress.c
@@ -111,6 +115,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/UIElementSystem.cpp
   ${PROJECT_DIR}/ecs/systems/UISystem.cpp
 
+  ${PROJECT_DIR}/graphics/BillboardMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/BinaryMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/BoundingBox.cpp
   ${PROJECT_DIR}/graphics/CircleMeshBuilder.cpp
@@ -145,6 +150,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/SimpleText.cpp
   ${PROJECT_DIR}/graphics/SimpleVertexArray.cpp
   ${PROJECT_DIR}/graphics/Spatial.cpp
+  ${PROJECT_DIR}/graphics/SpriteMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/SpriteSheet.cpp
   ${PROJECT_DIR}/graphics/StaticMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/Texture.cpp

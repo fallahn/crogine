@@ -128,7 +128,7 @@ private:
     std::queue<std::pair<cro::String, cro::Colour>> m_printQueue;
     cro::Clock m_printTimer;
     TextChat m_textChat;
-    VoiceChat m_voiceChat;
+    //VoiceChat m_voiceChat;
     MatchMaking m_matchMaking;
     cro::ResourceCollection m_resources;
     void playMessageSound();
@@ -176,6 +176,7 @@ private:
             Trophy,
             Lantern,
             Glass,
+            Cloth,
 
             Count
         };
@@ -468,6 +469,7 @@ private:
 
     void launchQuickPlay();
     void launchTournament(std::int32_t);
+    void launchProLeague();
     void handleNetEvent(const net::NetEvent&);
 
     void createDebugWindows();
@@ -475,6 +477,7 @@ private:
     void applyCareerConnection();
     void applyQuickPlayConnection();
     void applyTournamentConnection();
+    void applyProLeagueConnection();
 
     friend struct MainMenuContext;
 };

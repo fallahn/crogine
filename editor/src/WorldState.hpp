@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -87,6 +87,7 @@ private:
     std::int32_t m_gizmoMode;
 
     bool m_showPreferences;
+    bool m_showTextureCompressor;
 
     void initUI();
     void drawMenuBar();

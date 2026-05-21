@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
+#include <crogine/detail/AllocationResource.hpp>
 #include <crogine/detail/BalancedTree.hpp>
 #include <crogine/detail/SDLResource.hpp>
 

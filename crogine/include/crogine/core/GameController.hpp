@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -273,6 +273,21 @@ namespace cro
         static std::int32_t controllerID(std::int32_t joystickID);
 
         /*!
+        \brief Moves the controller index down, if not already at zero,
+        swapping indices with the controller previously in its position
+        \param currentIndex Index of the controller to move
+        */
+        static void moveControllerIndexDown(std::int32_t currentIndex);
+
+        /*!
+        \brief Moves the controller index up, if not already at the maximum
+        available index. The index is swapped with the one of that which already
+        occupies the target index.
+        \param currentIndex The index of the controller to move up.
+        */
+        static void moveControllerIndexUp(std::int32_t currentIndex);
+
+        /*!
         \brief Returns the current value of the requested axis on the requested
         controller index, if it exists, else returns zero.
         \param controllerIndex Index of the controller to query
@@ -416,5 +431,7 @@ namespace cro
     private:
         friend class App;
         static std::int32_t m_lastControllerIndex; //tracks which controller last had input
+
+        static void swapControllers(std::int32_t currentIndex, std::int32_t dstIndex);
     };
 }

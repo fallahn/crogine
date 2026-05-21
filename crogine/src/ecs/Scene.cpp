@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -79,7 +79,8 @@ namespace
     const std::string skyboxFrag = 
         R"(
         OUTPUT
-
+//layout (location = 1) out vec4 POS_OUT;
+//layout (location = 2) out vec4 NORM_OUT;
         uniform LOW vec3 u_darkColour;
         uniform LOW vec3 u_midColour;
         uniform LOW vec3 u_lightColour;
@@ -140,7 +141,8 @@ namespace
             vec3 viewDirection = normalize(v_texCoords);
             float stars = pow(clamp(noise(viewDirection * 200.0), 0.0f, 1.0f), Threshold) * Exposure;
             stars *= mix(0.4, 1.4, noise(viewDirection * 100.0));
-
+//NORM_OUT = vec4(0.5,0.5,0.0,1.0);
+//POS_OUT.r = 10000.0;//hack to make the sky distance a long way away
             FRAG_OUT.rgb = mix(FRAG_OUT.rgb, vec3(1.0), stars * amount * u_starsAmount);
 
         })";
@@ -213,9 +215,6 @@ Scene::Scene(MessageBus& mb, std::size_t initialPoolSize, std::uint32_t infoFlag
     m_sunlight.addComponent<Transform>();
     m_sunlight.addComponent<Sunlight>();
 
-    using namespace std::placeholders;
-    currentRenderPath = std::bind(&Scene::defaultRenderPath, this, _1, _2, _3);
-
     std::fill(m_skyColourUniforms.begin(), m_skyColourUniforms.end(), -1);
 }
 
@@ -257,10 +256,6 @@ void Scene::simulate(float dt)
     m_destroyedEntities.clear();
 
     m_systemManager.process(dt);
-    for (auto& p : m_postEffects)
-    {
-        p->process(dt);
-    }
 }
 
 Entity Scene::createEntity()
@@ -278,22 +273,6 @@ void Scene::destroyEntity(Entity entity)
 Entity Scene::getEntity(std::uint32_t id) const
 {
     return m_entityManager.getEntity(id);
-}
-
-void Scene::setPostEnabled(bool enabled)
-{
-    using namespace std::placeholders;
-
-    if (enabled && !m_postEffects.empty())
-    {
-        currentRenderPath = std::bind(&Scene::postRenderPath, this, _1, _2, _3);
-        auto size = App::getWindow().getSize();
-        resizeBuffers(size);
-    }
-    else
-    {       
-        currentRenderPath = std::bind(&Scene::defaultRenderPath, this, _1, _2, _3);
-    }
 }
 
 void Scene::setSunlight(Entity sunlight)
@@ -314,51 +293,51 @@ void Scene::enableSkybox()
         if (m_skyboxShaders[SkyboxType::Coloured].getGLHandle() ||
             m_skyboxShaders[SkyboxType::Coloured].loadFromString(skyboxVertex, skyboxFrag))
         {
-            //only using positions - remember we looking from
+            //only using positions - remember we're looking from
             //the inside so wind the verts accordingly...
-            std::array<float, 108> verts = {
-                 //far
-                -0.5f,  0.5f, -0.5f,
-                -0.5f, -0.5f, -0.5f,
-                 0.5f, -0.5f, -0.5f,
-                 0.5f, -0.5f, -0.5f,
-                 0.5f,  0.5f, -0.5f,
-                -0.5f,  0.5f, -0.5f,
-                 //left
-                -0.5f, -0.5f,  0.5f,
-                -0.5f, -0.5f, -0.5f,
-                -0.5f,  0.5f, -0.5f,
-                -0.5f,  0.5f, -0.5f,
-                -0.5f,  0.5f,  0.5f,
-                -0.5f, -0.5f,  0.5f,
-                 //right
-                 0.5f, -0.5f, -0.5f,
-                 0.5f, -0.5f,  0.5f,
-                 0.5f,  0.5f,  0.5f,
-                 0.5f,  0.5f,  0.5f,
-                 0.5f,  0.5f, -0.5f,
-                 0.5f, -0.5f, -0.5f,
-                 //front
-                -0.5f, -0.5f,  0.5f,
-                -0.5f,  0.5f,  0.5f,
-                 0.5f,  0.5f,  0.5f,
-                 0.5f,  0.5f,  0.5f,
-                 0.5f, -0.5f,  0.5f,
-                -0.5f, -0.5f,  0.5f,
-                 //top
-                -0.5f,  0.5f, -0.5f,
-                 0.5f,  0.5f, -0.5f,
-                 0.5f,  0.5f,  0.5f,
-                 0.5f,  0.5f,  0.5f,
-                -0.5f,  0.5f,  0.5f,
-                -0.5f,  0.5f, -0.5f,
-                 //bottom
-                -0.5f, -0.5f, -0.5f,
-                -0.5f, -0.5f,  0.5f,
-                 0.5f, -0.5f, -0.5f,
-                 0.5f, -0.5f, -0.5f,
-                -0.5f, -0.5f,  0.5f,
-                 0.5f, -0.5f,  0.5f
+            std::array<std::int8_t, 108> verts = {
+               //far
+               -63,  63, -63,
+               -63, -63, -63,
+                63, -63, -63,
+                63, -63, -63,
+                63,  63, -63,
+               -63,  63, -63,
+               //left
+               -63, -63,  63,
+               -63, -63, -63,
+               -63,  63, -63,
+               -63,  63, -63,
+               -63,  63,  63,
+               -63, -63,  63,
+               //right
+                63, -63, -63,
+                63, -63,  63,
+                63,  63,  63,
+                63,  63,  63,
+                63,  63, -63,
+                63, -63, -63,
+               //front
+               -63, -63,  63,
+               -63,  63,  63,
+                63,  63,  63,
+                63,  63,  63,
+                63, -63,  63,
+               -63, -63,  63,
+               //top
+               -63,  63, -63,
+                63,  63, -63,
+                63,  63,  63,
+                63,  63,  63,
+               -63,  63,  63,
+               -63,  63, -63,
+               //bottom
+               -63, -63, -63,
+               -63, -63,  63,
+                63, -63, -63,
+                63, -63, -63,
+               -63, -63,  63,
+                63, -63,  63
             };
 
 #ifdef PLATFORM_DESKTOP
@@ -367,12 +346,12 @@ void Scene::enableSkybox()
 #endif
             glCheck(glGenBuffers(1, &m_skybox.vbo));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
-            glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
+            glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size(), verts.data(), GL_STATIC_DRAW));
 
 #ifdef PLATFORM_DESKTOP
             const auto& attribs = m_skyboxShaders[SkyboxType::Coloured].getAttribMap();
             glCheck(glEnableVertexAttribArray(attribs[0]));
-            glCheck(glVertexAttribPointer(attribs[0], 3, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(3 * sizeof(float)), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
+            glCheck(glVertexAttribPointer(attribs[0], 3, GL_BYTE, GL_TRUE, 0, reinterpret_cast<void*>(static_cast<intptr_t>(0))));
             glCheck(glEnableVertexAttribArray(0));
 
             glCheck(glBindVertexArray(0));
@@ -534,40 +513,16 @@ void Scene::forwardMessage(const Message& msg)
     {
         d->handleMessage(msg);
     }
-
-    if (msg.id == Message::WindowMessage)
-    {
-        const auto& data = msg.getData<Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-        {
-            //resizes the post effect buffer if it is in use
-            resizeBuffers({ data.data0, data.data1 });
-        }
-    }
 }
 
-void Scene::render(bool doPost)
+void Scene::render()
 {
-    if (doPost)
-    {
-        currentRenderPath(*RenderTarget::getActiveTarget(), &m_activeCamera, 1);
-    }
-    else
-    {
-        defaultRenderPath(*RenderTarget::getActiveTarget(), &m_activeCamera, 1);
-    }
+    defaultRenderPath(*RenderTarget::getActiveTarget(), &m_activeCamera, 1);
 }
 
-void Scene::render(const std::vector<Entity>& cameras, bool doPost)
+void Scene::render(const std::vector<Entity>& cameras)
 {
-    if (doPost)
-    {
-        currentRenderPath(*RenderTarget::getActiveTarget(), cameras.data(), cameras.size());
-    }
-    else
-    {
-        defaultRenderPath(*RenderTarget::getActiveTarget(), cameras.data(), cameras.size());
-    }
+    defaultRenderPath(*RenderTarget::getActiveTarget(), cameras.data(), cameras.size());
 }
 
 std::pair<const float*, std::size_t> Scene::getActiveProjectionMaps() const
@@ -711,27 +666,6 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
     glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
 }
 
-void Scene::postRenderPath(const RenderTarget&, const Entity* cameraList, std::size_t cameraCount)
-{
-    m_sceneBuffer.clear(Colour::Transparent);
-    defaultRenderPath(m_sceneBuffer, cameraList, cameraCount);
-    m_sceneBuffer.display();
-
-    RenderTexture* inTex = &m_sceneBuffer;
-    RenderTexture* outTex = nullptr;
-
-    for (auto i = 0u; i < m_postEffects.size() - 1; ++i)
-    {
-        outTex = &m_postBuffers[i % 2];
-        outTex->clear();
-        m_postEffects[i]->apply(*inTex);
-        outTex->display();
-        inTex = outTex;
-    }
-
-    m_postEffects.back()->apply(*inTex);
-}
-
 void Scene::destroySkybox()
 {
     if (m_skybox.vao)
@@ -750,29 +684,4 @@ void Scene::destroySkybox()
     }
 
     m_skybox = {};
-}
-
-void Scene::resizeBuffers(glm::uvec2 size)
-{
-    if (size != m_sceneBuffer.getSize())
-    {
-        if (m_sceneBuffer.available())
-        {
-            m_sceneBuffer.create(size.x, size.y);
-            for (auto& p : m_postEffects)
-            {
-                p->resizeBuffer(size.x, size.y);
-            }
-        }
-
-        if (m_postBuffers[0].available())
-        {
-            m_postBuffers[0].create(size.x, size.y, false);
-        }
-
-        if (m_postBuffers[1].available())
-        {
-            m_postBuffers[1].create(size.x, size.y, false);
-        }
-    }
 }

@@ -402,9 +402,10 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 applyTextEdit();
             }
             break;
-        /*case SDLK_p:
-            renderBallFrames();
-            break;*/
+        //case SDLK_p:
+        //    //renderBallFrames();
+        //    requestStackPush(StateID::Shop);
+        //    break;
         //case SDLK_k:
         //    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().getUserData<std::int32_t>()++;
         //    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
@@ -791,6 +792,13 @@ void ProfileState::handleMessage(const cro::Message& msg)
             case StateID::Keyboard:
                 applyTextEdit();
                 break;
+            case StateID::Shop:
+                for (auto i = 0u; i < m_gearMenus.size(); ++i)
+                {
+                    refreshItemDescription(i);
+                }
+                refreshItemLists();
+                break;
             }
         }
     }
@@ -980,7 +988,7 @@ void ProfileState::loadResources()
                             }
                             else if (name == "man")
                             {
-                                data.man = std::clamp(p.getValue<std::int32_t>(), 0, std::int32_t(inv::ManufID::BeyTree));
+                                data.manufacturer = std::clamp(p.getValue<std::int32_t>(), 0, std::int32_t(inv::ManufID::BeyTree));
                             }
                         }
 
@@ -1048,7 +1056,7 @@ void ProfileState::loadResources()
 
     //make sure the default set is first, if it's found
     if (auto res = std::find_if(m_clubData.begin(), m_clubData.end(),
-        [](const ProfileState::ClubData& cd)
+        [](const ClubData& cd)
         {
             return cd.name.find("Default") != std::string::npos;
         }); res != m_clubData.end() && m_clubData.size() > 1)
@@ -1619,7 +1627,7 @@ void ProfileState::buildScene()
                     //randomise colours
                     for (auto i = 0; i < PaletteID::BallThumb; ++i)
                     {
-                        m_activeProfile.playerData.avatarFlags[i] = static_cast<std::uint8_t>(cro::Util::Random::value(0u, pc::PairCounts[i] - 1));
+                        m_activeProfile.playerData.avatarFlags[i] = static_cast<std::uint8_t>(cro::Util::Random::value(0u, (pc::PairCounts[i] / 2) - 1));
                         m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(i), m_activeProfile.playerData.avatarFlags[i]);
                     }
 
@@ -3024,7 +3032,7 @@ void ProfileState::createItemThumbs()
     m_modelScene.setActiveCamera(m_cameras[CameraID::Ball]);
     m_modelScene.simulate(0.f);
 
-    const auto& ident = m_resources.textures.get("assets/golf/images/ident.png");
+    const auto& ident = m_resources.textures.get("assets/golf/images/ui/ident.png");
     cro::SimpleQuad keyIcon(ident);
     cro::SimpleQuad spannerIcon(ident);
 
@@ -4247,7 +4255,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
                 {
                     auto idx = (PlayerData::HeadwearOffset::HairTx + i) + (PlayerData::HeadwearOffset::HatTx * m_headwearID);
 
-                    float val = m_activeProfile.playerData.headwearOffsets[idx][j];
+                    const float val = m_activeProfile.playerData.headwearOffsets[idx][j];
                     std::stringstream ss;
                     ss.precision(2);
                     ss << std::fixed << val;
@@ -4422,8 +4430,9 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
 void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext& ctx)
 {
     constexpr std::size_t IndexClose = 10000;
-    constexpr std::size_t IndexClubs = 10001;
-    constexpr std::size_t IndexList = 10002;
+    constexpr std::size_t IndexCounter = 10001;
+    constexpr std::size_t IndexClubs = 10002;
+    constexpr std::size_t IndexList = 10003;
 
 
     auto [bgEnt, closeButtonEnt] = createBrowserBackground(MenuID::GearEditor, ctx);
@@ -4431,10 +4440,10 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
     m_menuEntities[EntityID::GearEditor] = bgEnt;
     parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
 
-    closeButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(70.f, 21.f) + glm::vec2(closeButtonEnt.getComponent<cro::Transform>().getOrigin()));
+    closeButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(186.f, 21.f) + glm::vec2(closeButtonEnt.getComponent<cro::Transform>().getOrigin()));
     closeButtonEnt.getComponent<cro::UIInput>().setSelectionIndex(IndexClose);
     closeButtonEnt.getComponent<cro::UIInput>().setNextIndex(IndexClubs, IndexList);
-    closeButtonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexList + GearID::Count, IndexList + GearID::Count);
+    closeButtonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexCounter, IndexList + GearID::Count);
 
 
     //clubset preview
@@ -4496,6 +4505,36 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     
+
+    //equipment counter button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(90.f, 31.f, 0.2f));
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("equipment_button");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::GearEditor);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(IndexCounter);
+    entity.getComponent<cro::UIInput>().setNextIndex(IndexClose, IndexList);
+    entity.getComponent<cro::UIInput>().setPrevIndex(IndexClose, IndexList + (GearID::Count - 1));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    requestStackPush(StateID::Shop);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
+    entity.getComponent<cro::Transform>().setOrigin({ std::round(bounds.width / 2.f), std::round(bounds.height / 2.f) });
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
     const auto itemAvailable = [](std::int32_t i)
@@ -4648,8 +4687,8 @@ void ProfileState::createLoadoutEditor(cro::Entity parent, const CallbackContext
     }
 
     //correct indices for first / last
-    temp.front().getComponent<cro::UIInput>().setPrevIndex(IndexClubs, IndexClose);
-    temp.back().getComponent<cro::UIInput>().setNextIndex(IndexClubs, IndexClose);
+    temp.front().getComponent<cro::UIInput>().setPrevIndex(IndexClubs, IndexCounter);
+    temp.back().getComponent<cro::UIInput>().setNextIndex(IndexClubs, IndexCounter);
 
 
     //stats for selected item
@@ -5195,8 +5234,8 @@ void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& 
                 {
                     const auto idx = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
 
-                    if (m_clubData[idx].man == -1
-                        || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[idx].man)) != 0)
+                    if (m_clubData[idx].manufacturer == -1
+                        || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[idx].manufacturer)) != 0)
                     {
                         //apply selection
                         m_activeProfile.playerData.clubID = m_clubData[idx].uid;
@@ -5231,7 +5270,7 @@ void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& 
                 m_pageContexts[PaginationID::Clubs].pageList[i].highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
 
                 const auto itemIndex = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
-                const bool locked = !(m_clubData[itemIndex].man == -1 || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[itemIndex].man)) != 0);
+                const bool locked = !(m_clubData[itemIndex].manufacturer == -1 || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[itemIndex].manufacturer)) != 0);
                 
                 auto& tc = m_pageContexts[PaginationID::Clubs].pageHandles.itemLabel.getComponent<cro::Text>();
 
@@ -5778,7 +5817,7 @@ void ProfileState::activatePage(std::int32_t itemID, std::size_t page, bool forc
                 }
                 else
                 {
-                    locked = !(m_clubData[itemIndex].man == -1 || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[itemIndex].man)) != 0);
+                    locked = !(m_clubData[itemIndex].manufacturer == -1 || (m_sharedData.inventory.manufacturerFlags & (1 << m_clubData[itemIndex].manufacturer)) != 0);
                 }
                 const cro::Colour c = locked ? cro::Colour::DarkGrey : cro::Colour::White;
 
@@ -5854,10 +5893,10 @@ void ProfileState::refreshMugshot()
 {
     if (!m_activeProfile.playerData.mugshot.empty())
     {
-        auto& tex = m_sharedData.sharedResources->textures.get(m_activeProfile.playerData.mugshot);
+        const auto& tex = m_sharedData.sharedResources->textures.get(m_activeProfile.playerData.mugshot);
 
-        glm::vec2 texSize(tex.getSize());
-        glm::vec2 scale = glm::vec2(96.f, 48.f) / texSize;
+        const glm::vec2 texSize(tex.getSize());
+        const glm::vec2 scale = glm::vec2(96.f, 48.f) / texSize;
         m_menuEntities[EntityID::Mugshot].getComponent<cro::Transform>().setScale(scale);
         m_menuEntities[EntityID::Mugshot].getComponent<cro::Sprite>().setTexture(tex);
     }
@@ -5880,8 +5919,8 @@ void ProfileState::refreshSwatch()
     std::vector<cro::Vertex2D> verts;
     for (auto i = 1u; i < SwatchPositions.size(); ++i)//skip hair
     {
-        cro::Colour c = pc::Palette[m_activeProfile.playerData.avatarFlags[i]];
-        auto pos = SwatchPositions[i];
+        const cro::Colour c = pc::Palette[m_activeProfile.playerData.avatarFlags[i]];
+        const auto& pos = SwatchPositions[i];
 
         verts.emplace_back(glm::vec2(pos.x, pos.y + SwatchSize.y), c);
         verts.emplace_back(pos, c);
@@ -6122,7 +6161,7 @@ void ProfileState::refreshItemDescription(std::uint32_t i)
 {
     if (m_activeProfile.loadout.items[i] == -1)
     {
-        m_gearMenus[i].description.getComponent<cro::Text>().setString("(1/" + std::to_string(m_gearMenus[i].items.size()) + ") Default");
+        m_gearMenus[i].description.getComponent<cro::Text>().setString("(1/" + std::to_string(std::max(std::size_t(1), m_gearMenus[i].items.size())) + ") Default");
     }
     else
     {
@@ -6139,7 +6178,7 @@ void ProfileState::refreshItemDescription(std::uint32_t i)
             itemIndex = std::distance(items.cbegin(), res);
         }
 
-        const std::string num = "(" + std::to_string(itemIndex + 1) + "/" + std::to_string(m_gearMenus[i].items.size()) + ") ";
+        const std::string num = "(" + std::to_string(itemIndex + 1) + "/" + std::to_string(std::max(std::size_t(1), m_gearMenus[i].items.size())) + ") ";
         m_gearMenus[i].description.getComponent<cro::Text>().setString(num + inv::Manufacturers[inv::Items[m_activeProfile.loadout.items[i]].manufacturer]);
     }
 }

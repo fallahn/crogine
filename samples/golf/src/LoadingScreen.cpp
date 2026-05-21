@@ -103,6 +103,12 @@ LoadingScreen::LoadingScreen(SharedStateData& sd)
 //public
 void LoadingScreen::launch()
 {
+    //quit all rumbling in case someone skipped while pad was active
+    for (auto i = 0; i < cro::GameController::getControllerCount(); ++i)
+    {
+        cro::GameController::rumbleStop(i);
+    }
+
     WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Loading..." }));
 
     const glm::vec2 screenSize = cro::App::getWindow().getSize();
@@ -130,6 +136,7 @@ void LoadingScreen::launch()
         "assets/images/loading/04.png",
         "assets/images/loading/05.png",
         "assets/images/loading/06.png",
+        "assets/images/loading/07.png",
     };
 
     const auto screenIndex = cro::Util::Random::value(0u, imagePaths.size() - 1);
@@ -147,9 +154,10 @@ void LoadingScreen::launch()
     const std::array audioPaths =
     {
         "assets/sound/loading01.ogg",
+        "assets/sound/loading01.ogg",
+        "assets/sound/loading02.ogg",
         "assets/sound/loading02.ogg",
         "assets/sound/loading03.ogg",
-        "assets/sound/loading04.ogg",
         "assets/sound/loading04.ogg",
         "assets/sound/loading04.ogg",
     };

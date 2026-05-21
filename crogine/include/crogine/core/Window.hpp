@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -48,6 +48,11 @@ namespace cro
     class LoadingScreen;
     class Cursor;
 
+    enum class GPUVendor
+    {
+        NVidia, AMD, Intel, Unknown
+    };
+
     /*!
     \brief Creates a window to which to draw.
     */
@@ -87,6 +92,17 @@ namespace cro
         \brief Returns whether or not vsync is enabled
         */
         bool getVsyncEnabled() const;
+
+        /*!
+        \brief Sets the target frame limit in FPS when VSync is disabled
+        \param fps The frames per second to attempt to limit to. Set to zero to disable limiting
+        */
+        void setFramerateLimit(float fps);
+
+        /*!
+        \brief Returns the *normalised* frame rate limit
+        */
+        float getFramerateLimit() const { return m_framerateLimit; }
 
         /*!
         \brief Attempts to enable or disable MSAA if multisampling is available on the current platform
@@ -273,16 +289,23 @@ namespace cro
         */
         glm::uvec2 getWindowedSize() const;
 
+        /*!
+        \brief Returns the GPU vendor of the current OpenGL context
+        */
+        GPUVendor getGPUVendor() const;
 
     private:
 
         SDL_Window* m_window;
         SDL_GLContext m_threadContext;
         SDL_GLContext m_mainContext;
+        mutable GPUVendor m_gpuVendor;
 
         std::unique_ptr<LoadingScreen> m_loadingScreen;
 
         mutable std::vector<glm::uvec2> m_resolutions;
+
+        float m_framerateLimit;
 
         bool m_fullscreen;
         bool m_exclusiveFullScreen;

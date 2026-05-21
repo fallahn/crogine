@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -106,11 +106,26 @@ bool OpenALImpl::init()
     if (!m_device)
     {
         /*alcCheck*/(m_device = alcOpenDevice(nullptr));
+#ifdef _WIN32
+        //hum, this breaks the audio hack where the steam deck forgets
+        //which audio device it was using, so we can only assume this is
+        //true for all linux builds... :/
+        m_preferredDevice = "default";
+#endif
         if (!m_device)
         {
             LOG("OpenAL: Failed opening valid OpenAL device", Logger::Type::Error);
             return false;
         }
+#ifdef _WIN32
+        else
+        {
+            //store this in the config as last known good device
+            ConfigFile cfg;
+            cfg.addProperty("preferred_device").setValue(m_preferredDevice);
+            cfg.save(getPreferencePath());
+        }
+#endif
     }
     
     
@@ -310,7 +325,7 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     else
     {
         stream.streamID = -1;
-        Logger::log(ext + ": Unsupported file type.", Logger::Type::Error);
+        Logger::log("[OpenAL] - " + FileSystem::getFileName(path) + ": Unsupported file type.", Logger::Type::Error);
         return -1;
     }
     
@@ -767,19 +782,19 @@ void OpenALImpl::enumerateDevices()
                 {
                     if (ImGui::Begin("Default Audio Device", &showWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))
                     {
-                        std::vector<const char*> items; //lol.
-                        for (const auto& d : m_devices)
-                        {
-                            items.push_back(d.c_str());
-                        }
+                        //std::vector<const char*> items; //lol.
+                        //for (const auto& d : m_devices)
+                        //{
+                        //    items.push_back(d.c_str());
+                        //}
 
                         static std::int32_t idx = 0;
                         if (ImGui::BeginListBox("##", ImVec2(-FLT_MIN, 0.f)))
                         {
-                            for (auto n = 0u; n < items.size(); ++n)
+                            for (auto n = 0u; n < m_devices.size(); ++n)
                             {
                                 const bool selected = (idx == n);
-                                if (ImGui::Selectable(items[n], selected))
+                                if (ImGui::Selectable(m_devices[n].c_str(), selected))
                                 {
                                     idx = n;
                                 }

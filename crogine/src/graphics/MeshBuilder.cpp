@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,33 +33,39 @@ source distribution.
 
 using namespace cro;
 
-std::size_t MeshBuilder::getAttributeSize(const std::array<std::size_t, Mesh::Attribute::Total>& attrib)
+std::size_t MeshBuilder::getComponentCount(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib)
 {
     std::size_t size = 0;
     for (const auto& a : attrib)
     {
-        size += a;
+        size += a.componentCount;
     }
     return size;
 }
 
-std::size_t MeshBuilder::getVertexSize(const std::array<std::size_t, Mesh::Attribute::Total>& attrib)
+std::size_t MeshBuilder::getVertexSize(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib)
 {
-    return getAttributeSize(attrib) * sizeof(float);
+    std::size_t total = 0;
+    for (const auto& a : attrib)
+    {
+        total += a.getSize();
+    }
+
+    return total;
 }
 
 void MeshBuilder::createVBO(Mesh::Data& meshData, const std::vector<float>& vertexData)
 {
-    glCheck(glGenBuffers(1, &meshData.vbo));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+    glCheck(glGenBuffers(1, &meshData.vboAllocation.bufferID));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, vertexData.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
 void MeshBuilder::createIBO(Mesh::Data& meshData, const void* idxData, std::size_t idx, std::int32_t dataSize)
 {
-    glCheck(glGenBuffers(1, &meshData.indexData[idx].ibo));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[idx].ibo));
+    glCheck(glGenBuffers(1, &meshData.indexData[idx].iboAllocation.bufferID));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[idx].iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[idx].indexCount * dataSize, idxData, GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024 - 2025
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -63,7 +63,7 @@ The sound recorder ALWAYS captures raw audio in STEREO (2 channels) at 48000Khz,
 floating point. The capture callback feeds this through an SDL AudioStream which 
 converts the sample rate and channel count to that which was requested when the
 device was opened. It remains as float, and is written to a circular buffer
-3 FRAMES in size. If the requested hardware do not support Stereo 48Khz float
+3 FRAMES in size. If the requested hardware does not support Stereo 48Khz float
 opening the device will deliberately FAIL.
 
 Data is stored in the circular buffer to give any optional effects on the
@@ -434,7 +434,7 @@ bool SoundRecorder::openSelectedDevice()
             for (auto& effect : m_processEffects)
             {
                 effect->setAudioParameters(m_sampleRate, m_channelCount);
-                effect->reset(); //do this second as resetting parameters might require knowinf the above values
+                effect->reset(); //do this second as resetting parameters might require knowing the above values
             }
 
             SDL_PauseAudioDevice(m_recordingDevice, SDL_FALSE);

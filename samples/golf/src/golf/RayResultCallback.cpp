@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,13 +29,14 @@ source distribution.
 
 #include "RayResultCallback.hpp"
 #include "Terrain.hpp"
+#include "GameConsts.hpp"
 
 #include <cmath>
 #include <algorithm>
 
 //custom callback to return proper face normal (I wish we could cache these...)
 RayResultCallback::RayResultCallback(const btVector3& rayFromWorld, const btVector3& rayToWorld)
-    : ClosestRayResultCallback(rayFromWorld, rayToWorld)
+    : /*ClosestRayResultCallback*/AllHitsRayResultCallback(rayFromWorld, rayToWorld)
 {
 }
 
@@ -51,10 +52,20 @@ btScalar RayResultCallback::addSingleResult(btCollisionWorld::LocalRayResult& ra
         //TODO getFaceData could fill these directly, but it's clearer
         //what's going on if we do it here.
 
-        auto [normal, collisionType] = getFaceData(rayResult, m_collisionObject->getUserIndex());
-        m_hitNormalWorld = normal;
-        m_collisionType = collisionType;
-        m_hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
+        const auto [normal, collisionType] = getFaceData(rayResult, m_collisionObject->getUserIndex());
+        //m_hitNormalWorld = normal;
+        //m_collisionType = collisionType;
+        //m_hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
+        m_hitNormalWorld.push_back(normal);
+        m_collisionType.push_back(collisionType);
+        
+        btVector3 hitPointWorld;
+        hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
+        m_hitPointWorld.push_back(hitPointWorld);
+
+        //TODO not used afaik, included for completeness
+        m_collisionObjects.push_back(rayResult.m_collisionObject);
+        m_hitFractions.push_back(rayResult.m_hitFraction);
     }
     else
     {
@@ -63,7 +74,57 @@ btScalar RayResultCallback::addSingleResult(btCollisionWorld::LocalRayResult& ra
     return rayResult.m_hitFraction;
 }
 
-RayResultCallback::FaceData RayResultCallback::getFaceData(const btCollisionWorld::LocalRayResult& rayResult, std::int32_t colourOffset) const
+
+CollisionUtil::FaceData RayResultCallback::getFaceData(const btCollisionWorld::LocalRayResult& rayResult, std::int32_t colourOffset) const
+{
+    return CollisionUtil::getFaceData(rayResult.m_collisionObject->getCollisionShape(), rayResult.m_localShapeInfo->m_shapePart, rayResult.m_localShapeInfo->m_triangleIndex, colourOffset);
+}
+
+
+//results callback when using a sphere / cylinder shape to test for walls
+btScalar SphereResult::addSingleResult(btManifoldPoint& cp, const btCollisionObjectWrapper*, int, int, const btCollisionObjectWrapper* obj0, int partID0, int triangleIndex0)
+{
+    //offset into colour information from beginning of vertex data
+    const auto colourOffset = obj0->getCollisionObject()->getUserIndex();
+
+    //for some reason the object passed in as a param returns a nullptr so we have to hack around it like this
+    const auto& arr = *objects;
+    const auto [faceNormal, terrain] = CollisionUtil::getFaceData(arr[obj0->getCollisionObject()->getUserIndex2()]->getCollisionShape(), partID0, triangleIndex0, colourOffset);
+
+    //NOTE the that normal direction *flips* if the centre of
+    //the sphere is the other side of the collision plane...
+    //but the penetration, not always :S
+    //so we use the calculated face normal instead
+
+    const auto normal = btToGlm(/*cp.m_normalWorldOnB*/faceNormal);
+    //static constexpr float MaxAngle = 8.f / 90.f;
+
+    //only keep this collision if the surface is near vertical
+    const auto angle = glm::dot(cro::Transform::Y_AXIS, normal);
+    if (angle < /*MaxAngle*/(maxTestAngle / 90.f)
+        && angle >= 0.f)
+    {
+        auto& man = manifolds.emplace_back();
+        man.normal = normal;
+
+        //TODO this isn't correct so we're ignoring it when processing the result
+        //perhaps we could use the point on worldB property to calculate the correction?
+        man.penetration = -cp.m_distance1;
+        man.terrain = ((terrain & 0xFF000000) >> 24);
+
+        //LogI << normal << ", " << btToGlm(faceNormal) << std::endl;
+    }
+    /*else
+    {
+        LogI << angle << ": threshold not met" << std::endl;
+    }*/
+    return 0.f; //what is this even returning? bullet docs are *infuriating*
+}
+
+
+
+//util to fetch face data from collision mesh
+CollisionUtil::FaceData CollisionUtil::getFaceData(const btCollisionShape* shape, std::int32_t partID, std::int32_t triangleID, std::int32_t colourOffset)
 {
     /*
     Respect to https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=12826
@@ -99,22 +160,37 @@ RayResultCallback::FaceData RayResultCallback::getFaceData(const btCollisionWorl
         return (std::int32_t(r) << 24) | (std::int32_t(g) << 16) | (std::int32_t(b) << 8);
     };
 
-    const auto* triangleShape = static_cast<const btBvhTriangleMeshShape*>(rayResult.m_collisionObject->getCollisionShape());
+    const auto* triangleShape = static_cast<const btBvhTriangleMeshShape*>(shape);
     const auto* triangleMesh = static_cast<const btTriangleIndexVertexArray*>(triangleShape->getMeshInterface());
 
     triangleMesh->getLockedReadOnlyVertexIndexBase(
-        &vertices, numVertices, verticesType, vertexStride, &indices, indicesStride, numFaces, indicesType, rayResult.m_localShapeInfo->m_shapePart
+        &vertices, numVertices, verticesType, vertexStride, &indices, indicesStride, numFaces, indicesType, partID
     );
 
-    const auto* index = reinterpret_cast<const int*>(indices + rayResult.m_localShapeInfo->m_triangleIndex * indicesStride);
-    btVector3 va = vertex(*index);
-    btVector3 vb = vertex(*(index + 1));
-    btVector3 vc = vertex(*(index + 2));
-    btVector3 normal = (vb - va).cross(vc - va).normalized();
+    //ugh different meshes have different strides
+    std::array<std::uint32_t, 3u> ind = {};    
+    switch (indicesStride)
+    {
+    default: break;
+    case 3:
+        ind = CollisionUtil::getTriangleIndices<std::uint8_t>(indices + triangleID * indicesStride);
+        break;
+    case 6:
+        ind = CollisionUtil::getTriangleIndices<std::uint16_t>(indices + triangleID * indicesStride);
+        break;
+    case 12:
+        ind = CollisionUtil::getTriangleIndices<std::uint32_t>(indices + triangleID * indicesStride);
+        break;
+    }
 
-    std::int32_t collisionType = colour(*index);
+    const btVector3 va = vertex(ind[0]);
+    const btVector3 vb = vertex(ind[1]);
+    const btVector3 vc = vertex(ind[2]);
+    const btVector3 normal = (vb - va).cross(vc - va).normalized();
 
-    triangleMesh->unLockReadOnlyVertexBase(rayResult.m_localShapeInfo->m_shapePart);
+    const std::int32_t collisionType = colour(ind[0]);
+
+    triangleMesh->unLockReadOnlyVertexBase(partID);
 
     return { normal, collisionType };
 }

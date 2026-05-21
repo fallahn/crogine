@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -181,6 +181,16 @@ static constexpr std::uint32_t ShadowMapLowest = 512;
 static constexpr std::uint32_t ShadowMapLow = 2048;
 static constexpr std::uint32_t ShadowMapHigh = 3072;
 
+struct Vertex final
+{
+    glm::vec3 position = glm::vec3(0.f);
+    cro::Detail::ColourLowP colour = cro::Colour::White;
+
+    Vertex() = default;
+    Vertex(glm::vec3 pos, cro::Detail::ColourLowP c) : position(pos), colour(c) {}
+    Vertex(float x, float y, float z) : position(x, y, z) {}
+};
+
 static inline void createKeystroke(std::int32_t key, bool down)
 {
     SDL_Event evt;
@@ -334,7 +344,9 @@ struct ShaderID final
         TerrainShadow,
         Billboard,
         BillboardShadow,
+        Grass,
         Cel,
+        CelBumped,
         CelSkinned,
         CelTextured,
         CelTexturedNoWind,
@@ -367,6 +379,7 @@ struct ShaderID final
         BallNight,
         BallNightSkinned,
         BallWasher,
+        TeeNight,
         Slope,
         Minimap,
         MinimapModel,
@@ -376,6 +389,7 @@ struct ShaderID final
         WireframeCulled,
         WireframeCulledPoint,
         Weather,
+        Swarm,
         Transition,
         Trophy,
         Beacon,
@@ -412,8 +426,20 @@ struct ShaderID final
         LavaFall,
         Umbrella,
         Moon,
-        Earth
+        Earth,
+        Cloth,
+        Shore,
+        Vapour
     };
+};
+
+struct ControllerEffect final
+{
+    enum
+    {
+        Firework, HIO, Bounce
+    };
+    static void trigger(std::int32_t controllerID, std::int32_t type);
 };
 
 struct SkipState final
@@ -528,6 +554,12 @@ static inline std::int32_t activeControllerID(std::int32_t bestMatch)
 }
 
 bool hasPSLayout(std::int32_t controllerID);
+namespace cro { class MultiRenderTexture; }
+void renderToNormalMap(const cro::Mesh::Data, cro::Shader&, cro::MultiRenderTexture&);
+
+static constexpr glm::vec3 Gravity = glm::vec3(0.f, -9.8f, 0.f);
+//NOTE after calling this impulse contains the *reflected* vector of the final bounce
+glm::vec3 getImpactPoint(glm::vec3 startPos, glm::vec3& impulse, float sideSpin, glm::vec3 wind, glm::vec3 pin, class CollisionMesh&, float dt = 1.f / 30.f);
 
 template <typename T>
 constexpr T interpolate(T a, T b, float t)
@@ -724,266 +756,11 @@ static inline void toggleAntialiasing(SharedStateData& sharedData, bool on, std:
 //    cfg.save(path);
 //}
 
-static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated)
-{
-    auto endColour = TextGoldColour;
-    endColour.setAlpha(0.f);
-    const cro::Colour Grey(0.419f, 0.435f, 0.447f);
-
-    if (decimated)
-    {
-        static constexpr std::array Offsets =
-        {
-            0.0001f, 0.0002f, 0.0004f, 0.0008f
-        };
-
-        return
-        {
-            //gold
-            cro::Vertex2D(glm::vec2(0.f, 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.f, -0.5f), TextGoldColour),
-
-
-            //05 - 0.045 0.055
-            cro::Vertex2D(glm::vec2(0.045f - Offsets[3], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.045f - Offsets[3], -0.5f), TextGoldColour),
-
-            cro::Vertex2D(glm::vec2(0.045f - Offsets[3], 0.5f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(0.045f - Offsets[3], -0.5f), LeaderboardTextDark),
-
-            cro::Vertex2D(glm::vec2(0.055f - Offsets[3], 0.5f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(0.055f - Offsets[3], -0.5f), LeaderboardTextDark),
-
-            cro::Vertex2D(glm::vec2(0.055f - Offsets[3], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.055f - Offsets[3], -0.5f), TextGoldColour),
-
-
-            //1 - 0.095 0.105
-            cro::Vertex2D(glm::vec2(0.095f - Offsets[2], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.095f - Offsets[2], -0.5f), TextGoldColour),
-
-            cro::Vertex2D(glm::vec2(0.095f - Offsets[2], 0.5f), Grey),
-            cro::Vertex2D(glm::vec2(0.095f - Offsets[2], -0.5f), Grey),
-
-            cro::Vertex2D(glm::vec2(0.105f - Offsets[2], 0.5f), Grey),
-            cro::Vertex2D(glm::vec2(0.105f - Offsets[2], -0.5f), Grey),
-
-            cro::Vertex2D(glm::vec2(0.105f - Offsets[2], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.105f - Offsets[2], -0.5f), TextGoldColour),
-
-
-            //15 - 0.145 0.155
-            cro::Vertex2D(glm::vec2(0.145f - Offsets[1], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.145f - Offsets[1], -0.5f), TextGoldColour),
-
-            cro::Vertex2D(glm::vec2(0.145f - Offsets[1], 0.5f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(0.145f - Offsets[1], -0.5f), LeaderboardTextDark),
-
-            cro::Vertex2D(glm::vec2(0.155f - Offsets[1], 0.5f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(0.155f - Offsets[1], -0.5f), LeaderboardTextDark),
-
-            cro::Vertex2D(glm::vec2(0.155f - Offsets[1], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.155f - Offsets[1], -0.5f), TextGoldColour),
-
-
-            //2 - 0.195 0.205
-            cro::Vertex2D(glm::vec2(0.195f - Offsets[0], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.195f - Offsets[0], -0.5f), TextGoldColour),
-
-            cro::Vertex2D(glm::vec2(0.195f - Offsets[0], 0.5f), Grey),
-            cro::Vertex2D(glm::vec2(0.195f - Offsets[0], -0.5f), Grey),
-
-            cro::Vertex2D(glm::vec2(0.205f - Offsets[0], 0.5f), Grey),
-            cro::Vertex2D(glm::vec2(0.205f - Offsets[0], -0.5f), Grey),
-
-            cro::Vertex2D(glm::vec2(0.205f - Offsets[0], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.205f - Offsets[0], -0.5f), TextGoldColour),
-
-
-
-            //25 - 0.245 0.255
-            cro::Vertex2D(glm::vec2(0.245f, 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.245f, -0.5f), TextGoldColour),
-
-            cro::Vertex2D(glm::vec2(0.245f, 0.5f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(0.245f, -0.5f), LeaderboardTextDark),
-
-            cro::Vertex2D(glm::vec2(0.255f, 0.5f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(0.255f, -0.5f), LeaderboardTextDark),
-
-            cro::Vertex2D(glm::vec2(0.255f, 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.255f, -0.5f), TextGoldColour),
-
-
-            //3 - 0.295 0.305
-            cro::Vertex2D(glm::vec2(0.295f + Offsets[0], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.295f + Offsets[0], -0.5f), TextGoldColour),
-
-            cro::Vertex2D(glm::vec2(0.295f + Offsets[0], 0.5f), Grey),
-            cro::Vertex2D(glm::vec2(0.295f + Offsets[0], -0.5f), Grey),
-
-            cro::Vertex2D(glm::vec2(0.305f + Offsets[0], 0.5f), Grey),
-            cro::Vertex2D(glm::vec2(0.305f + Offsets[0], -0.5f), Grey),
-
-            cro::Vertex2D(glm::vec2(0.305f + Offsets[0], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.305f + Offsets[0], -0.5f), TextGoldColour),
-
-
-            //35 - 0.345 0.355
-            cro::Vertex2D(glm::vec2(0.345f + Offsets[1], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.345f + Offsets[1], -0.5f), TextGoldColour),
-
-            cro::Vertex2D(glm::vec2(0.345f + Offsets[1], 0.5f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(0.345f + Offsets[1], -0.5f), LeaderboardTextDark),
-
-            cro::Vertex2D(glm::vec2(0.355f + Offsets[1], 0.5f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(0.355f + Offsets[1], -0.5f), LeaderboardTextDark),
-
-            cro::Vertex2D(glm::vec2(0.355f + Offsets[1], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.355f + Offsets[1], -0.5f), TextGoldColour),
-
-
-            //4 - 0.395 0.405
-            cro::Vertex2D(glm::vec2(0.395f + Offsets[2], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.395f + Offsets[2], -0.5f), TextGoldColour),
-
-            cro::Vertex2D(glm::vec2(0.395f + Offsets[2], 0.5f), Grey),
-            cro::Vertex2D(glm::vec2(0.395f + Offsets[2], -0.5f), Grey),
-
-            cro::Vertex2D(glm::vec2(0.405f + Offsets[2], 0.5f), Grey),
-            cro::Vertex2D(glm::vec2(0.405f + Offsets[2], -0.5f), Grey),
-
-            cro::Vertex2D(glm::vec2(0.405f + Offsets[2], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.405f + Offsets[2], -0.5f), TextGoldColour),
-
-
-
-            //45 0.445 0. 455
-            cro::Vertex2D(glm::vec2(0.445f + Offsets[3], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.445f + Offsets[3], -0.5f), TextGoldColour),
-
-            cro::Vertex2D(glm::vec2(0.445f + Offsets[3], 0.5f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(0.445f + Offsets[3], -0.5f), LeaderboardTextDark),
-
-            cro::Vertex2D(glm::vec2(0.455f + Offsets[3], 0.5f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(0.455f + Offsets[3], -0.5f), LeaderboardTextDark),
-
-            cro::Vertex2D(glm::vec2(0.455f + Offsets[3], 0.5f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(0.455f + Offsets[3], -0.5f), TextGoldColour),
-
-
-
-
-            cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
-            cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
-        };
-    }
-
-    return
-    {
-        //gold
-        cro::Vertex2D(glm::vec2(0.f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.f, -0.5f), TextGoldColour),
-
-        //grey
-        cro::Vertex2D(glm::vec2(0.0188f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.0188f, -0.5f), TextGoldColour),
-
-        cro::Vertex2D(glm::vec2(0.0188f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.0188f, -0.5f), Grey),
-
-        cro::Vertex2D(glm::vec2(0.0288f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.0288f, -0.5f), Grey),
-
-        cro::Vertex2D(glm::vec2(0.0288f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.0288f, -0.5f), TextGoldColour),
-
-
-        //black
-        cro::Vertex2D(glm::vec2(0.07f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.07f, -0.5f), TextGoldColour),
-
-        cro::Vertex2D(glm::vec2(0.07f, 0.5f), LeaderboardTextDark),
-        cro::Vertex2D(glm::vec2(0.07f, -0.5f), LeaderboardTextDark),
-
-        cro::Vertex2D(glm::vec2(0.08f, 0.5f), LeaderboardTextDark),
-        cro::Vertex2D(glm::vec2(0.08f, -0.5f), LeaderboardTextDark),
-
-        cro::Vertex2D(glm::vec2(0.08f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.08f, -0.5f), TextGoldColour),
-
-        //grey
-        cro::Vertex2D(glm::vec2(0.1525f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.1525f, -0.5f), TextGoldColour),
-
-        cro::Vertex2D(glm::vec2(0.1525f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.1525f, -0.5f), Grey),
-
-        cro::Vertex2D(glm::vec2(0.1625f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.1625f, -0.5f), Grey),
-
-        cro::Vertex2D(glm::vec2(0.1625f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.1625f, -0.5f), TextGoldColour),
-
-        //black
-        cro::Vertex2D(glm::vec2(0.245f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.245f, -0.5f), TextGoldColour),
-
-        cro::Vertex2D(glm::vec2(0.245f, 0.5f), LeaderboardTextDark),
-        cro::Vertex2D(glm::vec2(0.245f, -0.5f), LeaderboardTextDark),
-
-        cro::Vertex2D(glm::vec2(0.255f, 0.5f), LeaderboardTextDark),
-        cro::Vertex2D(glm::vec2(0.255f, -0.5f), LeaderboardTextDark),
-
-        cro::Vertex2D(glm::vec2(0.255f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.255f, -0.5f), TextGoldColour),
-
-
-        //grey
-        cro::Vertex2D(glm::vec2(0.3175f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.3175f, -0.5f), TextGoldColour),
-
-        cro::Vertex2D(glm::vec2(0.3175f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.3175f, -0.5f), Grey),
-
-        cro::Vertex2D(glm::vec2(0.3275f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.3275f, -0.5f), Grey),
-
-        cro::Vertex2D(glm::vec2(0.3275f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.3275f, -0.5f), TextGoldColour),
-
-
-        //black
-        cro::Vertex2D(glm::vec2(0.395f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.395f, -0.5f), TextGoldColour),
-
-        cro::Vertex2D(glm::vec2(0.395f, 0.5f), LeaderboardTextDark),
-        cro::Vertex2D(glm::vec2(0.395f, -0.5f), LeaderboardTextDark),
-
-        cro::Vertex2D(glm::vec2(0.405f, 0.5f), LeaderboardTextDark),
-        cro::Vertex2D(glm::vec2(0.405f, -0.5f), LeaderboardTextDark),
-
-        cro::Vertex2D(glm::vec2(0.405f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.405f, -0.5f), TextGoldColour),
-
-        //grey
-        cro::Vertex2D(glm::vec2(0.4475f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.4475f, -0.5f), TextGoldColour),
-
-        cro::Vertex2D(glm::vec2(0.4475f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.4475f, -0.5f), Grey),
-
-        cro::Vertex2D(glm::vec2(0.4575f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.4575f, -0.5f), Grey),
-
-        cro::Vertex2D(glm::vec2(0.4575f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.4575f, -0.5f), TextGoldColour),
-
-        //gold
-        cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
-        cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
-    };
-}
+//old version
+std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated);
+
+//new version
+std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2>& points, float offsetScale = 1.f);
 
 static inline void createSwingputMeter(cro::Entity entity, InputParser& inputParser)
 {
@@ -1412,8 +1189,12 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
                     }
                     else
                     {
-                        applyMaterialData(md, material, i);
-                        entity.getComponent<cro::Model>().setMaterial(i, material);
+                        //don't apply this material if a custom one was loaded with the model
+                        if (!entity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Final, i).customShader)
+                        {
+                            applyMaterialData(md, material, i);
+                            entity.getComponent<cro::Model>().setMaterial(i, material);
+                        }
                     }
                 }
             }

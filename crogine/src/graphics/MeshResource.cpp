@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -62,8 +62,8 @@ bool MeshResource::loadMesh(std::size_t ID, const MeshBuilder& mb)
         return false;
     }
 
-    auto meshData = mb.build();
-    if (meshData.vbo > 0 && meshData.submeshCount > 0)
+    auto meshData = mb.build(&m_allocationResource);
+    if (meshData.vboAllocation.bufferID > 0 && meshData.submeshCount > 0)
     {
         m_meshData.insert(std::make_pair(ID, meshData));
 
@@ -149,11 +149,19 @@ void MeshResource::flush()
 void MeshResource::deleteMesh(Mesh::Data md)
 {
     //delete index buffers
+
     for (auto& id : md.indexData)
     {
-        if (id.ibo)
+        if (id.iboAllocation.bufferID)
         {
-            glCheck(glDeleteBuffers(1, &id.ibo));
+            if (md.iboAllocator)
+            {
+                md.iboAllocator->freeAllocation(id.iboAllocation);
+            }
+            else
+            {
+                glCheck(glDeleteBuffers(1, &id.iboAllocation.bufferID));
+            }
         }
 
 #ifdef PLATFORM_DESKTOP
@@ -166,9 +174,17 @@ void MeshResource::deleteMesh(Mesh::Data md)
         }
 #endif
     }
+
     //delete vertex buffer
-    if (md.vbo)
+    if (md.vboAllocation.bufferID)
     {
-        glCheck(glDeleteBuffers(1, &md.vbo));
+        if (md.vboAllocator)
+        {
+            md.vboAllocator->freeAllocation(md.vboAllocation);
+        }
+        else
+        {
+            glCheck(glDeleteBuffers(1, &md.vboAllocation.bufferID));
+        }
     }
 }

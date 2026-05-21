@@ -38,6 +38,8 @@ source distribution.
 #include <array>
 #include <cstdint>
 
+#define LOB_WEDGE
+
 struct ClubID final
 {
     enum
@@ -45,7 +47,11 @@ struct ClubID final
         Driver, ThreeWood, FiveWood,
         FourIron, FiveIron, SixIron,
         SevenIron, EightIron, NineIron,
-        PitchWedge, GapWedge, SandWedge,
+        PitchWedge,
+#ifdef LOB_WEDGE
+        LobWedge,
+#endif
+        GapWedge, SandWedge,
         Putter,
 
         Count
@@ -56,7 +62,11 @@ struct ClubID final
         (1<<Driver),     (1<<ThreeWood), (1<<FiveWood),
         (1<<FourIron),   (1<<FiveIron),  (1<<SixIron),
         (1<<SevenIron),  (1<<EightIron), (1<<NineIron),
-        (1<<PitchWedge), (1<<GapWedge),  (1<<SandWedge),
+        (1<<PitchWedge),
+#ifdef LOB_WEDGE
+        (1<<LobWedge),
+#endif
+        (1<<GapWedge),   (1<<SandWedge),
         (1<<Putter)
     };
 
@@ -78,14 +88,22 @@ struct ClubID final
         return 0;
     }
 
+    //this appears in Social.cpp too!!! Make sure they remain in sync
     static constexpr std::int32_t DefaultSet =
         Flags[Driver]    | Flags[ThreeWood]  | Flags[FiveIron] |
-        Flags[EightIron] | Flags[PitchWedge] | Flags[GapWedge] |
-        Flags[SandWedge] | Flags[Putter];
+        Flags[EightIron] | Flags[PitchWedge] |
+#ifdef LOB_WEDGE
+        Flags[LobWedge] |
+#endif
+        Flags[GapWedge]  | Flags[SandWedge] | Flags[Putter];
 
+#ifdef LOB_WEDGE
+    static constexpr std::int32_t FullSet = 0x3FFF; //with lob wedge
+#else
     static constexpr std::int32_t FullSet = 0x1FFF;
+#endif
 
-    //these are disable while the player has the snek
+    //these are disabled while the player has the snek
     static constexpr std::int32_t SnekFlags =
         Flags[ThreeWood] | Flags[FiveWood]  | Flags[FourIron]  |
         Flags[SixIron]   | Flags[SevenIron] | Flags[EightIron] |
@@ -108,7 +126,7 @@ public:
 
     Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin);
 
-    std::string getName(bool imperial, float distanceToPin) const;
+    std::string getName(bool imperial, float distanceToPin, float dampening = 1.f) const;
 
     std::string getLabel() const { return m_name; } //doesn't include distance
 
@@ -181,6 +199,9 @@ static constexpr std::array<std::int32_t, ClubID::Count> ClubShot =
     ShotType::Regular | ShotType::Punch,
     ShotType::Regular | ShotType::Punch | ShotType::Flop,
     ShotType::Regular | ShotType::Flop, //wedge
+#ifdef LOB_WEDGE
+    ShotType::Regular | ShotType::Flop, //lob
+#endif
     ShotType::Regular | ShotType::Flop,
     ShotType::Regular | ShotType::Flop,
     ShotType::Regular, //putter
@@ -208,18 +229,22 @@ static constexpr std::array<std::int32_t, ClubID::Count> ClubShot =
 //};
 
 //remember if using these to also set the club stats in Clubs.cpp
+//name, angle, side spin, top spin
 static inline const std::array<Club, ClubID::Count> Clubs =
 {
-    Club(ClubID::Driver,    "Driver ", 28.992f, 0.300f, 0.500f),
-    Club(ClubID::ThreeWood, "3 Wood ", 32.315f, 0.350f, 0.550f),
-    Club(ClubID::FiveWood,  "5 Wood ", 34.721f, 0.450f, 0.550f),
-    Club(ClubID::FourIron,  "4 Iron ", 37.586f, 0.450f, 0.780f),
-    Club(ClubID::FiveIron,  "5 Iron ", 37.128f, 0.500f, 0.780f),
-    Club(ClubID::SixIron,   "6 Iron ", 36.326f, 0.550f, 0.800f),
-    Club(ClubID::SevenIron, "7 Iron ", 35.924f, 0.600f, 0.800f),
-    Club(ClubID::EightIron, "8 Iron ", 35.924f, 0.750f, 0.850f),
+    Club(ClubID::Driver,    "Driver ", 28.992f, 0.700f, 0.500f),
+    Club(ClubID::ThreeWood, "3 Wood ", 32.315f, 0.710f, 0.550f),
+    Club(ClubID::FiveWood,  "5 Wood ", 34.721f, 0.710f, 0.550f),
+    Club(ClubID::FourIron,  "4 Iron ", 37.586f, 0.740f, 0.780f),
+    Club(ClubID::FiveIron,  "5 Iron ", 37.128f, 0.750f, 0.780f),
+    Club(ClubID::SixIron,   "6 Iron ", 36.326f, 0.750f, 0.800f),
+    Club(ClubID::SevenIron, "7 Iron ", 35.924f, 0.760f, 0.800f),
+    Club(ClubID::EightIron, "8 Iron ", 35.924f, 0.780f, 0.850f),
     Club(ClubID::NineIron,  "9 Iron ", 35.523f, 0.800f, 0.850f),
     Club(ClubID::PitchWedge, "Pitch Wedge ", 56.895f, 0.050f, 0.900f),
+#ifdef LOB_WEDGE
+    Club(ClubID::LobWedge,   "Lob Wedge ",   52.f, 0.050f, 0.910f),
+#endif
     Club(ClubID::GapWedge,   "Gap Wedge ",   62.452f, 0.050f, 0.930f),
     Club(ClubID::SandWedge,  "Sand Wedge ",  60.000f, 0.050f, 0.950f),
     Club(ClubID::Putter,     "Putter ",      0.000f, 0.000f, 0.000f),

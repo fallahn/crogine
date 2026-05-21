@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -43,7 +43,7 @@ CircleMeshBuilder::CircleMeshBuilder(float radius, std::uint32_t pointCount)
 }
 
 //private
-Mesh::Data CircleMeshBuilder::build() const
+Mesh::Data CircleMeshBuilder::build(AllocationResource*) const
 {
     const float step = cro::Util::Const::TAU / m_pointCount;
     std::vector<glm::vec2> points;
@@ -98,11 +98,11 @@ Mesh::Data CircleMeshBuilder::build() const
 
 
     Mesh::Data meshData;
-    meshData.attributes[Mesh::Position] = 3;
-    meshData.attributes[Mesh::Normal] = 3;
-    meshData.attributes[Mesh::Tangent] = 3;
-    meshData.attributes[Mesh::Bitangent] = 3;
-    meshData.attributes[Mesh::UV0] = 2;
+    meshData.attributes[Mesh::Attribute::Position].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Normal].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Tangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::Bitangent].componentCount = 3;
+    meshData.attributes[Mesh::Attribute::UV0].componentCount = 2;
     meshData.attributeFlags = (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
     meshData.primitiveType = GL_TRIANGLE_STRIP;
     meshData.vertexCount = verts.size() / 14;

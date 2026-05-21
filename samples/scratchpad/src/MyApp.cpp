@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -50,6 +50,7 @@ source distribution.
 #include "LoadingScreen.hpp"
 #include "arc/ArcState.hpp"
 #include "trackoverlay/TrackOverlayState.hpp"
+#include "deckintro/DeckintroState.hpp"
 #include "pseuthe/PseutheBackgroundState.hpp"
 #include "pseuthe/PseutheGameState.hpp"
 #include "pseuthe/PseutheMenuState.hpp"
@@ -62,6 +63,9 @@ source distribution.
 #include "gk/GKGameState.hpp"
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
+
+#include <memory>
 
 namespace
 {
@@ -79,6 +83,7 @@ namespace
     {
         return getBasePath() + "content/";
     }
+    std::unique_ptr<cro::ResourceCollection> sharedResources;
 }
 
 MyApp::MyApp()
@@ -184,7 +189,9 @@ bool MyApp::initialise()
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Scratchpad Browser");
 
-    m_stateStack.registerState<sp::MenuState>(States::ScratchPad::MainMenu, *this);
+    sharedResources = std::make_unique<cro::ResourceCollection>();
+
+    m_stateStack.registerState<sp::MenuState>(States::ScratchPad::MainMenu, *this, *sharedResources);
     m_stateStack.registerState<BatcatState>(States::ScratchPad::BatCat);
     m_stateStack.registerState<BilliardsState>(States::ScratchPad::Billiards);
     m_stateStack.registerState<BushState>(States::ScratchPad::Bush);
@@ -204,6 +211,7 @@ bool MyApp::initialise()
     m_stateStack.registerState<InteriorMappingState>(States::ScratchPad::InteriorMapping); //instance culling
     m_stateStack.registerState<EndlessDrivingState>(States::ScratchPad::EndlessDriving);
     m_stateStack.registerState<TrackOverlayState>(States::ScratchPad::TrackOverlay);
+    m_stateStack.registerState<DeckIntroState>(States::ScratchPad::DeckIntro);
     
     m_stateStack.registerState<ScrubGameState>(States::ScratchPad::Scrub);
     m_stateStack.registerState<ScrubAttractState>(States::ScratchPad::ScrubAttract);
@@ -218,8 +226,8 @@ bool MyApp::initialise()
 
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(States::ScratchPad::TrackOverlay);
-    //m_stateStack.pushState(States::ScratchPad::BatCat);
-    m_stateStack.pushState(States::ScratchPad::MainMenu);
+    m_stateStack.pushState(States::ScratchPad::BatCat);
+    //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
     m_stateStack.pushState(States::ScratchPad::BatCat);
@@ -233,5 +241,6 @@ void MyApp::finalise()
     m_stateStack.clearStates();
     m_stateStack.simulate(0.f);
 
+    sharedResources.reset();
     cro::App::unloadPlugin(m_stateStack);
 }

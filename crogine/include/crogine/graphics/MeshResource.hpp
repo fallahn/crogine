@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/SDLResource.hpp>
+#include <crogine/detail/AllocationResource.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
 
@@ -39,7 +40,7 @@ source distribution.
 #include <array>
 
 namespace cro
-{    
+{
     class MeshBuilder;
 
     /*!
@@ -105,7 +106,14 @@ namespace cro
         */
         void flush();
 
+        /*!
+        \brief Returns a refrence to the AllocationResource used for allocating shared buffers
+        */
+        AllocationResource& getAllocationResource() { return m_allocationResource; }
+
     private:
+        AllocationResource m_allocationResource;
+        
         std::unordered_map<std::size_t, Mesh::Data> m_meshData;
         std::unordered_map<std::size_t, Skeleton> m_skeletalData;
 

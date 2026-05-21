@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -35,4 +35,8 @@ struct SharedStateData final
 {
     std::string workingDirectory;
     std::string skymapTexture;
+
+    std::string nvttPath;
+    std::string compressionDirectory;
+    bool compressMips = false; //create mipmaps on DXT5 textures?
 };

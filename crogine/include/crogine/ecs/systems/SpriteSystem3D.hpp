@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/AllocationResource.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/graphics/Shader.hpp>
@@ -92,6 +93,7 @@ namespace cro
         Material::Data m_colouredMaterial;
         Material::Data m_texturedMaterial;
 
+        AllocationResource m_allocationResource;
         std::unique_ptr<MeshBuilder> m_meshBuilder; //needs the polymorphism I'm afraid
 
         void onEntityAdded(Entity) override;

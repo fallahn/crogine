@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -35,6 +35,11 @@ static inline const std::string CelVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
+#if defined(BUMP)
+    ATTRIBUTE vec3 a_tangent;
+    ATTRIBUTE vec3 a_bitangent;
+#endif
+
 #if defined (TEXTURED)
     ATTRIBUTE vec2 a_texCoord0;
 #endif
@@ -44,6 +49,10 @@ static inline const std::string CelVertexShader = R"(
 
 #if defined(INSTANCING)
 #include INSTANCE_ATTRIBS
+#else
+//#define worldMatrix u_worldMatrix;
+//#define worldViewMatrix u_worldViewMatrix;
+//#define normalMatrix u_normalMatrix;
 #endif
 
 #if defined(SKINNED)
@@ -105,7 +114,8 @@ VARYING_OUT vec4 v_menuProjection;
     VARYING_OUT vec4 v_colour;
     VARYING_OUT vec3 v_cameraWorldPosition;
     VARYING_OUT vec3 v_worldPosition;
-    //VARYING_OUT float v_perspectiveScale;
+    VARYING_OUT vec3 v_viewPosition;
+    VARYING_OUT float v_perspectiveScale;
 
 #if defined (TEXTURED)
     VARYING_OUT vec2 v_texCoord;
@@ -115,8 +125,8 @@ VARYING_OUT vec4 v_menuProjection;
 #include SHADOWMAP_OUTPUTS
 #endif
 
-#if defined (NORMAL_MAP)
-    VARYING_OUT vec2 v_normalTexCoord;
+#if defined (BUMP)
+    VARYING_OUT vec3 v_tbn[3];
 #endif
 
 #if defined(INSTANCING)
@@ -139,12 +149,11 @@ flat out int v_instanceID;
     {
     #if defined (INSTANCING)
 #include INSTANCE_MATRICES
-v_instanceID = gl_InstanceID;
+        v_instanceID = gl_InstanceID;
     #else
         mat4 worldMatrix = u_worldMatrix;
         mat4 worldViewMatrix = u_worldViewMatrix;
         mat3 normalMatrix = u_normalMatrix;
-        //mat3 normalMatrix = transpose(inverse(mat3(u_worldMatrix)));
     #endif
 
     #if defined (VATS)
@@ -198,11 +207,15 @@ v_instanceID = gl_InstanceID;
 #if !defined(WOBBLE)
         worldPosition.xyz += windDir;
 #endif
-        vec4 vertPos = u_projectionMatrix * u_viewMatrix * worldPosition;
+        //vec4 vertPos = u_projectionMatrix * u_viewMatrix * worldPosition;
+        vec4 viewPosition = u_viewMatrix * worldPosition;
 #else
-        vec4 vertPos = u_projectionMatrix * worldViewMatrix * position;
+        //vec4 vertPos = u_projectionMatrix * worldViewMatrix * position;
+        vec4 viewPosition = worldViewMatrix * position;
 #endif
+        vec4 vertPos = u_projectionMatrix * viewPosition;
         v_worldPosition = worldPosition.xyz;
+        v_viewPosition = viewPosition.xyz;
 
 #if defined(WOBBLE)
         vertPos.xyz /= vertPos.w;
@@ -238,8 +251,10 @@ v_instanceID = gl_InstanceID;
 #endif
 #endif
 
-#if defined (NORMAL_MAP)
-        v_normalTexCoord = vec2(worldPosition.x / MapSize.x, -worldPosition.z / MapSize.y);
+#if defined (BUMP)
+        v_tbn[0] = normalize(normalMatrix * a_tangent);
+        v_tbn[1] = normalize(normalMatrix * a_bitangent);
+        v_tbn[2] = normalize(normalMatrix * normal);
 #endif
         gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
 
@@ -260,7 +275,7 @@ v_instanceID = gl_InstanceID;
 #if defined(TERRAIN_CLIP)
     gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
 #endif
-        //v_perspectiveScale = u_projectionMatrix[1][1] / gl_Position.w;
+        v_perspectiveScale = clamp(1.0 - (u_projectionMatrix[1][1] / gl_Position.w), 0.0, 1.0);
     })";
 
 static inline const std::string CelFragmentShader = R"(
@@ -338,9 +353,9 @@ static inline const std::string CelFragmentShader = R"(
     uniform sampler2D u_angleTex;
 #endif
 
-#if defined (NORMAL_MAP)
+#if defined (BUMP)
     uniform sampler2D u_normalMap;
-    VARYING_IN vec2 v_normalTexCoord;
+    VARYING_IN vec3 v_tbn[3];
 #endif
 
     VARYING_IN vec3 v_normal;
@@ -348,8 +363,9 @@ static inline const std::string CelFragmentShader = R"(
     VARYING_IN float v_ditherAmount;
     VARYING_IN vec3 v_cameraWorldPosition;
     VARYING_IN vec3 v_worldPosition;
+    VARYING_IN vec3 v_viewPosition;
     VARYING_IN vec2 v_texCoord;
-    //VARYING_IN float v_perspectiveScale;
+    VARYING_IN float v_perspectiveScale;
 
 #if defined(MULTI_TARGET)
     VARYING_IN vec4 v_targetProjection;
@@ -362,14 +378,11 @@ static inline const std::string CelFragmentShader = R"(
 #define USE_MRT
 #include OUTPUT_LOCATION
 
-    layout (location = 4) out vec4 o_terrain;
-
 
 #if defined(RX_SHADOWS)
 #include SHADOWMAP_INPUTS
 #include CASCADE_SELECTION
 
-//#if defined (TERRAIN) || defined(CONTOUR)
 #if !defined (CLASSIC_SHADOWS)
 #include VSM_SHADOWS
 #else
@@ -420,6 +433,36 @@ static inline const std::string CelFragmentShader = R"(
 
     const vec3 SlopeShade = vec3(0.439, 0.368, 0.223);
     const vec3 BaseContourColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion
+#if defined(HOLE_HEIGHT)
+#if defined(CONTOUR)
+#include CONTOUR
+#else
+    float getContour(float spacing, float thickness)
+    {
+        vec3 f = fract(v_worldPosition * spacing);
+
+        float sizeMultiplier = smoothstep(10.0, 20.0, length(u_holePosition - v_cameraWorldPosition));
+        float falloff = 0.003;
+        falloff += 0.02 * sizeMultiplier;
+
+        thickness += thickness * sizeMultiplier;
+
+        float edge2 = 1.0 - falloff;
+        float edge1 = edge2 - thickness;
+        float edge0 = edge1 - falloff;
+
+        float contourX = smoothstep(edge0, edge1, f.x) * (1.0 - smoothstep(edge2, 1.0, f.x));
+        float contourY = smoothstep(edge0, edge1, f.z) * (1.0 - smoothstep(edge2, 1.0, f.z));
+        return clamp(contourX + contourY, 0.0, 1.0);
+    }
+#endif
+#endif
+
+    float calcFresnel(vec3 viewDirection, vec3 normal)
+    {
+        float f = 1.0 - pow(clamp(dot(viewDirection, normal), 0.0, 1.0), 5.0);
+        return (f * 0.8) + 0.2;
+    }
 
     void main()
     {
@@ -458,17 +501,18 @@ static inline const std::string CelFragmentShader = R"(
         colour *= u_ballColour;
 #endif
 
-#if defined (NORMAL_MAP)
-        vec3 normal = TEXTURE(u_normalMap, v_normalTexCoord).rgb * 2.0 - 1.0;
+#if defined (BUMP)
+        vec3 texNormal = TEXTURE(u_normalMap, v_texCoord).rgb * 2.0 - 1.0;
+        vec3 normal = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
 #else
         vec3 normal = normalize(v_normal);
 #endif
-        NORM_OUT = vec4(normal, 1.0);
+        NORM_OUT = vec4(normal * 0.5 + 0.5, 1.0); //8 bit target (note STILL IN WORLD SPACE)
+#if defined(VIEW_POS)        
+        POS_OUT.r = v_viewPosition.z;
+#else
         POS_OUT = vec4(v_worldPosition, 1.0);
-
-        float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
-
-        o_terrain = vec4(vec3(greenTerrain), 1.0);
+#endif
 
         vec3 lightDirection = normalize(-u_lightDirection);
         float amount = dot(normal, lightDirection);
@@ -504,7 +548,6 @@ static inline const std::string CelFragmentShader = R"(
 
 
 #if !defined(HOLE_HEIGHT)
-
         //TODO most of these comp shade materials don't need this
         //so would be nice to be able to skip the pointless lookups
         if (u_maskColour.b < 0.95)
@@ -562,8 +605,10 @@ static inline const std::string CelFragmentShader = R"(
         int texY = int(mod(texCheck.y, MatrixSize));
 
         float facing = dot(normal, vec3(0.0, 1.0, 0.0));
-        float waterFade = (1.0 - smoothstep(WaterLevel, (1.15 * (1.0 - smoothstep(0.89, 0.99, facing))) + WaterLevel, v_worldPosition.y));
-        float waterDither = findClosest(texX, texY, waterFade) * waterFade * (1.0 - step(0.96, facing));
+        float waterFade = (1.0 - smoothstep(WaterLevel, (1.15 * (1.0 - smoothstep(0.98, 0.995, facing))) + WaterLevel, v_worldPosition.y));
+        //float waterFade = (1.0 - smoothstep(WaterLevel, (1.15 * (1.0 - smoothstep(0.89, 0.99, facing))) + WaterLevel, v_worldPosition.y));
+        float waterDither = findClosest(texX, texY, waterFade) * waterFade * (1.0 - step(0.992, facing));
+        //float waterDither = findClosest(texX, texY, waterFade) * waterFade * (1.0 - step(0.96, facing));
 
 #if defined(COMP_SHADE)
         waterDither *= u_maskColour.g;
@@ -579,7 +624,8 @@ static inline const std::string CelFragmentShader = R"(
 #endif
 
 #if defined(REFLECTIONS)
-        colour.rgb = (TEXTURE_CUBE(u_reflectMap, reflect(-viewDirection, normal)).rgb * 0.25) + colour.rgb;
+        viewDirection = normalize(viewDirection);
+        colour.rgb += calcFresnel(viewDirection, normal) * (TEXTURE_CUBE(u_reflectMap, reflect(-viewDirection, normal)).rgb * 0.25); + colour.rgb;
 #endif
 
         FRAG_OUT = vec4(colour.rgb, 1.0);
@@ -627,8 +673,8 @@ static inline const std::string CelFragmentShader = R"(
 #endif 
 
 
-#if defined (DITHERED) || defined (FADE_INPUT)// || defined (TERRAIN)
-        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
+#if defined (DITHERED) || defined (FADE_INPUT)
+        vec2 xy = gl_FragCoord.xy;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
 
@@ -641,42 +687,16 @@ static inline const std::string CelFragmentShader = R"(
 #endif
 
 
-
-
 #if defined(HOLE_HEIGHT)
 #if !defined(CONTOUR) //regular green
-    //vec3 f = fract(v_worldPosition * 0.5);
-    //vec3 df = fwidth(v_worldPosition * 0.5);
-    ////df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
-    //vec3 g = step(df * u_pixelScale, f);
 
-    //float contour = /*round*/(1.0 - (g.x * g.y * g.z));
-
-vec3 f = fract(v_worldPosition * 0.5);
-
-float sizeMultiplier = smoothstep(10.0, 20.0, length(u_holePosition - v_cameraWorldPosition));
-float falloff = 0.003;
-falloff += 0.02 * sizeMultiplier;
-
-float thickness = 0.018;
-thickness += thickness * sizeMultiplier;
-
-float edge2 = 1.0 - falloff;
-float edge1 = edge2 - thickness;
-float edge0 = edge1 - falloff;
-
-float contourX = smoothstep(edge0, edge1, f.x) * (1.0 - smoothstep(edge2, 1.0, f.x));
-float contourY = smoothstep(edge0, edge1, f.z) * (1.0 - smoothstep(edge2, 1.0, f.z));
-float contour = clamp(contourX + contourY, 0.0, 1.0);
-
+float contour = getContour(0.5, 0.018);
 
     vec3 gridColour = ((FRAG_OUT.rgb * vec3(0.999, 0.95, 0.85))) * (0.4 + (0.6 * holeHeight)) * 0.2;
     //vec3 gridColour = ((FRAG_OUT.rgb * vec3(0.999, 0.95, 0.85))) * (0.8 + (0.4 * holeHeight));
-    
-
-//    float slope = 1.0 - dot(normal, vec3(0.0, 1.0, 0.0));
-//    slope = smoothstep(0.02, 0.04, clamp(slope / 0.05, 0.0, 1.0));
-//    gridColour = mix(gridColour, vec3(1.0, 0.0, 0.0), slope * 0.5);
+    //    float slope = 1.0 - dot(normal, vec3(0.0, 1.0, 0.0));
+    //    slope = smoothstep(0.02, 0.04, clamp(slope / 0.05, 0.0, 1.0));
+    //    gridColour = mix(gridColour, vec3(1.0, 0.0, 0.0), slope * 0.5);
 
 
     float transparency = 1.0 - pow(1.0 - u_transparency, 4.0);
@@ -687,16 +707,20 @@ float contour = clamp(contourX + contourY, 0.0, 1.0);
 
 #else //putting green
 
-    vec3 f = fract(v_worldPosition * 2.0);
-    vec3 df = fwidth(v_worldPosition * 2.0);
+    vec2 f = fract(v_worldPosition.xz * 2.0);
+    vec2 df = fwidth(v_worldPosition.xz * 2.0);
     //df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
-    vec3 g = step(df * u_pixelScale, f);
+    //vec2 g = step(df * u_pixelScale, f);
+    vec2 g = smoothstep(df, df * 2.0, f);
+    vec2 h = smoothstep(df * 0.25, df * 0.5, f);
 
-    float contour = 1.0 - (g.x * g.y * g.z);
+    float contour = (1.0 - (g.x * g.y)) * (h.x * h.y);
 
-    vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
+    //float contour = pristineGrid(v_worldPosition.xz*2.0,vec2(1.0/40.0));
+
     //these magic numbers are distance sqr
-    float fade = (1.0 - smoothstep(81.0, 144.0, dot(distance, distance))) * u_transparency * 0.75;
+    vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
+    float fade = (1.0 - smoothstep(81.0, 100.0, dot(distance, distance))) * u_transparency * 0.75;
 
     vec3 contourColour = BaseContourColour;
     contourColour.x += mod(v_worldPosition.y * 3.0, 1.0);
@@ -712,12 +736,6 @@ float contour = clamp(contourX + contourY, 0.0, 1.0);
 #endif
 
 
-
-#if defined(TERRAIN_CLIP)
-    //FRAG_OUT.rgb = mix(vec3(0.2, 0.3059, 0.6118) * u_lightColour.rgb, FRAG_OUT.rgb, smoothstep(WaterLevel - 0.001, WaterLevel + 0.001, v_worldPosition.y));
-    //FRAG_OUT.a = step(WaterLevel - 0.001, v_worldPosition.y);
-#endif
-
 #if defined (MASK_MAP)
     vec3 mask = TEXTURE(u_maskMap, texCoord).rgb;
 
@@ -731,6 +749,7 @@ FRAG_OUT.rgb *= ao;
     //we assume 12 LODs for a 1024 texture as textureQueryLevels() requires GLSL 4.3 :(
     float lod = clamp(((1.0 - mask.r) * 2.0), 0.0, 1.0) * 11.0;
     vec3 reflectColour = textureLod(u_reflectMap, reflect(-viewDirection, normal), lod).rgb * 0.25;
+    reflectColour *= calcFresnel(viewDirection, normal);
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, reflectColour + FRAG_OUT.rgb, mask.r);
 #endif
@@ -768,11 +787,10 @@ vec3 mapColour = TEXTURE(u_menuTexture, projUV).rgb;
     mapColour *= 1.0 - mask.g;
 #endif
 FRAG_OUT.rgb += mapColour;
-
 #endif
-//FRAG_OUT += vec4(1.0, 0.0, 0.0, 1.0);
     })";
     
+//FRAG_OUT += vec4(1.0, 0.0, 0.0, 1.0);
 //FRAG_OUT.r *= step(0.001, projUV.x);
 //FRAG_OUT.r *= 1.0 - step(0.999, projUV.x);
 

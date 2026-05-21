@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -52,6 +52,20 @@ struct MixerChannel final
     };
 };
 
+static inline const std::array<cro::String, MixerChannel::Count> MixerLabels =
+{
+    "Menu Music",
+    "Game Music",
+    "Effects",
+    "Menu Sounds",
+    "Voices",
+    "Vehicles",
+    "Environment",
+    "Text To Speech"
+};
+
+static const std::string TournamentDataFile = "data.tmt";
+
 namespace ConstVal
 {
     static constexpr float MinMouseSpeed = 0.5f;
@@ -101,3 +115,55 @@ namespace ConstVal
 
     static const std::uint8_t SummaryTimeout = 30;
 }
+
+namespace cro
+{
+    class Entity;
+    struct Attachment;
+}
+
+struct AvatarPreview final
+{
+    std::int32_t type = 0;
+    std::int32_t hairIndex = 0; //TODO this doesn't really need to be per model...
+    std::int32_t hatIndex = 0; //TODO this doesn't really need to be per model...
+    cro::Attachment* hairAttachment = nullptr;
+    cro::Attachment* hatAttachment = nullptr;
+    cro::Entity previewModel;
+    std::vector<cro::Entity> previewAudio;
+    std::uint32_t audioUID = 0;
+    std::size_t previewIndex = 0; //actual index may differ because of locked models
+};
+
+struct BallPreview final
+{
+    cro::Entity root;
+    cro::Entity ball;
+
+    std::int32_t type = 0;
+    std::int32_t infoIndex = -1;
+};
+
+struct ClubData final
+{
+    std::string name;
+    std::string thumbnail;
+    cro::FloatRect uv = {};
+    std::uint32_t uid = 0;
+    std::int32_t manufacturer = -1;
+    bool userItem = false;
+    bool locked = false;
+};
+
+struct GearID final
+{
+    enum
+    {
+        Driver, ThreeW, FiveW, FourI,
+        FiveI, SixI, SevenI, EightI,
+        NineI, PitchWedge, GapWedge,
+        SandWedge, Balls,
+
+        Count
+    };
+};

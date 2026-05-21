@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -280,14 +280,14 @@ bool GameState::handleEvent(const cro::Event& evt)
         case SDLK_F4:
         {
             auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-            if (cam.renderFlags & TwoDeeFlags::Debug)
+            /*if (cam.renderFlags & TwoDeeFlags::Debug)
             {
                 cam.renderFlags &= ~TwoDeeFlags::Debug;
             }
             else
             {
                 cam.renderFlags |= TwoDeeFlags::Debug;
-            }
+            }*/
         }
             break;
         /*case SDLK_1:
@@ -616,11 +616,11 @@ void GameState::loadAssets()
     };
     const std::size_t vertComponentCount = 5;
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexData[0].ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexData[0].iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
@@ -1053,11 +1053,11 @@ void GameState::loadMap()
 
             auto& mesh = entity.getComponent<cro::Model>().getMeshData();
 
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vboAllocation.bufferID));
             glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexData[0].ibo));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexData[0].iboAllocation.bufferID));
             glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 

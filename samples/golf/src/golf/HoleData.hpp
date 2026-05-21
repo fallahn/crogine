@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -66,7 +66,7 @@ static inline bool operator != (const Team::Player& a, const Team::Player& b)
     return !(a == b);
 }
 
-static inline const std::array<std::string, 13u> CourseNames =
+static inline const std::array<std::string, 14u> CourseNames =
 {
     "course_01",
     "course_02",
@@ -82,7 +82,8 @@ static inline const std::array<std::string, 13u> CourseNames =
     "course_12",
 
     //dlc from here
-    "course_13"
+    "course_13",
+    "course_14",
 };
 
 static inline std::int32_t getCourseIndex(const std::string& name)

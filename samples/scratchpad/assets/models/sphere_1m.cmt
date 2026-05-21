@@ -1,6 +1,6 @@
 model sphere
 {
-    mesh = sphere
+    mesh = "sphere"
     radius = 2.50
     cast_shadows = true
 

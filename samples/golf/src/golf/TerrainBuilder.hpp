@@ -47,6 +47,7 @@ source distribution.
 #include <atomic>
 #include <memory>
 #include <array>
+#include <future>
 
 namespace cro
 {
@@ -92,11 +93,19 @@ public:
 
     float getSlopeAlpha() const;
 
+    void setSlopeVisible(bool);
+
+    bool getSlopeVisible() const;
+
     void applyTreeQuality();
 
     void applyCrowdDensity();
 
+    void applyGrassDensity();
+
 private:
+    static constexpr auto ChunkCount = ChunkVisSystem::RowCount * ChunkVisSystem::ColCount;
+    
     SharedStateData& m_sharedData;
     const std::vector<HoleData>& m_holeData;
     std::size_t m_currentHole;
@@ -118,24 +127,34 @@ private:
     std::array<std::vector<glm::mat4>, MaxShrubInstances> m_shrubTransforms; //these are the incoming transforms and will be set next swap
     std::array<std::array<cro::Entity, MaxShrubInstances>, 2u> m_instancedShrubs = {};
 
-    struct CellData final
+    struct CellData
     {
         std::vector<glm::mat4> transforms;
         std::vector<glm::mat3> normalMats;
-    };
+    };    
+    
+    std::array<std::vector<glm::mat4>, ChunkVisSystem::ChunkCount> m_grassTransforms = {};
+    std::array<cro::Entity, ChunkCount> m_grassChunks = {};
+    void readGrassData();
+
+    void createGrassChunks(cro::ResourceCollection&, cro::Scene&, cro::Material::Data&);
+    void setVisibilityStates(const ChunkVisSystem::VisStates&);
+
+
     //contains matrix data for current and next hole, indexed by m_swapIndex
-    std::array<std::array<std::array<CellData, ChunkVisSystem::RowCount* ChunkVisSystem::ColCount>, MaxShrubInstances>, 2> m_cellData = {};
+    std::array<std::array<std::array<CellData, ChunkCount>, MaxShrubInstances>, 2> m_cellData = {};
     friend class ChunkVisSystem;
     void onChunkUpdate(const std::vector<std::int32_t>&);
 
     std::array<std::vector<cro::Entity>, 2u> m_crowdEntities = {};
     std::array<cro::Entity, 2u> m_umbrellaEntities = {};
 
+    //TODO find a good way to compress normals
     struct TerrainVertex final
     {
         glm::vec3 position = glm::vec3(0.f);
         //glm::vec4 colour = glm::vec4(0.1f, 0.117f, 0.176f, 1.f);
-        glm::vec4 colour = glm::vec4(0.1568f, 0.305f, 0.2627f, 1.f);
+        cro::Detail::ColourLowP colour = glm::vec4(0.1568f, 0.305f, 0.2627f, 1.f);
         glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
 
         //these actually get attached to tan/bitan attribs in the shader
@@ -160,12 +179,12 @@ private:
     struct SlopeVertex final
     {
         glm::vec3 position = glm::vec3(0.f);
-        glm::vec4 colour = glm::vec4(glm::vec3(1.f), 0.7f);
+        cro::Detail::ColourLowP colour = glm::vec4(glm::vec3(1.f), 0.7f);
         glm::vec3 normal = glm::vec3(0.f);
-        glm::vec2 texCoord = glm::vec2(0.f);
+        std::uint32_t texCoord = 0;
     };
     std::vector<SlopeVertex> m_slopeBuffer;
-    std::vector<std::uint32_t> m_slopeIndices;
+    std::vector<std::uint16_t> m_slopeIndices;
     struct SlopeProperties final
     {
         cro::Mesh::Data* meshData = nullptr;
@@ -176,12 +195,12 @@ private:
         float currentAlpha = 0.f;
     }m_slopeProperties;
 
-
     std::atomic_bool m_threadRunning;
     std::atomic_bool m_wantsUpdate;
     std::unique_ptr<std::thread> m_thread;
 
     void threadFunc();
+
 
     cro::MultiRenderTexture m_normalMap;
     cro::Shader m_normalShader;

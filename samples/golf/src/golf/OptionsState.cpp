@@ -130,17 +130,6 @@ namespace
         };
     };
 
-    const std::array<cro::String, MixerChannel::Count> MixerLabels =
-    {
-        "Menu Music",
-        "Game Music",
-        "Effects",
-        "Menu Sounds",
-        "Voices",
-        "Vehicles",
-        "Environment",
-        "Text To Speech"
-    };
     //generally static vars would be a bad idea, but in this case
     //a static index value will remember the last channel between
     //showing instances of options, as well as being available to
@@ -341,7 +330,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     ctx.mainWindow.setMouseCaptured(false);
 
     m_videoSettings.fullScreen = ctx.mainWindow.isFullscreen();
-    auto size = ctx.mainWindow.getSize();
+    const auto size = ctx.mainWindow.getSize();
     for (auto i = 0u; i < sd.resolutions.size(); ++i)
     {
         if (sd.resolutions[i].x == size.x && sd.resolutions[i].y == size.y)
@@ -2849,7 +2838,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             {
                 if (activated(evt))
                 {
-                    m_sharedData.lightmapQuality = m_sharedData.lightmapQuality == 0 ? 1 : 0;
+                    //m_sharedData.lightmapQuality = m_sharedData.lightmapQuality == 0 ? 1 : 0;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
                 }
@@ -2870,8 +2859,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            float scale = m_sharedData.lightmapQuality ? 1.f : 0.f;
-            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+            //float scale = m_sharedData.lightmapQuality ? 1.f : 0.f;
+            //e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -3977,8 +3966,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         return entity;
     };
 
-    static const auto MinDeadZone = -3000;// -(cro::GameController::LeftThumbDeadZone / 2);
-    static const auto MaxDeadzone = 24000;// ((cro::GameController::AxisMax - 100) - cro::GameController::LeftThumbDeadZone.size);// / 2;
+    static constexpr auto MinDeadZone = -3000;// -(cro::GameController::LeftThumbDeadZone / 2);
+    static constexpr auto MaxDeadzone = 24000;// ((cro::GameController::AxisMax - 100) - cro::GameController::LeftThumbDeadZone.size);// / 2;
 
     auto deadzoneSlider = createSlider({ 29.f, 109.f });
     deadzoneSlider.getComponent<cro::Callback>().getUserData<SliderData>().onActivate =
@@ -4247,7 +4236,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
     //swingput enable
     entity = createSquareHighlight(glm::vec2(97.f, 22.f));
-    entity.setLabel("With either trigger held, pull back on a thumbstick to charge the power.\nPush forward on the stick to make your shot. Timing is important!");
+    entity.setLabel("With either trigger held, pull back on a thumbstick to charge the power.\nPush forward on the stick to take your shot. Timing is important!");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlSwg);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlMouseAction, WindowAdvanced);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlMouseAction, CtrlAltPower);
@@ -4814,7 +4803,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
     //hide minimap
     entity = createHighlight(glm::vec2(12.f, 79.f));
-    entity.setLabel("Show the Minimap and Range Indicator on the HUD\nDefault to ON");
+    entity.setLabel("Reduces the UI to a minimum for a more sim-like feel\nDefault to OFF");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettShowMinimap);
     entity.getComponent<cro::UIInput>().setNextIndex(SettPost, SettShowHints);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettRotateCam);
@@ -4834,7 +4823,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            const float scale = m_sharedData.showMinimap ? 1.f : 0.f;
+            const float scale = m_sharedData.showMinimap ? 0.f : 1.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -4843,7 +4832,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity = createHighlight(glm::vec2(12.f, 63.f));
     entity.setLabel("Show hints and tips during gameplay.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettShowHints);
-    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetHints);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, SettCalcRange);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettShowMinimap);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
@@ -4866,12 +4855,45 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         };
 
 
+    //use calculated range indicator
+    entity = createHighlight(glm::vec2(12.f, 47.f));
+    entity.setLabel("Calculate range of impact based on terrain elevation and wind\ninstead of estimating based on club strength and direction.");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettCalcRange);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetHints);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettShowHints);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.calculateRange = !m_sharedData.calculateRange;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = createCheckbox(glm::vec2(14.f, 49.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const float scale = m_sharedData.calculateRange ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+
+
 
     //available flag textures
     const std::string flagDir = "assets/golf/images/flags/";
 
     auto flags = cro::FileSystem::listFiles(flagDir);
     std::vector<std::pair<std::string, std::string>> mappedFlags;
+
+    flags.erase(std::remove_if(flags.begin(), flags.end(), 
+        [](const std::string& f)
+        {
+            return f.find(".png") == std::string::npos;
+        }), flags.end());
 
     if (auto pos = std::find(flags.begin(), flags.end(), "flag.png");
         pos != flags.end() && pos != flags.begin())
@@ -4934,7 +4956,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     }
 
     //this just checks that the path was found, else resets it
-    //if the file from the path loaded in the config is missing
+    //to the file from the path loaded if the config is missing
     if (m_flagIndex == 0)
     {
         m_sharedData.flagPath = m_flagPaths[0];
@@ -5245,7 +5267,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     {
         entity.getComponent<cro::UIInput>().setNextIndex(ResetCareer, WindowAdvanced);
     }
-    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettShowHints);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettCalcRange);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -5713,9 +5735,9 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
         case StatType::Time:
         {
             std::int32_t v = static_cast<std::int32_t>(Achievements::getStat(StatStrings[i])->value);
-            auto seconds = v % 60;
+            const auto seconds = v % 60;
             auto minutes = v / 60;
-            auto hours = minutes / 60;
+            const auto hours = minutes / 60;
             minutes %= 60;
 
             std::stringstream ss;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -34,12 +34,15 @@ source distribution.
 #include "moonphase/MoonPhase.hpp"
 #include <crogine/graphics/VideoPlayer.hpp>
 #include <crogine/audio/sound_system/MusicPlayer.hpp>
+#include <crogine/audio/sound_system/SoundRecorder.hpp>
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/Font.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/SimpleText.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -50,7 +53,7 @@ namespace sp
     class MenuState final : public cro::State, public cro::GuiClient
     {
     public:
-        MenuState(cro::StateStack&, cro::State::Context, MyApp&);
+        MenuState(cro::StateStack&, cro::State::Context, MyApp&, cro::ResourceCollection&);
         ~MenuState() = default;
 
         cro::StateID getStateID() const override { return States::ScratchPad::MainMenu; }
@@ -63,8 +66,12 @@ namespace sp
     private:
         MyApp& m_gameInstance;
 
+        cro::ResourceCollection& m_resources;
+
+        cro::SimpleQuad m_simpleQuad;
+        cro::SimpleText m_simpleText;
+
         cro::Scene m_scene;
-        cro::Font m_font;
 
         cro::VideoPlayer m_video;
         cro::MusicPlayer m_music;
@@ -96,5 +103,17 @@ namespace sp
         cro::SimpleQuad m_moonQuad;
         cro::Shader m_moonShader;
         void moonPhase();
+
+
+        struct RecorderDebug final
+        {
+            std::int32_t captureAvailable = 0;
+            std::uint32_t encodedPacketSize = 0;
+
+            std::int32_t packetErrorID = 0;
+            std::int32_t decoderErrorID = 0;
+        }m_recorderDebug;
+        cro::SoundRecorder m_soundRecorder;
+        void odinWindow();
     };
 }

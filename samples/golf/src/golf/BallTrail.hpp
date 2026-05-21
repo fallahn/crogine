@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,8 +29,11 @@ source distribution.
 
 #pragma once
 
-#include <crogine/graphics/MeshData.hpp>
+#include "GameConsts.hpp"
+
 #include <crogine/detail/glm/vec3.hpp>
+#include <crogine/graphics/Colour.hpp>
+#include <crogine/graphics/MeshData.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 //#include <crogine/core/HiResTimer.hpp>
@@ -61,20 +64,10 @@ public:
 
 private:
 
-    struct Vertex final
-    {
-        glm::vec3 p = glm::vec3(0.f);
-        glm::vec4 c = glm::vec4(1.f);
-
-        Vertex() = default;
-        Vertex(glm::vec3 pos, glm::vec4 colour) :p(pos), c(colour) {}
-    };
-
-
     struct Trail final
     {
         std::vector<Vertex> vertexData;
-        std::vector<std::uint32_t> indices;
+        std::vector<std::uint16_t> indices;
         std::size_t front = 0;
         bool active = false;
         cro::Mesh::Data* meshData = nullptr;

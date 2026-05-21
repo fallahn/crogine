@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -63,7 +63,11 @@ R"(
         mat2 rotation;
         vec4 colour;
         vec3 normal;
+#if defined(VIEW_POS)
+        vec3 viewPos;
+#else
         vec3 worldPos;
+#endif
         float darkenAmount;
         float ditherAmount;
     }v_data;
@@ -238,7 +242,11 @@ v_data.ditherAmount *= 1.0 - clamp((distance - FarFadeDistance) / fadeDistance, 
 
         gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
 
+#if defined(VIEW_POS)
+        v_data.viewPos = (u_viewMatrix * worldPosition).xyz;
+#else
         v_data.worldPos = worldPosition.xyz;
+#endif
 
         gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
     })";
@@ -333,7 +341,11 @@ R"(
         mat2 rotation;
         vec4 colour;
         vec3 normal;
+#if defined(VIEW_POS)
+        vec3 viewPos;
+#else
         vec3 worldPos;
+#endif
         float darkenAmount;
         float ditherAmount;
     }v_data;
@@ -342,6 +354,7 @@ R"(
 #include LIGHT_COLOUR
 
 uniform float u_rotation = 0.25;
+uniform float u_alpha = 1.0;
 
 #include HSV
     vec3 complementaryColour(vec3 c)
@@ -384,7 +397,7 @@ uniform float u_rotation = 0.25;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
 
-        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_data.ditherAmount));
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_data.ditherAmount) * u_alpha);
         if (textureColour.a * alpha < 0.3) discard;
 
 //* step(WaterLevel - 0.001, v_data.worldPos.y)
@@ -392,8 +405,12 @@ uniform float u_rotation = 0.25;
         textureColour.rgb *= v_data.darkenAmount;
 
 #if defined(USE_MRT)
-        NORM_OUT = vec4(normal, 1.0);
+        NORM_OUT = vec4(normal * 0.5 + 0.5, 1.0);
+#if defined(VIEW_POS)
+        POS_OUT.r = v_data.viewPos.z;
+#else
         POS_OUT = vec4(v_data.worldPos, 1.0);
+#endif
         LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 
@@ -425,6 +442,9 @@ static inline const std::string BranchVertex = R"(
     VARYING_OUT float v_ditherAmount;
     VARYING_OUT vec2 v_texCoord;
     VARYING_OUT vec3 v_normal;
+#if defined(VIEW_POS)    
+    VARYING_OUT vec3 v_viewPosition;
+#endif
     VARYING_OUT vec3 v_worldPosition;
     VARYING_OUT float v_darkenAmount;
 
@@ -480,6 +500,9 @@ static inline const std::string BranchVertex = R"(
 #else
         gl_Position = u_viewProjectionMatrix * worldPosition;
 #endif
+#if defined (VIEW_POS)        
+        v_viewPosition = (u_viewMatrix * worldPosition).xyz;
+#endif
         v_worldPosition = worldPosition.xyz;
 
         gl_ClipDistance[0] = dot(u_clipPlane, worldPosition);
@@ -506,6 +529,7 @@ static inline const std::string BranchFragment = R"(
 #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
+    uniform float u_alpha = 1.0;
 
 #include LIGHT_UBO
 #include SCALE_BUFFER
@@ -513,7 +537,11 @@ static inline const std::string BranchFragment = R"(
     VARYING_IN float v_ditherAmount;
     VARYING_IN vec2 v_texCoord;
     VARYING_IN vec3 v_normal;
+#if defined(VIEW_POS)
+    VARYING_IN vec3 v_viewPosition;
+#else
     VARYING_IN vec3 v_worldPosition;
+#endif
     VARYING_IN float v_darkenAmount;
 
 #include BAYER_MATRIX
@@ -536,8 +564,12 @@ static inline const std::string BranchFragment = R"(
         FRAG_OUT = colour * getLightColour();
 
 #if defined(USE_MRT)
-        NORM_OUT = vec4(normal, 1.0);
+        NORM_OUT = vec4(normal * 0.5 + 0.5, 1.0);
+#if defined(VIEW_POS)
+        POS_OUT.r = v_viewPosition.z;
+#else
         POS_OUT = vec4(v_worldPosition, 1.0);
+#endif
         LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 
@@ -546,10 +578,10 @@ static inline const std::string BranchFragment = R"(
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
 
-        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount) * u_alpha);
 #if defined ALPHA_CLIP
         alpha *= colour.a;// * step(WaterLevel - 0.001, v_worldPosition.y);
 #endif
 
-        if (alpha < 0.1) discard;
+        if (alpha < 0.3) discard;
     })";

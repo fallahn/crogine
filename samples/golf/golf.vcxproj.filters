@@ -112,6 +112,18 @@
     <Filter Include="Source Files\sportsball">
       <UniqueIdentifier>{774b2a37-f5e3-4e3f-8adf-d216c7e3173f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf\client\user interface">
+      <UniqueIdentifier>{0c56be52-4a26-4eb7-bd7e-82ad8a459891}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\client\user interface">
+      <UniqueIdentifier>{2b8d1138-3a71-4b41-ac70-d7a41b84f7fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\golf\client\template">
+      <UniqueIdentifier>{6f20e2e4-3d90-43a1-8aed-7d84e5fbfb96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\client\template">
+      <UniqueIdentifier>{acecd210-c5f3-4d22-a37f-15d425376e15}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -167,9 +179,6 @@
     </ClCompile>
     <ClCompile Include="src\golf\GolfCartSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
-    </ClCompile>
-    <ClCompile Include="src\golf\OptionsState.cpp">
-      <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
     <ClCompile Include="src\golf\PauseState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
@@ -370,9 +379,6 @@
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
     <ClCompile Include="src\golf\MenuAvatars.cpp">
-      <Filter>Source Files\golf\client\states</Filter>
-    </ClCompile>
-    <ClCompile Include="src\golf\ProfileState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
     <ClCompile Include="src\golf\PlayerData.cpp">
@@ -684,6 +690,42 @@
     <ClCompile Include="src\golf\MoonPhase.cpp">
       <Filter>Source Files\golf\client</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\EditTournamentState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\CustomTournament.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ui\EventHandler.cpp">
+      <Filter>Source Files\golf\client\user interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ui\FlagPreview.cpp">
+      <Filter>Source Files\golf\client\user interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\OptionsStateV2.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\TemplateState.cpp">
+      <Filter>Source Files\golf\client\template</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ui\MenuLayout.cpp">
+      <Filter>Source Files\golf\client\user interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\editor\GrassProcessing.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\GolfStateMinimap.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\nv\NVSettings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ProLeagueState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ProfileStateV2.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -802,9 +844,6 @@
     </ClInclude>
     <ClInclude Include="src\golf\GolfCartSystem.hpp">
       <Filter>Header Files\golf\client\systems</Filter>
-    </ClInclude>
-    <ClInclude Include="src\golf\OptionsState.hpp">
-      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\PauseState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
@@ -1024,9 +1063,6 @@
     </ClInclude>
     <ClInclude Include="src\golf\MinimapZoom.hpp">
       <Filter>Header Files\golf</Filter>
-    </ClInclude>
-    <ClInclude Include="src\golf\ProfileState.hpp">
-      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\PlayerData.hpp">
       <Filter>Header Files\golf\client</Filter>
@@ -1442,6 +1478,39 @@
     <ClInclude Include="src\Colordome-32.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\EditTournamentState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CustomTournament.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\UserInterface.hpp">
+      <Filter>Header Files\golf\client\user interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ui\FlagPreview.hpp">
+      <Filter>Header Files\golf\client\user interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\OptionsStateV2.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\TemplateState.hpp">
+      <Filter>Header Files\golf\client\template</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ui\MenuLayout.hpp">
+      <Filter>Header Files\golf\client\user interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\GrassProcessing.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nv\NVSettings.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ProLeagueState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ProfileStateV2.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">
@@ -1550,6 +1619,30 @@
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
     <None Include="src\golf\shaders\TerrainMaterials.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\ClothShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\MinimapModel.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\SwarmShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\GrassShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\Shore.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\ProgressShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\2DBorderShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\VapourShader.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
   </ItemGroup>

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -36,6 +36,7 @@ source distribution.
 #include "ChunkVisSystem.hpp"
 #include "Career.hpp"
 #include "Clubs.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -69,6 +70,9 @@ namespace
 #include <crogine/ecs/components/Model.hpp>
 
 #include "../ErrorCheck.hpp"
+
+//defines for enabling various debug windows
+//#define SKY_PICKER
 
 #ifdef PATH_TRACING
 namespace
@@ -281,8 +285,7 @@ void GolfState::registerDebugCommands()
     //registerWindow([&]() 
     //    {
     //        ImGui::Begin("Cloud Cover");
-    //        
-    //        auto light = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour();
+    //        /*auto light = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour();
     //        ImGui::Text("%3.2f, %3.2f, %3.2f", light.getRed(), light.getGreen(), light.getBlue());
 
     //        static float t = 1.f;
@@ -298,7 +301,22 @@ void GolfState::registerDebugCommands()
     //            auto skyColours = m_skyScene.getSkyboxColours();
     //            skyColours.top = glm::mix(darkSky.getVec4(), m_baseSkyColour.getVec4(), t);
     //            m_skyScene.setSkyboxColours(skyColours);
-    //        }
+    //        }*/
+    //        /*if (m_gameSceneMRTexture.available())
+    //        {
+    //            glm::vec2 s(m_gameSceneMRTexture.getSize() / 4u);
+    //            ImGui::Image(m_gameSceneMRTexture.getDepthTexture(), {s.x, s.y}, {0.f,1.f}, {1.f, 0.f});
+    //        }*/
+    //        /*const auto pos = m_currentPlayer.position;
+    //        ImGui::Text("Pos %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+
+    //        if (ImGui::Button("Buns"))
+    //        {
+    //            auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(cl::MessageID::GolfMessage);
+    //            msg3->type = GolfEvent::PowerShot;
+    //            msg3->position = m_currentPlayer.position;
+    //            msg3->club = ClubID::Driver;
+    //        }*/
 
     //        ImGui::End();
     //    });
@@ -355,115 +373,11 @@ void GolfState::registerDebugCommands()
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::SkipTurn), net::NetFlag::Reliable);
         });
 
-    registerCommand("build_cubemaps",
-        [&](const std::string&)
-        {
-            std::string holeNumber = std::to_string(m_currentHole + 1);
-            if (m_currentHole < 9)
-            {
-                holeNumber = "0" + holeNumber;
-            }
-
-            std::string tod = "/d/";
-            //TODO if night tod = "/n/"
-
-            auto courseDir = "assets/golf/courses/" + m_sharedData.mapDirectory + "/cmap/" + holeNumber + tod;
-            if (!cro::FileSystem::directoryExists(courseDir))
-            {
-                cro::FileSystem::createDirectory(courseDir);
-            }
-
-            cro::Entity cam = m_gameScene.createEntity();
-            cam.addComponent<cro::Transform>();
-            cam.addComponent<cro::Camera>().setPerspective(90.f * cro::Util::Const::degToRad, 1.f, 0.1f, 280.f);
-            cam.getComponent<cro::Camera>().viewport = { 0.f, 0.f, 1.f, 1.f };
-            cam.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::CubeMap);
-            m_gameScene.simulate(0.f); //do this once to integrate the new entity;
-
-            auto oldCam = m_gameScene.setActiveCamera(cam);
-            m_skyScene.setActiveCamera(m_skyCameras[SkyCam::Flight]);
-
-            static const std::uint32_t TexSize = 256;
-            cro::RenderTexture rt;
-            rt.create(TexSize, TexSize);
-
-
-            //create 3 cubemaps based on pin/tee position etc
-            const std::array<glm::vec3, 3u> Positions =
-            {
-                m_holeData[m_currentHole].tee,
-                m_holeData[m_currentHole].target,
-                m_holeData[m_currentHole].pin,
-            };
-
-            for (auto i = 0; i < 3; ++i)
-            {
-                auto path = courseDir + std::to_string(i);
-                if (!cro::FileSystem::directoryExists(path))
-                {
-                    cro::FileSystem::createDirectory(path);
-                }
-
-                cro::ConfigFile cfg("cubemap");
-                cfg.addProperty("up").setValue(path + "/py.png");
-                cfg.addProperty("down").setValue(path + "/ny.png");
-                cfg.addProperty("left").setValue(path + "/nx.png");
-                cfg.addProperty("right").setValue(path + "/px.png");
-                cfg.addProperty("front").setValue(path + "/pz.png");
-                cfg.addProperty("back").setValue(path + "/nz.png");
-                cfg.save(path + "/cmap.ccm");
-
-
-                struct Rotation final
-                {
-                    glm::vec3 axis = glm::vec3(0.f);
-                    float angle = 0.f;
-                    constexpr Rotation(glm::vec3 a, float r) : axis(a), angle(r) {};
-                };
-                static constexpr std::array<Rotation, 6u> Rotations =
-                {
-                    Rotation(cro::Transform::Y_AXIS, 0.f),
-                    Rotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f),
-                    Rotation(cro::Transform::Y_AXIS, cro::Util::Const::PI),
-                    Rotation(cro::Transform::Y_AXIS, -cro::Util::Const::PI / 2.f),
-                    Rotation(cro::Transform::X_AXIS, cro::Util::Const::PI / 2.f),
-                    Rotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f)
-                };
-
-                static const std::array<std::string, 6u> FileNames =
-                {
-                    "/pz.png", "/nx.png", "/nz.png", "/px.png", "/py.png", "/ny.png"
-                };
-
-                auto position = Positions[i];
-                position.y += 0.5f;
-
-                cam.getComponent<cro::Transform>().setPosition(position);
-                for (auto j = 0; j < 6; ++j)
-                {
-                    cam.getComponent<cro::Transform>().setRotation(Rotations[j].axis, Rotations[j].angle);
-                    m_gameScene.simulate(0.f);
-
-                    //we'll use the existing cam as it happens to have the same FOV
-                    m_skyCameras[SkyCam::Flight].getComponent<cro::Transform>().setRotation(cam.getComponent<cro::Transform>().getWorldRotation());
-                    m_skyCameras[SkyCam::Flight].getComponent<cro::Transform>().setPosition({0.f, position.y / 64.f, 0.f});
-                    m_skyScene.simulate(0.f);
-
-                    rt.clear();
-                    m_skyScene.render();
-                    glClear(GL_DEPTH_BUFFER_BIT);
-                    m_gameScene.render();
-                    rt.display();
-
-                    rt.saveToFile(path + FileNames[j]);
-                }
-            }
-
-            m_gameScene.setActiveCamera(oldCam);
-            m_gameScene.destroyEntity(cam);
-
-            cro::Console::print("Done!");
-        });
+    //registerCommand("build_cubemaps",
+    //    [&](const std::string&)
+    //    {
+    //        buiildCubemap();
+    //    });
 
     registerCommand("noclip", [&](const std::string&)
         {
@@ -954,16 +868,35 @@ void GolfState::registerDebugCommands()
 
 void GolfState::registerDebugWindows()
 {
+#ifdef SKY_PICKER
     registerWindow([&]()
         {
-            /*ImGui::Begin("sdef");
-            for (auto& t : m_sharedData.nameTextures)
+            ImGui::Begin("Sky Colour");
+            auto colours = m_skyScene.getSkyboxColours();
+            glm::vec4 skyTop = colours.top.getVec4();
+
+            if (ImGui::ColorEdit3("Top", &skyTop[0]))
             {
-                glm::vec2 size(t.getSize());
-                ImGui::Image(t.getTexture(), size, { 0.f, 1.f }, { 1.f, 0.f });
-                ImGui::SameLine();
+                colours.top = skyTop;
+                m_skyScene.setSkyboxColours(colours);
             }
-            ImGui::End();*/
+
+            glm::vec4 skyMid = colours.middle.getVec4();
+            if (ImGui::ColorEdit3("Middle", &skyMid[0]))
+            {
+                colours.middle = skyMid;
+                m_skyScene.setSkyboxColours(colours);
+            }
+
+            auto sunColour = m_skyScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
+            if (ImGui::ColorEdit3("Sun", &sunColour[0]))
+            {
+                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(sunColour);
+                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(sunColour);
+            }
+
+
+            ImGui::End();
 
             //if (ImGui::Begin("Ball Cam"))
             //{
@@ -1005,24 +938,8 @@ void GolfState::registerDebugWindows()
             //    ImGui::Text("Putt count %d", m_achievementTracker.puttCount);
             //}
             //ImGui::End();
-
-            /*if (ImGui::Begin("Depth Map"))
-            {
-                glm::vec2 size(m_gameSceneTexture.getSize() / 2u);
-                ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
-            }
-            ImGui::End();*/
         });
-
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Spin"))
-    //        {
-    //            auto spin = m_inputParser.getSpin();
-    //            ImGui::SliderFloat2("Spin", &spin[0], -1.f, 1.f);
-    //            ImGui::End();
-    //        }
-    //    });
+#endif
 
     //registerWindow([&]()
     //    {
@@ -1059,84 +976,110 @@ void GolfState::registerDebugWindows()
     //            ImGui::End();
     //        }
     //    });
+}
 
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Sun"))
-    //        {
-    //            if (ImGui::SliderFloat("ToD", &m_skyData.tod, 0.f, 1.f))
-    //            {
-    //                float angle = SkyData::MinAngle + (m_skyData.tod * (SkyData::MaxAngle - SkyData::MinAngle));
-    //                m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -angle * cro::Util::Const::degToRad);
-    //                //m_skyData.sunRoot.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -angle * cro::Util::Const::degToRad);
+void GolfState::buildCubemap(glm::vec3 position, const std::string& path)
+{
+    if (!cro::FileSystem::directoryExists(path))
+    {
+        cro::FileSystem::createDirectory(path);
+    }
+    m_gameScene.setSystemActive<ChunkVisSystem>(false);
 
-    //                /*if (auto w = m_skyData.sunPalette.getSize().x; w != 0)
-    //                {
-    //                    auto index = (w - 1) * m_skyData.tod;
-    //                    auto* colour = m_skyData.sunPalette.getPixel(static_cast<std::uint32_t>(index), 0);
-    //                    m_skyData.sunModel.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour(colour[0], colour[1], colour[2]));
-    //                }
+    cro::Entity cam = m_gameScene.createEntity();
+    cam.addComponent<cro::Transform>();
+    cam.addComponent<cro::Camera>().setPerspective(90.f * cro::Util::Const::degToRad, 1.f, 0.1f, 280.f);
+    cam.getComponent<cro::Camera>().viewport = { 0.f, 0.f, 1.f, 1.f };
+    cam.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::All);
+    m_gameScene.simulate(0.f); //do this once to integrate the new entity;
 
-    //                if (auto w = m_skyData.lightPalette.getSize().x; w != 0)
-    //                {
-    //                    auto index = (w - 1) * m_skyData.tod;
-    //                    auto* colour = m_skyData.sunPalette.getPixel(static_cast<std::uint32_t>(index), 0);
-    //                    
-    //                    glm::vec4 lightColour(static_cast<float>(colour[0]) / 255.f, static_cast<float>(colour[1]) / 255.f, static_cast<float>(colour[3]) / 255.f, 1.f);
-    //                    auto colours = m_skyData.skyColours;
-    //                    colours.top *= lightColour;
-    //                    colours.middle *= lightColour;
-    //                    m_skyScene.setSkyboxColours(colours.bottom, colours.middle, colours.top);
+    auto oldCam = m_gameScene.setActiveCamera(cam);
+    m_skyScene.setActiveCamera(m_skyCameras[SkyCam::Flight]);
 
-    //                    cro::Colour sLight(colour[0], colour[1], colour[2]);
-    //                    m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(sLight);
-    //                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(sLight);
-    //                }*/
-    //            }
-    //        }
-    //        ImGui::End();
-    //    });
+    static const std::uint32_t TexSize = 256;
+    cro::RenderTexture rt;
+    rt.create(TexSize, TexSize);
 
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Depthmap"))
-    //        {
-    //            auto size = m_depthMap.getGridCount();
-    //            for (auto y = size.y - 1; y >= 0; --y)
-    //            {
-    //                for (auto x = 0; x < size.x; ++x)
-    //                {
-    //                    auto idx = y * size.x + x;
-    //                    ImGui::Image(m_depthMap.getTextureAt(idx), { 80.f, 80.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //                    ImGui::SameLine();
-    //                }
-    //                ImGui::NewLine();
-    //            }
 
-    //            /*const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-    //            for (auto i = 0u; i < cam.shadowMapBuffer.getLayerCount(); ++i)
-    //            {
-    //                ImGui::Image(cam.shadowMapBuffer.getTexture(i), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //                ImGui::SameLine();
-    //            }*/
-    //        }
-    //        ImGui::End();
-    //    });
+    //create 3 cubemaps based on pin/tee position etc
+    //const std::array/*<glm::vec3, 3u>*/ Positions =
+    //{
+    //    //m_holeData[m_currentHole].tee,
+    //    m_holeData[m_currentHole].target,
+    //    //m_holeData[m_currentHole].pin,
+    //};
 
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Network"))
-    //        {
-    //            auto size = m_greenBuffer.getSize();
-    //            ImGui::Text("Buffer Size %u, %u", size.x, size.y);
+    //for (auto i = 0u; i < Positions.size(); ++i)
+    {
+        //auto path = courseDir + "/" + name + "/" + std::to_string(instanceID);// +std::to_string(i);
+        /*if (!cro::FileSystem::directoryExists(path))
+        {
+            cro::FileSystem::createDirectory(path);
+        }*/
 
-    //            ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
+        cro::ConfigFile cfg("cubemap");
+        cfg.addProperty("up").setValue(path + "/py.png");
+        cfg.addProperty("down").setValue(path + "/ny.png");
+        cfg.addProperty("left").setValue(path + "/nx.png");
+        cfg.addProperty("right").setValue(path + "/px.png");
+        cfg.addProperty("front").setValue(path + "/pz.png");
+        cfg.addProperty("back").setValue(path + "/nz.png");
+        cfg.save(path + "/cmap.ccm");
 
-    //            auto terrain = m_collisionMesh.getTerrain(m_freeCam.getComponent<cro::Transform>().getPosition());
-    //            ImGui::Text("Terrain %s", TerrainStrings[terrain.terrain].c_str());
-    //        }
-    //        ImGui::End();
-    //    }, true);
+
+        struct Rotation final
+        {
+            glm::vec3 axis = glm::vec3(0.f);
+            float angle = 0.f;
+            constexpr Rotation(glm::vec3 a, float r) : axis(a), angle(r) {};
+        };
+        static constexpr std::array<Rotation, 6u> Rotations =
+        {
+            Rotation(cro::Transform::Y_AXIS, 0.f),
+            Rotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f),
+            Rotation(cro::Transform::Y_AXIS, cro::Util::Const::PI),
+            Rotation(cro::Transform::Y_AXIS, -cro::Util::Const::PI / 2.f),
+            Rotation(cro::Transform::X_AXIS, cro::Util::Const::PI / 2.f),
+            Rotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f)
+        };
+
+        static const std::array<std::string, 6u> FileNames =
+        {
+            "/pz.png", "/nx.png", "/nz.png", "/px.png", "/py.png", "/ny.png"
+        };
+
+        //auto position = Positions[i];
+        position.y += 0.5f;
+        //position.y += 5.f;
+
+        
+        cam.getComponent<cro::Transform>().setPosition(position);
+        for (auto j = 0; j < 6; ++j)
+        {
+            cam.getComponent<cro::Transform>().setRotation(Rotations[j].axis, Rotations[j].angle);
+            m_gameScene.simulate(0.f);
+
+            //we'll use the existing cam as it happens to have the same FOV
+            m_skyCameras[SkyCam::Flight].getComponent<cro::Transform>().setRotation(cam.getComponent<cro::Transform>().getWorldRotation());
+            m_skyCameras[SkyCam::Flight].getComponent<cro::Transform>().setPosition({ 0.f, position.y / 64.f, 0.f });
+            m_skyScene.simulate(0.f);
+
+            rt.clear();
+            m_skyScene.render();
+            glClear(GL_DEPTH_BUFFER_BIT);
+            m_gameScene.render();
+            rt.display();
+
+            rt.saveToFile(path + FileNames[j]);
+        }
+        m_gameScene.setSystemActive<ChunkVisSystem>(true);
+    }
+
+    m_gameScene.setActiveCamera(oldCam);
+    m_gameScene.destroyEntity(cam);
+
+    //LogI << "Built cubemap for " << path << std::endl;
+    //cro::Console::print("Done!");
 }
 
 void GolfState::dumpBenchmark()

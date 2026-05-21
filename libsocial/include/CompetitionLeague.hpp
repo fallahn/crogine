@@ -1,0 +1,57 @@
+/*-----------------------------------------------------------------------
+
+Matt Marchant 2026
+http://trederia.blogspot.com
+
+Super Video Golf - zlib licence.
+
+This software is provided 'as-is', without any express or
+implied warranty.In no event will the authors be held
+liable for any damages arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute
+it freely, subject to the following restrictions :
+
+1. The origin of this software must not be misrepresented;
+you must not claim that you wrote the original software.
+If you use this software in a product, an acknowledgment
+in the product documentation would be appreciated but
+is not required.
+
+2. Altered source versions must be plainly marked as such,
+and must not be misrepresented as being the original software.
+
+3. This notice may not be removed or altered from any
+source distribution.
+
+-----------------------------------------------------------------------*/
+
+#pragma once
+
+#include <crogine/core/String.hpp>
+
+#include <cstdint>
+
+class CompetitionLeague final
+{
+public:
+
+    static void init();
+    static void insertScore(std::int32_t stableford, std::int32_t courseIndex);
+
+    //these funcs raise a Social::StatMessage to say that the string is ready
+    static void refreshCurrentLeaderboard() {};
+    static void refreshPreviousLeaderboard() {};
+
+    //leaderboard string, personal score string
+    static const std::pair<const cro::String*, const cro::String*> getCurrentLeaderboard();
+    static const std::pair<const cro::String*, const cro::String*> getPreviousLeaderboard();
+
+    //returns the next course to play or -1 if this month is complete
+    static std::int32_t getCourseIndex() { return 0; }
+
+private:
+
+    static void refreshTotal(std::int32_t currentCourse);
+};

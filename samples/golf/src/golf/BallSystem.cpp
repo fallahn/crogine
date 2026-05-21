@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -152,6 +152,8 @@ namespace
     constexpr float TopSpinInfluence = 1.f;
 
     constexpr float BallPenetrationAvg = 0.054f; //if the ball collision is greater than this it's set to 'buried' else 'sitting up'
+
+    constexpr float PhysicsScale = 10.f; //physics world is scaled by this to decrease tunnelling (supposedly)
 }
 
 const std::array<std::string, 5u> Ball::StateStrings = { "Idle", "Flight", "Putt", "Paused", "Reset" };
@@ -312,7 +314,16 @@ const BullsEye& BallSystem::spawnBullsEye()
 BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos, glm::vec3 forward, float rayLength) const
 {
     CRO_ASSERT(glm::length2(forward) != 0, "");
-    //TODO how do we assert forward is a normal vec without normalising?
+    
+    pos *= PhysicsScale;
+    rayLength *= PhysicsScale;
+
+    //normalised vecs share a normalised length squared
+    //assuming no fp error...
+    if (glm::length2(forward) != 1.f)
+    {
+        forward = glm::normalize(forward);
+    }
 
     TerrainResult retVal;
 
@@ -329,11 +340,25 @@ BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos, glm::vec3 forwar
     m_collisionWorld->rayTest(rayStart, rayEnd, res);
     if (res.hasHit())
     {
-        retVal.terrain = (res.m_collisionType >> 24);
-        retVal.trigger = ((res.m_collisionType & 0x00ff0000) >> 16);
-        retVal.normal = { res.m_hitNormalWorld.x(), res.m_hitNormalWorld.y(), res.m_hitNormalWorld.z() };
-        retVal.intersection = { res.m_hitPointWorld.x(), res.m_hitPointWorld.y(), res.m_hitPointWorld.z() };
-        retVal.penetration = res.m_hitPointWorld.y() - pos.y;
+        //TODO we might have more that one result (although rarely more than 2)
+        //so we need to find the closest to the test point? If the test point
+        //is below ground however the one we look for (the ground surface) may
+        //actually be further away... so do we keep the result with the highest
+        //Y value and assume the ray is always cast downwards?
+        for (auto i = 0u; i < res.m_hitPointWorld.size(); ++i)
+        {
+            if (res.m_hitPointWorld[i].y() > retVal.intersection.y)
+            {
+                retVal.terrain = (res.m_collisionType[i] >> 24);
+                retVal.trigger = ((res.m_collisionType[i] & 0x00ff0000) >> 16);
+                retVal.normal = { res.m_hitNormalWorld[i].x(), res.m_hitNormalWorld[i].y(), res.m_hitNormalWorld[i].z() };
+                retVal.intersection = { res.m_hitPointWorld[i].x(), res.m_hitPointWorld[i].y(), res.m_hitPointWorld[i].z() };
+                retVal.penetration = res.m_hitPointWorld[i].y() - pos.y;
+
+                retVal.intersection /= PhysicsScale;
+                retVal.penetration /= PhysicsScale;
+            }
+        }
     }
 
     return retVal;
@@ -364,6 +389,12 @@ void BallSystem::fastForward(cro::Entity entity)
     auto* msg = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
     *msg = predictionEvent;
     msg->client = entity.getComponent<Ball>().client;
+}
+
+float BallSystem::estimateSidespin(float& spin)
+{
+    spin *= SpinDecay[static_cast<std::int32_t>(Ball::State::Flight)].x;
+    return spin * SideSpinInfluence;
 }
 
 #ifdef CRO_DEBUG_
@@ -429,7 +460,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             //helps prevent tunnelling through cliffs/flag pole
             //TODO this is mostly wasted when we're high up, so we could make the iteration count dynamic
-            static constexpr std::int32_t Iterations = 3;
+            static constexpr std::int32_t Iterations = 1;// 3;
             dt /= Iterations;
 
             for (auto f = 0; f < Iterations; ++f)
@@ -459,12 +490,34 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 float r = cro::Util::Const::TAU * (vel2 / MaxVel) * ball.rotation;// *ball.spin.x;
                 r = std::clamp(r, -MaxRotation, MaxRotation);
 
-
+                //this isn't actually the ball spin - rather it makes
+                //balls with spin disabled rotate on the Y axis while in flight
                 tx.rotate(cro::Transform::Y_AXIS, r * dt);
 
-                //test collision
-                doCollision(entity);
-                //doBallCollision(entity);
+                //test collision (accounts for ball position not actually being at the centre...
+                if (const auto manifolds = doSphereCollision(tx.getPosition() + glm::vec3(0.f, Ball::Radius, 0.f), 60.f);
+                    !manifolds.empty())
+                {
+                    //LogI << "Wall collision!" << std::endl;
+                    //doCollision(entity);
+                    const auto dir = glm::normalize(ball.velocity);
+
+                    for (const auto& [normal, _, terrain] : manifolds)
+                    {
+                        const auto surfaceDir = static_cast<float>(cro::Util::Maths::sgn(glm::dot(normal, -dir)));
+                        if (surfaceDir > 0)
+                        {
+                            tx.move((normal * Ball::Radius));
+                            ball.velocity = glm::reflect(ball.velocity, normal) * Restitution[terrain];
+                            ball.lastTerrain = terrain; //this will trigger a sound effect when it reaches the client
+                        }
+                    }
+                }
+                else
+                {
+                    doCollision(entity);
+                    //doBallCollision(entity);
+                }
 
                 if (ball.state != Ball::State::Flight)
                 {
@@ -604,8 +657,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         ball.delay -= dt;
         if (ball.delay < 0)
         {
-            
-            //doBallCollision(entity);
+            //ball.lastTerrain = ConstVal::NullValue;
 
             auto& tx = entity.getComponent<cro::Transform>();
             auto position = tx.getPosition();
@@ -735,24 +787,74 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
 
             //move by velocity
-            tx.move(ball.velocity * dt);
+            const auto movement = ball.velocity * dt;
+            tx.move(movement);
 
 
             //check for wall collision
-            /*if (auto l2 = glm::length2(ball.velocity); l2 != 0
-                && glm::dot(ball.velocity, cro::Transform::Y_AXIS) > 0)
+            if (ball.state == Ball::State::Putt //this may have changed above
+                && m_holeData->puttFromTee)
             {
-                //the problem with this is that the ray *shouldn't* be cast from behind the ball in this case.
-                auto wallResult = getTerrain(tx.getPosition(), ball.velocity / std::sqrt(l2) * (Ball::Radius * 4.f));
-                if (wallResult.penetration > 0)
+                std::int32_t stepCount = 1;
+
+                if (glm::length2(movement) > (Ball::Radius * Ball::Radius))
                 {
-                    tx.move(wallResult.normal * wallResult.penetration);
-                    ball.velocity = glm::reflect(ball.velocity, wallResult.normal);
-                    LogI << "Bounced off wall" << std::endl;
+                    stepCount = static_cast<std::int32_t>(std::ceil(glm::length(movement) / Ball::Radius)) + 1;
+                    //LogI << "Step count: " << stepCount << std::endl;
                 }
-            }*/
 
+                const auto step = movement / static_cast<float>(stepCount);
+                const auto centre = tx.getPosition() + (cro::Transform::Y_AXIS * Ball::Radius); //actual pos is on the ground...
+                
+                std::size_t collisionCount = 0;
+                
+                //take multiple smaller steps to attempt to reduce tunneling
+                for (auto i = 0; i < stepCount && collisionCount == 0; ++i)
+                {
+                    const auto testOffset = (static_cast<float>(i) * step);
+                    const auto manifolds = doSphereCollision(centre - testOffset);
+                    collisionCount += manifolds.size();
 
+                    //NOTE this penetration value *isn't* the penetration depth, this needs
+                    //to be renamed!!
+                    for (const auto& [normal, penetration, terrain] : manifolds)
+                    {
+                        if (penetration != 0)
+                        {
+                            const auto dir = glm::normalize(ball.velocity);
+                            tx.move(-testOffset);
+                            
+                            //penetration is actually the offset of the centre of the ball from teh collision plane
+                            const float correction = Ball::Radius;// -std::abs(penetration);
+
+                            //this makes sure the normal is always facing the direction
+                            //the ball was travelling from - otherwise it flips if the
+                            //centre of the ball is the other side of the colliding face.
+                            const auto surfaceDir = static_cast<float>(cro::Util::Maths::sgn(glm::dot(normal, -dir)));
+                            //normal *= surfaceDir;
+
+                            //if (surfaceDir < 0)
+                            //{
+                            //    LogI << surfaceDir << std::endl;
+                            //    //we're on the wrong side so add another ball diameter
+                            //    correction = (Ball::Radius * 2.f);
+                            //}
+                            
+
+                            //TODO this is a bit crude and will cause sliding along the wall
+                            //we need to use the penetration depth + angle between the normal and velocity
+                            //to figure out how far back along the velocity path to move
+                            
+                            if (surfaceDir > 0)
+                            {
+                                tx.move((normal * correction));
+                                ball.velocity = glm::reflect(ball.velocity, normal) * 0.5f;
+                                ball.lastTerrain = TerrainID::Stone; //this will trigger a sound effect when it reaches the client
+                            }
+                        }
+                    }
+                }
+            }
 
             auto newPos = tx.getPosition();
             terrainContact = getTerrain(newPos);
@@ -836,10 +938,14 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //make sure to update the position
                 position = tx.getPosition();
                 len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
+                constexpr float PenDist = (HoleRadius * 2) * (HoleRadius * 2.f);
 
                 auto* msg = postEvent();
                 msg->type = GolfBallEvent::Landed;
-                msg->terrain = ((terrainContact.penetration > Ball::Radius) || (len2 < MinBallDistance)) ? TerrainID::Hole : ball.terrain;
+                msg->terrain = ((terrainContact.penetration >= Ball::Radius) && (len2 < PenDist)) || (len2 < MinBallDistance) ? TerrainID::Hole : ball.terrain;
+                
+                //TODO fix the penetration test as it causes the ball to hole-out when it clips through geometry
+                //msg->terrain = ((terrainContact.penetration > Ball::Radius)/* && (len2 < MinBallDistance)*/) || (len2 < MinBallDistance) ? TerrainID::Hole : ball.terrain;
                 msg->client = ball.client;
 
                 if (msg->terrain == TerrainID::Hole)
@@ -1139,6 +1245,14 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         //we do this outside the time out, else the server won't send the updated position until the next turn
         doBallCollision(entity);
 
+        //do a ray cast here to make sure we're sitting on top of any geom instead of stuck in it.
+        if (ball.terrain != TerrainID::Hole)
+        {
+            const auto oldPos = entity.getComponent<cro::Transform>().getPosition();
+            const auto newPos = getTerrain(oldPos).intersection;
+            entity.getComponent<cro::Transform>().setPosition(newPos);
+        }
+
         ball.delay -= dt;
 
         if (ball.checkGimme && ball.delay < (BallTurnDelay / 2.f))
@@ -1289,7 +1403,21 @@ void BallSystem::doCollision(cro::Entity entity)
         ball.delay = 0.f;
     };
 
-    auto terrainResult = getTerrain(pos);
+    auto& ball = entity.getComponent<Ball>();
+
+    auto testDir = glm::vec3(0.f, -1.f, 0.f);
+    //nice idea but causes rubber banding
+    //if (ball.state == Ball::State::Flight)
+    //{
+    //    //if the ball isn't travelling towards the ground in flight
+    //    //use the velocity vector to test what's in front
+    //    const auto dir = glm::normalize(ball.velocity);
+    //    if (glm::dot(dir, cro::Transform::Y_AXIS) > -0.5f)
+    //    {
+    //        testDir = dir;
+    //    }
+    //}
+    auto terrainResult = getTerrain(pos, testDir);
 
     if (terrainResult.penetration > 0)
     {
@@ -1298,7 +1426,6 @@ void BallSystem::doCollision(cro::Entity entity)
         pos = terrainResult.intersection;
         tx.setPosition(pos);
 
-        auto& ball = entity.getComponent<Ball>();
         ball.lie = terrainResult.penetration > BallPenetrationAvg ? 0 : 1;
         CRO_ASSERT(!std::isnan(pos.x), "");
         CRO_ASSERT(!std::isnan(ball.velocity.x), "");
@@ -1569,6 +1696,18 @@ void BallSystem::updateWind()
     //m_windStrengthTarget = 0.f;
 }
 
+std::vector<SphereResult::Manifold> BallSystem::doSphereCollision(glm::vec3 worldPosition, float maxWallAngle)
+{
+    m_ballCollider->setWorldTransform(btTransform(btQuaternion(), glmToBt(worldPosition * PhysicsScale)));
+
+    SphereResult result;
+    result.objects = &m_groundObjects;
+    result.maxTestAngle = maxWallAngle;
+    m_collisionWorld->contactTest(m_ballCollider.get(), result);
+
+    return result.manifolds;
+}
+
 void BallSystem::initCollisionWorld(bool drawDebug)
 {
     m_collisionCfg = std::make_unique<btDefaultCollisionConfiguration>();
@@ -1576,6 +1715,14 @@ void BallSystem::initCollisionWorld(bool drawDebug)
 
     m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
     m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionCfg.get());
+
+
+    m_ballCollisionShape = std::make_unique<btSphereShape>((Ball::Radius - 0.001f) * PhysicsScale);
+    //m_ballCollisionShape = std::make_unique<btCylinderShape>(btVector3(Ball::Radius, Ball::Radius / 6.f, Ball::Radius));
+    m_ballCollider = std::make_unique<btCollisionObject>();
+    m_ballCollider->setCollisionShape(m_ballCollisionShape.get());
+    m_ballCollider->setCcdMotionThreshold(Ball::Radius / 2.f);
+    m_ballCollider->setCcdSweptSphereRadius(Ball::Radius);
 
 #ifdef CRO_DEBUG_
     if (drawDebug)
@@ -1605,7 +1752,21 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
 {
     clearCollisionObjects();
 
-    cro::Mesh::Data meshData = cro::Detail::ModelBinary::read(modelPath, m_vertexData, m_indexData);
+    std::vector<std::vector<std::uint32_t>> temp;
+    cro::Mesh::Data meshData = cro::Detail::ModelBinary::read(modelPath, m_vertexData, temp);
+
+    //the mesh collision callback expects 16 bit indices - as this is mostly running
+    //in it's own thread a quick conversion here shouldn't hurt...
+    for (const auto& t : temp)
+    {
+        auto& i = m_indexData.emplace_back();
+        for (auto x : t)
+        {
+            i.push_back(x);
+        }
+    }
+
+    if (meshData.vertexCount > std::numeric_limits<std::uint16_t>::max()) LogW << "FIX ME " << FILE_LINE << std::endl;
 
     if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
     {
@@ -1613,12 +1774,10 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
         return false;
     }
 
-
-
     std::int32_t colourOffset = 0;
     for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
     {
-        colourOffset += static_cast<std::int32_t>(meshData.attributes[i]);
+        colourOffset += static_cast<std::int32_t>(meshData.attributes[i].componentCount);
     }
 
     //we have to create a specific object for each sub mesh
@@ -1626,6 +1785,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
 
     //Later note: now we have per-triangle terrain detection this probably isn't true now.
     //for (auto i = 0u; i < m_indexData.size(); ++i)
+    auto i = 0;
     for(const auto& id : m_indexData)
     {
         btIndexedMesh groundMesh;
@@ -1633,16 +1793,16 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
         groundMesh.m_numVertices = static_cast<int>(meshData.vertexCount);
         groundMesh.m_vertexStride = static_cast<int>(meshData.vertexSize);
 
-        
         groundMesh.m_numTriangles = /*meshData.indexData[i].indexCount*/id.size() / 3;
         groundMesh.m_triangleIndexBase = reinterpret_cast<const std::uint8_t*>(id.data());
-        groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
+        groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint16_t);
 
-
-        m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh);
+        m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh, PHY_SHORT);
         m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
+        m_groundShapes.back()->setLocalScaling(btVector3(PhysicsScale, PhysicsScale, PhysicsScale));
         m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
         m_groundObjects.back()->setUserIndex(colourOffset); //use to read the terrain type in RayResult
+        m_groundObjects.back()->setUserIndex2(i++); //so we can index back into this array in a callback
         m_collisionWorld->addCollisionObject(m_groundObjects.back().get(), CollisionGroup::Terrain, CollisionGroup::Ball);
     }
 

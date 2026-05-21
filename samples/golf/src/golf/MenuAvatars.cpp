@@ -612,7 +612,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        cro::Colour c = m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex].isCPU ? TextGoldColour : cro::Colour::Transparent;
+        const cro::Colour c = m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex].isCPU ? TextGoldColour : cro::Colour::Transparent;
         auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
         for (auto& v : verts)
         {
@@ -1008,7 +1008,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     profile.name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
                     for (auto i = 0u; i < profile.avatarFlags.size(); ++i)
                     {
-                        profile.avatarFlags[i] = static_cast<std::uint8_t>(cro::Util::Random::value(0u, pc::PairCounts[i] - 1));
+                        profile.avatarFlags[i] = static_cast<std::uint8_t>(cro::Util::Random::value(0u, (pc::PairCounts[i] / 2) - 1));
                     }
 
                     //don't allow locked items duh
@@ -1022,7 +1022,6 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     else
                     {
                         profile.ballID = 0;// m_cosmeticIDs.balls[cro::Util::Random::value(0u, m_cosmeticIDs.balls.size() - 1)];
-
                     }
 
                     profile.flipped = cro::Util::Random::value(0, 1) == 0 ? false : true;
@@ -2403,7 +2402,7 @@ void MenuState::updateLobbyAvatars()
             entity.addComponent<cro::SpriteAnimation>();
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
-                [&, cID](cro::Entity e2, float)
+                [&, cID](cro::Entity e2, float) //apparently captured structed binding actually need c++ 20
                 {
                     auto index = m_readyState[cID] ? 1 : 0;
                     e2.getComponent<cro::SpriteAnimation>().play(index);

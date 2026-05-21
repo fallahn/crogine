@@ -559,7 +559,7 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
         || terrain == TerrainID::Scrub
             || terrain == TerrainID::Bunker))
     {
-        const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
+        //const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
 
         //retarget
         if (/*(cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood] &&*/ terrain != TerrainID::Bunker/*)*/

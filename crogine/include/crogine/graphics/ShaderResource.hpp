@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/Shader.hpp>
 
+#include <crogine/gui/GuiClient.hpp>
+
 #include <string>
 #include <unordered_map>
 
@@ -149,6 +151,7 @@ namespace cro
 
     */
     class CRO_EXPORT_API ShaderResource final : public Detail::SDLResource
+        , public GuiClient
     {
     public:
         enum BuiltIn
@@ -266,11 +269,11 @@ namespace cro
         Material definition files can optionally contain a property
         named "shader_string_id". When loaded via a ModelDefinition
         instance the shader resource is searched to see if this string
-        ID is mapped to a loaded shader and that shader is preferred
-        over the default shader for the materialtype. In which case
-        custom shaders should be first loaded into the resource then
-        mapped to a string ID with this function before loading the
-        model with the ModelDefinition instance.
+        ID is mapped to a (lazily) loaded shader and that shader is
+        preferred over the default shader for the material type. In 
+        which case custom shaders should be first (lazily) loaded into the 
+        resource then mapped to a string ID with this function before
+        loading the model with the ModelDefinition instance.
         \param stringID the string to search from the model definition
         \param shaderID the already loaded shader ID to map to the string ID
         \returns true if successfully mapped else false if the string is
@@ -281,7 +284,17 @@ namespace cro
         /*!
         \brief Returns true if the requested mapping is available
         */
-        bool hasStringID(const std::string& stringID) const { return m_stringMappings.count(stringID); }
+        bool hasStringID(const std::string& stringID) const;
+
+        /*!
+        \brief Assigns a loading function to a shader ID so that it may be
+        lazily loaded only when first required.
+        \param id Shader ID to which the result of the loading function is assigned
+        \param func Lazy load function which takes an instance of this resource as a parameter,
+        called once the first time the shader with the given ID is requested.
+        \returns false if a shader already exists with the given ID, or a loader is already created
+        */
+        bool addLazyLoader(std::int32_t shaderID, const std::function<void(ShaderResource&)>& func);
 
     private:
 
@@ -290,7 +303,10 @@ namespace cro
         std::unordered_map<std::string, const char*> m_includes;
 
         std::unordered_map<std::string, std::int32_t> m_stringMappings;
+        std::unordered_map<std::int32_t, std::function<void(ShaderResource&)>> m_lazyLoaders;
 
         std::string parseIncludes(const std::string& src) const;
+
+        bool tryLazyLoad(std::int32_t);
     };
 }

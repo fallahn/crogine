@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -36,6 +36,7 @@ source distribution.
 #include "VatFile.hpp"
 #include "VatAnimationSystem.hpp"
 #include "SharedStateData.hpp"
+#include "../editor/GrassProcessing.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -62,6 +63,10 @@ source distribution.
 
 #include <chrono>
 
+//this disables the grass position gen etc
+//but not all the other glue logic.
+//#define GEN_GRASS
+
 using namespace cl;
 
 namespace
@@ -74,6 +79,7 @@ namespace
 
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.4f;// 1.7f; //radius for PD sampler
+    static constexpr float GrassDensityHigh = 0.9f;
     static constexpr float TreeDensity = 4.f;
 
     static constexpr std::array MinBounds = { 0.f, 0.f };
@@ -88,6 +94,20 @@ namespace
     //number of times the resolution of the map to increase normal map resolution by
     //MUST be even and should be 2,4 or 8 as 1 will cause a div0!
     static constexpr std::int32_t NormalMapMultiplier = 8; 
+
+    constexpr glm::uvec2 getNormalMapSize()
+    {
+        return { MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier };
+    }
+
+    struct GrassUniform final
+    {
+        std::int32_t alpha = -1;
+        std::uint32_t shader = 0;
+
+        float target = 1.f;
+        float current = 0.f;
+    }grassUniform;
 
     //callback data
     struct SwapData final
@@ -115,13 +135,28 @@ namespace
 
             swapData.currentTime = std::min(SwapData::TransitionTime, swapData.currentTime + dt);
 
-            pos.y = swapData.start + ((swapData.destination - swapData.start) * cro::Util::Easing::easeInOutQuint(swapData.currentTime / SwapData::TransitionTime));
+            const auto progress = cro::Util::Easing::easeInOutQuint(swapData.currentTime / SwapData::TransitionTime);
+            const auto movement = (swapData.destination - swapData.start);
+            pos.y = swapData.start + (movement * progress);
             pos.y = std::min(-TerrainLevel, std::max(-MaxShrubOffset, pos.y));
 
             e.getComponent<cro::Transform>().setPosition(pos);
 
+            grassUniform.target = (cro::Util::Maths::sgn(movement)) + 1 / 2;
+            if (grassUniform.target < grassUniform.current)
+            {
+                grassUniform.current = std::max(0.f, grassUniform.current - dt);
+            }
+            else
+            {
+                grassUniform.current = std::min(1.f, grassUniform.current + dt);
+            }
+
             if (swapData.currentTime == SwapData::TransitionTime)
             {
+                grassUniform.target = std::clamp(std::round(grassUniform.target), 0.f, 1.f);
+                grassUniform.current = grassUniform.target;
+
                 pos.y = swapData.destination;
                 e.getComponent<cro::Transform>().setPosition(pos);
                 e.getComponent<cro::Callback>().active = false;
@@ -167,6 +202,9 @@ namespace
                     swapData.umbrellaEnt.getComponent<cro::Model>().setHidden(true);
                 }
             }
+
+            glUseProgram(grassUniform.shader);
+            glUniform1f(grassUniform.alpha, grassUniform.current);
         }
 
         cro::Entity terrainEntity;
@@ -299,6 +337,10 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto terrainShadowMat = resources.materials.get(materialID);
     terrainShadowMat.addCustomSetting(GL_CLIP_DISTANCE1);
 
+    auto& terrainMeshData = resources.meshes.getMesh(meshID);
+    terrainMeshData.attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+    terrainMeshData.attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
+    terrainMeshData.vertexSize = cro::MeshBuilder::getVertexSize(terrainMeshData.attributes);
 
     auto entity = scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, TerrainLevel, 0.f });
@@ -316,7 +358,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             e.getComponent<cro::Callback>().active = false;
         }
     };
-    entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), terrainMat);
+    entity.addComponent<cro::Model>(terrainMeshData, terrainMat);
     entity.getComponent<cro::Model>().setShadowMaterial(0, terrainShadowMat);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
     entity.addComponent<cro::ShadowCaster>();
@@ -327,39 +369,46 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     meshData->boundingBox[1] = glm::vec3(MaxBounds[0], 10.f, -MaxBounds[1]);
     meshData->boundingSphere.centre = { MaxBounds[0] / 2.f, 0.f, -MaxBounds[1] / 2.f };
     meshData->boundingSphere.radius = glm::length(meshData->boundingSphere.centre);
-    m_terrainProperties.vbo = meshData->vbo;
+    m_terrainProperties.vbo = meshData->vboAllocation.bufferID;
     //vert data is uploaded to vbo via update()
+
+    //we'll do this first to allocate enough buffer space
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(m_terrainBuffer.data(), m_terrainBuffer.size()));
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { cro::DataArray(indices.data(), indices.size()) });
 
     //parent the shrubbery so they always stay the same relative height
     m_terrainEntity = entity;
 
+
+    //high density grass
+    const auto grassID = resources.materials.add(resources.shaders.get(ShaderID::Grass));
+
     //modified billboard shader - shader loading is done in GolfState::loadAssets()
-    auto billboardMatID = resources.materials.add(resources.shaders.get(ShaderID::Billboard));
-    auto billboardShadowID = resources.materials.add(resources.shaders.get(ShaderID::BillboardShadow));
+    const auto billboardMatID = resources.materials.add(resources.shaders.get(ShaderID::Billboard));
+    //hmm we wanted nearer culling for grass but it shares an entity with other shrubs
+    //auto billboardGrassMatID = resources.materials.add(resources.shaders.get(ShaderID::BillboardGrass)); 
+    const auto billboardShadowID = resources.materials.add(resources.shaders.get(ShaderID::BillboardShadow));
 
     //custom shader for instanced plants
-    auto reedMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CelTexturedInstanced));
-    auto reedShadowID = resources.materials.add(resources.shaders.get(ShaderID::ShadowMapInstanced));
+    const auto reedMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CelTexturedInstanced));
+    const auto reedShadowID = resources.materials.add(resources.shaders.get(ShaderID::ShadowMapInstanced));
 
 
     //HQ tree materials
-    std::int32_t branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
-    std::int32_t leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
-    std::int32_t treeShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetShadow));
-    std::int32_t leafShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeafShadow));
+    const std::int32_t branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
+    const std::int32_t leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
+    const std::int32_t treeShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetShadow));
+    const std::int32_t leafShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeafShadow));
 
     //and VATs shader for crowd
-    auto crowdMaterialID = resources.materials.add(resources.shaders.get(ShaderID::Crowd));
-    auto shadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdShadow));
+    const auto crowdMaterialID = resources.materials.add(resources.shaders.get(ShaderID::Crowd));
+    const auto shadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdShadow));
 
-    auto crowdArrayMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdArray));
-    auto shadowArrayMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdShadowArray));
+    const auto crowdArrayMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdArray));
+    const auto shadowArrayMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdShadowArray));
 
     //create billboard/instanced entities
     cro::ModelDefinition billboardDef(resources);
@@ -380,6 +429,16 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto& noiseTex = resources.textures.get("assets/golf/images/wind.png");
     noiseTex.setRepeated(true);
     noiseTex.setSmooth(true);
+
+#ifdef GEN_GRASS
+    if (!Social::isSteamdeck())
+    {
+        resources.materials.get(grassID).setProperty("u_noiseTexture", noiseTex);
+        resources.materials.get(grassID).addCustomSetting(GL_CLIP_DISTANCE1);
+        createGrassChunks(resources, scene, resources.materials.get(grassID));
+    }
+#endif
+
     auto b = 0;
     for (auto& entity : m_propRootEntities)
     {
@@ -418,6 +477,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                         e.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
 
                         auto material = resources.materials.get(billboardMatID);
+                        material.addCustomSetting(GL_CLIP_DISTANCE1);
                         applyMaterialData(billboardDef, material);
                         material.setProperty("u_noiseTexture", noiseTex);
                         e.getComponent<cro::Model>().setMaterial(0, material);
@@ -445,6 +505,18 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         if (bbe.hasComponent<cro::Model>())
         {
             bbe.getComponent<cro::Model>().setRenderFlags(RenderFlags::FlightCam);
+            bbe.getComponent<cro::Model>().setMaterialProperty(0, "u_alpha", 0.f);
+            bbe.addComponent<cro::Callback>().active = true;
+            bbe.getComponent<cro::Callback>().function =
+                [entity](cro::Entity e, float)
+                {
+                    if (entity.getComponent<cro::Callback>().active)
+                    {
+                        const auto pos = entity.getComponent<cro::Transform>().getPosition();
+                        float alpha = 1.f - std::clamp(pos.y / -MaxShrubOffset, 0.f, 1.f);
+                        e.getComponent<cro::Model>().setMaterialProperty(0, "u_alpha", alpha);
+                    }
+                };
             m_billboardTreeEntities[b] = bbe;
         }
         b++;
@@ -485,7 +557,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             if (shrubDef.loadFromFile(theme.treesets[j].modelPath, true))
             {
                 auto childEnt = scene.createEntity();
-                childEnt.addComponent<cro::Transform>();
+                childEnt.addComponent<cro::Transform>();// .setScale(glm::vec3(theme.treesets[j].scale));
                 shrubDef.createModel(childEnt);
 
                 for (auto idx : theme.treesets[j].branchIndices)
@@ -493,6 +565,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     auto material = resources.materials.get(branchMaterialID);
                     applyMaterialData(shrubDef, material, idx);
                     material.setProperty("u_noiseTexture", noiseTex);
+                    material.setProperty("u_alpha", 0.f);
                     material.addCustomSetting(GL_CLIP_DISTANCE1);
                     childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
@@ -513,6 +586,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     material.setProperty("u_colour", theme.treesets[j].colour);
                     material.setProperty("u_rotation", theme.treesets[j].colourRotation);
                     material.setProperty("u_noiseTexture", noiseTex);
+                    material.setProperty("u_alpha", 0.f);
                     material.addCustomSetting(GL_CLIP_DISTANCE1);
                     childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
@@ -528,6 +602,24 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
                 childEnt.getComponent<cro::Model>().setHidden(true);
                 childEnt.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen | RenderFlags::FlightCam));
+                //updates transparency during transition - ideally this should be a UBO
+                childEnt.addComponent<cro::Callback>().active = true;
+                childEnt.getComponent<cro::Callback>().function =
+                    [entity](cro::Entity e, float)
+                    {
+                        if (entity.getComponent<cro::Callback>().active)
+                        {
+                            const auto pos = entity.getComponent<cro::Transform>().getPosition();
+                            float alpha = 1.f - std::clamp(pos.y / -MaxShrubOffset, 0.f, 1.f);
+                            
+                            auto& model = e.getComponent<cro::Model>();
+                            for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+                            {
+                                model.setMaterialProperty(i, "u_alpha", alpha);
+                            }
+                        }
+                    };
+                
                 entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
                 m_instancedShrubs[i][j] = childEnt;
             }
@@ -643,7 +735,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     //create a mesh to display the slope data
     flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0;
-    meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_LINES));
+    meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_LINES, GL_UNSIGNED_SHORT));
     resources.shaders.loadFromString(ShaderID::Slope, SlopeVertexShader, SlopeFragmentShader);
     auto& slopeShader = resources.shaders.get(ShaderID::Slope);
     m_slopeProperties.positionUniform = slopeShader.getUniformID("u_centrePosition");
@@ -668,12 +760,18 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //        ImGui::End();
     //    });
 
+    //cusomise the vertex properties
+    auto& slopeMeshData = resources.meshes.getMesh(meshID);
+    slopeMeshData.attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+    slopeMeshData.attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
+    slopeMeshData.attributes[cro::Mesh::Attribute::UV0].glType = GL_HALF_FLOAT;
 
+    slopeMeshData.vertexSize = cro::MeshBuilder::getVertexSize(slopeMeshData.attributes);
 
     entity = scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::SlopeIndicator;
-    entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
+    entity.addComponent<cro::Model>(slopeMeshData, resources.materials.get(materialID));
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen | RenderFlags::FlightCam | RenderFlags::Reflection));
     entity.getComponent<cro::Model>().setHidden(true);
     entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
@@ -713,18 +811,16 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     //create and update the initial normal map
     m_normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
-    glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
-    glm::vec2 mapSize(MapSize);
-    glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -40.f, 40.f);
-    auto normalViewProj = projMat * viewMat;
+    constexpr glm::vec2 mapSize(MapSize);
+    const glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
+    const glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -40.f, 40.f);
+    const auto normalViewProj = projMat * viewMat;
 
     //we can set this once so we don't need to store the matrix
     glCheck(glUseProgram(m_normalShader.getGLHandle()));
     glCheck(glUniformMatrix4fv(m_normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
     glCheck(glUseProgram(0));
 
-    m_normalMap.setPrecision(cro::TexturePrecision::Low);
-    m_normalMap.create(MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier, 2);
     if (m_currentHole < m_holeData.size())
     {
         renderNormalMap();
@@ -833,7 +929,8 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
                     }
                 }
 
-                if (m_umbrellaEntities[first].isValid())
+                if (m_umbrellaEntities[first].isValid()
+                    && !positions[0].empty())
                 {
                     m_umbrellaEntities[first].getComponent<cro::Model>().setInstanceTransforms(positions[0]);
                     m_umbrellaEntities[first].getComponent<cro::Model>().setHidden(false);
@@ -853,20 +950,38 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
             //terrain callback is set active when shrubbery callback switches
         }
         //upload the slope buffer data - this might be different even if the hole model is the same
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_slopeProperties.meshData->vbo));
-        glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(SlopeVertex) * m_slopeBuffer.size(), m_slopeBuffer.data(), GL_STATIC_DRAW));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+        cro::DynamicMeshBuilder::setVertexData(*m_slopeProperties.meshData, cro::DataArray(m_slopeBuffer.data(), m_slopeBuffer.size()));
+
 
         auto* submesh = &m_slopeProperties.meshData->indexData[0];
         submesh->indexCount = static_cast<std::uint32_t>(m_slopeIndices.size());
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), m_slopeIndices.data(), GL_STATIC_DRAW));
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+        cro::DynamicMeshBuilder::setIndexData(*m_slopeProperties.meshData, { cro::DataArray(m_slopeIndices.data(), m_slopeIndices.size()) });
         
         m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
 
+#ifdef GEN_GRASS
+        //if we have any transforms update the chunks
+        if (!Social::isSteamdeck()
+            /*&& m_sharedData.grassDensity == 1*/) //hmm, we always have to do this in case the user changes the setting mid-round
+        {
+            for (auto i = 0u; i < m_grassTransforms.size(); ++i)
+            {
+                if (!m_grassTransforms[i].empty())
+                {
+                    m_grassChunks[i].getComponent<cro::Model>().setInstanceTransforms(m_grassTransforms[i]);
+                    m_grassChunks[i].getComponent<cro::Model>().setRenderFlags(RenderFlags::Main);
+                    m_grassTransforms[i].clear();
+                }
+                else
+                {
+                    m_grassChunks[i].getComponent<cro::Model>().setRenderFlags(0);
+                }
+            }
+        }
+#endif
+
         //signal to the thread we want to update the buffers
-        //ready for next time
+        //ready for next time - this will also recreate the grass transforms
         m_currentHole++;
         if (m_currentHole < m_holeData.size())
         {
@@ -889,6 +1004,16 @@ float TerrainBuilder::getSlopeAlpha() const
     return m_slopeProperties.currentAlpha;
 }
 
+void TerrainBuilder::setSlopeVisible(bool v)
+{
+    m_slopeProperties.entity.getComponent<cro::Model>().setHidden(!v);
+}
+
+bool TerrainBuilder::getSlopeVisible() const
+{
+    return !m_slopeProperties.entity.getComponent<cro::Model>().isHidden();
+}
+
 void TerrainBuilder::applyTreeQuality()
 {
     std::uint64_t hqFlags = 0;
@@ -896,8 +1021,8 @@ void TerrainBuilder::applyTreeQuality()
 
     if (m_sharedData.treeQuality == SharedStateData::TreeQuality::High)
     {
-        hqFlags = RenderFlags::Main | RenderFlags::Reflection;
-        bbFlags = RenderFlags::FlightCam;
+        hqFlags = RenderFlags::Main;
+        bbFlags = RenderFlags::FlightCam | RenderFlags::Reflection;
     }
     
     for (const auto& ents : m_instancedShrubs)
@@ -962,7 +1087,115 @@ void TerrainBuilder::applyCrowdDensity()
     }
 }
 
+void TerrainBuilder::applyGrassDensity()
+{
+#ifdef GEN_GRASS
+    for (auto e : m_grassChunks)
+    {
+        e.getComponent<cro::Model>().setHidden(m_sharedData.grassDensity == 0);
+    }
+#endif
+}
+
 //private
+void TerrainBuilder::readGrassData()
+{
+#ifdef GEN_GRASS
+    for (auto& tx : m_grassTransforms)
+    {
+        tx.clear();
+    }
+
+    auto path = m_holeData[m_currentHole].modelPath;
+    cro::Util::String::replace(path, "cmt", "gss");
+    if (cro::FileSystem::fileExists(path))
+    {
+        GrassProcessor::Header header = {};
+        std::fill(header.begin(), header.end(), 0);
+
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        if (file.file)
+        {
+            file.file->read(file.file, header.data(), sizeof(header), 1);
+
+            for (auto i = 0u; i < m_grassTransforms.size(); ++i)
+            {
+                if (header[i] > 0
+                    && (header[i] % sizeof(glm::mat4)) == 0)
+                {
+                    const auto count = header[i] / sizeof(glm::mat4);
+                    m_grassTransforms[i].resize(count);
+                    file.file->read(file.file, m_grassTransforms[i].data(), sizeof(glm::mat4), count);
+                }
+            }
+        }
+    }
+#endif
+}
+
+void TerrainBuilder::createGrassChunks(cro::ResourceCollection& resources, cro::Scene& scene, cro::Material::Data& material)
+{
+#ifdef GEN_GRASS
+    const auto& shader = resources.shaders.get(ShaderID::Grass);
+    grassUniform.shader = shader.getGLHandle();
+    grassUniform.alpha = shader.getUniformID("u_alpha");
+
+    constexpr glm::vec2 ChunkSize(MapSize.x / ChunkVisSystem::ColCount, MapSize.y / ChunkVisSystem::RowCount);
+
+    cro::ModelDefinition md(resources);
+    if (md.loadFromFile("assets/golf/models/grass_sparse.cmt", true))
+    //if (md.loadFromFile("assets/golf/models/grass_dense.cmt", true))
+    {
+        applyMaterialData(md, material);
+        for (auto y = 0; y < ChunkVisSystem::RowCount; ++y)
+        {
+            for (auto x = 0; x < ChunkVisSystem::ColCount; ++x)
+            {
+                const glm::vec2 pos = glm::vec2(ChunkSize.x * x, ChunkSize.y * y) + (ChunkSize / 2.f);
+
+                auto entity = scene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({ pos.x, 0.f, -pos.y });
+                md.createModel(entity);
+                entity.getComponent<cro::Model>().setMaterial(0, material);
+
+                const auto chunkIdx = y * ChunkVisSystem::ColCount + x;
+                m_grassChunks[chunkIdx] = entity;
+            }
+        }
+    }
+
+    applyGrassDensity();
+#endif
+}
+
+void TerrainBuilder::setVisibilityStates(const ChunkVisSystem::VisStates& states)
+{
+#ifdef GEN_GRASS
+    if (!Social::isSteamdeck() &&
+        m_sharedData.grassDensity)
+    {
+        constexpr auto a2 = ChunkVisSystem::ChunkWidth * ChunkVisSystem::ChunkWidth;
+        constexpr auto b2 = ChunkVisSystem::ChunkHeight * ChunkVisSystem::ChunkHeight;
+        constexpr auto c2 = a2 + b2;
+
+        //would be nice to make this variable (along with fade dist in shader)
+        static constexpr float VisRadius = static_cast<float>(c2);
+        for (auto i = 0u; i < m_grassChunks.size(); ++i)
+        {
+            if (states[i].visible)
+            {
+                m_grassChunks[i].getComponent<cro::Model>().setHidden(states[i].distToCamSqr > VisRadius);
+            }
+            else
+            {
+                m_grassChunks[i].getComponent<cro::Model>().setHidden(true);
+            }
+        }
+    }
+#endif
+}
+
 void TerrainBuilder::onChunkUpdate(const std::vector<std::int32_t>& visibleChunks)
 {
     auto shrubIndex = m_swapIndex % 2;
@@ -1007,7 +1240,7 @@ void TerrainBuilder::threadFunc()
 {
     const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
     {
-        auto size = m_normalMap.getSize();
+        constexpr auto size = getNormalMapSize();
         x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
         y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
 
@@ -1017,7 +1250,7 @@ void TerrainBuilder::threadFunc()
 
     const auto readNormal = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
     {
-        auto size = m_normalMap.getSize();
+        constexpr auto size = getNormalMapSize();
         x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
         y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
 
@@ -1095,10 +1328,10 @@ void TerrainBuilder::threadFunc()
                 }
 
                 //recreate the distribution(s)
-                auto seed = static_cast<std::uint32_t>(std::time(nullptr));
-                auto grass = pd::PoissonDiskSampling(GrassDensity, MinBounds, MaxBounds, 30u, seed);
-                auto trees = pd::PoissonDiskSampling(TreeDensity, MinBounds, MaxBounds);
-                auto flowers = pd::PoissonDiskSampling(TreeDensity * 0.5f, MinBounds, MaxBounds, 30u, seed / 2);
+                const auto seed = static_cast<std::uint32_t>(std::time(nullptr));
+                const auto grass = pd::PoissonDiskSampling(m_sharedData.grassDensity == 0 ? GrassDensity : GrassDensityHigh, MinBounds, MaxBounds, 30u, seed);
+                const auto trees = pd::PoissonDiskSampling(TreeDensity, MinBounds, MaxBounds);
+                const auto flowers = pd::PoissonDiskSampling(TreeDensity * 0.5f, MinBounds, MaxBounds, 30u, seed / 2);
 
                 //filter distribution by map area
                 m_billboardBuffer.clear();
@@ -1106,15 +1339,15 @@ void TerrainBuilder::threadFunc()
                 
                 for (auto [x, y] : grass)
                 {
-                    auto [terrain, terrainHeight] = readMap(mapImage, x, y);
+                    const auto [terrain, terrainHeight] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Rough)
                     {
-                        float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
-                        float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+                        const float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
+                        const float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
 
                         if (height > WaterLevel)
                         {
-                            auto n = readNormal(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+                            const auto n = readNormal(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
                             //don't place on steep slopes
                             if (glm::dot(n, cro::Transform::Y_AXIS) > 0.3f)
                             {
@@ -1145,7 +1378,7 @@ void TerrainBuilder::threadFunc()
                         }
                     }
                 }
-                
+
                 for (auto [x, y] : trees)
                 {
                     auto [terrain, height] = readMap(mapImage, x, y);
@@ -1180,25 +1413,25 @@ void TerrainBuilder::threadFunc()
                             if (!isNearProp)
                             {
                                 static std::size_t shrubIdx = 0;
-                                auto currIndex = shrubIdx % MaxShrubInstances;
+                                const auto currIndex = shrubIdx % MaxShrubInstances;
 
                                 if (m_instancedShrubs[0][currIndex].isValid())
                                 {
                                     glm::vec3 position(x, height - 0.05f, -y);
-                                    float rotation = static_cast<float>(cro::Util::Random::value(0, 36) * 10) * cro::Util::Const::degToRad;
-                                    float scale = static_cast<float>(cro::Util::Random::value(16, 20)) / 10.f;
+                                    const float rotation = static_cast<float>(cro::Util::Random::value(0, 36) * 10) * cro::Util::Const::degToRad;
+                                    const float scale = static_cast<float>(cro::Util::Random::value(16, 20)) / 10.f;
 
                                     auto& mat4 = m_shrubTransforms[currIndex].emplace_back(1.f);
                                     mat4 = glm::translate(mat4, position);
                                     mat4 = glm::rotate(mat4, rotation, cro::Transform::Y_AXIS);
-                                    mat4 = glm::scale(mat4, glm::vec3(scale));
+                                    mat4 = glm::scale(mat4, glm::vec3(scale) * 1.2f);
 
                                     //find which chunk this is in based on position and update the 
                                     //appropriate cell data for culling
-                                    auto norm = glm::inverseTranspose(mat4);
+                                    const auto norm = glm::inverseTranspose(mat4);
 
-                                    auto xCell = std::floor(x / ChunkSize.x);
-                                    auto yCell = std::floor(y / ChunkSize.y);
+                                    const auto xCell = std::floor(x / ChunkSize.x);
+                                    const auto yCell = std::floor(y / ChunkSize.y);
 
                                     auto idx = static_cast<std::int32_t>(yCell * ChunkVisSystem::ColCount + xCell);
                                     //LogI << idx <<std::endl;
@@ -1209,7 +1442,7 @@ void TerrainBuilder::threadFunc()
                                 //low quality version - always rendered on flight cam and optionally on LQ settings
                                 glm::vec3 bbPos({ x, height - 0.05f, -y });
 
-                                float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+                                const float scale = (static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f) * 1.2f;
                                 auto& bb = m_billboardTreeBuffer.emplace_back(m_billboardTemplates[BillboardID::Tree01 + currIndex]);
                                 bb.position = bbPos; //small vertical offset to stop floating billboards
                                 bb.size *= scale;
@@ -1266,6 +1499,63 @@ void TerrainBuilder::threadFunc()
                         }
                     }
                 }
+
+
+#ifdef GEN_GRASS
+                if (!Social::isSteamdeck())
+                {
+                    //hmm it would be nice to not do this if density is set to 0
+                    //however if the density is changed mid-round no transforms will be generated
+                    //until the next hole...
+                    for (auto& tx : m_grassTransforms)
+                    {
+                        tx.clear();
+                    }
+                    //TODO only do if desity set to high?
+                    constexpr glm::vec2 ChunkSize(MapSize.x / ChunkVisSystem::ColCount, MapSize.y / ChunkVisSystem::RowCount);
+                    for (auto y = 0; y < ChunkVisSystem::RowCount; ++y)
+                    {
+                        for (auto x = 0; x < ChunkVisSystem::ColCount; ++x)
+                        {
+                            const glm::vec2 chunkPos = glm::vec2(ChunkSize.x * x, ChunkSize.y * y) + (ChunkSize / 2.f);
+                            const auto chunkIdx = y * ChunkVisSystem::ColCount + x;
+
+                            //use world space bounds so that the positions tile correctly
+                            const std::array minb = { chunkPos.x - (ChunkSize.x / 2.f), chunkPos.y - (ChunkSize.y / 2.f) };
+                            const std::array maxb = { chunkPos.x + (ChunkSize.x / 2.f), chunkPos.y + (ChunkSize.y / 2.f) };
+
+                            static constexpr float density = 0.3f; //0.02f
+                            const auto points = pd::PoissonDiskSampling(density, minb, maxb);
+
+                            for (const auto& [x1, y1] : points)
+                            {
+                                auto pointPos = glm::vec3(x1, 0.f, -y1);
+                                const auto [terrain, _1] = readMap(mapImage, x1, y1);
+                                const float height = readHeightMap(static_cast<std::uint32_t>(x1), static_cast<std::uint32_t>(y1));
+
+                                if (terrain == TerrainID::Rough
+                                    && height > 0.f)
+                                {
+                                    //don't place on steep slopes
+                                    const auto n = readNormal(static_cast<std::uint32_t>(x1), static_cast<std::uint32_t>(y1));
+                                    if (glm::dot(n, cro::Transform::Y_AXIS) > 0.7f)
+                                    {
+                                        pointPos.y = height;
+
+                                        //remember to put this point relative to ent position...
+                                        auto t = glm::translate(glm::mat4(1.f), pointPos - glm::vec3(chunkPos.x, 0.f, -chunkPos.y));
+                                        t = glm::rotate(t, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI), cro::Transform::Y_AXIS);
+                                        t = glm::scale(t, glm::vec3(cro::Util::Random::value(0.8f, 1.1f)) * 2.f);
+                                        m_grassTransforms[chunkIdx].emplace_back(t);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+#endif
+
+
 
                 //this isn't the same as the readHeightMap above - it scales the
                 //result to MaxTerrainHeight, whereas the above returns world coords
@@ -1359,7 +1649,7 @@ void TerrainBuilder::threadFunc()
 
                             //this is the number of times the 'dashes' repeat if enabled in the shader
                             //and the speed/direction based on height difference
-                            vert.texCoord = { 0.f, 0.f };
+                            vert.texCoord = glm::packHalf2x16({ 0.f, 0.f });
 
                             glm::vec3 offset(GridSpacing, 0.f, 0.f);
                             height = (readHeightMap(worldX + 1, worldY, GridDensity) - pinPos.y);
@@ -1373,10 +1663,11 @@ void TerrainBuilder::threadFunc()
                             vert2.position = vert.position + offset;
                             vert2.position.y = height;
                             vert2.normal = readNormal(worldX + 1, worldY, GridDensity);
-                            vert2.texCoord = { vert2.position.x * DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
-                            vert.texCoord.x = vert.position.x * DashCount;
-                            vert.texCoord.y = vert2.texCoord.y; //must be constant across segment
-                            
+
+                            const glm::vec2 uv2 = { vert2.position.x * DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
+                            const glm::vec2 uv1 = { vert.position.x * DashCount, uv2.y }; //must be constant across segment
+                            vert2.texCoord = glm::packHalf2x16(uv2);
+                            vert.texCoord = glm::packHalf2x16(uv1);
 
                             //we have to copy first vert as the tex coords will be different
                             //shame we can't just recycle the index...
@@ -1392,9 +1683,11 @@ void TerrainBuilder::threadFunc()
                             vert4.position = vert.position + offset;
                             vert4.position.y = height;
                             vert4.normal = readNormal(worldX, worldY + 1, GridDensity);
-                            vert4.texCoord = { vert4.position.z * DashCount, std::min(-glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
-                            vert3.texCoord.x = vert3.position.z * DashCount;
-                            vert3.texCoord.y = vert4.texCoord.y;
+
+                            const glm::vec2 uv4 = { vert4.position.z * DashCount, std::min(-glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
+                            const glm::vec2 uv3 = { vert3.position.z * DashCount, uv4.y };
+                            vert4.texCoord = glm::packHalf2x16(uv4);
+                            vert3.texCoord = glm::packHalf2x16(uv3);
 
                             vert.position += vert.normal * SurfaceOffset;
                             vert2.position += vert2.normal * SurfaceOffset;
@@ -1466,53 +1759,23 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
         return;
     }
 
-
-    //hmmm is there some of this we can pre-process to save doing it here?
     const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
-    std::size_t normalOffset = 0;
-    for (auto i = 0u; i < cro::Mesh::Normal; ++i)
+    //so... we're technically only using a single target here HOWEVER using a regulsr render texture
+    //even in floating point doesn't render the grid correctly. Even weirder still if I set this to create
+    //only one target the rendering breaks COMPLETELY despite the removal of a completely unused target...
+    if (!m_normalMap.available())
     {
-        normalOffset += meshData.attributes[i];
+        m_normalMap.setPrecision(1, cro::TexturePrecision::Default);
+        m_normalMap.setChannelCount(1, 1);
+        m_normalMap.create(getNormalMapSize().x, getNormalMapSize().y, 2, true);
     }
+    //m_normalMap.create(getNormalMapSize().x, getNormalMapSize().y, false, false, 0, true);
+    renderToNormalMap(meshData, m_normalShader, m_normalMap);
 
-    const auto& attribs = m_normalShader.getAttribMap();
-    auto vaoCount = static_cast<std::int32_t>(meshData.submeshCount);
-
-    std::vector<std::uint32_t> vaos(vaoCount);
-    glCheck(glGenVertexArrays(vaoCount, vaos.data()));
-
-    for (auto i = 0u; i < vaos.size(); ++i)
-    {
-        glCheck(glBindVertexArray(vaos[i]));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Position]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Position], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), 0));
-        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Normal]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Normal], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), (void*)(normalOffset * sizeof(float))));
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
-    }
     
-    glCheck(glUseProgram(m_normalShader.getGLHandle()));
-    glCheck(glDisable(GL_CULL_FACE));
-
-
-    //clear the alpha to 0 so unrendered areas have zero height
-    //then the heightmap image can be compared and highest value used
-    static const cro::Colour ClearColour(0x7f7fff00);
-    m_normalMap.clear(ClearColour);
-    for (auto i = 0u; i < vaos.size(); ++i)
-    {
-        glCheck(glBindVertexArray(vaos[i]));
-        glCheck(glDrawElements(GL_TRIANGLES, meshData.indexData[i].indexCount, GL_UNSIGNED_INT, 0));
-    }
-    m_normalMap.display();
-
-    glCheck(glBindVertexArray(0));
-    glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
-
-
     //copy the texture to an array we can query
-    m_normalMapValues.resize(m_normalMap.getSize().x * m_normalMap.getSize().y * 4);
-    glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture(1).textureID);
+    m_normalMapValues.resize(getNormalMapSize().x * getNormalMapSize().y * 4);
+    //glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture(1).textureID);
+    glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture().getGLHandle());
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, m_normalMapValues.data());
 }

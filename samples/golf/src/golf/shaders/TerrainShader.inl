@@ -199,8 +199,8 @@ R"(
 
         vec4 colour = vec4(c, v_heightData.x);
 
-        colour.a *= u_alpha;
         colour = mix(vec4(DotColour, (0.35 + (0.5 * u_alpha)) * v_heightData.x), colour, alpha);
+        colour.a *= u_alpha;
 
 //colour.rgb *= 0.1; //additive blending
 //colour.rgb *= colour.a; //additive blending
@@ -208,7 +208,7 @@ R"(
 
         FRAG_OUT = colour;
         LIGHT_OUT = vec4(vec3(0.0), 1.0);
-        NORM_OUT.a = FRAG_OUT.a;
+        NORM_OUT.a = 0.0;//FRAG_OUT.a;
     }
 )";
 
@@ -231,7 +231,7 @@ static inline const std::string NormalMapVertexShader = R"(
 
 static inline const std::string NormalMapFragmentShader = R"(
     layout (location = 0) out vec4 FRAG_OUT;
-    layout (location = 1) out vec4 POS_OUT;
+    //layout (location = 1) out vec4 POS_OUT;
 
     VARYING_IN vec3 v_normal;
     VARYING_IN float v_position;
@@ -239,17 +239,13 @@ static inline const std::string NormalMapFragmentShader = R"(
     void main()
     {
         vec3 normal = normalize(v_normal);
-        POS_OUT = vec4(normal, v_position);
+        FRAG_OUT = vec4(normal, v_position);
 
-        FRAG_OUT = vec4(1.0);
 
-        //float z = normal.y;
-        //normal.y - normal.z;
-        //normal.z = z;
 
-        //normal += 1.0;
-        //normal *= 0.5;
+        //vec3 normal = normalize(v_normal);
+        //POS_OUT = vec4(normal, v_position);
 
-        //FRAG_OUT = vec4(normal, v_height);
+        //FRAG_OUT = vec4(1.0);
     }
 )";

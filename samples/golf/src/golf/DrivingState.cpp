@@ -764,11 +764,37 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 msg2->travelDistance = std::atan2(dir.z, dir.x);
             }
         }
+
+        if (data.type == CollisionEvent::Begin
+            && m_sharedData.enableRumble)
+        {
+            switch (data.terrain)
+            {
+            default: break;
+            case TerrainID::Green:
+            case TerrainID::Fairway:
+            case TerrainID::Rough:
+                ControllerEffect::trigger(cro::GameController::controllerID(m_inputParser.getLastActiveController()), ControllerEffect::Bounce);
+                break;
+            }
+        }
+
         /*else if (data.terrain == CollisionEvent::FlagPole)
         {
             Social::getMonthlyChallenge().updateChallenge(ChallengeID::Eleven, 0);
         }*/
         //LogI << glm::length(data.position - PlayerPosition) << std::endl;
+    }
+        break;
+    case cro::Message::SpriteAnimationMessage:
+    {
+        //stars on rank message after stroke
+        const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
+        if (m_sharedData.enableRumble &&
+            data.userType == SpriteAnimID::Medal) //scoreboard star animation
+        {
+            ControllerEffect::trigger(cro::GameController::controllerID(m_inputParser.getLastActiveController()), ControllerEffect::Bounce);
+        }
     }
         break;
     case cro::Message::SkeletalAnimationMessage:
@@ -840,7 +866,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::PlayerAvatar;
             cmd.action = [&](cro::Entity e, float)
             {
-                e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[m_inputParser.getClub() > ClubID::PitchWedge ? AnimationID::Chip : AnimationID::Swing]);
+                e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[m_inputParser.getClub() >= ClubID::PitchWedge ? AnimationID::Chip : AnimationID::Swing]);
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -849,15 +875,27 @@ void DrivingState::handleMessage(const cro::Message& msg)
             break;
         case GolfEvent::ClubChanged:
         {
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::StrokeIndicator;
-            cmd.action = [&](cro::Entity e, float)
+            //crude animation for indicator
+            /*if (m_inputParser.getClub() > data.club)
             {
-                //distance is zero because we should never select a putter here.
-                float scale = Clubs[m_inputParser.getClub()].getPower(0.f, m_sharedData.imperialMeasurements) / Clubs[ClubID::Driver].getPower(0.f, m_sharedData.imperialMeasurements);
-                e.getComponent<cro::Transform>().setScale({ scale, 1.f });
-            };
-            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                m_minimapIndicatorEnt.getComponent<cro::Callback>().getUserData<float>() = 0.7f;
+            }
+            else if (m_inputParser.getClub() < data.club)
+            {
+                m_minimapIndicatorEnt.getComponent<cro::Callback>().getUserData<float>() = 1.3f;
+            }*/
+
+            cro::Command cmd;
+
+            //TODO doesn't look like we're using this any more
+            //cmd.targetFlags = CommandID::StrokeIndicator;
+            //cmd.action = [&](cro::Entity e, float)
+            //{
+            //    //distance is zero because we should never select a putter here.
+            //    /*float scale = Clubs[m_inputParser.getClub()].getPower(0.f, m_sharedData.imperialMeasurements) / Clubs[ClubID::Driver].getPower(0.f, m_sharedData.imperialMeasurements);
+            //    e.getComponent<cro::Transform>().setScale({ scale, 1.f });*/
+            //};
+            //m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             //update club text colour based on distance
             cmd.targetFlags = CommandID::UI::ClubName;
@@ -889,7 +927,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
             //and change the stance
             const auto current = m_avatar.model.getComponent<cro::Skeleton>().getCurrentAnimation();
             std::int32_t next = current;
-            if (club > ClubID::PitchWedge)
+            if (club >= ClubID::PitchWedge)
             {
                 if (current == m_avatar.animationIDs[AnimationID::Idle])
                 {
@@ -952,6 +990,14 @@ void DrivingState::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
                     e.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
                 };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //and tee marker
+                cmd.targetFlags = CommandID::Tee;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", CD32::Colours[m_sharedData.teeColour]);
+                    };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                 //and the measurement settings
@@ -1276,7 +1322,7 @@ void DrivingState::loadAssets()
     m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
     
     //models
-    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define SKINNED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n" + wobble);
@@ -1301,6 +1347,7 @@ void DrivingState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Cel]).setProperty("u_ballColour", cro::Colour::White);
     
     shader = &m_resources.shaders.get(ShaderID::CelSkinned);
     m_scaleBuffer.addShader(*shader);
@@ -1985,6 +2032,9 @@ void DrivingState::createScene()
     }
     entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::MiniMap);
 
+    //we also hae a collision mesh we an query to create the ball arc on the mini map
+    m_collisionMesh.updateCollisionMesh(entity.getComponent<cro::Model>().getMeshData());
+
 
     //create the billboards
     createFoliage(entity);
@@ -2018,6 +2068,8 @@ void DrivingState::createScene()
     entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
     md.createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", CD32::Colours[m_sharedData.teeColour]);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Tee;
 
     createFlag();
 
@@ -2282,67 +2334,31 @@ void DrivingState::createScene()
 void DrivingState::createFoliage(cro::Entity terrainEnt)
 {
     //render a heightmap from the hole mesh
-    //TODO this is lifted from TerrainBuilder and can probably be shared between both with a refactor
     const auto& meshData = terrainEnt.getComponent<cro::Model>().getMeshData();
-    std::size_t normalOffset = 0;
-    for (auto i = 0u; i < cro::Mesh::Normal; ++i)
-    {
-        normalOffset += meshData.attributes[i];
-    }
-
+    
+    cro::MultiRenderTexture normalMap;
+    normalMap.create(280, 290); //course size + borders
+    
     cro::Shader normalShader;
     normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
+    glUseProgram(normalShader.getGLHandle());
 
-    glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
-    glm::vec2 mapSize(280.f, 290.f);
-    glm::mat4 projMat = glm::ortho(-mapSize.x / 2.f, mapSize.x / 2.f, -125.f, mapSize.y - 125.f, -10.f, 20.f);
-    auto normalViewProj = projMat * viewMat;
+    constexpr glm::vec2 mapSize(280.f, 290.f);
+    const glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
+    const glm::mat4 projMat = glm::ortho(-mapSize.x / 2.f, mapSize.x / 2.f, -125.f, mapSize.y - 125.f, -10.f, 20.f);
+    const auto normalViewProj = projMat * viewMat;
 
-    const auto& attribs = normalShader.getAttribMap();
-    auto vaoCount = static_cast<std::int32_t>(meshData.submeshCount);
-
-    std::vector<std::uint32_t> vaos(vaoCount);
-    glCheck(glGenVertexArrays(vaoCount, vaos.data()));
-
-    for (auto i = 0u; i < vaos.size(); ++i)
-    {
-        glCheck(glBindVertexArray(vaos[i]));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Position]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Position], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), 0));
-        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Normal]));
-        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Normal], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), (void*)(normalOffset * sizeof(float))));
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
-    }
-
-    glCheck(glUseProgram(normalShader.getGLHandle()));
-    glCheck(glDisable(GL_CULL_FACE));
-
-    float holeBottom = std::min(meshData.boundingBox[0].y, meshData.boundingBox[1].y);
-    float holeHeight = std::max(meshData.boundingBox[0].y, meshData.boundingBox[1].y) - holeBottom;
+    const float holeBottom = std::min(meshData.boundingBox[0].y, meshData.boundingBox[1].y);
+    const float holeHeight = std::max(meshData.boundingBox[0].y, meshData.boundingBox[1].y) - holeBottom;
     glCheck(glUniform1f(normalShader.getUniformID("u_lowestPoint"), holeBottom));
     glCheck(glUniform1f(normalShader.getUniformID("u_maxHeight"), holeHeight));
     glCheck(glUniformMatrix4fv(normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
-
-    cro::MultiRenderTexture normalMap;
-    normalMap.create(280, 290); //course size + borders
-
-    //clear the alpha to 0 so unrendered areas have zero height
-    static const cro::Colour ClearColour = cro::Colour(0x7f7fff00);
-    normalMap.clear(ClearColour);
-    for (auto i = 0u; i < vaos.size(); ++i)
-    {
-        glCheck(glBindVertexArray(vaos[i]));
-        glCheck(glDrawElements(GL_TRIANGLES, meshData.indexData[i].indexCount, GL_UNSIGNED_INT, 0));
-    }
-    normalMap.display();
-
-    glCheck(glBindVertexArray(0));
-    glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
-
+    
+    renderToNormalMap(meshData, normalShader, normalMap);
 
     std::vector<float> normalMapValues(normalMap.getSize().x * normalMap.getSize().y * 4);
-    glBindTexture(GL_TEXTURE_2D, normalMap.getTexture(1).textureID);
+    //glBindTexture(GL_TEXTURE_2D, normalMap.getTexture(1).textureID);
+    glBindTexture(GL_TEXTURE_2D, normalMap.getTexture().getGLHandle());
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, normalMapValues.data());
 
 
@@ -2951,7 +2967,7 @@ void DrivingState::createPlayer()
     };
     //entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
 
-    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP, GL_UNSIGNED_BYTE));
     material = m_resources.materials.get(m_materialIDs[MaterialID::Wireframe]);
     material.blendMode = cro::Material::BlendMode::Additive;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
@@ -2964,7 +2980,7 @@ void DrivingState::createPlayer()
         0.f, Ball::Radius, -5.f,    1.f * IndicatorDarkness, 0.97f * IndicatorDarkness, 0.88f * IndicatorDarkness, 0.2f,
         0.f, Ball::Radius, 0.005f,  1.f * IndicatorLightness, 0.97f * IndicatorLightness, 0.88f * IndicatorLightness, 1.f
     };
-    std::vector<std::uint32_t> indices =
+    std::vector<std::uint8_t> indices =
     {
         0,1,2
     };
@@ -2972,22 +2988,19 @@ void DrivingState::createPlayer()
 
     auto vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = verts.size() / vertStride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
+
 
     entity.getComponent<cro::Model>().setHidden(true);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
     auto indicatorEnt = entity;
 
     //a 'fan' which shows max rotation
-    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_FAN));
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_FAN, GL_UNSIGNED_BYTE));
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeArc;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
@@ -3067,15 +3080,11 @@ void DrivingState::createPlayer()
         0,1,2,3,4,5,6
     };
     meshData->vertexCount = verts.size() / vertStride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
 
     m_inputParser.setHoleDirection(-PlayerPosition);
 }
@@ -3087,29 +3096,28 @@ void DrivingState::createBall()
     //glCheck(glPointSize(BallPointSize)); - this is set in resize callback based on the buffer resolution/pixel scale
 
     auto ballMaterialID = m_materialIDs[MaterialID::WireframeCulledPoint];
-    auto ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
-    auto shadowMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+    auto ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_BYTE));
+    auto shadowMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_BYTE));
 
     auto* meshData = &m_resources.meshes.getMesh(ballMeshID);
     std::vector<float> verts =
     {
         0.f, 0.f, 0.f,   1.f, 1.f, 1.f, 1.f
     };
-    std::vector<std::uint32_t> indices =
+    std::vector<std::uint8_t> indices =
     {
         0
     };
 
     meshData->vertexCount = 1;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = 1;
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
+    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
     meshData = &m_resources.meshes.getMesh(shadowMeshID);
     verts =
@@ -3117,15 +3125,11 @@ void DrivingState::createBall()
         0.f, 0.f, 0.f,    0.5f, 0.5f, 0.5f, 1.f,
     };
     meshData->vertexCount = 1;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     submesh = &meshData->indexData[0];
     submesh->indexCount = 1;
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
 
 
 
@@ -3197,10 +3201,8 @@ void DrivingState::createBall()
             cmd.action =
                 [&, pos](cro::Entity e, float)
             {
-                const auto position = glm::vec3(pos.x, -pos.z, 0.1f) / 2.f;
-                //need to tie into the fact the mini map is 1/2 scale
-                //and has the origin in the centre
-                e.getComponent<cro::Transform>().setPosition(position + glm::vec3(RangeSize / 4.f, 0.f));
+                const auto position = glm::vec3(toMinimapCoords(pos), 0.1f);
+                e.getComponent<cro::Transform>().setPosition(position);
 
                 //set scale based on height
                 const auto height = (pos.y / MaxMinimapHeight);
@@ -3212,7 +3214,7 @@ void DrivingState::createBall()
                 data.state = MiniTrailData::Follow;
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
+            
             //following cameras
             cmd.targetFlags = CommandID::SpectatorCam;
             cmd.action = [&, ent](cro::Entity e, float)
@@ -3479,13 +3481,13 @@ void DrivingState::createFlag()
         0,1,2,3,4,5,6,7,8,9,10,11,12
     };
     meshData->vertexCount = verts.size() / vertStride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     auto * submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
@@ -3634,7 +3636,8 @@ void DrivingState::hitBall()
 #ifdef CRO_DEBUG_
     //result.impulse *= powerMultiplier;
 #endif
-    result.impulse *= Dampening[TerrainID::Fairway];
+    //performed bu getStroke()
+    //result.impulse *= Dampening[TerrainID::Fairway];
 
     //apply impulse to ball component
     cro::Command cmd;
@@ -3731,6 +3734,7 @@ void DrivingState::setHole(std::int32_t index)
 {
     m_gameScene.getSystem<BallSystem>()->setHoleData(m_holeData[index], false);
     m_inputParser.resetPower();
+    Club::setModifierIndex(0); //reset punch/flop
     //activated when flag anim finishes
 
 

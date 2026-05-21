@@ -605,7 +605,8 @@ void GolfState::netBroadcast()
                 info.lie = ballC.lie;
                 info.groupID = m_groupAssignments[player.client];
                 //as these are only used for sound effects only send the events where we bounce on something
-                info.collisionTerrain = ballC.state == Ball::State::Flight ? ballC.lastTerrain : ConstVal::NullValue;
+                info.collisionTerrain = ballC.state == Ball::State::Flight || ballC.state == Ball::State::Putt
+                    ? ballC.lastTerrain : ConstVal::NullValue;
                 ballC.lastTerrain = ConstVal::NullValue;
                 m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Unreliable);
             }
@@ -1903,17 +1904,18 @@ void GolfState::initScene()
             return a.playerCount > b.playerCount;
         });
 
-    auto groupMode = m_sharedData.groupMode;
+    auto groupMode = m_sharedData.groupMode; //hmm, why do we copy this?
     if (m_sharedData.scoreType == ScoreType::Skins
-        || m_sharedData.scoreType == ScoreType::Match)
+        || m_sharedData.scoreType == ScoreType::Match
+        || m_sharedData.teamMode)
     {
         groupMode = ClientGrouping::None;
     }
 
-    if (groupMode != ClientGrouping::None)
-    {
-        m_sharedData.teamMode = 0;
-    }
+    //if (groupMode != ClientGrouping::None)
+    //{
+    //    m_sharedData.teamMode = 0;
+    //}
 
     if (groupMode == ClientGrouping::Even)
     {
@@ -2099,11 +2101,20 @@ void GolfState::buildWorld()
         if (m_sharedData.leagueID > LeagueRoundID::Count)
         {
             const auto tournamentID = std::numeric_limits<std::int32_t>::max() - m_sharedData.leagueID;
-            CRO_ASSERT(tournamentID < 2, "");
+            CRO_ASSERT(tournamentID < 3, "");
 
             Tournament t;
             t.id = tournamentID;
-            readTournamentData(t);
+
+            if (tournamentID == TournamentIndex::Custom)
+            {
+                std::scoped_lock lock(m_sharedData.mutex);
+                readTournamentData(t, m_sharedData.customTournament.c_str());
+            }
+            else
+            {
+                readTournamentData(t);
+            }
 
             std::fill(scores.begin(), scores.end(), 0);
 
@@ -2285,8 +2296,8 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
                     }
                 };
         }
-#endif
         break;
+#endif
         }
     }
 }

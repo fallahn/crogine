@@ -154,6 +154,12 @@ void Server::setLeagueID(std::int32_t id)
     m_sharedData.leagueID = id;
 }
 
+void Server::setCustomTournament(const std::string& path)
+{
+    std::scoped_lock lock(m_sharedData.mutex);
+    m_sharedData.customTournament = path;
+}
+
 //private
 void Server::run()
 {

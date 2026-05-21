@@ -44,6 +44,8 @@ struct StateID final
         Practice,
         Career,
         Tournament,
+        EditTournament,
+        ProLeague,
         DrivingRange,
         PuttingRange,
         Clubhouse,
@@ -81,7 +83,10 @@ struct StateID final
 
         SQLite, //used for testing SQLite features
         Workshop = 1100,
-        Count
+        Count,
+
+
+        Template
     };
 };
 
@@ -93,6 +98,7 @@ struct RequestID final
     enum
     {
         QuickPlay = StateID::Count,
-        Tournament
+        Tournament,
+        ProLeague
     };
 };

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -35,6 +35,7 @@ source distribution.
 #include "PlayerData.hpp"
 #include "LeagueNames.hpp"
 #include "Tournament.hpp"
+#include "CustomTournament.hpp"
 #include "Inventory.hpp"
 #include "server/Server.hpp"
 
@@ -58,6 +59,7 @@ source distribution.
 namespace cro
 {
     class MultiRenderTexture;
+    class Scene;
 }
 
 struct MenuSky final
@@ -109,7 +111,7 @@ enum class GameMode
 struct SharedCourseData;
 struct SharedStateData final
 {
-    std::unique_ptr<cro::MumbleLink> mumLink;
+    std::array<ImGuiStyle, 6u> uiScales = {};
 
     inv::Inventory inventory;
     //which loadout to display in the editor, else display shop if == inv::MaxLoadouts
@@ -126,7 +128,7 @@ struct SharedStateData final
 
     ChatFonts chatFonts;
     std::array<ImFont*, 3u> helpFonts = { nullptr, nullptr, nullptr };
-    bool showHelp = false;
+    bool showHelp = false; //TODO move this to new options menu
 
     bool useOSKBuffer = false; //if true output of OSK is buffered here instead of sending codepoints
     cro::String OSKBuffer;
@@ -138,17 +140,24 @@ struct SharedStateData final
             Keyboard, XBox, PS
         };
     };
-    std::int32_t activeInput = ActiveInput::Keyboard; //NOTE only updated by driving range and main game
+    //NOTE only updated by driving range and main game and new options menu
+    std::int32_t activeInput = ActiveInput::Keyboard;
 
     struct MinimapData final
     {
-        cro::MultiRenderTexture* mrt = nullptr;
+        cro::String courseName;
+        cro::Scene* mapScene = nullptr;
         glm::vec3 teePos = glm::vec3(0.f);
         glm::vec3 pinPos = glm::vec3(0.f);
         glm::vec3 targetPos = glm::vec3(0.f); //approx location of aiming target
         glm::vec3 mapCentre = glm::vec3(0.f); //based on AABB of geom rather than world size
-        cro::String courseName;
+        glm::vec2 mapSize = glm::vec2(0.f); //as above but with X/Z used to create ortho view
         std::int32_t holeNumber = -1;
+
+        std::uint32_t shaderID = 0;
+        std::int32_t heatUniform = -1;
+        std::int32_t zoomUniform = -1;
+
         bool active = false;
     }minimapData;
 
@@ -273,6 +282,9 @@ struct SharedStateData final
     std::array<std::size_t, ConstVal::MaxPlayers> profileIndices = {};
     cro::String targetIP = "255.255.255.255";
 
+    //printed by the error state
+    std::string errorMessage;
+
     //sent to server if hosting else rx'd from server
     //for brevity this only contains a directory name
     //within which a file named data.course is sought
@@ -286,20 +298,18 @@ struct SharedStateData final
     std::uint8_t weatherType = 0;
     std::uint8_t randomWind = 0; //bool
     std::uint8_t windStrength = 0; //1-5 but stored 0-4 for ease of iteration
+    //counts the number of holes actually played in elimination
+    std::uint8_t holesPlayed = 0;    
     std::int32_t leagueRoundID = 0; //which league we're playing in
     std::int32_t quickplayOpponents = 0; //1-3 if quickplay, 0 to disable
     std::int32_t groupMode = 0; //experimental group mode - buggy as all balls.
     std::int32_t teamMode = 0;
 
-    //counts the number of holes actually played in elimination
-    std::uint8_t holesPlayed = 0;
 
-    //printed by the error state
-    std::string errorMessage;
-
+    GameMode gameMode = GameMode::FreePlay;
     bool hosting = false;
     bool hasMulligan = false;
-    GameMode gameMode = GameMode::FreePlay;
+    bool competitionLeague = false;
     std::size_t tutorialIndex = 0; //set in tutorial mode to decide which part to display
     std::size_t courseIndex = 0; //if hosting which course/billiard table we last chose.
     std::int32_t ballSkinIndex = 0; //billiards balls
@@ -315,15 +325,15 @@ struct SharedStateData final
     std::vector<Unlock> unlockedItems;
 
     //client settings
-    bool usePostProcess = false;
-    std::int32_t postProcessIndex = 0;
-    std::string customShaderPath;
     InputBinding inputBinding;
+    std::string customShaderPath;
+    std::int32_t postProcessIndex = 0;
+    bool usePostProcess = false;
     bool pixelScale = false;
     bool antialias = false;
+    bool vertexSnap = false;
     std::uint32_t multisamples = 0;
     float fov = MinFOV;
-    bool vertexSnap = false;
     float mouseSpeed = 1.f;
     float swingputThreshold = 0.1f;
     bool useSwingput = false;
@@ -331,7 +341,7 @@ struct SharedStateData final
     bool invertY = false;
     bool showBeacon = true;
     float beaconColour = 1.f; //normalised rotation
-    bool imperialMeasurements = false;
+    std::int32_t teeColour = 17; //CD32 index
     float gridTransparency = 1.f;
     struct TreeQuality final
     {
@@ -350,6 +360,7 @@ struct SharedStateData final
         };
     };
     std::int32_t shadowQuality = ShadowQuality::Low;
+    bool imperialMeasurements = false;
     bool logBenchmarks = false;
     bool showCustomCourses = true;
     bool showTutorialTip = true;
@@ -361,21 +372,20 @@ struct SharedStateData final
     std::int32_t clubSet = 0;
     std::int32_t preferredClubSet = 0; //this is what the player chooses, may be overridden by game rules
     std::int32_t crowdDensity = 1;
+    std::int32_t grassDensity = 0;
 
     bool pressHold = false; //press and hold the action button to select power
     bool useTTS = false;
     bool useLensFlare = true;
     bool useMouseAction = false;
-    bool useLargePowerBar = false;
+    bool useLargePowerBar = true;
     bool useContrastPowerBar = false;
     bool decimatePowerBar = false;
     bool decimateDistance = false;
     bool showRosterTip = true;
     bool fixedPuttingRange = false;
-    std::int32_t lightmapQuality = 0;
     
     bool webSocket = false;
-    std::int32_t webPort = 8080;
     bool logCSV = false;
     bool blockChat = false;
     bool logChat = false;
@@ -387,6 +397,12 @@ struct SharedStateData final
     bool rotateCamera = true;
     bool showMinimap = true;
     bool showInGameTips = true;
+    bool calculateRange = false; //calculate or estimate the range indicator
+    bool miniLoadingScreen = false; //cover the transition with a loading screen
+    float measureSpeed = 1.f; //multiplier when measuring for putt
+    float skipSpeed = 60.f; //how long the shot button is held (lower faster) to skip the shot
+    std::int32_t webPort = 8080;
+    
     std::int32_t flagText = 0; //none, black, white
     std::string flagPath;
 
@@ -398,6 +414,12 @@ struct SharedStateData final
     std::vector<std::string> resolutionStrings;
 
     LeagueNames leagueNames;
-    std::array<Tournament, 2u> tournaments;
+    std::array<Tournament, 3u> tournaments;
     std::int32_t activeTournament = -1;
+
+    //we have to copy these now depending on the active tournament
+    //as we might have a custom one where the values vary
+    HoleScores tournamentPars = {};
+    std::string tournamentPath; //empty if creating a new tournament, else tells the editor which to load/save to
+    CustomTournament customTournament; //set by the tournament menu
 };

@@ -271,6 +271,47 @@ bool TimeOfDay::doSnow() const
     return false;
 }
 
+std::string TimeOfDay::getCountryCode()
+{
+    std::string retVal;
+#ifdef USE_GNS
+    //query Steam
+    retVal = Social::getCountryCode();
+#endif
+
+    if (retVal.empty())
+    {
+        //query the OS
+#ifdef _WIN32
+        static constexpr std::int32_t BuffSize = 8;
+        WCHAR buffer[BuffSize] = { 0 };
+        if (auto charCount = GetUserDefaultGeoName(buffer, BuffSize); charCount == 0)
+        {
+            retVal = "US";
+        }
+        else
+        {
+            //hm for some reason this isn't creating a precise match
+            //which messes up the LatLong lookup (above)
+            cro::String temp = cro::String::fromUtf16(std::begin(buffer), std::begin(buffer) + charCount);
+            retVal = temp.toAnsiString();
+        }
+#else
+        retVal = "US";
+
+        //POSIX systems ought to return XPG format locales so we'll take
+        //a wild swing at using that - eg en_US.UTF-8
+        auto lc = std::locale("").name();
+        if (lc.size() > 4
+            && lc[2] == '_')
+        {
+            retVal = lc.substr(3, 2);
+        }
+#endif
+    }
+    return retVal;
+}
+
 //private
 void TimeOfDay::updateLatLon()
 {
@@ -319,47 +360,6 @@ void TimeOfDay::updateLatLon()
     }
 
     writeDataFile();
-}
-
-std::string TimeOfDay::getCountryCode()
-{
-    std::string retVal;
-#ifdef USE_GNS
-    //query Steam
-    retVal = Social::getCountryCode();
-#endif
-
-    if (retVal.empty())
-    {
-        //query the OS
-#ifdef _WIN32
-        static constexpr std::int32_t BuffSize = 8;
-        WCHAR buffer[BuffSize] = { 0 };
-        if (auto charCount = GetUserDefaultGeoName(buffer, BuffSize); charCount == 0)
-        {
-            retVal = "US";
-        }
-        else
-        {
-            //hm for some reason this isn't creating a precise match
-            //which messes up the LatLong lookup (above)
-            cro::String temp = cro::String::fromUtf16(std::begin(buffer), std::begin(buffer) + charCount);
-            retVal = temp.toAnsiString();
-        }
-#else
-        retVal = "US";
-        
-        //POSIX systems ought to return XPG format locales so we'll take
-        //a wild swing at using that - eg en_US.UTF-8
-        auto lc = std::locale("").name();
-        if (lc.size() > 4
-            && lc[2] == '_')
-        {
-            retVal = lc.substr(3, 2);
-        }
-#endif
-    }
-    return retVal;
 }
 
 void TimeOfDay::writeDataFile() const

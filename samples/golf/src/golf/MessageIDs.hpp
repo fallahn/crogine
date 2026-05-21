@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -51,6 +51,7 @@ namespace cl::MessageID
         AIMessage,
         EnviroMessage,
         WebSocketMessage,
+        MenuSoundMessage,
 
         Count
     };
@@ -99,6 +100,7 @@ struct GolfEvent final
     };
     union
     {
+        //this is the previous club in a club changed event so we know if we went up or down
         std::uint8_t club = 0;
         std::uint8_t client;
     };
@@ -167,6 +169,7 @@ struct SystemEvent final
         ShadowQualityChanged,
         TreeQualityChanged,
         CrowdDensityChanged,
+        GrassDensityChanged,
         MenuChanged,
         MenuRequest, //freeplay menu wants to do something
         RestartActiveMode, //currently just driving range, but might apply somewhere else one day :)
@@ -238,4 +241,15 @@ struct WebSocketEvent final
         Connected, Disconnected
     }type = Connected;
 
+};
+
+struct MenuSoundEvent final
+{
+    enum
+    {
+        Switch, Activate,
+        Cancel, Denied,
+        Snapshot, Crumple,
+    };
+    std::uint8_t type = 0;
 };

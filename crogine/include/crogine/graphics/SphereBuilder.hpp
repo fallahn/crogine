@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,6 +35,9 @@ namespace cro
 {
     /*!
     \brief Creates a spherical mesh with cube-mapped texture coordinates.
+    TODO index creation is incorrect
+    TODO requires shared buffer optimisation
+    TODO requires vertex size optimisation
     */
     class CRO_EXPORT_API SphereBuilder final : public MeshBuilder
     {
@@ -54,6 +57,6 @@ namespace cro
         float m_radius;
         std::size_t m_resolution;
         std::size_t m_uid;
-        Mesh::Data build() const override;
+        Mesh::Data build(AllocationResource*) const override;
     };
 }

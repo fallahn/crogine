@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -149,6 +149,20 @@ void MyApp::loadPrefs()
                 sharedData.skymapTexture = prop.getValue<std::string>();
                 std::replace(sharedData.skymapTexture.begin(), sharedData.skymapTexture.end(), '\\', '/');
             }
+            else if (name == "nvtt_path")
+            {
+                sharedData.nvttPath = prop.getValue<std::string>();
+                std::replace(sharedData.nvttPath.begin(), sharedData.nvttPath.end(), '\\', '/');
+            }
+            else if (name == "compress_path")
+            {
+                sharedData.compressionDirectory = prop.getValue<std::string>();
+                std::replace(sharedData.compressionDirectory.begin(), sharedData.compressionDirectory.end(), '\\', '/');
+            }
+            else if (name == "compress_mips")
+            {
+                sharedData.compressMips = prop.getValue<bool>();
+            }
         }
     }
 }
@@ -158,6 +172,9 @@ void MyApp::savePrefs()
     cro::ConfigFile prefsOut;
     prefsOut.addProperty("working_dir").setValue(sharedData.workingDirectory);
     prefsOut.addProperty("skybox").setValue(sharedData.skymapTexture);
+    prefsOut.addProperty("nvtt_path").setValue(sharedData.nvttPath);
+    prefsOut.addProperty("compress_path").setValue(sharedData.compressionDirectory);
+    prefsOut.addProperty("compress_mips").setValue(sharedData.compressMips);
 
     prefsOut.save(cro::App::getPreferencePath() + "global.cfg");
 }

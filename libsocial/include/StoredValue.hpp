@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -37,7 +37,7 @@ source distribution.
 
 static inline void readValue(std::int32_t& dst, const std::string& fileName)
 {
-    auto path = cro::App::getPreferencePath() + fileName;
+    const auto path = cro::App::getPreferencePath() + fileName;
     if (cro::FileSystem::fileExists(path))
     {
         auto* file = SDL_RWFromFile(path.c_str(), "rb");
@@ -54,7 +54,7 @@ static inline void writeValue(std::int32_t src, const std::string& fileName)
 #ifdef CRO_DEBUG_
     //return;
 #endif
-    auto path = cro::App::getPreferencePath() + fileName;
+    const auto path = cro::App::getPreferencePath() + fileName;
     auto* file = SDL_RWFromFile(path.c_str(), "wb");
     if (file)
     {

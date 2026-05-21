@@ -114,6 +114,9 @@ private:
     std::function<void()> enterStatCallback;
     std::function<void()> quitStatCallback;
 
+    std::vector<std::string> m_customPaths;
+    std::size_t m_customIndex;
+
     void loadAssets();
     void addSystems();
     void buildScene();
@@ -125,6 +128,9 @@ private:
     void applySettingsValues();
     void refreshTree();
     void refreshClubsetWarning();
+
+    void refreshCustomList();
+    void loadCustomTournament();
 
     void quitState();
 

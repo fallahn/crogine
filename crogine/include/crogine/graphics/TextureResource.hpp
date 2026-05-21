@@ -76,7 +76,7 @@ namespace cro
         \param createMipMaps Attempts to create the default MipMap levels 
         when loading the texture.
         */
-        bool load(std::uint32_t id, const std::string& path, bool createMipMaps = false);
+        bool load(std::uint32_t id, const std::string& path, bool createMipMaps = false, bool useCompression = false);
 
         /*!
         \brief Returns true if a texture has been loaded with the given texture ID
@@ -113,8 +113,8 @@ namespace cro
         /*!
         \brief Deprecated, maintained until backwards compat no longer required
         */
-        //[[deprecated("Use load() with get(id)")]] //hum this errors in VC instead of warns
-        Texture& get(const std::string&, bool = false);
+        //[[deprecated("Use load() with get(id)")]] //hum this errors in VC instead of warns when /sdl is enabled
+        Texture& get(const std::string&, bool = false, bool = false);
 
 
     private:

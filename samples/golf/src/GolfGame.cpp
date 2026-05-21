@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -42,7 +42,7 @@ source distribution.
 #include "golf/ShopState.hpp"
 #include "golf/BilliardsState.hpp"
 #include "golf/ErrorState.hpp"
-#include "golf/OptionsState.hpp"
+#include "golf/OptionsStateV2.hpp"
 #include "golf/PauseState.hpp"
 #include "golf/TutorialState.hpp"
 #include "golf/KeyboardState.hpp"
@@ -52,6 +52,7 @@ source distribution.
 #include "golf/DrivingState.hpp"
 #include "golf/ClubhouseState.hpp"
 #include "golf/LeagueState.hpp"
+#include "golf/ProLeagueState.hpp"
 #include "golf/GcState.hpp"
 #include "golf/MessageOverlayState.hpp"
 #include "golf/TrophyState.hpp"
@@ -60,7 +61,7 @@ source distribution.
 #include "golf/PlayerManagementState.hpp"
 #include "golf/CreditsState.hpp"
 #include "golf/UnlockState.hpp"
-#include "golf/ProfileState.hpp"
+#include "golf/ProfileStateV2.hpp"
 #include "golf/LeaderboardState.hpp"
 #include "golf/StatsState.hpp"
 #include "golf/FreePlayState.hpp"
@@ -73,7 +74,9 @@ source distribution.
 #include "golf/UnlockItems.hpp"
 #include "golf/Clubs.hpp"
 #include "golf/ClubInfoState.hpp"
+#include "golf/EditTournamentState.hpp"
 #include "golf/XPAwardStrings.hpp"
+#include "golf/UserInterface.hpp"
 
 #include "editor/BushState.hpp"
 #include "sqlite/SqliteState.hpp"
@@ -94,6 +97,7 @@ source distribution.
 
 #include <AchievementIDs.hpp>
 #include <AchievementStrings.hpp>
+#include <CompetitionLeague.hpp>
 
 #ifdef USE_GNS
 #include <AchievementsImpl.hpp>
@@ -140,23 +144,11 @@ namespace
     bool safeMode = false;
 #endif
 
-    struct HelpNav final
-    {
-        std::int32_t chapterCount = 0;
-        std::int32_t scrollIndex = 0;
-        std::int32_t targetIndex = 0;
+    float prefade = 1.f;
+    float prefadeTarget = 1.f;
 
-        std::int32_t selectedScroll = 0;
-
-        bool wantsScroll = false;
-
-        float manualScroll = 0.f;
-        float currTime = 0.f;
-        static constexpr float ScrollTime = 0.025f;
-        static constexpr float ScrollAmount = 12.f;
-
-    }helpNav;
-
+    HelpNav helpNav;
+    
     els::SharedStateData elsShared;
 
     struct ShaderDescription final
@@ -216,9 +208,12 @@ cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
 
 GolfGame::GolfGame()
     : m_stateStack  ({*this, getWindow()}),
-    //m_cursor        (/*cro::SystemCursor::Hand*/"assets/images/cursor.png", 0, 0),
+    m_cursor        (/*cro::SystemCursor::Hand*/"assets/images/cursor.png", 1, 1),
     m_activeIndex   (0)
 {
+#ifdef _WIN32
+    getWindow().setCursor(&m_cursor);
+#endif
     //must be set before anything, else cfg is still loaded from default path
     setApplicationStrings("Trederia", "golf");
 
@@ -228,8 +223,8 @@ GolfGame::GolfGame()
     m_stateStack.registerState<KeyboardState>(StateID::Keyboard, m_sharedData);
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData, m_profileData);
-    m_stateStack.registerState<ProfileState>(StateID::Profile, m_sharedData, m_profileData);
-    m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
+    m_stateStack.registerState<ProfileStateV2>(StateID::Profile, m_sharedData, m_profileData);
+    m_stateStack.registerState<OptionsStateV2>(StateID::Options, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);
     m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData, m_profileData);
@@ -239,6 +234,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<CareerState>(StateID::Career, m_sharedData);
+    m_stateStack.registerState<ProLeagueState>(StateID::ProLeague, m_sharedData);
     m_stateStack.registerState<TournamentState>(StateID::Tournament, m_sharedData);
     m_stateStack.registerState<FreePlayState>(StateID::FreePlay, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);
@@ -257,6 +253,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<EndlessDrivingState>(StateID::EndlessRunner, m_sharedData, elsShared);
     m_stateStack.registerState<EndlessPauseState>(StateID::EndlessPause, m_sharedData, elsShared);
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
+    m_stateStack.registerState<EditTournamentState>(StateID::EditTournament, m_sharedData);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
     m_stateStack.registerState<GCState>(StateID::GC);
 
@@ -292,76 +289,31 @@ void GolfGame::setSafeModeEnabled(bool sm)
 
 void GolfGame::handleEvent(const cro::Event& evt)
 {
-    if (m_sharedData.showHelp)
+    //handles UI close events for ImGui such as how to play
+    if (handleTopLevelEvent(evt, m_sharedData, helpNav))
     {
-        const auto doScroll =
-            [&]()
-            {
-                helpNav.wantsScroll = true;
-                auto* msg = postMessage<SystemEvent>(MessageID::SystemMessage);
-                msg->type = SystemEvent::MenuSwitched;
-            };
-
-        const auto scrollUp = 
-            [&]()
-            {
-                helpNav.targetIndex = (helpNav.selectedScroll + (helpNav.chapterCount - 1)) % helpNav.chapterCount;
-                doScroll();
-            };
-        const auto scrollDown = 
-            [&]()
-            {
-                helpNav.targetIndex = (helpNav.selectedScroll + 1) % helpNav.chapterCount;
-                doScroll();
-            };
-
-        switch (evt.type)
-        {
-        default: break;
-        case SDL_MOUSEBUTTONUP:
-            if (evt.button.button == SDL_BUTTON_RIGHT)
-            {
-                m_sharedData.showHelp = false;
-            }
-            break;
-        case SDL_CONTROLLERBUTTONUP:
-            switch (evt.cbutton.button)
-            {
-            default: break;
-            case cro::GameController::ButtonB:
-                m_sharedData.showHelp = false;
-                break;
-            case cro::GameController::DPadDown:
-                scrollDown();
-                break;
-            case cro::GameController::DPadUp:
-                scrollUp();
-                break;
-            }
-            break;
-        case SDL_KEYUP:
-            switch (evt.key.keysym.sym)
-            {
-            default: break;
-            case SDLK_ESCAPE:
-            case SDLK_BACKSPACE:
-                m_sharedData.showHelp = false;
-                break;
-            case SDLK_DOWN:
-                scrollDown();
-                break;
-            case SDLK_UP:
-                scrollUp();
-                break;
-            }
-            break;
-        }
         return;
     }
+
 
     switch (evt.type)
     {
     default: break;
+    case SDL_WINDOWEVENT:
+        switch (evt.window.event)
+        {
+        default: break;
+        case SDL_WINDOWEVENT_MINIMIZED:
+        case SDL_WINDOWEVENT_FOCUS_LOST:
+            prefadeTarget = 0.f;
+            break;
+        case SDL_WINDOWEVENT_MAXIMIZED:
+        case SDL_WINDOWEVENT_FOCUS_GAINED:
+            //TODO switching to full screen
+            prefadeTarget = 1.f;
+            break;
+        }
+        break;
     case SDL_MOUSEMOTION:
         //cro::App::getWindow().setMouseCaptured(false);
         break;
@@ -559,6 +511,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
                 {
                     Social::awardXP(1000, XPStringID::ChallengeComplete);
                     Achievements::awardAchievement(AchievementStrings[AchievementID::UpForTheChallenge]);
+                    Achievements::incrementStat(StatStrings[StatID::ChallengeComplete]);
                 }
                 else
                 {
@@ -620,7 +573,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
             m_progressIcon->queueMessage(m);
         }
     }
-    else if (msg.id == cro::Message::SystemMessage)
+    /*else if (msg.id == cro::Message::SystemMessage)
     {
         const auto& data = msg.getData<cro::Message::SystemEvent>();
         if (data.type == cro::Message::SystemEvent::ScreenshotTaken)
@@ -632,13 +585,26 @@ void GolfGame::handleMessage(const cro::Message& msg)
             m.audioID = ProgressMessage::ScreenShot;
             m_progressIcon->queueMessage(m);
         }
-    }
+    }*/
+
 
     m_stateStack.handleMessage(msg);
 }
 
 void GolfGame::simulate(float dt)
 {
+    if (prefadeTarget < prefade)
+    {
+        prefade = std::max(prefadeTarget, prefade - dt);
+        cro::AudioMixer::setMasterPrefadeVolume(prefade);
+    }
+
+    if (prefadeTarget > prefade)
+    {
+        prefade = std::min(prefadeTarget, prefade + dt);
+        cro::AudioMixer::setMasterPrefadeVolume(prefade);
+    }
+
     if (m_sharedData.showHelp)
     {
         const auto scroll = 
@@ -679,7 +645,10 @@ void GolfGame::simulate(float dt)
     Achievements::update();
     m_progressIcon->update(dt);
 
-    m_sharedData.mumLink->update();
+    if (Social::isSteamdeck())
+    {
+        cro::Console::setMaxFrames(4);
+    }
 }
 
 void GolfGame::render()
@@ -786,11 +755,13 @@ bool GolfGame::initialise()
     }
 
     loadAvatars(); //this relies on steam being initialised
+    CompetitionLeague::init(); //as does this
 
-    /*if (Social::isSteamdeck())
+    if (Social::isSteamdeck())
     {
-        getWindow().setVsyncEnabled(true);
-    }*/
+        //don't interfere with deck's built-in limiter
+        getWindow().setFramerateLimit(0.f);
+    }
 
 #ifdef CRO_DEBUG_
 #ifndef USE_GNS
@@ -1094,17 +1065,17 @@ bool GolfGame::initialise()
         });
 
 #ifdef USE_GNS
-    registerCommand("discord_connect",
-        [](const std::string&) 
-        {
-            Discord::connect(); 
-        });
+    //registerCommand("discord_connect",
+    //    [](const std::string&) 
+    //    {
+    //        Discord::connect(); 
+    //    });
 
-    registerCommand("discord_disconnect",
-        [](const std::string&) 
-        {
-            Discord::disconnect(); 
-        });
+    //registerCommand("discord_disconnect",
+    //    [](const std::string&) 
+    //    {
+    //        Discord::disconnect(); 
+    //    });
 #endif
 
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
@@ -1267,11 +1238,6 @@ bool GolfGame::initialise()
     }*/
     //Discord::disconnect();
 #endif
-
-    m_sharedData.mumLink = std::make_unique<cro::MumbleLink>(cro::String("Super Video Golf"), cro::String("Owen's Finest."));
-    m_sharedData.mumLink->setIdentity(m_profileData.playerProfiles[0].playerData.name);
-    //m_sharedData.mumLink->connect();
-
     //cro::App::getWindow().setCursor(&m_cursor);
 
     return true;
@@ -1279,6 +1245,9 @@ bool GolfGame::initialise()
 
 void GolfGame::finalise()
 {
+    m_progressIcon.reset();
+    m_guideTextures.reset();
+
     m_sharedData.clientConnection.netClient.disconnect();
     m_sharedData.serverInstance.stop(); //this waits for any threads to finish first.
 
@@ -1364,6 +1333,9 @@ void GolfGame::initFonts()
         m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(path, ctx);
     }
 
+    //controller icon font
+    //ctx.codepointRange = {0x2190,0x21FF};
+    //m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
 
 
     //emoji fonts
@@ -1411,6 +1383,15 @@ void GolfGame::initFonts()
             m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(path, ctx);
         }
     }
+
+
+    //attempt to prime the font with some characters to prevent
+    //resizing the first time the loading screen shows (and garbled
+    //characters appearing)
+    cro::SimpleText text(m_sharedData.sharedResources->fonts.get(FontID::Info));
+    text.setCharacterSize(InfoTextSize);
+    text.setString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+    text.getLocalBounds(); //this updates the vertices / font texture without drawing
 }
 
 void GolfGame::convertPreferences() const
@@ -1522,7 +1503,7 @@ void GolfGame::loadPreferences()
     //bool restoreDefaults = false;
 
     //make sure to set all defaults *before* loading any files
-    m_sharedData.useLargePowerBar = Social::isSteamdeck();
+    //m_sharedData.useLargePowerBar = Social::isSteamdeck();
 
     auto path = getPreferencePath() + "prefs.cfg";
     if (cro::FileSystem::fileExists(path))
@@ -1687,9 +1668,9 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.webPort = std::clamp(prop.getValue<std::int32_t>(), WebSock::MinPort, WebSock::MaxPort);
                 }
-                else if (name == "lightmap_quality")
+                else if (name == "grass_density")
                 {
-                    m_sharedData.lightmapQuality = std::clamp(prop.getValue<std::int32_t>(), 0, 1);
+                    m_sharedData.grassDensity = std::clamp(prop.getValue<std::int32_t>(), 0, 1);
                 }
             }
         }
@@ -1879,6 +1860,35 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.showInGameTips = prop.getValue<bool>();
                     }
+                    else if (name == "calculate_range")
+                    {
+                        m_sharedData.calculateRange = prop.getValue<bool>();
+                        Social::setLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist, !prop.getValue<bool>());
+                    }
+                    else if (name == "mini_load")
+                    {
+                        m_sharedData.miniLoadingScreen = prop.getValue<bool>();
+                    }
+                    else if (name == "measure_speed")
+                    {
+                        m_sharedData.measureSpeed = std::clamp(prop.getValue<float>(), 0.5f, 5.f);
+                    }
+                    else if (name == "tee_colour")
+                    {
+                        m_sharedData.teeColour = std::clamp(prop.getValue<std::int32_t>(), 0, static_cast<std::int32_t>(CD32::Count));
+                    }
+                    else if (name == "skip_speed")
+                    {
+                        m_sharedData.skipSpeed = std::clamp(prop.getValue<float>(), 10.f, 60.f);
+                    }
+                    else if (name == "filter_friends")
+                    {
+                        Social::setLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly, prop.getValue<bool>());
+                    }
+                    /*else if (name == "filter_assist")
+                    {
+                        Social::setLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist, prop.getValue<bool>());
+                    }*/
                 }
             }
 
@@ -1886,6 +1896,12 @@ void GolfGame::loadPreferences()
             {
                 restoreDefaults = true;
             }*/
+        }
+        else
+        {
+            //this is a brand new player
+            m_sharedData.calculateRange = true;
+            m_sharedData.imperialMeasurements = TimeOfDay::getCountryCode() == "US";
         }
 
         path = Content::getBaseContentPath() + "league_names.txt";
@@ -1901,6 +1917,7 @@ void GolfGame::loadPreferences()
 
         m_sharedData.tournaments[0].id = 0;
         m_sharedData.tournaments[1].id = 1;
+        m_sharedData.tournaments[2].id = 2;
         readTournamentData(m_sharedData.tournaments[0]);
         readTournamentData(m_sharedData.tournaments[1]);
     }
@@ -1990,7 +2007,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
     cfg.addProperty("web_socket").setValue(m_sharedData.webSocket);
     cfg.addProperty("web_port").setValue(m_sharedData.webPort);
-    cfg.addProperty("lightmap_quality").setValue(m_sharedData.lightmapQuality);
+    cfg.addProperty("grass_density").setValue(m_sharedData.grassDensity);
     cfg.save(path);
 
 
@@ -2039,6 +2056,13 @@ void GolfGame::savePreferences()
     cfg.addProperty("rotate_camera").setValue(m_sharedData.rotateCamera);
     cfg.addProperty("show_minimap").setValue(m_sharedData.showMinimap);
     cfg.addProperty("show_tips").setValue(m_sharedData.showInGameTips);
+    cfg.addProperty("calculate_range").setValue(m_sharedData.calculateRange);
+    cfg.addProperty("mini_load").setValue(m_sharedData.miniLoadingScreen);
+    cfg.addProperty("measure_speed").setValue(m_sharedData.measureSpeed);
+    cfg.addProperty("tee_colour").setValue(m_sharedData.teeColour);
+    cfg.addProperty("skip_speed").setValue(m_sharedData.skipSpeed);
+    cfg.addProperty("filter_friends").setValue(Social::getLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly));
+    //cfg.addProperty("filter_assist").setValue(Social::getLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist));
     cfg.save(path);
 
 
@@ -2455,7 +2479,8 @@ void GolfGame::createHowTo()
     auto filePaths = cro::FileSystem::listFiles(rootPath);
     std::sort(filePaths.begin(), filePaths.end());
 
-    const auto& controlTex = m_guideTextures.get(imagePath + "controls.png");
+    m_guideTextures = std::make_unique<cro::TextureResource>();
+    const auto& controlTex = m_guideTextures->get(imagePath + "controls.png");
 
     pugi::xml_document doc;
     for (const auto& path : filePaths)
@@ -2493,7 +2518,7 @@ void GolfGame::createHowTo()
             else if (std::strcmp(c.name(), "image") == 0)
             {
                 const std::string imgName = c.text().as_string();
-                const auto& img = m_guideTextures.get(imagePath + imgName);
+                const auto& img = m_guideTextures->get(imagePath + imgName);
                 auto& item = chapter.items.emplace_back();
                 item.type = pg::Item::Image;
                 item.image = &img;

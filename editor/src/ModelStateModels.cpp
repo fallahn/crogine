@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -92,6 +92,7 @@ void ModelState::openModelAtPath(const std::string& path)
     closeModel();
 
     cro::ModelDefinition def(m_resources, &m_environmentMap, m_sharedData.workingDirectory);
+    def.optimiseOnLoad(false);
     if (def.loadFromFile(path, m_useDeferred))
     {
         m_currentFilePath = path;
@@ -362,6 +363,8 @@ void ModelState::saveModel(const std::string& path)
     };
 
     //add all the active materials
+    //TODO this is duplicating the code in exportMaterial()
+    //we want to move it all to a single place.
     for (auto i : m_activeMaterials)
     {
         auto* obj = newCfg.addObject("material");
@@ -481,6 +484,31 @@ void ModelState::saveModel(const std::string& path)
             for (const auto& t : mat.tags)
             {
                 tags->addProperty("tag").setValue(t);
+            }
+        }
+
+        for (const auto& uniform : mat.uniformValues)
+        {
+            auto* o = obj->addObject("uniform");
+            o->addProperty("name").setValue(uniform.name);
+            o->addProperty("type").setValue(uniform.type);
+            switch (uniform.type)
+            {
+            default:
+                o->addProperty("value").setValue(uniform.stringValue);
+                break;
+            case MaterialDefinition::Uniform::Float1:
+                o->addProperty("value").setValue(uniform.value[0]);
+                break;
+            case MaterialDefinition::Uniform::Float2:
+                o->addProperty("value").setValue(glm::vec2(uniform.value[0], uniform.value[1]));
+                break;
+            case MaterialDefinition::Uniform::Float3:
+                o->addProperty("value").setValue(glm::vec3(uniform.value[0], uniform.value[1], uniform.value[2]));
+                break;
+            case MaterialDefinition::Uniform::Float4:
+                o->addProperty("value").setValue(glm::vec4(uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]));
+                break;
             }
         }
     }
@@ -809,9 +837,9 @@ void ModelState::importIQM(const std::string& path)
     //tidy up the temo VBO/VAO/IBO we used for loading
     for (auto& sub : meshData.indexData)
     {
-        if (sub.ibo)
+        if (sub.iboAllocation.bufferID)
         {
-            glCheck(glDeleteBuffers(1, &sub.ibo));
+            glCheck(glDeleteBuffers(1, &sub.iboAllocation.bufferID));
         }
 
         for (auto& vao : sub.vao)
@@ -822,9 +850,9 @@ void ModelState::importIQM(const std::string& path)
             }
         }
     }
-    if (meshData.vbo)
+    if (meshData.vboAllocation.bufferID)
     {
-        glCheck(glDeleteBuffers(1, &meshData.vbo));
+        glCheck(glDeleteBuffers(1, &meshData.vboAllocation.bufferID));
     }
 
     savePrefs();
@@ -869,14 +897,14 @@ void ModelState::updateImportNode(CMFHeader header, std::vector<float>& imported
         meshData.submeshCount = std::min(MaxSubMeshes, header.arrayCount);
 
         //update the buffers
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
         glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexCount * meshData.vertexSize, m_importedVBO.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
         for (auto i = 0u; i < meshData.submeshCount; ++i)
         {
             meshData.indexData[i].indexCount = static_cast<std::uint32_t>(m_importedIndexArrays[i].size());
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
             glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].indexCount * sizeof(std::uint32_t), m_importedIndexArrays[i].data(), GL_STATIC_DRAW));
         }
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
@@ -976,7 +1004,7 @@ void ModelState::buildSkeleton()
                 meshData.vertexSize = vertStride * sizeof(float);
                 meshData.vertexCount = verts.size() / vertStride;
 
-                glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
                 glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, verts.data(), GL_DYNAMIC_DRAW));
                 glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -994,7 +1022,7 @@ void ModelState::buildSkeleton()
 
                 auto& submesh = meshData.indexData[0];
                 submesh.indexCount = static_cast<std::uint32_t>(indices.size());
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID));
                 glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
                 glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
@@ -1007,7 +1035,7 @@ void ModelState::buildSkeleton()
                 auto& submesh2 = meshData.indexData[1];
                 submesh2.indexCount = static_cast<std::uint32_t>(indices.size());
                 submesh2.primitiveType = GL_POINTS;
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh2.ibo));
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh2.iboAllocation.bufferID));
                 glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh2.indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
                 glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
             }
@@ -1115,27 +1143,27 @@ void ModelState::applyImportTransform(std::vector<float>& vertexData)
 
         //calculate the offset index into a single vertex which points
         //to any normal / tan / bitan values
-        if (meshData.attributes[cro::Mesh::Attribute::Normal] != 0)
+        if (meshData.attributes[cro::Mesh::Attribute::Normal].componentCount != 0)
         {
             for (auto i = 0; i < cro::Mesh::Attribute::Normal; ++i)
             {
-                normalOffset += meshData.attributes[i];
+                normalOffset += meshData.attributes[i].componentCount;
             }
         }
 
-        if (meshData.attributes[cro::Mesh::Attribute::Tangent] != 0)
+        if (meshData.attributes[cro::Mesh::Attribute::Tangent].componentCount != 0)
         {
             for (auto i = 0; i < cro::Mesh::Attribute::Tangent; ++i)
             {
-                tanOffset += meshData.attributes[i];
+                tanOffset += meshData.attributes[i].componentCount;
             }
         }
 
-        if (meshData.attributes[cro::Mesh::Attribute::Bitangent] != 0)
+        if (meshData.attributes[cro::Mesh::Attribute::Bitangent].componentCount != 0)
         {
             for (auto i = 0; i < cro::Mesh::Attribute::Bitangent; ++i)
             {
-                bitanOffset += meshData.attributes[i];
+                bitanOffset += meshData.attributes[i].componentCount;
             }
         }
 
@@ -1180,7 +1208,7 @@ void ModelState::applyImportTransform(std::vector<float>& vertexData)
         }
 
         //upload the data to the preview model
-        glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID);
         glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, vertexData.data(), GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         m_importedTransform = {};
@@ -1199,9 +1227,9 @@ void ModelState::flipNormals()
 
         auto stride = meshData.vertexSize / sizeof(float);
         auto offset = 0u;
-        for (auto i = 0u; i < cro::Mesh::Normal; ++i)
+        for (auto i = 0u; i < cro::Mesh::Attribute::Normal; ++i)
         {
-            offset += meshData.attributes[i];
+            offset += meshData.attributes[i].componentCount;
         }
 
         for (auto i = offset; i < verts.size(); i += stride)
@@ -1211,7 +1239,7 @@ void ModelState::flipNormals()
             verts[i+2] *= -1.f;
         }
 
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
         glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexCount * meshData.vertexSize, verts.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     }
@@ -1221,8 +1249,8 @@ void ModelState::readBackVertexData(cro::Mesh::Data meshData, std::vector<float>
 {
     destVerts.clear();
     destVerts.resize(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-    glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, 0, meshData.vertexCount * meshData.vertexSize, destVerts.data()));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
+    glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, meshData.vertexCount * meshData.vertexSize, destVerts.data()));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     destIndices.clear();
@@ -1231,7 +1259,7 @@ void ModelState::readBackVertexData(cro::Mesh::Data meshData, std::vector<float>
     for (auto i = 0u; i < meshData.submeshCount; ++i)
     {
         destIndices[i].resize(meshData.indexData[i].indexCount);
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
 
         //fudgy kludge for different index types
         switch (meshData.indexData[i].format)

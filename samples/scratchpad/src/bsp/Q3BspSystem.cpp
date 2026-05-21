@@ -183,17 +183,17 @@ Q3BspSystem::Q3BspSystem(cro::MessageBus& mb)
 Q3BspSystem::~Q3BspSystem()
 {
     //delete opengl stuffs
-    if (m_meshes[MeshData::Brush].mesh.vbo)
+    if (m_meshes[MeshData::Brush].mesh.vboAllocation.bufferID)
     {
         for (auto& [ibo, mat] : m_meshes[MeshData::Brush].submeshes)
         {
 #ifdef PLATFORM_DESKTOP
             glCheck(glDeleteVertexArrays(1, &ibo.vao[0]));
 #endif
-            glCheck(glDeleteBuffers(1, &ibo.ibo));
+            glCheck(glDeleteBuffers(1, &ibo.iboAllocation.bufferID));
         }
 
-        glCheck(glDeleteBuffers(1, &m_meshes[MeshData::Brush].mesh.vbo));
+        glCheck(glDeleteBuffers(1, &m_meshes[MeshData::Brush].mesh.vboAllocation.bufferID));
     }
 }
 
@@ -325,7 +325,7 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
         }
 
         submesh.indexCount = static_cast<std::uint32_t>(indexData.size());
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indexData.data(), GL_DYNAMIC_DRAW));
         m_meshes[MeshData::Brush].activeSubmeshCount++;
     }
@@ -360,7 +360,7 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
         indexData.pop_back();
 
         submesh.indexCount = static_cast<std::uint32_t>(indexData.size());
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indexData.data(), GL_DYNAMIC_DRAW));
         m_meshes[MeshData::Patch].activeSubmeshCount++;
     }
@@ -814,20 +814,20 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
         submesh.format = GL_UNSIGNED_INT;
         submesh.primitiveType = GL_TRIANGLES;
 
-        glCheck(glGenBuffers(1, &submesh.ibo));
+        glCheck(glGenBuffers(1, &submesh.iboAllocation.bufferID));
 
 #ifdef PLATFORM_DESKTOP
         glCheck(glGenVertexArrays(1, &submesh.vao[0]));
 
         glCheck(glBindVertexArray(submesh.vao[0]));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Brush].mesh.vbo));
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Brush].mesh.vboAllocation.bufferID));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID));
 
         const auto& attribs = m_material.attribs;
         for (auto j = 0u; j < m_material.attribCount; ++j)
         {
             glCheck(glEnableVertexAttribArray(attribs[j][cro::Material::Data::Index]));
-            glCheck(glVertexAttribPointer(attribs[j][cro::Material::Data::Index], attribs[j][cro::Material::Data::Size],
+            glCheck(glVertexAttribPointer(attribs[j][cro::Material::Data::Index], attribs[j][cro::Material::Data::ComponentCount],
                 GL_FLOAT, GL_FALSE, static_cast<GLsizei>(m_meshes[MeshData::Brush].mesh.vertexSize),
                 reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][cro::Material::Data::Offset]))));
         }
@@ -839,22 +839,22 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
     };
 
     //check we don't already have a buffer before creating a new one
-    if (!m_meshes[MeshData::Brush].mesh.vbo)
+    if (!m_meshes[MeshData::Brush].mesh.vboAllocation.bufferID)
     {
         //create new buffers
         CRO_ASSERT(m_meshes[MeshData::Brush].submeshes.empty(), "ibos not empty!");
-        glCheck(glGenBuffers(1, &m_meshes[MeshData::Brush].mesh.vbo));
+        glCheck(glGenBuffers(1, &m_meshes[MeshData::Brush].mesh.vboAllocation.bufferID));
 
-        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Position] = 3;
-        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Colour] = 4;
-        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Normal] = 3;
-        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::UV0] = 2;
+        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Attribute::Position].componentCount = 3;
+        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Attribute::Colour].componentCount = 4;
+        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Attribute::Normal].componentCount = 3;
+        m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Attribute::UV0].componentCount = 2;
         m_meshes[MeshData::Brush].mesh.attributeFlags = (cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0);
 
         m_meshes[MeshData::Brush].mesh.primitiveType = GL_TRIANGLES;
         for (auto a : m_meshes[MeshData::Brush].mesh.attributes)
         {
-            m_meshes[MeshData::Brush].mesh.vertexSize += a;
+            m_meshes[MeshData::Brush].mesh.vertexSize += a.componentCount;
         }
         m_meshes[MeshData::Brush].mesh.vertexSize *= sizeof(float);
         
@@ -899,7 +899,7 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
     m_meshes[MeshData::Brush].mesh.vertexCount = vertexData.size() / (m_meshes[MeshData::Brush].mesh.vertexSize / sizeof(float));
 
     //upload vert data
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Brush].mesh.vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Brush].mesh.vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_meshes[MeshData::Brush].mesh.vertexSize * m_meshes[MeshData::Brush].mesh.vertexCount, vertexData.data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
@@ -912,20 +912,20 @@ void Q3BspSystem::createPatchMesh(const std::vector<float>& vertices)
         submesh.format = GL_UNSIGNED_INT;
         submesh.primitiveType = GL_TRIANGLE_STRIP;
 
-        glCheck(glGenBuffers(1, &submesh.ibo));
+        glCheck(glGenBuffers(1, &submesh.iboAllocation.bufferID));
 
 #ifdef PLATFORM_DESKTOP
         glCheck(glGenVertexArrays(1, &submesh.vao[0]));
 
         glCheck(glBindVertexArray(submesh.vao[0]));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Patch].mesh.vbo));
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Patch].mesh.vboAllocation.bufferID));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.iboAllocation.bufferID));
 
         const auto& attribs = m_material.attribs;
         for (auto j = 0u; j < m_material.attribCount; ++j)
         {
             glCheck(glEnableVertexAttribArray(attribs[j][cro::Material::Data::Index]));
-            glCheck(glVertexAttribPointer(attribs[j][cro::Material::Data::Index], attribs[j][cro::Material::Data::Size],
+            glCheck(glVertexAttribPointer(attribs[j][cro::Material::Data::Index], attribs[j][cro::Material::Data::ComponentCount],
                 GL_FLOAT, GL_FALSE, static_cast<GLsizei>(m_meshes[MeshData::Patch].mesh.vertexSize),
                 reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][cro::Material::Data::Offset]))));
         }
@@ -937,22 +937,22 @@ void Q3BspSystem::createPatchMesh(const std::vector<float>& vertices)
     };
 
     //check we don't already have a buffer before creating a new one
-    if (!m_meshes[MeshData::Patch].mesh.vbo)
+    if (!m_meshes[MeshData::Patch].mesh.vboAllocation.bufferID)
     {
         //create new buffers
         CRO_ASSERT(m_meshes[MeshData::Patch].submeshes.empty(), "ibos not empty!");
-        glCheck(glGenBuffers(1, &m_meshes[MeshData::Patch].mesh.vbo));
+        glCheck(glGenBuffers(1, &m_meshes[MeshData::Patch].mesh.vboAllocation.bufferID));
 
-        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Position] = 3;
-        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Colour] = 4;
-        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Normal] = 3;
-        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::UV0] = 2;
+        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Attribute::Position].componentCount = 3;
+        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Attribute::Colour].componentCount = 4;
+        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Attribute::Normal].componentCount = 3;
+        m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Attribute::UV0].componentCount = 2;
         m_meshes[MeshData::Patch].mesh.attributeFlags = (cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0);
 
         m_meshes[MeshData::Patch].mesh.primitiveType = GL_TRIANGLE_STRIP;
         for (auto a : m_meshes[MeshData::Patch].mesh.attributes)
         {
-            m_meshes[MeshData::Patch].mesh.vertexSize += a;
+            m_meshes[MeshData::Patch].mesh.vertexSize += a.componentCount;
         }
         m_meshes[MeshData::Patch].mesh.vertexSize *= sizeof(float);
 
@@ -967,7 +967,7 @@ void Q3BspSystem::createPatchMesh(const std::vector<float>& vertices)
 
     //upload vert data
     m_meshes[MeshData::Patch].mesh.vertexCount = vertices.size() / (m_meshes[MeshData::Patch].mesh.vertexSize / sizeof(float));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Patch].mesh.vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Patch].mesh.vboAllocation.bufferID));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_meshes[MeshData::Patch].mesh.vertexSize * m_meshes[MeshData::Patch].mesh.vertexCount, vertices.data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
@@ -990,25 +990,25 @@ void Q3BspSystem::initMaterial()
         if (m_material.attribs[i][cro::Material::Data::Index] > -1)
         {
             //attrib exists in shader so map its size
-            m_material.attribs[i][cro::Material::Data::Size] = static_cast<std::int32_t>(m_meshes[MeshData::Brush].mesh.attributes[i]);
+            m_material.attribs[i][cro::Material::Data::ComponentCount] = static_cast<std::int32_t>(m_meshes[MeshData::Brush].mesh.attributes[i].componentCount);
 
             //calc the pointer offset for each attrib
             m_material.attribs[i][cro::Material::Data::Offset] = static_cast<std::int32_t>(pointerOffset * sizeof(float));
         }
-        pointerOffset += m_meshes[MeshData::Brush].mesh.attributes[i]; //count the offset regardless as the mesh may have more attributes than material
+        pointerOffset += m_meshes[MeshData::Brush].mesh.attributes[i].componentCount; //count the offset regardless as the mesh may have more attributes than material
     }
 
     //sort by size
     std::sort(std::begin(m_material.attribs), std::end(m_material.attribs),
-        [](const std::array<std::int32_t, 3>& ip,
-            const std::array<std::int32_t, 3>& op)
+        [](const std::array<std::int32_t, cro::Material::Data::Count>& ip,
+            const std::array<std::int32_t, cro::Material::Data::Count>& op)
         {
-            return ip[cro::Material::Data::Size] > op[cro::Material::Data::Size];
+            return ip[cro::Material::Data::ComponentCount] > op[cro::Material::Data::ComponentCount];
         });
 
     //count attribs with size > 0
     int i = 0;
-    while (m_material.attribs[i++][cro::Material::Data::Size] != 0)
+    while (m_material.attribs[i++][cro::Material::Data::ComponentCount] != 0)
     {
         m_material.attribCount++;
     }

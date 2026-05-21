@@ -71,6 +71,7 @@ private:
     SharedProfileData m_profileData;
     SharedMinigameData m_minigameData;
     cro::StateStack m_stateStack;
+    cro::Cursor m_cursor;
 
     std::vector<std::string> m_hostAddresses;
 
@@ -121,7 +122,7 @@ private:
     bool setShader(const char*);
 
     std::vector<pg::Chapter> m_guideChapters;
-    cro::TextureResource m_guideTextures;
+    std::unique_ptr<cro::TextureResource> m_guideTextures;
     void createHowTo();
 
 #ifdef _WIN32

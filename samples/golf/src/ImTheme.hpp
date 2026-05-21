@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Colordome-32.hpp"
 #include "golf/SharedStateData.hpp"
 
 #include <crogine/gui/Gui.hpp>
@@ -38,8 +39,11 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     style.TabBorderSize = 0.0f;
     style.TabMinWidthForCloseButton = 0.0f;
     style.ColorButtonPosition = ImGuiDir_Right;
-    style.ButtonTextAlign = ImVec2(0.6f, 0.5f);
+    style.ButtonTextAlign = ImVec2(0.5f, 0.5f);
     style.SelectableTextAlign = ImVec2(0.0f, 0.0f);
+    style.AntiAliasedLines = true;
+    //style.AntiAliasedLinesUseTex = true;
+    style.AntiAliasedFill = true;
 
     style.Colors[ImGuiCol_Text] = ImVec4(1.0f, 0.9725490212440491f, 0.8823529481887817f, 1.0f);
     style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.7843137383460999f, 0.7215686440467834f, 0.6235294342041016f, 1.0f);
@@ -83,20 +87,26 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     style.Colors[ImGuiCol_PlotLinesHovered] = ImVec4(0.9490196108818054f, 0.8117647171020508f, 0.3607843220233917f, 1.0f);
     style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.9490196108818054f, 0.8117647171020508f, 0.3607843220233917f, 1.0f);
     style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.9254902005195618f, 0.4666666686534882f, 0.239215686917305f, 1.0f);
-    style.Colors[ImGuiCol_TableHeaderBg] = ImVec4(0.4941176474094391f, 0.4274509847164154f, 0.2156862765550613f, 1.0f);
+    style.Colors[ImGuiCol_TableHeaderBg] = ImVec4(0.3960784375667572f, 0.2627451121807098f, 0.1843137294054031f, 1.0f);// ImVec4(0.4941176474094391f, 0.4274509847164154f, 0.2156862765550613f, 1.0f);
     style.Colors[ImGuiCol_TableBorderStrong] = ImVec4(0.4941176474094391f, 0.4274509847164154f, 0.2156862765550613f, 1.0f);
     style.Colors[ImGuiCol_TableBorderLight] = ImVec4(0.2588235437870026f, 0.2588235437870026f, 0.2784313857555389f, 1.0f);
     style.Colors[ImGuiCol_TableRowBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
     style.Colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.0f, 0.9725490212440491f, 0.8823529481887817f, 1.0f);
     style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.4313725531101227f, 0.7450980544090271f, 0.4392156898975372f, 1.0f);
     style.Colors[ImGuiCol_DragDropTarget] = ImVec4(0.9490196108818054f, 0.8117647171020508f, 0.3607843220233917f, 1.0f);
-    style.Colors[ImGuiCol_NavHighlight] = ImVec4(0.4470588266849518f, 0.4470588266849518f, 0.8980392217636108f, 0.800000011920929f);
+    style.Colors[ImGuiCol_NavHighlight] = CD32::Colours[CD32::Yellow];// ImVec4(0.4470588266849518f, 0.4470588266849518f, 0.8980392217636108f, 0.800000011920929f);
     style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.0f, 0.9725490212440491f, 0.8823529481887817f, 1.0f);
     style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.7843137383460999f, 0.7215686440467834f, 0.6235294342041016f, 1.0f);
     style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.2000000029802322f, 0.2000000029802322f, 0.2000000029802322f, 0.3499999940395355f);
+    sd.uiScales[0] = style;
 
-
-    //ImGui::GetIO().FontGlobalScale = 2.f;
+    //keep a copy for each view scale so we can apply to ImGui as needed
+    for (auto i = 1u; i < sd.uiScales.size(); ++i)
+    {
+        sd.uiScales[i] = style;
+        sd.uiScales[i].ScaleAllSizes(static_cast<float>(i + 1));
+        sd.uiScales[i].ChildBorderSize = static_cast<float>(i + 1);
+    }
 
     //load specific fonts
     auto* fonts = ImGui::GetIO().Fonts;

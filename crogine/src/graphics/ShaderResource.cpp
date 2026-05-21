@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/graphics/ShaderResource.hpp>
+#include <crogine/gui/Gui.hpp>
 
 #include "shaders/Default.hpp"
 #include "shaders/Unlit.hpp"
@@ -51,6 +52,20 @@ namespace
 
 ShaderResource::ShaderResource()
 {
+    //registerWindow(
+    //    [&]()
+    //    {
+    //        if (ImGui::Begin("Shader Resource"))
+    //        {
+    //            ImGui::Text("%ul Shaders loaded", m_shaders.size());
+    //            for (const auto& [id, shader] : m_shaders)
+    //            {
+    //                ImGui::Text("Shader %d", id);
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
+
     if (!m_defaultShader.loadFromString(Shaders::Default::Vertex, Shaders::Default::Fragment))
     {
         Logger::log("FAILED LOADING DEFAULT SHADER, SHADER RESOURCE INVALID STATE", Logger::Type::Error);
@@ -316,8 +331,11 @@ Shader& ShaderResource::get(std::int32_t ID)
 {
     if (m_shaders.count(ID) == 0)
     {
-        Logger::log("Could not find shader with ID " + std::to_string(ID) + ", returning default shader", Logger::Type::Warning);
-        return m_defaultShader;
+        if (!tryLazyLoad(ID))
+        {
+            Logger::log("Could not find shader with ID " + std::to_string(ID) + ", returning default shader", Logger::Type::Warning);
+            return m_defaultShader;
+        }
     }
     return m_shaders.at(ID);// .second;
 }
@@ -348,9 +366,10 @@ void ShaderResource::addInclude(const std::string& include, const char* src)
 
 bool ShaderResource::mapStringID(const std::string& stringID, std::int32_t shaderID)
 {
-    if (m_shaders.count(shaderID) == 0)
+    if (m_shaders.count(shaderID) == 0
+        && m_lazyLoaders.count(shaderID) == 0)
     {
-        LogE << "Failed to map " << stringID << " to " << shaderID << ": shader not loaded." << std::endl;
+        LogE << "Failed to map " << stringID << " to " << shaderID << ": shader not loaded, or not prepped for lazy loading." << std::endl;
         return false;
     }
 
@@ -361,6 +380,29 @@ bool ShaderResource::mapStringID(const std::string& stringID, std::int32_t shade
     }
 
     m_stringMappings.insert(std::make_pair(stringID, shaderID));
+    return true;
+}
+
+bool ShaderResource::hasStringID(const std::string& stringID) const
+{
+    return m_stringMappings.count(stringID);
+}
+
+bool ShaderResource::addLazyLoader(std::int32_t shaderID, const std::function<void(ShaderResource&)>& func)
+{
+    if (m_shaders.count(shaderID))
+    {
+        LogW << "Shader with ID " << shaderID << " already loaded." << std::endl;
+        return false;
+    }
+
+    if (m_lazyLoaders.count(shaderID))
+    {
+        LogW << "Shader with ID " << shaderID << " already has a lazy loader assigned." << std::endl;
+        return false;
+    }
+
+    m_lazyLoaders.insert(std::make_pair(shaderID, func));
     return true;
 }
 
@@ -410,4 +452,17 @@ std::string ShaderResource::parseIncludes(const std::string& src) const
     }
 
     return ret;
+}
+
+bool ShaderResource::tryLazyLoad(std::int32_t shaderID)
+{
+    if (m_lazyLoaders.count(shaderID))
+    {
+        //hmm this assumes that the loader correct calls and assigns
+        //the shader ID with this resource
+        m_lazyLoaders.at(shaderID)(*this);
+        m_lazyLoaders.erase(shaderID);
+        //LogI << "Lazily loaded shader with ID " << shaderID << std::endl;
+    }
+    return m_shaders.count(shaderID) != 0;
 }

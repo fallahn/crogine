@@ -53,7 +53,7 @@ void AudioSystem::process(float)
 {
     //update the scene's listener details
     const auto& listener = getScene()->getActiveListener();
-    AudioRenderer::setListenerVolume(listener.getComponent<AudioListener>().getVolume() * AudioMixer::m_masterVol);
+    AudioRenderer::setListenerVolume(listener.getComponent<AudioListener>().getVolume() * AudioMixer::m_masterVol * AudioMixer::m_masterPrefade);
     AudioRenderer::setListenerVelocity(listener.getComponent<AudioListener>().getVelocity());
     
     const auto& tx = listener.getComponent<Transform>();

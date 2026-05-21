@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,6 +35,8 @@ namespace cro
 {
     /*!
     \brief Creates a 1x1x1 cube mesh with texture coordinates
+    TODO needs shared buffer optimsation
+    TODO needs vertex size optimisation
     */
     class CRO_EXPORT_API CubeBuilder final : public MeshBuilder
     {
@@ -44,6 +46,6 @@ namespace cro
     private:
         std::size_t m_uid;
         glm::vec3 m_dimensions;
-        Mesh::Data build() const override;
+        Mesh::Data build(AllocationResource*) const override;
     };
 }

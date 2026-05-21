@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -39,6 +39,7 @@ Drawable2D::Drawable2D()
     : m_shader              (nullptr),
     m_customShader          (false),
     m_applyDefaultShader    (true),
+    m_shaderNeedsUpdate     (true),
     m_autoCrop              (true),
     m_textureUniform        (-1),
     m_worldUniform          (-1),
@@ -48,7 +49,6 @@ Drawable2D::Drawable2D()
     m_doubleSided           (false),
     m_blendMode             (Material::BlendMode::Alpha),
     m_primitiveType         (GL_TRIANGLE_STRIP),
-    m_vbo                   (0),
     m_vao                   (0),
     m_updateBufferData      (false),
     m_renderFlags           (DefaultRenderFlag),
@@ -57,7 +57,8 @@ Drawable2D::Drawable2D()
     m_cropped               (false),
     m_absoluteCrop          (false),
     m_wasCulledLastFrame    (true),
-    m_sortCriteria          (0)
+    m_sortCriteria          (0),
+    m_vboAllocator          (nullptr)
 {
 
 }
@@ -83,7 +84,9 @@ bool Drawable2D::setTexture(const Texture* texture)
 
         m_applyDefaultShader = !m_customShader;
 
-        applyShader();
+        //we need to defer this to processing in the
+        //render system when we know the VBO is prepared.
+        m_shaderNeedsUpdate = true;
         return true;
     }
     return false;
@@ -102,7 +105,9 @@ void Drawable2D::setTexture(TextureID textureID, glm::uvec2 size)
 
         m_applyDefaultShader = !m_customShader;
 
-        applyShader();
+        //we need to defer this to processing in the
+        //render system when we know the VBO is prepared.
+        m_shaderNeedsUpdate = true;
     }
 }
 
@@ -127,7 +132,9 @@ void Drawable2D::setShader(Shader* shader)
 
     m_vertexAttributes.clear();
 
-    applyShader();
+    //we need to defer this to processing in the
+    //render system when we know the VBO is prepared.
+    m_shaderNeedsUpdate = true;
 }
 
 void Drawable2D::setBlendMode(Material::BlendMode mode)
@@ -202,13 +209,13 @@ void Drawable2D::updateLocalBounds()
 {
     if (m_vertices.empty()) return;
 
-    auto xExtremes = std::minmax_element(m_vertices.begin(), m_vertices.end(),
+    const auto xExtremes = std::minmax_element(m_vertices.begin(), m_vertices.end(),
         [](const Vertex2D& lhs, const Vertex2D& rhs)
         {
             return lhs.position.x < rhs.position.x;
         });
 
-    auto yExtremes = std::minmax_element(m_vertices.begin(), m_vertices.end(),
+    const auto yExtremes = std::minmax_element(m_vertices.begin(), m_vertices.end(),
         [](const Vertex2D& lhs, const Vertex2D& rhs)
         {
             return lhs.position.y < rhs.position.y;
@@ -345,7 +352,7 @@ void Drawable2D::applyShader()
         //store available attribs so we can also use this on mobile
         m_vertexAttributes.clear();
 
-        auto attribs = m_shader->getAttribMap();
+        const auto& attribs = m_shader->getAttribMap();
         if (attribs[Mesh::Attribute::Position] == -1)
         {
             Logger::log("Position attribute missing from Drawable2D shader", Logger::Type::Error);
@@ -360,6 +367,8 @@ void Drawable2D::applyShader()
             data.id = attribs[Mesh::Attribute::Position];
             data.size = 2;
             data.offset = 0;
+            data.glType = GL_FLOAT;
+            data.glNormalised = GL_FALSE;
         }
 
         if (attribs[Mesh::Attribute::Colour] == -1)
@@ -374,6 +383,8 @@ void Drawable2D::applyShader()
             data.id = attribs[Mesh::Attribute::Colour];
             data.size = 4;
             data.offset = 4 * sizeof(float); //last after 2 position and 2 UV
+            data.glType = GL_UNSIGNED_BYTE;
+            data.glNormalised = GL_TRUE;
         }
 
         if (m_textureInfo.textureID.textureID)
@@ -388,38 +399,41 @@ void Drawable2D::applyShader()
                 AttribData& data = m_vertexAttributes.emplace_back();
                 data.id = attribs[Mesh::Attribute::UV0];
                 data.size = 2;
-                data.offset = 2 * sizeof(float);
+                data.offset = 2 * sizeof(float); //after position x/y
+                data.glType = GL_FLOAT;
+                data.glNormalised = GL_FALSE;
             }
         }
+        m_shaderNeedsUpdate = false;
 
+        updateVAO();
+    }
+}
 
-#ifdef PLATFORM_DESKTOP
+void Drawable2D::updateVAO()
+{
+    {
         //only update the vao on desktop
-        if (m_vao != 0)
-        {
-            glCheck(glDeleteVertexArrays(1, &m_vao));
-            m_vao = 0;
-        }
-
-        glCheck(glGenVertexArrays(1, &m_vao));
+#ifdef PLATFORM_DESKTOP
+        assert(m_vao != 0);
 
         //this might be done before the system has
         //a chance to create it, ie when setting a custom shader immediately
         //upon component creation.
-        if (m_vbo == 0)
+        if (m_vboAllocation.bufferID == 0)
         {
-            glCheck(glGenBuffers(1, &m_vbo));
+            m_vboAllocation = m_vboAllocator->newAllocation(m_vertices.size());
         }
 
         glCheck(glBindVertexArray(m_vao));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
-
-        for (const auto& [id, size, offset] : m_vertexAttributes)
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vboAllocation.bufferID));
+        assert(m_vboAllocation.bufferID != 0);
+        for (const auto& [id, size, offset, type, normalised] : m_vertexAttributes)
         {
             glCheck(glEnableVertexAttribArray(id));
             glCheck(glVertexAttribPointer(id, size,
-                                            GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
-                                            reinterpret_cast<void*>(static_cast<intptr_t>(offset))));
+                                            type, normalised, static_cast<GLsizei>(sizeof(Vertex2D)),
+                                            reinterpret_cast<void*>(static_cast<intptr_t>(offset + m_vboAllocation.offset))));
         }
 
         glCheck(glBindVertexArray(0));
@@ -427,4 +441,22 @@ void Drawable2D::applyShader()
 
 #endif //PLATFORM
     }
+}
+
+void Drawable2D::updateVBO()
+{
+    if (m_vboAllocation.bufferID == 0 ||
+        m_vboAllocation.blockCount < m_vboAllocator->getBlockCount(m_vertices.size()))
+    {
+        m_vboAllocation = m_vboAllocator->newAllocation(m_vertices.size());        
+        updateVAO();
+    }
+
+    //bind VBO and upload data
+    assert(m_vboAllocation.bufferID != 0); //the above should preclude this, but still...
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vboAllocation.bufferID));
+    glCheck(glBufferSubData(GL_ARRAY_BUFFER, static_cast<GLintptr>(m_vboAllocation.offset), m_vertices.size() * sizeof(Vertex2D), m_vertices.data()));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    m_updateBufferData = false;
 }

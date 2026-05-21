@@ -47,7 +47,7 @@ source distribution.
 
 namespace
 {
-    const std::array<std::string, 13u> CourseNames =
+    const std::array<std::string, 14u> CourseNames =
     {
         "course_01",
         "course_02",
@@ -63,6 +63,7 @@ namespace
         "course_12",
 
         "course_13",
+        "course_14",
     };
 
     std::unique_ptr<PersonalBest> personalBest;
@@ -134,7 +135,7 @@ namespace
     constexpr float XPx = 0.07f;
     constexpr float XPy = 2.f;
 
-    constexpr std::int32_t DefaultClubSet = 3731;
+    constexpr std::int32_t DefaultClubSet = 16019;// 3731;
 
     std::int32_t getLevelFromXP(std::int32_t exp)
     {
@@ -228,8 +229,8 @@ std::int32_t Social::doubleXP()
 {
     auto ts = std::time(nullptr);
     const auto* tm = std::localtime(&ts);
-    if ((tm->tm_wday == 0 && (tm->tm_mday > 14 && tm->tm_mday < 22))
-        || (tm->tm_wday == 6 && (tm->tm_mday > 13 && tm->tm_mday < 21)))
+    if ((tm->tm_wday == 0 && (tm->tm_mday > 13 && tm->tm_mday < 22))
+        || (tm->tm_wday == 6 && (tm->tm_mday > 12 && tm->tm_mday < 21)))
     {
         return 2;
     }
@@ -924,7 +925,7 @@ bool Social::getLeaderboardsEnabled()
     return leaderboardsEnabled;
 }
 
-void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score, std::int32_t, const std::vector<std::uint8_t>& holeScores)
+void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score, std::int32_t, const std::vector<std::uint8_t>& holeScores, bool)
 {
 #ifdef USE_GJS
     //GJ::insertScore(course, hole, score);

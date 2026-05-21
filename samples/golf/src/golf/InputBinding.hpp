@@ -34,6 +34,7 @@ source distribution.
 #include <array>
 #include <cstdint>
 #include <limits>
+#include <string>
 
 namespace InputFlag
 {
@@ -59,6 +60,17 @@ namespace InputFlag
         All = 0xFFFF
     };
 }
+
+static inline const std::array<std::string, 10> InputLabels =
+{
+    std::string("Action"),
+    "Next Club", "Previous Club",
+    "Spin Menu", "Emote Menu",
+    "Cancel Shot", "Aim Left",
+    "Aim Right", "Camera Up",
+    "Camera Down"
+};
+
 //IMPORTANT if we update this make sure any plugins which copy (yes, *sigh*)
 //this struct also get updated.
 struct InputBinding final

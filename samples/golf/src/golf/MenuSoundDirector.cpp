@@ -55,15 +55,20 @@ MenuSoundDirector::MenuSoundDirector(cro::AudioResource& ar, const std::size_t& 
         "assets/golf/sound/ball/holed.wav",
         "assets/golf/sound/ball/drop.wav",
         "assets/golf/sound/menu/snapshot.wav",
+        "assets/golf/sound/menu/crumple.wav",
         "assets/golf/sound/menu/lobby.wav",
         "assets/golf/sound/menu/lobby_exit.wav",
         "assets/golf/sound/menu/title.wav",
-        "assets/golf/sound/menu/switch.wav",
         "assets/golf/sound/woof.wav",
 
         "assets/golf/sound/ambience/fw01.wav",
         "assets/golf/sound/ambience/fw02.wav",
         "assets/golf/sound/ambience/fw03.wav",
+
+        "assets/golf/sound/menu/switch.wav",
+        "assets/golf/sound/menu/accept.wav",
+        "assets/golf/sound/menu/back.wav",
+        "assets/golf/sound/menu/nope.wav",
 
         "assets/golf/sound/menu/bucket/bounce01.wav",
         "assets/golf/sound/menu/bucket/bounce02.wav",
@@ -102,6 +107,33 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
         switch (msg.id)
         {
         default: break;
+        case cl::MessageID::MenuSoundMessage:
+        {
+            const auto& data = msg.getData<MenuSoundEvent>();
+            switch (data.type)
+            {
+            default: break;
+            case MenuSoundEvent::Activate:
+                playSound(AudioID::Accept, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case MenuSoundEvent::Cancel:
+                playSound(AudioID::Back, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case MenuSoundEvent::Switch:
+                playSound(AudioID::Switch, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case MenuSoundEvent::Denied:
+                playSound(AudioID::Denied, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case MenuSoundEvent::Snapshot:
+                playSound(AudioID::Snapshot, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case MenuSoundEvent::Crumple:
+                playSound(AudioID::Crumple, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            }
+        }
+            break;
         case cl::MessageID::CollisionMessage:
         {
             const auto& data = msg.getData<CollisionEvent>();

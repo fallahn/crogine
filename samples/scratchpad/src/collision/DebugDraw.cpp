@@ -87,11 +87,11 @@ BulletDebug::BulletDebug()
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vbo));
             glCheck(glBufferData(GL_ARRAY_BUFFER, VertSize * MaxVertices, nullptr, GL_DYNAMIC_DRAW));
 
-            glCheck(glEnableVertexAttribArray(attribs.at(cro::Mesh::Position)));
-            glCheck(glVertexAttribPointer(attribs.at(cro::Mesh::Position), 3, GL_FLOAT, GL_FALSE, VertSize, 0));
+            glCheck(glEnableVertexAttribArray(attribs.at(cro::Mesh::Attribute::Position)));
+            glCheck(glVertexAttribPointer(attribs.at(cro::Mesh::Attribute::Position), 3, GL_FLOAT, GL_FALSE, VertSize, 0));
 
-            glCheck(glEnableVertexAttribArray(attribs.at(cro::Mesh::Colour)));
-            glCheck(glVertexAttribPointer(attribs.at(cro::Mesh::Colour), 3, GL_FLOAT, GL_FALSE, VertSize, reinterpret_cast<void*>(static_cast<std::intptr_t>(3 * sizeof(float)))));
+            glCheck(glEnableVertexAttribArray(attribs.at(cro::Mesh::Attribute::Colour)));
+            glCheck(glVertexAttribPointer(attribs.at(cro::Mesh::Attribute::Colour), 3, GL_FLOAT, GL_FALSE, VertSize, reinterpret_cast<void*>(static_cast<std::intptr_t>(3 * sizeof(float)))));
 
             glCheck(glBindVertexArray(0));
         }

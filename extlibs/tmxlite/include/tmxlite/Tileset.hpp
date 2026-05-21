@@ -1,5 +1,5 @@
 /*********************************************************************
-Matt Marchant 2016 - 2021
+Matt Marchant 2016 - 2023
 http://trederia.blogspot.com
 
 tmxlite - Zlib license.
@@ -52,7 +52,7 @@ namespace tmx
     class TMXLITE_EXPORT_API Tileset final
     {
     public:
-        explicit Tileset(const std::string& workingDir);
+        explicit Tileset(const std::string& workingDir = "");
 
         /*!
         \brief Any tiles within a tile set which have special
@@ -99,7 +99,7 @@ namespace tmx
             \brief The position of the tile within the image.
             */
             Vector2u imagePosition;
-            std::string type;
+            std::string className;
         };
             
         /*!
@@ -130,12 +130,28 @@ namespace tmx
             BottomRight
         };
 
+        /**
+        \brief Loads the tilemap from the given location.
+        This does not set the first GID.
+        This does not support templates.
+        Usually tilemaps are loaded automatically as part of a Map instead.
+        */
+        bool loadWithoutMap(const std::string& path);
+
+        /**
+        \brief Loads the tilemap from the given XML string.
+        This does not set the first GID.
+        This does not support templates.
+        Usually tilemaps are loaded automatically as part of a Map instead.
+        */
+        bool loadWithoutMapFromString(const std::string& xmlStr);
+
         /*!
-        \brief Attempts to parse the given xml node.
-        If node parsing fails an error is printed in the console
+        \brief Attempts to parse the given xml node as part of a map.
+        If node parsing fails, an error is printed in the console
         and the Tileset remains in an uninitialised state.
         */
-        void parse(pugi::xml_node, Map*);
+        bool parse(pugi::xml_node, Map*);
 
         /*!
         \brief Returns the first GID of this tile set.
@@ -143,6 +159,12 @@ namespace tmx
         each tile set guarantees a unique set of IDs
         */
         std::uint32_t getFirstGID() const { return m_firstGID; }
+
+        /*!
+        \brief Sets the first GID of this tile set.
+        This is set automatically if the tileset is loaded as part of a Map.
+        */
+        void setFirstGID(std::uint32_t firstGID) { m_firstGID = firstGID; }
 
         /*!
         \brief Returns the last GID of this tile set.
@@ -154,6 +176,11 @@ namespace tmx
         \brief Returns the name of this tile set.
         */
         const std::string& getName() const { return m_name; }
+
+        /*!
+        \brief Returns the class of the Tileset, as defined in the editor Tiled 1.9+
+        */
+        const std::string& getClass() const { return m_class; }
 
         /*!
         \brief Returns the width and height of a tile in the
@@ -260,6 +287,7 @@ namespace tmx
         std::uint32_t m_firstGID;
         std::string m_source;
         std::string m_name;
+        std::string m_class;
         Vector2u m_tileSize;
         std::uint32_t m_spacing;
         std::uint32_t m_margin;
@@ -275,13 +303,17 @@ namespace tmx
         bool m_hasTransparency;
 
         std::vector<Terrain> m_terrainTypes;
+        std::vector<std::uint32_t> m_tileIndex;
         std::vector<Tile> m_tiles;
 
-        void reset();
+        //always returns false so we can return this
+        //on load failure
+        bool reset();
 
         void parseOffsetNode(const pugi::xml_node&);
         void parsePropertyNode(const pugi::xml_node&);
         void parseTerrainNode(const pugi::xml_node&);
+        Tile& newTile(std::uint32_t ID);
         void parseTileNode(const pugi::xml_node&, Map*);
         void createMissingTile(std::uint32_t ID);
     };

@@ -47,6 +47,9 @@ static inline const std::string WaterVertex = R"(
     VARYING_OUT vec2 v_texCoord;
 
     VARYING_OUT vec3 v_worldPosition;
+#if defined (USE_MRT)
+    VARYING_OUT vec3 v_viewPosition;
+#endif
     VARYING_OUT vec4 v_reflectionPosition;
     VARYING_OUT vec4 v_refractionPosition;
     VARYING_OUT LOW vec4 v_lightWorldPosition;
@@ -66,6 +69,11 @@ static inline const std::string WaterVertex = R"(
         v_texCoord += vec2(1.0); //remove negative value up to -1,-1
 
         v_worldPosition = position.xyz;
+#if defined (USE_MRT)
+#if defined (VIEW_POS)
+        v_viewPosition = (u_viewMatrix * position).xyz;
+#endif
+#endif
         v_reflectionPosition = u_reflectionMatrix * position;
         v_refractionPosition = gl_Position;
         v_lightWorldPosition = u_lightViewProjectionMatrix * position;
@@ -81,8 +89,8 @@ static inline const std::string WaterFragment = R"(
 
     uniform sampler2D u_reflectionMap;
 #if defined(RAIN)
-    uniform sampler2D u_rainTexture;
-    uniform float u_rainAmount;
+    uniform sampler2DArray u_rainTexture;
+    uniform float u_rainAmount = 1.0;
 #endif
 
 #if !defined(NO_DEPTH)
@@ -100,6 +108,9 @@ uniform sampler2DArray u_depthMap;
     VARYING_IN vec3 v_normal;
     VARYING_IN vec2 v_texCoord;
 
+#if defined (USE_MRT)
+    VARYING_IN vec3 v_viewPosition;
+#endif
     VARYING_IN vec3 v_worldPosition;
     VARYING_IN vec4 v_reflectionPosition;
     VARYING_IN vec4 v_refractionPosition;
@@ -110,8 +121,9 @@ uniform sampler2DArray u_depthMap;
     //pixels per metre
 #include MAP_SIZE
     const vec2 PixelCount = vec2(1280.0, 800.0);
-    const vec2 TileCount = MapSize; //tiles of rain animation
-
+    const vec2 TileCount = MapSize / 4.0; //tiles of rain animation
+    const float FrameRate = 1.0 / 16.0;
+    
     const vec3 WaterColour = vec3(0.02, 0.078, 0.578);
     //const vec3 WaterColour = vec3(0.2, 0.278, 0.278);
     //const vec3 WaterColour = vec3(0.137, 0.267, 0.53);
@@ -174,8 +186,12 @@ uniform sampler2DArray u_depthMap;
         vec3 normal = normalize(v_normal);
 
 #if defined (USE_MRT)
-        NORM_OUT = vec4(normal, 1.0);
+        NORM_OUT = vec4(normal * 0.5 + 0.5, 1.0);
+#if defined(VIEW_POS)
+        POS_OUT.r = v_viewPosition.z;
+#else
         POS_OUT = vec4(v_worldPosition, 1.0);
+#endif
         LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 
@@ -194,7 +210,8 @@ uniform sampler2DArray u_depthMap;
         blendedColour.rgb += wave;
 
         //edge feather
-        float amount = 1.0 - smoothstep(u_radius * 0.625, u_radius, length(v_vertDistance));
+        float viewDistance = length(v_vertDistance);
+        float amount = 1.0 - smoothstep(u_radius * 0.625, u_radius, viewDistance);
 
         vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
@@ -220,7 +237,10 @@ uniform sampler2DArray u_depthMap;
 #endif
 
 #if defined(RAIN)
-        blendedColour = (TEXTURE(u_rainTexture, v_texCoord /** TileCount*/).rgb * u_rainAmount) + (blendedColour);
+        float frame = mod(floor(u_windData.w / FrameRate), 18.0);
+
+        float fadeAmount = 1.0 - smoothstep(u_radius * 0.05, u_radius * 0.15, length(u_cameraWorldPosition.xz - v_worldPosition.xz));
+        blendedColour = (TEXTURE(u_rainTexture, vec3(v_texCoord * TileCount, frame)).rgb * u_rainAmount * fadeAmount) / 3.0 + (blendedColour);
 #endif
 
         FRAG_OUT = vec4(blendedColour, 1.0);
@@ -248,7 +268,7 @@ uniform sampler2DArray u_depthMap;
 
     static inline const std::string HorizonFrag = 
         R"(
-    OUTPUT
+    #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
     uniform vec4 u_lightColour = vec4(1.0);
@@ -266,6 +286,9 @@ uniform sampler2DArray u_depthMap;
         vec4 colour = TEXTURE(u_diffuseMap, v_texCoord);
 #endif
         FRAG_OUT = vec4(mix(WaterColour, colour.rgb, v_colour.g), 1.0);
-
+#if defined(USE_MRT)
+    NORM_OUT = vec4(0.5,0.5,0.0,1.0);
+    POS_OUT.r = 10000.0; //makes the skybox items a long way away for lighting calc purposes
+#endif
         if(colour.a < 0.1) discard;
     })";

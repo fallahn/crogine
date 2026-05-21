@@ -179,7 +179,7 @@ static inline const std::string CloudOverheadVertex = R"(
     })";
 
 static inline const std::string CloudOverheadFragment = R"(
-    OUTPUT
+#include OUTPUT_LOCATION
 
     uniform vec2 u_worldCentre = vec2(0.0);
     uniform vec4 u_skyColourTop;
@@ -244,7 +244,10 @@ static inline const std::string CloudOverheadFragment = R"(
 #endif
 
         FRAG_OUT = colour * getLightColour();
-
+#if defined (USE_MRT)
+    NORM_OUT = vec4(0.5,0.5,0.0,1.0);
+    POS_OUT.r = 10000.0; //lighting hack
+#endif
 
 #if defined(FEATHER_EDGE)
         float amount = 1.0 - smoothstep(0.8, 0.95, (length(v_worldPosition.xz - u_worldCentre) / MaxDist));

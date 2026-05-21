@@ -67,6 +67,7 @@ public:
     CollisionMesh& operator = (CollisionMesh&&) = delete;
 
     void updateCollisionMesh(const cro::Mesh::Data&);
+    void updateCollisionMesh(const cro::Mesh::Data&, const std::vector<float>&, const std::vector<std::vector<std::uint32_t>>&);
 
     TerrainResult getTerrain(glm::vec3 position) const;
     TerrainResult getTerrain(glm::vec3 rayStart, glm::vec3 rayEnd) const;
@@ -87,9 +88,13 @@ private:
     std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_groundVertices;
 
     std::vector<float> m_vertexData;
-    std::vector<std::vector<std::uint32_t>> m_indexData;
+    //hmm I wish we could query the index data for its type
+    //and automatically select the correct one here...
+    std::vector<std::vector<std::uint16_t>> m_indexData;
 
 
     void initCollisionWorld();
     void clearCollisionObjects();
+
+    void setCollisionMesh(const cro::Mesh::Data&, std::uint32_t vertStride);
 };

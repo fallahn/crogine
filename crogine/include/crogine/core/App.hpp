@@ -263,6 +263,7 @@ namespace cro
         {
             std::int32_t width = 800;
             std::int32_t height = 600;
+            float framelimit = 240.f;
             bool fullscreen = false;
             bool exclusive = false;
             bool vsync = true;

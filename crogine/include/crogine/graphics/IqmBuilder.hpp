@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -43,6 +43,8 @@ namespace cro
     they do not support secondary UV coordinates for lightmapping - in
     which case cmf mesh (via the StaticMeshBuilder) should be preferred.
     <a href="http://sauerbraten.org/iqm/">IQM File Format</a>
+    TODO needs shared buffer optimisation
+    TODO needs vertex size optimisation
     */
     class CRO_EXPORT_API IqmBuilder final : public MeshBuilder
     {
@@ -74,13 +76,13 @@ namespace cro
         \brief This is a naughty hack to get mesh data into the Model Editor.
         Don't use this. Seriously.
         */
-        Mesh::Data getData() const { return build(); }
+        Mesh::Data getData() const { return build(nullptr); }
 
     private:
         std::string m_path;
         std::size_t m_uid;
         mutable SDL_RWops* m_file;
-        Mesh::Data build() const override;
+        Mesh::Data build(AllocationResource*) const override;
         mutable Skeleton m_skeleton;
     };
 }

@@ -2,6 +2,81 @@
 
 #include <string>
 
+static const inline std::string ReflectionVert =
+R"(
+ATTRIBUTE vec4 a_position;
+ATTRIBUTE vec4 a_colour;
+ATTRIBUTE vec3 a_normal;
+
+//#include CAMERA_UBO
+layout (std140) uniform CameraUniforms
+{
+    mat4 u_viewMatrix;
+    mat4 u_viewProjectionMatrix;
+    mat4 u_projectionMatrix;
+    vec4 u_clipPlane;
+    vec3 u_cameraWorldPosition;
+};
+#define CAMERA_UBO
+//#include WVP_UNIFORMS
+uniform mat3 u_normalMatrix;
+uniform mat4 u_worldMatrix;
+
+VARYING_OUT vec3 v_worldPosition;
+VARYING_OUT vec3 v_normalVector;
+
+void main()
+{
+    vec4 worldPos = u_worldMatrix * a_position;
+    v_worldPosition = worldPos.xyz;
+
+    gl_Position = u_projectionMatrix * u_viewMatrix * worldPos;
+
+    v_normalVector = u_normalMatrix * a_normal;
+})";
+
+static const inline std::string ReflectionFrag =
+R"(
+OUTPUT
+layout (std140) uniform CameraUniforms
+{
+    mat4 u_viewMatrix;
+    mat4 u_viewProjectionMatrix;
+    mat4 u_projectionMatrix;
+    vec4 u_clipPlane;
+    vec3 u_cameraWorldPosition;
+};
+
+uniform samplerCube u_reflectMap;
+
+VARYING_IN vec3 v_worldPosition;
+VARYING_IN vec3 v_normalVector;
+
+
+const vec3 CubePos = vec3(0.0, -60.0, 0.0);
+const vec3 MinBox = vec3(-50.0);
+const vec3 MaxBox = vec3(50.0);
+
+
+void main()
+{
+    vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+    vec3 normal = normalize(v_normalVector);
+    vec3 R = reflect(-eyeDirection, normal);
+
+    vec3 intersectA = (MaxBox - v_worldPosition);
+    vec3 intersectB = (MinBox - v_worldPosition);
+    vec3 furthest = max(intersectA, intersectB);
+    float dist = min(min(furthest.x, furthest.y), furthest.z);
+
+    vec3 intersect = dist * (v_worldPosition + R);
+    R = intersect - CubePos;
+
+    vec4 reflectionColour = texture(u_reflectMap, R);
+
+    FRAG_OUT = reflectionColour; //mix(vec4(1.0, 1.0 ,0.0, 1.0), reflectionColour, 0.9);
+})";
+
 static const inline std::string HoloFrag =
 R"(
 OUTPUT

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,6 +32,9 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/mat4x4.hpp>
 
+#include <crogine/ecs/Entity.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+
 #include <cstdint>
 
 struct MinimapZoom final
@@ -48,7 +51,15 @@ struct MinimapZoom final
     glm::vec2 textureSize = glm::vec2(1.f);
 
     cro::Entity activeAnimation;
+    //cro::Entity camera2D; //TODO remove this once we switch to 3D
 
     void updateShader();
     glm::vec2 toMapCoords(glm::vec3 worldPos) const;
+
+
+
+    //updated settings for 3D camera
+    static constexpr float CamHeight = 36.f; //Y pos in world units
+    cro::Entity camera;
+    cro::RenderTexture sceneTexture;
 };
