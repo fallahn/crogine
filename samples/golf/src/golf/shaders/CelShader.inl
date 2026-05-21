@@ -463,6 +463,7 @@ static inline const std::string CelFragmentShader = R"(
         float f = 1.0 - pow(clamp(dot(viewDirection, normal), 0.0, 1.0), 5.0);
         return (f * 0.8) + 0.2;
     }
+    const vec3 DotColour = vec3(1.0, 0.85, 0.5); //slope indicator
 
     void main()
     {
@@ -693,30 +694,17 @@ static inline const std::string CelFragmentShader = R"(
 float contour = getContour(0.5, 0.018);
 
     vec3 gridColour = ((FRAG_OUT.rgb * vec3(0.999, 0.95, 0.85))) * (0.4 + (0.6 * holeHeight)) * 0.2;
-    //vec3 gridColour = ((FRAG_OUT.rgb * vec3(0.999, 0.95, 0.85))) * (0.8 + (0.4 * holeHeight));
-    //    float slope = 1.0 - dot(normal, vec3(0.0, 1.0, 0.0));
-    //    slope = smoothstep(0.02, 0.04, clamp(slope / 0.05, 0.0, 1.0));
-    //    gridColour = mix(gridColour, vec3(1.0, 0.0, 0.0), slope * 0.5);
-
-
     float transparency = 1.0 - pow(1.0 - u_transparency, 4.0);
-    //FRAG_OUT.rgb = mix(FRAG_OUT.rgb, gridColour, contour * holeHeightFade * transparency);
-
     FRAG_OUT.rgb += gridColour * contour * holeHeightFade * transparency;
-
 
 #else //putting green
 
     vec2 f = fract(v_worldPosition.xz * 2.0);
     vec2 df = fwidth(v_worldPosition.xz * 2.0);
-    //df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
-    //vec2 g = step(df * u_pixelScale, f);
     vec2 g = smoothstep(df, df * 2.0, f);
     vec2 h = smoothstep(df * 0.25, df * 0.5, f);
 
     float contour = (1.0 - (g.x * g.y)) * (h.x * h.y);
-
-    //float contour = pristineGrid(v_worldPosition.xz*2.0,vec2(1.0/40.0));
 
     //these magic numbers are distance sqr
     vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
@@ -725,6 +713,17 @@ float contour = getContour(0.5, 0.018);
     vec3 contourColour = BaseContourColour;
     contourColour.x += mod(v_worldPosition.y * 3.0, 1.0);
     contourColour = hsv2rgb(contourColour);
+
+//float dotWidth = 0.95;
+//float dotCount = 20.0;
+//float dotSpeed = 5.0;
+//float gridClip = 0.1;
+
+//float dash = step(dotWidth, sin((f.x * dotCount) + (u_windData.w * dotSpeed * normal.z))) * step(gridClip, f.x);
+//vec2 dash = step(0.75, fract((f * 8.0) + (vec2(u_windData.w * dotSpeed)) * normal.xz)) * step(gridClip, f);
+//contourColour = mix(contourColour, DotColour, dash.x);
+//dash = step(dotWidth, sin((f.y * dotCount) + (u_windData.w * dotSpeed * normal.z))) * step(gridClip, f.y);
+//contourColour = mix(contourColour, DotColour, dash);
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contour * fade);
 

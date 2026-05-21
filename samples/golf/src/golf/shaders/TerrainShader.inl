@@ -231,7 +231,7 @@ static inline const std::string NormalMapVertexShader = R"(
 
 static inline const std::string NormalMapFragmentShader = R"(
     layout (location = 0) out vec4 FRAG_OUT;
-    //layout (location = 1) out vec4 POS_OUT;
+    //layout (location = 1) out float POS_OUT;
 
     VARYING_IN vec3 v_normal;
     VARYING_IN float v_position;
@@ -240,7 +240,6 @@ static inline const std::string NormalMapFragmentShader = R"(
     {
         vec3 normal = normalize(v_normal);
         FRAG_OUT = vec4(normal, v_position);
-
 
 
         //vec3 normal = normalize(v_normal);

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -33,6 +33,7 @@ source distribution.
 #include "Billboard.hpp"
 #include "Treeset.hpp"
 #include "ChunkVisSystem.hpp"
+#include "CollisionMesh.hpp"
 
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Entity.hpp>
@@ -199,6 +200,7 @@ private:
     std::atomic_bool m_wantsUpdate;
     std::unique_ptr<std::thread> m_thread;
 
+    CollisionMesh m_collisionMesh;
     void threadFunc();
 
 

@@ -1337,8 +1337,9 @@ void TerrainBuilder::threadFunc()
                 m_billboardBuffer.clear();
                 m_billboardTreeBuffer.clear();
                 
-                for (auto [x, y] : grass)
+                for (const auto [x, y] : grass)
                 {
+                    //auto terrain = m_collisionMesh.getTerrain({ x, 10.f, -y });
                     const auto [terrain, terrainHeight] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Rough)
                     {
@@ -1610,7 +1611,7 @@ void TerrainBuilder::threadFunc()
                 m_slopeIndices.clear();
 
                 std::uint32_t currIndex = 0u;
-                auto pinPos = m_holeData[m_currentHole].pin;
+                const auto pinPos = m_holeData[m_currentHole].pin;
 
                 //we can optimise this by only looping the grid around the pin pos
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
@@ -1631,6 +1632,7 @@ void TerrainBuilder::threadFunc()
                         auto worldY = startY + (y / GridDensity);
 
                         auto terrain = readMap(mapImage, worldX, worldY).first;
+                        //TODO get world coords and sample collision mesh
                         if (terrain == TerrainID::Green)
                         {
                             float posX = static_cast<float>(x / GridDensity) + ((x % GridDensity) * GridSpacing) + startX;
@@ -1642,27 +1644,35 @@ void TerrainBuilder::threadFunc()
                             worldX = startX * GridDensity + x;
                             worldY = startY * GridDensity + y;
 
-                            auto height = (readHeightMap(worldX, worldY, GridDensity) - pinPos.y);
+                            const float sampleHeight = pinPos.y + 1.f;
+
                             SlopeVertex vert;
-                            vert.position = { posX, height, posZ };
-                            vert.normal = readNormal(worldX, worldY, GridDensity);
+                            vert.position = { posX, sampleHeight, posZ };
+
+                            auto terrain = m_collisionMesh.getTerrain(vert.position + pinPos);
+                            vert.position.y = terrain.height - pinPos.y;
+                            vert.normal = terrain.normal;
 
                             //this is the number of times the 'dashes' repeat if enabled in the shader
                             //and the speed/direction based on height difference
                             vert.texCoord = glm::packHalf2x16({ 0.f, 0.f });
 
-                            glm::vec3 offset(GridSpacing, 0.f, 0.f);
-                            height = (readHeightMap(worldX + 1, worldY, GridDensity) - pinPos.y);
 
                             //because of the low precision of the height map
                             //we average out the slope over a greater distance
+                            //to calculate the correct UV (used for slope animation)
                             glm::vec3 avgPosition = vert.position + glm::vec3(AvgDistance, 0.f, 0.f);
+                            //TODO read this from the collision mesh
                             avgPosition.y = (readHeightMap(worldX + AvgDistance, worldY, GridDensity) - pinPos.y);
 
+                            glm::vec3 offset(GridSpacing, 0.f, 0.f);
                             SlopeVertex vert2;
                             vert2.position = vert.position + offset;
-                            vert2.position.y = height;
-                            vert2.normal = readNormal(worldX + 1, worldY, GridDensity);
+                            vert2.position.y = sampleHeight;
+
+                            terrain = m_collisionMesh.getTerrain(vert2.position + pinPos);
+                            vert2.position.y = terrain.height - pinPos.y;
+                            vert2.normal = terrain.normal;
 
                             const glm::vec2 uv2 = { vert2.position.x * DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
                             const glm::vec2 uv1 = { vert.position.x * DashCount, uv2.y }; //must be constant across segment
@@ -1673,16 +1683,22 @@ void TerrainBuilder::threadFunc()
                             //shame we can't just recycle the index...
                             auto vert3 = vert;
 
-                            offset = glm::vec3(0.f, 0.f, -GridSpacing);
-                            height = (readHeightMap(worldX, worldY + 1, GridDensity) - pinPos.y);
+                            terrain = m_collisionMesh.getTerrain(glm::vec3(vert3.position.x, sampleHeight, vert3.position.z) + pinPos);
+                            vert3.position.y = terrain.height - pinPos.y;
+                            vert3.normal = terrain.normal;
+
 
                             avgPosition = vert.position + glm::vec3(0.f, 0.f, -AvgDistance);
                             avgPosition.y = (readHeightMap(worldX, worldY + AvgDistance, GridDensity) - pinPos.y);
 
+                            offset = glm::vec3(0.f, 0.f, -GridSpacing);
                             SlopeVertex vert4;
                             vert4.position = vert.position + offset;
-                            vert4.position.y = height;
-                            vert4.normal = readNormal(worldX, worldY + 1, GridDensity);
+                            vert4.position.y = sampleHeight;// height;
+
+                            terrain = m_collisionMesh.getTerrain(vert4.position + pinPos);
+                            vert4.position.y = terrain.height - pinPos.y;
+                            vert4.normal = terrain.normal;
 
                             const glm::vec2 uv4 = { vert4.position.z * DashCount, std::min(-glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
                             const glm::vec2 uv3 = { vert3.position.z * DashCount, uv4.y };
@@ -1760,7 +1776,9 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
     }
 
     const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
-    //so... we're technically only using a single target here HOWEVER using a regulsr render texture
+    m_collisionMesh.updateCollisionMesh(meshData);
+    
+    //so... we're technically only using a single target here HOWEVER using a regular render texture
     //even in floating point doesn't render the grid correctly. Even weirder still if I set this to create
     //only one target the rendering breaks COMPLETELY despite the removal of a completely unused target...
     if (!m_normalMap.available())
