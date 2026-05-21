@@ -174,6 +174,8 @@ private:
     static constexpr float TinyRange = 1.f / 10.f;
     static constexpr float TinyRangeThreshold = TinyRange * 0.5f;
 
+    //this only applies to the putter and scales the value based on
+    //the current distance to the pin
     float getScaledValue(float v, float dist) const;
 };
 

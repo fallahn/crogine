@@ -213,13 +213,13 @@ float Club::getPower(float distanceToPin, bool imperial) const
 {
     if (m_id == ClubID::Putter)
     {
+        //looks like a bug, but turns out we need the extra power.
+        const auto p = getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
         if (m_fixedPuttingDistance)
         {
-            return ClubStats[m_id].stats[0].target;
+            return std::max(ClubStats[m_id].stats[0].target, p);
         }
 
-        //looks like a bug, but turns out we need the extra power.
-        auto p = getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
         //return getScaledValue(ClubStats[m_id].stats[0].power, distanceToPin);
 
         //because imperial display is rounded we need to apply this to the power too
@@ -246,7 +246,8 @@ float Club::getTarget(float distanceToPin) const
 {
     if (m_id == ClubID::Putter)
     {
-        return m_fixedPuttingDistance ? getBaseTarget() : getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
+        const auto d = getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
+        return m_fixedPuttingDistance ? std::max(getBaseTarget(), d) : d;
     }
 
     return getBaseTarget(); //this includes target multiplier
@@ -318,6 +319,12 @@ std::int32_t Club::getScaleIndex(float distanceToPin) const
 //private
 float Club::getScaledValue(float value, float distanceToPin) const
 {
+    if (m_id == ClubID::Putter
+        && distanceToPin > value)
+    {
+        return value * 2.5f; //bumps putter up to 25m
+    }
+
     const auto index = getScaleIndex(distanceToPin);
 
     switch (index)

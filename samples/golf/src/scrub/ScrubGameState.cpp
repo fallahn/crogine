@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024 - 2025
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1810,7 +1810,7 @@ bool ScrubGameState::updateScore()
     m_score.cleanlinessSum += cleanliness;
     m_score.avgCleanliness = m_score.cleanlinessSum / m_score.ballsWashed;
 
-    if (m_score.ballsWashed == 40)
+    if (m_score.ballsWashed == 35)
     {
         Achievements::awardAchievement(AchievementStrings[AchievementID::CleanWhistle]);
     }
