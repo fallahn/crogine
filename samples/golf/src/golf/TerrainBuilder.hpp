@@ -200,15 +200,10 @@ private:
     std::atomic_bool m_wantsUpdate;
     std::unique_ptr<std::thread> m_thread;
 
-    CollisionMesh m_collisionMesh;
     void threadFunc();
 
-
-    /*cro::MultiRenderTexture m_normalMap;
-    cro::Shader m_normalShader;
-    std::vector<float> m_normalMapValues;*/
-
-    void renderNormalMap(bool forceUpdate = false); //don't call this from thread!!
+    CollisionMesh m_collisionMesh;
+    void updateCollisionMesh(bool forceUpdate = false); //don't call this from thread!! (Uses OpenGL)
 
 
 #ifdef CRO_DEBUG_
