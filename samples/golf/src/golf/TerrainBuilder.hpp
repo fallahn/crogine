@@ -204,9 +204,9 @@ private:
     void threadFunc();
 
 
-    cro::MultiRenderTexture m_normalMap;
+    /*cro::MultiRenderTexture m_normalMap;
     cro::Shader m_normalShader;
-    std::vector<float> m_normalMapValues;
+    std::vector<float> m_normalMapValues;*/
 
     void renderNormalMap(bool forceUpdate = false); //don't call this from thread!!
 

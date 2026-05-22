@@ -181,13 +181,14 @@ R"(
     const vec3 DotColour = vec3(1.0, 0.85, 0.5);
     const vec3 BaseColour = vec3(0.627, 0.699, 0.58); //0.94 stored as HSV to save on a conversion
     const float TAU = 6.2831855;
+    const float DotSpeed = 0.5;
 
     #include HSV
 
     void main()
     {
 
-        float alpha = (sin((v_texCoord.x * TAU) - ((u_windData.w * 2.5) * v_texCoord.y)) + 1.0) * 0.5;
+        float alpha = (sin((v_texCoord.x * TAU) - ((u_windData.w * DotSpeed) * v_texCoord.y)) + 1.0) * 0.5;
         alpha = step(0.01, alpha);
 
         vec3 c = BaseColour;

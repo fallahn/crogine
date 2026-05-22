@@ -810,16 +810,16 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_slopeProperties.entity = entity;
 
     //create and update the initial normal map
-    m_normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
-    constexpr glm::vec2 mapSize(MapSize);
-    const glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
-    const glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -40.f, 40.f);
-    const auto normalViewProj = projMat * viewMat;
+    //m_normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
+    //constexpr glm::vec2 mapSize(MapSize);
+    //const glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
+    //const glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -40.f, 40.f);
+    //const auto normalViewProj = projMat * viewMat;
 
-    //we can set this once so we don't need to store the matrix
-    glCheck(glUseProgram(m_normalShader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(m_normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
-    glCheck(glUseProgram(0));
+    ////we can set this once so we don't need to store the matrix
+    //glCheck(glUseProgram(m_normalShader.getGLHandle()));
+    //glCheck(glUniformMatrix4fv(m_normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
+    //glCheck(glUseProgram(0));
 
     if (m_currentHole < m_holeData.size())
     {
@@ -1238,7 +1238,7 @@ void TerrainBuilder::onChunkUpdate(const std::vector<std::int32_t>& visibleChunk
 
 void TerrainBuilder::threadFunc()
 {
-    const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
+    /*const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
     {
         constexpr auto size = getNormalMapSize();
         x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
@@ -1246,19 +1246,19 @@ void TerrainBuilder::threadFunc()
 
         auto idx = 4 * (y * size.x + x);
         return m_normalMapValues[idx + 3];
-    };
+    };*/
 
-    const auto readNormal = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
-    {
-        constexpr auto size = getNormalMapSize();
-        x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
-        y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
+    //const auto readNormal = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
+    //{
+    //    constexpr auto size = getNormalMapSize();
+    //    x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
+    //    y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
 
-        auto idx = 4 * (y * size.x + x);
-        glm::vec3 normal(m_normalMapValues[idx], m_normalMapValues[idx + 1], m_normalMapValues[idx + 2]);
+    //    auto idx = 4 * (y * size.x + x);
+    //    glm::vec3 normal(m_normalMapValues[idx], m_normalMapValues[idx + 1], m_normalMapValues[idx + 2]);
 
-        return normal;
-    };
+    //    return normal;
+    //};
 
     //we can optimise this a bit by storing each prop
     //in a grid-indexed array to save all the looping...
@@ -1339,20 +1339,20 @@ void TerrainBuilder::threadFunc()
                 
                 for (const auto [x, y] : grass)
                 {
-                    //auto terrain = m_collisionMesh.getTerrain({ x, 10.f, -y });
-                    const auto [terrain, terrainHeight] = readMap(mapImage, x, y);
+                    const auto terrainData = m_collisionMesh.getTerrain({ x, 10.f, -y });
+                    const auto [terrain, terrainHeight] = readMap(mapImage, x, y); //NOTE we *do* need to read this as the terrain height may be greater than the model height
                     if (terrain == TerrainID::Rough)
                     {
                         const float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
-                        const float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+                        //const float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
 
-                        if (height > WaterLevel)
+                        if (terrainData.height > WaterLevel)
                         {
-                            const auto n = readNormal(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+                            const auto& n = terrainData.normal;
                             //don't place on steep slopes
                             if (glm::dot(n, cro::Transform::Y_AXIS) > 0.3f)
                             {
-                                glm::vec3 bbPos({ x, height - 0.02f, -y });
+                                glm::vec3 bbPos({ x, terrainData.height - 0.02f, -y });
                                 
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                                 bb.position = bbPos;
@@ -1365,12 +1365,12 @@ void TerrainBuilder::threadFunc()
                     if (terrain == TerrainID::Rough
                         || terrain == TerrainID::Scrub)
                     {
-                        float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
-                        height = std::max(height, terrainHeight + TerrainLevel);
+                        //float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+                        const auto height = std::max(terrainData.height, terrainHeight + TerrainLevel);
 
                         if (height < 0.1f)
                         {
-                            float scale = static_cast<float>(cro::Util::Random::value(9, 16)) / 10.f;
+                            const float scale = static_cast<float>(cro::Util::Random::value(9, 16)) / 10.f;
 
                             glm::mat4 tx = glm::translate(glm::mat4(1.f), { x, height - 0.01f, -y });
                             tx = glm::rotate(tx, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI), cro::Transform::Y_AXIS);
@@ -1380,14 +1380,15 @@ void TerrainBuilder::threadFunc()
                     }
                 }
 
-                for (auto [x, y] : trees)
+                for (const auto [x, y] : trees)
                 {
+                    const auto terrainData = m_collisionMesh.getTerrain({ x, 10.f, -y });
                     auto [terrain, height] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Scrub)
                     {
                         //check if model mesh is higher than terrain
-                        float height2 = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
-                        height = std::max(height + TerrainLevel, height2);
+                        //float height2 = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+                        height = std::max(height + TerrainLevel, terrainData.height);
 
                         //check we're actually above water height
                         if (height > -(TerrainLevel - WaterLevel))
@@ -1463,14 +1464,15 @@ void TerrainBuilder::threadFunc()
                     }
                 }
                 
-                for (auto [x, y] : flowers)
+                for (const auto [x, y] : flowers)
                 {
+                    const auto terrainData = m_collisionMesh.getTerrain({ x, 10.f, -y });
                     auto [terrain, height] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Scrub
                         /*&& height > 0.6f*/)
                     {
-                        float height2 = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
-                        height = std::max(height + TerrainLevel, height2);
+                        //float height2 = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+                        height = std::max(height + TerrainLevel, terrainData.height);
 
                         if (height > /*-(TerrainLevel - WaterLevel)*/0)
                         {
@@ -1663,7 +1665,8 @@ void TerrainBuilder::threadFunc()
                             //to calculate the correct UV (used for slope animation)
                             glm::vec3 avgPosition = vert.position + glm::vec3(AvgDistance, 0.f, 0.f);
                             //TODO read this from the collision mesh
-                            avgPosition.y = (readHeightMap(worldX + AvgDistance, worldY, GridDensity) - pinPos.y);
+                            //avgPosition.y = (readHeightMap(worldX + AvgDistance, worldY, GridDensity) - pinPos.y);
+                            avgPosition.y = m_collisionMesh.getTerrain(avgPosition + pinPos).height - pinPos.y;
 
                             glm::vec3 offset(GridSpacing, 0.f, 0.f);
                             SlopeVertex vert2;
@@ -1689,7 +1692,8 @@ void TerrainBuilder::threadFunc()
 
 
                             avgPosition = vert.position + glm::vec3(0.f, 0.f, -AvgDistance);
-                            avgPosition.y = (readHeightMap(worldX, worldY + AvgDistance, GridDensity) - pinPos.y);
+                            //avgPosition.y = (readHeightMap(worldX, worldY + AvgDistance, GridDensity) - pinPos.y);
+                            avgPosition.y = m_collisionMesh.getTerrain(avgPosition + pinPos).height - pinPos.y;
 
                             offset = glm::vec3(0.f, 0.f, -GridSpacing);
                             SlopeVertex vert4;
@@ -1781,19 +1785,19 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
     //so... we're technically only using a single target here HOWEVER using a regular render texture
     //even in floating point doesn't render the grid correctly. Even weirder still if I set this to create
     //only one target the rendering breaks COMPLETELY despite the removal of a completely unused target...
-    if (!m_normalMap.available())
-    {
-        m_normalMap.setPrecision(1, cro::TexturePrecision::Default);
-        m_normalMap.setChannelCount(1, 1);
-        m_normalMap.create(getNormalMapSize().x, getNormalMapSize().y, 2, true);
-    }
-    //m_normalMap.create(getNormalMapSize().x, getNormalMapSize().y, false, false, 0, true);
-    renderToNormalMap(meshData, m_normalShader, m_normalMap);
+    //if (!m_normalMap.available())
+    //{
+    //    m_normalMap.setPrecision(1, cro::TexturePrecision::Default);
+    //    m_normalMap.setChannelCount(1, 1);
+    //    m_normalMap.create(getNormalMapSize().x, getNormalMapSize().y, 2, true);
+    //}
+    ////m_normalMap.create(getNormalMapSize().x, getNormalMapSize().y, false, false, 0, true);
+    //renderToNormalMap(meshData, m_normalShader, m_normalMap);
 
-    
-    //copy the texture to an array we can query
-    m_normalMapValues.resize(getNormalMapSize().x * getNormalMapSize().y * 4);
-    //glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture(1).textureID);
-    glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture().getGLHandle());
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, m_normalMapValues.data());
+    //
+    ////copy the texture to an array we can query
+    //m_normalMapValues.resize(getNormalMapSize().x * getNormalMapSize().y * 4);
+    ////glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture(1).textureID);
+    //glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture().getGLHandle());
+    //glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, m_normalMapValues.data());
 }
