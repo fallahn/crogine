@@ -5258,16 +5258,19 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
 
 float GolfState::estimatePuttPower()
 {
-    auto target = m_holeData[m_currentHole].pin;
-    auto targetDist = m_distanceToHole;
+    const auto target = m_holeData[m_currentHole].pin;
+    const auto targetDist = m_distanceToHole;
         
-    auto maxDist = Clubs[ClubID::Putter].getTarget(targetDist);
+    const auto maxDist = Clubs[ClubID::Putter].getTarget(targetDist);
     float guestimation = (targetDist / maxDist);
 
-    //kludge stops the flag recommending too much power            
-    if (maxDist == Clubs[ClubID::Putter].getBaseTarget())
+    //kludge stops the flag recommending too much power 
+    //NOTE the base target is only 10, but we've kludged
+    //in a max range of 25m!!         
+    if (maxDist >= Clubs[ClubID::Putter].getBaseTarget())
     {
         //guestimation = cro::Util::Easing::easeInSine(guestimation);
+        //const float reduction = std::pow(0.83f, maxDist/BaseTarget)
         guestimation *= 0.83f;
     }
     else
