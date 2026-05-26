@@ -138,7 +138,7 @@ R"(
     VARYING_OUT vec2 v_texCoord;
     VARYING_OUT vec2 v_heightData;
 
-    const float MaxRadius = 10.0; //this should match max putt distance
+    const float MaxRadius = 25.0; //this should match max putt distance
     const float MinRadius = 0.5;
 
     void main()
@@ -148,7 +148,7 @@ R"(
         float radius = clamp(viewLength, MinRadius, MaxRadius);
         float ratio = min(1.0, viewLength / MaxRadius);
 
-        float alpha = 1.0 - smoothstep(radius, radius + (3.0 * ratio), length(worldPos.xyz - u_centrePosition));
+        float alpha = 1.0 - smoothstep(radius, radius + (7.0 * ratio), length(worldPos.xyz - u_centrePosition));
         alpha *= (1.0 - smoothstep(MaxRadius, MaxRadius + (1.0 * ratio), length(worldPos.xyz - u_cameraWorldPosition)));
 
         gl_Position = u_viewProjectionMatrix * worldPos;

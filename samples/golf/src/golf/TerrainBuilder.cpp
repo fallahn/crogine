@@ -88,17 +88,17 @@ namespace
     static constexpr std::uint32_t QuadsPerMetre = 1;
 
     static constexpr float MaxShrubOffset = MaxTerrainHeight + 18.f;
-    static constexpr std::int32_t SlopeGridSize = 20;
+    static constexpr std::int32_t SlopeGridSize = 40;
     static constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
     
     //number of times the resolution of the map to increase normal map resolution by
     //MUST be even and should be 2,4 or 8 as 1 will cause a div0!
-    static constexpr std::int32_t NormalMapMultiplier = 8; 
+    //static constexpr std::int32_t NormalMapMultiplier = 8; 
 
-    constexpr glm::uvec2 getNormalMapSize()
-    {
-        return { MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier };
-    }
+    //constexpr glm::uvec2 getNormalMapSize()
+    //{
+    //    return { MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier };
+    //}
 
     struct GrassUniform final
     {
@@ -1582,7 +1582,7 @@ void TerrainBuilder::threadFunc()
                 static constexpr float DashCount = 2.f;// 80.f;
                 static constexpr float SlopeSpeed = -40.f;//REMEMBER this const is also used in the slope frag shader
                 static constexpr std::int32_t AvgDistance = 1;
-                static constexpr std::int32_t GridDensity = NormalMapMultiplier; //verts per metre, however grid size is half this.
+                static constexpr std::int32_t GridDensity = 8;// NormalMapMultiplier; //verts per metre, however grid size is half this.
                 static constexpr float GridSpacing = 1.f / GridDensity;
 
                 static constexpr float SurfaceOffset = 0.02f; //verts are pushed along normal by this much
@@ -1676,7 +1676,7 @@ void TerrainBuilder::threadFunc()
                             //TODO this is a lazy addition where we could really skip
                             //all vert processing entirely when not needed, but it
                             //doesn't actually make processing time *worse*
-                            if ((y % (NormalMapMultiplier / 2) == 0))
+                            if ((y % (GridDensity / 2) == 0))
                             {
                                 m_slopeBuffer.push_back(vert);
                                 m_slopeIndices.push_back(currIndex++);
@@ -1684,7 +1684,7 @@ void TerrainBuilder::threadFunc()
                                 m_slopeIndices.push_back(currIndex++);
                             }
 
-                            if ((x % (NormalMapMultiplier / 2)) == 0)
+                            if ((x % (GridDensity / 2)) == 0)
                             {
                                 m_slopeBuffer.push_back(vert3);
                                 m_slopeIndices.push_back(currIndex++);
