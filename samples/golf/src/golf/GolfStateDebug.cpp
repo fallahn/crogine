@@ -1082,6 +1082,24 @@ void GolfState::buildCubemap(glm::vec3 position, const std::string& path)
     //cro::Console::print("Done!");
 }
 
+#include "BehaviourRabbit.hpp"
+
+void GolfState::spawnRabbit(glm::vec3 pos)
+{
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("dlc/craewall/models/props/rabbit.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(pos);
+        md.createModel(entity);
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function = BehaviourRabbit(m_collisionMesh, pos);
+
+        LogI << "Spawned rabbit at " << pos << std::endl;
+    }
+}
+
 void GolfState::dumpBenchmark()
 {
     std::string outFile = cro::App::getPreferencePath() + "benchmark/";

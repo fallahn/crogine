@@ -901,7 +901,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
             break;
 
-
+        case SDLK_F10:
+            spawnRabbit(m_holeData[m_currentHole].tee);
+            break;
 #ifdef CRO_DEBUG_
         case SDLK_F10:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::EndGame), net::NetFlag::Reliable);

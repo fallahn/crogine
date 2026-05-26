@@ -124,6 +124,9 @@
     <Filter Include="Source Files\golf\client\template">
       <UniqueIdentifier>{acecd210-c5f3-4d22-a37f-15d425376e15}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf\client\prop behaviours">
+      <UniqueIdentifier>{4338c920-dd20-4a49-8c48-a48b66b46719}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -1510,6 +1513,12 @@
     </ClInclude>
     <ClInclude Include="src\golf\ProfileStateV2.hpp">
       <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BehaviourRabbit.hpp">
+      <Filter>Header Files\golf\client\prop behaviours</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BehaviourLorvis.hpp">
+      <Filter>Header Files\golf\client\prop behaviours</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

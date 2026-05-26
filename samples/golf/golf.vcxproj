@@ -816,6 +816,8 @@
     <ClInclude Include="src\golf\BallTrail.hpp" />
     <ClInclude Include="src\golf\BannerTexture.hpp" />
     <ClInclude Include="src\golf\BeaconCallback.hpp" />
+    <ClInclude Include="src\golf\BehaviourLorvis.hpp" />
+    <ClInclude Include="src\golf\BehaviourRabbit.hpp" />
     <ClInclude Include="src\golf\Billboard.hpp" />
     <ClInclude Include="src\golf\BilliardsClientCollision.hpp" />
     <ClInclude Include="src\golf\BilliardsSoundDirector.hpp" />

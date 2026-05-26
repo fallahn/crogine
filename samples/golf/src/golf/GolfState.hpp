@@ -913,8 +913,9 @@ private:
     std::vector<cro::CubemapTexture> m_cubemaps;
     void buildCubemap(glm::vec3 position, const std::string& filePath);
 
-    //bool m_drawDepthMaps = false; //TODO remove me when done
     bool m_drawDebugMesh;
+
+    void spawnRabbit(glm::vec3);
 
     struct NetworkDebugContext final
     {
