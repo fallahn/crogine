@@ -1093,10 +1093,12 @@ void GolfState::spawnRabbit(glm::vec3 pos)
         entity.addComponent<cro::Transform>().setPosition(pos);
         md.createModel(entity);
 
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+        applyMaterialData(md, material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function = BehaviourRabbit(m_collisionMesh, pos);
-
-        LogI << "Spawned rabbit at " << pos << std::endl;
     }
 }
 

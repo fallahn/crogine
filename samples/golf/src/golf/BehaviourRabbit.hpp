@@ -90,6 +90,13 @@ struct BehaviourRabbit final
                 currentTarget.y = collisionMesh.getTerrain(currentTarget).height;
 
                 targetIndex = (targetIndex + 1) % targetPoints.size();
+
+                /*const auto dir = currentTarget - e.getComponent<cro::Transform>().getPosition();
+                const auto fwd = e.getComponent<cro::Transform>().getForwardVector();
+                const auto start = std::atan2(-fwd.z, fwd.x);
+                const auto end = std::atan2(-dir.z, dir.x);
+
+                e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, end + (cro::Util::Const::PI / 2.f));*/
             }
         }
 
@@ -103,12 +110,14 @@ struct BehaviourRabbit final
                 //9m/s =~ 20mph
                 e.getComponent<cro::Transform>().move(glm::normalize(dir) * 4.f * dt);
                 const auto fwd = e.getComponent<cro::Transform>().getForwardVector();
-                const auto start = std::atan2(-fwd.z, fwd.x);
-                const auto end = std::atan2(-dir.z, dir.x);
+                const auto start = std::atan2(-fwd.z, fwd.x) - (cro::Util::Const::PI / 2.f);
+                const auto end = std::atan2(-dir.z, dir.x) + (cro::Util::Const::PI / 2.f);
 
-                if (std::abs(start - end) > 0.15f)
+                const float rot = cro::Util::Maths::shortestRotation(start, end);
+                const float rotAmt = rot * dt * 5.f;
+                if (std::abs(rotAmt) < std::abs(rot))
                 {
-                    e.getComponent<cro::Transform>().rotate(-cro::Transform::Y_AXIS, cro::Util::Maths::shortestRotation(start, end) * dt * 5.f);
+                    e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rotAmt);
                 }
             }
             else
