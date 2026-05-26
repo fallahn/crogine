@@ -55,6 +55,7 @@ public:
     void handleEvent(const cro::Event&);
     void setHoleDirection(glm::vec3);
     void setDistanceToHole(float d) { m_distanceToHole = d; }
+    void setOnFringe(bool b) { m_onFringe = b; }
     void setClub(float, std::uint8_t terrain); //picks closest club to given distance
     void syncClub(std::int32_t); //matches the club to the remote player's
     float getYaw() const; //yaw in world space (includes facing direction)
@@ -182,6 +183,7 @@ private:
     std::size_t m_bunkerTableIndex;
     std::size_t m_roughTableIndex;
 
+    bool m_onFringe;
     std::int32_t m_terrain;
     std::uint8_t m_lie;
     float m_estimatedDistance;

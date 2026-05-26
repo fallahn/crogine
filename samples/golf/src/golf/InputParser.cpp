@@ -115,6 +115,7 @@ InputParser::InputParser(SharedStateData& sd, cro::Scene* s)
     m_clubOffset        (0),
     m_bunkerTableIndex  (0),
     m_roughTableIndex   (0),
+    m_onFringe          (false),
     m_terrain           (TerrainID::Fairway),
     m_lie               (1),
     m_estimatedDistance (0.f),
@@ -1415,7 +1416,9 @@ void InputParser::updateStroke(float dt)
             if ((m_prevFlags & InputFlag::PrevClub) == 0
                 && (m_inputFlags & InputFlag::PrevClub))
             {
-                const auto MinClub = m_terrain == TerrainID::Fairway && m_distanceToHole < 11.f ? 
+                //we also check terrain so we don't tr putting from a bunker...
+                const auto onFringe = m_terrain == TerrainID::Fairway && m_onFringe;
+                const auto MinClub = onFringe ? 
                     ClubID::Count : ClubID::Putter;
 
                 const auto oldClub = m_currentClub;
@@ -1458,7 +1461,8 @@ void InputParser::updateStroke(float dt)
             if ((m_prevFlags & InputFlag::NextClub) == 0
                 && (m_inputFlags & InputFlag::NextClub))
             {
-                const auto MinClub = m_terrain == TerrainID::Fairway && m_distanceToHole < 11.f ?
+                const auto onFringe = m_terrain == TerrainID::Fairway && m_onFringe;
+                const auto MinClub = onFringe ?
                     ClubID::Count : ClubID::Putter;
 
                 const auto oldClub = m_currentClub;

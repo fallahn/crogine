@@ -5264,9 +5264,9 @@ float GolfState::estimatePuttPower()
     const auto maxDist = Clubs[ClubID::Putter].getTarget(targetDist);
     float guestimation = (targetDist / maxDist);
 
-    //kludge stops the flag recommending too much power 
+    //kludge stops the flag recommending too much power
     //NOTE the base target is only 10, but we've kludged
-    //in a max range of 25m!!         
+    //in a max range of 25m!!
     if (maxDist >= Clubs[ClubID::Putter].getBaseTarget())
     {
         //guestimation = cro::Util::Easing::easeInSine(guestimation);
