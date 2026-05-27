@@ -739,6 +739,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     resources.shaders.loadFromString(ShaderID::Slope, SlopeVertexShader, SlopeFragmentShader);
     auto& slopeShader = resources.shaders.get(ShaderID::Slope);
     m_slopeProperties.positionUniform = slopeShader.getUniformID("u_centrePosition");
+    m_slopeProperties.radiusUniform = slopeShader.getUniformID("u_radius");
     m_slopeProperties.alphaUniform = slopeShader.getUniformID("u_alpha");
     m_slopeProperties.shader = slopeShader.getGLHandle();
     materialID = resources.materials.add(slopeShader);
@@ -1083,6 +1084,13 @@ void TerrainBuilder::applyGrassDensity()
         e.getComponent<cro::Model>().setHidden(m_sharedData.grassDensity == 0);
     }
 #endif
+}
+
+void TerrainBuilder::setDistanceToPin(float d)
+{
+    glUseProgram(m_slopeProperties.shader);
+    glUniform1f(m_slopeProperties.radiusUniform, d);
+    //glUseProgram(0);
 }
 
 //private

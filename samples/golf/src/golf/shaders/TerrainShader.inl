@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -133,6 +133,7 @@ R"(
 
     uniform mat4 u_worldMatrix;
     uniform vec3 u_centrePosition;
+    uniform float u_radius = 25.0;
 
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec2 v_texCoord;
@@ -145,11 +146,11 @@ R"(
     {
         vec4 worldPos = u_worldMatrix * a_position;
         float viewLength = length(u_cameraWorldPosition - u_centrePosition) * 0.75;
-        float radius = clamp(viewLength, MinRadius, MaxRadius);
-        float ratio = min(1.0, viewLength / MaxRadius);
+        float radius = clamp(viewLength, MinRadius, /*MaxRadius*/u_radius);
+        float ratio = min(1.0, viewLength / /*MaxRadius*/u_radius);
 
         float alpha = 1.0 - smoothstep(radius, radius + (7.0 * ratio), length(worldPos.xyz - u_centrePosition));
-        alpha *= (1.0 - smoothstep(MaxRadius, MaxRadius + (1.0 * ratio), length(worldPos.xyz - u_cameraWorldPosition)));
+        alpha *= (1.0 - smoothstep(/*MaxRadius*/u_radius, /*MaxRadius*/u_radius + (1.0 * ratio), length(worldPos.xyz - u_cameraWorldPosition)));
 
         gl_Position = u_viewProjectionMatrix * worldPos;
 

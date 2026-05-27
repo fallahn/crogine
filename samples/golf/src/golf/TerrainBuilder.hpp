@@ -104,6 +104,8 @@ public:
 
     void applyGrassDensity();
 
+    void setDistanceToPin(float);
+
 private:
     static constexpr auto ChunkCount = ChunkVisSystem::RowCount * ChunkVisSystem::ColCount;
     
@@ -190,6 +192,7 @@ private:
     {
         cro::Mesh::Data* meshData = nullptr;
         std::int32_t positionUniform = -1;
+        std::int32_t radiusUniform = -1;
         std::int32_t alphaUniform = -1;
         std::uint32_t shader = 0;
         cro::Entity entity;

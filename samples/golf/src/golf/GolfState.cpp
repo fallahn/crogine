@@ -2995,7 +2995,11 @@ bool GolfState::simulate(float dt)
 
     //this gets used a lot so we'll save on some calls to length()
     m_distanceToHole = glm::length(holeDir);
-
+    if (m_currentPlayer.terrain == TerrainID::Green
+        && !m_holeData[m_currentHole].puttFromTee)
+    {
+        m_terrainBuilder.setDistanceToPin(std::clamp(m_distanceToHole, 10.f, 25.f));
+    }
 
     if (m_sharedData.clientConnection.connected)
     {
