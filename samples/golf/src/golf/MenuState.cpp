@@ -47,6 +47,7 @@ source distribution.
 #include "LightmapProjectionSystem.hpp"
 #include "FireworksSystem.hpp"
 #include "InterpolationSystem.hpp"
+#include "BehaviourRabbit.hpp"
 #include "../Colordome-32.hpp"
 #include "../ErrorCheck.hpp"
 #include "../WebsocketServer.hpp"
@@ -3052,6 +3053,8 @@ void MenuState::createScene()
     camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter(timeOfDay == TimeOfDay::Night ? "02" : "01");
     camEnt.getComponent<cro::AudioEmitter>().play();
 
+    createExtras();
+
     //set up cam / models for ball preview
     createBallScene();    
 
@@ -3496,6 +3499,30 @@ void MenuState::createSnow()
 
     m_windBuffer.addShader(shader);
     m_scaleBuffer.addShader(shader);
+}
+
+void MenuState::createExtras()
+{
+    if (cro::FileSystem::fileExists("dlc/craewall/models/props/rabbit.cmt"))
+    {
+        cro::ModelDefinition md(m_resources);
+        if (md.loadFromFile("dlc/craewall/models/props/rabbit.cmt"))
+        {
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+            applyMaterialData(md, material);
+
+            for (auto i = 0u; i < 3u; ++i)
+            {
+                auto entity = m_backgroundScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({ -13.f, 0.f, 16.f });
+                md.createModel(entity);
+
+                entity.getComponent<cro::Model>().setMaterial(0, material);
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().function = BehaviourRabbit(nullptr, entity.getComponent<cro::Transform>().getPosition(), i);
+            }
+        }
+    }
 }
 
 void MenuState::setVoiceCallbacks()

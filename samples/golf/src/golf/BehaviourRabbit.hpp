@@ -39,20 +39,27 @@ source distribution.
 struct BehaviourRabbit final
 {
     std::vector<std::array<float, 2u>> targetPoints;
-    const CollisionMesh& collisionMesh;
+    const CollisionMesh* collisionMesh = nullptr;
     std::int32_t targetIndex = 0;
     glm::vec3 currentTarget = glm::vec3(0.f);
 
     static constexpr float AreaSize = 3.f;
 
-    BehaviourRabbit(const CollisionMesh& mesh, glm::vec3 basePoint)
+    BehaviourRabbit(const CollisionMesh* mesh, glm::vec3 basePoint, std::uint32_t seed = std::numeric_limits<std::uint32_t>::max())
         : collisionMesh(mesh)
     {
         //the actual mesh won't be loaded when the behaviour is
         //created, so we store a reference and query it at runtime
         const std::array<float, 2u> MinArea = { basePoint.x - AreaSize, -basePoint.z - AreaSize };
         const std::array<float, 2u> MaxArea = { basePoint.x + AreaSize, -basePoint.z + AreaSize };
-        targetPoints = thinks::PoissonDiskSampling(2.f, MinArea, MaxArea, 30, static_cast<std::uint32_t>(std::time(nullptr)));
+        if (seed == std::numeric_limits<std::uint32_t>::max())
+        {
+            targetPoints = thinks::PoissonDiskSampling(2.f, MinArea, MaxArea, 30, static_cast<std::uint32_t>(std::time(nullptr)));
+        }
+        else
+        {
+            targetPoints = thinks::PoissonDiskSampling(2.f, MinArea, MaxArea, 30, seed);
+        }
     }
 
     enum State
@@ -71,8 +78,10 @@ struct BehaviourRabbit final
             e.getComponent<cro::Skeleton>().play(Idle);
 
             glm::vec3 pos = { targetPoints[targetIndex][0], 0.f, -targetPoints[targetIndex][1] };
-            pos.y = collisionMesh.getTerrain(pos).height;
-
+            if (collisionMesh)
+            {
+                pos.y = collisionMesh->getTerrain(pos).height;
+            }
             targetIndex = (targetIndex + 1) % targetPoints.size();
             e.getComponent<cro::Transform>().setPosition(pos);
         }
@@ -87,8 +96,10 @@ struct BehaviourRabbit final
                 e.getComponent<cro::Skeleton>().play(Running);
 
                 currentTarget = { targetPoints[targetIndex][0], 0.f, -targetPoints[targetIndex][1] };
-                currentTarget.y = collisionMesh.getTerrain(currentTarget).height;
-
+                if (collisionMesh)
+                {
+                    currentTarget.y = collisionMesh->getTerrain(currentTarget).height;
+                }
                 targetIndex = (targetIndex + 1) % targetPoints.size();
 
                 /*const auto dir = currentTarget - e.getComponent<cro::Transform>().getPosition();

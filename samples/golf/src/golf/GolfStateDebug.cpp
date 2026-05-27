@@ -37,6 +37,7 @@ source distribution.
 #include "Career.hpp"
 #include "Clubs.hpp"
 #include "MessageIDs.hpp"
+#include "BehaviourRabbit.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -1082,8 +1083,6 @@ void GolfState::buildCubemap(glm::vec3 position, const std::string& path)
     //cro::Console::print("Done!");
 }
 
-#include "BehaviourRabbit.hpp"
-
 void GolfState::spawnRabbit(glm::vec3 pos)
 {
     cro::ModelDefinition md(m_resources);
@@ -1093,12 +1092,12 @@ void GolfState::spawnRabbit(glm::vec3 pos)
         entity.addComponent<cro::Transform>().setPosition(pos);
         md.createModel(entity);
 
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Player]);
         applyMaterialData(md, material);
         entity.getComponent<cro::Model>().setMaterial(0, material);
 
         entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function = BehaviourRabbit(m_collisionMesh, pos);
+        entity.getComponent<cro::Callback>().function = BehaviourRabbit(&m_collisionMesh, pos);
     }
 }
 
