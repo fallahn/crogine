@@ -197,6 +197,7 @@ namespace AchievementID
         Tag,
         PartyPlanner,
         WhatABanger,
+        PeskyKids,
 
         Count
     };

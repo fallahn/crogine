@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -434,7 +434,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             sendAchievement(AchievementID::ISeeNoShips, group.playerInfo[0].client, group.playerInfo[0].player);
             break;
         case TriggerID::Greenhouse:
-            //sendAchievement(AchievementID::PeskyKids, group.playerInfo[0].client, group.playerInfo[0].player);
+            sendAchievement(AchievementID::PeskyKids, group.playerInfo[0].client, group.playerInfo[0].player);
             break;
         case TriggerID::TennisCourt:
             LogI << "Deuce!" << std::endl;

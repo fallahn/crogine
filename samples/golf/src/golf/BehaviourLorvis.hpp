@@ -97,6 +97,7 @@ struct BehaviourLorvis final
                 if (entity.hasComponent<cro::AudioEmitter>())
                 {
                     entity.getComponent<cro::AudioEmitter>().setVelocity(glm::vec3(0.f));
+                    entity.getComponent<cro::AudioEmitter>().play();
                 }
             }
         }
@@ -110,6 +111,10 @@ struct BehaviourLorvis final
                 //player moved
                 state = Chase;
                 entity.getComponent<cro::Skeleton>().play(Run);
+                if (entity.hasComponent<cro::AudioEmitter>())
+                {
+                    entity.getComponent<cro::AudioEmitter>().stop();
+                }
             }
             else
             {

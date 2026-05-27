@@ -902,7 +902,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
 
         case SDLK_F10:
-            spawnGardener(m_holeData[m_currentHole].target);
+        {
+            //spawnGardener(m_holeData[m_currentHole].target);
+            auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+            msg->type = CollisionEvent::Trigger;
+            msg->position = {236.f,1.5f,-102.f};
+            msg->terrain = TriggerID::Greenhouse;
+        }
             break;
 #ifdef CRO_DEBUG_
         case SDLK_F10:
@@ -2903,6 +2909,13 @@ void GolfState::handleMessage(const cro::Message& msg)
                     ControllerEffect::trigger(activeControllerID(m_sharedData.inputBinding.playerID), ControllerEffect::Bounce);
                     break;
                 }
+            }
+        }
+        else if (data.type == CollisionEvent::Trigger)
+        {
+            if (data.terrain == TriggerID::Greenhouse)
+            {
+                spawnGardener(data.position);
             }
         }
     }

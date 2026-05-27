@@ -1123,6 +1123,8 @@ void GolfState::spawnGardener(glm::vec3 pos)
         entity.getComponent<cro::Skeleton>().play(BehaviourLorvis::Run);
         entity.addComponent<cro::CommandTarget>().ID = CommandID::GarbageCollect;
 
+        //NOTE to future me: this will return FALSE if we try to spawn a second one
+        //as the resource is already loaded.
         if (m_resources.audio.load(221002, "dlc/craewall/sound/lorvis_yell.wav"))
         {
             auto& snd = m_resources.audio.get(221002);
@@ -1130,7 +1132,8 @@ void GolfState::spawnGardener(glm::vec3 pos)
             emitter.setLooped(true);
             emitter.setMixerChannel(MixerChannel::Voice);
             emitter.setRolloff(0.1f);
-            emitter.play();
+            emitter.setVolume(0.5f);
+            //emitter.play();
         }
     }
 }

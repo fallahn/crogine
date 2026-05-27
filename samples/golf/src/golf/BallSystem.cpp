@@ -494,7 +494,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //balls with spin disabled rotate on the Y axis while in flight
                 tx.rotate(cro::Transform::Y_AXIS, r * dt);
 
-                //test collision (accounts for ball position not actually being at the centre...
+                //test collision (accounts for ball position not actually being at the centre...)
                 if (const auto manifolds = doSphereCollision(tx.getPosition() + glm::vec3(0.f, Ball::Radius, 0.f), 60.f);
                     !manifolds.empty())
                 {
