@@ -916,6 +916,7 @@ private:
     bool m_drawDebugMesh;
 
     void spawnRabbit(glm::vec3);
+    void spawnGardener(glm::vec3);
 
     struct NetworkDebugContext final
     {

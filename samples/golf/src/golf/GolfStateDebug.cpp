@@ -38,6 +38,7 @@ source distribution.
 #include "Clubs.hpp"
 #include "MessageIDs.hpp"
 #include "BehaviourRabbit.hpp"
+#include "BehaviourLorvis.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -1098,6 +1099,39 @@ void GolfState::spawnRabbit(glm::vec3 pos)
 
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function = BehaviourRabbit(&m_collisionMesh, pos);
+
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::GarbageCollect;
+    }
+}
+
+void GolfState::spawnGardener(glm::vec3 pos)
+{
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("dlc/craewall/models/props/lorvis.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(pos);
+        md.createModel(entity);
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Player]);
+        applyMaterialData(md, material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+
+        auto behaviour = BehaviourLorvis(m_collisionMesh, m_currentPlayer);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function = behaviour;
+        entity.getComponent<cro::Skeleton>().play(BehaviourLorvis::Run);
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::GarbageCollect;
+
+        if (m_resources.audio.load(221002, "dlc/craewall/sound/lorvis_yell.wav"))
+        {
+            auto& snd = m_resources.audio.get(221002);
+            auto& emitter = entity.addComponent<cro::AudioEmitter>(snd);
+            emitter.setLooped(true);
+            emitter.setMixerChannel(MixerChannel::Voice);
+            emitter.setRolloff(0.1f);
+            emitter.play();
+        }
     }
 }
 

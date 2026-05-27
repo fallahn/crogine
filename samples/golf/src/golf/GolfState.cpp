@@ -902,7 +902,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
 
         case SDLK_F10:
-            spawnRabbit(m_holeData[m_currentHole].tee);
+            spawnGardener(m_holeData[m_currentHole].target);
             break;
 #ifdef CRO_DEBUG_
         case SDLK_F10:
@@ -7223,6 +7223,19 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+
+    //remove any extraneous entities
+    cmd.targetFlags = CommandID::GarbageCollect;
+    cmd.action = [this](cro::Entity e, float)
+        {
+            auto msg = postMessage<GolfEvent>(MessageID::GolfMessage);
+            msg->position = e.getComponent<cro::Transform>().getPosition();
+            msg->terrain = TerrainID::Water;
+            msg->type = GolfEvent::BirdHit; //this emulates going out of bounds so we get a particle effect
+
+            m_gameScene.destroyEntity(e);
+        };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //update status
     const std::size_t MaxTitleLen = 220;

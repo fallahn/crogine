@@ -54,7 +54,8 @@ struct CommandID final
         BullsEye        = 0x40000,
         Ghost           = 0x80000, //20
         MeasureWidget   = 0x100000,
-        TeeLight        = 0x200000
+        TeeLight        = 0x200000,
+        GarbageCollect  = 0x400000,
     };
 
     struct UI final

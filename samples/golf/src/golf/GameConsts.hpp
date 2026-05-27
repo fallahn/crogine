@@ -308,14 +308,16 @@ struct SpriteAnimID final
 {
     enum
     {
+        //don't change the order of these! They are embedded in the assets
         Swing = 0,
         Medal,
         BillboardSwing,
         BillboardRewind,
-        Footstep,
+        FootstepPath,
         Pump,
         Swoosh,
-        BillboardPause
+        BillboardPause,
+        FootstepGrass
     };
 };
 
