@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include "MessageIDs.hpp"
 #include <crogine/detail/glm/vec2.hpp>
 
 #include <cstdint>
@@ -86,12 +87,13 @@ struct TriggerID final
         Boat,
         TennisCourt,
         BackWall, //hole 12-15
+        Greenhouse,
 
         Count,
-        FlagStick //TODO we MUST update Messages.hpp if this value changes
+        FlagStick = CollisionEvent::FlagPole //TODO we MUST update Messages.hpp if this value changes
     };
 };
-static_assert(TriggerID::FlagStick == 18, "Update MessageIDs with correct value");
+static_assert(TriggerID::FlagStick == 255, "Update MessageIDs with correct value");
 static_assert(TriggerID::Count < 25, "MAX VALUE REACHED");
 
 static const std::array<std::string, TerrainID::Count> TerrainStrings =

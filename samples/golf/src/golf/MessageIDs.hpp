@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -149,7 +149,7 @@ struct CollisionEvent final
         Timeout = -4,
         Billboard,
         Firework,
-        FlagPole = 18// TriggerID::FlagStick //ugh including Terrain.hpp breaks compilation
+        FlagPole = 255// TriggerID::FlagStick //ugh including Terrain.hpp breaks compilation
     };
     float velocity = 0.f; //squared
     glm::vec3 position = glm::vec3(0.f);

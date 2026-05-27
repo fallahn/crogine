@@ -433,6 +433,9 @@ void GolfState::handleMessage(const cro::Message& msg)
         case TriggerID::Boat:
             sendAchievement(AchievementID::ISeeNoShips, group.playerInfo[0].client, group.playerInfo[0].player);
             break;
+        case TriggerID::Greenhouse:
+            //sendAchievement(AchievementID::PeskyKids, group.playerInfo[0].client, group.playerInfo[0].player);
+            break;
         case TriggerID::TennisCourt:
             LogI << "Deuce!" << std::endl;
             hadTennisBounce = true;
