@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -143,7 +143,9 @@ void GolfState::createCameras()
                     ctx.samples = samples;
                     ctx.width = static_cast<std::uint32_t>(texSize.x);
                     ctx.height = static_cast<std::uint32_t>(texSize.y);
-
+#ifdef STENCIL_SKYBOX
+                    ctx.stencilBuffer = true;
+#endif
                     //ctx.floatingPointStorage = true;
 
                     m_sharedData.antialias =

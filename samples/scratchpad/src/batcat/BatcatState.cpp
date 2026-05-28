@@ -1212,7 +1212,7 @@ void BatcatState::updateView(cro::Camera& cam3D)
     glm::uvec2 size = cro::App::getWindow().getSize();
     size.y = (size.x / 16) * 9;
 
-    m_sceneTexture.create(size.x, size.y);
+    m_sceneTexture.create(size.x, size.y, true, true);
     m_sceneTexture.setSmooth(false);
 
     m_outputTexture.create(size.x, size.y, false);

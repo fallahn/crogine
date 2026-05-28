@@ -3427,10 +3427,21 @@ void GolfState::render()
     }
 
     m_renderTarget.clear(cro::Colour::Black);
+#ifndef STENCIL_SKYBOX
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
+#endif
 #ifndef __APPLE__
     glCheck(glEnable(GL_LINE_SMOOTH));
+#endif
+    //TODO this needs fixed stencil buffers for render targets
+    //and a way for properly blending beacons etc (probably 
+    //needs to be inserted into the new skybox callback?)
+#ifdef STENCIL_SKYBOX
+    glCheck(glEnable(GL_STENCIL_TEST));
+    glCheck(glStencilFunc(GL_ALWAYS, 1, 0xff));
+    glCheck(glStencilMask(0xff));
+    glCheck(glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE));
 #endif
     m_gameScene.render();
 #ifdef CAMERA_TRACK
@@ -3445,7 +3456,13 @@ void GolfState::render()
 #endif
 #ifdef CRO_DEBUG_
 #endif
-
+#ifdef STENCIL_SKYBOX
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glCheck(glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP));
+    glCheck(glStencilFunc(GL_EQUAL, 0, 0xFF));
+    m_skyScene.render();
+    glCheck(glDisable(GL_STENCIL_TEST));
+#endif
     //m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
     m_renderTarget.display();
 

@@ -76,6 +76,8 @@ source distribution.
 #endif
 #define VIEW_SPACE_LIGHTING
 
+//#define STENCIL_SKYBOX
+
 static constexpr float Upscale = 1.f;
 
 struct BullsEye;
