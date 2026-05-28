@@ -590,72 +590,10 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
     for (auto i = 0u; i < cameraCount; ++i)
     {
         const auto& cam = cameraList[i].getComponent<Camera>();
-        const auto& pass = cam.getActivePass();
 
         auto rect = rt.getViewport(cam.viewport);
         glViewport(rect.left, rect.bottom, rect.width, rect.height);
 
-        //TODO the skybox pass ought to be placed between opaque
-        //and transparent passes
-
-        //draw the skybox if enabled
-        if (m_skybox.vbo)
-        {
-            //change depth function so depth test passes when values are equal to depth buffer's content
-            glCheck(glDepthFunc(GL_LEQUAL));
-            glCheck(glEnable(GL_DEPTH_TEST));
-            glCheck(glEnable(GL_CULL_FACE));
-            glCheck(glCullFace(pass.getCullFace()));
-
-            //remove translation from the view matrix
-            auto view = glm::mat4(glm::mat3(pass.viewMatrix)) * m_skybox.modelMatrix;
-
-            glCheck(glUseProgram(m_skyboxShaders[m_shaderIndex].getGLHandle()));
-            glCheck(glUniformMatrix4fv(m_skybox.modelViewUniform, 1, GL_FALSE, glm::value_ptr(view)));
-            glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
-
-            //bind the texture if it exists
-            if (m_activeSkyboxTexture)
-            {
-                glCheck(glActiveTexture(GL_TEXTURE0));
-                glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_activeSkyboxTexture));
-                glCheck(glUniform1i(m_skybox.textureUniform, 0));
-            }
-
-            //set sun colour if shader expects it
-            if (m_skybox.skyColourUniform != -1) //this would be -1 if it doesn't exist, not 0
-            {
-                auto c = m_sunlight.getComponent<Sunlight>().getColour();
-                glCheck(glUniform3f(m_skybox.skyColourUniform, c.getRed(), c.getGreen(), c.getBlue()));
-            }
-
-            //draw cube
-#ifdef PLATFORM_DESKTOP
-            glCheck(glBindVertexArray(m_skybox.vao));
-            glCheck(glDrawArrays(GL_TRIANGLES, 0, 36));
-            glCheck(glBindVertexArray(0));
-#else
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
-
-            const auto& attribs = m_skyboxShader.getAttribMap();
-            glCheck(glEnableVertexAttribArray(attribs[0]));
-            glCheck(glVertexAttribPointer(attribs[0], 3, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(3 * sizeof(float)), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
-
-            glCheck(glDrawArrays(GL_TRIANGLES, 0, 36));
-
-            glCheck(glDisableVertexAttribArray(attribs[0]));
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-#endif //PLATFORM
-            glCheck(glUseProgram(0));
-
-            glDisable(GL_DEPTH_TEST);
-            glCheck(glDepthFunc(GL_LESS));
-        }
-
-        //ideally we want to do this before the skybox to reduce overdraw
-        //but this breaks transparent objects... opaque and transparent
-        //passes should be separated, but this only affects the model renderer
-        //and not other systems.... hum. Ideas on a postcard please.
         for (auto r : m_renderables)
         {
             r->render(cameraList[i], rt);
@@ -664,6 +602,69 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
 
     //restore old view port
     glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
+}
+
+void Scene::renderSkybox(const Camera& cam)
+{
+    //this is passed to renderables via std::bind
+    //and not called directly from here so that
+    //the skybox can be inserted between opaque/blended passes.
+
+    //draw the skybox if enabled
+    if (m_skybox.vbo)
+    {
+        const auto& pass = cam.getActivePass();
+
+        //change depth function so depth test passes when values are equal to depth buffer's content
+        glCheck(glDepthFunc(GL_LEQUAL));
+        glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glEnable(GL_CULL_FACE));
+        glCheck(glCullFace(pass.getCullFace()));
+
+        //remove translation from the view matrix
+        auto view = glm::mat4(glm::mat3(pass.viewMatrix)) * m_skybox.modelMatrix;
+
+        glCheck(glUseProgram(m_skyboxShaders[m_shaderIndex].getGLHandle()));
+        glCheck(glUniformMatrix4fv(m_skybox.modelViewUniform, 1, GL_FALSE, glm::value_ptr(view)));
+        glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
+
+        //bind the texture if it exists
+        if (m_activeSkyboxTexture)
+        {
+            glCheck(glActiveTexture(GL_TEXTURE0));
+            glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_activeSkyboxTexture));
+            glCheck(glUniform1i(m_skybox.textureUniform, 0));
+        }
+
+        //set sun colour if shader expects it
+        if (m_skybox.skyColourUniform != -1) //this would be -1 if it doesn't exist, not 0
+        {
+            auto c = m_sunlight.getComponent<Sunlight>().getColour();
+            glCheck(glUniform3f(m_skybox.skyColourUniform, c.getRed(), c.getGreen(), c.getBlue()));
+        }
+
+        //draw cube
+#ifdef PLATFORM_DESKTOP
+        glCheck(glBindVertexArray(m_skybox.vao));
+        glCheck(glDrawArrays(GL_TRIANGLES, 0, 36));
+        glCheck(glBindVertexArray(0));
+#else
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
+
+        const auto& attribs = m_skyboxShader.getAttribMap();
+        glCheck(glEnableVertexAttribArray(attribs[0]));
+        glCheck(glVertexAttribPointer(attribs[0], 3, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(3 * sizeof(float)), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
+
+        glCheck(glDrawArrays(GL_TRIANGLES, 0, 36));
+
+        glCheck(glDisableVertexAttribArray(attribs[0]));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+#endif //PLATFORM
+        glCheck(glUseProgram(0));
+
+        glDisable(GL_DEPTH_TEST);
+        glCheck(glDepthFunc(GL_LESS));
+    }
 }
 
 void Scene::destroySkybox()

@@ -2500,7 +2500,7 @@ void GolfState::loadMaterials()
     //m_minimapZoom.shaderID = shader->getGLHandle();
     //m_minimapZoom.matrixUniformID = shader->getUniformID("u_coordMatrix");
 
-    //water - this is if we ever get the rain splash pattern working
+    //water
     std::string waterDefines;
     if (m_sharedData.weatherType == WeatherType::Rain
         || m_sharedData.weatherType == WeatherType::Showers)
@@ -2519,6 +2519,8 @@ void GolfState::loadMaterials()
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(*shader);
+    //reduces overdraw by forcing the water to draw after all opaque objects
+    m_resources.materials.get(m_materialIDs[MaterialID::Water]).blendMode = cro::Material::BlendMode::Alpha;
 
     if (!waterDefines.empty())
     {

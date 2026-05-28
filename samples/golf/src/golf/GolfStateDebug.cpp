@@ -1106,6 +1106,11 @@ void GolfState::spawnRabbit(glm::vec3 pos)
 
 void GolfState::spawnGardener(glm::vec3 pos)
 {
+    if (m_achievementTracker.peskyKids)
+    {
+        return;
+    }
+
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("dlc/craewall/models/props/lorvis.cmt"))
     {
@@ -1135,6 +1140,8 @@ void GolfState::spawnGardener(glm::vec3 pos)
             emitter.setVolume(0.5f);
             //emitter.play();
         }
+
+        m_achievementTracker.peskyKids = true;
     }
 }
 

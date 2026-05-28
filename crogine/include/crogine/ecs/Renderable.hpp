@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,9 +34,11 @@ source distribution.
 #include <crogine/graphics/Rectangle.hpp>
 
 #include <array>
+#include <functional>
 
 namespace cro
 {
+    struct Camera;
     class Entity;
     class RenderTarget;
     /*!
@@ -78,6 +80,14 @@ namespace cro
         */
         virtual void render(Entity camera, const RenderTarget& target) = 0;
 
+        /*!
+        \brief Sets the function to render the Scene's skybox.
+        Only applicable to the ModelRenderer which needs to render
+        the skybox between opaqueand transparent passes.
+        */
+        void setSkyboxCallback(const std::function<void(const Camera&)>&);
+
+        
     protected:
         /*!
         \brief Applies the given normalised viewport.
@@ -98,8 +108,14 @@ namespace cro
         */
         virtual void flushEntity(Entity) = 0;
 
+        /*!
+        \brief Calls the Skybox callback set by the Scene using this system
+        */
+        void drawSkybox(const Camera&);
+
     private:
         std::array<std::int32_t, 4> m_previousViewport{};
 
+        std::function<void(const Camera&)> m_skyboxCallback;
     };
 }

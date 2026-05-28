@@ -504,7 +504,7 @@ namespace cro
         //we use a pointer here so we can create an array of just one
         //camera without having to create a vector from it
         void defaultRenderPath(const RenderTarget&, const Entity* cameraList, std::size_t cameraCount);
-
+        void renderSkybox(const Camera&);
         void destroySkybox();
     };
 

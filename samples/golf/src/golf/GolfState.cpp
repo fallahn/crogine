@@ -3445,6 +3445,7 @@ void GolfState::render()
 #endif
 #ifdef CRO_DEBUG_
 #endif
+
     //m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
     m_renderTarget.display();
 

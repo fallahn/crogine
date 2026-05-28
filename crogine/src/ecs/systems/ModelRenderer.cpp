@@ -44,8 +44,8 @@ source distribution.
 #include <crogine/util/Frustum.hpp>
 
 #if defined(DEBUG_WINDOWS) || defined(BENCHMARK)
-#include <crogine/gui/Gui.hpp>
 #endif
+#include <crogine/gui/Gui.hpp>
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
@@ -104,7 +104,7 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
     registerWindow([&]() 
         {
             ImGui::Begin("sdfg");
-
+            ImGui::Text("Skybox %d", drawCount);
             ImGui::End();
         });
 #endif
@@ -325,6 +325,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 #endif
     m_lightUBO.bind();
     
+    bool skyboxDrawn = false;
+
     const auto& camComponent = camera.getComponent<Camera>();
     const auto camIndex = camComponent.getDrawListIndex();
     if (camIndex < m_drawLists.size())
@@ -341,9 +343,16 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
         glCheck(glCullFace(pass.getCullFace()));
 
+        Material::BlendMode previousMode = Material::BlendMode::None;
 
         //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
         const auto& visibleEntities = m_drawLists[camIndex][camComponent.getActivePassIndex()].renderables;
+        if (visibleEntities.empty())
+        {
+            drawSkybox(camComponent);
+            return;
+        }
+
         for (const auto& [entity, sortData] : visibleEntities)
         {
             //may have been marked for deletion - though this should never be true
@@ -368,6 +377,17 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             {
                 const auto& material = model.m_materials[Mesh::IndexData::Final][i];
                 const auto& uniforms = material.uniforms;
+
+                //check if we switch from opaque pass (crude, but I want to prove a point before spending time on a large refactor...)
+                //note that if there are no alpha blended materals this never gets invoked!
+                if (material.blendMode != cro::Material::BlendMode::None
+                    && previousMode == Material::BlendMode::None)
+                {
+                    //draw skybox if it's available
+                    drawSkybox(camComponent);
+                    skyboxDrawn = true;
+                }
+                previousMode = material.blendMode;
 
                 //bind shader
                 glCheck(glUseProgram(material.shader));
@@ -448,6 +468,12 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         glCheck(glDisable(GL_CULL_FACE));
         glCheck(glDisable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
+    }
+
+    if (!skyboxDrawn)
+    {
+        //we only had an opaque pass so this is still pending
+        drawSkybox(camComponent);
     }
 #ifdef BENCHMARK
     if (m_benchmarks.size() <= camIndex) m_benchmarks.resize(camIndex+1); //hmmm we shouldn't need this

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,12 @@ source distribution.
 
 using namespace cro;
 
+//public
+void Renderable::setSkyboxCallback(const std::function<void(const Camera&)>& cb)
+{
+    m_skyboxCallback = cb;
+}
+
 //protected
 IntRect Renderable::applyViewport(FloatRect vp, const RenderTarget& rt)
 {
@@ -49,4 +55,9 @@ IntRect Renderable::applyViewport(FloatRect vp, const RenderTarget& rt)
 void Renderable::restorePreviousViewport()
 {
     glViewport(m_previousViewport[0], m_previousViewport[1], m_previousViewport[2], m_previousViewport[3]);
+}
+
+void Renderable::drawSkybox(const Camera& cam)
+{
+    m_skyboxCallback(cam);
 }
