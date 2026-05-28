@@ -209,6 +209,7 @@ private:
 
     BullsEye m_bullsEye;
 
+    bool doWallCollision(cro::Entity, float);
     void doCollision(cro::Entity);
     void doBallCollision(cro::Entity);
     void doBullsEyeCollision(glm::vec3, std::uint8_t client);
