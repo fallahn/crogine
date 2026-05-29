@@ -594,10 +594,10 @@ void ShadowMapRenderer::render()
 #ifndef PLATFORM_DESKTOP
                 glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
 #endif
-                //hmm we probably want to cull this at the draw list calculation
-                //bu draw lists consider entire entities, not individual meshes
                 for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
                 {
+                    //hmm we probably want to cull this at the draw list calculation
+                    //bu draw lists consider entire entities, not individual meshes
                     if (model.m_materials[Mesh::IndexData::Final][i].null)
                     {
                         continue;

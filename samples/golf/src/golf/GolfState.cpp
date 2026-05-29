@@ -2801,7 +2801,8 @@ void GolfState::handleMessage(const cro::Message& msg)
     case MessageID::CollisionMessage:
     {
         const auto& data = msg.getData<CollisionEvent>();
-        if (data.terrain == TerrainID::Scrub)
+        if (data.terrain == TerrainID::Scrub
+            && !m_holeData[m_currentHole].puttFromTee)
         {
             if (cro::Util::Random::value(0, 2) == 0)
             {
@@ -7271,7 +7272,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
         {
             auto msg = postMessage<GolfEvent>(MessageID::GolfMessage);
             msg->position = e.getComponent<cro::Transform>().getPosition();
-            msg->terrain = TerrainID::Water;
+            msg->terrain = TerrainID::Water; //makes the particle emitter do smoke and not birds
             msg->type = GolfEvent::BirdHit; //this emulates going out of bounds so we get a particle effect
 
             m_gameScene.destroyEntity(e);
@@ -7603,8 +7604,16 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_puttViewState.isEnabled = true;
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
     m_inputParser.setActive(localPlayer && !m_photoMode, /*m_currentPlayer.terrain*/player.terrain, l, isCPU, lie);
-    m_inputParser.setDistanceToHole(glm::length(m_holeData[m_currentHole].pin - player.position));
-    
+    if (m_holeData[m_currentHole].puttFromTee)
+    {
+        //prevent picking 25m club on putting courses
+        m_inputParser.setDistanceToHole(std::min(glm::length(m_holeData[m_currentHole].pin - player.position), 10.f));
+    }
+    else
+    {
+        m_inputParser.setDistanceToHole(glm::length(m_holeData[m_currentHole].pin - player.position));
+    }
+
     const auto searchPos = glm::normalize(m_holeData[m_currentHole].pin - player.position) + player.position;
     m_inputParser.setOnFringe(m_collisionMesh.getTerrain(searchPos).terrain == TerrainID::Green); //tests if we're on fringe and should allow putting
 
@@ -7795,7 +7804,9 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     const bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
         && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
     const auto clubTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
-    m_inputParser.setClub(glm::length(clubTarget - player.position), m_currentPlayer.terrain);
+    //limit the club to 10m when on a putting course
+    const auto d = m_holeData[m_currentHole].puttFromTee ? std::min(glm::length(clubTarget - player.position), 10.f) : glm::length(clubTarget - player.position);
+    m_inputParser.setClub(d, m_currentPlayer.terrain);
 
 
     cmd.targetFlags = CommandID::BullsEye;

@@ -320,7 +320,9 @@ std::int32_t Club::getScaleIndex(float distanceToPin) const
 float Club::getScaledValue(float value, float distanceToPin) const
 {
     if (m_id == ClubID::Putter
-        && distanceToPin > value)
+        //TODO this should be putter baseTarget()
+        //but we're hacking around this to stop the 25m putter on putting courses
+        && distanceToPin > /*value*/11.f)
     {
         return value * 2.5f; //bumps putter up to 25m
     }

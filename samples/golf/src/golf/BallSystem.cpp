@@ -664,7 +664,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
     }
         break;
     case Ball::State::Putt:
-
         ball.delay -= dt;
         if (ball.delay < 0)
         {
@@ -801,7 +800,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             const auto movement = ball.velocity * dt;
             tx.move(movement);
 
-
             //check for wall collision
             if (ball.state == Ball::State::Putt //this may have changed above
                 && m_holeData->puttFromTee)
@@ -812,6 +810,22 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             auto newPos = tx.getPosition();
             terrainContact = getTerrain(newPos);
             ball.terrain = terrainContact.terrain;
+
+
+            //launch the ball when putting off ramps
+            if (terrainContact.penetration < -0.1f //hmm this doesn't work well because of the fudgy way the ball hits the ground from flight mode
+                || (terrainContact.terrain != TerrainID::Green && glm::length2(ball.velocity) > 10.f))
+            {
+                tx.move({ 0.f, 0.1f, 0.f });
+
+                //LogI << terrainContact.penetration << std::endl;
+                ball.state = Ball::State::Flight;
+                ball.delay = 0.f;
+                ball.velocity.y = std::abs(ball.velocity.y) * 1.5f;
+                return;
+            }
+
+
 
             //one final correction to stop jitter
             pinDir = m_holeData->pin - newPos;
@@ -1336,7 +1350,7 @@ bool BallSystem::doWallCollision(cro::Entity entity, float dt)
                 if (surfaceDir > 0)
                 {
                     tx.move((normal * correction));
-                    ball.velocity = glm::reflect(ball.velocity, normal) * 0.5f;
+                    ball.velocity = glm::reflect(ball.velocity, normal) * 0.75f;
                     ball.lastTerrain = TerrainID::Stone; //this will trigger a sound effect when it reaches the client
                     return true;
                 }
@@ -1490,7 +1504,8 @@ void BallSystem::doCollision(cro::Entity entity)
             break;
         case TerrainID::Green:
             //if low bounce start rolling
-            if (ball.velocity.y > MinRollVelocity) // the sooner we start rolling the more velocity we have left to roll :)
+            if (ball.velocity.y > MinRollVelocity
+                || m_holeData->puttFromTee) // the sooner we start rolling the more velocity we have left to roll :)
             {
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
                 startRoll(Ball::State::Putt, ball);
