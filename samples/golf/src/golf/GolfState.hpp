@@ -144,6 +144,9 @@ public:
     cro::StateID getStateID() const override { return StateID::Golf; }
 
 private:
+    std::vector<float> m_debugCurve;
+
+
     cro::ResourceCollection m_resources;
     cro::DynamicAudioStream m_musicStream;
     cro::VideoPlayer m_billboardVideo;

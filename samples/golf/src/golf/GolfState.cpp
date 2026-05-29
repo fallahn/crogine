@@ -904,10 +904,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F10:
         {
             //spawnGardener(m_holeData[m_currentHole].target);
-            auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+            /*auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
             msg->type = CollisionEvent::Trigger;
             msg->position = {236.f,1.5f,-102.f};
-            msg->terrain = TriggerID::Greenhouse;
+            msg->terrain = TriggerID::Greenhouse;*/
+            m_debugCurve.clear();
         }
             break;
 #ifdef CRO_DEBUG_
@@ -2933,6 +2934,11 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 bool GolfState::simulate(float dt)
 {
+    if (m_inputParser.inProgress())
+    {
+        m_debugCurve.push_back(m_inputParser.getPower());
+    }
+
     //while this mostly does nothing it would be nice
     //to be able to stop/start it when only a hole requires it
     m_billboardVideo.update(dt);

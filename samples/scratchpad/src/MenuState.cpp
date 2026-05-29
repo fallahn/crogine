@@ -323,6 +323,14 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
     m_musicName = "No File";
 
 
+    registerWindow([this]()
+        {
+            ImGui::Begin("Curves");
+            ImGui::PlotLines("Linear", m_linearPower.data(), m_linearPower.size());
+            ImGui::PlotLines("Curved", m_curvedPower.data(), m_linearPower.size());
+            ImGui::End();
+        });
+
     //registerWindow(std::bind(&MenuState::odinWindow, this));
 
     /*auto* fonts = ImGui::GetIO().Fonts;
@@ -1093,6 +1101,42 @@ void MenuState::createScene()
 
 void MenuState::createUI()
 {
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [this](cro::Entity e, float dt)
+        {
+            static float direction = 1.f;
+            static constexpr float MaxVal = 1.f;
+
+            auto& p = e.getComponent<cro::Callback>().getUserData<float>();
+            p = std::min(p + (dt */* 0.75f **/ direction), MaxVal);
+
+            if (p == MaxVal
+                || p == 0)
+            {
+                direction *= -1.f;
+            }
+
+            static constexpr std::size_t MaxSamples = 240;
+            m_linearPower.push_back(p);
+            /*if (m_linearPower.size() == MaxSamples)
+            {
+                m_linearPower.pop_front();
+            }*/
+
+            static constexpr float MinPower = 0.01f;
+            static constexpr float MaxPower = 0.99f;
+
+            m_curvedPower.push_back(MinPower + (MaxPower * cro::Util::Easing::easeInSine(std::min(p, 1.f))));
+            /*if (m_curvedPower.size() == MaxSamples)
+            {
+                m_curvedPower.pop_front();
+            }*/
+        };
+
+
     m_fileBrowser.SetTitle("File Browser");
     m_fileBrowser.SetWindowSize(640, 480);
 

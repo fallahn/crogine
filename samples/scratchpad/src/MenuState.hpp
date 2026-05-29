@@ -47,6 +47,53 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/gui/Gui.hpp>
 
+#include <array>
+
+template <class T, std::size_t s>
+class CircularBuffer final
+{
+public:
+    CircularBuffer()
+        : m_head(0), m_tail(0)
+    {
+
+    }
+
+    const T* data() const
+    {
+        return m_buffer.data();
+    }
+
+    const T& front() const
+    {
+        return m_buffer[m_head];
+    }
+
+    const T& back() const
+    {
+        return m_buffer[m_tail];
+    }
+
+    void push_back(T v)
+    {
+        m_buffer[m_tail] = v;
+        m_tail = (m_tail + 1) % s;
+    }
+
+    void pop_front()
+    {
+        m_head = (m_head + 1) % s;
+    }
+
+    const std::size_t size() const { return m_buffer.size(); }
+
+private:
+
+    std::size_t m_head;
+    std::size_t m_tail;
+    std::array<T, s> m_buffer;
+};
+
 class MyApp;
 namespace sp
 {
@@ -78,6 +125,9 @@ namespace sp
         std::string m_musicName;
 
         ImGui::FileBrowser m_fileBrowser;
+
+        CircularBuffer<float, 120> m_linearPower;
+        CircularBuffer<float, 120> m_curvedPower;
 
         Aer m_aer;
 

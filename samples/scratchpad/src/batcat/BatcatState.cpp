@@ -893,7 +893,6 @@ void BatcatState::createUI()
     //        e.getComponent<cro::UIElement>().relativePosition = { 0.f, y / size.y };
     //    };
 
-
     registerWindow([&, outputEnt, edgeEnt, weightEnt, ent]() mutable
         {
             if (ImGui::Begin("SMAA"))

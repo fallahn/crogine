@@ -943,6 +943,16 @@ void GolfState::registerDebugWindows()
         });
 #endif
 
+    registerWindow([this]() 
+        {
+            ImGui::Begin("Curve");
+            if (!m_debugCurve.empty())
+            {
+                ImGui::PlotLines("Curve", m_debugCurve.data(), m_debugCurve.size(), 0, 0, FLT_MAX, FLT_MAX, ImVec2(0.f, 40.f));
+            }
+            ImGui::End();
+        });
+
     //registerWindow([&]()
     //    {
     //        if (ImGui::Begin("Target Info"))
