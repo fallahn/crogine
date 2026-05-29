@@ -294,6 +294,12 @@ namespace cro
             bool doubleSided = false;
 
             /*!
+            \brief Set this to true and all meshes with this material
+            are completely ignored when rendering
+            */
+            bool null = false;
+
+            /*!
             \brief Add up to 8 custom settings
             \param setting GLenum to be used with glEnable/glDisable
             Use sparingly - each of these are enabled before rendering

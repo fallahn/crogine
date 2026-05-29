@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -594,9 +594,15 @@ void ShadowMapRenderer::render()
 #ifndef PLATFORM_DESKTOP
                 glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
 #endif
-
+                //hmm we probably want to cull this at the draw list calculation
+                //bu draw lists consider entire entities, not individual meshes
                 for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
                 {
+                    if (model.m_materials[Mesh::IndexData::Final][i].null)
+                    {
+                        continue;
+                    }
+
                     const auto& mat = model.m_materials[Mesh::IndexData::Shadow][i];
                     //CRO_ASSERT(mat.shader, "Missing Shadow Cast material.");
                     //some sub-meshes aren't written to the depth map if they don't receive shadows

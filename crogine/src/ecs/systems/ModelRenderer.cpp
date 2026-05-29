@@ -751,6 +751,11 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
                 //add ent/index pair to alpha or opaque list
                 for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
                 {
+                    if (model.m_materials[Mesh::IndexData::Final][i].null)
+                    {
+                        continue;
+                    }
+
                     if (model.m_materials[Mesh::IndexData::Final][i].blendMode != Material::BlendMode::None)
                     {
                         transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
