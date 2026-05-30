@@ -708,6 +708,7 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
         glCheck(glEnable(GL_CULL_FACE));
         glCheck(glCullFace(pass.getCullFace()));
         glCheck(glEnable(GL_BLEND));
+        glCheck(glBlendEquation(GL_FUNC_ADD));
         glCheck(glEnable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_FALSE));
         ENABLE_POINT_SPRITES;

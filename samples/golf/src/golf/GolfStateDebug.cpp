@@ -950,6 +950,8 @@ void GolfState::registerDebugWindows()
             {
                 ImGui::PlotLines("Curve", m_debugCurve.data(), m_debugCurve.size(), 0, 0, FLT_MAX, FLT_MAX, ImVec2(0.f, 40.f));
             }
+            ImGui::Text("Scene Water Level %3.3f", m_gameScene.getWaterLevel());
+            ImGui::Text("Entity level %3.3f", m_waterEnt.getComponent<cro::Transform>().getPosition().y);
             ImGui::End();
         });
 

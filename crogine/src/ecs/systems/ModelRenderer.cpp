@@ -335,7 +335,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         
         const auto& pass = camComponent.getActivePass();
         //why did we have this offset here??
-        glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() /*+ (0.08f * pass.getClipPlaneMultiplier())*/) * pass.getClipPlaneMultiplier();
+        glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel()/* + (0.08f * pass.getClipPlaneMultiplier())*/) * pass.getClipPlaneMultiplier();
 
         const auto& camTx = camera.getComponent<Transform>();
         auto cameraPosition = camTx.getWorldPosition();
@@ -1070,6 +1070,11 @@ void ModelRenderer::applyBlendMode(const Material::Data& material)
     {
     default: break;
     case Material::BlendMode::Custom:
+        for (auto e : material.blendData.disableProperties)
+        {
+            glCheck(glDisable(e));
+        }
+        
         CRO_ASSERT(!material.blendData.enableProperties.empty(), "You'll probably want at least GL_BLEND and GL_DEPTH_TEST");
         for (auto e : material.blendData.enableProperties)
         {

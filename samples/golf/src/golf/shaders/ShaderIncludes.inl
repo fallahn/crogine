@@ -305,7 +305,7 @@ vec3 dim(vec3 c)
     return mix(dimmed, desat, desatAmount * DESAT);
 })";
 
-static inline const std::string IncWaterLevel = R"(const float WaterLevel = -0.019;)";
+static inline const std::string IncWaterLevel = R"(const float WaterLevel = -0.021;)";
 
 static inline const std::string ClipDistance = R"(gl_ClipDistance[1] = dot(position, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));)";
 

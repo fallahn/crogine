@@ -2519,8 +2519,16 @@ void GolfState::loadMaterials()
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(*shader);
+
     //reduces overdraw by forcing the water to draw after all opaque objects
-    m_resources.materials.get(m_materialIDs[MaterialID::Water]).blendMode = cro::Material::BlendMode::Alpha;
+    auto& waterMat = m_resources.materials.get(m_materialIDs[MaterialID::Water]);
+    waterMat.blendMode = cro::Material::BlendMode::Custom;
+    cro::Material::Data::BlendData blendData;
+    blendData.writeDepthMask = GL_TRUE;
+    blendData.disableProperties.push_back(GL_BLEND);
+    blendData.enableProperties.push_back(GL_DEPTH_TEST);
+    waterMat.blendData = blendData;
+
 
     if (!waterDefines.empty())
     {

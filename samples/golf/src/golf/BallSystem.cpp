@@ -814,7 +814,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             //launch the ball when putting off ramps
             if (//terrainContact.penetration < -0.1f //hmm this doesn't work well because of the fudgy way the ball hits the ground from flight mode
-                /*||*/ (terrainContact.terrain != TerrainID::Green && glm::length2(ball.velocity) > 10.f))
+                /*||*/ m_holeData->puttFromTee &&
+                (terrainContact.terrain != TerrainID::Green && glm::length2(ball.velocity) > 10.f))
             {
                 tx.move({ 0.f, 0.1f, 0.f });
 
