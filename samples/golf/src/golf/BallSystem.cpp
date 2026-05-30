@@ -463,7 +463,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             if (doWallCollision(entity, dt))
             {
-                LogI << "Wall collision" << std::endl;
                 return;
             }
             //else restore and do regular collision
@@ -813,8 +812,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
 
             //launch the ball when putting off ramps
-            if (//terrainContact.penetration < -0.1f //hmm this doesn't work well because of the fudgy way the ball hits the ground from flight mode
-                /*||*/ m_holeData->puttFromTee &&
+            if ( m_holeData->puttFromTee &&
                 (terrainContact.terrain != TerrainID::Green && glm::length2(ball.velocity) > 10.f))
             {
                 tx.move({ 0.f, 0.1f, 0.f });
@@ -823,6 +821,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 ball.state = Ball::State::Flight;
                 ball.delay = 0.f;
                 ball.velocity.y = std::abs(ball.velocity.y) * 1.5f;
+                ball.velocity *= 1.5f;
                 return;
             }
 
@@ -1350,8 +1349,10 @@ bool BallSystem::doWallCollision(cro::Entity entity, float dt)
                 //to figure out how far back along the velocity path to move                            
                 if (surfaceDir > 0)
                 {
+                    const float reduction = ball.state == Ball::State::Putt ? 0.75f : 0.95f;
+
                     tx.move((normal * correction));
-                    ball.velocity = glm::reflect(ball.velocity, normal) * 0.75f;
+                    ball.velocity = glm::reflect(ball.velocity, normal) * reduction;
                     ball.lastTerrain = TerrainID::Stone; //this will trigger a sound effect when it reaches the client
                     return true;
                 }
@@ -1504,9 +1505,24 @@ void BallSystem::doCollision(cro::Entity entity)
             ball.spin *= SpinReduction[terrainResult.terrain];
             break;
         case TerrainID::Green:
+            if (m_holeData->puttFromTee)
+            {
+                //special case if we tried jumping the ball on a putting course
+                if (ball.velocity.y < 0 && ball.velocity.y > MinRollVelocity)
+                {
+                    ball.state = Ball::State::Putt;
+                    ball.delay = 0.f;
+                    return;
+                }
+                else
+                {
+                    ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
+                    ball.velocity *= 0.5f;
+                }
+            }
+            
             //if low bounce start rolling
-            if (ball.velocity.y > MinRollVelocity
-                || m_holeData->puttFromTee) // the sooner we start rolling the more velocity we have left to roll :)
+            else if (ball.velocity.y > MinRollVelocity) // the sooner we start rolling the more velocity we have left to roll :)
             {
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
                 startRoll(Ball::State::Putt, ball);
