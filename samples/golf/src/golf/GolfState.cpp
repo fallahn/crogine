@@ -908,7 +908,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             msg->type = CollisionEvent::Trigger;
             msg->position = {236.f,1.5f,-102.f};
             msg->terrain = TriggerID::Greenhouse;*/
-            m_debugCurve.clear();
+            //m_debugCurve.clear();
         }
             break;
 #ifdef CRO_DEBUG_
@@ -2088,7 +2088,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                                 auto club = getClub();
                                 if (club == ClubID::Putter)
                                 {
-                                    auto str = Clubs[ClubID::Putter].getName(m_sharedData.imperialMeasurements, m_distanceToHole);
+                                    const auto str = Clubs[ClubID::Putter].getName(m_sharedData.imperialMeasurements, m_distanceToHole);
                                     e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
                                 }
                                 else
@@ -2935,10 +2935,10 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 bool GolfState::simulate(float dt)
 {
-    if (m_inputParser.inProgress())
+    /*if (m_inputParser.inProgress())
     {
         m_debugCurve.push_back(m_inputParser.getPower());
-    }
+    }*/
 
     //while this mostly does nothing it would be nice
     //to be able to stop/start it when only a hole requires it
@@ -7184,7 +7184,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 
     m_currentPlayer.position = m_holeData[m_currentHole].tee;
 
-
+    Club::clampMaxScale(m_holeData[m_currentHole].puttFromTee);
     m_inputParser.setHoleDirection(m_holeData[m_currentHole].target - m_currentPlayer.position);
     m_currentPlayer.terrain = m_holeData[m_currentHole].puttFromTee ? TerrainID::Green : TerrainID::Fairway; //this will be overwritten from the server but setting this to non-green makes sure the mini cam stops updating in time
     m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin, true); //limits club selection based on hole size
@@ -7604,15 +7604,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_puttViewState.isEnabled = true;
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
     m_inputParser.setActive(localPlayer && !m_photoMode, /*m_currentPlayer.terrain*/player.terrain, l, isCPU, lie);
-    if (m_holeData[m_currentHole].puttFromTee)
-    {
-        //prevent picking 25m club on putting courses
-        m_inputParser.setDistanceToHole(std::min(glm::length(m_holeData[m_currentHole].pin - player.position), 10.f));
-    }
-    else
-    {
-        m_inputParser.setDistanceToHole(glm::length(m_holeData[m_currentHole].pin - player.position));
-    }
+    m_inputParser.setDistanceToHole(glm::length(m_holeData[m_currentHole].pin - player.position));
 
     const auto searchPos = glm::normalize(m_holeData[m_currentHole].pin - player.position) + player.position;
     m_inputParser.setOnFringe(m_collisionMesh.getTerrain(searchPos).terrain == TerrainID::Green); //tests if we're on fringe and should allow putting

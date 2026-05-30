@@ -64,7 +64,7 @@ int main(int argc, char** argsv)
     WebSock::stop();
 
 #ifdef _WIN32
-    if (safeMode)
+    if (argc > 1)
     {
         FreeConsole();
     }

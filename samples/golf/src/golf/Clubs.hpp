@@ -158,6 +158,7 @@ public:
 
     std::int32_t getScaleIndex(float) const; //0, 1 or 2 for putter else 2, based on distance to the pin
 
+    static void clampMaxScale(bool); //onyl used for putter - stops the scale going up to 25 metres if true
 private:
     const std::int32_t m_id = -1;
     std::string m_name; //displayed in UI
@@ -173,6 +174,8 @@ private:
     static constexpr float ShortRangeThreshold = ShortRange * 0.8f;
     static constexpr float TinyRange = 1.f / 10.f;
     static constexpr float TinyRangeThreshold = TinyRange * 0.5f;
+
+    static float m_maxScale;
 
     //this only applies to the putter and scales the value based on
     //the current distance to the pin

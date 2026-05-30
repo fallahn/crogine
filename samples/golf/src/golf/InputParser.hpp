@@ -55,6 +55,7 @@ public:
     void handleEvent(const cro::Event&);
     void setHoleDirection(glm::vec3);
     void setDistanceToHole(float d) { m_distanceToHole = d; }
+    float getDistanceToHole() const { return m_distanceToHole; }
     void setOnFringe(bool b) { m_onFringe = b; }
     void setClub(float, std::uint8_t terrain); //picks closest club to given distance
     void syncClub(std::int32_t); //matches the club to the remote player's

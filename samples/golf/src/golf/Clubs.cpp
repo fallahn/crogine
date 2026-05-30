@@ -125,6 +125,7 @@ namespace
 }
 
 bool Club::m_fixedPuttingDistance = false;
+float Club::m_maxScale = ClubStats[ClubID::Putter].stats[0].target;
 
 Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin)
     : m_id      (id), 
@@ -316,13 +317,24 @@ std::int32_t Club::getScaleIndex(float distanceToPin) const
     return 2;
 }
 
+void Club::clampMaxScale(bool c)
+{
+    if (c)
+    {
+        m_maxScale = 1000.f;
+    }
+    else
+    {
+        m_maxScale = ClubStats[ClubID::Putter].stats[0].target;
+    }
+}
+
 //private
 float Club::getScaledValue(float value, float distanceToPin) const
 {
     if (m_id == ClubID::Putter
-        //TODO this should be putter baseTarget()
-        //but we're hacking around this to stop the 25m putter on putting courses
-        && distanceToPin > /*value*/11.f)
+        //we're hacking around this to stop the 25m putter on putting courses
+        && distanceToPin > /*value*/m_maxScale)
     {
         return value * 2.5f; //bumps putter up to 25m
     }
