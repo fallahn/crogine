@@ -1938,8 +1938,11 @@ void GolfState::startFlyBy()
                 camTx.setRotation(rot);
 
                 auto pos = interpolate(glm::vec3(data.targets[data.currentTarget][3]), glm::vec3(data.targets[data.currentTarget + 1][3]), data.ease(data.progress));
-                const auto height = m_collisionMesh.getTerrain(pos).height;
-                pos.y = std::max(height + 2.f, pos.y); //prevent camera clipping into the ground
+                if (!m_holeData[m_currentHole].puttFromTee)
+                {
+                    const auto height = m_collisionMesh.getTerrain(pos).height;
+                    pos.y = std::max(height + 2.f, pos.y); //prevent camera clipping into the ground
+                }
                 camTx.setPosition(pos);
             }
         };
