@@ -48,6 +48,15 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_access.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 
+//I can't think of a simpler way to disable this right now
+//but I need to test if there's a threading/contention thing
+//going on here causing stutters
+#ifndef PARALLEL_DISABLE
+#define PARALLEL_DISABLE
+#define PARALLEL_SUSPENDED
+#endif
+
+
 #ifdef PARALLEL_DISABLE
 #undef USE_PARALLEL_PROCESSING
 #endif
@@ -354,7 +363,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
         const auto worldMat = camEnt.getComponent<cro::Transform>().getWorldTransform();
         auto corners = camera.getFrustumSplits(); //copy this as we'll transform it into world coords
-        glm::vec3 lightDir = -getScene()->getSunlight().getComponent<Sunlight>().getDirection();
+        const glm::vec3 lightDir = -getScene()->getSunlight().getComponent<Sunlight>().getDirection();
 
         for (auto i = 0u; i < corners.size(); ++i)
         {
@@ -788,4 +797,8 @@ void ShadowMapRenderer::flushEntity(Entity e)
 #ifndef PARALLEL_GLOBAL_DISABLE
 #define USE_PARALLEL_PROCESSING
 #endif
+#endif
+
+#ifdef PARALLEL_SUSPENDED
+#undef PARALLEL_DISABLE
 #endif
