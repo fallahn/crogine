@@ -744,6 +744,7 @@ void TextChat::toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckIn
 
 #ifdef USE_GNS
     if (Social::isSteamdeck()
+        && cro::GameController::getControllerCount() != 0 //big picture mode might require keyboard input
         && enableDeckInput
         /*&& !m_visible*/)
     {
@@ -925,7 +926,7 @@ void TextChat::sendTextChat()
 bool TextChat::speak(const cro::String& str) const
 {
 #ifdef _WIN32
-    if (!Social::isSteamdeck() &&
+    if (!Social::isSteamdeck(false) && //not sure why the check for steam deck is here if it's conditionally compiled out
         m_sharedData.useTTS)
     {
         if (m_speaker.voice != nullptr)
