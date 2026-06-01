@@ -1691,7 +1691,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
     entity.addComponent<cro::Callback>().setUserData<float>(1.f);
     entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [this](cro::Entity e, float dt)
         {
             auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
             ct = std::max(0.f, ct - (dt * 8.f));
@@ -1703,6 +1703,15 @@ void GolfState::buildUI()
                 ct = 1.f;
             }
             e.getComponent<cro::Transform>().setScale(glm::vec2(ct, 1.f));
+
+            if (m_currentPlayer.terrain == TerrainID::Green)
+            {
+                e.getComponent<cro::Drawable2D>().setDoubleSided(true);
+            }
+            else
+            {
+                e.getComponent<cro::Drawable2D>().setDoubleSided(false);
+            }
         };
     m_minimapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_minimapTrail = entity;

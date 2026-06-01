@@ -151,6 +151,7 @@ void MenuState::createScene()
                 ImGui::Text("Vendor: %s", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
                 const auto size = cro::App::getWindow().getSize();
                 ImGui::Text("Window size: %u, %u", size.x, size.y);
+                ImGui::Text("Press F1 for more information");
             }
             ImGui::End();
         });

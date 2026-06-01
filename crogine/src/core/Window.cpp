@@ -157,6 +157,8 @@ void Window::setVsyncEnabled(bool enabled)
         {
             std::string e = enabled ? "Enabled - " : "Disabled - ";
             LogE << "SDL: Failed to set VSync to " << e << SDL_GetError() << std::endl;
+
+            FileSystem::showMessageBox("OpenGL Error", "Failed setting v-sync.\nEnsure OpenGL is available and drivers are up to date.", FileSystem::OK, FileSystem::Error);
         }
     }
 }
