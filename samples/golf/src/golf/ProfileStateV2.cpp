@@ -1935,11 +1935,17 @@ void ProfileStateV2::createBodyItems()
                 break;
             }
         };
+    
+    auto c = 1;
     for (auto i = 0u; i < m_avatarModels.size(); ++i)
     {
         if (m_avatarModels[i].previewModel.isValid())
         {
-            item->labels.push_back(std::to_string(i + 1));
+            item->labels.push_back(std::to_string(c++));
+        }
+        else
+        {
+            LogI << " invalid entity" << std::endl;
         }
     }
     item->selectedIndex = m_avatarIndex;
@@ -3151,7 +3157,10 @@ void ProfileStateV2::loadAvatarPreviews()
 
             auto entity = m_previewScene.createEntity();
             entity.addComponent<cro::Transform>().setOrigin(AvatarPos);
-            avatar.createModel(entity);
+            if (!avatar.createModel(entity))
+            {
+                LogE << avatar.getSource() << ": failed to load!" << std::endl;
+            }
             entity.getComponent<cro::Model>().setHidden(true);
 
             auto material = m_profileData.profileMaterials.avatar;
@@ -3202,6 +3211,11 @@ void ProfileStateV2::loadAvatarPreviews()
             avt.type = m_sharedData.avatarInfo[i].type;
             avt.previewIndex = previewIndex++;
 
+            if (!entity.isValid())
+            {
+                LogI << avt.type << std::endl;
+                LogI << "entity: " << entity.getLabel() << " is not valid!" << std::endl;
+            }
             //these are unique models from the menu so we'll 
             //need to capture their attachment points once again...
             if (entity.hasComponent<cro::Skeleton>())

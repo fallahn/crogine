@@ -207,6 +207,11 @@ namespace cro
         */
         bool hasTag(std::size_t index, const std::string& tag) const;
 
+        /*!
+        \brief Returns the name of the model definition files the last loading attempt was made from
+        */
+        const std::string& getSource() const { return m_fileName; }
+
     private:
         ResourceCollection& m_resources;
         EnvironmentMap* m_envMap;
