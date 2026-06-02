@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,12 +30,12 @@ source distribution.
 #pragma once
 
 #include "HoleData.hpp"
+#include "PracticeCommon.hpp"
 
 #include <crogine/ecs/Director.hpp>
 
 #include <vector>
  
-static constexpr glm::vec3 PlayerPosition(0.f, 2.5f, 121.f);
 
 class DrivingRangeDirector final : public cro::Director
 {

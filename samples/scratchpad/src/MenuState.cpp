@@ -55,6 +55,7 @@ source distribution.
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/graphics/SimpleVertexArray.hpp>
 
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Random.hpp>
@@ -1039,7 +1040,7 @@ void MenuState::createScene()
     };
 
     //spawns random stuff to test Drawable2D (re)allocation of vertex data
-    /*const auto spawnRandom = 
+    /*const auto spawnRandom =
         [&, sheet]()
         {
             auto e = m_scene.createEntity();
@@ -1101,40 +1102,88 @@ void MenuState::createScene()
 
 void MenuState::createUI()
 {
-    auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    entity.getComponent<cro::Callback>().function =
-        [this](cro::Entity e, float dt)
-        {
-            static float direction = 1.f;
-            static constexpr float MaxVal = 1.f;
+    //auto entity = m_scene.createEntity();
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    //entity.getComponent<cro::Callback>().function =
+    //    [this](cro::Entity e, float dt)
+    //    {
+    //        static float direction = 1.f;
+    //        static constexpr float MaxVal = 1.f;
 
-            auto& p = e.getComponent<cro::Callback>().getUserData<float>();
-            p = std::min(p + (dt */* 0.75f **/ direction), MaxVal);
+    //        auto& p = e.getComponent<cro::Callback>().getUserData<float>();
+    //        p = std::min(p + (dt */* 0.75f **/ direction), MaxVal);
 
-            if (p == MaxVal
-                || p == 0)
-            {
-                direction *= -1.f;
-            }
+    //        if (p == MaxVal
+    //            || p == 0)
+    //        {
+    //            direction *= -1.f;
+    //        }
 
-            static constexpr std::size_t MaxSamples = 240;
-            m_linearPower.push_back(p);
-            /*if (m_linearPower.size() == MaxSamples)
-            {
-                m_linearPower.pop_front();
-            }*/
+    //        static constexpr std::size_t MaxSamples = 240;
+    //        m_linearPower.push_back(p);
 
-            static constexpr float MinPower = 0.01f;
-            static constexpr float MaxPower = 0.99f;
+    //        static constexpr float MinPower = 0.01f;
+    //        static constexpr float MaxPower = 0.99f;
 
-            m_curvedPower.push_back(MinPower + (MaxPower * cro::Util::Easing::easeInSine(std::min(p, 1.f))));
-            /*if (m_curvedPower.size() == MaxSamples)
-            {
-                m_curvedPower.pop_front();
-            }*/
-        };
+    //        m_curvedPower.push_back(MinPower + (MaxPower * cro::Util::Easing::easeInSine(std::min(p, 1.f))));
+    //    };
+
+//    cro::Texture t;
+//    cro::RenderTexture rt;
+//
+//    constexpr glm::vec2 size = glm::vec2(174.f, 108.f);
+//    cro::SimpleVertexArray q;
+//    q.setPrimitiveType(GL_TRIANGLE_STRIP);
+//    q.setVertexData({
+//        cro::Vertex2D(glm::vec2(0.f, size.y), glm::vec2(0.f, 1.f)),
+//        cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.f)),
+//        cro::Vertex2D(size, glm::vec2(1.f)),
+//        cro::Vertex2D(glm::vec2(size.x, 0.f), glm::vec2(1.f, 0.f)),
+//        });
+//    q.setOrigin(size / 2.f);
+//
+//    const std::string f = 
+//R"(
+//OUTPUT
+//
+//uniform sampler2D u_texture;
+//
+//VARYING_IN vec2 v_texCoord;
+//VARYING_IN vec4 v_colour;
+//
+//void main()
+//{
+//FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour;
+//FRAG_OUT.a *= smoothstep(0.0, 0.5, v_texCoord.y) * 0.45;
+//
+//})";
+//
+//    cro::Shader s;
+//    s.loadFromString(cro::SimpleDrawable::getDefaultVertexShader(), f);
+//    q.setShader(s);
+//    q.setBlendMode(cro::Material::BlendMode::None);
+//
+//    rt.create(174, 108, false);
+//    //const float scale = 108.f / 240.f;
+//
+//    const auto& files = cro::FileSystem::listFiles("assets/flags");
+//    for (const auto& file : files)
+//    {
+//        t.loadFromFile("assets/flags/" + file);
+//        t.setSmooth(true);
+//        q.setTexture(t);
+//        //q.setOrigin(glm::vec2(t.getSize()) / 2.f);
+//        q.setPosition({ 54.f, 70.f });
+//        q.setRotation(8.5f);
+//        //q.setScale({ scale, scale });
+//
+//        rt.clear(cro::Colour::Transparent);
+//        q.draw();
+//        rt.display();
+//
+//        rt.getTexture().saveToFile("assets/flags/output/" + file);
+//    }
 
 
     m_fileBrowser.SetTitle("File Browser");

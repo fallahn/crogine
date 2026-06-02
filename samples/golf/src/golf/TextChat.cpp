@@ -430,7 +430,8 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                     ImGui::EndChild();
                     ImGui::Separator();
 
-                    if (!Social::isSteamdeck())
+                    if (!Social::isSteamdeck()
+                        || cro::GameController::getControllerCount() == 0) //big picture but with no controllers
                     {
                         if (ImGui::InputText("##ip", &m_inputBuffer, 
                             ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory, &historyCallback))

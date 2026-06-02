@@ -729,6 +729,12 @@
     <ClCompile Include="src\golf\ProfileStateV2.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\ChipInState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ChipInStateUI.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -1519,6 +1525,12 @@
     </ClInclude>
     <ClInclude Include="src\golf\BehaviourLorvis.hpp">
       <Filter>Header Files\golf\client\prop behaviours</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ChipInState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PracticeCommon.hpp">
+      <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

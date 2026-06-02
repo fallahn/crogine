@@ -63,13 +63,13 @@ namespace inv
 
 struct SharedStateData;
 struct SharedProfileData;
-class DrivingState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
+class ChipInState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
-    DrivingState(cro::StateStack&, cro::State::Context, SharedStateData&, const SharedProfileData&);
-    ~DrivingState();
+    ChipInState(cro::StateStack&, cro::State::Context, SharedStateData&, const SharedProfileData&);
+    ~ChipInState();
 
-    cro::StateID getStateID() const override { return StateID::DrivingRange; }
+    cro::StateID getStateID() const override { return StateID::ChipIn; }
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
@@ -223,15 +223,12 @@ private:
     void setHole(std::int32_t);
     void setActiveCamera(std::int32_t);
     void forceRestart();
-    void triggerGC(glm::vec3);
     
-    //DrivingStateUI.cpp
+    //ChipInStateUI.cpp
 #ifdef USE_GNS
     cro::Entity m_leaderboardEntity;
 #endif
     cro::Entity m_courseEntity;
-    cro::Shader m_saturationShader;
-    std::int32_t m_saturationUniform;
     CollisionMesh m_collisionMesh;
 
     cro::RenderTexture m_mapTexture;

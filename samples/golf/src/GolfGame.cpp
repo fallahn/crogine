@@ -50,6 +50,7 @@ source distribution.
 #include "golf/CareerState.hpp"
 #include "golf/TournamentState.hpp"
 #include "golf/DrivingState.hpp"
+#include "golf/ChipInState.hpp"
 #include "golf/ClubhouseState.hpp"
 #include "golf/LeagueState.hpp"
 #include "golf/ProLeagueState.hpp"
@@ -208,7 +209,7 @@ cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
 
 GolfGame::GolfGame()
     : m_stateStack  ({*this, getWindow()}),
-    m_cursor        (/*cro::SystemCursor::Hand*/"assets/images/cursor.png", 1, 1),
+    m_cursor        ("assets/images/cursor.png", 1, 1),
     m_activeIndex   (0)
 {
 #ifdef _WIN32
@@ -238,6 +239,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TournamentState>(StateID::Tournament, m_sharedData);
     m_stateStack.registerState<FreePlayState>(StateID::FreePlay, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);
+    m_stateStack.registerState<ChipInState>(StateID::ChipIn, m_sharedData, m_profileData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData, m_profileData, *this);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
     m_stateStack.registerState<ShopState>(StateID::Shop, m_sharedData, m_profileData);
@@ -900,6 +902,16 @@ bool GolfGame::initialise()
             {
                 m_sharedData.mumLink->connect();
             }*/
+        });
+
+    registerCommand("chip_in",
+        [&](const std::string&)
+        {
+            if (m_stateStack.getTopmostState() == StateID::Menu)
+            {
+                m_stateStack.clearStates();
+                m_stateStack.pushState(StateID::ChipIn);
+            }
         });
 
     registerCommand("log_benchmark", 

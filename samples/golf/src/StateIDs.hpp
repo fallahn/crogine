@@ -48,6 +48,7 @@ struct StateID final
         ProLeague,
         DrivingRange,
         PuttingRange,
+        ChipIn,
         Clubhouse,
         Shop,
         Billiards,
