@@ -618,6 +618,7 @@
     <ClCompile Include="src\golf\CameraFollowSystem.cpp" />
     <ClCompile Include="src\golf\Career.cpp" />
     <ClCompile Include="src\golf\CareerState.cpp" />
+    <ClCompile Include="src\golf\ChipInDirector.cpp" />
     <ClCompile Include="src\golf\ChipInState.cpp" />
     <ClCompile Include="src\golf\ChipInStateUI.cpp" />
     <ClCompile Include="src\golf\ChunkVisSystem.cpp" />
@@ -832,6 +833,7 @@
     <ClInclude Include="src\golf\CameraFollowSystem.hpp" />
     <ClInclude Include="src\golf\Career.hpp" />
     <ClInclude Include="src\golf\CareerState.hpp" />
+    <ClInclude Include="src\golf\ChipInDirector.hpp" />
     <ClInclude Include="src\golf\ChipInState.hpp" />
     <ClInclude Include="src\golf\ChunkVisSystem.hpp" />
     <ClInclude Include="src\golf\CircularBuffer.hpp" />

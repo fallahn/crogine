@@ -33,18 +33,16 @@ source distribution.
 #include "SharedProfileData.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
-//#include "GameConsts.hpp"
 #include "PlayerAvatar.hpp"
 #include "FpsCameraSystem.hpp"
 #include "TextAnimCallback.hpp"
-#include "DrivingRangeDirector.hpp"
+#include "ChipInDirector.hpp"
 #include "BallSystem.hpp"
 #include "MessageIDs.hpp"
 #include "Clubs.hpp"
 #include "PlayerColours.hpp"
 #include "GolfParticleDirector.hpp"
 #include "GolfSoundDirector.hpp"
-//#include "CameraFollowSystem.hpp"
 #include "ClientCollisionSystem.hpp"
 #include "FloatingTextSystem.hpp"
 #include "CloudSystem.hpp"
@@ -311,7 +309,7 @@ bool ChipInState::handleEvent(const cro::Event& evt)
     const auto pauseGame = [&]()
     {
         //tells the pause menu to add restart option if round is active
-        if (m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+        if (m_gameScene.getDirector<ChipInDirector>()->roundEnded())
         {
             m_sharedData.baseState = -1;
         }
@@ -341,7 +339,7 @@ bool ChipInState::handleEvent(const cro::Event& evt)
 
             m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
         }
-        else if (m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+        else if (m_gameScene.getDirector<ChipInDirector>()->roundEnded())
         {
             pauseGame();
         }
@@ -477,7 +475,7 @@ bool ChipInState::handleEvent(const cro::Event& evt)
 #ifdef USE_GNS
             closeLeaderboard(); //this deals with the case below but checks for leaderboard view first
 #else
-            if (m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+            if (m_gameScene.getDirector<ChipInDirector>()->roundEnded())
             {
                 pauseGame();
             }
@@ -507,7 +505,7 @@ bool ChipInState::handleEvent(const cro::Event& evt)
 #ifdef USE_GNS
             closeLeaderboard();
 #else
-            if (m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+            if (m_gameScene.getDirector<ChipInDirector>()->roundEnded())
             {
                 pauseGame();
             }
@@ -665,7 +663,7 @@ void ChipInState::handleMessage(const cro::Message& msg)
             const auto dist = glm::length(PlayerPosition - data.position);
             showMessage(dist);
             
-            const auto pin = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin;
+            const auto pin = m_holeData[m_gameScene.getDirector<ChipInDirector>()->getCurrentHole()].pin;
 
             //does fireworks at pin
             if (data.type == GolfBallEvent::Holed
@@ -730,7 +728,7 @@ void ChipInState::handleMessage(const cro::Message& msg)
             {
                 e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements, 0.f));
 
-                auto dist = glm::length(PlayerPosition - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin) * 1.67f;
+                auto dist = glm::length(PlayerPosition - m_holeData[m_gameScene.getDirector<ChipInDirector>()->getCurrentHole()].pin) * 1.67f;
                 if (m_inputParser.getClub() < ClubID::NineIron &&
                     Clubs[m_inputParser.getClub()].getTarget(0.f) > dist)
                 {
@@ -840,7 +838,7 @@ void ChipInState::handleMessage(const cro::Message& msg)
                 cmd.action = [&](cro::Entity e, float)
                 {
                     float ballDist = 
-                        glm::length(PlayerPosition - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin);
+                        glm::length(PlayerPosition - m_holeData[m_gameScene.getDirector<ChipInDirector>()->getCurrentHole()].pin);
                     formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, false);
 
                     auto bounds = cro::Text::getLocalBounds(e);
@@ -1070,7 +1068,7 @@ void ChipInState::addSystems()
 
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
 
-    m_gameScene.addDirector<DrivingRangeDirector>(m_holeData);
+    m_gameScene.addDirector<ChipInDirector>(m_holeData);
     m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio, m_sharedData)->init();
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures, m_sharedData)->init();
 
@@ -2970,7 +2968,7 @@ void ChipInState::createBall()
             {
                 //if we're on the green convert to cm
                 float ballDist =
-                    glm::length(pos - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin);
+                    glm::length(pos - m_holeData[m_gameScene.getDirector<ChipInDirector>()->getCurrentHole()].pin);
 
                 formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, false);
 
@@ -3005,7 +3003,7 @@ void ChipInState::createBall()
             {
                 e.getComponent<CameraFollower>().target = ent;
                 e.getComponent<CameraFollower>().playerPosition = PlayerPosition;
-                e.getComponent<CameraFollower>().holePosition = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin;
+                e.getComponent<CameraFollower>().holePosition = m_holeData[m_gameScene.getDirector<ChipInDirector>()->getCurrentHole()].pin;
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
@@ -3503,7 +3501,7 @@ void ChipInState::hitBall()
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //drop a marker on the steam timeline
-    Timeline::addEvent(Timeline::Event::NewHole, m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentStroke() + 1);
+    Timeline::addEvent(Timeline::Event::NewHole, m_gameScene.getDirector<ChipInDirector>()->getCurrentStroke() + 1);
 }
 
 void ChipInState::setHole(std::int32_t index)
@@ -3577,7 +3575,7 @@ void ChipInState::setHole(std::int32_t index)
     cmd.action = [&](cro::Entity e, float)
     {
         std::string str("Turn ");
-        str += std::to_string(m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentStroke() + 1);
+        str += std::to_string(m_gameScene.getDirector<ChipInDirector>()->getCurrentStroke() + 1);
         str += " of ";
         str += std::to_string(m_strokeCounts[m_strokeCountIndex]);
         e.getComponent<cro::Text>().setString(str);
@@ -3695,7 +3693,7 @@ void ChipInState::forceRestart()
     m_mapTexture.display();
     m_gameScene.setActiveCamera(oldCam);
 
-    m_gameScene.getDirector<DrivingRangeDirector>()->setHoleCount(0, 0); //setting this to 0 makes sure the holes are returned to order if they were shuffled
+    m_gameScene.getDirector<ChipInDirector>()->setHoleCount(0, 0); //setting this to 0 makes sure the holes are returned to order if they were shuffled
     setActiveCamera(CameraID::Player);
 
     //reset any open messages

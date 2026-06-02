@@ -735,6 +735,9 @@
     <ClCompile Include="src\golf\ChipInStateUI.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\ChipInDirector.cpp">
+      <Filter>Source Files\golf\client\directors</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -1531,6 +1534,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\PracticeCommon.hpp">
       <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ChipInDirector.hpp">
+      <Filter>Header Files\golf\client\directors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

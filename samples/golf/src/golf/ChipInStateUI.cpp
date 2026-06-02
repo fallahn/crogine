@@ -33,7 +33,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "MessageIDs.hpp"
 #include "TextAnimCallback.hpp"
-#include "DrivingRangeDirector.hpp"
+#include "ChipInDirector.hpp"
 #include "CloudSystem.hpp"
 #include "BallSystem.hpp"
 #include "FloatingTextSystem.hpp"
@@ -2384,9 +2384,9 @@ will be given a score based on your overall accuracy. Good Luck!
                     uiSystem->setActiveGroup(MenuID::Dummy);
                     
                     m_gameScene.getSystem<BallSystem>()->forceWindChange();
-                    m_gameScene.getDirector<DrivingRangeDirector>()->setHoleCount(m_strokeCounts[m_strokeCountIndex], m_targetIndex - 1);
+                    m_gameScene.getDirector<ChipInDirector>()->setHoleCount(m_strokeCounts[m_strokeCountIndex], m_targetIndex - 1);
 
-                    setHole(m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole());
+                    setHole(m_gameScene.getDirector<ChipInDirector>()->getCurrentHole());
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
 
@@ -2756,7 +2756,7 @@ void ChipInState::updateMinimap()
     m_mapTexture.clear(TextNormalColour);
     m_gameScene.render();
 
-    auto holePos = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin;
+    auto holePos = m_holeData[m_gameScene.getDirector<ChipInDirector>()->getCurrentHole()].pin;
     m_flagQuad.setPosition(toMinimapCoords(holePos));
     m_flagQuad.draw();
 
@@ -2843,7 +2843,7 @@ void ChipInState::updateWindDisplay(glm::vec3 direction)
 
 void ChipInState::showMessage(float range)
 {
-    const auto* director = m_gameScene.getDirector<DrivingRangeDirector>();
+    const auto* director = m_gameScene.getDirector<ChipInDirector>();
     float score = director->getScore(director->getCurrentStroke() - 1); //this was incremented internally when score was updated
 
     auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();
@@ -3008,10 +3008,10 @@ void ChipInState::showMessage(float range)
                 m_uiScene.destroyEntity(imgEnt);
                 m_uiScene.destroyEntity(e);
 
-                if (m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+                if (m_gameScene.getDirector<ChipInDirector>()->roundEnded())
                 {
                     //show summary screen
-                    const auto* director = m_gameScene.getDirector<DrivingRangeDirector>();
+                    const auto* director = m_gameScene.getDirector<ChipInDirector>();
                     auto scoreCount = director->getTotalStrokes();
                     float totalScore = 0.f;
 
@@ -3141,7 +3141,7 @@ void ChipInState::showMessage(float range)
                 }
                 else
                 {
-                    setHole(m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole());
+                    setHole(m_gameScene.getDirector<ChipInDirector>()->getCurrentHole());
                 }
             }
             break;
@@ -3280,7 +3280,7 @@ void ChipInState::updateSkipMessage(float dt)
                         {
                             f.getComponent<CameraFollower>().target = e;
                             f.getComponent<CameraFollower>().playerPosition = PlayerPosition;
-                            f.getComponent<CameraFollower>().holePosition = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin;
+                            f.getComponent<CameraFollower>().holePosition = m_holeData[m_gameScene.getDirector<ChipInDirector>()->getCurrentHole()].pin;
                         };
                         m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd2);
 
