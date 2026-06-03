@@ -792,14 +792,14 @@ void ChipInState::createUI()
         glm::uvec2 previewSize(RangeSize / 2.f);
         m_mapTexture.create(previewSize.x, previewSize.y);
 
-        miniCam.setOrthographic((-RangeSize.x / 2.f) + 1.f, (RangeSize.x / 2.f) - 1.f, -RangeSize.y / 2.f, RangeSize.y / 2.f, -0.1f, 7.f);
-        float xPixel = 1.f / (RangeSize.x / 2.f);
-        float yPixel = 1.f / (RangeSize.y / 2.f);
+        miniCam.setOrthographic((-ChipInSize.x / 2.f) + 1.f, (ChipInSize.x / 2.f) - 1.f, -ChipInSize.y / 2.f, ChipInSize.y / 2.f, -0.1f, 7.f);
+        float xPixel = 1.f / (ChipInSize.x / 2.f);
+        float yPixel = 1.f / (ChipInSize.y / 2.f);
         miniCam.viewport = { xPixel, yPixel, 1.f - (xPixel * 2.f), 1.f - (yPixel * 2.f) };
     };
 
     m_mapCam = m_gameScene.createEntity();
-    m_mapCam.addComponent<cro::Transform>().setPosition({ 0.f, 5.f, 0.f });
+    m_mapCam.addComponent<cro::Transform>().setPosition({ 0.f, 5.f, (RangeSize.y / 2.f) - (ChipInSize.y / 2.f)});
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
     miniCam.setRenderFlags(cro::Camera::Pass::Final, RenderFlags::MiniMap);
@@ -1392,13 +1392,13 @@ void ChipInState::createGameOptions()
     titleText.addComponent<cro::Drawable2D>();
     titleText.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     titleText.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    titleText.getComponent<cro::Text>().setString("The Range");
+    titleText.getComponent<cro::Text>().setString("Chip Challenge");
     centreText(titleText);
     bgEntity.getComponent<cro::Transform>().addChild(titleText.getComponent<cro::Transform>());
 
     //header
     auto headerText = m_uiScene.createEntity();
-    headerText.addComponent<cro::Transform>().setPosition({ 25.f, 248.f, 0.02f });
+    headerText.addComponent<cro::Transform>().setPosition({ 25.f, 248.f, 0.06f });
     headerText.addComponent<cro::Drawable2D>();
     headerText.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     headerText.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1416,11 +1416,11 @@ void ChipInState::createGameOptions()
     infoText.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     infoText.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     const std::string helpString =
-        R"(
-Pick the number of strokes you wish to take. Hit the ball as close as possible to the
-target by selecting the appropriate club. When all of your strokes are taken you
-will be given a score based on your overall accuracy. Good Luck!
-    )";
+R"(
+Chip-in Challenge is a time attack round where you score as much as you can by getting
+as many balls as close as possible to the active pin as you can. Choose a challenge
+duration and optionally the number of players before hitting Start. Good Luck!
+)";
 
     infoText.getComponent<cro::Text>().setString(helpString);
     bgEntity.getComponent<cro::Transform>().addChild(infoText.getComponent<cro::Transform>());
@@ -1448,7 +1448,7 @@ will be given a score based on your overall accuracy. Good Luck!
     auto recordEnt = m_uiScene.createEntity();
     recordEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 270.f, 0.1f });
     recordEnt.addComponent<cro::Drawable2D>();
-    recordEnt.addComponent<cro::Text>(labelFont).setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
+    recordEnt.addComponent<cro::Text>(labelFont).setString(Social::getDrivingLeader(m_targetIndex, m_durationIndex));
     recordEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     recordEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     recordEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
@@ -1457,7 +1457,7 @@ will be given a score based on your overall accuracy. Good Luck!
     bgEntity.getComponent<cro::Transform>().addChild(recordEnt.getComponent<cro::Transform>());
 
 
-    //hole count
+    //duration
     auto countEnt = m_uiScene.createEntity();
     countEnt.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f) - 42.f, 134.f, 0.1f });
     countEnt.addComponent<cro::Drawable2D>();
@@ -1469,21 +1469,21 @@ will be given a score based on your overall accuracy. Good Luck!
     auto strokeTextEnt = m_uiScene.createEntity();
     strokeTextEnt.addComponent<cro::Transform>().setPosition({ strokeBounds.width / 2.f, strokeBounds.height + 22.f });
     strokeTextEnt.addComponent<cro::Drawable2D>();
-    strokeTextEnt.addComponent<cro::Text>(largeFont).setString("Strokes\nTo Play");
+    strokeTextEnt.addComponent<cro::Text>(largeFont).setString("Challenge\nDuration");
     strokeTextEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     strokeTextEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     strokeTextEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-    //strokeTextEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    strokeTextEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     strokeTextEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
     strokeTextEnt.getComponent<cro::Text>().setVerticalSpacing(2.f);
-    centreText(strokeTextEnt);
+    //centreText(strokeTextEnt);
     countEnt.getComponent<cro::Transform>().addChild(strokeTextEnt.getComponent<cro::Transform>());
 
     auto numberEnt = m_uiScene.createEntity();
     numberEnt.addComponent<cro::Transform>().setPosition({ strokeBounds.width / 2.f, std::floor(strokeBounds.height / 2.f) + 4.f, 0.02f });
     numberEnt.addComponent<cro::Drawable2D>();
     numberEnt.addComponent<cro::Text>(largeFont);
-    numberEnt.getComponent<cro::Text>().setString("5");
+    numberEnt.getComponent<cro::Text>().setString("30");
     numberEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     numberEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
     centreText(numberEnt);
@@ -1503,11 +1503,11 @@ will be given a score based on your overall accuracy. Good Luck!
         const auto& data = bgEntity.getComponent<cro::Callback>().getUserData<PopupAnim>();
         if (data.state == PopupAnim::Open)
         {
-            if (m_topScores[m_strokeCountIndex] > 0)
+            if (m_topScores[m_durationIndex] > 0)
             {
                 std::stringstream s;
                 s.precision(3);
-                s << "Personal Best: " << m_topScores[m_strokeCountIndex] << "%";
+                s << "Personal Best: " << m_topScores[m_durationIndex] << "%";
 
                 e.getComponent<cro::Text>().setString(s.str());
             }
@@ -1525,7 +1525,7 @@ will be given a score based on your overall accuracy. Good Luck!
     //Top 5 ticker
     for (auto i = 0u; i < m_tickerStrings.size(); ++i)
     {
-        m_tickerStrings[i] = Social::getDrivingTopFive(i);
+        m_tickerStrings[i] = Social::getChippingTopFive(i);
     }
 
     tickerEnt = m_uiScene.createEntity();
@@ -1568,7 +1568,7 @@ will be given a score based on your overall accuracy. Good Luck!
 
 #endif
 
-    //hole count buttons
+    //duration buttons
     auto buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f), ButtonID::CountPrev);
     if (Social::getClubLevel())
     {
@@ -1589,17 +1589,17 @@ will be given a score based on your overall accuracy. Good Luck!
             {
                 if (activated(evt))
                 {
-                    m_strokeCountIndex = (m_strokeCountIndex + (m_strokeCounts.size() - 1)) % m_strokeCounts.size();
-                    numberEnt.getComponent<cro::Text>().setString(std::to_string(m_strokeCounts[m_strokeCountIndex]));
+                    m_durationIndex = (m_durationIndex + (m_durationCounts.size() - 1)) % m_durationCounts.size();
+                    numberEnt.getComponent<cro::Text>().setString(std::to_string(m_durationCounts[m_durationIndex]));
                     centreText(numberEnt);
 
-                    leaderboardTryCount = m_strokeCountIndex;
+                    leaderboardTryCount = m_durationIndex;
 
-                    if (m_topScores[m_strokeCountIndex] > 0)
+                    if (m_topScores[m_durationIndex] > 0)
                     {
                         std::stringstream s;
                         s.precision(3);
-                        s << "Personal Best: " << m_topScores[m_strokeCountIndex] << "%";
+                        s << "Personal Best: " << m_topScores[m_durationIndex] << "%";
 
                         textEnt4.getComponent<cro::Text>().setString(s.str());
                     }
@@ -1610,13 +1610,13 @@ will be given a score based on your overall accuracy. Good Luck!
                     centreText(textEnt4);
 
 #ifdef USE_GNS
-                    tickerEnt.getComponent<cro::Text>().setString(m_tickerStrings[m_strokeCountIndex]);
+                    tickerEnt.getComponent<cro::Text>().setString(m_tickerStrings[m_durationIndex]);
                     auto pos = tickerEnt.getComponent<cro::Transform>().getPosition();
                     pos.x = 300.f;
                     tickerEnt.getComponent<cro::Transform>().setPosition(pos);
                     tickerEnt.getComponent<cro::Callback>().function(tickerEnt, 0.f); //updates the cropping
 
-                    recordEnt.getComponent<cro::Text>().setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
+                    recordEnt.getComponent<cro::Text>().setString(Social::getChippingLeader(m_targetIndex, m_durationIndex));
                     centreText(recordEnt);
 #endif
 
@@ -1645,17 +1645,17 @@ will be given a score based on your overall accuracy. Good Luck!
             {
                 if (activated(evt))
                 {
-                    m_strokeCountIndex = (m_strokeCountIndex + 1) % m_strokeCounts.size();
-                    numberEnt.getComponent<cro::Text>().setString(std::to_string(m_strokeCounts[m_strokeCountIndex]));
+                    m_durationIndex = (m_durationIndex + 1) % m_durationCounts.size();
+                    numberEnt.getComponent<cro::Text>().setString(std::to_string(m_durationCounts[m_durationIndex]));
                     centreText(numberEnt);
 
-                    leaderboardTryCount = m_strokeCountIndex;
+                    leaderboardTryCount = m_durationIndex;
 
-                    if (m_topScores[m_strokeCountIndex] > 0)
+                    if (m_topScores[m_durationIndex] > 0)
                     {
                         std::stringstream s;
                         s.precision(3);
-                        s << "Personal Best: " << m_topScores[m_strokeCountIndex] << "%";
+                        s << "Personal Best: " << m_topScores[m_durationIndex] << "%";
 
                         textEnt4.getComponent<cro::Text>().setString(s.str());
                     }
@@ -1666,13 +1666,13 @@ will be given a score based on your overall accuracy. Good Luck!
                     centreText(textEnt4);
 
 #ifdef USE_GNS
-                    tickerEnt.getComponent<cro::Text>().setString(m_tickerStrings[m_strokeCountIndex]);
+                    tickerEnt.getComponent<cro::Text>().setString(m_tickerStrings[m_durationIndex]);
                     auto pos = tickerEnt.getComponent<cro::Transform>().getPosition();
                     pos.x = 300.f;
                     tickerEnt.getComponent<cro::Transform>().setPosition(pos);
                     tickerEnt.getComponent<cro::Callback>().function(tickerEnt, 0.f); //updates the cropping
 
-                    recordEnt.getComponent<cro::Text>().setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
+                    recordEnt.getComponent<cro::Text>().setString(Social::getDrivingLeader(m_targetIndex, m_durationIndex));
                     centreText(recordEnt);
 #endif
 
@@ -1749,27 +1749,19 @@ will be given a score based on your overall accuracy. Good Luck!
                 static std::size_t idx = 0;
                 idx = (idx + cro::Util::Random::value(1, 3)) % m_holeData.size();
 
-                auto pos = m_holeData[idx].pin / 2.f;
-                flagPos = { pos.x, -pos.z };
-
-                flagPos += Offset;
-                e.getComponent<cro::Transform>().setPosition(flagPos);
+                e.getComponent<cro::Transform>().setPosition(toMinimapCoords(m_holeData[idx].pin));
             }
         }
         else
         {
-            auto pos = m_holeData[m_targetIndex - 1].pin / 2.f;
-            flagPos = { pos.x, -pos.z };
-
-            flagPos += Offset;
-            e.getComponent<cro::Transform>().setPosition(flagPos);
+            e.getComponent<cro::Transform>().setPosition(toMinimapCoords(m_holeData[m_targetIndex - 1].pin));
         }
     };
 
     mapEnt.getComponent<cro::Transform>().addChild(flagEnt.getComponent<cro::Transform>());
 
 
-    //target select
+    //player count
     countEnt = m_uiScene.createEntity();
     countEnt.addComponent<cro::Transform>().setPosition({ std::floor((bounds.width / 2.f) + 42.f), 134.f, 0.1f });
     countEnt.addComponent<cro::Drawable2D>();
@@ -1781,21 +1773,21 @@ will be given a score based on your overall accuracy. Good Luck!
     strokeTextEnt = m_uiScene.createEntity();
     strokeTextEnt.addComponent<cro::Transform>().setPosition({ strokeBounds.width / 2.f, strokeBounds.height + 22.f });
     strokeTextEnt.addComponent<cro::Drawable2D>();
-    strokeTextEnt.addComponent<cro::Text>(largeFont).setString("Select\nTarget");
+    strokeTextEnt.addComponent<cro::Text>(largeFont).setString("Player\nCount");
     strokeTextEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     strokeTextEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     strokeTextEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-    //strokeTextEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    strokeTextEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     strokeTextEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
     strokeTextEnt.getComponent<cro::Text>().setVerticalSpacing(2.f);
-    centreText(strokeTextEnt);
+    //centreText(strokeTextEnt);
     countEnt.getComponent<cro::Transform>().addChild(strokeTextEnt.getComponent<cro::Transform>());
 
     numberEnt = m_uiScene.createEntity();
     numberEnt.addComponent<cro::Transform>().setPosition({ strokeBounds.width / 2.f, std::floor(strokeBounds.height / 2.f) + 4.f, 0.02f });
     numberEnt.addComponent<cro::Drawable2D>();
     numberEnt.addComponent<cro::Text>(largeFont);
-    numberEnt.getComponent<cro::Text>().setString("?");
+    numberEnt.getComponent<cro::Text>().setString("1");
     numberEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     numberEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
     centreText(numberEnt);
@@ -1823,18 +1815,13 @@ will be given a score based on your overall accuracy. Good Luck!
             {
                 if (activated(evt))
                 {
-                    m_targetIndex = static_cast<std::int32_t>((m_targetIndex + m_holeData.size()) % (m_holeData.size() + 1));
-                    std::string str = (m_targetIndex - 1) < 0 ? "?" : std::to_string(m_targetIndex);
+                    m_playerCount = (m_playerCount + (MaxPlayers - 1)) % MaxPlayers;
+
+                    std::string str = std::to_string(m_playerCount + 1);
                     numberEnt.getComponent<cro::Text>().setString(str);
                     centreText(numberEnt);
 
-                    leaderboardHoleIndex = m_targetIndex;
-
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
-#ifdef USE_GNS
-                    recordEnt.getComponent<cro::Text>().setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
-                    centreText(recordEnt);
-#endif
                 }
             });
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
@@ -1859,19 +1846,13 @@ will be given a score based on your overall accuracy. Good Luck!
             {
                 if (activated(evt))
                 {
-                    m_targetIndex = (m_targetIndex + 1) % (m_holeData.size() + 1);
-                    std::string str = (m_targetIndex - 1) < 0 ? "?" : std::to_string(m_targetIndex);
+                    m_playerCount = (m_playerCount + 1) % MaxPlayers;
+
+                    std::string str = std::to_string(m_playerCount + 1);
                     numberEnt.getComponent<cro::Text>().setString(str);
                     centreText(numberEnt);
 
-                    leaderboardHoleIndex = m_targetIndex;
-
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
-
-#ifdef USE_GNS
-                    recordEnt.getComponent<cro::Text>().setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
-                    centreText(recordEnt);
-#endif
                 }
             });
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
@@ -2384,7 +2365,7 @@ will be given a score based on your overall accuracy. Good Luck!
                     uiSystem->setActiveGroup(MenuID::Dummy);
                     
                     m_gameScene.getSystem<BallSystem>()->forceWindChange();
-                    m_gameScene.getDirector<ChipInDirector>()->setHoleCount(m_strokeCounts[m_strokeCountIndex], m_targetIndex - 1);
+                    m_gameScene.getDirector<ChipInDirector>()->setHoleCount(m_durationCounts[m_durationIndex], m_targetIndex - 1);
 
                     setHole(m_gameScene.getDirector<ChipInDirector>()->getCurrentHole());
 
@@ -2395,14 +2376,16 @@ will be given a score based on your overall accuracy. Good Luck!
                     m_summaryScreen.fadeEnt.getComponent<cro::Callback>().active = true;
 
                     //set the round title
-                    m_summaryScreen.roundName.getComponent<cro::Text>().setString(ScoreStrings[m_strokeCountIndex] + ", " + HoleStrings[m_targetIndex]);
-                    centreText(m_summaryScreen.roundName);
+                    /*m_summaryScreen.roundName.getComponent<cro::Text>().setString(ScoreStrings[m_durationIndex] + ", " + HoleStrings[m_targetIndex]);
+                    centreText(m_summaryScreen.roundName);*/
 
                     m_mapTexture.clear(cro::Colour::Transparent);
                     m_mapTexture.display();
 
                     //reset stat timer
                     m_statClock.restart();
+
+                    m_inputParser.setClub(50.f, TerrainID::Fairway); //pick a reasonable starting club
                 }
             });
     centreSprite(startButton);
@@ -2418,18 +2401,6 @@ will be given a score based on your overall accuracy. Good Luck!
     entity.addComponent<cro::SpriteAnimation>().play(0);
     bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //wang this in here so we can debug easier
-    /*cro::Command cmd;
-    cmd.targetFlags = CommandID::UI::DrivingBoard;
-    cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Callback>().active = true; };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
-
-    //registerWindow([&]() 
-    //    {
-    //        ImGui::Begin("sdfg");
-    //        ImGui::Text("%d, %3.3f", Club::getClubLevel(), m_inputParser.getEstimatedDistance());
-    //        ImGui::End();
-    //    });
 }
 
 void ChipInState::createSummary()
@@ -2742,11 +2713,7 @@ void ChipInState::createSummary()
 
 glm::vec2 ChipInState::toMinimapCoords(glm::vec3 p) const
 {
-    //need to tie into the fact the mini map is 1/2 scale
-    //and has the origin in the centre
-    glm::vec2 r = glm::vec2(p.x, -p.z) / 2.f;
-    r += (RangeSize / 4.f);
-    return r;
+    return m_mapCam.getComponent<cro::Camera>().coordsToPixel(p, m_mapTexture.getSize());
 }
 
 void ChipInState::updateMinimap()
@@ -3112,9 +3079,9 @@ void ChipInState::showMessage(float range)
                     m_summaryScreen.fadeEnt.getComponent<cro::Callback>().active = true;
                     m_summaryScreen.root.getComponent<cro::Callback>().active = true;
 
-                    if (totalScore > m_topScores[m_strokeCountIndex])
+                    if (totalScore > m_topScores[m_durationIndex])
                     {
-                        m_topScores[m_strokeCountIndex] = totalScore;
+                        m_topScores[m_durationIndex] = totalScore;
                         saveScores();
                         m_summaryScreen.bestMessage.getComponent<cro::Callback>().active = true;
                     }
@@ -3126,7 +3093,7 @@ void ChipInState::showMessage(float range)
                     }
 
 #ifdef USE_GNS
-                    Social::insertDrivingScore(m_targetIndex, static_cast<std::int32_t>(m_strokeCountIndex), totalScore);
+                    Social::insertDrivingScore(m_targetIndex, static_cast<std::int32_t>(m_durationIndex), totalScore);
 #endif
 
                     //reset the minimap

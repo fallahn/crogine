@@ -207,7 +207,8 @@ ChipInState::ChipInState(cro::StateStack& stack, cro::State::Context context, Sh
     m_resolutionBuffer  ("ScaledResolution"),
     m_windBuffer        ("WindValues"),
     m_targetIndex       (0),
-    m_strokeCountIndex  (0),
+    m_durationIndex     (0),
+    m_playerCount       (0),
     m_currentCamera     (CameraID::Player)
 {
     BannerIndex = (BannerIndex + 1) % BannerStrings.size();
@@ -1609,7 +1610,7 @@ void ChipInState::createScene()
 
     //check data file - quit if missing or corrupt
     cro::ConfigFile cfg;
-    if (!cfg.loadFromFile("assets/golf/courses/driving.range"))
+    if (!cfg.loadFromFile("assets/golf/courses/chipin.range"))
     {
         quitFail("Could Not Open Course Data");
         return;
@@ -1772,7 +1773,7 @@ void ChipInState::createScene()
 
     //load the course model
     cro::ModelDefinition md(m_resources);
-    if (!md.loadFromFile("assets/golf/models/driving_range.cmt"))
+    if (!md.loadFromFile("assets/golf/models/chipin_range.cmt"))
     {
         quitFail("Could Not Load Course Model");
         return;
@@ -3540,13 +3541,13 @@ void ChipInState::setHole(std::int32_t index)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    //reset ball position
-    cmd.targetFlags = CommandID::Ball;
+    //reset ball position - TODO spawn a new ball
+    /*cmd.targetFlags = CommandID::Ball;
     cmd.action = [](cro::Entity e, float)
     {
         e.getComponent<cro::Transform>().setPosition(PlayerPosition);
     };
-    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
 
     //trigger flag animation
     cmd.targetFlags = CommandID::Hole;
@@ -3577,7 +3578,7 @@ void ChipInState::setHole(std::int32_t index)
         std::string str("Turn ");
         str += std::to_string(m_gameScene.getDirector<ChipInDirector>()->getCurrentStroke() + 1);
         str += " of ";
-        str += std::to_string(m_strokeCounts[m_strokeCountIndex]);
+        str += std::to_string(m_durationCounts[m_durationIndex]);
         e.getComponent<cro::Text>().setString(str);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

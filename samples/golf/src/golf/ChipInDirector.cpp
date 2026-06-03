@@ -99,11 +99,6 @@ void ChipInDirector::handleMessage(const cro::Message& msg)
                 m_scores[idx] = 100.f;
             }
             m_holeCount--;
-
-            if (m_scores[idx] > 99.f)
-            {
-                Social::getMonthlyChallenge().updateChallenge(ChallengeID::Six, hole);
-            }
         }
     }
         break;

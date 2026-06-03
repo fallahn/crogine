@@ -198,8 +198,11 @@ private:
     Avatar m_avatar;
     ClubModels m_clubModels;
 
-    std::array<std::int32_t, 3u> m_strokeCounts = { 5,9,18 };
-    std::size_t m_strokeCountIndex;
+    std::array<std::int32_t, 3u> m_durationCounts = { 30,45,60 };
+    std::size_t m_durationIndex;
+
+    std::size_t m_playerCount;
+    static constexpr std::size_t MaxPlayers = 8;
 
     std::array<cro::Entity, CameraID::Count> m_cameras = {};
     std::int32_t m_currentCamera;
