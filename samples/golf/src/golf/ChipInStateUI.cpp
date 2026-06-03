@@ -1525,7 +1525,7 @@ duration and optionally the number of players before hitting Start. Good Luck!
     //Top 5 ticker
     for (auto i = 0u; i < m_tickerStrings.size(); ++i)
     {
-        m_tickerStrings[i] = Social::getChippingTopFive(i);
+        //m_tickerStrings[i] = Social::getChippingTopFive(i);
     }
 
     tickerEnt = m_uiScene.createEntity();
@@ -1616,7 +1616,7 @@ duration and optionally the number of players before hitting Start. Good Luck!
                     tickerEnt.getComponent<cro::Transform>().setPosition(pos);
                     tickerEnt.getComponent<cro::Callback>().function(tickerEnt, 0.f); //updates the cropping
 
-                    recordEnt.getComponent<cro::Text>().setString(Social::getChippingLeader(m_targetIndex, m_durationIndex));
+                    //recordEnt.getComponent<cro::Text>().setString(Social::getChippingLeader(m_targetIndex, m_durationIndex));
                     centreText(recordEnt);
 #endif
 
