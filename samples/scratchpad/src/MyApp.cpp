@@ -61,6 +61,7 @@ source distribution.
 #include "scrub/ScrubPauseState.hpp"
 
 #include "gk/GKGameState.hpp"
+#include "pinballgame/PinballGameState.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -223,11 +224,13 @@ bool MyApp::initialise()
     m_stateStack.registerState<PseutheMenuState>(States::ScratchPad::PseutheMenu);
 
     m_stateStack.registerState<GKGameState>(States::ScratchPad::GKGame);
+    m_stateStack.registerState<PinballGameState>(States::ScratchPad::PinballGame);
 
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(States::ScratchPad::TrackOverlay);
     //m_stateStack.pushState(States::ScratchPad::BatCat);
-    m_stateStack.pushState(States::ScratchPad::MainMenu);
+    //m_stateStack.pushState(States::ScratchPad::MainMenu);
+    m_stateStack.pushState(States::ScratchPad::PinballGame);
 #else
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
     m_stateStack.pushState(States::ScratchPad::BatCat);
