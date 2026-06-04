@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -80,7 +80,9 @@ struct TriggerID final
     //these are stored on the green channel
     //we start from above the terrain ID to
     //stop conflicts/backwards compat with
-    //existing terrain models
+    //existing terrain models. Note these
+    //are multiplied by 10 in the model data
+    //so max trigger value is 25 (aka 250)
     enum
     {
         Volcano = 13,
@@ -91,9 +93,9 @@ struct TriggerID final
 
         Count,
         FlagStick = CollisionEvent::FlagPole //TODO we MUST update Messages.hpp if this value changes
+        //don't use 255 as it's reserved for ConstVal::NullValue
     };
 };
-static_assert(TriggerID::FlagStick == 255, "Update MessageIDs with correct value");
 static_assert(TriggerID::Count < 25, "MAX VALUE REACHED");
 
 static const std::array<std::string, TerrainID::Count> TerrainStrings =

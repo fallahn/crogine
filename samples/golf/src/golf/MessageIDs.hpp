@@ -149,7 +149,7 @@ struct CollisionEvent final
         Timeout = -4,
         Billboard,
         Firework,
-        FlagPole = 255// TriggerID::FlagStick //ugh including Terrain.hpp breaks compilation
+        FlagPole = 127 //must ALSO be assigned to TriggerID - and not 255 as that's reserved for NullValue
     };
     float velocity = 0.f; //squared
     glm::vec3 position = glm::vec3(0.f);
