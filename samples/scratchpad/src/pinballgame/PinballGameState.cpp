@@ -166,11 +166,114 @@ void PinballGameState::createScene()
     for (const auto& p : arc)
     {
         verts.emplace_back(p, cro::Colour::Green);
-        //arcSeg(p, -r);
     }
 
     entity.getComponent<cro::Drawable2D>().setVertexData(verts);
 
+
+    //channel wall
+    entity = SCENE.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(ChannelWallPos);
+    entity.addComponent<cro::Drawable2D>().setVertexData(halfBox(ChannelWallSize));
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+
+
+    //bottom funnel
+    entity = SCENE.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(FunnelLeftPos);
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    entity.getComponent<cro::Drawable2D>().setVertexData({
+        cro::Vertex2D(glm::vec2(0.f), cro::Colour::Red),
+        cro::Vertex2D(glm::vec2(FunnelSize.x, 0.f), cro::Colour::Red),
+        cro::Vertex2D(glm::vec2(0.f, FunnelSize.y), cro::Colour::Red),
+        cro::Vertex2D(glm::vec2(0.f), cro::Colour::Red),
+        });
+
+    entity = SCENE.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(FunnelRightPos);
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    entity.getComponent<cro::Drawable2D>().setVertexData({
+        cro::Vertex2D(glm::vec2(0.f), cro::Colour::Red),
+        cro::Vertex2D(glm::vec2(FunnelSize.x, 0.f), cro::Colour::Red),
+        cro::Vertex2D(FunnelSize, cro::Colour::Red),
+        cro::Vertex2D(glm::vec2(0.f), cro::Colour::Red),
+        });
+
+
+    //ramp on the left
+    verts.clear();
+    for (const auto& p : RampPoints)
+    {
+        verts.emplace_back(p, cro::Colour::Red);
+    }
+    entity = SCENE.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+
+
+
+    //bumpers
+    verts.clear();
+    for (const auto p : BumperPoints)
+    {
+        verts.emplace_back(p, cro::Colour::Blue);
+    }
+    verts.push_back(verts.front());
+
+    entity = SCENE.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+
+    std::reverse(verts.begin(), verts.end());
+    for (auto& p : verts)
+    {
+        p.position.x *= -1.f;
+        p.position.x -= ((TableSize.x / 2.f) - PlayAreaCentre) * 2.f;
+    }
+    entity = SCENE.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+
+
+
+    //flipper chute
+    entity = SCENE.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(FlipperChutePosLarge);
+    entity.getComponent<cro::Transform>().setRotation(FlipperChuteLargeRotation);
+    entity.addComponent<cro::Drawable2D>().setVertexData(halfBox(FlipperChuteSizeLarge / 2.f));
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+
+
+    auto flippedPos = FlipperChutePosLarge;
+    flippedPos.x *= -1.f;
+    flippedPos.x -= ((TableSize.x / 2.f) - PlayAreaCentre) * 2.f;
+
+    entity = SCENE.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(flippedPos);
+    entity.getComponent<cro::Transform>().setRotation(-FlipperChuteLargeRotation);
+    entity.addComponent<cro::Drawable2D>().setVertexData(halfBox(FlipperChuteSizeLarge / 2.f));
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+
+
+
+
+    entity = SCENE.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(FlipperChutePosSmall);
+    entity.addComponent<cro::Drawable2D>().setVertexData(halfBox(FlipperChuteSizeSmall / 2.f));
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+
+
+    flippedPos = FlipperChutePosSmall;
+    flippedPos.x *= -1.f;
+    flippedPos.x -= ((TableSize.x / 2.f) - PlayAreaCentre) * 2.f;
+
+    entity = SCENE.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(flippedPos);
+    entity.addComponent<cro::Drawable2D>().setVertexData(halfBox(FlipperChuteSizeSmall / 2.f));
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
 
 
 
@@ -208,6 +311,8 @@ void PinballGameState::createUI()
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     resize(cam);
+
+    m_uiScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ TableSize.x / 2.f, 0.f, 0.f });
 }
 
 void PinballGameState::spawnBall()
