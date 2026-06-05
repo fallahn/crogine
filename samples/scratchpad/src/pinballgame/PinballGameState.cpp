@@ -4,6 +4,8 @@
 #include "PinballSystem.hpp"
 #include "PinballConsts.hpp"
 
+#include <box2d/box2d.h>
+
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
@@ -65,6 +67,23 @@ bool PinballGameState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE:
             spawnBall();
             break;
+        case SDLK_LEFT:
+        {
+            auto j = SCENE.getSystem<PinballSystem>()->testJoint;
+            b2MotorJoint_SetAngularVelocity(j, 10.f);
+            b2Joint_WakeBodies(j);
+            break;
+        }
+        }
+    }
+    else if (evt.type == SDL_KEYUP)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_LEFT:
+            b2MotorJoint_SetAngularVelocity(SCENE.getSystem<PinballSystem>()->testJoint, 0.f);
+            break;
         }
     }
 
@@ -105,6 +124,7 @@ void PinballGameState::addSystems()
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
 
+    m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
@@ -276,6 +296,25 @@ void PinballGameState::createScene()
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
 
 
+
+
+    //flippers
+    entity = SCENE.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(halfBox({ 0.02f, 0.05f }));
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [this](cro::Entity e, float)
+        {
+            const auto body = SCENE.getSystem<PinballSystem>()->testBody;
+            const b2Rot rotation = b2Body_GetRotation(body);
+            const auto rads = b2Rot_GetAngle(rotation);
+            e.getComponent<cro::Transform>().setRotation(rads);
+
+            const b2Vec2 position = b2Body_GetPosition(body);
+            e.getComponent<cro::Transform>().setPosition({ position.x, position.y });
+        };
 
 
     auto resize = [](cro::Camera& cam)

@@ -33,6 +33,9 @@ public:
 
     void createTable(); //TODO could pass some external params etc
 
+    b2JointId testJoint = {};
+    b2BodyId testBody = {};
+
 private:
     b2WorldId m_physicsWorld;
 

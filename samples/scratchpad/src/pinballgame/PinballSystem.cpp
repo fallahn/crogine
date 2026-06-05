@@ -166,6 +166,45 @@ void PinballSystem::createTable()
         b2Vector(FunnelSize.x , FunnelSize.y),
     };
     createPoly(funnelPoints, FunnelRightPos);
+
+
+
+
+    //static body to which flippers are connected
+    b2BodyDef bodyDef = b2DefaultBodyDef();
+    auto groundId = b2CreateBody(m_physicsWorld, &bodyDef);
+    b2ShapeDef shapeDef = b2DefaultShapeDef();
+    b2Segment segment = { { -0.02f, 0.0f }, { 0.02f, 0.0f } };
+    b2CreateSegmentShape(groundId, &shapeDef, &segment);
+
+    const auto createFlipper =
+        [this, &groundId]() 
+        {
+            b2BodyDef bodyDef = b2DefaultBodyDef();
+            bodyDef.type = b2_dynamicBody;
+            //bodyDef.position;
+            auto bodyId = b2CreateBody(m_physicsWorld, &bodyDef);
+            testBody = bodyId;
+            b2Polygon box = b2MakeBox(0.02f, 0.05f);
+            b2ShapeDef shapeDef = b2DefaultShapeDef();
+            b2CreatePolygonShape(bodyId, &shapeDef, &box);
+
+            b2MotorJointDef jointDef = b2DefaultMotorJointDef();
+            jointDef.base.bodyIdA = groundId;
+            jointDef.base.bodyIdB = bodyId;
+            jointDef.base.localFrameA.p = b2Add(bodyDef.position, { 0.025f, 0.025f });
+            jointDef.base.localFrameB.p = { 0.025f, 0.025f };
+            jointDef.linearHertz = 7.5f;
+            jointDef.linearDampingRatio = 0.7f;
+            jointDef.angularHertz = 7.5f;
+            jointDef.angularDampingRatio = 0.7f;
+            jointDef.maxSpringForce = 500.0f;
+            jointDef.maxSpringTorque = 10.0f;
+
+            return b2CreateMotorJoint(m_physicsWorld, &jointDef);
+        };
+
+    testJoint = createFlipper();
 }
 
 //private
