@@ -92,9 +92,6 @@ B2_API bool b2IsValidVec2( b2Vec2 v );
 /// Is this a valid rotation? Not NaN or infinity. Is normalized.
 B2_API bool b2IsValidRotation( b2Rot q );
 
-/// Is this a valid transform? Not NaN or infinity. Rotation is normalized.
-B2_API bool b2IsValidTransform( b2Transform t );
-
 /// Is this a valid bounding box? Not Nan or infinity. Upper bound greater than or equal to lower bound.
 B2_API bool b2IsValidAABB( b2AABB aabb );
 
@@ -123,13 +120,6 @@ B2_INLINE int b2AbsInt( int a )
 B2_INLINE int b2ClampInt( int a, int lower, int upper )
 {
 	return a < lower ? lower : ( a > upper ? upper : a );
-}
-
-// https://en.wikipedia.org/wiki/Floor_and_ceiling_functions
-B2_INLINE int b2CeilingInt( int numerator, int denominator )
-{
-	B2_VALIDATE( denominator > 0 && numerator >= 0 );
-	return ( numerator + denominator - 1 ) / denominator;
 }
 
 /// @return the minimum of two floats
@@ -342,7 +332,7 @@ B2_INLINE b2Vec2 b2GetLengthAndNormalize( float* length, b2Vec2 v )
 B2_INLINE b2Rot b2NormalizeRot( b2Rot q )
 {
 	float mag = sqrtf( q.s * q.s + q.c * q.c );
-	float invMag = mag > 0.0f ? 1.0f / mag : 0.0f;
+	float invMag = mag > 0.0 ? 1.0f / mag : 0.0f;
 	b2Rot qn = { q.c * invMag, q.s * invMag };
 	return qn;
 }
@@ -358,7 +348,7 @@ B2_INLINE b2Rot b2IntegrateRotation( b2Rot q1, float deltaAngle )
 	// s2 = s1 + omega * h * c1
 	b2Rot q2 = { q1.c - deltaAngle * q1.s, q1.s + deltaAngle * q1.c };
 	float mag = sqrtf( q2.s * q2.s + q2.c * q2.c );
-	float invMag = mag > 0.0f ? 1.0f / mag : 0.0f;
+	float invMag = mag > 0.0 ? 1.0f / mag : 0.0f;
 	b2Rot qn = { q2.c * invMag, q2.s * invMag };
 	return qn;
 }
@@ -383,13 +373,6 @@ B2_INLINE b2Rot b2MakeRot( float radians )
 	return B2_LITERAL( b2Rot ){ cs.cosine, cs.sine };
 }
 
-/// Make a rotation using a unit vector
-B2_INLINE b2Rot b2MakeRotFromUnitVector( b2Vec2 unitVector )
-{
-	B2_ASSERT( b2IsNormalized( unitVector ) );
-	return B2_LITERAL( b2Rot ){ unitVector.x, unitVector.y };
-}
-
 /// Compute the rotation between two unit vectors
 B2_API b2Rot b2ComputeRotationBetweenUnitVectors( b2Vec2 v1, b2Vec2 v2 );
 
@@ -399,12 +382,6 @@ B2_INLINE bool b2IsNormalizedRot( b2Rot q )
 	// larger tolerance due to failure on mingw 32-bit
 	float qq = q.s * q.s + q.c * q.c;
 	return 1.0f - 0.0006f < qq && qq < 1.0f + 0.0006f;
-}
-
-/// Get the inverse of a rotation
-B2_INLINE b2Rot b2InvertRot( b2Rot a )
-{
-	return B2_LITERAL( b2Rot ){ a.c, -a.s };
 }
 
 /// Normalized linear interpolation
@@ -419,7 +396,7 @@ B2_INLINE b2Rot b2NLerp( b2Rot q1, b2Rot q2, float t )
 	};
 
 	float mag = sqrtf( q.s * q.s + q.c * q.c );
-	float invMag = mag > 0.0f ? 1.0f / mag : 0.0f;
+	float invMag = mag > 0.0 ? 1.0f / mag : 0.0f;
 	b2Rot qn = { q.c * invMag, q.s * invMag };
 	return qn;
 }
@@ -477,27 +454,26 @@ B2_INLINE b2Rot b2MulRot( b2Rot q, b2Rot r )
 	return qr;
 }
 
-/// Transpose multiply two rotations: inv(a) * b
-/// This rotates a vector local in frame b into a vector local in frame a
-B2_INLINE b2Rot b2InvMulRot( b2Rot a, b2Rot b )
+/// Transpose multiply two rotations: qT * r
+B2_INLINE b2Rot b2InvMulRot( b2Rot q, b2Rot r )
 {
-	// [ ac as] * [bc -bs] = [ac*bc+qs*bs -ac*bs+as*bc]
-	// [-as ac]   [bs  bc]   [-as*bc+ac*bs as*bs+ac*bc]
-	// s(a - b) = ac * bs - as * bc
-	// c(a - b) = ac * bc + as * bs
-	b2Rot r;
-	r.s = a.c * b.s - a.s * b.c;
-	r.c = a.c * b.c + a.s * b.s;
-	return r;
+	// [ qc qs] * [rc -rs] = [qc*rc+qs*rs -qc*rs+qs*rc]
+	// [-qs qc]   [rs  rc]   [-qs*rc+qc*rs qs*rs+qc*rc]
+	// s(q - r) = qc * rs - qs * rc
+	// c(q - r) = qc * rc + qs * rs
+	b2Rot qr;
+	qr.s = q.c * r.s - q.s * r.c;
+	qr.c = q.c * r.c + q.s * r.s;
+	return qr;
 }
 
-/// Relative angle between a and b
-B2_INLINE float b2RelativeAngle( b2Rot a, b2Rot b )
+/// relative angle between b and a (rot_b * inv(rot_a))
+B2_INLINE float b2RelativeAngle( b2Rot b, b2Rot a )
 {
 	// sin(b - a) = bs * ac - bc * as
 	// cos(b - a) = bc * ac + bs * as
-	float s = a.c * b.s - a.s * b.c;
-	float c = a.c * b.c + a.s * b.s;
+	float s = b.s * a.c - b.c * a.s;
+	float c = b.c * a.c + b.s * a.s;
 	return b2Atan2( s, c );
 }
 

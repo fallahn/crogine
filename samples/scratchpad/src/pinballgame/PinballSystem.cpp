@@ -190,16 +190,16 @@ void PinballSystem::createTable()
             b2CreatePolygonShape(bodyId, &shapeDef, &box);
 
             b2MotorJointDef jointDef = b2DefaultMotorJointDef();
-            jointDef.base.bodyIdA = groundId;
-            jointDef.base.bodyIdB = bodyId;
-            jointDef.base.localFrameA.p = b2Add(bodyDef.position, { 0.025f, 0.025f });
-            jointDef.base.localFrameB.p = { 0.025f, 0.025f };
+            jointDef.bodyIdA = groundId;
+            jointDef.bodyIdB = bodyId;
+            /*jointDef.localFrameA.p = b2Add(bodyDef.position, { 0.025f, 0.025f });
+            jointDef.localFrameB.p = { 0.025f, 0.025f };
             jointDef.linearHertz = 7.5f;
             jointDef.linearDampingRatio = 0.7f;
             jointDef.angularHertz = 7.5f;
             jointDef.angularDampingRatio = 0.7f;
             jointDef.maxSpringForce = 500.0f;
-            jointDef.maxSpringTorque = 10.0f;
+            jointDef.maxSpringTorque = 10.0f;*/
 
             return b2CreateMotorJoint(m_physicsWorld, &jointDef);
         };

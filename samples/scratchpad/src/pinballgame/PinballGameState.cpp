@@ -70,7 +70,7 @@ bool PinballGameState::handleEvent(const cro::Event& evt)
         case SDLK_LEFT:
         {
             auto j = SCENE.getSystem<PinballSystem>()->testJoint;
-            b2MotorJoint_SetAngularVelocity(j, 10.f);
+            b2MotorJoint_SetAngularOffset(j, 10.f);
             b2Joint_WakeBodies(j);
             break;
         }
@@ -82,7 +82,7 @@ bool PinballGameState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_LEFT:
-            b2MotorJoint_SetAngularVelocity(SCENE.getSystem<PinballSystem>()->testJoint, 0.f);
+            b2MotorJoint_SetAngularOffset(SCENE.getSystem<PinballSystem>()->testJoint, 0.f);
             break;
         }
     }
