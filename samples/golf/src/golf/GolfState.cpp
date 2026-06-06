@@ -7606,8 +7606,9 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_inputParser.setActive(localPlayer && !m_photoMode, /*m_currentPlayer.terrain*/player.terrain, l, isCPU, lie);
     m_inputParser.setDistanceToHole(glm::length(m_holeData[m_currentHole].pin - player.position));
 
-    const auto searchPos = (glm::normalize(m_holeData[m_currentHole].pin - player.position) * 3.f) + player.position;
-    m_inputParser.setOnFringe(m_collisionMesh.getTerrain(searchPos).terrain == TerrainID::Green); //tests if we're on fringe and should allow putting
+    const auto searchDir = m_holeData[m_currentHole].pin - player.position;
+    const auto searchPos = (glm::normalize(searchDir) * 5.f) + player.position;
+    m_inputParser.setOnFringe(m_collisionMesh.getTerrain(searchPos).terrain == TerrainID::Green || glm::length2(searchDir) < 100.f); //tests if we're on fringe and should allow putting
 
     m_restoreInput = localPlayer; //if we're in photo mode should we restore input parser?
     Achievements::setActive(localPlayer && !isCPU && m_allowAchievements);
