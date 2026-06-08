@@ -85,6 +85,12 @@ static constexpr float FlipperChuteLargeRotation = 51.7f * cro::Util::Const::deg
 static constexpr glm::vec2 FlipperChuteSizeSmall = glm::vec2(0.01f, 0.13f);
 static constexpr glm::vec2 FlipperChutePosSmall = glm::vec2(-0.208f, -0.32f);
 
+static constexpr float FlipperLength = 0.065f;
+static constexpr float FlipperRadius = 0.01f;
+static constexpr float FlipperRestRotation = 40.f * cro::Util::Const::degToRad;
+static constexpr float FlipperActiveRotation = 1.2f;
+
+
 //helper func because b2d has no ctors
 static inline b2Vec2 b2Vector(float x, float y)
 {

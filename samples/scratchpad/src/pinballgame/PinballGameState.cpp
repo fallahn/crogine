@@ -69,8 +69,15 @@ bool PinballGameState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_LEFT:
         {
-            auto j = SCENE.getSystem<PinballSystem>()->testJoint;
-            b2MotorJoint_SetAngularOffset(j, 10.f);
+            auto j = SCENE.getSystem<PinballSystem>()->flipperLeft;
+            b2MotorJoint_SetAngularOffset(j, FlipperActiveRotation);
+            b2Joint_WakeBodies(j);
+            break;
+        }
+        case SDLK_RIGHT:
+        {
+            auto j = SCENE.getSystem<PinballSystem>()->flipperRight;
+            b2MotorJoint_SetAngularOffset(j, -FlipperActiveRotation);
             b2Joint_WakeBodies(j);
             break;
         }
@@ -82,7 +89,10 @@ bool PinballGameState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_LEFT:
-            b2MotorJoint_SetAngularOffset(SCENE.getSystem<PinballSystem>()->testJoint, 0.f);
+            b2MotorJoint_SetAngularOffset(SCENE.getSystem<PinballSystem>()->flipperLeft, 0.f);
+            break;
+        case SDLK_RIGHT:
+            b2MotorJoint_SetAngularOffset(SCENE.getSystem<PinballSystem>()->flipperRight, 0.f);
             break;
         }
     }
@@ -164,6 +174,25 @@ void PinballGameState::createScene()
             entity.getComponent<cro::Transform>().setRotation(rotation);
             entity.addComponent<cro::Drawable2D>().setVertexData(halfBox(ArcSegmentSize));
             entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+        };
+
+    const auto capsule =
+        [this](glm::vec2 pos0, glm::vec2 pos1, float rad)
+        {
+            auto circle0 = cro::Shape::circle(rad, cro::Colour::Magenta);
+            for (auto& v : circle0)
+            {
+                v.position += pos0;
+            }
+
+            auto circle1 = cro::Shape::circle(rad, cro::Colour::Magenta);
+            for (auto& v : circle1)
+            {
+                v.position += pos1;
+            }
+
+            circle0.insert(circle0.end(), circle1.begin(), circle1.end());
+            return circle0;
         };
 
     ////walls
@@ -299,15 +328,10 @@ void PinballGameState::createScene()
 
 
     //flippers
-    entity = SCENE.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>().setVertexData(halfBox({ 0.02f, 0.05f }));
-    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [this](cro::Entity e, float)
+    const auto flipperFunc = 
+        [](cro::Entity e, float)
         {
-            const auto body = SCENE.getSystem<PinballSystem>()->testBody;
+            const auto& body = e.getComponent<cro::Callback>().getUserData<b2BodyId>();
             const b2Rot rotation = b2Body_GetRotation(body);
             const auto rads = b2Rot_GetAngle(rotation);
             e.getComponent<cro::Transform>().setRotation(rads);
@@ -315,6 +339,24 @@ void PinballGameState::createScene()
             const b2Vec2 position = b2Body_GetPosition(body);
             e.getComponent<cro::Transform>().setPosition({ position.x, position.y });
         };
+
+    entity = SCENE.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(capsule({0.f, 0.f},{FlipperLength, 0.f}, FlipperRadius));
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<b2BodyId>(SCENE.getSystem<PinballSystem>()->flipperLeftBody);
+    entity.getComponent<cro::Callback>().function = flipperFunc;
+        
+    entity = SCENE.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(capsule({ 0.f, 0.f }, { FlipperLength, 0.f }, FlipperRadius));
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<b2BodyId>(SCENE.getSystem<PinballSystem>()->flipperRightBody);
+    entity.getComponent<cro::Callback>().function = flipperFunc;
+
+
 
 
     auto resize = [](cro::Camera& cam)

@@ -168,43 +168,44 @@ void PinballSystem::createTable()
     createPoly(funnelPoints, FunnelRightPos);
 
 
-
-
-    //static body to which flippers are connected
-    b2BodyDef bodyDef = b2DefaultBodyDef();
-    auto groundId = b2CreateBody(m_physicsWorld, &bodyDef);
-    b2ShapeDef shapeDef = b2DefaultShapeDef();
-    b2Segment segment = { { -0.02f, 0.0f }, { 0.02f, 0.0f } };
-    b2CreateSegmentShape(groundId, &shapeDef, &segment);
-
+    const b2Vec2 flipperPosLeft = { -0.1f, FlipperChutePosLarge.y - 0.046f };
+    const b2Vec2 flipperPosRight = {0.06f, flipperPosLeft.y};
+    
+    //TODO we should be able to connect to flippers to a single
+    //static body but I can't for the life of me figure out how to
+    //set the position of the flippers.
     const auto createFlipper =
-        [this, &groundId]() 
+        [this](b2BodyId& b, b2Vec2 pos, float rotation) 
         {
+            //static body to which flippers are connected
             b2BodyDef bodyDef = b2DefaultBodyDef();
+            bodyDef.position = pos;
+            bodyDef.fixedRotation = true;
+            bodyDef.rotation = b2MakeRot(rotation);
+            auto groundId = b2CreateBody(m_physicsWorld, &bodyDef);
+
+
+            bodyDef = b2DefaultBodyDef();
             bodyDef.type = b2_dynamicBody;
-            //bodyDef.position;
             auto bodyId = b2CreateBody(m_physicsWorld, &bodyDef);
-            testBody = bodyId;
-            b2Polygon box = b2MakeBox(0.02f, 0.05f);
+            b = bodyId;
+
+            b2Capsule capsule = {};
+            capsule.center1 = { 0.f, 0.f };
+            capsule.center2 = { 0.065f, 0.f };
+            capsule.radius = 0.01f;
             b2ShapeDef shapeDef = b2DefaultShapeDef();
-            b2CreatePolygonShape(bodyId, &shapeDef, &box);
+            b2CreateCapsuleShape(bodyId, &shapeDef, &capsule);
 
             b2MotorJointDef jointDef = b2DefaultMotorJointDef();
             jointDef.bodyIdA = groundId;
             jointDef.bodyIdB = bodyId;
-            /*jointDef.localFrameA.p = b2Add(bodyDef.position, { 0.025f, 0.025f });
-            jointDef.localFrameB.p = { 0.025f, 0.025f };
-            jointDef.linearHertz = 7.5f;
-            jointDef.linearDampingRatio = 0.7f;
-            jointDef.angularHertz = 7.5f;
-            jointDef.angularDampingRatio = 0.7f;
-            jointDef.maxSpringForce = 500.0f;
-            jointDef.maxSpringTorque = 10.0f;*/
 
             return b2CreateMotorJoint(m_physicsWorld, &jointDef);
         };
 
-    testJoint = createFlipper();
+    flipperLeft = createFlipper(flipperLeftBody, flipperPosLeft, -FlipperRestRotation);
+    flipperRight = createFlipper(flipperRightBody, flipperPosRight, -FlipperRestRotation - (cro::Util::Const::PI / 2.f) - 0.18f);
 }
 
 //private

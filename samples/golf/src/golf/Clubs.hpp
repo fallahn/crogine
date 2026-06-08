@@ -173,7 +173,7 @@ private:
     static constexpr float ShortRange = 1.f / 3.f;
     static constexpr float ShortRangeThreshold = ShortRange * 0.8f;
     static constexpr float TinyRange = 1.f / 10.f;
-    static constexpr float TinyRangeThreshold = TinyRange * 0.8f;// 0.5f;
+    static constexpr float TinyRangeThreshold = TinyRange * 0.65f;// 0.5f;
 
     static float m_maxScale;
 
