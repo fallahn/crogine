@@ -536,10 +536,13 @@ void App::run(bool resetSettings)
     static constexpr std::int32_t MaxFrames = 4; //for every fixed update render no more than these frames
     std::int32_t framesRendered = 0;
 
+    static constexpr std::int32_t MaxUpdates = 20;
+
     while (m_running)
     {
         timeSinceLastUpdate += frameClock.restart();
 
+        std::int32_t updates = 0;
         while (timeSinceLastUpdate > frameTime)
         {
             timeSinceLastUpdate -= frameTime;
@@ -552,6 +555,13 @@ void App::run(bool resetSettings)
             simulate(frameTime);
 
             framesRendered = 0;
+
+            if (updates++ > MaxUpdates)
+            {
+                Logger::log("Max updates reached with frame time " + std::to_string(timeSinceLastUpdate) + "remaining: aborting!", Logger::Type::Warning, Logger::Output::All);
+                simulate(timeSinceLastUpdate);
+                timeSinceLastUpdate = 0;
+            }
         }
 
         if (m_window.getVsyncEnabled()
