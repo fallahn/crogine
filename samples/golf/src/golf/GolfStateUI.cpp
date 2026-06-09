@@ -6734,7 +6734,7 @@ void GolfState::updateLeague()
             }
         }
 
-        //if this is the final league and the last round
+        //if this is the final league and the last round (non-DLC)
         if (m_sharedData.leagueRoundID == LeagueRoundID::RoundSix
             && league->getCurrentSeason() > 1) //iterating above will have incremented this on completion
         {
@@ -6747,7 +6747,7 @@ void GolfState::updateLeague()
         if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
         {
             std::int32_t bestCount = 0;
-            for (auto i = 0u; i < Career::MaxLeagues - 1; ++i) //don't include custom league
+            for (auto i = 0u; i < Career::MaxLeagues; ++i)
             {
                 bestCount += Career::instance(m_sharedData).getLeagueTables()[i].getCurrentBest();
             }
@@ -6799,7 +6799,7 @@ void GolfState::updateLeagueHole()
             case LeagueRoundID::RoundFour:
             case LeagueRoundID::RoundFive:
             case LeagueRoundID::RoundSix:
-            //case LeagueRoundID::Custom:
+            case LeagueRoundID::RoundSeven:
             {
                 auto& league = Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
                 //this may have been saved previously

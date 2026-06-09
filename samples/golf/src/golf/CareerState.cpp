@@ -404,7 +404,7 @@ void CareerState::buildScene()
 
 
                 //interestingly only clang tells us capturing a structured binding is C++20 (we're using 17)
-                auto ct = currTime;
+                const auto ct = currTime;
 
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Menu::TitleText;
@@ -557,10 +557,12 @@ void CareerState::buildScene()
     std::vector<std::uint8_t> temp(18);
     std::int32_t temp2 = 0;
 
-    //const bool showCustom = false;// (leagueTables[Career::MaxLeagues - 1].getCurrentBest() < CareerLeagueThreshold);
-    //const std::uint32_t displayCount = showCustom ? Career::MaxLeagues : Career::MaxLeagues - 1;
+    const bool showCustom = false;// TODO we need to determine if DLC is available
+    const std::uint32_t displayCount = showCustom ? Career::MaxLeagues : Career::MaxLeagues - 1;
 
-    for (auto i = 0u; i < Career::MaxLeagues/*displayCount*/; ++i)
+    LogI << m_sharedData.courseData->courseData.size() << " courses" << std::endl;
+
+    for (auto i = 0u; i < /*Career::MaxLeagues*/displayCount; ++i)
     {
         //this just builds up the string if needed, and finds the previous result (if any)
         leagueTables[i].getPreviousResults(playerName);
@@ -658,22 +660,25 @@ void CareerState::buildScene()
     buttons.back().getComponent<cro::UIInput>().setNextIndex(CareerGimme, CareerGimme);
 
     //put player name on bottom row of the box
-    /*if (!showCustom)
+    if (!showCustom)
     {
-    }*/
-    position.y -= LeagueLineSpacing;
-
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(position);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString(playerName);
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    m_playerName = entity;
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        position.y -= LeagueLineSpacing;
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(largeFont).setString(playerName);
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        m_playerName = entity;
+        bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+    else
+    {
+        position.y -= (LeagueLineSpacing + 1.f);
+    }
 
 
     //ticker for freeplay reminder
@@ -688,7 +693,12 @@ void CareerState::buildScene()
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString("Don't forget you can practice any course at any time in Free Play mode!");
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setFillColour(showCustom ? TextNormalColour : LeaderboardTextDark);
+        if (showCustom)
+        {
+            entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+            entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        }
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<ScrollData>();
         entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds = cro::Text::getLocalBounds(entity);

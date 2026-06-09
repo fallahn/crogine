@@ -43,7 +43,7 @@ namespace
         {10,1},
         {8, 2},
         {6,11},
-        //{15,16}
+        {13,14}
         }
     };
 
@@ -55,6 +55,7 @@ namespace
         "Hill and Hole Valley Run",
         "Chippers Pitch 'n' Putt",
         "The Woodlands League",
+        "Sun & Moon Adventure"
         //"Craewall Competition"
     };
 }

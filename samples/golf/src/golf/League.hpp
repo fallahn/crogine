@@ -93,7 +93,8 @@ struct LeagueRoundID final
         RoundFive,
         RoundSix,
 
-        //Custom,
+        //DLC leagues
+        RoundSeven,
 
         Count
     };

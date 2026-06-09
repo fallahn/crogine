@@ -830,6 +830,7 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
         "Career League Four",
         "Career League Five",
         "Career League Six",
+        "Career League Seven",
         //"Custom League",
     };
 

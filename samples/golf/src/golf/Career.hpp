@@ -62,8 +62,8 @@ public:
     Career& operator = (const Career&) = delete;
     Career& operator = (Career&&) = delete;
 
-    //static constexpr std::uint32_t MaxLeagues = 7;
-    static constexpr std::uint32_t MaxLeagues = 6;
+    static constexpr std::uint32_t MaxLeagues = 7;
+    //static constexpr std::uint32_t MaxLeagues = 6;
 
     static Career& instance(const SharedStateData& sd)
     {
