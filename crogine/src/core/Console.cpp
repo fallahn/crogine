@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -500,6 +500,8 @@ void Console::draw()
                 break;
             }
         }
+
+        currentResolution = std::clamp(currentResolution, 0, static_cast<std::int32_t>(resolutions.size() - 1));
         return;
     }
 

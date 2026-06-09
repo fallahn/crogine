@@ -364,7 +364,7 @@ const std::vector<glm::uvec2>& Window::getAvailableResolutions() const
     CRO_ASSERT(m_window, "window not created");
     if (m_resolutions.empty())
     {
-        auto modeCount = SDL_GetNumDisplayModes(0);
+        const auto modeCount = SDL_GetNumDisplayModes(0);
         if (modeCount > 0)
         {
             SDL_DisplayMode mode = { SDL_PIXELFORMAT_UNKNOWN, 0, 0, 0, 0 };
@@ -381,6 +381,11 @@ const std::vector<glm::uvec2>& Window::getAvailableResolutions() const
         {
             const std::string err = SDL_GetError();
             Logger::log("failed retrieving available resolutions: " + err, Logger::Type::Error, Logger::Output::All);
+
+            //don't leave this empty else we'll badly index it
+            m_resolutions.emplace_back(1920u, 1080u);
+            m_resolutions.emplace_back(1280u, 720u);
+            m_resolutions.emplace_back(640u, 480u);
         }
     }
     return m_resolutions;

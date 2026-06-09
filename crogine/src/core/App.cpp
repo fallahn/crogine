@@ -558,7 +558,7 @@ void App::run(bool resetSettings)
 
             if (updates++ > MaxUpdates)
             {
-                Logger::log("Max updates reached with frame time " + std::to_string(timeSinceLastUpdate) + "remaining: aborting!", Logger::Type::Warning, Logger::Output::All);
+                Logger::log("Max updates reached with frame time " + std::to_string(timeSinceLastUpdate) + " remaining: aborting!", Logger::Type::Warning, Logger::Output::All);
                 simulate(timeSinceLastUpdate);
                 timeSinceLastUpdate = 0;
             }
