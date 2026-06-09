@@ -564,7 +564,8 @@ private:
         bool isEnabled = false;
     }m_puttViewState;
     void togglePuttingView(bool); //only used when switching to putter manually
-    void setCameraTarget(const ActivePlayer&);//target for createTranstion() and spectateNextPlayer()
+    void setCameraTarget(const ActivePlayer&);//target for createTransition() and spectateNextPlayer()
+    void rotateCameraToTarget(); //performs animation to rotate to target set by above
     void createTransition(const ActivePlayer&, bool = true);
     void startFlyBy();
     void setCameraPosition(glm::vec3, float, float);

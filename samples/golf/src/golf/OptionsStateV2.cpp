@@ -2196,6 +2196,11 @@ void OptionsStateV2::createKeyboardItems()
     item->displayType = Menu::Item::TextOnly;
 
     item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
+    item->title = "Rotate Camera To Target";
+    item->description = "Key: Number 6 (Top Row)";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Show Scores";
     item->description = "Key: Tab";
     item->displayType = Menu::Item::TextOnly;

@@ -791,6 +791,16 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 m_useDOF = !m_useDOF;
                 enableDOF(m_useDOF);
             }
+            else
+            {
+                //reset the camera view
+                if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+                    && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
+                {
+                    setCameraTarget(m_currentPlayer);
+                    rotateCameraToTarget();
+                }
+            }
         };
 
     if (evt.type == SDL_KEYUP)
@@ -3222,8 +3232,7 @@ bool GolfState::simulate(float dt)
         }*/
 
         const float rotation = m_inputParser.getCamRotation() * dt;
-        if (/*getClub() != ClubID::Putter
-            && */rotation != 0)
+        if (rotation != 0)
         {
             auto& tx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
 

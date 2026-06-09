@@ -1349,7 +1349,7 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
     }
 
     //if we have a sub-target see if that should be active
-    auto activeTarget = findTargetPos(playerData.position);
+    const auto activeTarget = findTargetPos(playerData.position);
 
 
     const auto targetDir = activeTarget - playerData.position;
@@ -1413,6 +1413,52 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
             targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
         }
     }
+}
+
+void GolfState::rotateCameraToTarget()
+{
+    auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
+    targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
+    targetInfo.startHeight = targetInfo.targetHeight;
+    targetInfo.startOffset = targetInfo.targetOffset;
+
+    const auto currRotation = m_camRotation;
+    const auto targetDir = targetInfo.currentLookAt - m_currentPlayer.position;
+    m_camRotation = std::atan2(-targetDir.z, targetDir.x);
+
+    const auto targRotation = m_camRotation;
+    const auto startRotation = currRotation;
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(currRotation);
+    entity.getComponent<cro::Callback>().function =
+        [&, targRotation, startRotation](cro::Entity e, float dt)
+        {
+            auto& tx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
+            auto& camRotation = e.getComponent<cro::Callback>().getUserData<float>();
+            const float rotation = cro::Util::Maths::shortestRotation(camRotation, targRotation) * (dt * 10.f);
+
+            auto offset = m_currentPlayer.position - tx.getWorldPosition();
+            tx.move(offset);
+
+            const auto axis = glm::inverse(tx.getRotation()) * cro::Transform::Y_AXIS;
+            tx.rotate(axis, rotation);
+
+            offset = glm::rotateY(offset, rotation);
+            tx.move(-offset);
+
+            camRotation += rotation;
+
+            //LogI << targRotation - camRotation << std::endl;
+            if (std::abs(targRotation - camRotation) < 0.0001f)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+
+                m_camRotation = camRotation;
+            }
+        };
 }
 
 void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPlayer)
