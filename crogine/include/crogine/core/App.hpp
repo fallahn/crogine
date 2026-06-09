@@ -267,6 +267,7 @@ namespace cro
             bool fullscreen = false;
             bool exclusive = false;
             bool vsync = false;
+            bool border = true;
             bool useMultisampling = false;
             glm::vec2 windowedSize = glm::vec2(0.f);
         };

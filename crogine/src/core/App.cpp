@@ -416,6 +416,7 @@ void App::run(bool resetSettings)
         m_window.setExclusiveFullscreen(settings.exclusive);
         m_window.setFullScreen(settings.fullscreen);
         m_window.setVsyncEnabled(settings.vsync);
+        m_window.setBorderVisible(settings.border);
         m_window.setFramerateLimit(settings.framelimit);
         m_window.setMultisamplingEnabled(settings.useMultisampling);
         Console::init();
@@ -1156,6 +1157,10 @@ App::WindowSettings App::loadSettings() const
             {
                 settings.vsync = prop.getValue<bool>();
             }
+            else if (prop.getName() == "border")
+            {
+                settings.border = prop.getValue<bool>();
+            }
             else if (prop.getName() == "framelimit")
             {
                 settings.framelimit = std::max(0.f, prop.getValue<float>());
@@ -1244,6 +1249,7 @@ void App::saveSettings()
     saveSettings.addProperty("fullscreen").setValue(m_window.isFullscreen());
     saveSettings.addProperty("exclusive").setValue(m_window.getExclusiveFullscreen());
     saveSettings.addProperty("vsync").setValue(m_window.getVsyncEnabled());
+    saveSettings.addProperty("border").setValue(m_window.getBorderVisible());
     saveSettings.addProperty("framelimit").setValue(m_window.getFramerateLimit());
     saveSettings.addProperty("multisample").setValue(m_window.getMultisamplingEnabled());
     saveSettings.addProperty("window_size").setValue(m_window.getWindowedSize());

@@ -2637,6 +2637,18 @@ void OptionsStateV2::createDisplayItems()
     item->selectedIndex = cro::App::getWindow().getExclusiveFullscreen() ? 1 : 0;
 
 
+    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
+    item->title = "Show Window Border";
+    item->description = "Display a border around the game window when not in full screen.";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            cro::App::getWindow().setBorderVisible(i.selectedIndex == 1);
+        };
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = cro::App::getWindow().getBorderVisible() ? 1 : 0;
+
+
     //vsync
     item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Enable VSync";

@@ -149,6 +149,23 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
     return true;
 }
 
+void Window::setBorderVisible(bool v)
+{
+    if (v)
+    {
+        SDL_SetWindowBordered(m_window, SDL_TRUE);
+    }
+    else
+    {
+        SDL_SetWindowBordered(m_window, SDL_FALSE);
+    }
+}
+
+bool Window::getBorderVisible() const
+{
+    return (SDL_GetWindowFlags(m_window) & SDL_WINDOW_BORDERLESS) == 0;
+}
+
 void Window::setVsyncEnabled(bool enabled)
 {
     if (m_mainContext)

@@ -84,6 +84,17 @@ namespace cro
         bool create(std::uint32_t width, std::uint32_t height, const std::string& title, std::uint32_t styleFlags = 0);
 
         /*!
+        \brief Toggles visibility of window's border
+        \param visible True to set the border visible, else false
+        */
+        void setBorderVisible(bool visible);
+
+        /*!
+        \brief Returns the curren visibility state of the window's border
+        */
+        bool getBorderVisible() const;
+
+        /*!
         \brief Enables or disables vsync
         */
         void setVsyncEnabled(bool);
