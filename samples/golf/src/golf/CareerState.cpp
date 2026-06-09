@@ -557,10 +557,8 @@ void CareerState::buildScene()
     std::vector<std::uint8_t> temp(18);
     std::int32_t temp2 = 0;
 
-    const bool showCustom = false;// TODO we need to determine if DLC is available
+    const bool showCustom = Content::leagueAvailable(LeagueRoundID::RoundSeven);
     const std::uint32_t displayCount = showCustom ? Career::MaxLeagues : Career::MaxLeagues - 1;
-
-    LogI << m_sharedData.courseData->courseData.size() << " courses" << std::endl;
 
     for (auto i = 0u; i < /*Career::MaxLeagues*/displayCount; ++i)
     {
@@ -686,12 +684,18 @@ void CareerState::buildScene()
     
     //if (!showCustom)
     {
+        std::string msg = "Don't forget you can practice any course at any time in Free Play mode!";
+        if (!showCustom)
+        {
+            msg += " - Unlock a new league with the Adventurer and Putt-stop in Paradise DLCs!";
+        }
+
         position.x += 100.f;
         position.y += LeagueLineSpacing + 1.f;
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString("Don't forget you can practice any course at any time in Free Play mode!");
+        entity.addComponent<cro::Text>(smallFont).setString(msg);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setFillColour(showCustom ? TextNormalColour : LeaderboardTextDark);
         if (showCustom)

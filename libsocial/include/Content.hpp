@@ -54,4 +54,7 @@ public:
     static std::string getBaseContentPath();
     //returns the base content path plus the given user content dir
     static std::string getUserContentPath(std::int32_t);
+
+    //returns whether a given league is available based on installed DLC
+    static bool leagueAvailable(std::int32_t leagueID);
 };

@@ -747,7 +747,8 @@ void LeagueState::buildScene()
     {
         if (unlocked)
         {
-            unlocked = createLeagueTab(bgNode, spriteSheet, i);
+            unlocked = createLeagueTab(bgNode, spriteSheet, i)
+                && (i < LeagueRoundID::RoundSix || Content::leagueAvailable(i+1));
         }
     }
 #ifdef USE_GNS
