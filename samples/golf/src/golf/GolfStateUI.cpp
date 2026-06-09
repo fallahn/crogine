@@ -2731,7 +2731,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
                         }
 
                         //any course
-                        if (p.parScore < -17)
+                        if (p.parScore < -17
+                            && m_sharedData.leagueRoundID == LeagueRoundID::Club)
                         {
                             Achievements::awardAchievement(AchievementStrings[AchievementID::RoadToSuccess]);
                         }
@@ -2742,12 +2743,14 @@ void GolfState::showCountdown(std::uint8_t seconds)
                         Achievements::awardAchievement(AchievementStrings[AchievementID::ConsistencyIsKey]);
                     }
 
-                    if (m_achievementTracker.noHolesOverPar)
+                    if (m_achievementTracker.noHolesOverPar
+                        && m_sharedData.leagueRoundID == LeagueRoundID::Club)
                     {
                         Achievements::awardAchievement(AchievementStrings[AchievementID::NoMistake]);
                     }
 
-                    if (m_achievementTracker.noGimmeUsed)
+                    if (m_achievementTracker.noGimmeUsed
+                        && m_sharedData.leagueRoundID == LeagueRoundID::Club)
                     {
                         Achievements::awardAchievement(AchievementStrings[AchievementID::NeverGiveUp]);
                     }

@@ -1751,7 +1751,7 @@ void OptionsStateV2::createSettingsItems()
             m_sharedData.calculateRange = i.selectedIndex == 0;
             Social::setLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist, i.selectedIndex == 1);
         };
-    item->labels = { "On" , "Off" };
+    item->labels = { "Yes" , "No" };
     item->selectedIndex = m_sharedData.calculateRange ? 0 : 1;
 
 
