@@ -706,7 +706,8 @@ void CareerState::buildScene()
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<ScrollData>();
         entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds = cro::Text::getLocalBounds(entity);
-        entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds.height += 2.f;
+        entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds.height += 3.f;
+        entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds.bottom -= 1.f;
         entity.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
             {
