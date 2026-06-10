@@ -129,6 +129,7 @@ void main()
 ShadowMapRenderer::ShadowMapRenderer(MessageBus& mb)
     : System(mb, typeid(ShadowMapRenderer)),
     m_interval      (1),
+    m_wantsRender   (true),
     m_blurBuffer    (false),
     m_bufferIndices (MaxDepthMaps)
 {
@@ -205,22 +206,23 @@ void ShadowMapRenderer::process(float)
     //which would call render() multiple times unnecessarily.
     if ((intervalCounter % m_interval) == 0)
     {
-        render();
+        m_wantsRender = true;
+        //render();
 
-        //for each camera mark its resource as now being free
-        //to use in the next call to updateDrawList()
-        for (auto cam : m_activeCameras)
-        {
-            const auto& dmap = cam.getComponent<cro::Camera>().shadowMapBuffer;
-            if (dmap.m_resourceIndex != -1)
-            {
-                //this *should* go back to zero as we iterate all cameras
-                //if it doesn't it's a more obvious bug than just forcing it to 0...
-                m_bufferResources[dmap.m_resourceIndex].useCount--;
-            }
-        }
-        
-        m_activeCameras.clear();
+        ////for each camera mark its resource as now being free
+        ////to use in the next call to updateDrawList()
+        //for (auto cam : m_activeCameras)
+        //{
+        //    const auto& dmap = cam.getComponent<cro::Camera>().shadowMapBuffer;
+        //    if (dmap.m_resourceIndex != -1)
+        //    {
+        //        //this *should* go back to zero as we iterate all cameras
+        //        //if it doesn't it's a more obvious bug than just forcing it to 0...
+        //        m_bufferResources[dmap.m_resourceIndex].useCount--;
+        //    }
+        //}
+        //
+        //m_activeCameras.clear();
     }
 
     //check buffer resource for updated refs and remove any now at zero
@@ -553,6 +555,31 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         //    //do an immediate update on the map
         //    render();
         //}
+    }
+}
+
+void ShadowMapRenderer::render(Entity, const RenderTarget&)
+{
+    if (m_wantsRender)
+    {
+        render();
+
+        //for each camera mark its resource as now being free
+        //to use in the next call to updateDrawList()
+        for (auto cam : m_activeCameras)
+        {
+            const auto& dmap = cam.getComponent<cro::Camera>().shadowMapBuffer;
+            if (dmap.m_resourceIndex != -1)
+            {
+                //this *should* go back to zero as we iterate all cameras
+                //if it doesn't it's a more obvious bug than just forcing it to 0...
+                m_bufferResources[dmap.m_resourceIndex].useCount--;
+            }
+        }
+
+        m_activeCameras.clear();
+
+        m_wantsRender = false;
     }
 }
 
