@@ -270,6 +270,7 @@ namespace cro
             bool border = true;
             bool useMultisampling = false;
             glm::vec2 windowedSize = glm::vec2(0.f);
+            glm::vec2 fullscreenSize = glm::vec2(0.f);
         };
         WindowSettings loadSettings() const;
 

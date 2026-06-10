@@ -2531,7 +2531,8 @@ void OptionsStateV2::createDisplayItems()
         {
             if (!i.valueChangedOnActivate)
             {
-                cro::App::getWindow().setSize(m_sharedData.resolutions[i.selectedIndex]);
+                cro::App::getWindow().setWindowedSize(m_sharedData.resolutions[i.selectedIndex]);
+                cro::App::getWindow().setFullscreenSize(m_sharedData.resolutions[i.selectedIndex]);
             }
         };
     item->alwaysActivate = true;
@@ -2542,7 +2543,7 @@ void OptionsStateV2::createDisplayItems()
     }
     item->wrapValue = false;
 
-    const auto size = cro::App::getWindow().getSize();
+    const auto size = cro::App::getWindow().isFullscreen() ? cro::App::getWindow().getFullscreenSize() : cro::App::getWindow().getWindowedSize();
     for (auto i = 0u; i < m_sharedData.resolutions.size(); ++i)
     {
         if (m_sharedData.resolutions[i].x == size.x 
@@ -2629,7 +2630,7 @@ void OptionsStateV2::createDisplayItems()
             if (cro::App::getWindow().isFullscreen())
             {
                 //apply the setting
-                cro::App::getWindow().setFullScreen(false);
+                //cro::App::getWindow().setFullScreen(false);
                 cro::App::getWindow().setFullScreen(true);
             }
         };

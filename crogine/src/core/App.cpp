@@ -413,6 +413,8 @@ void App::run(bool resetSettings)
         ImGui::GetIO().Fonts->AddFontFromMemoryTTF(fontBuff.data(), fontBuff.size(), 13.f, &config, ranges);
 
         m_window.setIcon(defaultIcon);
+        m_window.setWindowedSize(settings.windowedSize);
+        m_window.setFullscreenSize(settings.fullscreenSize);
         m_window.setExclusiveFullscreen(settings.exclusive);
         m_window.setFullScreen(settings.fullscreen);
         m_window.setVsyncEnabled(settings.vsync);
@@ -1178,6 +1180,15 @@ App::WindowSettings App::loadSettings() const
                 settings.windowedSize.x = std::clamp(settings.windowedSize.x, std::min(640.f, modeWidth - 1.f), modeWidth);
                 settings.windowedSize.x = std::clamp(settings.windowedSize.y, std::min(640.f, modeHeight - 1.f), modeHeight);
             }
+            else if (prop.getName() == "full_size")
+            {
+                const float modeWidth = static_cast<float>(mode.w);
+                const float modeHeight = static_cast<float>(mode.h);
+
+                settings.fullscreenSize = prop.getValue<glm::vec2>();
+                settings.fullscreenSize.x = std::clamp(settings.fullscreenSize.x, std::min(640.f, modeWidth - 1.f), modeWidth);
+                settings.fullscreenSize.x = std::clamp(settings.fullscreenSize.y, std::min(640.f, modeHeight - 1.f), modeHeight);
+            }
             else if (prop.getName() == "left_deadzone")
             {
                 cro::GameController::LeftThumbDeadZone.setOffset(prop.getValue<std::int32_t>());
@@ -1253,6 +1264,7 @@ void App::saveSettings()
     saveSettings.addProperty("framelimit").setValue(m_window.getFramerateLimit());
     saveSettings.addProperty("multisample").setValue(m_window.getMultisamplingEnabled());
     saveSettings.addProperty("window_size").setValue(m_window.getWindowedSize());
+    saveSettings.addProperty("full_size").setValue(m_window.getFullscreenSize());
     saveSettings.addProperty("left_deadzone").setValue(cro::GameController::LeftThumbDeadZone.getOffset());
     saveSettings.addProperty("right_deadzone").setValue(cro::GameController::RightThumbDeadZone.getOffset());
     saveSettings.addProperty("trigger_deadzone").setValue(cro::GameController::TriggerDeadZone.getOffset());
