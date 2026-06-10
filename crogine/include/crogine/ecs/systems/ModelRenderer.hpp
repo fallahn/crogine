@@ -64,6 +64,7 @@ namespace cro
         //to calc once per draw list rather than
         //every single render frame
         glm::mat4 worldViewMatrix = glm::mat4(1.f);
+        std::int32_t blendMode = 4;
     };
 
     using MaterialPair = std::pair<Entity, SortData>;

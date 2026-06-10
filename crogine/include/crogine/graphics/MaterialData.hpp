@@ -124,11 +124,12 @@ namespace cro
         
         enum class BlendMode
         {
-            None,
-            Alpha,
-            Multiply,
             Additive,
-            Custom
+            Multiply,
+            Alpha,
+            Custom,
+            None,
+            //note this is also used in sorting so order is important
         };
 
         struct CRO_EXPORT_API Property final

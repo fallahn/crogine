@@ -238,7 +238,12 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
 #endif
             [](const MaterialPair& a, const MaterialPair& b)
             {
-                return a.second.flags < b.second.flags;
+                if (a.second.blendMode == b.second.blendMode
+                    /*|| a.second.blendMode < static_cast<std::int32_t>(Material::BlendMode::Alpha)*/)
+                {
+                    return a.second.flags < b.second.flags;
+                }
+                return a.second.blendMode > b.second.blendMode;
             });
 #ifdef GNUC_UNSUPPORTED
 #define USE_PARALLEL_PROCESSING
@@ -756,16 +761,19 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
                         continue;
                     }
 
-                    if (model.m_materials[Mesh::IndexData::Final][i].blendMode != Material::BlendMode::None)
+                    const auto blendMode = model.m_materials[Mesh::IndexData::Final][i].blendMode;
+                    if (blendMode != Material::BlendMode::None)
                     {
                         transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
                         transparent.second.flags = static_cast<std::int64_t>(-distance * 1000000.f); //suitably large number to shift decimal point
                         transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
+                        transparent.second.blendMode = static_cast<std::int32_t>(blendMode);
                     }
                     else
                     {
                         opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
                         opaque.second.flags = static_cast<std::int64_t>(distance * 1000000.f);
+                        opaque.second.blendMode = static_cast<std::int32_t>(blendMode);
                     }
                 }
 
