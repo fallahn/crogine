@@ -1178,7 +1178,7 @@ App::WindowSettings App::loadSettings() const
 
                 settings.windowedSize = prop.getValue<glm::vec2>();
                 settings.windowedSize.x = std::clamp(settings.windowedSize.x, std::min(640.f, modeWidth - 1.f), modeWidth);
-                settings.windowedSize.x = std::clamp(settings.windowedSize.y, std::min(640.f, modeHeight - 1.f), modeHeight);
+                settings.windowedSize.y = std::clamp(settings.windowedSize.y, std::min(480.f, modeHeight - 1.f), modeHeight);
             }
             else if (prop.getName() == "full_size")
             {
@@ -1187,7 +1187,7 @@ App::WindowSettings App::loadSettings() const
 
                 settings.fullscreenSize = prop.getValue<glm::vec2>();
                 settings.fullscreenSize.x = std::clamp(settings.fullscreenSize.x, std::min(640.f, modeWidth - 1.f), modeWidth);
-                settings.fullscreenSize.x = std::clamp(settings.fullscreenSize.y, std::min(640.f, modeHeight - 1.f), modeHeight);
+                settings.fullscreenSize.y = std::clamp(settings.fullscreenSize.y, std::min(480.f, modeHeight - 1.f), modeHeight);
             }
             else if (prop.getName() == "left_deadzone")
             {

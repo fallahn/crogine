@@ -147,6 +147,7 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
 
         //m_previousWindowSize = { width, height };
     }
+
     return true;
 }
 
