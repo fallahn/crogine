@@ -129,7 +129,7 @@ namespace sp
         CircularBuffer<float, 120> m_linearPower;
         CircularBuffer<float, 120> m_curvedPower;
 
-        Aer m_aer;
+        //Aer m_aer;
 
         void addSystems();
         void loadAssets();
@@ -140,11 +140,19 @@ namespace sp
         void fileToByteArray(const std::string&, const std::string&) const;
         void CSVToMap();
 
+        void loadConfig();
+        void saveConfig();
+
         cro::Texture m_quantizeInput;
         cro::RenderTexture m_quantizeOutput;
         cro::SimpleQuad m_quantizeQuad;
         cro::Shader m_quantizeShader;
         void imageQuantizer();
+
+        std::string m_cubemapLoadPath;
+        std::string m_cubemapSavePath;
+        cro::Texture m_cubemapPreview;
+        void cubemapWindow();
 
         MoonPhase m_moonPhase;
         tm m_timePicker;

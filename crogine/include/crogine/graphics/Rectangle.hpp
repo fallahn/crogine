@@ -144,5 +144,11 @@ namespace cro
         return { rect.left * scale, rect.bottom * scale, rect.width * scale, rect.height * scale };
     }
 
+    template <typename T>
+    Rectangle<T> operator * (const Rectangle<T>& rect, glm::vec2 scale)
+    {
+        return { rect.left * scale.x, rect.bottom * scale.y, rect.width * scale.x, rect.height * scale.y };
+    }
+
 #include "Rectangle.inl"
 }

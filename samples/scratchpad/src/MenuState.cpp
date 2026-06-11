@@ -101,7 +101,8 @@ namespace
     bool showMusicPlayer = false;
     bool showBoilerplate = false;
     bool showQuantizer = false;
-    bool showMoonPhase = true;
+    bool showMoonPhase = false;
+    bool showCubemap = false;
 
     cro::ConfigFile testFile;
 
@@ -323,14 +324,15 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
 
     m_musicName = "No File";
 
+    loadConfig();
 
-    registerWindow([this]()
-        {
-            ImGui::Begin("Curves");
-            ImGui::PlotLines("Linear", m_linearPower.data(), m_linearPower.size());
-            ImGui::PlotLines("Curved", m_curvedPower.data(), m_linearPower.size());
-            ImGui::End();
-        });
+    //registerWindow([this]()
+    //    {
+    //        ImGui::Begin("Curves");
+    //        ImGui::PlotLines("Linear", m_linearPower.data(), m_linearPower.size());
+    //        ImGui::PlotLines("Curved", m_curvedPower.data(), m_linearPower.size());
+    //        ImGui::End();
+    //    });
 
     //registerWindow(std::bind(&MenuState::odinWindow, this));
 
@@ -1232,9 +1234,14 @@ void MenuState::createUI()
                         showMoonPhase = !showMoonPhase;
                     }
 
-                    if (ImGui::MenuItem("AER Caluclator"))
+                    /*if (ImGui::MenuItem("AER Caluclator"))
                     {
                         m_aer.setVisible(!m_aer.getVisible());
+                    }*/
+
+                    if (ImGui::MenuItem("Cubmap Converter"))
+                    {
+                        showCubemap = !showCubemap;
                     }
 
                     ImGui::EndMenu();
@@ -1410,6 +1417,11 @@ void MenuState::createUI()
             if (showMoonPhase)
             {
                 moonPhase();
+            }
+
+            if (showCubemap)
+            {
+                cubemapWindow();
             }
 
             if (m_fileBrowser.HasSelected())
@@ -1781,6 +1793,36 @@ void MenuState::CSVToMap()
     }
 }
 
+void MenuState::loadConfig()
+{
+    const std::string inpath = cro::App::getPreferencePath() + "/scratchpad.cfg";
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile(inpath))
+    {
+        for (const auto& prop : cfg.getProperties())
+        {
+            const auto& name = prop.getName();
+            if (name == "cube_load")
+            {
+                m_cubemapLoadPath = prop.getValue<std::string>();
+            }
+            else if (name == "cube_save")
+            {
+                m_cubemapSavePath = prop.getValue<std::string>();
+            }
+        }
+    }
+}
+
+void MenuState::saveConfig()
+{
+    const std::string outpath = cro::App::getPreferencePath() + "/scratchpad.cfg";
+    cro::ConfigFile cfg;
+    cfg.addProperty("cube_load").setValue(m_cubemapLoadPath);
+    cfg.addProperty("cube_save").setValue(m_cubemapSavePath);
+    cfg.save(outpath);
+}
+
 void MenuState::imageQuantizer()
 {
     if (ImGui::Begin("Quantizer", &showQuantizer))
@@ -1821,6 +1863,112 @@ void MenuState::imageQuantizer()
 
             const glm::vec2 size(m_quantizeOutput.getSize());
             ImGui::Image(m_quantizeOutput.getTexture(), { size.x, size.y }, { 0.f,1.f }, { 1.f,0.f });
+
+        }
+    }
+    ImGui::End();
+}
+
+void MenuState::cubemapWindow()
+{
+    if (ImGui::Begin("Convert Cubemap", &showCubemap))
+    {
+        if (ImGui::Button("Browse"))
+        {
+            const auto path = cro::FileSystem::openFileDialogue(m_cubemapLoadPath, "png,jpg,bmp");
+            if (!path.empty())
+            {
+                m_cubemapPreview.loadFromFile(path);
+
+                m_cubemapLoadPath = path;
+                saveConfig();
+            }
+        }
+
+        if (m_cubemapPreview.getGLHandle() != 0)
+        {
+            static constexpr std::array<cro::FloatRect, 6u> UVs =
+            {
+                cro::FloatRect(1.f / 4.f,         (1.f / 3.f) * 2.f, (1.f / 4.f) * 2.f, 1.f),               //+Y
+                cro::FloatRect(0.f,               (1.f / 3.f),       1.f / 4.f,         (1.f / 3.f) * 2.f), //-X
+                cro::FloatRect(1.f / 4.f,         (1.f / 3.f),       (1.f / 4.f) * 2.f, (1.f / 3.f) * 2.f), //+Z
+                cro::FloatRect((1.f / 4.f) * 2.f, (1.f / 3.f),       (1.f / 4.f) * 3.f, (1.f / 3.f) * 2.f), //+X
+                cro::FloatRect((1.f / 4.f) * 3.f, (1.f / 3.f),       1.f,               (1.f / 3.f) * 2.f), //-Z
+                cro::FloatRect(1.f / 4.f,         0.f,               (1.f / 4.f) * 2.f, 1.f / 3.f),         //-Y
+            };
+            const auto faceSize = m_cubemapPreview.getSize() / glm::uvec2(4u, 3u);
+
+            ImGui::SameLine();
+            if (ImGui::Button("Save"))
+            {
+                const auto path = cro::FileSystem::openFolderDialogue(m_cubemapSavePath);
+                if (!path.empty())
+                {
+                    bool canSave = !cro::FileSystem::fileExists(path + "/cubemap.ccm");
+                    if (!canSave)
+                    {
+                        canSave = cro::FileSystem::showMessageBox("Warning", "Output exists, Overwrite?", cro::FileSystem::YesNo);
+                    }
+
+                    if (canSave)
+                    {
+                        //save images and ccm file
+                        const std::array<std::string, 6u> FileNames = 
+                        {
+                            "py.png",
+                            "nx.png",
+                            "pz.png",
+                            "px.png",
+                            "nz.png",
+                            "ny.png"
+                        };
+                        
+                        cro::ConfigFile cfg("cubemap");
+                        cfg.addProperty("up").setValue("py.png");
+                        cfg.addProperty("left").setValue("nx.png");
+                        cfg.addProperty("front").setValue("pz.png");
+                        cfg.addProperty("right").setValue("px.png");
+                        cfg.addProperty("back").setValue("nz.png");
+                        cfg.addProperty("down").setValue("ny.png");
+                        cfg.save(path + "/cubemap.ccm");
+
+                        cro::SimpleQuad q;
+                        q.setTexture(m_cubemapPreview);
+
+                        const glm::vec2 floatSize(m_cubemapPreview.getSize());
+
+                        cro::RenderTexture rt;
+                        rt.create(faceSize.x, faceSize.y, false);
+                        for (auto i = 0u; i < FileNames.size(); ++i)
+                        {
+                            q.setTextureRect(UVs[i] * floatSize);
+                            rt.clear();
+                            q.draw();
+                            rt.display();
+                            rt.saveToFile(path + "/" + FileNames[i]);
+                        }
+
+                        m_cubemapSavePath = path;
+                        saveConfig();
+                    }
+                }
+            }
+            ImGui::Text("Input Size %u, %u", faceSize.x, faceSize.y);
+
+            //TODO option to set output size?
+
+            //display preview
+            std::int32_t i = 0;
+            for (const auto& uv : UVs)
+            {
+                //TODO this is wrong because the flipping of sub-rects goes
+                //the wrong direction vertically, but I cbf to figure it out *again*
+                ImGui::Image(m_cubemapPreview, { 128.f, 128.f }, { uv.left, 1.f - uv.bottom }, { uv.width, 1.f - uv.height });
+                if ((++i % 3) != 0)
+                {
+                    ImGui::SameLine();
+                }
+            }
 
         }
     }
