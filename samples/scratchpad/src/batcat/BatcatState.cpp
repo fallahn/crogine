@@ -119,6 +119,7 @@ namespace
     ShaderInfo holoShader;
     ShaderInfo lavaShader;
     ShaderInfo lavaFallShader;
+    ShaderInfo waveShader;
 }
 
 BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
@@ -373,6 +374,9 @@ bool BatcatState::simulate(float dt)
     static float accum = 0.f;
     accum += dt;
 
+    glUseProgram(waveShader.ID);
+    glUniform1f(waveShader.timeUniform, accum);
+
     //glUseProgram(holoShader.ID);
     //glUniform1f(holoShader.timeUniform, accum);
 
@@ -461,6 +465,8 @@ void BatcatState::createScene()
     //createTestModels();
 
     createReflectionScene();
+
+    m_scene.setCubemap("assets/skybox/blue/cubemap.ccm");
 
     cro::ModelDefinition md(m_resources);
 
@@ -1148,7 +1154,7 @@ void BatcatState::createTestModels()
 
 void BatcatState::createReflectionScene()
 {
-    m_cubemapTexture.loadFromFile("assets/images/skybox/sky.ccm");
+    m_cubemapTexture.loadFromFile("assets/skybox/blue/cubemap.ccm");
 
     cro::Entity entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 3.f, -6.f });
@@ -1178,6 +1184,87 @@ void BatcatState::createReflectionScene()
             idx = (idx + 1) % table.size();
         };
 
+
+
+    md.loadFromFile("assets/models/plane_tangents.cmt");
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 8.f, -8.f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(6.f));
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -1.f);
+    md.createModel(entity);
+
+    const std::string normalsPath = "assets/water/normals/";
+    const auto files = cro::FileSystem::listFiles(normalsPath);
+
+    if (!files.empty())
+    {
+        cro::Image img;
+        img.loadFromFile(normalsPath + files[0]);
+        m_arrayTexture.create(img.getSize().x, img.getSize().y);
+
+        for (auto i = 0u; i < files.size(); ++i)
+        {
+            if (i)
+            {
+                img.loadFromFile(normalsPath + files[i]);
+            }
+            m_arrayTexture.insertLayer(img, i);
+        }
+    }
+
+    const std::string fragShader = 
+        R"(
+OUTPUT
+
+uniform sampler2DArray u_texture;
+uniform vec3 u_lightDirection;
+uniform float u_time = 0.0;
+
+layout (std140) uniform CameraUniforms
+{
+    mat4 u_viewMatrix;
+    mat4 u_viewProjectionMatrix;
+    mat4 u_projectionMatrix;
+    vec4 u_clipPlane;
+    vec3 u_cameraWorldPosition;
+};
+
+uniform samplerCube u_reflectMap;
+
+VARYING_IN vec3 v_worldPosition;
+
+VARYING_IN vec2 v_texCoord0;
+VARYING_IN vec3 v_tbn[3];
+
+void main()
+{
+    vec3 normal = texture(u_texture, vec3(v_texCoord0 / 2.0, mod(u_time * 18.0, MAXFRAMES))).rgb * 2.0 - 1.0;
+    //vec3 normal = texture(u_texture, vec3((v_texCoord0 / 2.0) + vec2(u_time), 0.0)).rgb * 2.0 - 1.0;
+    normal = normalize(v_tbn[0] * normal.r + v_tbn[1] * normal.g + v_tbn[2] * normal.b);
+
+    vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+    vec3 R = reflect(-eyeDirection, normal);
+
+    FRAG_OUT = texture(u_reflectMap, R);
+
+    //FRAG_OUT = vec4(vec3(dot(normal, normalize(-u_lightDirection))), 1.0);
+})";
+
+    const std::string FrameCount = "#define MAXFRAMES " + std::to_string(files.size()) + ".0\n";
+
+    m_resources.shaders.loadFromString(ShaderID::Waves, 
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), fragShader, "#define TEXTURED\n#define BUMP\n" + FrameCount);
+    auto& shader = m_resources.shaders.get(ShaderID::Waves);
+    matID = m_resources.materials.add(shader);
+    waveShader.ID = shader.getGLHandle();
+    waveShader.timeUniform = shader.getUniformID("u_time");
+
+    auto mat = m_resources.materials.get(matID);
+    cro::TextureID tid(m_arrayTexture.getGLHandle(), true);
+    mat.setProperty("u_texture", tid);
+    mat.setProperty("u_reflectMap", cro::CubemapID(m_cubemapTexture));
+
+    entity.getComponent<cro::Model>().setMaterial(0, mat);
 
     //cro::Entity entity = m_scene.createEntity();
     //entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -2.f });

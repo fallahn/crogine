@@ -145,7 +145,7 @@ namespace cro
     }
 
     template <typename T>
-    Rectangle<T> operator * (const Rectangle<T>& rect, glm::vec2 scale)
+    Rectangle<T> operator * (const Rectangle<T>& rect, glm::vec<2, T, glm::defaultp> scale)
     {
         return { rect.left * scale.x, rect.bottom * scale.y, rect.width * scale.x, rect.height * scale.y };
     }

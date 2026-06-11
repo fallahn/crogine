@@ -35,6 +35,7 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/ArrayTexture.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/MultiRenderTexture.hpp>
@@ -73,6 +74,8 @@ private:
 
     cro::RenderTexture m_sceneTexture;
     cro::RenderTexture m_outputTexture;
+
+    cro::ArrayTexture<std::uint8_t, 40> m_arrayTexture;
 
     SMAAPost m_smaaPost;
 
