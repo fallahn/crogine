@@ -743,7 +743,7 @@ void LeagueState::buildScene()
 
 
     bool unlocked = true;
-    for (auto i = 0; i < LeagueRoundID::Count; ++i)
+    for (auto i = 0; i < LeagueRoundID::Count; ++i) //dear future me: if you add more DLC leagues update LeagueID to match
     {
         if (unlocked)
         {

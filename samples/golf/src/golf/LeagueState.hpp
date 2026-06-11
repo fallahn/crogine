@@ -106,6 +106,7 @@ private:
             S04,
             S05,
             S06,
+            S07,
             Global,
             FriendsGlobal,
             Pro,
