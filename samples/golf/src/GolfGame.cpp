@@ -79,6 +79,11 @@ source distribution.
 #include "golf/XPAwardStrings.hpp"
 #include "golf/UserInterface.hpp"
 
+#ifdef _WIN32
+#include "golf/OptionsState.hpp"
+#include "golf/ProfileState.hpp"
+#endif
+
 #include "editor/BushState.hpp"
 #include "sqlite/SqliteState.hpp"
 #include "runner/EndlessAttractState.hpp"
@@ -207,7 +212,7 @@ namespace
 
 cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
 
-GolfGame::GolfGame()
+GolfGame::GolfGame(const std::vector<std::string>& args)
     : m_stateStack  ({*this, getWindow()}),
     m_cursor        ("assets/images/cursor.png", 1, 1),
     m_activeIndex   (0)
@@ -220,11 +225,26 @@ GolfGame::GolfGame()
 
     std::fill(m_sharedData.profileIndices.begin(), m_sharedData.profileIndices.end(), 0);
 
+    
     m_stateStack.registerState<SplashState>(StateID::SplashScreen, m_sharedData);
     m_stateStack.registerState<KeyboardState>(StateID::Keyboard, m_sharedData);
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData, m_profileData);
+#ifdef _WIN32
+    if(std::find(args.begin(), args.end(), "no-prof") != args.end())
+    {
+        m_stateStack.registerState<ProfileState>(StateID::Profile, m_sharedData, m_profileData);
+    }
+    else
+#endif
     m_stateStack.registerState<ProfileStateV2>(StateID::Profile, m_sharedData, m_profileData);
+#ifdef _WIN32
+    if (std::find(args.begin(), args.end(), "no-opt") != args.end())
+    {
+        m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
+    }
+    else
+#endif
     m_stateStack.registerState<OptionsStateV2>(StateID::Options, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);

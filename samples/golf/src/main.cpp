@@ -41,22 +41,25 @@ int main(int argc, char** argsv)
 {
     bool safeMode = false;
 
+    std::vector<std::string> argStr;
     if (argc > 1)
     {
-        std::string str(argsv[1]);
-        safeMode = (str == "safe_mode");
-
 #ifdef _WIN32
         AllocConsole();
 #endif
-
+        for (auto i = 1; i < argc; ++i)
+        {
+            const auto& str = argStr.emplace_back(argsv[i]);
+            safeMode = (str == "safe_mode");
+        }
     }
+
 
 #ifdef _WIN32
     applyNVSettings();
 #endif
 
-    GolfGame game;
+    GolfGame game(argStr);
 
     game.setSafeModeEnabled(safeMode);
     game.run(safeMode);

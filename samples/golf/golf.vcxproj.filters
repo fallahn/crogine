@@ -127,6 +127,9 @@
     <Filter Include="Header Files\golf\client\prop behaviours">
       <UniqueIdentifier>{4338c920-dd20-4a49-8c48-a48b66b46719}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\golf\client\states\old">
+      <UniqueIdentifier>{29256788-2816-4c81-9ffb-b8a7a32ba99c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -737,6 +740,12 @@
     </ClCompile>
     <ClCompile Include="src\golf\ChipInDirector.cpp">
       <Filter>Source Files\golf\client\directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\OptionsState.cpp">
+      <Filter>Source Files\golf\client\states\old</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ProfileState.cpp">
+      <Filter>Source Files\golf\client\states\old</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
