@@ -127,6 +127,7 @@ void SurrealState::loadAssets()
 void SurrealState::createScene()
 {
     m_gameScene.setCubemap("assets/skybox/blue/cubemap.ccm");
+    //m_gameScene.setStarsAmount(1.f);
 
     //makes the skybox rotate
     auto entity = m_gameScene.createEntity();
@@ -185,6 +186,7 @@ void SurrealState::createScene()
         const auto matID = m_resources.materials.add(shader);
         m_waveShader.ID = shader.getGLHandle();
         m_waveShader.timeUniform = shader.getUniformID("u_time");
+        //m_waveShader.skyUniform = shader.getUniformID("u_skyColour");
 
         auto mat = m_resources.materials.get(matID);
         cro::TextureID tid(m_arrayTexture.getGLHandle(), true);
@@ -279,16 +281,15 @@ void SurrealState::createScene()
         {
             if (ImGui::Begin("Cam"))
             {
-                //if (ImGui::SliderFloat("X", &XRotation, -1.f, 1.f))
-                //{
-                //    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, XRotation);
-                //}
-
-                //static float h = 1.44f;
-                //if (ImGui::SliderFloat("Height", &h, 0.1f, 5.f))
-                //{
-                //    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, h, 2.f });
-                //}
+                static float c[3] = { 1.f, 1.f, 1.f };
+                if (ImGui::ColorPicker3("Sky", c))
+                {
+                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ c[0], c[1], c[2] });
+                }
+                float hsv[3] = {};
+                ImGui::ColorConvertRGBtoHSV(c[0], c[1], c[2], hsv[0], hsv[1], hsv[2]);
+                ImGui::Text("%3.2f, %3.2f, %3.2f", hsv[0], hsv[1], hsv[2]);
+                m_gameScene.setStarsAmount(1.f - hsv[2]);
 
                 ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 ImGui::SameLine();

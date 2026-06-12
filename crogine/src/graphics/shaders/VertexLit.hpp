@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -403,7 +403,7 @@ static inline const std::string Vertex = R"(
         #endif
 
             vec3 R = reflect(-eyeDirection, normal);
-            FRAG_OUT.rgb = mix(TEXTURE_CUBE(u_skybox, R).rgb, FRAG_OUT.rgb, mask.a);
+            FRAG_OUT.rgb = mix(TEXTURE_CUBE(u_skybox, R).rgb * u_lightColour.rgb, FRAG_OUT.rgb, mask.a);
 
 
         #if defined (RIMMING)

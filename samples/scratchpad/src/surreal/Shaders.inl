@@ -9,6 +9,7 @@ OUTPUT
 uniform samplerCube u_skybox;
 uniform sampler2DArray u_normalMap;
 uniform sampler2D u_reflectionMap;
+uniform vec4 u_lightColour;
 uniform vec3 u_lightDirection;
 uniform float u_time = 0.0;
 
@@ -29,7 +30,6 @@ VARYING_IN vec2 v_texCoord0;
 VARYING_IN vec3 v_tbn[3];
 
 VARYING_IN vec4 v_reflectionPosition;
-//VARYING_IN vec4 v_refractionPosition;
 
 #include SHADOWMAP_INPUTS
 #include CASCADE_SELECTION
@@ -45,14 +45,14 @@ void main()
     vec4 skyboxColour = texture(u_skybox, R);
 
     vec2 reflectCoords = v_reflectionPosition.xy / v_reflectionPosition.w / 2.0 + 0.5;
-    vec3 reflectColour = TEXTURE(u_reflectionMap, reflectCoords + (normal.xz * 0.01)).rgb;
+    vec3 reflectColour = TEXTURE(u_reflectionMap, reflectCoords + (normal.xz * 0.05)).rgb;
 
     float fresnel = dot(reflect(-eyeDirection, normal), normal);
     const float bias = 0.6;
     fresnel = (fresnel * (1.0 - bias)) + bias;
 
 
-    vec3 blendedColour = mix(reflectColour, skyboxColour.rgb, fresnel);
+    vec3 blendedColour = mix(reflectColour, skyboxColour.rgb * u_lightColour.rgb, fresnel);
 
     int cascadeIndex = getCascadeIndex();
     float shadow = shadowAmount(cascadeIndex);

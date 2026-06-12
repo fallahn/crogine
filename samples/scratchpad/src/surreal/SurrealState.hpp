@@ -34,6 +34,7 @@ private:
     {
         std::uint32_t ID = 0;
         std::int32_t timeUniform = -1;
+        std::int32_t skyUniform = -1;
     }m_waveShader;
 
     void addSystems();

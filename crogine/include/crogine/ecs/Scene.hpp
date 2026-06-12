@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/ecs/Component.hpp>
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/ShaderResource.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
@@ -271,7 +272,6 @@ namespace cro
 
         /*!
         \brief Sets the strength of the star rendering on the default skybox.
-        If a skybox texture or environment map has been set then this does nothing.
         \param amount A value between 0 (no stars) and 1 (full stars)
         */
         void setStarsAmount(float amount);
@@ -495,9 +495,10 @@ namespace cro
             Count
         };
         std::int32_t m_starsUniform;
-        std::array<std::int32_t, 3u> m_skyColourUniforms;
-        std::array<Shader, SkyboxType::Count> m_skyboxShaders;
+        std::array<std::int32_t, 3u> m_skyColourUniforms = {};
+        std::array<Shader*, SkyboxType::Count> m_skyboxShaders = {};
         std::size_t m_shaderIndex;
+        ShaderResource m_shaderResource;
         void applySkyboxColours();
         void applyStars();
 

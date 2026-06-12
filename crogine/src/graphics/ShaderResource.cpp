@@ -91,6 +91,7 @@ ShaderResource::ShaderResource()
     addInclude("PCF_SHADOWS", PCFShadows.c_str());
     addInclude("VSM_SHADOWS", VSMShadows.c_str());
     addInclude("FXAA", FXAA.c_str());
+    addInclude("NOISE_3D", Noise3D.c_str());
 }
 
 //public
