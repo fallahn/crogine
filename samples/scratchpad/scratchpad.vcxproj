@@ -349,6 +349,7 @@
     <ClCompile Include="src\scrub\ScrubPauseState.cpp" />
     <ClCompile Include="src\ssao\LightVolumeSystem.cpp" />
     <ClCompile Include="src\ssao\SSAOState.cpp" />
+    <ClCompile Include="src\surreal\SurrealState.cpp" />
     <ClCompile Include="src\swingput\Swingput.cpp" />
     <ClCompile Include="src\swingput\SwingState.cpp" />
     <ClCompile Include="src\trackoverlay\pugixml.cpp" />
@@ -434,6 +435,7 @@
     <ClInclude Include="src\ssao\LightVolumeSystem.hpp" />
     <ClInclude Include="src\ssao\SSAOState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
+    <ClInclude Include="src\surreal\SurrealState.hpp" />
     <ClInclude Include="src\swingput\Swingput.hpp" />
     <ClInclude Include="src\swingput\SwingState.hpp" />
     <ClInclude Include="src\trackoverlay\TrackOverlayState.hpp" />
@@ -458,6 +460,7 @@
     <None Include="src\pseuthe\PseutheShaders.inl" />
     <None Include="src\retro\RetroShaders.inl" />
     <None Include="src\ssao\BlurShaders.inl" />
+    <None Include="src\surreal\Shaders.inl" />
     <None Include="src\swingput\Glow.inl" />
     <None Include="src\swingput\Hole.inl" />
     <None Include="src\swingput\Rain.inl" />

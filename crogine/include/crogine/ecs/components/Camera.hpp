@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -536,7 +536,7 @@ namespace cro
         /*!
         \brief Set the number of cascades up to cascadeCount which should
         be given a blur pass for soft shadowing. Set to 0 to disable.
-        Not all cascades necesserily need this so performance could be improved
+        Not all cascades necessersarily need this so performance could be improved
         by, say, only setting the first cascade to blur.
         \param count Number of cascades to blur.
         */

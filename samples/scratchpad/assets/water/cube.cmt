@@ -1,0 +1,23 @@
+model cube
+{
+    mesh = "cube.cmb"
+    cast_shadows = true
+
+    material VertexLit
+    {
+        mask_colour = 1.000000, 1.000000, 0.000000, 0.639216
+        name = "Untitled"
+        colour = 0.000000, 0.309735, 1.000000, 1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1.000000
+        col_count = 1.000000
+        framerate = 1.000000
+        blendmode = "none"
+        rx_shadows = true
+    }
+}

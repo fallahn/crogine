@@ -50,6 +50,7 @@ source distribution.
 #include "LoadingScreen.hpp"
 #include "arc/ArcState.hpp"
 #include "trackoverlay/TrackOverlayState.hpp"
+#include "surreal/SurrealState.hpp"
 #include "deckintro/DeckintroState.hpp"
 #include "pseuthe/PseutheBackgroundState.hpp"
 #include "pseuthe/PseutheGameState.hpp"
@@ -212,6 +213,7 @@ bool MyApp::initialise()
     m_stateStack.registerState<InteriorMappingState>(States::ScratchPad::InteriorMapping); //instance culling
     m_stateStack.registerState<EndlessDrivingState>(States::ScratchPad::EndlessDriving);
     m_stateStack.registerState<TrackOverlayState>(States::ScratchPad::TrackOverlay);
+    m_stateStack.registerState<SurrealState>(States::ScratchPad::Surreal);
     m_stateStack.registerState<DeckIntroState>(States::ScratchPad::DeckIntro);
     
     m_stateStack.registerState<ScrubGameState>(States::ScratchPad::Scrub);
@@ -227,9 +229,9 @@ bool MyApp::initialise()
     m_stateStack.registerState<PinballGameState>(States::ScratchPad::PinballGame);
 
 #ifdef CRO_DEBUG_
-    //m_stateStack.pushState(States::ScratchPad::TrackOverlay);
-    m_stateStack.pushState(States::ScratchPad::BatCat);
-    //m_stateStack.pushState(States::ScratchPad::MainMenu);
+    //m_stateStack.pushState(States::ScratchPad::Menu);
+    //m_stateStack.pushState(States::ScratchPad::BatCat);
+    m_stateStack.pushState(States::ScratchPad::Surreal);
     //m_stateStack.pushState(States::ScratchPad::PinballGame);
 #else
     //m_stateStack.pushState(States::ScratchPad::MainMenu);

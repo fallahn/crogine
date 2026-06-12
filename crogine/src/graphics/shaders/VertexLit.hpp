@@ -67,6 +67,10 @@ static inline const std::string Vertex = R"(
 #include CAMERA_UBO
 #include WVP_UNIFORMS
 
+#if defined (REFLECTION_PLANE)
+    uniform mat4 u_reflectionMatrix;
+#endif
+
     #if defined(RX_SHADOWS)
 #include SHADOWMAP_UNIFORMS_VERT
     #endif
@@ -93,6 +97,10 @@ static inline const std::string Vertex = R"(
     #if defined(LIGHTMAPPED)
         VARYING_OUT MED vec2 v_texCoord1;
     #endif
+
+#if defined(REFLECTION_PLANE)
+    VARYING_OUT vec4 v_reflectionPosition;
+#endif
 
     #if defined(RX_SHADOWS)
 #include SHADOWMAP_OUTPUTS
@@ -135,6 +143,10 @@ static inline const std::string Vertex = R"(
         #if defined (VIEW_POS)
             v_viewPosition = (u_viewMatrix * worldPos).xyz;
         #endif
+
+#if defined (REFLECTION_PLANE)
+        v_reflectionPosition = u_reflectionMatrix * worldPos;
+#endif
 
         #if defined(VERTEX_COLOUR)
             v_colour = a_colour;

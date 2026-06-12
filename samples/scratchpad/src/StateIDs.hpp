@@ -56,6 +56,7 @@ namespace States
             VATs,
             EndlessDriving,
             TrackOverlay,
+            Surreal,
             DeckIntro,
 
             PseutheBackground,

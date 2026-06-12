@@ -1,0 +1,23 @@
+model torus
+{
+    mesh = "torus.cmb"
+    cast_shadows = true
+
+    material VertexLit
+    {
+        mask_colour = 0.756863, 0.019608, 0.000000, 0.843137
+        name = "Untitled"
+        colour = 0.300885, 1.000000, 0.000000, 1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1.000000
+        col_count = 1.000000
+        framerate = 1.000000
+        blendmode = "none"
+        rx_shadows = true
+    }
+}
