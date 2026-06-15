@@ -618,6 +618,11 @@ void ShadowMapRenderer::render()
             {
                 const auto& model = e.getComponent<Model>();
 
+                if ((model.m_renderFlags & camera.getActivePass().renderFlags) == 0)
+                {
+                    continue;
+                }
+
                 glCheck(glFrontFace(model.m_facing));
 
                 //calc entity transform

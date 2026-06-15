@@ -34,7 +34,11 @@ private:
     {
         std::uint32_t ID = 0;
         std::int32_t timeUniform = -1;
-        std::int32_t skyUniform = -1;
+        //std::int32_t skyUniform = -1;
+
+        std::int32_t fogStart = -1;
+        std::int32_t fogEnd = -1;
+        std::int32_t fogDensity = -1;
     }m_waveShader;
 
     void addSystems();

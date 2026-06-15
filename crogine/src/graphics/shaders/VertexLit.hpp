@@ -100,6 +100,7 @@ static inline const std::string Vertex = R"(
 
 #if defined(REFLECTION_PLANE)
     VARYING_OUT vec4 v_reflectionPosition;
+    VARYING_OUT vec4 v_refractionPosition;
 #endif
 
     #if defined(RX_SHADOWS)
@@ -146,6 +147,7 @@ static inline const std::string Vertex = R"(
 
 #if defined (REFLECTION_PLANE)
         v_reflectionPosition = u_reflectionMatrix * worldPos;
+        v_refractionPosition = gl_Position;
 #endif
 
         #if defined(VERTEX_COLOUR)

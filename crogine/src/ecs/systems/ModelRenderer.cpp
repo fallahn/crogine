@@ -373,6 +373,13 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             const auto& model = entity.getComponent<Model>();
             glCheck(glFrontFace(model.m_facing));
 
+            //this might actually change at render time
+            //as I'm a dummy and assumed Final and Refraction passes
+            //will always be the same.
+            if ((model.m_renderFlags & pass.renderFlags) == 0)
+            {
+                continue;
+            }
 
 #ifndef PLATFORM_DESKTOP
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));

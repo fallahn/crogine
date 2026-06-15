@@ -9,6 +9,8 @@ OUTPUT
 uniform samplerCube u_skybox;
 uniform sampler2DArray u_normalMap;
 uniform sampler2D u_reflectionMap;
+uniform sampler2D u_refractionMap;
+uniform sampler2D u_depthMap;
 uniform vec4 u_lightColour;
 uniform vec3 u_lightDirection;
 uniform float u_time = 0.0;
@@ -30,10 +32,38 @@ VARYING_IN vec2 v_texCoord0;
 VARYING_IN vec3 v_tbn[3];
 
 VARYING_IN vec4 v_reflectionPosition;
+VARYING_IN vec4 v_refractionPosition;
 
 #include SHADOWMAP_INPUTS
 #include CASCADE_SELECTION
 #include VSM_SHADOWS
+
+
+const float ZNear = 0.1;
+#if !defined(ZFAR)
+#define ZFAR 50.0
+#endif
+const float ZFar = ZFAR;
+
+uniform float u_density = 0.5;
+uniform float u_fogStart = 0.01;
+uniform float u_fogEnd = 5.5;
+
+const vec4 FogColour = vec4(0.91,0.92,0.923,1.0);
+
+float fogAmount(float distance)
+{
+    //linear
+    return clamp(smoothstep(u_fogStart, u_fogEnd, distance * ZFar) * u_density, 0.0, 1.0);
+}
+
+float getDistance(float ds)
+{
+    return (2.0 * ZNear) / (ZFar + ZNear - ds * (ZFar - ZNear));
+}
+
+
+
 
 void main()
 {
@@ -47,12 +77,24 @@ void main()
     vec2 reflectCoords = v_reflectionPosition.xy / v_reflectionPosition.w / 2.0 + 0.5;
     vec3 reflectColour = TEXTURE(u_reflectionMap, reflectCoords + (normal.xz * 0.05)).rgb;
 
+    vec2 refractCoords = v_refractionPosition.xy / v_refractionPosition.w / 2.0 + 0.5;
+    vec3 refractColour = TEXTURE(u_refractionMap, refractCoords + (normal.xz * 0.02)).rgb;// * 0.6;
+
+    //float depthSample = TEXTURE(u_depthMap, refractCoords).r;
+    //float d = getDistance(depthSample);
+    //float fogMix = fogAmount(d);
+    //refractColour = mix(refractColour, vec3(0.0, 0.0, 1.0), fogMix);
+    //refractColour = mix(vec3(1.0), vec3(0.0, 0.0, 1.0), d);
+
+
     float fresnel = dot(reflect(-eyeDirection, normal), normal);
-    const float bias = 0.6;
+    const float bias = 0.2;
     fresnel = (fresnel * (1.0 - bias)) + bias;
 
-
+    reflectColour *= refractColour;
     vec3 blendedColour = mix(reflectColour, skyboxColour.rgb * u_lightColour.rgb, fresnel);
+    //blendedColour = mix(refractColour, blendedColour, 0.5);
+
 
     int cascadeIndex = getCascadeIndex();
     float shadow = shadowAmount(cascadeIndex);
@@ -85,4 +127,60 @@ void main()
 
 
     FRAG_OUT = vec4(blendedColour, 1.0);
+})";
+
+
+static const inline std::string ShapeFrag =
+R"(
+OUTPUT
+#include CAMERA_UBO
+#include LIGHT_UBO
+
+uniform samplerCube u_skybox;
+uniform vec4 u_maskColour;
+uniform vec4 u_colour = vec4(1.0);
+
+VARYING_IN vec3 v_normalVector;
+VARYING_IN vec3 v_worldPosition;
+
+vec4 diffuseColour = u_colour;
+vec3 eyeDirection;
+vec4 mask = vec4(1.0, 1.0, 1.0, 0.0);
+
+vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
+{
+    MED float diffuseAmount = max(dot(normal, lightDirection), 0.0);
+    //diffuseAmount = pow((diffuseAmount * 0.5) + 5.0, 2.0);
+    MED vec3 mixedColour = diffuseColour.rgb * lightDiffuse * diffuseAmount * falloff;
+
+    MED vec3 halfVec = normalize(eyeDirection + lightDirection);
+    MED float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
+    LOW vec3 specularColour = lightSpecular * vec3(pow(specularAngle, ((254.0 * mask.r) + 1.0))) * falloff;
+
+    return clamp(mixedColour + (specularColour * mask.g), 0.0, 1.0);
+}
+
+void main()
+{
+    vec3 normal = normalize(v_normalVector);
+    mask = u_maskColour;
+
+    vec3 blendedColour = diffuseColour.rgb * 0.2; //ambient
+    eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+
+    blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, vec3(1.0), 1.0);
+
+    FRAG_OUT = vec4(blendedColour, 1.0);
+
+    vec3 R = reflect(-eyeDirection, normal);
+    //FRAG_OUT.rgb = mix(TEXTURE_CUBE(u_skybox, R).rgb * u_lightColour.rgb, FRAG_OUT.rgb, mask.a);
+    FRAG_OUT.rgb += TEXTURE_CUBE(u_skybox, R).rgb * u_lightColour.rgb * mask.a;
+
+
+    //we're making the supposition here that the water plane is on Y zero
+    //however we ought to be using the clip plane in some way, while also
+    //accounting for which pass we're currently rendering
+
+    float dist = dot(u_clipPlane.xyz, v_worldPosition) + u_clipPlane.w;
+    FRAG_OUT.rgb *= 0.1 + (0.9 * smoothstep(-5.0, 0.0, -dist));
 })";

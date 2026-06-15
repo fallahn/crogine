@@ -18,6 +18,7 @@
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 namespace
 {
@@ -28,12 +29,21 @@ namespace
         enum
         {
             Water,
+            Shape,
 
             Count
         };
     };
 
-    /*constexpr*/ float XRotation = -0.14f;
+    struct RenderFlags final
+    {
+        enum
+        {
+            Final = (1 << 0)
+        };
+    };
+
+    constexpr float XRotation = -0.14f;
 }
 
 SurrealState::SurrealState(cro::StateStack& stack, cro::State::Context context)
@@ -101,8 +111,21 @@ void SurrealState::render()
     m_gameScene.render();
     cam.reflectionBuffer.display();
 
+    //in my infinite wisdom I made the render flags for refraction
+    //the same as final and now we have to hack out water rendering...
+    cam.setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::Final);
+    cam.setActivePass(cro::Camera::Pass::Refraction);
+    cam.refractionBuffer.clear();
+    m_gameScene.render();
+    cam.refractionBuffer.display();
+
+
+    cam.setRenderFlags(cro::Camera::Pass::Final, /*cro::RenderFlags::All*/RenderFlags::Final);
     cam.setActivePass(cro::Camera::Pass::Final);
     m_gameScene.render();
+
+
+
     m_uiScene.render();
 }
 
@@ -127,7 +150,6 @@ void SurrealState::loadAssets()
 void SurrealState::createScene()
 {
     m_gameScene.setCubemap("assets/skybox/blue/cubemap.ccm");
-    //m_gameScene.setStarsAmount(1.f);
 
     //makes the skybox rotate
     auto entity = m_gameScene.createEntity();
@@ -147,12 +169,15 @@ void SurrealState::createScene()
         };
 
 
+    cro::Entity waterEntity;
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("assets/water/plane.cmt"))
     {
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setScale(glm::vec3(4.f));
         md.createModel(entity);
+
+        entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Final);
 
         const std::string normalsPath = "assets/water/normals/";
         const auto files = cro::FileSystem::listFiles(normalsPath);
@@ -183,18 +208,29 @@ void SurrealState::createScene()
             cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), 
             WaterFrag, "#define TEXTURED\n#define BUMP\n#define RX_SHADOWS\n#define REFLECTION_PLANE\n" + FrameCount);
         auto& shader = m_resources.shaders.get(ShaderID::Water);
-        const auto matID = m_resources.materials.add(shader);
+        const auto waterMatID = m_resources.materials.add(shader);
         m_waveShader.ID = shader.getGLHandle();
         m_waveShader.timeUniform = shader.getUniformID("u_time");
-        //m_waveShader.skyUniform = shader.getUniformID("u_skyColour");
+        /*m_waveShader.fogDensity = shader.getUniformID("u_density");
+        m_waveShader.fogEnd = shader.getUniformID("u_fogEnd");
+        m_waveShader.fogStart = shader.getUniformID("u_fogStart");*/
 
-        auto mat = m_resources.materials.get(matID);
+        auto& mat = m_resources.materials.get(waterMatID);
         cro::TextureID tid(m_arrayTexture.getGLHandle(), true);
         mat.setProperty("u_normalMap", tid);
         mat.setProperty("u_skybox", m_gameScene.getCubemap());
 
         entity.getComponent<cro::Model>().setMaterial(0, mat);
+        waterEntity = entity;
     }
+
+    m_resources.shaders.loadFromString(ShaderID::Shape,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit),
+        ShapeFrag);
+
+    auto& shader = m_resources.shaders.get(ShaderID::Shape);
+    const auto matID = m_resources.materials.add(shader);
+    auto material = m_resources.materials.get(matID);
 
     if (md.loadFromFile("assets/water/cone.cmt"))
     {
@@ -209,10 +245,15 @@ void SurrealState::createScene()
                 e.getComponent<cro::Transform>().move({ 0.f, 1.f * dt, 0.f });
                 if (e.getComponent<cro::Transform>().getPosition().y > 6.f)
                 {
-                    e.getComponent<cro::Transform>().move({ 0.f, -7.f, 0.f });
+                    e.getComponent<cro::Transform>().move({ 0.f, -12.f, 0.f });
                 }
             };
         md.createModel(entity);
+
+        //TODO use a lazy loader save creating unused shaders
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", glm::vec4(0.5f, 0.5f, 1.f, 0.5f));
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", glm::vec4(1.f, 1.f, 0.2f, 1.f));
     }
     if (md.loadFromFile("assets/water/cube.cmt"))
     {
@@ -227,10 +268,15 @@ void SurrealState::createScene()
                 e.getComponent<cro::Transform>().move({ 0.f, 0.7f * dt, 0.f });
                 if (e.getComponent<cro::Transform>().getPosition().y > 6.f)
                 {
-                    e.getComponent<cro::Transform>().move({ 0.f, -7.f, 0.f });
+                    e.getComponent<cro::Transform>().move({ 0.f, -12.f, 0.f });
                 }
             };
         md.createModel(entity);
+
+        //TODO use a lazy loader save creating unused shaders
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", glm::vec4(0.5f, 0.5f, 1.f, 0.5f));
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", glm::vec4(0.f, 0.3f, 0.94f, 1.f));
     }
     if (md.loadFromFile("assets/water/torus.cmt"))
     {
@@ -245,16 +291,57 @@ void SurrealState::createScene()
                 e.getComponent<cro::Transform>().move({ 0.f, 0.8f * dt, 0.f });
                 if (e.getComponent<cro::Transform>().getPosition().y > 6.f)
                 {
-                    e.getComponent<cro::Transform>().move({ 0.f, -7.f, 0.f });
+                    e.getComponent<cro::Transform>().move({ 0.f, -12.f, 0.f });
                 }
             };
         md.createModel(entity);
+
+        //TODO use a lazy loader save creating unused shaders
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", glm::vec4(0.5f, 0.5f, 1.f, 0.5f));
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", glm::vec4(0.f, 1.f, 0.2f, 1.f));
     }
+
+
+
+    if (md.loadFromFile("assets/water/head.cmt"))
+    {
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, -20.f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+        md.createModel(entity);
+
+        struct HeadData final
+        {
+            std::vector<float> wavetable1 = cro::Util::Wavetable::sine(0.1f);
+            std::vector<float> wavetable2 = cro::Util::Wavetable::sine(0.02f, 0.35f);
+            std::uint32_t index1 = 0;
+            std::uint32_t index2 = 0;
+        };
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<HeadData>();
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float)
+            {
+                auto& [table1, table2, idx1, idx2] = e.getComponent<cro::Callback>().getUserData<HeadData>();
+                e.getComponent<cro::Transform>().setPosition({-16.f, 10.f + (table1[idx1] * 2.f), -30.f });
+
+                glm::quat q = glm::rotate(cro::Transform::QUAT_IDENTITY, 0.5f, cro::Transform::X_AXIS);
+                q = glm::rotate(q, table2[idx2] + cro::Util::Const::PI, cro::Transform::Y_AXIS);
+                e.getComponent<cro::Transform>().setRotation(q);
+
+                idx1 = (idx1 + 1) % table1.size();
+                idx2 = (idx2 + 1) % table2.size();
+            };
+    }
+
 
 
 
     auto resize = [](cro::Camera& cam)
     {
+        //NOTE if we change the far plane update the fog calc in the water shader!
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         cam.setPerspective(80.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 50.f);
@@ -271,16 +358,50 @@ void SurrealState::createScene()
 
     cam.reflectionBuffer.create(1024, 1024);
 
+    cro::RenderTarget::Context ctx;
+    ctx.depthTexture = true;
+    ctx.width = 512;
+    ctx.height = 512;
+    cam.refractionBuffer.create(ctx);
+    cam.refractionBuffer.setSmooth(true);
+    //if (waterEntity.isValid())
+    //{
+    //    waterEntity.getComponent<cro::Model>().setMaterialProperty(0, "u_depthMap", cam.refractionBuffer.getDepthTexture());
+    //}
+
+    cam.setRenderFlags(cro::Camera::Pass::Reflection, ~RenderFlags::Final);
+    //cam.setRenderFlags(cro::Camera::Pass::Refraction, ~RenderFlags::Final);
+
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 1.44f, 2.f });
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, XRotation);
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.8f);
-    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.8f);
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.2f);
 
     registerWindow([this, &cam]() 
         {
             if (ImGui::Begin("Cam"))
             {
+                /*static float density = 0.5f;
+                static float fogStart = 0.01f;
+                static float fogEnd = 5.5f;
+
+                if (ImGui::SliderFloat("Density", &density, 0.f, 1.f))
+                {
+                    glUseProgram(m_waveShader.ID);
+                    glUniform1f(m_waveShader.fogDensity, density);
+                }
+                if (ImGui::SliderFloat("Start", &fogStart, 0.f, fogEnd))
+                {
+                    glUseProgram(m_waveShader.ID);
+                    glUniform1f(m_waveShader.fogStart, fogStart);
+                }
+                if (ImGui::SliderFloat("End", &fogEnd, fogStart, 50.f))
+                {
+                    glUseProgram(m_waveShader.ID);
+                    glUniform1f(m_waveShader.fogEnd, fogEnd);
+                }*/
+
                 static float c[3] = { 1.f, 1.f, 1.f };
                 if (ImGui::ColorPicker3("Sky", c))
                 {
@@ -294,6 +415,8 @@ void SurrealState::createScene()
                 ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 ImGui::SameLine();
                 ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::SameLine();
+                ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().refractionBuffer.getDepthTexture(), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();        
         });
