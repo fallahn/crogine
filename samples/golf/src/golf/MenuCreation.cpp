@@ -5450,7 +5450,7 @@ void MenuState::updateUnlockedItems()
     {
         for (auto i = 0u; i < Leagues.size(); ++i)
         {
-            auto flag = (1 << i);
+            const auto flag = (1 << i);
 
             if (Leagues[i].getCurrentSeason() > 0
                 && Leagues[i].getCurrentIteration() == 0)
@@ -5504,6 +5504,39 @@ void MenuState::updateUnlockedItems()
         }
         Social::setUnlockStatus(Social::UnlockType::CareerPosition, leagueFlags);
     }
+
+    //check DLC leagues
+    const auto dlcCheck = [this](std::int32_t leagueID)
+        {
+            if (Content::leagueAvailable(leagueID))
+            {
+                League l(leagueID, m_sharedData);
+                if (l.getCurrentSeason() > 0
+                    && l.getCurrentIteration() == 0)
+                {
+                    const auto position = l.getCurrentBest();
+                    switch (position)
+                    {
+                    default: break;
+                    case 1:
+                    case 2:
+                    case 3:
+                    {
+                        auto& item = m_sharedData.unlockedItems.emplace_back();
+                        item.id = ul::UnlockID::CareerGold + (position - 1);
+                        item.xp = l.reward(position);
+                        awardCredits(CreditID::LeagueWinFirst - ((position - 1) * 50));
+                    }
+                    [[fallthrough]];
+                    case 4:
+                    case 5:
+
+                        break;
+                    }
+                }
+            }
+        };
+    dlcCheck(LeagueRoundID::RoundSeven);
 
 
     //tournament unlocks - ignores any custom tournament
