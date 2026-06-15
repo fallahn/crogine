@@ -184,3 +184,49 @@ void main()
     float dist = dot(u_clipPlane.xyz, v_worldPosition) + u_clipPlane.w;
     FRAG_OUT.rgb *= 0.1 + (0.9 * smoothstep(-5.0, 0.0, -dist));
 })";
+
+static inline const std::string TerrainVertex =
+R"(
+ATTRIBUTE vec4 a_position;
+ATTRIBUTE vec3 a_normal;
+ATTRIBUTE MED vec2 a_texCoord0;
+
+#include CAMERA_UBO
+#include WVP_UNIFORMS
+
+//TODO height can be on normal map alpha
+uniform sampler2D u_heightMap;
+uniform sampler2D u_normalMap;
+
+VARYING_OUT vec3 v_normalVector;
+
+#if !defined(MAX_HEIGHT)
+#define MAX_HEIGHT 10.0
+#endif
+
+void main()
+{
+    //TODO technically this in is tangent space - we can fudge this by swapping -y/z
+    vec3 normal = normalize(TEXTURE(u_normalMap, a_texCoord0).rgb * 2.0 - 1.0);
+    //normal = vec3(normal.x, normal.z, -normal.y);
+    v_normalVector = u_normalMatrix * normal;
+
+    vec4 position = a_position;
+    position.y = TEXTURE(u_heightMap, a_texCoord0).r * MAX_HEIGHT;
+
+    mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
+    gl_Position = wvp * position;
+})";
+
+static inline const std::string TerrainFrag =
+R"(
+OUTPUT
+
+VARYING_IN vec3 v_normalVector;
+
+void main()
+{
+    //TODO darken below water line (and with distance?)
+
+    FRAG_OUT = vec4(1.0, 1.0, 0.0, 1.0) * dot(normalize(v_normalVector), vec3(0.0, 0.0, 1.0));
+})";

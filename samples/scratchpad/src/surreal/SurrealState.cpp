@@ -30,6 +30,7 @@ namespace
         {
             Water,
             Shape,
+            Terrain,
 
             Count
         };
@@ -336,7 +337,23 @@ void SurrealState::createScene()
             };
     }
 
+    //terrain
+    if (md.loadFromFile("assets/water/heightmesh.cmt"))
+    {
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -2.f, -30.f });
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(40.f, 1.f, 20.f)); //height scale MUST be 1 as we calc this in the shader
+        md.createModel(entity);
 
+        m_resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertex, TerrainFrag);
+        auto& heightmap = m_resources.textures.get("assets/water/heightmap/heightmap_a.png");
+        auto& normalmap = m_resources.textures.get("assets/water/heightmap/normal_a.png");
+        const auto m = m_resources.materials.add(m_resources.shaders.get(ShaderID::Terrain));
+        auto& mat = m_resources.materials.get(m);
+        mat.setProperty("u_heightMap", heightmap);
+        mat.setProperty("u_normalMap", normalmap);
+        entity.getComponent<cro::Model>().setMaterial(0, mat);
+    }
 
 
     auto resize = [](cro::Camera& cam)
@@ -364,10 +381,7 @@ void SurrealState::createScene()
     ctx.height = 512;
     cam.refractionBuffer.create(ctx);
     cam.refractionBuffer.setSmooth(true);
-    //if (waterEntity.isValid())
-    //{
-    //    waterEntity.getComponent<cro::Model>().setMaterialProperty(0, "u_depthMap", cam.refractionBuffer.getDepthTexture());
-    //}
+
 
     cam.setRenderFlags(cro::Camera::Pass::Reflection, ~RenderFlags::Final);
     //cam.setRenderFlags(cro::Camera::Pass::Refraction, ~RenderFlags::Final);
