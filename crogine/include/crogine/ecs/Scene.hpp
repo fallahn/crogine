@@ -51,6 +51,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 
 #include <functional>
+#include <memory>
 
 namespace cro
 {
@@ -498,7 +499,7 @@ namespace cro
         std::array<std::int32_t, 3u> m_skyColourUniforms = {};
         std::array<Shader*, SkyboxType::Count> m_skyboxShaders = {};
         std::size_t m_shaderIndex;
-        ShaderResource m_shaderResource;
+        std::unique_ptr<ShaderResource> m_shaderResource;
         void applySkyboxColours();
         void applyStars();
 

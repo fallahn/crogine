@@ -268,10 +268,15 @@ void Scene::enableSkybox()
 {
     if (!m_skybox.vbo)
     {
+        if (!m_shaderResource)
+        {
+            m_shaderResource = std::make_unique<ShaderResource>();
+        }
+
         if (!m_skyboxShaders[SkyboxType::Coloured])
         {
-            m_shaderResource.loadFromString(SkyboxType::Coloured, skyboxVertex, skyboxFrag);
-            m_skyboxShaders[SkyboxType::Coloured] = &m_shaderResource.get(SkyboxType::Coloured);
+            m_shaderResource->loadFromString(SkyboxType::Coloured, skyboxVertex, skyboxFrag);
+            m_skyboxShaders[SkyboxType::Coloured] = &m_shaderResource->get(SkyboxType::Coloured);
         }
 
         if (m_skyboxShaders[SkyboxType::Coloured]->getGLHandle())
@@ -377,8 +382,8 @@ void Scene::setCubemap(const std::string& path)
     //create shader if it doesn't exist
     if (!m_skyboxShaders[SkyboxType::Cubemap])
     {
-        m_shaderResource.loadFromString(SkyboxType::Cubemap, skyboxVertex, skyboxFragTextured);
-        m_skyboxShaders[SkyboxType::Cubemap] = &m_shaderResource.get(SkyboxType::Cubemap);
+        m_shaderResource->loadFromString(SkyboxType::Cubemap, skyboxVertex, skyboxFragTextured);
+        m_skyboxShaders[SkyboxType::Cubemap] = &m_shaderResource->get(SkyboxType::Cubemap);
     }
 
     //if (m_skyboxShaders[SkyboxType::Cubemap]->getGLHandle() == 0)
@@ -404,8 +409,8 @@ void Scene::setCubemap(const EnvironmentMap& map)
 
     if (!m_skyboxShaders[SkyboxType::Environment])
     {
-        m_shaderResource.loadFromString(SkyboxType::Environment, skyboxVertex, skyboxFragTextured, "#define GAMMA_CORRECT\n");
-        m_skyboxShaders[SkyboxType::Environment] = &m_shaderResource.get(SkyboxType::Environment);
+        m_shaderResource->loadFromString(SkyboxType::Environment, skyboxVertex, skyboxFragTextured, "#define GAMMA_CORRECT\n");
+        m_skyboxShaders[SkyboxType::Environment] = &m_shaderResource->get(SkyboxType::Environment);
     }
 
     m_activeSkyboxTexture = map.m_textures[0];
