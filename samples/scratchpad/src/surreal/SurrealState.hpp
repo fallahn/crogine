@@ -41,6 +41,12 @@ private:
         std::int32_t fogDensity = -1;
     }m_waveShader;
 
+    struct TerrainShader final
+    {
+        std::uint32_t ID = 0;
+        std::int32_t blend = -1;
+    }m_terrainShader;
+
     void addSystems();
     void loadAssets();
     void createScene();

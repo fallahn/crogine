@@ -17,6 +17,5 @@ model heightmesh
         col_count = 1.000000
         framerate = 1.000000
         blendmode = "none"
-        diffuse = "assets/water/heightmap/heightmap_a.png"
     }
 }

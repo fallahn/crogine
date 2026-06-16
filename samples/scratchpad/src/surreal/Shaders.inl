@@ -195,10 +195,15 @@ ATTRIBUTE MED vec2 a_texCoord0;
 #include WVP_UNIFORMS
 
 //TODO height can be on normal map alpha
-uniform sampler2D u_heightMap;
-uniform sampler2D u_normalMap;
+uniform sampler2D u_heightMapA;
+uniform sampler2D u_normalMapA;
+uniform sampler2D u_heightMapB;
+uniform sampler2D u_normalMapB;
+
+uniform float u_blend = 0.0;
 
 VARYING_OUT vec3 v_normalVector;
+VARYING_OUT vec3 v_worldPosition;
 
 #if !defined(MAX_HEIGHT)
 #define MAX_HEIGHT 10.0
@@ -206,27 +211,61 @@ VARYING_OUT vec3 v_normalVector;
 
 void main()
 {
-    //TODO technically this in is tangent space - we can fudge this by swapping -y/z
-    vec3 normal = normalize(TEXTURE(u_normalMap, a_texCoord0).rgb * 2.0 - 1.0);
-    //normal = vec3(normal.x, normal.z, -normal.y);
-    v_normalVector = u_normalMatrix * normal;
+    //TODO technically this in is tangent space
+    vec3 normalA = normalize(TEXTURE(u_normalMapA, a_texCoord0).rgb * 2.0 - 1.0);
+    vec3 normalB = normalize(TEXTURE(u_normalMapB, a_texCoord0).rgb * 2.0 - 1.0);
+    v_normalVector = u_normalMatrix * normalize(mix(normalA, normalB, u_blend));
+
+    //this is in model space because we can't calc world
+    //space until *after* calculating the blend...
+    float blendPos = u_blend * 2.0 - 1.0;
+    blendPos *= 2.0;
+    float blend = smoothstep(blendPos - 0.3, blendPos + 0.3, a_position.x);
 
     vec4 position = a_position;
-    position.y = TEXTURE(u_heightMap, a_texCoord0).r * MAX_HEIGHT;
+    float z = mix(TEXTURE(u_heightMapA, a_texCoord0).r, TEXTURE(u_heightMapB, a_texCoord0).r, blend);
+    position.z = z * MAX_HEIGHT;
 
     mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
     gl_Position = wvp * position;
+
+    v_worldPosition = (u_worldMatrix * position).xyz;
 })";
 
 static inline const std::string TerrainFrag =
 R"(
 OUTPUT
 
+uniform sampler2D u_diffuseMap;
+layout (std140) uniform CameraUniforms
+{
+    mat4 u_viewMatrix;
+    mat4 u_viewProjectionMatrix;
+    mat4 u_projectionMatrix;
+    vec4 u_clipPlane;
+    vec3 u_cameraWorldPosition;
+};
+
+#include LIGHT_UBO
+
 VARYING_IN vec3 v_normalVector;
+VARYING_IN vec3 v_worldPosition;
+
+const float StartFade = 25.0;
+const float EndFade = 42.0;
 
 void main()
 {
-    //TODO darken below water line (and with distance?)
+    vec3 colour = TEXTURE(u_diffuseMap, vec2(0.5, v_worldPosition.y / 4.0)).rgb;
+    colour *= u_lightColour.rgb;
+    FRAG_OUT = vec4(colour, 1.0) * dot(normalize(v_normalVector), normalize(-u_lightDirection));
+    
 
-    FRAG_OUT = vec4(1.0, 1.0, 0.0, 1.0) * dot(normalize(v_normalVector), vec3(0.0, 0.0, 1.0));
+    //darken below water line - TODO use this to mix a shadow colour rather than just blacken
+    float dist = dot(u_clipPlane.xyz, v_worldPosition) + u_clipPlane.w;
+    FRAG_OUT.rgb *= 0.1 + (0.9 * smoothstep(-5.0, 0.0, -dist));
+
+    //fade with distance
+    dist = length(v_worldPosition - u_cameraWorldPosition);
+    FRAG_OUT.rgb *= 0.5 + (0.5 * (1.0 - smoothstep(StartFade, EndFade, dist)));
 })";

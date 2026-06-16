@@ -342,17 +342,32 @@ void SurrealState::createScene()
     {
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, -2.f, -30.f });
-        entity.getComponent<cro::Transform>().setScale(glm::vec3(40.f, 1.f, 20.f)); //height scale MUST be 1 as we calc this in the shader
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(40.f, 20.f, 1.f)); //height scale MUST be 1 as we calc this in the shader
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -(cro::Util::Const::PI / 2.f));
         md.createModel(entity);
 
         m_resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertex, TerrainFrag);
-        auto& heightmap = m_resources.textures.get("assets/water/heightmap/heightmap_a.png");
-        auto& normalmap = m_resources.textures.get("assets/water/heightmap/normal_a.png");
-        const auto m = m_resources.materials.add(m_resources.shaders.get(ShaderID::Terrain));
+        const auto& heightmapA = m_resources.textures.get("assets/water/heightmap/heightmap_a.png");
+        const auto& normalmapA = m_resources.textures.get("assets/water/heightmap/normal_a.png");
+        const auto& heightmapB = m_resources.textures.get("assets/water/heightmap/heightmap_b.png");
+        const auto& normalmapB = m_resources.textures.get("assets/water/heightmap/normal_b.png");
+
+        auto& diffuseMap = m_resources.textures.get("assets/water/cliffs.png");
+        diffuseMap.setSmooth(true);
+        diffuseMap.setRepeated(true);
+
+        const auto& shader = m_resources.shaders.get(ShaderID::Terrain);
+        const auto m = m_resources.materials.add(shader);
         auto& mat = m_resources.materials.get(m);
-        mat.setProperty("u_heightMap", heightmap);
-        mat.setProperty("u_normalMap", normalmap);
+        mat.setProperty("u_heightMapA", heightmapA);
+        mat.setProperty("u_normalMapA", normalmapA);
+        mat.setProperty("u_heightMapB", heightmapB);
+        mat.setProperty("u_normalMapB", normalmapB);
+        mat.setProperty("u_diffuseMap", diffuseMap);
         entity.getComponent<cro::Model>().setMaterial(0, mat);
+
+        m_terrainShader.ID = shader.getGLHandle();
+        m_terrainShader.blend = shader.getUniformID("u_blend");
     }
 
 
@@ -396,6 +411,13 @@ void SurrealState::createScene()
         {
             if (ImGui::Begin("Cam"))
             {
+                static float blend = 0.f;
+                if (ImGui::SliderFloat("Blend", &blend, 0.f, 1.f))
+                {
+                    glUseProgram(m_terrainShader.ID);
+                    glUniform1f(m_terrainShader.blend, blend);
+                }
+
                 /*static float density = 0.5f;
                 static float fogStart = 0.01f;
                 static float fogEnd = 5.5f;
