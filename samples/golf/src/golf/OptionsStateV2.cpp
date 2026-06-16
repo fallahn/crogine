@@ -124,7 +124,7 @@ namespace
 
     const std::array ItemLabels =
     {
-        "Settings", "Keyboard", "Controller",
+        "Settings", "Keyboard", "Input",
         "Graphics", "Audio", "Achievements",
         "Stats"
     };
@@ -2387,7 +2387,7 @@ void OptionsStateV2::createControllerItems()
     //menu items
 
     auto* item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
-    item->title = "Controller Settings";
+    item->title = "Input Settings";
     item->displayType = Menu::Item::Heading;
 
     //input sensitivity
@@ -2425,10 +2425,9 @@ void OptionsStateV2::createControllerItems()
     
 
     //invert X axis
+    const auto xItem = m_uiLayout.menuLayout.items[TabID::Controller].size();
     item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Invert X axis";
-    item->description = "Invert the controller X axis when in camera mode";
-    cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.invertX = i.selectedIndex == 1;
@@ -2436,11 +2435,11 @@ void OptionsStateV2::createControllerItems()
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.invertX ? 1 : 0;
 
+    
     //invert Y axis
+    const auto yItem = m_uiLayout.menuLayout.items[TabID::Controller].size();
     item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Invert Y axis";
-    item->description = "Invert the controller Y axis when in camera mode";
-    cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.invertY = i.selectedIndex == 1;
@@ -2448,17 +2447,46 @@ void OptionsStateV2::createControllerItems()
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.invertY ? 1 : 0;
 
+
     //enable swingput
+    const auto swingItem = m_uiLayout.menuLayout.items[TabID::Controller].size();
     item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
-    item->title = "Enable Swingput";
-    item->description = "With either trigger held, pull back on a thumbstick to charge the power. Push forward on the stick to take your shot.";
-    cro::Util::String::wordWrap(item->description, 36);
+    item->title = "Enable Swingput";    
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.useSwingput = i.selectedIndex == 1;
         };
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.useSwingput ? 1 : 0;
+
+    //entity with a callback to update the strings based on active input
+    auto e = m_scene.createEntity();
+    e.addComponent<cro::Callback>().active = true;
+    e.getComponent<cro::Callback>().setUserData<std::int32_t>(-1);
+    e.getComponent<cro::Callback>().function =
+        [this, xItem, yItem, swingItem](cro::Entity ent, float)
+        {
+            auto& lastInput = ent.getComponent<cro::Callback>().getUserData<std::int32_t>();
+            if (lastInput != m_sharedData.activeInput)
+            {
+                if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+                {
+                    m_uiLayout.menuLayout.items[TabID::Controller][xItem].description = "Invert the mouse X axis when in camera mode";
+                    m_uiLayout.menuLayout.items[TabID::Controller][yItem].description = "Invert the mouse Y axis when in camera mode";
+                    m_uiLayout.menuLayout.items[TabID::Controller][swingItem].description = "With Right Mouse held, pull back on the mouse to set the power. Push forward to take your shot.";
+                }
+                else
+                {
+                    m_uiLayout.menuLayout.items[TabID::Controller][xItem].description = "Invert the controller X axis when in camera mode";
+                    m_uiLayout.menuLayout.items[TabID::Controller][yItem].description = "Invert the controller Y axis when in camera mode";
+                    m_uiLayout.menuLayout.items[TabID::Controller][swingItem].description = "With either trigger held, pull back on a thumbstick to charge the power. Push forward on the stick to take your shot.";
+                }
+                cro::Util::String::wordWrap(m_uiLayout.menuLayout.items[TabID::Controller][xItem].description, 36);
+                cro::Util::String::wordWrap(m_uiLayout.menuLayout.items[TabID::Controller][yItem].description, 36);
+                cro::Util::String::wordWrap(m_uiLayout.menuLayout.items[TabID::Controller][swingItem].description, 36);
+            }
+            lastInput = m_sharedData.activeInput;
+        };
 
     //vibration
     item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
