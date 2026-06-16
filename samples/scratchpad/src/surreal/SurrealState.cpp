@@ -8,10 +8,12 @@
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
@@ -138,6 +140,7 @@ void SurrealState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::ParticleSystem>(mb);
 
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
@@ -255,6 +258,14 @@ void SurrealState::createScene()
         entity.getComponent<cro::Model>().setMaterial(0, material);
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", glm::vec4(0.5f, 0.5f, 1.f, 0.5f));
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", glm::vec4(1.f, 1.f, 0.2f, 1.f));
+
+        //auto parent = entity;
+
+        //entity = m_gameScene.createEntity();
+        //entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
+        entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/water/drips.cps", m_resources.textures);
+        entity.getComponent<cro::ParticleEmitter>().start();
+        //parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
     if (md.loadFromFile("assets/water/cube.cmt"))
     {
@@ -265,6 +276,7 @@ void SurrealState::createScene()
             [](cro::Entity e, float dt)
             {
                 e.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, dt * -0.1f);
+                e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, dt * 0.2f);
 
                 e.getComponent<cro::Transform>().move({ 0.f, 0.7f * dt, 0.f });
                 if (e.getComponent<cro::Transform>().getPosition().y > 6.f)
@@ -278,6 +290,9 @@ void SurrealState::createScene()
         entity.getComponent<cro::Model>().setMaterial(0, material);
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", glm::vec4(0.5f, 0.5f, 1.f, 0.5f));
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", glm::vec4(0.f, 0.3f, 0.94f, 1.f));
+
+        entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/water/drips.cps", m_resources.textures);
+        entity.getComponent<cro::ParticleEmitter>().start();
     }
     if (md.loadFromFile("assets/water/torus.cmt"))
     {
@@ -301,6 +316,10 @@ void SurrealState::createScene()
         entity.getComponent<cro::Model>().setMaterial(0, material);
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", glm::vec4(0.5f, 0.5f, 1.f, 0.5f));
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", glm::vec4(0.f, 1.f, 0.2f, 1.f));
+
+        entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/water/drips.cps", m_resources.textures);
+        entity.getComponent<cro::ParticleEmitter>().settings.spawnOffset.x = -1.f;
+        entity.getComponent<cro::ParticleEmitter>().start();
     }
 
 
@@ -326,7 +345,7 @@ void SurrealState::createScene()
             [](cro::Entity e, float)
             {
                 auto& [table1, table2, idx1, idx2] = e.getComponent<cro::Callback>().getUserData<HeadData>();
-                e.getComponent<cro::Transform>().setPosition({-16.f, 10.f + (table1[idx1] * 2.f), -30.f });
+                e.getComponent<cro::Transform>().setPosition({-14.f, 12.f + (table1[idx1]), -30.f });
 
                 glm::quat q = glm::rotate(cro::Transform::QUAT_IDENTITY, 0.5f, cro::Transform::X_AXIS);
                 q = glm::rotate(q, table2[idx2] + cro::Util::Const::PI, cro::Transform::Y_AXIS);
@@ -369,6 +388,7 @@ void SurrealState::createScene()
         m_terrainShader.ID = shader.getGLHandle();
         m_terrainShader.blend = shader.getUniformID("u_blend");
     }
+
 
 
     auto resize = [](cro::Camera& cam)
