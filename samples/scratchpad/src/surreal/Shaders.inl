@@ -211,16 +211,17 @@ VARYING_OUT vec3 v_worldPosition;
 
 void main()
 {
-    //TODO technically this in is tangent space
-    vec3 normalA = normalize(TEXTURE(u_normalMapA, a_texCoord0).rgb * 2.0 - 1.0);
-    vec3 normalB = normalize(TEXTURE(u_normalMapB, a_texCoord0).rgb * 2.0 - 1.0);
-    v_normalVector = u_normalMatrix * normalize(mix(normalA, normalB, u_blend));
-
     //this is in model space because we can't calc world
     //space until *after* calculating the blend...
     float blendPos = u_blend * 2.0 - 1.0;
     blendPos *= 2.0;
     float blend = smoothstep(blendPos - 0.3, blendPos + 0.3, a_position.x);
+
+
+    //TODO technically this in is tangent space
+    vec3 normalA = normalize(TEXTURE(u_normalMapA, a_texCoord0).rgb * 2.0 - 1.0);
+    vec3 normalB = normalize(TEXTURE(u_normalMapB, a_texCoord0).rgb * 2.0 - 1.0);
+    v_normalVector = u_normalMatrix * normalize(mix(normalA, normalB, blend));
 
     vec4 position = a_position;
     float z = mix(TEXTURE(u_heightMapA, a_texCoord0).r, TEXTURE(u_heightMapB, a_texCoord0).r, blend);
@@ -256,7 +257,7 @@ const float EndFade = 42.0;
 
 void main()
 {
-    vec3 colour = TEXTURE(u_diffuseMap, vec2(0.5, v_worldPosition.y / 4.0)).rgb;
+    vec3 colour = TEXTURE(u_diffuseMap, vec2(0.5, v_worldPosition.y / 6.0)).rgb;
     colour *= u_lightColour.rgb;
     FRAG_OUT = vec4(colour, 1.0) * dot(normalize(v_normalVector), normalize(-u_lightDirection));
     

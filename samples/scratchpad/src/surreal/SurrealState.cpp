@@ -360,7 +360,7 @@ void SurrealState::createScene()
     if (md.loadFromFile("assets/water/heightmesh.cmt"))
     {
         entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, -2.f, -30.f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -3.f, -30.f });
         entity.getComponent<cro::Transform>().setScale(glm::vec3(40.f, 20.f, 1.f)); //height scale MUST be 1 as we calc this in the shader
         entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -(cro::Util::Const::PI / 2.f));
         md.createModel(entity);
@@ -372,7 +372,7 @@ void SurrealState::createScene()
         const auto& normalmapB = m_resources.textures.get("assets/water/heightmap/normal_b.png");
 
         auto& diffuseMap = m_resources.textures.get("assets/water/cliffs.png");
-        diffuseMap.setSmooth(true);
+        //diffuseMap.setSmooth(true);
         diffuseMap.setRepeated(true);
 
         const auto& shader = m_resources.shaders.get(ShaderID::Terrain);
@@ -424,8 +424,8 @@ void SurrealState::createScene()
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 1.44f, 2.f });
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, XRotation);
 
-    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.8f);
-    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.2f);
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -1.f);
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.35f);
 
     registerWindow([this, &cam]() 
         {
