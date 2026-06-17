@@ -1611,7 +1611,6 @@ void GolfState::loadMap()
         hole.tee.y = result.height;
 
 
-
         //while we're here check if this is a putting
         //course by looking to see if the tee is on the green
         hole.puttFromTee = m_collisionMesh.getTerrain(hole.tee).terrain == TerrainID::Green;

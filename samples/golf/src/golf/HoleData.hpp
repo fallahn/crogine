@@ -124,6 +124,7 @@ struct HoleData final
     std::vector<cro::Entity> audioEntities;
     std::array<std::vector<glm::mat4>, CrowdDensityCount> crowdPositions = {};
     std::vector<Path> crowdCurves;
+    std::vector<glm::vec3> rabbitPositions;
 };
 
 static inline constexpr std::size_t MaxHoles = 18;

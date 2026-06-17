@@ -6943,6 +6943,15 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
                 audio.getComponent<cro::Callback>().active = true;
             }
 
+            for (const auto& pos : m_holeData[m_currentHole].rabbitPositions)
+            {
+                const auto count = cro::Util::Random::value(1, 5);
+                for (auto i = 0; i < count; ++i)
+                {
+                    spawnRabbit(pos, cro::Util::Random::value(3, 3000));
+                }
+            }
+
             //check hole for any crowd paths and assign any free
             //spectator models we have
             if (rescale &&
