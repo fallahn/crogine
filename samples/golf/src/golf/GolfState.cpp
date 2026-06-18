@@ -909,6 +909,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
             {
                 cro::Console::doCommand("build_cubemaps");
             }
+            else
+            {
+                std::ofstream file("minimap.log", std::ios::app);
+                file << cro::SysTime::dateString() << " " << cro::SysTime::timeString() 
+                    << "- hole: " << m_currentHole + 1 << ", course: " << m_courseTitle.toAnsiString() << std::endl;
+                LogI << "Updated minimap.log" << std::endl;
+            }
             break;
 
         case SDLK_F10:
