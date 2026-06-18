@@ -784,14 +784,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
         };
 
-    const auto toggleDOF = [&]()
+    const auto toggleDOF = [&](bool isKey)
         {
             if (m_photoMode)
             {
                 m_useDOF = !m_useDOF;
                 enableDOF(m_useDOF);
             }
-            else
+            else if (isKey) //sigh - can't overlap this with the controller input
             {
                 //reset the camera view
                 if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
@@ -863,7 +863,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             toggleMiniZoom();
             break;
         case FixedKey::ToggleDOF:
-            toggleDOF();
+            toggleDOF(true);
             break;
         case SDLK_SPACE: //TODO this should read the keymap... but it's not const
             closeMessage();
@@ -1243,7 +1243,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             if (evt.cbutton.which == cro::GameController::deviceID(activeID)
                 || m_humanCount == 1)
             {
-                toggleDOF();
+                toggleDOF(false);
             }
             break;
         case cro::GameController::ButtonY:
