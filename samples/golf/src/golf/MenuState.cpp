@@ -135,7 +135,10 @@ namespace
 
     const std::unordered_map<std::string, std::string> MissingCourses =
     {
-        std::make_pair("course_13", "Requires Adventurer DLC")
+        std::make_pair("course_13", "Requires Adventurer DLC"),
+        std::make_pair("course_14", "Requires Putt-Stop DLC"),
+        std::make_pair("course_15", "Requires Craewall DLC"),
+        std::make_pair("course_16", "Requires Craewall DLC"),
     };
 
     bool checkCommandLine = true;
