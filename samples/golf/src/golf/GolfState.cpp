@@ -907,14 +907,16 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F9:
             if (evt.key.keysym.mod & KMOD_SHIFT)
             {
-                cro::Console::doCommand("build_cubemaps");
-            }
-            else
-            {
+                //cro::Console::doCommand("build_cubemaps");
+
                 std::ofstream file("minimap.log", std::ios::app);
                 file << cro::SysTime::dateString() << " " << cro::SysTime::timeString() 
                     << "- hole: " << m_currentHole + 1 << ", course: " << m_courseTitle.toAnsiString() << std::endl;
                 LogI << "Updated minimap.log" << std::endl;
+            }
+            else
+            {
+                retargetMinimap(false);
             }
             break;
 
@@ -1947,6 +1949,9 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_mapRoot.getComponent<cro::Callback>().active = true;
         }
             break;
+        /*case SceneEvent::MinimapUpdated:
+            m_minimapZoom.camera.getComponent<cro::Camera>().active = true;
+            break;*/
         }
     }
         break;
