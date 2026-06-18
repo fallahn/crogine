@@ -1330,7 +1330,7 @@ void GolfState::togglePuttingView(bool putt)
         };
 }
 
-void GolfState::setCameraTarget(const ActivePlayer& playerData)
+void GolfState::setCameraTarget(const ActivePlayer& playerData, bool usePlayerLookAt)
 {
     auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
     if (playerData.terrain == TerrainID::Green)
@@ -1347,14 +1347,27 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
         targetInfo.targetHeight = CameraStrokeHeight;
         targetInfo.targetOffset = CameraStrokeOffset;
     }
+    targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
+
+    if (usePlayerLookAt)
+    {
+        const auto getPlayerDir = 
+            [this, &playerData]()
+        {
+            glm::vec3 impulse(1.f, 0.f, 0.f);
+            const auto rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, m_inputParser.getYaw(), cro::Transform::Y_AXIS);
+            return (glm::toMat3(rotation) * impulse) + playerData.position;
+        };
+        targetInfo.targetLookAt = getPlayerDir();
+        return;
+    }
 
     //if we have a sub-target see if that should be active
     const auto activeTarget = findTargetPos(playerData.position);
-
-
     const auto targetDir = activeTarget - playerData.position;
     const auto pinDir = m_holeData[m_currentHole].pin - playerData.position;
-    targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
+
+
 
     //always look at the target in mult-target mode and target not yet hit
     if (m_sharedData.scoreType == ScoreType::MultiTarget

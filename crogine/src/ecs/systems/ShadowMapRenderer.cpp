@@ -593,7 +593,7 @@ void ShadowMapRenderer::render()
     for (auto c = 0u; c < m_activeCameras.size(); c++)
     {
         auto& camera = m_activeCameras[c].getComponent<Camera>();
-        auto cameraPosition = m_activeCameras[c].getComponent<cro::Transform>().getWorldPosition();
+        const auto cameraPosition = m_activeCameras[c].getComponent<cro::Transform>().getWorldPosition();
         const auto& camView = camera.getPass(Camera::Pass::Final).viewMatrix;
 
         //enable face culling and render rear faces
@@ -638,7 +638,7 @@ void ShadowMapRenderer::render()
                 for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
                 {
                     //hmm we probably want to cull this at the draw list calculation
-                    //bu draw lists consider entire entities, not individual meshes
+                    //but draw lists consider entire entities, not individual sub-meshes
                     if (model.m_materials[Mesh::IndexData::Final][i].null)
                     {
                         continue;

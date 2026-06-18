@@ -797,7 +797,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
                     && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
                 {
-                    setCameraTarget(m_currentPlayer);
+                    setCameraTarget(m_currentPlayer, true);
                     rotateCameraToTarget();
                 }
             }

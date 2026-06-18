@@ -1251,7 +1251,7 @@ std::int32_t InputParser::getLastActiveController() const
 glm::vec3 InputParser::getImpulse(float pitch, float yaw) const
 {
     glm::vec3 impulse(1.f, 0.f, 0.f);
-    auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
+    auto rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, yaw, cro::Transform::Y_AXIS);
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
     return glm::toMat3(rotation) * impulse;
 }
