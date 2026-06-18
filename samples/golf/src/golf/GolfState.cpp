@@ -905,7 +905,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
             break;
         case SDLK_F9:
-            if (evt.key.keysym.mod & KMOD_SHIFT)
+            //if (evt.key.keysym.mod & KMOD_SHIFT)
             {
                 //cro::Console::doCommand("build_cubemaps");
 
@@ -914,7 +914,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
                     << "- hole: " << m_currentHole + 1 << ", course: " << m_courseTitle.toAnsiString() << std::endl;
                 LogI << "Updated minimap.log" << std::endl;
             }
-            else
+            //else
             {
                 retargetMinimap(false);
             }
