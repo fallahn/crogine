@@ -138,6 +138,7 @@ ProLeagueState::ProLeagueState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_currentMenu   (MenuID::Career)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Pro League");
 
     std::fill(m_progressPositions.begin(), m_progressPositions.end(), 0);
 
@@ -807,10 +808,9 @@ void ProLeagueState::buildScene()
         bannerEnt.getComponent<cro::Callback>().active = true;
     };
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
-    m_scene.setActiveCamera(entity);
+    entity = m_scene.getActiveCamera();
+    entity.setLabel("Pro League");
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(entity.getComponent<cro::Camera>());
 }
 

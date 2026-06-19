@@ -232,6 +232,7 @@ void MenuState::createBallScene()
     };
 
     m_ballCam = m_backgroundScene.createEntity();
+    m_ballCam.setLabel("Ball Camera");
     m_ballCam.addComponent<cro::Transform>().setPosition({ RootPoint - 10.f, 0.045f, 0.095f });
     m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
     m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, static_cast<float>(BallPreviewSize.x) / BallPreviewSize.y, 0.001f, 2.f);
@@ -1156,14 +1157,15 @@ void MenuState::createAvatarScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };*/
     };
 
-    auto avatarCam = m_avatarScene.createEntity();
-    avatarCam.addComponent<cro::Transform>().setPosition({ 0.f, 0.7f, 1.3f });
+    auto avatarCam = m_avatarScene.getActiveCamera();
+    avatarCam.setLabel("Avatar cam");
+    avatarCam.getComponent<cro::Transform>().setPosition({ 0.f, 0.7f, 1.3f });
     //avatarCam.addComponent<cro::Camera>().setPerspective(75.f * cro::Util::Const::degToRad, static_cast<float>(AvatarPreviewSize.x) / AvatarPreviewSize.y, 0.001f, 10.f);
 
     static constexpr float ratio = static_cast<float>(AvatarPreviewSize.y) / AvatarPreviewSize.x;
     static constexpr float orthoWidth = 0.7f;
     auto orthoSize = glm::vec2(orthoWidth, orthoWidth * ratio);
-    avatarCam.addComponent<cro::Camera>().setOrthographic(-orthoSize.x, orthoSize.x, -orthoSize.y, orthoSize.y, 0.001f, 10.f);
+    avatarCam.getComponent<cro::Camera>().setOrthographic(-orthoSize.x, orthoSize.x, -orthoSize.y, orthoSize.y, 0.001f, 10.f);
     avatarCam.getComponent<cro::Camera>().resizeCallback = avatarTexCallback;
     avatarTexCallback(avatarCam.getComponent<cro::Camera>());
 

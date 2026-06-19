@@ -96,6 +96,7 @@ PauseState::PauseState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     m_confirmationType  (ConfirmType::Quit)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Pause State");
 
     buildScene();
 

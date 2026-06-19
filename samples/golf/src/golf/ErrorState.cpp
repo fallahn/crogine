@@ -60,6 +60,7 @@ ErrorState::ErrorState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     m_viewScale (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Error State");
 
     buildScene();
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -164,6 +164,7 @@ KeyboardState::KeyboardState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_prevAxisFlags (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("OSK State");
 
     buildScene();
     
@@ -612,12 +613,12 @@ void KeyboardState::buildScene()
     m_touchpadContext.pointerEnt = entity;
 
 
-
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = resize;
+    //camera
+    entity = m_scene.getActiveCamera();
+    entity.setLabel("OSK");
+    entity.getComponent<cro::Camera>().resizeCallback = resize;
     resize(entity.getComponent<cro::Camera>());
-    m_scene.setActiveCamera(entity);
+
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(GridOffset, 0.1f));

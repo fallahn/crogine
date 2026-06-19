@@ -137,6 +137,7 @@ CareerState::CareerState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_currentMenu   (MenuID::Career)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Career State");
 
     std::fill(m_progressPositions.begin(), m_progressPositions.end(), 0);
 
@@ -1352,10 +1353,8 @@ void CareerState::buildScene()
         bannerEnt.getComponent<cro::Callback>().active = true;
     };
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
-    m_scene.setActiveCamera(entity);
+    entity = m_scene.getActiveCamera();
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(entity.getComponent<cro::Camera>());
 }
 

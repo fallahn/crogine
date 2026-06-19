@@ -157,6 +157,7 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     lastWindowSize = cro::App::getWindow().getSize();
     
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Options Menu");
 
     m_flagPreview.init(sd.flagPath);
     m_flagPreview.setText(m_sharedData.flagText);
@@ -1214,10 +1215,9 @@ void OptionsStateV2::buildScene()
         m_uiLayout.updateTabBar();
     };
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
-    m_scene.setActiveCamera(entity);
+    entity = m_scene.getActiveCamera();
+    entity.setLabel("Options Cam");
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(entity.getComponent<cro::Camera>());
 }
 

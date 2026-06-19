@@ -215,6 +215,7 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
     m_ditherUniform     (-1)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Map Overview");
 
     CRO_ASSERT(sd.minimapData.mapScene, "");
     addSystems();

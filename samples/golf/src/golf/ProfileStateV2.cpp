@@ -153,6 +153,9 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_uiLayout          (TabID::Count, sd)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Profile UI");
+    m_previewScene.setTitle("Profile Preview");
+    m_statScene.setTitle("Profile Stats");
 
     std::fill(m_controllerMasks.begin(), m_controllerMasks.end(), 0);
     std::fill(m_controllerPrevMasks.begin(), m_controllerPrevMasks.end(), 0);
@@ -1491,10 +1494,9 @@ void ProfileStateV2::buildScene()
         m_uiLayout.updateTabBar();
     };
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
-    m_scene.setActiveCamera(entity);
+    entity = m_scene.getActiveCamera();
+    entity.setLabel("UI");
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(entity.getComponent<cro::Camera>());
 
 
@@ -1691,7 +1693,7 @@ void ProfileStateV2::buildPreviewScene()
     //cameras anyway.
     resize(cam);
     m_previewCameras[PreviewCamera::Avatar] = camEnt;
-
+    camEnt.setLabel("Avatar");
 
     //this needs its own callback with narrower FOV and split screen
     //for club thumbnails
@@ -1711,6 +1713,7 @@ void ProfileStateV2::buildPreviewScene()
     ballCam.resizeCallback = resize2;
     resize2(ballCam);
     m_previewCameras[PreviewCamera::Ball] = camEnt;
+    camEnt.setLabel("Ball");
 
 
     const auto resize3 =
@@ -1729,7 +1732,7 @@ void ProfileStateV2::buildPreviewScene()
     bioCam.resizeCallback = resize3;
     resize3(bioCam);
     m_previewCameras[PreviewCamera::Biog] = camEnt;
-
+    camEnt.setLabel("Biog");
 
 
     //doesn't use a callback because the mugshot texture doesn't resize
@@ -1742,7 +1745,7 @@ void ProfileStateV2::buildPreviewScene()
     cam2.viewport = { 0.f, 0.f, 0.5f, 1.f };
     //cam2.setRenderFlags(cro::Camera::Pass::Final, ~(1 << 1));
     m_previewCameras[PreviewCamera::MugShot] = camEnt;
-
+    camEnt.setLabel("Mugshot");
 
     auto lightEnt = m_previewScene.getSunlight();
     lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 2.8f);
@@ -1888,6 +1891,7 @@ void ProfileStateV2::buildStatScene()
 
 
     auto camEnt = m_statScene.getActiveCamera();
+    camEnt.setLabel("UI");
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = 
         [&](cro::Camera& c)

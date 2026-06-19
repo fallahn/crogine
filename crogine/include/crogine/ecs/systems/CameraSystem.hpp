@@ -65,6 +65,8 @@ namespace cro
         std::size_t m_nextDrawlistIndex;
         std::vector<std::size_t> m_freeDrawlistIndices;
 
+        bool m_updatedThisFrame; //debug output
+
         void resizeGBuffer(Entity);
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;

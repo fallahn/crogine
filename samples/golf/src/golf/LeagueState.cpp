@@ -141,6 +141,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_activeName            (nullptr)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("League Browser");
 #ifdef USE_GNS
     //scoreSet = readGameScores();
 #endif

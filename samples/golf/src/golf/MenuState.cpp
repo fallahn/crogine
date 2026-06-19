@@ -211,6 +211,10 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_serverMapAvailable    (true),
     m_avUpdateCount         (0)
 {
+    m_uiScene.setTitle("Menu UI");
+    m_backgroundScene.setTitle("Menu Background");
+    m_avatarScene.setTitle("Menu Avatars");
+
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     Timeline::setTimelineDesc("Main Menu");
 
@@ -2060,7 +2064,6 @@ void MenuState::addSystems()
     m_avatarScene.addSystem<cro::SkeletalAnimator>(mb);
     m_avatarScene.addSystem<cro::CameraSystem>(mb);
     m_avatarScene.addSystem<cro::ModelRenderer>(mb);
-    m_avatarScene.setTitle("Avatar Scene");
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);

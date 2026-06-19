@@ -105,6 +105,7 @@ EditTournamentState::EditTournamentState(cro::StateStack& ss, cro::State::Contex
     m_showImguiInput    (false)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Tournament Edit");
 
     buildScene();
     loadCourseInfo();
@@ -673,10 +674,8 @@ void EditTournamentState::buildScene()
         m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
-    m_scene.setActiveCamera(entity);
+    entity = m_scene.getActiveCamera();
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(entity.getComponent<cro::Camera>());
 }
 
