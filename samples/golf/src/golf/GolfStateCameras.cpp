@@ -217,6 +217,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Callback>().setUserData<float>(DefaultZoomSpeed);
 
     m_cameras[CameraID::Player] = camEnt;
+    camEnt.setLabel("Player Camera");
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
     cam.setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
@@ -283,6 +284,7 @@ void GolfState::createCameras()
     //this holds the water plane ent when active
     camEnt.addComponent<TargetInfo>();
     m_cameras[CameraID::Sky] = camEnt;
+    camEnt.setLabel("Sky Camera");
 
 
     //same as sky cam, but controlled by the active player
@@ -321,7 +323,7 @@ void GolfState::createCameras()
     //this holds the water plane ent when active
     camEnt.addComponent<TargetInfo>();
     m_cameras[CameraID::Drone] = camEnt;
-
+    camEnt.setLabel("Drone Camera");
 
 
     //and a green camera
@@ -353,6 +355,7 @@ void GolfState::createCameras()
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     m_cameras[CameraID::Green] = camEnt;
+    camEnt.setLabel("Green Camera");
 
     //bystander cam (when remote or CPU player is swinging)
     camEnt = m_gameScene.createEntity();
@@ -401,7 +404,7 @@ void GolfState::createCameras()
             }
         };
     m_cameras[CameraID::Bystander] = camEnt;
-
+    camEnt.setLabel("Bystander Camera");
 
     //idle cam when player AFKs
     camEnt = m_gameScene.createEntity();
@@ -453,6 +456,7 @@ void GolfState::createCameras()
         };
     camEnt.getComponent<cro::Camera>().updateMatrices(camEnt.getComponent<cro::Transform>());
     m_cameras[CameraID::Idle] = camEnt;
+    camEnt.setLabel("Idle Camera");
 
     //fly-by cam for transition
     camEnt = m_gameScene.createEntity();
@@ -471,7 +475,7 @@ void GolfState::createCameras()
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     m_cameras[CameraID::Transition] = camEnt;
-
+    camEnt.setLabel("Transition Camera");
 
     //free cam
     camEnt = m_gameScene.createEntity();
@@ -504,6 +508,7 @@ void GolfState::createCameras()
     camEnt.addComponent<FpsCamera>();
     camEnt.addComponent<TargetInfo>();
     m_freeCam = camEnt;
+    camEnt.setLabel("Free Camera");
 
 #ifdef PATH_TRACING
     initBallDebug();
@@ -580,17 +585,20 @@ void GolfState::createCameras()
             }
         };
     m_flightCam = camEnt;
-
+    camEnt.setLabel("Flight Camera");
 
 
     //set up the skybox cameras so they can be updated with the relative active cams
     m_skyCameras[SkyCam::Main] = m_skyScene.getActiveCamera();
     m_skyCameras[SkyCam::Main].getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    m_skyCameras[SkyCam::Main].setLabel("Skybox Camera");
     m_skyCameras[SkyCam::Flight] = m_skyScene.createEntity();
     m_skyCameras[SkyCam::Flight].addComponent<cro::Transform>();
+    m_skyCameras[SkyCam::Flight].setLabel("Skybox Flight Camera");
     auto& skyCam = m_skyCameras[SkyCam::Flight].addComponent<cro::Camera>();
     skyCam.setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, 0.1f, 14.f);
     skyCam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    skyCam.active = false;
 }
 
 void GolfState::setGreenCamPosition()

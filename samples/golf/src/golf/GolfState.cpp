@@ -1512,6 +1512,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     m_greenCam.getComponent<cro::Camera>().active = false;
                     m_flightCam.getComponent<cro::Camera>().active = true;
+
+                    m_skyCameras[SkyCam::Flight].getComponent<cro::Camera>().active = true;
                 }
             }
 
@@ -1749,6 +1751,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                         e.getComponent<cro::Callback>().active = true;
                         e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                         m_flightCam.getComponent<cro::Camera>().active = true;
+                        m_skyCameras[SkyCam::Flight].getComponent<cro::Camera>().active = true;
                     }
                 };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -3686,6 +3689,7 @@ void GolfState::addSystems()
 
     m_mapScene.addSystem<cro::CameraSystem>(mb);
     m_mapScene.addSystem<cro::ModelRenderer>(mb);
+    m_mapScene.setTitle("Minimap Scene");
 }
 
 void GolfState::buildScene()

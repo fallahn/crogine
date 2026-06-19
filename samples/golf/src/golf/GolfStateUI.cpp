@@ -2025,6 +2025,7 @@ void GolfState::buildUI()
                 m_greenCam.getComponent<cro::Callback>().active = false;
                 m_greenCam.getComponent<cro::Camera>().active = false;
                 m_flightCam.getComponent<cro::Camera>().active = false;
+                m_skyCameras[SkyCam::Flight].getComponent<cro::Camera>().active = false;
             }
         }
     };

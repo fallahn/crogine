@@ -44,10 +44,11 @@ void GolfState::createMinimapCamera()
     m_sharedData.minimapData.mapScene = &m_mapScene;
 
 
-    auto mapCam = m_mapScene.createEntity();
-    mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, MinimapZoom::CamHeight, -static_cast<float>(MapSize.y) / 2.f });
+    auto mapCam = m_mapScene.getActiveCamera();
+    mapCam.getComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, MinimapZoom::CamHeight, -static_cast<float>(MapSize.y) / 2.f });
     mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    auto& miniCam = mapCam.addComponent<cro::Camera>();
+    mapCam.setLabel("Minimap Camera");
+    auto& miniCam = mapCam.getComponent<cro::Camera>();
     miniCam.setOrthographic(-MapSizeFloat.x / 2.f, MapSizeFloat.x / 2.f, -MapSizeFloat.y / 2.f, MapSizeFloat.y / 2.f, 1.f, 40.f);
     miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
 

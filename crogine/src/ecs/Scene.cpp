@@ -181,6 +181,7 @@ Scene::Scene(MessageBus& mb, std::size_t initialPoolSize, std::uint32_t infoFlag
     defaultCamera.addComponent<Transform>();
     defaultCamera.addComponent<Camera>().resizeCallback = std::bind(&updateView, std::placeholders::_1);
     defaultCamera.addComponent<AudioListener>();
+    defaultCamera.setLabel("Default Camera");
     updateView(defaultCamera.getComponent<Camera>());
 
     std::fill(m_skyboxShaders.begin(), m_skyboxShaders.end(), nullptr);

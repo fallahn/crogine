@@ -34,8 +34,14 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/graphics/Spatial.hpp>
+#include <crogine/gui/Gui.hpp>
 
 using namespace cro;
+
+namespace 
+{
+    std::int32_t menuID = 0;
+}
 
 CameraSystem::CameraSystem(cro::MessageBus& mb)
     : System            (mb, typeid(CameraSystem)),
@@ -43,6 +49,22 @@ CameraSystem::CameraSystem(cro::MessageBus& mb)
 {
     requireComponent<Camera>();
     requireComponent<Transform>();
+
+    const std::string uid = "##" + std::to_string(menuID++);
+    registerWindow([this, uid]()
+        {
+            const auto title = getScene()->getTitle() + " Camera System" + uid;
+            if (ImGui::Begin(title.c_str()))
+            {
+                for (const auto e : getEntities())
+                {
+                    const std::string active = e.getComponent<cro::Camera>().active ? "Active" : "Inactive";
+                    ImGui::Text("%s: %s", e.getLabel().c_str(), active.c_str());
+                }
+
+            }
+            ImGui::End();
+        });
 }
 
 //public
