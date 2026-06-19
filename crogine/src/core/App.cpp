@@ -541,6 +541,8 @@ void App::run(bool resetSettings)
 
     static constexpr std::int32_t MaxUpdates = 20;
 
+    HiResTimer renderClock;
+
     while (m_running)
     {
         timeSinceLastUpdate += frameClock.restart();
@@ -556,6 +558,7 @@ void App::run(bool resetSettings)
             handleMessages();
 
             simulate(frameTime);
+            doImGui();
 
             framesRendered = 0;
 
@@ -570,13 +573,16 @@ void App::run(bool resetSettings)
         if (m_window.getVsyncEnabled()
             || framesRendered++ < /*MaxFrames*/Console::getMaxFrames())
         {
-            doImGui();
+            //doImGui();
 
-            ImGui::Render();
+            //ImGui::Render();
+            renderClock.restart();
             m_window.clear();
             render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             m_window.display();
+
+            Console::updateAverageRenderTime(renderClock.restart());
 
             //if (!m_window.getVsyncEnabled())
             //{
@@ -1069,6 +1075,11 @@ void App::doImGui()
             f.first();
         }
     }
+
+    //this just causes imgui to create its drawlists
+    //the actual rendering is done in the render loop
+    //using ImGui_ImplOpenGL3_RenderDrawData()
+    ImGui::Render();
 }
 
 void App::addStats(const std::function<void()>& f, const GuiClient* c)

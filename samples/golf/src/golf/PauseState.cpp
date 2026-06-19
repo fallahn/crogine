@@ -648,10 +648,8 @@ void PauseState::buildScene()
         m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
-    m_scene.setActiveCamera(entity);
+    entity = m_scene.getActiveCamera();
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(entity.getComponent<cro::Camera>());
 
     m_scene.simulate(0.f);

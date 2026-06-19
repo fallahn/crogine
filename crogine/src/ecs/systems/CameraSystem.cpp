@@ -51,15 +51,13 @@ CameraSystem::CameraSystem(cro::MessageBus& mb)
     requireComponent<Camera>();
     requireComponent<Transform>();
 
-    const std::string uid = "##" + std::to_string(menuID++);
+    /*const std::string uid = "##" + std::to_string(menuID++);
     registerWindow([this, uid]()
         {
             const auto title = getScene()->getTitle() + " Camera System" + uid;
             if (ImGui::Begin(title.c_str()))
             {
-                //hmm we need to fix the ImGui updates being done *every* draw time
-                //we did this in crow - so check what we did there...
-                /*if (m_updatedThisFrame)
+                if (m_updatedThisFrame)
                 {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.f, 1.f, 0.f, 1.f));
                     ImGui::Text("Updated This Frame: true");
@@ -70,17 +68,27 @@ CameraSystem::CameraSystem(cro::MessageBus& mb)
                     ImGui::Text("Updated This Frame: false");
                 }
                 ImGui::PopStyleColor();
-                m_updatedThisFrame = false;*/
+                m_updatedThisFrame = false;
 
                 for (const auto e : getEntities())
                 {
-                    const std::string active = e.getComponent<cro::Camera>().active ? "Active" : "Inactive";
-                    ImGui::Text("%s: %s", e.getLabel().c_str(), active.c_str());
+                    if (e.getComponent<cro::Camera>().active)
+                    {
+                        const std::string active = "Active";
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.f, 1.f, 0.f, 1.f));
+                        ImGui::Text("%s: %s", e.getLabel().c_str(), active.c_str());
+                        ImGui::PopStyleColor();
+                    }
+                    else
+                    {
+                        const std::string active = "Inactive";
+                        ImGui::Text("%s: %s", e.getLabel().c_str(), active.c_str());
+                    }
                 }
 
             }
             ImGui::End();
-        });
+        });*/
 }
 
 //public

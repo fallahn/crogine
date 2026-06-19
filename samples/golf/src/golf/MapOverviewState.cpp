@@ -894,10 +894,8 @@ void MapOverviewState::buildScene()
         zoomCamera();
     };
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity = m_scene.getActiveCamera();
     entity.addComponent<cro::Camera>().resizeCallback = updateView;
-    m_scene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
 
     m_scene.simulate(0.f);
@@ -907,6 +905,7 @@ void MapOverviewState::buildScene()
 
     //camera for 3D scene
     entity = m_sharedData.minimapData.mapScene->createEntity();
+    entity.setLabel("Overview Camera");
     entity.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     entity.addComponent<cro::Camera>().active = false;
     m_mapCamera = entity;

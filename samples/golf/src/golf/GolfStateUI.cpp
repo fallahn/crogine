@@ -2088,6 +2088,7 @@ void GolfState::buildUI()
 
     m_greenCam = m_gameScene.createEntity();
     m_greenCam.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+    m_greenCam.setLabel("Green Overhead");
     auto& greenCam = m_greenCam.addComponent<cro::Camera>();
     greenCam.setRenderFlags(cro::Camera::Pass::Final, RenderFlags::MiniGreen);
     greenCam.resizeCallback = updateGreenView;
