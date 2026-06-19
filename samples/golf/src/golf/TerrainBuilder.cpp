@@ -91,6 +91,11 @@ namespace
     static constexpr std::int32_t SlopeGridSize = 40;
     static constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
     
+    bool disableGridData = false;
+    bool disableTreeData = false;
+    bool disableTerrainData = false;
+    bool disableCrowdData = false;
+
     //number of times the resolution of the map to increase normal map resolution by
     //MUST be even and should be 2,4 or 8 as 1 will cause a div0!
     //static constexpr std::int32_t NormalMapMultiplier = 8; 
@@ -221,6 +226,19 @@ TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>&
     m_wantsUpdate   (false)
 {
     m_slopeBuffer.reserve(SlopeGridSize * SlopeGridSize * 4);
+
+    registerWindow([]()
+        {
+            if (ImGui::Begin("Debug Perf"))
+            {
+                ImGui::Checkbox("Disable Grid Data", &disableGridData);
+                ImGui::Checkbox("Disable Tree Data", &disableTreeData);
+                ImGui::Checkbox("Disable Terrain Data", &disableTerrainData);
+                ImGui::Checkbox("Disable Crowd Data", &disableCrowdData);
+            }
+            ImGui::End();
+        });
+
 #ifdef CRO_DEBUG_
     //registerWindow([&]() 
     //    {
@@ -839,7 +857,7 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
     //wait for thread to finish (usually only the first time)
     //this *shouldn't* ever block unless something goes wrong
     //in which case we need to implement a get-out clause
-    while (m_wantsUpdate) {}
+    while (m_wantsUpdate) { LogW << "waiting on terrain thread!" << std::endl; }
 
     if (holeIndex == m_currentHole)
     {
@@ -860,8 +878,11 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
                 swapData.destination = -TerrainLevel;
                 swapData.currentTime = 0.f;
 
-                m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
-                m_billboardTreeEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardTreeBuffer);
+                if (!disableTreeData)
+                {
+                    m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
+                    m_billboardTreeEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardTreeBuffer);
+                }
                 m_propRootEntities[first].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
 
                 swapData.start = m_propRootEntities[second].getComponent<cro::Transform>().getPosition().y;
@@ -880,7 +901,8 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
                 m_propRootEntities[second].getComponent<cro::Callback>().active = true;
 
                 //update any instanced geom
-                if (!m_instanceTransforms.empty()
+                if (!disableTreeData &&
+                    !m_instanceTransforms.empty()
                     && m_instancedEntities[first].isValid())
                 {
                     m_instancedEntities[first].getComponent<cro::Model>().setHidden(false);
@@ -890,7 +912,8 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
 
                 for (auto i = 0u; i < MaxShrubInstances; ++i)
                 {
-                    if (!m_shrubTransforms[i].empty()
+                    if (!disableTreeData &&
+                        !m_shrubTransforms[i].empty()
                         && m_instancedShrubs[first][i].isValid())
                     {
                         m_instancedShrubs[first][i].getComponent<cro::Model>().setHidden(false);
@@ -901,35 +924,41 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
 
                 //crowd instances
                 //TODO can we move some of this to the thread func (can't set transforms in it though)
-                const auto density = m_holeData[m_currentHole].puttFromTee ? std::min(m_sharedData.crowdDensity, 1) : m_sharedData.crowdDensity;
-                std::vector<std::vector<glm::mat4>> positions(m_crowdEntities[first].size());
-                for (auto i = 0u; i < m_holeData[m_currentHole].crowdPositions[density].size(); ++i)
+                if (!disableCrowdData)
                 {
-                    positions[i % positions.size()].push_back(m_holeData[m_currentHole].crowdPositions[density][i]);
-                }
-
-                for (auto i = 0u; i < m_crowdEntities[first].size(); ++i)
-                {
-                    if (m_crowdEntities[first][i].isValid()
-                        && !positions[i].empty())
+                    const auto density = m_holeData[m_currentHole].puttFromTee ? std::min(m_sharedData.crowdDensity, 1) : m_sharedData.crowdDensity;
+                    std::vector<std::vector<glm::mat4>> positions(m_crowdEntities[first].size());
+                    for (auto i = 0u; i < m_holeData[m_currentHole].crowdPositions[density].size(); ++i)
                     {
-                        m_crowdEntities[first][i].getComponent<cro::Model>().setInstanceTransforms(positions[i]);
-                        m_crowdEntities[first][i].getComponent<cro::Model>().setHidden(false);
+                        positions[i % positions.size()].push_back(m_holeData[m_currentHole].crowdPositions[density][i]);
                     }
-                }
 
-                if (m_umbrellaEntities[first].isValid()
-                    && !positions[0].empty())
-                {
-                    m_umbrellaEntities[first].getComponent<cro::Model>().setInstanceTransforms(positions[0]);
-                    m_umbrellaEntities[first].getComponent<cro::Model>().setHidden(false);
+                    for (auto i = 0u; i < m_crowdEntities[first].size(); ++i)
+                    {
+                        if (m_crowdEntities[first][i].isValid()
+                            && !positions[i].empty())
+                        {
+                            m_crowdEntities[first][i].getComponent<cro::Model>().setInstanceTransforms(positions[i]);
+                            m_crowdEntities[first][i].getComponent<cro::Model>().setHidden(false);
+                        }
+                    }
+
+                    if (m_umbrellaEntities[first].isValid()
+                        && !positions[0].empty())
+                    {
+                        m_umbrellaEntities[first].getComponent<cro::Model>().setInstanceTransforms(positions[0]);
+                        m_umbrellaEntities[first].getComponent<cro::Model>().setHidden(false);
+                    }
                 }
             }
 
             //upload terrain data
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_terrainProperties.vbo));
-            glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_STATIC_DRAW));
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+            if (!disableTerrainData)
+            {
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_terrainProperties.vbo));
+                glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_STATIC_DRAW));
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+            }
 
             m_terrainProperties.morphTime = 0.f;
             glCheck(glUseProgram(m_terrainProperties.shaderID));
@@ -938,15 +967,20 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
             glCheck(glUniform1f(m_terrainProperties.morphUniformShadow, m_terrainProperties.morphTime));
             //terrain callback is set active when shrubbery callback switches
         }
-        //upload the slope buffer data - this might be different even if the hole model is the same
-        cro::DynamicMeshBuilder::setVertexData(*m_slopeProperties.meshData, cro::DataArray(m_slopeBuffer.data(), m_slopeBuffer.size()));
-
-
-        auto* submesh = &m_slopeProperties.meshData->indexData[0];
-        submesh->indexCount = static_cast<std::uint32_t>(m_slopeIndices.size());
-        cro::DynamicMeshBuilder::setIndexData(*m_slopeProperties.meshData, { cro::DataArray(m_slopeIndices.data(), m_slopeIndices.size()) });
         
-        m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
+        if (!disableGridData)
+        {
+            //upload the slope buffer data - this might be different even if the hole model is the same
+            cro::DynamicMeshBuilder::setVertexData(*m_slopeProperties.meshData, cro::DataArray(m_slopeBuffer.data(), m_slopeBuffer.size()));
+
+
+            auto* submesh = &m_slopeProperties.meshData->indexData[0];
+            submesh->indexCount = static_cast<std::uint32_t>(m_slopeIndices.size());
+            cro::DynamicMeshBuilder::setIndexData(*m_slopeProperties.meshData, { cro::DataArray(m_slopeIndices.data(), m_slopeIndices.size()) });
+
+            m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
+        }
+
 
 #ifdef GEN_GRASS
         //if we have any transforms update the chunks

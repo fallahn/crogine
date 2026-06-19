@@ -259,6 +259,12 @@ void GolfState::retargetMinimap(bool reset)
                     m_minimapZoom.zoom = data.end.zoom;
                     m_minimapZoom.updateCamera();
 
+                    //make sure we actually render the final position
+                    m_mapScene.simulate(dt);
+                    m_minimapZoom.sceneTexture.clear(cro::Colour::Transparent);
+                    m_mapScene.render();
+                    m_minimapZoom.sceneTexture.display();
+
                     m_minimapZoom.activeAnimation = {};
                     e.getComponent<cro::Callback>().active = false;
                     m_uiScene.destroyEntity(e);
