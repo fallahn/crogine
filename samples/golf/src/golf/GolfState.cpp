@@ -1891,7 +1891,9 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
 
+#ifdef AUTO_UI
             setUIHidden(false);
+#endif
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete, m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
             cro::Command cmd;

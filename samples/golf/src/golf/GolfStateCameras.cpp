@@ -896,8 +896,9 @@ void GolfState::toggleFreeCam()
                 m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
 
                 //unhide UI
+#ifdef AUTO_UI
                 setUIHidden(false);
-
+#endif
                 //and stroke indicator
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::StrokeIndicator;

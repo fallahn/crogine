@@ -91,11 +91,12 @@ namespace
     static constexpr std::int32_t SlopeGridSize = 40;
     static constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
     
+#ifdef PERF_TEST
     bool disableGridData = false;
     bool disableTreeData = false;
     bool disableTerrainData = false;
     bool disableCrowdData = false;
-
+#endif
     //number of times the resolution of the map to increase normal map resolution by
     //MUST be even and should be 2,4 or 8 as 1 will cause a div0!
     //static constexpr std::int32_t NormalMapMultiplier = 8; 
@@ -227,6 +228,7 @@ TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>&
 {
     m_slopeBuffer.reserve(SlopeGridSize * SlopeGridSize * 4);
 
+#ifdef PERF_TEST
     registerWindow([]()
         {
             if (ImGui::Begin("Debug Perf"))
@@ -238,7 +240,7 @@ TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>&
             }
             ImGui::End();
         });
-
+#endif
 #ifdef CRO_DEBUG_
     //registerWindow([&]() 
     //    {
@@ -878,7 +880,9 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
                 swapData.destination = -TerrainLevel;
                 swapData.currentTime = 0.f;
 
+#ifdef PERF_TEST
                 if (!disableTreeData)
+#endif
                 {
                     m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
                     m_billboardTreeEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardTreeBuffer);
@@ -901,7 +905,7 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
                 m_propRootEntities[second].getComponent<cro::Callback>().active = true;
 
                 //update any instanced geom
-                if (!disableTreeData &&
+                if (/*!disableTreeData &&*/
                     !m_instanceTransforms.empty()
                     && m_instancedEntities[first].isValid())
                 {
@@ -912,7 +916,7 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
 
                 for (auto i = 0u; i < MaxShrubInstances; ++i)
                 {
-                    if (!disableTreeData &&
+                    if (/*!disableTreeData &&*/
                         !m_shrubTransforms[i].empty()
                         && m_instancedShrubs[first][i].isValid())
                     {
@@ -924,7 +928,9 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
 
                 //crowd instances
                 //TODO can we move some of this to the thread func (can't set transforms in it though)
+#ifdef PERF_TEST
                 if (!disableCrowdData)
+#endif
                 {
                     const auto density = m_holeData[m_currentHole].puttFromTee ? std::min(m_sharedData.crowdDensity, 1) : m_sharedData.crowdDensity;
                     std::vector<std::vector<glm::mat4>> positions(m_crowdEntities[first].size());
@@ -953,7 +959,9 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
             }
 
             //upload terrain data
+#ifdef PERF_TEST
             if (!disableTerrainData)
+#endif
             {
                 glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_terrainProperties.vbo));
                 glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_STATIC_DRAW));
@@ -968,7 +976,9 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
             //terrain callback is set active when shrubbery callback switches
         }
         
+#ifdef PERF_TEST
         if (!disableGridData)
+#endif
         {
             //upload the slope buffer data - this might be different even if the hole model is the same
             cro::DynamicMeshBuilder::setVertexData(*m_slopeProperties.meshData, cro::DataArray(m_slopeBuffer.data(), m_slopeBuffer.size()));
