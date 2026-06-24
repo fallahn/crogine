@@ -5008,7 +5008,7 @@ void MenuState::applyQuickPlayConnection()
     //club set should have been set by the player
     m_sharedData.reverseCourse = cro::Util::Random::value(0, 1);
     m_sharedData.scoreType = ScoreType::Stroke;
-    m_sharedData.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
+    m_sharedData.weatherType = m_sharedData.randomQuickplayWeather ? cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist) : WeatherType::Clear;
     m_sharedData.holeCount = cro::Util::Random::value(1, 2);
     m_sharedData.gimmeRadius = GimmeSize::Leather; //hmmm should we let the player choose this?
     m_sharedData.teamMode = 0;

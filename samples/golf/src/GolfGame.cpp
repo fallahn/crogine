@@ -1922,6 +1922,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.snapHIO = prop.getValue<bool>();
                     }
+                    else if (name == "random_weather")
+                    {
+                        m_sharedData.randomQuickplayWeather = prop.getValue<bool>();
+                    }
                 }
             }
 
@@ -2096,6 +2100,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("skip_speed").setValue(m_sharedData.skipSpeed);
     cfg.addProperty("filter_friends").setValue(Social::getLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly));
     cfg.addProperty("snap_hio").setValue(m_sharedData.snapHIO);
+    cfg.addProperty("random_weather").setValue(m_sharedData.randomQuickplayWeather);
     //cfg.addProperty("filter_assist").setValue(Social::getLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist));
     cfg.save(path);
 

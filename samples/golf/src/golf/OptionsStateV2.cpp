@@ -1780,6 +1780,18 @@ void OptionsStateV2::createSettingsItems()
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.showInGameTips ? 1 : 0;
 
+
+    //allow random weather in quickplay
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
+    item->title = "Random Quick-play Weather";
+    item->description = "Quick-play rounds will choose weather at random, otherwise will always be clear";
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.randomQuickplayWeather = i.selectedIndex == 1;
+        };
+    item->labels = { "No" , "Yes" };
+    item->selectedIndex = m_sharedData.randomQuickplayWeather ? 1 : 0;
+
 #ifdef USE_GNS
     //---------leaderboard settings----------//
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
