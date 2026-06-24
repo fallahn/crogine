@@ -1918,10 +1918,10 @@ void GolfGame::loadPreferences()
                     {
                         Social::setLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly, prop.getValue<bool>());
                     }
-                    /*else if (name == "filter_assist")
+                    else if (name == "snap_hio")
                     {
-                        Social::setLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist, prop.getValue<bool>());
-                    }*/
+                        m_sharedData.snapHIO = prop.getValue<bool>();
+                    }
                 }
             }
 
@@ -2095,6 +2095,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("tee_colour").setValue(m_sharedData.teeColour);
     cfg.addProperty("skip_speed").setValue(m_sharedData.skipSpeed);
     cfg.addProperty("filter_friends").setValue(Social::getLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly));
+    cfg.addProperty("snap_hio").setValue(m_sharedData.snapHIO);
     //cfg.addProperty("filter_assist").setValue(Social::getLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist));
     cfg.save(path);
 

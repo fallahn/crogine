@@ -5352,6 +5352,8 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
     imgEnt.getComponent<cro::Transform>().move(glm::vec2(0.f, -6.f));
     imgEnt.addComponent<cro::Drawable2D>();
 
+    std::int32_t scoreType = -1; //used for auto-screenshots during display callback
+
     switch (messageType)
     {
     default: break;
@@ -5677,6 +5679,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             default:
                 break;
             }
+            scoreType = score;
 
             if (special
                 && score != ScoreID::HIO)
@@ -5829,7 +5832,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<MessageAnim>();
     entity.getComponent<cro::Callback>().function =
-        [&, textEnt, textEnt2, textEnt3, imgEnt, messageType](cro::Entity e, float dt)
+        [this, textEnt, textEnt2, textEnt3, imgEnt, scoreType, messageType](cro::Entity e, float dt)
     {
         static constexpr float HoldTime = 2.f;
         auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
@@ -5851,6 +5854,13 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             {
                 currTime = 0;
                 state = MessageAnim::Hold;
+
+                if (m_sharedData.snapHIO
+                    && messageType == MessageBoardID::HoleScore
+                    && (scoreType == ScoreID::HIO || scoreType == ScoreID::Albatross))
+                {
+                    m_gameScene.getSystem<FpsCameraSystem>()->takeScreenshot();
+                }
             }
             break;
         case MessageAnim::Hold:

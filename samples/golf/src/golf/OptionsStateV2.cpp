@@ -1817,6 +1817,16 @@ void OptionsStateV2::createSettingsItems()
     item->title = "Configuration";
     item->displayType = Menu::Item::Heading;
 
+    //auto screenshot
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
+    item->title = "Automatic Screenshots";
+    item->description = "Automatically takes a screenshot when scoring a hole in one or albatross";
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.snapHIO = i.selectedIndex == 1;
+        };
+    item->labels = { "No" , "Yes" };
+    item->selectedIndex = m_sharedData.snapHIO ? 1 : 0;
 
     //web socket
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();

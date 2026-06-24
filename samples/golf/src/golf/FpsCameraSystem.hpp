@@ -147,6 +147,8 @@ public:
     void setControllerID(std::int32_t p);
     void setLocation(const cro::String& l) { m_screenshotLocation = l; }
 
+    void takeScreenshot();
+
 private:
 
     const CollisionMesh& m_collisionMesh;

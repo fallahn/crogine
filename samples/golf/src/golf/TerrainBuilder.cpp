@@ -859,7 +859,7 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
     //wait for thread to finish (usually only the first time)
     //this *shouldn't* ever block unless something goes wrong
     //in which case we need to implement a get-out clause
-    while (m_wantsUpdate) { LogW << "waiting on terrain thread!" << std::endl; }
+    while (m_wantsUpdate) { /*LogW << "waiting on terrain thread!" << std::endl;*/ }
 
     if (holeIndex == m_currentHole)
     {
