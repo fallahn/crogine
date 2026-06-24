@@ -138,8 +138,8 @@ bool Server::addLocalVoiceConnection(net::NetClient& client)
         LOG("Server not running (voice connection)", cro::Logger::Type::Error);
         return false;
     }
-    return m_voiceHost.addLocalConnection(client);
-#else
+//    return m_voiceHost.addLocalConnection(client);
+//#else
     return false;
 #endif
 }
