@@ -92,7 +92,7 @@ private:
     std::int32_t m_playerCount;
 
     sv::SharedData m_sharedData;
-    VoiceHost m_voiceHost;
+    //VoiceHost m_voiceHost;
 
     struct PendingConnection final
     {

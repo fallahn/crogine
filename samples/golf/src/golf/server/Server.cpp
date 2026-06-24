@@ -170,10 +170,10 @@ void Server::run()
         return;
     }    
     
-    if (!m_voiceHost.start(ConstVal::VoicePort))
+    /*if (!m_voiceHost.start(ConstVal::VoicePort))
     {
         LogW << "Unable to start voice channel server" << std::endl;
-    }
+    }*/
 
     LOG("Server launched", cro::Logger::Type::Info);
 
@@ -195,7 +195,7 @@ void Server::run()
 
     while (m_running)
     {
-        m_voiceHost.update();
+        //m_voiceHost.update();
 
         while (!m_sharedData.messageBus.empty())
         {
@@ -369,7 +369,7 @@ void Server::run()
         c = {};
     }
 
-    m_voiceHost.stop();
+    //m_voiceHost.stop();
     m_sharedData.host.stop();
 
     LOG("Server quit", cro::Logger::Type::Info);
