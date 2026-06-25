@@ -2553,6 +2553,17 @@ void DrivingState::createPlayer()
         processClubPath(basePath + s);
     }
 
+#ifdef USE_GNS
+    //workshop paths
+    const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Clubs);
+    for (const auto& p : wsPaths)
+    {
+        processClubPath(p.string() + "/");
+    }
+#endif
+
+
+
     std::string clubPath = "assets/golf/clubs/default/list.cst";
     if (clubPaths.count(playerData.clubID) != 0)
     {

@@ -3527,6 +3527,15 @@ void ProfileStateV2::loadClubData()
     {
         processClubPath(basePath + s, true);
     }
+
+#ifdef USE_GNS
+    const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Clubs);
+    for (const auto& p : wsPaths)
+    {
+        processClubPath(p.string(), true);
+    }
+#endif
+
 }
 
 void ProfileStateV2::loadVoiceData()
@@ -3580,6 +3589,21 @@ void ProfileStateV2::loadVoiceData()
             }
         }
     }
+
+#ifdef USE_GNS
+    const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Voice);
+    for (const auto& p : wsPaths)
+    {
+        const auto files = cro::FileSystem::listFiles(p.string());
+        for (const auto& f : files)
+        {
+            if (cro::FileSystem::getFileExtension(f) == ".xas")
+            {
+                paths.push_back(p.string() + "/" + f);
+            }
+        }
+    }
+#endif
 
     if (next < paths.size())
     {

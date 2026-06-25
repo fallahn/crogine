@@ -90,6 +90,23 @@ void FlagPreview::init(const std::string& currPath)
         }
     }
 
+#ifdef USE_GNS
+    const auto& paths = Content::getUserItemsPaths(Content::UserContent::Flag);
+    for (const auto& p : paths)
+    {
+        const auto files = cro::FileSystem::listFiles(p.string());
+        for (auto j = 0u; j < files.size(); ++j)
+        {
+            //just grab the first png we find
+            if (cro::FileSystem::getFileExtension(files[j]) == ".png")
+            {
+                mappedFlags.emplace_back(std::make_pair(p.string() + "/", files[j]));
+                break;
+            }
+        }
+    }
+#endif
+
     const auto RowCount = (mappedFlags.size() / ColCount) + 1;
     m_textures[0].create(ColCount * PreviewWidth, RowCount * PreviewHeight, false);
 

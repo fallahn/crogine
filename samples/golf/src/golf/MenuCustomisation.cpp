@@ -752,18 +752,29 @@ void MenuState::parseAvatarDirectory()
     start = m_sharedData.avatarInfo.size();
 
     //custom avatars
-    auto avatarUserDir = Content::getUserContentPath(Content::UserContent::Avatar);
+    const auto avatarUserDir = Content::getUserContentPath(Content::UserContent::Avatar);
     if (cro::FileSystem::directoryExists(avatarUserDir))
     {
         auto dirs = cro::FileSystem::listDirectories(avatarUserDir);
         dirs.resize(std::min(dirs.size(), std::size_t(24)));//arbitrary limit
         for (const auto& dir : dirs)
         {
-            auto resourceDir = avatarUserDir + dir + "/";
+            const auto resourceDir = avatarUserDir + dir + "/";
             const auto files = cro::FileSystem::listFiles(resourceDir);
             processAvatarList(false, files, resourceDir, resourceDir, false);
         }
     }
+#ifdef USE_GNS
+    //workshop paths
+    const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Avatar);
+    for (const auto& p : wsPaths)
+    {
+        const auto resourceDir = p.string() + "/";
+        const auto files = cro::FileSystem::listFiles(resourceDir);
+        processAvatarList(false, files, resourceDir, resourceDir, false);
+    }
+#endif
+
 
     if (m_sharedData.avatarInfo.size() > start)
     {

@@ -2721,6 +2721,11 @@ void GolfState::loadModels()
         processPath(baseAudioPath + dir + "/");
     }
 
+    for (const auto& p : Content::getUserItemsPaths(Content::UserContent::Voice))
+    {
+        processPath(p.string() + "/");
+    }
+
     auto defaultAudio = m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape("assets/golf/sound/avatars/default.xas", m_resources.audio);
 
 
@@ -3153,6 +3158,15 @@ void GolfState::loadModels()
     {
         processClubPath(basePath + s);
     }
+
+#ifdef USE_GNS
+    //workshop paths
+    const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Clubs);
+    for (const auto& p : wsPaths)
+    {
+        processClubPath(p.string());
+    }
+#endif
 
 
     const auto loadClubModel = 

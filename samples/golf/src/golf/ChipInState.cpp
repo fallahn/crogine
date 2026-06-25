@@ -2429,6 +2429,7 @@ void ChipInState::createPlayer()
     auto clubsets = cro::FileSystem::listDirectories(basePath);
 
     //remove dirs from this list if it's not from the workshop (rather crudely)
+    //TODO probably not necessary as we refrence workshop dirs directly now
     clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::string& s) {return s.back() != 'w'; }), clubsets.end());
 
     if (clubsets.size() > ConstVal::MaxClubsets)
@@ -2441,6 +2442,17 @@ void ChipInState::createPlayer()
     {
         processClubPath(basePath + s);
     }
+
+#ifdef USE_GNS
+    //workshop paths
+    const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Clubs);
+    for (const auto& p : wsPaths)
+    {
+        processClubPath(p.string() + "/");
+    }
+#endif
+
+
 
     std::string clubPath = "assets/golf/clubs/default/list.cst";
     if (clubPaths.count(playerData.clubID) != 0)
