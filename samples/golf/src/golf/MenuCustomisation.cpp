@@ -61,10 +61,10 @@ namespace
 
         if (!dirList.empty())
         {
-            if (dirList.back().find("w") == dirList.back().size() - 1)
+            //if (dirList.back().find("w") == dirList.back().size() - 1)
             {
                 std::stringstream ss;
-                ss << dirList.back().substr(0, dirList.back().size() - 1).toAnsiString();
+                ss << dirList.back()/*.substr(0, dirList.back().size() - 1)*/.toAnsiString();
 
                 std::uint64_t id = 0;
                 ss >> id;
@@ -246,7 +246,7 @@ void MenuState::createBallScene()
     ballTexCallback(m_ballCam.getComponent<cro::Camera>());
 
 
-    //parse the content firs into file paths - though
+    //parse the content first into file paths - though
     //these balls aren't actually loaded until after unlocks.
     const auto ContentDirs = Content::getInstallPaths();
     const std::string BallDir = "balls/";
@@ -287,7 +287,6 @@ void MenuState::createBallScene()
         insertInfo(info, m_sharedData.ballInfo, true);
     }
 
-    //TODO add the unlockable balls before the silly ones
     std::vector<SharedStateData::BallInfo> delayedEntries;
     const std::array<std::string, 5u> ShopPaths =
     {
@@ -474,21 +473,11 @@ void MenuState::createBallScene()
     }
 
 
-    //look in the user directory - only do this if the default dir is OK?
-    const auto BallUserPath = Content::getUserContentPath(Content::UserContent::Ball);
-    if (cro::FileSystem::directoryExists(BallUserPath))
-    {
-        auto dirList = cro::FileSystem::listDirectories(BallUserPath);
-        if (dirList.size() > ConstVal::MaxBalls)
+    
+    const auto parsePath =
+        [this](const std::string& path)
         {
-            dirList.resize(ConstVal::MaxBalls);
-        }
-
-        for (const auto& dir : dirList)
-        {
-            auto path = BallUserPath + dir + "/";
             auto files = cro::FileSystem::listFiles(path);
-
             for (const auto& file : files)
             {
                 if (cro::FileSystem::getFileExtension(file) == ".ball")
@@ -507,11 +496,30 @@ void MenuState::createBallScene()
                     break; //skip the rest of the file list
                 }
             }
+        };
+    
+    //look in the user directory - only do this if the default dir is OK?
+    const auto BallUserPath = Content::getUserContentPath(Content::UserContent::Ball);
+    if (cro::FileSystem::directoryExists(BallUserPath))
+    {
+        auto dirList = cro::FileSystem::listDirectories(BallUserPath);
+        if (dirList.size() > ConstVal::MaxBalls)
+        {
+            dirList.resize(ConstVal::MaxBalls);
+        }
+
+        for (const auto& dir : dirList)
+        {
+            parsePath(BallUserPath + dir + "/");
         }
     }
 
-
-
+#ifdef USE_GNS
+    for (const auto& p : Content::getUserItemsPaths(Content::UserContent::Ball))
+    {
+        parsePath(p.string() + "/");
+    }
+#endif
 
     //load each model for the preview in the player menu
     cro::ModelDefinition ballDef(m_resources);
@@ -887,21 +895,10 @@ void MenuState::parseAvatarDirectory()
     }
 
 
-
-    const auto userHairPath = Content::getUserContentPath(Content::UserContent::Hair);
-    if (cro::FileSystem::directoryExists(userHairPath))
-    {
-        auto userDirs = cro::FileSystem::listDirectories(userHairPath);
-
-        if (userDirs.size() > ConstVal::MaxHeadwear)
+    const auto parsePath = 
+        [this](const std::string userPath) 
         {
-            userDirs.resize(ConstVal::MaxHeadwear);
-        }
-
-        for (const auto& userDir : userDirs)
-        {
-            const auto userPath = userHairPath + userDir + "/";
-            hairFiles = cro::FileSystem::listFiles(userPath);
+            const auto hairFiles = cro::FileSystem::listFiles(userPath);
 
             for (const auto& file : hairFiles)
             {
@@ -931,6 +928,23 @@ void MenuState::parseAvatarDirectory()
                     break; //only load one...
                 }
             }
+        };
+
+
+    const auto userHairPath = Content::getUserContentPath(Content::UserContent::Hair);
+    if (cro::FileSystem::directoryExists(userHairPath))
+    {
+        auto userDirs = cro::FileSystem::listDirectories(userHairPath);
+
+        if (userDirs.size() > ConstVal::MaxHeadwear)
+        {
+            userDirs.resize(ConstVal::MaxHeadwear);
+        }
+
+        for (const auto& userDir : userDirs)
+        {
+            const auto userPath = userHairPath + userDir + "/";
+            parsePath(userPath);
 
             if (m_sharedData.hairInfo.size() == 96)
             {
@@ -939,6 +953,14 @@ void MenuState::parseAvatarDirectory()
             }
         }
     }
+
+#ifdef USE_GNS
+    for (const auto& p : Content::getUserItemsPaths(Content::UserContent::Hair))
+    {
+        parsePath(p.string() + "/");
+    }
+#endif
+
 
     //honestly these are probably already sorted above, but let's just get this done
     for (const auto& i : m_sharedData.hairInfo)
