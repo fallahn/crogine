@@ -1399,7 +1399,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         //and reloaded, but that's probably OK. They just need to
         //exist in the shared data so the main game can find the
         //models for remote players who have them.
-        const auto BallUserPath = Content::getUserContentPath(Content::UserContent::Ball) + std::to_string(id) + "w/";
+        const auto BallUserPath = Content::getItemInstallPath(id);// Content::getUserContentPath(Content::UserContent::Ball) + std::to_string(id) + "w/";
 
         //this can happen sometimes when the UGC fails to install (usually linux)
         //so quit so we don't throw
@@ -1432,7 +1432,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
     }
     else if (type == Content::UserContent::Hair)
     {
-        const auto HairUserPath = Content::getUserContentPath(Content::UserContent::Hair) + std::to_string(id) + "w/";
+        const auto HairUserPath = Content::getItemInstallPath(id);// Content::getUserContentPath(Content::UserContent::Hair) + std::to_string(id) + "w/";
 
         if (!cro::FileSystem::directoryExists(HairUserPath))
         {
@@ -1464,7 +1464,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
     else if (type == Content::UserContent::Avatar)
     {
         //insert into m_sharedData.avatarInfo so GolfState can find it
-        const auto& avatarPath = Content::getUserContentPath(Content::UserContent::Avatar) + std::to_string(id) + "w/";
+        const auto avatarPath = Content::getItemInstallPath(id); //Content::getUserContentPath(Content::UserContent::Avatar) + std::to_string(id) + "w/";
 
         if (!cro::FileSystem::directoryExists(avatarPath))
         {

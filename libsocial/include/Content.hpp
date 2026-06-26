@@ -57,4 +57,6 @@ public:
 
     //returns whether a given league is available based on installed DLC
     static bool leagueAvailable(std::int32_t leagueID);
+
+    static std::string getItemInstallPath(std::uint64_t) { return {}; }
 };

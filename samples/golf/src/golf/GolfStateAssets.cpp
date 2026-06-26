@@ -2721,10 +2721,12 @@ void GolfState::loadModels()
         processPath(baseAudioPath + dir + "/");
     }
 
+#ifdef USE_GNS
     for (const auto& p : Content::getUserItemsPaths(Content::UserContent::Voice))
     {
         processPath(p.string() + "/");
     }
+#endif
 
     auto defaultAudio = m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape("assets/golf/sound/avatars/default.xas", m_resources.audio);
 
