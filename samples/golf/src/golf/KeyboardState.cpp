@@ -303,6 +303,14 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             switch (evt.cbutton.button)
             {
             default: break;
+            case cro::GameController::DPadDown:
+            case cro::GameController::DPadLeft:
+            case cro::GameController::DPadRight:
+            case cro::GameController::DPadUp:
+                //need to forward these in case the
+                //state below thinks the direction button
+                //is still being held
+                return true;
             case cro::GameController::ButtonRightShoulder:
             case cro::GameController::ButtonStart:
             {
