@@ -579,7 +579,10 @@ void App::run(bool resetSettings)
             renderClock.restart();
             m_window.clear();
             render();
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            if (auto* dd = ImGui::GetDrawData(); dd != nullptr)
+            {
+                ImGui_ImplOpenGL3_RenderDrawData(dd);
+            }
             m_window.display();
 
             Console::updateAverageRenderTime(renderClock.restart());
