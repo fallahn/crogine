@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -46,6 +46,15 @@ source distribution.
 #define IS_PS(x) hasPSLayout(x)
 #else
 #define IS_PS(x) cro::GameController::hasPSLayout(x)
+#endif
+
+//#define DEMO
+#ifdef DEMO
+#define DEMO_TEXT_COLOUR TextHighlightColour
+#define DEMO_LOCKED false
+#else
+#define DEMO_TEXT_COLOUR TextNormalColour
+#define DEMO_LOCKED true
 #endif
 
 struct FontID final

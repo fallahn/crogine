@@ -1043,22 +1043,26 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         entity.addComponent<cro::Text>(smallFont).setString("Tournaments");
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setFillColour(DEMO_TEXT_COLOUR);
         entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         entity.addComponent<cro::Callback>().function = MenuTextCallback();
         entity.addComponent<cro::UIInput>().setGroup(MenuID::CareerSelect);
         entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+#ifndef DEMO
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterBounce;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+#endif
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback(
                 [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
                 {
                     if (activated(evt))
                     {
+#ifndef DEMO
                         //launch tournament state
                         quitCareerCallback(StateID::Tournament);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+#endif
                     }
                 });
         confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1093,17 +1097,24 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         
         //freeplay
         entity = createButton("Free Play");
+        entity.getComponent<cro::Text>().setFillColour(DEMO_TEXT_COLOUR);
+#ifdef DEMO
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 0;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 0;
+#endif
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
                     if (activated(evt))
                     {
+#ifndef DEMO
                         m_sharedData.leagueRoundID = LeagueRoundID::Club;
                         if (randomWeather)
                         {
                             m_sharedData.weatherType = WeatherType::Random;
                         }
                         requestStackPush(StateID::FreePlay);
+#endif
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
                 });
@@ -1121,6 +1132,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 });
 
 #ifdef USE_GNS
+#ifndef DEMO
         //competition league
         entity = createButton("Pro League");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -1160,6 +1172,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                             };
                     }
                 });
+#endif
 #endif
 
         //facilities menu

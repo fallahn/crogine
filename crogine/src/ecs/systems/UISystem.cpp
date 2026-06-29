@@ -799,7 +799,7 @@ void UISystem::selectPrev(std::size_t stride, std::int32_t direction)
 {
     const auto& entities = m_groups[m_activeGroup];
 
-    auto old = m_selectedIndex;
+    const auto old = m_selectedIndex;
 
     auto targetSelection = entities[m_selectedIndex].getComponent<UIInput>().m_neighbourIndices[direction];
 
@@ -866,7 +866,7 @@ void UISystem::unselect(std::size_t entIdx, bool wasMouseEvent)
         auto& input = entities[entIdx].getComponent<UIInput>();
         input.m_wasMouseEvent = wasMouseEvent;
 
-        auto idx = input.callbacks[UIInput::Unselected];
+        const auto idx = input.callbacks[UIInput::Unselected];
         m_selectionCallbacks[idx](entities[entIdx]);
 
         input.m_wasMouseEvent = false;
@@ -879,7 +879,7 @@ void UISystem::select(std::size_t entIdx, bool wasMouseEvent)
     auto& input = entities[entIdx].getComponent<UIInput>();
     input.m_wasMouseEvent = wasMouseEvent;
     
-    auto idx = input.callbacks[UIInput::Selected];
+    const auto idx = input.callbacks[UIInput::Selected];
     m_selectionCallbacks[idx](entities[entIdx]);
 
     input.m_wasMouseEvent = false;

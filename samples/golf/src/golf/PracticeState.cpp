@@ -387,19 +387,31 @@ void PracticeState::buildScene()
 
     //driving range
     entity = createItem(position, "Driving Range", menuEntity);
+    entity.getComponent<cro::Text>().setFillColour(DEMO_TEXT_COLOUR);
+#ifdef DEMO
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 0;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 0;
+#endif
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
                 if (activated(evt))
                 {
+#ifndef DEMO
                     requestStackClear();
                     requestStackPush(StateID::DrivingRange);
+#endif //
                 }
             });
     position.y -= ItemHeight;
 
 
     entity = createItem(position, "Clubhouse", menuEntity);
+    entity.getComponent<cro::Text>().setFillColour(DEMO_TEXT_COLOUR);
+#ifdef DEMO
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 0;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 0;
+#endif
     //if (Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
     {
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -407,6 +419,7 @@ void PracticeState::buildScene()
                 {
                     if (activated(evt))
                     {
+#ifndef DEMO
                         //also used as table index so reset this in case
                         //the current value is greater than the number of tables...
                         m_sharedData.courseIndex = 0;
@@ -415,6 +428,7 @@ void PracticeState::buildScene()
                         requestStackPush(StateID::Clubhouse);
 
                         Achievements::awardAchievement(AchievementStrings[AchievementID::Socialiser]);
+#endif
                     }
                 });
     }
@@ -443,6 +457,7 @@ void PracticeState::buildScene()
     //}
     position.y -= ItemHeight;
 
+#ifndef DEMO
     //course editor
     entity = createItem(position, "Course Remixer", menuEntity);
     if (Achievements::getAchievement(AchievementStrings[AchievementID::GrandTour])->achieved)
@@ -496,7 +511,7 @@ void PracticeState::buildScene()
 
     position.y -= 3.f;
     helpText.getComponent<cro::Transform>().setPosition(position);
-
+#endif
 
     //back button
     entity = createItem(glm::vec2(0.f, -28.f), "Back", menuEntity);
