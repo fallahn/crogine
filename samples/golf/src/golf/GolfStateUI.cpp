@@ -5854,8 +5854,9 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             {
                 currTime = 0;
                 state = MessageAnim::Hold;
-
+                //and then... (and no and then!)
                 if (m_sharedData.snapHIO
+                    && m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
                     && messageType == MessageBoardID::HoleScore
                     && (scoreType == ScoreID::HIO || scoreType == ScoreID::Albatross))
                 {

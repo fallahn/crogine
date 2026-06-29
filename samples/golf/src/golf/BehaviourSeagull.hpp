@@ -68,15 +68,15 @@ struct BehaviourSeagull final
             if (state != lastState)
             {
                 //we switched so change animation
-                e.getComponent<cro::Skeleton>().play(e.getComponent<cro::Skeleton>().getAnimationIndex("Takeoff"));
+                e.getComponent<cro::Skeleton>().play(e.getComponent<cro::Skeleton>().getAnimationIndex("Takeoff"), 2.f);
             }
             else if (e.getComponent<cro::Skeleton>().getState() == cro::Skeleton::Stopped)
             {
-                e.getComponent<cro::Skeleton>().play(e.getComponent<cro::Skeleton>().getAnimationIndex("Flap"));
+                e.getComponent<cro::Skeleton>().play(e.getComponent<cro::Skeleton>().getAnimationIndex("Flap"), 2.f);
             }
 
             auto& tx = e.getComponent<cro::Transform>();
-            tx.move((-tx.getForwardVector() + Elevation) * dt * 4.f);
+            tx.move((-tx.getForwardVector() + Elevation) * dt * 6.f);
 
             if (tx.getPosition().y > (16.f + startHeight))
             {
