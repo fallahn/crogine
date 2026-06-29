@@ -42,6 +42,7 @@ source distribution.
 #include "BehaviourSeagull.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
+#include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/systems/LightVolumeSystem.hpp>
 #include <crogine/core/SysTime.hpp>
@@ -1169,6 +1170,9 @@ void GolfState::spawnSeagulls(glm::vec3 pos)
     {
         if (md.hasSkeleton())
         {
+            cro::AudioScape as;
+            as.loadFromFile("dlc/craewall/sound/gull.xas", m_resources.audio);
+
             //hmm we should probably set this as a lazy loader? It's a bugger
             //merely because the seagull has so many bones...
             if (m_materialIDs[MaterialID::Seagull] == -1)
@@ -1216,6 +1220,8 @@ void GolfState::spawnSeagulls(glm::vec3 pos)
                 entity.getComponent<cro::Callback>().function = BehaviourSeagull(m_gameScene);
                 entity.getComponent<cro::Skeleton>().play(md.getSkeleton().getAnimationIndex("Idle"));
                 entity.addComponent<cro::CommandTarget>().ID = CommandID::GarbageCollect | CommandID::Seagull;
+
+                entity.addComponent<cro::AudioEmitter>() = as.getEmitter("0" + std::to_string(i + 1));
             }
         }
     }
