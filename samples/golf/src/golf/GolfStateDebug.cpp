@@ -39,6 +39,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "BehaviourRabbit.hpp"
 #include "BehaviourLorvis.hpp"
+#include "BehaviourSeagull.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -49,6 +50,8 @@ source distribution.
 
 namespace
 {
+#include "shaders/CelShader.inl"
+
     const std::array<std::string, CameraID::Count> CameraStrings =
     {
         "Player", "Bystander", "Sky", "Green", "Transition", "Idle", "Drone"
@@ -1156,6 +1159,65 @@ void GolfState::spawnGardener(glm::vec3 pos)
         }
 
         m_achievementTracker.peskyKids = true;
+    }
+}
+
+void GolfState::spawnSeagulls(glm::vec3 pos)
+{
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("dlc/craewall/models/props/seagull.cmt"))
+    {
+        if (md.hasSkeleton())
+        {
+            //hmm we should probably set this as a lazy loader? It's a bugger
+            //merely because the seagull has so many bones...
+            if (m_materialIDs[MaterialID::Seagull] == -1)
+            {
+                GLint maxVec;
+                glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
+                auto MAX_BONES = maxVec / 4; //4 x 4-components make up a mat4.
+                //we'll allow 64 vectors for other uniforms (cascaded maps take up a few)
+                //64 / 4 = 16
+                MAX_BONES = std::min(MAX_BONES - 16, 255);
+
+                const std::string bones = "#define MAX_BONES " + std::to_string(std::min(MAX_BONES, 136)) + "\n";
+                m_resources.shaders.loadFromString(ShaderID::Seagull, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n" + bones);
+                auto& shader = m_resources.shaders.get(ShaderID::Seagull);
+                m_resolutionBuffer.addShader(shader);
+                m_materialIDs[MaterialID::Seagull] = m_resources.materials.add(shader);
+            }
+
+            static constexpr std::array<float, 2u> start = { -5.f, -5.f };
+            static constexpr std::array<float, 2u> end = { 5.f, 5.f };
+            const auto points = pd::PoissonDiskSampling(3.f, start, end, 30, static_cast<std::uint32_t>(std::time(nullptr)));
+
+            const auto count = cro::Util::Random::value(1, std::min(static_cast<std::int32_t>(points.size()), 3));
+            static constexpr float SeagullOffset = 0.1f; //model origin is not at the feet
+
+            for (auto i = 0; i < count; ++i)
+            {
+                glm::vec3 point = glm::vec3(points[i][0], 0.f, points[i][1]) + pos;
+                point.y = m_collisionMesh.getTerrain(point).height + SeagullOffset;
+
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition(point);
+
+                const float rotation = static_cast<float>(cro::Util::Random::value(-180, 180)) * cro::Util::Const::degToRad;
+                entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+
+                md.createModel(entity);
+
+                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Seagull]);
+                applyMaterialData(md, material);
+                entity.getComponent<cro::Model>().setMaterial(0, material);
+
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<std::int32_t>(0); //switch this to anything else to take off
+                entity.getComponent<cro::Callback>().function = BehaviourSeagull(m_gameScene);
+                entity.getComponent<cro::Skeleton>().play(md.getSkeleton().getAnimationIndex("Idle"));
+                entity.addComponent<cro::CommandTarget>().ID = CommandID::GarbageCollect | CommandID::Seagull;
+            }
+        }
     }
 }
 

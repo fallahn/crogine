@@ -56,7 +56,9 @@ static inline const std::string CelVertexShader = R"(
 #endif
 
 #if defined(SKINNED)
+#if !defined(MAX_BONES)
     #define MAX_BONES 64
+#endif
 #include SKIN_UNIFORMS
 #endif
 

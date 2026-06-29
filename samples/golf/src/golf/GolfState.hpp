@@ -345,6 +345,7 @@ private:
             PointFlare,
             Emissive, //self-illum for clubs
             Hole,
+            Seagull,
 
             Count
         };
@@ -925,6 +926,7 @@ private:
 
     void spawnRabbit(glm::vec3, std::uint32_t seed);
     void spawnGardener(glm::vec3);
+    void spawnSeagulls(glm::vec3);
 
     struct NetworkDebugContext final
     {

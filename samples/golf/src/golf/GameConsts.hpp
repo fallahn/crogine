@@ -432,7 +432,8 @@ struct ShaderID final
         Earth,
         Cloth,
         Shore,
-        Vapour
+        Vapour,
+        Seagull
     };
 };
 

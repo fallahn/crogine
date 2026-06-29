@@ -1547,6 +1547,9 @@
     <ClInclude Include="src\golf\ChipInDirector.hpp">
       <Filter>Header Files\golf\client\directors</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\BehaviourSeagull.hpp">
+      <Filter>Header Files\golf\client\prop behaviours</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">

@@ -3154,7 +3154,7 @@ void OptionsStateV2::refreshAudioDevices(Menu::Item& item)
         {
             d = d.substr(RemoveMe.size());
         }
-        item.labels.push_back(d);
+        item.labels.push_back(cro::String::fromUtf8(d.begin(), d.end()));
     }
 
     //item.count = static_cast<std::int32_t>(deviceList.size());

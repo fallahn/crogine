@@ -5040,7 +5040,7 @@ void MenuState::applyProLeagueConnection()
 {
     m_sharedData.reverseCourse = 0;
     m_sharedData.scoreType = ScoreType::Stroke;
-    m_sharedData.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
+    m_sharedData.weatherType = WeatherType::Clear;// cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
     m_sharedData.holeCount = 0;
     m_sharedData.gimmeRadius = GimmeSize::None;
     m_sharedData.teamMode = 0;

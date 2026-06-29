@@ -56,6 +56,7 @@ struct CommandID final
         MeasureWidget   = 0x100000,
         TeeLight        = 0x200000,
         GarbageCollect  = 0x400000,
+        Seagull         = 0x800000,
     };
 
     struct UI final

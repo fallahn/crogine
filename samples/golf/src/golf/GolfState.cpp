@@ -922,6 +922,20 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
         case SDLK_F10:
         {
+            /*if (evt.key.keysym.mod & KMOD_SHIFT)
+            {
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Seagull;
+                cmd.action = [](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Callback>().setUserData<std::int32_t>(1);
+                    };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
+            else
+            {
+                spawnSeagulls(m_holeData[m_currentHole].pin);
+            }*/
             //spawnGardener(m_holeData[m_currentHole].target);
             /*auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
             msg->type = CollisionEvent::Trigger;
