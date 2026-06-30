@@ -833,7 +833,11 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         return entity;
     };
 
-    auto validData = Social::isValid();
+#ifdef DEMO
+    const auto validData = true;
+#else
+    const auto validData = Social::isValid();
+#endif
     if (validData
         && !m_sharedCourseData.courseData.empty()
         && !m_sharedData.ballInfo.empty()

@@ -685,12 +685,15 @@ void CareerState::buildScene()
     
     //if (!showCustom)
     {
+#ifdef DEMO
+        const std::string msg = "Purchase the full game to unlock the complete Career and more!";
+#else
         std::string msg = "Don't forget you can practice any course at any time in Free Play mode!";
         if (!showCustom)
         {
             msg += " - Unlock a new league with the Adventurer and Putt-stop in Paradise DLCs!";
         }
-
+#endif
         position.x += 100.f;
         position.y += LeagueLineSpacing + 1.f;
         entity = m_scene.createEntity();
