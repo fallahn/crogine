@@ -19,6 +19,8 @@ endif()
 #option(USE_NEWSFEED "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl" ON)
 option(USE_STEAM "Enable the steamworks SDK" OFF)
 
+option(BUILD_DEMO "Build the demo version of the game" OFF)
+
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
 SET(PROJECT_STATIC_RUNTIME FALSE)
 
@@ -38,6 +40,10 @@ endif()
 
 if (NOT USE_PARALLEL_EXECUTION OR APPLE)
   add_definitions(-DPARALLEL_GLOBAL_DISABLE)
+endif()
+
+if (BUILD_DEMO)
+  add_definitions(-DDEMO)
 endif()
 
 if(NOT GNS_TAG)

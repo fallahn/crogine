@@ -256,7 +256,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             Achievements::update();
         }
         CompetitionLeague::refreshTotal(CompetitionLeague::getCourseIndex());
+#ifndef DEMO
         checkBeta();
+#endif
 #endif
 
         updateUnlockedItems(); //do this before attempting to load the assets...
@@ -554,9 +556,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         refreshDisplayMembers();
     }
 
-    //for some reason this immediately unsets itself
-    //cro::App::getWindow().setCursor(&m_cursor);
 #ifndef __APPLE__
+#ifndef DEMO
     registerCommand("tree_ed", [&](const std::string&)
         {
             if (getStateCount() == 1)
@@ -598,11 +599,12 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 #endif
+#endif
 #ifdef USE_GNS
-    registerCommand("restore_xp", [](const std::string&)
-        {
-            bunnage();
-        });
+    //registerCommand("restore_xp", [](const std::string&)
+    //    {
+    //        bunnage();
+    //    });
 #else
     registerCommand("connect", [&](const std::string& address)
         {
@@ -802,7 +804,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
 
-#if defined USE_WORKSHOP && !defined __APPLE__
+#if defined USE_WORKSHOP && !defined __APPLE__ && !defined DEMO
     if (!Social::isSteamdeck())
     {
         registerCommand("workshop",
@@ -1609,6 +1611,7 @@ void MenuState::handleMessage(const cro::Message& msg)
             updateLobbyList();
             break;
         case MatchMaking::Message::LobbyInvite:
+#ifndef DEMO
             if (!m_sharedData.clientConnection.connected)
             {
                 if (data.gameType == Server::GameMode::Golf)
@@ -1624,6 +1627,7 @@ void MenuState::handleMessage(const cro::Message& msg)
                     requestStackPush(StateID::Clubhouse);
                 }
             }
+#endif
             break;
         case MatchMaking::Message::GameCreateFailed:
             //TODO set some sort of flag to indicate offline mode?
@@ -1818,6 +1822,7 @@ void MenuState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<Social::UGCEvent>();
         ugcInstalledHandler(data.itemID, data.type);
     }
+#ifndef DEMO
     else if (msg.id == Social::MessageID::SocialMessage)
     {
         const auto& data = msg.getData<Social::SocialEvent>();
@@ -1866,6 +1871,7 @@ void MenuState::handleMessage(const cro::Message& msg)
             };
         }
     }
+#endif
 #endif
 
     else if (msg.id == MessageID::WebSocketMessage)
@@ -3568,7 +3574,7 @@ void MenuState::setVoiceCallbacks()
     //m_voiceChat.setDeletionCallback(voiceDelete);
 }
 
-#ifdef USE_GNS
+#if defined USE_GNS && !defined DEMO
 void MenuState::checkBeta()
 {
     if (SteamBeta::isBetaAvailable())

@@ -48,7 +48,6 @@ source distribution.
 #define IS_PS(x) cro::GameController::hasPSLayout(x)
 #endif
 
-//#define DEMO
 #ifdef DEMO
 #define DEMO_TEXT_COLOUR TextHighlightColour
 #define DEMO_LOCKED false
