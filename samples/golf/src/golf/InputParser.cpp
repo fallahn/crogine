@@ -152,7 +152,7 @@ void InputParser::handleEvent(const cro::Event& evt)
             case State::Aim:
                 if (m_terrain == TerrainID::Green)
                 {
-                    showMeasureWidget();
+                    showMeasureWidget();                    
                 }
                 else
                 {

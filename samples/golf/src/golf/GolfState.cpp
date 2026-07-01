@@ -7861,7 +7861,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     const auto clubTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
     //limit the club to 10m when on a putting course
     const auto d = m_holeData[m_currentHole].puttFromTee ? std::min(glm::length(clubTarget - player.position), 10.f) : glm::length(clubTarget - player.position);
-    m_inputParser.setClub(d, m_currentPlayer.terrain);
+    m_inputParser.setClub(d, player.terrain);
 
 
     cmd.targetFlags = CommandID::BullsEye;
