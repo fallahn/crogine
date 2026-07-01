@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2024, 2, 3),
+    "version": (2026, 7, 1),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -35,6 +35,16 @@ def WriteAIPath(file, path):
         file.write("        point = %f,%f,%f\n" % (worldP.x, worldP.z, -worldP.y))
     file.write("\n    }\n")
 
+def WriteSwarm(file, location):
+    file.write("    swarm\n    {\n")
+    WriteProperty(file, "    position", location)
+    #TODO write other swarm properties
+    file.write("    }\n\n")
+
+def WriteRabbit(file, location)
+    file.write("    rabbit\n    {\n")
+    WriteProperty(file, "    position", location)
+    file.write("    }\n\n")
 
 def WritePath(file, path):
     file.write("\n        path\n        {\n")
@@ -243,6 +253,12 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                         self.report({'WARNING'}, "Multiple tees selected")
                 elif ob.type == 'CURVE' and "ai" in modelName.lower():
                     WriteAIPath(file, ob)
+
+                elif "swarm" in modelName.lower():
+                    WriteSwarm(file, worldLocation)
+
+                elif "rabbit" in modelName.lower():
+                    WriteRabbit(file, worldLocation)
 
                 else:
                     if ob.type == 'MESH':

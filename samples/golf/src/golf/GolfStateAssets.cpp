@@ -1418,6 +1418,16 @@ void GolfState::loadMap()
                                 holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
                                 holeData.propEntities.push_back(ent);
                             }
+                            else if (name == "rabbit")
+                            {
+                                for (const auto& rp : obj.getProperties())
+                                {
+                                    if (rp.getName() == "position")
+                                    {
+                                        holeData.rabbitPositions.push_back(rp.getValue<glm::vec3>());
+                                    }
+                                }
+                            }
                         }
                     };
                 parseProps(holeCfg.getObjects());
