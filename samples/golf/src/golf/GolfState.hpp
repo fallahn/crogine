@@ -45,6 +45,7 @@ source distribution.
 #include "TextChat.hpp"
 #include "League.hpp"
 #include "AvatarAnimation.hpp"
+#include "GroupID.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/audio/DynamicAudioStream.hpp>
@@ -146,7 +147,7 @@ public:
 
 private:
     //std::vector<float> m_debugCurve;
-
+    GroupID m_groupID;
 
     cro::ResourceCollection m_resources;
     cro::DynamicAudioStream m_musicStream;

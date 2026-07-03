@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -42,6 +42,7 @@ source distribution.
 #include "TextChat.hpp"
 #include "VoiceChat.hpp"
 #include "HoleData.hpp"
+#include "GroupID.hpp"
 
 #include <MatchMaking.hpp>
 
@@ -115,6 +116,7 @@ private:
     SharedProfileData& m_profileData;
     std::int32_t m_connectedClientCount;
     std::int32_t m_connectedPlayerCount;
+    GroupID m_groupID;
 
     bool m_canActive;
 
