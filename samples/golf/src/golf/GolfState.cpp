@@ -2893,7 +2893,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     const auto pos = data.position;
 
-                    //update minimap cross for impact
+                    //update minimap cross for impact - TODO we need to track the ball's
+                    //group ID so in group games  we can ignore this if it doesn't match m_serverGroup
                     auto cmd = cro::Command();
                     cmd.targetFlags = CommandID::UI::MiniCross;
                     cmd.action =

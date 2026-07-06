@@ -1421,7 +1421,8 @@ void GolfState::loadMap()
                                 holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
                                 holeData.propEntities.push_back(ent);
                             }
-                            else if (name == "rabbit")
+                            else if (name == "rabbit"
+                                && !m_sharedData.nightTime)
                             {
                                 for (const auto& rp : obj.getProperties())
                                 {

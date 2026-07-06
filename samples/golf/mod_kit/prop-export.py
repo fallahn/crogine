@@ -41,7 +41,7 @@ def WriteSwarm(file, location):
     #TODO write other swarm properties
     file.write("    }\n\n")
 
-def WriteRabbit(file, location)
+def WriteRabbit(file, location):
     file.write("    rabbit\n    {\n")
     WriteProperty(file, "    position", location)
     file.write("    }\n\n")
