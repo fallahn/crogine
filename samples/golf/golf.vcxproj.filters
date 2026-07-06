@@ -1550,6 +1550,9 @@
     <ClInclude Include="src\golf\BehaviourSeagull.hpp">
       <Filter>Header Files\golf\client\prop behaviours</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\GroupID.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">

@@ -1974,6 +1974,10 @@ bool MenuState::simulate(float dt)
 
     m_sharedCourseData.videoPlayer.update(dt);
 
+#ifdef USE_GNS
+    m_groupID.update(m_sharedData.clientConnection.hostID, m_connectedPlayerCount);
+#endif
+
     return true;
 }
 

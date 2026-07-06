@@ -3000,6 +3000,15 @@ bool GolfState::simulate(float dt)
         m_debugCurve.push_back(m_inputParser.getPower());
     }*/
 
+#ifdef USE_GNS
+    std::int32_t playerCount = 0;
+    for (const auto& c : m_sharedData.connectionData)
+    {
+        playerCount += c.playerCount;
+    }
+    m_groupID.update(m_sharedData.clientConnection.hostID, playerCount);
+#endif
+
     //while this mostly does nothing it would be nice
     //to be able to stop/start it when only a hole requires it
     m_billboardVideo.update(dt);

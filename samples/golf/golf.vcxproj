@@ -953,6 +953,7 @@
     <ClInclude Include="src\golf\GolfParticleDirector.hpp" />
     <ClInclude Include="src\golf\GolfSoundDirector.hpp" />
     <ClInclude Include="src\golf\GolfState.hpp" />
+    <ClInclude Include="src\golf\GroupID.hpp" />
     <ClInclude Include="src\golf\HoleData.hpp" />
     <ClInclude Include="src\golf\InputBinding.hpp" />
     <ClInclude Include="src\golf\InputParser.hpp" />
