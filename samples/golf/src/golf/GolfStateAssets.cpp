@@ -1394,7 +1394,11 @@ void GolfState::loadMap()
                                             const auto ext = cro::FileSystem::getFileExtension(swarmSettings.texture);
                                             if (!ext.empty())
                                             {
-                                                swarmSettings.texture = swarmSettings.texture.substr(0, swarmSettings.texture.find(ext)) + "_night" + ext;
+                                                const auto nightPath = swarmSettings.texture.substr(0, swarmSettings.texture.find(ext)) + "_night" + ext;
+                                                if (cro::FileSystem::fileExists(nightPath))
+                                                {
+                                                    swarmSettings.texture = nightPath;
+                                                }
                                             }
                                         }
                                     }
@@ -1413,6 +1417,10 @@ void GolfState::loadMap()
                                     else if (spName == "frame_count")
                                     {
                                         swarmSettings.frameCount = sp.getValue<std::int32_t>();
+                                    }
+                                    else if (spName == "type")
+                                    {
+                                        swarmSettings.type = std::clamp(0u, sp.getValue<std::uint32_t>(), static_cast<std::uint32_t>(Swarm::Count - 1));
                                     }
                                 }
 

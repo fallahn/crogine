@@ -427,6 +427,13 @@ private:
     //weather.cpp
     struct Swarm final
     {
+        enum
+        {
+            Insect, Bird,
+
+            Count
+        };
+        std::uint32_t type = Insect;
         std::string texture;
         std::string mask;
         std::int32_t frameCount = 1;

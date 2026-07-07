@@ -1500,14 +1500,17 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         
         if (m_sharedData.avatarInfo.size() > start)
         {
+            LogI << "Installed remote avatar" << std::endl;
             for (auto i = start; i < m_sharedData.avatarInfo.size(); ++i)
             {
                 m_sharedData.avatarInfo[i].type = SharedStateData::AvatarInfo::Custom;
             }
         }
+        else
+        {
+            LogI << avatarPath << ": avatar not installed" << std::endl;
+        }
         
-        
-        LogI << "Installed remote avatar" << std::endl;
         //this just updates all the textures including the newly acquired
         //avatar data - there's room for optimisation here.
         updateLobbyAvatars();

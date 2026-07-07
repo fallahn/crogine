@@ -4101,9 +4101,13 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 err += "Bad Data Received";
                 break;
             case MessageType::VersionMismatch:
+#ifdef DEMO
+                err += "\nMultiplayer is not available in the Demo";
+#else
                 err += "Client/Server Mismatch";
 #ifdef USE_GNS
                 err += "\nEnsure all players are on the\nsame branch in Steam";
+#endif
 #endif
                 break;
             }

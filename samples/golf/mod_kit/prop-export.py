@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2026, 7, 1),
+    "version": (2026, 7, 7),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -28,6 +28,16 @@ def vecMultiply(vec, vec2):
 def WriteProperty(file, propName, location):
     file.write("    %s = %f,%f,%f\n\n" % (propName, location[0], location[2], -location[1]))
 
+def WriteOptionalPropertyString(file, propName, ob):
+    if ob.get(propName) is not None:
+        file.write("        %s = \"%s\"\n" % (propName, ob[propName]))
+
+
+def WriteOptionalPropertyInt(file, propName, ob):
+    if ob.get(propName) is not None:
+        file.write("        %s = %s\n" % (propName, ob[propName]))
+
+
 def WriteAIPath(file, path):
     file.write("\n    path ai\n    {\n")
     for p in path.data.splines.active.points:
@@ -35,10 +45,17 @@ def WriteAIPath(file, path):
         file.write("        point = %f,%f,%f\n" % (worldP.x, worldP.z, -worldP.y))
     file.write("\n    }\n")
 
-def WriteSwarm(file, location):
+def WriteSwarm(file, location, ob):
     file.write("    swarm\n    {\n")
     WriteProperty(file, "    position", location)
-    #TODO write other swarm properties
+    
+    WriteOptionalPropertyString(file, 'diffuse', ob)
+    WriteOptionalPropertyString(file, 'mask', ob)
+    WriteOptionalPropertyInt(file, 'frame_count', ob)
+    WriteOptionalPropertyInt(file, 'frame_rate', ob)
+    WriteOptionalPropertyInt(file, 'type', ob)
+
+
     file.write("    }\n\n")
 
 def WriteRabbit(file, location):
@@ -255,7 +272,7 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                     WriteAIPath(file, ob)
 
                 elif "swarm" in modelName.lower():
-                    WriteSwarm(file, worldLocation)
+                    WriteSwarm(file, worldLocation, ob)
 
                 elif "rabbit" in modelName.lower():
                     WriteRabbit(file, worldLocation)
