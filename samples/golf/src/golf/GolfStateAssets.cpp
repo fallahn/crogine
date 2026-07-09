@@ -1590,7 +1590,7 @@ void GolfState::loadMap()
                 auto result = m_collisionMesh.getTerrain(pos);
                 m[3][1] = result.height;
             }
-
+            
 
             //remove spectators which intersect the bounding sphere of props
             for (auto pe : hole.propEntities)
