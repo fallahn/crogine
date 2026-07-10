@@ -3511,6 +3511,7 @@ void ProfileStateV2::loadClubData()
     }
 
     //workshop clubs
+#ifndef USE_GNS
     const auto basePath = Content::getUserContentPath(Content::UserContent::Clubs);
     auto clubsets = cro::FileSystem::listDirectories(basePath);
 
@@ -3528,7 +3529,7 @@ void ProfileStateV2::loadClubData()
         processClubPath(basePath + s, true);
     }
 
-#ifdef USE_GNS
+#else
     const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Clubs);
     for (const auto& p : wsPaths)
     {
@@ -3576,6 +3577,7 @@ void ProfileStateV2::loadVoiceData()
     std::sort(paths.begin(), paths.end());
     const auto next = paths.size();
 
+#ifndef USE_GNS
     const auto basePath = Content::getUserContentPath(Content::UserContent::Voice);
     const auto dirs = cro::FileSystem::listDirectories(basePath);
     for (const auto& dir : dirs)
@@ -3590,7 +3592,7 @@ void ProfileStateV2::loadVoiceData()
         }
     }
 
-#ifdef USE_GNS
+#else
     const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Voice);
     for (const auto& p : wsPaths)
     {

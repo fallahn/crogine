@@ -42,6 +42,7 @@ source distribution.
 #include "SharedProfileData.hpp"
 #include "spooky2.hpp"
 #include "Clubs.hpp"
+#include "Career.hpp"
 #include "League.hpp"
 #include "RopeSystem.hpp"
 #include "LightmapProjectionSystem.hpp"
@@ -882,6 +883,27 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //createDebugWindows();
     cro::App::getInstance().resetFrameTime();
     simulate(0.f);
+
+
+    {
+        std::int32_t bestCount = 0;
+        for (auto i = 0u; i < /*Career::MaxLeagues*/6; ++i) //we only want the 6 included leagues, not the DLC
+        {
+            const auto pos = Career::instance(m_sharedData).getLeagueTables()[i].getCurrentBest();
+            bestCount += pos;
+            LogI << "League " << (i + 1) << " rank is " << pos << std::endl;
+        }
+
+        if (bestCount == 6)
+        {
+            Achievements::awardAchievement(AchievementStrings[AchievementID::AllTime]);
+            LogI << "Awarded All Time Career Achievement" << std::endl;
+        }
+        else
+        {
+            LogI << "Career Gold Leagues is " << bestCount << std::endl;
+        }
+    }
 }
 
 MenuState::~MenuState()

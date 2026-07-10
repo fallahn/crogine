@@ -1605,7 +1605,7 @@ void GolfState::loadMap()
                         pos.x += MapSize.x / 2;
                         pos.z -= MapSize.y / 2;
 
-                        return sphere.contains(pos);
+                        return sphere.radius < 10.f && sphere.contains(pos);
                     }),
                     positions.end());
             }
@@ -2736,6 +2736,8 @@ void GolfState::loadModels()
     {
         processPath(path + baseAudioPath);
     }
+
+#ifndef USE_GNS
     baseAudioPath = Content::getUserContentPath(Content::UserContent::Voice);
     const auto voiceDirs = cro::FileSystem::listDirectories(baseAudioPath);
     for (const auto& dir : voiceDirs)
@@ -2743,7 +2745,7 @@ void GolfState::loadModels()
         processPath(baseAudioPath + dir + "/");
     }
 
-#ifdef USE_GNS
+#else
     for (const auto& p : Content::getUserItemsPaths(Content::UserContent::Voice))
     {
         processPath(p.string() + "/");
@@ -3166,6 +3168,7 @@ void GolfState::loadModels()
     }
 
     //workshop clubs
+#ifndef USE_GNS
     const auto basePath = Content::getUserContentPath(Content::UserContent::Clubs);
     auto clubsets = cro::FileSystem::listDirectories(basePath);
 
@@ -3182,8 +3185,7 @@ void GolfState::loadModels()
     {
         processClubPath(basePath + s);
     }
-
-#ifdef USE_GNS
+#else
     //workshop paths
     const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Clubs);
     for (const auto& p : wsPaths)

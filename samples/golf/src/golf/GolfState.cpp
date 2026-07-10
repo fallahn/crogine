@@ -1905,7 +1905,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
 
-            if (m_sharedData.courseIndex == 15
+            if ((m_sharedData.courseIndex == 15 || m_sharedData.courseIndex == 7)
+                && cro::FileSystem::fileExists("dlc/craewall/models/props/seagull.cmt")
                 && cro::Util::Random::value(0, 2) == 0)
             {
                 spawnSeagulls(m_holeData[m_currentHole].pin);
