@@ -891,18 +891,18 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             const auto pos = Career::instance(m_sharedData).getLeagueTables()[i].getCurrentBest();
             bestCount += pos;
-            LogI << "League " << (i + 1) << " rank is " << pos << std::endl;
+            //LogI << "League " << (i + 1) << " rank is " << pos << std::endl;
         }
 
         if (bestCount == 6)
         {
             Achievements::awardAchievement(AchievementStrings[AchievementID::AllTime]);
-            LogI << "Awarded All Time Career Achievement" << std::endl;
+            //LogI << "Awarded All Time Career Achievement" << std::endl;
         }
-        else
+        /*else
         {
             LogI << "Career Gold Leagues is " << bestCount << std::endl;
-        }
+        }*/
     }
 }
 
