@@ -884,7 +884,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     cro::App::getInstance().resetFrameTime();
     simulate(0.f);
 
-
+    //check career achievement
     {
         std::int32_t bestCount = 0;
         for (auto i = 0u; i < /*Career::MaxLeagues*/6; ++i) //we only want the 6 included leagues, not the DLC
