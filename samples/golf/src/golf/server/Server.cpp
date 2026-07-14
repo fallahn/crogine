@@ -227,11 +227,13 @@ void Server::run()
                 {
                     m_pendingConnections.emplace_back().peer = evt.peer;
                     m_sharedData.host.sendPacket(evt.peer, PacketID::ClientVersion, std::uint16_t(m_gameMode), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    LogI << evt.peer.getRemoteID() << " connected" << std::endl;
                 }
                 else
                 {
+#ifdef USE_GNS
                     //check dropped connections list and reinstate if not timed out
-                    const auto peerID = evt.peer.getID();
+                    const auto peerID = evt.peer.getRemoteID();
                     if (auto res = std::find_if(m_pendingDisconnections.begin(), m_pendingDisconnections.end(), 
                         [peerID](const PendingConnection& pc) { return pc.connectionID == peerID; });
                         res != m_pendingDisconnections.end())
@@ -256,6 +258,7 @@ void Server::run()
                         }
                     }
                     else
+#endif
                     {
                         //send rejection packet
                         m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::NotInLobby), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -265,15 +268,25 @@ void Server::run()
             }
             else if (evt.type == net::NetEvent::ClientDisconnect)
             {
-                //remove from client list
-                //removeClient(evt.peer);
-                
-                //quarantine the peer to wait and see if we reconnect
-                //before removing the client
-                auto& dc = m_pendingDisconnections.emplace_back();
-                dc.peer = evt.peer;
-                dc.connectionID = evt.peer.getID(); //TODO does this return a valid ID?
-                LogW << dc.connectionID << ": peer lost connection, awaiting reconnection attempt..." << std::endl;
+#ifdef USE_GNS
+                if (m_currentState->stateID() == sv::StateID::Lobby)
+                {
+                    //remove from client list
+                    removeClient(evt.peer);
+                }
+                else
+                {
+                    //quarantine the peer to wait and see if we reconnect
+                    //before removing the client
+                    auto& dc = m_pendingDisconnections.emplace_back();
+                    dc.peer = evt.peer;
+                    dc.connectionID = evt.peer.getRemoteID(); //TODO we shouldn't need to store this separately
+                    LogW << dc.connectionID << ": peer lost connection, awaiting reconnection attempt..." << std::endl;
+                }
+                LogI << evt.peer.getRemoteID() << " disconnected" << std::endl;
+#else
+                removeClient(evt.peer);
+#endif
             }
             else if (evt.type == net::NetEvent::ClientPeerUpdated)
             {
