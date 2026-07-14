@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -96,11 +96,13 @@ private:
 
     struct PendingConnection final
     {
+        std::uint64_t connectionID = 0;
         net::NetPeer peer;
         cro::Clock connectionTime;
         static constexpr float Timeout = 15.f;
     };
     std::vector<PendingConnection> m_pendingConnections;
+    std::vector<PendingConnection> m_pendingDisconnections;
 
     std::size_t m_clientCount;
 
@@ -111,7 +113,7 @@ private:
 
     //returns slot index, or >= MaxClients if full
     std::uint8_t addClient(const net::NetPeer&, std::uint8_t playerCount);
-    void removeClient(const net::NetEvent&);
+    void removeClient(const net::NetPeer&);
     void removeClient(std::size_t);
     void kickClient(std::size_t);
 };

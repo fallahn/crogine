@@ -149,6 +149,13 @@ private:
     //std::vector<float> m_debugCurve;
     GroupID m_groupID;
 
+    struct ConnectRetry final
+    {
+        std::int32_t retryCount = 0;
+        float retryTime = 0.f;
+        static constexpr float Timeout = 3.f;
+    }m_connectionRetry;
+
     cro::ResourceCollection m_resources;
     cro::DynamicAudioStream m_musicStream;
     cro::VideoPlayer m_billboardVideo;

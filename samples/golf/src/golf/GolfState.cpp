@@ -942,6 +942,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             msg->position = {236.f,1.5f,-102.f};
             msg->terrain = TriggerID::Greenhouse;*/
             //m_debugCurve.clear();
+            m_connectionRetry.retryCount = 3;
         }
             break;
 #ifdef CRO_DEBUG_
@@ -3000,6 +3001,36 @@ bool GolfState::simulate(float dt)
     {
         m_debugCurve.push_back(m_inputParser.getPower());
     }*/
+
+    if (m_connectionRetry.retryCount)
+    {
+        m_connectionRetry.retryTime -= dt;
+        if (m_connectionRetry.retryTime < 0)
+        {
+            m_connectionRetry.retryTime += ConnectRetry::Timeout;
+            m_textChat.printToScreen("Retrying Connection...", TextHighlightColour);
+
+#ifdef USE_GNS
+            const auto connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(m_sharedData.clientConnection.hostID)), ConstVal::GamePort);
+#else
+            const auto connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
+#endif
+            m_connectionRetry.retryCount = connected ? 0 : m_connectionRetry.retryCount - 1;
+            if (m_connectionRetry.retryCount == 0)
+            {
+                if (!connected)
+                {
+                    m_sharedData.clientConnection.connected = false;
+                    m_sharedData.errorMessage = "Disconnected From Server";
+                    requestStackPush(StateID::Error);
+                }
+                else
+                {
+                    m_textChat.printToScreen("Connection Restored!", TextGoldColour);
+                }
+            }
+        }
+    }
 
 #ifdef USE_GNS
     std::int32_t playerCount = 0;
@@ -6464,8 +6495,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         }
         break;
     case net::NetEvent::ClientDisconnect:
-        m_sharedData.errorMessage = "Disconnected From Server";
-        requestStackPush(StateID::Error);
+        //trigger reconnection tries first
+        m_connectionRetry.retryCount = 3;
+        m_connectionRetry.retryTime = 0.f;
         break;
     default: break;
     }
