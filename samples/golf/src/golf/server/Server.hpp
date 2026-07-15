@@ -96,7 +96,6 @@ private:
 
     struct PendingConnection final
     {
-        std::uint64_t connectionID = 0;
         net::NetPeer peer;
         cro::Clock connectionTime;
         static constexpr float Timeout = 15.f;

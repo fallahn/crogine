@@ -227,21 +227,21 @@ void Server::run()
                 {
                     m_pendingConnections.emplace_back().peer = evt.peer;
                     m_sharedData.host.sendPacket(evt.peer, PacketID::ClientVersion, std::uint16_t(m_gameMode), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    LogI << evt.peer.getRemoteID() << " connected" << std::endl;
+                    LogI << evt.peer.getID() << " connected" << std::endl;
                 }
                 else
                 {
 #ifdef USE_GNS
                     //check dropped connections list and reinstate if not timed out
-                    const auto peerID = evt.peer.getRemoteID();
+                    const auto peerID = evt.peer.getID();
                     if (auto res = std::find_if(m_pendingDisconnections.begin(), m_pendingDisconnections.end(), 
-                        [peerID](const PendingConnection& pc) { return pc.connectionID == peerID; });
+                        [peerID](const PendingConnection& pc) { return pc.peer.getID() == peerID; });
                         res != m_pendingDisconnections.end())
                     {
                         //the peer itself is probably not the same despite having had the same network ID
                         //so we need to overwrite the existing peer in m_sharedData.clients for this connection
                         if (auto c = std::find_if(m_sharedData.clients.begin(), m_sharedData.clients.end(), 
-                            [peerID](const sv::ClientConnection& cd) { return cd.peerID == peerID; });
+                            [peerID](const sv::ClientConnection& cd) { return cd.peer.getID() == peerID; });
                             c != m_sharedData.clients.end())
                         {
                             c->peer = evt.peer;
@@ -280,10 +280,9 @@ void Server::run()
                     //before removing the client
                     auto& dc = m_pendingDisconnections.emplace_back();
                     dc.peer = evt.peer;
-                    dc.connectionID = evt.peer.getRemoteID(); //TODO we shouldn't need to store this separately
-                    LogW << dc.connectionID << ": peer lost connection, awaiting reconnection attempt..." << std::endl;
+                    LogW << evt.peer.getID() << ": peer lost connection, awaiting reconnection attempt..." << std::endl;
                 }
-                LogI << evt.peer.getRemoteID() << " disconnected" << std::endl;
+                LogI << evt.peer.getID() << " disconnected" << std::endl;
 #else
                 removeClient(evt.peer);
 #endif
@@ -427,7 +426,7 @@ void Server::run()
 void Server::checkPending()
 {
     //pending connections
-    for (auto& [_, peer, t] : m_pendingConnections)
+    for (auto& [peer, t] : m_pendingConnections)
     {
         if (t.elapsed().asSeconds() > PendingConnection::Timeout)
         {
@@ -446,7 +445,7 @@ void Server::checkPending()
 
 
     //pending disconnections
-    for (auto& [_, peer, t] : m_pendingDisconnections)
+    for (auto& [peer, t] : m_pendingDisconnections)
     {
         if (t.elapsed().asSeconds() > PendingConnection::Timeout)
         {
@@ -504,7 +503,7 @@ std::uint8_t Server::addClient(const net::NetPeer& peer, std::uint8_t playerCoun
 
                 m_sharedData.clients[i].connected = true;
                 m_sharedData.clients[i].peer = peer;
-                m_sharedData.clients[i].peerID = peer.getID(); //if the peer becomes disconnected we keep a record of who they were
+                //m_sharedData.clients[i].peerID = peer.getID(); //if the peer becomes disconnected we keep a record of who they were
 
                 //broadcast to all connected clients
                 //so they can update lobby view.
