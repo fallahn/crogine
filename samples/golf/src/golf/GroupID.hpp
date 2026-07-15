@@ -33,10 +33,22 @@ source distribution.
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Log.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
-class GroupID final
+class GroupID final : public cro::GuiClient
 {
 public:
+    GroupID()
+        : m_activeGroupID(0)
+    {
+        registerWindow([this]()
+            {
+                ImGui::Begin("Group ID");
+                ImGui::Text("Rich Presence Group %llu", m_activeGroupID);
+                ImGui::End();
+            });
+    }
+
     void update(std::uint64_t groupID, std::int32_t playerCount)
     {
         if (groupID
@@ -45,11 +57,13 @@ public:
             m_clock.restart();
             Social::setGroup(groupID, playerCount);
 
-            //LogI << "Set Group " << groupID << " with " << playerCount << " players." << std::endl;
+            m_activeGroupID = groupID;
         }
     }
 
 private:
+
+    std::uint64_t m_activeGroupID;
 
     cro::Clock m_clock;
     static constexpr cro::Time m_expireTime = cro::seconds(30.f);

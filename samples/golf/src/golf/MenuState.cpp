@@ -4185,7 +4185,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::MapInfo:
         {
             //check we have the local data (or at least something with the same name)
-            auto course = deserialiseString(evt.packet);
+            const auto course = deserialiseString(evt.packet);
 
             //jump straight into the tutorial
             //if that's what's set
@@ -4637,7 +4637,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 {
 #ifdef USE_GNS
+    //this also fills in out peer host ID else it remains at 0
     m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
+    m_sharedData.clientConnection.hostID = m_sharedData.clientConnection.netClient.getPeer().getID();
 #ifdef CRO_DEBUG_
     cro::App::getWindow().setTitle(std::to_string(msgData.hostID));
 #endif
@@ -5112,6 +5114,7 @@ bool quickConnect(SharedStateData& sharedData)
 
 #ifdef USE_GNS
         sharedData.clientConnection.connected = sharedData.serverInstance.addLocalConnection(sharedData.clientConnection.netClient);
+        sharedData.clientConnection.hostID = sharedData.clientConnection.netClient.getPeer().getID();
 #else
         sharedData.clientConnection.connected = sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
 #endif

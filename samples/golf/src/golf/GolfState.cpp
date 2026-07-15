@@ -942,7 +942,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
             msg->position = {236.f,1.5f,-102.f};
             msg->terrain = TriggerID::Greenhouse;*/
             //m_debugCurve.clear();
-            m_connectionRetry.retryCount = 3;
         }
             break;
 #ifdef CRO_DEBUG_
