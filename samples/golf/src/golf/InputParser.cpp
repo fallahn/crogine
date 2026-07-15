@@ -1113,7 +1113,10 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     power *= (1.f - (SideSpinReduction * std::abs(spin.x)));
 
-    auto impulse = getImpulse(pitch, yaw) * power * getDampening();
+    const auto dampening = getDampening();
+    spin *= dampening / 2.f;
+    auto impulse = getImpulse(pitch, yaw) * power * dampening;
+
 
     m_lastCalculatedHook = hook;
     m_activeLoadout = nullptr;
