@@ -498,7 +498,7 @@ void GolfState::netEvent(const net::NetEvent& evt)
         {
             auto data = evt.packet.as<std::uint16_t>();
             auto client = data & 0xff;
-            const auto group = m_playerInfo[m_groupAssignments[client]];
+            const auto& group = m_playerInfo[m_groupAssignments[client]];
             for (auto c : group.clientIDs)
             {
                 m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::ClubChanged, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -746,7 +746,7 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
         m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::GroupID, std::uint8_t(m_groupAssignments[clientID]), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         //send all the ball positions
-        auto timestamp = m_serverTime.elapsed().asMilliseconds();
+        const auto timestamp = m_serverTime.elapsed().asMilliseconds();
 
         for (const auto& group : m_playerInfo)
         {
