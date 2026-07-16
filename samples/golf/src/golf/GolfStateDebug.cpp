@@ -288,6 +288,14 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
+    //registerWindow([this]() 
+    //    {
+    //        ImGui::Begin("Server Data");
+    //        ImGui::Text("History Size %llu", m_sharedData.serverInstance.getNetworkHistorySize());
+    //        ImGui::Text("History Index %llu", m_sharedData.serverInstance.getHistoryIndex());
+    //        ImGui::End();
+    //    });
+
     //registerWindow([&]() 
     //    {
     //        ImGui::Begin("Cloud Cover");

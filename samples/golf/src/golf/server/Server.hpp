@@ -77,7 +77,8 @@ public:
     void setPreferredIP(const std::string& ip) { m_preferredIP = ip; }
     const std::string& getPreferredIP() const { return m_preferredIP; }
 
-
+    /*std::size_t getNetworkHistorySize() const { return m_sharedData.host.getHistoryDataSize(); }
+    std::size_t getHistoryIndex() const { return m_sharedData.host.getHistoryIndex(); }*/
 private:
     std::size_t m_maxConnections;
     std::string m_preferredIP;
@@ -99,6 +100,12 @@ private:
         net::NetPeer peer;
         cro::Clock connectionTime;
         static constexpr float Timeout = 15.f;
+
+#ifdef USE_GNS
+        //buffers packets which need sending should
+        //this client manage to reconnect
+        std::vector<net::BufferedPacket*> bufferedPackets;
+#endif
     };
     std::vector<PendingConnection> m_pendingConnections;
     std::vector<PendingConnection> m_pendingDisconnections;

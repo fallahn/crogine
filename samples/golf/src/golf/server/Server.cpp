@@ -246,7 +246,18 @@ void Server::run()
                         {
                             c->peer = evt.peer;
 
+                            //send the peer any missed broadcasts
+                            //TODO this should never be much more than ~256kb
+                            //after having measured (max buffer size) and usually
+                            //much smaller - however it might be worth setting
+                            //some limit and break this down into chunks
+                            for (const auto& bp : res->bufferedPackets)
+                            {
+                                m_sharedData.host.sendPacket(evt.peer, bp->id, bp->data.data(), bp->data.size(), bp->flags);
+                            }
+
                             //remove from pending disconnection list
+                            m_sharedData.host.unregisterPacketBuffer(&res->bufferedPackets);
                             m_pendingDisconnections.erase(res);
 
                             LogI << "Reconnected client " << peerID << std::endl;
@@ -280,6 +291,7 @@ void Server::run()
                     //before removing the client
                     auto& dc = m_pendingDisconnections.emplace_back();
                     dc.peer = evt.peer;
+                    m_sharedData.host.registerPacketBuffer(&dc.bufferedPackets);
                     LogW << evt.peer.getID() << ": peer lost connection, awaiting reconnection attempt..." << std::endl;
                 }
                 LogI << evt.peer.getID() << " disconnected" << std::endl;
@@ -426,7 +438,11 @@ void Server::run()
 void Server::checkPending()
 {
     //pending connections
+#ifdef USE_GNS
+    for (auto& [peer, t, _] : m_pendingConnections)
+#else
     for (auto& [peer, t] : m_pendingConnections)
+#endif
     {
         if (t.elapsed().asSeconds() > PendingConnection::Timeout)
         {
@@ -445,10 +461,17 @@ void Server::checkPending()
 
 
     //pending disconnections
+#ifdef USE_GNS
+    for (auto& [peer, t, pb] : m_pendingDisconnections)
+#else
     for (auto& [peer, t] : m_pendingDisconnections)
+#endif
     {
         if (t.elapsed().asSeconds() > PendingConnection::Timeout)
         {
+#ifdef USE_GNS
+            m_sharedData.host.unregisterPacketBuffer(&pb);
+#endif
             removeClient(peer);
         }
     }
