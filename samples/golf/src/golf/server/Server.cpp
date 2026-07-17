@@ -253,7 +253,10 @@ void Server::run()
                             //some limit and break this down into chunks
                             for (const auto& bp : res->bufferedPackets)
                             {
-                                m_sharedData.host.sendPacket(evt.peer, bp->id, bp->data.data(), bp->data.size(), bp->flags);
+                                if (bp->id != PacketID::ActorUpdate)
+                                {
+                                    m_sharedData.host.sendPacket(evt.peer, bp->id, bp->data.data(), bp->data.size(), bp->flags);
+                                }
                             }
 
                             //remove from pending disconnection list
