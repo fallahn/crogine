@@ -1096,9 +1096,13 @@ void GolfState::loadMap()
                                             if (propAudio.hasEmitter("foghorn")
                                                 && m_sharedData.weatherType == WeatherType::Mist)
                                             {
+                                                const auto scale = ent.getComponent<cro::Transform>().getScale();
+                                                const float vol = scale.x * scale.y;
+
                                                 auto fh = m_gameScene.createEntity();
                                                 fh.addComponent<cro::Transform>().setPosition({ 0.f, 27.f, 0.f });
                                                 fh.addComponent<cro::AudioEmitter>() = propAudio.getEmitter("foghorn");
+                                                fh.getComponent<cro::AudioEmitter>().setVolume(vol * 0.5f);
                                                 fh.addComponent<cro::Callback>().active = true;
                                                 fh.getComponent<cro::Callback>().setUserData<float>(90.f);
                                                 fh.getComponent<cro::Callback>().function =
