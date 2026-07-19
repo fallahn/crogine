@@ -148,7 +148,7 @@ namespace
         glm::vec2(0.f),           //paused
         glm::vec2(0.f)            //reset
     };
-    constexpr float SideSpinInfluence = 6.f;
+    constexpr float SideSpinInfluence = 10.f;// 6.f;
     constexpr float TopSpinInfluence = 1.f;
 
     constexpr float BallPenetrationAvg = 0.054f; //if the ball collision is greater than this it's set to 'buried' else 'sitting up'
@@ -394,7 +394,7 @@ void BallSystem::fastForward(cro::Entity entity)
 float BallSystem::estimateSidespin(float& spin)
 {
     spin *= SpinDecay[static_cast<std::int32_t>(Ball::State::Flight)].x;
-    return spin * SideSpinInfluence;
+    return spin * (SideSpinInfluence / 2.5f);
 }
 
 #ifdef CRO_DEBUG_
