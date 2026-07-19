@@ -1091,6 +1091,41 @@ void GolfState::loadMap()
 #endif
                                             }
                                         }
+                                        else if (cro::FileSystem::getFileName(path).find("lighthouse") != std::string::npos)
+                                        {
+                                            if (propAudio.hasEmitter("foghorn")
+                                                && m_sharedData.weatherType == WeatherType::Mist)
+                                            {
+                                                auto fh = m_gameScene.createEntity();
+                                                fh.addComponent<cro::Transform>().setPosition({ 0.f, 27.f, 0.f });
+                                                fh.addComponent<cro::AudioEmitter>() = propAudio.getEmitter("foghorn");
+                                                fh.addComponent<cro::Callback>().active = true;
+                                                fh.getComponent<cro::Callback>().setUserData<float>(90.f);
+                                                fh.getComponent<cro::Callback>().function =
+                                                    [this, ent](cro::Entity e, float dt)
+                                                    {
+                                                        if (!ent.isValid())
+                                                        {
+                                                            e.getComponent<cro::Callback>().active = false;
+                                                            m_gameScene.destroyEntity(e);
+                                                            return;
+                                                        }
+
+                                                        if (glm::length2(ent.getComponent<cro::Transform>().getWorldScale()) != 0)
+                                                        {
+                                                            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+                                                            ct -= dt;
+                                                            if (ct < 0)
+                                                            {
+                                                                ct += 90.f;
+                                                                e.getComponent<cro::AudioEmitter>().play();
+                                                            }
+                                                        }
+                                                    };
+                                                ent.getComponent<cro::Transform>().addChild(fh.getComponent<cro::Transform>());
+                                            }
+                                        }
+
 
                                         //add path if it exists
                                         if (curve.size() > 3)
