@@ -6488,15 +6488,30 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         }
         break;
         case PacketID::ConnectionRefused:
-            m_sharedData.errorMessage = "Kicked By Host";
+            if (evt.packet.as<std::uint8_t>() == MessageType::Kicked)
+            {
+                m_sharedData.errorMessage = "Kicked By Host";
+            }
+            else
+            {
+                m_sharedData.errorMessage = "Disconnected From Server";
+            }
+            m_connectionRetry.retryCount = 0; //stop retrying - we failed..
+            m_sharedData.clientConnection.connected = false;
             requestStackPush(StateID::Error);
             break;
         }
         break;
     case net::NetEvent::ClientDisconnect:
+#ifdef USE_GNS
         //trigger reconnection tries first
         m_connectionRetry.retryCount = 3;
         m_connectionRetry.retryTime = 0.f;
+#else
+        m_sharedData.clientConnection.connected = false;
+        m_sharedData.errorMessage = "Disconnected From Server";
+        requestStackPush(StateID::Error);
+#endif
         break;
     default: break;
     }

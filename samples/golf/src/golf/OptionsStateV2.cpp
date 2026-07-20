@@ -2808,6 +2808,7 @@ void OptionsStateV2::createAudioItems()
     refreshAudioDevices(*item);
 
     //currently the deck needs to re-apply the audio device for some reason
+    //LATER NOTE this seems it was a bug in SteamOS which has since been fixed.
     if (!audioHackDone)
     {
         item->activated(*item);
@@ -2943,17 +2944,23 @@ void OptionsStateV2::createStatItems()
             switch (type)
             {
             default:
+            case StatType::Integer:
+            {
+                std::stringstream ss;
+                ss.imbue(std::locale("")); //enable comma delimit each 1000
+                ss << static_cast<std::int32_t>(statValue);
+                value = ss.str();
+            }
+                break;
             case StatType::Float:
             {
                 std::stringstream ss;
                 ss.precision(2);
+                ss.imbue(std::locale("")); //enable comma delimit each 1000
                 ss << std::fixed << statValue;
                 value = ss.str();
             }
             break;
-            case StatType::Integer:
-                value = std::to_string(static_cast<std::int32_t>(statValue));
-                break;
             case StatType::Percent:
             {
                 const float v = statValue * 100.f;

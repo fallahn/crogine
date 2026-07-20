@@ -1115,7 +1115,8 @@ void GolfState::loadMap()
                                                             return;
                                                         }
 
-                                                        if (glm::length2(ent.getComponent<cro::Transform>().getWorldScale()) != 0)
+                                                        if (/*glm::length2(ent.getComponent<cro::Transform>().getWorldScale()) != 0*/
+                                                            !ent.getComponent<cro::Model>().isHidden())
                                                         {
                                                             auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
                                                             ct -= dt;
