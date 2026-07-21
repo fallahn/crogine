@@ -5988,7 +5988,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         break;
         case PacketID::ReadyQuitStatus:
             m_readyQuitFlags = evt.packet.as<std::uint16_t>();
-            m_gameScene.getDirector<GolfSoundDirector>()->playSound(GolfSoundDirector::AudioID::Stone, m_currentPlayer.position);
+            if (m_roundEnded)
+            {
+                m_gameScene.getDirector<GolfSoundDirector>()->playSound(GolfSoundDirector::AudioID::Stone, m_currentPlayer.position);
+            }
             break;
         case PacketID::AchievementGet:
             notifyAchievement(evt.packet.as<std::array<std::uint8_t, 2u>>());
