@@ -104,7 +104,7 @@ private:
 #ifdef USE_GNS
         //buffers packets which need sending should
         //this client manage to reconnect
-        std::vector<net::BufferedPacket*> bufferedPackets;
+        std::vector<net::BufferedPacket> bufferedPackets;
 #endif
     };
     std::vector<PendingConnection> m_pendingConnections;

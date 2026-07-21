@@ -244,6 +244,7 @@ void Server::run()
                             [peerID](const sv::ClientConnection& cd) { return cd.peer.getID() == peerID; });
                             c != m_sharedData.clients.end())
                         {
+                            const auto oldPeer = c->peer;
                             c->peer = evt.peer;
 
                             //send the peer any missed broadcasts
@@ -253,14 +254,14 @@ void Server::run()
                             //some limit and break this down into chunks
                             for (const auto& bp : res->bufferedPackets)
                             {
-                                if (bp->id != PacketID::ActorUpdate)
+                                if (bp.data[0] != PacketID::ActorUpdate)
                                 {
-                                    m_sharedData.host.sendPacket(evt.peer, bp->id, bp->data.data(), bp->data.size(), bp->flags);
+                                    m_sharedData.host.sendBufferedData(evt.peer, bp);
                                 }
                             }
 
                             //remove from pending disconnection list
-                            m_sharedData.host.unregisterPacketBuffer(&res->bufferedPackets);
+                            m_sharedData.host.unregisterPacketBuffer(oldPeer);
                             m_pendingDisconnections.erase(res);
 
                             LogI << "Reconnected client " << peerID << std::endl;
@@ -294,7 +295,7 @@ void Server::run()
                     //before removing the client
                     auto& dc = m_pendingDisconnections.emplace_back();
                     dc.peer = evt.peer;
-                    m_sharedData.host.registerPacketBuffer(&dc.bufferedPackets);
+                    m_sharedData.host.registerPacketBuffer(dc.peer, &dc.bufferedPackets);
                     LogW << evt.peer.getID() << ": peer lost connection, awaiting reconnection attempt..." << std::endl;
                 }
                 LogI << evt.peer.getID() << " disconnected" << std::endl;
@@ -473,7 +474,7 @@ void Server::checkPending()
         if (t.elapsed().asSeconds() > PendingConnection::Timeout)
         {
 #ifdef USE_GNS
-            m_sharedData.host.unregisterPacketBuffer(&pb);
+            m_sharedData.host.unregisterPacketBuffer(peer);
 #endif
             removeClient(peer);
         }

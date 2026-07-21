@@ -2204,7 +2204,7 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
                 if (m_gameStarted && !m_playerInfo[groupID].playerInfo.empty()
                     /*&& m_playerInfo[0].client == target*/)
                 {
-                    m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] = MaxStrokes; //this should be half on putt from tee but meh, it's a penalty
+                    m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] = m_holeData[m_currentHole].par + 1;// MaxStrokes; //this should be half on putt from tee but meh, it's a penalty
                     m_playerInfo[groupID].playerInfo[0].position = m_holeData[m_currentHole].pin;
                     m_playerInfo[groupID].playerInfo[0].distanceToHole = 0.f;
                     m_playerInfo[groupID].playerInfo[0].terrain = TerrainID::Green;

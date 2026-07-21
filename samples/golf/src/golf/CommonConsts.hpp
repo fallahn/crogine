@@ -113,7 +113,7 @@ namespace ConstVal
     static const std::string UserCoursePath("courses/");
     static const std::string UserMapPath("courses/export/");
 
-    static const std::uint8_t SummaryTimeout = 30;
+    static const std::uint8_t SummaryTimeout = 60;
 }
 
 namespace cro
