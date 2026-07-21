@@ -252,13 +252,16 @@ void Server::run()
                             //after having measured (max buffer size) and usually
                             //much smaller - however it might be worth setting
                             //some limit and break this down into chunks
+                            std::int32_t sentCount = 0;
                             for (const auto& bp : res->bufferedPackets)
                             {
                                 if (bp.data[0] != PacketID::ActorUpdate)
                                 {
+                                    sentCount++;
                                     m_sharedData.host.sendBufferedData(evt.peer, bp);
                                 }
                             }
+                            LogI << "Sent " << sentCount << " buffered packets to reconnected client" << std::endl;
 
                             //remove from pending disconnection list
                             m_sharedData.host.unregisterPacketBuffer(oldPeer);
