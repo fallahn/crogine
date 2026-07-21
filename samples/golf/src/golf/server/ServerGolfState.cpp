@@ -942,6 +942,9 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
         //we might be waiting for others to start new hole
         m_scoreboardReadyFlags |= (1 << clientID);
 
+        //let clients know to update their display
+        m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::ReadyQuitStatus, m_scoreboardReadyFlags, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
         for (auto& group : m_playerInfo)
         {
             for (auto i = 0u; i < group.playerInfo.size(); ++i)
@@ -956,7 +959,7 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
         return;
     }
 
-    std::uint8_t broadcastFlags = 0;
+    std::uint16_t broadcastFlags = 0;
     for (auto& group : m_playerInfo)
     {
         for (auto& p : group.playerInfo)
@@ -977,7 +980,7 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
         }
     }
     //let clients know to update their display
-    m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::ReadyQuitStatus, broadcastFlags, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::ReadyQuitStatus, broadcastFlags, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     for (auto& group : m_playerInfo)
     {

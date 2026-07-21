@@ -5987,7 +5987,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         }
         break;
         case PacketID::ReadyQuitStatus:
-            m_readyQuitFlags = evt.packet.as<std::uint8_t>();
+            m_readyQuitFlags = evt.packet.as<std::uint16_t>();
             m_gameScene.getDirector<GolfSoundDirector>()->playSound(GolfSoundDirector::AudioID::Stone, m_currentPlayer.position);
             break;
         case PacketID::AchievementGet:
@@ -7586,6 +7586,11 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    //this is just used to indicate when the scoreboard
+    //is ready to be dismissed in multiplayer so resetting
+    //it here makes sure it's ready for the next hole.
+    m_readyQuitFlags = 0;
+
     m_measurePosition = glm::vec3(0.f);
 
     if (m_sharedData.gameMode != GameMode::Tutorial)

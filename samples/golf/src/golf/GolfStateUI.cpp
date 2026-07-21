@@ -3719,7 +3719,7 @@ void GolfState::createScoreboard()
             entity.getComponent<cro::Callback>().function =
                 [&, iconPos](cro::Entity e, float)
                 {
-                    auto [client, player, leaguePlayer] = e.getComponent<cro::Callback>().getUserData<NetStatData>();
+                    const auto& [client, player, leaguePlayer] = e.getComponent<cro::Callback>().getUserData<NetStatData>();
 
                     if (leaguePlayer ||
                         m_sharedData.connectionData[client].playerData[player].isCPU)
@@ -3728,8 +3728,15 @@ void GolfState::createScoreboard()
                     }
                     else
                     {
-                        auto idx = m_sharedData.connectionData[client].pingTime / 60;
-                        e.getComponent<cro::SpriteAnimation>().play(std::min(4u, idx));
+                        if (m_newHole && ((m_readyQuitFlags & (1 << client)) != 0))
+                        {
+                            e.getComponent<cro::SpriteAnimation>().play(6);
+                        }
+                        else
+                        {
+                            const auto idx = m_sharedData.connectionData[client].pingTime / 60;
+                            e.getComponent<cro::SpriteAnimation>().play(std::min(4u, idx));
+                        }
                     }
 
                     auto pos = iconPos;

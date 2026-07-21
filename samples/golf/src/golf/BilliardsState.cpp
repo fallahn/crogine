@@ -1301,7 +1301,7 @@ void BilliardsState::handleNetEvent(const net::NetEvent& evt)
             showReadyNotify(evt.packet.as<BilliardsPlayer>());
             break;
         case PacketID::ReadyQuitStatus:
-            m_readyQuitFlags = evt.packet.as<std::uint8_t>();
+            m_readyQuitFlags = evt.packet.as<std::uint16_t>();
             break;
         case PacketID::GameEnd:
             showGameEnd(evt.packet.as<BilliardsPlayer>());

@@ -517,7 +517,7 @@ void BilliardsState::checkReadyQuit(std::uint8_t clientID)
         return;
     }
 
-    std::uint8_t broadcastFlags = 0;
+    std::uint16_t broadcastFlags = 0;
 
     for (auto& p : m_playerInfo)
     {
@@ -536,7 +536,7 @@ void BilliardsState::checkReadyQuit(std::uint8_t clientID)
         }
     }
     //let clients know to update their display
-    m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::ReadyQuitStatus, broadcastFlags, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::ReadyQuitStatus, broadcastFlags, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     for (const auto& p : m_playerInfo)
     {

@@ -703,7 +703,7 @@ private:
     cro::Entity m_nemesisEnt;
     cro::Entity m_droneTextEnt;
     cro::Entity m_freecamMenuEnt;
-    std::uint8_t m_readyQuitFlags;
+    std::uint16_t m_readyQuitFlags;
 
     std::unique_ptr<FriendlyPlayers> m_friendlyPlayers;
 
