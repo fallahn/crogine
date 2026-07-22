@@ -2490,6 +2490,8 @@ void GolfState::createPowerBars(cro::Entity rootNode)
 
 void GolfState::showCountdown(std::uint8_t seconds)
 {
+    m_readyQuitFlags = 0;
+
     Timeline::setTimelineDesc("Final Scores");
     Timeline::addEvent(Timeline::Event::EndOfRound);
 

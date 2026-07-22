@@ -70,6 +70,7 @@ public:
     float getPower() const; //0-1 multiplied by selected club
     float getHook() const; //-1 to -1 * some angle, club defined
     float getCalculatedHook() const; //used by UI to display if current player hooked
+    std::int32_t getTerrain() const { return m_terrain; }
     std::uint8_t getLie() const { return m_lie; } //lie of the ball as it was when last activated
 
     std::int32_t getClub() const;

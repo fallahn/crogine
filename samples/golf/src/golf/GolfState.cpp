@@ -8731,6 +8731,7 @@ float GolfState::getDampening() const
     //this is supposed to correct the label for clubs
     //which have been shortened by the terrain
     //TODO this is incorrect for bunker/rough
+    //TODO input parser *already applies* Dampening / LieDampening why do we do it again here?
     return m_inputParser.getDampening() * Dampening[m_currentPlayer.terrain] * LieDampening[m_currentPlayer.terrain][m_inputParser.getLie()];//;
 }
 

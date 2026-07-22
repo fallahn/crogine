@@ -214,7 +214,7 @@ void Server::run()
         }
 
         net::NetEvent evt;
-        while(m_sharedData.host.pollEvent(evt))
+        while (m_sharedData.host.pollEvent(evt))
         {
             m_currentState->netEvent(evt);
         
