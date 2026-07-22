@@ -231,7 +231,7 @@ void Server::run()
                 }
                 else
                 {
-#ifdef USE_GNS
+#ifdef TRY_RECON
                     //check dropped connections list and reinstate if not timed out
                     const auto peerID = evt.peer.getID();
                     if (auto res = std::find_if(m_pendingDisconnections.begin(), m_pendingDisconnections.end(), 
@@ -286,7 +286,7 @@ void Server::run()
             }
             else if (evt.type == net::NetEvent::ClientDisconnect)
             {
-#ifdef USE_GNS
+#ifdef TRY_RECON
                 if (m_currentState->stateID() == sv::StateID::Lobby)
                 {
                     //remove from client list
@@ -469,14 +469,14 @@ void Server::checkPending()
 
     //pending disconnections
 #ifdef USE_GNS
-    for (auto& [peer, t, pb] : m_pendingDisconnections)
+    for (auto& [peer, t, _] : m_pendingDisconnections)
 #else
     for (auto& [peer, t] : m_pendingDisconnections)
 #endif
     {
         if (t.elapsed().asSeconds() > PendingConnection::Timeout)
         {
-#ifdef USE_GNS
+#ifdef TRY_RECON
             m_sharedData.host.unregisterPacketBuffer(peer);
 #endif
             removeClient(peer);

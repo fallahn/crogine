@@ -6506,10 +6506,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         }
         break;
     case net::NetEvent::ClientDisconnect:
-#ifdef USE_GNS
+#ifdef TRY_RECON
         //trigger reconnection tries first
         m_connectionRetry.retryCount = 3;
-        m_connectionRetry.retryTime = 0.f;
+        m_connectionRetry.retryTime = 1.f;
 #else
         m_sharedData.clientConnection.connected = false;
         m_sharedData.errorMessage = "Disconnected From Server";
