@@ -2374,6 +2374,7 @@ void GolfState::createPowerBars(cro::Entity rootNode)
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarCentre, 8.f, 0.55f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
+    entity.addComponent<cro::SpriteAnimation>();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f)));
     entity.addComponent<cro::Callback>().active = true;
@@ -2382,6 +2383,9 @@ void GolfState::createPowerBars(cro::Entity rootNode)
         {
             glm::vec3 pos(std::round(BarCentre + (BarCentre * m_inputParser.getHook())), 8.f, 0.55f);
             e.getComponent<cro::Transform>().setPosition(pos);
+
+            /*const auto id = m_sharedData.useContrastPowerBar ? 1 : 0;
+            e.getComponent<cro::SpriteAnimation>().play(id);*/
         };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -2463,6 +2467,7 @@ void GolfState::createPowerBars(cro::Entity rootNode)
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarCentre, 16.f, 0.55f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBarDouble];
+    entity.addComponent<cro::SpriteAnimation>();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f)));
     entity.addComponent<cro::Callback>().active = true;
@@ -2471,6 +2476,9 @@ void GolfState::createPowerBars(cro::Entity rootNode)
         {
             glm::vec3 pos(std::round(BarCentre + (BarCentre * m_inputParser.getHook())), 16.f, 0.55f);
             e.getComponent<cro::Transform>().setPosition(pos);
+
+            /*const auto id = m_sharedData.useContrastPowerBar ? 1 : 0;
+            e.getComponent<cro::SpriteAnimation>().play(id);*/
         };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
