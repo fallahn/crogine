@@ -5576,6 +5576,7 @@ void MenuState::updateUnlockedItems()
             }
         };
     dlcCheck(LeagueRoundID::RoundSeven);
+    dlcCheck(LeagueRoundID::RoundEight);
 
 
     //tournament unlocks - ignores any custom tournament

@@ -101,9 +101,11 @@ bool Content::leagueAvailable(std::int32_t leagueID)
 
     switch (leagueID)
     {
-    default: return false;
+    default: return true;
     case 7:
         return cro::FileSystem::directoryExists(SearchPaths[0])
             && cro::FileSystem::directoryExists(SearchPaths[1]);
+    case 8:
+        return cro::FileSystem::directoryExists(SearchPaths[2]);
     }
 }

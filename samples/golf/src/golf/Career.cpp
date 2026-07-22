@@ -43,7 +43,8 @@ namespace
         {10,1},
         {8, 2},
         {6,11},
-        {13,12}
+        {13,12},
+        {15,14},
         }
     };
 
@@ -55,13 +56,14 @@ namespace
         "Hill and Hole Valley Run",
         "Chippers Pitch 'n' Putt",
         "The Woodlands League",
-        "Sun & Moon Adventure"
-        //"Craewall Competition"
+        "Sun & Moon Adventure DLC",
+        "Craewall Competition DLC"
     };
 }
 
 Career::Career(const SharedStateData& sd)
 {
+    static_assert(MaxLeagues == CareerLeague::MaxRounds + 1, "SIGH these values are coupled.");
     for (auto i = 0u; i < MaxLeagues; ++i)
     {
         m_leagues[i].leagueID = i + 1;
