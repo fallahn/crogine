@@ -254,16 +254,21 @@ void GolfState::retargetMinimap(bool reset)
                 {
                     m_minimapZoom.camera.getComponent<cro::Camera>().active = false;
 
+                    //HMMM this is causing a bit of a jump as it snaps
+                    //into place - although progress being 1 *shouldn't*
+                    //do that? I've disabled this as it looks horrible,
+                    //but will that mean that sometimes the map is off centre?
+
                     m_minimapZoom.pan = data.end.pan;
                     m_minimapZoom.tilt = data.end.tilt;
                     m_minimapZoom.zoom = data.end.zoom;
-                    m_minimapZoom.updateCamera();
+                    //m_minimapZoom.updateCamera();
 
                     //make sure we actually render the final position
-                    m_mapScene.simulate(dt);
+                    /*m_mapScene.simulate(dt);
                     m_minimapZoom.sceneTexture.clear(cro::Colour::Transparent);
                     m_mapScene.render();
-                    m_minimapZoom.sceneTexture.display();
+                    m_minimapZoom.sceneTexture.display();*/
 
                     m_minimapZoom.activeAnimation = {};
                     e.getComponent<cro::Callback>().active = false;

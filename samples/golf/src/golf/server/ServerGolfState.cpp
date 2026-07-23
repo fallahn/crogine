@@ -624,53 +624,62 @@ std::int32_t GolfState::process(float dt)
     if (m_gameStarted)
     {
         //check the turn timer and skip player if they AFK'd
-        for (auto& group : m_playerInfo)
-        {
-            if (!group.playerInfo.empty()) //players may have quit
-            {
-                if (group.playerInfo[0].distanceToHole == 0)
-                {
-                    //we're waiting for other players to finish so don't time out
-                    group.turnTimer.restart();
-                }
-                else
-                {
-                    if (group.turnTimer.elapsed() > (TurnTime - WarnTime))
-                    {
-                        if (!group.warned
-                            && m_sharedData.clients[group.playerInfo[0].client].peer.getID() != m_sharedData.hostID)
-                        {
-                            group.warned = true;
-                            m_sharedData.host.broadcastPacket(PacketID::WarnTime, std::uint8_t(10), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                        }
+        
+        /*
+        OK So this never actually worked on Steam because all the peers
+        had the same ID of 0 meaning they were never warned as they all
+        appeared to be the host... However now that the ID is fixed we
+        get players being warned/AFK'd all the time which, clearly, was
+        never needed as it wasn't ever working! So I've disabled it.
+        */
 
-                        if (group.turnTimer.elapsed() > TurnTime)
-                        {
-                            if (m_sharedData.clients[group.playerInfo[0].client].peer.getID() != m_sharedData.hostID)
-                            {
-                                group.playerInfo[0].holeScore[m_currentHole] = MaxStrokes;
-                                group.playerInfo[0].position = m_holeData[m_currentHole].pin;
-                                group.playerInfo[0].distanceToHole = 0.f;
-                                group.playerInfo[0].terrain = TerrainID::Green;
-                                setNextPlayer(m_groupAssignments[group.playerInfo[0].client]); //resets the timer
+        //for (auto& group : m_playerInfo)
+        //{
+        //    if (!group.playerInfo.empty()) //players may have quit
+        //    {
+        //        if (group.playerInfo[0].distanceToHole == 0)
+        //        {
+        //            //we're waiting for other players to finish so don't time out
+        //            group.turnTimer.restart();
+        //        }
+        //        else
+        //        {
+        //            if (group.turnTimer.elapsed() > (TurnTime - WarnTime))
+        //            {
+        //                if (!group.warned
+        //                    && m_sharedData.clients[group.playerInfo[0].client].peer.getID() != m_sharedData.hostID)
+        //                {
+        //                    group.warned = true;
+        //                    m_sharedData.host.broadcastPacket(PacketID::WarnTime, std::uint8_t(10), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        //                }
 
-                                for (auto c : group.clientIDs)
-                                {
-                                    m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::MaxStrokes, std::uint8_t(MaxStrokeID::IdleTimeout), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                                }
-                                //broadcast hole complete message so all clients update scores correctly
-                                std::uint16_t pkt = (group.playerInfo[0].client << 8) | group.playerInfo[0].player;
-                                m_sharedData.host.broadcastPacket(PacketID::HoleComplete, pkt, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        group.warned = false;
-                    }
-                }
-            }
-        }
+        //                if (group.turnTimer.elapsed() > TurnTime)
+        //                {
+        //                    if (m_sharedData.clients[group.playerInfo[0].client].peer.getID() != m_sharedData.hostID)
+        //                    {
+        //                        group.playerInfo[0].holeScore[m_currentHole] = MaxStrokes;
+        //                        group.playerInfo[0].position = m_holeData[m_currentHole].pin;
+        //                        group.playerInfo[0].distanceToHole = 0.f;
+        //                        group.playerInfo[0].terrain = TerrainID::Green;
+        //                        setNextPlayer(m_groupAssignments[group.playerInfo[0].client]); //resets the timer
+
+        //                        for (auto c : group.clientIDs)
+        //                        {
+        //                            m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::MaxStrokes, std::uint8_t(MaxStrokeID::IdleTimeout), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        //                        }
+        //                        //broadcast hole complete message so all clients update scores correctly
+        //                        std::uint16_t pkt = (group.playerInfo[0].client << 8) | group.playerInfo[0].player;
+        //                        m_sharedData.host.broadcastPacket(PacketID::HoleComplete, pkt, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        //                    }
+        //                }
+        //            }
+        //            else
+        //            {
+        //                group.warned = false;
+        //            }
+        //        }
+        //    }
+        //}
 
         //we have to keep checking this as a client might
         //disconnect mid-transition and the final 'complete'
