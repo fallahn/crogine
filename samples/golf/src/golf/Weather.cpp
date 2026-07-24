@@ -392,7 +392,7 @@ void GolfState::createWeather(std::int32_t weatherType)
 
 void GolfState::setFog(float density)
 {
-    auto skyColour = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
+    const auto skyColour = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
     
     auto* shader = &m_resources.shaders.get(ShaderID::Composite);
     glUseProgram(shader->getGLHandle());

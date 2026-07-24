@@ -4651,7 +4651,8 @@ void GolfState::buildScene()
         createWeather(WeatherType::Rain);
         break;
     case WeatherType::Mist:
-        setFog(m_sharedData.nightTime ? 0.45f : 0.35f);
+        //setFog(m_sharedData.nightTime ? 0.45f : 0.35f);
+        setFog(m_sharedData.nightTime ? 0.65f : 0.55f);
         break;
     }
 }
