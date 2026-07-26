@@ -177,11 +177,15 @@ void GolfState::retargetMinimap(bool reset)
     }
     else
     {
-        bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
+        const bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
             && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
 
+        //pin is close to the tee because the hole is u-shaped
+        const bool isHairpin = (glm::length2(m_holeData[m_currentHole].tee - m_currentPlayer.position) < 1
+            && glm::length2(m_holeData[m_currentHole].pin - m_currentPlayer.position) < glm::length2(m_holeData[m_currentHole].target - m_currentPlayer.position));
+
         //find vec between player and flag
-        const auto pin = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
+        const auto pin = isMultiTarget || isHairpin ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
         const auto player = m_currentPlayer.position;
 
         //rotate minimap so flag is at top

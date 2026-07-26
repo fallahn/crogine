@@ -39,7 +39,7 @@ source distribution.
 
 //undef this to disable attempting reconnection
 #ifdef USE_GNS
-#define TRY_RECON
+//#define TRY_RECON
 #endif
 
 namespace MessageType

@@ -7316,7 +7316,11 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     Club::clampMaxScale(m_holeData[m_currentHole].puttFromTee);
     m_inputParser.setHoleDirection(m_holeData[m_currentHole].target - m_currentPlayer.position);
     m_currentPlayer.terrain = m_holeData[m_currentHole].puttFromTee ? TerrainID::Green : TerrainID::Fairway; //this will be overwritten from the server but setting this to non-green makes sure the mini cam stops updating in time
-    m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin, true); //limits club selection based on hole size
+    
+    //check for u-bend holes where the in is closer to the tee than the target
+    const auto dist = glm::length2(m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee) < glm::length2(m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee)
+        ? glm::length(m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee) : m_holeData[m_currentHole].distanceToPin;
+    m_inputParser.setMaxClub(dist, true); //limits club selection based on hole size
 
     //hide the slope indicator
     cro::Command cmd;
@@ -7754,7 +7758,9 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     }
     else
     {
-        m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin, glm::length2(player.position - m_holeData[m_currentHole].tee) < 1.f);
+        const auto dist = glm::length2(m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee) < glm::length2(m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee)
+            ? glm::length(m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee) : m_holeData[m_currentHole].distanceToPin;
+        m_inputParser.setMaxClub(dist, glm::length2(player.position - m_holeData[m_currentHole].tee) < 1.f);
     }
 
     //player UI name
@@ -7930,7 +7936,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     //set this separately because target might not necessarily be the pin.
     const bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
         && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
-    const auto clubTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
+
+    //pin is close to the tee because the hole is u-shaped
+    const bool isHairpin = (glm::length2(m_holeData[m_currentHole].tee - m_currentPlayer.position) < 1
+        && glm::length2(m_holeData[m_currentHole].pin - m_currentPlayer.position) < glm::length2(m_holeData[m_currentHole].target - m_currentPlayer.position));
+
+    const auto clubTarget = isMultiTarget || isHairpin ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
     //limit the club to 10m when on a putting course
     const auto d = m_holeData[m_currentHole].puttFromTee ? std::min(glm::length(clubTarget - player.position), 10.f) : glm::length(clubTarget - player.position);
     m_inputParser.setClub(d, player.terrain);

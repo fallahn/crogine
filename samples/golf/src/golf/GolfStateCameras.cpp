@@ -1386,8 +1386,15 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData, bool usePlayerLo
     }
     else
     {
+        //always use the target when we're at the tee and the hole is closer to the
+        //target because of a U-bend
+        if (glm::length2(m_holeData[m_currentHole].tee - playerData.position) < 1
+            && glm::length2(m_holeData[m_currentHole].pin - playerData.position) < glm::length2(activeTarget - playerData.position))
+        {
+            targetInfo.targetLookAt = activeTarget;
+        }
         //if both the pin and the target are in front of the player
-        if (glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)) > 0.4)
+        else if (glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)) > 0.4)
         {
             //set the target depending on how close it is
             const auto pinDist = glm::length2(pinDir);
