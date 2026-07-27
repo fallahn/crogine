@@ -4118,7 +4118,7 @@ void GolfState::initBillboardLeagueTexture()
             });
         arr.draw();
 
-        const auto& prevWinners = Social::getPreviousLeague();
+        const auto& prevWinners = Social::getPreviousLeague(Social::getLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly));
         for (const auto& [name, score, handle] : prevWinners)
         {
             if (handle != 0)
