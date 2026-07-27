@@ -7594,6 +7594,13 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    //this is a bit fudgey but we need to reset the index
+    //clamp to whichever range is currently selected based
+    //on the distance to the hole
+    Club::setMaxScaleIndex(4);
+    const auto idx = Clubs[ClubID::Putter].getScaleIndex(m_distanceToHole);
+    Club::setMaxScaleIndex(idx);
+
     //this is just used to indicate when the scoreboard
     //is ready to be dismissed in multiplayer so resetting
     //it here makes sure it's ready for the next hole.

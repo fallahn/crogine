@@ -125,14 +125,15 @@ namespace
 }
 
 bool Club::m_fixedPuttingDistance = false;
+std::int32_t Club::m_maxScaleIndex = 4;
 float Club::m_maxScale = ClubStats[ClubID::Putter].stats[0].target;
 
 Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin)
-    : m_id      (id), 
-    m_name      (name), 
-    m_angle     (angle * cro::Util::Const::degToRad),
-    m_sidespin  (sidespin),
-    m_topspin   (topspin)
+    : m_id          (id), 
+    m_name          (name), 
+    m_angle         (angle * cro::Util::Const::degToRad),
+    m_sidespin      (sidespin),
+    m_topspin       (topspin)
 {
 
 }
@@ -310,11 +311,11 @@ std::int32_t Club::getScaleIndex(float distanceToPin) const
     {
         if (distanceToPin < target * TinyRangeThreshold)
         {
-            return 0;
+            return std::min(m_maxScaleIndex, 0);
         }
-        return 1;
+        return std::min(m_maxScaleIndex, 1);
     }
-    return 2;
+    return std::min(m_maxScaleIndex, 2);
 }
 
 void Club::clampMaxScale(bool c)

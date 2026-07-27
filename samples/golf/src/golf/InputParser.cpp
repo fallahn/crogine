@@ -1419,43 +1419,46 @@ void InputParser::updateStroke(float dt)
             if ((m_prevFlags & InputFlag::PrevClub) == 0
                 && (m_inputFlags & InputFlag::PrevClub))
             {
-                //we also check terrain so we don't tr putting from a bunker...
-                const auto onFringe = m_terrain == TerrainID::Fairway && m_onFringe;
-                const auto MinClub = onFringe ? 
-                    ClubID::Count : ClubID::Putter;
-
                 const auto oldClub = m_currentClub;
 
-                do
+                if (m_terrain == TerrainID::Green)
                 {
-                    auto clubCount = MinClub - m_firstClub;
-                    m_clubOffset = m_currentClub - m_firstClub;
-                    m_clubOffset = (m_clubOffset + 1) % clubCount;
-                    m_currentClub = m_firstClub + m_clubOffset;
-                } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
-
-                //always punch from stone if club supports it
-                if (m_terrain == TerrainID::Stone
-                    && (ClubShot[m_currentClub] & ShotType::Punch))
-                {
-                    Club::setModifierIndex(1);
+                    //set the distance clamp
+                    auto id = Club::getMaxScaleIndex();
+                    id = (id + (Club::MaxIndexRange - 1)) % Club::MaxIndexRange;
+                    Club::setMaxScaleIndex(id);
                 }
-                //reset modifier if new club doesn't support it
-                else if((ClubShot[m_currentClub] & (1 << Club::getModifierIndex())) == 0)
+                else
                 {
-                    Club::setModifierIndex(0);
-                }
+                    //we also check terrain so we don't try putting from a bunker...
+                    const auto onFringe = m_terrain == TerrainID::Fairway && m_onFringe;
+                    const auto MinClub = onFringe ?
+                        ClubID::Count : ClubID::Putter;
 
+                    do
+                    {
+                        auto clubCount = MinClub - m_firstClub;
+                        m_clubOffset = m_currentClub - m_firstClub;
+                        m_clubOffset = (m_clubOffset + 1) % clubCount;
+                        m_currentClub = m_firstClub + m_clubOffset;
+                    } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
+
+                    //always punch from stone if club supports it
+                    if (m_terrain == TerrainID::Stone
+                        && (ClubShot[m_currentClub] & ShotType::Punch))
+                    {
+                        Club::setModifierIndex(1);
+                    }
+                    //reset modifier if new club doesn't support it
+                    else if ((ClubShot[m_currentClub] & (1 << Club::getModifierIndex())) == 0)
+                    {
+                        Club::setModifierIndex(0);
+                    }
+                }
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = (m_isCPU || m_terrain == TerrainID::Green) ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
                 msg->club = oldClub;
-
-                //if we're on the green toggle putt assist
-                /*if (m_terrain == TerrainID::Green)
-                {
-                    m_sharedData.showPuttingPower = !m_sharedData.showPuttingPower;
-                }*/
 
                 updateDistanceEstimation();
                 beginIcon();
@@ -1464,30 +1467,38 @@ void InputParser::updateStroke(float dt)
             if ((m_prevFlags & InputFlag::NextClub) == 0
                 && (m_inputFlags & InputFlag::NextClub))
             {
-                const auto onFringe = m_terrain == TerrainID::Fairway && m_onFringe;
-                const auto MinClub = onFringe ?
-                    ClubID::Count : ClubID::Putter;
-
                 const auto oldClub = m_currentClub;
 
-                do
+                if (m_terrain == TerrainID::Green)
                 {
-                    auto clubCount = MinClub - m_firstClub;
-                    m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
-                    m_currentClub = m_firstClub + m_clubOffset;
-                } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
-
-                //always punch from stone (if club supports it)
-                if (m_terrain == TerrainID::Stone
-                    && (ClubShot[m_currentClub] & ShotType::Punch))
-                {
-                    Club::setModifierIndex(1);
+                    auto id = Club::getMaxScaleIndex();
+                    id = (id + 1) % Club::MaxIndexRange;
+                    Club::setMaxScaleIndex(id);
                 }
-                else if((ClubShot[m_currentClub] & (1 << Club::getModifierIndex())) == 0)
+                else
                 {
-                    Club::setModifierIndex(0);
-                }
+                    const auto onFringe = m_terrain == TerrainID::Fairway && m_onFringe;
+                    const auto MinClub = onFringe ?
+                        ClubID::Count : ClubID::Putter;
 
+                    do
+                    {
+                        auto clubCount = MinClub - m_firstClub;
+                        m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
+                        m_currentClub = m_firstClub + m_clubOffset;
+                    } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
+
+                    //always punch from stone (if club supports it)
+                    if (m_terrain == TerrainID::Stone
+                        && (ClubShot[m_currentClub] & ShotType::Punch))
+                    {
+                        Club::setModifierIndex(1);
+                    }
+                    else if ((ClubShot[m_currentClub] & (1 << Club::getModifierIndex())) == 0)
+                    {
+                        Club::setModifierIndex(0);
+                    }
+                }
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = (m_isCPU || m_terrain == TerrainID::Green) ? 0 : 1;

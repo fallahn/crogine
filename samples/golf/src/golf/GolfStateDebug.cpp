@@ -291,8 +291,9 @@ void GolfState::registerDebugCommands()
     //registerWindow([this]() 
     //    {
     //        ImGui::Begin("Server Data");
-    //        ImGui::Text("History Size %llu", m_sharedData.serverInstance.getNetworkHistorySize());
-    //        ImGui::Text("History Index %llu", m_sharedData.serverInstance.getHistoryIndex());
+    //        /*ImGui::Text("History Size %llu", m_sharedData.serverInstance.getNetworkHistorySize());
+    //        ImGui::Text("History Index %llu", m_sharedData.serverInstance.getHistoryIndex());*/
+    //        ImGui::Text("Range %d", Clubs[ClubID::Putter].getMaxScaleIndex());
     //        ImGui::End();
     //    });
 
