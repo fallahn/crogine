@@ -260,15 +260,21 @@ void GolfState::loadMap()
             };
             constexpr std::array<CrowdContext, 4u> Contexts =
             {
-                /*CrowdContext({ -8.f, -1.5f }, { 8.f, 1.5f }, 1.75f),
+                //TODO we need to choose these two when putting from tee
+                //but at this point we don't yet have that info
+                CrowdContext({ -8.f, -1.5f }, { 8.f, 1.5f }, 1.75f),
                 CrowdContext({ -8.f, -1.5f }, { 8.f, 1.5f }, 0.75f),
-                CrowdContext({ -16.f, -3.5f }, { 16.f, 3.5f }, 0.75f),*/
-                CrowdContext({ -14.f, -0.5f }, { 14.f, 2.5f }, 1.2f),
-                CrowdContext({ -16.f, -2.5f }, { 16.f, 3.5f }, 0.85f),
+                
+                //TODO these are better but currently I'd rather not
+                //mangle the putting course layout
+                /*CrowdContext({ -14.f, -0.5f }, { 14.f, 2.5f }, 1.2f),
+                CrowdContext({ -16.f, -2.5f }, { 16.f, 3.5f }, 0.85f),*/
+                
                 CrowdContext({ -18.f, -2.5f }, { 18.f, 5.5f }, 0.85f),
                 CrowdContext({ -18.f, -5.5f }, { 18.f, 5.5f }, 0.75f),
             };
-
+            /*if (holeData.puttFromTee) LogI << "Putting hole" << std::endl;
+            else LogI << "this is not a putting hole" << std::endl;*/
             const auto dist = pd::PoissonDiskSampling(Contexts[crowdIdx].density, Contexts[crowdIdx].start, Contexts[crowdIdx].end, 30, seed++);
 
             rotation *= cro::Util::Const::degToRad;
