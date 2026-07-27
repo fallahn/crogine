@@ -88,7 +88,6 @@ struct ConnectionData final
     std::uint64_t peerID = 0;
 
     std::uint8_t connectionID = ConstVal::NullValue;
-
     std::uint8_t playerCount = 1;
     std::array<PlayerData, ConstVal::MaxPlayers> playerData = {};
 

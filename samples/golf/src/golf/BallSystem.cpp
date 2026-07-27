@@ -1113,7 +1113,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 }
 
                 //only count this if we reset to the same (or near to) the position we started
-                else if (glm::length2(tx.getPosition() - ball.startPoint) < 64.f)
+                else if (ball.isCPU &&
+                    glm::length2(tx.getPosition() - ball.startPoint) < 64.f)
                 {
                     //this is probably a CPU player melting down
                     //so move to the nearest target

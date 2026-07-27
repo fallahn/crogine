@@ -1996,6 +1996,7 @@ void GolfState::initScene()
                 player.player = j;
                 player.position = m_holeData[0].tee;
                 player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[0].pin);
+                player.isCPU = m_sharedData.clients[d.clientID].playerData[j].isCPU;
 
                 if (m_sharedData.teamMode)
                 {
@@ -2060,6 +2061,7 @@ void GolfState::buildWorld()
             player.ballEntity.addComponent<cro::Transform>().setPosition(player.position);
             player.ballEntity.addComponent<Ball>().terrain = player.terrain;
             player.ballEntity.getComponent<Ball>().client = player.client;
+            player.ballEntity.getComponent<Ball>().isCPU = player.isCPU;
 
             player.holeScore.resize(m_holeData.size());
             player.distanceScore.resize(m_holeData.size());
