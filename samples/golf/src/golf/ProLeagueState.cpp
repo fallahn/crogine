@@ -678,7 +678,7 @@ void ProLeagueState::buildScene()
             {
                 if (activated(evt))
                 {
-                    m_sharedData.leagueTable = 9;
+                    m_sharedData.leagueTable = 12;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     m_scene.getActiveCamera().getComponent<cro::Camera>().active = false;
                     requestStackPush(StateID::League);

@@ -1457,7 +1457,7 @@ void InputParser::updateStroke(float dt)
                 }
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
-                msg->score = (m_isCPU || m_terrain == TerrainID::Green) ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
+                msg->score = (m_isCPU /*|| m_terrain == TerrainID::Green*/) ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
                 msg->club = oldClub;
 
                 updateDistanceEstimation();
@@ -1501,7 +1501,7 @@ void InputParser::updateStroke(float dt)
                 }
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
-                msg->score = (m_isCPU || m_terrain == TerrainID::Green) ? 0 : 1;
+                msg->score = (m_isCPU /*|| m_terrain == TerrainID::Green*/) ? 0 : 1;
                 msg->club = oldClub;
                 
                 /*if (m_terrain == TerrainID::Green)
