@@ -1,3 +1,7 @@
+#objects which are EMPTY and have type are:
+# 1 - particle system
+# 2 - rope. Ropes have two properties for start and end, and a third for slackness
+
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",

@@ -3399,7 +3399,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
 
             for (auto i = 0u; i < polePos.size() - 1; ++i)
             {
-                auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(polePos[i], polePos[i+1], 0.001f);
+                const auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(polePos[i], polePos[i+1], 0.001f);
                 for (auto j = 0; j < NodeCount; ++j)
                 {
                     const auto scale = 1.f + cro::Util::Random::value(-0.2f, 0.5f);
@@ -3413,7 +3413,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                     
                     if (md.isLoaded())
                     {
-                        const auto colour = LightColours[cro::Util::Random::value(0u, LightColours.size() - 1)];
+                        const auto& colour = LightColours[cro::Util::Random::value(0u, LightColours.size() - 1)];
 
                         md.createModel(entity);
                         entity.getComponent<cro::Model>().setMaterial(0, lightMaterial);
