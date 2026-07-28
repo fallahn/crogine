@@ -117,7 +117,7 @@ def WriteProp(file, modelName, location, rotation, scale, ob):
     file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
     file.write("        rotation = %f\n" % (rotation[2] * (180.0 / 3.141)))
     file.write("        scale = %f,%f,%f\n" % (scale[0], scale[2], scale[1]))
-
+    #NOTE TO SELF location is WORLD location eg if this is a vehicle parented to a path
 
     if ob.parent is not None and ob.parent.type == 'CURVE':
         WritePath(file, ob.parent)
@@ -134,10 +134,10 @@ def WriteProp(file, modelName, location, rotation, scale, ob):
                 file.write("\n")
                 if child.get('path') is not None:
                     #file.write("        particles = \"%s\"\n" % child['path'])
-                    WriteParticles(file, child['path'], child.location, True)
+                    WriteParticles(file, child['path'], child.matrix_local.translation, True)
                 else:
                     #file.write("        particles = \"path_is_missing\"\n")
-                    WriteParticles(file, "path_is_missing", child.location, True)
+                    WriteParticles(file, "path_is_missing", child.matrix_local.translation, True)
 
 
     file.write("    }\n\n")
@@ -181,6 +181,7 @@ def WriteLight(file, ob):
         indent = ""
         if ob.parent is not None and ob.parent.type == 'MESH':
             indent = "    "
+            location = ob.matrix_local.translation
 
         file.write("    %slight\n    %s{\n" % (indent, indent))
         file.write("        %sposition = %f,%f,%f\n" % (indent, location[0], location[2], -location[1]))
