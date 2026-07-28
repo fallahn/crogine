@@ -845,6 +845,7 @@ void GolfState::loadMap()
                                 float radiusMultiplier = 1.f; //hack because models with a wake eg boats push the bounding radius too far
 
                                 std::string particlePath;
+                                glm::vec3 particlePos = glm::vec3(0.f);
                                 std::string emitterName;
 
                                 const cro::ConfigObject* childLight = nullptr;
@@ -924,6 +925,21 @@ void GolfState::loadMap()
                                         && !childLight) //only add the first one
                                     {
                                         childLight = &o;
+                                    }
+                                    else if (o.getName() == "particles")
+                                    {
+                                        const auto& pProps = o.getProperties();
+                                        for (const auto& pProp : pProps)
+                                        {
+                                            if (pProp.getName() == "path")
+                                            {
+                                                particlePath = pProp.getValue<std::string>();
+                                            }
+                                            else if (pProp.getName() == "position")
+                                            {
+                                                particlePos = pProp.getValue<glm::vec3>();
+                                            }
+                                        }
                                     }
                                 }
 
@@ -1166,7 +1182,7 @@ void GolfState::loadMap()
                                             if (settings.loadFromFile(particlePath, m_resources.textures))
                                             {
                                                 auto pEnt = m_gameScene.createEntity();
-                                                pEnt.addComponent<cro::Transform>();
+                                                pEnt.addComponent<cro::Transform>().setPosition(particlePos);
                                                 pEnt.addComponent<cro::ParticleEmitter>().settings = settings;
                                                 pEnt.getComponent<cro::ParticleEmitter>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
                                                 pEnt.addComponent<cro::CommandTarget>().ID = CommandID::ParticleEmitter;

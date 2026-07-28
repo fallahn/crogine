@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2026, 7, 7),
+    "version": (2026, 7, 28),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -121,12 +121,19 @@ def WriteProp(file, modelName, location, rotation, scale, ob):
     for child in ob.children:
         if child.type == 'SPEAKER':
             WriteSpeaker(file, child)
+        elif child.type == 'LIGHT':
+                file.write("\n")
+                WriteLight(file, child)
         elif child.type == 'EMPTY':
+            #particle systems
             if child.get('type') is not None and child['type'] == 1:
+                file.write("\n")
                 if child.get('path') is not None:
-                    file.write("        particles = \"%s\"\n" % child['path'])
+                    #file.write("        particles = \"%s\"\n" % child['path'])
+                    WriteParticles(file, child['path'], child.location, True)
                 else:
-                    file.write("        particles = \"path_is_missing\"\n")
+                    #file.write("        particles = \"path_is_missing\"\n")
+                    WriteParticles(file, "path_is_missing", child.location, True)
 
 
     file.write("    }\n\n")
@@ -150,11 +157,15 @@ def WriteCrowd(file, location, rotation, ob):
     file.write("    }\n\n")
 
 
-def WriteParticles(file, path, location):
-    file.write("    particles\n    {\n")
-    file.write("        path = \"%s\"\n" % path)
-    file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
-    file.write("    }\n\n")
+def WriteParticles(file, path, location, hasParent):
+    indent = ""
+    if hasParent == True:
+        indent = "    "
+
+    file.write("    %sparticles\n    %s{\n" % (indent, indent))
+    file.write("        %spath = \"%s\"\n" % (indent, path))
+    file.write("        %sposition = %f,%f,%f\n" % (indent, location[0], location[2], -location[1]))
+    file.write("    %s}\n\n" % indent)
 
 
 def WriteLight(file, ob):
@@ -162,19 +173,23 @@ def WriteLight(file, ob):
     if light.type == 'POINT':
         location = ob.location
         colour = light.color
-        
-        file.write("    light\n    {\n")
-        file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
-        file.write("        colour = %f,%f,%f,1.0\n" % (colour.r, colour.g, colour.b))
-        file.write("        radius = %f\n" % light.shadow_soft_size)
+
+        indent = ""
+        if ob.parent is not None and ob.parent.type == 'MESH':
+            indent = "    "
+
+        file.write("    %slight\n    %s{\n" % (indent, indent))
+        file.write("        %sposition = %f,%f,%f\n" % (indent, location[0], location[2], -location[1]))
+        file.write("        %scolour = %f,%f,%f,1.0\n" % (indent, colour.r, colour.g, colour.b))
+        file.write("        %sradius = %f\n" % (indent, light.shadow_soft_size))
 
         if ob.get('animation') is not None:
-            file.write("        animation = \"%s\"\n" % ob['animation'])
+            file.write("        %sanimation = \"%s\"\n" % (indent, ob['animation']))
 
         if ob.get('preset') is not None:
-            file.write("        preset = \"%s\"\n" % ob['preset'])
+            file.write("        %spreset = \"%s\"\n" % (indent, ob['preset']))
 
-        file.write("    }\n\n")
+        file.write("    %s}\n\n" % indent)
 
 
 
@@ -285,13 +300,13 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                             if ob['type'] == 1 and ob.parent is None:
                             # is a particle emitter not parented to a prop
                                 if ob.get('path') is not None:
-                                    WriteParticles(file, ob['path'], worldLocation)
+                                    WriteParticles(file, ob['path'], worldLocation, False)
                                 else:
-                                    WriteParticles(file, "path_missing", worldLocation)
+                                    WriteParticles(file, "path_missing", worldLocation, False)
                     elif ob.type == 'SPEAKER' and ob.parent is None:
                         WriteSpeakerSolo(file, ob)
 
-            elif ob.type == 'LIGHT':
+            elif ob.type == 'LIGHT' and ob.parent is None:
                 WriteLight(file, ob)
         
 
