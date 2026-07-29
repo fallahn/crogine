@@ -201,7 +201,7 @@ namespace cro
         \brief Sets a system active or inactive by adding or removing it
         from the active systems processing list.
         \param active Set true to enable the system or false to disable.
-        If the systems does not exist this function has no effect.
+        If the system does not exist this function has no effect.
         */
         template <typename T>
         void setSystemActive(bool active);

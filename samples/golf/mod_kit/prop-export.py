@@ -1,11 +1,11 @@
 #objects which are EMPTY and have type are:
 # 1 - particle system
-# 2 - rope. Ropes have two properties for start and end, and a third for slackness
+
 
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2026, 7, 28),
+    "version": (2026, 7, 29),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -48,6 +48,24 @@ def WriteAIPath(file, path):
         worldP = path.matrix_world @ p.co
         file.write("        point = %f,%f,%f\n" % (worldP.x, worldP.z, -worldP.y))
     file.write("\n    }\n")
+
+
+def WriteRope(file, ob):
+    file.write("\n    rope\n    {\n")
+    #for p in path.data.splines.active.points:
+
+    worldP = ob.matrix_world @ ob.data.splines.active.points[0].co
+    file.write("        point = %f,%f,%f\n" % (worldP.x, worldP.z, -worldP.y))
+    worldP = ob.matrix_world @ ob.data.splines.active.points[1].co
+    file.write("        point = %f,%f,%f\n" % (worldP.x, worldP.z, -worldP.y))
+
+    slackness = 0.001
+    if ob.get('slackness') is not None:
+        slackness = ob.get('slackness')
+
+    file.write("        slackness = %f\n" % slackness)
+    file.write("    }\n")
+
 
 def WriteSwarm(file, location, ob):
     file.write("    swarm\n    {\n")
@@ -288,8 +306,11 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                         teeWritten = True
                     else:
                         self.report({'WARNING'}, "Multiple tees selected")
-                elif ob.type == 'CURVE' and "ai" in modelName.lower():
-                    WriteAIPath(file, ob)
+                elif ob.type == 'CURVE':
+                    if "ai" in modelName.lower():
+                        WriteAIPath(file, ob)
+                    elif "rope" in modelName.lower():
+                        WriteRope(file, ob)
 
                 elif "swarm" in modelName.lower():
                     WriteSwarm(file, worldLocation, ob)

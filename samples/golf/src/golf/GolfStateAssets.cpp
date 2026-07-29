@@ -40,6 +40,7 @@ source distribution.
 #include "MoonPhase.hpp"
 #include "TimeOfDay.hpp"
 #include "LightAnimationSystem.hpp"
+#include "RopeSystem.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
@@ -824,6 +825,34 @@ void GolfState::loadMap()
                         }
                     };
 
+                const auto parseRopeData = [&](const cro::ConfigObject& obj)
+                    {
+                        //just store the info on the hole data
+                        //and create during transition - mark as
+                        //garbage collect so removed afterwards too.
+                        //see Menustate 3325 on mesh construction
+                        RopeData d;
+                        for (const auto& p : obj.getProperties())
+                        {
+                            if (p.getName() == "point")
+                            {
+                                d.points.push_back(p.getValue<glm::vec3>());
+                            }
+                            else if (p.getName() == "slackness")
+                            {
+                                d.slackness = p.getValue<float>();
+                            }
+                        }
+                        if (d.points.size() == 2u)
+                        {
+                            holeData.ropeData.push_back(d);
+                        }
+
+                        //this is disabled by default to save processing
+                        //as most maps don't use this
+                        m_gameScene.setSystemActive<RopeSystem>(true);
+                    };
+
                 //look for prop models (are optional and can fail to load no problem)
                 const auto parseProps = [&](const std::vector<cro::ConfigObject>& propObjs)
                     {
@@ -1505,6 +1534,10 @@ void GolfState::loadMap()
                                         holeData.rabbitPositions.push_back(rp.getValue<glm::vec3>());
                                     }
                                 }
+                            }
+                            else if (name == "rope")
+                            {
+                                parseRopeData(obj);
                             }
                         }
                     };

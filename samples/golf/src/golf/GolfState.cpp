@@ -37,6 +37,7 @@ source distribution.
 #include "ClientPacketData.hpp"
 #include "MessageIDs.hpp"
 #include "Clubs.hpp"
+#include "RopeSystem.hpp"
 #include "TextAnimCallback.hpp"
 #include "ClientCollisionSystem.hpp"
 #include "GolfParticleDirector.hpp"
@@ -3674,6 +3675,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<InterpolationSystem<InterpolationType::Linear>>(mb);
     m_gameScene.addSystem<CloudSystem>(mb, glm::vec3(MapSizeFloat.x / 2.f, 0.f, -MapSizeFloat.y / 2.f));
     m_gameScene.addSystem<AvatarRotationSystem>(mb);
+    m_gameScene.addSystem<RopeSystem>(mb);
     m_gameScene.addSystem<ClientCollisionSystem>(mb, m_holeData, m_collisionMesh);
     m_gameScene.addSystem<SpectatorSystem>(mb, m_collisionMesh);
     m_gameScene.addSystem<PropFollowSystem>(mb, m_collisionMesh);
@@ -3714,6 +3716,10 @@ void GolfState::addSystems()
     }
 
     //m_gameScene.setSystemActive<InterpolationSystem<InterpolationType::Linear>>(false);
+    m_gameScene.setSystemActive<RopeSystem>(false);
+    LogW << "Noise map for rope system not set!!" << std::endl;
+    /*m_gameScene.addSystem<RopeSystem>(mb)->setNoiseTexture("assets/golf/images/wind.png", 10.f);
+    m_gameScene.getSystem<RopeSystem>()->setWind(glm::vec3(0.15f, 0.02f, -0.15f));*/
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
     m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::TreeQuality::High);
     m_gameScene.setSystemActive<WeatherAnimationSystem>(m_sharedData.weatherType == WeatherType::Rain || m_sharedData.weatherType == WeatherType::Showers);

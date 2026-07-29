@@ -105,6 +105,12 @@ struct LightData final
     bool lensFlare = true;
 };
 
+struct RopeData final
+{
+    std::vector<glm::vec3> points;
+    float slackness = 0.001f;
+};
+
 struct HoleData final
 {
     glm::vec3 tee = glm::vec3(0.f);
@@ -118,6 +124,7 @@ struct HoleData final
     std::string modelPath;
     cro::Entity modelEntity;
     std::vector<LightData> lightData;
+    std::vector<RopeData> ropeData;
     std::vector<cro::Entity> lights;
     std::vector<cro::Entity> propEntities;
     std::vector<cro::Entity> particleEntities;
