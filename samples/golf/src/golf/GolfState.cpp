@@ -6986,7 +6986,17 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 
                         if (lightData.parent.isValid())
                         {
-                            lightData.parent.getComponent<cro::Transform>().addChild(lightEnt.getComponent<cro::Transform>());
+                            if (lightData.parent.hasComponent<cro::Skeleton>()
+                                && lightData.parent.getComponent<cro::Skeleton>().getAttachmentIndex("light") != -1)
+                            {
+                                //we have a specific attachment point...
+                                lightData.parent.getComponent<cro::Skeleton>().getAttachments()
+                                    [lightData.parent.getComponent<cro::Skeleton>().getAttachmentIndex("light")].setModel(lightEnt);
+                            }
+                            else
+                            {
+                                lightData.parent.getComponent<cro::Transform>().addChild(lightEnt.getComponent<cro::Transform>());
+                            }
                         }
                         else
                         {

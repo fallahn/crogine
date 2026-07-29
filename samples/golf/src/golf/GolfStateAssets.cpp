@@ -1181,6 +1181,9 @@ void GolfState::loadMap()
                                             cro::EmitterSettings settings;
                                             if (settings.loadFromFile(particlePath, m_resources.textures))
                                             {
+                                                particlePos += settings.spawnOffset;
+                                                settings.spawnOffset = glm::vec3(0.f);
+
                                                 auto pEnt = m_gameScene.createEntity();
                                                 pEnt.addComponent<cro::Transform>().setPosition(particlePos);
                                                 pEnt.addComponent<cro::ParticleEmitter>().settings = settings;
@@ -1189,16 +1192,16 @@ void GolfState::loadMap()
                                                 ent.getComponent<cro::Transform>().addChild(pEnt.getComponent<cro::Transform>());
                                                 
                                                 //TODO deactivate this when particles stop
-                                                ent.addComponent<cro::Callback>().active = true;
+                                                /*ent.addComponent<cro::Callback>().active = true;
                                                 ent.getComponent<cro::Callback>().setUserData<glm::vec3>(ent.getComponent<cro::Transform>().getPosition());
                                                 ent.getComponent<cro::Callback>().function =
                                                     [pEnt](cro::Entity e, float dt) mutable
                                                     {
-                                                        auto prevPos = e.getComponent<cro::Callback>().getUserData<glm::vec3>();
-                                                        auto pos = e.getComponent<cro::Transform>().getPosition();
+                                                        const auto prevPos = e.getComponent<cro::Callback>().getUserData<glm::vec3>();
+                                                        const auto pos = e.getComponent<cro::Transform>().getPosition();
                                                         pEnt.getComponent<cro::ParticleEmitter>().parentVelocity = (pos - prevPos) * (1.f / dt);
                                                         e.getComponent<cro::Callback>().setUserData<glm::vec3>(pos);
-                                                    };
+                                                    };*/
                                                 holeData.particleEntities.push_back(pEnt);
                                             }
                                         }
