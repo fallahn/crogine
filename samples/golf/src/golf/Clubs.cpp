@@ -125,7 +125,7 @@ namespace
 }
 
 bool Club::m_fixedPuttingDistance = false;
-std::int32_t Club::m_maxScaleIndex = 4;
+std::int32_t Club::m_maxScaleIndex = 2;
 float Club::m_maxScale = ClubStats[ClubID::Putter].stats[0].target;
 
 Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin)
@@ -311,11 +311,11 @@ std::int32_t Club::getScaleIndex(float distanceToPin) const
     {
         if (distanceToPin < target * TinyRangeThreshold)
         {
-            return std::min(m_maxScaleIndex, 0);
+            return 0;
         }
-        return std::min(m_maxScaleIndex, 1);
+        return 1;
     }
-    return std::min(m_maxScaleIndex, 2);
+    return 2;
 }
 
 void Club::clampMaxScale(bool c)
@@ -340,9 +340,7 @@ float Club::getScaledValue(float value, float distanceToPin) const
         return value * 2.5f; //bumps putter up to 25m
     }
 
-    const auto index = getScaleIndex(distanceToPin);
-
-    switch (index)
+    switch (m_maxScaleIndex)
     {
     default:
     case 2:
