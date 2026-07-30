@@ -2212,7 +2212,7 @@ void TutorialState::tutorialPutt(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("NOTE: Unlike other clubs the putter will automatically adjust its maximum range!\nKeep an eye on the maximum distance next to the Power Bar.\nThis behaviour can be disabled in the Options menu.");
+    entity.addComponent<cro::Text>(font).setString("NOTE: Unlike other clubs the putter will automatically adjust its maximum range!\nKeep an eye on the maximum distance next to the Power Bar.\nUse the Previous and Next club buttons to cycle the range.");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);

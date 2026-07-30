@@ -163,7 +163,7 @@ public:
     //only applies to putter - clamps the max distance
     static std::int32_t getMaxScaleIndex() { return m_maxScaleIndex; }
     static void setMaxScaleIndex(std::int32_t i) { m_maxScaleIndex = i; assert(i > -1); }
-    static constexpr std::int32_t MaxIndexRange = 3;
+    static constexpr std::int32_t MaxIndexRange = 4;
 private:
     const std::int32_t m_id = -1;
     std::string m_name; //displayed in UI
