@@ -400,6 +400,7 @@ struct SharedStateData final
     bool miniLoadingScreen = false; //cover the transition with a loading screen
     bool snapHIO = true; //auto screenshot hio and albatross
     bool randomQuickplayWeather = true;
+    bool enableDailyStreak = true;
     float measureSpeed = 1.f; //multiplier when measuring for putt
     float skipSpeed = 60.f; //how long the shot button is held (lower faster) to skip the shot
     std::int32_t webPort = 8080;

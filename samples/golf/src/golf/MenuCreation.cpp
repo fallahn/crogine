@@ -5211,12 +5211,15 @@ void MenuState::updateCourseRuleString(bool updateScoreboard)
 void MenuState::updateUnlockedItems()
 {
     //current day streak
-    auto streak = Social::updateStreak();
+    const auto streak = Social::updateStreak();
     CRO_ASSERT(streak < 8, "");
     switch (streak)
     {
     default:
-        m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Streak01 + (streak - 1);
+        if (m_sharedData.enableDailyStreak)
+        {
+            m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Streak01 + (streak - 1);
+        }
         break;
     case 0: //do nothing
         break;

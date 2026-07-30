@@ -1926,6 +1926,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.randomQuickplayWeather = prop.getValue<bool>();
                     }
+                    else if (name == "daily_streak")
+                    {
+                        m_sharedData.enableDailyStreak = prop.getValue<bool>();
+                    }
                 }
             }
 
@@ -2101,6 +2105,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("filter_friends").setValue(Social::getLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly));
     cfg.addProperty("snap_hio").setValue(m_sharedData.snapHIO);
     cfg.addProperty("random_weather").setValue(m_sharedData.randomQuickplayWeather);
+    cfg.addProperty("daily_streak").setValue(m_sharedData.enableDailyStreak);
     //cfg.addProperty("filter_assist").setValue(Social::getLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist));
     cfg.save(path);
 

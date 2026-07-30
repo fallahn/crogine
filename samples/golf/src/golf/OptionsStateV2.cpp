@@ -1924,6 +1924,16 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.remoteContent ? 1 : 0;
 #endif
 
+    //daily streak
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
+    item->title = "Enable Daily Streak";
+    item->description = "Track the number of consecutive days the game has been played";
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.enableDailyStreak = i.selectedIndex == 1;
+        };
+    item->labels = { "No" , "Yes" };
+    item->selectedIndex = m_sharedData.enableDailyStreak ? 1 : 0;
 
 
     //reset hints
@@ -1950,7 +1960,6 @@ void OptionsStateV2::createSettingsItems()
         };
     item->labels = { "OK" };
     item->selectedIndex = 0;
-
 
     //reset career
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
