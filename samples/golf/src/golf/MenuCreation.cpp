@@ -394,9 +394,24 @@ void MenuState::updateCompletionString()
         m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Text>().setString("Completed " + std::to_string(count) + "x this month!");
        
-        const auto best = Social::getMonthlyBest(m_sharedData.mapDirectory, m_sharedData.holeCount);        
         m_lobbyWindowEntities[LobbyEntityID::MonthlyBest].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        m_lobbyWindowEntities[LobbyEntityID::MonthlyBest].getComponent<cro::Text>().setString("Monthly Best: " + std::to_string(best));
+        auto best = Social::getMonthlyBest(m_sharedData.mapDirectory, m_sharedData.holeCount);
+        if (best)
+        {
+            m_lobbyWindowEntities[LobbyEntityID::MonthlyBest].getComponent<cro::Text>().setString("Monthly Best: " + std::to_string(best));
+        }
+        else
+        {
+            best = Social::getPersonalBest(m_sharedData.mapDirectory, m_sharedData.holeCount);
+            if (best)
+            {
+                m_lobbyWindowEntities[LobbyEntityID::MonthlyBest].getComponent<cro::Text>().setString("Personal Best: " + std::to_string(best));
+            }
+            else
+            {
+                m_lobbyWindowEntities[LobbyEntityID::MonthlyBest].getComponent<cro::Text>().setString("Fetching Score...");
+            }
+        }
     }
     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 #endif
