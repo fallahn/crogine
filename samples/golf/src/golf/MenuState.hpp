@@ -251,6 +251,7 @@ private:
             Background,
             Info,
             MonthlyCourse,
+            MonthlyBest,
             MinPlayerCount,
 
             Scorecard,

@@ -1602,11 +1602,23 @@ void LeagueState::activateTab(std::int32_t tabID)
 
 void LeagueState::switchLeague(std::int32_t forward)
 {
+
+    //TODO this should be a proper DLC-specific test rather than if the 
+    //career leagues are available...
+    /*const bool dlcAvailable = Content::leagueAvailable(7) || Content::leagueAvailable(8);
+    const auto viewExtLeague = 
+        [dlcAvailable](std::int32_t idx)
+        {
+            return dlcAvailable && (idx == LeagueID::FriendsGlobalExt || idx == LeagueID::GlobalExt);
+        };*/
+    
+    
     std::int32_t next = 0;
     if (forward == Page::Forward)
     {
         next = (m_currentLeague + 1) % LeagueID::Count;
-        while (next != m_currentLeague && !m_leagueNodes[next].isValid())
+        while (next != m_currentLeague && !m_leagueNodes[next].isValid()
+            /*&& !viewExtLeague(next)*/)
         {
             next = (next + 1) % LeagueID::Count;
         }
@@ -1614,7 +1626,8 @@ void LeagueState::switchLeague(std::int32_t forward)
     else
     {
         next = (m_currentLeague + (LeagueID::Count - 1)) % LeagueID::Count;
-        while (next != m_currentLeague && !m_leagueNodes[next].isValid())
+        while (next != m_currentLeague && !m_leagueNodes[next].isValid()
+            /*&& !viewExtLeague(next)*/)
         {
             next = (next + (LeagueID::Count - 1)) % LeagueID::Count;
         }

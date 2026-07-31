@@ -383,15 +383,20 @@ void MenuState::hideToolTip()
 void MenuState::updateCompletionString()
 {
 #ifdef USE_GNS
-    auto count = Social::getMonthlyCompletionCount(m_sharedData.mapDirectory, m_sharedData.holeCount);
+    const auto count = Social::getMonthlyCompletionCount(m_sharedData.mapDirectory, m_sharedData.holeCount);
     if (count == 0)
     {
         m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        m_lobbyWindowEntities[LobbyEntityID::MonthlyBest].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
     else
     {
         m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent < cro::Text>().setString("Completed " + std::to_string(count) + "x this month!");
+        m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Text>().setString("Completed " + std::to_string(count) + "x this month!");
+       
+        const auto best = Social::getMonthlyBest(m_sharedData.mapDirectory, m_sharedData.holeCount);        
+        m_lobbyWindowEntities[LobbyEntityID::MonthlyBest].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        m_lobbyWindowEntities[LobbyEntityID::MonthlyBest].getComponent<cro::Text>().setString("Monthly Best: " + std::to_string(best));
     }
     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 #endif
@@ -2758,16 +2763,42 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse] = entity;
 
     const float w = (thumbBgEnt.getComponent<cro::Sprite>().getTextureBounds().width / 4.f) + 2.f;
+    const float h = std::floor(thumbBgEnt.getComponent<cro::Sprite>().getTextureBounds().height / 2.f) - 8.f;
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, h, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Please Wait...");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyWindowEntities[LobbyEntityID::MonthlyBest] = entity;
+
+
 
     cro::Colour c(0.f, 0.f, 0.f, BackgroundAlpha / 2.f);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, -3.f, -0.05f });
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
-            cro::Vertex2D(glm::vec2(-w, 6.f),c),
-            cro::Vertex2D(glm::vec2(-w, -6.f),c),
+            cro::Vertex2D(glm::vec2(w, h + 6.f),c),
+            cro::Vertex2D(glm::vec2(-w, h + 6.f),c),
+            cro::Vertex2D(glm::vec2(w, h-6.f),c),
+            cro::Vertex2D(glm::vec2(-w, h-6.f),c),
+
+            cro::Vertex2D(glm::vec2(w, h-6.f),cro::Colour::Transparent),
+            cro::Vertex2D(glm::vec2(-w, h-6.f),cro::Colour::Transparent),
+            cro::Vertex2D(glm::vec2(w, 6.f),cro::Colour::Transparent),
+            cro::Vertex2D(glm::vec2(-w, 6.f),cro::Colour::Transparent),
+
             cro::Vertex2D(glm::vec2(w, 6.f),c),
-            cro::Vertex2D(glm::vec2(w, -6.f),c)
+            cro::Vertex2D(glm::vec2(-w, 6.f),c),
+            cro::Vertex2D(glm::vec2(w, -6.f),c),
+            cro::Vertex2D(glm::vec2(-w, -6.f),c),
         });
     m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 #endif
