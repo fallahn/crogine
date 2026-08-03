@@ -4176,6 +4176,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
             {
             default:
             case ScoreType::Elimination:
+                //hmm we should be sorting by remaining
+                //lives here but it's not stored in the entry
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:
