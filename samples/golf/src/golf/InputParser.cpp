@@ -254,7 +254,7 @@ void InputParser::handleEvent(const cro::Event& evt)
             }
             else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::SpinMenu])
             {
-                if (m_state != State::Drone)
+                if (m_state == State::Aim)
                 {
                     m_inputFlags |= InputFlag::SpinMenu;
                     //cro::App::getWindow().setMouseCaptured(!m_isCPU);
@@ -342,7 +342,7 @@ void InputParser::handleEvent(const cro::Event& evt)
                 }
                 else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::SpinMenu])
                 {
-                    if (m_state != State::Drone)
+                    if (m_state == State::Aim)
                     {
                         m_inputFlags |= InputFlag::SpinMenu;
                     }
