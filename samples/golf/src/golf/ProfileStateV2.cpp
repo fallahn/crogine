@@ -2565,22 +2565,24 @@ void ProfileStateV2::createLoadoutItems()
         };
     
     //TODO slight problem here in that the equipment counter doesn't cover the lob wedge...
-    static const std::array titles =
-    {
-        std::string("Driver"),
-        std::string("3 Wood"),
-        std::string("5 Wood"),
-        std::string("4 Iron"),
-        std::string("5 Iron"),
-        std::string("6 Iron"),
-        std::string("7 Iron"),
-        std::string("8 Iron"),
-        std::string("9 Iron"),
-        std::string("Pitch Wedge"),
-        std::string("Gap Wedge"),
-        std::string("Sand Wedge"),
-        std::string("Balls"),
-    };
+    //static const std::array titles =
+    //{
+    //    std::string("Driver"),
+    //    std::string("3 Wood"),
+    //    std::string("5 Wood"),
+    //    std::string("4 Iron"),
+    //    std::string("5 Iron"),
+    //    std::string("6 Iron"),
+    //    std::string("7 Iron"),
+    //    std::string("8 Iron"),
+    //    std::string("9 Iron"),
+    //    std::string("Pitch Wedge"),
+    //    std::string("Lob Wedge"),
+    //    std::string("Gap Wedge"),
+    //    //std::string("Sand Wedge"),
+    //    std::string("Balls"),
+    //};
+
 
     //sort inventory into sub-lists of things that we own
     struct SubItem final
@@ -2612,7 +2614,7 @@ void ProfileStateV2::createLoadoutItems()
         const auto available = itemAvailable(i);
 
         item = &m_uiLayout.menuLayout.items[TabID::Loadout].emplace_back();
-        item->title = titles[i];
+        item->title = inv::ItemStrings[i];// titles[i];
 
         if (available)
         {
@@ -2631,7 +2633,7 @@ void ProfileStateV2::createLoadoutItems()
                     m_activeProfile.loadout.items[i] = itemIndices[menuItem.selectedIndex];
                     refreshStat(i, itemIndices[menuItem.selectedIndex], true);
 
-                    menuItem.title = titles[i] + " " + std::to_string(menuItem.selectedIndex + 1) + "/" + std::to_string(itemIndices.size());
+                    menuItem.title = inv::ItemStrings[i] + " " + std::to_string(menuItem.selectedIndex + 1) + "/" + std::to_string(itemIndices.size());
                 };
             const auto res = std::find(itemIndices.cbegin(), itemIndices.cend(), m_activeProfile.loadout.items[i]);
             if (res != itemIndices.cend())
