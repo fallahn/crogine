@@ -61,7 +61,10 @@ void RopeSystem::process(float dt)
 
 std::size_t RopeSystem::addRope(glm::vec3 start, glm::vec3 end, float slack)
 {
-    auto ret = m_ropes.size();
+    //TODO we should probably have some sort of pooling scheme if we
+    //use this in the main game so that destroyed entities return their
+    //ropes to the pool for re-use
+    const auto ret = m_ropes.size();
     auto& rope = m_ropes.emplace_back(start, end, slack, *getScene(), ret);
 
     if (!m_windImage.empty())

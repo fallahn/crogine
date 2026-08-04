@@ -3324,7 +3324,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
 
             const auto createRopeMesh = [&](glm::vec3 pos, std::size_t ropeID)
                 {
-                    //position only, triangle strip
+                    //position only, line strip
                     auto entity = m_backgroundScene.createEntity();
                     entity.addComponent<cro::Transform>().setPosition(pos);
                     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP, GL_UNSIGNED_BYTE));
@@ -3346,11 +3346,8 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                     auto* submesh = &meshData->indexData[0];
                     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
                     cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
-                    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-                    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
-                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
                     
-                    //just has to pass culling
+                    //just has to pass culling - TODO use start and end points
                     meshData->boundingBox = { glm::vec3(-15.f), glm::vec3(15.f) };
                     meshData->boundingSphere = meshData->boundingBox;
 
@@ -3359,7 +3356,6 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                     //via a uniform BUT we're still sending the same amount of data every time and
                     //that would actually require a more expensive shader...
                     entity.addComponent<cro::Callback>().active = true;
-                    entity.getComponent<cro::Callback>().setUserData<std::vector<glm::vec3>>();
                     entity.getComponent<cro::Callback>().function =
                         [&, ropeID, meshData](cro::Entity e, float)
                         {

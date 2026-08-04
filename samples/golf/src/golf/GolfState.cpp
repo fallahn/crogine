@@ -3231,6 +3231,9 @@ bool GolfState::simulate(float dt)
         e.getComponent<cro::Callback>().setUserData<float>(m_windUpdate.currentWindSpeed);
     }
 
+    //this is negative as we actually offset into texture coordinates rather than apply wind
+    m_gameScene.getSystem<RopeSystem>()->setWind(-m_windUpdate.currentWindVector * m_windUpdate.currentWindSpeed);
+
     cro::Command cmd;
     cmd.targetFlags = CommandID::ParticleEmitter;
     cmd.action = [&](cro::Entity e, float)
@@ -3717,9 +3720,8 @@ void GolfState::addSystems()
 
     //m_gameScene.setSystemActive<InterpolationSystem<InterpolationType::Linear>>(false);
     m_gameScene.setSystemActive<RopeSystem>(false);
-    LogW << "Noise map for rope system not set!!" << std::endl;
-    /*m_gameScene.addSystem<RopeSystem>(mb)->setNoiseTexture("assets/golf/images/wind.png", 10.f);
-    m_gameScene.getSystem<RopeSystem>()->setWind(glm::vec3(0.15f, 0.02f, -0.15f));*/
+    m_gameScene.getSystem<RopeSystem>()->setNoiseTexture("assets/golf/images/wind.png", 10.f);
+
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
     m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::TreeQuality::High);
     m_gameScene.setSystemActive<WeatherAnimationSystem>(m_sharedData.weatherType == WeatherType::Rain || m_sharedData.weatherType == WeatherType::Showers);
