@@ -4080,11 +4080,12 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 {
                 default:
                 case ScoreType::Elimination:
-                    if (a.score == b.score)
+                    if (a.lives == b.lives)
                     {
-                        return a.lives > b.lives;
+                        return a.score < b.score;
                     }
-                    [[fallthrough]];
+                    return a.lives > b.lives;
+                    //[[fallthrough]];
                 case ScoreType::Stroke:
                 case ScoreType::ShortRound:
                 case ScoreType::MultiTarget:
@@ -6015,11 +6016,12 @@ void MenuState::createPreviousScoreCard()
             {
             default:
             case ScoreType::Elimination:
-                if (a.total == b.total)
+                if (a.lives == b.lives)
                 {
-                    return a.lives > b.lives;
+                    return a.total < b.total;
                 }
-                [[fallthrough]];
+                return a.lives > b.lives;
+                //[[fallthrough]];
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:

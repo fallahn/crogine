@@ -4220,11 +4220,12 @@ void GolfState::updateScoreboard(bool updateParDiff)
             {
             default:
             case ScoreType::Elimination:
-                if (a.total == b.total)
+                if (a.lives == b.lives)
                 {
-                    return a.lives > b.lives;
+                    return a.total < b.total;
                 }
-                [[fallthrough]];
+                return a.lives > b.lives;
+                //[[fallthrough]];
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:
