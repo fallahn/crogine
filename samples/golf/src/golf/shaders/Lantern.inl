@@ -81,9 +81,11 @@ void main()
 
     FRAG_OUT = Colours[i] * getLightColour() * Dimming;
 
+#if defined(USE_MRT)
     POS_OUT = vec4(1.0);
     NORM_OUT = vec4(0.0); //mask off lightmap
     LIGHT_OUT = vec4(vec3(0.0), 1.0);
+#endif
 })";
 
 static const inline std::string RopeFrag =

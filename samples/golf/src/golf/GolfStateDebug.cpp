@@ -1117,9 +1117,10 @@ void GolfState::createRope(const RopeData& ropeData)
 {
     //these are loaded from the map in world position
     const auto ropeID = m_gameScene.getSystem<RopeSystem>()->addRope(ropeData.points[0], ropeData.points[1], ropeData.slackness);
-    static constexpr std::uint32_t NodeCount = 6; //TODO vary this on rope length, must make sure not to create more than 256 verts!
+    std::uint32_t nodeCount = static_cast<std::uint32_t>(glm::length(ropeData.points[0] - ropeData.points[1]) / 1.3f);// 6; //TODO vary this on rope length, must make sure not to create more than 256 verts!
+    nodeCount = std::min(nodeCount, ((255u / 3) * 2) - 2);  //clamp max indices as we're using u8
 
-    for (auto i = 0u; i < NodeCount; ++i)
+    for (auto i = 0u; i < nodeCount; ++i)
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
@@ -1142,7 +1143,7 @@ void GolfState::createRope(const RopeData& ropeData)
 
     //indices are fixed at nodecount + 2 for anchors
     std::vector<std::uint8_t> indices;
-    const auto total = std::min(NodeCount + 2, (255u / 3) * 2); //clamp max indices as we're using u8
+    const auto total = nodeCount + 2;
     for (auto i = 0; i < total - 1; ++i)
     {
         //we'll create a 3rd vertex for each segment to complete the triangle
