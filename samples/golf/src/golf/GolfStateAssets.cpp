@@ -846,6 +846,15 @@ void GolfState::loadMap()
                         if (d.points.size() == 2u)
                         {
                             holeData.ropeData.push_back(d);
+
+                            if (m_materialIDs[MaterialID::Bunting] == -1)
+                            {
+                                const std::string def = m_sharedData.nightTime ? "#define USE_MRT\n" : "";
+
+                                //init the material
+                                m_resources.shaders.loadFromString(ShaderID::Rope, BuntingVert, BuntingFrag, def);
+                                m_materialIDs[MaterialID::Bunting] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Rope));
+                            }
                         }
 
                         //this is disabled by default to save processing

@@ -44,9 +44,19 @@ void main()
 })";
 
 
+/*
+#if defined (VIEW_POS)
+    POS_OUT.r = v_viewPosition.z;
+#else
+    POS_OUT = vec4(v_worldPosition, 1.0);
+#endif
+*/
+
 static const inline std::string BuntingFrag =
 R"(
-OUTPUT
+#include LIGHT_UBO
+#include LIGHT_COLOUR
+#include OUTPUT_LOCATION
 
 #define COLOUR_COUNT 7
 const vec4 Colours[COLOUR_COUNT] = vec4[COLOUR_COUNT]
@@ -55,18 +65,25 @@ vec4(0.784314, 0.721569, 0.623529, 1.0),
 vec4(0.94902, 0.811765, 0.360784, 1.0),
 vec4(0.92549, 0.466667, 0.239216, 1.0),
 vec4(0.678431, 0.85098, 0.717647, 1.0),
-vec4(0.678431, 0.72549, 0.721569, 1.0),
+vec4(0.722, 0.208, 0.188, 1.0),
 vec4(0.92549, 0.6, 0.513726, 1.0),
-vec4(0.576471, 0.670588, 0.321569, 1.0)
+vec4(0.718, 0.471, 0.329, 1.0)
 );
 
+//colours can disappear on sky background or grass etc
+//so we make them a little darker.
+const float Dimming = 0.99;
 
 void main()
 {
     float id = gl_PrimitiveID;
     int i = int(mod(floor(id), COLOUR_COUNT));
 
-    FRAG_OUT = Colours[i];
+    FRAG_OUT = Colours[i] * getLightColour() * Dimming;
+
+    POS_OUT = vec4(1.0);
+    NORM_OUT = vec4(0.0); //mask off lightmap
+    LIGHT_OUT = vec4(vec3(0.0), 1.0);
 })";
 
 static const inline std::string RopeFrag =

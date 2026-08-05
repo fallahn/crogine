@@ -45,6 +45,7 @@ source distribution.
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/systems/LightVolumeSystem.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/OpenGL.hpp>
@@ -53,7 +54,6 @@ source distribution.
 namespace
 {
 #include "shaders/CelShader.inl"
-#include "shaders/Lantern.inl" //TODO move to asset loading
 
     const std::array<std::string, CameraID::Count> CameraStrings =
     {
@@ -1117,7 +1117,7 @@ void GolfState::createRope(const RopeData& ropeData)
 {
     //these are loaded from the map in world position
     const auto ropeID = m_gameScene.getSystem<RopeSystem>()->addRope(ropeData.points[0], ropeData.points[1], ropeData.slackness);
-    static constexpr std::uint32_t NodeCount = 6; //TODO vary this on rope length
+    static constexpr std::uint32_t NodeCount = 6; //TODO vary this on rope length, must make sure not to create more than 256 verts!
 
     for (auto i = 0u; i < NodeCount; ++i)
     {
@@ -1131,13 +1131,8 @@ void GolfState::createRope(const RopeData& ropeData)
         entity.addComponent<cro::CommandTarget>().ID = CommandID::GarbageCollect;
     }
 
-    //TODO move to material loading
-    //TODO only load if we detect ropes on a map (ie lazy load)
-    m_resources.shaders.loadFromString(ShaderID::Rope, BuntingVert, BuntingFrag);
-    auto matID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Rope));
-    auto material = m_resources.materials.get(matID);
+    auto material = m_resources.materials.get(m_materialIDs[MaterialID::Bunting]);
     material.doubleSided = true;
-
 
 
     auto entity = m_gameScene.createEntity();
@@ -1156,7 +1151,6 @@ void GolfState::createRope(const RopeData& ropeData)
         indices.push_back(i+total);
     }
 
-
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
@@ -1170,9 +1164,16 @@ void GolfState::createRope(const RopeData& ropeData)
     //it slightly to make a crude triangle / flag
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&, ropeID, meshData](cro::Entity e, float)
+        [this, ropeID, meshData](cro::Entity e, float)
         {
-            /*const auto&*/auto verts = m_gameScene.getSystem<RopeSystem>()->getNodePositions(ropeID);
+            if (!e.isValid())
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+                return;
+            }
+
+            auto verts = m_gameScene.getSystem<RopeSystem>()->getNodePositions(ropeID);
             std::vector<glm::vec3> points;
             for (auto i = 0; i < verts.size() -1; ++i)
             {
@@ -1185,13 +1186,9 @@ void GolfState::createRope(const RopeData& ropeData)
             cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
         };
 
-
-    //TODO set up material
-    /*
-    const auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
-    const auto shadowMatID = m_resources.materials.add(m_resources.shaders.get(shaderID));
     entity.addComponent<cro::ShadowCaster>();
-    entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(shadowMatID));*/
+    entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::GarbageCollect;
 }
 
 void GolfState::spawnRabbit(glm::vec3 pos, std::uint32_t seed)

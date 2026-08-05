@@ -354,6 +354,7 @@ private:
             Emissive, //self-illum for clubs
             Hole,
             Seagull,
+            Bunting,
 
             Count
         };
