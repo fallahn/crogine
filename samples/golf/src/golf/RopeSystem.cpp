@@ -39,6 +39,34 @@ namespace
     constexpr glm::vec3 Gravity(0.f, -9.f, 0.f);
 }
 
+/*
+addRope() creates a single rope simulation and returns the
+index. That index is used to create multiple RopeNodes which
+is added as a component to an entity. Therefore the rope can
+have a model at each node to represent objects attached to it.
+
+A separate entity is used to draw the rope itself by retreiving
+the nodePositions() each frame for a given rope ID.
+
+The number of nodes on a rope is arbitrary, add as many as perf
+will allow (although 6 - 10 is a good number)
+
+auto ropeID = scene.getSystem<RopeSystem>()->addRope();
+for(auto i = 0; i < NodeCount; ++i)
+{
+    auto entity = scene.creteEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<RopeNode>(ropeID);
+    //optionally add a model or drawable
+}
+
+auto entity = scene.createEntity();
+entity.addComponent<cro::Transform>();
+//add a model or mesh component
+//then each frame update the mesh by
+//calling scene.getSystem<RopeSystem>()->getNodePositions(ropeID)
+*/
+
 RopeSystem::RopeSystem(cro::MessageBus& mb)
     : cro::System   (mb, typeid(RopeSystem)),
     m_imageScale    (1.f),
@@ -61,9 +89,20 @@ void RopeSystem::process(float dt)
 
 std::size_t RopeSystem::addRope(glm::vec3 start, glm::vec3 end, float slack)
 {
-    //TODO we should probably have some sort of pooling scheme if we
-    //use this in the main game so that destroyed entities return their
-    //ropes to the pool for re-use
+    //check for unused ropes and return that if available
+    if (!m_freeRopes.empty())
+    {
+        auto ret = m_freeRopes.back();
+        m_freeRopes.pop_back();
+
+        m_ropes[ret] = Rope(start, end, slack, *getScene(), ret);
+        if (!m_windImage.empty())
+        {
+            m_ropes[ret].setNoiseMap(m_windImage, m_imageScale);
+        }
+        return ret;
+    }
+
     const auto ret = m_ropes.size();
     auto& rope = m_ropes.emplace_back(start, end, slack, *getScene(), ret);
 
@@ -121,6 +160,17 @@ void RopeSystem::onEntityRemoved(cro::Entity e)
     CRO_ASSERT(node.ropeID < m_ropes.size(), "");
 
     m_ropes[node.ropeID].removeNode(e);
+
+    //if the rope now has 0 nodes release
+    //it back into the rope pool to be recycled
+    //as if we erase the rope it will mess up
+    //the indexing used for rope IDs for other
+    //remaining ropes...
+
+    if (m_ropes[node.ropeID].empty())
+    {
+        m_freeRopes.push_back(node.ropeID);
+    }
 }
 
 
@@ -128,10 +178,11 @@ void RopeSystem::onEntityRemoved(cro::Entity e)
 Rope::Rope(glm::vec3 start, glm::vec3 end, float slack, cro::Scene& scene, std::size_t id)
     : m_startPoint  (start),
     m_endPoint      (end),
-    m_slack         (slack),
     m_noiseMap      (nullptr),
     m_pixelsPerMetre(1.f),
-    m_nodeSpacing   (0.f)
+    m_slack         (slack),
+    m_nodeSpacing   (0.f),
+    m_dirty         (false)
 {
     auto ent = scene.createEntity();
     ent.addComponent<cro::Transform>();
@@ -162,7 +213,7 @@ void Rope::addNode(cro::Entity e)
         m_nodes.push_back(e);
     }
 
-    recalculate();
+    m_dirty = true;
 }
 
 void Rope::removeNode(cro::Entity e)
@@ -172,11 +223,18 @@ void Rope::removeNode(cro::Entity e)
         {
             return e == ent;
         }), m_nodes.end());
-    recalculate();
+
+    m_dirty = true;
 }
 
 void Rope::simulate(float dt, glm::vec3 windOffset)
 {
+    if (m_dirty)
+    {
+        recalculate();
+        m_dirty = false;
+    }
+
     if (m_nodes.size() > 2)
     {
         integrate(dt, windOffset);

@@ -3402,7 +3402,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
 
                     auto entity = m_backgroundScene.createEntity();
                     entity.addComponent<cro::Transform>().setScale(glm::vec3(scale));
-                    entity.addComponent<RopeNode>().ropeID = rope;
+                    entity.addComponent<RopeNode>(rope);
 
                     //load models for lights
                     //TODO could have a version with flags on instead of lanterns?
