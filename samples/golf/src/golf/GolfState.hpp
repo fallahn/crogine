@@ -939,6 +939,7 @@ private:
 
     bool m_drawDebugMesh;
 
+    void createRope(const RopeData&);
     void spawnRabbit(glm::vec3, std::uint32_t seed);
     void spawnGardener(glm::vec3);
     void spawnSeagulls(glm::vec3);

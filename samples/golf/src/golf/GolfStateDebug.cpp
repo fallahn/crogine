@@ -40,6 +40,7 @@ source distribution.
 #include "BehaviourRabbit.hpp"
 #include "BehaviourLorvis.hpp"
 #include "BehaviourSeagull.hpp"
+#include "RopeSystem.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/audio/AudioScape.hpp>
@@ -52,6 +53,7 @@ source distribution.
 namespace
 {
 #include "shaders/CelShader.inl"
+#include "shaders/Lantern.inl" //TODO move to asset loading
 
     const std::array<std::string, CameraID::Count> CameraStrings =
     {
@@ -1109,6 +1111,87 @@ void GolfState::buildCubemap(glm::vec3 position, const std::string& path)
 
     //LogI << "Built cubemap for " << path << std::endl;
     //cro::Console::print("Done!");
+}
+
+void GolfState::createRope(const RopeData& ropeData)
+{
+    //these are loaded from the map in world position
+    const auto ropeID = m_gameScene.getSystem<RopeSystem>()->addRope(ropeData.points[0], ropeData.points[1], ropeData.slackness);
+    static constexpr std::uint32_t NodeCount = 6; //TODO vary this on rope length
+
+    for (auto i = 0u; i < NodeCount; ++i)
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<RopeNode>(ropeID);
+
+        //these are marked as garbage collected as they are
+        //created at runtime (we might disable creating ropes
+        //as an option for perf reasons)
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::GarbageCollect;
+    }
+
+    //TODO move to material loading
+    //TODO only load if we detect ropes on a map (ie lazy load)
+    m_resources.shaders.loadFromString(ShaderID::Rope, BuntingVert, BuntingFrag);
+    auto matID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Rope));
+    auto material = m_resources.materials.get(matID);
+    material.doubleSided = true;
+
+
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(ropeData.points[0]);
+    const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_TRIANGLES, GL_UNSIGNED_BYTE));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+
+    //indices are fixed at nodecount + 2 for anchors
+    std::vector<std::uint8_t> indices;
+    const auto total = std::min(NodeCount + 2, (255u / 3) * 2); //clamp max indices as we're using u8
+    for (auto i = 0; i < total - 1; ++i)
+    {
+        //we'll create a 3rd vertex for each segment to complete the triangle
+        indices.push_back(i);
+        indices.push_back(i+1);
+        indices.push_back(i+total);
+    }
+
+
+    auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
+
+    //has to pass culling
+    meshData->boundingBox = { glm::vec3(0.f), ropeData.points[1] - ropeData.points[0] };
+    meshData->boundingSphere = meshData->boundingBox;
+
+    //this creates a 3rd point along each segment and lowers
+    //it slightly to make a crude triangle / flag
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, ropeID, meshData](cro::Entity e, float)
+        {
+            /*const auto&*/auto verts = m_gameScene.getSystem<RopeSystem>()->getNodePositions(ropeID);
+            std::vector<glm::vec3> points;
+            for (auto i = 0; i < verts.size() -1; ++i)
+            {
+                points.push_back(((verts[i + 1] - verts[i]) / 2.f) + verts[i]);
+                points.back().y -= 0.5f;
+            }
+            verts.insert(verts.end(), points.begin(), points.end());
+
+            meshData->vertexCount = verts.size();
+            cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
+        };
+
+
+    //TODO set up material
+    /*
+    const auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
+    const auto shadowMatID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    entity.addComponent<cro::ShadowCaster>();
+    entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(shadowMatID));*/
 }
 
 void GolfState::spawnRabbit(glm::vec3 pos, std::uint32_t seed)

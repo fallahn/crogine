@@ -3318,8 +3318,8 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
             auto material = m_resources.materials.get(matID);
             material.setProperty("u_colour", CD32::Colours[CD32::GreyLight] * m_sharedData.menuSky.sunColour);
 
-            auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
-            auto shadowMatID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+            const auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
+            const auto shadowMatID = m_resources.materials.add(m_resources.shaders.get(shaderID));
             static constexpr std::int32_t NodeCount = 6;
 
             const auto createRopeMesh = [&](glm::vec3 pos, std::size_t ropeID)

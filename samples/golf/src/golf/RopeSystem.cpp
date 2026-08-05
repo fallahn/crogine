@@ -100,6 +100,8 @@ std::size_t RopeSystem::addRope(glm::vec3 start, glm::vec3 end, float slack)
         {
             m_ropes[ret].setNoiseMap(m_windImage, m_imageScale);
         }
+
+        //LogI << "Recycled rope " << ret << std::endl;
         return ret;
     }
 
@@ -111,6 +113,7 @@ std::size_t RopeSystem::addRope(glm::vec3 start, glm::vec3 end, float slack)
         rope.setNoiseMap(m_windImage, m_imageScale);
     }
 
+    //LogI << "Created rope " << ret << std::endl;
     return ret;
 }
 
@@ -166,7 +169,6 @@ void RopeSystem::onEntityRemoved(cro::Entity e)
     //as if we erase the rope it will mess up
     //the indexing used for rope IDs for other
     //remaining ropes...
-
     if (m_ropes[node.ropeID].empty())
     {
         m_freeRopes.push_back(node.ropeID);
@@ -223,6 +225,12 @@ void Rope::removeNode(cro::Entity e)
         {
             return e == ent;
         }), m_nodes.end());
+
+    //assume this is empty if we only have the end nodes remaning
+    if (m_nodes.size() == 2)
+    {
+        m_nodes.clear();
+    }
 
     m_dirty = true;
 }

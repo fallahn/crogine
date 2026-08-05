@@ -113,7 +113,8 @@ public:
 
     void process(float) override;
 
-    //creates a new rope between the given fixed points.
+    //creates a new rope between the given fixed points
+    //in world coordinates.
     //returns an ID to use with components when assigning
     //those entities to a specific rope.
     //increase slack for a looser rope between fixed points

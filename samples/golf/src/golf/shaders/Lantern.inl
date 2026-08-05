@@ -31,6 +31,44 @@ source distribution.
 
 #include <string>
 
+static const inline std::string BuntingVert =
+R"(
+ATTRIBUTE vec4 a_position;
+
+#include WVP_UNIFORMS
+
+void main()
+{
+    mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
+    gl_Position = wvp * a_position;
+})";
+
+
+static const inline std::string BuntingFrag =
+R"(
+OUTPUT
+
+#define COLOUR_COUNT 7
+const vec4 Colours[COLOUR_COUNT] = vec4[COLOUR_COUNT]
+(
+vec4(0.784314, 0.721569, 0.623529, 1.0),
+vec4(0.94902, 0.811765, 0.360784, 1.0),
+vec4(0.92549, 0.466667, 0.239216, 1.0),
+vec4(0.678431, 0.85098, 0.717647, 1.0),
+vec4(0.678431, 0.72549, 0.721569, 1.0),
+vec4(0.92549, 0.6, 0.513726, 1.0),
+vec4(0.576471, 0.670588, 0.321569, 1.0)
+);
+
+
+void main()
+{
+    float id = gl_PrimitiveID;
+    int i = int(mod(floor(id), COLOUR_COUNT));
+
+    FRAG_OUT = Colours[i];
+})";
+
 static const inline std::string RopeFrag =
 R"(
 uniform vec4 u_colour = vec4(0.6784, 0.7255, 0.7216, 1.0);

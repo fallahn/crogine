@@ -7081,6 +7081,11 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
                 }
             }
 
+            for (const auto& rope : m_holeData[m_currentHole].ropeData)
+            {
+                createRope(rope);
+            }
+
             //check hole for any crowd paths and assign any free
             //spectator models we have
             if (rescale &&
