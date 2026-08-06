@@ -1116,8 +1116,8 @@ void GolfState::buildCubemap(glm::vec3 position, const std::string& path)
 void GolfState::createRope(const RopeData& ropeData)
 {
     //these are loaded from the map in world position
-    const auto ropeID = m_gameScene.getSystem<RopeSystem>()->addRope(ropeData.points[0], ropeData.points[1], ropeData.slackness);
-    std::uint32_t nodeCount = static_cast<std::uint32_t>(glm::length(ropeData.points[0] - ropeData.points[1]) / 1.3f);// 6; //TODO vary this on rope length, must make sure not to create more than 256 verts!
+    const auto ropeID = m_gameScene.getSystem<RopeSystem>()->addRope(ropeData.points[0], ropeData.points[1], ropeData.slackness, 10.f);
+    std::uint32_t nodeCount = static_cast<std::uint32_t>(glm::length(ropeData.points[0] - ropeData.points[1]) / 1.3f);// 6;
     nodeCount = std::min(nodeCount, ((255u / 3) * 2) - 2);  //clamp max indices as we're using u8
 
     for (auto i = 0u; i < nodeCount; ++i)
@@ -1144,7 +1144,7 @@ void GolfState::createRope(const RopeData& ropeData)
     //indices are fixed at nodecount + 2 for anchors
     std::vector<std::uint8_t> indices;
     const auto total = nodeCount + 2;
-    for (auto i = 0; i < total - 1; ++i)
+    for (auto i = 0u; i < total - 1; ++i)
     {
         //we'll create a 3rd vertex for each segment to complete the triangle
         indices.push_back(i);

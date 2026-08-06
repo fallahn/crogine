@@ -50,6 +50,15 @@ void main()
 #else
     POS_OUT = vec4(v_worldPosition, 1.0);
 #endif
+
+White
+Yellow
+Blue
+Orange
+Purple
+Green
+Pink
+(Red 184, 53, 48) 0.7216, 0.2078, 0.1882
 */
 
 static const inline std::string BuntingFrag =
@@ -61,13 +70,13 @@ R"(
 #define COLOUR_COUNT 7
 const vec4 Colours[COLOUR_COUNT] = vec4[COLOUR_COUNT]
 (
-vec4(0.784314, 0.721569, 0.623529, 1.0),
+vec4(1.0, 0.9735, 0.8824, 1.0),
 vec4(0.94902, 0.811765, 0.360784, 1.0),
+vec4(0.2392, 0.6941, 0.9255, 1.0),
 vec4(0.92549, 0.466667, 0.239216, 1.0),
-vec4(0.678431, 0.85098, 0.717647, 1.0),
-vec4(0.722, 0.208, 0.188, 1.0),
-vec4(0.92549, 0.6, 0.513726, 1.0),
-vec4(0.718, 0.471, 0.329, 1.0)
+vec4(0.4627, 0.2431, 0.4941, 1.0),
+vec4(0.4313, 0.7450, 0.4392, 1.0),
+vec4(0.92549, 0.6, 0.513726, 1.0)
 );
 
 //colours can disappear on sky background or grass etc

@@ -87,7 +87,7 @@ void RopeSystem::process(float dt)
     }
 }
 
-std::size_t RopeSystem::addRope(glm::vec3 start, glm::vec3 end, float slack)
+std::size_t RopeSystem::addRope(glm::vec3 start, glm::vec3 end, float slack, float forceMultiplier)
 {
     //check for unused ropes and return that if available
     if (!m_freeRopes.empty())
@@ -96,6 +96,7 @@ std::size_t RopeSystem::addRope(glm::vec3 start, glm::vec3 end, float slack)
         m_freeRopes.pop_back();
 
         m_ropes[ret] = Rope(start, end, slack, *getScene(), ret);
+        m_ropes[ret].setForceMultiplier(forceMultiplier);
         if (!m_windImage.empty())
         {
             m_ropes[ret].setNoiseMap(m_windImage, m_imageScale);
@@ -107,6 +108,7 @@ std::size_t RopeSystem::addRope(glm::vec3 start, glm::vec3 end, float slack)
 
     const auto ret = m_ropes.size();
     auto& rope = m_ropes.emplace_back(start, end, slack, *getScene(), ret);
+    rope.setForceMultiplier(forceMultiplier);
 
     if (!m_windImage.empty())
     {
@@ -178,13 +180,14 @@ void RopeSystem::onEntityRemoved(cro::Entity e)
 
 //-------rope class-------//
 Rope::Rope(glm::vec3 start, glm::vec3 end, float slack, cro::Scene& scene, std::size_t id)
-    : m_startPoint  (start),
-    m_endPoint      (end),
-    m_noiseMap      (nullptr),
-    m_pixelsPerMetre(1.f),
-    m_slack         (slack),
-    m_nodeSpacing   (0.f),
-    m_dirty         (false)
+    : m_startPoint      (start),
+    m_endPoint          (end),
+    m_noiseMap          (nullptr),
+    m_pixelsPerMetre    (1.f),
+    m_slack             (slack),
+    m_nodeSpacing       (0.f),
+    m_forceMultiplier   (5.f),
+    m_dirty             (false)
 {
     auto ent = scene.createEntity();
     ent.addComponent<cro::Transform>();
@@ -349,7 +352,7 @@ void Rope::integrate(float dt, glm::vec3 windOffset)
                 const float z = *(m_noiseMap->begin() + index + 2);
                 
                 n.force = { x,y/4.f,z };
-                n.force *= 5.f; //hmm we want to make this a variable somewhere?
+                n.force *= m_forceMultiplier;
             }
 
 
