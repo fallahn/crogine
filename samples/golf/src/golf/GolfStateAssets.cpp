@@ -852,7 +852,7 @@ void GolfState::loadMap()
                                 const std::string def = m_sharedData.nightTime ? "#define USE_MRT\n" : "";
 
                                 //init the material
-                                m_resources.shaders.loadFromString(ShaderID::Rope, BuntingVert, BuntingFrag, def);
+                                m_resources.shaders.loadFromString(ShaderID::Rope, BuntingVert, BuntingGeom, BuntingFrag, def);
                                 m_materialIDs[MaterialID::Bunting] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Rope));
                             }
                         }
