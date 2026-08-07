@@ -1640,27 +1640,28 @@ void OptionsStateV2::createSettingsItems()
     item->displayType = Menu::Item::Heading;
     item->description = "Configure input settings";
 
-    //mouse button for action
-    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Use Left Mouse as Action Button";
-    item->description = "Clicking left mouse button performs the same as the Action button";
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.useMouseAction = i.selectedIndex == 1;
-        };
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
+    ///-----moved to Input tab----//
+    ////mouse button for action
+    //item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
+    //item->title = "Use Left Mouse as Action Button";
+    //item->description = "Clicking left mouse button performs the same as the Action button";
+    //item->activated = [&](Menu::Item& i)
+    //    {
+    //        m_sharedData.useMouseAction = i.selectedIndex == 1;
+    //    };
+    //item->labels = { "No", "Yes" };
+    //item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
 
-    //hold for power
-    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Hold Action For Power";
-    item->description = "Press and hold the Action button to choose swing power instead of the traditional 3-click system";
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.pressHold = i.selectedIndex == 1;
-        };
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = m_sharedData.pressHold ? 1 : 0;
+    ////hold for power
+    //item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
+    //item->title = "Hold Action For Power";
+    //item->description = "Press and hold the Action button to choose swing power instead of the traditional 3-click system";
+    //item->activated = [&](Menu::Item& i)
+    //    {
+    //        m_sharedData.pressHold = i.selectedIndex == 1;
+    //    };
+    //item->labels = { "No", "Yes" };
+    //item->selectedIndex = m_sharedData.pressHold ? 1 : 0;
 
 
     //measure sensitivity
@@ -2478,6 +2479,27 @@ void OptionsStateV2::createControllerItems()
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.invertY ? 1 : 0;
 
+    //mouse button for action
+    item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
+    item->title = "Use Left Mouse as Action Button";
+    item->description = "Clicking left mouse button performs the same as the Action button";
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.useMouseAction = i.selectedIndex == 1;
+        };
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
+
+    //hold for power
+    item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
+    item->title = "Hold Action For Power";
+    item->description = "Press and hold the Action button to choose swing power instead of the traditional 3-click system";
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.pressHold = i.selectedIndex == 1;
+        };
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.pressHold ? 1 : 0;
 
     //enable swingput
     const auto swingItem = m_uiLayout.menuLayout.items[TabID::Controller].size();
