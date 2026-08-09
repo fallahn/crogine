@@ -467,7 +467,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Play a Teams round in Freeplay", false),
     std::make_pair("Create a Custom Tournament", false),
     std::make_pair("Get a Beef Stick from a tee shot", false),
-    std::make_pair("Upset the groundskeeper", true),
+    std::make_pair("Ruin the groundskeeper's tomatoes", true),
 };
 
 //assuming trophies load correctly they are:

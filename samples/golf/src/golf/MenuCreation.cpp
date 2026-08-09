@@ -2782,7 +2782,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, h + 2.f, 0.f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, h + 1.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("Please Wait...");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
