@@ -2335,6 +2335,7 @@ void OptionsStateV2::createControllerItems()
                 }
                 else
                 {
+                    //TODO cro::GameController::getPrintableName(0) == "Steam Controller"
                     e.getComponent<cro::Sprite>().setTextureRect(data.bounds[SpriteData::Xbox]);
                 }
             }
