@@ -126,6 +126,8 @@ namespace
     constexpr float LeagueLineSpacing = 14.f;
 
     const std::string ConfigFile("career.cfg");
+
+    std::int32_t craewallOffset = 0; //hack to offset the index when craewall is installed but adventurer isn't
 }
 
 CareerState::CareerState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -141,8 +143,15 @@ CareerState::CareerState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
 
     std::fill(m_progressPositions.begin(), m_progressPositions.end(), 0);
 
+    //hax
+    if (!Content::leagueAvailable(7) && Content::leagueAvailable(8))
+    {
+        craewallOffset = 1;
+    }
+
     addSystems();
     buildScene();
+
 }
 
 CareerState::~CareerState()
@@ -356,13 +365,22 @@ void CareerState::buildScene()
                     {
                         if (Career::instance(m_sharedData).getLeagueTables()[currIdx].getCurrentIteration() == 0)
                         {
+                            //TODO this isn't quite right if we're playing DLC but at least
+                            //it doesn't break anything...
                             m_sharedData.leagueRoundID = std::min(std::int32_t(LeagueRoundID::RoundSix), m_sharedData.leagueRoundID + 1);
                         }
                     }
 
                     if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
                     {
-                        selectLeague(m_maxLeagueIndex);
+                        //horrid horrid HAX
+                        auto idx = m_maxLeagueIndex;
+                        if (craewallOffset && idx >= 6)
+                        {
+                            idx += craewallOffset;
+                        }
+
+                        selectLeague(idx);
                     }
                     else
                     {

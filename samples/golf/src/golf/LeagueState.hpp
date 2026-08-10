@@ -107,6 +107,7 @@ private:
             S05,
             S06,
             S07,
+            S08,
             Global,
             FriendsGlobal,
             GlobalExt,

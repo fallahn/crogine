@@ -6755,7 +6755,7 @@ void GolfState::updateLeague()
             league = &Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
         }
 
-        //we assume that as achievments are allowed that
+        //we assume that as achievements are allowed that
         //there's only one human player - though they may not
         //necessarily be first in the player list
         for (const auto& player : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)
@@ -6836,6 +6836,7 @@ void GolfState::updateLeagueHole()
             case LeagueRoundID::RoundFive:
             case LeagueRoundID::RoundSix:
             case LeagueRoundID::RoundSeven:
+            case LeagueRoundID::RoundEight:
             {
                 auto& league = Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
                 //this may have been saved previously

@@ -95,6 +95,18 @@ std::string Content::getUserContentPath(std::int32_t contentType)
     }
 }
 
+bool Content::DLCAvailable(std::int32_t idx)
+{
+    switch (idx)
+    {
+    default: return false;
+    case 0:
+    case 1:
+    case 2:
+        return cro::FileSystem::directoryExists(SearchPaths[idx]);
+    }
+}
+
 bool Content::leagueAvailable(std::int32_t leagueID)
 {
     //hmm we need to get the LeagueID enum in here somehow...

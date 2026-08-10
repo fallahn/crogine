@@ -755,6 +755,10 @@ void LeagueState::buildScene()
             unlocked = createLeagueTab(bgNode, spriteSheet, i)
                 && (i < LeagueRoundID::RoundSix || Content::leagueAvailable(i+1));
         }
+        else
+        {
+            unlocked = Content::leagueAvailable(i + 1);
+        }
     }
 #ifdef USE_GNS
     createGlobalLeagueTab(bgNode, spriteSheet, LeagueID::Global);
@@ -841,7 +845,7 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
         "Career League Five",
         "Career League Six",
         "Career League Seven",
-        //"Custom League",
+        "Career League Eight",
     };
 
     auto entity = m_scene.createEntity();
@@ -1027,7 +1031,7 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
 
     refreshNameList(leagueIndex, league);
 
-    return leagueIndex < LeagueRoundID::RoundOne || league.getCurrentBest() < CareerLeagueThreshold;
+    return leagueIndex < LeagueRoundID::RoundOne || league.getCurrentBest() < CareerLeagueThreshold || !Content::leagueAvailable(leagueIndex);
 }
 
 void LeagueState::createInfoTab(cro::Entity parent)

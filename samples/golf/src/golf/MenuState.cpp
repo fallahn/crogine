@@ -904,6 +904,23 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             LogI << "Career Gold Leagues is " << bestCount << std::endl;
         }*/
     }
+
+
+
+    //registerWindow([this]()
+    //{
+    //    ImGui::Begin("leagues");
+    //    for (auto i = 0; i < 8; ++i)
+    //    {
+    //        const auto& leagueData = Career::instance(m_sharedData).getLeagueData()[i];
+    //        const auto& league = Career::instance(m_sharedData).getLeagueTables()[i];
+
+    //        ImGui::Text("%d, %s", leagueData.leagueID, leagueData.title.toUtf8().data());
+    //        ImGui::Text("Iter: %d", league.getCurrentIteration());
+    //    }
+
+    //    ImGui::End();
+    //});
 }
 
 MenuState::~MenuState()
