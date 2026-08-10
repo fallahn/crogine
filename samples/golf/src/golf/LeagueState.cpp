@@ -757,7 +757,7 @@ void LeagueState::buildScene()
         }
         else
         {
-            unlocked = Content::leagueAvailable(i + 1);
+            unlocked = i >= LeagueRoundID::RoundSix && Content::leagueAvailable(i + 1) && m_leagueNodes[LeagueRoundID::RoundSix].isValid();
         }
     }
 #ifdef USE_GNS
@@ -1645,6 +1645,7 @@ void LeagueState::switchLeague(std::int32_t forward)
             m_leagueNodes[m_currentLeague].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             m_leagueNodes[next].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             m_currentLeague = next;
+
 #ifdef USE_GNS
             if (m_currentLeague == LeagueID::Pro)
             {

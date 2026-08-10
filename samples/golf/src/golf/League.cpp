@@ -650,7 +650,6 @@ std::string League::getFilePath(const std::string& fn) const
         assertPath();
         break;
     case LeagueRoundID::RoundFour:
-
         basePath += "round_04/";
         assertPath();
         break;
@@ -664,6 +663,10 @@ std::string League::getFilePath(const std::string& fn) const
         break;
     case LeagueRoundID::RoundSeven:
         basePath += "round_07/";
+        assertPath();
+        break;
+    case LeagueRoundID::RoundEight:
+        basePath += "round_08/";
         assertPath();
         break;
     }
