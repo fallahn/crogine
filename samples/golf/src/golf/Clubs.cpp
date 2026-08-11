@@ -341,7 +341,7 @@ float Club::getScaledValue(float value, float distanceToPin) const
     {
     default:
     case 3:
-        return value * 2.4f;
+        return value * 2.f;
     case 2:
         return value;
     case 1:
