@@ -307,7 +307,7 @@ void Club::setModifierIndex(std::int32_t idx)
 std::int32_t Club::getScaleIndex(float distanceToPin) const
 {
     const auto target = getBaseTarget();
-    if (distanceToPin < m_maxScale)
+    if (distanceToPin < (m_maxScale + 0.9f))
     {
         if (distanceToPin < target * ShortRangeThreshold)
         {
@@ -337,18 +337,11 @@ void Club::clampMaxScale(bool c)
 //private
 float Club::getScaledValue(float value, float distanceToPin) const
 {
-    //if (m_id == ClubID::Putter
-    //    //we're hacking around this to stop the 25m putter on putting courses
-    //    && distanceToPin > /*value*/m_maxScale)
-    //{
-    //    return value * 2.5f; //bumps putter up to 25m
-    //}
-
     switch (m_maxScaleIndex)
     {
     default:
     case 3:
-        return value * 2.5f;
+        return value * 2.4f;
     case 2:
         return value;
     case 1:

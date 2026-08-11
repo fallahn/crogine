@@ -3307,7 +3307,7 @@ bool GolfState::simulate(float dt)
 
         if (float movement = m_inputParser.getCamMotion() * m_sharedData.mouseSpeed; movement != 0)
         {
-            updateCameraHeight(movement* dt);
+            updateCameraHeight(movement * dt);
         }
 
         //if we're CPU or remote player check screen pos of ball and

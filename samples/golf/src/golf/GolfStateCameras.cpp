@@ -781,7 +781,7 @@ void GolfState::updateCameraHeight(float movement)
         const auto groundHeight = std::max(m_collisionMesh.getTerrain(pos).height, WaterLevel);
 
         auto origin = tx.getOrigin();
-        origin.y = std::clamp(origin.y - movement, -CameraPuttHeight / 2.f, (pos.y - groundHeight) * 0.5f);
+        origin.y = std::clamp(origin.y - movement, -CameraPuttHeight / 1.5f/*2.f*/, (pos.y - groundHeight) * 0.5f);
         tx.setOrigin(origin);
 
         /*const auto camPos = tx.getPosition();
