@@ -1818,7 +1818,12 @@ void GolfState::startFlyBy()
     //static for lambda capture
     static constexpr float MoveSpeed = 50.f; //metres per sec
     static constexpr float MaxHoleDistance = 275.f; //this scales the move speed based on the tee-pin distance
-    float SpeedMultiplier = (0.25f + ((m_holeData[m_currentHole].distanceToPin / MaxHoleDistance) * 0.75f));
+
+    //as this is a total move across the hole we need to include distance to the target
+    const float moveDistance = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].target) 
+        + glm::length(m_holeData[m_currentHole].target - m_holeData[m_currentHole].pin);
+
+    float SpeedMultiplier = (0.25f + ((/*m_holeData[m_currentHole].distanceToPin*/moveDistance / MaxHoleDistance) * 0.75f));
     float heightMultiplier = 1.f;
 
     //only slow down if current and previous were putters - in cases of custom courses
