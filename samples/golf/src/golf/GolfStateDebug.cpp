@@ -1194,15 +1194,16 @@ void GolfState::createRope(const RopeData& ropeData)
 
 void GolfState::spawnRabbit(glm::vec3 pos, std::uint32_t seed)
 {
-    cro::ModelDefinition md(m_resources);
-    if (md.loadFromFile("dlc/craewall/models/props/rabbit.cmt"))
+    //cro::ModelDefinition md(m_resources);
+    //if (md.loadFromFile("dlc/craewall/models/props/rabbit.cmt"))
+    if (m_modelDefs[ModelID::Rabbit]->isLoaded())
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(pos);
-        md.createModel(entity);
+        m_modelDefs[ModelID::Rabbit]->createModel(entity);
 
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Player]);
-        applyMaterialData(md, material);
+        applyMaterialData(*m_modelDefs[ModelID::Rabbit], material);
         entity.getComponent<cro::Model>().setMaterial(0, material);
 
         entity.addComponent<cro::Callback>().active = true;
@@ -1255,32 +1256,13 @@ void GolfState::spawnGardener(glm::vec3 pos)
 
 void GolfState::spawnSeagulls(glm::vec3 pos)
 {
-    cro::ModelDefinition md(m_resources);
-    if (md.loadFromFile("dlc/craewall/models/props/seagull.cmt"))
+    //cro::ModelDefinition md(m_resources);
+    //if (md.loadFromFile("dlc/craewall/models/props/seagull.cmt"))
+    if (m_modelDefs[ModelID::Seagull]->isLoaded())
     {
+        auto& md = *m_modelDefs[ModelID::Seagull];
         if (md.hasSkeleton())
         {
-            cro::AudioScape as;
-            as.loadFromFile("dlc/craewall/sound/gull.xas", m_resources.audio);
-
-            //hmm we should probably set this as a lazy loader? It's a bugger
-            //merely because the seagull has so many bones...
-            if (m_materialIDs[MaterialID::Seagull] == -1)
-            {
-                GLint maxVec;
-                glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
-                auto MAX_BONES = maxVec / 4; //4 x 4-components make up a mat4.
-                //we'll allow 64 vectors for other uniforms (cascaded maps take up a few)
-                //64 / 4 = 16
-                MAX_BONES = std::min(MAX_BONES - 16, 255);
-
-                const std::string bones = "#define MAX_BONES " + std::to_string(std::min(MAX_BONES, 136)) + "\n";
-                m_resources.shaders.loadFromString(ShaderID::Seagull, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n" + bones);
-                auto& shader = m_resources.shaders.get(ShaderID::Seagull);
-                m_resolutionBuffer.addShader(shader);
-                m_materialIDs[MaterialID::Seagull] = m_resources.materials.add(shader);
-            }
-
             static constexpr std::array<float, 2u> start = { -5.f, -5.f };
             static constexpr std::array<float, 2u> end = { 5.f, 5.f };
             const auto points = pd::PoissonDiskSampling(3.f, start, end, 30, static_cast<std::uint32_t>(std::time(nullptr)));
@@ -1311,7 +1293,7 @@ void GolfState::spawnSeagulls(glm::vec3 pos)
                 entity.getComponent<cro::Skeleton>().play(md.getSkeleton().getAnimationIndex("Idle"));
                 entity.addComponent<cro::CommandTarget>().ID = CommandID::GarbageCollect | CommandID::Seagull;
 
-                entity.addComponent<cro::AudioEmitter>() = as.getEmitter("0" + std::to_string(i + 1));
+                entity.addComponent<cro::AudioEmitter>() = m_gullAudio.getEmitter("0" + std::to_string(i + 1));
             }
         }
     }

@@ -48,6 +48,7 @@ source distribution.
 #include "GroupID.hpp"
 #include "server/ServerPacketData.hpp"
 
+#include <crogine/audio/AudioScape.hpp>
 #include <crogine/audio/DynamicAudioStream.hpp>
 
 #include <crogine/core/State.hpp>
@@ -369,12 +370,15 @@ private:
             BullsEye,
             PlayerFallBack,
             MeasureWidget,
+            Rabbit,
+            Seagull,
 
             Count
         };
     };
     std::array<std::unique_ptr<cro::ModelDefinition>, ModelID::Count> m_modelDefs = {};
     std::unordered_map<std::int32_t, std::unique_ptr<cro::ModelDefinition>> m_ballModels;
+    cro::AudioScape m_gullAudio;
 
     struct ShaderPair final
     {

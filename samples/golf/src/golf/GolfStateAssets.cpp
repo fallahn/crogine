@@ -1543,6 +1543,11 @@ void GolfState::loadMap()
                                         holeData.rabbitPositions.push_back(rp.getValue<glm::vec3>());
                                     }
                                 }
+
+                                if (!m_modelDefs[ModelID::Rabbit]->isLoaded())
+                                {
+                                    m_modelDefs[ModelID::Rabbit]->loadFromFile("dlc/craewall/models/props/rabbit.cmt");
+                                }
                             }
                             else if (name == "rope")
                             {
@@ -2804,6 +2809,37 @@ void GolfState::loadModels()
     m_modelDefs[ModelID::BullsEye]->loadFromFile("assets/golf/models/target.cmt"); //TODO we can only load this if challenge month or game mode requires
     m_modelDefs[ModelID::PlayerFallBack]->loadFromFile("assets/golf/models/avatars/default.cmt");
     m_modelDefs[ModelID::MeasureWidget]->loadFromFile("assets/golf/models/hole_arrow.cmt");
+
+    if ((m_sharedData.mapDirectory == "course_16" || m_sharedData.courseIndex == 7 || m_sharedData.courseIndex == 3)
+        && cro::FileSystem::fileExists("dlc/craewall/models/props/seagull.cmt"))
+    {
+        m_modelDefs[ModelID::Seagull]->loadFromFile("dlc/craewall/models/props/seagull.cmt");
+
+        //hmm we should probably set this as a lazy loader? It's a bugger
+        //merely because the seagull has so many bones...
+        //if (m_materialIDs[MaterialID::Seagull] == -1)
+        {
+            GLint maxVec;
+            glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
+            auto MAX_BONES = maxVec / 4; //4 x 4-components make up a mat4.
+            //we'll allow 64 vectors for other uniforms (cascaded maps take up a few)
+            //64 / 4 = 16
+            MAX_BONES = std::min(MAX_BONES - 16, 255);
+
+            const std::string bones = "#define MAX_BONES " + std::to_string(std::min(MAX_BONES, 136)) + "\n";
+            m_resources.shaders.loadFromString(ShaderID::Seagull, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n" + bones);
+            auto& shader = m_resources.shaders.get(ShaderID::Seagull);
+            m_resolutionBuffer.addShader(shader);
+            m_materialIDs[MaterialID::Seagull] = m_resources.materials.add(shader);
+        }
+
+        m_gullAudio.loadFromFile("dlc/craewall/sound/gull.xas", m_resources.audio);
+    }
+    else
+    {
+        //we test the existence elsewhere so reset this if not loaded
+        m_modelDefs[ModelID::Seagull].reset();
+    }
 
     //ball models - the menu should never have let us get this far if it found no ball files
     for (const auto& info : m_sharedData.ballInfo)
