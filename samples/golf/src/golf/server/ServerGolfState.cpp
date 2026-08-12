@@ -1209,6 +1209,11 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
                         {
                             return true;
                         }
+                        //and conversely
+                        if (glm::length2(b.position - m_holeData[m_currentHole].tee) < 1)
+                        {
+                            return false;
+                        }
 
                         return a.distanceToHole > b.distanceToHole;
                     };
