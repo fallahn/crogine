@@ -94,6 +94,10 @@ namespace
     static constexpr float ToFeet = 3.281f;
     //static constexpr float ToInches = 12.f;
 
+    //used to control the extra 25m putter
+    static constexpr float LongLongRange = 25.f;
+    static constexpr float LongLongMultiplier = LongLongRange / 10.f; //this is actually ClubStats[Putter].target
+    static constexpr float LongLongDampening = 0.95f;
 
     constexpr std::size_t DebugLevel = 35;
     std::int32_t playerLevel = 0;
@@ -216,21 +220,16 @@ float Club::getPower(float distanceToPin, bool imperial) const
     if (m_id == ClubID::Putter)
     {
         //looks like a bug, but turns out we need the extra power.
-        const auto p = getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
+        auto p = getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
+        if (m_maxScaleIndex == 3)
+        {
+            //hack to reduce the 25m putt power
+            p *= LongLongDampening;
+        }
         if (m_fixedPuttingDistance)
         {
             return std::max(ClubStats[m_id].stats[0].target, p);
         }
-
-        //return getScaledValue(ClubStats[m_id].stats[0].power, distanceToPin);
-
-        //because imperial display is rounded we need to apply this to the power too
-        //if (imperial
-        //    && p < 10.f) //only diplayed in feet < 10m
-        //{
-        //    p = std::round(p * ToFeet);
-        //    p /= ToFeet; //still need to actually physic in metres
-        //}
 
         return p;
     }
@@ -341,7 +340,7 @@ float Club::getScaledValue(float value, float distanceToPin) const
     {
     default:
     case 3:
-        return value * 2.f;
+        return value * LongLongMultiplier;
     case 2:
         return value;
     case 1:
