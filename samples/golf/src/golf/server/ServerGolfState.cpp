@@ -1203,6 +1203,13 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
                         {
                             return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer] == a;
                         }
+
+                        //return true if still at the tee (we might be closer to the hole on u-bends)
+                        if (glm::length2(a.position - m_holeData[m_currentHole].tee) < 1)
+                        {
+                            return true;
+                        }
+
                         return a.distanceToHole > b.distanceToHole;
                     };
 
