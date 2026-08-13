@@ -748,7 +748,7 @@ void EditTournamentState::onCachedPush()
     //data and load it ready for editing
     if (!m_sharedData.tournamentPath.empty())
     {
-        m_tournamentInfo.load(m_sharedData.tournamentPath);
+        m_tournamentInfo.load(m_sharedData.tournamentPath, m_sharedData.courseData);
         
         //map the courses to their indices
         for (auto i = 0; i < 4; ++i)

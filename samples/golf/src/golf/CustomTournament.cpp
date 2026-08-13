@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,6 +29,7 @@ source distribution.
 
 #include "CustomTournament.hpp"
 #include "CommonConsts.hpp"
+#include "SharedCourseData.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/detail/Assert.hpp>
@@ -45,7 +46,7 @@ CustomTournament::CustomTournament()
 }
 
 //public
-void CustomTournament::load(const std::string& path)
+void CustomTournament::load(const std::string& path, const SharedCourseData* courseData)
 {
     CRO_ASSERT(path.back() == '/', "");
 
@@ -90,7 +91,12 @@ void CustomTournament::load(const std::string& path)
     //replace any invalid strings with something semi-sane
     for (auto& c : m_courses)
     {
-        if (c.find("course_") == std::string::npos)
+        if (const auto res = std::find_if(courseData->courseData.cbegin(), courseData->courseData.cend(), 
+            [&c](const SharedCourseData::CourseData& cd)
+            {
+                return cd.directory == cro::String(c);
+            });
+            res == courseData->courseData.cend())
         {
             c = "course_01";
         }

@@ -2847,7 +2847,7 @@ void TournamentState::loadCustomTournament()
     readTournamentData(m_sharedData.tournaments[TournamentIndex::Custom], (m_customPaths[m_customIndex] + TournamentDataFile).c_str());
     
     m_sharedData.customTournament = {};
-    m_sharedData.customTournament.load(m_customPaths[m_customIndex]);
+    m_sharedData.customTournament.load(m_customPaths[m_customIndex], m_sharedData.courseData);
     m_sharedData.tournamentPath = m_customPaths[m_customIndex];
 
     maxTournaments = 3;
