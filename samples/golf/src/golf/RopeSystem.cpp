@@ -34,6 +34,10 @@ source distribution.
 
 #include <crogine/gui/Gui.hpp>
 
+#ifdef USE_PARALLEL_PROCESSING
+#include <execution>
+#endif
+
 namespace
 {
     constexpr glm::vec3 Gravity(0.f, -9.f, 0.f);
@@ -81,10 +85,18 @@ RopeSystem::RopeSystem(cro::MessageBus& mb)
 void RopeSystem::process(float dt)
 {
     m_windOffset += (m_windDirection * dt) * 0.01f;
+#ifdef USE_PARALLEL_PROCESSING
+    std::for_each(std::execution::par, m_ropes.begin(), m_ropes.end(),
+        [&](Rope& rope)
+#else
     for (auto& rope : m_ropes)
+#endif
     {
         rope.simulate(dt, m_windOffset);
     }
+#ifdef USE_PARALLEL_PROCESSING       
+        );
+#endif
 }
 
 std::size_t RopeSystem::addRope(glm::vec3 start, glm::vec3 end, float slack, float forceMultiplier)
