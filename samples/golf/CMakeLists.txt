@@ -81,6 +81,10 @@ if(NOT USE_STEAM)
   find_package(CURL REQUIRED)
 endif()
 
+if(USE_TBB)
+  find_package(TBB REQUIRED)
+endif()
+
 # If the crogine target exists then we're being built as part of the crogine project
 # so can link to it directly. If not, we must find a pre-installed version
 if(NOT TARGET crogine)
