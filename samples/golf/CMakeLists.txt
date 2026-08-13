@@ -34,6 +34,15 @@ if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
   endif()
 endif()
 
+#versions of gcc older than 9 don't support parallel execution policies
+if(CMAKE_COMPILER_IS_GNUCC AND
+  CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8 AND
+  USE_PARALLEL_EXECUTION)
+  SET(USE_TBB true)
+else()
+  add_definitions(-DPARALLEL_GLOBAL_DISABLE)
+endif()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-potentially-evaluated-expression")
 endif()
@@ -234,6 +243,10 @@ target_link_libraries(${PROJECT_NAME}
   ${BULLET_LIBRARIES}
   ${SQLite3_LIBRARIES}  
   ${OPENGL_LIBRARIES})
+
+if(USE_TBB)
+  target_link_libraries(${PROJECT_NAME} TBB::tbb)
+endif()
 
 if(TARGET crogine)
  target_link_libraries(${PROJECT_NAME} crogine)
