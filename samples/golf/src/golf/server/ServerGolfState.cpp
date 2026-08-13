@@ -1156,8 +1156,19 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         }
         else if (m_sharedData.scoreType == ScoreType::Elimination)
         {
-            const auto predicate = [](const PlayerStatus& a, const PlayerStatus& b)
+            const auto predicate = [this](const PlayerStatus& a, const PlayerStatus& b)
                 {
+                    //return true if still at the tee (we might be closer to the hole on u-bends)
+                    if (glm::length2(a.position - m_holeData[m_currentHole].tee) < 1)
+                    {
+                        return true;
+                    }
+                    //and conversely
+                    if (glm::length2(b.position - m_holeData[m_currentHole].tee) < 1)
+                    {
+                        return false;
+                    }
+
                     if (!a.eliminated && !b.eliminated)
                     {
                         return a.distanceToHole > b.distanceToHole;
@@ -1173,8 +1184,19 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         else if (m_sharedData.scoreType == ScoreType::NearestThePin)
         {
             //make sure player hasn't completed all turns
-            const auto& predicate = [&](const PlayerStatus& a, const PlayerStatus& b)
+            const auto& predicate = [this](const PlayerStatus& a, const PlayerStatus& b)
                 {
+                    //return true if still at the tee (we might be closer to the hole on u-bends)
+                    if (glm::length2(a.position - m_holeData[m_currentHole].tee) < 1)
+                    {
+                        return true;
+                    }
+                    //and conversely
+                    if (glm::length2(b.position - m_holeData[m_currentHole].tee) < 1)
+                    {
+                        return false;
+                    }
+
                     if (a.holeScore[m_currentHole] < MaxNTPStrokes && b.holeScore[m_currentHole] < MaxNTPStrokes)
                     {
                         return a.distanceToHole > b.distanceToHole;
@@ -1196,7 +1218,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             else
             {
                 //sort players by distance
-                const auto predicate = [&](const PlayerStatus& a, const PlayerStatus& b)
+                const auto predicate = [this](const PlayerStatus& a, const PlayerStatus& b)
                     {
                         if (m_sharedData.teamMode
                             && a.teamIndex == b.teamIndex)
