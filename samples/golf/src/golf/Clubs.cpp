@@ -159,7 +159,8 @@ std::string Club::getName(bool imperial, float distanceToPin, float dampening) c
 
     if (imperial)
     {
-        if (getPower(distanceToPin, imperial) > 10.f)
+        if (getPower(distanceToPin, imperial) > 10.f
+            && m_id != ClubID::Putter)
         {
             auto dist = static_cast<std::int32_t>(t * ToYards);
             return m_name + std::to_string(dist) + "yds" + getSuffix();

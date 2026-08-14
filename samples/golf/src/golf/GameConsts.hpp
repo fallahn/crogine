@@ -1366,7 +1366,7 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
                 ss.precision(2);
                 ss << "Distance: ";
 
-                if (!onGreen)
+                if (!onGreen) //hmm this should be unreachable as we check this case above already
                 {
                     ss << std::fixed << (distance * ToYards);
                     ss << "yds";
@@ -1390,7 +1390,6 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
                     ss << "ft";
 
                     target.setString(ss.str());
-
                     /*auto dist = static_cast<std::int32_t>(distance);
                     target.setString("Distance: " + std::to_string(dist) + "ft");*/
                 }

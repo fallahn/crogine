@@ -2686,7 +2686,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     if (m_sharedData.showMinimap)
                     {
-                        formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, m_currentPlayer.terrain == TerrainID::Green);
+                        formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, /*m_currentPlayer.terrain == TerrainID::Green*/m_inputParser.getClub() == ClubID::Putter);
                     }
                     else
                     {
@@ -7822,7 +7822,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         if (m_sharedData.showMinimap)
         {
-            formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, player.terrain == TerrainID::Green);
+            formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, /*player.terrain == TerrainID::Green*/m_inputParser.getClub() == ClubID::Putter);
         }
         else
         {
@@ -8614,7 +8614,7 @@ void GolfState::updateActor(const ActorInfo& update)
             {
                 //hmmm this is actually wrong, because it doesn't use the current (lagged) output of the interpolation
                 formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, 
-                    getClub() == ClubID::Putter || terrain == TerrainID::Green, isMultiTarget);
+                    m_inputParser.getClub() == ClubID::Putter || terrain == TerrainID::Green, isMultiTarget);
             }
             else
             {
