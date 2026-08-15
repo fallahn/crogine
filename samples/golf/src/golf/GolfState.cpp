@@ -2157,8 +2157,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                                 auto club = getClub();
                                 if (club == ClubID::Putter)
                                 {
-                                    const auto idx = Clubs[ClubID::Putter].getScaleIndex(m_distanceToHole);
-                                    e.getComponent<cro::SpriteAnimation>().play(idx + 1);
+                                    const auto idx = std::clamp(Clubs[ClubID::Putter].getScaleIndex(Clubs[ClubID::Putter].getPower(m_distanceToHole, m_sharedData.imperialMeasurements) + 1), 1, 3);
+                                    e.getComponent<cro::SpriteAnimation>().play(idx);
                                     e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                                 }
                                 else

@@ -3367,7 +3367,7 @@ void TutorialState::tutorialLowerClubs(cro::Entity root)
     //time delay to show continue button
     entity = m_scene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(5.f);
+    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
@@ -3464,7 +3464,7 @@ void TutorialState::tutorialPuttAssist(cro::Entity root)
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.getComponent<cro::Text>().setString("Quickly toggle Putt Assist with the \"Next Club\" Button.\nUse the Flag icon to determine how much power you need.\n\n\n\n\n\n\n\n\nPay attention the range of the putter!\n\n\n\nFull details available in Options -> How to Play.");
+    entity.getComponent<cro::Text>().setString("Try enabling Putt Assist from the Options menu.\nThen use the Flag icon to determine how much power you need.\n\n\n\n\n\n\n\n\nPay attention the range of the putter!\nThe Previous and Next club buttons will\nchange the maximum range.\n\nFull details available in Options -> How to Play.");
     entity.getComponent<cro::Text>().setVerticalSpacing(2.f);
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto textEnt = entity;
@@ -3549,7 +3549,7 @@ void TutorialState::tutorialPuttAssist(cro::Entity root)
     //time delay to show continue button
     entity = m_scene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(5.f);
+    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {

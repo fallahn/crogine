@@ -1278,6 +1278,8 @@ bool GolfGame::initialise()
 
 void GolfGame::finalise()
 {
+    Social::setStatus(Social::InfoID::Menu, {"Packing Clubs"});
+
     m_progressIcon.reset();
     m_guideTextures.reset();
 
