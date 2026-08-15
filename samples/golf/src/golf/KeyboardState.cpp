@@ -598,7 +598,7 @@ void KeyboardState::buildScene()
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
         const auto keyboardSize = entity.getComponent<cro::Sprite>().getTextureBounds();
 
-        const float scale = 3.f - std::ceil((winSize.y / 2.f) / keyboardSize.height);
+        const float scale = std::max(1.f, 3.f - std::ceil((winSize.y / 2.f) / keyboardSize.height));
         winSize *= scale;
         cam.setOrthographic(0.f, winSize.x, 0.f, winSize.y, -20.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

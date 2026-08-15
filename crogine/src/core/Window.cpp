@@ -275,6 +275,8 @@ glm::uvec2 Window::getScaledSize() const
 
 void Window::setSize(glm::uvec2 size)
 {
+    //size = { 3840u, 2160u };
+
     m_windowedSize = size;
 
     CRO_ASSERT(m_window, "window not created");
