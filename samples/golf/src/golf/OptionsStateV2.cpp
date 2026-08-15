@@ -1726,7 +1726,7 @@ void OptionsStateV2::createSettingsItems()
     //fixed range putter
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Fixed Range Putter";
-    item->description = "Fixes the max range of the putter at 10m/33ft";
+    item->description = "Fixes the range of the putter at 10m/33ft. Range can be extended when putting by using Previous or Next club buttons";
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.fixedPuttingRange = i.selectedIndex == 1;
