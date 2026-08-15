@@ -2834,6 +2834,10 @@ void GolfState::loadModels()
         }
 
         m_gullAudio.loadFromFile("dlc/craewall/sound/gull.xas", m_resources.audio);
+
+        static constexpr std::array<float, 2u> start = { -5.f, -5.f };
+        static constexpr std::array<float, 2u> end = { 5.f, 5.f };
+        m_gullPoints = pd::PoissonDiskSampling(3.f, start, end, 30, static_cast<std::uint32_t>(std::time(nullptr)));
     }
     else
     {

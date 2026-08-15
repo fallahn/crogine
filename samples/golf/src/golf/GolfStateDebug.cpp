@@ -1194,8 +1194,6 @@ void GolfState::createRope(const RopeData& ropeData)
 
 void GolfState::spawnRabbit(glm::vec3 pos, std::uint32_t seed)
 {
-    //cro::ModelDefinition md(m_resources);
-    //if (md.loadFromFile("dlc/craewall/models/props/rabbit.cmt"))
     if (m_modelDefs[ModelID::Rabbit]->isLoaded())
     {
         auto entity = m_gameScene.createEntity();
@@ -1256,23 +1254,17 @@ void GolfState::spawnGardener(glm::vec3 pos)
 
 void GolfState::spawnSeagulls(glm::vec3 pos)
 {
-    //cro::ModelDefinition md(m_resources);
-    //if (md.loadFromFile("dlc/craewall/models/props/seagull.cmt"))
     if (m_modelDefs[ModelID::Seagull]->isLoaded())
     {
         auto& md = *m_modelDefs[ModelID::Seagull];
         if (md.hasSkeleton())
         {
-            static constexpr std::array<float, 2u> start = { -5.f, -5.f };
-            static constexpr std::array<float, 2u> end = { 5.f, 5.f };
-            const auto points = pd::PoissonDiskSampling(3.f, start, end, 30, static_cast<std::uint32_t>(std::time(nullptr)));
-
-            const auto count = cro::Util::Random::value(1, std::min(static_cast<std::int32_t>(points.size()), 3));
+            const auto count = cro::Util::Random::value(1, std::min(static_cast<std::int32_t>(m_gullPoints.size()), 3));
             static constexpr float SeagullOffset = 0.1f; //model origin is not at the feet
 
             for (auto i = 0; i < count; ++i)
             {
-                glm::vec3 point = glm::vec3(points[i][0], 0.f, points[i][1]) + pos;
+                glm::vec3 point = glm::vec3(m_gullPoints[i][0], 0.f, m_gullPoints[i][1]) + pos;
                 point.y = m_collisionMesh.getTerrain(point).height + SeagullOffset;
 
                 auto entity = m_gameScene.createEntity();

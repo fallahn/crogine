@@ -36,6 +36,9 @@ source distribution.
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/util/Random.hpp>
 
+#include <future>
+#include <memory>
+
 struct BehaviourRabbit final
 {
     std::vector<std::array<float, 2u>> targetPoints;
@@ -43,6 +46,7 @@ struct BehaviourRabbit final
     std::int32_t targetIndex = 0;
     glm::vec3 currentTarget = glm::vec3(0.f);
 
+    std::shared_ptr<std::future<std::vector<std::array<float, 2u>>>> pointsResult;
     static constexpr float AreaSize = 3.f;
 
     BehaviourRabbit(const CollisionMesh* mesh, glm::vec3 basePoint, std::uint32_t seed = std::numeric_limits<std::uint32_t>::max())
@@ -54,11 +58,21 @@ struct BehaviourRabbit final
         const std::array<float, 2u> MaxArea = { basePoint.x + AreaSize, -basePoint.z + AreaSize };
         if (seed == std::numeric_limits<std::uint32_t>::max())
         {
-            targetPoints = thinks::PoissonDiskSampling(2.f, MinArea, MaxArea, 30, static_cast<std::uint32_t>(std::time(nullptr)));
+            //targetPoints = thinks::PoissonDiskSampling(2.f, MinArea, MaxArea, 30, static_cast<std::uint32_t>(std::time(nullptr)));
+            pointsResult = std::make_shared<std::future<std::vector<std::array<float, 2u>>>>(std::async(std::launch::async, 
+                [MinArea, MaxArea]() 
+                {
+                    return thinks::PoissonDiskSampling(2.f, MinArea, MaxArea, 30, static_cast<std::uint32_t>(std::time(nullptr))); 
+                }));
         }
         else
         {
-            targetPoints = thinks::PoissonDiskSampling(2.f, MinArea, MaxArea, 30, seed);
+            //targetPoints = thinks::PoissonDiskSampling(2.f, MinArea, MaxArea, 30, seed);
+            pointsResult = std::make_shared<std::future<std::vector<std::array<float, 2u>>>>(std::async(std::launch::async, 
+                [MinArea, MaxArea, seed]()
+                {
+                    return thinks::PoissonDiskSampling(2.f, MinArea, MaxArea, 30, seed); 
+                }));
         }
     }
 
@@ -74,16 +88,22 @@ struct BehaviourRabbit final
     {
         if (state == Inactive)
         {
-            state = Idle;
-            e.getComponent<cro::Skeleton>().play(Idle);
-
-            glm::vec3 pos = { targetPoints[targetIndex][0], 0.f, -targetPoints[targetIndex][1] };
-            if (collisionMesh)
+            if (pointsResult->valid())
             {
-                pos.y = collisionMesh->getTerrain(pos).height;
+                targetPoints = pointsResult->get();
+                pointsResult.reset();
+
+                state = Idle;
+                e.getComponent<cro::Skeleton>().play(Idle);
+
+                glm::vec3 pos = { targetPoints[targetIndex][0], 0.f, -targetPoints[targetIndex][1] };
+                if (collisionMesh)
+                {
+                    pos.y = collisionMesh->getTerrain(pos).height;
+                }
+                targetIndex = (targetIndex + 1) % targetPoints.size();
+                e.getComponent<cro::Transform>().setPosition(pos);
             }
-            targetIndex = (targetIndex + 1) % targetPoints.size();
-            e.getComponent<cro::Transform>().setPosition(pos);
         }
 
         else if (state == Idle)

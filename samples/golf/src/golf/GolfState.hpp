@@ -379,6 +379,7 @@ private:
     std::array<std::unique_ptr<cro::ModelDefinition>, ModelID::Count> m_modelDefs = {};
     std::unordered_map<std::int32_t, std::unique_ptr<cro::ModelDefinition>> m_ballModels;
     cro::AudioScape m_gullAudio;
+    std::vector<std::array<float, 2u>> m_gullPoints;
 
     struct ShaderPair final
     {
