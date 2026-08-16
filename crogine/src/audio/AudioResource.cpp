@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -53,10 +53,13 @@ AudioResource::AudioResource()
 bool AudioResource::load(std::int32_t ID, const std::string& path, bool streaming)
 {
     if (!streaming &&
-        m_sources.count(ID) > 0)
+        m_sources.count(ID) != 0)
     {
-        Logger::log("Data Source with ID " + std::to_string(ID) + " alread exists", Logger::Type::Error);
-        return false;
+        //Logger::log("Data Source with ID " + std::to_string(ID) + " alread exists", Logger::Type::Error);
+        //return false;
+
+        //*technically this counts as success then, surely?
+        return true;
     }
 
     std::unique_ptr<AudioSource> buffer;
