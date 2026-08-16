@@ -252,8 +252,10 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         //cached menu states depend on steam stats being
         //up to date so this hacks in a delay and pumps the callback loop
         cro::Clock cl;
-        while (cl.elapsed().asSeconds() < 1.5f)
+        while (cl.elapsed().asSeconds() < 3.5f)
         {
+            //seems excessive but if we don't at least request
+            //the monthly scores the menu crashes in the lobby
             Achievements::update();
         }
         CompetitionLeague::refreshTotal(CompetitionLeague::getCourseIndex());
