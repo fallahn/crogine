@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -335,19 +335,19 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
         //the target (so we prefer the pin still, just fall short) unless
         //the shortened target is out of bounds, in which case use the fallback
         else if (auto len = glm::length(target - m_activePlayer.position);
-                    len > Clubs[ClubID::Driver].getTargetAtLevel(Stat[CPUStat::Skill]))
+                    len > Clubs[ClubID::Driver].getTargetAtLevel(Stat[CPUStat::Skill]) * getDampening())
         {
             glm::vec3 newDir(0.f);
             if (target != fallback)
             {
-                len -= Clubs[ClubID::Driver].getTargetAtLevel(Stat[CPUStat::Skill]);
+                len -= Clubs[ClubID::Driver].getTargetAtLevel(Stat[CPUStat::Skill]) * getDampening();
                 const auto correctionDir = glm::normalize(fallback - target) * (len * 1.05f);
                 newDir = target + correctionDir;
             }
             else
             {
                 //just move back towards the player
-                const float reduction = (Clubs[ClubID::Driver].getTargetAtLevel(Stat[CPUStat::Skill]) / len) * 0.95f;
+                const float reduction = ((Clubs[ClubID::Driver].getTargetAtLevel(Stat[CPUStat::Skill]) * getDampening()) / len) * 0.95f;
                 newDir = (target - m_activePlayer.position) * reduction;
                 newDir += m_activePlayer.position;
             }
@@ -801,7 +801,7 @@ void CPUGolfer::calcDistance(float dt, glm::vec3 windVector)
             const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
 
             //but not too much if we're near the hole
-            float multiplier = absDistance / Clubs[ClubID::PitchWedge].getTargetAtLevel(Stat[CPUStat::Skill]);
+            float multiplier = absDistance / (Clubs[ClubID::PitchWedge].getTargetAtLevel(Stat[CPUStat::Skill]) * getDampening());
             targetDistance += 20.f * multiplier; //TODO reduce this if we're close to the green
         }
         m_searchDistance = targetDistance;
@@ -812,16 +812,18 @@ void CPUGolfer::calcDistance(float dt, glm::vec3 windVector)
 
 void CPUGolfer::pickClub(float dt)
 {
+
     if (m_thinking)
     {
         think(dt);
     }
     else
     {
-        auto absDistance = glm::length(m_target - m_activePlayer.position);
+        const auto dampening = m_inputParser.getDampening();
+        const auto absDistance = glm::length(m_target - m_activePlayer.position);
 
-        auto club = m_inputParser.getClub(); //this should never really be the putter here?
-        float clubDistance = Clubs[club].getTarget(m_distanceToPin);
+        const auto club = m_inputParser.getClub(); //this should never really be the putter here?
+        const float clubDistance = Clubs[club].getTarget(m_distanceToPin) *  dampening;
 
         const auto acceptClub = [&]()
         {
@@ -833,7 +835,7 @@ void CPUGolfer::pickClub(float dt)
             //LOG("CPU Entered Aiming Mode", cro::Logger::Type::Info);
         };
         
-        auto diff = m_searchDistance - clubDistance;
+        const auto diff = m_searchDistance - clubDistance;
 #ifdef CRO_DEBUG_
         debug.diff = diff;
         //debug.windDot = windDot;
@@ -848,7 +850,7 @@ void CPUGolfer::pickClub(float dt)
         }
 
         //if the new club has looped switch back and accept it
-        if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].getTarget(m_distanceToPin))
+        if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].getTarget(m_distanceToPin) * dampening)
         {
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
             m_clubID = m_prevClubID;
@@ -857,7 +859,7 @@ void CPUGolfer::pickClub(float dt)
             return;
         }
 
-        if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].getTarget(m_distanceToPin))
+        if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].getTarget(m_distanceToPin) * dampening)
         {
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
             m_clubID = m_prevClubID;
@@ -907,6 +909,7 @@ void CPUGolfer::pickClubDynamic(float dt)
     }
     else
     {
+        const auto dampening = getDampening();
         float targetDistance = glm::length(m_target - m_activePlayer.position);
         //LogI << "Elevation of target: " << (m_target.y - m_activePlayer.position.y) << std::endl;
 
@@ -926,7 +929,7 @@ void CPUGolfer::pickClubDynamic(float dt)
             m_aimTimer.restart();
 
             //TODO increase target power with slope
-            const auto clubTarget = Clubs[ClubID::Putter].getTarget(m_distanceToPin);
+            const auto clubTarget = Clubs[ClubID::Putter].getTarget(m_distanceToPin) * dampening;
             m_targetPower = std::min(1.f, targetDistance / clubTarget);
             if (clubTarget < Clubs[ClubID::Putter].getBaseTarget())
             {
@@ -943,7 +946,7 @@ void CPUGolfer::pickClubDynamic(float dt)
         const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
 
         auto club = m_inputParser.getClub();
-        const float clubDistance = Clubs[club].getTargetAtLevel(Stat[CPUStat::Skill]);
+        const float clubDistance = Clubs[club].getTargetAtLevel(Stat[CPUStat::Skill]) * dampening;
         const float diff = targetDistance - clubDistance;
 
         const auto acceptClub = [&]()
@@ -953,7 +956,7 @@ void CPUGolfer::pickClubDynamic(float dt)
             m_aimTimer.restart();
 
             //guestimate power based on club (this gets refined from predictions)
-            m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill]));
+            m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill])) * dampening;
             //m_targetPower = std::min(1.f, m_targetPower + (getOffsetValue() / 100.f));
         };
 
@@ -968,7 +971,7 @@ void CPUGolfer::pickClubDynamic(float dt)
 
 
         //if the new club has looped switch back and accept it (it's the longest we have)
-        if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].getTargetAtLevel(Stat[CPUStat::Skill]))
+        if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].getTargetAtLevel(Stat[CPUStat::Skill]) * dampening)
         {
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
             m_clubID = m_prevClubID;
@@ -977,7 +980,7 @@ void CPUGolfer::pickClubDynamic(float dt)
             return;
         }
 
-        if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].getTargetAtLevel(Stat[CPUStat::Skill]))
+        if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].getTargetAtLevel(Stat[CPUStat::Skill]) * dampening)
         {
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
             m_clubID = m_prevClubID;
@@ -1069,15 +1072,15 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         //wind is x, strength (0 - 1), z
 
         //create target angle based on wind strength / direction
-        auto w = glm::normalize(glm::vec2(windVector.x, -windVector.z));
-        auto t = glm::normalize(glm::vec2(targetDir.x, -targetDir.z));
+        const auto w = glm::normalize(glm::vec2(windVector.x, -windVector.z));
+        const auto t = glm::normalize(glm::vec2(targetDir.x, -targetDir.z));
 
         const auto maxRot = cro::Util::Const::PI;// m_inputParser.getMaxRotation();
 
         //max rotation (percent of InputParser::MaxRotation) to apply for wind.
         //rotation is good ~ 0.1 rads, so this values is 0.1/InputParser::MaxRotation
         const float MaxCompensation = 0.12f / maxRot;
-        float dot = glm::dot(w, t);
+        const float dot = glm::dot(w, t);
         float windComp = (1.f - std::abs(dot)) * MaxCompensation;
 
         auto wAngle = std::atan2(w.y, w.x);
@@ -1126,7 +1129,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
                 //power is not actually linear - ie half the distance is not
                 //half the power, so we need to pull back a little to stop
                 //overshooting long drives
-                m_targetPower = m_aimDistance / Clubs[m_clubID].getTarget(m_distanceToPin); //these aren't particularly extended anyway so leave this
+                m_targetPower = m_aimDistance / Clubs[m_clubID].getTarget(m_distanceToPin) * getDampening(); //these aren't particularly extended anyway so leave this
                 //if (Clubs[m_clubID].target > m_aimDistance)
                 {
                     //the further we try to drive the bigger the reduction
@@ -1136,7 +1139,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             }
             else
             {
-                m_targetPower = (distanceToTarget * 1.12f) / Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill]);
+                m_targetPower = (distanceToTarget * 1.12f) / (Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill]) * getDampening());
             }
             m_targetPower += ((0.06f * (-dot * windVector.y)) * greenCompensation) * m_targetPower;
 
@@ -1331,7 +1334,7 @@ void CPUGolfer::updatePrediction(float dt)
                     const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
 
                     float precDiff = std::sqrt(resultPrecision);
-                    float change = (precDiff / Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill])) / 2.f;
+                    float change = (precDiff / (Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill])) * getDampening()) / 2.f;
                     change += getOffsetValue() / 50.f;
 
                     if (glm::length2(predictDir) < glm::length2(targetDir))
@@ -1533,6 +1536,11 @@ float CPUGolfer::getOffsetValue() const
     return static_cast<float>(1 - ((m_offsetRotation % 2) * 2))
         //* static_cast<float>((m_offsetRotation % (m_skills.size() - getSkillIndex())))
         * multiplier;
+}
+
+float CPUGolfer::getDampening() const
+{
+    return m_inputParser.getDampening() * Dampening[m_inputParser.getTerrain()] * LieDampening[m_inputParser.getTerrain()][m_inputParser.getLie()];
 }
 
 void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)

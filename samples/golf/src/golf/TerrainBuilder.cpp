@@ -88,17 +88,23 @@ namespace
     static constexpr std::uint32_t QuadsPerMetre = 1;
 
     static constexpr float MaxShrubOffset = MaxTerrainHeight + 18.f;
-    static constexpr std::int32_t SlopeGridSize = 20;
+    static constexpr std::int32_t SlopeGridSize = 40;
     static constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
     
+#ifdef PERF_TEST
+    bool disableGridData = false;
+    bool disableTreeData = false;
+    bool disableTerrainData = false;
+    bool disableCrowdData = false;
+#endif
     //number of times the resolution of the map to increase normal map resolution by
     //MUST be even and should be 2,4 or 8 as 1 will cause a div0!
-    static constexpr std::int32_t NormalMapMultiplier = 8; 
+    //static constexpr std::int32_t NormalMapMultiplier = 8; 
 
-    constexpr glm::uvec2 getNormalMapSize()
-    {
-        return { MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier };
-    }
+    //constexpr glm::uvec2 getNormalMapSize()
+    //{
+    //    return { MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier };
+    //}
 
     struct GrassUniform final
     {
@@ -221,6 +227,20 @@ TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>&
     m_wantsUpdate   (false)
 {
     m_slopeBuffer.reserve(SlopeGridSize * SlopeGridSize * 4);
+
+#ifdef PERF_TEST
+    registerWindow([]()
+        {
+            if (ImGui::Begin("Debug Perf"))
+            {
+                ImGui::Checkbox("Disable Grid Data", &disableGridData);
+                ImGui::Checkbox("Disable Tree Data", &disableTreeData);
+                ImGui::Checkbox("Disable Terrain Data", &disableTerrainData);
+                ImGui::Checkbox("Disable Crowd Data", &disableCrowdData);
+            }
+            ImGui::End();
+        });
+#endif
 #ifdef CRO_DEBUG_
     //registerWindow([&]() 
     //    {
@@ -739,6 +759,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     resources.shaders.loadFromString(ShaderID::Slope, SlopeVertexShader, SlopeFragmentShader);
     auto& slopeShader = resources.shaders.get(ShaderID::Slope);
     m_slopeProperties.positionUniform = slopeShader.getUniformID("u_centrePosition");
+    m_slopeProperties.radiusUniform = slopeShader.getUniformID("u_radius");
     m_slopeProperties.alphaUniform = slopeShader.getUniformID("u_alpha");
     m_slopeProperties.shader = slopeShader.getGLHandle();
     materialID = resources.materials.add(slopeShader);
@@ -809,21 +830,9 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_slopeProperties.meshData->boundingSphere.radius = glm::length(m_slopeProperties.meshData->boundingSphere.centre);
     m_slopeProperties.entity = entity;
 
-    //create and update the initial normal map
-    m_normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
-    constexpr glm::vec2 mapSize(MapSize);
-    const glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
-    const glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -40.f, 40.f);
-    const auto normalViewProj = projMat * viewMat;
-
-    //we can set this once so we don't need to store the matrix
-    glCheck(glUseProgram(m_normalShader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(m_normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
-    glCheck(glUseProgram(0));
-
     if (m_currentHole < m_holeData.size())
     {
-        renderNormalMap();
+        updateCollisionMesh();
     }
 
     //launch the thread - wants update is initially true
@@ -840,7 +849,7 @@ void TerrainBuilder::applyHoleIndex(std::size_t idx)
         && idx > m_currentHole)
     {
         m_currentHole = idx;
-        renderNormalMap(true);
+        updateCollisionMesh(true);
         m_wantsUpdate = true;
     }
 }
@@ -850,7 +859,7 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
     //wait for thread to finish (usually only the first time)
     //this *shouldn't* ever block unless something goes wrong
     //in which case we need to implement a get-out clause
-    while (m_wantsUpdate) {}
+    while (m_wantsUpdate) { /*LogW << "waiting on terrain thread!" << std::endl;*/ }
 
     if (holeIndex == m_currentHole)
     {
@@ -871,8 +880,13 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
                 swapData.destination = -TerrainLevel;
                 swapData.currentTime = 0.f;
 
-                m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
-                m_billboardTreeEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardTreeBuffer);
+#ifdef PERF_TEST
+                if (!disableTreeData)
+#endif
+                {
+                    m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
+                    m_billboardTreeEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardTreeBuffer);
+                }
                 m_propRootEntities[first].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
 
                 swapData.start = m_propRootEntities[second].getComponent<cro::Transform>().getPosition().y;
@@ -891,7 +905,8 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
                 m_propRootEntities[second].getComponent<cro::Callback>().active = true;
 
                 //update any instanced geom
-                if (!m_instanceTransforms.empty()
+                if (/*!disableTreeData &&*/
+                    !m_instanceTransforms.empty()
                     && m_instancedEntities[first].isValid())
                 {
                     m_instancedEntities[first].getComponent<cro::Model>().setHidden(false);
@@ -901,7 +916,8 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
 
                 for (auto i = 0u; i < MaxShrubInstances; ++i)
                 {
-                    if (!m_shrubTransforms[i].empty()
+                    if (/*!disableTreeData &&*/
+                        !m_shrubTransforms[i].empty()
                         && m_instancedShrubs[first][i].isValid())
                     {
                         m_instancedShrubs[first][i].getComponent<cro::Model>().setHidden(false);
@@ -912,35 +928,45 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
 
                 //crowd instances
                 //TODO can we move some of this to the thread func (can't set transforms in it though)
-                const auto density = m_holeData[m_currentHole].puttFromTee ? std::min(m_sharedData.crowdDensity, 1) : m_sharedData.crowdDensity;
-                std::vector<std::vector<glm::mat4>> positions(m_crowdEntities[first].size());
-                for (auto i = 0u; i < m_holeData[m_currentHole].crowdPositions[density].size(); ++i)
+#ifdef PERF_TEST
+                if (!disableCrowdData)
+#endif
                 {
-                    positions[i % positions.size()].push_back(m_holeData[m_currentHole].crowdPositions[density][i]);
-                }
-
-                for (auto i = 0u; i < m_crowdEntities[first].size(); ++i)
-                {
-                    if (m_crowdEntities[first][i].isValid()
-                        && !positions[i].empty())
+                    const auto density = m_holeData[m_currentHole].puttFromTee ? std::min(m_sharedData.crowdDensity, 1) : m_sharedData.crowdDensity;
+                    std::vector<std::vector<glm::mat4>> positions(m_crowdEntities[first].size());
+                    for (auto i = 0u; i < m_holeData[m_currentHole].crowdPositions[density].size(); ++i)
                     {
-                        m_crowdEntities[first][i].getComponent<cro::Model>().setInstanceTransforms(positions[i]);
-                        m_crowdEntities[first][i].getComponent<cro::Model>().setHidden(false);
+                        positions[i % positions.size()].push_back(m_holeData[m_currentHole].crowdPositions[density][i]);
                     }
-                }
 
-                if (m_umbrellaEntities[first].isValid()
-                    && !positions[0].empty())
-                {
-                    m_umbrellaEntities[first].getComponent<cro::Model>().setInstanceTransforms(positions[0]);
-                    m_umbrellaEntities[first].getComponent<cro::Model>().setHidden(false);
+                    for (auto i = 0u; i < m_crowdEntities[first].size(); ++i)
+                    {
+                        if (m_crowdEntities[first][i].isValid()
+                            && !positions[i].empty())
+                        {
+                            m_crowdEntities[first][i].getComponent<cro::Model>().setInstanceTransforms(positions[i]);
+                            m_crowdEntities[first][i].getComponent<cro::Model>().setHidden(false);
+                        }
+                    }
+
+                    if (m_umbrellaEntities[first].isValid()
+                        && !positions[0].empty())
+                    {
+                        m_umbrellaEntities[first].getComponent<cro::Model>().setInstanceTransforms(positions[0]);
+                        m_umbrellaEntities[first].getComponent<cro::Model>().setHidden(false);
+                    }
                 }
             }
 
             //upload terrain data
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_terrainProperties.vbo));
-            glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_STATIC_DRAW));
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+#ifdef PERF_TEST
+            if (!disableTerrainData)
+#endif
+            {
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_terrainProperties.vbo));
+                glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_STATIC_DRAW));
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+            }
 
             m_terrainProperties.morphTime = 0.f;
             glCheck(glUseProgram(m_terrainProperties.shaderID));
@@ -949,15 +975,22 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
             glCheck(glUniform1f(m_terrainProperties.morphUniformShadow, m_terrainProperties.morphTime));
             //terrain callback is set active when shrubbery callback switches
         }
-        //upload the slope buffer data - this might be different even if the hole model is the same
-        cro::DynamicMeshBuilder::setVertexData(*m_slopeProperties.meshData, cro::DataArray(m_slopeBuffer.data(), m_slopeBuffer.size()));
-
-
-        auto* submesh = &m_slopeProperties.meshData->indexData[0];
-        submesh->indexCount = static_cast<std::uint32_t>(m_slopeIndices.size());
-        cro::DynamicMeshBuilder::setIndexData(*m_slopeProperties.meshData, { cro::DataArray(m_slopeIndices.data(), m_slopeIndices.size()) });
         
-        m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
+#ifdef PERF_TEST
+        if (!disableGridData)
+#endif
+        {
+            //upload the slope buffer data - this might be different even if the hole model is the same
+            cro::DynamicMeshBuilder::setVertexData(*m_slopeProperties.meshData, cro::DataArray(m_slopeBuffer.data(), m_slopeBuffer.size()));
+
+
+            auto* submesh = &m_slopeProperties.meshData->indexData[0];
+            submesh->indexCount = static_cast<std::uint32_t>(m_slopeIndices.size());
+            cro::DynamicMeshBuilder::setIndexData(*m_slopeProperties.meshData, { cro::DataArray(m_slopeIndices.data(), m_slopeIndices.size()) });
+
+            m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
+        }
+
 
 #ifdef GEN_GRASS
         //if we have any transforms update the chunks
@@ -985,7 +1018,7 @@ void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
         m_currentHole++;
         if (m_currentHole < m_holeData.size())
         {
-            renderNormalMap();
+            updateCollisionMesh();
             m_wantsUpdate = true;
         }
     }
@@ -1095,6 +1128,13 @@ void TerrainBuilder::applyGrassDensity()
         e.getComponent<cro::Model>().setHidden(m_sharedData.grassDensity == 0);
     }
 #endif
+}
+
+void TerrainBuilder::setDistanceToPin(float d)
+{
+    glUseProgram(m_slopeProperties.shader);
+    glUniform1f(m_slopeProperties.radiusUniform, d);
+    //glUseProgram(0);
 }
 
 //private
@@ -1238,28 +1278,6 @@ void TerrainBuilder::onChunkUpdate(const std::vector<std::int32_t>& visibleChunk
 
 void TerrainBuilder::threadFunc()
 {
-    const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
-    {
-        constexpr auto size = getNormalMapSize();
-        x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
-        y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
-
-        auto idx = 4 * (y * size.x + x);
-        return m_normalMapValues[idx + 3];
-    };
-
-    const auto readNormal = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
-    {
-        constexpr auto size = getNormalMapSize();
-        x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
-        y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
-
-        auto idx = 4 * (y * size.x + x);
-        glm::vec3 normal(m_normalMapValues[idx], m_normalMapValues[idx + 1], m_normalMapValues[idx + 2]);
-
-        return normal;
-    };
-
     //we can optimise this a bit by storing each prop
     //in a grid-indexed array to save all the looping...
     const auto GridSize = 8;
@@ -1337,21 +1355,21 @@ void TerrainBuilder::threadFunc()
                 m_billboardBuffer.clear();
                 m_billboardTreeBuffer.clear();
                 
-                for (auto [x, y] : grass)
+                for (const auto [x, y] : grass)
                 {
-                    const auto [terrain, terrainHeight] = readMap(mapImage, x, y);
+                    const auto terrainData = m_collisionMesh.getTerrain({ x, 10.f, -y });
+                    const auto [terrain, terrainHeight] = readMap(mapImage, x, y); //NOTE we *do* need to read this as the terrain height may be greater than the model height
                     if (terrain == TerrainID::Rough)
                     {
                         const float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
-                        const float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
 
-                        if (height > WaterLevel)
+                        if (terrainData.height > WaterLevel)
                         {
-                            const auto n = readNormal(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+                            const auto& n = terrainData.normal;
                             //don't place on steep slopes
                             if (glm::dot(n, cro::Transform::Y_AXIS) > 0.3f)
                             {
-                                glm::vec3 bbPos({ x, height - 0.02f, -y });
+                                const glm::vec3 bbPos({ x, terrainData.height - 0.02f, -y });
                                 
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                                 bb.position = bbPos;
@@ -1364,12 +1382,11 @@ void TerrainBuilder::threadFunc()
                     if (terrain == TerrainID::Rough
                         || terrain == TerrainID::Scrub)
                     {
-                        float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
-                        height = std::max(height, terrainHeight + TerrainLevel);
+                        const auto height = std::max(terrainData.height, terrainHeight + TerrainLevel);
 
                         if (height < 0.1f)
                         {
-                            float scale = static_cast<float>(cro::Util::Random::value(9, 16)) / 10.f;
+                            const float scale = static_cast<float>(cro::Util::Random::value(9, 16)) / 10.f;
 
                             glm::mat4 tx = glm::translate(glm::mat4(1.f), { x, height - 0.01f, -y });
                             tx = glm::rotate(tx, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI), cro::Transform::Y_AXIS);
@@ -1379,14 +1396,14 @@ void TerrainBuilder::threadFunc()
                     }
                 }
 
-                for (auto [x, y] : trees)
+                for (const auto [x, y] : trees)
                 {
+                    const auto terrainData = m_collisionMesh.getTerrain({ x, 10.f, -y });
                     auto [terrain, height] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Scrub)
                     {
                         //check if model mesh is higher than terrain
-                        float height2 = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
-                        height = std::max(height + TerrainLevel, height2);
+                        height = std::max(height + TerrainLevel, terrainData.height);
 
                         //check we're actually above water height
                         if (height > -(TerrainLevel - WaterLevel))
@@ -1440,7 +1457,7 @@ void TerrainBuilder::threadFunc()
                                 }
 
                                 //low quality version - always rendered on flight cam and optionally on LQ settings
-                                glm::vec3 bbPos({ x, height - 0.05f, -y });
+                                const glm::vec3 bbPos({ x, height - 0.05f, -y });
 
                                 const float scale = (static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f) * 1.2f;
                                 auto& bb = m_billboardTreeBuffer.emplace_back(m_billboardTemplates[BillboardID::Tree01 + currIndex]);
@@ -1462,24 +1479,23 @@ void TerrainBuilder::threadFunc()
                     }
                 }
                 
-                for (auto [x, y] : flowers)
+                for (const auto [x, y] : flowers)
                 {
+                    const auto terrainData = m_collisionMesh.getTerrain({ x, 10.f, -y });
                     auto [terrain, height] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Scrub
                         /*&& height > 0.6f*/)
                     {
-                        float height2 = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
-                        height = std::max(height + TerrainLevel, height2);
+                        height = std::max(height + TerrainLevel, terrainData.height);
 
                         if (height > /*-(TerrainLevel - WaterLevel)*/0)
                         {
-                            glm::vec3 position(x, height - 0.001f, -y);
+                            const glm::vec3 position(x, height - 0.001f, -y);
+                            const glm::vec3 bbPos({ x, height - 0.05f, -y });
 
                             if (!nearProp(position))
                             {
-                                glm::vec3 bbPos({ x, height - 0.05f, -y });
-                                
-                                float scale = static_cast<float>(cro::Util::Random::value(13, 17)) / 10.f;
+                                const float scale = static_cast<float>(cro::Util::Random::value(13, 17)) / 10.f;
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Bush02)]);
                                 bb.position = bbPos;
                                 bb.size *= scale;
@@ -1488,9 +1504,9 @@ void TerrainBuilder::threadFunc()
                             else
                             {
                                 //TODO not sure how this position is different, but hey
-                                glm::vec3 bbPos({ x, height - 0.05f, -y });
+                                //const glm::vec3 bbPos({ x, height - 0.05f, -y });
                                 
-                                float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
+                                const float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                                 bb.position = bbPos;
                                 bb.size *= scale;
@@ -1610,7 +1626,7 @@ void TerrainBuilder::threadFunc()
                 m_slopeIndices.clear();
 
                 std::uint32_t currIndex = 0u;
-                auto pinPos = m_holeData[m_currentHole].pin;
+                const auto pinPos = m_holeData[m_currentHole].pin;
 
                 //we can optimise this by only looping the grid around the pin pos
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
@@ -1618,7 +1634,7 @@ void TerrainBuilder::threadFunc()
                 static constexpr float DashCount = 2.f;// 80.f;
                 static constexpr float SlopeSpeed = -40.f;//REMEMBER this const is also used in the slope frag shader
                 static constexpr std::int32_t AvgDistance = 1;
-                static constexpr std::int32_t GridDensity = NormalMapMultiplier; //verts per metre, however grid size is half this.
+                static constexpr std::int32_t GridDensity = 8;// NormalMapMultiplier; //verts per metre, however grid size is half this.
                 static constexpr float GridSpacing = 1.f / GridDensity;
 
                 static constexpr float SurfaceOffset = 0.02f; //verts are pushed along normal by this much
@@ -1631,6 +1647,7 @@ void TerrainBuilder::threadFunc()
                         auto worldY = startY + (y / GridDensity);
 
                         auto terrain = readMap(mapImage, worldX, worldY).first;
+                        //TODO get world coords and sample collision mesh
                         if (terrain == TerrainID::Green)
                         {
                             float posX = static_cast<float>(x / GridDensity) + ((x % GridDensity) * GridSpacing) + startX;
@@ -1642,27 +1659,34 @@ void TerrainBuilder::threadFunc()
                             worldX = startX * GridDensity + x;
                             worldY = startY * GridDensity + y;
 
-                            auto height = (readHeightMap(worldX, worldY, GridDensity) - pinPos.y);
+                            const float sampleHeight = pinPos.y + 1.f;
+
                             SlopeVertex vert;
-                            vert.position = { posX, height, posZ };
-                            vert.normal = readNormal(worldX, worldY, GridDensity);
+                            vert.position = { posX, sampleHeight, posZ };
+
+                            auto terrain = m_collisionMesh.getTerrain(vert.position + pinPos);
+                            vert.position.y = terrain.height - pinPos.y;
+                            vert.normal = terrain.normal;
 
                             //this is the number of times the 'dashes' repeat if enabled in the shader
                             //and the speed/direction based on height difference
                             vert.texCoord = glm::packHalf2x16({ 0.f, 0.f });
 
-                            glm::vec3 offset(GridSpacing, 0.f, 0.f);
-                            height = (readHeightMap(worldX + 1, worldY, GridDensity) - pinPos.y);
 
                             //because of the low precision of the height map
                             //we average out the slope over a greater distance
+                            //to calculate the correct UV (used for slope animation)
                             glm::vec3 avgPosition = vert.position + glm::vec3(AvgDistance, 0.f, 0.f);
-                            avgPosition.y = (readHeightMap(worldX + AvgDistance, worldY, GridDensity) - pinPos.y);
+                            avgPosition.y = m_collisionMesh.getTerrain(avgPosition + pinPos).height - pinPos.y;
 
+                            glm::vec3 offset(GridSpacing, 0.f, 0.f);
                             SlopeVertex vert2;
                             vert2.position = vert.position + offset;
-                            vert2.position.y = height;
-                            vert2.normal = readNormal(worldX + 1, worldY, GridDensity);
+                            vert2.position.y = sampleHeight;
+
+                            terrain = m_collisionMesh.getTerrain(vert2.position + pinPos);
+                            vert2.position.y = terrain.height - pinPos.y;
+                            vert2.normal = terrain.normal;
 
                             const glm::vec2 uv2 = { vert2.position.x * DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
                             const glm::vec2 uv1 = { vert.position.x * DashCount, uv2.y }; //must be constant across segment
@@ -1673,16 +1697,22 @@ void TerrainBuilder::threadFunc()
                             //shame we can't just recycle the index...
                             auto vert3 = vert;
 
-                            offset = glm::vec3(0.f, 0.f, -GridSpacing);
-                            height = (readHeightMap(worldX, worldY + 1, GridDensity) - pinPos.y);
+                            terrain = m_collisionMesh.getTerrain(glm::vec3(vert3.position.x, sampleHeight, vert3.position.z) + pinPos);
+                            vert3.position.y = terrain.height - pinPos.y;
+                            vert3.normal = terrain.normal;
+
 
                             avgPosition = vert.position + glm::vec3(0.f, 0.f, -AvgDistance);
-                            avgPosition.y = (readHeightMap(worldX, worldY + AvgDistance, GridDensity) - pinPos.y);
+                            avgPosition.y = m_collisionMesh.getTerrain(avgPosition + pinPos).height - pinPos.y;
 
+                            offset = glm::vec3(0.f, 0.f, -GridSpacing);
                             SlopeVertex vert4;
                             vert4.position = vert.position + offset;
-                            vert4.position.y = height;
-                            vert4.normal = readNormal(worldX, worldY + 1, GridDensity);
+                            vert4.position.y = sampleHeight;
+
+                            terrain = m_collisionMesh.getTerrain(vert4.position + pinPos);
+                            vert4.position.y = terrain.height - pinPos.y;
+                            vert4.normal = terrain.normal;
 
                             const glm::vec2 uv4 = { vert4.position.z * DashCount, std::min(-glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
                             const glm::vec2 uv3 = { vert3.position.z * DashCount, uv4.y };
@@ -1698,7 +1728,7 @@ void TerrainBuilder::threadFunc()
                             //TODO this is a lazy addition where we could really skip
                             //all vert processing entirely when not needed, but it
                             //doesn't actually make processing time *worse*
-                            if ((y % (NormalMapMultiplier / 2) == 0))
+                            if ((y % (GridDensity / 2) == 0))
                             {
                                 m_slopeBuffer.push_back(vert);
                                 m_slopeIndices.push_back(currIndex++);
@@ -1706,7 +1736,7 @@ void TerrainBuilder::threadFunc()
                                 m_slopeIndices.push_back(currIndex++);
                             }
 
-                            if ((x % (NormalMapMultiplier / 2)) == 0)
+                            if ((x % (GridDensity / 2)) == 0)
                             {
                                 m_slopeBuffer.push_back(vert3);
                                 m_slopeIndices.push_back(currIndex++);
@@ -1750,7 +1780,7 @@ void TerrainBuilder::threadFunc()
     }
 }
 
-void TerrainBuilder::renderNormalMap(bool forceUpdate)
+void TerrainBuilder::updateCollisionMesh(bool forceUpdate)
 {
     //skip this if we rendered the model the previous hole
     if (m_currentHole && !forceUpdate &&
@@ -1760,22 +1790,5 @@ void TerrainBuilder::renderNormalMap(bool forceUpdate)
     }
 
     const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
-    //so... we're technically only using a single target here HOWEVER using a regulsr render texture
-    //even in floating point doesn't render the grid correctly. Even weirder still if I set this to create
-    //only one target the rendering breaks COMPLETELY despite the removal of a completely unused target...
-    if (!m_normalMap.available())
-    {
-        m_normalMap.setPrecision(1, cro::TexturePrecision::Default);
-        m_normalMap.setChannelCount(1, 1);
-        m_normalMap.create(getNormalMapSize().x, getNormalMapSize().y, 2, true);
-    }
-    //m_normalMap.create(getNormalMapSize().x, getNormalMapSize().y, false, false, 0, true);
-    renderToNormalMap(meshData, m_normalShader, m_normalMap);
-
-    
-    //copy the texture to an array we can query
-    m_normalMapValues.resize(getNormalMapSize().x * getNormalMapSize().y * 4);
-    //glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture(1).textureID);
-    glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture().getGLHandle());
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, m_normalMapValues.data());
+    m_collisionMesh.updateCollisionMesh(meshData);
 }

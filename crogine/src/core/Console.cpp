@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -96,6 +96,7 @@ namespace
 }
 int textEditCallback(ImGuiInputTextCallbackData* data);
 
+float Console::m_avgFrameTime = 0.f;
 
 //public
 void Console::print(const std::string& line)
@@ -461,7 +462,8 @@ void Console::draw()
                 //stats
                 if (ui::BeginTabItem("Stats"))
                 {
-                    ui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                    //ui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                    ui::Text("Application average %.3f ms/frame (%.1f FPS)", m_avgFrameTime, 1.f / m_avgFrameTime);
                     ui::NewLine();
 
                     for (const auto& [f, _] : m_statFuncs)
@@ -500,6 +502,8 @@ void Console::draw()
                 break;
             }
         }
+
+        currentResolution = std::clamp(currentResolution, 0, static_cast<std::int32_t>(resolutions.size() - 1));
         return;
     }
 
@@ -723,6 +727,13 @@ void Console::finalise()
     //to modify setConvarValue as it calls this to
     //update the file with new values.
     convars.save(App::getPreferencePath() + convarName);
+}
+
+void Console::updateAverageRenderTime(float ft)
+{
+    static constexpr float alpha = 0.2f;
+    static constexpr float alphaInv = 1.f - alpha;
+    m_avgFrameTime = (alpha * ft) + alphaInv * m_avgFrameTime;
 }
 
 ConfigFile& Console::getConvars()

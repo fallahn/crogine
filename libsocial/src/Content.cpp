@@ -94,3 +94,30 @@ std::string Content::getUserContentPath(std::int32_t contentType)
         return getBaseContentPath() + "chat_logs/";
     }
 }
+
+bool Content::DLCAvailable(std::int32_t idx)
+{
+    switch (idx)
+    {
+    default: return false;
+    case 0:
+    case 1:
+    case 2:
+        return cro::FileSystem::directoryExists(SearchPaths[idx]);
+    }
+}
+
+bool Content::leagueAvailable(std::int32_t leagueID)
+{
+    //hmm we need to get the LeagueID enum in here somehow...
+
+    switch (leagueID)
+    {
+    default: return true;
+    case 7:
+        return cro::FileSystem::directoryExists(SearchPaths[0])
+            && cro::FileSystem::directoryExists(SearchPaths[1]);
+    case 8:
+        return cro::FileSystem::directoryExists(SearchPaths[2]);
+    }
+}

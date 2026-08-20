@@ -40,6 +40,7 @@ source distribution.
 #include "MoonPhase.hpp"
 #include "TimeOfDay.hpp"
 #include "LightAnimationSystem.hpp"
+#include "RopeSystem.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
@@ -260,12 +261,21 @@ void GolfState::loadMap()
             };
             constexpr std::array<CrowdContext, 4u> Contexts =
             {
+                //TODO we need to choose these two when putting from tee
+                //but at this point we don't yet have that info
                 CrowdContext({ -8.f, -1.5f }, { 8.f, 1.5f }, 1.75f),
                 CrowdContext({ -8.f, -1.5f }, { 8.f, 1.5f }, 0.75f),
-                CrowdContext({ -16.f, -3.5f }, { 16.f, 3.5f }, 0.75f),
-                CrowdContext({ -18.f, -5.5f }, { 18.f, 5.5f }, 0.85f)
+                
+                //TODO these are better but currently I'd rather not
+                //mangle the putting course layout
+                /*CrowdContext({ -14.f, -0.5f }, { 14.f, 2.5f }, 1.2f),
+                CrowdContext({ -16.f, -2.5f }, { 16.f, 3.5f }, 0.85f),*/
+                
+                CrowdContext({ -18.f, -2.5f }, { 18.f, 5.5f }, 0.85f),
+                CrowdContext({ -18.f, -5.5f }, { 18.f, 5.5f }, 0.75f),
             };
-
+            /*if (holeData.puttFromTee) LogI << "Putting hole" << std::endl;
+            else LogI << "this is not a putting hole" << std::endl;*/
             const auto dist = pd::PoissonDiskSampling(Contexts[crowdIdx].density, Contexts[crowdIdx].start, Contexts[crowdIdx].end, 30, seed++);
 
             rotation *= cro::Util::Const::degToRad;
@@ -815,6 +825,43 @@ void GolfState::loadMap()
                         }
                     };
 
+                const auto parseRopeData = [&](const cro::ConfigObject& obj)
+                    {
+                        //just store the info on the hole data
+                        //and create during transition - mark as
+                        //garbage collect so removed afterwards too.
+                        //see Menustate 3325 on mesh construction
+                        RopeData d;
+                        for (const auto& p : obj.getProperties())
+                        {
+                            if (p.getName() == "point")
+                            {
+                                d.points.push_back(p.getValue<glm::vec3>());
+                            }
+                            else if (p.getName() == "slackness")
+                            {
+                                d.slackness = p.getValue<float>();
+                            }
+                        }
+                        if (d.points.size() == 2u)
+                        {
+                            holeData.ropeData.push_back(d);
+
+                            if (m_materialIDs[MaterialID::Bunting] == -1)
+                            {
+                                const std::string def = m_sharedData.nightTime ? "#define USE_MRT\n" : "";
+
+                                //init the material
+                                m_resources.shaders.loadFromString(ShaderID::Rope, BuntingVert, BuntingGeom, BuntingFrag, def);
+                                m_materialIDs[MaterialID::Bunting] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Rope));
+                            }
+                        }
+
+                        //this is disabled by default to save processing
+                        //as most maps don't use this
+                        m_gameScene.setSystemActive<RopeSystem>(true);
+                    };
+
                 //look for prop models (are optional and can fail to load no problem)
                 const auto parseProps = [&](const std::vector<cro::ConfigObject>& propObjs)
                     {
@@ -836,6 +883,7 @@ void GolfState::loadMap()
                                 float radiusMultiplier = 1.f; //hack because models with a wake eg boats push the bounding radius too far
 
                                 std::string particlePath;
+                                glm::vec3 particlePos = glm::vec3(0.f);
                                 std::string emitterName;
 
                                 const cro::ConfigObject* childLight = nullptr;
@@ -915,6 +963,21 @@ void GolfState::loadMap()
                                         && !childLight) //only add the first one
                                     {
                                         childLight = &o;
+                                    }
+                                    else if (o.getName() == "particles")
+                                    {
+                                        const auto& pProps = o.getProperties();
+                                        for (const auto& pProp : pProps)
+                                        {
+                                            if (pProp.getName() == "path")
+                                            {
+                                                particlePath = pProp.getValue<std::string>();
+                                            }
+                                            else if (pProp.getName() == "position")
+                                            {
+                                                particlePos = pProp.getValue<glm::vec3>();
+                                            }
+                                        }
                                     }
                                 }
 
@@ -1088,6 +1151,47 @@ void GolfState::loadMap()
 #endif
                                             }
                                         }
+                                        else if (cro::FileSystem::getFileName(path).find("lighthouse") != std::string::npos)
+                                        {
+                                            if (propAudio.hasEmitter("foghorn")
+                                                && m_sharedData.weatherType == WeatherType::Mist)
+                                            {
+                                                const auto scale = ent.getComponent<cro::Transform>().getScale();
+                                                const float vol = scale.x * scale.y;
+                                                static constexpr float HornTimeout = 70.f;
+
+                                                auto fh = m_gameScene.createEntity();
+                                                fh.addComponent<cro::Transform>().setPosition({ 0.f, 27.f, 0.f });
+                                                fh.addComponent<cro::AudioEmitter>() = propAudio.getEmitter("foghorn");
+                                                fh.getComponent<cro::AudioEmitter>().setVolume(vol * 0.5f);
+                                                fh.addComponent<cro::Callback>().active = true;
+                                                fh.getComponent<cro::Callback>().setUserData<float>(HornTimeout);
+                                                fh.getComponent<cro::Callback>().function =
+                                                    [this, ent](cro::Entity e, float dt)
+                                                    {
+                                                        if (!ent.isValid())
+                                                        {
+                                                            e.getComponent<cro::Callback>().active = false;
+                                                            m_gameScene.destroyEntity(e);
+                                                            return;
+                                                        }
+
+                                                        if (/*glm::length2(ent.getComponent<cro::Transform>().getWorldScale()) != 0*/
+                                                            !ent.getComponent<cro::Model>().isHidden())
+                                                        {
+                                                            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+                                                            ct -= dt;
+                                                            if (ct < 0)
+                                                            {
+                                                                ct += HornTimeout;
+                                                                e.getComponent<cro::AudioEmitter>().play();
+                                                            }
+                                                        }
+                                                    };
+                                                ent.getComponent<cro::Transform>().addChild(fh.getComponent<cro::Transform>());
+                                            }
+                                        }
+
 
                                         //add path if it exists
                                         if (curve.size() > 3)
@@ -1115,24 +1219,27 @@ void GolfState::loadMap()
                                             cro::EmitterSettings settings;
                                             if (settings.loadFromFile(particlePath, m_resources.textures))
                                             {
+                                                particlePos += settings.spawnOffset;
+                                                settings.spawnOffset = glm::vec3(0.f);
+
                                                 auto pEnt = m_gameScene.createEntity();
-                                                pEnt.addComponent<cro::Transform>();
+                                                pEnt.addComponent<cro::Transform>().setPosition(particlePos);
                                                 pEnt.addComponent<cro::ParticleEmitter>().settings = settings;
                                                 pEnt.getComponent<cro::ParticleEmitter>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
                                                 pEnt.addComponent<cro::CommandTarget>().ID = CommandID::ParticleEmitter;
                                                 ent.getComponent<cro::Transform>().addChild(pEnt.getComponent<cro::Transform>());
                                                 
                                                 //TODO deactivate this when particles stop
-                                                ent.addComponent<cro::Callback>().active = true;
+                                                /*ent.addComponent<cro::Callback>().active = true;
                                                 ent.getComponent<cro::Callback>().setUserData<glm::vec3>(ent.getComponent<cro::Transform>().getPosition());
                                                 ent.getComponent<cro::Callback>().function =
                                                     [pEnt](cro::Entity e, float dt) mutable
                                                     {
-                                                        auto prevPos = e.getComponent<cro::Callback>().getUserData<glm::vec3>();
-                                                        auto pos = e.getComponent<cro::Transform>().getPosition();
+                                                        const auto prevPos = e.getComponent<cro::Callback>().getUserData<glm::vec3>();
+                                                        const auto pos = e.getComponent<cro::Transform>().getPosition();
                                                         pEnt.getComponent<cro::ParticleEmitter>().parentVelocity = (pos - prevPos) * (1.f / dt);
                                                         e.getComponent<cro::Callback>().setUserData<glm::vec3>(pos);
-                                                    };
+                                                    };*/
                                                 holeData.particleEntities.push_back(pEnt);
                                             }
                                         }
@@ -1391,7 +1498,11 @@ void GolfState::loadMap()
                                             const auto ext = cro::FileSystem::getFileExtension(swarmSettings.texture);
                                             if (!ext.empty())
                                             {
-                                                swarmSettings.texture = swarmSettings.texture.substr(0, swarmSettings.texture.find(ext)) + "_night" + ext;
+                                                const auto nightPath = swarmSettings.texture.substr(0, swarmSettings.texture.find(ext)) + "_night" + ext;
+                                                if (cro::FileSystem::fileExists(nightPath))
+                                                {
+                                                    swarmSettings.texture = nightPath;
+                                                }
                                             }
                                         }
                                     }
@@ -1411,12 +1522,36 @@ void GolfState::loadMap()
                                     {
                                         swarmSettings.frameCount = sp.getValue<std::int32_t>();
                                     }
+                                    else if (spName == "type")
+                                    {
+                                        swarmSettings.type = std::clamp(0u, sp.getValue<std::uint32_t>(), static_cast<std::uint32_t>(Swarm::Count - 1));
+                                    }
                                 }
 
                                 auto ent = createSwarm(swarmSettings);
                                 ent.getComponent<cro::Model>().setHidden(true);
                                 holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
                                 holeData.propEntities.push_back(ent);
+                            }
+                            else if (name == "rabbit"
+                                && !m_sharedData.nightTime)
+                            {
+                                for (const auto& rp : obj.getProperties())
+                                {
+                                    if (rp.getName() == "position")
+                                    {
+                                        holeData.rabbitPositions.push_back(rp.getValue<glm::vec3>());
+                                    }
+                                }
+
+                                if (!m_modelDefs[ModelID::Rabbit]->isLoaded())
+                                {
+                                    m_modelDefs[ModelID::Rabbit]->loadFromFile("dlc/craewall/models/props/rabbit.cmt");
+                                }
+                            }
+                            else if (name == "rope")
+                            {
+                                parseRopeData(obj);
                             }
                         }
                     };
@@ -1568,7 +1703,7 @@ void GolfState::loadMap()
                 auto result = m_collisionMesh.getTerrain(pos);
                 m[3][1] = result.height;
             }
-
+            
 
             //remove spectators which intersect the bounding sphere of props
             for (auto pe : hole.propEntities)
@@ -1583,7 +1718,7 @@ void GolfState::loadMap()
                         pos.x += MapSize.x / 2;
                         pos.z -= MapSize.y / 2;
 
-                        return sphere.contains(pos);
+                        return sphere.radius < 10.f && sphere.contains(pos);
                     }),
                     positions.end());
             }
@@ -1609,7 +1744,6 @@ void GolfState::loadMap()
 
         result = m_collisionMesh.getTerrain(hole.tee);
         hole.tee.y = result.height;
-
 
 
         //while we're here check if this is a putting
@@ -2500,7 +2634,7 @@ void GolfState::loadMaterials()
     //m_minimapZoom.shaderID = shader->getGLHandle();
     //m_minimapZoom.matrixUniformID = shader->getUniformID("u_coordMatrix");
 
-    //water - this is if we ever get the rain splash pattern working
+    //water
     std::string waterDefines;
     if (m_sharedData.weatherType == WeatherType::Rain
         || m_sharedData.weatherType == WeatherType::Showers)
@@ -2519,6 +2653,16 @@ void GolfState::loadMaterials()
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(*shader);
+
+    //reduces overdraw by forcing the water to draw after all opaque objects
+    auto& waterMat = m_resources.materials.get(m_materialIDs[MaterialID::Water]);
+    waterMat.blendMode = cro::Material::BlendMode::Custom;
+    cro::Material::Data::BlendData blendData;
+    blendData.writeDepthMask = GL_TRUE;
+    blendData.disableProperties.push_back(GL_BLEND);
+    blendData.enableProperties.push_back(GL_DEPTH_TEST);
+    waterMat.blendData = blendData;
+
 
     if (!waterDefines.empty())
     {
@@ -2666,6 +2810,41 @@ void GolfState::loadModels()
     m_modelDefs[ModelID::PlayerFallBack]->loadFromFile("assets/golf/models/avatars/default.cmt");
     m_modelDefs[ModelID::MeasureWidget]->loadFromFile("assets/golf/models/hole_arrow.cmt");
 
+    if ((m_sharedData.mapDirectory == "course_16" || m_sharedData.courseIndex == 7 || m_sharedData.courseIndex == 3)
+        && cro::FileSystem::fileExists("dlc/craewall/models/props/seagull.cmt"))
+    {
+        m_modelDefs[ModelID::Seagull]->loadFromFile("dlc/craewall/models/props/seagull.cmt");
+
+        //hmm we should probably set this as a lazy loader? It's a bugger
+        //merely because the seagull has so many bones...
+        //if (m_materialIDs[MaterialID::Seagull] == -1)
+        {
+            GLint maxVec;
+            glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
+            auto MAX_BONES = maxVec / 4; //4 x 4-components make up a mat4.
+            //we'll allow 64 vectors for other uniforms (cascaded maps take up a few)
+            //64 / 4 = 16
+            MAX_BONES = std::min(MAX_BONES - 16, 255);
+
+            const std::string bones = "#define MAX_BONES " + std::to_string(std::min(MAX_BONES, 136)) + "\n";
+            m_resources.shaders.loadFromString(ShaderID::Seagull, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n" + bones);
+            auto& shader = m_resources.shaders.get(ShaderID::Seagull);
+            m_resolutionBuffer.addShader(shader);
+            m_materialIDs[MaterialID::Seagull] = m_resources.materials.add(shader);
+        }
+
+        m_gullAudio.loadFromFile("dlc/craewall/sound/gull.xas", m_resources.audio);
+
+        static constexpr std::array<float, 2u> start = { -5.f, -5.f };
+        static constexpr std::array<float, 2u> end = { 5.f, 5.f };
+        m_gullPoints = pd::PoissonDiskSampling(3.f, start, end, 30, static_cast<std::uint32_t>(std::time(nullptr)));
+    }
+    else
+    {
+        //we test the existence elsewhere so reset this if not loaded
+        m_modelDefs[ModelID::Seagull].reset();
+    }
+
     //ball models - the menu should never have let us get this far if it found no ball files
     for (const auto& info : m_sharedData.ballInfo)
     {
@@ -2705,12 +2884,21 @@ void GolfState::loadModels()
     {
         processPath(path + baseAudioPath);
     }
+
+#ifndef USE_GNS
     baseAudioPath = Content::getUserContentPath(Content::UserContent::Voice);
     const auto voiceDirs = cro::FileSystem::listDirectories(baseAudioPath);
     for (const auto& dir : voiceDirs)
     {
         processPath(baseAudioPath + dir + "/");
     }
+
+#else
+    for (const auto& p : Content::getUserItemsPaths(Content::UserContent::Voice))
+    {
+        processPath(p.string() + "/");
+    }
+#endif
 
     auto defaultAudio = m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape("assets/golf/sound/avatars/default.xas", m_resources.audio);
 
@@ -3128,6 +3316,7 @@ void GolfState::loadModels()
     }
 
     //workshop clubs
+#ifndef USE_GNS
     const auto basePath = Content::getUserContentPath(Content::UserContent::Clubs);
     auto clubsets = cro::FileSystem::listDirectories(basePath);
 
@@ -3144,6 +3333,14 @@ void GolfState::loadModels()
     {
         processClubPath(basePath + s);
     }
+#else
+    //workshop paths
+    const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Clubs);
+    for (const auto& p : wsPaths)
+    {
+        processClubPath(p.string());
+    }
+#endif
 
 
     const auto loadClubModel = 
@@ -4022,7 +4219,7 @@ void GolfState::initBillboardLeagueTexture()
             });
         arr.draw();
 
-        const auto& prevWinners = Social::getPreviousLeague();
+        const auto& prevWinners = Social::getPreviousLeague(Social::getLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly));
         for (const auto& [name, score, handle] : prevWinners)
         {
             if (handle != 0)

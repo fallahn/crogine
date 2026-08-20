@@ -37,6 +37,7 @@ source distribution.
 #include "ClientPacketData.hpp"
 #include "MessageIDs.hpp"
 #include "Clubs.hpp"
+#include "RopeSystem.hpp"
 #include "TextAnimCallback.hpp"
 #include "ClientCollisionSystem.hpp"
 #include "GolfParticleDirector.hpp"
@@ -784,12 +785,22 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
         };
 
-    const auto toggleDOF = [&]()
+    const auto toggleDOF = [&](bool isKey)
         {
             if (m_photoMode)
             {
                 m_useDOF = !m_useDOF;
                 enableDOF(m_useDOF);
+            }
+            else if (isKey) //sigh - can't overlap this with the controller input
+            {
+                //reset the camera view
+                if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+                    && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
+                {
+                    setCameraTarget(m_currentPlayer, true);
+                    rotateCameraToTarget();
+                }
             }
         };
 
@@ -853,7 +864,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             toggleMiniZoom();
             break;
         case FixedKey::ToggleDOF:
-            toggleDOF();
+            toggleDOF(true);
             break;
         case SDLK_SPACE: //TODO this should read the keymap... but it's not const
             closeMessage();
@@ -895,13 +906,45 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
             break;
         case SDLK_F9:
-            if (evt.key.keysym.mod & KMOD_SHIFT)
+            //if (evt.key.keysym.mod & KMOD_SHIFT)
             {
-                cro::Console::doCommand("build_cubemaps");
+                //cro::Console::doCommand("build_cubemaps");
+
+                std::ofstream file("minimap.log", std::ios::app);
+                file << cro::SysTime::dateString() << " " << cro::SysTime::timeString() 
+                    << "- hole: " << m_currentHole + 1 << ", course: " << m_courseTitle.toAnsiString() << std::endl;
+                LogI << "Updated minimap.log" << std::endl;
+            }
+            //else
+            {
+                retargetMinimap(false);
             }
             break;
 
-
+        case SDLK_F10:
+        {
+            /*if (evt.key.keysym.mod & KMOD_SHIFT)
+            {
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Seagull;
+                cmd.action = [](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Callback>().setUserData<std::int32_t>(1);
+                    };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
+            else
+            {
+            }*/
+            //spawnSeagulls(m_holeData[m_currentHole].pin);
+            //spawnGardener(m_holeData[m_currentHole].target);
+            /*auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+            msg->type = CollisionEvent::Trigger;
+            msg->position = {236.f,1.5f,-102.f};
+            msg->terrain = TriggerID::Greenhouse;*/
+            //m_debugCurve.clear();
+        }
+            break;
 #ifdef CRO_DEBUG_
         case SDLK_F10:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::EndGame), net::NetFlag::Reliable);
@@ -1224,7 +1267,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             if (evt.cbutton.which == cro::GameController::deviceID(activeID)
                 || m_humanCount == 1)
             {
-                toggleDOF();
+                toggleDOF(false);
             }
             break;
         case cro::GameController::ButtonY:
@@ -1484,6 +1527,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     m_greenCam.getComponent<cro::Camera>().active = false;
                     m_flightCam.getComponent<cro::Camera>().active = true;
+
+                    m_skyCameras[SkyCam::Flight].getComponent<cro::Camera>().active = true;
                 }
             }
 
@@ -1721,6 +1766,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                         e.getComponent<cro::Callback>().active = true;
                         e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                         m_flightCam.getComponent<cro::Camera>().active = true;
+                        m_skyCameras[SkyCam::Flight].getComponent<cro::Camera>().active = true;
                     }
                 };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -1860,7 +1906,15 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
 
+            if (m_modelDefs[ModelID::Seagull]
+                && cro::Util::Random::value(0, 2) == 0)
+            {
+                spawnSeagulls(m_holeData[m_currentHole].pin);
+            }
+
+#ifdef AUTO_UI
             setUIHidden(false);
+#endif
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete, m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
             cro::Command cmd;
@@ -1921,6 +1975,9 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_mapRoot.getComponent<cro::Callback>().active = true;
         }
             break;
+        /*case SceneEvent::MinimapUpdated:
+            m_minimapZoom.camera.getComponent<cro::Camera>().active = true;
+            break;*/
         }
     }
         break;
@@ -2079,7 +2136,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                                 auto club = getClub();
                                 if (club == ClubID::Putter)
                                 {
-                                    auto str = Clubs[ClubID::Putter].getName(m_sharedData.imperialMeasurements, m_distanceToHole);
+                                    const auto str = Clubs[ClubID::Putter].getName(m_sharedData.imperialMeasurements, m_distanceToHole);
                                     e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
                                 }
                                 else
@@ -2100,8 +2157,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                                 auto club = getClub();
                                 if (club == ClubID::Putter)
                                 {
-                                    const auto idx = Clubs[ClubID::Putter].getScaleIndex(m_distanceToHole);
-                                    e.getComponent<cro::SpriteAnimation>().play(idx + 1);
+                                    const auto idx = std::clamp(Clubs[ClubID::Putter].getScaleIndex(Clubs[ClubID::Putter].getPower(m_distanceToHole, m_sharedData.imperialMeasurements) + 1), 1, 3);
+                                    e.getComponent<cro::SpriteAnimation>().play(idx);
                                     e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                                 }
                                 else
@@ -2629,7 +2686,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     if (m_sharedData.showMinimap)
                     {
-                        formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, m_currentPlayer.terrain == TerrainID::Green);
+                        formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, /*m_currentPlayer.terrain == TerrainID::Green*/m_inputParser.getClub() == ClubID::Putter);
                     }
                     else
                     {
@@ -2792,7 +2849,8 @@ void GolfState::handleMessage(const cro::Message& msg)
     case MessageID::CollisionMessage:
     {
         const auto& data = msg.getData<CollisionEvent>();
-        if (data.terrain == TerrainID::Scrub)
+        if (data.terrain == TerrainID::Scrub
+            && !m_holeData[m_currentHole].puttFromTee)
         {
             if (cro::Util::Random::value(0, 2) == 0)
             {
@@ -2836,7 +2894,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     const auto pos = data.position;
 
-                    //update minimap cross for impact
+                    //update minimap cross for impact - TODO we need to track the ball's
+                    //group ID so in group games  we can ignore this if it doesn't match m_serverGroup
                     auto cmd = cro::Command();
                     cmd.targetFlags = CommandID::UI::MiniCross;
                     cmd.action =
@@ -2886,6 +2945,18 @@ void GolfState::handleMessage(const cro::Message& msg)
                     }
                 }
             }
+
+            //scare off any birds
+            if (data.terrain == TerrainID::Green)
+            {
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Seagull;
+                cmd.action = [](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Callback>().setUserData<std::int32_t>(1);
+                    };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
         }
         else if (data.type == CollisionEvent::End)
         {
@@ -2903,6 +2974,13 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
             }
         }
+        else if (data.type == CollisionEvent::Trigger)
+        {
+            if (data.terrain == TriggerID::Greenhouse)
+            {
+                spawnGardener(data.position);
+            }
+        }
     }
         break;
     }
@@ -2918,6 +2996,50 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 bool GolfState::simulate(float dt)
 {
+    /*if (m_inputParser.inProgress())
+    {
+        m_debugCurve.push_back(m_inputParser.getPower());
+    }*/
+
+    if (m_connectionRetry.retryCount)
+    {
+        m_connectionRetry.retryTime -= dt;
+        if (m_connectionRetry.retryTime < 0)
+        {
+            m_connectionRetry.retryTime += ConnectRetry::Timeout;
+            m_textChat.printToScreen("Retrying Connection...", TextHighlightColour);
+
+#ifdef USE_GNS
+            const auto connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(m_sharedData.clientConnection.hostID)), ConstVal::GamePort);
+#else
+            const auto connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
+#endif
+            m_connectionRetry.retryCount = connected ? 0 : m_connectionRetry.retryCount - 1;
+            if (m_connectionRetry.retryCount == 0)
+            {
+                if (!connected)
+                {
+                    m_sharedData.clientConnection.connected = false;
+                    m_sharedData.errorMessage = "Disconnected From Server";
+                    requestStackPush(StateID::Error);
+                }
+                else
+                {
+                    m_textChat.printToScreen("Connection Restored!", TextGoldColour);
+                }
+            }
+        }
+    }
+
+#ifdef USE_GNS
+    std::int32_t playerCount = 0;
+    for (const auto& c : m_sharedData.connectionData)
+    {
+        playerCount += c.playerCount;
+    }
+    m_groupID.update(m_sharedData.clientConnection.hostID, playerCount);
+#endif
+
     //while this mostly does nothing it would be nice
     //to be able to stop/start it when only a hole requires it
     m_billboardVideo.update(dt);
@@ -2993,7 +3115,11 @@ bool GolfState::simulate(float dt)
 
     //this gets used a lot so we'll save on some calls to length()
     m_distanceToHole = glm::length(holeDir);
-
+    if (m_currentPlayer.terrain == TerrainID::Green
+        && !m_holeData[m_currentHole].puttFromTee)
+    {
+        m_terrainBuilder.setDistanceToPin(std::clamp(m_distanceToHole, 10.f, 25.f));
+    }
 
     if (m_sharedData.clientConnection.connected)
     {
@@ -3104,6 +3230,9 @@ bool GolfState::simulate(float dt)
         e.getComponent<cro::Callback>().setUserData<float>(m_windUpdate.currentWindSpeed);
     }
 
+    //this is negative as we actually offset into texture coordinates rather than apply wind
+    m_gameScene.getSystem<RopeSystem>()->setWind(-m_windUpdate.currentWindVector * m_windUpdate.currentWindSpeed);
+
     cro::Command cmd;
     cmd.targetFlags = CommandID::ParticleEmitter;
     cmd.action = [&](cro::Entity e, float)
@@ -3177,7 +3306,7 @@ bool GolfState::simulate(float dt)
 
         if (float movement = m_inputParser.getCamMotion() * m_sharedData.mouseSpeed; movement != 0)
         {
-            updateCameraHeight(movement* dt);
+            updateCameraHeight(movement * dt);
         }
 
         //if we're CPU or remote player check screen pos of ball and
@@ -3196,8 +3325,7 @@ bool GolfState::simulate(float dt)
         }*/
 
         const float rotation = m_inputParser.getCamRotation() * dt;
-        if (/*getClub() != ClubID::Putter
-            && */rotation != 0)
+        if (rotation != 0)
         {
             auto& tx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
 
@@ -3408,10 +3536,21 @@ void GolfState::render()
     }
 
     m_renderTarget.clear(cro::Colour::Black);
+#ifndef STENCIL_SKYBOX
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
+#endif
 #ifndef __APPLE__
     glCheck(glEnable(GL_LINE_SMOOTH));
+#endif
+    //TODO this needs fixed stencil buffers for render targets
+    //and a way for properly blending beacons etc (probably 
+    //needs to be inserted into the new skybox callback?)
+#ifdef STENCIL_SKYBOX
+    glCheck(glEnable(GL_STENCIL_TEST));
+    glCheck(glStencilFunc(GL_ALWAYS, 1, 0xff));
+    glCheck(glStencilMask(0xff));
+    glCheck(glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE));
 #endif
     m_gameScene.render();
 #ifdef CAMERA_TRACK
@@ -3425,6 +3564,13 @@ void GolfState::render()
     glCheck(glDisable(GL_LINE_SMOOTH));
 #endif
 #ifdef CRO_DEBUG_
+#endif
+#ifdef STENCIL_SKYBOX
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glCheck(glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP));
+    glCheck(glStencilFunc(GL_EQUAL, 0, 0xFF));
+    m_skyScene.render();
+    glCheck(glDisable(GL_STENCIL_TEST));
 #endif
     //m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
     m_renderTarget.display();
@@ -3531,6 +3677,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<InterpolationSystem<InterpolationType::Linear>>(mb);
     m_gameScene.addSystem<CloudSystem>(mb, glm::vec3(MapSizeFloat.x / 2.f, 0.f, -MapSizeFloat.y / 2.f));
     m_gameScene.addSystem<AvatarRotationSystem>(mb);
+    m_gameScene.addSystem<RopeSystem>(mb);
     m_gameScene.addSystem<ClientCollisionSystem>(mb, m_holeData, m_collisionMesh);
     m_gameScene.addSystem<SpectatorSystem>(mb, m_collisionMesh);
     m_gameScene.addSystem<PropFollowSystem>(mb, m_collisionMesh);
@@ -3571,6 +3718,9 @@ void GolfState::addSystems()
     }
 
     //m_gameScene.setSystemActive<InterpolationSystem<InterpolationType::Linear>>(false);
+    m_gameScene.setSystemActive<RopeSystem>(false);
+    m_gameScene.getSystem<RopeSystem>()->setNoiseTexture("assets/golf/images/wind.png", 10.f);
+
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
     m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::TreeQuality::High);
     m_gameScene.setSystemActive<WeatherAnimationSystem>(m_sharedData.weatherType == WeatherType::Rain || m_sharedData.weatherType == WeatherType::Showers);
@@ -3621,6 +3771,7 @@ void GolfState::addSystems()
 
     m_mapScene.addSystem<cro::CameraSystem>(mb);
     m_mapScene.addSystem<cro::ModelRenderer>(mb);
+    m_mapScene.setTitle("Minimap Scene");
 }
 
 void GolfState::buildScene()
@@ -4507,7 +4658,8 @@ void GolfState::buildScene()
         createWeather(WeatherType::Rain);
         break;
     case WeatherType::Mist:
-        setFog(m_sharedData.nightTime ? 0.45f : 0.35f);
+        //setFog(m_sharedData.nightTime ? 0.45f : 0.35f);
+        setFog(m_sharedData.nightTime ? 0.65f : 0.55f);
         break;
     }
 }
@@ -5843,8 +5995,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         }
         break;
         case PacketID::ReadyQuitStatus:
-            m_readyQuitFlags = evt.packet.as<std::uint8_t>();
-            m_gameScene.getDirector<GolfSoundDirector>()->playSound(GolfSoundDirector::AudioID::Stone, m_currentPlayer.position);
+            m_readyQuitFlags = evt.packet.as<std::uint16_t>();
+            if (m_roundEnded)
+            {
+                m_gameScene.getDirector<GolfSoundDirector>()->playSound(GolfSoundDirector::AudioID::Stone, m_currentPlayer.position);
+            }
             break;
         case PacketID::AchievementGet:
             notifyAchievement(evt.packet.as<std::array<std::uint8_t, 2u>>());
@@ -6344,14 +6499,30 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         }
         break;
         case PacketID::ConnectionRefused:
-            m_sharedData.errorMessage = "Kicked By Host";
+            if (evt.packet.as<std::uint8_t>() == MessageType::Kicked)
+            {
+                m_sharedData.errorMessage = "Kicked By Host";
+            }
+            else
+            {
+                m_sharedData.errorMessage = "Disconnected From Server";
+            }
+            m_connectionRetry.retryCount = 0; //stop retrying - we failed..
+            m_sharedData.clientConnection.connected = false;
             requestStackPush(StateID::Error);
             break;
         }
         break;
     case net::NetEvent::ClientDisconnect:
+#ifdef TRY_RECON
+        //trigger reconnection tries first
+        m_connectionRetry.retryCount = 3;
+        m_connectionRetry.retryTime = 1.f;
+#else
+        m_sharedData.clientConnection.connected = false;
         m_sharedData.errorMessage = "Disconnected From Server";
         requestStackPush(StateID::Error);
+#endif
         break;
     default: break;
     }
@@ -6822,7 +6993,17 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 
                         if (lightData.parent.isValid())
                         {
-                            lightData.parent.getComponent<cro::Transform>().addChild(lightEnt.getComponent<cro::Transform>());
+                            if (lightData.parent.hasComponent<cro::Skeleton>()
+                                && lightData.parent.getComponent<cro::Skeleton>().getAttachmentIndex("light") != -1)
+                            {
+                                //we have a specific attachment point...
+                                lightData.parent.getComponent<cro::Skeleton>().getAttachments()
+                                    [lightData.parent.getComponent<cro::Skeleton>().getAttachmentIndex("light")].setModel(lightEnt);
+                            }
+                            else
+                            {
+                                lightData.parent.getComponent<cro::Transform>().addChild(lightEnt.getComponent<cro::Transform>());
+                            }
                         }
                         else
                         {
@@ -6888,6 +7069,20 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
             {
                 audio.getComponent<cro::AudioEmitter>().play();
                 audio.getComponent<cro::Callback>().active = true;
+            }
+
+            for (const auto& pos : m_holeData[m_currentHole].rabbitPositions)
+            {
+                const auto count = cro::Util::Random::value(1, 5);
+                for (auto i = 0; i < count; ++i)
+                {
+                    spawnRabbit(pos, cro::Util::Random::value(3, 3000));
+                }
+            }
+
+            for (const auto& rope : m_holeData[m_currentHole].ropeData)
+            {
+                createRope(rope);
             }
 
             //check hole for any crowd paths and assign any free
@@ -7140,10 +7335,14 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 
     m_currentPlayer.position = m_holeData[m_currentHole].tee;
 
-
+    Club::clampMaxScale(m_holeData[m_currentHole].puttFromTee);
     m_inputParser.setHoleDirection(m_holeData[m_currentHole].target - m_currentPlayer.position);
     m_currentPlayer.terrain = m_holeData[m_currentHole].puttFromTee ? TerrainID::Green : TerrainID::Fairway; //this will be overwritten from the server but setting this to non-green makes sure the mini cam stops updating in time
-    m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin, true); //limits club selection based on hole size
+    
+    //check for u-bend holes where the in is closer to the tee than the target
+    const auto dist = glm::length2(m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee) < glm::length2(m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee)
+        ? glm::length(m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee) : m_holeData[m_currentHole].distanceToPin;
+    m_inputParser.setMaxClub(dist, true); //limits club selection based on hole size
 
     //hide the slope indicator
     cro::Command cmd;
@@ -7221,6 +7420,19 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+
+    //remove any extraneous entities
+    cmd.targetFlags = CommandID::GarbageCollect;
+    cmd.action = [this](cro::Entity e, float)
+        {
+            auto msg = postMessage<GolfEvent>(MessageID::GolfMessage);
+            msg->position = e.getComponent<cro::Transform>().getPosition();
+            msg->terrain = TerrainID::Water; //makes the particle emitter do smoke and not birds
+            msg->type = GolfEvent::BirdHit; //this emulates going out of bounds so we get a particle effect
+
+            m_gameScene.destroyEntity(e);
+        };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //update status
     const std::size_t MaxTitleLen = 220;
@@ -7404,6 +7616,19 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    //this is a bit fudgey but we need to reset the index
+    //clamp to whichever range is currently selected based
+    //on the distance to the hole
+    const auto holeDist = glm::length(m_holeData[m_currentHole].pin - player.position);
+    const auto idx = Clubs[ClubID::Putter].getScaleIndex(holeDist);
+    Club::setMaxScaleIndex(idx);
+
+
+    //this is just used to indicate when the scoreboard
+    //is ready to be dismissed in multiplayer so resetting
+    //it here makes sure it's ready for the next hole.
+    m_readyQuitFlags = 0;
+
     m_measurePosition = glm::vec3(0.f);
 
     if (m_sharedData.gameMode != GameMode::Tutorial)
@@ -7548,6 +7773,11 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
     m_inputParser.setActive(localPlayer && !m_photoMode, /*m_currentPlayer.terrain*/player.terrain, l, isCPU, lie);
     m_inputParser.setDistanceToHole(glm::length(m_holeData[m_currentHole].pin - player.position));
+
+    const auto searchDir = m_holeData[m_currentHole].pin - player.position;
+    const auto searchPos = (glm::normalize(searchDir) * 5.f) + player.position;
+    m_inputParser.setOnFringe(m_collisionMesh.getTerrain(searchPos).terrain == TerrainID::Green || glm::length2(searchDir) < 100.f); //tests if we're on fringe and should allow putting
+
     m_restoreInput = localPlayer; //if we're in photo mode should we restore input parser?
     Achievements::setActive(localPlayer && !isCPU && m_allowAchievements);
 
@@ -7558,7 +7788,9 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     }
     else
     {
-        m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin, glm::length2(player.position - m_holeData[m_currentHole].tee) < 1.f);
+        const auto dist = glm::length2(m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee) < glm::length2(m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee)
+            ? glm::length(m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee) : m_holeData[m_currentHole].distanceToPin;
+        m_inputParser.setMaxClub(dist, glm::length2(player.position - m_holeData[m_currentHole].tee) < 1.f);
     }
 
     //player UI name
@@ -7590,7 +7822,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         if (m_sharedData.showMinimap)
         {
-            formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, player.terrain == TerrainID::Green);
+            formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, /*player.terrain == TerrainID::Green*/m_inputParser.getClub() == ClubID::Putter);
         }
         else
         {
@@ -7734,8 +7966,15 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     //set this separately because target might not necessarily be the pin.
     const bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
         && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
-    const auto clubTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
-    m_inputParser.setClub(glm::length(clubTarget - player.position), m_currentPlayer.terrain);
+
+    //pin is close to the tee because the hole is u-shaped
+    const bool isHairpin = (glm::length2(m_holeData[m_currentHole].tee - m_currentPlayer.position) < 1
+        && glm::length2(m_holeData[m_currentHole].pin - m_currentPlayer.position) < glm::length2(m_holeData[m_currentHole].target - m_currentPlayer.position));
+
+    const auto clubTarget = isMultiTarget || isHairpin ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
+    //limit the club to 10m when on a putting course
+    const auto d = m_holeData[m_currentHole].puttFromTee ? std::min(glm::length(clubTarget - player.position), 10.f) : glm::length(clubTarget - player.position);
+    m_inputParser.setClub(d, player.terrain);
 
 
     cmd.targetFlags = CommandID::BullsEye;
@@ -8375,7 +8614,7 @@ void GolfState::updateActor(const ActorInfo& update)
             {
                 //hmmm this is actually wrong, because it doesn't use the current (lagged) output of the interpolation
                 formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, 
-                    getClub() == ClubID::Putter || terrain == TerrainID::Green, isMultiTarget);
+                    m_inputParser.getClub() == ClubID::Putter || terrain == TerrainID::Green, isMultiTarget);
             }
             else
             {
@@ -8534,6 +8773,7 @@ float GolfState::getDampening() const
     //this is supposed to correct the label for clubs
     //which have been shortened by the terrain
     //TODO this is incorrect for bunker/rough
+    //TODO input parser *already applies* Dampening / LieDampening why do we do it again here?
     return m_inputParser.getDampening() * Dampening[m_currentPlayer.terrain] * LieDampening[m_currentPlayer.terrain][m_inputParser.getLie()];//;
 }
 

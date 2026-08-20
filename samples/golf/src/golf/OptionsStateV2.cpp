@@ -124,7 +124,7 @@ namespace
 
     const std::array ItemLabels =
     {
-        "Settings", "Keyboard", "Controller",
+        "Settings", "Keyboard", "Input",
         "Graphics", "Audio", "Achievements",
         "Stats"
     };
@@ -157,6 +157,7 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     lastWindowSize = cro::App::getWindow().getSize();
     
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Options Menu");
 
     m_flagPreview.init(sd.flagPath);
     m_flagPreview.setText(m_sharedData.flagText);
@@ -1214,10 +1215,9 @@ void OptionsStateV2::buildScene()
         m_uiLayout.updateTabBar();
     };
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
-    m_scene.setActiveCamera(entity);
+    entity = m_scene.getActiveCamera();
+    entity.setLabel("Options Cam");
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(entity.getComponent<cro::Camera>());
 }
 
@@ -1640,27 +1640,28 @@ void OptionsStateV2::createSettingsItems()
     item->displayType = Menu::Item::Heading;
     item->description = "Configure input settings";
 
-    //mouse button for action
-    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Use Left Mouse as Action Button";
-    item->description = "Clicking left mouse button performs the same as the Action button";
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.useMouseAction = i.selectedIndex == 1;
-        };
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
+    ///-----moved to Input tab----//
+    ////mouse button for action
+    //item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
+    //item->title = "Use Left Mouse as Action Button";
+    //item->description = "Clicking left mouse button performs the same as the Action button";
+    //item->activated = [&](Menu::Item& i)
+    //    {
+    //        m_sharedData.useMouseAction = i.selectedIndex == 1;
+    //    };
+    //item->labels = { "No", "Yes" };
+    //item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
 
-    //hold for power
-    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Hold Action For Power";
-    item->description = "Press and hold the Action button to choose swing power instead of the traditional 3-click system";
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.pressHold = i.selectedIndex == 1;
-        };
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = m_sharedData.pressHold ? 1 : 0;
+    ////hold for power
+    //item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
+    //item->title = "Hold Action For Power";
+    //item->description = "Press and hold the Action button to choose swing power instead of the traditional 3-click system";
+    //item->activated = [&](Menu::Item& i)
+    //    {
+    //        m_sharedData.pressHold = i.selectedIndex == 1;
+    //    };
+    //item->labels = { "No", "Yes" };
+    //item->selectedIndex = m_sharedData.pressHold ? 1 : 0;
 
 
     //measure sensitivity
@@ -1725,7 +1726,7 @@ void OptionsStateV2::createSettingsItems()
     //fixed range putter
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Fixed Range Putter";
-    item->description = "Fixes the max range of the putter at 10m/33ft";
+    item->description = "Fixes the range of the putter at 10m/33ft. Range can be extended when putting by using Previous or Next club buttons";
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.fixedPuttingRange = i.selectedIndex == 1;
@@ -1751,7 +1752,7 @@ void OptionsStateV2::createSettingsItems()
             m_sharedData.calculateRange = i.selectedIndex == 0;
             Social::setLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist, i.selectedIndex == 1);
         };
-    item->labels = { "On" , "Off" };
+    item->labels = { "Yes" , "No" };
     item->selectedIndex = m_sharedData.calculateRange ? 0 : 1;
 
 
@@ -1779,6 +1780,18 @@ void OptionsStateV2::createSettingsItems()
         };
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.showInGameTips ? 1 : 0;
+
+
+    //allow random weather in quickplay
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
+    item->title = "Random Quick-play Weather";
+    item->description = "Quick-play rounds will choose weather at random, otherwise will always be clear";
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.randomQuickplayWeather = i.selectedIndex == 1;
+        };
+    item->labels = { "No" , "Yes" };
+    item->selectedIndex = m_sharedData.randomQuickplayWeather ? 1 : 0;
 
 #ifdef USE_GNS
     //---------leaderboard settings----------//
@@ -1817,6 +1830,16 @@ void OptionsStateV2::createSettingsItems()
     item->title = "Configuration";
     item->displayType = Menu::Item::Heading;
 
+    //auto screenshot
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
+    item->title = "Automatic Screenshots";
+    item->description = "Automatically takes a screenshot when scoring a hole in one or albatross";
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.snapHIO = i.selectedIndex == 1;
+        };
+    item->labels = { "No" , "Yes" };
+    item->selectedIndex = m_sharedData.snapHIO ? 1 : 0;
 
     //web socket
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
@@ -1902,6 +1925,16 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.remoteContent ? 1 : 0;
 #endif
 
+    //daily streak
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
+    item->title = "Enable Daily Streak";
+    item->description = "Track the number of consecutive days the game has been played";
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.enableDailyStreak = i.selectedIndex == 1;
+        };
+    item->labels = { "No" , "Yes" };
+    item->selectedIndex = m_sharedData.enableDailyStreak ? 1 : 0;
 
 
     //reset hints
@@ -1928,7 +1961,6 @@ void OptionsStateV2::createSettingsItems()
         };
     item->labels = { "OK" };
     item->selectedIndex = 0;
-
 
     //reset career
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
@@ -2196,6 +2228,11 @@ void OptionsStateV2::createKeyboardItems()
     item->displayType = Menu::Item::TextOnly;
 
     item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
+    item->title = "Rotate Camera To Target";
+    item->description = "Key: Number 6 (Top Row)";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Show Scores";
     item->description = "Key: Tab";
     item->displayType = Menu::Item::TextOnly;
@@ -2298,6 +2335,7 @@ void OptionsStateV2::createControllerItems()
                 }
                 else
                 {
+                    //TODO cro::GameController::getPrintableName(0) == "Steam Controller"
                     e.getComponent<cro::Sprite>().setTextureRect(data.bounds[SpriteData::Xbox]);
                 }
             }
@@ -2382,7 +2420,7 @@ void OptionsStateV2::createControllerItems()
     //menu items
 
     auto* item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
-    item->title = "Controller Settings";
+    item->title = "Input Settings";
     item->displayType = Menu::Item::Heading;
 
     //input sensitivity
@@ -2420,10 +2458,9 @@ void OptionsStateV2::createControllerItems()
     
 
     //invert X axis
+    const auto xItem = m_uiLayout.menuLayout.items[TabID::Controller].size();
     item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Invert X axis";
-    item->description = "Invert the controller X axis when in camera mode";
-    cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.invertX = i.selectedIndex == 1;
@@ -2431,11 +2468,11 @@ void OptionsStateV2::createControllerItems()
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.invertX ? 1 : 0;
 
+    
     //invert Y axis
+    const auto yItem = m_uiLayout.menuLayout.items[TabID::Controller].size();
     item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Invert Y axis";
-    item->description = "Invert the controller Y axis when in camera mode";
-    cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.invertY = i.selectedIndex == 1;
@@ -2443,17 +2480,67 @@ void OptionsStateV2::createControllerItems()
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.invertY ? 1 : 0;
 
-    //enable swingput
+    //mouse button for action
     item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
-    item->title = "Enable Swingput";
-    item->description = "With either trigger held, pull back on a thumbstick to charge the power. Push forward on the stick to take your shot.";
-    cro::Util::String::wordWrap(item->description, 36);
+    item->title = "Use Left Mouse as Action Button";
+    item->description = "Clicking left mouse button performs the same as the Action button";
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.useMouseAction = i.selectedIndex == 1;
+        };
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.useMouseAction ? 1 : 0;
+
+    //hold for power
+    item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
+    item->title = "Hold Action For Power";
+    item->description = "Press and hold the Action button to choose swing power instead of the traditional 3-click system";
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.pressHold = i.selectedIndex == 1;
+        };
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.pressHold ? 1 : 0;
+
+    //enable swingput
+    const auto swingItem = m_uiLayout.menuLayout.items[TabID::Controller].size();
+    item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
+    item->title = "Enable Swingput";    
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.useSwingput = i.selectedIndex == 1;
         };
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.useSwingput ? 1 : 0;
+
+    //entity with a callback to update the strings based on active input
+    auto e = m_scene.createEntity();
+    e.addComponent<cro::Callback>().active = true;
+    e.getComponent<cro::Callback>().setUserData<std::int32_t>(-1);
+    e.getComponent<cro::Callback>().function =
+        [this, xItem, yItem, swingItem](cro::Entity ent, float)
+        {
+            auto& lastInput = ent.getComponent<cro::Callback>().getUserData<std::int32_t>();
+            if (lastInput != m_sharedData.activeInput)
+            {
+                if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+                {
+                    m_uiLayout.menuLayout.items[TabID::Controller][xItem].description = "Invert the mouse X axis when in camera mode";
+                    m_uiLayout.menuLayout.items[TabID::Controller][yItem].description = "Invert the mouse Y axis when in camera mode";
+                    m_uiLayout.menuLayout.items[TabID::Controller][swingItem].description = "With Right Mouse held, pull back on the mouse to set the power. Push forward to take your shot.";
+                }
+                else
+                {
+                    m_uiLayout.menuLayout.items[TabID::Controller][xItem].description = "Invert the controller X axis when in camera mode";
+                    m_uiLayout.menuLayout.items[TabID::Controller][yItem].description = "Invert the controller Y axis when in camera mode";
+                    m_uiLayout.menuLayout.items[TabID::Controller][swingItem].description = "With either trigger held, pull back on a thumbstick to charge the power. Push forward on the stick to take your shot.";
+                }
+                cro::Util::String::wordWrap(m_uiLayout.menuLayout.items[TabID::Controller][xItem].description, 36);
+                cro::Util::String::wordWrap(m_uiLayout.menuLayout.items[TabID::Controller][yItem].description, 36);
+                cro::Util::String::wordWrap(m_uiLayout.menuLayout.items[TabID::Controller][swingItem].description, 36);
+            }
+            lastInput = m_sharedData.activeInput;
+        };
 
     //vibration
     item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
@@ -2526,7 +2613,8 @@ void OptionsStateV2::createDisplayItems()
         {
             if (!i.valueChangedOnActivate)
             {
-                cro::App::getWindow().setSize(m_sharedData.resolutions[i.selectedIndex]);
+                cro::App::getWindow().setWindowedSize(m_sharedData.resolutions[i.selectedIndex]);
+                cro::App::getWindow().setFullscreenSize(m_sharedData.resolutions[i.selectedIndex]);
             }
         };
     item->alwaysActivate = true;
@@ -2537,7 +2625,7 @@ void OptionsStateV2::createDisplayItems()
     }
     item->wrapValue = false;
 
-    const auto size = cro::App::getWindow().getSize();
+    const auto size = cro::App::getWindow().isFullscreen() ? cro::App::getWindow().getFullscreenSize() : cro::App::getWindow().getWindowedSize();
     for (auto i = 0u; i < m_sharedData.resolutions.size(); ++i)
     {
         if (m_sharedData.resolutions[i].x == size.x 
@@ -2624,12 +2712,24 @@ void OptionsStateV2::createDisplayItems()
             if (cro::App::getWindow().isFullscreen())
             {
                 //apply the setting
-                cro::App::getWindow().setFullScreen(false);
+                //cro::App::getWindow().setFullScreen(false);
                 cro::App::getWindow().setFullScreen(true);
             }
         };
     item->labels = { "Borderless Window", "Exclusive Mode" };
     item->selectedIndex = cro::App::getWindow().getExclusiveFullscreen() ? 1 : 0;
+
+
+    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
+    item->title = "Show Window Border";
+    item->description = "Display a border around the game window when not in full screen.";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            cro::App::getWindow().setBorderVisible(i.selectedIndex == 1);
+        };
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = cro::App::getWindow().getBorderVisible() ? 1 : 0;
 
 
     //vsync
@@ -2740,6 +2840,7 @@ void OptionsStateV2::createAudioItems()
     refreshAudioDevices(*item);
 
     //currently the deck needs to re-apply the audio device for some reason
+    //LATER NOTE this seems it was a bug in SteamOS which has since been fixed.
     if (!audioHackDone)
     {
         item->activated(*item);
@@ -2875,17 +2976,23 @@ void OptionsStateV2::createStatItems()
             switch (type)
             {
             default:
+            case StatType::Integer:
+            {
+                std::stringstream ss;
+                ss.imbue(std::locale("")); //enable comma delimit each 1000
+                ss << static_cast<std::int32_t>(statValue);
+                value = ss.str();
+            }
+                break;
             case StatType::Float:
             {
                 std::stringstream ss;
                 ss.precision(2);
+                ss.imbue(std::locale("")); //enable comma delimit each 1000
                 ss << std::fixed << statValue;
                 value = ss.str();
             }
             break;
-            case StatType::Integer:
-                value = std::to_string(static_cast<std::int32_t>(statValue));
-                break;
             case StatType::Percent:
             {
                 const float v = statValue * 100.f;
@@ -3086,7 +3193,7 @@ void OptionsStateV2::refreshAudioDevices(Menu::Item& item)
         {
             d = d.substr(RemoveMe.size());
         }
-        item.labels.push_back(d);
+        item.labels.push_back(cro::String::fromUtf8(d.begin(), d.end()));
     }
 
     //item.count = static_cast<std::int32_t>(deviceList.size());

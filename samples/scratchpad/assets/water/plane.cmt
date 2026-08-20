@@ -1,0 +1,11 @@
+model plane
+{
+    mesh = "plane.cmb"
+
+    material Unlit
+    {
+        colour = 1.000000, 0.000000, 1.000000, 1.000000
+        skinned = false
+        mask_colour = 0.000000, 1.000000, 1.000000, 1.000000
+    }
+}

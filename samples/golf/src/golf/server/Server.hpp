@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -77,7 +77,8 @@ public:
     void setPreferredIP(const std::string& ip) { m_preferredIP = ip; }
     const std::string& getPreferredIP() const { return m_preferredIP; }
 
-
+    /*std::size_t getNetworkHistorySize() const { return m_sharedData.host.getHistoryDataSize(); }
+    std::size_t getHistoryIndex() const { return m_sharedData.host.getHistoryIndex(); }*/
 private:
     std::size_t m_maxConnections;
     std::string m_preferredIP;
@@ -92,15 +93,22 @@ private:
     std::int32_t m_playerCount;
 
     sv::SharedData m_sharedData;
-    VoiceHost m_voiceHost;
+    //VoiceHost m_voiceHost;
 
     struct PendingConnection final
     {
         net::NetPeer peer;
         cro::Clock connectionTime;
         static constexpr float Timeout = 15.f;
+
+#ifdef USE_GNS
+        //buffers packets which need sending should
+        //this client manage to reconnect
+        std::vector<net::BufferedPacket> bufferedPackets;
+#endif
     };
     std::vector<PendingConnection> m_pendingConnections;
+    std::vector<PendingConnection> m_pendingDisconnections;
 
     std::size_t m_clientCount;
 
@@ -111,7 +119,7 @@ private:
 
     //returns slot index, or >= MaxClients if full
     std::uint8_t addClient(const net::NetPeer&, std::uint8_t playerCount);
-    void removeClient(const net::NetEvent&);
+    void removeClient(const net::NetPeer&);
     void removeClient(std::size_t);
     void kickClient(std::size_t);
 };

@@ -106,8 +106,12 @@ private:
             S04,
             S05,
             S06,
+            S07,
+            S08,
             Global,
             FriendsGlobal,
+            GlobalExt,
+            FriendsGlobalExt,
             Pro,
             FriendsPro,
 
@@ -146,6 +150,7 @@ private:
         enum
         {
             Global, FriendsGlobal,
+            GlobalExt, FriendsGlobalExt,
             Pro, FriendsPro,
             Count
         };

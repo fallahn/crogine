@@ -61,10 +61,10 @@ namespace
 
         if (!dirList.empty())
         {
-            if (dirList.back().find("w") == dirList.back().size() - 1)
+            //if (dirList.back().find("w") == dirList.back().size() - 1)
             {
                 std::stringstream ss;
-                ss << dirList.back().substr(0, dirList.back().size() - 1).toAnsiString();
+                ss << dirList.back()/*.substr(0, dirList.back().size() - 1)*/.toAnsiString();
 
                 std::uint64_t id = 0;
                 ss >> id;
@@ -232,6 +232,7 @@ void MenuState::createBallScene()
     };
 
     m_ballCam = m_backgroundScene.createEntity();
+    m_ballCam.setLabel("Ball Camera");
     m_ballCam.addComponent<cro::Transform>().setPosition({ RootPoint - 10.f, 0.045f, 0.095f });
     m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
     m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, static_cast<float>(BallPreviewSize.x) / BallPreviewSize.y, 0.001f, 2.f);
@@ -245,7 +246,7 @@ void MenuState::createBallScene()
     ballTexCallback(m_ballCam.getComponent<cro::Camera>());
 
 
-    //parse the content firs into file paths - though
+    //parse the content first into file paths - though
     //these balls aren't actually loaded until after unlocks.
     const auto ContentDirs = Content::getInstallPaths();
     const std::string BallDir = "balls/";
@@ -286,7 +287,6 @@ void MenuState::createBallScene()
         insertInfo(info, m_sharedData.ballInfo, true);
     }
 
-    //TODO add the unlockable balls before the silly ones
     std::vector<SharedStateData::BallInfo> delayedEntries;
     const std::array<std::string, 5u> ShopPaths =
     {
@@ -473,21 +473,11 @@ void MenuState::createBallScene()
     }
 
 
-    //look in the user directory - only do this if the default dir is OK?
-    const auto BallUserPath = Content::getUserContentPath(Content::UserContent::Ball);
-    if (cro::FileSystem::directoryExists(BallUserPath))
-    {
-        auto dirList = cro::FileSystem::listDirectories(BallUserPath);
-        if (dirList.size() > ConstVal::MaxBalls)
+    
+    const auto parsePath =
+        [this](const std::string& path)
         {
-            dirList.resize(ConstVal::MaxBalls);
-        }
-
-        for (const auto& dir : dirList)
-        {
-            auto path = BallUserPath + dir + "/";
             auto files = cro::FileSystem::listFiles(path);
-
             for (const auto& file : files)
             {
                 if (cro::FileSystem::getFileExtension(file) == ".ball")
@@ -506,11 +496,30 @@ void MenuState::createBallScene()
                     break; //skip the rest of the file list
                 }
             }
+        };
+    
+    //look in the user directory - only do this if the default dir is OK?
+    const auto BallUserPath = Content::getUserContentPath(Content::UserContent::Ball);
+    if (cro::FileSystem::directoryExists(BallUserPath))
+    {
+        auto dirList = cro::FileSystem::listDirectories(BallUserPath);
+        if (dirList.size() > ConstVal::MaxBalls)
+        {
+            dirList.resize(ConstVal::MaxBalls);
+        }
+
+        for (const auto& dir : dirList)
+        {
+            parsePath(BallUserPath + dir + "/");
         }
     }
 
-
-
+#ifdef USE_GNS
+    for (const auto& p : Content::getUserItemsPaths(Content::UserContent::Ball))
+    {
+        parsePath(p.string() + "/");
+    }
+#endif
 
     //load each model for the preview in the player menu
     cro::ModelDefinition ballDef(m_resources);
@@ -751,18 +760,29 @@ void MenuState::parseAvatarDirectory()
     start = m_sharedData.avatarInfo.size();
 
     //custom avatars
-    auto avatarUserDir = Content::getUserContentPath(Content::UserContent::Avatar);
+    const auto avatarUserDir = Content::getUserContentPath(Content::UserContent::Avatar);
     if (cro::FileSystem::directoryExists(avatarUserDir))
     {
         auto dirs = cro::FileSystem::listDirectories(avatarUserDir);
         dirs.resize(std::min(dirs.size(), std::size_t(24)));//arbitrary limit
         for (const auto& dir : dirs)
         {
-            auto resourceDir = avatarUserDir + dir + "/";
+            const auto resourceDir = avatarUserDir + dir + "/";
             const auto files = cro::FileSystem::listFiles(resourceDir);
             processAvatarList(false, files, resourceDir, resourceDir, false);
         }
     }
+#ifdef USE_GNS
+    //workshop paths
+    const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Avatar);
+    for (const auto& p : wsPaths)
+    {
+        const auto resourceDir = p.string() + "/";
+        const auto files = cro::FileSystem::listFiles(resourceDir);
+        processAvatarList(false, files, resourceDir, resourceDir, false);
+    }
+#endif
+
 
     if (m_sharedData.avatarInfo.size() > start)
     {
@@ -875,21 +895,10 @@ void MenuState::parseAvatarDirectory()
     }
 
 
-
-    const auto userHairPath = Content::getUserContentPath(Content::UserContent::Hair);
-    if (cro::FileSystem::directoryExists(userHairPath))
-    {
-        auto userDirs = cro::FileSystem::listDirectories(userHairPath);
-
-        if (userDirs.size() > ConstVal::MaxHeadwear)
+    const auto parsePath = 
+        [this](const std::string userPath) 
         {
-            userDirs.resize(ConstVal::MaxHeadwear);
-        }
-
-        for (const auto& userDir : userDirs)
-        {
-            const auto userPath = userHairPath + userDir + "/";
-            hairFiles = cro::FileSystem::listFiles(userPath);
+            const auto hairFiles = cro::FileSystem::listFiles(userPath);
 
             for (const auto& file : hairFiles)
             {
@@ -919,6 +928,23 @@ void MenuState::parseAvatarDirectory()
                     break; //only load one...
                 }
             }
+        };
+
+
+    const auto userHairPath = Content::getUserContentPath(Content::UserContent::Hair);
+    if (cro::FileSystem::directoryExists(userHairPath))
+    {
+        auto userDirs = cro::FileSystem::listDirectories(userHairPath);
+
+        if (userDirs.size() > ConstVal::MaxHeadwear)
+        {
+            userDirs.resize(ConstVal::MaxHeadwear);
+        }
+
+        for (const auto& userDir : userDirs)
+        {
+            const auto userPath = userHairPath + userDir + "/";
+            parsePath(userPath);
 
             if (m_sharedData.hairInfo.size() == 96)
             {
@@ -927,6 +953,14 @@ void MenuState::parseAvatarDirectory()
             }
         }
     }
+
+#ifdef USE_GNS
+    for (const auto& p : Content::getUserItemsPaths(Content::UserContent::Hair))
+    {
+        parsePath(p.string() + "/");
+    }
+#endif
+
 
     //honestly these are probably already sorted above, but let's just get this done
     for (const auto& i : m_sharedData.hairInfo)
@@ -1156,14 +1190,15 @@ void MenuState::createAvatarScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };*/
     };
 
-    auto avatarCam = m_avatarScene.createEntity();
-    avatarCam.addComponent<cro::Transform>().setPosition({ 0.f, 0.7f, 1.3f });
+    auto avatarCam = m_avatarScene.getActiveCamera();
+    avatarCam.setLabel("Avatar cam");
+    avatarCam.getComponent<cro::Transform>().setPosition({ 0.f, 0.7f, 1.3f });
     //avatarCam.addComponent<cro::Camera>().setPerspective(75.f * cro::Util::Const::degToRad, static_cast<float>(AvatarPreviewSize.x) / AvatarPreviewSize.y, 0.001f, 10.f);
 
     static constexpr float ratio = static_cast<float>(AvatarPreviewSize.y) / AvatarPreviewSize.x;
     static constexpr float orthoWidth = 0.7f;
     auto orthoSize = glm::vec2(orthoWidth, orthoWidth * ratio);
-    avatarCam.addComponent<cro::Camera>().setOrthographic(-orthoSize.x, orthoSize.x, -orthoSize.y, orthoSize.y, 0.001f, 10.f);
+    avatarCam.getComponent<cro::Camera>().setOrthographic(-orthoSize.x, orthoSize.x, -orthoSize.y, orthoSize.y, 0.001f, 10.f);
     avatarCam.getComponent<cro::Camera>().resizeCallback = avatarTexCallback;
     avatarTexCallback(avatarCam.getComponent<cro::Camera>());
 
@@ -1386,7 +1421,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         //and reloaded, but that's probably OK. They just need to
         //exist in the shared data so the main game can find the
         //models for remote players who have them.
-        const auto BallUserPath = Content::getUserContentPath(Content::UserContent::Ball) + std::to_string(id) + "w/";
+        const auto BallUserPath = Content::getItemInstallPath(id);// Content::getUserContentPath(Content::UserContent::Ball) + std::to_string(id) + "w/";
 
         //this can happen sometimes when the UGC fails to install (usually linux)
         //so quit so we don't throw
@@ -1419,7 +1454,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
     }
     else if (type == Content::UserContent::Hair)
     {
-        const auto HairUserPath = Content::getUserContentPath(Content::UserContent::Hair) + std::to_string(id) + "w/";
+        const auto HairUserPath = Content::getItemInstallPath(id);// Content::getUserContentPath(Content::UserContent::Hair) + std::to_string(id) + "w/";
 
         if (!cro::FileSystem::directoryExists(HairUserPath))
         {
@@ -1451,7 +1486,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
     else if (type == Content::UserContent::Avatar)
     {
         //insert into m_sharedData.avatarInfo so GolfState can find it
-        const auto& avatarPath = Content::getUserContentPath(Content::UserContent::Avatar) + std::to_string(id) + "w/";
+        const auto avatarPath = Content::getItemInstallPath(id); //Content::getUserContentPath(Content::UserContent::Avatar) + std::to_string(id) + "w/";
 
         if (!cro::FileSystem::directoryExists(avatarPath))
         {
@@ -1465,14 +1500,17 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         
         if (m_sharedData.avatarInfo.size() > start)
         {
+            LogI << "Installed remote avatar" << std::endl;
             for (auto i = start; i < m_sharedData.avatarInfo.size(); ++i)
             {
                 m_sharedData.avatarInfo[i].type = SharedStateData::AvatarInfo::Custom;
             }
         }
+        else
+        {
+            LogI << avatarPath << ": avatar not installed" << std::endl;
+        }
         
-        
-        LogI << "Installed remote avatar" << std::endl;
         //this just updates all the textures including the newly acquired
         //avatar data - there's room for optimisation here.
         updateLobbyAvatars();

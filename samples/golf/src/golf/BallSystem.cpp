@@ -148,7 +148,7 @@ namespace
         glm::vec2(0.f),           //paused
         glm::vec2(0.f)            //reset
     };
-    constexpr float SideSpinInfluence = 6.f;
+    constexpr float SideSpinInfluence = 10.f;// 6.f;
     constexpr float TopSpinInfluence = 1.f;
 
     constexpr float BallPenetrationAvg = 0.054f; //if the ball collision is greater than this it's set to 'buried' else 'sitting up'
@@ -394,7 +394,7 @@ void BallSystem::fastForward(cro::Entity entity)
 float BallSystem::estimateSidespin(float& spin)
 {
     spin *= SpinDecay[static_cast<std::int32_t>(Ball::State::Flight)].x;
-    return spin * SideSpinInfluence;
+    return spin * (SideSpinInfluence / 2.5f);
 }
 
 #ifdef CRO_DEBUG_
@@ -458,6 +458,16 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         {
             auto& tx = entity.getComponent<cro::Transform>();
 
+            auto oldPos = tx.getPosition();
+            tx.move(ball.velocity * dt);
+
+            if (doWallCollision(entity, dt))
+            {
+                return;
+            }
+            //else restore and do regular collision
+            tx.setPosition(oldPos);
+
             //helps prevent tunnelling through cliffs/flag pole
             //TODO this is mostly wasted when we're high up, so we could make the iteration count dynamic
             static constexpr std::int32_t Iterations = 1;// 3;
@@ -494,7 +504,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //balls with spin disabled rotate on the Y axis while in flight
                 tx.rotate(cro::Transform::Y_AXIS, r * dt);
 
-                //test collision (accounts for ball position not actually being at the centre...
+                //test collision (accounts for ball position not actually being at the centre...)
                 if (const auto manifolds = doSphereCollision(tx.getPosition() + glm::vec3(0.f, Ball::Radius, 0.f), 60.f);
                     !manifolds.empty())
                 {
@@ -653,7 +663,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
     }
         break;
     case Ball::State::Putt:
-
         ball.delay -= dt;
         if (ball.delay < 0)
         {
@@ -790,75 +799,33 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             const auto movement = ball.velocity * dt;
             tx.move(movement);
 
-
             //check for wall collision
             if (ball.state == Ball::State::Putt //this may have changed above
                 && m_holeData->puttFromTee)
             {
-                std::int32_t stepCount = 1;
-
-                if (glm::length2(movement) > (Ball::Radius * Ball::Radius))
-                {
-                    stepCount = static_cast<std::int32_t>(std::ceil(glm::length(movement) / Ball::Radius)) + 1;
-                    //LogI << "Step count: " << stepCount << std::endl;
-                }
-
-                const auto step = movement / static_cast<float>(stepCount);
-                const auto centre = tx.getPosition() + (cro::Transform::Y_AXIS * Ball::Radius); //actual pos is on the ground...
-                
-                std::size_t collisionCount = 0;
-                
-                //take multiple smaller steps to attempt to reduce tunneling
-                for (auto i = 0; i < stepCount && collisionCount == 0; ++i)
-                {
-                    const auto testOffset = (static_cast<float>(i) * step);
-                    const auto manifolds = doSphereCollision(centre - testOffset);
-                    collisionCount += manifolds.size();
-
-                    //NOTE this penetration value *isn't* the penetration depth, this needs
-                    //to be renamed!!
-                    for (const auto& [normal, penetration, terrain] : manifolds)
-                    {
-                        if (penetration != 0)
-                        {
-                            const auto dir = glm::normalize(ball.velocity);
-                            tx.move(-testOffset);
-                            
-                            //penetration is actually the offset of the centre of the ball from teh collision plane
-                            const float correction = Ball::Radius;// -std::abs(penetration);
-
-                            //this makes sure the normal is always facing the direction
-                            //the ball was travelling from - otherwise it flips if the
-                            //centre of the ball is the other side of the colliding face.
-                            const auto surfaceDir = static_cast<float>(cro::Util::Maths::sgn(glm::dot(normal, -dir)));
-                            //normal *= surfaceDir;
-
-                            //if (surfaceDir < 0)
-                            //{
-                            //    LogI << surfaceDir << std::endl;
-                            //    //we're on the wrong side so add another ball diameter
-                            //    correction = (Ball::Radius * 2.f);
-                            //}
-                            
-
-                            //TODO this is a bit crude and will cause sliding along the wall
-                            //we need to use the penetration depth + angle between the normal and velocity
-                            //to figure out how far back along the velocity path to move
-                            
-                            if (surfaceDir > 0)
-                            {
-                                tx.move((normal * correction));
-                                ball.velocity = glm::reflect(ball.velocity, normal) * 0.5f;
-                                ball.lastTerrain = TerrainID::Stone; //this will trigger a sound effect when it reaches the client
-                            }
-                        }
-                    }
-                }
+                doWallCollision(entity, dt);
             }
 
             auto newPos = tx.getPosition();
             terrainContact = getTerrain(newPos);
             ball.terrain = terrainContact.terrain;
+
+
+            //launch the ball when putting off ramps
+            if ( m_holeData->puttFromTee &&
+                (terrainContact.terrain != TerrainID::Green && glm::length2(ball.velocity) > 10.f))
+            {
+                tx.move({ 0.f, 0.1f, 0.f });
+
+                //LogI << terrainContact.penetration << std::endl;
+                ball.state = Ball::State::Flight;
+                ball.delay = 0.f;
+                ball.velocity.y = std::abs(ball.velocity.y) * 1.5f;
+                ball.velocity *= 1.5f;
+                return;
+            }
+
+
 
             //one final correction to stop jitter
             pinDir = m_holeData->pin - newPos;
@@ -1146,7 +1113,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 }
 
                 //only count this if we reset to the same (or near to) the position we started
-                else if (glm::length2(tx.getPosition() - ball.startPoint) < 64.f)
+                else if (ball.isCPU &&
+                    glm::length2(tx.getPosition() - ball.startPoint) < 64.f)
                 {
                     //this is probably a CPU player melting down
                     //so move to the nearest target
@@ -1326,6 +1294,75 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
     }
 }
 
+bool BallSystem::doWallCollision(cro::Entity entity, float dt)
+{
+    std::int32_t stepCount = 1;
+    auto& ball = entity.getComponent<Ball>();
+    auto& tx = entity.getComponent<cro::Transform>();
+    const auto movement = ball.velocity * dt;
+
+    if (glm::length2(movement) > (Ball::Radius * Ball::Radius))
+    {
+        stepCount = static_cast<std::int32_t>(std::ceil(glm::length(movement) / Ball::Radius)) + 1;
+        //LogI << "Step count: " << stepCount << std::endl;
+    }
+
+    const auto step = movement / static_cast<float>(stepCount);
+    const auto centre = tx.getPosition() + (cro::Transform::Y_AXIS * Ball::Radius); //actual pos is on the ground...
+
+    std::size_t collisionCount = 0;
+
+    //take multiple smaller steps to attempt to reduce tunneling
+    for (auto i = 0; i < stepCount && collisionCount == 0; ++i)
+    {
+        const auto testOffset = (static_cast<float>(i) * step);
+        const auto manifolds = doSphereCollision(centre - testOffset);
+        collisionCount += manifolds.size();
+
+        //NOTE this penetration value *isn't* the penetration depth, this needs
+        //to be renamed!!
+        for (const auto& [normal, penetration, terrain] : manifolds)
+        {
+            if (penetration != 0)
+            {
+                const auto dir = glm::normalize(ball.velocity);
+                tx.move(-testOffset);
+
+                //penetration is actually the offset of the centre of the ball from teh collision plane
+                const float correction = Ball::Radius;// -std::abs(penetration);
+
+                //this makes sure the normal is always facing the direction
+                //the ball was travelling from - otherwise it flips if the
+                //centre of the ball is the other side of the colliding face.
+                const auto surfaceDir = static_cast<float>(cro::Util::Maths::sgn(glm::dot(normal, -dir)));
+                //normal *= surfaceDir;
+
+                //if (surfaceDir < 0)
+                //{
+                //    LogI << surfaceDir << std::endl;
+                //    //we're on the wrong side so add another ball diameter
+                //    correction = (Ball::Radius * 2.f);
+                //}
+
+
+                //TODO this is a bit crude and will cause sliding along the wall
+                //we need to use the penetration depth + angle between the normal and velocity
+                //to figure out how far back along the velocity path to move                            
+                if (surfaceDir > 0)
+                {
+                    const float reduction = ball.state == Ball::State::Putt ? 0.75f : 0.95f;
+
+                    tx.move((normal * correction));
+                    ball.velocity = glm::reflect(ball.velocity, normal) * reduction;
+                    ball.lastTerrain = TerrainID::Stone; //this will trigger a sound effect when it reaches the client
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 void BallSystem::doCollision(cro::Entity entity)
 {
     //check height
@@ -1469,8 +1506,24 @@ void BallSystem::doCollision(cro::Entity entity)
             ball.spin *= SpinReduction[terrainResult.terrain];
             break;
         case TerrainID::Green:
+            if (m_holeData->puttFromTee)
+            {
+                //special case if we tried jumping the ball on a putting course
+                if (ball.velocity.y < 0 && ball.velocity.y > MinRollVelocity)
+                {
+                    ball.state = Ball::State::Putt;
+                    ball.delay = 0.f;
+                    return;
+                }
+                else
+                {
+                    ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
+                    ball.velocity *= 0.5f;
+                }
+            }
+            
             //if low bounce start rolling
-            if (ball.velocity.y > MinRollVelocity) // the sooner we start rolling the more velocity we have left to roll :)
+            else if (ball.velocity.y > MinRollVelocity) // the sooner we start rolling the more velocity we have left to roll :)
             {
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
                 startRoll(Ball::State::Putt, ball);

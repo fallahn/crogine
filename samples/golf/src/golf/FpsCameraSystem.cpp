@@ -680,6 +680,11 @@ void FpsCameraSystem::setControllerID(std::int32_t p)
     m_input.buttonFlags = 0;
 }
 
+void FpsCameraSystem::takeScreenshot()
+{
+    Social::takeScreenshot(m_screenshotLocation, m_sharedData.courseIndex);
+}
+
 //private
 void FpsCameraSystem::checkControllerInput(float dt)
 {

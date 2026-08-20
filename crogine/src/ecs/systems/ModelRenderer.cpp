@@ -44,8 +44,8 @@ source distribution.
 #include <crogine/util/Frustum.hpp>
 
 #if defined(DEBUG_WINDOWS) || defined(BENCHMARK)
-#include <crogine/gui/Gui.hpp>
 #endif
+#include <crogine/gui/Gui.hpp>
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
@@ -104,7 +104,7 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
     registerWindow([&]() 
         {
             ImGui::Begin("sdfg");
-
+            ImGui::Text("Skybox %d", drawCount);
             ImGui::End();
         });
 #endif
@@ -238,7 +238,12 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
 #endif
             [](const MaterialPair& a, const MaterialPair& b)
             {
-                return a.second.flags < b.second.flags;
+                if (a.second.blendMode == b.second.blendMode
+                    /*|| a.second.blendMode < static_cast<std::int32_t>(Material::BlendMode::Alpha)*/)
+                {
+                    return a.second.flags < b.second.flags;
+                }
+                return a.second.blendMode > b.second.blendMode;
             });
 #ifdef GNUC_UNSUPPORTED
 #define USE_PARALLEL_PROCESSING
@@ -325,6 +330,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 #endif
     m_lightUBO.bind();
     
+    bool skyboxDrawn = false;
+
     const auto& camComponent = camera.getComponent<Camera>();
     const auto camIndex = camComponent.getDrawListIndex();
     if (camIndex < m_drawLists.size())
@@ -333,7 +340,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         
         const auto& pass = camComponent.getActivePass();
         //why did we have this offset here??
-        glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() /*+ (0.08f * pass.getClipPlaneMultiplier())*/) * pass.getClipPlaneMultiplier();
+        glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel()/* + (0.08f * pass.getClipPlaneMultiplier())*/) * pass.getClipPlaneMultiplier();
 
         const auto& camTx = camera.getComponent<Transform>();
         auto cameraPosition = camTx.getWorldPosition();
@@ -341,9 +348,16 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
         glCheck(glCullFace(pass.getCullFace()));
 
+        Material::BlendMode previousMode = Material::BlendMode::None;
 
         //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
         const auto& visibleEntities = m_drawLists[camIndex][camComponent.getActivePassIndex()].renderables;
+        if (visibleEntities.empty())
+        {
+            drawSkybox(camComponent);
+            return;
+        }
+
         for (const auto& [entity, sortData] : visibleEntities)
         {
             //may have been marked for deletion - though this should never be true
@@ -359,6 +373,13 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             const auto& model = entity.getComponent<Model>();
             glCheck(glFrontFace(model.m_facing));
 
+            //this might actually change at render time
+            //as I'm a dummy and assumed Final and Refraction passes
+            //will always be the same.
+            if ((model.m_renderFlags & pass.renderFlags) == 0)
+            {
+                continue;
+            }
 
 #ifndef PLATFORM_DESKTOP
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
@@ -368,6 +389,17 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             {
                 const auto& material = model.m_materials[Mesh::IndexData::Final][i];
                 const auto& uniforms = material.uniforms;
+
+                //check if we switch from opaque pass (crude, but I want to prove a point before spending time on a large refactor...)
+                //note that if there are no alpha blended materals this never gets invoked!
+                if (material.blendMode != cro::Material::BlendMode::None
+                    && previousMode == Material::BlendMode::None)
+                {
+                    //draw skybox if it's available
+                    drawSkybox(camComponent);
+                    skyboxDrawn = true;
+                }
+                previousMode = material.blendMode;
 
                 //bind shader
                 glCheck(glUseProgram(material.shader));
@@ -448,6 +480,12 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         glCheck(glDisable(GL_CULL_FACE));
         glCheck(glDisable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
+    }
+
+    if (!skyboxDrawn)
+    {
+        //we only had an opaque pass so this is still pending
+        drawSkybox(camComponent);
     }
 #ifdef BENCHMARK
     if (m_benchmarks.size() <= camIndex) m_benchmarks.resize(camIndex+1); //hmmm we shouldn't need this
@@ -725,16 +763,24 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
                 //add ent/index pair to alpha or opaque list
                 for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
                 {
-                    if (model.m_materials[Mesh::IndexData::Final][i].blendMode != Material::BlendMode::None)
+                    if (model.m_materials[Mesh::IndexData::Final][i].null)
+                    {
+                        continue;
+                    }
+
+                    const auto blendMode = model.m_materials[Mesh::IndexData::Final][i].blendMode;
+                    if (blendMode != Material::BlendMode::None)
                     {
                         transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
                         transparent.second.flags = static_cast<std::int64_t>(-distance * 1000000.f); //suitably large number to shift decimal point
                         transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
+                        transparent.second.blendMode = static_cast<std::int32_t>(blendMode);
                     }
                     else
                     {
                         opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
                         opaque.second.flags = static_cast<std::int64_t>(distance * 1000000.f);
+                        opaque.second.blendMode = static_cast<std::int32_t>(blendMode);
                     }
                 }
 
@@ -1039,6 +1085,11 @@ void ModelRenderer::applyBlendMode(const Material::Data& material)
     {
     default: break;
     case Material::BlendMode::Custom:
+        for (auto e : material.blendData.disableProperties)
+        {
+            glCheck(glDisable(e));
+        }
+        
         CRO_ASSERT(!material.blendData.enableProperties.empty(), "You'll probably want at least GL_BLEND and GL_DEPTH_TEST");
         for (auto e : material.blendData.enableProperties)
         {

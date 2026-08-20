@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -174,7 +174,7 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
 //public
 bool RenderTexture::create(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer, std::uint32_t samples, bool floatingPoint)
 {
-    return create({ width, height, depthBuffer, false, floatingPoint, stencilBuffer, samples });
+    return create({ width, height, depthBuffer, false, stencilBuffer, floatingPoint, samples });
 }
 
 bool RenderTexture::create(RenderTarget::Context ctx)
@@ -424,7 +424,6 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
                 glCheck(glRenderbufferStorage(GL_RENDERBUFFER, format, ctx.width, ctx.height));
                 glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, m_rboID));
                 glCheck(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-
             }
 
             //create a depth texture if requested - though only do it here
@@ -437,7 +436,14 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
                 }
 
                 glCheck(glBindTexture(GL_TEXTURE_2D, m_depthTextureID));
-                glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, ctx.width, ctx.height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
+                if (ctx.stencilBuffer)
+                {
+                    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, ctx.width, ctx.height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL));
+                }
+                else
+                {
+                    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, ctx.width, ctx.height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
+                }
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
@@ -445,7 +451,8 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
                 const float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
                 glCheck(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor));
 
-                glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthTextureID, 0));
+                const auto texAttachment = ctx.stencilBuffer ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT;
+                glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, texAttachment, GL_TEXTURE_2D, m_depthTextureID, 0));
             }
         }
 
@@ -459,6 +466,10 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
             m_creationContext = ctx;
 
             return true;
+        }
+        else
+        {
+            LogE << "framebuffer incomplete" << std::endl;
         }
     }
     glCheck(glBindFramebuffer(GL_FRAMEBUFFER, RenderTarget::getActiveTargetID()));

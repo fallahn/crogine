@@ -94,6 +94,7 @@ static constexpr float FlightCamRotation = -0.158f;
 static constexpr glm::uvec2 MapSize(560u, 320u);
 static constexpr glm::vec2 MapSizeFloat(MapSize);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
+static constexpr glm::vec2 ChipInSize(80.f, 90.f);
 static constexpr float MaxSubTarget = (MapSize.x * 2.f) * (MapSize.x * 2.f); //used to validate the sub-target property of a hole
 static constexpr glm::uvec2 MiniMapSize(320u, 200u);
 static constexpr std::uint32_t MapSizeMultiplier = 8u;// 4u; //increases the texture resolution by this much
@@ -308,14 +309,16 @@ struct SpriteAnimID final
 {
     enum
     {
+        //don't change the order of these! They are embedded in the assets
         Swing = 0,
         Medal,
         BillboardSwing,
         BillboardRewind,
-        Footstep,
+        FootstepPath,
         Pump,
         Swoosh,
-        BillboardPause
+        BillboardPause,
+        FootstepGrass
     };
 };
 
@@ -429,7 +432,8 @@ struct ShaderID final
         Earth,
         Cloth,
         Shore,
-        Vapour
+        Vapour,
+        Seagull
     };
 };
 
@@ -897,6 +901,7 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
         dest.doubleSided = m->doubleSided;
         dest.animation = m->animation;
         dest.name = m->name;
+        dest.null = m->null;
     }
 }
 
@@ -1361,7 +1366,7 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
                 ss.precision(2);
                 ss << "Distance: ";
 
-                if (!onGreen)
+                if (!onGreen) //hmm this should be unreachable as we check this case above already
                 {
                     ss << std::fixed << (distance * ToYards);
                     ss << "yds";
@@ -1385,7 +1390,6 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
                     ss << "ft";
 
                     target.setString(ss.str());
-
                     /*auto dist = static_cast<std::int32_t>(distance);
                     target.setString("Distance: " + std::to_string(dist) + "ft");*/
                 }

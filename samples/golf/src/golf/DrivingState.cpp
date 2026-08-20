@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -33,7 +33,6 @@ source distribution.
 #include "SharedProfileData.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
-#include "GameConsts.hpp"
 #include "PlayerAvatar.hpp"
 #include "FpsCameraSystem.hpp"
 #include "TextAnimCallback.hpp"
@@ -44,7 +43,6 @@ source distribution.
 #include "PlayerColours.hpp"
 #include "GolfParticleDirector.hpp"
 #include "GolfSoundDirector.hpp"
-#include "CameraFollowSystem.hpp"
 #include "ClientCollisionSystem.hpp"
 #include "FloatingTextSystem.hpp"
 #include "CloudSystem.hpp"
@@ -195,113 +193,9 @@ void main()
 
     float playerXScale = 1.f;
 
-    const cro::Time IdleTime = cro::seconds(30.f);
-
-    static constexpr glm::vec3 CameraPosition = PlayerPosition + glm::vec3(0.f, CameraStrokeHeight, CameraStrokeOffset);
-
-    static constexpr glm::vec2 BillboardChunk(40.f, 50.f);
-    static constexpr std::size_t ChunkCount = 5;
-
-    const std::array BannerStrings =
-    {
-        cro::String("Missed Me!!"),
-        cro::String("Buy Pentworth's\nIndispensible Lube"),
-        cro::String("Also Available In Chartreuse"),
-        cro::String("Honk if you love cilantro"),
-        cro::String("Brilton & Stockley"),
-        cro::String("Space For Rent"),
-        cro::String("Strike it with a Dong"),
-        cro::String("Dannis Always Chips In")
-    };
-
     //make this static so throughout the duration of the game we
     //cycle without repetition (until we reach the end)
     static std::int32_t BannerIndex = cro::Util::Random::value(0, static_cast<std::int32_t>(BannerStrings.size()) - 1);
-
-    struct FanData final
-    {
-        std::int32_t dir = 1;
-        float progress = 0.f;
-    };
-
-    struct FoliageCallback final
-    {
-        FoliageCallback(float d = 0.f) : delay(d + 8.f) {} //magic number is some delay before effect starts
-        float delay = 0.f;
-        float progress = 0.f;
-        static constexpr float Distance = 14.f;
-
-        void operator() (cro::Entity e, float dt)
-        {
-            delay -= (dt * 1.6f); 
-
-            if (delay < 0)
-            {
-                progress = std::min(1.f, progress + dt);
-
-                auto pos = e.getComponent<cro::Transform>().getPosition();
-                pos.y = (cro::Util::Easing::easeInOutQuint(progress) - 1.f) * Distance;
-                e.getComponent<cro::Transform>().setPosition(pos);
-
-                if (progress == 1)
-                {
-                    e.getComponent<cro::Callback>().active = false;
-                }
-            }
-        }
-    };
-
-    struct FlagCallbackData final
-    {
-        float progress = 1.f;
-        enum
-        {
-            Out, In
-        }state = Out;
-        glm::vec3 startPos = glm::vec3(0.f);
-        glm::vec3 targetPos = glm::vec3(0.f);
-        static constexpr float MaxDepth = 3.f;
-    };
-
-    float getMaxShadowDistance(std::int32_t camID, bool hq)
-    {
-        if (hq)
-        {
-            switch (camID)
-            {
-            default: return 80.f;
-            case CameraID::Player: return 40.f;
-            case CameraID::Idle: return 40.f;
-            case CameraID::Green: return 55.f; //50.f
-            }
-        }
-        else
-        {
-            switch (camID)
-            {
-            default: return 80.f;
-            case CameraID::Player: return 20.f;
-            case CameraID::Idle: return 15.f;
-            case CameraID::Green: return 15.f;
-            }
-        }
-        return 80.f;
-    }
-
-    std::uint32_t getShadowMapSize(std::int32_t q)
-    {
-        switch (q)
-        {
-        default:
-        case 0:
-            return ShadowMapLowest;
-        case 1:
-            return ShadowMapLow;
-        case 2:
-        case 3:
-            return ShadowMapHigh;
-        }
-    }
 }
 
 DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, const SharedProfileData& sp)
@@ -574,7 +468,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
             cmd.targetFlags = CommandID::Hole;
             cmd.action = [&](cro::Entity e, float)
             {
-                e.getComponent<cro::Callback>().getUserData<FlagCallbackData>().targetPos = m_holeData[0].pin;
+                e.getComponent<cro::Callback>().getUserData<FlagPosCallbackData>().targetPos = m_holeData[0].pin;
                 e.getComponent<cro::Callback>().active = true;
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -2659,6 +2553,17 @@ void DrivingState::createPlayer()
         processClubPath(basePath + s);
     }
 
+#ifdef USE_GNS
+    //workshop paths
+    const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Clubs);
+    for (const auto& p : wsPaths)
+    {
+        processClubPath(p.string() + "/");
+    }
+#endif
+
+
+
     std::string clubPath = "assets/golf/clubs/default/list.cst";
     if (clubPaths.count(playerData.clubID) != 0)
     {
@@ -3449,7 +3354,7 @@ void DrivingState::createFlag()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Hole;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, -FlagCallbackData::MaxDepth, 0.f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -FlagPosCallbackData::MaxDepth, 0.f });
     //entity.getComponent<cro::Transform>().addChild(holeEntity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(flagEntity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(beaconEntity.getComponent<cro::Transform>());
@@ -3492,23 +3397,23 @@ void DrivingState::createFlag()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/flag.cps", m_resources.textures);
-    entity.addComponent<cro::Callback>().setUserData<FlagCallbackData>();
+    entity.addComponent<cro::Callback>().setUserData<FlagPosCallbackData>();
     entity.getComponent<cro::Callback>().function =
         [&, beaconEntity](cro::Entity e, float dt) mutable
     {
-        auto& data = e.getComponent<cro::Callback>().getUserData<FlagCallbackData>();
+        auto& data = e.getComponent<cro::Callback>().getUserData<FlagPosCallbackData>();
         auto& tx = e.getComponent<cro::Transform>();
-        if (data.state == FlagCallbackData::Out)
+        if (data.state == FlagPosCallbackData::Out)
         {
             data.progress = std::min(1.f, data.progress + dt);
 
             auto pos = data.startPos;
-            pos.y -= FlagCallbackData::MaxDepth * cro::Util::Easing::easeInOutQuint(data.progress);
+            pos.y -= FlagPosCallbackData::MaxDepth * cro::Util::Easing::easeInOutQuint(data.progress);
             tx.setPosition(pos);
 
             if (data.progress == 1)
             {
-                data.state = FlagCallbackData::In;
+                data.state = FlagPosCallbackData::In;
             }
         }
         else
@@ -3516,12 +3421,12 @@ void DrivingState::createFlag()
             data.progress = std::max(0.f, data.progress - dt);
 
             auto pos = data.targetPos;
-            pos.y -= FlagCallbackData::MaxDepth * cro::Util::Easing::easeInOutQuint(data.progress);
+            pos.y -= FlagPosCallbackData::MaxDepth * cro::Util::Easing::easeInOutQuint(data.progress);
             tx.setPosition(pos);
 
             if (data.progress == 0)
             {
-                data.state = FlagCallbackData::Out;
+                data.state = FlagPosCallbackData::Out;
                 data.startPos = data.targetPos;
 
                 e.getComponent<cro::Callback>().active = false;
@@ -3636,7 +3541,7 @@ void DrivingState::hitBall()
 #ifdef CRO_DEBUG_
     //result.impulse *= powerMultiplier;
 #endif
-    //performed bu getStroke()
+    //performed by getStroke()
     //result.impulse *= Dampening[TerrainID::Fairway];
 
     //apply impulse to ball component
@@ -3778,7 +3683,7 @@ void DrivingState::setHole(std::int32_t index)
     cmd.targetFlags = CommandID::Hole;
     cmd.action = [&, index](cro::Entity e, float)
     {
-        e.getComponent<cro::Callback>().getUserData<FlagCallbackData>().targetPos = m_holeData[index].pin;
+        e.getComponent<cro::Callback>().getUserData<FlagPosCallbackData>().targetPos = m_holeData[index].pin;
         e.getComponent<cro::Callback>().active = true;
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

@@ -161,6 +161,7 @@ private:
     std::int32_t m_offsetRotation;
     void calcAccuracy();
     float getOffsetValue() const;
+    float getDampening() const;
 
     //for each pressed event we need a release event the next frame
     std::vector<cro::Event> m_popEvents;

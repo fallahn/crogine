@@ -151,6 +151,7 @@ namespace cro
             friend class NetHost;
         }packet;
 
+
         /*!
         \brief Contains the peer from which this event was transmitted
         */

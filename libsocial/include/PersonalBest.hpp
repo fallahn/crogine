@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -62,5 +62,5 @@ private:
     };
 
     //hmmm shouldn't we have this const somewhere?
-    std::array<ScoreEntry, 14 * 3> m_entries = {};
+    std::array<ScoreEntry, 16 * 3> m_entries = {};
 };

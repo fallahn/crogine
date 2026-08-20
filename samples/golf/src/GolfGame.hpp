@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -52,11 +52,13 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 
 #include <memory>
+#include <vector>
+#include <string>
 
 class GolfGame final : public cro::App, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
-    GolfGame();
+    explicit GolfGame(const std::vector<std::string>&);
 
     static cro::RenderTarget* getActiveTarget() { return m_renderTarget; }
 
@@ -65,8 +67,6 @@ public:
 
     void setSafeModeEnabled(bool sm);
 private:
-    //cro::Cursor m_cursor;
-
     SharedStateData m_sharedData;
     SharedProfileData m_profileData;
     SharedMinigameData m_minigameData;

@@ -191,6 +191,9 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/ambience/foot02.wav",
         "assets/golf/sound/ambience/foot03.wav",
         "assets/golf/sound/ambience/foot04.wav",
+        "assets/golf/sound/ambience/foot05.wav",
+        "assets/golf/sound/ambience/foot06.wav",
+        "assets/golf/sound/ambience/window.wav",
 
         "assets/golf/sound/bad.wav",
         "assets/golf/sound/tutorial_appear.wav",
@@ -332,7 +335,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                 sound.getComponent<cro::AudioEmitter>().setRolloff(0.65f);
             }
-            else if (data.userType == SpriteAnimID::Footstep)
+            else if (data.userType == SpriteAnimID::FootstepPath)
             {
                 //don't play footsteps if crowd is hidden
                 if (m_sharedData.crowdDensity != (CrowdDensityCount - 1))
@@ -342,6 +345,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     sound.getComponent<cro::AudioEmitter>().setRolloff(0.74f);
                     sound.getComponent<cro::AudioEmitter>().setPitch(1.f + cro::Util::Random::value(-0.2f, 0.2f));
                 }
+            }
+            else if (data.userType == SpriteAnimID::FootstepGrass)
+            {
+                auto sound = playSound(cro::Util::Random::value(AudioID::Foot05, AudioID::Foot06), data.position, 0.8f);
+                sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                sound.getComponent<cro::AudioEmitter>().setRolloff(0.74f);
+                sound.getComponent<cro::AudioEmitter>().setPitch(1.f + cro::Util::Random::value(-0.25f, 0.25f));
             }
             else if (data.userType == SpriteAnimID::Pump)
             {
@@ -850,9 +860,22 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             }
             else if (data.type == CollisionEvent::Trigger)
             {
-                if (m_soundTimers[AudioID::Fore].elapsed() > ForeSoundTime)
+                switch (data.terrain)
                 {
-                    playSound(AudioID::Fore, glm::vec3(0.f));
+                default:
+                    if (m_soundTimers[AudioID::Fore].elapsed() > ForeSoundTime)
+                    {
+                        playSound(AudioID::Fore, glm::vec3(0.f));
+                    }
+                    break;
+                case TriggerID::Greenhouse:
+                {
+                    auto ent = playSound(AudioID::Window, data.position);
+                    ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    ent.getComponent<cro::AudioEmitter>().setVolume(1.f);
+                    ent.getComponent<cro::AudioEmitter>().setRolloff(0.1f);
+                }
+                    break;
                 }
             }
         }

@@ -130,11 +130,11 @@ namespace cro
         void process(float) override;
 
         void updateDrawList(Entity) override;
-        void render(Entity, const RenderTarget&) override {};
+        void render(Entity, const RenderTarget&) override;
 
     private:
         std::uint32_t m_interval;
-        
+        bool m_wantsRender;
         std::vector<Entity> m_activeCameras;
 
         struct Drawable final

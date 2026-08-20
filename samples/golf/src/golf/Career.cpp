@@ -29,6 +29,7 @@ source distribution.
 
 #include "Career.hpp"
 #include "Input.hpp"
+#include "Content.hpp"
 
 #include <crogine/core/Log.hpp>
 #include <crogine/core/FileSystem.hpp>
@@ -43,7 +44,8 @@ namespace
         {10,1},
         {8, 2},
         {6,11},
-        //{0,1}
+        {13,12},
+        {15,14},
         }
     };
 
@@ -55,12 +57,14 @@ namespace
         "Hill and Hole Valley Run",
         "Chippers Pitch 'n' Putt",
         "The Woodlands League",
-        //"Custom League"
+        "Sun & Moon Adventure DLC",
+        "Craewall Competition DLC"
     };
 }
 
 Career::Career(const SharedStateData& sd)
 {
+    static_assert(MaxLeagues == CareerLeague::MaxRounds + 1, "SIGH these values are coupled.");
     for (auto i = 0u; i < MaxLeagues; ++i)
     {
         m_leagues[i].leagueID = i + 1;
@@ -73,6 +77,22 @@ Career::Career(const SharedStateData& sd)
         }
 
         m_leagueTables.emplace_back(m_leagues[i].leagueID, sd);
+    }
+
+    //we need to re-adjust the course IDs if either of the League 7 DLCs aren't installed
+    //as the Craewall ones may sit in their place.
+    std::uint8_t offset = 0;
+    for (auto i = 0; i < 2; ++i)
+    {
+        if (!Content::DLCAvailable(i))
+        {
+            offset++;
+        }
+    }
+
+    for (auto& p : m_leagues.back().playlist)
+    {
+        p.courseID -= offset;
     }
 }
 

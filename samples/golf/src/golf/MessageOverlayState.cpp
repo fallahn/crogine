@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -88,6 +88,7 @@ MessageOverlayState::MessageOverlayState(cro::StateStack& ss, cro::State::Contex
     m_viewScale     (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Message Overlay");
 
     buildScene();
 }

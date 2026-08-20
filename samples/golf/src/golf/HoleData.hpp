@@ -66,7 +66,7 @@ static inline bool operator != (const Team::Player& a, const Team::Player& b)
     return !(a == b);
 }
 
-static inline const std::array<std::string, 14u> CourseNames =
+static inline const std::array<std::string, 16u> CourseNames =
 {
     "course_01",
     "course_02",
@@ -84,6 +84,8 @@ static inline const std::array<std::string, 14u> CourseNames =
     //dlc from here
     "course_13",
     "course_14",
+    "course_15",
+    "course_16",
 };
 
 static inline std::int32_t getCourseIndex(const std::string& name)
@@ -105,6 +107,12 @@ struct LightData final
     bool lensFlare = true;
 };
 
+struct RopeData final
+{
+    std::vector<glm::vec3> points;
+    float slackness = 0.001f;
+};
+
 struct HoleData final
 {
     glm::vec3 tee = glm::vec3(0.f);
@@ -118,12 +126,14 @@ struct HoleData final
     std::string modelPath;
     cro::Entity modelEntity;
     std::vector<LightData> lightData;
+    std::vector<RopeData> ropeData;
     std::vector<cro::Entity> lights;
     std::vector<cro::Entity> propEntities;
     std::vector<cro::Entity> particleEntities;
     std::vector<cro::Entity> audioEntities;
     std::array<std::vector<glm::mat4>, CrowdDensityCount> crowdPositions = {};
     std::vector<Path> crowdCurves;
+    std::vector<glm::vec3> rabbitPositions;
 };
 
 static inline constexpr std::size_t MaxHoles = 18;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -52,7 +52,7 @@ source distribution.
 
 namespace
 {
-    const std::array<std::string, 20> TipStrings  =
+    const std::array<std::string, 21> TipStrings  =
     {
         std::string("Loading...\n\nTip: Click on an opponent's name in the League Browser to change it"),
         "Loading...\n\nDid You Know: Before golf tees players would shape mounds of sand and place the golf ball on top",
@@ -71,6 +71,7 @@ namespace
         "Loading...\n\nTip: Hitting certain paths and bridges can give you an exaggerated bounce...\nbut be careful what you wish for!",
         "Loading...\n\nDid You Know: There are exactly 336 dimples on a regulation golf ball,\nand they must weigh no more than 45.93 grammes (including logo paint!)",
         "Loading...\n\nTip: You can check out the lie of the green or the fairway ahead at any time!\nUse D-Pad Down or Keyboard \"2\" to manually control the drone",
+        "Loading...\n\nDid You Know: The 30 Lives Code was created by Kazuhisa Hashimoto, who was\ndeveloping the home port of the 1985 arcade game Gradius",
         "Loading...\n\nTip: If you find putting a little too tricky, try enabling Putting Assist in the Options menu.",
         "Loading...\n\nTip: A fresh pack of balls from the Equipment Counter can go a long way to fixing your slice!",
         "Loading...\n\nTip: Press Up on the D-Pad or \"1\" on keyboard when putting to bring up the measuring tool.",

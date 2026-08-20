@@ -119,7 +119,7 @@ TerrainResult CollisionMesh::getTerrain(glm::vec3 position) const
     //btCollisionWorld::ClosestRayResultCallback res(worldPos, worldPos + RayLength);
     //m_collisionWorld->rayTest(worldPos, worldPos + RayLength, res);
 
-    //TODO this might not stictly be necessary for client collision
+    //TODO this might not strictly be necessary for client collision
     //but we might want to share this class with the ball system eventually
     RayResultCallback res(worldPos, worldPos + RayLength);
     m_collisionWorld->rayTest(worldPos, worldPos + RayLength, res);

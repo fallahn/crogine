@@ -82,7 +82,9 @@ namespace ShaderID
         SMAAPreview,
 
         Holo, Lava, LavaFall,
-        Grass, Grid
+        Grass, Grid,
+
+        Waves
     };
 }
 

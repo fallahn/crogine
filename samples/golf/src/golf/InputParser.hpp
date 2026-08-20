@@ -55,6 +55,8 @@ public:
     void handleEvent(const cro::Event&);
     void setHoleDirection(glm::vec3);
     void setDistanceToHole(float d) { m_distanceToHole = d; }
+    float getDistanceToHole() const { return m_distanceToHole; }
+    void setOnFringe(bool b) { m_onFringe = b; }
     void setClub(float, std::uint8_t terrain); //picks closest club to given distance
     void syncClub(std::int32_t); //matches the club to the remote player's
     float getYaw() const; //yaw in world space (includes facing direction)
@@ -68,6 +70,7 @@ public:
     float getPower() const; //0-1 multiplied by selected club
     float getHook() const; //-1 to -1 * some angle, club defined
     float getCalculatedHook() const; //used by UI to display if current player hooked
+    std::int32_t getTerrain() const { return m_terrain; }
     std::uint8_t getLie() const { return m_lie; } //lie of the ball as it was when last activated
 
     std::int32_t getClub() const;
@@ -182,6 +185,7 @@ private:
     std::size_t m_bunkerTableIndex;
     std::size_t m_roughTableIndex;
 
+    bool m_onFringe;
     std::int32_t m_terrain;
     std::uint8_t m_lie;
     float m_estimatedDistance;

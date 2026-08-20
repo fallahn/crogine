@@ -54,7 +54,7 @@ namespace cro
             std::uint32_t width = 0u; //!< desired width
             std::uint32_t height = 0u; //!< desired height
             bool depthBuffer = true; //!< should this target create a depth buffer?
-            bool depthTexture = false; //!< if a depth buffer is enabled so this be rendered to a texture?
+            bool depthTexture = false; //!< if a depth buffer is enabled should this be rendered to a texture?
             bool stencilBuffer = false; //!< should this target create a stencil buffer?
             bool floatingPointStorage = false; //!< if true the texture is created with 16bit floating point storage, else it defaults to 8 bit signed
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -45,8 +45,10 @@ source distribution.
 #include "TextChat.hpp"
 #include "League.hpp"
 #include "AvatarAnimation.hpp"
+#include "GroupID.hpp"
 #include "server/ServerPacketData.hpp"
 
+#include <crogine/audio/AudioScape.hpp>
 #include <crogine/audio/DynamicAudioStream.hpp>
 
 #include <crogine/core/State.hpp>
@@ -75,6 +77,9 @@ source distribution.
 //#define PATH_TRACING
 #endif
 #define VIEW_SPACE_LIGHTING
+
+//#define STENCIL_SKYBOX
+#define AUTO_UI
 
 static constexpr float Upscale = 1.f;
 
@@ -142,6 +147,16 @@ public:
     cro::StateID getStateID() const override { return StateID::Golf; }
 
 private:
+    //std::vector<float> m_debugCurve;
+    GroupID m_groupID;
+
+    struct ConnectRetry final
+    {
+        std::int32_t retryCount = 0;
+        float retryTime = 0.f;
+        static constexpr float Timeout = 3.f;
+    }m_connectionRetry;
+
     cro::ResourceCollection m_resources;
     cro::DynamicAudioStream m_musicStream;
     cro::VideoPlayer m_billboardVideo;
@@ -339,6 +354,8 @@ private:
             PointFlare,
             Emissive, //self-illum for clubs
             Hole,
+            Seagull,
+            Bunting,
 
             Count
         };
@@ -353,12 +370,16 @@ private:
             BullsEye,
             PlayerFallBack,
             MeasureWidget,
+            Rabbit,
+            Seagull,
 
             Count
         };
     };
     std::array<std::unique_ptr<cro::ModelDefinition>, ModelID::Count> m_modelDefs = {};
     std::unordered_map<std::int32_t, std::unique_ptr<cro::ModelDefinition>> m_ballModels;
+    cro::AudioScape m_gullAudio;
+    std::vector<std::array<float, 2u>> m_gullPoints;
 
     struct ShaderPair final
     {
@@ -419,6 +440,13 @@ private:
     //weather.cpp
     struct Swarm final
     {
+        enum
+        {
+            Insect, Bird,
+
+            Count
+        };
+        std::uint32_t type = Insect;
         std::string texture;
         std::string mask;
         std::int32_t frameCount = 1;
@@ -559,7 +587,8 @@ private:
         bool isEnabled = false;
     }m_puttViewState;
     void togglePuttingView(bool); //only used when switching to putter manually
-    void setCameraTarget(const ActivePlayer&);//target for createTranstion() and spectateNextPlayer()
+    void setCameraTarget(const ActivePlayer&, bool usePlayerLookat = false);//target for createTransition() and spectateNextPlayer()
+    void rotateCameraToTarget(); //performs animation to rotate to target set by above
     void createTransition(const ActivePlayer&, bool = true);
     void startFlyBy();
     void setCameraPosition(glm::vec3, float, float);
@@ -680,7 +709,7 @@ private:
     cro::Entity m_nemesisEnt;
     cro::Entity m_droneTextEnt;
     cro::Entity m_freecamMenuEnt;
-    std::uint8_t m_readyQuitFlags;
+    std::uint16_t m_readyQuitFlags;
 
     std::unique_ptr<FriendlyPlayers> m_friendlyPlayers;
 
@@ -846,6 +875,7 @@ private:
         bool bullseyeChallenge = false;
         bool leadingCareerRound = false;
         bool usedAssist = false;
+        bool peskyKids = false;
     }m_achievementTracker;
     cro::Clock m_playTimer; //track avg play time stat
     cro::Time m_playTime;
@@ -913,8 +943,12 @@ private:
     std::vector<cro::CubemapTexture> m_cubemaps;
     void buildCubemap(glm::vec3 position, const std::string& filePath);
 
-    //bool m_drawDepthMaps = false; //TODO remove me when done
     bool m_drawDebugMesh;
+
+    void createRope(const RopeData&);
+    void spawnRabbit(glm::vec3, std::uint32_t seed);
+    void spawnGardener(glm::vec3);
+    void spawnSeagulls(glm::vec3);
 
     struct NetworkDebugContext final
     {

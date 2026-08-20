@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/ecs/Component.hpp>
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/ShaderResource.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
@@ -50,6 +51,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 
 #include <functional>
+#include <memory>
 
 namespace cro
 {
@@ -150,7 +152,7 @@ namespace cro
         /*!
         \brief Sets the given system type active or inactive in the scene.
         Inactive systems are moved from the processing list and are ignored
-        until set active again. If the system type give doesn't exist then
+        until set active again. If the system type given doesn't exist then
         this function does nothing.
         */
         template <typename T>
@@ -271,7 +273,6 @@ namespace cro
 
         /*!
         \brief Sets the strength of the star rendering on the default skybox.
-        If a skybox texture or environment map has been set then this does nothing.
         \param amount A value between 0 (no stars) and 1 (full stars)
         */
         void setStarsAmount(float amount);
@@ -495,16 +496,17 @@ namespace cro
             Count
         };
         std::int32_t m_starsUniform;
-        std::array<std::int32_t, 3u> m_skyColourUniforms;
-        std::array<Shader, SkyboxType::Count> m_skyboxShaders;
+        std::array<std::int32_t, 3u> m_skyColourUniforms = {};
+        std::array<Shader*, SkyboxType::Count> m_skyboxShaders = {};
         std::size_t m_shaderIndex;
+        std::unique_ptr<ShaderResource> m_shaderResource;
         void applySkyboxColours();
         void applyStars();
 
         //we use a pointer here so we can create an array of just one
         //camera without having to create a vector from it
         void defaultRenderPath(const RenderTarget&, const Entity* cameraList, std::size_t cameraCount);
-
+        void renderSkybox(const Camera&);
         void destroySkybox();
     };
 

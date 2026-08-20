@@ -19,6 +19,8 @@ endif()
 #option(USE_NEWSFEED "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl" ON)
 option(USE_STEAM "Enable the steamworks SDK" OFF)
 
+option(BUILD_DEMO "Build the demo version of the game" OFF)
+
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
 SET(PROJECT_STATIC_RUNTIME FALSE)
 
@@ -32,12 +34,25 @@ if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
   endif()
 endif()
 
+#versions of gcc older than 9 don't support parallel execution policies
+if(CMAKE_COMPILER_IS_GNUCC AND
+  CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8 AND
+  USE_PARALLEL_EXECUTION)
+  SET(USE_TBB true)
+else()
+  add_definitions(-DPARALLEL_GLOBAL_DISABLE)
+endif()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-potentially-evaluated-expression")
 endif()
 
 if (NOT USE_PARALLEL_EXECUTION OR APPLE)
   add_definitions(-DPARALLEL_GLOBAL_DISABLE)
+endif()
+
+if (BUILD_DEMO)
+  add_definitions(-DDEMO)
 endif()
 
 if(NOT GNS_TAG)
@@ -64,6 +79,10 @@ find_package(SQLite3 REQUIRED)
 
 if(NOT USE_STEAM)
   find_package(CURL REQUIRED)
+endif()
+
+if(USE_TBB)
+  find_package(TBB REQUIRED)
 endif()
 
 # If the crogine target exists then we're being built as part of the crogine project
@@ -228,6 +247,10 @@ target_link_libraries(${PROJECT_NAME}
   ${BULLET_LIBRARIES}
   ${SQLite3_LIBRARIES}  
   ${OPENGL_LIBRARIES})
+
+if(USE_TBB)
+  target_link_libraries(${PROJECT_NAME} TBB::tbb)
+endif()
 
 if(TARGET crogine)
  target_link_libraries(${PROJECT_NAME} crogine)

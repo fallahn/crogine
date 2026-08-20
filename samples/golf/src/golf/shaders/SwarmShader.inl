@@ -45,8 +45,10 @@ R"(
 #include WIND_BUFFER
 
         VARYING_OUT float v_currentFrame;
-
-        const float particleSize = 64.0;
+#if !defined(PARTICLE_SIZE)
+#define PARTICLE_SIZE 64.0
+#endif
+        const float particleSize = PARTICLE_SIZE;
         const float PI = 3.141;
 #if !defined(AREA_SIZE)
 #define AREA_SIZE 2.5

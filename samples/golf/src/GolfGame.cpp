@@ -50,6 +50,7 @@ source distribution.
 #include "golf/CareerState.hpp"
 #include "golf/TournamentState.hpp"
 #include "golf/DrivingState.hpp"
+#include "golf/ChipInState.hpp"
 #include "golf/ClubhouseState.hpp"
 #include "golf/LeagueState.hpp"
 #include "golf/ProLeagueState.hpp"
@@ -77,6 +78,11 @@ source distribution.
 #include "golf/EditTournamentState.hpp"
 #include "golf/XPAwardStrings.hpp"
 #include "golf/UserInterface.hpp"
+
+#ifdef _WIN32
+#include "golf/OptionsState.hpp"
+#include "golf/ProfileState.hpp"
+#endif
 
 #include "editor/BushState.hpp"
 #include "sqlite/SqliteState.hpp"
@@ -206,9 +212,9 @@ namespace
 
 cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
 
-GolfGame::GolfGame()
+GolfGame::GolfGame(const std::vector<std::string>& args)
     : m_stateStack  ({*this, getWindow()}),
-    m_cursor        (/*cro::SystemCursor::Hand*/"assets/images/cursor.png", 1, 1),
+    m_cursor        ("assets/images/cursor.png", 1, 1),
     m_activeIndex   (0)
 {
 #ifdef _WIN32
@@ -219,11 +225,26 @@ GolfGame::GolfGame()
 
     std::fill(m_sharedData.profileIndices.begin(), m_sharedData.profileIndices.end(), 0);
 
+    
     m_stateStack.registerState<SplashState>(StateID::SplashScreen, m_sharedData);
     m_stateStack.registerState<KeyboardState>(StateID::Keyboard, m_sharedData);
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData, m_profileData);
+#ifdef _WIN32
+    if(std::find(args.begin(), args.end(), "no-prof") != args.end())
+    {
+        m_stateStack.registerState<ProfileState>(StateID::Profile, m_sharedData, m_profileData);
+    }
+    else
+#endif
     m_stateStack.registerState<ProfileStateV2>(StateID::Profile, m_sharedData, m_profileData);
+#ifdef _WIN32
+    if (std::find(args.begin(), args.end(), "no-opt") != args.end())
+    {
+        m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
+    }
+    else
+#endif
     m_stateStack.registerState<OptionsStateV2>(StateID::Options, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);
@@ -238,6 +259,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TournamentState>(StateID::Tournament, m_sharedData);
     m_stateStack.registerState<FreePlayState>(StateID::FreePlay, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);
+    m_stateStack.registerState<ChipInState>(StateID::ChipIn, m_sharedData, m_profileData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData, m_profileData, *this);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
     m_stateStack.registerState<ShopState>(StateID::Shop, m_sharedData, m_profileData);
@@ -902,6 +924,16 @@ bool GolfGame::initialise()
             }*/
         });
 
+    registerCommand("chip_in",
+        [&](const std::string&)
+        {
+            if (m_stateStack.getTopmostState() == StateID::Menu)
+            {
+                m_stateStack.clearStates();
+                m_stateStack.pushState(StateID::ChipIn);
+            }
+        });
+
     registerCommand("log_benchmark", 
         [&](const std::string& state)
         {
@@ -1118,6 +1150,7 @@ bool GolfGame::initialise()
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::FlagPreview, cro::RenderSystem2D::getDefaultVertexShader(), FlagFrag, "#define TEXTURED\n");
 
     m_sharedData.resolutions = getWindow().getAvailableResolutions();
+    //m_sharedData.resolutions.insert(m_sharedData.resolutions.end(), getWindow().getWindowedResolutions().begin(), getWindow().getWindowedResolutions().end());
     std::reverse(m_sharedData.resolutions.begin(), m_sharedData.resolutions.end());
     for (auto r : m_sharedData.resolutions)
     {
@@ -1245,6 +1278,8 @@ bool GolfGame::initialise()
 
 void GolfGame::finalise()
 {
+    Social::setStatus(Social::InfoID::Menu, {"Packing Clubs"});
+
     m_progressIcon.reset();
     m_guideTextures.reset();
 
@@ -1885,10 +1920,18 @@ void GolfGame::loadPreferences()
                     {
                         Social::setLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly, prop.getValue<bool>());
                     }
-                    /*else if (name == "filter_assist")
+                    else if (name == "snap_hio")
                     {
-                        Social::setLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist, prop.getValue<bool>());
-                    }*/
+                        m_sharedData.snapHIO = prop.getValue<bool>();
+                    }
+                    else if (name == "random_weather")
+                    {
+                        m_sharedData.randomQuickplayWeather = prop.getValue<bool>();
+                    }
+                    else if (name == "daily_streak")
+                    {
+                        m_sharedData.enableDailyStreak = prop.getValue<bool>();
+                    }
                 }
             }
 
@@ -2062,6 +2105,9 @@ void GolfGame::savePreferences()
     cfg.addProperty("tee_colour").setValue(m_sharedData.teeColour);
     cfg.addProperty("skip_speed").setValue(m_sharedData.skipSpeed);
     cfg.addProperty("filter_friends").setValue(Social::getLeaderboardFilter(Social::LeaderboardFilterValue::FriendsOnly));
+    cfg.addProperty("snap_hio").setValue(m_sharedData.snapHIO);
+    cfg.addProperty("random_weather").setValue(m_sharedData.randomQuickplayWeather);
+    cfg.addProperty("daily_streak").setValue(m_sharedData.enableDailyStreak);
     //cfg.addProperty("filter_assist").setValue(Social::getLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist));
     cfg.save(path);
 

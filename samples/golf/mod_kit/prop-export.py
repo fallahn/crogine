@@ -1,7 +1,11 @@
+#objects which are EMPTY and have type are:
+# 1 - particle system
+
+
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2024, 2, 3),
+    "version": (2026, 7, 29),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -28,6 +32,16 @@ def vecMultiply(vec, vec2):
 def WriteProperty(file, propName, location):
     file.write("    %s = %f,%f,%f\n\n" % (propName, location[0], location[2], -location[1]))
 
+def WriteOptionalPropertyString(file, propName, ob):
+    if ob.get(propName) is not None:
+        file.write("        %s = \"%s\"\n" % (propName, ob[propName]))
+
+
+def WriteOptionalPropertyInt(file, propName, ob):
+    if ob.get(propName) is not None:
+        file.write("        %s = %s\n" % (propName, ob[propName]))
+
+
 def WriteAIPath(file, path):
     file.write("\n    path ai\n    {\n")
     for p in path.data.splines.active.points:
@@ -35,6 +49,41 @@ def WriteAIPath(file, path):
         file.write("        point = %f,%f,%f\n" % (worldP.x, worldP.z, -worldP.y))
     file.write("\n    }\n")
 
+
+def WriteRope(file, ob):
+    file.write("\n    rope\n    {\n")
+    #for p in path.data.splines.active.points:
+
+    worldP = ob.matrix_world @ ob.data.splines.active.points[0].co
+    file.write("        point = %f,%f,%f\n" % (worldP.x, worldP.z, -worldP.y))
+    worldP = ob.matrix_world @ ob.data.splines.active.points[1].co
+    file.write("        point = %f,%f,%f\n" % (worldP.x, worldP.z, -worldP.y))
+
+    slackness = 0.001
+    if ob.get('slackness') is not None:
+        slackness = ob.get('slackness')
+
+    file.write("        slackness = %f\n" % slackness)
+    file.write("    }\n")
+
+
+def WriteSwarm(file, location, ob):
+    file.write("    swarm\n    {\n")
+    WriteProperty(file, "    position", location)
+    
+    WriteOptionalPropertyString(file, 'diffuse', ob)
+    WriteOptionalPropertyString(file, 'mask', ob)
+    WriteOptionalPropertyInt(file, 'frame_count', ob)
+    WriteOptionalPropertyInt(file, 'frame_rate', ob)
+    WriteOptionalPropertyInt(file, 'type', ob)
+
+
+    file.write("    }\n\n")
+
+def WriteRabbit(file, location):
+    file.write("    rabbit\n    {\n")
+    WriteProperty(file, "    position", location)
+    file.write("    }\n\n")
 
 def WritePath(file, path):
     file.write("\n        path\n        {\n")
@@ -86,7 +135,7 @@ def WriteProp(file, modelName, location, rotation, scale, ob):
     file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
     file.write("        rotation = %f\n" % (rotation[2] * (180.0 / 3.141)))
     file.write("        scale = %f,%f,%f\n" % (scale[0], scale[2], scale[1]))
-
+    #NOTE TO SELF location is WORLD location eg if this is a vehicle parented to a path
 
     if ob.parent is not None and ob.parent.type == 'CURVE':
         WritePath(file, ob.parent)
@@ -94,12 +143,19 @@ def WriteProp(file, modelName, location, rotation, scale, ob):
     for child in ob.children:
         if child.type == 'SPEAKER':
             WriteSpeaker(file, child)
+        elif child.type == 'LIGHT':
+                file.write("\n")
+                WriteLight(file, child)
         elif child.type == 'EMPTY':
+            #particle systems
             if child.get('type') is not None and child['type'] == 1:
+                file.write("\n")
                 if child.get('path') is not None:
-                    file.write("        particles = \"%s\"\n" % child['path'])
+                    #file.write("        particles = \"%s\"\n" % child['path'])
+                    WriteParticles(file, child['path'], child.matrix_local.translation, True)
                 else:
-                    file.write("        particles = \"path_is_missing\"\n")
+                    #file.write("        particles = \"path_is_missing\"\n")
+                    WriteParticles(file, "path_is_missing", child.matrix_local.translation, True)
 
 
     file.write("    }\n\n")
@@ -123,11 +179,15 @@ def WriteCrowd(file, location, rotation, ob):
     file.write("    }\n\n")
 
 
-def WriteParticles(file, path, location):
-    file.write("    particles\n    {\n")
-    file.write("        path = \"%s\"\n" % path)
-    file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
-    file.write("    }\n\n")
+def WriteParticles(file, path, location, hasParent):
+    indent = ""
+    if hasParent == True:
+        indent = "    "
+
+    file.write("    %sparticles\n    %s{\n" % (indent, indent))
+    file.write("        %spath = \"%s\"\n" % (indent, path))
+    file.write("        %sposition = %f,%f,%f\n" % (indent, location[0], location[2], -location[1]))
+    file.write("    %s}\n\n" % indent)
 
 
 def WriteLight(file, ob):
@@ -135,19 +195,24 @@ def WriteLight(file, ob):
     if light.type == 'POINT':
         location = ob.location
         colour = light.color
-        
-        file.write("    light\n    {\n")
-        file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
-        file.write("        colour = %f,%f,%f,1.0\n" % (colour.r, colour.g, colour.b))
-        file.write("        radius = %f\n" % light.shadow_soft_size)
+
+        indent = ""
+        if ob.parent is not None and ob.parent.type == 'MESH':
+            indent = "    "
+            location = ob.matrix_local.translation
+
+        file.write("    %slight\n    %s{\n" % (indent, indent))
+        file.write("        %sposition = %f,%f,%f\n" % (indent, location[0], location[2], -location[1]))
+        file.write("        %scolour = %f,%f,%f,1.0\n" % (indent, colour.r, colour.g, colour.b))
+        file.write("        %sradius = %f\n" % (indent, light.shadow_soft_size))
 
         if ob.get('animation') is not None:
-            file.write("        animation = \"%s\"\n" % ob['animation'])
+            file.write("        %sanimation = \"%s\"\n" % (indent, ob['animation']))
 
         if ob.get('preset') is not None:
-            file.write("        preset = \"%s\"\n" % ob['preset'])
+            file.write("        %spreset = \"%s\"\n" % (indent, ob['preset']))
 
-        file.write("    }\n\n")
+        file.write("    %s}\n\n" % indent)
 
 
 
@@ -241,8 +306,17 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                         teeWritten = True
                     else:
                         self.report({'WARNING'}, "Multiple tees selected")
-                elif ob.type == 'CURVE' and "ai" in modelName.lower():
-                    WriteAIPath(file, ob)
+                elif ob.type == 'CURVE':
+                    if "ai" in modelName.lower():
+                        WriteAIPath(file, ob)
+                    elif "rope" in modelName.lower():
+                        WriteRope(file, ob)
+
+                elif "swarm" in modelName.lower():
+                    WriteSwarm(file, worldLocation, ob)
+
+                elif "rabbit" in modelName.lower():
+                    WriteRabbit(file, worldLocation)
 
                 else:
                     if ob.type == 'MESH':
@@ -252,13 +326,13 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                             if ob['type'] == 1 and ob.parent is None:
                             # is a particle emitter not parented to a prop
                                 if ob.get('path') is not None:
-                                    WriteParticles(file, ob['path'], worldLocation)
+                                    WriteParticles(file, ob['path'], worldLocation, False)
                                 else:
-                                    WriteParticles(file, "path_missing", worldLocation)
+                                    WriteParticles(file, "path_missing", worldLocation, False)
                     elif ob.type == 'SPEAKER' and ob.parent is None:
                         WriteSpeakerSolo(file, ob)
 
-            elif ob.type == 'LIGHT':
+            elif ob.type == 'LIGHT' and ob.parent is None:
                 WriteLight(file, ob)
         
 

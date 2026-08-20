@@ -73,6 +73,18 @@ cro::Entity GolfState::createSwarm(const GolfState::Swarm& info)
     static constexpr std::array<float, 3U> AreaStart = {-AreaSize, 0.f, -AreaSize};
     static constexpr std::array<float, 3U> AreaEnd = {AreaSize, AreaSize, AreaSize};
 
+    std::string particleSize;
+
+    float sizeMultiplier = 1.f;
+    switch (info.type)
+    {
+    default: break;
+    case GolfState::Swarm::Bird:
+        sizeMultiplier = 10.f;
+        particleSize = "#define PARTICLE_SIZE 120.0\n";
+        break;
+    }
+
     if (m_swarmMesh == 0)
     {
         const auto points = pd::PoissonDiskSampling(1.f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
@@ -89,19 +101,20 @@ cro::Entity GolfState::createSwarm(const GolfState::Swarm& info)
         //verts have a base position with offset radius in red, offset rotation in green and movements speed in blue
         for (auto i = 0u; i < points.size(); ++i)
         {
-            const glm::vec3 p = glm::vec3(points[i][0], points[i][1], points[i][2]);
+            const glm::vec3 p = glm::vec3(points[i][0], points[i][1], points[i][2]) * sizeMultiplier;
+            const auto areaDist = std::pow((AreaSize * sizeMultiplier), 2.f);
 
-            if (glm::length2(p) < (AreaSize * AreaSize))
+            if (glm::length2(p) < areaDist)
             {
                 indices.push_back(static_cast<std::uint16_t>(verts.size()));
 
                 auto& v = verts.emplace_back(p.x, p.y, p.z);
                 //radius
-                v.colour.setRed(0.2f + (static_cast<float>(cro::Util::Random::value(0, 7)) / 10.f));
+                v.colour.setRed((0.2f + (static_cast<float>(cro::Util::Random::value(0, 7)) / 10.f)) * sizeMultiplier * 2.f);
                 //rotation offset
                 v.colour.setGreen(static_cast<float>(cro::Util::Random::value(0, 9)) / 10.f);
                 //speed (normalised multiplier)
-                v.colour.setBlue(0.6f + (static_cast<float>(cro::Util::Random::value(0, 2)) / 10.f));
+                v.colour.setBlue((0.6f + (static_cast<float>(cro::Util::Random::value(0, 2)) / 10.f)) * sizeMultiplier);
                 //animation frame offset
                 v.colour.setAlpha(static_cast<float>(cro::Util::Random::value(0, 3)) / 3.f);
             }
@@ -137,7 +150,7 @@ cro::Entity GolfState::createSwarm(const GolfState::Swarm& info)
 
         const std::string frameDefs = "#define FRAME_RATE " + std::to_string(1.f / info.frameRate) + "\n#define FRAME_COUNT " + std::to_string(info.frameCount) + "\n";
 
-        m_resources.shaders.loadFromString(shaderID, SwarmVertex, SwarmFragment, sizeDef + frameDefs + illumDef);
+        m_resources.shaders.loadFromString(shaderID, SwarmVertex, SwarmFragment, sizeDef + frameDefs + illumDef + particleSize);
         const auto& shader = m_resources.shaders.get(shaderID);
         m_windBuffer.addShader(shader); //time input
         m_resolutionBuffer.addShader(shader); //viewport size
@@ -146,15 +159,24 @@ cro::Entity GolfState::createSwarm(const GolfState::Swarm& info)
     //hmmm we *could* recycle materials based on unique shaders (although they may have different textures)
     const auto materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
     auto material = m_resources.materials.get(materialID);
-    //used for vertical offset
-    auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
-    material.setProperty("u_noiseTexture", noiseTex);
-
+    
+    if (info.type == GolfState::Swarm::Insect)
+    {
+        //used for vertical offset
+        auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
+        material.setProperty("u_noiseTexture", noiseTex);
+    }
+    else
+    {
+        m_resources.textures.setFallbackColour(cro::Colour::Black);
+        auto& noiseTex = m_resources.textures.get("fallback_black");
+        material.setProperty("u_noiseTexture", noiseTex);
+    }
     auto& tex = m_resources.textures.get(info.texture);
     tex.setSmooth(false);
     material.setProperty("u_texture", tex);
 
-    //TODO conver this to a texture array
+    //TODO convert this to a texture array
     if (illum)
     {
         auto& illumTex = m_resources.textures.get(info.mask);
@@ -370,7 +392,7 @@ void GolfState::createWeather(std::int32_t weatherType)
 
 void GolfState::setFog(float density)
 {
-    auto skyColour = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
+    const auto skyColour = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
     
     auto* shader = &m_resources.shaders.get(ShaderID::Composite);
     glUseProgram(shader->getGLHandle());

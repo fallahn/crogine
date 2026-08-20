@@ -180,6 +180,9 @@ namespace cro
         static void init();
         static void finalise();
 
+        static float m_avgFrameTime;
+        static void updateAverageRenderTime(float);
+
         static cro::ConfigObject& getConvars();
     };
 

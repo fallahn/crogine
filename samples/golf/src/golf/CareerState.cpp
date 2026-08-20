@@ -126,6 +126,8 @@ namespace
     constexpr float LeagueLineSpacing = 14.f;
 
     const std::string ConfigFile("career.cfg");
+
+    std::int32_t craewallOffset = 0; //hack to offset the index when craewall is installed but adventurer isn't
 }
 
 CareerState::CareerState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -137,11 +139,19 @@ CareerState::CareerState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_currentMenu   (MenuID::Career)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Career State");
 
     std::fill(m_progressPositions.begin(), m_progressPositions.end(), 0);
 
+    //hax
+    if (!Content::leagueAvailable(7) && Content::leagueAvailable(8))
+    {
+        craewallOffset = 1;
+    }
+
     addSystems();
     buildScene();
+
 }
 
 CareerState::~CareerState()
@@ -355,13 +365,22 @@ void CareerState::buildScene()
                     {
                         if (Career::instance(m_sharedData).getLeagueTables()[currIdx].getCurrentIteration() == 0)
                         {
+                            //TODO this isn't quite right if we're playing DLC but at least
+                            //it doesn't break anything...
                             m_sharedData.leagueRoundID = std::min(std::int32_t(LeagueRoundID::RoundSix), m_sharedData.leagueRoundID + 1);
                         }
                     }
 
                     if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
                     {
-                        selectLeague(m_maxLeagueIndex);
+                        //horrid horrid HAX
+                        auto idx = m_maxLeagueIndex;
+                        if (craewallOffset && idx >= 6)
+                        {
+                            idx += craewallOffset;
+                        }
+
+                        selectLeague(idx);
                     }
                     else
                     {
@@ -404,7 +423,7 @@ void CareerState::buildScene()
 
 
                 //interestingly only clang tells us capturing a structured binding is C++20 (we're using 17)
-                auto ct = currTime;
+                const auto ct = currTime;
 
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Menu::TitleText;
@@ -557,15 +576,15 @@ void CareerState::buildScene()
     std::vector<std::uint8_t> temp(18);
     std::int32_t temp2 = 0;
 
-    //const bool showCustom = false;// (leagueTables[Career::MaxLeagues - 1].getCurrentBest() < CareerLeagueThreshold);
-    //const std::uint32_t displayCount = showCustom ? Career::MaxLeagues : Career::MaxLeagues - 1;
-
-    for (auto i = 0u; i < Career::MaxLeagues/*displayCount*/; ++i)
+    for (auto i = 0u; i < Career::MaxLeagues; ++i)
     {
         //this just builds up the string if needed, and finds the previous result (if any)
         leagueTables[i].getPreviousResults(playerName);
 
-        const bool unlocked = (i == 0 || ((i > 0) && (leagueTables[i - 1].getCurrentBest() < CareerLeagueThreshold)));
+        const bool unlocked = (i == 0 
+            || ((i > 0) && (leagueTables[i - 1].getCurrentBest() < CareerLeagueThreshold) && DEMO_LOCKED && Content::leagueAvailable(i + 1))
+            //horrible hack for when we have craewall DLC but not adventurer
+            || (i == 7 && !Content::leagueAvailable(i) && Content::leagueAvailable(8) && (leagueTables[i - 2].getCurrentBest() < CareerLeagueThreshold)));
 
         //league titles, listed on left
         entity = m_scene.createEntity();
@@ -648,7 +667,6 @@ void CareerState::buildScene()
             bgEnt.getComponent<cro::Transform>().addChild(statusEnt.getComponent<cro::Transform>());
         }
 
-
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         position.y -= LeagueLineSpacing;
     }
@@ -658,22 +676,25 @@ void CareerState::buildScene()
     buttons.back().getComponent<cro::UIInput>().setNextIndex(CareerGimme, CareerGimme);
 
     //put player name on bottom row of the box
-    /*if (!showCustom)
+    //if (!showCustom)
+    //{
+    //    position.y -= LeagueLineSpacing;
+    //    entity = m_scene.createEntity();
+    //    entity.addComponent<cro::Transform>().setPosition(position);
+    //    entity.addComponent<cro::Drawable2D>();
+    //    entity.addComponent<cro::Text>(largeFont).setString(playerName);
+    //    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    //    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    //    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    //    entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
+    //    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    //    m_playerName = entity;
+    //    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //}
+    //else
     {
-    }*/
-    position.y -= LeagueLineSpacing;
-
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(position);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString(playerName);
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    m_playerName = entity;
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        position.y -= (LeagueLineSpacing + 1.f);
+    }
 
 
     //ticker for freeplay reminder
@@ -681,39 +702,63 @@ void CareerState::buildScene()
     
     //if (!showCustom)
     {
-        position.x += 100.f;
-        position.y += LeagueLineSpacing + 1.f;
+#ifdef DEMO
+        const std::string msg = "Purchase the full game to unlock the complete Career and more!";
+#else
+        std::string msg = "Don't forget you can practice any course at any time in Free Play mode!";
+        
+        //only add these if the existing leagues are complete
+        if (leagueTables[5].getCurrentBest() < CareerLeagueThreshold)
+        {
+            if (!Content::leagueAvailable(7) && !Content::leagueAvailable(8))
+            {
+                msg += " - Unlock new leagues with the Adventurer and Putt-stop in Paradise DLCs or the Craewall County DLC!";
+            }
+            else if (!Content::leagueAvailable(7))
+            {
+                msg += " - Unlock a new league with the Adventurer and Putt-stop in Paradise DLCs!";
+            }
+            else if (!Content::leagueAvailable(8))
+            {
+                msg += " - Unlock a new league with the Craewall County DLC!";
+            }
+        }
+#endif
+        position.x += 400.f;
+        position.y = 29.f;
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString("Don't forget you can practice any course at any time in Free Play mode!");
+        entity.addComponent<cro::Text>(smallFont).setString(msg);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<ScrollData>();
         entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds = cro::Text::getLocalBounds(entity);
-        entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds.height += 2.f;
+        entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds.height += 3.f;
+        entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds.bottom -= 1.f;
         entity.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
             {
                 auto& [bounds, xPos] = e.getComponent<cro::Callback>().getUserData<ScrollData>();
                 xPos -= (dt * 30.f);
 
-                static constexpr float BGWidth = 198.f;
+                static constexpr float BasePos = 230.f;
+                static constexpr float BGWidth = 268.f;
 
                 if (xPos < (-bounds.width))
                 {
-                    xPos = BGWidth + 20.f;
+                    xPos = BGWidth;
                 }
 
                 auto pos = e.getComponent<cro::Transform>().getPosition();
-                pos.x = std::round(xPos);
+                pos.x = BasePos + std::round(xPos);
 
                 e.getComponent<cro::Transform>().setPosition(pos);
 
                 auto cropping = bounds;
                 cropping.left = -pos.x;
-                cropping.left += 20.f;
+                cropping.left += BasePos;
                 cropping.width = BGWidth;
                 e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
             };
@@ -1337,10 +1382,8 @@ void CareerState::buildScene()
         bannerEnt.getComponent<cro::Callback>().active = true;
     };
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
-    m_scene.setActiveCamera(entity);
+    entity = m_scene.getActiveCamera();
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(entity.getComponent<cro::Camera>());
 }
 

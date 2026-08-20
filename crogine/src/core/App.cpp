@@ -413,9 +413,12 @@ void App::run(bool resetSettings)
         ImGui::GetIO().Fonts->AddFontFromMemoryTTF(fontBuff.data(), fontBuff.size(), 13.f, &config, ranges);
 
         m_window.setIcon(defaultIcon);
+        m_window.setWindowedSize(settings.windowedSize);
+        m_window.setFullscreenSize(settings.fullscreenSize);
         m_window.setExclusiveFullscreen(settings.exclusive);
         m_window.setFullScreen(settings.fullscreen);
         m_window.setVsyncEnabled(settings.vsync);
+        m_window.setBorderVisible(settings.border);
         m_window.setFramerateLimit(settings.framelimit);
         m_window.setMultisamplingEnabled(settings.useMultisampling);
         Console::init();
@@ -536,10 +539,15 @@ void App::run(bool resetSettings)
     static constexpr std::int32_t MaxFrames = 4; //for every fixed update render no more than these frames
     std::int32_t framesRendered = 0;
 
+    static constexpr std::int32_t MaxUpdates = 20;
+
+    HiResTimer renderClock;
+
     while (m_running)
     {
         timeSinceLastUpdate += frameClock.restart();
 
+        std::int32_t updates = 0;
         while (timeSinceLastUpdate > frameTime)
         {
             timeSinceLastUpdate -= frameTime;
@@ -550,20 +558,34 @@ void App::run(bool resetSettings)
             handleMessages();
 
             simulate(frameTime);
+            doImGui();
 
             framesRendered = 0;
+
+            if (updates++ > MaxUpdates)
+            {
+                Logger::log("Max updates reached with frame time " + std::to_string(timeSinceLastUpdate) + " remaining: aborting!", Logger::Type::Warning, Logger::Output::All);
+                simulate(timeSinceLastUpdate);
+                timeSinceLastUpdate = 0;
+            }
         }
 
         if (m_window.getVsyncEnabled()
             || framesRendered++ < /*MaxFrames*/Console::getMaxFrames())
         {
-            doImGui();
+            //doImGui();
 
-            ImGui::Render();
+            //ImGui::Render();
+            renderClock.restart();
             m_window.clear();
             render();
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            if (auto* dd = ImGui::GetDrawData(); dd != nullptr)
+            {
+                ImGui_ImplOpenGL3_RenderDrawData(dd);
+            }
             m_window.display();
+
+            Console::updateAverageRenderTime(renderClock.restart());
 
             //if (!m_window.getVsyncEnabled())
             //{
@@ -1056,6 +1078,11 @@ void App::doImGui()
             f.first();
         }
     }
+
+    //this just causes imgui to create its drawlists
+    //the actual rendering is done in the render loop
+    //using ImGui_ImplOpenGL3_RenderDrawData()
+    ImGui::Render();
 }
 
 void App::addStats(const std::function<void()>& f, const GuiClient* c)
@@ -1146,6 +1173,10 @@ App::WindowSettings App::loadSettings() const
             {
                 settings.vsync = prop.getValue<bool>();
             }
+            else if (prop.getName() == "border")
+            {
+                settings.border = prop.getValue<bool>();
+            }
             else if (prop.getName() == "framelimit")
             {
                 settings.framelimit = std::max(0.f, prop.getValue<float>());
@@ -1161,7 +1192,16 @@ App::WindowSettings App::loadSettings() const
 
                 settings.windowedSize = prop.getValue<glm::vec2>();
                 settings.windowedSize.x = std::clamp(settings.windowedSize.x, std::min(640.f, modeWidth - 1.f), modeWidth);
-                settings.windowedSize.x = std::clamp(settings.windowedSize.y, std::min(640.f, modeHeight - 1.f), modeHeight);
+                settings.windowedSize.y = std::clamp(settings.windowedSize.y, std::min(480.f, modeHeight - 1.f), modeHeight);
+            }
+            else if (prop.getName() == "full_size")
+            {
+                const float modeWidth = static_cast<float>(mode.w);
+                const float modeHeight = static_cast<float>(mode.h);
+
+                settings.fullscreenSize = prop.getValue<glm::vec2>();
+                settings.fullscreenSize.x = std::clamp(settings.fullscreenSize.x, std::min(640.f, modeWidth - 1.f), modeWidth);
+                settings.fullscreenSize.y = std::clamp(settings.fullscreenSize.y, std::min(480.f, modeHeight - 1.f), modeHeight);
             }
             else if (prop.getName() == "left_deadzone")
             {
@@ -1234,9 +1274,11 @@ void App::saveSettings()
     saveSettings.addProperty("fullscreen").setValue(m_window.isFullscreen());
     saveSettings.addProperty("exclusive").setValue(m_window.getExclusiveFullscreen());
     saveSettings.addProperty("vsync").setValue(m_window.getVsyncEnabled());
+    saveSettings.addProperty("border").setValue(m_window.getBorderVisible());
     saveSettings.addProperty("framelimit").setValue(m_window.getFramerateLimit());
     saveSettings.addProperty("multisample").setValue(m_window.getMultisamplingEnabled());
     saveSettings.addProperty("window_size").setValue(m_window.getWindowedSize());
+    saveSettings.addProperty("full_size").setValue(m_window.getFullscreenSize());
     saveSettings.addProperty("left_deadzone").setValue(cro::GameController::LeftThumbDeadZone.getOffset());
     saveSettings.addProperty("right_deadzone").setValue(cro::GameController::RightThumbDeadZone.getOffset());
     saveSettings.addProperty("trigger_deadzone").setValue(cro::GameController::TriggerDeadZone.getOffset());

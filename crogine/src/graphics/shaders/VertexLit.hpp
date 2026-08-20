@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -67,6 +67,10 @@ static inline const std::string Vertex = R"(
 #include CAMERA_UBO
 #include WVP_UNIFORMS
 
+#if defined (REFLECTION_PLANE)
+    uniform mat4 u_reflectionMatrix;
+#endif
+
     #if defined(RX_SHADOWS)
 #include SHADOWMAP_UNIFORMS_VERT
     #endif
@@ -93,6 +97,11 @@ static inline const std::string Vertex = R"(
     #if defined(LIGHTMAPPED)
         VARYING_OUT MED vec2 v_texCoord1;
     #endif
+
+#if defined(REFLECTION_PLANE)
+    VARYING_OUT vec4 v_reflectionPosition;
+    VARYING_OUT vec4 v_refractionPosition;
+#endif
 
     #if defined(RX_SHADOWS)
 #include SHADOWMAP_OUTPUTS
@@ -135,6 +144,11 @@ static inline const std::string Vertex = R"(
         #if defined (VIEW_POS)
             v_viewPosition = (u_viewMatrix * worldPos).xyz;
         #endif
+
+#if defined (REFLECTION_PLANE)
+        v_reflectionPosition = u_reflectionMatrix * worldPos;
+        v_refractionPosition = gl_Position;
+#endif
 
         #if defined(VERTEX_COLOUR)
             v_colour = a_colour;
@@ -391,7 +405,7 @@ static inline const std::string Vertex = R"(
         #endif
 
             vec3 R = reflect(-eyeDirection, normal);
-            FRAG_OUT.rgb = mix(TEXTURE_CUBE(u_skybox, R).rgb, FRAG_OUT.rgb, mask.a);
+            FRAG_OUT.rgb = mix(TEXTURE_CUBE(u_skybox, R).rgb * u_lightColour.rgb, FRAG_OUT.rgb, mask.a);
 
 
         #if defined (RIMMING)

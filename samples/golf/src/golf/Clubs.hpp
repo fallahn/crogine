@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -158,6 +158,12 @@ public:
 
     std::int32_t getScaleIndex(float) const; //0, 1 or 2 for putter else 2, based on distance to the pin
 
+    static void clampMaxScale(bool); //only used for putter - stops the scale going up to 25 metres if true
+
+    //only applies to putter - clamps the max distance
+    static std::int32_t getMaxScaleIndex() { return m_maxScaleIndex; }
+    static void setMaxScaleIndex(std::int32_t i) { m_maxScaleIndex = i; assert(i > -1); }
+    static constexpr std::int32_t MaxIndexRange = 4;
 private:
     const std::int32_t m_id = -1;
     std::string m_name; //displayed in UI
@@ -168,12 +174,19 @@ private:
     //hack to fix the putter distance at 10m if set in the options
     static bool m_fixedPuttingDistance;
 
+    //allows clamping the max scale of the putter. Ignored by other clubs
+    static std::int32_t m_maxScaleIndex;
+
     //putter below this is rescaled
     static constexpr float ShortRange = 1.f / 3.f;
     static constexpr float ShortRangeThreshold = ShortRange * 0.8f;
     static constexpr float TinyRange = 1.f / 10.f;
-    static constexpr float TinyRangeThreshold = TinyRange * 0.5f;
+    static constexpr float TinyRangeThreshold = TinyRange * 0.65f;// 0.5f;
 
+    static float m_maxScale;
+
+    //this only applies to the putter and scales the value based on
+    //the current distance to the pin
     float getScaledValue(float v, float dist) const;
 };
 
@@ -227,6 +240,7 @@ static constexpr std::array<std::int32_t, ClubID::Count> ClubShot =
 //    Club(ClubID::SandWedge,  "Sand Wedge ",  60.f, 0.05f, 0.95f), //default set
 //    Club(ClubID::Putter,     "Putter ",      0.f,  0.f,   0.f)    //default set
 //};
+
 
 //remember if using these to also set the club stats in Clubs.cpp
 //name, angle, side spin, top spin

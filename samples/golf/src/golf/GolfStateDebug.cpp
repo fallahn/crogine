@@ -37,9 +37,15 @@ source distribution.
 #include "Career.hpp"
 #include "Clubs.hpp"
 #include "MessageIDs.hpp"
+#include "BehaviourRabbit.hpp"
+#include "BehaviourLorvis.hpp"
+#include "BehaviourSeagull.hpp"
+#include "RopeSystem.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
+#include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/systems/LightVolumeSystem.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/OpenGL.hpp>
@@ -47,6 +53,8 @@ source distribution.
 
 namespace
 {
+#include "shaders/CelShader.inl"
+
     const std::array<std::string, CameraID::Count> CameraStrings =
     {
         "Player", "Bystander", "Sky", "Green", "Transition", "Idle", "Drone"
@@ -282,6 +290,15 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
+    //registerWindow([this]() 
+    //    {
+    //        ImGui::Begin("Server Data");
+    //        /*ImGui::Text("History Size %llu", m_sharedData.serverInstance.getNetworkHistorySize());
+    //        ImGui::Text("History Index %llu", m_sharedData.serverInstance.getHistoryIndex());*/
+    //        ImGui::Text("Range %d", Clubs[ClubID::Putter].getMaxScaleIndex());
+    //        ImGui::End();
+    //    });
+
     //registerWindow([&]() 
     //    {
     //        ImGui::Begin("Cloud Cover");
@@ -941,6 +958,20 @@ void GolfState::registerDebugWindows()
         });
 #endif
 
+    //registerWindow([this]() 
+    //    {
+    //        ImGui::Begin("Curve");
+    //        /*if (!m_debugCurve.empty())
+    //        {
+    //            ImGui::PlotLines("Curve", m_debugCurve.data(), m_debugCurve.size(), 0, 0, FLT_MAX, FLT_MAX, ImVec2(0.f, 40.f));
+    //        }*/
+    //        ImGui::Text("Scene Water Level: %3.3f", m_gameScene.getWaterLevel());
+    //        ImGui::Text("Entity level: %3.3f", m_waterEnt.getComponent<cro::Transform>().getPosition().y);
+    //        ImGui::Text("Distance to hole :%3.3f", m_distanceToHole);
+    //        ImGui::Text("Input parser distance to hole: %3.3f", m_inputParser.getDistanceToHole());
+    //        ImGui::End();
+    //    });
+
     //registerWindow([&]()
     //    {
     //        if (ImGui::Begin("Target Info"))
@@ -1080,6 +1111,182 @@ void GolfState::buildCubemap(glm::vec3 position, const std::string& path)
 
     //LogI << "Built cubemap for " << path << std::endl;
     //cro::Console::print("Done!");
+}
+
+void GolfState::createRope(const RopeData& ropeData)
+{
+    //these are loaded from the map in world position
+    const auto ropeID = m_gameScene.getSystem<RopeSystem>()->addRope(ropeData.points[0], ropeData.points[1], ropeData.slackness, 10.f);
+    std::uint32_t nodeCount = static_cast<std::uint32_t>(glm::length(ropeData.points[0] - ropeData.points[1]) / 1.3f);// 6;
+    nodeCount = std::min(nodeCount, ((255u / 3) * 2) - 2);  //clamp max indices as we're using u8
+
+    for (auto i = 0u; i < nodeCount; ++i)
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<RopeNode>(ropeID);
+
+        //these are marked as garbage collected as they are
+        //created at runtime (we might disable creating ropes
+        //as an option for perf reasons)
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::GarbageCollect;
+    }
+
+    auto material = m_resources.materials.get(m_materialIDs[MaterialID::Bunting]);
+    material.doubleSided = true;
+
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(ropeData.points[0]);
+    const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_TRIANGLES, GL_UNSIGNED_BYTE));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+
+    //indices are fixed at nodecount + 2 for anchors
+    std::vector<std::uint8_t> indices;
+    const auto total = nodeCount + 2;
+    for (auto i = 0u; i < total - 1; ++i)
+    {
+        //we'll create a 3rd vertex for each segment to complete the triangle
+        indices.push_back(i);
+        indices.push_back(i+1);
+        indices.push_back(i+total);
+    }
+
+    auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
+
+    //has to pass culling
+    meshData->boundingBox = { glm::vec3(0.f), ropeData.points[1] - ropeData.points[0] };
+    meshData->boundingSphere = meshData->boundingBox;
+
+    //this creates a 3rd point along each segment and lowers
+    //it slightly to make a crude triangle / flag
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [this, ropeID, meshData](cro::Entity e, float)
+        {
+            if (!e.isValid())
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+                return;
+            }
+
+            auto verts = m_gameScene.getSystem<RopeSystem>()->getNodePositions(ropeID);
+            std::vector<glm::vec3> points;
+            for (auto i = 0; i < verts.size() -1; ++i)
+            {
+                points.push_back(((verts[i + 1] - verts[i]) / 2.f) + verts[i]);
+                points.back().y -= 0.5f;
+            }
+            verts.insert(verts.end(), points.begin(), points.end());
+
+            meshData->vertexCount = verts.size();
+            cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
+        };
+
+    entity.addComponent<cro::ShadowCaster>();
+    entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::GarbageCollect;
+}
+
+void GolfState::spawnRabbit(glm::vec3 pos, std::uint32_t seed)
+{
+    if (m_modelDefs[ModelID::Rabbit]->isLoaded())
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(pos);
+        m_modelDefs[ModelID::Rabbit]->createModel(entity);
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Player]);
+        applyMaterialData(*m_modelDefs[ModelID::Rabbit], material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function = BehaviourRabbit(&m_collisionMesh, pos, seed);
+
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::GarbageCollect;
+    }
+}
+
+void GolfState::spawnGardener(glm::vec3 pos)
+{
+    if (m_achievementTracker.peskyKids)
+    {
+        return;
+    }
+
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("dlc/craewall/models/props/lorvis.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(pos);
+        md.createModel(entity);
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Player]);
+        applyMaterialData(md, material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+
+        auto behaviour = BehaviourLorvis(m_collisionMesh, m_currentPlayer);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function = behaviour;
+        entity.getComponent<cro::Skeleton>().play(BehaviourLorvis::Run);
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::GarbageCollect;
+
+        if (m_resources.audio.load(221002, "dlc/craewall/sound/lorvis_yell.wav"))
+        {
+            auto& snd = m_resources.audio.get(221002);
+            auto& emitter = entity.addComponent<cro::AudioEmitter>(snd);
+            emitter.setLooped(true);
+            emitter.setMixerChannel(MixerChannel::Voice);
+            emitter.setRolloff(0.1f);
+            emitter.setVolume(0.5f);
+            //emitter.play();
+        }
+
+        m_achievementTracker.peskyKids = true;
+    }
+}
+
+void GolfState::spawnSeagulls(glm::vec3 pos)
+{
+    if (m_modelDefs[ModelID::Seagull]->isLoaded())
+    {
+        auto& md = *m_modelDefs[ModelID::Seagull];
+        if (md.hasSkeleton())
+        {
+            const auto count = cro::Util::Random::value(1, std::min(static_cast<std::int32_t>(m_gullPoints.size()), 3));
+            static constexpr float SeagullOffset = 0.1f; //model origin is not at the feet
+
+            for (auto i = 0; i < count; ++i)
+            {
+                glm::vec3 point = glm::vec3(m_gullPoints[i][0], 0.f, m_gullPoints[i][1]) + pos;
+                point.y = m_collisionMesh.getTerrain(point).height + SeagullOffset;
+
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition(point);
+
+                const float rotation = static_cast<float>(cro::Util::Random::value(-180, 180)) * cro::Util::Const::degToRad;
+                entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+
+                md.createModel(entity);
+
+                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Seagull]);
+                applyMaterialData(md, material);
+                entity.getComponent<cro::Model>().setMaterial(0, material);
+
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<std::int32_t>(0); //switch this to anything else to take off
+                entity.getComponent<cro::Callback>().function = BehaviourSeagull(m_gameScene);
+                entity.getComponent<cro::Skeleton>().play(md.getSkeleton().getAnimationIndex("Idle"));
+                entity.addComponent<cro::CommandTarget>().ID = CommandID::GarbageCollect | CommandID::Seagull;
+
+                entity.addComponent<cro::AudioEmitter>() = m_gullAudio.getEmitter("0" + std::to_string(i + 1));
+            }
+        }
+    }
 }
 
 void GolfState::dumpBenchmark()

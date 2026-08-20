@@ -39,7 +39,7 @@ class CustomTournament final
 public:
     CustomTournament();
 
-    void load(const std::string&);
+    void load(const std::string&, const struct SharedCourseData*);
     void save(const std::string&);
 
     void setCourse(std::size_t tier, const std::string& course);

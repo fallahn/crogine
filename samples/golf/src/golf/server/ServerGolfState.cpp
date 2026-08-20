@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -433,6 +433,9 @@ void GolfState::handleMessage(const cro::Message& msg)
         case TriggerID::Boat:
             sendAchievement(AchievementID::ISeeNoShips, group.playerInfo[0].client, group.playerInfo[0].player);
             break;
+        case TriggerID::Greenhouse:
+            sendAchievement(AchievementID::PeskyKids, group.playerInfo[0].client, group.playerInfo[0].player);
+            break;
         case TriggerID::TennisCourt:
             LogI << "Deuce!" << std::endl;
             hadTennisBounce = true;
@@ -495,7 +498,7 @@ void GolfState::netEvent(const net::NetEvent& evt)
         {
             auto data = evt.packet.as<std::uint16_t>();
             auto client = data & 0xff;
-            const auto group = m_playerInfo[m_groupAssignments[client]];
+            const auto& group = m_playerInfo[m_groupAssignments[client]];
             for (auto c : group.clientIDs)
             {
                 m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::ClubChanged, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -621,53 +624,62 @@ std::int32_t GolfState::process(float dt)
     if (m_gameStarted)
     {
         //check the turn timer and skip player if they AFK'd
-        for (auto& group : m_playerInfo)
-        {
-            if (!group.playerInfo.empty()) //players may have quit
-            {
-                if (group.playerInfo[0].distanceToHole == 0)
-                {
-                    //we're waiting for other players to finish so don't time out
-                    group.turnTimer.restart();
-                }
-                else
-                {
-                    if (group.turnTimer.elapsed() > (TurnTime - WarnTime))
-                    {
-                        if (!group.warned
-                            && m_sharedData.clients[group.playerInfo[0].client].peer.getID() != m_sharedData.hostID)
-                        {
-                            group.warned = true;
-                            m_sharedData.host.broadcastPacket(PacketID::WarnTime, std::uint8_t(10), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                        }
+        
+        /*
+        OK So this never actually worked on Steam because all the peers
+        had the same ID of 0 meaning they were never warned as they all
+        appeared to be the host... However now that the ID is fixed we
+        get players being warned/AFK'd all the time which, clearly, was
+        never needed as it wasn't ever working! So I've disabled it.
+        */
 
-                        if (group.turnTimer.elapsed() > TurnTime)
-                        {
-                            if (m_sharedData.clients[group.playerInfo[0].client].peer.getID() != m_sharedData.hostID)
-                            {
-                                group.playerInfo[0].holeScore[m_currentHole] = MaxStrokes;
-                                group.playerInfo[0].position = m_holeData[m_currentHole].pin;
-                                group.playerInfo[0].distanceToHole = 0.f;
-                                group.playerInfo[0].terrain = TerrainID::Green;
-                                setNextPlayer(m_groupAssignments[group.playerInfo[0].client]); //resets the timer
+        //for (auto& group : m_playerInfo)
+        //{
+        //    if (!group.playerInfo.empty()) //players may have quit
+        //    {
+        //        if (group.playerInfo[0].distanceToHole == 0)
+        //        {
+        //            //we're waiting for other players to finish so don't time out
+        //            group.turnTimer.restart();
+        //        }
+        //        else
+        //        {
+        //            if (group.turnTimer.elapsed() > (TurnTime - WarnTime))
+        //            {
+        //                if (!group.warned
+        //                    && m_sharedData.clients[group.playerInfo[0].client].peer.getID() != m_sharedData.hostID)
+        //                {
+        //                    group.warned = true;
+        //                    m_sharedData.host.broadcastPacket(PacketID::WarnTime, std::uint8_t(10), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        //                }
 
-                                for (auto c : group.clientIDs)
-                                {
-                                    m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::MaxStrokes, std::uint8_t(MaxStrokeID::IdleTimeout), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                                }
-                                //broadcast hole complete message so all clients update scores correctly
-                                std::uint16_t pkt = (group.playerInfo[0].client << 8) | group.playerInfo[0].player;
-                                m_sharedData.host.broadcastPacket(PacketID::HoleComplete, pkt, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        group.warned = false;
-                    }
-                }
-            }
-        }
+        //                if (group.turnTimer.elapsed() > TurnTime)
+        //                {
+        //                    if (m_sharedData.clients[group.playerInfo[0].client].peer.getID() != m_sharedData.hostID)
+        //                    {
+        //                        group.playerInfo[0].holeScore[m_currentHole] = MaxStrokes;
+        //                        group.playerInfo[0].position = m_holeData[m_currentHole].pin;
+        //                        group.playerInfo[0].distanceToHole = 0.f;
+        //                        group.playerInfo[0].terrain = TerrainID::Green;
+        //                        setNextPlayer(m_groupAssignments[group.playerInfo[0].client]); //resets the timer
+
+        //                        for (auto c : group.clientIDs)
+        //                        {
+        //                            m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::MaxStrokes, std::uint8_t(MaxStrokeID::IdleTimeout), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        //                        }
+        //                        //broadcast hole complete message so all clients update scores correctly
+        //                        std::uint16_t pkt = (group.playerInfo[0].client << 8) | group.playerInfo[0].player;
+        //                        m_sharedData.host.broadcastPacket(PacketID::HoleComplete, pkt, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        //                    }
+        //                }
+        //            }
+        //            else
+        //            {
+        //                group.warned = false;
+        //            }
+        //        }
+        //    }
+        //}
 
         //we have to keep checking this as a client might
         //disconnect mid-transition and the final 'complete'
@@ -743,7 +755,7 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
         m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::GroupID, std::uint8_t(m_groupAssignments[clientID]), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         //send all the ball positions
-        auto timestamp = m_serverTime.elapsed().asMilliseconds();
+        const auto timestamp = m_serverTime.elapsed().asMilliseconds();
 
         for (const auto& group : m_playerInfo)
         {
@@ -939,6 +951,9 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
         //we might be waiting for others to start new hole
         m_scoreboardReadyFlags |= (1 << clientID);
 
+        //let clients know to update their display
+        m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::ReadyQuitStatus, m_scoreboardReadyFlags, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
         for (auto& group : m_playerInfo)
         {
             for (auto i = 0u; i < group.playerInfo.size(); ++i)
@@ -953,7 +968,7 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
         return;
     }
 
-    std::uint8_t broadcastFlags = 0;
+    std::uint16_t broadcastFlags = 0;
     for (auto& group : m_playerInfo)
     {
         for (auto& p : group.playerInfo)
@@ -974,7 +989,7 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
         }
     }
     //let clients know to update their display
-    m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::ReadyQuitStatus, broadcastFlags, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::ReadyQuitStatus, broadcastFlags, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     for (auto& group : m_playerInfo)
     {
@@ -1141,8 +1156,19 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         }
         else if (m_sharedData.scoreType == ScoreType::Elimination)
         {
-            const auto predicate = [](const PlayerStatus& a, const PlayerStatus& b)
+            const auto predicate = [this](const PlayerStatus& a, const PlayerStatus& b)
                 {
+                    //return true if still at the tee (we might be closer to the hole on u-bends)
+                    if (glm::length2(a.position - m_holeData[m_currentHole].tee) < 1)
+                    {
+                        return true;
+                    }
+                    //and conversely
+                    if (glm::length2(b.position - m_holeData[m_currentHole].tee) < 1)
+                    {
+                        return false;
+                    }
+
                     if (!a.eliminated && !b.eliminated)
                     {
                         return a.distanceToHole > b.distanceToHole;
@@ -1158,8 +1184,19 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         else if (m_sharedData.scoreType == ScoreType::NearestThePin)
         {
             //make sure player hasn't completed all turns
-            const auto& predicate = [&](const PlayerStatus& a, const PlayerStatus& b)
+            const auto& predicate = [this](const PlayerStatus& a, const PlayerStatus& b)
                 {
+                    //return true if still at the tee (we might be closer to the hole on u-bends)
+                    if (glm::length2(a.position - m_holeData[m_currentHole].tee) < 1)
+                    {
+                        return true;
+                    }
+                    //and conversely
+                    if (glm::length2(b.position - m_holeData[m_currentHole].tee) < 1)
+                    {
+                        return false;
+                    }
+
                     if (a.holeScore[m_currentHole] < MaxNTPStrokes && b.holeScore[m_currentHole] < MaxNTPStrokes)
                     {
                         return a.distanceToHole > b.distanceToHole;
@@ -1181,13 +1218,25 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             else
             {
                 //sort players by distance
-                const auto predicate = [&](const PlayerStatus& a, const PlayerStatus& b)
+                const auto predicate = [this](const PlayerStatus& a, const PlayerStatus& b)
                     {
                         if (m_sharedData.teamMode
                             && a.teamIndex == b.teamIndex)
                         {
                             return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer] == a;
                         }
+
+                        //return true if still at the tee (we might be closer to the hole on u-bends)
+                        if (glm::length2(a.position - m_holeData[m_currentHole].tee) < 1)
+                        {
+                            return true;
+                        }
+                        //and conversely
+                        if (glm::length2(b.position - m_holeData[m_currentHole].tee) < 1)
+                        {
+                            return false;
+                        }
+
                         return a.distanceToHole > b.distanceToHole;
                     };
 
@@ -1981,6 +2030,7 @@ void GolfState::initScene()
                 player.player = j;
                 player.position = m_holeData[0].tee;
                 player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[0].pin);
+                player.isCPU = m_sharedData.clients[d.clientID].playerData[j].isCPU;
 
                 if (m_sharedData.teamMode)
                 {
@@ -2045,6 +2095,7 @@ void GolfState::buildWorld()
             player.ballEntity.addComponent<cro::Transform>().setPosition(player.position);
             player.ballEntity.addComponent<Ball>().terrain = player.terrain;
             player.ballEntity.getComponent<Ball>().client = player.client;
+            player.ballEntity.getComponent<Ball>().isCPU = player.isCPU;
 
             player.holeScore.resize(m_holeData.size());
             player.distanceScore.resize(m_holeData.size());
@@ -2201,7 +2252,7 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
                 if (m_gameStarted && !m_playerInfo[groupID].playerInfo.empty()
                     /*&& m_playerInfo[0].client == target*/)
                 {
-                    m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] = MaxStrokes; //this should be half on putt from tee but meh, it's a penalty
+                    m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] = m_holeData[m_currentHole].par + 1;// MaxStrokes; //this should be half on putt from tee but meh, it's a penalty
                     m_playerInfo[groupID].playerInfo[0].position = m_holeData[m_currentHole].pin;
                     m_playerInfo[groupID].playerInfo[0].distanceToHole = 0.f;
                     m_playerInfo[groupID].playerInfo[0].terrain = TerrainID::Green;

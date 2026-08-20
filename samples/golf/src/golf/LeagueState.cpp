@@ -141,6 +141,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_activeName            (nullptr)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("League Browser");
 #ifdef USE_GNS
     //scoreSet = readGameScores();
 #endif
@@ -445,7 +446,9 @@ void LeagueState::handleMessage(const cro::Message& msg)
             && data.id == StateID::League)
         {
             updateLeagueText(LeagueTextID::FriendsGlobal);
+            updateLeagueText(LeagueTextID::FriendsGlobalExt);
             updateLeagueText(LeagueTextID::Global);
+            updateLeagueText(LeagueTextID::GlobalExt);
         }
     }
 #endif
@@ -541,7 +544,9 @@ void LeagueState::buildScene()
 #ifdef USE_GNS
                 //remote steam list
                 updateLeagueText(LeagueTextID::FriendsGlobal);
+                updateLeagueText(LeagueTextID::FriendsGlobalExt);
                 updateLeagueText(LeagueTextID::Global);
+                updateLeagueText(LeagueTextID::GlobalExt);
 #endif
                 //in case we changed our profile name
                 refreshAllNameLists();
@@ -743,20 +748,29 @@ void LeagueState::buildScene()
 
 
     bool unlocked = true;
-    for (auto i = 0; i < LeagueRoundID::Count; ++i)
+    for (auto i = 0; i < LeagueRoundID::Count; ++i) //dear future me: if you add more DLC leagues update LeagueID to match
     {
         if (unlocked)
         {
-            unlocked = createLeagueTab(bgNode, spriteSheet, i);
+            unlocked = createLeagueTab(bgNode, spriteSheet, i)
+                && (i < LeagueRoundID::RoundSix || Content::leagueAvailable(i+1));
+        }
+        else
+        {
+            unlocked = i >= LeagueRoundID::RoundSix && Content::leagueAvailable(i + 1) && m_leagueNodes[LeagueRoundID::RoundSix].isValid();
         }
     }
 #ifdef USE_GNS
     createGlobalLeagueTab(bgNode, spriteSheet, LeagueID::Global);
     createGlobalLeagueTab(bgNode, spriteSheet, LeagueID::FriendsGlobal);
+    createGlobalLeagueTab(bgNode, spriteSheet, LeagueID::GlobalExt);
+    createGlobalLeagueTab(bgNode, spriteSheet, LeagueID::FriendsGlobalExt);
     createGlobalLeagueTab(bgNode, spriteSheet, LeagueID::Pro);
     createGlobalLeagueTab(bgNode, spriteSheet, LeagueID::FriendsPro);
     m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     m_leagueNodes[LeagueID::FriendsGlobal].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_leagueNodes[LeagueID::GlobalExt].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_leagueNodes[LeagueID::FriendsGlobalExt].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     m_leagueNodes[LeagueID::Pro].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     m_leagueNodes[LeagueID::FriendsPro].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     m_currentLeague = LeagueID::Global;
@@ -830,7 +844,8 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
         "Career League Four",
         "Career League Five",
         "Career League Six",
-        //"Custom League",
+        "Career League Seven",
+        "Career League Eight",
     };
 
     auto entity = m_scene.createEntity();
@@ -1016,7 +1031,7 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
 
     refreshNameList(leagueIndex, league);
 
-    return leagueIndex < LeagueRoundID::RoundOne || league.getCurrentBest() < CareerLeagueThreshold;
+    return leagueIndex < LeagueRoundID::RoundOne || league.getCurrentBest() < CareerLeagueThreshold || !Content::leagueAvailable(leagueIndex);
 }
 
 void LeagueState::createInfoTab(cro::Entity parent)
@@ -1167,10 +1182,12 @@ void LeagueState::refreshAllNameLists()
 void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteSheet& spriteSheet, std::int32_t leagueIndex)
 {
     const auto textIndex = leagueIndex - LeagueID::Global;
-    const std::array<cro::String, 4u> TitleStrings =
+    const std::array<cro::String, 6u> TitleStrings =
     {
         "Global League for ",
         "Friends League for ",
+        "Global DLC League for ",
+        "Friends DLC League for ",
         "Pro League for ",
         "Friends Pro League for ",
     };
@@ -1213,7 +1230,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
 
 
     //cro::String str(" 1/36\n23/36\n 7/36\n33/36\n 1/36\n23/36\n 7/36\n33/36\n 1/36\n23/36\n 7/36\n33/36\n 1/36\n23/36\n 7/36\n33/36");
-    const auto& str = Social::getMonthlyLeague(false);
+    const auto& str = Social::getMonthlyLeague(false, leagueIndex > LeagueID::FriendsGlobal);
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 68.f, TextTop + 1.f, 0.2f });
@@ -1260,9 +1277,9 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     m_leagueText[textIndex].personal = entity;
 
     //how to play
-    const auto statusString = textIndex > 1 ?
+    const auto statusString = textIndex > LeagueTextID::FriendsGlobalExt ?
         "To compete select Pro League from the Main Menu" :
-        "To compete play through all 36 rounds in Free Play";
+        "To compete play through every round in Free Play";
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ centre, 50.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
@@ -1331,7 +1348,9 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
 
 void LeagueState::updateLeagueText(std::int32_t textIndex)
 {
-    const auto& str = Social::getMonthlyLeague(textIndex == LeagueTextID::FriendsGlobal);
+    const auto& str = Social::getMonthlyLeague(
+        textIndex == LeagueTextID::FriendsGlobal || textIndex == LeagueTextID::FriendsGlobalExt,
+        textIndex > LeagueTextID::FriendsGlobal);
 
     m_leagueText[textIndex].games.getComponent<cro::Text>().setString(str[2]);
     m_leagueText[textIndex].names.getComponent<cro::Text>().setString(str[0]);
@@ -1587,11 +1606,23 @@ void LeagueState::activateTab(std::int32_t tabID)
 
 void LeagueState::switchLeague(std::int32_t forward)
 {
+
+    //TODO this should be a proper DLC-specific test rather than if the 
+    //career leagues are available...
+    /*const bool dlcAvailable = Content::leagueAvailable(7) || Content::leagueAvailable(8);
+    const auto viewExtLeague = 
+        [dlcAvailable](std::int32_t idx)
+        {
+            return dlcAvailable && (idx == LeagueID::FriendsGlobalExt || idx == LeagueID::GlobalExt);
+        };*/
+    
+    
     std::int32_t next = 0;
     if (forward == Page::Forward)
     {
         next = (m_currentLeague + 1) % LeagueID::Count;
-        while (next != m_currentLeague && !m_leagueNodes[next].isValid())
+        while (next != m_currentLeague && !m_leagueNodes[next].isValid()
+            /*&& !viewExtLeague(next)*/)
         {
             next = (next + 1) % LeagueID::Count;
         }
@@ -1599,7 +1630,8 @@ void LeagueState::switchLeague(std::int32_t forward)
     else
     {
         next = (m_currentLeague + (LeagueID::Count - 1)) % LeagueID::Count;
-        while (next != m_currentLeague && !m_leagueNodes[next].isValid())
+        while (next != m_currentLeague && !m_leagueNodes[next].isValid()
+            /*&& !viewExtLeague(next)*/)
         {
             next = (next + (LeagueID::Count - 1)) % LeagueID::Count;
         }
@@ -1613,6 +1645,7 @@ void LeagueState::switchLeague(std::int32_t forward)
             m_leagueNodes[m_currentLeague].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             m_leagueNodes[next].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             m_currentLeague = next;
+
 #ifdef USE_GNS
             if (m_currentLeague == LeagueID::Pro)
             {

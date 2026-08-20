@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -94,13 +94,16 @@ void SimpleQuad::setTexture(cro::TextureID texture, glm::uvec2 size)
 
 void SimpleQuad::setTextureRect(cro::FloatRect subRect)
 {
-    if (m_size.x > 0 
-        && m_size.y > 0)
+    assert(getTexture());
+    const auto texSize = getTexture()->getSize();
+
+    if (texSize.x > 0 
+        && texSize.y > 0)
     {
-        m_uvRect.left = subRect.left / m_size.x;
-        m_uvRect.width = subRect.width / m_size.x;
-        m_uvRect.bottom = subRect.bottom / m_size.y;
-        m_uvRect.height = subRect.height / m_size.y;
+        m_uvRect.left = subRect.left / texSize.x;
+        m_uvRect.width = subRect.width / texSize.x;
+        m_uvRect.bottom = subRect.bottom / texSize.y;
+        m_uvRect.height = subRect.height / texSize.y;
 
         m_size = { subRect.width, subRect.height };
         CRO_ASSERT(m_size.x > 0 && m_size.y > 0, "div by zero!");

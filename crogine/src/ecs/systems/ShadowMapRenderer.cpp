@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -47,6 +47,15 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 #include <crogine/detail/glm/gtc/matrix_access.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
+
+//I can't think of a simpler way to disable this right now
+//but I need to test if there's a threading/contention thing
+//going on here causing stutters
+#ifndef PARALLEL_DISABLE
+#define PARALLEL_DISABLE
+#define PARALLEL_SUSPENDED
+#endif
+
 
 #ifdef PARALLEL_DISABLE
 #undef USE_PARALLEL_PROCESSING
@@ -120,6 +129,7 @@ void main()
 ShadowMapRenderer::ShadowMapRenderer(MessageBus& mb)
     : System(mb, typeid(ShadowMapRenderer)),
     m_interval      (1),
+    m_wantsRender   (true),
     m_blurBuffer    (false),
     m_bufferIndices (MaxDepthMaps)
 {
@@ -196,22 +206,23 @@ void ShadowMapRenderer::process(float)
     //which would call render() multiple times unnecessarily.
     if ((intervalCounter % m_interval) == 0)
     {
-        render();
+        m_wantsRender = true;
+        //render();
 
-        //for each camera mark its resource as now being free
-        //to use in the next call to updateDrawList()
-        for (auto cam : m_activeCameras)
-        {
-            const auto& dmap = cam.getComponent<cro::Camera>().shadowMapBuffer;
-            if (dmap.m_resourceIndex != -1)
-            {
-                //this *should* go back to zero as we iterate all cameras
-                //if it doesn't it's a more obvious bug than just forcing it to 0...
-                m_bufferResources[dmap.m_resourceIndex].useCount--;
-            }
-        }
-        
-        m_activeCameras.clear();
+        ////for each camera mark its resource as now being free
+        ////to use in the next call to updateDrawList()
+        //for (auto cam : m_activeCameras)
+        //{
+        //    const auto& dmap = cam.getComponent<cro::Camera>().shadowMapBuffer;
+        //    if (dmap.m_resourceIndex != -1)
+        //    {
+        //        //this *should* go back to zero as we iterate all cameras
+        //        //if it doesn't it's a more obvious bug than just forcing it to 0...
+        //        m_bufferResources[dmap.m_resourceIndex].useCount--;
+        //    }
+        //}
+        //
+        //m_activeCameras.clear();
     }
 
     //check buffer resource for updated refs and remove any now at zero
@@ -354,7 +365,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
         const auto worldMat = camEnt.getComponent<cro::Transform>().getWorldTransform();
         auto corners = camera.getFrustumSplits(); //copy this as we'll transform it into world coords
-        glm::vec3 lightDir = -getScene()->getSunlight().getComponent<Sunlight>().getDirection();
+        const glm::vec3 lightDir = -getScene()->getSunlight().getComponent<Sunlight>().getDirection();
 
         for (auto i = 0u; i < corners.size(); ++i)
         {
@@ -547,6 +558,31 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
     }
 }
 
+void ShadowMapRenderer::render(Entity, const RenderTarget&)
+{
+    if (m_wantsRender)
+    {
+        render();
+
+        //for each camera mark its resource as now being free
+        //to use in the next call to updateDrawList()
+        for (auto cam : m_activeCameras)
+        {
+            const auto& dmap = cam.getComponent<cro::Camera>().shadowMapBuffer;
+            if (dmap.m_resourceIndex != -1)
+            {
+                //this *should* go back to zero as we iterate all cameras
+                //if it doesn't it's a more obvious bug than just forcing it to 0...
+                m_bufferResources[dmap.m_resourceIndex].useCount--;
+            }
+        }
+
+        m_activeCameras.clear();
+
+        m_wantsRender = false;
+    }
+}
+
 //private
 void ShadowMapRenderer::render()
 {
@@ -557,7 +593,7 @@ void ShadowMapRenderer::render()
     for (auto c = 0u; c < m_activeCameras.size(); c++)
     {
         auto& camera = m_activeCameras[c].getComponent<Camera>();
-        auto cameraPosition = m_activeCameras[c].getComponent<cro::Transform>().getWorldPosition();
+        const auto cameraPosition = m_activeCameras[c].getComponent<cro::Transform>().getWorldPosition();
         const auto& camView = camera.getPass(Camera::Pass::Final).viewMatrix;
 
         //enable face culling and render rear faces
@@ -582,6 +618,11 @@ void ShadowMapRenderer::render()
             {
                 const auto& model = e.getComponent<Model>();
 
+                if ((model.m_renderFlags & camera.getActivePass().renderFlags) == 0)
+                {
+                    continue;
+                }
+
                 glCheck(glFrontFace(model.m_facing));
 
                 //calc entity transform
@@ -594,9 +635,15 @@ void ShadowMapRenderer::render()
 #ifndef PLATFORM_DESKTOP
                 glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
 #endif
-
                 for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
                 {
+                    //hmm we probably want to cull this at the draw list calculation
+                    //but draw lists consider entire entities, not individual sub-meshes
+                    if (model.m_materials[Mesh::IndexData::Final][i].null)
+                    {
+                        continue;
+                    }
+
                     const auto& mat = model.m_materials[Mesh::IndexData::Shadow][i];
                     //CRO_ASSERT(mat.shader, "Missing Shadow Cast material.");
                     //some sub-meshes aren't written to the depth map if they don't receive shadows
@@ -782,4 +829,8 @@ void ShadowMapRenderer::flushEntity(Entity e)
 #ifndef PARALLEL_GLOBAL_DISABLE
 #define USE_PARALLEL_PROCESSING
 #endif
+#endif
+
+#ifdef PARALLEL_SUSPENDED
+#undef PARALLEL_DISABLE
 #endif

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -39,6 +39,7 @@ source distribution.
 #include "ClubModels.hpp"
 #include "AvatarAnimation.hpp"
 #include "CollisionMesh.hpp"
+#include "PracticeCommon.hpp"
 
 #include <crogine/audio/DynamicAudioStream.hpp>
 
@@ -59,32 +60,6 @@ namespace inv
 {
     struct Loadout;
 }
-
-//callback data for anim/self destruction
-//of messages / options window
-struct PopupAnim final
-{
-    enum
-    {
-        Delay, Open, Hold, Close,
-        Abort //used to remove open messages when forcefully restarting
-    }state = Delay;
-    float currentTime = 0.5f;
-};
-
-struct MiniTrailData final
-{
-    enum
-    {
-        Reset, Follow, Idle
-    }state = Reset;
-
-    float progress = 1.f;
-    float height = 0.f; //normalised
-};
-
-//*sigh* multiple structs with the same name and different defs...
-using WindCallbackData = std::pair<float, float>;
 
 struct SharedStateData;
 struct SharedProfileData;

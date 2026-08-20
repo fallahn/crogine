@@ -96,6 +96,7 @@ PauseState::PauseState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     m_confirmationType  (ConfirmType::Quit)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Pause State");
 
     buildScene();
 
@@ -179,7 +180,7 @@ void PauseState::handleMessage(const cro::Message& msg)
 bool PauseState::simulate(float dt)
 {
     m_scene.simulate(dt);
-    return /*true*/m_sharedData.baseState != StateID::DrivingRange;
+    return m_sharedData.baseState != StateID::DrivingRange && m_sharedData.baseState != StateID::ChipIn;
 }
 
 void PauseState::render()
@@ -237,7 +238,7 @@ void PauseState::buildScene()
 
             if (m_restartButton.isValid())
             {
-                auto reset = (m_sharedData.baseState == StateID::DrivingRange);
+                auto reset = (m_sharedData.baseState == StateID::DrivingRange || m_sharedData.baseState == StateID::ChipIn);
                 m_restartButton.getComponent<cro::UIInput>().enabled = reset;
                 m_restartButton.getComponent<cro::Transform>().setScale(glm::vec2(reset ? 1.f : 0.f));
             }
@@ -417,7 +418,8 @@ void PauseState::buildScene()
 
 
     //restart button
-    if (m_sharedData.baseState == StateID::DrivingRange)
+    if (m_sharedData.baseState == StateID::DrivingRange
+        || m_sharedData.baseState == StateID::ChipIn)
     {
         entity = createItem(glm::vec2(0.f, 6.f), "Restart Round", menuEntity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
@@ -433,7 +435,7 @@ void PauseState::buildScene()
                         m_confirmationType = ConfirmType::Restart;
                     }
                 });
-        entity.getComponent<cro::UIInput>().enabled = (m_sharedData.baseState == StateID::DrivingRange);
+        entity.getComponent<cro::UIInput>().enabled = (m_sharedData.baseState == StateID::DrivingRange || m_sharedData.baseState == StateID::ChipIn);
         entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         m_restartButton = entity;
     }
@@ -646,10 +648,8 @@ void PauseState::buildScene()
         m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
-    m_scene.setActiveCamera(entity);
+    entity = m_scene.getActiveCamera();
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(entity.getComponent<cro::Camera>());
 
     m_scene.simulate(0.f);

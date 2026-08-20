@@ -4930,6 +4930,23 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         }
     }
 
+#ifdef USE_GNS
+    const auto& paths = Content::getUserItemsPaths(Content::UserContent::Flag);
+    for (const auto& p : paths)
+    {
+        const auto files = cro::FileSystem::listFiles(p.string());
+        for (auto j = 0u; j < files.size(); ++j)
+        {
+            //just grab the first png we find
+            if (cro::FileSystem::getFileExtension(files[j]) == ".png")
+            {
+                mappedFlags.emplace_back(std::make_pair(p.string() + "/", files[j]));
+                break;
+            }
+        }
+    }
+#endif
+
 
     std::uint32_t loadedCount = 0;
     cro::Image tmp(true);

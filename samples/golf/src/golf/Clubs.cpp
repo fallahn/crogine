@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -94,6 +94,10 @@ namespace
     static constexpr float ToFeet = 3.281f;
     //static constexpr float ToInches = 12.f;
 
+    //used to control the extra 25m putter
+    static constexpr float LongLongRange = 25.f;
+    static constexpr float LongLongMultiplier = LongLongRange / 10.f; //this is actually ClubStats[Putter].target
+    static constexpr float LongLongDampening = 0.95f;
 
     constexpr std::size_t DebugLevel = 35;
     std::int32_t playerLevel = 0;
@@ -125,13 +129,15 @@ namespace
 }
 
 bool Club::m_fixedPuttingDistance = false;
+std::int32_t Club::m_maxScaleIndex = 2;
+float Club::m_maxScale = ClubStats[ClubID::Putter].stats[0].target;
 
 Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin)
-    : m_id      (id), 
-    m_name      (name), 
-    m_angle     (angle * cro::Util::Const::degToRad),
-    m_sidespin  (sidespin),
-    m_topspin   (topspin)
+    : m_id          (id), 
+    m_name          (name), 
+    m_angle         (angle * cro::Util::Const::degToRad),
+    m_sidespin      (sidespin),
+    m_topspin       (topspin)
 {
 
 }
@@ -153,7 +159,8 @@ std::string Club::getName(bool imperial, float distanceToPin, float dampening) c
 
     if (imperial)
     {
-        if (getPower(distanceToPin, imperial) > 10.f)
+        if (getPower(distanceToPin, imperial) > 10.f
+            && m_id != ClubID::Putter)
         {
             auto dist = static_cast<std::int32_t>(t * ToYards);
             return m_name + std::to_string(dist) + "yds" + getSuffix();
@@ -213,22 +220,17 @@ float Club::getPower(float distanceToPin, bool imperial) const
 {
     if (m_id == ClubID::Putter)
     {
-        if (m_fixedPuttingDistance)
-        {
-            return ClubStats[m_id].stats[0].target;
-        }
-
         //looks like a bug, but turns out we need the extra power.
         auto p = getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
-        //return getScaledValue(ClubStats[m_id].stats[0].power, distanceToPin);
-
-        //because imperial display is rounded we need to apply this to the power too
-        //if (imperial
-        //    && p < 10.f) //only diplayed in feet < 10m
-        //{
-        //    p = std::round(p * ToFeet);
-        //    p /= ToFeet; //still need to actually physic in metres
-        //}
+        if (m_maxScaleIndex == 3)
+        {
+            //hack to reduce the 25m putt power
+            p *= LongLongDampening;
+        }
+        if (m_fixedPuttingDistance)
+        {
+            return std::max(ClubStats[m_id].stats[0].target, p);
+        }
 
         return p;
     }
@@ -246,7 +248,8 @@ float Club::getTarget(float distanceToPin) const
 {
     if (m_id == ClubID::Putter)
     {
-        return m_fixedPuttingDistance ? getBaseTarget() : getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
+        const auto d = getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
+        return m_fixedPuttingDistance ? std::max(getBaseTarget(), d) : d;
     }
 
     return getBaseTarget(); //this includes target multiplier
@@ -304,25 +307,41 @@ void Club::setModifierIndex(std::int32_t idx)
 std::int32_t Club::getScaleIndex(float distanceToPin) const
 {
     const auto target = getBaseTarget();
-    if (distanceToPin < target * ShortRangeThreshold)
+    if (distanceToPin < (m_maxScale + 0.9f))
     {
-        if (distanceToPin < target * TinyRangeThreshold)
+        if (distanceToPin < target * ShortRangeThreshold)
         {
-            return 0;
+            if (distanceToPin < target * TinyRangeThreshold)
+            {
+                return 0;
+            }
+            return 1;
         }
-        return 1;
+        return 2;
     }
-    return 2;
+    return 3;
+}
+
+void Club::clampMaxScale(bool c)
+{
+    if (c)
+    {
+        m_maxScale = 1000.f;
+    }
+    else
+    {
+        m_maxScale = ClubStats[ClubID::Putter].stats[0].target;
+    }
 }
 
 //private
 float Club::getScaledValue(float value, float distanceToPin) const
 {
-    const auto index = getScaleIndex(distanceToPin);
-
-    switch (index)
+    switch (m_maxScaleIndex)
     {
     default:
+    case 3:
+        return value * LongLongMultiplier;
     case 2:
         return value;
     case 1:

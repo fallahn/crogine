@@ -44,7 +44,9 @@ T* Scene::addSystem(Args&&... args)
     auto& system = m_systemManager.addSystem<T>(std::forward<Args>(args)...);
     if constexpr (std::is_base_of<Renderable, T>::value)
     {
-        m_renderables.push_back(static_cast<Renderable*>(&system));
+        auto* r = static_cast<Renderable*>(&system);
+        r->setSkyboxCallback(std::bind(&Scene::renderSkybox, this, std::placeholders::_1));
+        m_renderables.push_back(r);
     }
     return &system;
 }

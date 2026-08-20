@@ -154,7 +154,7 @@ private:
     cro::Entity m_cueball;
     cro::Entity m_localCue;
     cro::Entity m_remoteCue;
-    std::uint8_t m_readyQuitFlags;
+    std::uint16_t m_readyQuitFlags;
 
     struct MaterialID final
     {

@@ -184,6 +184,7 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     m_awardPageCount        (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Stats State");
 
     buildScene();
 

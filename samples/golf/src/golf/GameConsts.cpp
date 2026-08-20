@@ -236,11 +236,11 @@ std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated)
             cro::Vertex2D(glm::vec2(0.245f, 0.5f), TextGoldColour),
             cro::Vertex2D(glm::vec2(0.245f, -0.5f), TextGoldColour),
 
-            cro::Vertex2D(glm::vec2(0.245f, 0.5f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(0.245f, -0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.245f, 0.5f), /*LeaderboardTextDark*/TextHighlightColour),
+            cro::Vertex2D(glm::vec2(0.245f, -0.5f), /*LeaderboardTextDark*/TextHighlightColour),
 
-            cro::Vertex2D(glm::vec2(0.255f, 0.5f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(0.255f, -0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.255f, 0.5f), /*LeaderboardTextDark*/TextHighlightColour),
+            cro::Vertex2D(glm::vec2(0.255f, -0.5f), /*LeaderboardTextDark*/TextHighlightColour),
 
             cro::Vertex2D(glm::vec2(0.255f, 0.5f), TextGoldColour),
             cro::Vertex2D(glm::vec2(0.255f, -0.5f), TextGoldColour),
@@ -373,11 +373,11 @@ std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated)
         cro::Vertex2D(glm::vec2(0.245f, 0.5f), TextGoldColour),
         cro::Vertex2D(glm::vec2(0.245f, -0.5f), TextGoldColour),
 
-        cro::Vertex2D(glm::vec2(0.245f, 0.5f), LeaderboardTextDark),
-        cro::Vertex2D(glm::vec2(0.245f, -0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.245f, 0.5f), /*LeaderboardTextDark*/TextHighlightColour),
+        cro::Vertex2D(glm::vec2(0.245f, -0.5f), /*LeaderboardTextDark*/TextHighlightColour),
 
-        cro::Vertex2D(glm::vec2(0.255f, 0.5f), LeaderboardTextDark),
-        cro::Vertex2D(glm::vec2(0.255f, -0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.255f, 0.5f), /*LeaderboardTextDark*/TextHighlightColour),
+        cro::Vertex2D(glm::vec2(0.255f, -0.5f), /*LeaderboardTextDark*/TextHighlightColour),
 
         cro::Vertex2D(glm::vec2(0.255f, 0.5f), TextGoldColour),
         cro::Vertex2D(glm::vec2(0.255f, -0.5f), TextGoldColour),
@@ -480,7 +480,7 @@ glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3& impulse, float sideSpin, glm:
 std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2>& points, float offsetScale)
 {
     //SIGH ofc these colours are the wrong way around when we switch to decimated...
-    static constexpr std::array col = { cro::Colour(0.419f, 0.435f, 0.447f), cro::Colour(0.f,0.f,0.f)};
+    static constexpr std::array col = { cro::Colour(0.419f, 0.435f, 0.447f), cro::Colour(0.f,0.f,0.f), TextHighlightColour};
     const std::size_t ColourOffset = (points.size() - 9) / 2; //so we hack around by looking at size diff
 
     const float OffsetX = 1.f * offsetScale;
@@ -498,7 +498,8 @@ std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2
         ret.emplace_back(points[i + 1] + glm::vec2(-OffsetX, -OffsetY), TextGoldColour);
         
 
-        const auto colIndex = (i + ColourOffset)%2;
+        const auto colIndex = i == ((points.size() / 2) - 2) ? 2 :
+            (i + ColourOffset)%2;
         ret.emplace_back(points[i + 1] + glm::vec2(-OffsetX, OffsetY), col[colIndex]);
         ret.emplace_back(points[i + 1] + glm::vec2(-OffsetX, -OffsetY), col[colIndex]);
 

@@ -42,11 +42,13 @@ source distribution.
 #include "SharedProfileData.hpp"
 #include "spooky2.hpp"
 #include "Clubs.hpp"
+#include "Career.hpp"
 #include "League.hpp"
 #include "RopeSystem.hpp"
 #include "LightmapProjectionSystem.hpp"
 #include "FireworksSystem.hpp"
 #include "InterpolationSystem.hpp"
+#include "BehaviourRabbit.hpp"
 #include "../Colordome-32.hpp"
 #include "../ErrorCheck.hpp"
 #include "../WebsocketServer.hpp"
@@ -134,7 +136,10 @@ namespace
 
     const std::unordered_map<std::string, std::string> MissingCourses =
     {
-        std::make_pair("course_13", "Requires Adventurer DLC")
+        std::make_pair("course_13", "Requires Adventurer DLC"),
+        std::make_pair("course_14", "Requires Putt-Stop DLC"),
+        std::make_pair("course_15", "Requires Craewall DLC"),
+        std::make_pair("course_16", "Requires Craewall DLC"),
     };
 
     bool checkCommandLine = true;
@@ -207,6 +212,10 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_serverMapAvailable    (true),
     m_avUpdateCount         (0)
 {
+    m_uiScene.setTitle("Menu UI");
+    m_backgroundScene.setTitle("Menu Background");
+    m_avatarScene.setTitle("Menu Avatars");
+
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     Timeline::setTimelineDesc("Main Menu");
 
@@ -243,12 +252,16 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         //cached menu states depend on steam stats being
         //up to date so this hacks in a delay and pumps the callback loop
         cro::Clock cl;
-        while (cl.elapsed().asSeconds() < 1.5f)
+        while (cl.elapsed().asSeconds() < 3.5f)
         {
+            //seems excessive but if we don't at least request
+            //the monthly scores the menu crashes in the lobby
             Achievements::update();
         }
         CompetitionLeague::refreshTotal(CompetitionLeague::getCourseIndex());
+#ifndef DEMO
         checkBeta();
+#endif
 #endif
 
         updateUnlockedItems(); //do this before attempting to load the assets...
@@ -546,9 +559,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         refreshDisplayMembers();
     }
 
-    //for some reason this immediately unsets itself
-    //cro::App::getWindow().setCursor(&m_cursor);
 #ifndef __APPLE__
+#ifndef DEMO
     registerCommand("tree_ed", [&](const std::string&)
         {
             if (getStateCount() == 1)
@@ -590,11 +602,12 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 #endif
+#endif
 #ifdef USE_GNS
-    registerCommand("restore_xp", [](const std::string&)
-        {
-            bunnage();
-        });
+    //registerCommand("restore_xp", [](const std::string&)
+    //    {
+    //        bunnage();
+    //    });
 #else
     registerCommand("connect", [&](const std::string& address)
         {
@@ -794,7 +807,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
 
-#if defined USE_WORKSHOP && !defined __APPLE__
+#if defined USE_WORKSHOP && !defined __APPLE__ && !defined DEMO
     if (!Social::isSteamdeck())
     {
         registerCommand("workshop",
@@ -872,6 +885,44 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //createDebugWindows();
     cro::App::getInstance().resetFrameTime();
     simulate(0.f);
+
+    //check career achievement
+    {
+        std::int32_t bestCount = 0;
+        for (auto i = 0u; i < /*Career::MaxLeagues*/6; ++i) //we only want the 6 included leagues, not the DLC
+        {
+            const auto pos = Career::instance(m_sharedData).getLeagueTables()[i].getCurrentBest();
+            bestCount += pos;
+            //LogI << "League " << (i + 1) << " rank is " << pos << std::endl;
+        }
+
+        if (bestCount == 6)
+        {
+            Achievements::awardAchievement(AchievementStrings[AchievementID::AllTime]);
+            //LogI << "Awarded All Time Career Achievement" << std::endl;
+        }
+        /*else
+        {
+            LogI << "Career Gold Leagues is " << bestCount << std::endl;
+        }*/
+    }
+
+
+
+    //registerWindow([this]()
+    //{
+    //    ImGui::Begin("leagues");
+    //    for (auto i = 0; i < 8; ++i)
+    //    {
+    //        const auto& leagueData = Career::instance(m_sharedData).getLeagueData()[i];
+    //        const auto& league = Career::instance(m_sharedData).getLeagueTables()[i];
+
+    //        ImGui::Text("%d, %s", leagueData.leagueID, leagueData.title.toUtf8().data());
+    //        ImGui::Text("Iter: %d", league.getCurrentIteration());
+    //    }
+
+    //    ImGui::End();
+    //});
 }
 
 MenuState::~MenuState()
@@ -1601,6 +1652,7 @@ void MenuState::handleMessage(const cro::Message& msg)
             updateLobbyList();
             break;
         case MatchMaking::Message::LobbyInvite:
+#ifndef DEMO
             if (!m_sharedData.clientConnection.connected)
             {
                 if (data.gameType == Server::GameMode::Golf)
@@ -1616,6 +1668,7 @@ void MenuState::handleMessage(const cro::Message& msg)
                     requestStackPush(StateID::Clubhouse);
                 }
             }
+#endif
             break;
         case MatchMaking::Message::GameCreateFailed:
             //TODO set some sort of flag to indicate offline mode?
@@ -1810,6 +1863,7 @@ void MenuState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<Social::UGCEvent>();
         ugcInstalledHandler(data.itemID, data.type);
     }
+#ifndef DEMO
     else if (msg.id == Social::MessageID::SocialMessage)
     {
         const auto& data = msg.getData<Social::SocialEvent>();
@@ -1858,6 +1912,7 @@ void MenuState::handleMessage(const cro::Message& msg)
             };
         }
     }
+#endif
 #endif
 
     else if (msg.id == MessageID::WebSocketMessage)
@@ -1960,6 +2015,10 @@ bool MenuState::simulate(float dt)
 
     m_sharedCourseData.videoPlayer.update(dt);
 
+#ifdef USE_GNS
+    m_groupID.update(m_sharedData.clientConnection.hostID, m_connectedPlayerCount);
+#endif
+
     return true;
 }
 
@@ -2056,7 +2115,6 @@ void MenuState::addSystems()
     m_avatarScene.addSystem<cro::SkeletalAnimator>(mb);
     m_avatarScene.addSystem<cro::CameraSystem>(mb);
     m_avatarScene.addSystem<cro::ModelRenderer>(mb);
-    m_avatarScene.setTitle("Avatar Scene");
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
@@ -3052,6 +3110,8 @@ void MenuState::createScene()
     camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter(timeOfDay == TimeOfDay::Night ? "02" : "01");
     camEnt.getComponent<cro::AudioEmitter>().play();
 
+    createExtras();
+
     //set up cam / models for ball preview
     createBallScene();    
 
@@ -3277,13 +3337,13 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
             auto material = m_resources.materials.get(matID);
             material.setProperty("u_colour", CD32::Colours[CD32::GreyLight] * m_sharedData.menuSky.sunColour);
 
-            auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
-            auto shadowMatID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+            const auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
+            const auto shadowMatID = m_resources.materials.add(m_resources.shaders.get(shaderID));
             static constexpr std::int32_t NodeCount = 6;
 
             const auto createRopeMesh = [&](glm::vec3 pos, std::size_t ropeID)
                 {
-                    //position only, triangle strip
+                    //position only, line strip
                     auto entity = m_backgroundScene.createEntity();
                     entity.addComponent<cro::Transform>().setPosition(pos);
                     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP, GL_UNSIGNED_BYTE));
@@ -3305,11 +3365,8 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                     auto* submesh = &meshData->indexData[0];
                     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
                     cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
-                    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->iboAllocation.bufferID));
-                    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
-                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
                     
-                    //just has to pass culling
+                    //just has to pass culling - TODO use start and end points
                     meshData->boundingBox = { glm::vec3(-15.f), glm::vec3(15.f) };
                     meshData->boundingSphere = meshData->boundingBox;
 
@@ -3318,7 +3375,6 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                     //via a uniform BUT we're still sending the same amount of data every time and
                     //that would actually require a more expensive shader...
                     entity.addComponent<cro::Callback>().active = true;
-                    entity.getComponent<cro::Callback>().setUserData<std::vector<glm::vec3>>();
                     entity.getComponent<cro::Callback>().function =
                         [&, ropeID, meshData](cro::Entity e, float)
                         {
@@ -3358,21 +3414,21 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
 
             for (auto i = 0u; i < polePos.size() - 1; ++i)
             {
-                auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(polePos[i], polePos[i+1], 0.001f);
+                const auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(polePos[i], polePos[i+1], 0.001f);
                 for (auto j = 0; j < NodeCount; ++j)
                 {
                     const auto scale = 1.f + cro::Util::Random::value(-0.2f, 0.5f);
 
                     auto entity = m_backgroundScene.createEntity();
                     entity.addComponent<cro::Transform>().setScale(glm::vec3(scale));
-                    entity.addComponent<RopeNode>().ropeID = rope;
+                    entity.addComponent<RopeNode>(rope);
 
                     //load models for lights
                     //TODO could have a version with flags on instead of lanterns?
                     
                     if (md.isLoaded())
                     {
-                        const auto colour = LightColours[cro::Util::Random::value(0u, LightColours.size() - 1)];
+                        const auto& colour = LightColours[cro::Util::Random::value(0u, LightColours.size() - 1)];
 
                         md.createModel(entity);
                         entity.getComponent<cro::Model>().setMaterial(0, lightMaterial);
@@ -3498,6 +3554,30 @@ void MenuState::createSnow()
     m_scaleBuffer.addShader(shader);
 }
 
+void MenuState::createExtras()
+{
+    if (cro::FileSystem::fileExists("dlc/craewall/models/props/rabbit.cmt"))
+    {
+        cro::ModelDefinition md(m_resources);
+        if (md.loadFromFile("dlc/craewall/models/props/rabbit.cmt"))
+        {
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+            applyMaterialData(md, material);
+
+            for (auto i = 0u; i < 3u; ++i)
+            {
+                auto entity = m_backgroundScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({ -13.f, 0.f, 16.f });
+                md.createModel(entity);
+
+                entity.getComponent<cro::Model>().setMaterial(0, material);
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().function = BehaviourRabbit(nullptr, entity.getComponent<cro::Transform>().getPosition(), i);
+            }
+        }
+    }
+}
+
 void MenuState::setVoiceCallbacks()
 {
     //const auto voiceCreate =
@@ -3535,7 +3615,7 @@ void MenuState::setVoiceCallbacks()
     //m_voiceChat.setDeletionCallback(voiceDelete);
 }
 
-#ifdef USE_GNS
+#if defined USE_GNS && !defined DEMO
 void MenuState::checkBeta()
 {
     if (SteamBeta::isBetaAvailable())
@@ -4058,9 +4138,13 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 err += "Bad Data Received";
                 break;
             case MessageType::VersionMismatch:
+#ifdef DEMO
+                err += "\nMultiplayer is not available in the Demo";
+#else
                 err += "Client/Server Mismatch";
 #ifdef USE_GNS
                 err += "\nEnsure all players are on the\nsame branch in Steam";
+#endif
 #endif
                 break;
             }
@@ -4116,7 +4200,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::MapInfo:
         {
             //check we have the local data (or at least something with the same name)
-            auto course = deserialiseString(evt.packet);
+            const auto course = deserialiseString(evt.packet);
 
             //jump straight into the tutorial
             //if that's what's set
@@ -4568,7 +4652,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 {
 #ifdef USE_GNS
+    //this also fills in out peer host ID else it remains at 0
     m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
+    m_sharedData.clientConnection.hostID = m_sharedData.clientConnection.netClient.getPeer().getID();
 #ifdef CRO_DEBUG_
     cro::App::getWindow().setTitle(std::to_string(msgData.hostID));
 #endif
@@ -4975,7 +5061,7 @@ void MenuState::applyQuickPlayConnection()
     //club set should have been set by the player
     m_sharedData.reverseCourse = cro::Util::Random::value(0, 1);
     m_sharedData.scoreType = ScoreType::Stroke;
-    m_sharedData.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
+    m_sharedData.weatherType = m_sharedData.randomQuickplayWeather ? cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist) : WeatherType::Clear;
     m_sharedData.holeCount = cro::Util::Random::value(1, 2);
     m_sharedData.gimmeRadius = GimmeSize::Leather; //hmmm should we let the player choose this?
     m_sharedData.teamMode = 0;
@@ -5007,7 +5093,7 @@ void MenuState::applyProLeagueConnection()
 {
     m_sharedData.reverseCourse = 0;
     m_sharedData.scoreType = ScoreType::Stroke;
-    m_sharedData.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
+    m_sharedData.weatherType = WeatherType::Clear;// cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
     m_sharedData.holeCount = 0;
     m_sharedData.gimmeRadius = GimmeSize::None;
     m_sharedData.teamMode = 0;
@@ -5043,6 +5129,7 @@ bool quickConnect(SharedStateData& sharedData)
 
 #ifdef USE_GNS
         sharedData.clientConnection.connected = sharedData.serverInstance.addLocalConnection(sharedData.clientConnection.netClient);
+        sharedData.clientConnection.hostID = sharedData.clientConnection.netClient.getPeer().getID();
 #else
         sharedData.clientConnection.connected = sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
 #endif

@@ -82,7 +82,6 @@ namespace sv
         
         //TODO this is basically the same as the ConnectionData struct in client shared data
         std::uint8_t playerCount = 0;
-        std::uint64_t peerID = 0;
         std::array<PlayerInfo, ConstVal::MaxPlayers> playerData = {};
     };
 

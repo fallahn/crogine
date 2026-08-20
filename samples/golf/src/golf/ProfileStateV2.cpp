@@ -153,6 +153,9 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_uiLayout          (TabID::Count, sd)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Profile UI");
+    m_previewScene.setTitle("Profile Preview");
+    m_statScene.setTitle("Profile Stats");
 
     std::fill(m_controllerMasks.begin(), m_controllerMasks.end(), 0);
     std::fill(m_controllerPrevMasks.begin(), m_controllerPrevMasks.end(), 0);
@@ -1491,10 +1494,9 @@ void ProfileStateV2::buildScene()
         m_uiLayout.updateTabBar();
     };
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
-    m_scene.setActiveCamera(entity);
+    entity = m_scene.getActiveCamera();
+    entity.setLabel("UI");
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(entity.getComponent<cro::Camera>());
 
 
@@ -1691,7 +1693,7 @@ void ProfileStateV2::buildPreviewScene()
     //cameras anyway.
     resize(cam);
     m_previewCameras[PreviewCamera::Avatar] = camEnt;
-
+    camEnt.setLabel("Avatar");
 
     //this needs its own callback with narrower FOV and split screen
     //for club thumbnails
@@ -1711,6 +1713,7 @@ void ProfileStateV2::buildPreviewScene()
     ballCam.resizeCallback = resize2;
     resize2(ballCam);
     m_previewCameras[PreviewCamera::Ball] = camEnt;
+    camEnt.setLabel("Ball");
 
 
     const auto resize3 =
@@ -1729,7 +1732,7 @@ void ProfileStateV2::buildPreviewScene()
     bioCam.resizeCallback = resize3;
     resize3(bioCam);
     m_previewCameras[PreviewCamera::Biog] = camEnt;
-
+    camEnt.setLabel("Biog");
 
 
     //doesn't use a callback because the mugshot texture doesn't resize
@@ -1742,7 +1745,7 @@ void ProfileStateV2::buildPreviewScene()
     cam2.viewport = { 0.f, 0.f, 0.5f, 1.f };
     //cam2.setRenderFlags(cro::Camera::Pass::Final, ~(1 << 1));
     m_previewCameras[PreviewCamera::MugShot] = camEnt;
-
+    camEnt.setLabel("Mugshot");
 
     auto lightEnt = m_previewScene.getSunlight();
     lightEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 2.8f);
@@ -1888,6 +1891,7 @@ void ProfileStateV2::buildStatScene()
 
 
     auto camEnt = m_statScene.getActiveCamera();
+    camEnt.setLabel("UI");
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = 
         [&](cro::Camera& c)
@@ -1916,7 +1920,7 @@ void ProfileStateV2::createBodyItems()
     item->activated =
         [&](Menu::Item& i)
         {
-            setAvatarIndex(i.selectedIndex);
+            i.selectedIndex = setAvatarIndex(i.selectedIndex); //returns a new index if we skipped over locked avatars
             i.description = i.labels[i.selectedIndex] + "/" + std::to_string(m_avatarModels.size() - m_lockedAvatarCount);
             m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString(i.description);
 
@@ -1935,11 +1939,19 @@ void ProfileStateV2::createBodyItems()
                 break;
             }
         };
+    
+    auto c = 1;
     for (auto i = 0u; i < m_avatarModels.size(); ++i)
     {
         if (m_avatarModels[i].previewModel.isValid())
         {
-            item->labels.push_back(std::to_string(i + 1));
+            item->labels.push_back(std::to_string(c++));
+        }
+        else
+        {
+            //we never see this but the labels need to
+            //be padded for forrect indexing.
+            item->labels.push_back("Locked");
         }
     }
     item->selectedIndex = m_avatarIndex;
@@ -2344,10 +2356,9 @@ void ProfileStateV2::createEquipmentItems()
     item->activated =
         [&](Menu::Item& i)
         {
-            setClubIndex(i.selectedIndex);
-            //setClubIndex() may have adjusted thit ti account for locked clubs
-            i.selectedIndex = m_clubIndex;
-
+            //setClubIndex() may have adjusted this to account for locked clubs
+            i.selectedIndex = setClubIndex(i.selectedIndex);
+            
             i.description = i.labels[i.selectedIndex] + "/" + std::to_string(m_clubData.size() - m_lockedClubCount);
             if (!m_clubData[i.selectedIndex].name.empty())
             {
@@ -2396,7 +2407,7 @@ void ProfileStateV2::createEquipmentItems()
     {
         item->description += " " + m_clubData[item->selectedIndex].name;
     }
-    setClubIndex(item->selectedIndex);
+    item->selectedIndex = setClubIndex(item->selectedIndex);
 
 
 
@@ -2409,10 +2420,8 @@ void ProfileStateV2::createEquipmentItems()
     item->activated =
         [&](Menu::Item& i)
         {
-            setBallIndex(i.selectedIndex);
-
             //setBallIndex() may skip locked balls so we need to re-sync...
-            i.selectedIndex = m_ballIndex;
+            i.selectedIndex = setBallIndex(i.selectedIndex);
 
             i.description = i.labels[i.selectedIndex] + "/" + std::to_string(m_ballModels.size() - m_lockedBallCount);
             if (!m_sharedData.ballInfo[i.selectedIndex].label.empty())
@@ -2472,7 +2481,7 @@ void ProfileStateV2::createEquipmentItems()
     {
         item->description += " " + m_sharedData.ballInfo[item->selectedIndex].label;
     }
-    setBallIndex(item->selectedIndex);
+    item->selectedIndex = setBallIndex(item->selectedIndex);
 
     //colour property
     item = &m_uiLayout.menuLayout.items[TabID::Equipment].emplace_back();
@@ -2556,22 +2565,24 @@ void ProfileStateV2::createLoadoutItems()
         };
     
     //TODO slight problem here in that the equipment counter doesn't cover the lob wedge...
-    static const std::array titles =
-    {
-        std::string("Driver"),
-        std::string("3 Wood"),
-        std::string("5 Wood"),
-        std::string("4 Iron"),
-        std::string("5 Iron"),
-        std::string("6 Iron"),
-        std::string("7 Iron"),
-        std::string("8 Iron"),
-        std::string("9 Iron"),
-        std::string("Pitch Wedge"),
-        std::string("Gap Wedge"),
-        std::string("Sand Wedge"),
-        std::string("Balls"),
-    };
+    //static const std::array titles =
+    //{
+    //    std::string("Driver"),
+    //    std::string("3 Wood"),
+    //    std::string("5 Wood"),
+    //    std::string("4 Iron"),
+    //    std::string("5 Iron"),
+    //    std::string("6 Iron"),
+    //    std::string("7 Iron"),
+    //    std::string("8 Iron"),
+    //    std::string("9 Iron"),
+    //    std::string("Pitch Wedge"),
+    //    std::string("Lob Wedge"),
+    //    std::string("Gap Wedge"),
+    //    //std::string("Sand Wedge"),
+    //    std::string("Balls"),
+    //};
+
 
     //sort inventory into sub-lists of things that we own
     struct SubItem final
@@ -2603,7 +2614,7 @@ void ProfileStateV2::createLoadoutItems()
         const auto available = itemAvailable(i);
 
         item = &m_uiLayout.menuLayout.items[TabID::Loadout].emplace_back();
-        item->title = titles[i];
+        item->title = inv::ItemStrings[i];// titles[i];
 
         if (available)
         {
@@ -2622,7 +2633,7 @@ void ProfileStateV2::createLoadoutItems()
                     m_activeProfile.loadout.items[i] = itemIndices[menuItem.selectedIndex];
                     refreshStat(i, itemIndices[menuItem.selectedIndex], true);
 
-                    menuItem.title = titles[i] + " " + std::to_string(menuItem.selectedIndex + 1) + "/" + std::to_string(itemIndices.size());
+                    menuItem.title = inv::ItemStrings[i] + " " + std::to_string(menuItem.selectedIndex + 1) + "/" + std::to_string(itemIndices.size());
                 };
             const auto res = std::find(itemIndices.cbegin(), itemIndices.cend(), m_activeProfile.loadout.items[i]);
             if (res != itemIndices.cend())
@@ -2910,7 +2921,7 @@ void ProfileStateV2::onCachedPush()
     refreshBio();
 
     //set any initial previews
-    setAvatarIndex(indexFromAvatarID(m_activeProfile.playerData.skinID));
+    m_avatarIndex = setAvatarIndex(indexFromAvatarID(m_activeProfile.playerData.skinID));
     setHairIndex(indexFromHairID(m_activeProfile.playerData.hairID));
     setHatIndex(indexFromHairID(m_activeProfile.playerData.hatID));
 
@@ -3151,7 +3162,10 @@ void ProfileStateV2::loadAvatarPreviews()
 
             auto entity = m_previewScene.createEntity();
             entity.addComponent<cro::Transform>().setOrigin(AvatarPos);
-            avatar.createModel(entity);
+            if (!avatar.createModel(entity))
+            {
+                LogE << avatar.getSource() << ": failed to load!" << std::endl;
+            }
             entity.getComponent<cro::Model>().setHidden(true);
 
             auto material = m_profileData.profileMaterials.avatar;
@@ -3202,6 +3216,11 @@ void ProfileStateV2::loadAvatarPreviews()
             avt.type = m_sharedData.avatarInfo[i].type;
             avt.previewIndex = previewIndex++;
 
+            if (!entity.isValid())
+            {
+                LogI << avt.type << std::endl;
+                LogI << "entity: " << entity.getLabel() << " is not valid!" << std::endl;
+            }
             //these are unique models from the menu so we'll 
             //need to capture their attachment points once again...
             if (entity.hasComponent<cro::Skeleton>())
@@ -3494,6 +3513,7 @@ void ProfileStateV2::loadClubData()
     }
 
     //workshop clubs
+#ifndef USE_GNS
     const auto basePath = Content::getUserContentPath(Content::UserContent::Clubs);
     auto clubsets = cro::FileSystem::listDirectories(basePath);
 
@@ -3510,6 +3530,15 @@ void ProfileStateV2::loadClubData()
     {
         processClubPath(basePath + s, true);
     }
+
+#else
+    const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Clubs);
+    for (const auto& p : wsPaths)
+    {
+        processClubPath(p.string(), true);
+    }
+#endif
+
 }
 
 void ProfileStateV2::loadVoiceData()
@@ -3550,6 +3579,7 @@ void ProfileStateV2::loadVoiceData()
     std::sort(paths.begin(), paths.end());
     const auto next = paths.size();
 
+#ifndef USE_GNS
     const auto basePath = Content::getUserContentPath(Content::UserContent::Voice);
     const auto dirs = cro::FileSystem::listDirectories(basePath);
     for (const auto& dir : dirs)
@@ -3563,6 +3593,21 @@ void ProfileStateV2::loadVoiceData()
             }
         }
     }
+
+#else
+    const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Voice);
+    for (const auto& p : wsPaths)
+    {
+        const auto files = cro::FileSystem::listFiles(p.string());
+        for (const auto& f : files)
+        {
+            if (cro::FileSystem::getFileExtension(f) == ".xas")
+            {
+                paths.push_back(p.string() + "/" + f);
+            }
+        }
+    }
+#endif
 
     if (next < paths.size())
     {
@@ -3653,10 +3698,10 @@ std::int32_t ProfileStateV2::indexFromClubID(std::uint32_t uid) const
     return 0;
 }
 
-void ProfileStateV2::setAvatarIndex(std::int32_t idx)
+std::int32_t ProfileStateV2::setAvatarIndex(std::int32_t idx)
 {
-    auto hairIdx = m_avatarModels[m_avatarIndex].hairIndex;
-    auto hatIdx = m_avatarModels[m_avatarIndex].hatIndex;
+    const auto hairIdx = m_avatarModels[m_avatarIndex].hairIndex;
+    const auto hatIdx = m_avatarModels[m_avatarIndex].hatIndex;
 
     if (m_avatarModels[m_avatarIndex].hairAttachment)
     {
@@ -3715,11 +3760,12 @@ void ProfileStateV2::setAvatarIndex(std::int32_t idx)
         m_profileTextures[idx].setColour(pc::ColourKey::Index(i), m_activeProfile.playerData.avatarFlags[i]);
     }
     m_profileTextures[idx].apply();
+
+    return idx;
 }
 
 void ProfileStateV2::setHairIndex(std::int32_t idx)
 {
-
     auto hairIndex = m_avatarModels[m_avatarIndex].hairIndex;
 
     if (m_avatarHairModels[hairIndex].isValid())
@@ -3810,7 +3856,7 @@ void ProfileStateV2::setHatIndex(std::int32_t idx)
     //m_headwearPreviewRects[HeadwearID::Hat] = getThumbnailTextureRect(hatIndex);
 }
 
-void ProfileStateV2::setBallIndex(std::int32_t idx)
+std::int32_t ProfileStateV2::setBallIndex(std::int32_t idx)
 {
     CRO_ASSERT(idx < m_ballModels.size(), "");
 
@@ -3842,9 +3888,11 @@ void ProfileStateV2::setBallIndex(std::int32_t idx)
     m_ballParticles[m_particleIndex].getComponent<cro::ParticleEmitter>().start();
 
     m_activeProfile.playerData.ballID = m_sharedData.ballInfo[m_ballIndex].uid;
+
+    return idx;
 }
 
-void ProfileStateV2::setClubIndex(std::int32_t idx)
+std::int32_t ProfileStateV2::setClubIndex(std::int32_t idx)
 {
     if (idx > m_clubIndex)
     {
@@ -3869,6 +3917,8 @@ void ProfileStateV2::setClubIndex(std::int32_t idx)
 
     m_clubIndex = idx;
     m_activeProfile.playerData.clubID = m_clubData[idx].uid;
+
+    return idx;
 }
 
 void ProfileStateV2::applyHeadwearTransform(std::size_t idx, std::size_t indexOffset)
@@ -4154,7 +4204,7 @@ void ProfileStateV2::randomise()
     setHatIndex(0);
 
     //randomise avatar
-    setAvatarIndex(cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1));
+    m_avatarIndex = setAvatarIndex(cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1));
 
     m_activeProfile.playerData.voiceID = m_avatarModels[m_avatarIndex].audioUID;
     m_activeProfile.playerData.voicePitch = 0;

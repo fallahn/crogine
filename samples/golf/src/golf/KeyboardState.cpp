@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -164,6 +164,7 @@ KeyboardState::KeyboardState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_prevAxisFlags (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("OSK State");
 
     buildScene();
     
@@ -302,6 +303,14 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             switch (evt.cbutton.button)
             {
             default: break;
+            case cro::GameController::DPadDown:
+            case cro::GameController::DPadLeft:
+            case cro::GameController::DPadRight:
+            case cro::GameController::DPadUp:
+                //need to forward these in case the
+                //state below thinks the direction button
+                //is still being held
+                return true;
             case cro::GameController::ButtonRightShoulder:
             case cro::GameController::ButtonStart:
             {
@@ -587,9 +596,9 @@ void KeyboardState::buildScene()
     {
         //ensure keyboard is always less than half the height of the window
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        auto keyboardSize = entity.getComponent<cro::Sprite>().getTextureBounds();
+        const auto keyboardSize = entity.getComponent<cro::Sprite>().getTextureBounds();
 
-        float scale = 3.f - std::ceil((winSize.y / 2.f) / keyboardSize.height);
+        const float scale = std::max(1.f, 3.f - std::ceil((winSize.y / 2.f) / keyboardSize.height));
         winSize *= scale;
         cam.setOrthographic(0.f, winSize.x, 0.f, winSize.y, -20.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
@@ -612,12 +621,12 @@ void KeyboardState::buildScene()
     m_touchpadContext.pointerEnt = entity;
 
 
-
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = resize;
+    //camera
+    entity = m_scene.getActiveCamera();
+    entity.setLabel("OSK");
+    entity.getComponent<cro::Camera>().resizeCallback = resize;
     resize(entity.getComponent<cro::Camera>());
-    m_scene.setActiveCamera(entity);
+
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(GridOffset, 0.1f));

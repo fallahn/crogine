@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -91,6 +91,7 @@ ShaderResource::ShaderResource()
     addInclude("PCF_SHADOWS", PCFShadows.c_str());
     addInclude("VSM_SHADOWS", VSMShadows.c_str());
     addInclude("FXAA", FXAA.c_str());
+    addInclude("NOISE_3D", Noise3D.c_str());
 }
 
 //public
@@ -236,7 +237,7 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
         if (MAX_BONES == 0)
         {
             //query opengl for the limit (this can be pretty low on mobile!!)
-            GLint maxVec;
+            GLint maxVec = 0;
             glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
             MAX_BONES = maxVec / 4; //4 x 4-components make up a mat4.
             //we'll allow 64 vectors for other uniforms (cascaded maps take up a few)

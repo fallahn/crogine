@@ -44,10 +44,11 @@ void GolfState::createMinimapCamera()
     m_sharedData.minimapData.mapScene = &m_mapScene;
 
 
-    auto mapCam = m_mapScene.createEntity();
-    mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, MinimapZoom::CamHeight, -static_cast<float>(MapSize.y) / 2.f });
+    auto mapCam = m_mapScene.getActiveCamera();
+    mapCam.getComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, MinimapZoom::CamHeight, -static_cast<float>(MapSize.y) / 2.f });
     mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    auto& miniCam = mapCam.addComponent<cro::Camera>();
+    mapCam.setLabel("Minimap Camera");
+    auto& miniCam = mapCam.getComponent<cro::Camera>();
     miniCam.setOrthographic(-MapSizeFloat.x / 2.f, MapSizeFloat.x / 2.f, -MapSizeFloat.y / 2.f, MapSizeFloat.y / 2.f, 1.f, 40.f);
     miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
@@ -64,6 +65,8 @@ void GolfState::createMinimapCamera()
             //the camera itself is continuously updated by pan/zoom so we don't do that here
         };
     updateView(miniCam);
+
+    miniCam.active = false;
     miniCam.resizeCallback = updateView;
 
     m_minimapZoom.camera = mapCam;
@@ -132,13 +135,14 @@ void GolfState::retargetMinimap(bool reset)
         };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    if (m_minimapZoom.activeAnimation.isValid())
-    {
-        //remove existing animation
-        m_minimapZoom.activeAnimation.getComponent<cro::Callback>().active = false;
-        m_uiScene.destroyEntity(m_minimapZoom.activeAnimation);
-        m_minimapZoom.activeAnimation = {};
-    }
+    //if (m_minimapZoom.activeAnimation.isValid())
+    //{
+    //    //remove existing animation
+    //    m_minimapZoom.activeAnimation.getComponent<cro::Callback>().active = false;
+    //    m_uiScene.destroyEntity(m_minimapZoom.activeAnimation);
+    //    m_minimapZoom.activeAnimation = {};
+    //    LogI << "removed animation" << std::endl;
+    //}
     struct MapZoomData final
     {
         struct
@@ -173,11 +177,15 @@ void GolfState::retargetMinimap(bool reset)
     }
     else
     {
-        bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
+        const bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
             && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
 
+        //pin is close to the tee because the hole is u-shaped
+        const bool isHairpin = (glm::length2(m_holeData[m_currentHole].tee - m_currentPlayer.position) < 1
+            && glm::length2(m_holeData[m_currentHole].pin - m_currentPlayer.position) < glm::length2(m_holeData[m_currentHole].target - m_currentPlayer.position));
+
         //find vec between player and flag
-        const auto pin = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
+        const auto pin = isMultiTarget || isHairpin ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
         const auto player = m_currentPlayer.position;
 
         //rotate minimap so flag is at top
@@ -224,41 +232,66 @@ void GolfState::retargetMinimap(bool reset)
         target.end.zoom = std::clamp(static_cast<float>(MiniMapSize.x) / viewLength, MinZoom, MaxZoom);
     }
 
-    //create a temp ent to interp between start and end values
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<MapZoomData>(target);
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-        {
-            auto& data = e.getComponent<cro::Callback>().getUserData<MapZoomData>();
+    if (!m_minimapZoom.activeAnimation.isValid())
+    {
+        m_minimapZoom.camera.getComponent<cro::Camera>().active = true;
 
-            //const auto speed = 0.4f + (0.7f * (1.f - std::clamp(glm::length2(data.start.pan - data.end.pan) / (100.f * 100.f), 0.f, 1.f)));
-            const auto speed = 0.4f + (0.7f * (1.f - std::clamp(glm::length(data.start.pan - data.end.pan) / 100.f, 0.f, 1.f)));
-            data.progress = std::min(1.f, data.progress + (dt * speed));
-
-            m_minimapZoom.pan = glm::mix(data.start.pan, data.end.pan, cro::Util::Easing::easeOutExpo(data.progress));
-            m_minimapZoom.tilt = glm::mix(data.start.tilt, data.end.tilt, cro::Util::Easing::easeInOutBack(data.progress));
-            m_minimapZoom.zoom = glm::mix(data.start.zoom, data.end.zoom, cro::Util::Easing::easeOutBack(data.progress));
-            m_minimapZoom.updateShader();
-
-            if (data.progress == 1)
+        //create a temp ent to interp between start and end values
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<MapZoomData>(target);
+        entity.getComponent<cro::Callback>().function =
+            [this](cro::Entity e, float dt)
             {
-                m_minimapZoom.activeAnimation = {};
-                e.getComponent<cro::Callback>().active = false;
-                m_uiScene.destroyEntity(e);
-            }
-        };
-    m_minimapZoom.activeAnimation = entity;
+                auto& data = e.getComponent<cro::Callback>().getUserData<MapZoomData>();
+
+                //const auto speed = 0.4f + (0.7f * (1.f - std::clamp(glm::length2(data.start.pan - data.end.pan) / (100.f * 100.f), 0.f, 1.f)));
+                const auto speed = 0.4f + (0.7f * (1.f - std::clamp(glm::length(data.start.pan - data.end.pan) / 100.f, 0.f, 1.f)));
+                data.progress = std::min(1.f, data.progress + (dt * speed));
+
+                m_minimapZoom.pan = glm::mix(data.start.pan, data.end.pan, cro::Util::Easing::easeOutExpo(data.progress));
+                m_minimapZoom.tilt = glm::mix(data.start.tilt, data.end.tilt, cro::Util::Easing::easeInOutBack(data.progress));
+                m_minimapZoom.zoom = glm::mix(data.start.zoom, data.end.zoom, cro::Util::Easing::easeOutBack(data.progress));
+                m_minimapZoom.updateCamera();
+
+                if (data.progress == 1)
+                {
+                    m_minimapZoom.camera.getComponent<cro::Camera>().active = false;
+
+                    //HMMM this is causing a bit of a jump as it snaps
+                    //into place - although progress being 1 *shouldn't*
+                    //do that? I've disabled this as it looks horrible,
+                    //but will that mean that sometimes the map is off centre?
+
+                    m_minimapZoom.pan = data.end.pan;
+                    m_minimapZoom.tilt = data.end.tilt;
+                    m_minimapZoom.zoom = data.end.zoom;
+                    //m_minimapZoom.updateCamera();
+
+                    //make sure we actually render the final position
+                    /*m_mapScene.simulate(dt);
+                    m_minimapZoom.sceneTexture.clear(cro::Colour::Transparent);
+                    m_mapScene.render();
+                    m_minimapZoom.sceneTexture.display();*/
+
+                    m_minimapZoom.activeAnimation = {};
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
+            };
+        m_minimapZoom.activeAnimation = entity;
+    }
+    else
+    {
+        m_minimapZoom.activeAnimation.getComponent<cro::Callback>().setUserData<MapZoomData>(target);
+    }
 }
 
 
 
 //minimap zoom struct
-void MinimapZoom::updateShader()
+void MinimapZoom::updateCamera()
 {
-    //TODO rename this once which switch from the shader
-    //to the 3D camera completely
     CRO_ASSERT(glm::length2(textureSize) != 0, "");
 
     //the inverse matrix is calculated so we can convert
@@ -276,9 +309,6 @@ void MinimapZoom::updateShader()
     matrix = glm::scale(matrix, glm::vec3(MapSizeRatio, 1.f));
     matrix = glm::translate(matrix, -centre);
     invTx = glm::inverse(matrix);
-
-    //glUseProgram(shaderID);
-    //glUniformMatrix4fv(matrixUniformID, 1, GL_FALSE, &matrix[0][0]);
 
 
     //update the 3D camera 

@@ -225,11 +225,11 @@ private:
     std::int32_t indexFromClubID(std::uint32_t) const;
 
     //note this sets the m_avatarIndex member value too!!
-    void setAvatarIndex(std::int32_t idx);
+    [[nodiscard]] std::int32_t setAvatarIndex(std::int32_t idx); //returns an updated index if locked models were skipped
     void setHairIndex(std::int32_t idx);
     void setHatIndex(std::int32_t idx);
-    void setBallIndex(std::int32_t);
-    void setClubIndex(std::int32_t);
+    [[nodiscard]] std::int32_t setBallIndex(std::int32_t);
+    [[nodiscard]] std::int32_t setClubIndex(std::int32_t);
 
     void applyHeadwearTransform(std::size_t idx, std::size_t indexOffset);
     void nameInputWindow();

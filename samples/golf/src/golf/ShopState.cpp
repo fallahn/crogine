@@ -285,6 +285,8 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
         buildPreviewScene(); //do this first so we know what the model indices will be
         buildScene();
 
+        m_uiScene.setTitle("Shop UI");
+        m_previewScene.setTitle("Shop Preview");
         m_viewScale = cro::UIElementSystem::getViewScale();
 }
 

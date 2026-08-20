@@ -486,12 +486,27 @@ bool GolfState::summariseRules()
 
     bool gameFinished = false;
 
-    std::sort(sortData.begin(), sortData.end(),
-        [&](const PlayerStatus& a, const PlayerStatus& b)
-        {
-            return a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
-        });
-
+    if (m_sharedData.scoreType == ScoreType::Elimination)
+    {
+        //elimination should prefer those with most lives remaining
+        std::sort(sortData.begin(), sortData.end(),
+            [&](const PlayerStatus& a, const PlayerStatus& b)
+            {
+                if (a.skins == b.skins)
+                {
+                    return a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
+                }
+                return a.skins > b.skins;
+            });
+    }
+    else
+    {
+        std::sort(sortData.begin(), sortData.end(),
+            [&](const PlayerStatus& a, const PlayerStatus& b)
+            {
+                return a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
+            });
+    }
 
     //check if we tied the last hole in skins
     if (m_sharedData.scoreType == ScoreType::Skins

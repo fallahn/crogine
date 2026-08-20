@@ -57,7 +57,11 @@ namespace
 
     const std::array BlendStrings =
     {
-        "None", "Alpha", "Multiply", "Additive"
+        "Additive",
+        "Multiply",
+        "Alpha",
+        "Custom",
+        "None"
     };
 
     const std::array AttribStrings =

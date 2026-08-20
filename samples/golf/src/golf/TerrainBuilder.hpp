@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -33,6 +33,7 @@ source distribution.
 #include "Billboard.hpp"
 #include "Treeset.hpp"
 #include "ChunkVisSystem.hpp"
+#include "CollisionMesh.hpp"
 
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Entity.hpp>
@@ -102,6 +103,8 @@ public:
     void applyCrowdDensity();
 
     void applyGrassDensity();
+
+    void setDistanceToPin(float);
 
 private:
     static constexpr auto ChunkCount = ChunkVisSystem::RowCount * ChunkVisSystem::ColCount;
@@ -189,6 +192,7 @@ private:
     {
         cro::Mesh::Data* meshData = nullptr;
         std::int32_t positionUniform = -1;
+        std::int32_t radiusUniform = -1;
         std::int32_t alphaUniform = -1;
         std::uint32_t shader = 0;
         cro::Entity entity;
@@ -201,12 +205,8 @@ private:
 
     void threadFunc();
 
-
-    cro::MultiRenderTexture m_normalMap;
-    cro::Shader m_normalShader;
-    std::vector<float> m_normalMapValues;
-
-    void renderNormalMap(bool forceUpdate = false); //don't call this from thread!!
+    CollisionMesh m_collisionMesh;
+    void updateCollisionMesh(bool forceUpdate = false); //don't call this from thread!! (Uses OpenGL)
 
 
 #ifdef CRO_DEBUG_

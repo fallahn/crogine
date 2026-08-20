@@ -184,6 +184,18 @@
     <Filter Include="Header Files\deck intro">
       <UniqueIdentifier>{86a33369-00a9-4aed-a4ab-3c022c818a5d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\pinball">
+      <UniqueIdentifier>{e0015c84-0310-41a1-b754-146cb03c668b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\pinball">
+      <UniqueIdentifier>{2184b2a0-a4d1-462d-819f-d5f080c414ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\surreal">
+      <UniqueIdentifier>{4189e1e7-e9b0-43a6-bf0c-02560e43bb37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\surreal">
+      <UniqueIdentifier>{b6241161-2283-4deb-81ab-b06488c75864}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -371,6 +383,15 @@
     </ClCompile>
     <ClCompile Include="src\trackoverlay\pugixml.cpp">
       <Filter>Source Files\track overlay</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pinballgame\PinballGameState.cpp">
+      <Filter>Source Files\pinball</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pinballgame\PinballSystem.cpp">
+      <Filter>Source Files\pinball</Filter>
+    </ClCompile>
+    <ClCompile Include="src\surreal\SurrealState.cpp">
+      <Filter>Source Files\surreal</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -608,6 +629,18 @@
     <ClInclude Include="src\deckintro\DeckintroState.hpp">
       <Filter>Header Files\deck intro</Filter>
     </ClInclude>
+    <ClInclude Include="src\pinballgame\PinballGameState.hpp">
+      <Filter>Header Files\pinball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pinballgame\PinballSystem.hpp">
+      <Filter>Header Files\pinball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pinballgame\PinballConsts.hpp">
+      <Filter>Header Files\pinball</Filter>
+    </ClInclude>
+    <ClInclude Include="src\surreal\SurrealState.hpp">
+      <Filter>Header Files\surreal</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\voxels\Tables.inl">
@@ -657,6 +690,9 @@
     </None>
     <None Include="src\batcat\GridShader.inl">
       <Filter>Header Files\batcat</Filter>
+    </None>
+    <None Include="src\surreal\Shaders.inl">
+      <Filter>Header Files\surreal</Filter>
     </None>
   </ItemGroup>
 </Project>

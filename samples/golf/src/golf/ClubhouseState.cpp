@@ -2009,6 +2009,7 @@ void ClubhouseState::finaliseGameCreate()
 {
 #ifdef USE_GNS
     m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
+    m_sharedData.clientConnection.hostID = m_sharedData.clientConnection.netClient.getPeer().getID();
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
 #endif

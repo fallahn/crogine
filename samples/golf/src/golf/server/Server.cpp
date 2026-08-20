@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -138,8 +138,8 @@ bool Server::addLocalVoiceConnection(net::NetClient& client)
         LOG("Server not running (voice connection)", cro::Logger::Type::Error);
         return false;
     }
-    return m_voiceHost.addLocalConnection(client);
-#else
+//    return m_voiceHost.addLocalConnection(client);
+//#else
     return false;
 #endif
 }
@@ -170,10 +170,10 @@ void Server::run()
         return;
     }    
     
-    if (!m_voiceHost.start(ConstVal::VoicePort))
+    /*if (!m_voiceHost.start(ConstVal::VoicePort))
     {
         LogW << "Unable to start voice channel server" << std::endl;
-    }
+    }*/
 
     LOG("Server launched", cro::Logger::Type::Info);
 
@@ -195,7 +195,7 @@ void Server::run()
 
     while (m_running)
     {
-        m_voiceHost.update();
+        //m_voiceHost.update();
 
         while (!m_sharedData.messageBus.empty())
         {
@@ -214,7 +214,7 @@ void Server::run()
         }
 
         net::NetEvent evt;
-        while(m_sharedData.host.pollEvent(evt))
+        while (m_sharedData.host.pollEvent(evt))
         {
             m_currentState->netEvent(evt);
         
@@ -227,23 +227,90 @@ void Server::run()
                 {
                     m_pendingConnections.emplace_back().peer = evt.peer;
                     m_sharedData.host.sendPacket(evt.peer, PacketID::ClientVersion, std::uint16_t(m_gameMode), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    LogI << evt.peer.getID() << " connected" << std::endl;
                 }
                 else
                 {
-                    //send rejection packet
-                    m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::NotInLobby), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    m_sharedData.host.disconnectLater(evt.peer);
+#ifdef TRY_RECON
+                    //check dropped connections list and reinstate if not timed out
+                    const auto peerID = evt.peer.getID();
+                    if (auto res = std::find_if(m_pendingDisconnections.begin(), m_pendingDisconnections.end(), 
+                        [peerID](const PendingConnection& pc) { return pc.peer.getID() == peerID; });
+                        res != m_pendingDisconnections.end())
+                    {
+                        //the peer itself is probably not the same despite having had the same network ID
+                        //so we need to overwrite the existing peer in m_sharedData.clients for this connection
+                        if (auto c = std::find_if(m_sharedData.clients.begin(), m_sharedData.clients.end(), 
+                            [peerID](const sv::ClientConnection& cd) { return cd.peer.getID() == peerID; });
+                            c != m_sharedData.clients.end())
+                        {
+                            const auto oldPeer = c->peer;
+                            c->peer = evt.peer;
+
+                            //send the peer any missed broadcasts
+                            //TODO this should never be much more than ~256kb
+                            //after having measured (max buffer size) and usually
+                            //much smaller - however it might be worth setting
+                            //some limit and break this down into chunks
+                            std::int32_t sentCount = 0;
+                            for (const auto& bp : res->bufferedPackets)
+                            {
+                                if (bp.data[0] != PacketID::ActorUpdate)
+                                {
+                                    sentCount++;
+                                    m_sharedData.host.sendBufferedData(evt.peer, bp);
+                                }
+                            }
+                            LogI << "Sent " << sentCount << " buffered packets to reconnected client" << std::endl;
+
+                            //remove from pending disconnection list
+                            m_sharedData.host.unregisterPacketBuffer(oldPeer);
+                            m_pendingDisconnections.erase(res);
+
+                            LogI << "Reconnected client " << peerID << std::endl;
+                        }
+                        else
+                        {
+                            //already removed for some reason - so let the pending check time out
+                            LogE << peerID << ": peer not found in existing connections, failed to reconnect" << std::endl;
+                        }
+                    }
+                    else
+#endif
+                    {
+                        //send rejection packet
+                        m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::NotInLobby), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        m_sharedData.host.disconnectLater(evt.peer);
+                    }
                 }
             }
             else if (evt.type == net::NetEvent::ClientDisconnect)
             {
-                //remove from client list
-                removeClient(evt);
+#ifdef TRY_RECON
+                if (m_currentState->stateID() == sv::StateID::Lobby)
+                {
+                    //remove from client list
+                    removeClient(evt.peer);
+                }
+                else
+                {
+                    //quarantine the peer to wait and see if we reconnect
+                    //before removing the client
+                    auto& dc = m_pendingDisconnections.emplace_back();
+                    dc.peer = evt.peer;
+                    m_sharedData.host.registerPacketBuffer(dc.peer, &dc.bufferedPackets);
+                    LogW << evt.peer.getID() << ": peer lost connection, awaiting reconnection attempt..." << std::endl;
+                }
+                LogI << evt.peer.getID() << " disconnected" << std::endl;
+#else
+                removeClient(evt.peer);
+#endif
             }
             else if (evt.type == net::NetEvent::ClientPeerUpdated)
             {
                 //a remote client dropped out but managed to reconnect
                 //so we need to update the peer.
+                //TODO this currently isn't (and shouldn't) be an active event - see libgns
                 for (auto& client : m_sharedData.clients)
                 {
                     if (client.peer == evt.userData)
@@ -369,7 +436,7 @@ void Server::run()
         c = {};
     }
 
-    m_voiceHost.stop();
+    //m_voiceHost.stop();
     m_sharedData.host.stop();
 
     LOG("Server quit", cro::Logger::Type::Info);
@@ -377,7 +444,12 @@ void Server::run()
 
 void Server::checkPending()
 {
+    //pending connections
+#ifdef USE_GNS
+    for (auto& [peer, t, _] : m_pendingConnections)
+#else
     for (auto& [peer, t] : m_pendingConnections)
+#endif
     {
         if (t.elapsed().asSeconds() > PendingConnection::Timeout)
         {
@@ -393,6 +465,29 @@ void Server::checkPending()
         {
             return pc.connectionTime.elapsed().asSeconds() > PendingConnection::Timeout;        
         }), m_pendingConnections.end());
+
+
+    //pending disconnections
+#ifdef USE_GNS
+    for (auto& [peer, t, _] : m_pendingDisconnections)
+#else
+    for (auto& [peer, t] : m_pendingDisconnections)
+#endif
+    {
+        if (t.elapsed().asSeconds() > PendingConnection::Timeout)
+        {
+#ifdef TRY_RECON
+            m_sharedData.host.unregisterPacketBuffer(peer);
+#endif
+            removeClient(peer);
+        }
+    }
+
+    m_pendingDisconnections.erase(std::remove_if(m_pendingDisconnections.begin(), m_pendingDisconnections.end(),
+        [](const PendingConnection& pc)
+        {
+            return pc.connectionTime.elapsed().asSeconds() > PendingConnection::Timeout;
+        }), m_pendingDisconnections.end());
 }
 
 void Server::validatePeer(net::NetPeer& peer, std::uint8_t playerCount)
@@ -438,6 +533,7 @@ std::uint8_t Server::addClient(const net::NetPeer& peer, std::uint8_t playerCoun
 
                 m_sharedData.clients[i].connected = true;
                 m_sharedData.clients[i].peer = peer;
+                //m_sharedData.clients[i].peerID = peer.getID(); //if the peer becomes disconnected we keep a record of who they were
 
                 //broadcast to all connected clients
                 //so they can update lobby view.
@@ -460,19 +556,19 @@ std::uint8_t Server::addClient(const net::NetPeer& peer, std::uint8_t playerCoun
     return ConstVal::NullValue;
 }
 
-void Server::removeClient(const net::NetEvent& evt)
+void Server::removeClient(const net::NetPeer& peer)
 {
     //remove from pending connection in case client is quitting due to game mode mismatch
     m_pendingConnections.erase(std::remove_if(m_pendingConnections.begin(), m_pendingConnections.end(),
-        [&evt](const PendingConnection& pc)
+        [&peer](const PendingConnection& pc)
         {
-            return pc.peer == evt.peer;
+            return pc.peer == peer;
         }), m_pendingConnections.end());
 
     auto result = std::find_if(m_sharedData.clients.begin(), m_sharedData.clients.end(), 
-        [&evt](const sv::ClientConnection& c) 
+        [&peer](const sv::ClientConnection& c) 
         {
-            return c.peer == evt.peer;
+            return c.peer == peer;
         });
 
     if (result != m_sharedData.clients.end())

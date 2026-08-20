@@ -14,6 +14,9 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/CameraFollowSystem.cpp
   ${PROJECT_DIR}/golf/Career.cpp
   ${PROJECT_DIR}/golf/CareerState.cpp
+  ${PROJECT_DIR}/golf/ChipInDirector.cpp
+  ${PROJECT_DIR}/golf/ChipInState.cpp
+  ${PROJECT_DIR}/golf/ChipInStateUI.cpp
   ${PROJECT_DIR}/golf/ChunkVisSystem.cpp
   ${PROJECT_DIR}/golf/ClientCollisionSystem.cpp
   ${PROJECT_DIR}/golf/CloudSystem.cpp

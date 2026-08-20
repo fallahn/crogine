@@ -650,7 +650,6 @@ std::string League::getFilePath(const std::string& fn) const
         assertPath();
         break;
     case LeagueRoundID::RoundFour:
-
         basePath += "round_04/";
         assertPath();
         break;
@@ -662,10 +661,14 @@ std::string League::getFilePath(const std::string& fn) const
         basePath += "round_06/";
         assertPath();
         break;
-    /*case LeagueRoundID::Custom:
+    case LeagueRoundID::RoundSeven:
         basePath += "round_07/";
         assertPath();
-        break;*/
+        break;
+    case LeagueRoundID::RoundEight:
+        basePath += "round_08/";
+        assertPath();
+        break;
     }
 
     return basePath + fn;
@@ -871,7 +874,10 @@ void League::read()
         if (dbFile.file)
         {
             const auto dbSize = dbFile.file->seek(dbFile.file, 0, RW_SEEK_END);
-            if (dbSize != DBSize)
+            //TODO after adding more leagues existing DBs will be smaller
+            //than we expect.
+            if (dbSize > DBSize
+                || (dbSize % sizeof(m_holeScores)) != 0)
             {
                 //close the file and delete it
                 SDL_RWclose(dbFile.file);
@@ -885,7 +891,8 @@ void League::read()
             }
             else
             {
-                auto startPoint = m_id * sizeof(m_holeScores);
+                //read the scores starting at the offset of the current league
+                const auto startPoint = m_id * sizeof(m_holeScores);
                 dbFile.file->seek(dbFile.file, startPoint, RW_SEEK_SET);
                 SDL_RWread(dbFile.file, m_holeScores.data(), sizeof(m_holeScores), 1);
             }
@@ -987,7 +994,7 @@ void League::updateDB()
 
     //hmm SDL doesn't let us write to arbitrary positions in the file
     //so we have to open it, read the entire thing, update the local data
-    //then write the whole ting back again D:
+    //then write the whole thing back again D:
     std::vector<std::uint8_t> temp(DBSize);
     std::fill(temp.begin(), temp.end(), 0);
 
@@ -995,8 +1002,11 @@ void League::updateDB()
     dbFile.file = SDL_RWFromFile(dbPath.c_str(), "rb");
     if (dbFile.file)
     {
+        //TODO existing DBs will be smaller than we expect after adding
+        //DLC based leagues
         const auto dbSize = dbFile.file->seek(dbFile.file, 0, RW_SEEK_END);
-        if (dbSize != DBSize)
+        if (dbSize > DBSize
+            || dbSize % sizeof(m_holeScores) != 0)
         {
             //close the file and delete it
             SDL_RWclose(dbFile.file);
@@ -1009,7 +1019,9 @@ void League::updateDB()
         }
         else
         {
-            SDL_RWread(dbFile.file, temp.data(), DBSize, 1);
+            //make sure to read the ACTUAL size, we'll expand
+            //the file if we need to when writing
+            SDL_RWread(dbFile.file, temp.data(), dbSize, 1);
             SDL_RWclose(dbFile.file);
 
             dbFile.file = SDL_RWFromFile(dbPath.c_str(), "wb");

@@ -37,6 +37,11 @@ source distribution.
 #include <string>
 #include <array>
 
+//undef this to disable attempting reconnection
+#ifdef USE_GNS
+//#define TRY_RECON
+#endif
+
 namespace MessageType
 {
     enum

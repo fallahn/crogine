@@ -124,6 +124,12 @@
     <Filter Include="Source Files\golf\client\template">
       <UniqueIdentifier>{acecd210-c5f3-4d22-a37f-15d425376e15}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf\client\prop behaviours">
+      <UniqueIdentifier>{4338c920-dd20-4a49-8c48-a48b66b46719}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\client\states\old">
+      <UniqueIdentifier>{29256788-2816-4c81-9ffb-b8a7a32ba99c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -725,6 +731,21 @@
     </ClCompile>
     <ClCompile Include="src\golf\ProfileStateV2.cpp">
       <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ChipInState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ChipInStateUI.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ChipInDirector.cpp">
+      <Filter>Source Files\golf\client\directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\OptionsState.cpp">
+      <Filter>Source Files\golf\client\states\old</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ProfileState.cpp">
+      <Filter>Source Files\golf\client\states\old</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1510,6 +1531,27 @@
     </ClInclude>
     <ClInclude Include="src\golf\ProfileStateV2.hpp">
       <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BehaviourRabbit.hpp">
+      <Filter>Header Files\golf\client\prop behaviours</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BehaviourLorvis.hpp">
+      <Filter>Header Files\golf\client\prop behaviours</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ChipInState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PracticeCommon.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ChipInDirector.hpp">
+      <Filter>Header Files\golf\client\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BehaviourSeagull.hpp">
+      <Filter>Header Files\golf\client\prop behaviours</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\GroupID.hpp">
+      <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

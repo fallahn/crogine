@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -376,3 +376,40 @@ static inline const std::string FXAA = R"(
         }
         return vec4(rgbB, 1.0);
     })";
+
+//#include NOISE_3D
+static inline const std::string Noise3D =
+R"(
+//3D Gradient noise from: https://www.shadertoy.com/view/Xsl3Dl
+//The MIT License
+//Copyright 2013 Inigo Quilez
+
+vec3 hash(vec3 p)
+{
+    p = vec3(dot(p,vec3(127.1,311.7, 74.7)),
+                dot(p,vec3(269.5,183.3,246.1)),
+                dot(p,vec3(113.5,271.9,124.6)));
+
+    return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+}
+
+float noise(vec3 p)
+{
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    
+    vec3 u = f * f * (3.0 - 2.0 * f);
+
+    return mix(mix(mix(dot(hash(i + vec3(0.0, 0.0, 0.0)), f - vec3(0.0, 0.0, 0.0)), 
+                        dot(hash(i + vec3(1.0, 0.0, 0.0)), f - vec3(1.0, 0.0, 0.0)), u.x),
+                    mix(dot(hash(i + vec3(0.0, 1.0, 0.0)), f - vec3(0.0, 1.0, 0.0)), 
+                        dot(hash(i + vec3(1.0, 1.0, 0.0)), f - vec3(1.0, 1.0, 0.0)), u.x), u.y),
+                mix(mix(dot(hash(i + vec3(0.0, 0.0, 1.0)), f - vec3(0.0, 0.0, 1.0)), 
+                        dot(hash(i + vec3(1.0, 0.0, 1.0)), f - vec3(1.0, 0.0, 1.0)), u.x),
+                    mix(dot(hash(i + vec3(0.0, 1.0, 1.0)), f - vec3(0.0, 1.0, 1.0)), 
+                        dot(hash(i + vec3(1.0, 1.0, 1.0)), f - vec3(1.0, 1.0, 1.0)), u.x), u.y), u.z );
+}
+
+const float Threshold = 8.0;
+const float Exposure = 100.0;
+)";

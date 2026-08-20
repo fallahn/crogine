@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -83,6 +83,7 @@ PracticeState::PracticeState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_viewScale (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
+    m_scene.setTitle("Practice State");
 
     buildScene();
 }
@@ -386,19 +387,31 @@ void PracticeState::buildScene()
 
     //driving range
     entity = createItem(position, "Driving Range", menuEntity);
+    entity.getComponent<cro::Text>().setFillColour(DEMO_TEXT_COLOUR);
+#ifdef DEMO
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 0;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 0;
+#endif
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
                 if (activated(evt))
                 {
+#ifndef DEMO
                     requestStackClear();
                     requestStackPush(StateID::DrivingRange);
+#endif //
                 }
             });
     position.y -= ItemHeight;
 
 
     entity = createItem(position, "Clubhouse", menuEntity);
+    entity.getComponent<cro::Text>().setFillColour(DEMO_TEXT_COLOUR);
+#ifdef DEMO
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 0;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 0;
+#endif
     //if (Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
     {
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -406,6 +419,7 @@ void PracticeState::buildScene()
                 {
                     if (activated(evt))
                     {
+#ifndef DEMO
                         //also used as table index so reset this in case
                         //the current value is greater than the number of tables...
                         m_sharedData.courseIndex = 0;
@@ -414,6 +428,7 @@ void PracticeState::buildScene()
                         requestStackPush(StateID::Clubhouse);
 
                         Achievements::awardAchievement(AchievementStrings[AchievementID::Socialiser]);
+#endif
                     }
                 });
     }
@@ -442,6 +457,7 @@ void PracticeState::buildScene()
     //}
     position.y -= ItemHeight;
 
+#ifndef DEMO
     //course editor
     entity = createItem(position, "Course Remixer", menuEntity);
     if (Achievements::getAchievement(AchievementStrings[AchievementID::GrandTour])->achieved)
@@ -495,7 +511,7 @@ void PracticeState::buildScene()
 
     position.y -= 3.f;
     helpText.getComponent<cro::Transform>().setPosition(position);
-
+#endif
 
     //back button
     entity = createItem(glm::vec2(0.f, -28.f), "Back", menuEntity);
@@ -538,10 +554,8 @@ void PracticeState::buildScene()
         m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
-    m_scene.setActiveCamera(entity);
+    entity = m_scene.getActiveCamera();
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(entity.getComponent<cro::Camera>());
 }
 

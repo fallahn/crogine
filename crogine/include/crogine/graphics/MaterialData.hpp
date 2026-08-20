@@ -124,11 +124,12 @@ namespace cro
         
         enum class BlendMode
         {
-            None,
-            Alpha,
-            Multiply,
             Additive,
-            Custom
+            Multiply,
+            Alpha,
+            Custom,
+            None,
+            //note this is also used in sorting so order is important
         };
 
         struct CRO_EXPORT_API Property final
@@ -294,6 +295,12 @@ namespace cro
             bool doubleSided = false;
 
             /*!
+            \brief Set this to true and all meshes with this material
+            are completely ignored when rendering
+            */
+            bool null = false;
+
+            /*!
             \brief Add up to 8 custom settings
             \param setting GLenum to be used with glEnable/glDisable
             Use sparingly - each of these are enabled before rendering
@@ -345,6 +352,7 @@ namespace cro
                 std::int32_t writeDepthMask = 0; //! < GLboolean
                 std::uint32_t equation = 0; //! < GLenum passed to glBlendEquation()
                 std::array<std::uint32_t, 2u> blendFunc = { 0,0 }; //! < GLenum pair passed to glBlendFunc()
+                std::vector<std::uint32_t> disableProperties; //! < list of GLenum passed to glDisable()
                 std::vector<std::uint32_t> enableProperties; //! < list of GLenum passed to glEnable()
             }blendData;
 

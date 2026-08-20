@@ -51,11 +51,9 @@ struct MinimapZoom final
     glm::vec2 textureSize = glm::vec2(1.f);
 
     cro::Entity activeAnimation;
-    //cro::Entity camera2D; //TODO remove this once we switch to 3D
 
-    void updateShader();
+    void updateCamera();
     glm::vec2 toMapCoords(glm::vec3 worldPos) const;
-
 
 
     //updated settings for 3D camera

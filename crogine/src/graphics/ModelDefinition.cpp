@@ -799,6 +799,12 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                     if (tag.getName() == "tag")
                     {
                         m_materialTags[m_materialCount].push_back(tag.getValue<std::string>());
+
+                        if (cro::Util::String::toLower(tag.getValue<std::string>()) == "null")
+                        {
+                            //sub meshes with this material aren't drawn
+                            material.null = true;
+                        }
                     }
                 }
             }

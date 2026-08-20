@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/ecs/System.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 #include <vector>
 
@@ -49,7 +50,7 @@ namespace cro
     systems, so that the values are updated in the correct order.
     */
 
-    class CRO_EXPORT_API CameraSystem final : public cro::System
+    class CRO_EXPORT_API CameraSystem final : public cro::System, public cro::GuiClient
     {
     public:
         explicit CameraSystem(cro::MessageBus&);
@@ -63,6 +64,8 @@ namespace cro
 
         std::size_t m_nextDrawlistIndex;
         std::vector<std::size_t> m_freeDrawlistIndices;
+
+        bool m_updatedThisFrame; //debug output
 
         void resizeGBuffer(Entity);
         void onEntityAdded(Entity) override;

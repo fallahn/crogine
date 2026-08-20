@@ -45,7 +45,7 @@ struct CareerRound final
 
 struct CareerLeague final
 {
-    static constexpr std::uint32_t MaxRounds = 6;
+    static constexpr std::uint32_t MaxRounds = 7;
     std::array<CareerRound, MaxRounds> playlist = {};
     std::int32_t leagueID = 0;
     //TODO apply some sort of clubset limit?
@@ -62,8 +62,7 @@ public:
     Career& operator = (const Career&) = delete;
     Career& operator = (Career&&) = delete;
 
-    //static constexpr std::uint32_t MaxLeagues = 7;
-    static constexpr std::uint32_t MaxLeagues = 6;
+    static constexpr std::uint32_t MaxLeagues = 8;
 
     static Career& instance(const SharedStateData& sd)
     {

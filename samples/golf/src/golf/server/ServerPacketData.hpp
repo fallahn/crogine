@@ -90,6 +90,7 @@ struct PlayerStatus final : public ActivePlayer
     bool targetHit = false;
     bool eliminated = false;
     bool readyQuit = false; //used at round end to see if all players want to skip scores
+    bool isCPU = false;
 };
 
 struct TeamData final

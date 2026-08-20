@@ -96,38 +96,7 @@ namespace
 
         const vec3 Up = vec3(0.0, 1.0, 0.0);
 
-        //3D Gradient noise from: https://www.shadertoy.com/view/Xsl3Dl
-        //The MIT License
-        //Copyright 2013 Inigo Quilez
-
-        vec3 hash(vec3 p)
-        {
-            p = vec3(dot(p,vec3(127.1,311.7, 74.7)),
-                     dot(p,vec3(269.5,183.3,246.1)),
-                     dot(p,vec3(113.5,271.9,124.6)));
-
-            return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
-        }
-
-        float noise(vec3 p)
-        {
-            vec3 i = floor(p);
-            vec3 f = fract(p);
-    
-            vec3 u = f * f * (3.0 - 2.0 * f);
-
-            return mix(mix(mix(dot(hash(i + vec3(0.0, 0.0, 0.0)), f - vec3(0.0, 0.0, 0.0)), 
-                               dot(hash(i + vec3(1.0, 0.0, 0.0)), f - vec3(1.0, 0.0, 0.0)), u.x),
-                           mix(dot(hash(i + vec3(0.0, 1.0, 0.0)), f - vec3(0.0, 1.0, 0.0)), 
-                               dot(hash(i + vec3(1.0, 1.0, 0.0)), f - vec3(1.0, 1.0, 0.0)), u.x), u.y),
-                       mix(mix(dot(hash(i + vec3(0.0, 0.0, 1.0)), f - vec3(0.0, 0.0, 1.0)), 
-                               dot(hash(i + vec3(1.0, 0.0, 1.0)), f - vec3(1.0, 0.0, 1.0)), u.x),
-                           mix(dot(hash(i + vec3(0.0, 1.0, 1.0)), f - vec3(0.0, 1.0, 1.0)), 
-                               dot(hash(i + vec3(1.0, 1.0, 1.0)), f - vec3(1.0, 1.0, 1.0)), u.x), u.y), u.z );
-        }
-
-        const float Threshold = 8.0;
-        const float Exposure = 100.0;
+#include NOISE_3D
 
         void main()
         {
@@ -152,8 +121,11 @@ namespace
 
         uniform samplerCube u_skybox;
         uniform vec3 u_skyColour;
+        uniform float u_starsAmount = 0.0;
 
         VARYING_IN vec3 v_texCoords;
+
+#include NOISE_3D
 
         void main()
         {
@@ -164,7 +136,11 @@ namespace
             colour = colour / (colour + vec3(1.0));
             colour = pow(colour, vec3(1.0/2.2));
 #endif
-            FRAG_OUT = vec4(colour * u_skyColour, 1.0);
+            vec3 viewDirection = normalize(v_texCoords);
+            float stars = pow(clamp(noise(viewDirection * 200.0), 0.0f, 1.0f), Threshold) * Exposure;
+            stars *= mix(0.4, 1.4, noise(viewDirection * 100.0));
+
+            FRAG_OUT = vec4(mix(colour * u_skyColour, vec3(1.0), stars * u_starsAmount), 1.0);
         })";
 
     const float DefaultFOV = 35.f * Util::Const::degToRad;
@@ -205,7 +181,10 @@ Scene::Scene(MessageBus& mb, std::size_t initialPoolSize, std::uint32_t infoFlag
     defaultCamera.addComponent<Transform>();
     defaultCamera.addComponent<Camera>().resizeCallback = std::bind(&updateView, std::placeholders::_1);
     defaultCamera.addComponent<AudioListener>();
+    defaultCamera.setLabel("Default Camera");
     updateView(defaultCamera.getComponent<Camera>());
+
+    std::fill(m_skyboxShaders.begin(), m_skyboxShaders.end(), nullptr);
 
     m_defaultCamera = defaultCamera;
     m_activeCamera = m_defaultCamera;
@@ -290,8 +269,18 @@ void Scene::enableSkybox()
 {
     if (!m_skybox.vbo)
     {
-        if (m_skyboxShaders[SkyboxType::Coloured].getGLHandle() ||
-            m_skyboxShaders[SkyboxType::Coloured].loadFromString(skyboxVertex, skyboxFrag))
+        if (!m_shaderResource)
+        {
+            m_shaderResource = std::make_unique<ShaderResource>();
+        }
+
+        if (!m_skyboxShaders[SkyboxType::Coloured])
+        {
+            m_shaderResource->loadFromString(SkyboxType::Coloured, skyboxVertex, skyboxFrag);
+            m_skyboxShaders[SkyboxType::Coloured] = &m_shaderResource->get(SkyboxType::Coloured);
+        }
+
+        if (m_skyboxShaders[SkyboxType::Coloured]->getGLHandle())
         {
             //only using positions - remember we're looking from
             //the inside so wind the verts accordingly...
@@ -349,7 +338,7 @@ void Scene::enableSkybox()
             glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size(), verts.data(), GL_STATIC_DRAW));
 
 #ifdef PLATFORM_DESKTOP
-            const auto& attribs = m_skyboxShaders[SkyboxType::Coloured].getAttribMap();
+            const auto& attribs = m_skyboxShaders[SkyboxType::Coloured]->getAttribMap();
             glCheck(glEnableVertexAttribArray(attribs[0]));
             glCheck(glVertexAttribPointer(attribs[0], 3, GL_BYTE, GL_TRUE, 0, reinterpret_cast<void*>(static_cast<intptr_t>(0))));
             glCheck(glEnableVertexAttribArray(0));
@@ -358,15 +347,15 @@ void Scene::enableSkybox()
 #endif
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-            m_skybox.setShader(m_skyboxShaders[Coloured]);
+            m_skybox.setShader(*m_skyboxShaders[Coloured]);
             setSkyboxColours(cro::Colour::Blue, cro::Colour::Green, cro::Colour::Red);
 
             m_shaderIndex = SkyboxType::Coloured;
 
-            m_skyColourUniforms[0] = m_skyboxShaders[SkyboxType::Coloured].getUniformID("u_darkColour");
-            m_skyColourUniforms[1] = m_skyboxShaders[SkyboxType::Coloured].getUniformID("u_midColour");
-            m_skyColourUniforms[2] = m_skyboxShaders[SkyboxType::Coloured].getUniformID("u_lightColour");
-            m_starsUniform = m_skyboxShaders[SkyboxType::Coloured].getUniformID("u_starsAmount");
+            m_skyColourUniforms[0] = m_skyboxShaders[SkyboxType::Coloured]->getUniformID("u_darkColour");
+            m_skyColourUniforms[1] = m_skyboxShaders[SkyboxType::Coloured]->getUniformID("u_midColour");
+            m_skyColourUniforms[2] = m_skyboxShaders[SkyboxType::Coloured]->getUniformID("u_lightColour");
+            m_starsUniform = m_skyboxShaders[SkyboxType::Coloured]->getUniformID("u_starsAmount");
         }
         else
         {
@@ -392,17 +381,24 @@ void Scene::setCubemap(const std::string& path)
     enableSkybox();
 
     //create shader if it doesn't exist
-    if (m_skyboxShaders[SkyboxType::Cubemap].getGLHandle() == 0)
+    if (!m_skyboxShaders[SkyboxType::Cubemap])
     {
-        if (!m_skyboxShaders[SkyboxType::Cubemap].loadFromString(skyboxVertex, skyboxFragTextured))
-        {
-            LogE << "Failed creating cubemap shader" << std::endl;
-            return;
-        }
+        m_shaderResource->loadFromString(SkyboxType::Cubemap, skyboxVertex, skyboxFragTextured);
+        m_skyboxShaders[SkyboxType::Cubemap] = &m_shaderResource->get(SkyboxType::Cubemap);
     }
 
-    m_skybox.setShader(m_skyboxShaders[Cubemap]);
+    //if (m_skyboxShaders[SkyboxType::Cubemap]->getGLHandle() == 0)
+    //{
+    //    if (!m_skyboxShaders[SkyboxType::Cubemap].loadFromString(skyboxVertex, skyboxFragTextured))
+    //    {
+    //        LogE << "Failed creating cubemap shader" << std::endl;
+    //        return;
+    //    }
+    //}
+
+    m_skybox.setShader(*m_skyboxShaders[SkyboxType::Cubemap]);
     m_shaderIndex = SkyboxType::Cubemap;
+    m_starsUniform = m_skyboxShaders[SkyboxType::Cubemap]->getUniformID("u_starsAmount");
 
     m_skybox.texture = m_skyboxCubemap.getGLHandle();
     m_activeSkyboxTexture = m_skybox.texture;
@@ -412,13 +408,14 @@ void Scene::setCubemap(const EnvironmentMap& map)
 {
     enableSkybox();
 
-    if (m_skyboxShaders[SkyboxType::Environment].getGLHandle() == 0)
+    if (!m_skyboxShaders[SkyboxType::Environment])
     {
-        m_skyboxShaders[SkyboxType::Environment].loadFromString(skyboxVertex, skyboxFragTextured, "#define GAMMA_CORRECT\n");
+        m_shaderResource->loadFromString(SkyboxType::Environment, skyboxVertex, skyboxFragTextured, "#define GAMMA_CORRECT\n");
+        m_skyboxShaders[SkyboxType::Environment] = &m_shaderResource->get(SkyboxType::Environment);
     }
 
     m_activeSkyboxTexture = map.m_textures[0];
-    m_skybox.setShader(m_skyboxShaders[Environment]);
+    m_skybox.setShader(*m_skyboxShaders[Environment]);
     m_shaderIndex = SkyboxType::Environment;
 
     m_skyboxCubemap = {};
@@ -557,9 +554,9 @@ void Scene::applySkyboxColours()
 {
     const auto& [dark, mid, light] = m_skybox.colours;
 
-    if (m_skyboxShaders[SkyboxType::Coloured].getGLHandle())
+    if (m_skyboxShaders[SkyboxType::Coloured])
     {
-        glCheck(glUseProgram(m_skyboxShaders[SkyboxType::Coloured].getGLHandle()));
+        glCheck(glUseProgram(m_skyboxShaders[SkyboxType::Coloured]->getGLHandle()));
         glCheck(glUniform3f(m_skyColourUniforms[0], dark.getRed(), dark.getGreen(), dark.getBlue()));
         glCheck(glUniform3f(m_skyColourUniforms[1], mid.getRed(), mid.getGreen(), mid.getBlue()));
         glCheck(glUniform3f(m_skyColourUniforms[2], light.getRed(), light.getGreen(), light.getBlue()));
@@ -569,9 +566,9 @@ void Scene::applySkyboxColours()
 
 void Scene::applyStars()
 {
-    if (m_skyboxShaders[SkyboxType::Coloured].getGLHandle())
+    if (m_skyboxShaders[m_shaderIndex]->getGLHandle())
     {
-        glCheck(glUseProgram(m_skyboxShaders[SkyboxType::Coloured].getGLHandle()));
+        glCheck(glUseProgram(m_skyboxShaders[m_shaderIndex]->getGLHandle()));
         glCheck(glUniform1f(m_starsUniform, m_skybox.starsAmount));
         //glCheck(glUseProgram(0));
     }
@@ -590,72 +587,10 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
     for (auto i = 0u; i < cameraCount; ++i)
     {
         const auto& cam = cameraList[i].getComponent<Camera>();
-        const auto& pass = cam.getActivePass();
 
         auto rect = rt.getViewport(cam.viewport);
         glViewport(rect.left, rect.bottom, rect.width, rect.height);
 
-        //TODO the skybox pass ought to be placed between opaque
-        //and transparent passes
-
-        //draw the skybox if enabled
-        if (m_skybox.vbo)
-        {
-            //change depth function so depth test passes when values are equal to depth buffer's content
-            glCheck(glDepthFunc(GL_LEQUAL));
-            glCheck(glEnable(GL_DEPTH_TEST));
-            glCheck(glEnable(GL_CULL_FACE));
-            glCheck(glCullFace(pass.getCullFace()));
-
-            //remove translation from the view matrix
-            auto view = glm::mat4(glm::mat3(pass.viewMatrix)) * m_skybox.modelMatrix;
-
-            glCheck(glUseProgram(m_skyboxShaders[m_shaderIndex].getGLHandle()));
-            glCheck(glUniformMatrix4fv(m_skybox.modelViewUniform, 1, GL_FALSE, glm::value_ptr(view)));
-            glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
-
-            //bind the texture if it exists
-            if (m_activeSkyboxTexture)
-            {
-                glCheck(glActiveTexture(GL_TEXTURE0));
-                glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_activeSkyboxTexture));
-                glCheck(glUniform1i(m_skybox.textureUniform, 0));
-            }
-
-            //set sun colour if shader expects it
-            if (m_skybox.skyColourUniform != -1) //this would be -1 if it doesn't exist, not 0
-            {
-                auto c = m_sunlight.getComponent<Sunlight>().getColour();
-                glCheck(glUniform3f(m_skybox.skyColourUniform, c.getRed(), c.getGreen(), c.getBlue()));
-            }
-
-            //draw cube
-#ifdef PLATFORM_DESKTOP
-            glCheck(glBindVertexArray(m_skybox.vao));
-            glCheck(glDrawArrays(GL_TRIANGLES, 0, 36));
-            glCheck(glBindVertexArray(0));
-#else
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
-
-            const auto& attribs = m_skyboxShader.getAttribMap();
-            glCheck(glEnableVertexAttribArray(attribs[0]));
-            glCheck(glVertexAttribPointer(attribs[0], 3, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(3 * sizeof(float)), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
-
-            glCheck(glDrawArrays(GL_TRIANGLES, 0, 36));
-
-            glCheck(glDisableVertexAttribArray(attribs[0]));
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-#endif //PLATFORM
-            glCheck(glUseProgram(0));
-
-            glDisable(GL_DEPTH_TEST);
-            glCheck(glDepthFunc(GL_LESS));
-        }
-
-        //ideally we want to do this before the skybox to reduce overdraw
-        //but this breaks transparent objects... opaque and transparent
-        //passes should be separated, but this only affects the model renderer
-        //and not other systems.... hum. Ideas on a postcard please.
         for (auto r : m_renderables)
         {
             r->render(cameraList[i], rt);
@@ -664,6 +599,69 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
 
     //restore old view port
     glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
+}
+
+void Scene::renderSkybox(const Camera& cam)
+{
+    //this is passed to renderables via std::bind
+    //and not called directly from here so that
+    //the skybox can be inserted between opaque/blended passes.
+
+    //draw the skybox if enabled
+    if (m_skybox.vbo)
+    {
+        const auto& pass = cam.getActivePass();
+
+        //change depth function so depth test passes when values are equal to depth buffer's content
+        glCheck(glDepthFunc(GL_LEQUAL));
+        glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glEnable(GL_CULL_FACE));
+        glCheck(glCullFace(pass.getCullFace()));
+
+        //remove translation from the view matrix
+        auto view = glm::mat4(glm::mat3(pass.viewMatrix)) * m_skybox.modelMatrix;
+
+        glCheck(glUseProgram(m_skyboxShaders[m_shaderIndex]->getGLHandle()));
+        glCheck(glUniformMatrix4fv(m_skybox.modelViewUniform, 1, GL_FALSE, glm::value_ptr(view)));
+        glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
+
+        //bind the texture if it exists
+        if (m_activeSkyboxTexture)
+        {
+            glCheck(glActiveTexture(GL_TEXTURE0));
+            glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_activeSkyboxTexture));
+            glCheck(glUniform1i(m_skybox.textureUniform, 0));
+        }
+
+        //set sun colour if shader expects it
+        if (m_skybox.skyColourUniform != -1) //this would be -1 if it doesn't exist, not 0
+        {
+            auto c = m_sunlight.getComponent<Sunlight>().getColour();
+            glCheck(glUniform3f(m_skybox.skyColourUniform, c.getRed(), c.getGreen(), c.getBlue()));
+        }
+
+        //draw cube
+#ifdef PLATFORM_DESKTOP
+        glCheck(glBindVertexArray(m_skybox.vao));
+        glCheck(glDrawArrays(GL_TRIANGLES, 0, 36));
+        glCheck(glBindVertexArray(0));
+#else
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
+
+        const auto& attribs = m_skyboxShader.getAttribMap();
+        glCheck(glEnableVertexAttribArray(attribs[0]));
+        glCheck(glVertexAttribPointer(attribs[0], 3, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(3 * sizeof(float)), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
+
+        glCheck(glDrawArrays(GL_TRIANGLES, 0, 36));
+
+        glCheck(glDisableVertexAttribArray(attribs[0]));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+#endif //PLATFORM
+        glCheck(glUseProgram(0));
+
+        glDisable(GL_DEPTH_TEST);
+        glCheck(glDepthFunc(GL_LESS));
+    }
 }
 
 void Scene::destroySkybox()

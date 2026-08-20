@@ -182,7 +182,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "another_level",
     "tag",
     "party_planner",
-    "what_a_banger"
+    "what_a_banger",
+    "pesky_kids"
 };
 
 //appears on the notification
@@ -323,7 +324,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Another Level",
     "Tag!",
     "Party Planner",
-    "What A Banger!"
+    "What A Banger!",
+    "Pesky Kids"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -443,7 +445,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Use at least one Mulligan in Career Mode", false),
     std::make_pair("Use the far wall on hole 15, course 12 to stop the ball going out of bounds", false),
     std::make_pair("Win a round of Nearest The Pin+ with at least 4 players", false),
-    std::make_pair("Scrub 40 balls in a single round of Scrub!", false),
+    std::make_pair("Scrub 35 balls in a single round of Scrub!", false),
     std::make_pair("Play a random 9 holes in Quick Play", false),
     std::make_pair("Come first in a Quick Play round using Casual clubs", false),
     std::make_pair("Come first in a Quick Play round using Regular clubs", false),
@@ -465,6 +467,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Play a Teams round in Freeplay", false),
     std::make_pair("Create a Custom Tournament", false),
     std::make_pair("Get a Beef Stick from a tee shot", false),
+    std::make_pair("Ruin the groundskeeper's tomatoes", true),
 };
 
 //assuming trophies load correctly they are:
@@ -644,6 +647,7 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*134*/TrophyID::BronzeCup,
     /*135*/TrophyID::BronzeCup,
     /*136*/TrophyID::GoldFigure,
+    /*137*/TrophyID::Platinum,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -143,7 +143,9 @@ void GolfState::createCameras()
                     ctx.samples = samples;
                     ctx.width = static_cast<std::uint32_t>(texSize.x);
                     ctx.height = static_cast<std::uint32_t>(texSize.y);
-
+#ifdef STENCIL_SKYBOX
+                    ctx.stencilBuffer = true;
+#endif
                     //ctx.floatingPointStorage = true;
 
                     m_sharedData.antialias =
@@ -215,6 +217,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Callback>().setUserData<float>(DefaultZoomSpeed);
 
     m_cameras[CameraID::Player] = camEnt;
+    camEnt.setLabel("Player Camera");
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
     cam.setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
@@ -281,6 +284,7 @@ void GolfState::createCameras()
     //this holds the water plane ent when active
     camEnt.addComponent<TargetInfo>();
     m_cameras[CameraID::Sky] = camEnt;
+    camEnt.setLabel("Sky Camera");
 
 
     //same as sky cam, but controlled by the active player
@@ -319,7 +323,7 @@ void GolfState::createCameras()
     //this holds the water plane ent when active
     camEnt.addComponent<TargetInfo>();
     m_cameras[CameraID::Drone] = camEnt;
-
+    camEnt.setLabel("Drone Camera");
 
 
     //and a green camera
@@ -351,6 +355,7 @@ void GolfState::createCameras()
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     m_cameras[CameraID::Green] = camEnt;
+    camEnt.setLabel("Green Camera");
 
     //bystander cam (when remote or CPU player is swinging)
     camEnt = m_gameScene.createEntity();
@@ -399,7 +404,7 @@ void GolfState::createCameras()
             }
         };
     m_cameras[CameraID::Bystander] = camEnt;
-
+    camEnt.setLabel("Bystander Camera");
 
     //idle cam when player AFKs
     camEnt = m_gameScene.createEntity();
@@ -451,6 +456,7 @@ void GolfState::createCameras()
         };
     camEnt.getComponent<cro::Camera>().updateMatrices(camEnt.getComponent<cro::Transform>());
     m_cameras[CameraID::Idle] = camEnt;
+    camEnt.setLabel("Idle Camera");
 
     //fly-by cam for transition
     camEnt = m_gameScene.createEntity();
@@ -469,7 +475,7 @@ void GolfState::createCameras()
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     m_cameras[CameraID::Transition] = camEnt;
-
+    camEnt.setLabel("Transition Camera");
 
     //free cam
     camEnt = m_gameScene.createEntity();
@@ -502,6 +508,7 @@ void GolfState::createCameras()
     camEnt.addComponent<FpsCamera>();
     camEnt.addComponent<TargetInfo>();
     m_freeCam = camEnt;
+    camEnt.setLabel("Free Camera");
 
 #ifdef PATH_TRACING
     initBallDebug();
@@ -578,17 +585,20 @@ void GolfState::createCameras()
             }
         };
     m_flightCam = camEnt;
-
+    camEnt.setLabel("Flight Camera");
 
 
     //set up the skybox cameras so they can be updated with the relative active cams
     m_skyCameras[SkyCam::Main] = m_skyScene.getActiveCamera();
     m_skyCameras[SkyCam::Main].getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    m_skyCameras[SkyCam::Main].setLabel("Skybox Camera");
     m_skyCameras[SkyCam::Flight] = m_skyScene.createEntity();
     m_skyCameras[SkyCam::Flight].addComponent<cro::Transform>();
+    m_skyCameras[SkyCam::Flight].setLabel("Skybox Flight Camera");
     auto& skyCam = m_skyCameras[SkyCam::Flight].addComponent<cro::Camera>();
     skyCam.setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, 0.1f, 14.f);
     skyCam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    skyCam.active = false;
 }
 
 void GolfState::setGreenCamPosition()
@@ -771,7 +781,7 @@ void GolfState::updateCameraHeight(float movement)
         const auto groundHeight = std::max(m_collisionMesh.getTerrain(pos).height, WaterLevel);
 
         auto origin = tx.getOrigin();
-        origin.y = std::clamp(origin.y - movement, -CameraPuttHeight / 2.f, (pos.y - groundHeight) * 0.5f);
+        origin.y = std::clamp(origin.y - movement, -CameraPuttHeight / 1.5f/*2.f*/, (pos.y - groundHeight) * 0.5f);
         tx.setOrigin(origin);
 
         /*const auto camPos = tx.getPosition();
@@ -886,8 +896,9 @@ void GolfState::toggleFreeCam()
                 m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
 
                 //unhide UI
+#ifdef AUTO_UI
                 setUIHidden(false);
-
+#endif
                 //and stroke indicator
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::StrokeIndicator;
@@ -1328,7 +1339,7 @@ void GolfState::togglePuttingView(bool putt)
         };
 }
 
-void GolfState::setCameraTarget(const ActivePlayer& playerData)
+void GolfState::setCameraTarget(const ActivePlayer& playerData, bool usePlayerLookAt)
 {
     auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
     if (playerData.terrain == TerrainID::Green)
@@ -1345,14 +1356,27 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
         targetInfo.targetHeight = CameraStrokeHeight;
         targetInfo.targetOffset = CameraStrokeOffset;
     }
+    targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
+
+    if (usePlayerLookAt)
+    {
+        const auto getPlayerDir = 
+            [this, &playerData]()
+        {
+            glm::vec3 impulse(1.f, 0.f, 0.f);
+            const auto rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, m_inputParser.getYaw(), cro::Transform::Y_AXIS);
+            return (glm::toMat3(rotation) * impulse) + playerData.position;
+        };
+        targetInfo.targetLookAt = getPlayerDir();
+        return;
+    }
 
     //if we have a sub-target see if that should be active
-    auto activeTarget = findTargetPos(playerData.position);
-
-
+    const auto activeTarget = findTargetPos(playerData.position);
     const auto targetDir = activeTarget - playerData.position;
     const auto pinDir = m_holeData[m_currentHole].pin - playerData.position;
-    targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
+
+
 
     //always look at the target in mult-target mode and target not yet hit
     if (m_sharedData.scoreType == ScoreType::MultiTarget
@@ -1362,8 +1386,15 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
     }
     else
     {
+        //always use the target when we're at the tee and the hole is closer to the
+        //target because of a U-bend
+        if (glm::length2(m_holeData[m_currentHole].tee - playerData.position) < 1
+            && glm::length2(m_holeData[m_currentHole].pin - playerData.position) < glm::length2(activeTarget - playerData.position))
+        {
+            targetInfo.targetLookAt = activeTarget;
+        }
         //if both the pin and the target are in front of the player
-        if (glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)) > 0.4)
+        else if (glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)) > 0.4)
         {
             //set the target depending on how close it is
             const auto pinDist = glm::length2(pinDir);
@@ -1411,6 +1442,52 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
             targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
         }
     }
+}
+
+void GolfState::rotateCameraToTarget()
+{
+    auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
+    targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
+    targetInfo.startHeight = targetInfo.targetHeight;
+    targetInfo.startOffset = targetInfo.targetOffset;
+
+    const auto currRotation = m_camRotation;
+    const auto targetDir = targetInfo.currentLookAt - m_currentPlayer.position;
+    m_camRotation = std::atan2(-targetDir.z, targetDir.x);
+
+    const auto targRotation = m_camRotation;
+    const auto startRotation = currRotation;
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(currRotation);
+    entity.getComponent<cro::Callback>().function =
+        [&, targRotation, startRotation](cro::Entity e, float dt)
+        {
+            auto& tx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
+            auto& camRotation = e.getComponent<cro::Callback>().getUserData<float>();
+            const float rotation = cro::Util::Maths::shortestRotation(camRotation, targRotation) * (dt * 10.f);
+
+            auto offset = m_currentPlayer.position - tx.getWorldPosition();
+            tx.move(offset);
+
+            const auto axis = glm::inverse(tx.getRotation()) * cro::Transform::Y_AXIS;
+            tx.rotate(axis, rotation);
+
+            offset = glm::rotateY(offset, rotation);
+            tx.move(-offset);
+
+            camRotation += rotation;
+
+            //LogI << targRotation - camRotation << std::endl;
+            if (std::abs(targRotation - camRotation) < 0.0001f)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+
+                m_camRotation = camRotation;
+            }
+        };
 }
 
 void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPlayer)
@@ -1741,7 +1818,12 @@ void GolfState::startFlyBy()
     //static for lambda capture
     static constexpr float MoveSpeed = 50.f; //metres per sec
     static constexpr float MaxHoleDistance = 275.f; //this scales the move speed based on the tee-pin distance
-    float SpeedMultiplier = (0.25f + ((m_holeData[m_currentHole].distanceToPin / MaxHoleDistance) * 0.75f));
+
+    //as this is a total move across the hole we need to include distance to the target
+    const float moveDistance = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].target) 
+        + glm::length(m_holeData[m_currentHole].target - m_holeData[m_currentHole].pin);
+
+    float SpeedMultiplier = (0.25f + ((/*m_holeData[m_currentHole].distanceToPin*/moveDistance / MaxHoleDistance) * 0.75f));
     float heightMultiplier = 1.f;
 
     //only slow down if current and previous were putters - in cases of custom courses
@@ -1932,10 +2014,15 @@ void GolfState::startFlyBy()
 
             if (data.currentTarget < 3)
             {
-                auto rot = glm::slerp(glm::quat_cast(data.targets[data.currentTarget]), glm::quat_cast(data.targets[data.currentTarget + 1]), data.progress);
+                const auto rot = glm::slerp(glm::quat_cast(data.targets[data.currentTarget]), glm::quat_cast(data.targets[data.currentTarget + 1]), data.progress);
                 camTx.setRotation(rot);
 
                 auto pos = interpolate(glm::vec3(data.targets[data.currentTarget][3]), glm::vec3(data.targets[data.currentTarget + 1][3]), data.ease(data.progress));
+                if (!m_holeData[m_currentHole].puttFromTee)
+                {
+                    const auto height = m_collisionMesh.getTerrain(pos).height;
+                    pos.y = std::max(height + 0.5f, pos.y); //prevent camera clipping into the ground
+                }
                 camTx.setPosition(pos);
             }
         };

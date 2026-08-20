@@ -52,6 +52,9 @@ struct RopeNode final
 
     //any external force added to this node
     glm::vec3 force = glm::vec3(0.f);
+
+    explicit RopeNode(std::size_t rid) : ropeID(rid) {}
+    RopeNode() = default;
 };
 
 //represents a collection of nodes in
@@ -80,19 +83,26 @@ public:
 
     void setNoiseMap(const cro::ImageArray<float>&, float scale);
 
+    void setForceMultiplier(float f) { m_forceMultiplier = std::max(0.1f, f); }
+
+    bool empty() const { return m_nodes.empty(); }
+
 private:
     
     glm::vec3 m_startPoint;
     glm::vec3 m_endPoint;
-    float m_slack;
 
     const cro::ImageArray<float>* m_noiseMap;
     glm::vec3 m_pixelsPerMetre;
+    float m_slack;
 
     //we iterate over these in the simulation rather than the system's entity list
     std::vector<cro::Entity> m_nodes;
     std::vector<glm::vec3> m_nodePositions; //track these so we can EG draw the rope in a shader
     float m_nodeSpacing;
+    float m_forceMultiplier;
+
+    bool m_dirty;
     void recalculate(); //called when adding a new node
 
     void integrate(float dt, glm::vec3);
@@ -106,11 +116,12 @@ public:
 
     void process(float) override;
 
-    //creates a new rope between the given fixed points.
+    //creates a new rope between the given fixed points
+    //in world coordinates.
     //returns an ID to use with components when assigning
     //those entities to a specific rope.
     //increase slack for a looser rope between fixed points
-    std::size_t addRope(glm::vec3, glm::vec3, float slack = 0.f);
+    std::size_t addRope(glm::vec3, glm::vec3, float slack = 0.f, float forceMultiplier = 5.f);
 
     //note that these are local space relative to the root node
     const std::vector<glm::vec3>& getNodePositions(std::size_t ropeID) const;
@@ -128,6 +139,7 @@ public:
 
 private:
     std::vector<Rope> m_ropes;
+    std::vector<std::size_t> m_freeRopes;
 
     cro::ImageArray<float> m_windImage;
     float m_imageScale;

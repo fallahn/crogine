@@ -383,15 +383,35 @@ void MenuState::hideToolTip()
 void MenuState::updateCompletionString()
 {
 #ifdef USE_GNS
-    auto count = Social::getMonthlyCompletionCount(m_sharedData.mapDirectory, m_sharedData.holeCount);
+    const auto count = Social::getMonthlyCompletionCount(m_sharedData.mapDirectory, m_sharedData.holeCount);
     if (count == 0)
     {
         m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        m_lobbyWindowEntities[LobbyEntityID::MonthlyBest].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
     else
     {
         m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent < cro::Text>().setString("Completed " + std::to_string(count) + "x this month!");
+        m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Text>().setString("Completed " + std::to_string(count) + "x this month!");
+       
+        m_lobbyWindowEntities[LobbyEntityID::MonthlyBest].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        auto best = Social::getMonthlyBest(m_sharedData.mapDirectory, m_sharedData.holeCount);
+        if (best)
+        {
+            m_lobbyWindowEntities[LobbyEntityID::MonthlyBest].getComponent<cro::Text>().setString("Monthly Best: " + std::to_string(best));
+        }
+        else
+        {
+            best = Social::getPersonalBest(m_sharedData.mapDirectory, m_sharedData.holeCount);
+            if (best)
+            {
+                m_lobbyWindowEntities[LobbyEntityID::MonthlyBest].getComponent<cro::Text>().setString("Personal Best: " + std::to_string(best));
+            }
+            else
+            {
+                m_lobbyWindowEntities[LobbyEntityID::MonthlyBest].getComponent<cro::Text>().setString("Fetching Score...");
+            }
+        }
     }
     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 #endif
@@ -833,7 +853,11 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         return entity;
     };
 
-    auto validData = Social::isValid();
+#ifdef DEMO
+    const auto validData = true;
+#else
+    const auto validData = Social::isValid();
+#endif
     if (validData
         && !m_sharedCourseData.courseData.empty()
         && !m_sharedData.ballInfo.empty()
@@ -1043,22 +1067,26 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         entity.addComponent<cro::Text>(smallFont).setString("Tournaments");
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setFillColour(DEMO_TEXT_COLOUR);
         entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         entity.addComponent<cro::Callback>().function = MenuTextCallback();
         entity.addComponent<cro::UIInput>().setGroup(MenuID::CareerSelect);
         entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+#ifndef DEMO
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterBounce;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+#endif
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback(
                 [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
                 {
                     if (activated(evt))
                     {
+#ifndef DEMO
                         //launch tournament state
                         quitCareerCallback(StateID::Tournament);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+#endif
                     }
                 });
         confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1093,17 +1121,24 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         
         //freeplay
         entity = createButton("Free Play");
+        entity.getComponent<cro::Text>().setFillColour(DEMO_TEXT_COLOUR);
+#ifdef DEMO
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 0;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 0;
+#endif
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
                     if (activated(evt))
                     {
+#ifndef DEMO
                         m_sharedData.leagueRoundID = LeagueRoundID::Club;
                         if (randomWeather)
                         {
                             m_sharedData.weatherType = WeatherType::Random;
                         }
                         requestStackPush(StateID::FreePlay);
+#endif
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
                 });
@@ -1121,6 +1156,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 });
 
 #ifdef USE_GNS
+#ifndef DEMO
         //competition league
         entity = createButton("Pro League");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -1160,6 +1196,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                             };
                     }
                 });
+#endif
 #endif
 
         //facilities menu
@@ -2741,16 +2778,42 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse] = entity;
 
     const float w = (thumbBgEnt.getComponent<cro::Sprite>().getTextureBounds().width / 4.f) + 2.f;
+    const float h = std::floor(thumbBgEnt.getComponent<cro::Sprite>().getTextureBounds().height / 2.f) - 8.f;
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, h + 1.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Please Wait...");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyWindowEntities[LobbyEntityID::MonthlyBest] = entity;
+
+
 
     cro::Colour c(0.f, 0.f, 0.f, BackgroundAlpha / 2.f);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, -3.f, -0.05f });
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
-            cro::Vertex2D(glm::vec2(-w, 6.f),c),
-            cro::Vertex2D(glm::vec2(-w, -6.f),c),
+            cro::Vertex2D(glm::vec2(w, h + 6.f),c),
+            cro::Vertex2D(glm::vec2(-w, h + 6.f),c),
+            cro::Vertex2D(glm::vec2(w, h-6.f),c),
+            cro::Vertex2D(glm::vec2(-w, h-6.f),c),
+
+            cro::Vertex2D(glm::vec2(w, h-6.f),cro::Colour::Transparent),
+            cro::Vertex2D(glm::vec2(-w, h-6.f),cro::Colour::Transparent),
+            cro::Vertex2D(glm::vec2(w, 6.f),cro::Colour::Transparent),
+            cro::Vertex2D(glm::vec2(-w, 6.f),cro::Colour::Transparent),
+
             cro::Vertex2D(glm::vec2(w, 6.f),c),
-            cro::Vertex2D(glm::vec2(w, -6.f),c)
+            cro::Vertex2D(glm::vec2(-w, 6.f),c),
+            cro::Vertex2D(glm::vec2(w, -6.f),c),
+            cro::Vertex2D(glm::vec2(-w, -6.f),c),
         });
     m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 #endif
@@ -4017,11 +4080,12 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 {
                 default:
                 case ScoreType::Elimination:
-                    if (a.score == b.score)
+                    if (a.lives == b.lives)
                     {
-                        return a.lives > b.lives;
+                        return a.score < b.score;
                     }
-                    [[fallthrough]];
+                    return a.lives > b.lives;
+                    //[[fallthrough]];
                 case ScoreType::Stroke:
                 case ScoreType::ShortRound:
                 case ScoreType::MultiTarget:
@@ -5194,12 +5258,15 @@ void MenuState::updateCourseRuleString(bool updateScoreboard)
 void MenuState::updateUnlockedItems()
 {
     //current day streak
-    auto streak = Social::updateStreak();
+    const auto streak = Social::updateStreak();
     CRO_ASSERT(streak < 8, "");
     switch (streak)
     {
     default:
-        m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Streak01 + (streak - 1);
+        if (m_sharedData.enableDailyStreak)
+        {
+            m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Streak01 + (streak - 1);
+        }
         break;
     case 0: //do nothing
         break;
@@ -5450,7 +5517,7 @@ void MenuState::updateUnlockedItems()
     {
         for (auto i = 0u; i < Leagues.size(); ++i)
         {
-            auto flag = (1 << i);
+            const auto flag = (1 << i);
 
             if (Leagues[i].getCurrentSeason() > 0
                 && Leagues[i].getCurrentIteration() == 0)
@@ -5504,6 +5571,62 @@ void MenuState::updateUnlockedItems()
         }
         Social::setUnlockStatus(Social::UnlockType::CareerPosition, leagueFlags);
     }
+
+    //check DLC leagues - TODO we can probably refactor this to be use in the above loop.
+    const auto dlcCheck = [this](std::int32_t leagueID)
+        {
+            assert(leagueID > LeagueRoundID::RoundSix);
+
+            if (Content::leagueAvailable(leagueID))
+            {
+                auto leagueFlags = Social::getUnlockStatus(Social::UnlockType::CareerPosition);
+                //hmm do we need to check this isn't -1 or can we
+                //assume that we only got this far by completing the
+                //other leagues?
+                if (leagueFlags != -1)
+                {
+                    //note that this actually skips 5 as previous flags
+                    //are based on array size, not league ID
+                    const auto flag = (1 << leagueID);
+
+                    League l(leagueID, m_sharedData);
+                    if (l.getCurrentSeason() > 0
+                        && l.getCurrentIteration() == 0)
+                    {
+                        if ((leagueFlags & flag) == 0)
+                        {
+                            const auto position = l.getCurrentBest();
+                            switch (position)
+                            {
+                            default: break;
+                            case 1:
+                            case 2:
+                            case 3:
+                            {
+                                leagueFlags |= flag;
+                                auto& item = m_sharedData.unlockedItems.emplace_back();
+                                item.id = ul::UnlockID::CareerGold + (position - 1);
+                                item.xp = l.reward(position);
+                                awardCredits(CreditID::LeagueWinFirst - ((position - 1) * 50));
+                            }
+                            [[fallthrough]];
+                            case 4:
+                            case 5:
+
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        leagueFlags &= ~flag; //reset until we complete this league again
+                    }
+                    Social::setUnlockStatus(Social::UnlockType::CareerPosition, leagueFlags);
+                }
+            }
+        };
+    dlcCheck(LeagueRoundID::RoundSeven);
+    dlcCheck(LeagueRoundID::RoundEight);
 
 
     //tournament unlocks - ignores any custom tournament
@@ -5893,11 +6016,12 @@ void MenuState::createPreviousScoreCard()
             {
             default:
             case ScoreType::Elimination:
-                if (a.total == b.total)
+                if (a.lives == b.lives)
                 {
-                    return a.lives > b.lives;
+                    return a.total < b.total;
                 }
-                [[fallthrough]];
+                return a.lives > b.lives;
+                //[[fallthrough]];
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:

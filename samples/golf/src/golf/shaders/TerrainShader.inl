@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -133,23 +133,24 @@ R"(
 
     uniform mat4 u_worldMatrix;
     uniform vec3 u_centrePosition;
+    uniform float u_radius = 25.0;
 
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec2 v_texCoord;
     VARYING_OUT vec2 v_heightData;
 
-    const float MaxRadius = 10.0; //this should match max putt distance
+    const float MaxRadius = 25.0; //this should match max putt distance
     const float MinRadius = 0.5;
 
     void main()
     {
         vec4 worldPos = u_worldMatrix * a_position;
         float viewLength = length(u_cameraWorldPosition - u_centrePosition) * 0.75;
-        float radius = clamp(viewLength, MinRadius, MaxRadius);
-        float ratio = min(1.0, viewLength / MaxRadius);
+        float radius = clamp(viewLength, MinRadius, /*MaxRadius*/u_radius);
+        float ratio = min(1.0, viewLength / /*MaxRadius*/u_radius);
 
-        float alpha = 1.0 - smoothstep(radius, radius + (3.0 * ratio), length(worldPos.xyz - u_centrePosition));
-        alpha *= (1.0 - smoothstep(MaxRadius, MaxRadius + (1.0 * ratio), length(worldPos.xyz - u_cameraWorldPosition)));
+        float alpha = 1.0 - smoothstep(radius, radius + (7.0 * ratio), length(worldPos.xyz - u_centrePosition));
+        alpha *= (1.0 - smoothstep(/*MaxRadius*/u_radius, /*MaxRadius*/u_radius + (1.0 * ratio), length(worldPos.xyz - u_cameraWorldPosition)));
 
         gl_Position = u_viewProjectionMatrix * worldPos;
 
@@ -181,13 +182,14 @@ R"(
     const vec3 DotColour = vec3(1.0, 0.85, 0.5);
     const vec3 BaseColour = vec3(0.627, 0.699, 0.58); //0.94 stored as HSV to save on a conversion
     const float TAU = 6.2831855;
+    const float DotSpeed = 0.5;
 
     #include HSV
 
     void main()
     {
 
-        float alpha = (sin((v_texCoord.x * TAU) - ((u_windData.w * 2.5) * v_texCoord.y)) + 1.0) * 0.5;
+        float alpha = (sin((v_texCoord.x * TAU) - ((u_windData.w * DotSpeed) * v_texCoord.y)) + 1.0) * 0.5;
         alpha = step(0.01, alpha);
 
         vec3 c = BaseColour;
@@ -231,7 +233,7 @@ static inline const std::string NormalMapVertexShader = R"(
 
 static inline const std::string NormalMapFragmentShader = R"(
     layout (location = 0) out vec4 FRAG_OUT;
-    //layout (location = 1) out vec4 POS_OUT;
+    //layout (location = 1) out float POS_OUT;
 
     VARYING_IN vec3 v_normal;
     VARYING_IN float v_position;
@@ -240,7 +242,6 @@ static inline const std::string NormalMapFragmentShader = R"(
     {
         vec3 normal = normalize(v_normal);
         FRAG_OUT = vec4(normal, v_position);
-
 
 
         //vec3 normal = normalize(v_normal);
