@@ -93,6 +93,10 @@ else()
 endif()
 
 
+if (BUILD_SDL OR APPLE OR BUILD_KTX)
+  include(FetchContent)
+endif()
+
 
 if (NOT BUILD_SHARED_LIBS)
   add_definitions(-DCRO_STATIC)
@@ -110,18 +114,17 @@ SET (OpenGL_GL_PREFERENCE "GLVND")
 
 #find_package(SDL2 MODULE REQUIRED)
 if (NOT BUILD_SDL)
-find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
+  find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
 else()
-include(FetchContent)
 
-SET(SDL_X11_XSCRNSAVER OFF CACHE BOOL "Disable screensaver" FORCE)
-FetchContent_Declare(
-    SDL3
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG origin/main
-    OVERRIDE_FIND_PACKAGE
-)
-FetchContent_MakeAvailable(SDL3)
+  SET(SDL_X11_XSCRNSAVER OFF CACHE BOOL "Disable screensaver" FORCE)
+  FetchContent_Declare(
+      SDL3
+      GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+      GIT_TAG origin/main
+      OVERRIDE_FIND_PACKAGE
+  )
+  FetchContent_MakeAvailable(SDL3)
 endif()
 find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -148,7 +151,7 @@ endif()
 #ktx texture compression
 if (APPLE OR BUILD_KTX)
 
-include(FetchContent)
+#include(FetchContent)
 #set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "Build KTX as a static library" FORCE)
 
 #hmmm this clashes with the crogine property...
