@@ -113,6 +113,8 @@ if (NOT BUILD_SDL)
 find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
 else()
 include(FetchContent)
+
+SET(SDL_X11_XSCRNSAVER OFF CACHE BOOL "Disable screensaver" FORCE)
 FetchContent_Declare(
     SDL3
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
