@@ -28,7 +28,8 @@ SET(TARGET_ANDROID FALSE CACHE BOOL "Build the library for Android devices")
 
 SET(USE_GL_41 FALSE CACHE BOOL "Use OpenGL 4.1 instead of 4.6 on desktop builds.")
 SET(USE_PARALLEL_EXECUTION TRUE CACHE BOOL "Enable parallel execution, requires compiler support")
-SET(BUILD_KTX TRUE CACHE BOOL "Choose to fetch and build libktx instead of using the binary inclued in the repository")
+SET(BUILD_KTX TRUE CACHE BOOL "Choose to fetch and build libktx instead of using the binary included in the repository")
+SET(BUILD_SDL FALSE BOOL "Choose to fetch and build libsdl3 instead of using the binary installed on the system")
 
 if(${TARGET_ANDROID})
   SET(${CMAKE_TOOLCHAIN_FILE} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchains/android-arm.cmake")
@@ -108,7 +109,17 @@ SET (CMAKE_CXX_STANDARD_REQUIRED ON)
 SET (OpenGL_GL_PREFERENCE "GLVND")
 
 #find_package(SDL2 MODULE REQUIRED)
+if (NOT BUILD_SDL)
 find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
+else()
+include(FetchContent)
+FetchContent_Declare(
+    SDL3
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+    GIT_TAG origin/main
+    OVERRIDE_FIND_PACKAGE
+)
+endif()
 find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OPUS REQUIRED)
