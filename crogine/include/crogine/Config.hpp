@@ -31,7 +31,7 @@ source distribution.
 
 #include <cstdint>
 
-#if defined SDL_PLATFORM_APPLE
+#if defined __APPLE__
 #include <TargetConditionals.h>
 #define GL41 //load GL4.1 not 4.6
 #endif

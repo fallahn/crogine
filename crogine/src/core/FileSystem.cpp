@@ -69,7 +69,7 @@ source distribution.
 #include <string.h>
 #include <stdlib.h>
 
-#elif defined(SDL_PLATFORM_APPLE)
+#elif defined(__APPLE__)
 #define MAX_PATH PATH_MAX
 #include <CoreServices/CoreServices.h>
 #include "../detail/ResourcePath.hpp"
@@ -470,7 +470,7 @@ std::string FileSystem::saveFileDialogue(const std::string& defaultDir, const st
 
 std::string FileSystem::getResourcePath()
 {
-#ifdef SDL_PLATFORM_APPLE  
+#ifdef __APPLE__
     //ugh - cwd when using bundles is a pain, so at least add some
     //checks to make sure we're not concatinating an existing part of the path
     auto rpath = resourcePath();

@@ -107,7 +107,8 @@ SET (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 SET (OpenGL_GL_PREFERENCE "GLVND")
 
-find_package(SDL2 MODULE REQUIRED)
+#find_package(SDL2 MODULE REQUIRED)
+find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
 find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OPUS REQUIRED)
@@ -157,7 +158,8 @@ endif()
 
 
 include_directories(
-  ${SDL2_INCLUDE_DIR}  
+  #${SDL2_INCLUDE_DIR}
+  SDL3::Headers
   ${FREETYPE_INCLUDE_DIRS} 
   ${OPUS_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}/crogine/include)
@@ -222,7 +224,8 @@ if(NOT TARGET crogine)
   target_compile_definitions(${PROJECT_NAME} PUBLIC $<$<CONFIG:Debug>:CRO_DEBUG_ PARALLEL_GLOBAL_DISABLE>)
 
   target_link_libraries(${PROJECT_NAME}
-    ${SDL2_LIBRARY} 
+    #${SDL2_LIBRARY} 
+    SDL3::SDL3
     ${FREETYPE_LIBRARIES}
     ${OPUS_LIBRARIES}
     ${OPENGL_LIBRARIES})

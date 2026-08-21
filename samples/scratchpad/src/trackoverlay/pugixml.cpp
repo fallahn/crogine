@@ -41,7 +41,7 @@
 #include <new>
 
 // For load_file
-#if defined(__linux__) || defined(SDL_PLATFORM_APPLE)
+#if defined(__linux__) || defined(__APPLE__)
 #include <sys/stat.h>
 #endif
 
@@ -159,7 +159,7 @@ using std::free;
 #	define PUGI_IMPL_SNPRINTF(buf, ...) snprintf(buf, sizeof(buf), __VA_ARGS__)
 #elif defined(PUGI_IMPL_MSVC_CRT_VERSION) && PUGI_IMPL_MSVC_CRT_VERSION >= 1400
 #	define PUGI_IMPL_SNPRINTF(buf, ...) _snprintf_s(buf, _countof(buf), _TRUNCATE, __VA_ARGS__)
-#elif defined(SDL_PLATFORM_APPLE) && __clang_major__ >= 14 // Xcode 14 marks sprintf as deprecated while still using C++98 by default
+#elif defined(__APPLE__) && __clang_major__ >= 14 // Xcode 14 marks sprintf as deprecated while still using C++98 by default
 #	define PUGI_IMPL_SNPRINTF(buf, fmt, arg1, arg2) snprintf(buf, sizeof(buf), fmt, arg1, arg2)
 #else
 #	define PUGI_IMPL_SNPRINTF sprintf
@@ -4825,7 +4825,7 @@ PUGI_IMPL_NS_BEGIN
 	// we need to get length of entire file to load it in memory; the only (relatively) sane way to do it is via seek/tell trick
 	PUGI_IMPL_FN xml_parse_status get_file_size(FILE* file, size_t& out_result)
 	{
-	#if defined(__linux__) || defined(SDL_PLATFORM_APPLE)
+	#if defined(__linux__) || defined(__APPLE__)
 		// this simultaneously retrieves the file size and file mode (to guard against loading non-files)
 		struct stat st;
 		if (fstat(fileno(file), &st) != 0) return status_io_error;

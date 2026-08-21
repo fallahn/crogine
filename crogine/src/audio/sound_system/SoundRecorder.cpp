@@ -33,7 +33,7 @@ source distribution.
 #include "../ALCheck.hpp"
 #include "../AudioRenderer.hpp"
 
-#ifdef SDL_PLATFORM_APPLE
+#ifdef __APPLE__
 #include "al.h"
 #include "alc.h"
 

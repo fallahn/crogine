@@ -43,7 +43,7 @@ BinaryMeshBuilder::BinaryMeshBuilder(const std::string& path, bool optimiseOnLoa
     m_uid               (0)
 {
 
-#ifdef SDL_PLATFORM_APPLE
+#ifdef __APPLE__
     if (!FileSystem::fileExists(m_path))
     {
         m_path = cro::FileSystem::getResourcePath() + path;

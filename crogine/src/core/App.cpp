@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef SDL_PLATFORM_APPLE
+#ifndef __APPLE__
 #include <crogine/detail/StackDump.hpp>
 #include <signal.h>
 static void winAbort(int)
@@ -253,7 +253,7 @@ App::App(std::uint32_t styleFlags)
     CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
 #ifndef CRO_DEBUG_
-#ifndef SDL_PLATFORM_APPLE //mac actually gives a decent stack dump
+#ifndef __APPLE__ //mac actually gives a decent stack dump
     //register custom abort which prints the call stack
     signal(SIGABRT, &winAbort);
     signal(SIGSEGV, &winSeg);
@@ -920,7 +920,7 @@ void App::handleEvents()
                     saveSettings();
                 }
                 break;
-#ifdef SDL_PLATFORM_APPLE
+#ifdef __APPLE__
             case SDLK_Q:
                 if (evt.key.mod & SDL_KMOD_GUI)
 #else
@@ -931,7 +931,7 @@ void App::handleEvents()
                     quit();
                 }
                 break;
-#ifdef SDL_PLATFORM_APPLE
+#ifdef __APPLE__
             case SDLK_F:
                 if (evt.key.mod & (SDL_KMOD_GUI | SDL_KMOD_CTRL))
 #else

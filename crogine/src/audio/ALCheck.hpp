@@ -33,7 +33,7 @@ source distribution.
 #define alCheck(x) x;
 #define alcCheck(x,y) x;
 #else
-#ifdef SDL_PLATFORM_APPLE
+#ifdef __APPLE__
 #include "al.h"
 #else
 #include <AL/al.h>

@@ -33,7 +33,7 @@
 #endif
 #endif
 
-#ifdef SDL_PLATFORM_APPLE
+#ifdef __APPLE__
 #include <unistd.h>
 #endif
 
@@ -385,7 +385,7 @@ inline StackTrace generate() {
       std::string functionName;
 
       const std::string line(strings[a]);
-#ifdef SDL_PLATFORM_APPLE
+#ifdef __APPLE__
       // Example: ust-test                            0x000000010001e883
       // _ZNK5Catch21TestInvokerAsFunction6invokeEv + 19
       auto p = line.find("0x");
@@ -441,7 +441,7 @@ inline StackTrace generate() {
 #endif
 
 // Fetch source file & line numbers
-#ifdef SDL_PLATFORM_APPLE
+#ifdef __APPLE__
   std::ostringstream ss;
   ss << "atos -p " << std::to_string(getpid()) << " ";
   for (int a = 0; a < (int)stackTrace.size(); a++) {

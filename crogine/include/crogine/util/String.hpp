@@ -446,7 +446,7 @@ namespace cro::Util::String
     {
         ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
     }
-#elif defined SDL_PLATFORM_APPLE
+#elif defined __APPLE__
     static inline void parseURL(const std::string& url)
     {
         std::string str = "open " + url;

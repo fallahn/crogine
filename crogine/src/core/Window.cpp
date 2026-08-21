@@ -295,7 +295,7 @@ void Window::setSize(glm::uvec2 size)
 
 void Window::setFullScreen(bool fullscreen)
 {
-#ifdef SDL_PLATFORM_APPLE
+#ifdef __APPLE__
 #define FS_MODE SDL_WINDOW_FULLSCREEN
 #else
 #define FS_MODE SDL_WINDOW_FULLSCREEN
@@ -304,7 +304,7 @@ void Window::setFullScreen(bool fullscreen)
     std::int32_t mode = 0;
     if (fullscreen)
     {
-#ifndef SDL_PLATFORM_APPLE
+#ifndef __APPLE__
         mode = m_exclusiveFullScreen ? SDL_WINDOW_FULLSCREEN : FS_MODE;
 #else
         mode = FS_MODE;
@@ -367,9 +367,9 @@ glm::ivec2 Window::getPosition() const
 void Window::setIcon(const std::uint8_t* data)
 {
     //let the bundle set the icon on mac
-#ifndef SDL_PLATFORM_APPLE
+#ifndef __APPLE__
     CRO_ASSERT(m_window, "window not created");
-    SDL_Surface* surface = SDL_CreateSurfaceFrom(16,16,SDL_PixelFormat::SDL_PIXELFORMAT_RGBA8888, (void*)data, 16 * 4);
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(16, 16, SDL_PIXELFORMAT_RGBA32, (void*)data, 16 * 4);
     if (surface)
     {
         SDL_SetWindowIcon(m_window, surface);
@@ -501,7 +501,7 @@ void Window::loadResources(const std::function<void()>& loader, bool threaded)
 
 #ifdef PLATFORM_DESKTOP
     //macs crash with loading screens
-#ifdef SDL_PLATFORM_APPLE
+#ifdef __APPLE__
     //if (m_fullscreen)
     {
         /*m_loadingScreen->launch();
