@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -113,7 +113,7 @@ void UISystem::handleEvent(const Event& evt)
         }
         break;
     case SDL_EVENT_MOUSE_MOTION:
-        m_eventPosition = toWorldCoords(evt.motion.x, evt.motion.y);
+        m_eventPosition = toWorldCoords(evt.motion.x / m_windowSize.x, evt.motion.y / m_windowSize.y);
         m_movementDelta = m_eventPosition - m_prevMousePosition;
         m_prevMousePosition = m_eventPosition;
         {
@@ -125,7 +125,7 @@ void UISystem::handleEvent(const Event& evt)
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
         m_previousEventPosition = m_eventPosition;
 
-        m_eventPosition = toWorldCoords(evt.button.x, evt.button.y);
+        m_eventPosition = toWorldCoords(evt.button.x / m_windowSize.x, evt.button.y / m_windowSize.y);
         {
             auto& buttonEvent = m_mouseDownEvents.emplace_back();
             buttonEvent.type = evt.type;
@@ -133,7 +133,7 @@ void UISystem::handleEvent(const Event& evt)
         }
         break;
     case SDL_EVENT_MOUSE_BUTTON_UP:
-        m_eventPosition = toWorldCoords(evt.button.x, evt.button.y);
+        m_eventPosition = toWorldCoords(evt.button.x / m_windowSize.x, evt.button.y / m_windowSize.y);
         {
             auto& buttonEvent = m_mouseUpEvents.emplace_back();
             buttonEvent.type = evt.type;
@@ -714,6 +714,8 @@ glm::vec2 UISystem::toWorldCoords(std::int32_t x, std::int32_t y)
 
 glm::vec2 UISystem::toWorldCoords(float x, float y)
 {
+    assert(x <= 1 && y <= 1);
+
     //invert Y
     y = 1.f - y;
 

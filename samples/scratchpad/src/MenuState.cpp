@@ -329,8 +329,16 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
     //registerWindow([this]()
     //    {
     //        ImGui::Begin("Curves");
-    //        ImGui::PlotLines("Linear", m_linearPower.data(), m_linearPower.size());
-    //        ImGui::PlotLines("Curved", m_curvedPower.data(), m_linearPower.size());
+    //        //ImGui::PlotLines("Linear", m_linearPower.data(), m_linearPower.size());
+    //        //ImGui::PlotLines("Curved", m_curvedPower.data(), m_linearPower.size());
+    //        const auto relPos = cro::Mouse::getRelativePosition();
+    //        const auto globalPos = cro::Mouse::getGlobalPosition();
+    //        const auto pos = cro::Mouse::getPosition();
+
+    //        ImGui::Text("Relative: %3.2f, %3.2f", relPos.x, relPos.y);
+    //        ImGui::Text("Global: %3.2f, %3.2f", globalPos.x, globalPos.y);
+    //        ImGui::Text("Position: %3.2f, %3.2f", pos.x, pos.y);
+
     //        ImGui::End();
     //    });
 

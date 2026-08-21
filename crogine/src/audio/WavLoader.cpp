@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -89,7 +89,7 @@ bool WavLoader::open(const std::string& path)
     {
         //file opened, let's do stuff!
         auto read = SDL_ReadIO(m_file.file, &m_header, sizeof(m_header));
-        if (read != 1)
+        if (read != sizeof(m_header))
         {
             SDL_CloseIO(m_file.file);
             m_file.file = nullptr;
@@ -157,15 +157,15 @@ bool WavLoader::open(const std::string& path)
 
         //read chunk info until we find the data and position our file stream there
         WavChunk chunk;
-        read = 1;
+        read = sizeof(WavChunk);
         ID = 0;
-        while (read == 1 && ID != dataID)
+        while (read == sizeof(WavChunk) && ID != dataID)
         {
             read = SDL_ReadIO(m_file.file, &chunk, sizeof(WavChunk));
             ID = asUint(chunk.ID);
         }
 
-        if (read != 1)
+        if (read != sizeof(WavChunk))
         {
             SDL_CloseIO(m_file.file);
             m_file.file = nullptr;

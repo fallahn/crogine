@@ -172,7 +172,7 @@ void Window::setVsyncEnabled(bool enabled)
 {
     if (m_mainContext)
     {
-        if (SDL_GL_SetSwapInterval(enabled ? 1 : 0) != 0)
+        if (!SDL_GL_SetSwapInterval(enabled ? 1 : 0))
         {
             std::string e = enabled ? "Enabled - " : "Disabled - ";
             LogE << "SDL: Failed to set VSync to " << e << SDL_GetError() << std::endl;
@@ -186,7 +186,7 @@ bool Window::getVsyncEnabled() const
 {
     int i = 0;
     SDL_GL_GetSwapInterval(&i);
-    return i == 1;
+    return i != 0;
 }
 
 void Window::setFramerateLimit(float fps)
@@ -316,7 +316,7 @@ void Window::setFullScreen(bool fullscreen)
     }
 
     CRO_ASSERT(m_window, "window not created");
-    if (SDL_SetWindowFullscreen(m_window, mode) == 0)
+    if (SDL_SetWindowFullscreen(m_window, mode))
     {
         m_fullscreen = fullscreen;
         if (!fullscreen)
@@ -387,30 +387,31 @@ const std::vector<glm::uvec2>& Window::getAvailableResolutions() const
     CRO_ASSERT(m_window, "window not created");
     if (m_resolutions.empty())
     {
-        std::int32_t modeCount = 0;
-        const auto modes = SDL_GetFullscreenDisplayModes(0, &modeCount);
-        //const auto modeCount = SDL_GetNumDisplayModes(0);
-        if (modeCount > 0)
+        std::int32_t displayCount = 0;
+        const auto displayIDs = SDL_GetDisplays(&displayCount);
+
+        for (auto j = 0; j < displayCount; ++j)
         {
-            /*SDL_DisplayMode mode = { SDL_PIXELFORMAT_UNKNOWN, 0, 0, 0, 0 };*/
-            for (auto i = 0; i < modeCount; ++i)
+            std::int32_t modeCount = 0;
+            const auto modes = SDL_GetFullscreenDisplayModes(displayIDs[j], &modeCount);
+            if (modeCount > 0)
             {
-                //if (SDL_GetDisplayMode(0, i, &mode) == 0)
+                for (auto i = 0; i < modeCount; ++i)
                 {
                     m_resolutions.emplace_back(modes[i]->w, modes[i]->h);
                 }
+                m_resolutions.erase(std::unique(std::begin(m_resolutions), std::end(m_resolutions)), std::end(m_resolutions));
             }
-            m_resolutions.erase(std::unique(std::begin(m_resolutions), std::end(m_resolutions)), std::end(m_resolutions));
-        }
-        else
-        {
-            const std::string err = SDL_GetError();
-            Logger::log("failed retrieving available resolutions: " + err, Logger::Type::Error, Logger::Output::All);
+            else
+            {
+                const std::string err = SDL_GetError();
+                Logger::log("failed retrieving available resolutions: " + err, Logger::Type::Error, Logger::Output::All);
 
-            //don't leave this empty else we'll badly index it
-            m_resolutions.emplace_back(1920u, 1080u);
-            m_resolutions.emplace_back(1280u, 720u);
-            m_resolutions.emplace_back(640u, 480u);
+                //don't leave this empty else we'll badly index it
+                m_resolutions.emplace_back(1920u, 1080u);
+                m_resolutions.emplace_back(1280u, 720u);
+                m_resolutions.emplace_back(640u, 480u);
+            }
         }
 
         auto sorted = m_resolutions;

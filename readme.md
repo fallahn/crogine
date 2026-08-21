@@ -6,7 +6,7 @@ CROGINE
 
 CROssplatform enGINE.
 
-SDL2 Based game engine which runs on Windows, linux and macOS. Compatibility with macOS is pretty good despite Apple's efforts to kill off OpenGL. Presumably consoles supported by SDL2 (such as Nintendo switch) are also compatible, possibly with a bit of work.
+SDL2 Based game engine which runs on Windows, linux and macOS. Compatibility with macOS is pretty good despite Apple's efforts to kill off OpenGL. Presumably consoles supported by SDL3 (such as Nintendo switch) are also compatible, possibly with a bit of work.
 
 
 #### Building
@@ -19,7 +19,7 @@ On Windows you can use the included Visual Studio 2022 solution to build crogine
 #### About
 crogine was built with the aim of creating a flexible ECS based framework to create games. crogine supplies renderers for both 2D and 3D based graphics, providing an OpenGL 4.6 context (GL 4.1 on macOS). As crogine is targeted at lower end hardware it doesn't feature a huge array of cutting edge rendering techniques - however it does support some PBR rendering, and new features are still being added.  
 
-crogine uses OpenAL for audio, and SDL2 for cross platform parts such as windowing, events and context creation. Documentation can be generated with doxygen using the doxy file in common/docs. Eventually I plan to fully document features on the github wiki as and when I have the time. It might be worth noting that the API is very similar to that of my other library [xygine](https://github.com/fallahn/xygine) so studying that may be of some use.
+crogine uses OpenAL for audio, and SDL3 for cross platform parts such as windowing, events and context creation. Documentation can be generated with doxygen using the doxy file in common/docs. Eventually I plan to fully document features on the github wiki as and when I have the time. It might be worth noting that the API is very similar to that of my other library [xygine](https://github.com/fallahn/xygine) so studying that may be of some use.
 
 Included systems can be used to create and render 3D scenes, 2D scenes (using sprites), rendering text, particles and playing back 3D audio. The API is designed specifically for creating and extending the ECS for custom use as quickly and easily as possible. See the [samples](https://github.com/fallahn/crogine/tree/master/samples) directory for more detail.
 
@@ -30,7 +30,7 @@ Portions of this software are copyright (c) 2019 SFML (www.sfml-dev.org). All ri
 
 -----------------------------------------------------------------------
 
-©Matt Marchant 2017 - 2025  
+©Matt Marchant 2017 - 2026  
 http://trederia.blogspot.com  
 
 crogine - Zlib license.  

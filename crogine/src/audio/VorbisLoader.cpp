@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -59,35 +59,36 @@ VorbisLoader::~VorbisLoader()
 bool VorbisLoader::open(const std::string& path)
 {
     //close any open files
-    if (m_file.file)
-    {
-        SDL_CloseIO(m_file.file);
-        m_file.file = nullptr;
+    //if (m_file.file)
+    //{
+    //    SDL_CloseIO(m_file.file);
+    //    m_file.file = nullptr;
 
-        m_dataChunk = {};
-        m_channelCount = 0;
-        m_sampleCount = 0;
-    }
+    //    m_dataChunk = {};
+    //    m_channelCount = 0;
+    //    m_sampleCount = 0;
+    //}
     if (m_vorbisFile)
     {
         stb_vorbis_close(m_vorbisFile);
         m_vorbisFile = nullptr;
     }
 
-    m_file.file = SDL_IOFromFile(path.c_str(), "rb");
-    if (!m_file.file)
-    {
-        Logger::log("Failed opening " + path, Logger::Type::Error);
-        return false;
-    }
+    //m_file.file = SDL_IOFromFile(path.c_str(), "rb");
+    //if (!m_file.file)
+    //{
+    //    Logger::log("Failed opening " + path, Logger::Type::Error);
+    //    return false;
+    //}
 
 
     //read header
-    m_vorbisFile = stb_vorbis_open_file(m_file.file, 0, nullptr, nullptr);
+    //m_vorbisFile = stb_vorbis_open_file(m_file.file, 0, nullptr, nullptr);
+    m_vorbisFile = stb_vorbis_open_filename(path.c_str(), nullptr, nullptr);
     if (!m_vorbisFile)
     {
-        SDL_CloseIO(m_file.file);
-        m_file.file = nullptr;
+        /*SDL_CloseIO(m_file.file);
+        m_file.file = nullptr;*/
 
         Logger::log("Failed opening vorbis file, error "/* + std::to_string(err)*/, Logger::Type::Error);
         return false;
@@ -96,8 +97,8 @@ bool VorbisLoader::open(const std::string& path)
     auto info = stb_vorbis_get_info(m_vorbisFile);
     if (info.channels > 2)
     {
-        SDL_CloseIO(m_file.file);
-        m_file.file = nullptr;
+        /*SDL_CloseIO(m_file.file);
+        m_file.file = nullptr;*/
 
         stb_vorbis_close(m_vorbisFile);
         m_vorbisFile = nullptr;
