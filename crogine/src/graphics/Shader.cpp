@@ -267,7 +267,7 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
     std::string version = "#version 100\n#define MOBILE\n" + vendorDef;
     const char* src[] = { version.c_str(), precision.c_str(), defines, vertex};
 #else
-#if defined GL41 || defined __APPLE__
+#if defined GL41 || defined SDL_PLATFORM_APPLE
     std::string version = "#version 410 core\n" + vendorDef;
 #else
     std::string version = "#version 460 core\n" + vendorDef;
@@ -553,7 +553,7 @@ std::string Shader::parseFile(const std::string& path)
 
     //open file and verify
     RaiiRWops file;
-    file.file = SDL_RWFromFile(path.c_str(), "r");
+    file.file = SDL_IOFromFile(path.c_str(), "r");
     if (!file.file)
     {
         Logger::log("Failed opening " + path, Logger::Type::Error);
@@ -561,7 +561,7 @@ std::string Shader::parseFile(const std::string& path)
     }
 
     char buf;
-    while (SDL_RWread(file.file, &buf, 1, 1))
+    while (SDL_ReadIO(file.file, &buf, 1))
     {
         retVal.push_back(buf);
     }

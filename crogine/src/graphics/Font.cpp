@@ -114,7 +114,7 @@ namespace
             if (fontData.count(path) == 0)
             {
                 RaiiRWops fontFile;
-                fontFile.file = SDL_RWFromFile(path.c_str(), "r");
+                fontFile.file = SDL_IOFromFile(path.c_str(), "r");
                 if (!fontFile.file)
                 {
                     Logger::log("Failed opening " + path, Logger::Type::Error);
@@ -122,13 +122,13 @@ namespace
                 }
 
                 std::vector<std::uint8_t> buffer;
-                buffer.resize(fontFile.file->size(fontFile.file));
+                buffer.resize(SDL_GetIOSize(fontFile.file));
                 if (buffer.size() == 0)
                 {
                     Logger::log("Could not open " + path + ": files size was 0", Logger::Type::Error);
                     return {};
                 }
-                SDL_RWread(fontFile.file, buffer.data(), buffer.size(), 1);
+                SDL_ReadIO(fontFile.file, buffer.data(), buffer.size());
 
                 fontData.insert(std::make_pair(path, buffer));
             }

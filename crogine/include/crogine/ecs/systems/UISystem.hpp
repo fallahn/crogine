@@ -55,7 +55,7 @@ namespace cro
             SDL_KeyboardEvent key;             //!< SDL_KeyboardEvent data if this is a keyboard event
             SDL_MouseButtonEvent button;       //!< SDL_MouseButtonEvent data if this is a mouse button event
             SDL_JoyButtonEvent jbutton;        //!< SDL_JoyButtonEvent data if this is a joystick button event
-            SDL_ControllerButtonEvent cbutton; //!< SDL_ControllerButtonEvent data if this is a controller button event
+            SDL_GamepadButtonEvent gbutton;    //!< SDL_GamepadButtonEvent data if this is a controller button event
             SDL_TouchFingerEvent tfinger;      //!< SDL_TouchFingerEvent data if this is a touch event
         };
     };
@@ -76,9 +76,9 @@ namespace cro
             SDL_JoyAxisEvent jaxis;         //!< Joystick axis event data
             SDL_JoyBallEvent jball;         //!< Joystick ball event data
             SDL_JoyHatEvent jhat;           //!< Joystick hat event data
-            SDL_ControllerAxisEvent caxis;  //!< Game Controller axis event data
-            SDL_MultiGestureEvent mgesture; //!< Gesture event data
-            SDL_DollarGestureEvent dgesture;//!< Gesture event data
+            SDL_GamepadAxisEvent caxis;  //!< Game Controller axis event data
+            //SDL_MultiGestureEvent mgesture; //!< Gesture event data
+            //SDL_DollarGestureEvent dgesture;//!< Gesture event data
         };
 
         static constexpr std::uint32_t CursorEnter = std::numeric_limits<std::uint32_t>::max(); //!< event type when cursor deactivates an input

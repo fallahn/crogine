@@ -41,7 +41,7 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 
 //oh apple you so quirky
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
 //silence deprecated openal warnings
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif

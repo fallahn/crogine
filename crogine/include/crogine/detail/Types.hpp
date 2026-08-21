@@ -31,9 +31,9 @@ source distribution.
 
 #include <crogine/Config.hpp>
 
-#include <SDL_stdinc.h>
-#include <SDL_events.h>
-#include <SDL_rwops.h>
+#include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_iostream.h>
 
 namespace cro
 {
@@ -63,7 +63,7 @@ namespace cro
     //used to automatically close RWops files
     struct RaiiRWops final
     {
-        SDL_RWops* file;
+        SDL_IOStream* file;
         ~RaiiRWops()
         {
             close();
@@ -79,7 +79,7 @@ namespace cro
         {
             if (file)
             {
-                SDL_RWclose(file);
+                SDL_CloseIO(file);
                 file = nullptr;
             }
         }

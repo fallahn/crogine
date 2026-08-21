@@ -634,7 +634,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\ktx\include;$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include;$(SolutionDir)extlibs\opus\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\ktx\include;$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl3\include;$(SolutionDir)extlibs\openal\include;$(SolutionDir)extlibs\opus\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>CLIP_SCREENSHOT;_SCL_SECURE_NO_WARNINGS;PARALLEL_GLOBAL_DISABLE;CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;CRO_DEBUG_;_WINDLL;%(PreprocessorDefinitions);GLM_ENABLE_EXPERIMENTAL</PreprocessorDefinitions>
       <AdditionalOptions>/w34457 /w34456 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -644,8 +644,8 @@
       <DisableSpecificWarnings>4723;5287</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\ktx\win64\lib;$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\openal\msvc\x64\debug;$(SolutionDir)extlibs\opus\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;IPHLPAPI.lib;%(AdditionalDependencies);openal32.lib;DbgHelp.lib;Shlwapi.lib;opus-d.lib;ktx.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\ktx\win64\lib;$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl3\lib\x64;$(SolutionDir)extlibs\openal\msvc\x64\debug;$(SolutionDir)extlibs\opus\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL3.lib;freetype.lib;ws2_32.lib;winmm.lib;IPHLPAPI.lib;%(AdditionalDependencies);openal32.lib;DbgHelp.lib;Shlwapi.lib;opus-d.lib;ktx.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugASan|x64'">
@@ -711,7 +711,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\ktx\include;$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include;$(SolutionDir)extlibs\opus\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\ktx\include;$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl3\include;$(SolutionDir)extlibs\openal\include;$(SolutionDir)extlibs\opus\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GL41;CLIP_SCREENSHOT;_SCL_SECURE_NO_WARNINGS;CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions);GLM_ENABLE_EXPERIMENTAL</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -720,8 +720,8 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\ktx\win64\lib;$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\release;$(SolutionDir)extlibs\openal\msvc\x64;$(SolutionDir)extlibs\opus\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>openal32.lib;SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;IPHLPAPI.lib;DbgHelp.lib;Shlwapi.lib;opus.lib;%(AdditionalDependencies);ktx.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\ktx\win64\lib;$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl3\lib\x64;$(SolutionDir)extlibs\enet\lib\release;$(SolutionDir)extlibs\openal\msvc\x64;$(SolutionDir)extlibs\opus\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>openal32.lib;SDL3.lib;freetype.lib;ws2_32.lib;winmm.lib;IPHLPAPI.lib;DbgHelp.lib;Shlwapi.lib;opus.lib;%(AdditionalDependencies);ktx.lib</AdditionalDependencies>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <SubSystem>Windows</SubSystem>
     </Link>

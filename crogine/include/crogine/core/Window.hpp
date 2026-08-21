@@ -34,9 +34,9 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
-#include <SDL_video.h>
-#include <SDL_events.h>
-#include <SDL_atomic.h>
+#include <SDL3/SDL_video.h>
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_atomic.h>
 
 #include <string>
 #include <vector>
@@ -61,7 +61,7 @@ namespace cro
     public:
         enum StyleFlags
         {
-            FullScreen = SDL_WINDOW_FULLSCREEN_DESKTOP,
+            FullScreen = SDL_WINDOW_FULLSCREEN,
             Borderless = SDL_WINDOW_BORDERLESS,
             Resizable  = SDL_WINDOW_RESIZABLE
         };

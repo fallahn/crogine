@@ -533,10 +533,10 @@ STBIDEF char *stbi_zlib_decode_noheader_malloc(const char *buffer, int len, int 
 STBIDEF int   stbi_zlib_decode_noheader_buffer(char *obuffer, int olen, const char *ibuffer, int ilen);
 
 
-struct SDL_RWops;
+struct SDL_IOStream;
 struct STBIMG_stbio_RWops final
 {
-    SDL_RWops* src = nullptr;
+    SDL_IOStream* src = nullptr;
     stbi_io_callbacks stb_cbs;
     int atEOF = 0; //defaults to 0; 1: reached EOF or error on read, 2: error on seek
 };

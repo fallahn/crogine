@@ -61,7 +61,7 @@ bool VorbisLoader::open(const std::string& path)
     //close any open files
     if (m_file.file)
     {
-        SDL_RWclose(m_file.file);
+        SDL_CloseIO(m_file.file);
         m_file.file = nullptr;
 
         m_dataChunk = {};
@@ -74,7 +74,7 @@ bool VorbisLoader::open(const std::string& path)
         m_vorbisFile = nullptr;
     }
 
-    m_file.file = SDL_RWFromFile(path.c_str(), "rb");
+    m_file.file = SDL_IOFromFile(path.c_str(), "rb");
     if (!m_file.file)
     {
         Logger::log("Failed opening " + path, Logger::Type::Error);
@@ -86,7 +86,7 @@ bool VorbisLoader::open(const std::string& path)
     m_vorbisFile = stb_vorbis_open_file(m_file.file, 0, nullptr, nullptr);
     if (!m_vorbisFile)
     {
-        SDL_RWclose(m_file.file);
+        SDL_CloseIO(m_file.file);
         m_file.file = nullptr;
 
         Logger::log("Failed opening vorbis file, error "/* + std::to_string(err)*/, Logger::Type::Error);
@@ -96,7 +96,7 @@ bool VorbisLoader::open(const std::string& path)
     auto info = stb_vorbis_get_info(m_vorbisFile);
     if (info.channels > 2)
     {
-        SDL_RWclose(m_file.file);
+        SDL_CloseIO(m_file.file);
         m_file.file = nullptr;
 
         stb_vorbis_close(m_vorbisFile);

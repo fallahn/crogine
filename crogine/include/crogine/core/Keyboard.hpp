@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/String.hpp>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include <cstdint>
 #include <cstring>
@@ -48,7 +48,7 @@ namespace cro::Keyboard
     */
     static inline bool isKeyPressed(SDL_Scancode scancode)
     {
-        CRO_ASSERT(scancode < SDL_NUM_SCANCODES, "scancode out of range!");
+        CRO_ASSERT(scancode < SDL_SCANCODE_COUNT, "scancode out of range!");
         auto* state = SDL_GetKeyboardState(nullptr);
         return state[scancode] != 0;
     }
@@ -60,7 +60,7 @@ namespace cro::Keyboard
     */
     static inline bool isKeyPressed(SDL_Keycode key)
     {
-        return isKeyPressed(SDL_GetScancodeFromKey(key));
+        return isKeyPressed(SDL_GetScancodeFromKey(key, nullptr));
     }
 
     /*!

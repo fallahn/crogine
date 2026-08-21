@@ -19,9 +19,9 @@
 #	define GLM_PLATFORM GLM_PLATFORM_UNKNOWN
 #elif defined(__CYGWIN__)
 #	define GLM_PLATFORM GLM_PLATFORM_CYGWIN
-#elif defined(__QNXNTO__)
+#elif defined(SDL_PLATFORM_QNXNTO)
 #	define GLM_PLATFORM GLM_PLATFORM_QNXNTO
-#elif defined(__APPLE__)
+#elif defined(SDL_PLATFORM_APPLE)
 #	define GLM_PLATFORM GLM_PLATFORM_APPLE
 #elif defined(WINCE)
 #	define GLM_PLATFORM GLM_PLATFORM_WINCE

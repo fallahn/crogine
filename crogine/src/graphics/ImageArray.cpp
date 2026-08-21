@@ -42,7 +42,7 @@ namespace cro::Detail
     {
         dst.clear();
 
-        auto* file = SDL_RWFromFile(path.c_str(), "rb");
+        auto* file = SDL_IOFromFile(path.c_str(), "rb");
         if (!file)
         {
             Logger::log("Failed opening " + path, Logger::Type::Error);
@@ -54,7 +54,7 @@ namespace cro::Detail
 
         std::int32_t w, h, d;
         stbi_info_from_callbacks(&io.stb_cbs, &io, &w, &h, &d);
-        file->seek(file, 0, RW_SEEK_SET);
+        SDL_SeekIO(file, 0, SDL_IO_SEEK_SET);
 
         //if this is RGB pad out to RGBA for row alignment
         std::int32_t wantedChannels = 0;
@@ -76,14 +76,14 @@ namespace cro::Detail
             channels = d;
 
             stbi_image_free(img);
-            SDL_RWclose(file);
+            SDL_CloseIO(file);
 
             return true;
         }
         else
         {
             Logger::log("failed to open image: " + path, Logger::Type::Error);
-            SDL_RWclose(file);
+            SDL_CloseIO(file);
 
             return false;
         }
@@ -95,7 +95,7 @@ namespace cro::Detail
     {
         dst.clear();
 
-        auto* file = SDL_RWFromFile(path.c_str(), "rb");
+        auto* file = SDL_IOFromFile(path.c_str(), "rb");
         if (!file)
         {
             Logger::log("Failed opening " + path, Logger::Type::Error);
@@ -107,7 +107,7 @@ namespace cro::Detail
 
         std::int32_t w, h, d;
         stbi_info_from_callbacks(&io.stb_cbs, &io, &w, &h, &d);
-        file->seek(file, 0, RW_SEEK_SET);
+        SDL_SeekIO(file, 0, SDL_IO_SEEK_SET);
 
         //if this is RGB pad out to RGBA for row alignment
         std::int32_t wantedChannels = 0;
@@ -130,14 +130,14 @@ namespace cro::Detail
             channels = d;
 
             stbi_image_free(img);
-            SDL_RWclose(file);
+            SDL_CloseIO(file);
 
             return true;
         }
         else
         {
             Logger::log("failed to open image: " + path, Logger::Type::Error);
-            SDL_RWclose(file);
+            SDL_CloseIO(file);
 
             return false;
         }
@@ -149,7 +149,7 @@ namespace cro::Detail
     {
         dst.clear();
 
-        auto* file = SDL_RWFromFile(path.c_str(), "rb");
+        auto* file = SDL_IOFromFile(path.c_str(), "rb");
         if (!file)
         {
             Logger::log("Failed opening " + path, Logger::Type::Error);
@@ -161,7 +161,7 @@ namespace cro::Detail
 
         std::int32_t w, h, d;
         stbi_info_from_callbacks(&io.stb_cbs, &io, &w, &h, &d);
-        file->seek(file, 0, RW_SEEK_SET);
+        SDL_SeekIO(file, 0, SDL_IO_SEEK_SET);
 
         //if this is RGB pad out to RGBA for row alignment
         std::int32_t wantedChannels = 0;
@@ -188,7 +188,7 @@ namespace cro::Detail
             channels = d;
 
             stbi_image_free(img);
-            SDL_RWclose(file);
+            SDL_CloseIO(file);
 
             stbi_ldr_to_hdr_gamma(2.2f);
 
@@ -197,7 +197,7 @@ namespace cro::Detail
         else
         {
             Logger::log("failed to open image: " + path, Logger::Type::Error);
-            SDL_RWclose(file);
+            SDL_CloseIO(file);
 
             stbi_ldr_to_hdr_gamma(2.2f);
 

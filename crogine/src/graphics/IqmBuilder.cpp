@@ -72,7 +72,7 @@ IqmBuilder::~IqmBuilder()
 {
     if (m_file)
     {
-        SDL_RWclose(m_file);
+        SDL_CloseIO(m_file);
     }
 }
 
@@ -88,22 +88,22 @@ cro::Mesh::Data IqmBuilder::build(AllocationResource*) const
     cro::Mesh::Data returnData;
     returnData.primitiveType = GL_TRIANGLES;
     
-    m_file = SDL_RWFromFile(m_path.c_str(), "rb");
+    m_file = SDL_IOFromFile(m_path.c_str(), "rb");
     if (m_file)
     {
         //do some file checks
-        auto fileSize = SDL_RWsize(m_file);
+        auto fileSize = SDL_GetIOSize(m_file);
         if (fileSize < static_cast<std::int32_t>(sizeof(Iqm::Header)))
         {
             Logger::log(m_path + ": Invalid file size", Logger::Type::Error);
-            SDL_RWclose(m_file);
+            SDL_CloseIO(m_file);
             m_file = nullptr;
             return {};
         }
 
         std::vector<char> fileData(fileSize);
-        auto readCount = SDL_RWread(m_file, fileData.data(), fileSize, 1);
-        SDL_RWclose(m_file);
+        auto readCount = SDL_ReadIO(m_file, fileData.data(), fileSize);
+        SDL_CloseIO(m_file);
         m_file = nullptr;
 
         if (readCount == 0)

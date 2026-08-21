@@ -32,7 +32,7 @@ source distribution.
 #include <crogine/graphics/MeshBuilder.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
 
-#include <SDL_rwops.h>
+#include <SDL3/SDL_iostream.h>
 
 namespace cro
 {
@@ -81,7 +81,7 @@ namespace cro
     private:
         std::string m_path;
         std::size_t m_uid;
-        mutable SDL_RWops* m_file;
+        mutable SDL_IOStream* m_file;
         Mesh::Data build(AllocationResource*) const override;
         mutable Skeleton m_skeleton;
     };

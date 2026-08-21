@@ -31,7 +31,7 @@ source distribution.
 
 #include <crogine/audio/sound_system/SoundSource.hpp>
 
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
 #include "../al.h"
 
 //silence deprecated openal warnings

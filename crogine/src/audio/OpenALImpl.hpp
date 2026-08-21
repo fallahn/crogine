@@ -35,7 +35,7 @@ source distribution.
 #include <crogine/core/ConsoleClient.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
 #include "al.h"
 #include "alc.h"
 #else

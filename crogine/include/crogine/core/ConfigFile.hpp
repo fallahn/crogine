@@ -267,9 +267,9 @@ namespace cro
         std::vector<ConfigProperty> m_properties;
         std::vector<ConfigObject> m_objects;
 
-        bool parseAsJson(SDL_RWops*);
+        bool parseAsJson(SDL_IOStream*);
 
-        std::size_t write(SDL_RWops* file, std::uint16_t depth = 0u);
+        std::size_t write(SDL_IOStream* file, std::uint16_t depth = 0u);
 
         bool loadFromFile2(const std::string& path);
     };

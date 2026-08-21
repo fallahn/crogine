@@ -55,7 +55,7 @@ namespace cro
     namespace Detail
     {
         class SDLResource;
-        bool isPSLayout(SDL_GameController*);
+        bool isPSLayout(SDL_Gamepad*);
     }
     class GuiClient;
     class HiResTimer;
@@ -221,10 +221,10 @@ namespace cro
         struct ControllerInfo final
         {
             ControllerInfo() = default;
-            ControllerInfo(SDL_GameController* gc)
+            ControllerInfo(SDL_Gamepad* gc)
                 : controller(gc) { psLayout = Detail::isPSLayout(gc); }
 
-            SDL_GameController* controller = nullptr;
+            SDL_Gamepad* controller = nullptr;
             SDL_Haptic* haptic = nullptr;
             std::int32_t joystickID = -1; //event IDs don't actually match the controllers
 

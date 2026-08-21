@@ -129,7 +129,7 @@ void App::loadPlugin(const std::string& path, StateStack& stateStack)
     }
 
     std::string fullPath = path;
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
     fullPath = FileSystem::getResourcePath() + fullPath;
     fullPath += "/libcroplug.dylib";
 #else

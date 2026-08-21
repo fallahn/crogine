@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef __APPLE__
+#ifndef SDL_PLATFORM_APPLE
 #include <crogine/detail/StackDump.hpp>
 #include <signal.h>
 static void winAbort(int)
@@ -65,9 +65,9 @@ static void winFPE(int)
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/String.hpp>
 
-#include <SDL.h>
-#include <SDL_joystick.h>
-#include <SDL_filesystem.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_joystick.h>
+#include <SDL3/SDL_filesystem.h>
 
 #include <future>
 
@@ -253,7 +253,7 @@ App::App(std::uint32_t styleFlags)
     CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
 #ifndef CRO_DEBUG_
-#ifndef __APPLE__ //mac actually gives a decent stack dump
+#ifndef SDL_PLATFORM_APPLE //mac actually gives a decent stack dump
     //register custom abort which prints the call stack
     signal(SIGABRT, &winAbort);
     signal(SIGSEGV, &winSeg);
@@ -267,16 +267,16 @@ App::App(std::uint32_t styleFlags)
     //urg sometimes some USB driver or something crashes and causes SDL_Init to hang
     //until the PC is restarted - this hacks around it while debugging (but disables controllers)
     //LogW << "Controller input is disabled" << std::endl;
-#define INIT_FLAGS SDL_INIT_EVERYTHING & ~(SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK)
+#define INIT_FLAGS SDL_INIT_EVERYTHING & ~(SDL_INIT_HAPTIC | SDL_INIT_GAMEPAD | SDL_INIT_JOYSTICK)
 #else
-#define INIT_FLAGS SDL_INIT_EVERYTHING
+#define INIT_FLAGS SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMEPAD | SDL_INIT_EVENTS |SDL_INIT_SENSOR
 #endif
 
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5, "1");
 #ifdef _WIN32
-    SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2");
+    //SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2");
 #endif
-    if (SDL_Init(INIT_FLAGS) < 0)
+    if (!SDL_Init(INIT_FLAGS))
     {
         const std::string err = std::string("SDL:") + SDL_GetError();
         Logger::log("Failed init: " + err, Logger::Type::Error, cro::Logger::Output::All);
@@ -286,9 +286,9 @@ App::App(std::uint32_t styleFlags)
         m_instance = this;
 
         //maps the steam deck rear buttons to the controller paddles
-        //auto mapResult = SDL_GameControllerAddMapping("03000000de2800000512000011010000,Steam Deck,platform:Linux,crc:17f6,a:b3,b:b4,x:b5,y:b6,back:b11,guide:b13,start:b12,leftstick:b14,rightstick:b15,leftshoulder:b7,rightshoulder:b8,dpup:b16,dpdown:b17,dpleft:b18,dpright:b19,misc1:b2,paddle1:b21,paddle2:b20,paddle3:b23,paddle4:b22,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:a9,righttrigger:a8");
-        auto mapResult = SDL_GameControllerAddMapping("03000000de2800000512000011010000,Steam Deck,a:b3,b:b4,back:b11,dpdown:b17,dpleft:b18,dpright:b19,dpup:b16,guide:b13,leftshoulder:b7,leftstick:b14,lefttrigger:a9,leftx:a0,lefty:a1,misc1:b2,paddle1:b21,paddle2:b20,paddle3:b23,paddle4:b22,rightshoulder:b8,rightstick:b15,righttrigger:a8,rightx:a2,righty:a3,start:b12,x:b5,y:b6,platform:Linux");
-        //auto mapResult = SDL_GameControllerAddMapping("03000000de2800000512000010010000,Steam Deck,a:b3,b:b4,back:b11,dpdown:b17,dpleft:b18,dpright:b19,dpup:b16,guide:b13,leftshoulder:b7,leftstick:b14,lefttrigger:a9,leftx:a0,lefty:a1,rightshoulder:b8,rightstick:b15,righttrigger:a8,rightx:a2,righty:a3,start:b12,x:b5,y:b6,platform:Linux");
+        //auto mapResult = SDL_AddGamepadMapping("03000000de2800000512000011010000,Steam Deck,platform:Linux,crc:17f6,a:b3,b:b4,x:b5,y:b6,back:b11,guide:b13,start:b12,leftstick:b14,rightstick:b15,leftshoulder:b7,rightshoulder:b8,dpup:b16,dpdown:b17,dpleft:b18,dpright:b19,misc1:b2,paddle1:b21,paddle2:b20,paddle3:b23,paddle4:b22,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:a9,righttrigger:a8");
+        auto mapResult = SDL_AddGamepadMapping("03000000de2800000512000011010000,Steam Deck,a:b3,b:b4,back:b11,dpdown:b17,dpleft:b18,dpright:b19,dpup:b16,guide:b13,leftshoulder:b7,leftstick:b14,lefttrigger:a9,leftx:a0,lefty:a1,misc1:b2,paddle1:b21,paddle2:b20,paddle3:b23,paddle4:b22,rightshoulder:b8,rightstick:b15,righttrigger:a8,rightx:a2,righty:a3,start:b12,x:b5,y:b6,platform:Linux");
+        //auto mapResult = SDL_AddGamepadMapping("03000000de2800000512000010010000,Steam Deck,a:b3,b:b4,back:b11,dpdown:b17,dpleft:b18,dpright:b19,dpup:b16,guide:b13,leftshoulder:b7,leftstick:b14,lefttrigger:a9,leftx:a0,lefty:a1,rightshoulder:b8,rightstick:b15,righttrigger:a8,rightx:a2,righty:a3,start:b12,x:b5,y:b6,platform:Linux");
         if (mapResult == -1)
         {
             LogE << "SDL: Controller mapping failed - " << SDL_GetError() << std::endl;
@@ -332,16 +332,16 @@ App::~App()
     
     for (auto js : m_joysticks)
     {
-        SDL_JoystickClose(js.second);
+        SDL_CloseJoystick(js.second);
     }
 
     for (auto info : m_controllers)
     {
         if (info.haptic)
         {
-            SDL_HapticClose(info.haptic);
+            SDL_CloseHaptic(info.haptic);
         }
-        SDL_GameControllerClose(info.controller);
+        SDL_CloseGamepad(info.controller);
     }
     
     //SDL cleanup
@@ -351,10 +351,7 @@ App::~App()
 //public
 void App::run(bool resetSettings)
 {
-    SDL_version v;
-    SDL_VERSION(&v);
-
-    LogI << "Using SDL " << (int)v.major << "." << (int)v.minor << "." << (int)v.patch << std::endl;
+    LogI << "Using SDL " << SDL_MAJOR_VERSION << "." << SDL_MINOR_VERSION << "." << SDL_MICRO_VERSION << std::endl;
 
     //hmm we have to *copy* this ?? (it also has to live as long as the app runs)
     std::vector<std::uint8_t> fontBuff(std::begin(FA_Regular400), std::end(FA_Regular400));
@@ -369,7 +366,7 @@ void App::run(bool resetSettings)
 #ifdef PLATFORM_MOBILE
         if (!gladLoadGLES2Loader(SDL_GL_GetProcAddress))
 #else
-        if (!gladLoadGLLoader(SDL_GL_GetProcAddress))
+        if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
 #endif //PLATFORM_MOBILE
         {
             Logger::log("Failed loading OpenGL", Logger::Type::Error, Logger::Output::All);
@@ -383,7 +380,7 @@ void App::run(bool resetSettings)
         //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad | ImGuiConfigFlags_NavEnableKeyboard;
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 
-        ImGui_ImplSDL2_InitForOpenGL(m_window.m_window, m_window.m_mainContext);
+        ImGui_ImplSDL3_InitForOpenGL(m_window.m_window, m_window.m_mainContext);
 #ifdef PLATFORM_DESKTOP
 #ifdef GL41
         ImGui_ImplOpenGL3_Init("#version 410 core");
@@ -455,18 +452,36 @@ void App::run(bool resetSettings)
         Console::addCommand("list_audio_devices",
             [](const std::string&)
             {
-                auto deviceCount = SDL_GetNumAudioDevices(0);
+                std::int32_t deviceCount = 0;
+                auto* deviceIDs = SDL_GetAudioPlaybackDevices(&deviceCount);
                 if (deviceCount)
                 {
+                    Console::print("Available Playback Devices:");
                     for (auto i = 0; i < deviceCount; ++i)
                     {
-                        auto str = SDL_GetAudioDeviceName(i, 0);
+                        auto str = SDL_GetAudioDeviceName(deviceIDs[i]);
                         Console::print(str);
                     }
                 }
                 else
                 {
-                    Console::print("No Audio Devices Found");
+                    Console::print("No Playback Devices Found");
+                }
+
+                deviceIDs = SDL_GetAudioRecordingDevices(&deviceCount);
+                if (deviceCount)
+                {
+                    Console::print(" ");
+                    Console::print("Available Recording Devices:");
+                    for (auto i = 0; i < deviceCount; ++i)
+                    {
+                        auto str = SDL_GetAudioDeviceName(deviceIDs[i]);
+                        Console::print(str);
+                    }
+                }
+                else
+                {
+                    Console::print("No Recording Devices Found");
                 }
             }, nullptr);
 
@@ -600,7 +615,7 @@ void App::run(bool resetSettings)
     m_messageBus.disable(); //prevents spamming a load of quit messages
     finalise();
     ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
     m_window.close();
 
@@ -709,7 +724,7 @@ void App::saveScreenshot()
         filename = outPath + filename;
 
         RaiiRWops out;
-        out.file = SDL_RWFromFile(filename.c_str(), "w");
+        out.file = SDL_IOFromFile(filename.c_str(), "w");
         if (out.file)
         {
             stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, bpp, buffer.data(), size.x * bpp);
@@ -796,7 +811,7 @@ void App::handleEvents()
     cro::Event evt;
     while (m_window.pollEvent(evt))
     {
-        ImGui_ImplSDL2_ProcessEvent(&evt);
+        ImGui_ImplSDL3_ProcessEvent(&evt);
 
         //update the count first because handling
         //the event below might query getControllerCount()
@@ -807,17 +822,17 @@ void App::handleEvents()
         //we probably should have been using SDL_NumJoysticks() all along
         //howvever this can report *more* than there are connected if a
         //device counts as a joystick but not a game controller *sigh*
-        if (evt.type == SDL_CONTROLLERDEVICEADDED)
+        if (evt.type == SDL_EVENT_GAMEPAD_ADDED)
         {
             //m_controllerCount++;
-            m_controllerCount = SDL_NumJoysticks();
+            SDL_GetJoysticks(&m_controllerCount);
 
             //LogI << "Controller added, count now " << m_controllerCount << std::endl;
         }
-        else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+        else if (evt.type == SDL_EVENT_GAMEPAD_REMOVED)
         {
             //m_controllerCount--;
-            m_controllerCount = SDL_NumJoysticks();
+            SDL_GetJoysticks(&m_controllerCount);
 
             //LogI << "Controller removed, count now " << m_controllerCount << std::endl;
         }
@@ -831,12 +846,12 @@ void App::handleEvents()
         switch (evt.type)
         {
         default: break;
-        case SDL_AUDIODEVICEADDED:
+        case SDL_EVENT_AUDIO_DEVICE_ADDED:
             //index of the device
         {
             //auto str = SDL_GetAudioDeviceName(evt.adevice.which, evt.adevice.iscapture);
             //LogI << str << " was connected " << std::endl;
-            if (evt.adevice.iscapture)
+            if (evt.adevice.recording)
             {
                 AudioRenderer::onRecordConnect();
             }
@@ -847,10 +862,10 @@ void App::handleEvents()
             postMessage<Message::SystemEvent>(Message::SystemMessage)->type = Message::SystemEvent::AudioDeviceChanged;
         }
             break;
-        case SDL_AUDIODEVICEREMOVED:
+        case SDL_EVENT_AUDIO_DEVICE_REMOVED:
             //SDL ID of device
         {
-            if (evt.adevice.iscapture)
+            if (evt.adevice.recording)
             {
                 AudioRenderer::onRecordDisconnect();
             }
@@ -864,9 +879,9 @@ void App::handleEvents()
             //LogI << "Device " << evt.adevice.which << " was disconnected" << std::endl;
         }
             break;
-        case SDL_CONTROLLERBUTTONUP:
+        case SDL_EVENT_GAMEPAD_BUTTON_UP:
             if (Console::isVisible()
-                && (evt.cbutton.button == GameController::ButtonB || evt.cbutton.button == GameController::ButtonBack))
+                && (evt.gbutton.button == GameController::ButtonB || evt.gbutton.button == GameController::ButtonBack))
             {
                 Console::show();
                 if (!Console::isVisible())
@@ -875,17 +890,17 @@ void App::handleEvents()
                 }
             }
             [[fallthrough]];
-        case SDL_CONTROLLERBUTTONDOWN:
-            GameController::m_lastControllerIndex = GameController::controllerID(evt.cbutton.which);
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+            GameController::m_lastControllerIndex = GameController::controllerID(evt.gbutton.which);
             break;
-        case SDL_CONTROLLERAXISMOTION:
-            if (std::abs(evt.caxis.value) > GameController::RightThumbDeadZone)
+        case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+            if (std::abs(evt.gaxis.value) > GameController::RightThumbDeadZone)
             {
-                GameController::m_lastControllerIndex = GameController::controllerID(evt.caxis.which);
+                GameController::m_lastControllerIndex = GameController::controllerID(evt.gaxis.which);
             }
             break;
-        case SDL_KEYUP:
-            if (evt.key.keysym.scancode == SDL_SCANCODE_GRAVE)
+        case SDL_EVENT_KEY_UP:
+            if (evt.key.scancode == SDL_SCANCODE_GRAVE)
             {
                 Console::show();
                 if (!Console::isVisible())
@@ -895,7 +910,7 @@ void App::handleEvents()
                 return;
             }
                 
-            switch (evt.key.keysym.sym)
+            switch (evt.key.key)
             {
             default: break;
             case SDLK_F1:
@@ -905,23 +920,23 @@ void App::handleEvents()
                     saveSettings();
                 }
                 break;
-#ifdef __APPLE__
-            case SDLK_q:
-                if (evt.key.keysym.mod & KMOD_GUI)
+#ifdef SDL_PLATFORM_APPLE
+            case SDLK_Q:
+                if (evt.key.mod & SDL_KMOD_GUI)
 #else
             case SDLK_F4:
-                if (evt.key.keysym.mod & KMOD_ALT)
+                if (evt.key.mod & SDL_KMOD_ALT)
 #endif
                 {
                     quit();
                 }
                 break;
-#ifdef __APPLE__
-            case SDLK_f:
-                if (evt.key.keysym.mod & (KMOD_GUI | KMOD_CTRL))
+#ifdef SDL_PLATFORM_APPLE
+            case SDLK_F:
+                if (evt.key.mod & (SDL_KMOD_GUI | SDL_KMOD_CTRL))
 #else
             case SDLK_RETURN:
-                if (evt.key.keysym.mod & KMOD_ALT)
+                if (evt.key.mod & SDL_KMOD_ALT)
 #endif
                 {
                     toggleFullScreen();
@@ -932,49 +947,73 @@ void App::handleEvents()
                 break;
             case SDLK_F11:
                 //ctrl f11 enables steam recording...
-                if ((evt.key.keysym.mod & KMOD_CTRL) == 0)
+                if ((evt.key.mod & SDL_KMOD_CTRL) == 0)
                 {
                     toggleFullScreen();
                 }
                 break;
             }
             break;
-        case SDL_QUIT:
+        case SDL_EVENT_QUIT:
             quit();
             break;
-        case SDL_WINDOWEVENT:
+            
+        case SDL_EVENT_WINDOW_SHOWN:
+        case SDL_EVENT_WINDOW_HIDDEN:
+        case SDL_EVENT_WINDOW_EXPOSED:
+        case SDL_EVENT_WINDOW_MOVED:
+        case SDL_EVENT_WINDOW_RESIZED:
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+        case SDL_EVENT_WINDOW_METAL_VIEW_RESIZED:
+        case SDL_EVENT_WINDOW_MINIMIZED:
+        case SDL_EVENT_WINDOW_MAXIMIZED:
+        case SDL_EVENT_WINDOW_RESTORED:
+        case SDL_EVENT_WINDOW_MOUSE_ENTER:
+        case SDL_EVENT_WINDOW_MOUSE_LEAVE:
+        case SDL_EVENT_WINDOW_FOCUS_GAINED:
+        case SDL_EVENT_WINDOW_FOCUS_LOST:
+        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+        case SDL_EVENT_WINDOW_HIT_TEST:
+        case SDL_EVENT_WINDOW_ICCPROF_CHANGED:
+        case SDL_EVENT_WINDOW_DISPLAY_CHANGED:
+        case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
+        case SDL_EVENT_WINDOW_SAFE_AREA_CHANGED:
+        case SDL_EVENT_WINDOW_OCCLUDED:
+        case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
+        case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
+        case SDL_EVENT_WINDOW_DESTROYED:            
         {
             auto* msg = m_messageBus.post<Message::WindowEvent>(Message::Type::WindowMessage);
-            msg->event = evt.window.event;
+            msg->event = evt.type;
             msg->windowID = evt.window.windowID;
             msg->data0 = evt.window.data1;
             msg->data1 = evt.window.data2;
         }
         //prevents spamming the next frame with a giant DT
-        if (evt.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+        if (evt.type == SDL_EVENT_WINDOW_FOCUS_GAINED)
         {
             resetFrameTime();
         }
 
             break;
-        case SDL_CONTROLLERDEVICEADDED:
+        case SDL_EVENT_GAMEPAD_ADDED:
         {
             auto id = evt.cdevice.which;
-            if (SDL_IsGameController(id))
+            if (SDL_IsGamepad(id))
             {
                 ControllerInfo ci;
-                ci.controller = SDL_GameControllerOpen(id);
+                ci.controller = SDL_OpenGamepad(id);
                 if (ci.controller)
                 {
                     //the actual index is different to the id of the event
-                    auto* j = SDL_GameControllerGetJoystick(ci.controller);
-                    ci.joystickID = SDL_JoystickInstanceID(j);                    
+                    auto* j = SDL_GetGamepadJoystick(ci.controller);
+                    ci.joystickID = SDL_GetJoystickID(j);                    
                     ci.psLayout = Detail::isPSLayout(ci.controller);
                     
-                    std::string n = SDL_GameControllerName(ci.controller);
+                    std::string n = SDL_GetGamepadName(ci.controller);
                     ci.printableName = cro::String::fromUtf8(n.begin(), n.end());
 
-                    auto idx = SDL_GameControllerGetPlayerIndex(ci.controller);
+                    auto idx = SDL_GetGamepadPlayerIndex(ci.controller);
                     if (idx != -1)
                     {
                         m_controllers[idx] = ci;
@@ -983,16 +1022,16 @@ void App::handleEvents()
             }
             else
             {
-                m_joysticks.insert(std::make_pair(id, SDL_JoystickOpen(id)));
+                m_joysticks.insert(std::make_pair(id, SDL_OpenJoystick(id)));
             }
         }
             break;
-        case SDL_CONTROLLERDEVICEREMOVED:
+        case SDL_EVENT_GAMEPAD_REMOVED:
         {
             auto id = evt.cdevice.which;
 
             //as the device is disconnected we can't query SDL and have to find the index manually
-            std::int32_t controllerIndex = -1;// SDL_GameControllerGetPlayerIndex(SDL_GameControllerFromInstanceID(id));
+            std::int32_t controllerIndex = -1;// SDL_GetGamepadPlayerIndex(SDL_GetGamepadFromID(id));
             for (auto i = 0; i < GameController::MaxControllers; ++i)
             {
                 if (m_controllers[i].joystickID == id)
@@ -1007,10 +1046,10 @@ void App::handleEvents()
             {
                 if (m_controllers[controllerIndex].haptic)
                 {
-                    SDL_HapticClose(m_controllers[controllerIndex].haptic);
+                    SDL_CloseHaptic(m_controllers[controllerIndex].haptic);
                 }
                 
-                SDL_GameControllerClose(m_controllers[controllerIndex].controller);
+                SDL_CloseGamepad(m_controllers[controllerIndex].controller);
                 //m_controllers[controllerIndex] = {};
 
                 m_controllers[controllerIndex] = m_controllers[m_controllerCount];
@@ -1018,13 +1057,13 @@ void App::handleEvents()
 
                 if (m_controllers[controllerIndex].controller)
                 {
-                    SDL_GameControllerSetPlayerIndex(m_controllers[controllerIndex].controller, controllerIndex);
+                    SDL_SetGamepadPlayerIndex(m_controllers[controllerIndex].controller, controllerIndex);
                 }
             }
 
             if (m_joysticks.count(id) > 0)
             {
-                SDL_JoystickClose(m_joysticks[id]);
+                SDL_CloseJoystick(m_joysticks[id]);
                 m_joysticks.erase(id);
             }
         }
@@ -1060,7 +1099,7 @@ void App::handleMessages()
 void App::doImGui()
 {
     ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplSDL2_NewFrame(/*m_window.m_window*/);
+    ImGui_ImplSDL3_NewFrame(/*m_window.m_window*/);
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
 
@@ -1143,8 +1182,7 @@ void App::removeWindows(const GuiClient* c)
 
 App::WindowSettings App::loadSettings() const
 {
-    SDL_DisplayMode mode;
-    SDL_GetDesktopDisplayMode(0, &mode);
+    const SDL_DisplayMode* mode = SDL_GetDesktopDisplayMode(0);
 
     WindowSettings settings;
     ConfigFile cfg;
@@ -1155,11 +1193,11 @@ App::WindowSettings App::loadSettings() const
         {
             if (prop.getName() == "width")
             {
-                settings.width = std::clamp(prop.getValue<std::int32_t>(), std::min(640, mode.w - 1), mode.w);
+                settings.width = std::clamp(prop.getValue<std::int32_t>(), std::min(640, mode->w - 1), mode->w);
             }
             else if (prop.getName() == "height")
             {
-                settings.height = std::clamp(prop.getValue<std::int32_t>(), std::min(480, mode.h - 1), mode.h);
+                settings.height = std::clamp(prop.getValue<std::int32_t>(), std::min(480, mode->h - 1), mode->h);
             }
             else if (prop.getName() == "fullscreen")
             {
@@ -1187,8 +1225,8 @@ App::WindowSettings App::loadSettings() const
             }
             else if (prop.getName() == "window_size")
             {
-                const float modeWidth = static_cast<float>(mode.w);
-                const float modeHeight = static_cast<float>(mode.h);
+                const float modeWidth = static_cast<float>(mode->w);
+                const float modeHeight = static_cast<float>(mode->h);
 
                 settings.windowedSize = prop.getValue<glm::vec2>();
                 settings.windowedSize.x = std::clamp(settings.windowedSize.x, std::min(640.f, modeWidth - 1.f), modeWidth);
@@ -1196,8 +1234,8 @@ App::WindowSettings App::loadSettings() const
             }
             else if (prop.getName() == "full_size")
             {
-                const float modeWidth = static_cast<float>(mode.w);
-                const float modeHeight = static_cast<float>(mode.h);
+                const float modeWidth = static_cast<float>(mode->w);
+                const float modeHeight = static_cast<float>(mode->h);
 
                 settings.fullscreenSize = prop.getValue<glm::vec2>();
                 settings.fullscreenSize.x = std::clamp(settings.fullscreenSize.x, std::min(640.f, modeWidth - 1.f), modeWidth);
@@ -1294,7 +1332,7 @@ void App::saveSettings()
     saveSettings.save(m_prefPath + cfgName);
 }
 
-bool Detail::isPSLayout(SDL_GameController* gc)
+bool Detail::isPSLayout(SDL_Gamepad* gc)
 {
     const std::array NameStrings =
     {
@@ -1310,7 +1348,7 @@ bool Detail::isPSLayout(SDL_GameController* gc)
         std::string("sony"),
     };
 
-    auto name = SDL_GameControllerName(gc);
+    auto name = SDL_GetGamepadName(gc);
     if (name)
     {
         auto nameString = cro::Util::String::toLower(name);

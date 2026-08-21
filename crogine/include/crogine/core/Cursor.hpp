@@ -29,7 +29,7 @@ source distribution.
 
 #pragma once
 
-#include <SDL_mouse.h>
+#include <SDL3/SDL_mouse.h>
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/SDLResource.hpp>
@@ -55,18 +55,18 @@ namespace cro
     */
     enum class SystemCursor
     {
-        Arrow     = SDL_SYSTEM_CURSOR_ARROW,     //!< Arrow
-        IBeam     = SDL_SYSTEM_CURSOR_IBEAM,     //!< i-beam
+        Arrow     = SDL_SYSTEM_CURSOR_DEFAULT,     //!< Arrow
+        IBeam     = SDL_SYSTEM_CURSOR_TEXT,     //!< i-beam
         Wait      = SDL_SYSTEM_CURSOR_WAIT,      //!< Wait
         Crosshair = SDL_SYSTEM_CURSOR_CROSSHAIR, //!< Crosshair
-        SmallWait = SDL_SYSTEM_CURSOR_WAITARROW, //!< Small wait or wait of not available on the current platform
-        SizeNWSE  = SDL_SYSTEM_CURSOR_SIZENWSE,  //!< Double arrow pointing northwest / southeast
-        SizeNESW  = SDL_SYSTEM_CURSOR_SIZENESW,  //!< Double arrow pointing northeast / southwest
-        SizeWE    = SDL_SYSTEM_CURSOR_SIZEWE,    //!< Double arrow pointing west and east
-        SizeNS    = SDL_SYSTEM_CURSOR_SIZENS,    //!< Double arrow pointing north and south
-        SizeAll   = SDL_SYSTEM_CURSOR_SIZEALL,   //!< Four pointed arrow pointing north, east, south and west
-        No        = SDL_SYSTEM_CURSOR_NO,        //!< Slashed circle or crossbones
-        Hand      = SDL_SYSTEM_CURSOR_HAND       //!< Hand
+        SmallWait = SDL_SYSTEM_CURSOR_PROGRESS, //!< Small wait or wait of not available on the current platform
+        SizeNWSE  = SDL_SYSTEM_CURSOR_NWSE_RESIZE,  //!< Double arrow pointing northwest / southeast
+        SizeNESW  = SDL_SYSTEM_CURSOR_NESW_RESIZE,  //!< Double arrow pointing northeast / southwest
+        SizeWE    = SDL_SYSTEM_CURSOR_EW_RESIZE,    //!< Double arrow pointing west and east
+        SizeNS    = SDL_SYSTEM_CURSOR_NS_RESIZE,    //!< Double arrow pointing north and south
+        SizeAll   = SDL_SYSTEM_CURSOR_MOVE,   //!< Four pointed arrow pointing north, east, south and west
+        No        = SDL_SYSTEM_CURSOR_NOT_ALLOWED,        //!< Slashed circle or crossbones
+        Hand      = SDL_SYSTEM_CURSOR_POINTER       //!< Hand
     };
 
     class CRO_EXPORT_API Cursor final : public Detail::SDLResource

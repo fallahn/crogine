@@ -33,8 +33,8 @@ source distribution.
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/detail/Types.hpp>
 
-#include <SDL_gamecontroller.h>
-#include <SDL_haptic.h>
+#include <SDL3/SDL_gamepad.h>
+#include <SDL3/SDL_haptic.h>
 
 #include <string>
 
@@ -81,36 +81,36 @@ namespace cro
 
         enum
         {
-            AxisRightX = SDL_CONTROLLER_AXIS_RIGHTX,
-            AxisRightY = SDL_CONTROLLER_AXIS_RIGHTY,
-            AxisLeftX = SDL_CONTROLLER_AXIS_LEFTX,
-            AxisLeftY = SDL_CONTROLLER_AXIS_LEFTY,
-            TriggerLeft = SDL_CONTROLLER_AXIS_TRIGGERLEFT,
-            TriggerRight = SDL_CONTROLLER_AXIS_TRIGGERRIGHT
+            AxisRightX = SDL_GAMEPAD_AXIS_RIGHTX,
+            AxisRightY = SDL_GAMEPAD_AXIS_RIGHTY,
+            AxisLeftX = SDL_GAMEPAD_AXIS_LEFTX,
+            AxisLeftY = SDL_GAMEPAD_AXIS_LEFTY,
+            TriggerLeft = SDL_GAMEPAD_AXIS_LEFT_TRIGGER,
+            TriggerRight = SDL_GAMEPAD_AXIS_RIGHT_TRIGGER
         };
 
         enum
         {
-            ButtonA = SDL_CONTROLLER_BUTTON_A,
-            ButtonB = SDL_CONTROLLER_BUTTON_B,
-            ButtonX = SDL_CONTROLLER_BUTTON_X,
-            ButtonY = SDL_CONTROLLER_BUTTON_Y,
-            ButtonBack = SDL_CONTROLLER_BUTTON_BACK,
-            ButtonGuide = SDL_CONTROLLER_BUTTON_GUIDE,
-            ButtonStart = SDL_CONTROLLER_BUTTON_START,
-            ButtonLeftStick = SDL_CONTROLLER_BUTTON_LEFTSTICK,
-            ButtonRightStick = SDL_CONTROLLER_BUTTON_RIGHTSTICK,
-            ButtonLeftShoulder= SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
-            ButtonRightShoulder = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
-            DPadUp = SDL_CONTROLLER_BUTTON_DPAD_UP,
-            DPadDown = SDL_CONTROLLER_BUTTON_DPAD_DOWN,
-            DPadLeft = SDL_CONTROLLER_BUTTON_DPAD_LEFT,
-            DPadRight = SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
-            ButtonTrackpad = SDL_CONTROLLER_BUTTON_TOUCHPAD,
-            PaddleL4 = SDL_CONTROLLER_BUTTON_PADDLE2,
-            PaddleL5 = SDL_CONTROLLER_BUTTON_PADDLE4,
-            PaddleR4 = SDL_CONTROLLER_BUTTON_PADDLE1,
-            PaddleR5 = SDL_CONTROLLER_BUTTON_PADDLE3,
+            ButtonA = SDL_GAMEPAD_BUTTON_SOUTH,
+            ButtonB = SDL_GAMEPAD_BUTTON_EAST,
+            ButtonX = SDL_GAMEPAD_BUTTON_WEST,
+            ButtonY = SDL_GAMEPAD_BUTTON_NORTH,
+            ButtonBack = SDL_GAMEPAD_BUTTON_BACK,
+            ButtonGuide = SDL_GAMEPAD_BUTTON_GUIDE,
+            ButtonStart = SDL_GAMEPAD_BUTTON_START,
+            ButtonLeftStick = SDL_GAMEPAD_BUTTON_LEFT_STICK,
+            ButtonRightStick = SDL_GAMEPAD_BUTTON_RIGHT_STICK,
+            ButtonLeftShoulder= SDL_GAMEPAD_BUTTON_LEFT_SHOULDER,
+            ButtonRightShoulder = SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER,
+            DPadUp = SDL_GAMEPAD_BUTTON_DPAD_UP,
+            DPadDown = SDL_GAMEPAD_BUTTON_DPAD_DOWN,
+            DPadLeft = SDL_GAMEPAD_BUTTON_DPAD_LEFT,
+            DPadRight = SDL_GAMEPAD_BUTTON_DPAD_RIGHT,
+            ButtonTrackpad = SDL_GAMEPAD_BUTTON_TOUCHPAD,
+            PaddleL4 = SDL_GAMEPAD_BUTTON_LEFT_PADDLE1,
+            PaddleL5 = SDL_GAMEPAD_BUTTON_LEFT_PADDLE2,
+            PaddleR4 = SDL_GAMEPAD_BUTTON_RIGHT_PADDLE1,
+            PaddleR5 = SDL_GAMEPAD_BUTTON_RIGHT_PADDLE2,
         };
 
         enum
@@ -244,7 +244,7 @@ namespace cro
 
         /*!
         \brief Returns the event ID associated with the controller at the given index
-        Events such as SDL_CONTROLLERBUTTONDOWN do not contain the ControllerID in the
+        Events such as SDL_EVENT_GAMEPAD_BUTTON_DOWN do not contain the ControllerID in the
         button.which field, rather the underlying ID of the device. This function returns
         that ID currently mapped to the given controller index (which may be -1 if the
         controller is currently disconnected) and can be compared the the event data
@@ -263,7 +263,7 @@ namespace cro
         /*!
         \brief Returns the ControllerID (0-3) from the given joystick index, if it is connected.
         If the joystick ID is not valid this function returns -1. Use it to find the ControllerID
-        of a joystick event such as SDL_CONTROLLERBUTTONDOWN
+        of a joystick event such as SDL_EVENT_GAMEPAD_BUTTON_DOWN
         \begincode
         auto id = controllerID(evt.cbutton.which);
         \endcode

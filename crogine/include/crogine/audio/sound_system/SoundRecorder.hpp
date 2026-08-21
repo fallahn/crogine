@@ -34,7 +34,7 @@ source distribution.
 #include <crogine/audio/sound_system/effects_chain/BaseEffect.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
-#include <SDL_audio.h>
+#include <SDL3/SDL_audio.h>
 
 #include <vector>
 #include <string>

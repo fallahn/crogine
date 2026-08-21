@@ -43,7 +43,7 @@ BinaryMeshBuilder::BinaryMeshBuilder(const std::string& path, bool optimiseOnLoa
     m_uid               (0)
 {
 
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
     if (!FileSystem::fileExists(m_path))
     {
         m_path = cro::FileSystem::getResourcePath() + path;
@@ -89,19 +89,19 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
     Mesh::Data meshData;
 
     RaiiRWops file;
-    file.file = SDL_RWFromFile(m_path.c_str(), "rb");
+    file.file = SDL_IOFromFile(m_path.c_str(), "rb");
     if (file.file)    
     {
         Detail::ModelBinary::Header header;
-        auto len = SDL_RWseek(file.file, 0, RW_SEEK_END);
+        auto len = SDL_SeekIO(file.file, 0, SDL_IO_SEEK_END);
         if (len < sizeof(header))
         {
             LogE << "Unable to open " << m_path << ": invalid file size" << std::endl;
             return {};
         }
 
-        SDL_RWseek(file.file, 0, RW_SEEK_SET);
-        SDL_RWread(file.file, &header, sizeof(header), 1);
+        SDL_SeekIO(file.file, 0, SDL_IO_SEEK_SET);
+        SDL_ReadIO(file.file, &header, sizeof(header));
 
         if (header.magic != Detail::ModelBinary::MAGIC
             && header.magic != Detail::ModelBinary::MAGIC_V1)
@@ -113,7 +113,7 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
         if (header.meshOffset)
         {
             Detail::ModelBinary::MeshHeader meshHeader;
-            SDL_RWread(file.file, &meshHeader, sizeof(meshHeader), 1);
+            SDL_ReadIO(file.file, &meshHeader, sizeof(meshHeader));
 
             if ((meshHeader.flags & VertexProperty::Position) == 0)
             {
@@ -125,7 +125,7 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
             std::vector<std::uint32_t> sizes(meshHeader.indexArrayCount);
             std::vector<std::vector<std::uint32_t>> indexData(meshHeader.indexArrayCount);
 
-            SDL_RWread(file.file, sizes.data(), meshHeader.indexArrayCount * sizeof(std::uint32_t), 1);
+            SDL_ReadIO(file.file, sizes.data(), meshHeader.indexArrayCount * sizeof(std::uint32_t));
 
             std::uint32_t vertStride = 0; //uncompressed stride
             std::uint32_t byteOffset = 0;
@@ -198,16 +198,16 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                 }
             }
 
-            auto pos = SDL_RWtell(file.file);
+            auto pos = SDL_TellIO(file.file);
             auto vertSize = meshHeader.indexArrayOffset - pos;
             tempVerts.resize(vertSize / sizeof(float));
-            SDL_RWread(file.file, tempVerts.data(), vertSize, 1);
+            SDL_ReadIO(file.file, tempVerts.data(), vertSize);
             CRO_ASSERT(tempVerts.size() % vertStride == 0, "");
             
             for (auto i = 0u; i < meshHeader.indexArrayCount; ++i)
             {
                 indexData[i].resize(sizes[i]);
-                SDL_RWread(file.file, indexData[i].data(), sizes[i] * sizeof(std::uint32_t), 1);
+                SDL_ReadIO(file.file, indexData[i].data(), sizes[i] * sizeof(std::uint32_t));
             }
 
             std::vector<float> positions; //used to calculate bounds
@@ -450,19 +450,19 @@ Mesh::Data BinaryMeshBuilder::buildDefault() const
     Mesh::Data meshData;
 
     RaiiRWops file;
-    file.file = SDL_RWFromFile(m_path.c_str(), "rb");
+    file.file = SDL_IOFromFile(m_path.c_str(), "rb");
     if (file.file)
     {
         Detail::ModelBinary::Header header;
-        auto len = SDL_RWseek(file.file, 0, RW_SEEK_END);
+        auto len = SDL_SeekIO(file.file, 0, SDL_IO_SEEK_END);
         if (len < sizeof(header))
         {
             LogE << "Unable to open " << m_path << ": invalid file size" << std::endl;
             return {};
         }
 
-        SDL_RWseek(file.file, 0, RW_SEEK_SET);
-        SDL_RWread(file.file, &header, sizeof(header), 1);
+        SDL_SeekIO(file.file, 0, SDL_IO_SEEK_SET);
+        SDL_ReadIO(file.file, &header, sizeof(header));
 
         if (header.magic != Detail::ModelBinary::MAGIC
             && header.magic != Detail::ModelBinary::MAGIC_V1)
@@ -474,7 +474,7 @@ Mesh::Data BinaryMeshBuilder::buildDefault() const
         if (header.meshOffset)
         {
             Detail::ModelBinary::MeshHeader meshHeader;
-            SDL_RWread(file.file, &meshHeader, sizeof(meshHeader), 1);
+            SDL_ReadIO(file.file, &meshHeader, sizeof(meshHeader));
 
             if ((meshHeader.flags & VertexProperty::Position) == 0)
             {
@@ -486,7 +486,7 @@ Mesh::Data BinaryMeshBuilder::buildDefault() const
             std::vector<std::uint32_t> sizes(meshHeader.indexArrayCount);
             std::vector<std::vector<std::uint32_t>> indexData(meshHeader.indexArrayCount);
 
-            SDL_RWread(file.file, sizes.data(), meshHeader.indexArrayCount * sizeof(std::uint32_t), 1);
+            SDL_ReadIO(file.file, sizes.data(), meshHeader.indexArrayCount * sizeof(std::uint32_t));
 
             std::uint32_t vertStride = 0;
             for (auto i = 0u; i < Mesh::Attribute::Total; ++i)
@@ -529,16 +529,16 @@ Mesh::Data BinaryMeshBuilder::buildDefault() const
                 }
             }
 
-            auto pos = SDL_RWtell(file.file);
+            auto pos = SDL_TellIO(file.file);
             auto vertSize = meshHeader.indexArrayOffset - pos;
             tempVerts.resize(vertSize / sizeof(float));
-            SDL_RWread(file.file, tempVerts.data(), vertSize, 1);
+            SDL_ReadIO(file.file, tempVerts.data(), vertSize);
             CRO_ASSERT(tempVerts.size() % vertStride == 0, "");
 
             for (auto i = 0u; i < meshHeader.indexArrayCount; ++i)
             {
                 indexData[i].resize(sizes[i]);
-                SDL_RWread(file.file, indexData[i].data(), sizes[i] * sizeof(std::uint32_t), 1);
+                SDL_ReadIO(file.file, indexData[i].data(), sizes[i] * sizeof(std::uint32_t));
             }
 
             //process vertex data
@@ -755,10 +755,10 @@ void BinaryMeshBuilder::parseSkeleton(RaiiRWops& file, const Detail::ModelBinary
             LogW << m_path << "\nSkeletal animation requires version 2 or greater. Please re-export the model" << std::endl;
         }
 
-        else if (SDL_RWseek(file.file, header.skeletonOffset, RW_SEEK_SET) > -1)
+        else if (SDL_SeekIO(file.file, header.skeletonOffset, SDL_IO_SEEK_SET) > -1)
         {
             Detail::ModelBinary::SkeletonHeaderV2 skelHeader;
-            SDL_RWread(file.file, &skelHeader, sizeof(skelHeader), 1);
+            SDL_ReadIO(file.file, &skelHeader, sizeof(skelHeader));
             m_skeleton.setRootTransform(glm::make_mat4(skelHeader.rootTransform));
 
             std::vector<Joint> inFrames(skelHeader.frameCount * skelHeader.frameSize);
@@ -767,11 +767,11 @@ void BinaryMeshBuilder::parseSkeleton(RaiiRWops& file, const Detail::ModelBinary
             std::vector<Detail::ModelBinary::SerialAttachment> inAttachments(skelHeader.attachmentCount);
             std::vector<float> inverseBindPose(skelHeader.frameSize * 16);
 
-            SDL_RWread(file.file, inFrames.data(), sizeof(Joint), inFrames.size());
-            SDL_RWread(file.file, inAnims.data(), sizeof(Detail::ModelBinary::SerialAnimation), inAnims.size());
-            SDL_RWread(file.file, inNotifications.data(), sizeof(Detail::ModelBinary::SerialNotification), inNotifications.size());
-            SDL_RWread(file.file, inAttachments.data(), sizeof(Detail::ModelBinary::SerialAttachment), inAttachments.size());
-            SDL_RWread(file.file, inverseBindPose.data(), sizeof(float), inverseBindPose.size());
+            SDL_ReadIO(file.file, inFrames.data(), sizeof(Joint) * inFrames.size());
+            SDL_ReadIO(file.file, inAnims.data(), sizeof(Detail::ModelBinary::SerialAnimation) * inAnims.size());
+            SDL_ReadIO(file.file, inNotifications.data(), sizeof(Detail::ModelBinary::SerialNotification) * inNotifications.size());
+            SDL_ReadIO(file.file, inAttachments.data(), sizeof(Detail::ModelBinary::SerialAttachment) * inAttachments.size());
+            SDL_ReadIO(file.file, inverseBindPose.data(), sizeof(float) * inverseBindPose.size());
 
 
             CRO_ASSERT(inFrames.size() % skelHeader.frameSize == 0, "");

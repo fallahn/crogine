@@ -31,13 +31,13 @@ source distribution.
 
 #include <crogine/core/Log.hpp>
 
-#include <SDL_rwops.h>
+#include <SDL3/SDL_iostream.h>
 
 namespace cro::Detail
 {
     bool readCMF(const std::string& path, MeshFile& output)
     {
-        auto* file = SDL_RWFromFile(path.c_str(), "rb");
+        auto* file = SDL_IOFromFile(path.c_str(), "rb");
 
         if (!file)
         {
@@ -50,7 +50,7 @@ namespace cro::Detail
             if (readCount == 0)
             {
                 LogE << path << ": Unexpected End of File" << std::endl;
-                SDL_RWclose(file);
+                SDL_CloseIO(file);
                 file = nullptr;
                 return true;
             }
@@ -58,12 +58,12 @@ namespace cro::Detail
         };
 
 
-        auto readCount = SDL_RWread(file, &output.flags, sizeof(std::uint8_t), 1);
+        auto readCount = SDL_ReadIO(file, &output.flags, sizeof(std::uint8_t));
         if (checkError(readCount))
         {
             return false;
         }
-        readCount = SDL_RWread(file, &output.arrayCount, sizeof(std::uint8_t), 1);
+        readCount = SDL_ReadIO(file, &output.arrayCount, sizeof(std::uint8_t));
         if (checkError(readCount))
         {
             return false;
@@ -71,12 +71,12 @@ namespace cro::Detail
 
         std::int32_t indexArrayOffset = 0;
         std::vector<std::int32_t> indexSizes(output.arrayCount);
-        readCount = SDL_RWread(file, &indexArrayOffset, sizeof(std::int32_t), 1);
+        readCount = SDL_ReadIO(file, &indexArrayOffset, sizeof(std::int32_t));
         if (checkError(readCount))
         {
             return false;
         }
-        readCount = SDL_RWread(file, indexSizes.data(), sizeof(std::int32_t), output.arrayCount);
+        readCount = SDL_ReadIO(file, indexSizes.data(), sizeof(std::int32_t) * output.arrayCount);
         if (checkError(readCount))
         {
             return false;
@@ -87,7 +87,7 @@ namespace cro::Detail
 
         std::size_t vboSize = (indexArrayOffset - headerSize) / sizeof(float);
         output.vboData.resize(vboSize);
-        readCount = SDL_RWread(file, output.vboData.data(), sizeof(float), vboSize);
+        readCount = SDL_ReadIO(file, output.vboData.data(), sizeof(float) * vboSize);
         if (checkError(readCount))
         {
             return false;
@@ -97,14 +97,14 @@ namespace cro::Detail
         for (auto i = 0; i < output.arrayCount; ++i)
         {
             output.indexArrays[i].resize(indexSizes[i] / sizeof(std::uint32_t));
-            readCount = SDL_RWread(file, output.indexArrays[i].data(), sizeof(std::uint32_t), indexSizes[i] / sizeof(std::uint32_t));
+            readCount = SDL_ReadIO(file, output.indexArrays[i].data(), indexSizes[i]);
             if (checkError(readCount))
             {
                 return false;
             }
         }
 
-        SDL_RWclose(file);
+        SDL_CloseIO(file);
 
         return true;
     }

@@ -47,7 +47,7 @@ DepthTexture::DepthTexture(bool d)
 
 DepthTexture::~DepthTexture()
 {
-#ifndef __APPLE__
+#ifndef SDL_PLATFORM_APPLE
     if (!m_layerHandles.empty())
     {
         glCheck(glDeleteTextures(static_cast<GLsizei>(m_layerHandles.size()), m_layerHandles.data()));
@@ -90,7 +90,7 @@ DepthTexture::DepthTexture(DepthTexture&& other) noexcept
     other.setView({ 0.f, 0.f });
     other.m_layerCount = 0;
 
-#ifndef __APPLE__
+#ifndef SDL_PLATFORM_APPLE
     m_layerHandles.swap(other.m_layerHandles);
 #endif
 }
@@ -99,7 +99,7 @@ DepthTexture& DepthTexture::operator=(DepthTexture&& other) noexcept
 {
     if (&other != this)
     {
-#ifndef __APPLE__
+#ifndef SDL_PLATFORM_APPLE
         if (!m_layerHandles.empty())
         {
             glCheck(glDeleteTextures(static_cast<GLsizei>(m_layerHandles.size()), m_layerHandles.data()));

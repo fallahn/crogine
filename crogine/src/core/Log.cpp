@@ -35,7 +35,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/Spatial.hpp>
 
-#include <SDL_log.h>
+#include <SDL3/SDL_log.h>
 
 #include <sstream>
 
@@ -96,7 +96,7 @@ void Logger::log(const std::string& message, Type type, Output output)
         //output to a log file
         RaiiRWops file;
         auto logPath = cro::App::getPreferencePath() + "output.log";
-        file.file = SDL_RWFromFile(logPath.c_str(), "a");
+        file.file = SDL_IOFromFile(logPath.c_str(), "a");
         if (file.file)
         {
             auto timeStamp = SysTime::timeString();
@@ -104,8 +104,8 @@ void Logger::log(const std::string& message, Type type, Output output)
             timeStamp += SysTime::dateString();
             timeStamp += ": ";
 
-            SDL_RWwrite(file.file, timeStamp.c_str(), 1, timeStamp.size());
-            SDL_RWwrite(file.file, outstring.c_str(), 1, outstring.size());
+            SDL_WriteIO(file.file, timeStamp.c_str(), timeStamp.size());
+            SDL_WriteIO(file.file, outstring.c_str(), outstring.size());
         }
         else
         {

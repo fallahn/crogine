@@ -33,7 +33,7 @@ source distribution.
 #include "../detail/stb_image_write.h"
 #include "../detail/stb_image_resize2.h"
 #include "../detail/SDLImageRead.hpp"
-#include <SDL_rwops.h>
+#include <SDL3/SDL_iostream.h>
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/ImageArray.hpp>
@@ -107,7 +107,7 @@ bool Image::loadFromFile(const std::string& filePath)
         path = FileSystem::getResourcePath() + filePath;
     }
 
-    auto* file = SDL_RWFromFile(path.c_str(), "rb");
+    auto* file = SDL_IOFromFile(path.c_str(), "rb");
     if (!file)
     {
         Logger::log("Failed opening " + path, Logger::Type::Error);
@@ -139,14 +139,14 @@ bool Image::loadFromFile(const std::string& filePath)
         auto result = fmt == 2 ? false : loadFromMemory(static_cast<std::uint8_t*>(img), w, h, format);
         
         stbi_image_free(img);
-        SDL_RWclose(file);
+        SDL_CloseIO(file);
 
         return result;
     }
     else
     {
         Logger::log("failed to open image: " + path, Logger::Type::Error);
-        SDL_RWclose(file);
+        SDL_CloseIO(file);
 
         return false;
     }
@@ -216,8 +216,8 @@ const std::uint8_t* Image::getPixelData() const
 
 void image_writer_func(void* context, void* data, int size)
 {
-    SDL_RWops* file = (SDL_RWops*)context;
-    SDL_RWwrite(file, data, size, 1);
+    SDL_IOStream* file = (SDL_IOStream*)context;
+    SDL_WriteIO(file, data, size);
 }
 
 bool Image::write(const std::string& path, bool flipOnWrite)
@@ -251,7 +251,7 @@ bool Image::write(const std::string& path, bool flipOnWrite)
     stbi_flip_vertically_on_write((m_flipped || flipOnWrite) ? 1 : 0);
 
     RaiiRWops out;
-    out.file = SDL_RWFromFile(path.c_str(), "wb");
+    out.file = SDL_IOFromFile(path.c_str(), "wb");
     return stbi_write_png_to_func(image_writer_func, out.file, m_size.x, m_size.y, pixelWidth, m_data.data(), m_size.x * pixelWidth) != 0;
 }
 

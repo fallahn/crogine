@@ -155,7 +155,7 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
         return false;
     }
 
-    auto* file = SDL_RWFromFile(path.c_str(), "rb");
+    auto* file = SDL_IOFromFile(path.c_str(), "rb");
     if (!file)
     {
         LogE << "SDLRW_ops Failed opening " << filePath << std::endl;
@@ -194,7 +194,7 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
         return false;
     }
     stbi_set_flip_vertically_on_load(0);
-    SDL_RWclose(file);
+    SDL_CloseIO(file);
 
     //create a temp render buffer/frame buffer to render the sides with
     TempFrameBuffer tempFBO;

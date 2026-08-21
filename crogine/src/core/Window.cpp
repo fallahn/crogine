@@ -34,8 +34,8 @@ source distribution.
 #include <crogine/core/Message.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
-#include <SDL.h>
-#include <SDL_video.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_video.h>
 
 #include "../detail/GLCheck.hpp"
 #include "DefaultLoadingScreen.hpp"
@@ -107,7 +107,7 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
 #endif
 #endif
 
-    m_window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, styleMask);
+    m_window = SDL_CreateWindow(title.c_str(), width, height, styleMask);
 
     if (!m_window)
     {
@@ -155,11 +155,11 @@ void Window::setBorderVisible(bool v)
 {
     if (v)
     {
-        SDL_SetWindowBordered(m_window, SDL_TRUE);
+        SDL_SetWindowBordered(m_window, true);
     }
     else
     {
-        SDL_SetWindowBordered(m_window, SDL_FALSE);
+        SDL_SetWindowBordered(m_window, false);
     }
 }
 
@@ -184,7 +184,9 @@ void Window::setVsyncEnabled(bool enabled)
 
 bool Window::getVsyncEnabled() const
 {
-    return SDL_GL_GetSwapInterval() != 0;
+    int i = 0;
+    SDL_GL_GetSwapInterval(&i);
+    return i == 1;
 }
 
 void Window::setFramerateLimit(float fps)
@@ -269,7 +271,8 @@ glm::uvec2 Window::getSize() const
 glm::uvec2 Window::getScaledSize() const
 {
     std::int32_t x, y;
-    SDL_GL_GetDrawableSize(m_window, &x, &y);
+    SDL_GetWindowSizeInPixels(m_window, &x, &y);
+
     return { x, y };
 }
 
@@ -292,16 +295,16 @@ void Window::setSize(glm::uvec2 size)
 
 void Window::setFullScreen(bool fullscreen)
 {
-#ifdef __APPLE__
-#define FS_MODE SDL_WINDOW_FULLSCREEN_DESKTOP
+#ifdef SDL_PLATFORM_APPLE
+#define FS_MODE SDL_WINDOW_FULLSCREEN
 #else
-#define FS_MODE SDL_WINDOW_FULLSCREEN_DESKTOP
+#define FS_MODE SDL_WINDOW_FULLSCREEN
 #endif
 
     std::int32_t mode = 0;
     if (fullscreen)
     {
-#ifndef __APPLE__
+#ifndef SDL_PLATFORM_APPLE
         mode = m_exclusiveFullScreen ? SDL_WINDOW_FULLSCREEN : FS_MODE;
 #else
         mode = FS_MODE;
@@ -319,7 +322,7 @@ void Window::setFullScreen(bool fullscreen)
         if (!fullscreen)
         {
             /*SDL_DisplayMode dm;
-            SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_window), &dm);
+            SDL_GetDesktopDisplayMode(SDL_GetDisplayForWindow(m_window), &dm);
             if (dm.w == static_cast<std::int32_t>(m_previousWindowSize.x)
                 && dm.h == static_cast<std::int32_t>(m_previousWindowSize.y))
             {
@@ -364,13 +367,13 @@ glm::ivec2 Window::getPosition() const
 void Window::setIcon(const std::uint8_t* data)
 {
     //let the bundle set the icon on mac
-#ifndef __APPLE__
+#ifndef SDL_PLATFORM_APPLE
     CRO_ASSERT(m_window, "window not created");
-    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom((void*)(data), 16, 16, 32, 16 * 4, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(16,16,SDL_PixelFormat::SDL_PIXELFORMAT_RGBA8888, (void*)data, 16 * 4);
     if (surface)
     {
         SDL_SetWindowIcon(m_window, surface);
-        SDL_FreeSurface(surface);
+        SDL_DestroySurface(surface);
     }
     else
     {
@@ -384,15 +387,17 @@ const std::vector<glm::uvec2>& Window::getAvailableResolutions() const
     CRO_ASSERT(m_window, "window not created");
     if (m_resolutions.empty())
     {
-        const auto modeCount = SDL_GetNumDisplayModes(0);
+        std::int32_t modeCount = 0;
+        const auto modes = SDL_GetFullscreenDisplayModes(0, &modeCount);
+        //const auto modeCount = SDL_GetNumDisplayModes(0);
         if (modeCount > 0)
         {
-            SDL_DisplayMode mode = { SDL_PIXELFORMAT_UNKNOWN, 0, 0, 0, 0 };
+            /*SDL_DisplayMode mode = { SDL_PIXELFORMAT_UNKNOWN, 0, 0, 0, 0 };*/
             for (auto i = 0; i < modeCount; ++i)
             {
-                if (SDL_GetDisplayMode(0, i, &mode) == 0)
+                //if (SDL_GetDisplayMode(0, i, &mode) == 0)
                 {
-                    m_resolutions.emplace_back(mode.w, mode.h);
+                    m_resolutions.emplace_back(modes[i]->w, modes[i]->h);
                 }
             }
             m_resolutions.erase(std::unique(std::begin(m_resolutions), std::end(m_resolutions)), std::end(m_resolutions));
@@ -462,7 +467,7 @@ namespace
     {
         SDL_Window* window = nullptr;
         SDL_GLContext context = nullptr;
-        SDL_atomic_t threadFlag = {};
+        SDL_AtomicInt threadFlag = {};
         LoadingScreen* loadingScreen = nullptr;
     };
 
@@ -472,7 +477,7 @@ namespace
         SDL_GL_MakeCurrent(threadData->window, threadData->context);
         threadData->loadingScreen->launch();
 
-        while (SDL_AtomicGet(&threadData->threadFlag) != 1)
+        while (SDL_GetAtomicInt(&threadData->threadFlag) != 1)
         {
             threadData->loadingScreen->update();
             glCheck(glClear(GL_COLOR_BUFFER_BIT));
@@ -495,7 +500,7 @@ void Window::loadResources(const std::function<void()>& loader, bool threaded)
 
 #ifdef PLATFORM_DESKTOP
     //macs crash with loading screens
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
     //if (m_fullscreen)
     {
         /*m_loadingScreen->launch();
@@ -579,7 +584,7 @@ void Window::setLoadingProgress(float progress)
 
 void Window::setMouseCaptured(bool captured)
 {
-    SDL_SetRelativeMouseMode(captured ? SDL_TRUE : SDL_FALSE);
+    SDL_SetWindowRelativeMouseMode(m_window, captured);
     /*if (captured)
     {
         SDL_WarpMouseInWindow(m_window, 1, 1);
@@ -587,12 +592,12 @@ void Window::setMouseCaptured(bool captured)
     //auto centre = getSize() / 2u;
     //SDL_WarpMouseInWindow(m_window, centre.x, centre.y);
 
-    //SDL_CaptureMouse(captured ? SDL_TRUE : SDL_FALSE);
+    //SDL_CaptureMouse(captured ? true : false);
 }
 
 bool Window::getMouseCaptured() const
 {
-    return (SDL_GetRelativeMouseMode() == SDL_TRUE);
+    return SDL_GetWindowRelativeMouseMode(m_window);
 }
 
 void Window::setCursor(const Cursor* cursor)
@@ -633,7 +638,7 @@ const Cursor* Window::getCursor() const
 void Window::setWindowedSize(glm::uvec2 size)
 {
     //SDL_DisplayMode dm;
-    //SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_window), &dm);
+    //SDL_GetDesktopDisplayMode(SDL_GetDisplayForWindow(m_window), &dm);
     //if (dm.w == static_cast<std::int32_t>(m_previousWindowSize.x)
     //    && dm.h == static_cast<std::int32_t>(m_previousWindowSize.y))
     //{
@@ -697,13 +702,13 @@ void Window::destroy()
     if (m_mainContext)
     {
         m_loadingScreen.reset(); //delete this while we still have a valid context!
-        SDL_GL_DeleteContext(m_mainContext);
+        SDL_GL_DestroyContext(m_mainContext);
         m_mainContext = nullptr;
     }
 
     if(m_threadContext)
     {
-        SDL_GL_DeleteContext(m_threadContext);
+        SDL_GL_DestroyContext(m_threadContext);
         m_threadContext = nullptr;
     }
 

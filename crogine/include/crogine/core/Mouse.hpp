@@ -29,7 +29,7 @@ source distribution.
 
 #pragma once
 
-#include <SDL_mouse.h>
+#include <SDL3/SDL_mouse.h>
 
 #include <crogine/detail/glm/vec2.hpp>
 
@@ -92,6 +92,6 @@ namespace cro::Mouse
     static inline bool isButtonPressed(Button button)
     {
         std::int32_t x, y;
-        return (SDL_BUTTON(int(button))& SDL_GetMouseState(&x, &y)) != 0;
+        return (SDL_BUTTON_MASK(int(button))& SDL_GetMouseState(&x, &y)) != 0;
     }
 }

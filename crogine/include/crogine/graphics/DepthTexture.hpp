@@ -138,7 +138,7 @@ namespace cro
 
         //this manages the texture views for reading individual layers
         //however it requires at least GL 4.3 so isn't available on macOS
-#ifndef __APPLE__
+#ifndef SDL_PLATFORM_APPLE
         std::vector<std::uint32_t> m_layerHandles;
 #endif
         void updateHandles();

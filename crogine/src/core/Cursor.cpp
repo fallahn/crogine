@@ -85,7 +85,9 @@ Cursor::Cursor(const std::string& path, std::int32_t x, std::int32_t y)
             const std::int32_t depth = 8 * channels;
             const std::int32_t pitch = size.x * channels;
 
-            m_surface = SDL_CreateRGBSurfaceFrom(m_imageData.data(), size.x, size.y, depth, pitch, rMask, gMask, bMask, aMask);
+            //m_surface = SDL_CreateRGBSurfaceFrom(m_imageData.data(), size.x, size.y, depth, pitch, rMask, gMask, bMask, aMask);
+            const auto pixelFormat = format == ImageFormat::RGB ? SDL_PIXELFORMAT_XRGB8888 : SDL_PIXELFORMAT_RGBA8888;
+            m_surface = SDL_CreateSurfaceFrom(size.x, size.y, pixelFormat, m_imageData.data(), pitch);
 
             if (m_surface)
             {
@@ -95,7 +97,7 @@ Cursor::Cursor(const std::string& path, std::int32_t x, std::int32_t y)
                     const std::string error = SDL_GetError();
                     LogE << "SDL: Failed creating colour cursor: " << error << std::endl;
 
-                    SDL_FreeSurface(m_surface);
+                    SDL_DestroySurface(m_surface);
                     m_surface = nullptr;
                 }
             }
@@ -128,11 +130,11 @@ Cursor::~Cursor()
 
     if (m_cursor)
     {
-        SDL_FreeCursor(m_cursor);
+        SDL_DestroyCursor(m_cursor);
     }
 
     if (m_surface)
     {
-        SDL_FreeSurface(m_surface);
+        SDL_DestroySurface(m_surface);
     }
 }

@@ -35,7 +35,7 @@ source distribution.
 
 #include "../ALCheck.hpp"
 
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
 #include "../al.h"
 
 //silence deprecated openal warnings

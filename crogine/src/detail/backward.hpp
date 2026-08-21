@@ -65,7 +65,7 @@
 #else
 #if defined(__linux) || defined(__linux__)
 #define BACKWARD_SYSTEM_LINUX
-#elif defined(__APPLE__)
+#elif defined(SDL_PLATFORM_APPLE)
 #define BACKWARD_SYSTEM_DARWIN
 #elif defined(_WIN32)
 #define BACKWARD_SYSTEM_WINDOWS
@@ -984,7 +984,7 @@ public:
       }
       _stacktrace[index] = reinterpret_cast<void *>(ctx.regs[UNW_ARM_R15]);
       ++index;
-#elif defined(__APPLE__) && defined(__x86_64__)
+#elif defined(SDL_PLATFORM_APPLE) && defined(__x86_64__)
       unw_getcontext(&ctx);
       // OS X's implementation of libunwind uses its own context object
       // so we need to convert the passed context to libunwind's format
@@ -1018,7 +1018,7 @@ public:
       }
       _stacktrace[index] = reinterpret_cast<void *>(ctx.data[16]);
       ++index;
-#elif defined(__APPLE__)
+#elif defined(SDL_PLATFORM_APPLE)
       unw_getcontext(&ctx)
           // TODO: Convert the ucontext_t to libunwind's unw_context_t like
           // we do in 64 bits
@@ -4242,7 +4242,7 @@ public:
 #elif defined(__arm__)
     error_addr = reinterpret_cast<void *>(uctx->uc_mcontext.arm_pc);
 #elif defined(__aarch64__)
-    #if defined(__APPLE__)
+    #if defined(SDL_PLATFORM_APPLE)
       error_addr = reinterpret_cast<void *>(uctx->uc_mcontext->__ss.__pc);
     #else
       error_addr = reinterpret_cast<void *>(uctx->uc_mcontext.pc);
@@ -4257,9 +4257,9 @@ public:
     error_addr = reinterpret_cast<void *>(uctx->uc_mcontext.__gregs[REG_PC]);
 #elif defined(__s390x__)
     error_addr = reinterpret_cast<void *>(uctx->uc_mcontext.psw.addr);
-#elif defined(__APPLE__) && defined(__x86_64__)
+#elif defined(SDL_PLATFORM_APPLE) && defined(__x86_64__)
     error_addr = reinterpret_cast<void *>(uctx->uc_mcontext->__ss.__rip);
-#elif defined(__APPLE__)
+#elif defined(SDL_PLATFORM_APPLE)
     error_addr = reinterpret_cast<void *>(uctx->uc_mcontext->__ss.__eip);
 #else
 #warning ":/ sorry, ain't know no nothing none not of your architecture!"
