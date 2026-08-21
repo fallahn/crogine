@@ -119,7 +119,7 @@ FetchContent_Declare(
     GIT_TAG origin/main
     OVERRIDE_FIND_PACKAGE
 )
-FetchContent_MakeAvailable(SDL)
+FetchContent_MakeAvailable(SDL3)
 endif()
 find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
