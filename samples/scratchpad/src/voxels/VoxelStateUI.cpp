@@ -293,7 +293,7 @@ void VoxelState::drawTopView()
 
 void VoxelState::handleKeyboardShortcut(const SDL_KeyboardEvent& evt)
 {
-    switch (evt.keysym.sym)
+    switch (evt.key)
     {
     default: break;
     case SDLK_KP_PLUS:
@@ -303,7 +303,7 @@ void VoxelState::handleKeyboardShortcut(const SDL_KeyboardEvent& evt)
         m_brush.editMode = Brush::EditMode::Subtract;
         break;
     case SDLK_LEFTBRACKET:
-        if (evt.keysym.mod & KMOD_ALT)
+        if (evt.mod & SDL_KMOD_ALT)
         {
             m_brush.feather = std::max(0.f, m_brush.feather - 0.1f);
         }
@@ -315,7 +315,7 @@ void VoxelState::handleKeyboardShortcut(const SDL_KeyboardEvent& evt)
         }
         break;
     case SDLK_RIGHTBRACKET:
-        if (evt.keysym.mod & KMOD_ALT)
+        if (evt.mod & SDL_KMOD_ALT)
         {
             m_brush.feather = std::min(Voxel::BrushMaxFeather, m_brush.feather + 0.1f);
         }

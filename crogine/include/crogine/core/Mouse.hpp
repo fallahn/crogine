@@ -55,8 +55,8 @@ namespace cro::Mouse
     */
     static inline glm::vec2 getGlobalPosition()
     {
-        std::int32_t x = 0;
-        std::int32_t y = 0;
+        float x = 0;
+        float y = 0;
         SDL_GetGlobalMouseState(&x, &y);
         return { x,y };
     }
@@ -67,8 +67,8 @@ namespace cro::Mouse
     */
     static inline glm::vec2 getPosition()
     {
-        std::int32_t x = 0;
-        std::int32_t y = 0;
+        float x = 0;
+        float y = 0;
         SDL_GetMouseState(&x, &y);
         return { x,y };
     }
@@ -79,8 +79,8 @@ namespace cro::Mouse
     */
     static inline glm::vec2 getRelativePosition()
     {
-        std::int32_t x = 0;
-        std::int32_t y = 0;
+        float x = 0;
+        float y = 0;
         SDL_GetRelativeMouseState(&x, &y);
         return { x,y };
     }
@@ -91,7 +91,7 @@ namespace cro::Mouse
     */
     static inline bool isButtonPressed(Button button)
     {
-        std::int32_t x, y;
+        float x, y;
         return (SDL_BUTTON_MASK(int(button))& SDL_GetMouseState(&x, &y)) != 0;
     }
 }

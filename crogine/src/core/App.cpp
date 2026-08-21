@@ -1182,7 +1182,19 @@ void App::removeWindows(const GuiClient* c)
 
 App::WindowSettings App::loadSettings() const
 {
-    const SDL_DisplayMode* mode = SDL_GetDesktopDisplayMode(0);
+    const SDL_DisplayID* ids = SDL_GetDisplays(nullptr);
+    if (ids == nullptr)
+    {
+        LogE << "I don't know how you're seeing this as there are no displays connected" << std::endl;
+        return {};
+    }
+
+    const SDL_DisplayMode* mode = SDL_GetDesktopDisplayMode(ids[0]);
+    if (!mode)
+    {
+        LogE << "Failed getting display mode: " << SDL_GetError() << std::endl;
+        return {};
+    }
 
     WindowSettings settings;
     ConfigFile cfg;

@@ -49,20 +49,20 @@ void InputParser::handleEvent(const SDL_Event& evt)
     switch (evt.type)
     {
     default: break;
-    case SDL_KEYDOWN:
-        switch (evt.key.keysym.sym)
+    case SDL_EVENT_KEY_DOWN:
+        switch (evt.key.key)
         {
         default:break;
-        case SDLK_w:
+        case SDLK_W:
             m_inputFlags |= Input::Forward;
             break;
-        case SDLK_s:
+        case SDLK_S:
             m_inputFlags |= Input::Backward;
             break;
-        case SDLK_a:
+        case SDLK_A:
             m_inputFlags |= Input::Left;
             break;
-        case SDLK_d:
+        case SDLK_D:
             m_inputFlags |= Input::Right;
             break;
         case SDLK_SPACE:
@@ -73,20 +73,20 @@ void InputParser::handleEvent(const SDL_Event& evt)
             break;
         }
         break;
-    case SDL_KEYUP:
-        switch (evt.key.keysym.sym)
+    case SDL_EVENT_KEY_UP:
+        switch (evt.key.key)
         {
         default:break;
-        case SDLK_w:
+        case SDLK_W:
             m_inputFlags &= ~Input::Forward;
             break;
-        case SDLK_s:
+        case SDLK_S:
             m_inputFlags &= ~Input::Backward;
             break;
-        case SDLK_a:
+        case SDLK_A:
             m_inputFlags &= ~Input::Left;
             break;
-        case SDLK_d:
+        case SDLK_D:
             m_inputFlags &= ~Input::Right;
             break;
         case SDLK_SPACE:
@@ -97,7 +97,7 @@ void InputParser::handleEvent(const SDL_Event& evt)
             break;
         }
         break;
-    case SDL_MOUSEBUTTONDOWN:
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
         switch (evt.button.button)
         {
         default: break;
@@ -109,7 +109,7 @@ void InputParser::handleEvent(const SDL_Event& evt)
             break;
         }
         break;
-    case SDL_MOUSEBUTTONUP:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
         switch (evt.button.button)
         {
         default: break;
@@ -121,7 +121,7 @@ void InputParser::handleEvent(const SDL_Event& evt)
             break;
         }
         break;
-    case SDL_MOUSEMOTION:
+    case SDL_EVENT_MOUSE_MOTION:
         //if (evt.motion.xrel != 0)
         {
             m_mouseMoveX += evt.motion.xrel;

@@ -141,7 +141,7 @@ void LightVolumeSystem::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_RESIZED)
+        if (data.event == SDL_EVENT_WINDOW_RESIZED)
         {
             //hmmmmm this is surely moot if we're not using the window size directly?
         }

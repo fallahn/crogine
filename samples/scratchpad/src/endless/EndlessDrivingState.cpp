@@ -149,9 +149,9 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -164,47 +164,47 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         if (!evt.key.repeat)
         {
             //TODO compare to keybind
-            if (evt.key.keysym.sym == SDLK_w)
+            if (evt.key.key == SDLK_W)
             {
                 m_inputFlags.flags |= InputFlags::Up;
                 m_inputFlags.keyCount++;
             }
-            if (evt.key.keysym.sym == SDLK_s)
+            if (evt.key.key == SDLK_S)
             {
                 m_inputFlags.flags |= InputFlags::Down;
                 m_inputFlags.keyCount++;
             }
-            if (evt.key.keysym.sym == SDLK_a)
+            if (evt.key.key == SDLK_A)
             {
                 m_inputFlags.flags |= InputFlags::Left;
                 m_inputFlags.keyCount++;
             }
-            if (evt.key.keysym.sym == SDLK_d)
+            if (evt.key.key == SDLK_D)
             {
                 m_inputFlags.flags |= InputFlags::Right;
                 m_inputFlags.keyCount++;
             }
         }
     }
-    else if (evt.type == SDL_KEYUP)
+    else if (evt.type == SDL_EVENT_KEY_UP)
     {
         //TODO compare to keybind
-        if (evt.key.keysym.sym == SDLK_w)
+        if (evt.key.key == SDLK_W)
         {
             m_inputFlags.flags &= ~InputFlags::Up;
             m_inputFlags.keyCount--;
         }
-        if (evt.key.keysym.sym == SDLK_s)
+        if (evt.key.key == SDLK_S)
         {
             m_inputFlags.flags &= ~InputFlags::Down;
             m_inputFlags.keyCount--;
         }
-        if (evt.key.keysym.sym == SDLK_a)
+        if (evt.key.key == SDLK_A)
         {
             m_inputFlags.flags &= ~InputFlags::Left;
             m_inputFlags.keyCount--;
         }
-        if (evt.key.keysym.sym == SDLK_d)
+        if (evt.key.key == SDLK_D)
         {
             m_inputFlags.flags &= ~InputFlags::Right;
             m_inputFlags.keyCount--;

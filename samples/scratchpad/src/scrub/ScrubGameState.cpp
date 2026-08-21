@@ -158,7 +158,7 @@ void main()
             Action,
             Count
         };
-        std::array<std::int32_t, Count> keys = { SDLK_q, SDLK_e, SDLK_a, SDLK_d, SDLK_SPACE };
+        std::array<std::int32_t, Count> keys = { SDLK_Q, SDLK_E, SDLK_A, SDLK_D, SDLK_SPACE };
     };
     struct SharedData
     {
@@ -277,9 +277,9 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             requestStackPush(States::ScratchPad::ScrubPause);
         };
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -289,32 +289,32 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
         }
 
 
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
+        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Left])
         {
             pumpDown();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Right])
         {
             pumpUp();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
         {
             insertBall();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
         {
             removeBall();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
         {
             addSoap();
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
         //TODO do we want to prevent other controller input
         //and lock to only the controller used to start this game?
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonLeftShoulder:
@@ -337,14 +337,14 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
         //TODO again do we want to lock the controller ID?
         //will having two controllers somehow be an advantage?
-        if (evt.caxis.axis == cro::GameController::AxisRightX)
+        if (evt.gaxis.axis == cro::GameController::AxisRightX)
         {
             static constexpr std::int16_t Threshold = std::numeric_limits<std::int16_t>::max() / 2;
-            const auto v = evt.caxis.value;
+            const auto v = evt.gaxis.value;
 
             if (m_axisPosition < Threshold
                 && v > Threshold)
@@ -360,7 +360,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             m_axisPosition = v;
         }
     }
-    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    else if (evt.type == SDL_EVENT_GAMEPAD_REMOVED)
     {
         pause();
     }

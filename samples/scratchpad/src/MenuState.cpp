@@ -82,18 +82,18 @@ namespace
         switch (evt.type)
         {
         default: return false;
-        case SDL_MOUSEBUTTONUP:
-        case SDL_MOUSEBUTTONDOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
             return evt.button.button == SDL_BUTTON_LEFT;
-        case SDL_CONTROLLERBUTTONUP:
-        case SDL_CONTROLLERBUTTONDOWN:
-            return evt.cbutton.button == SDL_CONTROLLER_BUTTON_A;
-        case SDL_FINGERUP:
-        case SDL_FINGERDOWN:
+        case SDL_EVENT_GAMEPAD_BUTTON_UP:
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+            return evt.gbutton.button == SDL_GAMEPAD_BUTTON_SOUTH;
+        case SDL_EVENT_FINGER_UP:
+        case SDL_EVENT_FINGER_DOWN:
             return true;
-        case SDL_KEYUP:
-        case SDL_KEYDOWN:
-            return (evt.key.keysym.sym == SDLK_SPACE || evt.key.keysym.sym == SDLK_RETURN);
+        case SDL_EVENT_KEY_UP:
+        case SDL_EVENT_KEY_DOWN:
+            return (evt.key.key == SDLK_SPACE || evt.key.key == SDLK_RETURN);
         }
     }
 
@@ -460,9 +460,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
             cro::GameController::rumbleStart(0, 0, (std::numeric_limits<std::uint16_t>::max() / 5) * strength, dur);
         };
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_1:
@@ -498,7 +498,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_0:
             rumbleHigh(5);
             break;
-        /*case SDLK_p:
+        /*case SDLK_P:
             spawnActive = !spawnActive;
             break;*/
         }
@@ -527,17 +527,18 @@ bool MenuState::simulate(float dt)
     static constexpr std::uint32_t FRAME_COUNT = 2048;
     if (odin)
     {
-        static std::array<std::uint8_t, FRAME_COUNT * sizeof(float)> encodeBuffer = {};
-        m_recorderDebug.captureAvailable = SDL_DequeueAudio(odin->recordDevice, encodeBuffer.data(), FRAME_COUNT*sizeof(float));
-        if (m_recorderDebug.captureAvailable != 0
-            && cro::Mouse::isButtonPressed(cro::Mouse::Button::Right)) //crude but proves a point. probably wants a slight delay after releasing the button
-        {
-            const auto res = odin_encoder_push(odin->encoder, (float*)encodeBuffer.data(), m_recorderDebug.captureAvailable / sizeof(float));
-            if (res != ODIN_ERROR_SUCCESS)
-            {
-                LogI << "Encode error: " << res << std::endl;
-            }
-        }
+        LogE << "Not ported to SDL3: " << FILE_LINE << std::endl;
+        //static std::array<std::uint8_t, FRAME_COUNT * sizeof(float)> encodeBuffer = {};
+        //m_recorderDebug.captureAvailable = SDL_DequeueAudio(odin->recordDevice, encodeBuffer.data(), FRAME_COUNT*sizeof(float));
+        //if (m_recorderDebug.captureAvailable != 0
+        //    && cro::Mouse::isButtonPressed(cro::Mouse::Button::Right)) //crude but proves a point. probably wants a slight delay after releasing the button
+        //{
+        //    const auto res = odin_encoder_push(odin->encoder, (float*)encodeBuffer.data(), m_recorderDebug.captureAvailable / sizeof(float));
+        //    if (res != ODIN_ERROR_SUCCESS)
+        //    {
+        //        LogI << "Encode error: " << res << std::endl;
+        //    }
+        //}
     }
 
     static constexpr std::uint32_t PACKET_SIZE = 2048;
@@ -572,7 +573,8 @@ bool MenuState::simulate(float dt)
 
             if (m_recorderDebug.decoderErrorID == ODIN_ERROR_SUCCESS)
             {
-                SDL_QueueAudio(odin->playbackDevice, decodeBuffer.data(), decodeBuffer.size() * sizeof(float));
+                //SDL_QueueAudio(odin->playbackDevice, decodeBuffer.data(), decodeBuffer.size() * sizeof(float));
+                LogE << "Not ported to SDL3: " << FILE_LINE << std::endl;
             }
         }
         pretendPacketQueue.clear();
@@ -1567,7 +1569,7 @@ bool MenuState::createStub(const std::string& name) const
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         switch (evt.key.keysym.sym)
         {
@@ -1679,7 +1681,7 @@ bool MenuState::createStub(const std::string& name) const
 void MenuState::fileToByteArray(const std::string& infile, const std::string& dst) const
 {
     cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(infile.c_str(), "rb");
+    file.file = SDL_IOFromFile(infile.c_str(), "rb");
     if (file.file)
     {
         std::stringstream ss;
@@ -1687,7 +1689,7 @@ void MenuState::fileToByteArray(const std::string& infile, const std::string& ds
 
         std::uint8_t b = 0;
         std::int32_t i = 0;
-        while (file.file->read(file.file, &b, 1, 1))
+        while (SDL_ReadIO(file.file, &b, 1))
         {
             ss << "0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (int)b << ", ";
 
@@ -1700,13 +1702,13 @@ void MenuState::fileToByteArray(const std::string& infile, const std::string& ds
 
         ss << "\n};";
 
-        file.file->close(file.file);
+        SDL_CloseIO(file.file);
 
-        file.file = SDL_RWFromFile(dst.c_str(), "w");
+        file.file = SDL_IOFromFile(dst.c_str(), "w");
         if (file.file)
         {
             const auto str = ss.str();
-            file.file->write(file.file, str.c_str(), str.length(), 1);
+            SDL_WriteIO(file.file, str.c_str(), str.length());
         }
     }
 }
@@ -2055,21 +2057,23 @@ void MenuState::odinWindow()
 
             SDL_AudioSpec spec = {};
             spec.freq = 48000;
-            spec.format = AUDIO_F32;
-            spec.channels = 2; //TODO if we want to play this through the AudioSystem (for positional) we need an SDL stream to resmaple to mono/16bit
-            spec.samples = 2048;
+            spec.format = SDL_AUDIO_F32LE;
+            spec.channels = 2; //TODO if we want to play this through the AudioSystem (for positional) we need an SDL stream to resample to mono/16bit
+            //spec.samples = 2048;
 
             SDL_AudioSpec obtained = {};
 
 
             if (!odin->playbackDevice)
             {
-                odin->playbackDevice = SDL_OpenAudioDevice(nullptr, 0, &spec, &obtained, 0);
+                //odin->playbackDevice = SDL_OpenAudioDevice(nullptr, 0, &spec, &obtained, 0);
+                LogE << "Not ported to SDL3: " << FILE_LINE << std::endl;
             }
             spec.channels = 1;
             if (!odin->recordDevice)
             {
-                odin->recordDevice = SDL_OpenAudioDevice(devList[idx].c_str(), SDL_TRUE, &spec, &obtained, 0);
+                //odin->recordDevice = SDL_OpenAudioDevice(devList[idx].c_str(), true, &spec, &obtained, 0);
+                LogE << "Not ported to SDL3: " << FILE_LINE << std::endl;
             }
         }
 
@@ -2089,8 +2093,8 @@ void MenuState::odinWindow()
                         //will be put out AFTER unpausing the device, causing
                         //potentially severe lag.
                         //m_soundRecorder.openDevice(devList[idx], 2, 48000);
-                        SDL_PauseAudioDevice(odin->playbackDevice, 0);
-                        SDL_PauseAudioDevice(odin->recordDevice, 0);
+                        SDL_PauseAudioDevice(odin->playbackDevice);
+                        SDL_PauseAudioDevice(odin->recordDevice);
                         odin->active = true;
                     }
                 }
@@ -2098,8 +2102,8 @@ void MenuState::odinWindow()
                 {
                     if (ImGui::Button("Stop"))
                     {
-                        SDL_PauseAudioDevice(odin->playbackDevice, 1);
-                        SDL_PauseAudioDevice(odin->recordDevice, 1);
+                        SDL_PauseAudioDevice(odin->playbackDevice);
+                        SDL_PauseAudioDevice(odin->recordDevice);
                         //m_soundRecorder.closeDevice();
                         odin->active = false;
                     }

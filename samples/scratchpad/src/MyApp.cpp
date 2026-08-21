@@ -129,9 +129,9 @@ void MyApp::unloadPlugin()
 void MyApp::handleEvent(const cro::Event& evt)
 {
 #ifdef CRO_DEBUG_
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_ESCAPE:

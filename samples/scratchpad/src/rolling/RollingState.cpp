@@ -107,16 +107,16 @@ bool RollingState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
-        case SDLK_q:
+        case SDLK_Q:
             //resetBall();
             spawnBall();
             break;
-        case SDLK_p:
+        case SDLK_P:
             m_physWorld->setIsDebugRenderingEnabled(!m_physWorld->getIsDebugRenderingEnabled());
             m_debugMesh.getComponent<cro::Model>().setHidden(!m_physWorld->getIsDebugRenderingEnabled());
             break;

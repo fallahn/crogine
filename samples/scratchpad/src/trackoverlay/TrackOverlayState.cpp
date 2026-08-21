@@ -140,9 +140,9 @@ bool TrackOverlayState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -162,9 +162,9 @@ bool TrackOverlayState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if(evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if(evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonRightShoulder:

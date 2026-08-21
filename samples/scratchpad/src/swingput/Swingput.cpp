@@ -117,19 +117,19 @@ bool Swingput::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: return false;
-    case SDL_MOUSEBUTTONDOWN:
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
             startStroke(MaxMouseVelocity);
         }
         return true;
-    case SDL_MOUSEBUTTONUP:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
             endStroke();
         }
         return true;
-    case SDL_MOUSEMOTION:
+    case SDL_EVENT_MOUSE_MOTION:
         //TODO we need to scale this down relative to the game buffer size
         switch (m_state)
         {
@@ -143,13 +143,13 @@ bool Swingput::handleEvent(const cro::Event& evt)
 
         //we allow either trigger or either stick
         //to aid handedness of players
-    case SDL_CONTROLLERAXISMOTION:
-        switch (evt.caxis.axis)
+    case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+        switch (evt.gaxis.axis)
         {
         default: break;
-        case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
-        case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
-            if (evt.caxis.value > MinTriggerMove)
+        case SDL_GAMEPAD_AXIS_LEFT_TRIGGER:
+        case SDL_GAMEPAD_AXIS_RIGHT_TRIGGER:
+            if (evt.gaxis.value > MinTriggerMove)
             {
                 startStroke(MaxControllerVelocity);
             }
@@ -158,36 +158,36 @@ bool Swingput::handleEvent(const cro::Event& evt)
                 endStroke();
             }
 
-            if (evt.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT)
+            if (evt.gaxis.axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER)
             {
-                m_lastLT = evt.caxis.value;
+                m_lastLT = evt.gaxis.value;
             }
             else
             {
-                m_lastRT = evt.caxis.value;
+                m_lastRT = evt.gaxis.value;
             }
             return true;
-        case SDL_CONTROLLER_AXIS_LEFTY:
-        case SDL_CONTROLLER_AXIS_RIGHTY:
+        case SDL_GAMEPAD_AXIS_LEFTY:
+        case SDL_GAMEPAD_AXIS_RIGHTY:
 
-            if (std::abs(evt.caxis.value) > MinStickMove)
+            if (std::abs(evt.gaxis.value) > MinStickMove)
             {
                 if (m_state == State::Swing)
                 {
-                    m_activePoint.y = std::pow((static_cast<float>(-evt.caxis.value) / ControllerAxisRange), 5.f) * (MaxDistance / 2.f);
+                    m_activePoint.y = std::pow((static_cast<float>(-evt.gaxis.value) / ControllerAxisRange), 5.f) * (MaxDistance / 2.f);
                 }
             }
             return true;
-        case SDL_CONTROLLER_AXIS_LEFTX:
-        case SDL_CONTROLLER_AXIS_RIGHTX:
+        case SDL_GAMEPAD_AXIS_LEFTX:
+        case SDL_GAMEPAD_AXIS_RIGHTX:
             //just set this and we'll have
             //whichever value was present when
             //the swing is finished
 
-            if (std::abs(evt.caxis.value) > MinStickMove
+            if (std::abs(evt.gaxis.value) > MinStickMove
                 && m_state == State::Swing)
             {
-                m_activePoint.x = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * MaxAccuracy;
+                m_activePoint.x = (static_cast<float>(evt.gaxis.value) / ControllerAxisRange) * MaxAccuracy;
             }
             return true;
         }

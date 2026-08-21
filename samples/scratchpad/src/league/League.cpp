@@ -229,7 +229,7 @@ void League::read()
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        file.file = SDL_IOFromFile(path.c_str(), "rb");
         if (!file.file)
         {
             LogE << "Could not open " << path << " for reading" << std::endl;
@@ -238,20 +238,20 @@ void League::read()
         }
 
         static constexpr std::size_t ExpectedSize = (sizeof(std::int32_t) * 3) + (sizeof(LeaguePlayer) * PlayerCount);
-        if (auto size = file.file->seek(file.file, 0, RW_SEEK_END); size != ExpectedSize)
+        if (auto size = SDL_SeekIO(file.file, 0, SDL_IO_SEEK_END); size != ExpectedSize)
         {
-            file.file->close(file.file);
+            SDL_CloseIO(file.file);
 
             LogE << path << " file not expected size!" << std::endl;
             reset();
             return;
         }
 
-        file.file->seek(file.file, 0, RW_SEEK_SET);
-        file.file->read(file.file, &m_currentIteration, sizeof(std::int32_t), 1);
-        file.file->read(file.file, &m_currentSeason, sizeof(std::int32_t), 1);
-        file.file->read(file.file, &m_playerScore, sizeof(std::int32_t), 1);
-        file.file->read(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
+        SDL_SeekIO(file.file, 0, SDL_IO_SEEK_SET);
+        SDL_ReadIO(file.file, &m_currentIteration, sizeof(std::int32_t));
+        SDL_ReadIO(file.file, &m_currentSeason, sizeof(std::int32_t));
+        SDL_ReadIO(file.file, &m_playerScore, sizeof(std::int32_t));
+        SDL_ReadIO(file.file, m_players.data(), sizeof(LeaguePlayer) * PlayerCount);
 
         //validate the loaded data and clamp to sane values
         m_currentIteration = std::clamp(m_currentIteration, 0, MaxIterations);
@@ -281,13 +281,13 @@ void League::write()
     const auto path = cro::App::getPreferencePath() + FileName;
 
     cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(path.c_str(), "wb");
+    file.file = SDL_IOFromFile(path.c_str(), "wb");
     if (file.file)
     {
-        file.file->write(file.file, &m_currentIteration, sizeof(std::int32_t), 1);
-        file.file->write(file.file, &m_currentSeason, sizeof(std::int32_t), 1);
-        file.file->write(file.file, &m_playerScore, sizeof(std::int32_t), 1);
-        file.file->write(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
+        SDL_WriteIO(file.file, &m_currentIteration, sizeof(std::int32_t));
+        SDL_WriteIO(file.file, &m_currentSeason, sizeof(std::int32_t));
+        SDL_WriteIO(file.file, &m_playerScore, sizeof(std::int32_t));
+        SDL_WriteIO(file.file, m_players.data(), sizeof(LeaguePlayer) * PlayerCount);
     }
     else
     {

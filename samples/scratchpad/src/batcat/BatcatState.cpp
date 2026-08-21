@@ -316,7 +316,7 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
 //public
 bool BatcatState::handleEvent(const cro::Event& evt)
 {    
-    if (evt.type == SDL_MOUSEMOTION)
+    if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         auto x = static_cast<float>(evt.motion.x);
         auto y = static_cast<float>(evt.motion.y); 
@@ -332,9 +332,9 @@ bool BatcatState::handleEvent(const cro::Event& evt)
         };
         commandSystem->sendCommand(cmd);
     }
-    else if (evt.type == SDL_KEYUP)
+    else if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_ESCAPE:
@@ -343,7 +343,7 @@ bool BatcatState::handleEvent(const cro::Event& evt)
             requestStackClear();
             requestStackPush(States::ScratchPad::MainMenu);
             break;
-        case SDLK_p:
+        case SDLK_P:
         {
             static constexpr std::array<glm::vec3, 2u> Pos =
             {

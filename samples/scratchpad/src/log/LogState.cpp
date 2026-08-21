@@ -115,9 +115,9 @@ bool LogState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -127,7 +127,7 @@ bool LogState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         if (evt.motion.state & SDL_BUTTON_RMASK)
         {
@@ -137,14 +137,14 @@ bool LogState::handleEvent(const cro::Event& evt)
             m_gameScene.getActiveCamera().getComponent<cro::Transform>().setRotation(glm::toQuat(glm::orientate3(camRotation)));
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -166,19 +166,19 @@ void LogState::handleMessage(const cro::Message& msg)
 bool LogState::simulate(float dt)
 {
     glm::vec3 movement(0.f);
-    if (cro::Keyboard::isKeyPressed(SDLK_a))
+    if (cro::Keyboard::isKeyPressed(SDLK_A))
     {
         movement.x -= 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_d))
+    if (cro::Keyboard::isKeyPressed(SDLK_D))
     {
         movement.x += 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_s))
+    if (cro::Keyboard::isKeyPressed(SDLK_S))
     {
         movement.z += 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_w))
+    if (cro::Keyboard::isKeyPressed(SDLK_W))
     {
         movement.z -= 1.f;
     }

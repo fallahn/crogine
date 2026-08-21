@@ -71,9 +71,9 @@ bool DeckIntroState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -81,10 +81,10 @@ bool DeckIntroState::handleEvent(const cro::Event& evt)
             requestStackClear();
             requestStackPush(0);
             break;
-        case SDLK_l:
+        case SDLK_L:
             spawnBall({cro::Util::Random::value(-0.7f, 0.7f), ScreenArea.y / 2.f, 0.f});
             break;
-        case SDLK_k:
+        case SDLK_K:
             spawnLogo();
             break;
         }
