@@ -190,7 +190,7 @@ namespace cro
         resolution.
         This has no effect on macOS which is always borderless full screen
         */
-        void setExclusiveFullscreen(bool exclusive) { m_exclusiveFullScreen = exclusive; }
+        void setExclusiveFullscreen(bool exclusive);
 
         /*!
         \brief Returns the current full screen mode
@@ -287,6 +287,16 @@ namespace cro
         cursor is unsupported this function will do nothing.
         */
         void setCursor(const Cursor* cursor);
+
+        /*!
+        \brief Sets whether or not the mouse cursor is visible
+        */
+        void setCursorVisible(bool visible);
+
+        /*!
+        \brief Returns whether or not the mouse cursor is current set to visible
+        */
+        bool getCursorVisible() const;
 
         /*!
         \brief Returns a pointer to the active cursor, or nullptr

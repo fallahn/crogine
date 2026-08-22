@@ -93,6 +93,20 @@ namespace
         } 
         return d;
     }
+
+    void ShowHelpMarker(const char* desc)
+    {
+        ImGui::SameLine();
+        ImGui::TextDisabled("(?)");
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::PushTextWrapPos(450.0f);
+            ImGui::TextUnformatted(desc);
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    }
 }
 int textEditCallback(ImGuiInputTextCallbackData* data);
 
@@ -391,6 +405,7 @@ void Console::draw()
                     {
                         App::getWindow().setExclusiveFullscreen(exclusive);
                     }
+                    ShowHelpMarker("Currently Doesn't Work with SDL3...");
 
                     bool vsync = App::getWindow().getVsyncEnabled();
                     if (ImGui::Checkbox("Vsync", &vsync))
@@ -407,7 +422,7 @@ void Console::draw()
                     std::int32_t v = MaxFrames * 60;
                     const auto flags = vsync ? ImGuiInputTextFlags_ReadOnly : 0;
                     ImGui::SetNextItemWidth(120.f);
-                    if (ImGui::InputInt("Frame Limit (disable VSync first)", &v, 60, 120, flags))
+                    if (ImGui::InputInt("Frame Limit (Applied when VSync is disabled)", &v, 60, 120, flags))
                     {
                         v = std::clamp(v, 60, 1200);
                         MaxFrames = v / 60;

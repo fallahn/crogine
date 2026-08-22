@@ -91,7 +91,7 @@ namespace cro
         struct WindowEvent final
         {
             std::uint32_t windowID = 0;
-            std::uint8_t event = 0;
+            std::uint32_t event = 0;
             std::int32_t data0 = 0;
             std::int32_t data1 = 0;
         };

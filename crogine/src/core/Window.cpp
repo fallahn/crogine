@@ -87,7 +87,7 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
     borderless = true;
 #endif //PLATFORM_MOBILE
 
-    int styleMask = SDL_WINDOW_OPENGL | styleFlags;
+    const int styleMask = SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL | styleFlags;
 
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
@@ -172,10 +172,21 @@ void Window::setVsyncEnabled(bool enabled)
 {
     if (m_mainContext)
     {
-        if (!SDL_GL_SetSwapInterval(enabled ? 1 : 0))
+        if (enabled)
         {
-            std::string e = enabled ? "Enabled - " : "Disabled - ";
-            LogE << "SDL: Failed to set VSync to " << e << SDL_GetError() << std::endl;
+            if (!SDL_GL_SetSwapInterval(-1))
+            {
+                LogW << "Adapative VSync unavailable, trying fixed rate VSync..." << std::endl;
+                if (!SDL_GL_SetSwapInterval(1))
+                {
+                    LogE << "SDL: Failed to enable VSync: " << SDL_GetError() << std::endl;
+                }
+            }
+        }
+
+        else if (!SDL_GL_SetSwapInterval(0))
+        {
+            LogE << "SDL: Failed to disable VSync: " << SDL_GetError() << std::endl;
 
             FileSystem::showMessageBox("OpenGL Error", "Failed setting v-sync.\nEnsure OpenGL is available and drivers are up to date.", FileSystem::OK, FileSystem::Error);
         }
@@ -295,19 +306,22 @@ void Window::setSize(glm::uvec2 size)
 
 void Window::setFullScreen(bool fullscreen)
 {
-#ifdef __APPLE__
-#define FS_MODE SDL_WINDOW_FULLSCREEN
-#else
-#define FS_MODE SDL_WINDOW_FULLSCREEN
-#endif
-
-    std::int32_t mode = 0;
     if (fullscreen)
     {
 #ifndef __APPLE__
-        mode = m_exclusiveFullScreen ? SDL_WINDOW_FULLSCREEN : FS_MODE;
-#else
-        mode = FS_MODE;
+        SDL_DisplayMode mode = *SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(m_window));
+        /*mode.w = 1920;
+        mode.h = 1080;*/
+        /*mode.displayID = SDL_GetDisplayForWindow(m_window);
+        mode.refresh_rate = 0.f;
+        mode.pixel_density = SDL_GetWindowPixelDensity(m_window);
+        mode.format = SDL_PIXELFORMAT_RGBA32;*/
+        //HHMMMMMMMM this doesn't work and always defaults to borderless full screen
+        if (!SDL_SetWindowFullscreenMode(m_window, m_exclusiveFullScreen ? &mode : nullptr))
+        {
+            LogE << "Failed setting full screen mode: " << SDL_GetError() << std::endl;
+        }
+        SDL_SyncWindow(m_window);
 #endif
         //m_previousWindowSize = getSize();
 
@@ -316,7 +330,7 @@ void Window::setFullScreen(bool fullscreen)
     }
 
     CRO_ASSERT(m_window, "window not created");
-    if (SDL_SetWindowFullscreen(m_window, mode))
+    if (SDL_SetWindowFullscreen(m_window, fullscreen))
     {
         m_fullscreen = fullscreen;
         if (!fullscreen)
@@ -345,6 +359,11 @@ void Window::setFullScreen(bool fullscreen)
 
     setViewport(getDefaultViewport());
     setView(FloatRect(getViewport()));
+}
+
+void Window::setExclusiveFullscreen(bool exclusive)
+{
+    m_exclusiveFullScreen = exclusive;
 }
 
 void Window::setPosition(std::int32_t x, std::int32_t y)
@@ -585,6 +604,7 @@ void Window::setLoadingProgress(float progress)
 
 void Window::setMouseCaptured(bool captured)
 {
+    LogW << "Did you mean to use setCursorVisible() ?" << std::endl;
     SDL_SetWindowRelativeMouseMode(m_window, captured);
     /*if (captured)
     {
@@ -634,6 +654,29 @@ void Window::setCursor(const Cursor* cursor)
 const Cursor* Window::getCursor() const
 {
     return m_cursor;
+}
+
+void Window::setCursorVisible(bool visible)
+{
+    if (!visible)
+    {
+        if (!SDL_HideCursor())
+        {
+            LogE << "Failed hiding mouse cursoe: " << SDL_GetError() << std::endl;
+        }
+    }
+    else
+    {
+        if (!SDL_ShowCursor())
+        {
+            LogE << "Failed showing mouse cursoe: " << SDL_GetError() << std::endl;
+        }
+    }
+}
+
+bool Window::getCursorVisible() const
+{
+    return SDL_CursorVisible();
 }
 
 void Window::setWindowedSize(glm::uvec2 size)

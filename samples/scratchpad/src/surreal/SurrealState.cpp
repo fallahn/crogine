@@ -83,6 +83,9 @@ bool SurrealState::handleEvent(const cro::Event& evt)
             requestStackClear();
             requestStackPush(0);
             break;
+        case SDLK_SPACE:
+            cro::App::getWindow().setCursorVisible(!cro::App::getWindow().getCursorVisible());
+            break;
         }
     }
 
@@ -460,6 +463,8 @@ void SurrealState::createScene()
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         cam.setPerspective(80.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 50.f);
+
+        LogI << size << std::endl;
     };
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
