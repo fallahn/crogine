@@ -694,7 +694,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     {
         if (getStateCount() == 1)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
         }
     };
 
@@ -1334,7 +1334,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         if (!m_photoMode
             && (evt.motion.state & SDL_BUTTON_RMASK) == 0)
         {
-            cro::App::getWindow().setMouseCaptured(false);
+            cro::App::getWindow().setCursorVisible(!false);
         }
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
@@ -2510,10 +2510,10 @@ void GolfState::handleMessage(const cro::Message& msg)
         {
         default: break;
         case cro::Message::ConsoleEvent::Closed:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
             break;
         case cro::Message::ConsoleEvent::Opened:
-            cro::App::getWindow().setMouseCaptured(false);
+            cro::App::getWindow().setCursorVisible(!false);
             break;
         }
     }
@@ -2526,7 +2526,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (data.id == StateID::Pause
                 || data.id == StateID::Tutorial)
             {
-                cro::App::getWindow().setMouseCaptured(true);
+                cro::App::getWindow().setCursorVisible(!true);
 
                 if (m_sharedData.tutorialIndex == TutorialID::LowerClubs)
                 {
@@ -7718,7 +7718,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_buttonStates = {};
     m_gameScene.getSystem<PropFollowSystem>()->setPlayerPosition(player.position);
 
-    cro::App::getWindow().setMouseCaptured(true);
+    cro::App::getWindow().setCursorVisible(!true);
     m_achievementTracker.hadBackspin = false;
     m_achievementTracker.hadTopspin = false;
     m_achievementTracker.hadFlop = false;

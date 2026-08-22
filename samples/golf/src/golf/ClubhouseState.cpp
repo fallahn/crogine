@@ -177,7 +177,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     Timeline::setGameMode(Timeline::GameMode::Menu);
     Timeline::setTimelineDesc("In the Clubhouse");
 
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(!false);
 
 
     //this is actually set as a flag from the pause menu
@@ -445,7 +445,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
         switch (evt.key.key)
         {
         default:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
             break;
         case SDLK_F1:
         case SDLK_F2:
@@ -468,7 +468,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        cro::App::getWindow().setMouseCaptured(true);
+        cro::App::getWindow().setCursorVisible(!true);
         switch (evt.gbutton.button)
         {
         default: 
@@ -523,13 +523,13 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(!false);
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
         if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
         }
     }
 

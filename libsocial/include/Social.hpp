@@ -52,6 +52,7 @@ source distribution.
 //(player avatar data format changed 1170 -> 1180)
 //(course data changed 1180 -> 1181)
 //(player profile data changed 1190 -> 1200)
+//(migrated from SDL2 to SDL3 1222 -> 1223)
 
 #ifdef DEMO
 static constexpr std::uint16_t CURRENT_VER = 0;
@@ -61,11 +62,11 @@ static const std::string StringVer("DEMO (macOS beta)");
 static const std::string StringVer("DEMO");
 #endif
 #else
-static constexpr std::uint16_t CURRENT_VER = 1222;
+static constexpr std::uint16_t CURRENT_VER = 1223;
 #ifdef SDL_PLATFORM_APPLE
-static const std::string StringVer("1.22.2 (macOS beta)");
+static const std::string StringVer("1.22.3 (macOS beta)");
 #else
-static const std::string StringVer("1.22.2");
+static const std::string StringVer("1.22.3");
 #endif
 #endif
 

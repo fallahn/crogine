@@ -100,7 +100,7 @@ TutorialState::TutorialState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_actionActive  (false)
 {
     inputMask = 0;
-    ctx.mainWindow.setMouseCaptured(true);
+    ctx.mainWindow.setCursorVisible(!true);
 
     spinAmount = glm::vec2(0.f);
     showSpin = false;
@@ -217,7 +217,7 @@ bool TutorialState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(!false);
         m_mouseVisible = true;
         m_mouseClock.restart();
     }
@@ -228,7 +228,7 @@ bool TutorialState::handleEvent(const cro::Event& evt)
         
         if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
             m_mouseVisible = false;
         }
 
@@ -276,7 +276,7 @@ void TutorialState::handleMessage(const cro::Message& msg)
         if (data.action == cro::Message::StateEvent::Popped
             && data.id == StateID::Pause)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
         }
     }
     else if (msg.id == cro::Message::SpriteAnimationMessage)
@@ -346,7 +346,7 @@ bool TutorialState::simulate(float dt)
             && !ImGui::GetIO().WantCaptureMouse)
         {
             m_mouseVisible = false;
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
         }
     }
 

@@ -134,7 +134,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
 
             m_mouseSwing.active = false; //gets confused if holding the right mouse before swinging with a controller...
 
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
         }
     };
 
@@ -164,7 +164,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             m_state = State::Swing;
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
             m_mouseSwing.startStroke();
             return true;
         }

@@ -288,7 +288,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Shop);
         cacheState(StateID::ClubInfo);
 
-        context.mainWindow.setMouseCaptured(false);
+        context.mainWindow.setCursorVisible(!false);
 
         //sd.inputBinding.controllerID = 0;
         sd.mapDirectory = m_sharedCourseData.courseData[courseOfTheMonth()].directory;
@@ -1421,7 +1421,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
             break;
         case SDLK_TAB:
             //togglePreviousScoreCard(); //let's see if anyone notices this has gone...
@@ -1478,7 +1478,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
         setChatHint(true, evt.gbutton.which);
-        cro::App::getWindow().setMouseCaptured(true);
+        cro::App::getWindow().setCursorVisible(!true);
 
         if (!m_textChat.isVisible())
         {
@@ -1578,7 +1578,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(!false);
         setChatHint(false, 0);
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
@@ -1586,7 +1586,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
             setChatHint(true, evt.gaxis.which);
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
         }
     }
 

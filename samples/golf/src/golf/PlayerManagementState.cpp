@@ -148,7 +148,7 @@ PlayerManagementState::PlayerManagementState(cro::StateStack& ss, cro::State::Co
     m_viewScale         (2.f),
     m_confirmType       (0)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(!false);
     m_scene.setTitle("Player Management");
 
     buildScene();
@@ -198,13 +198,13 @@ bool PlayerManagementState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
             break;
         }
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        cro::App::getWindow().setMouseCaptured(true);
+        cro::App::getWindow().setCursorVisible(!true);
         if (evt.gbutton.button == cro::GameController::ButtonB
             || evt.gbutton.button == cro::GameController::ButtonStart)
         {
@@ -238,12 +238,12 @@ bool PlayerManagementState::handleEvent(const cro::Event& evt)
     {
         if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
         }
     }
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(!false);
     }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);

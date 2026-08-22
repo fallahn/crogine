@@ -392,7 +392,7 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
 {
     if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(!false);
     }
 
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
@@ -419,7 +419,7 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
     if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         m_sharedGameData.lastInput = els::SharedStateData::Keyboard;
-        cro::App::getWindow().setMouseCaptured(true);
+        cro::App::getWindow().setCursorVisible(!true);
         switch (evt.key.key)
         {
         default: break;
@@ -510,7 +510,7 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         {
             m_sharedGameData.lastInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.gbutton.which))
                 ? els::SharedStateData::PS : els::SharedStateData::Xbox;
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
         }
     }
 

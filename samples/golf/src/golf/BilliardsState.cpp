@@ -157,7 +157,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     sd.clientConnection.quitThread();
     Timeline::setGameMode(Timeline::GameMode::Playing);
 #ifndef CRO_DEBUG_
-    ctx.mainWindow.setMouseCaptured(true);
+    ctx.mainWindow.setCursorVisible(!true);
 #endif
     //this is already set to Clubhouse so the pause
     //menu knows where to go when quitting.
@@ -235,7 +235,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         if (evt.type == SDL_EVENT_MOUSE_MOTION
             && cro::App::getWindow().getMouseCaptured())
         {
-            cro::App::getWindow().setMouseCaptured(false);
+            cro::App::getWindow().setCursorVisible(!false);
         }
 
         return false;
@@ -322,7 +322,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         case SDLK_TAB:
             //if (m_activeCamera == CameraID::Player)
             {
-                cro::App::getWindow().setMouseCaptured(false);
+                cro::App::getWindow().setCursorVisible(!false);
             }
             break;
 #endif //CRO_DEBUG_
@@ -554,7 +554,7 @@ bool BilliardsState::simulate(float dt)
         {
 #ifndef CRO_DEBUG_
             //if (!cro::Keyboard::isKeyPressed(SDLK_TAB))
-                cro::App::getWindow().setMouseCaptured(true);
+                cro::App::getWindow().setCursorVisible(!true);
 #endif
         }
 
@@ -582,7 +582,7 @@ bool BilliardsState::simulate(float dt)
     {
         if (cro::App::getWindow().getMouseCaptured())
         {
-            cro::App::getWindow().setMouseCaptured(false);
+            cro::App::getWindow().setCursorVisible(!false);
         }
     }*/
 

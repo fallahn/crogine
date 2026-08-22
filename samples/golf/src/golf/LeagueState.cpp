@@ -140,7 +140,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_editName              (false),
     m_activeName            (nullptr)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(!false);
     m_scene.setTitle("League Browser");
 #ifdef USE_GNS
     //scoreSet = readGameScores();
@@ -356,13 +356,13 @@ bool LeagueState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
             break;
         }
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        cro::App::getWindow().setMouseCaptured(true);
+        cro::App::getWindow().setCursorVisible(!true);
 
         switch (evt.gbutton.button)
         {
@@ -391,12 +391,12 @@ bool LeagueState::handleEvent(const cro::Event& evt)
     {
         if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
         }
     }
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(!false);
     }
     else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {

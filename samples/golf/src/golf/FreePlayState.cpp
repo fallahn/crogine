@@ -110,7 +110,7 @@ FreePlayState::FreePlayState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_sharedData(sd),
     m_viewScale (2.f)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(!false);
     m_scene.setTitle("Freeplay Menu");
 
     buildScene();
@@ -145,13 +145,13 @@ bool FreePlayState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
             break;
         }
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        cro::App::getWindow().setMouseCaptured(true);
+        cro::App::getWindow().setCursorVisible(!true);
         
         switch (evt.gbutton.button)
         {
@@ -189,12 +189,12 @@ bool FreePlayState::handleEvent(const cro::Event& evt)
     {
         if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
         }
     }
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(!false);
     }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);

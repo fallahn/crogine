@@ -264,7 +264,7 @@ bool ChipInState::handleEvent(const cro::Event& evt)
     {
         if (evt.type == SDL_EVENT_MOUSE_MOTION)
         {
-            cro::App::getWindow().setMouseCaptured(false);
+            cro::App::getWindow().setCursorVisible(!false);
         }
         return true;
     }
@@ -352,7 +352,7 @@ bool ChipInState::handleEvent(const cro::Event& evt)
     {
         m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         resetIdle();
-        cro::App::getWindow().setMouseCaptured(true);
+        cro::App::getWindow().setCursorVisible(!true);
         switch (evt.key.key)
         {
         default: break;
@@ -436,7 +436,7 @@ bool ChipInState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
             break;
         }
     }
@@ -448,7 +448,7 @@ bool ChipInState::handleEvent(const cro::Event& evt)
                 SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
 
             resetIdle();
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
         }
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
@@ -492,7 +492,7 @@ bool ChipInState::handleEvent(const cro::Event& evt)
 #endif
             if ((evt.motion.state & SDL_BUTTON_RMASK) == 0)
             {
-                cro::App::getWindow().setMouseCaptured(false);
+                cro::App::getWindow().setCursorVisible(!false);
             }
 #ifdef CRO_DEBUG_
         }
@@ -1040,7 +1040,7 @@ void ChipInState::toggleFreeCam()
 
     m_gameScene.setSystemActive<FpsCameraSystem>(useFreeCam);
     m_inputParser.setActive(!useFreeCam, TerrainID::Fairway, nullptr);
-    cro::App::getWindow().setMouseCaptured(useFreeCam);
+    cro::App::getWindow().setCursorVisible(!useFreeCam);
 #endif
 }
 

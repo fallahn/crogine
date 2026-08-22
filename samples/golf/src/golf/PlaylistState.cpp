@@ -283,7 +283,7 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_playlistUnselectedCallback(0),
     m_currentTab                (0)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(!false);
 
     ctx.mainWindow.loadResources(
         [&]() 
@@ -375,7 +375,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
             break;
         }
     }
@@ -383,7 +383,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
     {
         static constexpr std::size_t MaxTabs = 4;
 
-        cro::App::getWindow().setMouseCaptured(true);
+        cro::App::getWindow().setCursorVisible(!true);
         switch (evt.gbutton.button)
         {
         case cro::GameController::ButtonB:
@@ -440,7 +440,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             auto pos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(glm::vec2(evt.button.x, evt.button.y));
             m_activeSlider.getComponent<cro::Callback>().getUserData<SliderData>().updatePosition(pos);
         }
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(!false);
     }
     else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
@@ -520,7 +520,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
     {
         if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
         }
     }
 

@@ -152,7 +152,7 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_saveMugshotOnExit (false),
     m_uiLayout          (TabID::Count, sd)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(!false);
     m_scene.setTitle("Profile UI");
     m_previewScene.setTitle("Profile Preview");
     m_statScene.setTitle("Profile Stats");
@@ -255,7 +255,7 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
                 m_uiLayout.tabBar.navRight.getComponent<cro::Text>().setCharacterSize(charSize);
                 m_uiLayout.tabBar.navRight.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2;*/
             }
-            cro::App::getWindow().setMouseCaptured(!mouse);
+            cro::App::getWindow().setCursorVisible(!!mouse);
         };
 
 
@@ -2726,7 +2726,7 @@ void ProfileStateV2::createDetailItems()
                 else
                 {
                     //keyboard
-                    cro::App::getWindow().setMouseCaptured(false);
+                    cro::App::getWindow().setCursorVisible(!false);
                     m_nameBuffer = m_activeProfile.playerData.name.toUtf8Char();
                     m_showNameInput = true;
                 }
@@ -2734,7 +2734,7 @@ void ProfileStateV2::createDetailItems()
                 if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
                 {
                     //show ImGuiWindow
-                    cro::App::getWindow().setMouseCaptured(false);
+                    cro::App::getWindow().setCursorVisible(!false);
                     m_nameBuffer = m_activeProfile.playerData.name.toUtf8Char();
                     m_showNameInput = true;
                 }

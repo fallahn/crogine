@@ -82,7 +82,7 @@ CreditsState::CreditsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_speedMultiplier   (0.f),
     m_viewScale         (2.f)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(!false);
     m_scene.setTitle("Credits");
 
     buildScene();
@@ -134,7 +134,7 @@ bool CreditsState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
             break;
         }
     }

@@ -187,7 +187,7 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_mugshotUpdated    (false)
 {
     std::fill(m_previousInv.begin(), m_previousInv.end(), -2);
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(!false);
 
     m_activeProfile = sp.playerProfiles[sp.activeProfileIndex];
 
@@ -426,7 +426,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
             break;
         }
     }
@@ -436,7 +436,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        cro::App::getWindow().setMouseCaptured(true);
+        cro::App::getWindow().setCursorVisible(!true);
 
         if (m_textEdit.string == nullptr)
         {
@@ -666,7 +666,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
     {
         if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
 
             updateHelpString(cro::GameController::controllerID(evt.gaxis.which));
         }
@@ -677,7 +677,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(!false);
         updateHelpString(-1);
 
         auto mousePos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords({ evt.motion.x, evt.motion.y });

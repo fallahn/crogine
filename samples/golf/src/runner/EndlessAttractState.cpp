@@ -122,7 +122,7 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
 {
     if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(!false);
     }
 
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
@@ -169,7 +169,7 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
                 refreshPrompt();
             }
 
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
         };
 
     if (evt.type == SDL_EVENT_KEY_DOWN)

@@ -363,7 +363,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             || evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
             m_controllerIndex = cro::GameController::controllerID(evt.gaxis.which);
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
         }
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_REMOVED)
@@ -379,7 +379,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(!false);
     }
 
     else if (evt.type == SDL_EVENT_KEY_UP

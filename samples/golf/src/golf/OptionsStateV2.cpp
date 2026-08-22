@@ -156,7 +156,7 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     //previous size and only update the layout when we need to
     lastWindowSize = cro::App::getWindow().getSize();
     
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(!false);
     m_scene.setTitle("Options Menu");
 
     m_flagPreview.init(sd.flagPath);
@@ -269,7 +269,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
                 m_uiLayout.tabBar.navRight.getComponent<cro::Text>().setCharacterSize(charSize);
                 m_uiLayout.tabBar.navRight.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2;*/
             }
-            cro::App::getWindow().setMouseCaptured(!mouse);
+            cro::App::getWindow().setCursorVisible(!!mouse);
         };
 
     const auto showHelp = 

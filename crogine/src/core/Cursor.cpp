@@ -86,7 +86,7 @@ Cursor::Cursor(const std::string& path, std::int32_t x, std::int32_t y)
             const std::int32_t pitch = size.x * channels;
 
             //m_surface = SDL_CreateRGBSurfaceFrom(m_imageData.data(), size.x, size.y, depth, pitch, rMask, gMask, bMask, aMask);
-            const auto pixelFormat = format == ImageFormat::RGB ? SDL_PIXELFORMAT_XRGB8888 : SDL_PIXELFORMAT_RGBA8888;
+            const auto pixelFormat = format == ImageFormat::RGB ? SDL_PIXELFORMAT_RGB24 : SDL_PIXELFORMAT_RGBA32;
             m_surface = SDL_CreateSurfaceFrom(size.x, size.y, pixelFormat, m_imageData.data(), pitch);
 
             if (m_surface)

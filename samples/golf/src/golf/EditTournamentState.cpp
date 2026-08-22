@@ -104,7 +104,7 @@ EditTournamentState::EditTournamentState(cro::StateStack& ss, cro::State::Contex
     m_showOSK           (false),
     m_showImguiInput    (false)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(!false);
     m_scene.setTitle("Tournament Edit");
 
     buildScene();
@@ -167,14 +167,14 @@ bool EditTournamentState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(!true);
             break;
         }
     }
 
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(!false);
     }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -557,7 +557,7 @@ void EditTournamentState::buildScene()
                     else
                     {
                         //show ImGuiWindow
-                        cro::App::getWindow().setMouseCaptured(false);
+                        cro::App::getWindow().setCursorVisible(!false);
                         m_imguiBuffer = m_tournamentNameEntity.getComponent<cro::Text>().getString().toUtf8Char();
                         m_showImguiInput = true;
                     }
