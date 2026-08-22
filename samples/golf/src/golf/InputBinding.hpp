@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,7 +29,7 @@ source distribution.
 
 #pragma once
 
-#include <SDL_events.h>
+#include <SDL3/SDL_events.h>
 
 #include <array>
 #include <cstdint>
@@ -92,25 +92,25 @@ struct InputBinding final
     std::array<std::int32_t, Count> keys =
     {
         SDLK_SPACE,
-        SDLK_e,
-        SDLK_q,
+        SDLK_E,
+        SDLK_Q,
         SDLK_LALT,
         SDLK_LCTRL,
         SDLK_LSHIFT,
-        SDLK_a,
-        SDLK_d,
-        SDLK_w,
-        SDLK_s
+        SDLK_A,
+        SDLK_D,
+        SDLK_W,
+        SDLK_S
     };
 
     std::array<std::int32_t, 6u> buttons =
     {
-        SDL_CONTROLLER_BUTTON_A,
-        SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
-        SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
-        SDL_CONTROLLER_BUTTON_X,
-        SDL_CONTROLLER_BUTTON_Y,
-        SDL_CONTROLLER_BUTTON_B
+        SDL_GAMEPAD_BUTTON_SOUTH,
+        SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER,
+        SDL_GAMEPAD_BUTTON_LEFT_SHOULDER,
+        SDL_GAMEPAD_BUTTON_WEST,
+        SDL_GAMEPAD_BUTTON_NORTH,
+        SDL_GAMEPAD_BUTTON_EAST
     };
     std::int32_t playerID = 0;
 

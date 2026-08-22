@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -61,7 +61,7 @@ void LeagueNames::read()
     std::size_t currName = 0;
 
     cro::RaiiRWops rFile;
-    rFile.file = SDL_RWFromFile(path.c_str(), "r");
+    rFile.file = SDL_IOFromFile(path.c_str(), "r");
     if (rFile.file)
     {
         std::size_t read = 0;
@@ -70,7 +70,7 @@ void LeagueNames::read()
 
         do
         {
-            read = SDL_RWread(rFile.file, &b, 1, 1);
+            read = SDL_ReadIO(rFile.file, &b, 1);
             if (b != NewLine
                 && buffer.size() < ConstVal::MaxStringChars * 2) //*sigh* this are probably multi-byte...
             {
@@ -101,14 +101,14 @@ bool LeagueNames::write() const
     const auto path = Content::getBaseContentPath() + FileName;
 
     cro::RaiiRWops rFile;
-    rFile.file = SDL_RWFromFile(path.c_str(), "w");
+    rFile.file = SDL_IOFromFile(path.c_str(), "w");
     if (rFile.file)
     {
         for (const auto& n : m_names)
         {
             auto t = n.toUtf8();
-            rFile.file->write(rFile.file, t.c_str(), t.size(), 1);
-            rFile.file->write(rFile.file, &NewLine, 1, 1);
+            SDL_WriteIO(rFile.file, t.c_str(), t.size());
+            SDL_WriteIO(rFile.file, &NewLine, 1);
         }
 
         return true;

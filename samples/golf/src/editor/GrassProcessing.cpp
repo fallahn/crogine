@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -97,15 +97,15 @@ bool GrassProcessor::process()
         cro::Util::String::replace(outPath, ".cmb", ".gss");
 
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(outPath.c_str(), "wb");
+        file.file = SDL_IOFromFile(outPath.c_str(), "wb");
         if (file.file)
         {
-            file.file->write(file.file, fileHeader.data(), sizeof(Header), 1);
+            SDL_WriteIO(file.file, fileHeader.data(), sizeof(Header));
             for (const auto& t : m_transformData)
             {
                 if (!t.empty())
                 {
-                    file.file->write(file.file, t.data(), sizeof(glm::mat4), t.size());
+                    SDL_WriteIO(file.file, t.data(), sizeof(glm::mat4) * t.size());
                 }
             }
         }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -272,10 +272,10 @@ void VatFile::loadBinary(const std::string& path, std::vector<float>& dst, glm::
     dst.resize(dims.x * dims.y * 4);
 
     cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(path.c_str(), "rb");
+    file.file = SDL_IOFromFile(path.c_str(), "rb");
     if (file.file)
     {
-        auto read = SDL_RWread(file.file, dst.data(), dst.size() * sizeof(float), 1);
+        auto read = SDL_ReadIO(file.file, dst.data(), dst.size() * sizeof(float));
         if (read == 0)
         {
             LogI << SDL_GetError() << std::endl;

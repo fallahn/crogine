@@ -391,14 +391,14 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
         }
     };
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: 
             if (m_arcadeIndexKey < ArcadeKey.size())
             {
-                if (evt.key.keysym.sym == ArcadeKey[m_arcadeIndexKey])
+                if (evt.key.key == ArcadeKey[m_arcadeIndexKey])
                 {
                     m_arcadeIndexKey++;
                     if (m_arcadeIndexKey == ArcadeKey.size())
@@ -439,10 +439,10 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         handleTextEdit(evt);
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default:
             cro::App::getWindow().setMouseCaptured(true);
@@ -462,19 +462,19 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_TEXTINPUT)
+    else if (evt.type == SDL_EVENT_TEXT_INPUT)
     {
         handleTextEdit(evt);
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
         cro::App::getWindow().setMouseCaptured(true);
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: 
             if (m_arcadeIndexJoy < ArcadeJoy.size())
             {
-                if (evt.cbutton.button == ArcadeJoy[m_arcadeIndexJoy])
+                if (evt.gbutton.button == ArcadeJoy[m_arcadeIndexJoy])
                 {
                     m_arcadeIndexJoy++;
                     if (m_arcadeIndexJoy == ArcadeJoy.size())
@@ -505,7 +505,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -521,13 +521,13 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
@@ -682,29 +682,29 @@ bool ClubhouseState::simulate(float dt)
     //float rotation = 0.f;
     //auto& tx = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>();
 
-    //if (cro::Keyboard::isKeyPressed(SDLK_d))
+    //if (cro::Keyboard::isKeyPressed(SDLK_D))
     //{
     //    movement += tx.getRightVector();
     //}
-    //if (cro::Keyboard::isKeyPressed(SDLK_a))
+    //if (cro::Keyboard::isKeyPressed(SDLK_A))
     //{
     //    movement -= tx.getRightVector();
     //}
 
-    //if (cro::Keyboard::isKeyPressed(SDLK_w))
+    //if (cro::Keyboard::isKeyPressed(SDLK_W))
     //{
     //    movement += tx.getForwardVector();
     //}
-    //if (cro::Keyboard::isKeyPressed(SDLK_s))
+    //if (cro::Keyboard::isKeyPressed(SDLK_S))
     //{
     //    movement -= tx.getForwardVector();
     //}
 
-    //if (cro::Keyboard::isKeyPressed(SDLK_q))
+    //if (cro::Keyboard::isKeyPressed(SDLK_Q))
     //{
     //    rotation -= dt;
     //}
-    //if (cro::Keyboard::isKeyPressed(SDLK_e))
+    //if (cro::Keyboard::isKeyPressed(SDLK_E))
     //{
     //    rotation += dt;
     //}

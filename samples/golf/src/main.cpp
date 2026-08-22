@@ -29,7 +29,8 @@ source distribution.
 
 #include "WebsocketServer.hpp"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 
 #include "GolfGame.hpp"
 #include "nv/NVSettings.hpp"

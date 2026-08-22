@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -74,7 +74,7 @@ M3UPlaylist::M3UPlaylist(const std::string& searchDir, std::uint32_t maxFiles)
 bool M3UPlaylist::loadPlaylist(const std::string& path)
 {
     cro::RaiiRWops rFile;
-    rFile.file = SDL_RWFromFile(path.c_str(), "r");
+    rFile.file = SDL_IOFromFile(path.c_str(), "r");
 
     if (!rFile.file)
     {
@@ -82,10 +82,10 @@ bool M3UPlaylist::loadPlaylist(const std::string& path)
         return false;
     }
 
-    if (auto fSize = rFile.file->size(rFile.file); fSize > 0)
+    if (const auto fSize = SDL_GetIOSize(rFile.file); fSize > 0)
     {
         std::vector<std::uint8_t> buffer(fSize);
-        auto read = SDL_RWread(rFile.file, buffer.data(), fSize, 1);
+        auto read = SDL_ReadIO(rFile.file, buffer.data(), fSize);
 
         if (read == 0)
         {

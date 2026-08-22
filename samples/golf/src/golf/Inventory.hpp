@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -117,10 +117,10 @@ namespace inv
             const auto loadoutPath = Content::getUserContentPath(Content::UserContent::Profile) + "/" + profileID + "/load.out";
 
             cro::RaiiRWops file;
-            file.file = SDL_RWFromFile(loadoutPath.c_str(), "rb");
+            file.file = SDL_IOFromFile(loadoutPath.c_str(), "rb");
             if (file.file)
             {
-                if (!SDL_RWread(file.file, items.data(), sizeof(items), 1))
+                if (SDL_ReadIO(file.file, items.data(), sizeof(items)) < sizeof(items))
                 {
                     LogW << "Failed reading loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
                 }
@@ -151,10 +151,10 @@ namespace inv
             path += "load.out";
 
             cro::RaiiRWops file;
-            file.file = SDL_RWFromFile(path.c_str(), "wb");
+            file.file = SDL_IOFromFile(path.c_str(), "wb");
             if (file.file)
             {
-                if (!file.file->write(file.file, items.data(), sizeof(items), 1))
+                if (SDL_WriteIO(file.file, items.data(), sizeof(items)) < sizeof(items))
                 {
                     LogW << "Failed writing loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
                 }
@@ -198,10 +198,10 @@ namespace inv
         const std::string filePath = Content::getBaseContentPath() + fileName;
 
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(filePath.c_str(), "rb");
+        file.file = SDL_IOFromFile(filePath.c_str(), "rb");
         if (file.file)
         {
-            if (SDL_RWread(file.file, &dst, sizeof(Inventory), 1) == 0)
+            if (SDL_ReadIO(file.file, &dst, sizeof(Inventory)) < sizeof(Inventory))
             {
                 LogE << "Failed reading " << filePath << ", " << SDL_GetError() << std::endl;
                 return false;
@@ -219,10 +219,10 @@ namespace inv
         const std::string filePath = Content::getBaseContentPath() + fileName;
 
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(filePath.c_str(), "wb");
+        file.file = SDL_IOFromFile(filePath.c_str(), "wb");
         if (file.file)
         {
-            if (SDL_RWwrite(file.file, &src, sizeof(Inventory), 1) < 1)
+            if (SDL_WriteIO(file.file, &src, sizeof(Inventory)) < sizeof(Inventory))
             {
                 LogE << "Failed writing " << filePath << ", " << SDL_GetError() << std::endl;
                 return false;

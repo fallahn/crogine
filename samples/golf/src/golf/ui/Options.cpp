@@ -804,7 +804,7 @@ void OptionsV2::displayTab(float scale)
                 auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
                 msg->data0 = size.x;
                 msg->data1 = size.y;
-                msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+                msg->event = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
             };
 
         ImGui::SetNextItemWidth(SliderWidth * scale);

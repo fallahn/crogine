@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -201,21 +201,21 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
             switch (evt.type)
             {
             default: break;
-            case SDL_KEYUP:
-                if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+            case SDL_EVENT_KEY_UP:
+                if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
                 {
                     //restart the game
                     restart();
                 }
-                else if (evt.key.keysym.sym == SDLK_ESCAPE)
+                else if (evt.key.key == SDLK_ESCAPE)
                 {
                     quit();
                 }
                 break;
-            case SDL_CONTROLLERBUTTONUP:
-                if (cro::GameController::controllerID(evt.cbutton.which) == 0)
+            case SDL_EVENT_GAMEPAD_BUTTON_UP:
+                if (cro::GameController::controllerID(evt.gbutton.which) == 0)
                 {
-                    if (evt.cbutton.button == cro::GameController::ButtonA)
+                    if (evt.gbutton.button == cro::GameController::ButtonA)
                     {
                         restart();
                     }
@@ -233,34 +233,34 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
         switch (evt.type)
         {
         default: break;
-        case SDL_KEYUP:
-            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
+        case SDL_EVENT_KEY_UP:
+            if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Left])
             {
                 m_inputFlags &= ~InputFlag::Left;
             }
-            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
+            else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Right])
             {
                 m_inputFlags &= ~InputFlag::Right;
             }
             break;
-        case SDL_KEYDOWN:
+        case SDL_EVENT_KEY_DOWN:
             if (evt.key.repeat == 0)
             {
-                if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+                if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
                 {
                     dropBall();
                 }
-                else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
+                else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Left])
                 {
                     m_inputFlags |= InputFlag::Left;
                 }
-                else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
+                else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Right])
                 {
                     m_inputFlags |= InputFlag::Right;
                 }
             }
 
-            switch (evt.key.keysym.sym)
+            switch (evt.key.key)
             {
             default: break;
             case SDLK_BACKSPACE:
@@ -268,25 +268,25 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
                 pause();
                 break;
 #ifdef CRO_DEBUG_
-            case SDLK_p:
+            case SDLK_P:
                 m_gameScene.getActiveCamera().getComponent<cro::Callback>().active = true;
                 m_gameScene.getActiveCamera().getComponent<cro::Callback>().setUserData<float>(1.f);
                 break;
-            case SDLK_i:
+            case SDLK_I:
                 levelUp();
                 break;
-            case SDLK_o:
+            case SDLK_O:
                 endGame();
                 break;
 #endif
             }
             break;
-        case SDL_CONTROLLERBUTTONUP:
-            if (cro::GameController::controllerID(evt.cbutton.which) == 0)
+        case SDL_EVENT_GAMEPAD_BUTTON_UP:
+            if (cro::GameController::controllerID(evt.gbutton.which) == 0)
             {
                 //hmm this just gets overwritten by the left stick...
                 //does it matter though?
-                switch (evt.cbutton.button)
+                switch (evt.gbutton.button)
                 {
                 default: break;
                 case cro::GameController::DPadLeft:
@@ -298,10 +298,10 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
                 }
             }
             break;
-        case SDL_CONTROLLERBUTTONDOWN:
-            if (cro::GameController::controllerID(evt.cbutton.which) == 0)
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+            if (cro::GameController::controllerID(evt.gbutton.which) == 0)
             {
-                switch (evt.cbutton.button)
+                switch (evt.gbutton.button)
                 {
                 default: break;
                 case cro::GameController::ButtonA:
@@ -319,7 +319,7 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
                 }
             }
             break;
-        case SDL_MOUSEBUTTONDOWN:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
             if (evt.button.button == SDL_BUTTON_LEFT)
             {
                 //TODO this should at least account for cursor pos
@@ -327,18 +327,18 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
                 //dropBall();
             }
             break;
-        case SDL_CONTROLLERAXISMOTION:
-            if (cro::GameController::controllerID(evt.cbutton.which) == 0)
+        case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+            if (cro::GameController::controllerID(evt.gbutton.which) == 0)
             {
-                if (evt.caxis.axis == SDL_CONTROLLER_AXIS_LEFTX
-                    /*|| evt.caxis.axis == SDL_CONTROLLER_AXIS_RIGHTX*/) //hmm these will overwrite each other if we try reading both axes
+                if (evt.gaxis.axis == SDL_GAMEPAD_AXIS_LEFTX
+                    /*|| evt.gaxis.axis == SDL_GAMEPAD_AXIS_RIGHTX*/) //hmm these will overwrite each other if we try reading both axes
                 {
-                    if (evt.caxis.value < -cro::GameController::LeftThumbDeadZoneV * 3)
+                    if (evt.gaxis.value < -cro::GameController::LeftThumbDeadZoneV * 3)
                     {
                         m_inputFlags |= InputFlag::Left;
                         m_inputFlags &= ~InputFlag::Right;
                     }
-                    else if (evt.caxis.value > cro::GameController::LeftThumbDeadZoneV * 3)
+                    else if (evt.gaxis.value > cro::GameController::LeftThumbDeadZoneV * 3)
                     {
                         m_inputFlags |= InputFlag::Right;
                         m_inputFlags &= ~InputFlag::Left;
@@ -355,7 +355,7 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
     }
 
     //update interface regardless
-    if (evt.type == SDL_MOUSEMOTION)
+    if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
     }
@@ -366,19 +366,19 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
         default:
 
             break;
-        case SDL_CONTROLLERDEVICEREMOVED:
+        case SDL_EVENT_GAMEPAD_REMOVED:
             pause();
             break;
-        case SDL_CONTROLLERDEVICEADDED:
+        case SDL_EVENT_GAMEPAD_ADDED:
             for (auto i = 0; i < 4; ++i)
             {
                 cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0, 1, 2));
             }
             break;
-        case SDL_CONTROLLERBUTTONDOWN:
-        case SDL_CONTROLLERBUTTONUP:
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+        case SDL_EVENT_GAMEPAD_BUTTON_UP:
             cro::App::getWindow().setMouseCaptured(true);
-            if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)))
+            if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.gaxis.which)))
             {
                 m_controlTextEntity.getComponent<cro::Text>().setString(InputPS);
                 lastInput = InputType::PS;
@@ -389,12 +389,12 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
                 lastInput = InputType::XBox;
             }
             break;
-        case SDL_CONTROLLERAXISMOTION:
+        case SDL_EVENT_GAMEPAD_AXIS_MOTION:
             cro::App::getWindow().setMouseCaptured(true);
 
-            if (evt.caxis.value < -cro::GameController::LeftThumbDeadZone || evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+            if (evt.gaxis.value < -cro::GameController::LeftThumbDeadZone || evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
             {
-                if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)))
+                if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.gaxis.which)))
                 {
                     m_controlTextEntity.getComponent<cro::Text>().setString(InputPS);
                     lastInput = InputType::PS;
@@ -406,8 +406,8 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
                 }
             }
             break;
-        case SDL_KEYDOWN:
-        case SDL_KEYUP:
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP:
             cro::App::getWindow().setMouseCaptured(true);
             m_controlTextEntity.getComponent<cro::Text>().setString(InputKeyb(m_sharedData.inputBinding));
             lastInput = InputType::Keyboard;

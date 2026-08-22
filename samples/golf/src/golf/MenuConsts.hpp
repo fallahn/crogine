@@ -227,19 +227,19 @@ static inline bool activated(const cro::ButtonEvent& evt)
     switch (evt.type)
     {
     default: return false;
-    case SDL_MOUSEBUTTONUP:
-    case SDL_MOUSEBUTTONDOWN:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
         return evt.button.button == SDL_BUTTON_LEFT;
-    case SDL_CONTROLLERBUTTONUP:
-    case SDL_CONTROLLERBUTTONDOWN:
-        return evt.cbutton.button == SDL_CONTROLLER_BUTTON_A;
-    case SDL_FINGERUP:
-    case SDL_FINGERDOWN:
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+        return evt.gbutton.button == SDL_GAMEPAD_BUTTON_SOUTH;
+    case SDL_EVENT_FINGER_UP:
+    case SDL_EVENT_FINGER_DOWN:
         return true;
-    case SDL_KEYUP:
-    case SDL_KEYDOWN:
-        return ((evt.key.keysym.sym == SDLK_KP_ENTER || evt.key.keysym.sym == SDLK_RETURN) 
-            && ((evt.key.keysym.mod & KMOD_ALT) == 0)
+    case SDL_EVENT_KEY_UP:
+    case SDL_EVENT_KEY_DOWN:
+        return ((evt.key.key == SDLK_KP_ENTER || evt.key.key == SDLK_RETURN) 
+            && ((evt.key.mod & SDL_KMOD_ALT) == 0)
             && evt.key.repeat == 0);
     }
 }
@@ -249,18 +249,18 @@ static inline bool deactivated(const cro::ButtonEvent& evt)
     switch (evt.type)
     {
     default: return false;
-    case SDL_MOUSEBUTTONUP:
-    case SDL_MOUSEBUTTONDOWN:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
         return evt.button.button == SDL_BUTTON_RIGHT;
-    case SDL_CONTROLLERBUTTONUP:
-    case SDL_CONTROLLERBUTTONDOWN:
-        return evt.cbutton.button == SDL_CONTROLLER_BUTTON_B;
-    case SDL_FINGERUP:
-    case SDL_FINGERDOWN:
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+        return evt.gbutton.button == SDL_GAMEPAD_BUTTON_EAST;
+    case SDL_EVENT_FINGER_UP:
+    case SDL_EVENT_FINGER_DOWN:
         return false;
-    case SDL_KEYUP:
-    case SDL_KEYDOWN:
-        return (((evt.key.keysym.sym == SDLK_ESCAPE || evt.key.keysym.sym == SDLK_BACKSPACE)) && ((evt.key.keysym.mod & ~KMOD_NUM) == 0));
+    case SDL_EVENT_KEY_UP:
+    case SDL_EVENT_KEY_DOWN:
+        return (((evt.key.key == SDLK_ESCAPE || evt.key.key == SDLK_BACKSPACE)) && ((evt.key.mod & ~SDL_KMOD_NUM) == 0));
     }
 }
 

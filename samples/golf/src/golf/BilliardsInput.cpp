@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -103,149 +103,149 @@ BilliardsInput::BilliardsInput(const SharedStateData& sd, cro::MessageBus& mb)
 void BilliardsInput::handleEvent(const cro::Event& evt)
 {
     const auto& inputBinding = m_sharedData.inputBinding;
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Up])
+        if (evt.key.key == inputBinding.keys[InputBinding::Up])
         {
             m_inputFlags |= InputFlag::Up;
         }
-        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Left])
+        else if (evt.key.key == inputBinding.keys[InputBinding::Left])
         {
             m_inputFlags |= InputFlag::Left;
         }
-        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Right])
+        else if (evt.key.key == inputBinding.keys[InputBinding::Right])
         {
             m_inputFlags |= InputFlag::Right;
         }
-        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Down])
+        else if (evt.key.key == inputBinding.keys[InputBinding::Down])
         {
             m_inputFlags |= InputFlag::Down;
         }
-        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Action])
+        else if (evt.key.key == inputBinding.keys[InputBinding::Action])
         {
             m_inputFlags |= InputFlag::Action;
         }
-        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.key == inputBinding.keys[InputBinding::NextClub])
         {
             m_inputFlags |= InputFlag::NextClub;
         }
-        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.key == inputBinding.keys[InputBinding::PrevClub])
         {
             m_inputFlags |= InputFlag::PrevClub;
         }
     }
-    else if (evt.type == SDL_KEYUP)
+    else if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Up])
+        if (evt.key.key == inputBinding.keys[InputBinding::Up])
         {
             m_inputFlags &= ~InputFlag::Up;
         }
-        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Left])
+        else if (evt.key.key == inputBinding.keys[InputBinding::Left])
         {
             m_inputFlags &= ~InputFlag::Left;
         }
-        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Right])
+        else if (evt.key.key == inputBinding.keys[InputBinding::Right])
         {
             m_inputFlags &= ~InputFlag::Right;
         }
-        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Down])
+        else if (evt.key.key == inputBinding.keys[InputBinding::Down])
         {
             m_inputFlags &= ~InputFlag::Down;
         }
-        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Action])
+        else if (evt.key.key == inputBinding.keys[InputBinding::Action])
         {
             m_inputFlags &= ~InputFlag::Action;
         }
-        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.key == inputBinding.keys[InputBinding::NextClub])
         {
             m_inputFlags &= ~InputFlag::NextClub;
         }
-        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.key == inputBinding.keys[InputBinding::PrevClub])
         {
             m_inputFlags &= ~InputFlag::PrevClub;
         }
     }
     
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(inputBinding.playerID)))
+        if (evt.gbutton.which == cro::GameController::deviceID(activeControllerID(inputBinding.playerID)))
         {
-            if (evt.cbutton.button == inputBinding.buttons[InputBinding::Action])
+            if (evt.gbutton.button == inputBinding.buttons[InputBinding::Action])
             {
                 m_inputFlags |= InputFlag::Action;
             }
-            else if (evt.cbutton.button == inputBinding.buttons[InputBinding::NextClub])
+            else if (evt.gbutton.button == inputBinding.buttons[InputBinding::NextClub])
             {
                 m_inputFlags |= InputFlag::NextClub;
             }
-            else if (evt.cbutton.button == inputBinding.buttons[InputBinding::PrevClub])
+            else if (evt.gbutton.button == inputBinding.buttons[InputBinding::PrevClub])
             {
                 m_inputFlags |= InputFlag::PrevClub;
             }
-            else if (evt.cbutton.button == inputBinding.buttons[InputBinding::CamModifier])
+            else if (evt.gbutton.button == inputBinding.buttons[InputBinding::CamModifier])
             {
                 m_inputFlags |= InputFlag::CamModifier;
             }
 
-            else if (evt.cbutton.button == cro::GameController::DPadLeft)
+            else if (evt.gbutton.button == cro::GameController::DPadLeft)
             {
                 m_inputFlags |= InputFlag::Left;
             }
-            else if (evt.cbutton.button == cro::GameController::DPadRight)
+            else if (evt.gbutton.button == cro::GameController::DPadRight)
             {
                 m_inputFlags |= InputFlag::Right;
             }
-            else if (evt.cbutton.button == cro::GameController::DPadUp)
+            else if (evt.gbutton.button == cro::GameController::DPadUp)
             {
                 m_inputFlags |= InputFlag::Up;
             }
-            else if (evt.cbutton.button == cro::GameController::DPadDown)
+            else if (evt.gbutton.button == cro::GameController::DPadDown)
             {
                 m_inputFlags |= InputFlag::Down;
             }
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(inputBinding.playerID)))
+        if (evt.gbutton.which == cro::GameController::deviceID(activeControllerID(inputBinding.playerID)))
         {
-            if (evt.cbutton.button == inputBinding.buttons[InputBinding::Action])
+            if (evt.gbutton.button == inputBinding.buttons[InputBinding::Action])
             {
                 m_inputFlags &= ~InputFlag::Action;
             }
-            else if (evt.cbutton.button == inputBinding.buttons[InputBinding::NextClub])
+            else if (evt.gbutton.button == inputBinding.buttons[InputBinding::NextClub])
             {
                 m_inputFlags &= ~InputFlag::NextClub;
             }
-            else if (evt.cbutton.button == inputBinding.buttons[InputBinding::PrevClub])
+            else if (evt.gbutton.button == inputBinding.buttons[InputBinding::PrevClub])
             {
                 m_inputFlags &= ~InputFlag::PrevClub;
             }
-            else if (evt.cbutton.button == inputBinding.buttons[InputBinding::CamModifier])
+            else if (evt.gbutton.button == inputBinding.buttons[InputBinding::CamModifier])
             {
                 m_inputFlags &= ~InputFlag::CamModifier;
             }
 
-            else if (evt.cbutton.button == cro::GameController::DPadLeft)
+            else if (evt.gbutton.button == cro::GameController::DPadLeft)
             {
                 m_inputFlags &= ~InputFlag::Left;
             }
-            else if (evt.cbutton.button == cro::GameController::DPadRight)
+            else if (evt.gbutton.button == cro::GameController::DPadRight)
             {
                 m_inputFlags &= ~InputFlag::Right;
             }
-            else if (evt.cbutton.button == cro::GameController::DPadUp)
+            else if (evt.gbutton.button == cro::GameController::DPadUp)
             {
                 m_inputFlags &= ~InputFlag::Up;
             }
-            else if (evt.cbutton.button == cro::GameController::DPadDown)
+            else if (evt.gbutton.button == cro::GameController::DPadDown)
             {
                 m_inputFlags &= ~InputFlag::Down;
             }
         }
     }
 
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         switch (evt.button.button)
         {
@@ -258,7 +258,7 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         switch (evt.button.button)
         {
@@ -272,12 +272,12 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_MOUSEWHEEL
+    else if (evt.type == SDL_EVENT_MOUSE_WHEEL
         && m_active)
     {
         m_power = std::max(MinPower, std::min(MaxPower, m_power + (PowerStep * evt.wheel.y)));
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         //normalise this to better match the controller input
         static constexpr float MaxMouseMove = 6.f;

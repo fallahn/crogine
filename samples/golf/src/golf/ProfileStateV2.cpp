@@ -259,96 +259,96 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         };
 
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
         setActiveInput(true, 0);
 
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE)
+        if (evt.key.key == SDLK_BACKSPACE
+            || evt.key.key == SDLK_ESCAPE)
         {
             /*quitState();
             return false;*/
             m_exitFlags &= ~ExitFlagQuit;
         }
-        else if (evt.key.keysym.sym == SDLK_LCTRL)
+        else if (evt.key.key == SDLK_LCTRL)
         {
             m_exitFlags &= ~ExitFlagSave;
         }
-        else if (evt.key.keysym.sym == SDLK_LALT)
+        else if (evt.key.key == SDLK_LALT)
         {
             m_exitFlags &= ~ExitFlagRandomise;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
         {
             m_uiLayout.nextTab();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
         {
             m_uiLayout.prevTab();
         }
 
         //done on key down event for repeat when held
-        /*else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down]
-            || evt.key.keysym.sym == SDLK_DOWN)
+        /*else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Down]
+            || evt.key.key == SDLK_DOWN)
         {
             nextItem();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up]
-            || evt.key.keysym.sym == SDLK_UP)
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Up]
+            || evt.key.key == SDLK_UP)
         {
             prevItem();
         }*/
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action]
-            || evt.key.keysym.sym == SDLK_RETURN)
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action]
+            || evt.key.key == SDLK_RETURN)
         {
             m_uiLayout.activate();
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         setActiveInput(true, 0);
 
         //do this here to take advantageof key repeat
-        if (evt.key.keysym.sym == SDLK_DOWN)
+        if (evt.key.key == SDLK_DOWN)
         {
             m_uiLayout.nextItem();
         }
-        else if (evt.key.keysym.sym == SDLK_UP)
+        else if (evt.key.key == SDLK_UP)
         {
             m_uiLayout.prevItem();
         }
-        else if (evt.key.keysym.sym == SDLK_LEFT)
+        else if (evt.key.key == SDLK_LEFT)
         {
             m_uiLayout.activateLeft();
         }
-        else if (evt.key.keysym.sym == SDLK_RIGHT)
+        else if (evt.key.key == SDLK_RIGHT)
         {
             m_uiLayout.activateRight();
         }
 
-        else if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE)
+        else if (evt.key.key == SDLK_BACKSPACE
+            || evt.key.key == SDLK_ESCAPE)
         {
             /*quitState();
             return false;*/
             m_exitFlags |= ExitFlagQuit;
         }
-        else if (evt.key.keysym.sym == SDLK_LCTRL)
+        else if (evt.key.key == SDLK_LCTRL)
         {
             m_exitFlags |= ExitFlagSave;
         }
-        else if (evt.key.keysym.sym == SDLK_LALT
+        else if (evt.key.key == SDLK_LALT
             && evt.key.repeat == 0)
         {
             m_exitFlags |= ExitFlagRandomise;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        const auto controllerID = cro::GameController::controllerID(evt.cbutton.which);
+        const auto controllerID = cro::GameController::controllerID(evt.gbutton.which);
         setActiveInput(false, controllerID);
 
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::DPadUp:
@@ -378,9 +378,9 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         /*case cro::GameController::DPadLeft:
@@ -412,7 +412,7 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
@@ -425,7 +425,7 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
             m_exitFlags &= ~ExitFlagQuit;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -433,19 +433,19 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         setActiveInput(true, 0);
 
         glm::vec2 pos(evt.motion.x, cro::App::getWindow().getSize().y - evt.motion.y);
         m_uiLayout.checkMouseOver(pos);
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
         constexpr std::int16_t Threshold = std::numeric_limits<std::int16_t>::max() / 2;// cro::GameController::LeftThumbDeadZone * 2;// 15000;
-        const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
+        const auto controllerID = cro::GameController::controllerID(evt.gaxis.which);
         
-        if (std::abs(evt.caxis.value) > Threshold)
+        if (std::abs(evt.gaxis.value) > Threshold)
         {
             setActiveInput(false, controllerID);
         }
@@ -454,17 +454,17 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         if (controllerID != -1
             && controllerID < 4)
         {
-            switch (evt.caxis.axis)
+            switch (evt.gaxis.axis)
             {
             default: break;
-            case SDL_CONTROLLER_AXIS_LEFTX:
-                if (evt.caxis.value > Threshold)
+            case SDL_GAMEPAD_AXIS_LEFTX:
+                if (evt.gaxis.value > Threshold)
                 {
                     //right
                     m_controllerMasks[controllerID] |= InputFlag::Right;
                     m_controllerMasks[controllerID] &= ~InputFlag::Left;
                 }
-                else if (evt.caxis.value < -Threshold)
+                else if (evt.gaxis.value < -Threshold)
                 {
                     //left
                     m_controllerMasks[controllerID] |= InputFlag::Left;
@@ -475,14 +475,14 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
                     m_controllerMasks[controllerID] &= ~(InputFlag::Left | InputFlag::Right);
                 }
                 break;
-            case SDL_CONTROLLER_AXIS_LEFTY:
-                if (evt.caxis.value > Threshold)
+            case SDL_GAMEPAD_AXIS_LEFTY:
+                if (evt.gaxis.value > Threshold)
                 {
                     //down
                     m_controllerMasks[controllerID] |= InputFlag::Down;
                     m_controllerMasks[controllerID] &= ~InputFlag::Up;
                 }
-                else if (evt.caxis.value < -Threshold)
+                else if (evt.gaxis.value < -Threshold)
                 {
                     //up
                     m_controllerMasks[controllerID] |= InputFlag::Up;
@@ -497,7 +497,7 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         }
         
     }
-    else if (evt.type == SDL_MOUSEWHEEL)
+    else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
         if (evt.wheel.y > 0)
         {
@@ -509,8 +509,8 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_CONTROLLERDEVICEADDED
-        || evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    else if (evt.type == SDL_EVENT_GAMEPAD_ADDED
+        || evt.type == SDL_EVENT_GAMEPAD_REMOVED)
     {
         //refreshControllerDevices();
         //*sigh* the names aren't updated until AFTER the event
@@ -555,7 +555,7 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             //hack to force the texture to resize properly
             m_uiLayout.menuLayout.texture.create(1, 1, false);
@@ -4153,10 +4153,10 @@ void ProfileStateV2::refreshBio()
                 std::vector<char> buffer(MaxBioChars + 1);
 
                 cro::RaiiRWops inFile;
-                inFile.file = SDL_RWFromFile(path.c_str(), "r");
+                inFile.file = SDL_IOFromFile(path.c_str(), "r");
                 if (inFile.file)
                 {
-                    auto readCount = inFile.file->read(inFile.file, buffer.data(), 1, MaxBioChars);
+                    auto readCount = SDL_ReadIO(inFile.file, buffer.data(), MaxBioChars);
                     buffer[readCount] = 0; //nullterm
                     setBioString(buffer.data());
                 }
@@ -4167,10 +4167,10 @@ void ProfileStateV2::refreshBio()
                 std::string bio = generateRandomBio();
 
                 cro::RaiiRWops outfile;
-                outfile.file = SDL_RWFromFile(path.c_str(), "w");
+                outfile.file = SDL_IOFromFile(path.c_str(), "w");
                 if (outfile.file)
                 {
-                    outfile.file->write(outfile.file, bio.data(), bio.size(), 1);
+                    SDL_WriteIO(outfile.file, bio.data(), bio.size());
                 }
                 setBioString(bio);
             }

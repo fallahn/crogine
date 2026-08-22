@@ -165,9 +165,9 @@ bool SplashState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYUP
-        || evt.type == SDL_CONTROLLERBUTTONUP
-        || evt.type == SDL_MOUSEBUTTONUP)
+    if (evt.type == SDL_EVENT_KEY_UP
+        || evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP
+        || evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         gotoMenu();
     }

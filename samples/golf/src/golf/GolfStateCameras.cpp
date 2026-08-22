@@ -134,7 +134,7 @@ void GolfState::createCameras()
                 {
                     cro::RenderTarget::Context ctx;
                     ctx.depthBuffer = true;
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
                     //*sigh*
                     ctx.depthTexture = false;
 #else

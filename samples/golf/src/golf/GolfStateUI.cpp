@@ -5062,7 +5062,7 @@ void GolfState::logCSV() const
         fileName = Content::getBaseContentPath() + fileName;
 
         cro::RaiiRWops out;
-        out.file = SDL_RWFromFile(fileName.c_str(), "w");
+        out.file = SDL_IOFromFile(fileName.c_str(), "w");
         if (out.file)
         {
             std::stringstream ss;
@@ -5112,7 +5112,7 @@ void GolfState::logCSV() const
             }
             
             auto str = ss.str();
-            SDL_RWwrite(out.file, str.data(), str.size(), 1);
+            SDL_WriteIO(out.file, str.data(), str.size());
             LogI << "Saved " << fileName << std::endl;
         }
         else
@@ -7181,10 +7181,10 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    if (evt.type == SDL_KEYDOWN
+    if (evt.type == SDL_EVENT_KEY_DOWN
         && evt.key.repeat == 0)
     {
-        if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::EmoteMenu])
+        if (evt.key.key == sharedData.inputBinding.keys[InputBinding::EmoteMenu])
         {
             targetScale = 1.f;
             return true;
@@ -7193,24 +7193,24 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         //stop these getting forwarded to input parser
         if (cro::Keyboard::isKeyPressed(sharedData.inputBinding.keys[InputBinding::EmoteMenu]))
         {
-            if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Up])
+            if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Up])
             {
                 return true;
             }
-            else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Down])
+            else if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Down])
             {
                 return true;
             }
-            else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Left])
+            else if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Left])
             {
                 return true;
             }
-            else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Right])
+            else if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Right])
             {
                 return true;
             }
 
-            switch (evt.key.keysym.sym)
+            switch (evt.key.key)
             {
             default: break;
             case SDLK_7:
@@ -7221,9 +7221,9 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_KEYUP)
+    else if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::EmoteMenu])
+        if (evt.key.key == sharedData.inputBinding.keys[InputBinding::EmoteMenu])
         {
             targetScale = 0.f;
             return true;
@@ -7231,28 +7231,28 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
 
         if (currentScale == 1)
         {
-            if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Up])
+            if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Up])
             {
                 sendEmote(Emote::Happy, 0);
                 return true;
             }
-            else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Down])
+            else if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Down])
             {
                 sendEmote(Emote::Laughing, 0);
                 return true;
             }
-            else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Left])
+            else if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Left])
             {
                 sendEmote(Emote::Sad, 0);
                 return true;
             }
-            else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Right])
+            else if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Right])
             {
                 sendEmote(Emote::Grumpy, 0);
                 return true;
             }
 
-            /*switch (evt.key.keysym.sym)
+            /*switch (evt.key.key)
             {
             default: break;
             case SDLK_7:
@@ -7280,13 +7280,13 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
     }
 
 
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
         auto controllerID = activeControllerID(sharedData.inputBinding.playerID);
-        if (cro::GameController::controllerID(evt.cbutton.which) == controllerID
+        if (cro::GameController::controllerID(evt.gbutton.which) == controllerID
             || sharedData.localConnectionData.playerCount == 1)
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::ButtonY:
@@ -7309,13 +7309,13 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         //if (cro::GameController::isButtonPressed(controllerID, cro::GameController::ButtonY))
         if (targetScale == 1)
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: return false;
-            case SDL_CONTROLLER_BUTTON_DPAD_UP:
-            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            case SDL_GAMEPAD_BUTTON_DPAD_UP:
+            case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
+            case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
+            case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
             case cro::GameController::ButtonLeftShoulder:
             case cro::GameController::ButtonRightShoulder:
             case cro::GameController::ButtonLeftStick:
@@ -7327,15 +7327,15 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
         //the controller ID is actually used to select the play name in this case
         auto controllerID = activeControllerID(sharedData.localConnectionData.playerCount == 1 ? 0 :
             sharedData.inputBinding.playerID);
 
-        /*if (cro::GameController::controllerID(evt.cbutton.which) == controllerID)
+        /*if (cro::GameController::controllerID(evt.gbutton.which) == controllerID)
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::ButtonY:
@@ -7346,7 +7346,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
 
         if (currentScale == 1)
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: return false;
             case cro::GameController::ButtonA:
@@ -7357,16 +7357,16 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
                 //close emote wheel automatically
                 targetScale = 0.f;
                 return true;
-            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+            case SDL_GAMEPAD_BUTTON_DPAD_UP:
                 sendEmote(Emote::Happy, controllerID);
                 return true;
-            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+            case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
                 sendEmote(Emote::Laughing, controllerID);
                 return true;
-            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
                 sendEmote(Emote::Sad, controllerID);
                 return true;
-            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
                 sendEmote(Emote::Grumpy, controllerID);
                 return true;
             case cro::GameController::ButtonLeftShoulder:
@@ -7393,11 +7393,11 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
         if (targetScale ==  1.f)
         {
-            switch (evt.caxis.axis)
+            switch (evt.gaxis.axis)
             {
             default: return false;
             case cro::GameController::TriggerLeft:

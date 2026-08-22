@@ -321,26 +321,26 @@ void GolfGame::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
-    case SDL_WINDOWEVENT:
-        switch (evt.window.event)
-        {
-        default: break;
-        case SDL_WINDOWEVENT_MINIMIZED:
-        case SDL_WINDOWEVENT_FOCUS_LOST:
-            prefadeTarget = 0.f;
-            break;
-        case SDL_WINDOWEVENT_MAXIMIZED:
-        case SDL_WINDOWEVENT_FOCUS_GAINED:
-            //TODO switching to full screen
-            prefadeTarget = 1.f;
-            break;
-        }
+    //case SDL_WINDOWEVENT:
+        //switch (evt.window.event)
+    {
+    //default: break;
+    case SDL_EVENT_WINDOW_MINIMIZED:
+    case SDL_EVENT_WINDOW_FOCUS_LOST:
+        prefadeTarget = 0.f;
         break;
-    case SDL_MOUSEMOTION:
+    case SDL_EVENT_WINDOW_MAXIMIZED:
+    case SDL_EVENT_WINDOW_FOCUS_GAINED:
+        //TODO switching to full screen
+        prefadeTarget = 1.f;
+        break;
+    }
+        //break;
+    case SDL_EVENT_MOUSE_MOTION:
         //cro::App::getWindow().setMouseCaptured(false);
         break;
-    case SDL_KEYUP:
-        switch (evt.key.keysym.sym)
+    case SDL_EVENT_KEY_UP:
+        switch (evt.key.key)
         {
         default: break;
 #ifdef CRO_DEBUG_
@@ -352,7 +352,7 @@ void GolfGame::handleEvent(const cro::Event& evt)
             m_progressIcon->show(0, 10, 10);
             break;*/
 #ifndef USE_GNS
-        case SDLK_t:
+        case SDLK_T:
             m_achievements->showTest();
             break;
 #endif
@@ -422,7 +422,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
     else if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             if (m_sharedData.usePostProcess)
             {
@@ -471,7 +471,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
 
                 //create a fake resize event to trigger any camera callbacks.
                 SDL_Event resizeEvent;
-                resizeEvent.type = SDL_WINDOWEVENT_SIZE_CHANGED;
+                resizeEvent.type = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
                 resizeEvent.window.windowID = 0;
                 resizeEvent.window.data1 = windowSize.x;
                 resizeEvent.window.data2 = windowSize.y;
@@ -875,12 +875,12 @@ bool GolfGame::initialise()
                 if (!path.empty())
                 {
                     cro::RaiiRWops file;
-                    file.file = SDL_RWFromFile(path.c_str(), "r");
+                    file.file = SDL_IOFromFile(path.c_str(), "r");
                     if (file.file)
                     {
-                        auto size = SDL_RWsize(file.file);
+                        auto size = SDL_GetIOSize(file.file);
                         std::vector<char> buffer(size);
-                        if (SDL_RWread(file.file, buffer.data(), size, 1))
+                        if (SDL_ReadIO(file.file, buffer.data(), size))
                         {
                             //teminate the string!
                             buffer.push_back(0);
@@ -1200,12 +1200,12 @@ bool GolfGame::initialise()
     if (!m_sharedData.customShaderPath.empty())
     {
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(m_sharedData.customShaderPath.c_str(), "r");
+        file.file = SDL_IOFromFile(m_sharedData.customShaderPath.c_str(), "r");
         if (file.file)
         {
-            auto size = SDL_RWsize(file.file);
+            auto size = SDL_GetIOSize(file.file);
             std::vector<char> buffer(size);
-            if (SDL_RWread(file.file, buffer.data(), size, 1))
+            if (SDL_ReadIO(file.file, buffer.data(), size))
             {
                 //teminate the string!
                 buffer.push_back(0);
@@ -1972,13 +1972,13 @@ void GolfGame::loadPreferences()
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        file.file = SDL_IOFromFile(path.c_str(), "rb");
         if (file.file)
         {
-            auto size = SDL_RWsize(file.file);
+            auto size = SDL_GetIOSize(file.file);
             if (size == sizeof(InputBinding))
             {
-                SDL_RWread(file.file, &m_sharedData.inputBinding, size, 1);
+                SDL_ReadIO(file.file, &m_sharedData.inputBinding, size);
                 LOG("Read keybinds file", cro::Logger::Type::Info);
             }
         }
@@ -1987,11 +1987,11 @@ void GolfGame::loadPreferences()
     //hack for existing keybinds which weren't expecting the billiards update
     if (m_sharedData.inputBinding.keys[InputBinding::Up] == SDLK_UNKNOWN)
     {
-        m_sharedData.inputBinding.keys[InputBinding::Up] = SDLK_w;
+        m_sharedData.inputBinding.keys[InputBinding::Up] = SDLK_W;
     }
     if (m_sharedData.inputBinding.keys[InputBinding::Down] == SDLK_UNKNOWN)
     {
-        m_sharedData.inputBinding.keys[InputBinding::Down] = SDLK_s;
+        m_sharedData.inputBinding.keys[InputBinding::Down] = SDLK_S;
     }
 
     //and then the cancel button update
@@ -2116,10 +2116,10 @@ void GolfGame::savePreferences()
     //keybinds
     path = Content::getBaseContentPath() + "keys.bind";
     cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(path.c_str(), "wb");
+    file.file = SDL_IOFromFile(path.c_str(), "wb");
     if (file.file)
     {
-        SDL_RWwrite(file.file, &m_sharedData.inputBinding, sizeof(InputBinding), 1);
+        SDL_WriteIO(file.file, &m_sharedData.inputBinding, sizeof(InputBinding));
     }
 
     inv::write(m_sharedData.inventory);

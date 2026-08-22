@@ -232,7 +232,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
     if (ImGui::GetIO().WantCaptureKeyboard
         || ImGui::GetIO().WantCaptureMouse)
     {
-        if (evt.type == SDL_MOUSEMOTION
+        if (evt.type == SDL_EVENT_MOUSE_MOTION
             && cro::App::getWindow().getMouseCaptured())
         {
             cro::App::getWindow().setMouseCaptured(false);
@@ -242,9 +242,9 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
     }
 
 #ifdef CRO_DEBUG_
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_F2:
@@ -265,13 +265,13 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
     else 
 #endif
     //TODO we need a good way to release the mouse without interfering with game play...
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_ESCAPE:
-        case SDLK_p:
+        case SDLK_P:
         case SDLK_PAUSE:
             requestStackPush(StateID::Pause);
             break;
@@ -328,16 +328,16 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
 #endif //CRO_DEBUG_
         }
 
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
         {
             sendReadyNotify();
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)))
+        if (evt.gbutton.which == cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)))
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::ButtonA:
@@ -352,15 +352,15 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
 //#ifdef CRO_DEBUG_
 //        else
 //        {
-//            LogI << "Event button ID " << evt.cbutton.which << ", controller ID " << cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)) << std::endl;
+//            LogI << "Event button ID " << evt.gbutton.which << ", controller ID " << cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)) << std::endl;
 //        }
 //#endif
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)))
+        if (evt.gbutton.which == cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)))
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::ButtonStart:
@@ -371,12 +371,12 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
 //#ifdef CRO_DEBUG_
 //        else
 //        {
-//            LogI << "Event button ID " << evt.cbutton.which << ", controller ID " << cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)) << std::endl;
+//            LogI << "Event button ID " << evt.gbutton.which << ", controller ID " << cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)) << std::endl;
 //        }
 //#endif
     }
 
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
@@ -398,7 +398,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
     case cro::Message::WindowMessage:
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             resizeBuffers();
         }

@@ -1154,7 +1154,7 @@ void TerrainBuilder::readGrassData()
         std::fill(header.begin(), header.end(), 0);
 
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        file.file = SDL_IOFromFile(path.c_str(), "rb");
         if (file.file)
         {
             file.file->read(file.file, header.data(), sizeof(header), 1);

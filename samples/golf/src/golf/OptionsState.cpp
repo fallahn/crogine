@@ -399,7 +399,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         else
         {
             //cancel the input
-            updateKeybind(/*evt.key.keysym.sym*/SDLK_ESCAPE);
+            updateKeybind(/*evt.key.key*/SDLK_ESCAPE);
         }
     };
 
@@ -421,21 +421,21 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         }
 
         cro::ButtonEvent fakeEvent;
-        fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+        fakeEvent.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
         fakeEvent.button.button = SDL_BUTTON_LEFT;
         m_scrollFunctions[callbackID](cro::Entity(), fakeEvent);
     };
 
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default:
             if (m_updatingKeybind)
             {
                 //apply keybind
-                updateKeybind(evt.key.keysym.sym);
+                updateKeybind(evt.key.key);
             }
             break;
 #ifdef CRO_DEBUG_
@@ -462,11 +462,11 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             return false;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         lastInput = LastInput::Keyboard;
 
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
@@ -479,12 +479,12 @@ bool OptionsState::handleEvent(const cro::Event& evt)
 
         if (!m_updatingKeybind)
         {
-            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+            if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
             {
                 m_currentTabFunction = (m_currentTabFunction + (m_tabFunctions.size() - 1)) % m_tabFunctions.size();
                 m_tabFunctions[m_currentTabFunction]();
             }
-            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+            else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
             {
                 m_currentTabFunction = (m_currentTabFunction + 1) % m_tabFunctions.size();
                 m_tabFunctions[m_currentTabFunction]();
@@ -492,9 +492,9 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces refresh
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonB:
@@ -515,10 +515,10 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
         cro::App::getWindow().setMouseCaptured(true);
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonLeftShoulder:
@@ -537,12 +537,12 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             break;
         }
 
-        toggleControllerIcon(cro::GameController::controllerID(evt.cbutton.which));
+        toggleControllerIcon(cro::GameController::controllerID(evt.gbutton.which));
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
-        if (std::abs(evt.caxis.value) > cro::GameController::LeftThumbDeadZone)
+        const auto controllerID = cro::GameController::controllerID(evt.gaxis.which);
+        if (std::abs(evt.gaxis.value) > cro::GameController::LeftThumbDeadZone)
         {
             toggleControllerIcon(controllerID);
             m_controllerState[controllerID] = true;
@@ -553,18 +553,18 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             m_controllerState[controllerID] = false;
         }
 
-        if (evt.caxis.axis == cro::GameController::AxisRightY)
+        if (evt.gaxis.axis == cro::GameController::AxisRightY)
         {
             const auto menuID = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
-            const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
-            const auto amt = evt.caxis.value;
+            const auto controllerID = cro::GameController::controllerID(evt.gaxis.which);
+            const auto amt = evt.gaxis.value;
 
             if (amt < -cro::GameController::LeftThumbDeadZone
                 && m_controllerScrollAxes[controllerID] >= -cro::GameController::LeftThumbDeadZone)
             {
                 cro::ButtonEvent fakeEvent;
-                fakeEvent.type = SDL_CONTROLLERBUTTONDOWN;
-                fakeEvent.cbutton.button = cro::GameController::ButtonA;
+                fakeEvent.type = SDL_EVENT_GAMEPAD_BUTTON_DOWN;
+                fakeEvent.gbutton.button = cro::GameController::ButtonA;
 
                 if (menuID == MenuID::Achievements)
                 {
@@ -579,8 +579,8 @@ bool OptionsState::handleEvent(const cro::Event& evt)
                 && m_controllerScrollAxes[controllerID] <= cro::GameController::LeftThumbDeadZone)
             {
                 cro::ButtonEvent fakeEvent;
-                fakeEvent.type = SDL_CONTROLLERBUTTONDOWN;
-                fakeEvent.cbutton.button = cro::GameController::ButtonA;
+                fakeEvent.type = SDL_EVENT_GAMEPAD_BUTTON_DOWN;
+                fakeEvent.gbutton.button = cro::GameController::ButtonA;
                 
                 if (menuID == MenuID::Achievements)
                 {
@@ -603,7 +603,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             m_controllerScrollAxes[controllerID] = amt;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         lastInput = LastInput::Keyboard;
 
@@ -636,7 +636,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
@@ -648,7 +648,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             closeWindow();
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         lastInput = LastInput::Keyboard;
 
@@ -656,7 +656,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         updateScrollBar();
         cro::App::getWindow().setMouseCaptured(false);
     }
-    else if (evt.type == SDL_MOUSEWHEEL)
+    else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
         lastInput = LastInput::Keyboard;
         m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -673,8 +673,8 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_CONTROLLERDEVICEADDED
-        || evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    else if (evt.type == SDL_EVENT_GAMEPAD_ADDED
+        || evt.type == SDL_EVENT_GAMEPAD_REMOVED)
         {
             m_refreshControllers = true;
 
@@ -754,9 +754,9 @@ bool OptionsState::simulate(float dt)
                 //event here because only controller presses (not
                 //mouse presses) should latch the active state
                 cro::ButtonEvent fakeEvent;
-                /*fakeEvent.type = SDL_CONTROLLERBUTTONDOWN;
-                fakeEvent.cbutton.button = cro::GameController::ButtonA;*/
-                fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+                /*fakeEvent.type = SDL_EVENT_GAMEPAD_BUTTON_DOWN;
+                fakeEvent.gbutton.button = cro::GameController::ButtonA;*/
+                fakeEvent.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
                 fakeEvent.button.button = SDL_BUTTON_LEFT;
                 m_scrollFunctions[i](cro::Entity(), fakeEvent);
             }
@@ -2110,7 +2110,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
             msg->data0 = size.x;
             msg->data1 = size.y;
-            msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+            msg->event = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
 
             fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
         };
@@ -2403,7 +2403,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                         auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
                         msg->data0 = size.x;
                         msg->data1 = size.y;
-                        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+                        msg->event = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
 
                         fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
                     }
@@ -2434,7 +2434,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                         auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
                         msg->data0 = size.x;
                         msg->data1 = size.y;
-                        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+                        msg->event = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
 
                         fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
                     }
@@ -3642,7 +3642,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
             [&, infoEnt, keyIndex](cro::Entity e, cro::ButtonEvent evt) mutable
             {
-                if ((evt.type == SDL_KEYUP || evt.type == SDL_MOUSEBUTTONUP)
+                if ((evt.type == SDL_EVENT_KEY_UP || evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
                     && activated(evt))
                 {
                     m_updatingKeybind = true;
@@ -3771,8 +3771,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                         e.getComponent<cro::UIInput>().setGroup(MenuID::Dummy);
                     }
 
-                    auto controllerIndex = evt.type == SDL_CONTROLLERBUTTONDOWN ?
-                        cro::GameController::controllerID(evt.cbutton.which) : 0;
+                    auto controllerIndex = evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN ?
+                        cro::GameController::controllerID(evt.gbutton.which) : 0;
 
                     std::size_t i = Social::isSteamdeck(false) ? LayoutID::Deck
                         : cro::GameController::getControllerCount() == 0 ? LayoutID::XBox :
@@ -5491,7 +5491,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
 
-                if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+                if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
                 {
                     m_scrollPresses[ScrollID::AchUp].pressed = true;
                 }
@@ -5514,7 +5514,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
 
-                if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+                if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
                 {
                     m_scrollPresses[ScrollID::AchDown].pressed = true;
                 }
@@ -5797,7 +5797,7 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
 
-            if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+            if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
             {
                 m_scrollPresses[ScrollID::StatUp].pressed = true;
             }
@@ -5820,7 +5820,7 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
 
-            if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+            if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
             {
                 m_scrollPresses[ScrollID::StatDown].pressed = true;
             }

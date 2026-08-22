@@ -330,7 +330,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 {
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
-        if (evt.type == SDL_MOUSEMOTION)
+        if (evt.type == SDL_EVENT_MOUSE_MOTION)
         {
             cro::App::getWindow().setMouseCaptured(false);
         }
@@ -416,12 +416,12 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 #endif
 
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
         m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         resetIdle();
         cro::App::getWindow().setMouseCaptured(true);
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_ESCAPE:
@@ -493,11 +493,11 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         m_skipState.displayControllerMessage = false;
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
@@ -508,26 +508,26 @@ bool DrivingState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (std::abs(evt.caxis.value) > cro::GameController::LeftThumbDeadZone)
+        if (std::abs(evt.gaxis.value) > cro::GameController::LeftThumbDeadZone)
         {
-            m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)) ?
+            m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.gaxis.which)) ?
                 SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
 
             resetIdle();
             cro::App::getWindow().setMouseCaptured(true);
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) ?
+        m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.gbutton.which)) ?
             SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
 
         resetIdle();
         m_skipState.displayControllerMessage = true;
 
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonRightStick:
@@ -552,7 +552,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         resetIdle();
 #ifdef CRO_DEBUG_
@@ -567,7 +567,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 #endif // CRO_DEBUG_
 
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -581,7 +581,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
-    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    else if (evt.type == SDL_EVENT_GAMEPAD_REMOVED)
     {
         pauseGame();
     }
@@ -590,7 +590,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     //    switch (evt.window.event)
     //    {
     //    default: break;
-    //    case SDL_WINDOWEVENT_FOCUS_GAINED:
+    //    case SDL_EVENT_WINDOW_FOCUS_GAINED:
     //        //this needs to be delayed a frame so mouse clicking on the
     //        //open window doesn't get sent to the input parser
     //    {
@@ -605,7 +605,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     //            };
     //    }
     //        break;
-    //    case SDL_WINDOWEVENT_FOCUS_LOST:
+    //    case SDL_EVENT_WINDOW_FOCUS_LOST:
     //        m_inputParser.setSuspended(true);
     //        break;
     //        }

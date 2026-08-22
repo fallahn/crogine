@@ -173,10 +173,10 @@ bool PlayerManagementState::handleEvent(const cro::Event& evt)
         };
 
     auto currMenu = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE)
+        if (evt.key.key == SDLK_BACKSPACE
+            || evt.key.key == SDLK_ESCAPE)
         {
             if (currMenu == MenuID::Help)
             {
@@ -189,9 +189,9 @@ bool PlayerManagementState::handleEvent(const cro::Event& evt)
             return false;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
@@ -202,11 +202,11 @@ bool PlayerManagementState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
         cro::App::getWindow().setMouseCaptured(true);
-        if (evt.cbutton.button == cro::GameController::ButtonB
-            || evt.cbutton.button == cro::GameController::ButtonStart)
+        if (evt.gbutton.button == cro::GameController::ButtonB
+            || evt.gbutton.button == cro::GameController::ButtonStart)
         {
             if (currMenu == MenuID::Help)
             {
@@ -219,7 +219,7 @@ bool PlayerManagementState::handleEvent(const cro::Event& evt)
             return false;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -234,14 +234,14 @@ bool PlayerManagementState::handleEvent(const cro::Event& evt)
             return false;
         }
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
     }

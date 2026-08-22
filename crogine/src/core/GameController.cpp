@@ -97,7 +97,7 @@ std::int16_t GameController::getAxisPosition(std::int32_t controllerIndex, std::
     {
         //return the average of all inputs
         std::int32_t sum = 0;
-        std::int32_t controllerCount = getControllerCount();
+        const std::int32_t controllerCount = getControllerCount();
 
         if (controllerCount == 0)
         {
@@ -127,7 +127,7 @@ bool GameController::isButtonPressed(std::int32_t controllerIndex, std::int32_t 
     {
         for (auto i = 0; i < /*getControllerCount()*/4; ++i)
         {
-            if (SDL_GetGamepadButton(App::m_instance->m_controllers[i].controller, static_cast<SDL_GamepadButton>(button)) == 1)
+            if (SDL_GetGamepadButton(App::m_instance->m_controllers[i].controller, static_cast<SDL_GamepadButton>(button)))
             {
                 return true;
             }
@@ -135,7 +135,7 @@ bool GameController::isButtonPressed(std::int32_t controllerIndex, std::int32_t 
         return false;
     }
 
-    return (SDL_GetGamepadButton(App::m_instance->m_controllers[controllerIndex].controller, static_cast<SDL_GamepadButton>(button)) == 1);
+    return SDL_GetGamepadButton(App::m_instance->m_controllers[controllerIndex].controller, static_cast<SDL_GamepadButton>(button));
 }
 
 bool GameController::isConnected(std::int32_t controllerIndex)
@@ -260,7 +260,7 @@ void GameController::rumbleStart(std::int32_t controllerIndex, std::uint16_t str
 
     if (controllerIndex > -1 && App::m_instance->m_controllers[controllerIndex].controller)
     {
-        if (SDL_RumbleGamepad(App::m_instance->m_controllers[controllerIndex].controller, strengthLow, strengthHigh, duration) != 0)
+        if (!SDL_RumbleGamepad(App::m_instance->m_controllers[controllerIndex].controller, strengthLow, strengthHigh, duration))
         {
             const auto* error = SDL_GetError();
             LogE << "SDL: " << error << " on controller " << controllerIndex << ": rumbleStart()" << std::endl;
@@ -275,7 +275,7 @@ void GameController::rumbleStop(std::int32_t controllerIndex)
 
     if (controllerIndex > -1 && App::m_instance->m_controllers[controllerIndex].controller)
     {
-        if (SDL_RumbleGamepad(App::m_instance->m_controllers[controllerIndex].controller, 0, 0, 0) != 0)
+        if (!SDL_RumbleGamepad(App::m_instance->m_controllers[controllerIndex].controller, 0, 0, 0))
         {
             const auto* error = SDL_GetError();
             LogE << "SDL: " << error << " on controller " << controllerIndex << ": rumbleEnd()" << std::endl;
@@ -375,9 +375,9 @@ bool GameController::applyDSTriggerEffect(std::int32_t controllerIndex, std::int
 
 std::uint64_t GameController::getSteamHandle(std::int32_t controllerID)
 {
-#if SDL_MINOR_VERSION < 30
-            return 0;
-#else
+//#if SDL_MINOR_VERSION < 30
+//            return 0;
+//#else
     if (controllerID < 0 || controllerID >= MaxControllers)
     {
         return 0;
@@ -388,7 +388,7 @@ std::uint64_t GameController::getSteamHandle(std::int32_t controllerID)
             return SDL_GetGamepadSteamHandle(c);
     }
     return 0;
-#endif
+//#endif
 }
 
 //factory functions for DSEffect - based on https://gist.github.com/Nielk1/6d54cc2c00d2201ccb8c2720ad7538db (MIT)

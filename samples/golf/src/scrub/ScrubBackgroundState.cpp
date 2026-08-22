@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024 - 2025
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -134,21 +134,21 @@ void ScrubBackgroundState::handleMessage(const cro::Message& msg)
 bool ScrubBackgroundState::simulate(float dt)
 {
     //glm::vec3 move(0.f);
-    //if (cro::Keyboard::isKeyPressed(SDLK_e))
+    //if (cro::Keyboard::isKeyPressed(SDLK_E))
     //{
     //    move.z += dt;
     //}
-    //if (cro::Keyboard::isKeyPressed(SDLK_q))
+    //if (cro::Keyboard::isKeyPressed(SDLK_Q))
     //{
     //    move.z -= dt;
     //}
     //m_scene.getActiveCamera().getComponent<cro::Transform>().move(move);
 
-    //if (cro::Keyboard::isKeyPressed(SDLK_w))
+    //if (cro::Keyboard::isKeyPressed(SDLK_W))
     //{
     //    Debug::rotate += dt;
     //}
-    //if (cro::Keyboard::isKeyPressed(SDLK_s))
+    //if (cro::Keyboard::isKeyPressed(SDLK_S))
     //{
     //    Debug::rotate -= dt;
     //}

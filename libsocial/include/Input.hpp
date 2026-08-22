@@ -115,18 +115,18 @@ namespace Progress
         {
             static constexpr std::uint64_t MaxBytes = sizeof(holeIndex) + 18;// 26; //size of holeIndex + 18 scores.
 
-            auto written = file.file->write(file.file, &holeIndex, sizeof(holeIndex), 1);
+            auto written = SDL_WriteIO(file.file, &holeIndex, sizeof(holeIndex));
 
             const auto scoreSize = std::min(std::size_t(18), holeScores.size());
             for (auto i = 0u; i < scoreSize; ++i)
             {
-                written += file.file->write(file.file, &holeScores[i], 1, 1);
+                written += SDL_WriteIO(file.file, &holeScores[i], 1);
             }
             //for (auto i = scoreSize; i < 18; ++i)
             while (written < MaxBytes)
             {
                 const std::uint8_t packing = 0;
-                written += file.file->write(file.file, &packing, 1, 1);
+                written += SDL_WriteIO(file.file, &packing, 1);
             }
         }
 
@@ -142,7 +142,7 @@ namespace Progress
 
         if (file2.file)
         {
-            file2.file->read(file2.file, values.data(), sizeof(values), 1);
+            SDL_ReadIO(file2.file, values.data(), sizeof(values));
             SDL_CloseIO(file2.file);
             file2.file = nullptr;
         }
@@ -152,7 +152,7 @@ namespace Progress
 
         if (file2.file)
         {
-            file2.file->write(file2.file, values.data(), sizeof(values), 1);
+            SDL_WriteIO(file2.file, values.data(), sizeof(values));
         }
     }
 
@@ -172,7 +172,7 @@ namespace Progress
 
                 std::array<std::uint8_t, sizeof(holeIndex) + 18> buffer = {};
                 std::size_t i = 0u;
-                while (file.file->read(file.file, &buffer[i], 1, 1) 
+                while (SDL_ReadIO(file.file, &buffer[i], 1) 
                     && i < buffer.size() - 1) //hm some existing files have 1 byte padding too many
                 {
                     i++;
@@ -204,7 +204,7 @@ namespace Progress
 
                 if (file2.file)
                 {
-                    file2.file->read(file2.file, values.data(), sizeof(values), 1);
+                    SDL_ReadIO(file2.file, values.data(), sizeof(values));
                     mulliganCount = std::min(1, values[leagueID]);
                 }
 

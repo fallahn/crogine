@@ -314,14 +314,14 @@ bool ShopState::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
-    case SDL_MOUSEBUTTONUP:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             quitState();
             return false;
         }
         break;
-    case SDL_MOUSEWHEEL:
+    case SDL_EVENT_MOUSE_WHEEL:
         if (evt.wheel.y > 0)
         {
             scroll(true);
@@ -331,31 +331,31 @@ bool ShopState::handleEvent(const cro::Event& evt)
             scroll(false);
         }
         break;
-    case SDL_KEYUP:
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+    case SDL_EVENT_KEY_UP:
+        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
         {
             prevCat();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
         {
             nextCat();
         }
-        else if (evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_BACKSPACE)
+        else if (evt.key.key == SDLK_ESCAPE
+            || evt.key.key == SDLK_BACKSPACE)
         {
             quitState();
             return false;
         }
 #ifdef CRO_DEBUG_
-        else if (evt.key.keysym.sym == SDLK_SPACE)
+        else if (evt.key.key == SDLK_SPACE)
         {
             cro::App::getInstance().resetFrameTime();
         }
 #endif
         
         break;
-    case SDL_CONTROLLERBUTTONUP:
-        switch (evt.cbutton.button)
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonLeftShoulder:
@@ -387,7 +387,7 @@ void ShopState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             auto node = m_scrollNodes[m_selectedCategory].scrollNode;
             node.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = 0;

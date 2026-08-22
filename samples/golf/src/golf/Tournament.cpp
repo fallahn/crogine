@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024 - 2025
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -167,16 +167,16 @@ void writeTournamentData(const Tournament& src, const char* p)
     if (!p)
     {
         auto path = getFilePath(src.id);
-        file.file = SDL_RWFromFile(path.c_str(), "wb");
+        file.file = SDL_IOFromFile(path.c_str(), "wb");
     }
     else
     {
         //custom tournament
-        file.file = SDL_RWFromFile(p, "wb");
+        file.file = SDL_IOFromFile(p, "wb");
     }
     if (file.file)
     {
-        SDL_RWwrite(file.file, &src, sizeof(src), 1);
+        SDL_WriteIO(file.file, &src, sizeof(src));
     }
 }
 
@@ -203,10 +203,10 @@ void readTournamentData(Tournament& dst, const char* p)
     else
     {
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        file.file = SDL_IOFromFile(path.c_str(), "rb");
         if (file.file)
         {
-            if (!SDL_RWread(file.file, &dst, sizeof(dst), 1))
+            if (!SDL_ReadIO(file.file, &dst, sizeof(dst)))
             {
                 LogW << "Could not read " << cro::FileSystem::getFileName(path) << std::endl;
                 resetTournament(dst);

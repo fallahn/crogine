@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -77,9 +77,9 @@ bool SBallAttractState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::Clubhouse);
         };
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_SPACE:
@@ -102,9 +102,9 @@ bool SBallAttractState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonB:
@@ -125,18 +125,18 @@ bool SBallAttractState::handleEvent(const cro::Event& evt)
             m_tabs[m_currentTab].getComponent<cro::AudioEmitter>().play();
             break;
         }
-        m_controllerIndex = cro::GameController::controllerID(evt.cbutton.which);
+        m_controllerIndex = cro::GameController::controllerID(evt.gbutton.which);
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value < -cro::GameController::LeftThumbDeadZone
-            || evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value < -cro::GameController::LeftThumbDeadZone
+            || evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            m_controllerIndex = cro::GameController::controllerID(evt.caxis.which);
+            m_controllerIndex = cro::GameController::controllerID(evt.gaxis.which);
             cro::App::getWindow().setMouseCaptured(true);
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
     }

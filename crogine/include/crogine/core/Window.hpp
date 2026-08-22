@@ -331,6 +331,9 @@ namespace cro
         */
         GPUVendor getGPUVendor() const;
 
+        //hacky overload for SDL functions which require access to this
+        //TODO friendship might be a better way around
+        operator SDL_Window* () { return m_window; }
     private:
 
         SDL_Window* m_window;

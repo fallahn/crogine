@@ -143,17 +143,17 @@ bool TutorialState::handleEvent(const cro::Event& evt)
         m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default:
-            /*if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+            /*if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
             {
                 doCurrentAction();
             }*/
             break;
-        case SDLK_p:
+        case SDLK_P:
         case SDLK_ESCAPE:
         case SDLK_BACKSPACE:
         case SDLK_PAUSE:
@@ -165,31 +165,31 @@ bool TutorialState::handleEvent(const cro::Event& evt)
 
             break;
 #ifdef CRO_DEBUG_
-        case SDLK_o:
+        case SDLK_O:
             quitState();
             break;
 #endif
         }
 
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
+        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
         {
             showSpin = false;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
         {
             doCurrentAction();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
         {
             showSpin = true;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonB:
@@ -203,60 +203,60 @@ bool TutorialState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        if (evt.cbutton.button == cro::GameController::ButtonA)
+        if (evt.gbutton.button == cro::GameController::ButtonA)
         {
             doCurrentAction();
         }
-        else if (evt.cbutton.button == cro::GameController::ButtonX)
+        else if (evt.gbutton.button == cro::GameController::ButtonX)
         {
             showSpin = true;
         }
-        updateButtonIcon(cro::GameController::controllerID(evt.cbutton.which));
+        updateButtonIcon(cro::GameController::controllerID(evt.gbutton.which));
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
         m_mouseVisible = true;
         m_mouseClock.restart();
     }
 
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        updateButtonIcon(cro::GameController::controllerID(evt.caxis.which));
+        updateButtonIcon(cro::GameController::controllerID(evt.gaxis.which));
         
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
             m_mouseVisible = false;
         }
 
-        if (evt.caxis.value > cro::GameController::TriggerDeadZone)
+        if (evt.gaxis.value > cro::GameController::TriggerDeadZone)
         {
-            if (evt.caxis.axis == cro::GameController::TriggerLeft
-                || evt.caxis.axis == cro::GameController::TriggerRight)
+            if (evt.gaxis.axis == cro::GameController::TriggerLeft
+                || evt.gaxis.axis == cro::GameController::TriggerRight)
             {
-                inputMask |= (1 << evt.caxis.axis);
+                inputMask |= (1 << evt.gaxis.axis);
             }
         }
         else
         {
-            if (evt.caxis.axis == cro::GameController::TriggerLeft
-                || evt.caxis.axis == cro::GameController::TriggerRight)
+            if (evt.gaxis.axis == cro::GameController::TriggerLeft
+                || evt.gaxis.axis == cro::GameController::TriggerRight)
             {
-                inputMask &= ~(1 << evt.caxis.axis);
+                inputMask &= ~(1 << evt.gaxis.axis);
             }
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             inputMask |= (1 << evt.button.button);
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {

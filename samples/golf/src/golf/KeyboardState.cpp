@@ -78,17 +78,17 @@ namespace
     {
         void operator()()
         {
-            if (SDL_IsTextInputActive())
+            if (SDL_TextInputActive(cro::App::getWindow()))
             {
-                SDL_Event evt;
+                SDL_Event evt = {};
                 evt.text.windowID = 0;
                 evt.text.timestamp = 0;
-                evt.type = SDL_TEXTINPUT;
-                evt.text.text[0] = bytes[0];
-                evt.text.text[1] = bytes[1];
-                evt.text.text[2] = bytes[2];
-                evt.text.text[3] = 0;
-
+                evt.type = SDL_EVENT_TEXT_INPUT;
+                //evt.text.text[0] = bytes[0];
+                //evt.text.text[1] = bytes[1];
+                //evt.text.text[2] = bytes[2];
+                //evt.text.text[3] = 0;
+                LogW << "Implement pointing to static characters" << std::endl;
                 SDL_PushEvent(&evt);
             }
         };
@@ -228,14 +228,14 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
         switch (evt.type)
         {
         default: break;
-        case SDL_CONTROLLERTOUCHPADDOWN:
+        case SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN:
         {
-            updateButtonAnim(evt.ctouchpad.which);
+            updateButtonAnim(evt.gtouchpad.which);
 
             auto& tx = m_touchpadContext.pointerEnt.getComponent<cro::Transform>();
             float currScale = tx.getScale().x;
 
-            glm::vec2 normPos = glm::vec2(evt.ctouchpad.x, 1.f - evt.ctouchpad.y);
+            glm::vec2 normPos = glm::vec2(evt.gtouchpad.x, 1.f - evt.gtouchpad.y);
             m_touchpadContext.lastPosition = normPos;
 
             if (currScale == 0)
@@ -248,14 +248,11 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             }
         }
             break;
-        case SDL_CONTROLLERTOUCHPADUP:
-
-            break;
-        case SDL_CONTROLLERTOUCHPADMOTION:
+        case SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION:
         {
             static constexpr float Sensitivity = 0.1f;
 
-            glm::vec2 normPos = glm::vec2(evt.ctouchpad.x, 1.f - evt.ctouchpad.y);
+            glm::vec2 normPos = glm::vec2(evt.gtouchpad.x, 1.f - evt.gtouchpad.y);
             glm::vec2 movement = (normPos - m_touchpadContext.lastPosition) * Sensitivity;
             m_touchpadContext.lastPosition += movement;
 
@@ -263,9 +260,9 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             updateTouchpadPosition(m_touchpadContext.pointerEnt.getComponent<cro::Transform>().getPosition());
         }
             break;
-        case SDL_CONTROLLERBUTTONDOWN:
-            updateButtonAnim(evt.cbutton.which);
-            switch (evt.cbutton.button)
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+            updateButtonAnim(evt.gbutton.which);
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::DPadDown:
@@ -299,8 +296,8 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
                 break;
             }
             return false;
-        case SDL_CONTROLLERBUTTONUP:
-            switch (evt.cbutton.button)
+        case SDL_EVENT_GAMEPAD_BUTTON_UP:
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::DPadDown:
@@ -330,28 +327,28 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             return false;
             }
             return false;
-        case SDL_CONTROLLERAXISMOTION:
-            //if (evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
+        case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+            //if (evt.gaxis.which == cro::GameController::deviceID(m_activeControllerID))
             {
                 const std::int16_t Threshold = cro::GameController::LeftThumbDeadZone;// 15000;
 
-                if (std::abs(evt.caxis.value) > Threshold)
+                if (std::abs(evt.gaxis.value) > Threshold)
                 {
                     m_touchpadContext.pointerEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                    updateButtonAnim(evt.caxis.which);
+                    updateButtonAnim(evt.gaxis.which);
                 }
 
-                switch (evt.caxis.axis)
+                switch (evt.gaxis.axis)
                 {
                 default: break;
-                case SDL_CONTROLLER_AXIS_LEFTX:
-                    if (evt.caxis.value > Threshold)
+                case SDL_GAMEPAD_AXIS_LEFTX:
+                    if (evt.gaxis.value > Threshold)
                     {
                         //right
                         m_axisFlags |= ControllerBits::Right;
                         m_axisFlags &= ~ControllerBits::Left;
                     }
-                    else if (evt.caxis.value < -Threshold)
+                    else if (evt.gaxis.value < -Threshold)
                     {
                         //left
                         m_axisFlags |= ControllerBits::Left;
@@ -362,14 +359,14 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
                         m_axisFlags &= ~(ControllerBits::Left | ControllerBits::Right);
                     }
                     break;
-                case SDL_CONTROLLER_AXIS_LEFTY:
-                    if (evt.caxis.value > Threshold)
+                case SDL_GAMEPAD_AXIS_LEFTY:
+                    if (evt.gaxis.value > Threshold)
                     {
                         //down
                         m_axisFlags |= ControllerBits::Down;
                         m_axisFlags &= ~ControllerBits::Up;
                     }
-                    else if (evt.caxis.value < -Threshold)
+                    else if (evt.gaxis.value < -Threshold)
                     {
                         //up
                         m_axisFlags |= ControllerBits::Up;
@@ -384,8 +381,8 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             }
             return false;
 //#ifdef CRO_DEBUG_
-        case SDL_KEYDOWN:
-            switch (evt.key.keysym.sym)
+        case SDL_EVENT_KEY_DOWN:
+            switch (evt.key.key)
             {
             default: return false;
             case SDLK_LEFT:
@@ -414,8 +411,8 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
                 return false;
             }
             break;
-        case SDL_KEYUP:
-            switch (evt.key.keysym.sym)
+        case SDL_EVENT_KEY_UP:
+            switch (evt.key.key)
             {
             default: return false;
             case SDLK_BACKSPACE:
@@ -445,7 +442,7 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
         }
     }
 
-    if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    if (evt.type == SDL_EVENT_GAMEPAD_REMOVED)
     {
         auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
         msg->type = SystemEvent::CancelOSK;
@@ -1071,14 +1068,14 @@ void KeyboardState::nextLayout()
 
 void KeyboardState::sendKeystroke(std::int32_t key)
 {
-    SDL_Event evt;
-    evt.type = SDL_KEYDOWN;
-    evt.key.keysym.sym = key;
-    evt.key.keysym.scancode = SDL_GetScancodeFromKey(key);
+    SDL_Event evt = {};
+    evt.type = SDL_EVENT_KEY_DOWN;
+    evt.key.key = key;
+    evt.key.scancode = SDL_GetScancodeFromKey(key, nullptr);
     evt.key.timestamp = 0;
     evt.key.repeat = 0;
     evt.key.windowID = 0;
-    evt.key.state = SDL_RELEASED;
+    evt.key.down = false;
 
     SDL_PushEvent(&evt);
 };

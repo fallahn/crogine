@@ -1367,7 +1367,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                         beginTextEdit(textEnt, &m_sharedData.targetIP, ConstVal::MaxIPChars);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                        if (evt.type == SDL_CONTROLLERBUTTONUP)
+                        if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
                         {
                             auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                             msg->type = SystemEvent::RequestOSK;

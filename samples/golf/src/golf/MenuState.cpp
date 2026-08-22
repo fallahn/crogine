@@ -559,7 +559,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         refreshDisplayMembers();
     }
 
-#ifndef __APPLE__
+#ifndef SDL_PLATFORM_APPLE
 #ifndef DEMO
     registerCommand("tree_ed", [&](const std::string&)
         {
@@ -807,7 +807,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
 
-#if defined USE_WORKSHOP && !defined __APPLE__ && !defined DEMO
+#if defined USE_WORKSHOP && !defined SDL_PLATFORM_APPLE && !defined DEMO
     if (!Social::isSteamdeck())
     {
         registerCommand("workshop",
@@ -1213,16 +1213,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
         }
     };
 
-    if (evt.type != SDL_MOUSEMOTION
-        && evt.type != SDL_CONTROLLERBUTTONDOWN
-        && evt.type != SDL_CONTROLLERBUTTONUP)
+    if (evt.type != SDL_EVENT_MOUSE_MOTION
+        && evt.type != SDL_EVENT_GAMEPAD_BUTTON_DOWN
+        && evt.type != SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
         if (/*cro::Console::isVisible() &&*/
             (cro::ui::wantsMouse() || cro::ui::wantsKeyboard()))
         {
-            if (evt.type == SDL_KEYUP)
+            if (evt.type == SDL_EVENT_KEY_UP)
             {
-                switch (evt.key.keysym.sym)
+                switch (evt.key.key)
                 {
                 default: break;
                 case SDLK_ESCAPE:
@@ -1232,16 +1232,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
                     }
                     break;
                 /*case SDLK_F8:
-                    if (evt.key.keysym.mod & KMOD_SHIFT)
+                    if (evt.key.mod & SDL_KMOD_SHIFT)
                     {
                         m_textChat.toggleWindow();
                     }
                     break;*/
                 }
             }
-            else if (evt.type == SDL_KEYDOWN)
+            else if (evt.type == SDL_EVENT_KEY_DOWN)
             {
-                switch (evt.key.keysym.sym)
+                switch (evt.key.key)
                 {
                 default: break;
                 case SDLK_F4:
@@ -1257,21 +1257,21 @@ bool MenuState::handleEvent(const cro::Event& evt)
     }
 
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
         setChatHint(false, 0);
 
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
         {
             doPrev();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
         {
             doNext();
         }
 
 
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_PAGEUP:
@@ -1280,7 +1280,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             //requestStackPush(StateID::Profile);
             break;
         case SDLK_PAUSE:
-            if (evt.key.keysym.mod & KMOD_SHIFT)
+            if (evt.key.mod & SDL_KMOD_SHIFT)
             {
                 if (Social::isAuth())
                 {
@@ -1397,24 +1397,24 @@ bool MenuState::handleEvent(const cro::Event& evt)
             }*/
             endCan();
             break;
-        case SDLK_p:
+        case SDLK_P:
             showPlayerManagement();
             break;
         /*case SDLK_HOME:
             launchQuickPlay();
             break;*/
-        //case SDLK_k:
+        //case SDLK_K:
         //    m_voiceChat.connect();
         //    break;
-        //case SDLK_l:
+        //case SDLK_L:
         //    m_voiceChat.disconnect();
         //    break;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         handleTextEdit(evt);
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
@@ -1437,13 +1437,13 @@ bool MenuState::handleEvent(const cro::Event& evt)
             }
             break;
         case SDLK_F8:
-            if ((evt.key.keysym.mod & KMOD_SHIFT)
+            if ((evt.key.mod & SDL_KMOD_SHIFT)
                 && m_currentMenu == MenuID::Lobby)
             {
                 m_textChat.toggleWindow(false, false);
             }
             break;
-        case SDLK_p:
+        case SDLK_P:
             showOptions();
             break;
         /*case SDLK_F11:
@@ -1451,23 +1451,23 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;*/
         }
     }
-    else if (evt.type == SDL_TEXTINPUT)
+    else if (evt.type == SDL_EVENT_TEXT_INPUT)
     {
         handleTextEdit(evt);
     }
-    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    else if (evt.type == SDL_EVENT_GAMEPAD_REMOVED)
     {
 
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
         if (m_currentMenu == MenuID::Lobby)
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default:  break;
             case cro::GameController::ButtonX:
-                if (cro::GameController::controllerID(evt.cbutton.which) == 0)
+                if (cro::GameController::controllerID(evt.gbutton.which) == 0)
                 {
                     startCan();
                 }
@@ -1475,14 +1475,14 @@ bool MenuState::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        setChatHint(true, evt.cbutton.which);
+        setChatHint(true, evt.gbutton.which);
         cro::App::getWindow().setMouseCaptured(true);
 
         if (!m_textChat.isVisible())
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default:
                 //cro::Console::show();
@@ -1513,7 +1513,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         //we have to do this separately because it should be allowed when chat window is open
         if (m_currentMenu == MenuID::Lobby)
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default:  break;
             case cro::GameController::ButtonY:
@@ -1523,7 +1523,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 m_textChat.toggleWindow(false, false, false);
                 break;
             case cro::GameController::ButtonX:
-                if (cro::GameController::controllerID(evt.cbutton.which) == 0)
+                if (cro::GameController::controllerID(evt.gbutton.which) == 0)
                 {
                     endCan();
                 }
@@ -1531,7 +1531,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         setChatHint(false, 0);
         if (m_currentMenu == MenuID::ProfileFlyout)
@@ -1576,16 +1576,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
         setChatHint(false, 0);
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            setChatHint(true, evt.caxis.which);
+            setChatHint(true, evt.gaxis.which);
             cro::App::getWindow().setMouseCaptured(true);
         }
     }
@@ -1957,7 +1957,7 @@ bool MenuState::simulate(float dt)
 
     m_textChat.update(dt);
 
-    /*if (cro::Keyboard::isKeyPressed(SDLK_j))
+    /*if (cro::Keyboard::isKeyPressed(SDLK_J))
     {
         m_voiceChat.captureVoice();
     }*/
@@ -4822,7 +4822,7 @@ void MenuState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size
     m_currentMenu = MenuID::Dummy;
     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(m_currentMenu);
 
-    SDL_StartTextInput();
+    SDL_StartTextInput(cro::App::getWindow());
 }
 
 void MenuState::handleTextEdit(const cro::Event& evt)
@@ -4832,9 +4832,9 @@ void MenuState::handleTextEdit(const cro::Event& evt)
         return;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -4850,7 +4850,7 @@ void MenuState::handleTextEdit(const cro::Event& evt)
         }
         
     }
-    else if (evt.type == SDL_TEXTINPUT)
+    else if (evt.type == SDL_EVENT_TEXT_INPUT)
     {
         if (m_textEdit.string->size() < ConstVal::MaxStringChars
             && m_textEdit.string->size() < m_textEdit.maxLen)

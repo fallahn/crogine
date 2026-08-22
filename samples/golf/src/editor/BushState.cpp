@@ -188,9 +188,9 @@ bool BushState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -217,11 +217,11 @@ bool BushState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEWHEEL)
+    else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
         m_gameScene.getActiveCamera().getComponent<cro::Transform>().move({ 0.f, 0.f, -evt.wheel.y });
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         if (evt.motion.state & SDL_BUTTON_MMASK)
         {
@@ -266,11 +266,11 @@ bool BushState::simulate(float dt)
 {
     static constexpr float Speed = 4.f;
     glm::vec3 movement(0.f);
-    if (cro::Keyboard::isKeyPressed(SDLK_w))
+    if (cro::Keyboard::isKeyPressed(SDLK_W))
     {
         movement.z -= dt * Speed;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_s))
+    if (cro::Keyboard::isKeyPressed(SDLK_S))
     {
         movement.z += dt * Speed;
     }
@@ -282,11 +282,11 @@ bool BushState::simulate(float dt)
     {
         movement.y -= dt * Speed;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_a))
+    if (cro::Keyboard::isKeyPressed(SDLK_A))
     {
         movement.x -= dt * Speed;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_d))
+    if (cro::Keyboard::isKeyPressed(SDLK_D))
     {
         movement.x += dt * Speed;
     }

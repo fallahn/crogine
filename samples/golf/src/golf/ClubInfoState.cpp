@@ -84,8 +84,8 @@ bool ClubInfoState::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
-    case SDL_KEYUP:
-        if (evt.key.keysym.sym == SDLK_ESCAPE)
+    case SDL_EVENT_KEY_UP:
+        if (evt.key.key == SDLK_ESCAPE)
         {
             requestStackPop();
         }
@@ -94,8 +94,8 @@ bool ClubInfoState::handleEvent(const cro::Event& evt)
             nextMessage();
         }
         break;
-    case SDL_CONTROLLERBUTTONUP:
-        if (evt.cbutton.button == cro::GameController::ButtonB)
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
+        if (evt.gbutton.button == cro::GameController::ButtonB)
         {
             requestStackPop();
         }
@@ -104,7 +104,7 @@ bool ClubInfoState::handleEvent(const cro::Event& evt)
             nextMessage();
         }
         break;
-    case SDL_MOUSEBUTTONUP:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
             nextMessage();

@@ -1546,22 +1546,22 @@ float CPUGolfer::getDampening() const
 void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)
 {
     SDL_Event evt;
-    evt.type = SDL_KEYDOWN;
-    evt.key.keysym.mod = 0; //must zero out else we get phantom keypresses
-    evt.key.keysym.sym = key;
-    evt.key.keysym.scancode = SDL_GetScancodeFromKey(key);
+    evt.type = SDL_EVENT_KEY_DOWN;
+    evt.key.mod = 0; //must zero out else we get phantom keypresses
+    evt.key.key = key;
+    evt.key.scancode = SDL_GetScancodeFromKey(key, nullptr);
     evt.key.timestamp = 0;
     evt.key.repeat = 0;
     evt.key.windowID = InputParser::CPU_ID;
-    evt.key.state = SDL_PRESSED;
+    evt.key.down = true;
 
     SDL_PushEvent(&evt);
 
     if (autoRelease)
     {
         //stash the counter-event
-        evt.type = SDL_KEYUP;
-        evt.key.state = SDL_RELEASED;
+        evt.type = SDL_EVENT_KEY_UP;
+        evt.key.down = false;
         m_popEvents.push_back(evt);
     }
 };

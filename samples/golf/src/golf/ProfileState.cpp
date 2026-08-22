@@ -362,10 +362,10 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             }        
         };
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
         handleTextEdit(evt);
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default:
             updateHelpString(-1);
@@ -402,24 +402,24 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 applyTextEdit();
             }
             break;
-        //case SDLK_p:
+        //case SDLK_P:
         //    //renderBallFrames();
         //    requestStackPush(StateID::Shop);
         //    break;
-        //case SDLK_k:
+        //case SDLK_K:
         //    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().getUserData<std::int32_t>()++;
         //    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
         //    break;
-        //case SDLK_l:
+        //case SDLK_L:
         //    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().getUserData<std::int32_t>()--;
         //    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
         //    break;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         handleTextEdit(evt);
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
@@ -430,17 +430,17 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_TEXTINPUT)
+    else if (evt.type == SDL_EVENT_TEXT_INPUT)
     {
         handleTextEdit(evt);
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
         cro::App::getWindow().setMouseCaptured(true);
 
         if (m_textEdit.string == nullptr)
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::ButtonRightShoulder:
@@ -507,7 +507,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         auto currentMenu = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
 
@@ -662,20 +662,20 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
 
-            updateHelpString(cro::GameController::controllerID(evt.caxis.which));
+            updateHelpString(cro::GameController::controllerID(evt.gaxis.which));
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        updateHelpString(cro::GameController::controllerID(evt.cbutton.which));
+        updateHelpString(cro::GameController::controllerID(evt.gbutton.which));
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
         updateHelpString(-1);
@@ -692,7 +692,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             updateGizmo();
         }
     }
-    else if (evt.type == SDL_MOUSEWHEEL)
+    else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
         const auto group = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
         if (group == MenuID::BallSelect)
@@ -719,7 +719,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         }
         else if (group == MenuID::HairEditor)
         {
-            auto point = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords({ evt.wheel.mouseX, evt.wheel.mouseY });
+            auto point = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords({ evt.wheel.mouse_x, evt.wheel.mouse_y });
             for (const auto& box : m_transformBoxes)
             {
                 const auto worldBounds = cro::Text::getLocalBounds(box.entity).transform(box.entity.getComponent<cro::Transform>().getWorldTransform());
@@ -728,7 +728,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 {
                     auto idx = (PlayerData::HeadwearOffset::HairTx + box.index) + (PlayerData::HeadwearOffset::HatTx * m_headwearID);
 
-                    float change = static_cast<float>(evt.wheel.y) * box.step;
+                    float change = evt.wheel.y * box.step;
                     if (cro::Keyboard::isKeyPressed(SDLK_LSHIFT))
                     {
                         change *= 10.f;
@@ -749,7 +749,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
 
             if (bounds.contains(mousePos))
             {
-                float zoom = evt.wheel.preciseY * (1.f / 20.f);
+                float zoom = evt.wheel.y * (1.f / 20.f);
                 auto pos = m_cameras[CameraID::Avatar].getComponent<cro::Transform>().getPosition();
                 if (glm::dot(CameraZoomPosition - pos, CameraZoomVector) > zoom
                     && glm::dot(CameraBasePosition - pos, CameraZoomVector) < zoom)
@@ -1682,7 +1682,7 @@ void ProfileState::buildScene()
                         beginTextEdit(m_menuEntities[EntityID::NameText], &m_activeProfile.playerData.name, ConstVal::MaxStringChars);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                        if (evt.type == SDL_CONTROLLERBUTTONUP)
+                        if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
                         {
 #ifdef USE_GNS
                             if (Social::isSteamdeck())
@@ -5979,10 +5979,10 @@ void ProfileState::refreshBio()
                 std::vector<char> buffer(MaxBioChars + 1);
 
                 cro::RaiiRWops inFile;
-                inFile.file = SDL_RWFromFile(path.c_str(), "r");
+                inFile.file = SDL_IOFromFile(path.c_str(), "r");
                 if (inFile.file)
                 {
-                    auto readCount = inFile.file->read(inFile.file, buffer.data(), 1, MaxBioChars);
+                    auto readCount = SDL_ReadIO(inFile.file, buffer.data(), MaxBioChars);
                     buffer[readCount] = 0; //nullterm
                     setBioString(buffer.data());
                 }
@@ -5993,10 +5993,10 @@ void ProfileState::refreshBio()
                 std::string bio = generateRandomBio();
 
                 cro::RaiiRWops outfile;
-                outfile.file = SDL_RWFromFile(path.c_str(), "w");
+                outfile.file = SDL_IOFromFile(path.c_str(), "w");
                 if (outfile.file)
                 {
-                    outfile.file->write(outfile.file, bio.data(), bio.size(), 1);
+                    SDL_WriteIO(outfile.file, bio.data(), bio.size());
                 }
                 setBioString(bio);
             }
@@ -6327,7 +6327,7 @@ void ProfileState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::s
     //block input to menu
     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
 
-    SDL_StartTextInput();
+    SDL_StartTextInput(cro::App::getWindow());
 }
 
 void ProfileState::handleTextEdit(const cro::Event& evt)
@@ -6337,9 +6337,9 @@ void ProfileState::handleTextEdit(const cro::Event& evt)
         return;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -6348,8 +6348,8 @@ void ProfileState::handleTextEdit(const cro::Event& evt)
                 m_textEdit.string->erase(m_textEdit.string->size() - 1);
             }
             break;
-        case SDLK_v:
-            if (evt.key.keysym.mod & KMOD_CTRL)
+        case SDLK_V:
+            if (evt.key.mod & SDL_KMOD_CTRL)
             {
                 if (SDL_HasClipboardText())
                 {
@@ -6366,9 +6366,9 @@ void ProfileState::handleTextEdit(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_KEYUP)
+    else if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_ESCAPE:
@@ -6376,7 +6376,7 @@ void ProfileState::handleTextEdit(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_TEXTINPUT)
+    else if (evt.type == SDL_EVENT_TEXT_INPUT)
     {
         if (m_textEdit.string->size() < ConstVal::MaxStringChars
             && m_textEdit.string->size() < m_textEdit.maxLen)

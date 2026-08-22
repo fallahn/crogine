@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024 - 2025
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -120,7 +120,7 @@ EndlessAttractState::EndlessAttractState(cro::StateStack& stack, cro::State::Con
 //public
 bool EndlessAttractState::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_MOUSEMOTION)
+    if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
     }
@@ -172,9 +172,9 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
             cro::App::getWindow().setMouseCaptured(true);
         };
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_LEFT:
@@ -191,16 +191,16 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
             break;
         }
 
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
         {
             startGame();
         }
 
         updateTextPrompt(false);
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonLeftShoulder:
@@ -221,10 +221,10 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
         updateTextPrompt(true);
     }
 
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone
-            || evt.caxis.value < -cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone
+            || evt.gaxis.value < -cro::GameController::LeftThumbDeadZone)
         {
             updateTextPrompt(true);
         }

@@ -195,14 +195,14 @@ struct Vertex final
 static inline void createKeystroke(std::int32_t key, bool down)
 {
     SDL_Event evt;
-    evt.type = SDL_KEYDOWN;
-    evt.key.keysym.mod = 0; //must zero out else we get phantom keypresses
-    evt.key.keysym.sym = key;
-    evt.key.keysym.scancode = SDL_GetScancodeFromKey(key);
+    evt.type = SDL_EVENT_KEY_DOWN;
+    evt.key.mod = 0; //must zero out else we get phantom keypresses
+    evt.key.key = key;
+    evt.key.scancode = SDL_GetScancodeFromKey(key, nullptr);
     evt.key.timestamp = 0;
     evt.key.repeat = 0;
     evt.key.windowID = 0;
-    evt.key.state = down ? SDL_PRESSED : SDL_RELEASED;
+    evt.key.down = down;
 
     SDL_PushEvent(&evt);
 };
@@ -710,7 +710,7 @@ static inline void togglePixelScale(SharedStateData& sharedData, bool on)
         auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
         msg->data0 = size.x;
         msg->data1 = size.y;
-        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+        msg->event = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
     }
 }
 
@@ -734,7 +734,7 @@ static inline void toggleAntialiasing(SharedStateData& sharedData, bool on, std:
         auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
         msg->data0 = size.x;
         msg->data1 = size.y;
-        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+        msg->event = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
     }
 }
 

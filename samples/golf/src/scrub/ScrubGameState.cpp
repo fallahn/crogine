@@ -240,9 +240,9 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             }
         };
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -250,16 +250,16 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             pause();
             break;
 #ifdef CRO_DEBUG_
-        case SDLK_l:
+        case SDLK_L:
             m_score.remainingTime = 0.f;
             break;
-        case SDLK_o:
+        case SDLK_O:
             showSoapEffect();
             break;
-        case SDLK_p:
+        case SDLK_P:
             m_gameScene.getSystem<ScrubPhysicsSystem>()->spawnBall(cro::Colour::Magenta);
             break;
-        case SDLK_i:
+        case SDLK_I:
             m_cameraShake.start();
             break;
 #endif
@@ -267,32 +267,32 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
         }
 
 
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
+        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Left])
         {
             pumpDown();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Right])
         {
             pumpUp();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
         {
             insertBall();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
         {
             removeBall();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
         {
             addSoap();
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
         //TODO do we want to prevent other controller input
         //and lock to only the controller used to start this game?
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonLeftShoulder:
@@ -314,16 +314,16 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             pause();
             break;
         }
-        m_controllerIndex = cro::GameController::controllerID(evt.cbutton.which);
+        m_controllerIndex = cro::GameController::controllerID(evt.gbutton.which);
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
         //TODO again do we want to lock the controller ID?
         //will having two controllers somehow be an advantage?
         static constexpr std::int16_t Threshold = std::numeric_limits<std::int16_t>::max() / 2;
-        const auto v = evt.caxis.value;
+        const auto v = evt.gaxis.value;
         
-        if (evt.caxis.axis == cro::GameController::AxisRightX)
+        if (evt.gaxis.axis == cro::GameController::AxisRightX)
         {
             if (m_axisPosition < Threshold
                 && v > Threshold)
@@ -338,7 +338,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
 
             m_axisPosition = v;
         }
-        else if (evt.caxis.axis == cro::GameController::TriggerLeft)
+        else if (evt.gaxis.axis == cro::GameController::TriggerLeft)
         {
             if (m_leftTriggerPosition < Threshold
                 && v > Threshold)
@@ -347,7 +347,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             }
             m_leftTriggerPosition = v;
         }
-        else if (evt.caxis.axis == cro::GameController::TriggerRight)
+        else if (evt.gaxis.axis == cro::GameController::TriggerRight)
         {
             if (m_rightTriggerPosition < Threshold
                 && v > Threshold)
@@ -359,31 +359,31 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
 
 
 
-        if (evt.caxis.value < -cro::GameController::LeftThumbDeadZone
-            || evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value < -cro::GameController::LeftThumbDeadZone
+            || evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            m_controllerIndex = cro::GameController::controllerID(evt.caxis.which);
+            m_controllerIndex = cro::GameController::controllerID(evt.gaxis.which);
             cro::App::getWindow().setMouseCaptured(true);
         }
     }
-    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    else if (evt.type == SDL_EVENT_GAMEPAD_REMOVED)
     {
         pause();
     }
-    else if (evt.type == SDL_CONTROLLERDEVICEADDED)
+    else if (evt.type == SDL_EVENT_GAMEPAD_ADDED)
     {
         for (auto i = 0; i < 4; ++i)
         {
             cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0, 1, 2));
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
     }
 
-    else if (evt.type == SDL_KEYUP
-        || evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_KEY_UP
+        || evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
         //skips through the score summary and quits
         if (m_score.summary.active)

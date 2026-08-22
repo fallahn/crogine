@@ -330,9 +330,9 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -351,7 +351,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
         case SDLK_4:
             setActiveTab(MenuID::FileSystem);
             break;
-        /*case SDLK_p:
+        /*case SDLK_P:
         case SDLK_PAUSE:
         case SDLK_ESCAPE:*/
             //requestStackPush(StateID::Pause);
@@ -366,9 +366,9 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
@@ -379,12 +379,12 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
         static constexpr std::size_t MaxTabs = 4;
 
         cro::App::getWindow().setMouseCaptured(true);
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         case cro::GameController::ButtonB:
         case cro::GameController::ButtonBack:
@@ -403,7 +403,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
@@ -415,7 +415,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             quitState();
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         if (evt.button.button == SDL_BUTTON_LEFT
             && !helpOverlay.isValid())
@@ -432,7 +432,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         if (m_activeSlider.isValid())
         {
@@ -442,12 +442,12 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
         }
         cro::App::getWindow().setMouseCaptured(false);
     }
-    else if (evt.type == SDL_MOUSEWHEEL)
+    else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
         if (evt.wheel.y > 0)
         {
             cro::ButtonEvent fakeEvent;
-            fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+            fakeEvent.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
             fakeEvent.button.button = SDL_BUTTON_LEFT;
 
             //up
@@ -483,7 +483,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
         else if (evt.wheel.y < 0)
         {
             cro::ButtonEvent fakeEvent;
-            fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+            fakeEvent.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
             fakeEvent.button.button = SDL_BUTTON_LEFT;
 
             //down
@@ -516,9 +516,9 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
@@ -1633,7 +1633,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
                     if (!m_croppingArea.contains(pos))
                     {
                         cro::ButtonEvent fakeEvent;
-                        fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+                        fakeEvent.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
                         fakeEvent.button.button = SDL_BUTTON_LEFT;
 
                         if (pos.y < m_croppingArea.bottom)
@@ -1909,7 +1909,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
                     if (!m_croppingArea.contains(pos))
                     {
                         cro::ButtonEvent fakeEvent;
-                        fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+                        fakeEvent.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
                         fakeEvent.button.button = SDL_BUTTON_LEFT;
 
                         if (pos.y < m_croppingArea.bottom)
@@ -2293,7 +2293,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                     if (!m_croppingArea.contains(pos))
                     {
                         cro::ButtonEvent fakeEvent;
-                        fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+                        fakeEvent.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
                         fakeEvent.button.button = SDL_BUTTON_LEFT;
 
                         if (pos.y < m_croppingArea.bottom)
@@ -2687,7 +2687,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
             if (!m_croppingArea.contains(pos))
             {
                 cro::ButtonEvent fakeEvent;
-                fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+                fakeEvent.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
                 fakeEvent.button.button = SDL_BUTTON_LEFT;
 
                 if (pos.y < m_croppingArea.bottom)
@@ -3393,7 +3393,7 @@ void PlaylistState::addSaveFileItem(std::size_t i, glm::vec2 position)
                 if (!m_croppingArea.contains(pos))
                 {
                     cro::ButtonEvent fakeEvent;
-                    fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+                    fakeEvent.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
                     fakeEvent.button.button = SDL_BUTTON_LEFT;
 
                     if (pos.y < m_croppingArea.bottom)
@@ -4446,24 +4446,24 @@ void PlaylistState::saveCourse(bool createNew)
     std::string fileName = ss.str();
 
     cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(fileName.c_str(), "wb");
+    file.file = SDL_IOFromFile(fileName.c_str(), "wb");
     if (file.file)
     {
         SaveFileEntry entry;
         entry.type = EntryType::Shrub;
         entry.directory = static_cast<std::uint8_t>(m_shrubIndex);
-        auto written = SDL_RWwrite(file.file, &entry, sizeof(entry), 1);
+        auto written = SDL_WriteIO(file.file, &entry, sizeof(entry));
 
         entry.type = EntryType::Skybox;
         entry.directory = static_cast<std::uint8_t>(m_skyboxIndex);
-        written += SDL_RWwrite(file.file, &entry, sizeof(entry), 1);
+        written += SDL_WriteIO(file.file, &entry, sizeof(entry));
 
         for (const auto& hole : m_playlist)
         {
             entry.type = EntryType::Hole;
             entry.directory = static_cast<std::uint8_t>(hole.courseIndex);
             entry.file = static_cast<std::uint8_t>(hole.holeIndex);
-            written += SDL_RWwrite(file.file, &entry, sizeof(entry), 1);
+            written += SDL_WriteIO(file.file, &entry, sizeof(entry));
         }
 
         if (written != m_playlist.size() + 2)
@@ -4490,7 +4490,7 @@ void PlaylistState::loadCourse()
     std::string fileName = strs.str();
 
     cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(fileName.c_str(), "rb");
+    file.file = SDL_IOFromFile(fileName.c_str(), "rb");
     if (file.file)
     {
         for (auto& e : m_playlist)
@@ -4507,7 +4507,7 @@ void PlaylistState::loadCourse()
         do
         {
             SaveFileEntry output;
-            read = SDL_RWread(file.file, &output, sizeof(output), 1);
+            read = SDL_ReadIO(file.file, &output, sizeof(output));
 
             if (read)
             {

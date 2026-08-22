@@ -1311,7 +1311,7 @@ void GolfState::dumpBenchmark()
     };
 
     cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(outFile.c_str(), "a");
+    file.file = SDL_IOFromFile(outFile.c_str(), "a");
     if (file.file)
     {
         std::string dateTime = cro::SysTime::dateString();
@@ -1333,9 +1333,9 @@ void GolfState::dumpBenchmark()
             + vsync
             + "\nVendor: " + vendor + " | Renderer: " + renderer + "\n\n";
 
-        SDL_RWwrite(file.file, dateTime.c_str(), dateTime.length(), 1);
-        SDL_RWwrite(file.file, stat.c_str(), stat.length(), 1);
-        SDL_RWwrite(file.file, settings.c_str(), settings.length(), 1);
+        SDL_WriteIO(file.file, dateTime.c_str(), dateTime.length());
+        SDL_WriteIO(file.file, stat.c_str(), stat.length());
+        SDL_WriteIO(file.file, settings.c_str(), settings.length());
     }
     else
     {
