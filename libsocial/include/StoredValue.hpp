@@ -40,12 +40,12 @@ static inline void readValue(std::int32_t& dst, const std::string& fileName)
     const auto path = cro::App::getPreferencePath() + fileName;
     if (cro::FileSystem::fileExists(path))
     {
-        auto* file = SDL_RWFromFile(path.c_str(), "rb");
+        auto* file = SDL_IOFromFile(path.c_str(), "rb");
         if (file)
         {
-            SDL_RWread(file, &dst, sizeof(dst), 1);
+            SDL_ReadIO(file, &dst, sizeof(dst));
         }
-        SDL_RWclose(file);
+        SDL_CloseIO(file);
     }
 }
 
@@ -55,12 +55,12 @@ static inline void writeValue(std::int32_t src, const std::string& fileName)
     //return;
 #endif
     const auto path = cro::App::getPreferencePath() + fileName;
-    auto* file = SDL_RWFromFile(path.c_str(), "wb");
+    auto* file = SDL_IOFromFile(path.c_str(), "wb");
     if (file)
     {
-        SDL_RWwrite(file, &src, sizeof(src), 1);
+        SDL_WriteIO(file, &src, sizeof(src));
     }
-    SDL_RWclose(file);
+    SDL_CloseIO(file);
 }
 
 struct StoredValue final

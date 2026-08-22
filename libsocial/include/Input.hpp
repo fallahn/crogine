@@ -110,7 +110,7 @@ namespace Progress
     {
         auto path = getFilePath(leagueID);
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "wb");
+        file.file = SDL_IOFromFile(path.c_str(), "wb");
         if (file.file)
         {
             static constexpr std::uint64_t MaxBytes = sizeof(holeIndex) + 18;// 26; //size of holeIndex + 18 scores.
@@ -138,17 +138,17 @@ namespace Progress
 
         path = getFilePath(MulliganID);
         cro::RaiiRWops file2;
-        file2.file = SDL_RWFromFile(path.c_str(), "rb");
+        file2.file = SDL_IOFromFile(path.c_str(), "rb");
 
         if (file2.file)
         {
             file2.file->read(file2.file, values.data(), sizeof(values), 1);
-            SDL_RWclose(file2.file);
+            SDL_CloseIO(file2.file);
             file2.file = nullptr;
         }
 
         values[leagueID] = std::min(1, mulliganCount);
-        file2.file = SDL_RWFromFile(path.c_str(), "wb");
+        file2.file = SDL_IOFromFile(path.c_str(), "wb");
 
         if (file2.file)
         {
@@ -164,11 +164,11 @@ namespace Progress
         if (cro::FileSystem::fileExists(path))
         {
             cro::RaiiRWops file;
-            file.file = SDL_RWFromFile(path.c_str(), "rb");
+            file.file = SDL_IOFromFile(path.c_str(), "rb");
             if (file.file)
             {
-                /*auto size = file.file->seek(file.file, 0, RW_SEEK_END);
-                file.file->seek(file.file, 0, RW_SEEK_SET);*/
+                /*auto size = file.file->seek(file.file, 0, SDL_IO_SEEK_END);
+                file.file->seek(file.file, 0, SDL_IO_SEEK_SET);*/
 
                 std::array<std::uint8_t, sizeof(holeIndex) + 18> buffer = {};
                 std::size_t i = 0u;
@@ -200,7 +200,7 @@ namespace Progress
 
                 path = getFilePath(MulliganID);
                 cro::RaiiRWops file2;
-                file2.file = SDL_RWFromFile(path.c_str(), "rb");
+                file2.file = SDL_IOFromFile(path.c_str(), "rb");
 
                 if (file2.file)
                 {

@@ -55,14 +55,14 @@ source distribution.
 
 #ifdef DEMO
 static constexpr std::uint16_t CURRENT_VER = 0;
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
 static const std::string StringVer("DEMO (macOS beta)");
 #else
 static const std::string StringVer("DEMO");
 #endif
 #else
 static constexpr std::uint16_t CURRENT_VER = 1222;
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
 static const std::string StringVer("1.22.2 (macOS beta)");
 #else
 static const std::string StringVer("1.22.2");

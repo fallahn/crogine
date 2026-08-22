@@ -644,15 +644,15 @@ void Social::refreshAwards()
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        file.file = SDL_IOFromFile(path.c_str(), "rb");
         if (file.file)
         {
-            auto size = SDL_RWseek(file.file, 0, RW_SEEK_END);
+            auto size = SDL_SeekIO(file.file, 0, SDL_IO_SEEK_END);
             if (size % sizeof(AwardData) == 0)
             {
-                SDL_RWseek(file.file, 0, RW_SEEK_SET);
+                SDL_SeekIO(file.file, 0, SDL_IO_SEEK_SET);
                 awardData.resize(size / sizeof(AwardData));
-                SDL_RWread(file.file, awardData.data(), size, 1);
+                SDL_ReadIO(file.file, awardData.data(), size);
             }
         }
     }
@@ -717,10 +717,10 @@ void Social::refreshAwards()
     if (newAwards)
     {
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "wb");
+        file.file = SDL_IOFromFile(path.c_str(), "wb");
         if (file.file)
         {
-            SDL_RWwrite(file.file, awardData.data(), sizeof(AwardData), awardData.size());
+            SDL_WriteIO(file.file, awardData.data(), sizeof(AwardData) * awardData.size());
         }
     }
 
