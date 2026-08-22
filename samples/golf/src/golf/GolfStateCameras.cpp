@@ -863,7 +863,7 @@ void GolfState::toggleFreeCam()
             l = &m_sharedProfiles.playerProfiles[m_sharedData.profileIndices[m_currentPlayer.player]].loadout;
         }
         m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain, l);
-        cro::App::getWindow().setCursorVisible(!true);
+        cro::App::getWindow().setCursorVisible(false);
 
 
         m_freecamMenuEnt.getComponent<cro::Callback>().active = true; //this does the show/hide animation
@@ -931,7 +931,7 @@ void GolfState::toggleFreeCam()
                     l = &m_sharedProfiles.playerProfiles[m_sharedData.profileIndices[m_currentPlayer.player]].loadout;
                 }
                 m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain, l);
-                cro::App::getWindow().setCursorVisible(!false);
+                cro::App::getWindow().setCursorVisible(true);
 
                 m_freecamMenuEnt.getComponent<cro::Callback>().active = false; //this does the show/hide animation
                 

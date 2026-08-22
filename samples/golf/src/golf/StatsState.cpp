@@ -183,7 +183,7 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     m_awardPageIndex        (0),
     m_awardPageCount        (0)
 {
-    ctx.mainWindow.setCursorVisible(!false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Stats State");
 
     buildScene();
@@ -291,13 +291,13 @@ bool StatsState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setCursorVisible(!true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        cro::App::getWindow().setCursorVisible(!true);
+        cro::App::getWindow().setCursorVisible(false);
 
         switch (evt.gbutton.button)
         {
@@ -326,12 +326,12 @@ bool StatsState::handleEvent(const cro::Event& evt)
     {
         if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setCursorVisible(!true);
+            cro::App::getWindow().setCursorVisible(false);
         }
     }
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setCursorVisible(!false);
+        cro::App::getWindow().setCursorVisible(true);
     }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);

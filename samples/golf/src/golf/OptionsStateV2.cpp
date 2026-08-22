@@ -156,7 +156,7 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     //previous size and only update the layout when we need to
     lastWindowSize = cro::App::getWindow().getSize();
     
-    ctx.mainWindow.setCursorVisible(!false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Options Menu");
 
     m_flagPreview.init(sd.flagPath);

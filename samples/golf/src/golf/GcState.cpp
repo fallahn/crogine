@@ -130,7 +130,7 @@ bool GCState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setCursorVisible(!false);
+        cro::App::getWindow().setCursorVisible(true);
     }
 
     m_gameScene.forwardEvent(evt);

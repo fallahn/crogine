@@ -81,7 +81,7 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
 {
     if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setCursorVisible(!false);
+        cro::App::getWindow().setCursorVisible(true);
     }
 
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
@@ -124,7 +124,7 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
                 m_textPrompt[m_sharedGameData.lastInput].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }
 
-            cro::App::getWindow().setCursorVisible(!true);
+            cro::App::getWindow().setCursorVisible(false);
         };
 
     if (evt.type == SDL_EVENT_KEY_DOWN)

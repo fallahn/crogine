@@ -327,7 +327,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     std::fill(m_controllerScrollAxes.begin(), m_controllerScrollAxes.end(), 0);
     std::fill(m_controllerState.begin(), m_controllerState.end(), false);
 
-    ctx.mainWindow.setCursorVisible(!false);
+    ctx.mainWindow.setCursorVisible(true);
 
     m_videoSettings.fullScreen = ctx.mainWindow.isFullscreen();
     const auto size = ctx.mainWindow.getSize();
@@ -473,7 +473,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setCursorVisible(!true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
 
@@ -517,7 +517,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        cro::App::getWindow().setCursorVisible(!true);
+        cro::App::getWindow().setCursorVisible(false);
         switch (evt.gbutton.button)
         {
         default: break;
@@ -546,7 +546,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         {
             toggleControllerIcon(controllerID);
             m_controllerState[controllerID] = true;
-            cro::App::getWindow().setCursorVisible(!true);
+            cro::App::getWindow().setCursorVisible(false);
         }
         else
         {
@@ -654,7 +654,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
 
         updateSlider();
         updateScrollBar();
-        cro::App::getWindow().setCursorVisible(!false);
+        cro::App::getWindow().setCursorVisible(true);
     }
     else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {

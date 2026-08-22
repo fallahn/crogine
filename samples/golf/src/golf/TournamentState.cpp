@@ -195,7 +195,7 @@ TournamentState::TournamentState(cro::StateStack& ss, cro::State::Context ctx, S
     m_currentMenu   (MenuID::Career),
     m_customIndex   (0)
 {
-    ctx.mainWindow.setCursorVisible(!false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Tournament State");
 
     loadAssets();
@@ -273,13 +273,13 @@ bool TournamentState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setCursorVisible(!true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        cro::App::getWindow().setCursorVisible(!true);
+        cro::App::getWindow().setCursorVisible(false);
         switch (evt.gbutton.button)
         {
         default: break;
@@ -312,7 +312,7 @@ bool TournamentState::handleEvent(const cro::Event& evt)
     {
         if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setCursorVisible(!true);
+            cro::App::getWindow().setCursorVisible(false);
         }
 
         if (evt.gaxis.axis == cro::GameController::AxisRightX)
@@ -335,7 +335,7 @@ bool TournamentState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setCursorVisible(!false);
+        cro::App::getWindow().setCursorVisible(true);
     }
     else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {

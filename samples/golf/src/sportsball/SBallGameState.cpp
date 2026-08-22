@@ -357,7 +357,7 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
     //update interface regardless
     if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setCursorVisible(!false);
+        cro::App::getWindow().setCursorVisible(true);
     }
     else
     {
@@ -377,7 +377,7 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
             break;
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
         case SDL_EVENT_GAMEPAD_BUTTON_UP:
-            cro::App::getWindow().setCursorVisible(!true);
+            cro::App::getWindow().setCursorVisible(false);
             if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.gaxis.which)))
             {
                 m_controlTextEntity.getComponent<cro::Text>().setString(InputPS);
@@ -390,7 +390,7 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
             }
             break;
         case SDL_EVENT_GAMEPAD_AXIS_MOTION:
-            cro::App::getWindow().setCursorVisible(!true);
+            cro::App::getWindow().setCursorVisible(false);
 
             if (evt.gaxis.value < -cro::GameController::LeftThumbDeadZone || evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
             {
@@ -408,7 +408,7 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
             break;
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP:
-            cro::App::getWindow().setCursorVisible(!true);
+            cro::App::getWindow().setCursorVisible(false);
             m_controlTextEntity.getComponent<cro::Text>().setString(InputKeyb(m_sharedData.inputBinding));
             lastInput = InputType::Keyboard;
             break;

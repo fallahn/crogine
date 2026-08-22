@@ -163,7 +163,7 @@ KeyboardState::KeyboardState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_axisFlags     (0),
     m_prevAxisFlags (0)
 {
-    ctx.mainWindow.setCursorVisible(!false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("OSK State");
 
     buildScene();

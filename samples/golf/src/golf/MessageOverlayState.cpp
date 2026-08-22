@@ -87,7 +87,7 @@ MessageOverlayState::MessageOverlayState(cro::StateStack& ss, cro::State::Contex
     m_timerActive   (false),
     m_viewScale     (2.f)
 {
-    ctx.mainWindow.setCursorVisible(!false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Message Overlay");
 
     buildScene();
@@ -142,7 +142,7 @@ bool MessageOverlayState::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setCursorVisible(!false);
+        cro::App::getWindow().setCursorVisible(true);
     }
 
     else if (evt.type == SDL_EVENT_KEY_DOWN)
@@ -154,7 +154,7 @@ bool MessageOverlayState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setCursorVisible(!true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
     }

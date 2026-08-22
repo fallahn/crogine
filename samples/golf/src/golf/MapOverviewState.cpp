@@ -214,7 +214,7 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
     m_fingerCount       (0),
     m_ditherUniform     (-1)
 {
-    ctx.mainWindow.setCursorVisible(!false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Map Overview");
 
     CRO_ASSERT(sd.minimapData.mapScene, "");
@@ -300,7 +300,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setCursorVisible(!true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
     }
@@ -308,7 +308,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     {
         setControlIcon(true);
 
-        cro::App::getWindow().setCursorVisible(!true);
+        cro::App::getWindow().setCursorVisible(false);
         switch (evt.gbutton.button)
         {
         default: break;
@@ -348,7 +348,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
         if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
             setControlIcon(true);
-            cro::App::getWindow().setCursorVisible(!true);
+            cro::App::getWindow().setCursorVisible(false);
         }
         m_thumbsticks.setValue(evt.gaxis.axis, evt.gaxis.value);
     }
@@ -389,7 +389,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     {
         setControlIcon(false);
 
-        cro::App::getWindow().setCursorVisible(!false);
+        cro::App::getWindow().setCursorVisible(true);
         if (evt.motion.state & (SDL_BUTTON_MIDDLE | SDL_BUTTON_LEFT))
         {
             panCamera({ -evt.motion.xrel, -evt.motion.yrel });

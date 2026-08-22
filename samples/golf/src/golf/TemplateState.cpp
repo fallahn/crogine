@@ -85,7 +85,7 @@ STATE_NAME::STATE_NAME(cro::StateStack& ss, cro::State::Context ctx, SharedState
     m_sharedData(sd),
     m_viewScale (2.f)
 {
-    ctx.mainWindow.setCursorVisible(!false);
+    ctx.mainWindow.setCursorVisible(true);
 
     buildScene();
 }
@@ -137,7 +137,7 @@ bool STATE_NAME::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setCursorVisible(!true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
     }

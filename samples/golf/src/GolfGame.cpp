@@ -337,7 +337,7 @@ void GolfGame::handleEvent(const cro::Event& evt)
     }
         //break;
     case SDL_EVENT_MOUSE_MOTION:
-        //cro::App::getWindow().setCursorVisible(!false);
+        //cro::App::getWindow().setCursorVisible(true);
         break;
     case SDL_EVENT_KEY_UP:
         switch (evt.key.key)
