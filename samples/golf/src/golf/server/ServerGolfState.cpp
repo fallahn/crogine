@@ -1159,12 +1159,14 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             const auto predicate = [this](const PlayerStatus& a, const PlayerStatus& b)
                 {
                     //return true if still at the tee (we might be closer to the hole on u-bends)
-                    if (glm::length2(a.position - m_holeData[m_currentHole].tee) < 1)
+                    if (!a.eliminated &&
+                        glm::length2(a.position - m_holeData[m_currentHole].tee) < 1)
                     {
                         return true;
                     }
                     //and conversely
-                    if (glm::length2(b.position - m_holeData[m_currentHole].tee) < 1)
+                    if (!b.eliminated &&
+                        glm::length2(b.position - m_holeData[m_currentHole].tee) < 1)
                     {
                         return false;
                     }
