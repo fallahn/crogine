@@ -550,6 +550,7 @@ void App::run(bool resetSettings)
     {
         Logger::log("App initialise() returned false.", Logger::Type::Error, Logger::Output::All);
     }
+    m_osk = std::make_unique<OSK>();
 
     static constexpr std::int32_t MaxFrames = 4; //for every fixed update render no more than these frames
     std::int32_t framesRendered = 0;
@@ -588,9 +589,6 @@ void App::run(bool resetSettings)
         if (m_window.getVsyncEnabled()
             || framesRendered++ < /*MaxFrames*/Console::getMaxFrames())
         {
-            //doImGui();
-
-            //ImGui::Render();
             renderClock.restart();
             m_window.clear();
             render();
@@ -598,6 +596,7 @@ void App::run(bool resetSettings)
             {
                 ImGui_ImplOpenGL3_RenderDrawData(dd);
             }
+            m_osk->render();
             m_window.display();
 
             Console::updateAverageRenderTime(renderClock.restart());
@@ -611,6 +610,7 @@ void App::run(bool resetSettings)
 
     saveSettings();
 
+    m_osk.reset();
     Console::finalise();
     m_messageBus.disable(); //prevents spamming a load of quit messages
     finalise();
@@ -808,10 +808,16 @@ void App::handleEvents()
             saveSettings();
         };
 
-    cro::Event evt;
+    Event evt;
     while (m_window.pollEvent(evt))
     {
         ImGui_ImplSDL3_ProcessEvent(&evt);
+
+        if (m_osk->handleEvent(evt))
+        {
+            //let the on screen keyboard consume the event
+            continue;
+        }
 
         //update the count first because handling
         //the event below might query getControllerCount()

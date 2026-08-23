@@ -2,6 +2,7 @@
 
 #include "SurrealState.hpp"
 
+#include <crogine/core/OSK.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
@@ -84,7 +85,17 @@ bool SurrealState::handleEvent(const cro::Event& evt)
             requestStackPush(0);
             break;
         case SDLK_SPACE:
-            cro::App::getWindow().setCursorVisible(!cro::App::getWindow().getCursorVisible());
+            cro::OSK::show([](bool submitted, const char* str)
+                {
+                    if (!submitted)
+                    {
+                        LogI << "Input was cancelled" << std::endl;
+                    }
+                    else
+                    {
+                        LogI << "Input is: " << str << std::endl;
+                    }
+                });
             break;
         }
     }
@@ -463,8 +474,6 @@ void SurrealState::createScene()
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         cam.setPerspective(80.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 50.f);
-
-        LogI << size << std::endl;
     };
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();

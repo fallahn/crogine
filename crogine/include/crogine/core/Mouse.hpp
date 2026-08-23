@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -46,7 +46,11 @@ namespace cro::Mouse
     */
     enum class Button
     {
-        Left = 1, Middle, Right
+        Left   = SDL_BUTTON_LEFT,
+        Middle = SDL_BUTTON_MIDDLE,
+        Right  = SDL_BUTTON_RIGHT,
+        X1     = SDL_BUTTON_X1,
+        X2     = SDL_BUTTON_X2
     };
 
     /*!
@@ -91,7 +95,6 @@ namespace cro::Mouse
     */
     static inline bool isButtonPressed(Button button)
     {
-        float x, y;
-        return (SDL_BUTTON_MASK(int(button))& SDL_GetMouseState(&x, &y)) != 0;
+        return (SDL_BUTTON_MASK(int(button))& SDL_GetMouseState(nullptr, nullptr)) != 0;
     }
 }

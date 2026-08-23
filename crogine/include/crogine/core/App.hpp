@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,19 +30,21 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
-#include <crogine/core/MessageBus.hpp>
-#include <crogine/core/Window.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Console.hpp>
-#include <crogine/core/Keyboard.hpp>
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/Keyboard.hpp>
+#include <crogine/core/MessageBus.hpp>
+#include <crogine/core/OSK.hpp>
+#include <crogine/core/Window.hpp>
 #include <crogine/detail/Types.hpp>
 
 #include <crogine/graphics/Colour.hpp>
 
-#include <vector>
-#include <map>
 #include <any>
+#include <map>
+#include <memory>
+#include <vector>
 
 #ifdef CRO_DEBUG_
 #define DPRINT(x, y) cro::Console::printStat(x, y)
@@ -210,6 +212,9 @@ namespace cro
         Colour m_clearColour;
         HiResTimer* m_frameClock;
         bool m_running;
+
+        friend class OSK; //what a horrible oroborean state of affairs...
+        std::unique_ptr<OSK> m_osk;
 
         void handleEvents();
 
