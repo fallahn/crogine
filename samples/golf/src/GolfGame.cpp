@@ -2436,9 +2436,9 @@ void GolfGame::loadMusic()
         //see if the soundtrack is installed and prefer that
         auto soundtrackPath = Content::getSoundTrackPath();
         if (!soundtrackPath.empty()
-            && cro::FileSystem::directoryExists(soundtrackPath + u8"/mp3/"))
+            && cro::FileSystem::directoryExists(soundtrackPath + "/mp3/"))
         {
-            loadFiles(soundtrackPath + u8"/mp3/", soundtrackPath + u8"/mp3/");
+            loadFiles(soundtrackPath + "/mp3/", soundtrackPath + "/mp3/");
         }
 
         if (m3uPlaylist.getTrackCount() == 0)
