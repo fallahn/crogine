@@ -42,6 +42,8 @@ using namespace cro;
 
 namespace
 {
+    constexpr float VerticalKeyboardProportion = 3.f; //WindowSize is divided by this
+
     constexpr Colour BGColour = Colour(std::uint8_t(35), 38, 46);
     constexpr Colour ButtonColourNormal = Colour(std::uint8_t(14), 20, 27);
     constexpr Colour ButtonColourActive = Colour(std::uint8_t(255), 255, 255);
@@ -77,6 +79,8 @@ namespace
         {KeyInfo(SDL_SCANCODE_LEFT),KeyInfo(SDL_SCANCODE_SPACE, ButtonWidth * 12.f),KeyInfo(/*would be switch to emoji*/),KeyInfo(/*would be Paste*/),KeyInfo(/*would be quit*/),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(SDL_SCANCODE_RIGHT)}
     };
 
+    std::array<std::array<FloatRect, ButtonCols>, ButtonRows> Hitboxes = {};
+
     //TODO do we need these or can the output of scancodes be inferred by shift status?
     //constexpr std::array<std::array<KeyInfo, 14u>, 5u> UpperCaseKeys =
     //{
@@ -93,11 +97,13 @@ namespace
 
 //public
 OSK::OSK()
-    : m_bufferIndex (0),
-    m_isActive      (false),
-    m_keymod        (0),
-    m_rowIndex      (0),
-    m_colIndex      (0)
+    : m_bufferIndex     (0),
+    m_isActive          (false),
+    m_rowIndex          (0),
+    m_colIndex          (0),
+    m_keymod            (0),
+    m_controllerMask    (0),
+    m_prevControllerMask(0)
 {
     m_keyboardArray.setPrimitiveType(GL_TRIANGLES);
     m_textArray.setPrimitiveType(GL_TRIANGLES);
@@ -160,7 +166,7 @@ void OSK::updateVertices()
     std::vector<Vertex2D> verts;
 
     //background
-    const float BGHeight = std::floor(WindowSize.y / 3.f);
+    const float BGHeight = std::floor(WindowSize.y / VerticalKeyboardProportion);
     verts.emplace_back(glm::vec2(0.f, BGHeight), BGColour);
     verts.emplace_back(glm::vec2(0.f), BGColour);
     verts.emplace_back(glm::vec2(WindowSize.x, BGHeight), BGColour);
@@ -241,7 +247,13 @@ void OSK::updateVertices()
                 verts.emplace_back(glm::vec2(x, y), c);
                 verts.emplace_back(glm::vec2(farX, y), c);
                 
+                Hitboxes[j][i] = FloatRect(x, y, buttonWidth, keySize.y);
+
                 x += (buttonWidth + Padding);
+            }
+            else
+            {
+                Hitboxes[j][i] = FloatRect(0.f, 0.f, 0.f, 0.f);
             }
             centres.emplace_back().pos = { std::round(x + (buttonWidth / 2.f)), std::round(y + (keySize.y / 2.f)) };
             centres.back().key = k;
@@ -348,6 +360,33 @@ void OSK::moveDown()
     updateVertices();
 }
 
+void OSK::mouseClick(glm::vec2 mousePos)
+{
+    //hmmm we're not using a camera - what do we use to convert coords?
+    //we can probably just make assumptions as we're rendering at window scale
+    const auto WindowSize = glm::vec2(App::getWindow().getSize());
+    const auto pos = glm::vec2(mousePos.x, WindowSize.y - mousePos.y);
+    
+    if (pos.y < std::floor(WindowSize.y / VerticalKeyboardProportion))
+    {
+        for (auto j = 0u; j < ButtonRows; ++j)
+        {
+            for (auto i = 0u; i < ButtonCols; ++i)
+            {
+                if (Hitboxes[j][i].contains(pos))
+                {
+                    m_rowIndex = j;
+                    m_colIndex = i;
+                    keypress(ButtonInfo[j][i].scancode);
+                    updateVertices();
+                    return;
+                }
+            }
+        }
+        
+    }
+}
+
 bool OSK::handleEvent(const Event& evt)
 {
     if (!m_isActive)
@@ -355,13 +394,134 @@ bool OSK::handleEvent(const Event& evt)
         return false;
     }
 
+    const auto applyAxisMotion = 
+        [this]()
+        {
+            const auto testBits = 
+                [](std::uint8_t mask, std::uint8_t bits)
+                {
+                    return (mask & bits) != 0;
+                };
+
+            if (m_prevControllerMask != m_controllerMask)
+            {
+                if (!testBits(m_prevControllerMask, ControllerBits::Left)
+                    && testBits(m_controllerMask, ControllerBits::Left))
+                {
+                    moveLeft();
+                }
+                if (!testBits(m_prevControllerMask, ControllerBits::Right)
+                    && testBits(m_controllerMask, ControllerBits::Right))
+                {
+                    moveRight();
+                }
+                if (!testBits(m_prevControllerMask, ControllerBits::Up)
+                    && testBits(m_controllerMask, ControllerBits::Up))
+                {
+                    moveUp();
+                }
+                if (!testBits(m_prevControllerMask, ControllerBits::Down)
+                    && testBits(m_controllerMask, ControllerBits::Down))
+                {
+                    moveDown();
+                }
+                if (!testBits(m_prevControllerMask, ControllerBits::L2)
+                    && testBits(m_controllerMask, ControllerBits::L2))
+                {
+                    m_keymod = SDL_KMOD_SHIFT;
+                    updateVertices();
+                }
+                else if (testBits(m_prevControllerMask, ControllerBits::L2)
+                    && !testBits(m_controllerMask, ControllerBits::L2))
+                {
+                    m_keymod = SDL_KMOD_NONE;
+                    updateVertices();
+                }
+
+                if (!testBits(m_prevControllerMask, ControllerBits::R2)
+                    && testBits(m_controllerMask, ControllerBits::R2))
+                {
+                    keypress(SDL_SCANCODE_RETURN);
+                }
+            }
+            m_prevControllerMask = m_controllerMask;
+        };
+
     switch (evt.type)
     {
     default: return false;
     case SDL_EVENT_GAMEPAD_AXIS_MOTION:
-        //TODO thumbstick movement
-        //TODO L2 shift and R2 submit
+    {
+        //thumbstick movement
+        const std::int16_t Threshold = GameController::LeftThumbDeadZone * 2;// 15000;
+        switch (evt.gaxis.axis)
+        {
+        default: break;
+        case SDL_GAMEPAD_AXIS_LEFTX:
+            if (evt.gaxis.value > Threshold)
+            {
+                //right
+                m_controllerMask |= ControllerBits::Right;
+                m_controllerMask &= ~ControllerBits::Left;
+            }
+            else if (evt.gaxis.value < -Threshold)
+            {
+                //left
+                m_controllerMask |= ControllerBits::Left;
+                m_controllerMask &= ~ControllerBits::Right;
+            }
+            else
+            {
+                m_controllerMask &= ~(ControllerBits::Left | ControllerBits::Right);
+            }
+            applyAxisMotion();
+            break;
+        case SDL_GAMEPAD_AXIS_LEFTY:
+            if (evt.gaxis.value > Threshold)
+            {
+                //down
+                m_controllerMask |= ControllerBits::Down;
+                m_controllerMask &= ~ControllerBits::Up;
+            }
+            else if (evt.gaxis.value < -Threshold)
+            {
+                //up
+                m_controllerMask |= ControllerBits::Up;
+                m_controllerMask &= ~ControllerBits::Down;
+            }
+            else
+            {
+                m_controllerMask &= ~(ControllerBits::Up | ControllerBits::Down);
+            }
+            applyAxisMotion();
+            break;
+        case SDL_GAMEPAD_AXIS_LEFT_TRIGGER:
+            if (evt.gaxis.value > GameController::TriggerDeadZone)
+            {
+                m_controllerMask |= ControllerBits::L2;
+            }
+            else if (evt.gaxis.value < GameController::TriggerDeadZone)
+            {
+                m_controllerMask &= ~ControllerBits::L2;
+            }
+            applyAxisMotion();
+            break;
+        case SDL_GAMEPAD_AXIS_RIGHT_TRIGGER:
+            if (evt.gaxis.value > GameController::TriggerDeadZone)
+            {
+                m_controllerMask |= ControllerBits::R2;
+            }
+            else if (evt.gaxis.value < GameController::TriggerDeadZone)
+            {
+                m_controllerMask &= ~ControllerBits::R2;
+            }
+            applyAxisMotion();
+            break;
+        }
 
+
+        //TODO L2 shift and R2 submit
+    }
         return m_isActive; //I mean... the clause above should mean this is always true at this point...
     case SDL_EVENT_GAMEPAD_BUTTON_UP:
         switch (evt.gbutton.button)
@@ -376,25 +536,25 @@ bool OSK::handleEvent(const Event& evt)
         switch (evt.gbutton.button)
         {
         default: break;
-        case cro::GameController::DPadLeft:
+        case GameController::DPadLeft:
             moveLeft();
             break;
-        case cro::GameController::DPadRight:
+        case GameController::DPadRight:
             moveRight();
             break;
-        case cro::GameController::DPadUp:
+        case GameController::DPadUp:
             moveUp();
             break;
-        case cro::GameController::DPadDown:
+        case GameController::DPadDown:
             moveDown();
             break;
-        case cro::GameController::ButtonLeftStick:
+        case GameController::ButtonLeftStick:
             keypress(SDL_SCANCODE_CAPSLOCK);
             break;
-        case cro::GameController::ButtonA:
+        case GameController::ButtonA:
             keypress(ButtonInfo[m_rowIndex][m_colIndex].scancode);
             break;
-        case cro::GameController::ButtonX:
+        case GameController::ButtonX:
             keypress(SDL_SCANCODE_BACKSPACE);
             break;
         }
@@ -438,11 +598,14 @@ bool OSK::handleEvent(const Event& evt)
         }
         return m_isActive;
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
-        //TODO check active button is under mouse
-        //and submit keypress
+        if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            mouseClick({ evt.button.x, evt.button.y });
+        }
         return m_isActive;
     case SDL_EVENT_MOUSE_MOTION:
-        //TODO use mouse coords to set active index and refresh verts
+        //TODO use mouse coords to set active index and refresh verts?
+        //or we could just accept wherever the mouse click is
         return m_isActive;
 
 

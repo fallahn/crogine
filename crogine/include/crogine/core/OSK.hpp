@@ -70,12 +70,23 @@ namespace cro
         std::array<std::uint32_t, MaxChars> m_textBuffer = {}; //unicode codepoints
         std::size_t m_bufferIndex;
 
-        SDL_Keymod m_keymod; //toggled to switch between shifted and non-shifted layouts
         std::uint32_t m_rowIndex;
         std::uint32_t m_colIndex;
 
+        SDL_Keymod m_keymod; //toggled to switch between shifted and non-shifted layouts
+
+        std::uint8_t m_controllerMask;
+        std::uint8_t m_prevControllerMask;
+        enum ControllerBits
+        {
+            Up = 0x1, Down = 0x2, Left = 0x4, Right = 0x8,
+            L2 = 0x10, R2 = 0x20
+        };
+
+
         bool m_isActive;
         std::function<void(bool, const char*)> m_callback;
+
 
 
         SimpleVertexArray m_keyboardArray;
@@ -91,6 +102,7 @@ namespace cro
         void moveRight();
         void moveUp();
         void moveDown();
+        void mouseClick(glm::vec2);
 
         friend class App;
         //returns true if the keyboard should consume the event
