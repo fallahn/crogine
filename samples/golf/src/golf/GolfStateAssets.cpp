@@ -318,7 +318,7 @@ void GolfState::loadMap()
     std::unordered_map<std::string, LightData> lightPresets;
     if (m_sharedData.nightTime)
     {
-        auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + u8"assets/golf/lights");
+        auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + "assets/golf/lights");
         for (const auto& file : files)
         {
             auto ext = cro::FileSystem::getFileExtension(file);

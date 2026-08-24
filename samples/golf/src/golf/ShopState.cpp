@@ -113,8 +113,8 @@ namespace
         return static_cast<std::int32_t>(static_cast<float>(price) * 0.55f);
     }
 
-    const std::string BuyStr = u8"Buy ↓";
-    const std::string SellStr = u8"Sell ↓";
+    const std::string BuyStr = "Buy \u2193"; //down arrow
+    const std::string SellStr = "Sell \u2193";
 
     struct TextFlashData final
     {
@@ -689,7 +689,7 @@ void ShopState::buildScene()
                     const auto scale = cro::UIElementSystem::getViewScale();
                     const auto screenWidth = std::round(cro::App::getWindow().getSize().x / scale);
 
-                    const auto buttonSpacing = std::round((screenWidth - TitleSize.x - (BorderPadding * 2)) / Category::Count);
+                    const auto buttonSpacing = std::round((screenWidth - TitleSize.x - (BorderPadding * 2)) / static_cast<std::int32_t>(Category::Count));
                     const auto buttonWidth = buttonSpacing - BorderPadding;
 
                     return std::make_pair(buttonSpacing, buttonWidth);

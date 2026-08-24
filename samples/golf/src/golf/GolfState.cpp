@@ -946,9 +946,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
             break;
 #ifdef CRO_DEBUG_
-        case SDLK_F10:
+        /*case SDLK_F10:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::EndGame), net::NetFlag::Reliable);
-            break;
+            break;*/
         //case SDLK_F7:
         //    //m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
         //    
@@ -7885,12 +7885,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         if (player.terrain == TerrainID::Bunker)
         {
-            static const std::array<std::string, 2u> str = { u8"Bunker ↓", u8"Bunker ↑" };
+            static const std::array<std::string, 2u> str = { "Bunker \u2193", "Bunker \u2191" };
             e.getComponent<cro::Text>().setString(cro::String::fromUtf8(str[lie].begin(), str[lie].end()));
         }
         else if (player.terrain == TerrainID::Rough)
         {
-            static const std::array<std::string, 2u> str = { u8"Rough ↓", u8"Rough ↑" };
+            static const std::array<std::string, 2u> str = { "Rough \u2193", "Rough \u2191" };
             e.getComponent<cro::Text>().setString(cro::String::fromUtf8(str[lie].begin(), str[lie].end()));
         }
         else

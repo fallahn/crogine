@@ -2012,9 +2012,9 @@ void GolfGame::loadPreferences()
 
     m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
 
-    if (!cro::FileSystem::directoryExists(Content::getBaseContentPath() + u8"music"))
+    if (!cro::FileSystem::directoryExists(Content::getBaseContentPath() + "music"))
     {
-        cro::FileSystem::createDirectory(Content::getBaseContentPath() + u8"music");
+        cro::FileSystem::createDirectory(Content::getBaseContentPath() + "music");
     }
     loadMusic();
 
@@ -2406,7 +2406,7 @@ void GolfGame::loadAvatars()
 void GolfGame::loadMusic()
 {
     //parse any music files into a playlist
-    M3UPlaylist m3uPlaylist(Content::getBaseContentPath() + u8"music/");
+    M3UPlaylist m3uPlaylist(Content::getBaseContentPath() + "music/");
 
     if (m3uPlaylist.getTrackCount() == 0)
     {
@@ -2445,7 +2445,7 @@ void GolfGame::loadMusic()
 #endif
         {
             //look in the fallback dir
-            const auto MusicDir = u8"assets/golf/sound/music/";
+            const auto MusicDir = "assets/golf/sound/music/";
             if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + MusicDir))
             {
                 loadFiles(cro::FileSystem::getResourcePath() + MusicDir, MusicDir);

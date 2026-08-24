@@ -6446,25 +6446,25 @@ std::string ProfileState::generateRandomBio() const
     default:
     case 0:
         return
-            u8"This former house-builder knows all about the benefits of elevation. If they play a good shot, you'll certainly be able to see their big beam and they'll hit the roof if they manage a hole in one! As a low-handicapper, tends to play off the builders tee, and enjoys ladder tournaments.";
+            "This former house-builder knows all about the benefits of elevation. If they play a good shot, you'll certainly be able to see their big beam and they'll hit the roof if they manage a hole in one! As a low-handicapper, tends to play off the builders tee, and enjoys ladder tournaments.";
     case 1:
         return
-            u8"A retired gardener this player knows a thing or two about lying in the rough. Don't underestimate them though - they could be considered the rake in the grass!";
+            "A retired gardener this player knows a thing or two about lying in the rough. Don't underestimate them though - they could be considered the rake in the grass!";
     case 2:
         return
-            u8"Small feet means nothing - not when you can handle your wood like this.";
+            "Small feet means nothing - not when you can handle your wood like this.";
     case 3:
         return
-            u8"Formerly a countryside resident this player moved to the city to experience the thrills of urban golf. Just don't sneak up on them when they're strumming the banjo.";
+            "Formerly a countryside resident this player moved to the city to experience the thrills of urban golf. Just don't sneak up on them when they're strumming the banjo.";
     case 4:
         return
-            u8"\"Good things come in small packages\" is this player's motto. Apparently they diet exclusively on fortune cookies.";
+            "\"Good things come in small packages\" is this player's motto. Apparently they diet exclusively on fortune cookies.";
     case 5:
         return
-            u8"The clever use of turn signals got this player to where they are today.";
+            "The clever use of turn signals got this player to where they are today.";
     case 6:
         return
-            u8"Nick-named \"The Midwife\" because they always deliver (and \"Postman\" was already taken) here's a player who knows a comfy lie is much better than a water-berth. Takes a cautious approach as they know it's much better to crawl before you can walk. Becoming a golf pro was their crowning achievement";
+            "Nick-named \"The Midwife\" because they always deliver (and \"Postman\" was already taken) here's a player who knows a comfy lie is much better than a water-berth. Takes a cautious approach as they know it's much better to crawl before you can walk. Becoming a golf pro was their crowning achievement";
     }
 }
 
