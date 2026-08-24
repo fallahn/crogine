@@ -118,6 +118,8 @@ if (NOT BUILD_SDL)
 else()
 
   SET(SDL_X11_XSCRNSAVER OFF CACHE BOOL "Disable screensaver" FORCE)
+  SET(SDL_TESTS OFF CACHE BOOL "Build the SDL tests directory" FORCE)
+  SET(SDL_TEST_LIBRARY OFF CACHE BOOL "Build the SDL test library" FORCE)
   FetchContent_Declare(
       SDL3
       GIT_REPOSITORY https://github.com/libsdl-org/SDL.git

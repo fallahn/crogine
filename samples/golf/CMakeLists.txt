@@ -71,7 +71,8 @@ SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 SET(OpenGL_GL_PREFERENCE "GLVND")
 
-find_package(SDL2 REQUIRED)
+#find_package(SDL2 REQUIRED)
+find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
 find_package(OpenGL REQUIRED)
 #TODO specify version 2.83
 find_package(Bullet REQUIRED)
@@ -154,7 +155,8 @@ endif()
 
 include_directories(
   ${CROGINE_INCLUDE_DIR}
-  ${SDL2_INCLUDE_DIR}
+  #${SDL2_INCLUDE_DIR}
+  SDL3::Headers
   ${OPENGL_INCLUDE_DIR}
   ${BULLET_INCLUDE_DIRS}
   ${SQLite3_INCLUDE_DIRS}
@@ -243,7 +245,8 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:CRO_DEBUG_>
 
 target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}
-  ${SDL2_LIBRARY}
+  #${SDL2_LIBRARY}
+  SDL3::SDL3
   ${BULLET_LIBRARIES}
   ${SQLite3_LIBRARIES}  
   ${OPENGL_LIBRARIES})
