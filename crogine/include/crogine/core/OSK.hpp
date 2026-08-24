@@ -71,6 +71,8 @@ namespace cro
         std::size_t m_bufferIndex;
 
         SDL_Keymod m_keymod; //toggled to switch between shifted and non-shifted layouts
+        std::uint32_t m_rowIndex;
+        std::uint32_t m_colIndex;
 
         bool m_isActive;
         std::function<void(bool, const char*)> m_callback;
@@ -84,6 +86,11 @@ namespace cro
         void close(bool isSubmitted);
         void updateVertices();
         bool keypress(SDL_Scancode);
+
+        void moveLeft();
+        void moveRight();
+        void moveUp();
+        void moveDown();
 
         friend class App;
         //returns true if the keyboard should consume the event

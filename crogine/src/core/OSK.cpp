@@ -51,6 +51,10 @@ namespace
     constexpr Colour TextColourActive = ButtonColourNormal;
     constexpr Colour TextColourShift = Colour(std::uint8_t(123), 126, 130); //shifted text icons EG number row when shift not active
 
+    constexpr std::uint32_t ButtonRows = 5;
+    constexpr std::uint32_t ButtonCols = 14;
+    constexpr float ButtonWidth = 1.f / ButtonCols;
+
     //we assign a scancode to each of the virtual keys
     //that way we automatically display the correct keys
     //based on the user's layout as well as render different
@@ -58,18 +62,19 @@ namespace
     struct KeyInfo final
     {
         constexpr KeyInfo() {};
-        constexpr KeyInfo(SDL_Scancode c) : scancode(c) {}
+        constexpr KeyInfo(SDL_Scancode c, float w = ButtonWidth) : scancode(c), size(w) {}
         SDL_Scancode scancode = SDL_SCANCODE_UNKNOWN;
+        const float size = ButtonWidth; //percentage of available width
         bool active = false;
     };
 
-    constexpr std::array<std::array<KeyInfo, 14u>, 5u> LowerCaseKeys =
+    constexpr std::array<std::array<KeyInfo, ButtonCols>, ButtonRows> ButtonInfo =
     {
-        std::array<KeyInfo, 14u>{KeyInfo(SDL_SCANCODE_GRAVE),KeyInfo(SDL_SCANCODE_1),KeyInfo(SDL_SCANCODE_2),KeyInfo(SDL_SCANCODE_3),KeyInfo(SDL_SCANCODE_4),KeyInfo(SDL_SCANCODE_5),KeyInfo(SDL_SCANCODE_6),KeyInfo(SDL_SCANCODE_7),KeyInfo(SDL_SCANCODE_8),KeyInfo(SDL_SCANCODE_9),KeyInfo(SDL_SCANCODE_0),KeyInfo(SDL_SCANCODE_MINUS),KeyInfo(SDL_SCANCODE_EQUALS),KeyInfo(SDL_SCANCODE_BACKSPACE)},
+        std::array<KeyInfo, 14u>{KeyInfo(SDL_SCANCODE_GRAVE, ButtonWidth / 2.f),KeyInfo(SDL_SCANCODE_1),KeyInfo(SDL_SCANCODE_2),KeyInfo(SDL_SCANCODE_3),KeyInfo(SDL_SCANCODE_4),KeyInfo(SDL_SCANCODE_5),KeyInfo(SDL_SCANCODE_6),KeyInfo(SDL_SCANCODE_7),KeyInfo(SDL_SCANCODE_8),KeyInfo(SDL_SCANCODE_9),KeyInfo(SDL_SCANCODE_0),KeyInfo(SDL_SCANCODE_MINUS),KeyInfo(SDL_SCANCODE_EQUALS),KeyInfo(SDL_SCANCODE_BACKSPACE, ButtonWidth + (ButtonWidth / 2.f))},
         {KeyInfo(SDL_SCANCODE_TAB),KeyInfo(SDL_SCANCODE_Q),KeyInfo(SDL_SCANCODE_W),KeyInfo(SDL_SCANCODE_E),KeyInfo(SDL_SCANCODE_R),KeyInfo(SDL_SCANCODE_T),KeyInfo(SDL_SCANCODE_Y),KeyInfo(SDL_SCANCODE_U),KeyInfo(SDL_SCANCODE_I),KeyInfo(SDL_SCANCODE_O),KeyInfo(SDL_SCANCODE_P),KeyInfo(SDL_SCANCODE_LEFTBRACKET),KeyInfo(SDL_SCANCODE_RIGHTBRACKET),KeyInfo(SDL_SCANCODE_BACKSLASH)},
-        {KeyInfo(SDL_SCANCODE_CAPSLOCK),KeyInfo(SDL_SCANCODE_A),KeyInfo(SDL_SCANCODE_S),KeyInfo(SDL_SCANCODE_D),KeyInfo(SDL_SCANCODE_F),KeyInfo(SDL_SCANCODE_G),KeyInfo(SDL_SCANCODE_H),KeyInfo(SDL_SCANCODE_J),KeyInfo(SDL_SCANCODE_K),KeyInfo(SDL_SCANCODE_L),KeyInfo(SDL_SCANCODE_SEMICOLON),KeyInfo(SDL_SCANCODE_APOSTROPHE),KeyInfo(SDL_SCANCODE_RETURN),KeyInfo()},
-        {KeyInfo(SDL_SCANCODE_LSHIFT),KeyInfo(SDL_SCANCODE_Z),KeyInfo(SDL_SCANCODE_X),KeyInfo(SDL_SCANCODE_C),KeyInfo(SDL_SCANCODE_V),KeyInfo(SDL_SCANCODE_B),KeyInfo(SDL_SCANCODE_N),KeyInfo(SDL_SCANCODE_M),KeyInfo(SDL_SCANCODE_COMMA),KeyInfo(SDL_SCANCODE_PERIOD),KeyInfo(SDL_SCANCODE_SLASH),KeyInfo(SDL_SCANCODE_RSHIFT),KeyInfo(),KeyInfo()},
-        {KeyInfo(SDL_SCANCODE_SPACE),KeyInfo(SDL_SCANCODE_LEFT),KeyInfo(SDL_SCANCODE_RIGHT),KeyInfo(/*would be switch to emoji*/),KeyInfo(/*would be Paste*/),KeyInfo(/*would be quit*/),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo()}
+        {KeyInfo(SDL_SCANCODE_CAPSLOCK, ButtonWidth + (ButtonWidth / 2.f)),KeyInfo(SDL_SCANCODE_A),KeyInfo(SDL_SCANCODE_S),KeyInfo(SDL_SCANCODE_D),KeyInfo(SDL_SCANCODE_F),KeyInfo(SDL_SCANCODE_G),KeyInfo(SDL_SCANCODE_H),KeyInfo(SDL_SCANCODE_J),KeyInfo(SDL_SCANCODE_K),KeyInfo(SDL_SCANCODE_L),KeyInfo(SDL_SCANCODE_SEMICOLON),KeyInfo(SDL_SCANCODE_APOSTROPHE),KeyInfo(SDL_SCANCODE_RETURN, ButtonWidth + (ButtonWidth / 2.f)),KeyInfo()},
+        {KeyInfo(SDL_SCANCODE_LSHIFT, ButtonWidth * 2.f),KeyInfo(SDL_SCANCODE_Z),KeyInfo(SDL_SCANCODE_X),KeyInfo(SDL_SCANCODE_C),KeyInfo(SDL_SCANCODE_V),KeyInfo(SDL_SCANCODE_B),KeyInfo(SDL_SCANCODE_N),KeyInfo(SDL_SCANCODE_M),KeyInfo(SDL_SCANCODE_COMMA),KeyInfo(SDL_SCANCODE_PERIOD),KeyInfo(SDL_SCANCODE_SLASH),KeyInfo(SDL_SCANCODE_RSHIFT, ButtonWidth * 2.f),KeyInfo(),KeyInfo()},
+        {KeyInfo(SDL_SCANCODE_LEFT),KeyInfo(SDL_SCANCODE_SPACE, ButtonWidth * 12.f),KeyInfo(/*would be switch to emoji*/),KeyInfo(/*would be Paste*/),KeyInfo(/*would be quit*/),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(SDL_SCANCODE_RIGHT)}
     };
 
     //TODO do we need these or can the output of scancodes be inferred by shift status?
@@ -90,7 +95,9 @@ namespace
 OSK::OSK()
     : m_bufferIndex (0),
     m_isActive      (false),
-    m_keymod        (0)
+    m_keymod        (0),
+    m_rowIndex      (0),
+    m_colIndex      (0)
 {
     m_keyboardArray.setPrimitiveType(GL_TRIANGLES);
     m_textArray.setPrimitiveType(GL_TRIANGLES);
@@ -162,20 +169,106 @@ void OSK::updateVertices()
     verts.emplace_back(glm::vec2(0.f), BGColour);
     verts.emplace_back(glm::vec2(WindowSize.x, 0.f), BGColour);
 
-
+    static constexpr float DefaultPadding = 2.f;
     const auto Scale = UIElementSystem::getViewScale();
-    //TODO calc padding and char size based on scale
+    
+    //calc padding and char size based on scale
+    const auto Padding = DefaultPadding * Scale;
 
-    //TODO total text area width should be 4:3 ratio of the current window height
+    //total text area width should be 4:3 ratio of the current window height
+    auto keyWidth = (WindowSize.y / 3.f) * 4.f;
+    keyWidth = std::min(keyWidth, WindowSize.x);
+    keyWidth -= Padding;
+    keyWidth = std::floor(keyWidth);
+
+    const auto keyHeight = std::floor(BGHeight - Padding);
+    const auto keySize = glm::vec2(std::floor(keyWidth / ButtonCols), std::floor(keyHeight / ButtonRows)) - glm::vec2(Padding);
+
+    const auto startX = ((WindowSize.x - keyWidth) / 2.f) + Padding;
+    const auto startY = BGHeight - keySize.y - Padding;
+
+    //track the centre pos so we dont have to recalc when placing text
+    struct KeyText final
+    {
+        glm::vec2 pos = glm::vec2(0.f);
+        SDL_Keycode key = 0;
+    };
+    std::vector<std::vector<KeyText>> centrePos;
+
+    //NOTE key size x is actually keyWidth * Button.size - Padding
+    float y = startY;
+    for (auto j = 0u; j < ButtonRows; ++j)
+    {
+        float x = startX;
+        auto& centres = centrePos.emplace_back();
+        for (auto i = 0u; i < ButtonCols; ++i)
+        {
+            const auto& buttonInf = ButtonInfo[j][i];
+            const auto buttonWidth = std::round((keyWidth * buttonInf.size) - Padding);
+            const auto k = SDL_GetKeyFromScancode(buttonInf.scancode, m_keymod, false);
+            
+            if (buttonInf.scancode != SDL_SCANCODE_UNKNOWN)
+            {
+                auto c = ButtonColourNormal;
+
+                if (m_rowIndex == j && m_colIndex == i)
+                {
+                    c = ButtonColourActive;
+                }                
+                else if (((k & (SDLK_EXTENDED_MASK | SDLK_SCANCODE_MASK)) != 0)
+                    || k == SDLK_TAB || k == SDLK_RETURN || k == SDLK_BACKSPACE)
+                {
+                    //set to blue if this is a shift and mod mode is not none
+                    if ((m_keymod & SDL_KMOD_SHIFT)
+                        && (buttonInf.scancode == SDL_SCANCODE_LSHIFT || buttonInf.scancode == SDL_SCANCODE_RSHIFT))
+                    {
+                        c = SpecialButtonActive;
+                    }
+                    else
+                    {
+                        c = SpecialButtonNormal;
+                    }
+                }
+
+                //clamps the width so rounding error at makes
+                //sure the far edges of buttons line up
+                const float farX = std::min(x + buttonWidth, keyWidth + startX - (Padding * 2.f));
+
+                verts.emplace_back(glm::vec2(x, y + keySize.y), c);
+                verts.emplace_back(glm::vec2(x, y), c);
+                verts.emplace_back(glm::vec2(farX, y + keySize.y), c);
+                verts.emplace_back(glm::vec2(farX, y + keySize.y), c);
+                verts.emplace_back(glm::vec2(x, y), c);
+                verts.emplace_back(glm::vec2(farX, y), c);
+                
+                x += (buttonWidth + Padding);
+            }
+            centres.emplace_back().pos = { std::round(x + (buttonWidth / 2.f)), std::round(y + (keySize.y / 2.f)) };
+            centres.back().key = k;
+        }
+        y -= (keySize.y + Padding);
+    }
 
     m_keyboardArray.setVertexData(verts);
 
 
+    //TODO calc text size and fetch glyphs
+    //TODO how do we do text that's more than one char?
+
+
+    //TODO move this somewhere sensible
     m_previewText.setCharacterSize(BasePreviewTextSize * static_cast<std::uint32_t>(Scale));
 }
 
 bool OSK::keypress(SDL_Scancode code)
 {
+    if (code == SDL_SCANCODE_CAPSLOCK)
+    {
+        m_keymod = m_keymod == SDL_KMOD_NONE ? SDL_KMOD_SHIFT : SDL_KMOD_NONE;
+        updateVertices();
+        return true;
+    }
+
     const auto k = SDL_GetKeyFromScancode(code, m_keymod, false);
     if ((k & (SDLK_EXTENDED_MASK | SDLK_SCANCODE_MASK)) == 0)
     {
@@ -208,6 +301,53 @@ bool OSK::keypress(SDL_Scancode code)
     return false;
 }
 
+void OSK::moveLeft()
+{
+    do
+    {
+        m_colIndex = (m_colIndex + (ButtonCols - 1)) % ButtonCols;
+    } while (ButtonInfo[m_rowIndex][m_colIndex].scancode == SDL_SCANCODE_UNKNOWN);
+
+    updateVertices();
+}
+
+void OSK::moveRight()
+{
+    do
+    {
+        m_colIndex = (m_colIndex + 1) % ButtonCols;
+    } while (ButtonInfo[m_rowIndex][m_colIndex].scancode == SDL_SCANCODE_UNKNOWN);
+
+    updateVertices();
+}
+
+void OSK::moveUp()
+{
+    //moving up/down is fine, but we need
+    //to correct the left/right if we land
+    //on an invalid slot
+    m_rowIndex = (m_rowIndex + (ButtonRows - 1)) % ButtonRows;
+
+    while (ButtonInfo[m_rowIndex][m_colIndex].scancode == SDL_SCANCODE_UNKNOWN)
+    {
+        m_colIndex = (m_colIndex + (ButtonCols - 1)) % ButtonCols;
+    }
+
+    updateVertices();
+}
+
+void OSK::moveDown()
+{
+    m_rowIndex = (m_rowIndex + 1) % ButtonRows;
+
+    while (ButtonInfo[m_rowIndex][m_colIndex].scancode == SDL_SCANCODE_UNKNOWN)
+    {
+        m_colIndex = (m_colIndex + (ButtonCols - 1)) % ButtonCols;
+    }
+
+    updateVertices();
+}
+
 bool OSK::handleEvent(const Event& evt)
 {
     if (!m_isActive)
@@ -219,8 +359,10 @@ bool OSK::handleEvent(const Event& evt)
     {
     default: return false;
     case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+        //TODO thumbstick movement
+        //TODO L2 shift and R2 submit
 
-        return m_isActive;
+        return m_isActive; //I mean... the clause above should mean this is always true at this point...
     case SDL_EVENT_GAMEPAD_BUTTON_UP:
         switch (evt.gbutton.button)
         {
@@ -230,7 +372,34 @@ bool OSK::handleEvent(const Event& evt)
             break;
         }
         return m_isActive;
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+        switch (evt.gbutton.button)
+        {
+        default: break;
+        case cro::GameController::DPadLeft:
+            moveLeft();
+            break;
+        case cro::GameController::DPadRight:
+            moveRight();
+            break;
+        case cro::GameController::DPadUp:
+            moveUp();
+            break;
+        case cro::GameController::DPadDown:
+            moveDown();
+            break;
+        case cro::GameController::ButtonLeftStick:
+            keypress(SDL_SCANCODE_CAPSLOCK);
+            break;
+        case cro::GameController::ButtonA:
+            keypress(ButtonInfo[m_rowIndex][m_colIndex].scancode);
+            break;
+        case cro::GameController::ButtonX:
+            keypress(SDL_SCANCODE_BACKSPACE);
+            break;
+        }
 
+        return m_isActive;
 
     case SDL_EVENT_KEY_UP:
         switch (evt.key.key)
@@ -239,6 +408,7 @@ bool OSK::handleEvent(const Event& evt)
         case SDLK_LSHIFT:
         case SDLK_RSHIFT:
             m_keymod = SDL_KMOD_NONE;
+            updateVertices();
             break;
         case SDLK_ESCAPE:
             close(false);
@@ -267,7 +437,13 @@ bool OSK::handleEvent(const Event& evt)
             close(false);
         }
         return m_isActive;
-
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        //TODO check active button is under mouse
+        //and submit keypress
+        return m_isActive;
+    case SDL_EVENT_MOUSE_MOTION:
+        //TODO use mouse coords to set active index and refresh verts
+        return m_isActive;
 
 
     case SDL_EVENT_WINDOW_RESIZED:
