@@ -100,7 +100,7 @@ std::vector<std::string> FileSystem::listFiles(std::string path)
     std::vector<std::string> results;
 
     std::error_code ec;
-    std::filesystem::directory_iterator it(std::filesystem::u8path(path), ec);
+    std::filesystem::directory_iterator it(std::filesystem::path(path), ec);
     
     if (ec)
     {
@@ -112,7 +112,7 @@ std::vector<std::string> FileSystem::listFiles(std::string path)
     {
         if (dir.is_regular_file())
         {
-            results.push_back(dir.path().filename().u8string());
+            results.push_back(dir.path().filename().string());
         }
     }
     return results;
@@ -179,7 +179,7 @@ bool FileSystem::fileExists(const std::string& path)
 {
     try
     {
-        const auto u8p = std::filesystem::u8path(path);
+        const auto u8p = std::filesystem::path(path);
 
         std::error_code ec;
         if (!std::filesystem::exists(u8p, ec))
@@ -207,7 +207,7 @@ bool FileSystem::createDirectory(const std::string& path)
     //if at any point a string literal is concatenated to it make sure to
     //use the u8 prefix - eg someString += u8"dirname"
     std::error_code ec;
-    if (!std::filesystem::create_directories(std::filesystem::u8path(path), ec))
+    if (!std::filesystem::create_directories(std::filesystem::path(path), ec))
     {
         //this might be 0 if the directory already exists
         if (ec.value() != 0)
@@ -299,8 +299,8 @@ bool FileSystem::createDirectory(const std::string& path)
 
 bool FileSystem::directoryExists(const std::string& path)
 {
-    std::filesystem::directory_entry dir(std::filesystem::u8path(path));
-    return dir.exists();
+    std::filesystem::directory_entry d = std::filesystem::directory_entry(std::filesystem::path(path));
+    return d.exists();
 }
 
 std::vector<std::string> FileSystem::listDirectories(const std::string& path)
@@ -314,7 +314,7 @@ std::vector<std::string> FileSystem::listDirectories(const std::string& path)
     fullPath += workingPath;*/
 
     std::error_code ec;
-    std::filesystem::directory_iterator it(std::filesystem::u8path(path), ec);
+    std::filesystem::directory_iterator it(std::filesystem::path(path), ec);
 
     if (ec)
     {
@@ -326,7 +326,7 @@ std::vector<std::string> FileSystem::listDirectories(const std::string& path)
     {
         if (dir.is_directory())
         {
-            retVal.push_back(dir.path().stem().u8string());
+            retVal.push_back(dir.path().stem().string());
         }
     }
     return retVal;
@@ -369,7 +369,7 @@ bool FileSystem::setCurrentDirectory(std::string path)
 void FileSystem::removeDirectory(const std::string& path)
 {
     std::error_code ec;
-    std::filesystem::remove_all(std::filesystem::u8path(path), ec);
+    std::filesystem::remove_all(std::filesystem::path(path), ec);
 
     if (ec)
     {

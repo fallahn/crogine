@@ -50,7 +50,7 @@ namespace cro
             template <typename T>
             T clamp(T value, T min, T max)
             {
-                static_assert(std::is_pod<T>::value, "Only available on POD");
+                static_assert(std::is_trivial<T>::value, "Only available on POD");
                 return std::min(max, std::max(min, value));
             }
 
@@ -146,7 +146,7 @@ namespace cro
             template <typename T>
             constexpr T normaliseTo(float v)
             {
-                static_assert(std::is_pod<T>::value, "");
+                static_assert(std::is_trivial<T>::value, "");
                 if constexpr (std::is_unsigned<T>::value)
                 {
                     CRO_ASSERT(v >= 0, "");

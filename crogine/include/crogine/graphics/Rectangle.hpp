@@ -57,13 +57,13 @@ namespace cro
         constexpr Rectangle(T l = 0, T b = 0, T w = 0, T h = 0)
             : left(l), bottom(b), width(w), height(h) 
         {
-            static_assert(std::is_pod<T>::value, "Only PODs allowed");
+            static_assert(std::is_trivial<T>::value, "Only PODs allowed");
         }
 
         constexpr Rectangle(glm::tvec2<T> position, glm::tvec2<T> size)
             : left(position.x), bottom(position.y), width(size.x), height(size.y)
         {
-            static_assert(std::is_pod<T>::value, "Only PODs allowed");
+            static_assert(std::is_trivial<T>::value, "Only PODs allowed");
         }
 
         Rectangle(const Box&)

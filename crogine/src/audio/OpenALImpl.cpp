@@ -863,7 +863,7 @@ std::string OpenALImpl::getPreferencePath() const
     auto prefPath = std::string(pp);
     SDL_free(pp);
     std::replace(prefPath.begin(), prefPath.end(), '\\', '/');
-    prefPath += u8"audio_device.cfg";
+    prefPath += "audio_device.cfg";
 
     return prefPath;
 }

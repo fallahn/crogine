@@ -639,7 +639,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\ktx\include;$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl3\include;$(SolutionDir)extlibs\openal\include;$(SolutionDir)extlibs\opus\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>CLIP_SCREENSHOT;_SCL_SECURE_NO_WARNINGS;PARALLEL_GLOBAL_DISABLE;CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;CRO_DEBUG_;_WINDLL;%(PreprocessorDefinitions);GLM_ENABLE_EXPERIMENTAL</PreprocessorDefinitions>
       <AdditionalOptions>/w34457 /w34456 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -715,7 +715,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\ktx\include;$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl3\include;$(SolutionDir)extlibs\openal\include;$(SolutionDir)extlibs\opus\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GL41;CLIP_SCREENSHOT;_SCL_SECURE_NO_WARNINGS;CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions);GLM_ENABLE_EXPERIMENTAL</PreprocessorDefinitions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4723;5287</DisableSpecificWarnings>
     </ClCompile>

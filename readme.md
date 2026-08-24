@@ -10,7 +10,7 @@ SDL2 Based game engine which runs on Windows, linux and macOS. Compatibility wit
 
 
 #### Building
-Using the CMake file included in the root directory first generate project files for your compiler/environment of choice, then build and install the crogine library. Samples each have their own cmake file to build them independently. The included findCROGINE.cmake file should find the installed library if it was installed in the default location - else you need to manually point CMake to the crogine lib.
+Using the CMake file included in the root directory first generate project files for your compiler/environment of choice, then build and install the crogine library. Samples each have their own cmake file to build them independently. The included findCROGINE.cmake file should find the installed library if it was installed in the default location - else you need to manually point CMake to the crogine lib. Requires C++20 support.
 
 On Windows you can use the included Visual Studio 2022 solution to build crogine and the demo projects for Windows.
 
