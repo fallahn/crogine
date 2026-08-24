@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -88,36 +88,36 @@ bool WorldState::handleEvent(const cro::Event& evt)
         return true;
     }*/
 
-    //if (evt.type == SDL_KEYUP)
+    //if (evt.type == SDL_EVENT_KEY_UP)
     switch(evt.type)
     {
     default: break;
-    case SDL_KEYUP:
-        if (evt.key.keysym.mod & (KMOD_LSHIFT | KMOD_RSHIFT))
+    case SDL_EVENT_KEY_UP:
+        if (evt.key.mod & (SDL_KMOD_LSHIFT | SDL_KMOD_RSHIFT))
         {
-            switch (evt.key.keysym.sym)
+            switch (evt.key.key)
             {
             default: break;
-            case SDLK_g:
+            case SDLK_G:
                 m_gizmoMode = ImGuizmo::OPERATION::TRANSLATE;
                 break;
-            case SDLK_r:
+            case SDLK_R:
                 m_gizmoMode = ImGuizmo::OPERATION::ROTATE;
                 break;
-            case SDLK_s:
+            case SDLK_S:
                 m_gizmoMode = ImGuizmo::OPERATION::SCALE;
                 break;
 
             }            
         }
         break;
-    case SDL_MOUSEWHEEL:
+    case SDL_EVENT_MOUSE_WHEEL:
     {
         m_fov = std::min(MaxFOV, std::max(MinFOV, m_fov - (evt.wheel.y * 0.1f)));
         m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
     }
     break;
-    case SDL_MOUSEMOTION:
+    case SDL_EVENT_MOUSE_MOTION:
         updateMouseInput(evt);
         break;
     }
@@ -131,7 +131,7 @@ void WorldState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             updateLayout(data.data0, data.data1);
             m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);

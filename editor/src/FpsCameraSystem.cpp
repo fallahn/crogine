@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -56,20 +56,20 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
-    case SDL_KEYDOWN:
-        switch (evt.key.keysym.sym)
+    case SDL_EVENT_KEY_DOWN:
+        switch (evt.key.key)
         {
         default:break;
-        case SDLK_w:
+        case SDLK_W:
             m_inputs[0].buttonFlags |= Input::Forward;
             break;
-        case SDLK_s:
+        case SDLK_S:
             m_inputs[0].buttonFlags |= Input::Backward;
             break;
-        case SDLK_a:
+        case SDLK_A:
             m_inputs[0].buttonFlags |= Input::Left;
             break;
-        case SDLK_d:
+        case SDLK_D:
             m_inputs[0].buttonFlags |= Input::Right;
             break;
         case SDLK_SPACE:
@@ -80,20 +80,20 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             break;
         }
         break;
-    case SDL_KEYUP:
-        switch (evt.key.keysym.sym)
+    case SDL_EVENT_KEY_UP:
+        switch (evt.key.key)
         {
         default:break;
-        case SDLK_w:
+        case SDLK_W:
             m_inputs[0].buttonFlags &= ~Input::Forward;
             break;
-        case SDLK_s:
+        case SDLK_S:
             m_inputs[0].buttonFlags &= ~Input::Backward;
             break;
-        case SDLK_a:
+        case SDLK_A:
             m_inputs[0].buttonFlags &= ~Input::Left;
             break;
-        case SDLK_d:
+        case SDLK_D:
             m_inputs[0].buttonFlags &= ~Input::Right;
             break;
         case SDLK_SPACE:
@@ -104,7 +104,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             break;
         }
         break;
-    case SDL_MOUSEBUTTONDOWN:
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
         switch (evt.button.button)
         {
         default: break;
@@ -116,7 +116,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             break;
         }
         break;
-    case SDL_MOUSEBUTTONUP:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
         switch (evt.button.button)
         {
         default: break;
@@ -128,7 +128,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             break;
         }
         break;
-    case SDL_MOUSEMOTION:
+    case SDL_EVENT_MOUSE_MOTION:
         if (cro::Mouse::isButtonPressed(cro::Mouse::Button::Left))
         {
             m_inputs[0].xMove += evt.motion.xrel;
@@ -138,13 +138,13 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
 
 
     //parse controller presses into corresponding inputs
-    case SDL_CONTROLLERBUTTONDOWN:
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
     {
-        auto controllerID = cro::GameController::controllerID(evt.cbutton.which);
+        auto controllerID = cro::GameController::controllerID(evt.gbutton.which);
         if (controllerID != -1)
         {
             CRO_ASSERT(controllerID < m_inputs.size(), "OUT OF RANGE");
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::ButtonA:
@@ -175,13 +175,13 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         }
     }
         break;
-    case SDL_CONTROLLERBUTTONUP:
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
     {
-        auto controllerID = cro::GameController::controllerID(evt.cbutton.which);
+        auto controllerID = cro::GameController::controllerID(evt.gbutton.which);
         if (controllerID != -1)
         {
             CRO_ASSERT(controllerID < m_inputs.size(), "OUT OF RANGE");
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::ButtonA:

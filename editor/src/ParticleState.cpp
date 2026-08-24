@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -108,33 +108,33 @@ bool ParticleState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    //if (evt.type == SDL_KEYUP)
+    //if (evt.type == SDL_EVENT_KEY_UP)
     switch(evt.type)
     {
     default: break;
-    case SDL_QUIT:
+    case SDL_EVENT_QUIT:
         confirmSave();
         break;
-    case SDL_KEYDOWN:
-        if (evt.key.keysym.mod & (KMOD_LSHIFT | KMOD_RSHIFT))
+    case SDL_EVENT_KEY_DOWN:
+        if (evt.key.mod & (SDL_KMOD_LSHIFT | SDL_KMOD_RSHIFT))
         {
-            switch (evt.key.keysym.sym)
+            switch (evt.key.key)
             {
             default: break;
-            case SDLK_g:
+            case SDLK_G:
                 m_gizmoMode = ImGuizmo::OPERATION::TRANSLATE;
                 break;
-            case SDLK_r:
+            case SDLK_R:
                 m_gizmoMode = ImGuizmo::OPERATION::ROTATE;
                 break;
-            case SDLK_s:
+            case SDLK_S:
                 m_gizmoMode = ImGuizmo::OPERATION::SCALE;
                 break;
             }
         }
         else
         {
-            switch (evt.key.keysym.sym)
+            switch (evt.key.key)
             {
             default: break;
             case SDLK_1:
@@ -146,7 +146,7 @@ bool ParticleState::handleEvent(const cro::Event& evt)
             }
         }
         break;
-    case SDL_MOUSEWHEEL:
+    case SDL_EVENT_MOUSE_WHEEL:
     {
         if (m_cameraIndex == CameraID::ThreeDee)
         {
@@ -155,7 +155,7 @@ bool ParticleState::handleEvent(const cro::Event& evt)
         }
     }
     break;
-    case SDL_MOUSEMOTION:
+    case SDL_EVENT_MOUSE_MOTION:
         updateMouseInput(evt);
         break;
     }
@@ -169,7 +169,7 @@ void ParticleState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             updateLayout(data.data0, data.data1);
             m_viewportRatio = updateView(m_cameras[CameraID::ThreeDee].camera, DefaultFarPlane, m_fov);

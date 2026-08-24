@@ -1,5 +1,5 @@
 /*********************************************************************
-(c) Matt Marchant 2021
+(c) Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Zlib license.
@@ -265,11 +265,11 @@ void EditorWindow::doHotkeys()
     auto ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
     auto alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
 
-    if (ctrl && !shift && !alt && cro::Keyboard::isKeyPressed(SDLK_o))
+    if (ctrl && !shift && !alt && cro::Keyboard::isKeyPressed(SDLK_O))
     {
         open();
     }
-    else if (ctrl && !shift && !alt && cro::Keyboard::isKeyPressed(SDLK_s))
+    else if (ctrl && !shift && !alt && cro::Keyboard::isKeyPressed(SDLK_S))
     {
         if (!m_currentFile.empty())
         {
