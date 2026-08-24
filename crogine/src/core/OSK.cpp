@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/core/App.hpp>
+#include <crogine/core/FileSystem.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/Mouse.hpp>
 #include <crogine/core/OSK.hpp>
@@ -108,13 +109,85 @@ OSK::OSK()
     m_keyboardArray.setPrimitiveType(GL_TRIANGLES);
     m_textArray.setPrimitiveType(GL_TRIANGLES);
 
-    if (m_previewFont.loadFromFile("assets/fonts/VeraMono.ttf"))
+    if (m_previewFont.loadFromFile("assets/golf/fonts/NotoSans-Regular.ttf"))
     {
-        //TODO append other fonts such as CJK and emoji
+        //append other fonts such as CJK - TODO these should really be in the assets root folder
+        FontAppendmentContext ctx;
+        static const std::array FontMappings =
+        {
+            //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", CodePointRange::Cyrillic),
+            //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", CodePointRange::Greek),
+            //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0100, 0x017F})), //extended latin-a
+            //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0180, 0x024F})), //extended latin-b
+            std::make_pair("assets/golf/fonts/NotoSansThai-Regular.ttf", std::array<std::uint32_t, 2u>({0x2010, 0x205E})),
+            std::make_pair("assets/golf/fonts/NotoSansThai-Regular.ttf", std::array<std::uint32_t, 2u>({0x0E00, 0x0E7F})),
+            std::make_pair("assets/golf/fonts/NotoSansKR-Regular.ttf", std::array<std::uint32_t, 2u>({0x3131, 0x3163})),
+            std::make_pair("assets/golf/fonts/NotoSansKR-Regular.ttf", std::array<std::uint32_t, 2u>({0xAC00, 0xD7A3})),
+            std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0x2000, 0x206F})),
+            std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0x3000, 0x30FF})),
+            std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0x31F0, 0x31FF})),
+            std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0xFF00, 0xFFEF})),
+            std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0x4e00, 0x9FAF})),
+        };
+
+        for (const auto& [path, codepoints] : FontMappings)
+        {
+            if (FileSystem::fileExists(path))
+            {
+                ctx.codepointRange = codepoints;
+                m_previewFont.appendFromFile(path, ctx);
+            }
+        }
+
+        //controller icon font
+        //ctx.codepointRange = {0x2190,0x21FF};
+        //m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
+
+        //TODO add emoji font if we allow for that input
+
+
+        //emoji fonts
+//        ctx.allowBold = false;
+//        ctx.allowFillColour = false;
+//        ctx.allowOutline = false;
+//
+//        static constexpr std::array Ranges =
+//        {
+//            CodePointRange::EmojiLower,
+//            CodePointRange::EmojiMid,
+//            CodePointRange::EmojiUpper,
+//        };
+//
+//#ifdef _WIN32
+//        const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
+//
+//        if (FileSystem::fileExists(winPath))
+//        {
+//            for (const auto& r : Ranges)
+//            {
+//                ctx.codepointRange = r;
+//                m_previewFont.appendFromFile(winPath, ctx);
+//            }
+//        }
+//        else
+//#endif
+//        {
+//            const std::string path = "assets/golf/fonts/TwemojiCOLRv0.ttf";
+//
+//            for (const auto& r : Ranges)
+//            {
+//                ctx.codepointRange = r;
+//                m_previewFont.appendFromFile(path, ctx);
+//            }
+//        }
 
 
 
+
+        m_previewText.setFillColour(Colour::Black);
         m_previewText.setFont(m_previewFont);
+        m_previewText.setAlignment(SimpleText::Alignment::Centre);
+        //m_previewText.setBold(true);
     }
 }
 
@@ -261,6 +334,22 @@ void OSK::updateVertices()
         y -= (keySize.y + Padding);
     }
 
+    static constexpr float InputHeight = 22.f;
+    verts.emplace_back(glm::vec2(0.f, BGHeight + (InputHeight * Scale)), SpecialButtonNormal);
+    verts.emplace_back(glm::vec2(0.f, BGHeight), SpecialButtonNormal);
+    verts.emplace_back(glm::vec2(WindowSize.x, BGHeight + (InputHeight * Scale)), SpecialButtonNormal);
+    verts.emplace_back(glm::vec2(WindowSize.x, BGHeight + (InputHeight * Scale)), SpecialButtonNormal);
+    verts.emplace_back(glm::vec2(0.f, BGHeight), SpecialButtonNormal);
+    verts.emplace_back(glm::vec2(WindowSize.x, BGHeight), SpecialButtonNormal);
+
+    //TODO place proper vertices for a border so we don't have overdraw
+    verts.emplace_back(glm::vec2(Padding, BGHeight + (InputHeight * Scale) - Padding), ButtonColourActive);
+    verts.emplace_back(glm::vec2(Padding, BGHeight + Padding), ButtonColourActive);
+    verts.emplace_back(glm::vec2(WindowSize.x - Padding, BGHeight + (InputHeight * Scale) - Padding), ButtonColourActive);
+    verts.emplace_back(glm::vec2(WindowSize.x - Padding, BGHeight + (InputHeight * Scale) - Padding), ButtonColourActive);
+    verts.emplace_back(glm::vec2(Padding, BGHeight + Padding), ButtonColourActive);
+    verts.emplace_back(glm::vec2(WindowSize.x- Padding, BGHeight + Padding), ButtonColourActive);
+
     m_keyboardArray.setVertexData(verts);
 
 
@@ -268,8 +357,10 @@ void OSK::updateVertices()
     //TODO how do we do text that's more than one char?
 
 
-    //TODO move this somewhere sensible
-    m_previewText.setCharacterSize(BasePreviewTextSize * static_cast<std::uint32_t>(Scale));
+    //move this somewhere sensible
+    const auto charSize = BasePreviewTextSize * static_cast<std::uint32_t>(Scale);
+    m_previewText.setCharacterSize(charSize);
+    m_previewText.setPosition({ std::floor(WindowSize.x / 2.f), std::floor(BGHeight + (charSize / 2)) });
 }
 
 bool OSK::keypress(SDL_Scancode code)
