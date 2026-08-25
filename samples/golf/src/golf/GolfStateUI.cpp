@@ -3347,7 +3347,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     const auto newPos = league.getCurrentPosition();
                     str += "\nCurrent Rank: " + std::to_string(newPos);
 
-                    static const std::array<std::string, 2u> Indicators = { " (\u2193", " (\u2191" };
+                    static const std::array<std::u8string, 2u> Indicators = { u8" (\u2193", u8" (\u2191" };
                     const auto change = newPos - pos;
                     if (change < 0)
                     {

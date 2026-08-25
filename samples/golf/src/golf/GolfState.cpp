@@ -7885,12 +7885,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         if (player.terrain == TerrainID::Bunker)
         {
-            static const std::array<std::string, 2u> str = { "Bunker \u2193", "Bunker \u2191" };
+            static const std::array<std::u8string, 2u> str = { u8"Bunker \u2193", u8"Bunker \u2191" };
             e.getComponent<cro::Text>().setString(cro::String::fromUtf8(str[lie].begin(), str[lie].end()));
         }
         else if (player.terrain == TerrainID::Rough)
         {
-            static const std::array<std::string, 2u> str = { "Rough \u2193", "Rough \u2191" };
+            static const std::array<std::u8string, 2u> str = { u8"Rough \u2193", u8"Rough \u2191" };
             e.getComponent<cro::Text>().setString(cro::String::fromUtf8(str[lie].begin(), str[lie].end()));
         }
         else

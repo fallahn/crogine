@@ -113,8 +113,8 @@ namespace
         return static_cast<std::int32_t>(static_cast<float>(price) * 0.55f);
     }
 
-    const std::string BuyStr = "Buy \u2193"; //down arrow
-    const std::string SellStr = "Sell \u2193";
+    const std::u8string BuyStr = u8"Buy \u2193"; //down arrow
+    const std::u8string SellStr = u8"Sell \u2193";
 
     struct TextFlashData final
     {
