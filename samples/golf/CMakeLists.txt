@@ -3,9 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 #Xcode 10 will default to Mojave (must be done BEFORE project())
 if (APPLE)
  SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
-
  SET(BUNDLE_NAME "Super Video Golf")
-
 endif()
 
 
@@ -16,14 +14,13 @@ if(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
 endif()
 
-#option(USE_NEWSFEED "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl" ON)
-option(USE_STEAM "Enable the steamworks SDK" OFF)
 
+option(USE_STEAM "Enable the steamworks SDK" OFF)
 option(BUILD_DEMO "Build the demo version of the game" OFF)
+
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
 SET(PROJECT_STATIC_RUNTIME FALSE)
-
 SET(USE_PARALLEL_EXECUTION TRUE CACHE BOOL "Enable parallel execution, requires compiler support")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
@@ -65,13 +62,12 @@ endif()
 #endif()
 
 
-# We're using c++20
+#We're using c++20
 SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 SET(OpenGL_GL_PREFERENCE "GLVND")
 
-#find_package(SDL2 REQUIRED)
 find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
 find_package(OpenGL REQUIRED)
 #TODO specify version 2.83
@@ -86,16 +82,17 @@ if(USE_TBB)
   find_package(TBB REQUIRED)
 endif()
 
-# If the crogine target exists then we're being built as part of the crogine project
-# so can link to it directly. If not, we must find a pre-installed version
+#If the crogine target exists then we're being built as part of the crogine project
+#so can link to it directly. If not, we must find a pre-installed version
 if(NOT TARGET crogine)
-  # We are configuring golf standalone, so must find a crogine installation
+  #We are configuring golf standalone, so must find a crogine installation
   find_package(CROGINE REQUIRED)
 endif()
 
 
 #glm wants this now
 add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
+
 
 if(USE_STEAM)
 
@@ -113,7 +110,7 @@ if(USE_STEAM)
   SET(SOCIAL_INCLUDE_DIR ${GNS_DIR}/golf_ach/include)
 
 if(APPLE)
-#apple sucks
+  #apple sucks
 else()
 
   SET(DISCORD_SDK_ROOT "${GNS_DIR}/extlibs/discord")
@@ -123,12 +120,11 @@ else()
 
   
   if(WIN32)
-#TODO if discord update their lib to work with sniper define this for linux
-add_compile_definitions(USE_DCD)
+    #TODO if discord update their lib to work with sniper define this for linux
+    add_compile_definitions(USE_DCD)
 
-
-      set(DISCORD_LIB_PATH "${DISCORD_SDK_LIB_DIR}/discord_partner_sdk.lib")
-      set(DISCORD_SHARED_LIB "${DISCORD_SDK_BIN_DIR}/discord_partner_sdk.dll")
+    set(DISCORD_LIB_PATH "${DISCORD_SDK_LIB_DIR}/discord_partner_sdk.lib")
+    set(DISCORD_SHARED_LIB "${DISCORD_SDK_BIN_DIR}/discord_partner_sdk.dll")
   else() # Linux
       set(DISCORD_LIB_PATH "${DISCORD_SDK_LIB_DIR}/libdiscord_partner_sdk.so")
       set(DISCORD_SHARED_LIB "${DISCORD_SDK_LIB_DIR}/libdiscord_partner_sdk.so")
@@ -155,7 +151,6 @@ endif()
 
 include_directories(
   ${CROGINE_INCLUDE_DIR}
-  #${SDL2_INCLUDE_DIR}
   SDL3::Headers
   ${OPENGL_INCLUDE_DIR}
   ${BULLET_INCLUDE_DIRS}
@@ -182,13 +177,11 @@ include(${PROJECT_DIR}/sockets/CMakeLists.txt)
 include(${PROJECT_DIR}/sportsball/CMakeLists.txt)
 include(${PROJECT_DIR}/sqlite/CMakeLists.txt)
 include(${SOCIAL_DIR}/CMakeLists.txt)
+include(${PROJECT_DIR}/rss/CMakeLists.txt)
 
-SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SCRUB_SRC} ${SOCKETS_SRC} ${SBALL_SRC} ${SQLITE_SRC})
-#Steam version actually uses this too now...
-#if(USE_NEWSFEED)
-  include(${PROJECT_DIR}/rss/CMakeLists.txt)
-  SET(GOLF_SRC ${GOLF_SRC} ${RSS_SRC})
-#endif()
+
+SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SCRUB_SRC} ${SOCKETS_SRC} ${SBALL_SRC} ${SQLITE_SRC} ${RSS_SRC})
+
 
 if(USE_STEAM)
   #include source of workshop, libgns
@@ -202,23 +195,23 @@ add_executable(${PROJECT_NAME}
                 ${PROJECT_SRC}
                 ${GOLF_SRC})
 
-# If on apple, create a nice bundle
+#If on apple, create a nice bundle
 if(APPLE)
 
-  # use, i.e. don't skip the full RPATH for the build tree
+  #use, i.e. don't skip the full RPATH for the build tree
   SET(CMAKE_SKIP_BUILD_RPATH FALSE)
 
-  # when building, don't use the install RPATH already
-  # (but later on when installing)
+  #when building, don't use the install RPATH already
+  #(but later on when installing)
   SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
 
   SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
-  # add the automatically determined parts of the RPATH
-  # which point to directories outside the build tree to the install RPATH
+  #add the automatically determined parts of the RPATH
+  #which point to directories outside the build tree to the install RPATH
   SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-  # the RPATH to be used when installing, but only if it's not a system directory
+  #the RPATH to be used when installing, but only if it's not a system directory
   LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
   IF("${isSystemDir}" STREQUAL "-1")
      SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
@@ -226,14 +219,14 @@ if(APPLE)
 
   set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
 
-  # Add the assets if the folder exists
+  #Add the assets if the folder exists
   set(ASSETS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/assets)
   if (EXISTS ${ASSETS_PATH})
     target_sources(${PROJECT_NAME} PRIVATE ${ASSETS_PATH})
     set_source_files_properties(${ASSETS_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
   endif()
 
-  # Add the icon
+  #Add the icon
   set(ICON_PATH ${CMAKE_CURRENT_SOURCE_DIR}/macOS/icon.icns)
   target_sources(${PROJECT_NAME} PRIVATE ${ICON_PATH})
   set_source_files_properties(${ICON_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
@@ -245,7 +238,6 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:CRO_DEBUG_>
 
 target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}
-  #${SDL2_LIBRARY}
   SDL3::SDL3
   ${BULLET_LIBRARIES}
   ${SQLite3_LIBRARIES}  
@@ -291,11 +283,11 @@ endif()
 
 
 if(APPLE)
-  # Install the app bundle to the root install folder
+  #Install the app bundle to the root install folder
   install(TARGETS ${PROJECT_NAME} DESTINATION .)
 
-  # Use fixup_bundle to ensure all libs are copied into the bundle
-  # Then sign with ad-hoc signing
+  #Use fixup_bundle to ensure all libs are copied into the bundle
+  #Then sign with ad-hoc signing
   install(CODE " include(BundleUtilities)
     fixup_bundle(${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app \"\" 
     \"/Library/Frameworks;$<TARGET_FILE_DIR:crogine>;${CMAKE_INSTALL_PREFIX}/lib;${GNS_DIR}/extlibs/steam/bin\")
