@@ -265,7 +265,7 @@ namespace cro
         If the joystick ID is not valid this function returns -1. Use it to find the ControllerID
         of a joystick event such as SDL_EVENT_GAMEPAD_BUTTON_DOWN
         \begincode
-        auto id = controllerID(evt.cbutton.which);
+        auto id = controllerID(evt.gbutton.which);
         \endcode
         \param joystickID The ID from which to retrieve the controller ID
         \returns 0-3 on success or -1 if the joystick is not a GameController

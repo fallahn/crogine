@@ -2324,7 +2324,7 @@ void ProfileStateV2::createEquipmentItems()
     //for some reason (I forget) the ballInfo size
     //is different to the number of model defs
     std::int32_t c = 0;
-    for (auto& ballDef : m_profileData.ballDefs)
+    for (const auto& _ : m_profileData.ballDefs)
     {
         if (m_sharedData.ballInfo[c++].locked)
         {

@@ -404,7 +404,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
 
     //high density grass
-    const auto grassID = resources.materials.add(resources.shaders.get(ShaderID::Grass));
+    //const auto grassID = resources.materials.add(resources.shaders.get(ShaderID::Grass));
 
     //modified billboard shader - shader loading is done in GolfState::loadAssets()
     const auto billboardMatID = resources.materials.add(resources.shaders.get(ShaderID::Billboard));

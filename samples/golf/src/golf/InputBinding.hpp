@@ -89,7 +89,9 @@ struct InputBinding final
         SwitchView = EmoteMenu
     };
 
-    std::array<std::int32_t, Count> keys =
+    //TODO these should use scancodes so that
+    //other keyboard layouts display the correct keys
+    std::array<SDL_Keycode, Count> keys =
     {
         SDLK_SPACE,
         SDLK_E,
@@ -118,6 +120,7 @@ struct InputBinding final
 };
 
 //these are the top row keys which can't be rebound
+//TODO these should be scancodes
 struct FixedKey final
 {
     enum
