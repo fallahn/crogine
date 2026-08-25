@@ -579,10 +579,10 @@ void SharedMinigameData::initFonts()
 
         ctx.codepointRange = { 0x2196, 0xE011 };
 
-        titleFont.appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
-        titleFont2.appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
-        bodyFont.appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
-        bodyFont2.appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
+        titleFont.appendFromFile("assets/fonts/promptfont.ttf", ctx);
+        titleFont2.appendFromFile("assets/fonts/promptfont.ttf", ctx);
+        bodyFont.appendFromFile("assets/fonts/promptfont.ttf", ctx);
+        bodyFont2.appendFromFile("assets/fonts/promptfont.ttf", ctx);
 
         //and emoji fonts
         static constexpr std::array Ranges =

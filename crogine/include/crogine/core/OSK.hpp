@@ -89,10 +89,10 @@ namespace cro
 
 
 
-        SimpleVertexArray m_keyboardArray;
-        SimpleVertexArray m_textArray; //icons
-        SimpleText m_previewText;
-        Font m_previewFont;
+        SimpleVertexArray m_keyboardArray; //button background
+        SimpleVertexArray m_keyTextArray; //key text
+        SimpleText m_previewText; //preview of the input buffer
+        Font m_textFont; //used for key text and input preview
 
         void close(bool isSubmitted);
         void updateVertices();

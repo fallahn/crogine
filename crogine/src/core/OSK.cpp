@@ -36,14 +36,15 @@ source distribution.
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/ecs/systems/UIElementSystem.hpp>
-
 #include <crogine/graphics/Colour.hpp>
+
+#include "../detail/TextConstruction.hpp"
 
 using namespace cro;
 
 namespace
 {
-    constexpr float VerticalKeyboardProportion = 3.f; //WindowSize is divided by this
+    constexpr float VerticalKeyboardProportion = 3.f; //WindowSize is divided by this to create height of keyboard
 
     constexpr Colour BGColour = Colour(std::uint8_t(35), 38, 46);
     constexpr Colour ButtonColourNormal = Colour(std::uint8_t(14), 20, 27);
@@ -92,8 +93,49 @@ namespace
     //    {KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo()}
     //};
 
+    //xbox
+    static constexpr inline std::uint32_t ButtonLT = 0x2196;
+    static constexpr inline std::uint32_t ButtonRT = 0x2197;
+    static constexpr inline std::uint32_t ButtonLB = 0x2198;
+    static constexpr inline std::uint32_t ButtonRB = 0x2199;
+    static constexpr inline std::uint32_t ButtonX = 0x21D0;
+    static constexpr inline std::uint32_t ButtonY = 0x21D1;
+    static constexpr inline std::uint32_t ButtonB = 0x21D2;
+    static constexpr inline std::uint32_t ButtonA = 0x21D3;
+    static constexpr inline std::uint32_t ButtonStart = 0x21FB;
+
+
+    //ps
+    static constexpr inline std::uint32_t ButtonL1 = 0x21B0;
+    static constexpr inline std::uint32_t ButtonR1 = 0x21B1;
+    static constexpr inline std::uint32_t ButtonL2 = 0x21B2;
+    static constexpr inline std::uint32_t ButtonR2 = 0x21B3;
+    static constexpr inline std::uint32_t ButtonSquare = 0x21E0;
+    static constexpr inline std::uint32_t ButtonTriangle = 0x21E1;
+    static constexpr inline std::uint32_t ButtonCircle = 0x21E2;
+    static constexpr inline std::uint32_t ButtonCross = 0x21E3;
+    static constexpr inline std::uint32_t ButtonOption = 0x21E8;
+
+
+    static constexpr inline std::uint32_t LeftStick = 0x21C4;
+    static constexpr inline std::uint32_t RightStick = 0x21C6;
+
+
+
+    //keyboard
+    constexpr std::uint32_t IconLeft = 0x23F4;
+    constexpr std::uint32_t IconRight = 0x23F5;
+    constexpr std::uint32_t IconUp = 0x23F6;
+    constexpr std::uint32_t IconDown = 0x23F7;
+    constexpr std::uint32_t IconShift = 0x2429;
+    constexpr std::uint32_t IconTab = 0x242B; //TODO this won't actually do anything - maybe emoji switch?
+    constexpr std::uint32_t IconCaps = 0x242C;
+    constexpr std::uint32_t IconBackspace = 0x242D;
+    constexpr std::uint32_t IconReturn = 0x242E;
+
 
     constexpr std::uint32_t BasePreviewTextSize = 12; //gets scaled based on screen size
+    constexpr std::uint32_t BaseKeyTextSize = 8; //as above
 }
 
 //public
@@ -107,9 +149,9 @@ OSK::OSK()
     m_isActive          (false)
 {
     m_keyboardArray.setPrimitiveType(GL_TRIANGLES);
-    m_textArray.setPrimitiveType(GL_TRIANGLES);
+    m_keyTextArray.setPrimitiveType(GL_TRIANGLES);
 
-    if (m_previewFont.loadFromFile("assets/golf/fonts/NotoSans-Regular.ttf"))
+    if (m_textFont.loadFromFile("assets/golf/fonts/NotoSans-Regular.ttf"))
     {
         //append other fonts such as CJK - TODO these should really be in the assets root folder
         FontAppendmentContext ctx;
@@ -135,13 +177,15 @@ OSK::OSK()
             if (FileSystem::fileExists(path))
             {
                 ctx.codepointRange = codepoints;
-                m_previewFont.appendFromFile(path, ctx);
+                m_textFont.appendFromFile(path, ctx);
             }
         }
 
         //controller icon font
-        //ctx.codepointRange = {0x2190,0x21FF};
-        //m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
+        ctx.codepointRange = {0x2190,0x21FF}; //controller input
+        m_textFont.appendFromFile("assets/fonts/promptfont.ttf", ctx);
+        ctx.codepointRange = {0x23F4,0x242E}; //keyboard icons, shift etc
+        m_textFont.appendFromFile("assets/fonts/promptfont.ttf", ctx);
 
         //TODO add emoji font if we allow for that input
 
@@ -166,7 +210,7 @@ OSK::OSK()
 //            for (const auto& r : Ranges)
 //            {
 //                ctx.codepointRange = r;
-//                m_previewFont.appendFromFile(winPath, ctx);
+//                m_textFont.appendFromFile(winPath, ctx);
 //            }
 //        }
 //        else
@@ -177,17 +221,27 @@ OSK::OSK()
 //            for (const auto& r : Ranges)
 //            {
 //                ctx.codepointRange = r;
-//                m_previewFont.appendFromFile(path, ctx);
+//                m_textFont.appendFromFile(path, ctx);
 //            }
 //        }
 
 
+        //prime the font with some texture pages to prevent GL errors
+        //when first assigned to the key text array
+        for (auto i = 1; i < static_cast<std::int32_t>(UIElementSystem::MaxViewScale) + 1; ++i) //each possible window scale
+        {
+            m_textFont.getGlyph(97, BasePreviewTextSize * i);
+            m_textFont.getGlyph(97, BaseKeyTextSize * i);
+        }
 
 
         m_previewText.setFillColour(Colour::Black);
-        m_previewText.setFont(m_previewFont);
+        m_previewText.setFont(m_textFont);
         m_previewText.setAlignment(SimpleText::Alignment::Centre);
-        //m_previewText.setBold(true);
+        
+
+        //TODO we need to register this class to the font callback so that it can
+        //tell the text to rebuild if necessary. Probably. It gets rebuilt a lot...
     }
 }
 
@@ -284,7 +338,7 @@ void OSK::updateVertices()
         {
             const auto& buttonInf = ButtonInfo[j][i];
             const auto buttonWidth = std::round((keyWidth * buttonInf.size) - Padding);
-            const auto k = SDL_GetKeyFromScancode(buttonInf.scancode, m_keymod, false);
+            auto k = SDL_GetKeyFromScancode(buttonInf.scancode, m_keymod, false);
             
             if (buttonInf.scancode != SDL_SCANCODE_UNKNOWN)
             {
@@ -307,6 +361,29 @@ void OSK::updateVertices()
                     {
                         c = SpecialButtonNormal;
                     }
+                    
+                    switch (buttonInf.scancode)
+                    {
+                    default: 
+                        k = 0;
+                        break;
+                    case SDL_SCANCODE_TAB:
+                        k = IconTab;
+                        break;
+                    case SDL_SCANCODE_CAPSLOCK:
+                        k = IconCaps;
+                        break;
+                    case SDL_SCANCODE_LSHIFT:
+                    case SDL_SCANCODE_RSHIFT:
+                        k = IconShift;
+                        break;
+                    case SDL_SCANCODE_RETURN:
+                        k = IconReturn;
+                        break;
+                    case SDL_SCANCODE_BACKSPACE:
+                        k = IconBackspace;
+                        break;
+                    }
                 }
 
                 //clamps the width so rounding error at makes
@@ -322,14 +399,16 @@ void OSK::updateVertices()
                 
                 Hitboxes[j][i] = FloatRect(x, y, buttonWidth, keySize.y);
 
+                centres.emplace_back().pos = { std::round(x + (buttonWidth / 2.f)), std::round(y + (keySize.y / 2.f)) };
+                centres.back().key = k;
+
                 x += (buttonWidth + Padding);
             }
             else
             {
                 Hitboxes[j][i] = FloatRect(0.f, 0.f, 0.f, 0.f);
+                centres.emplace_back().key = 0;
             }
-            centres.emplace_back().pos = { std::round(x + (buttonWidth / 2.f)), std::round(y + (keySize.y / 2.f)) };
-            centres.back().key = k;
         }
         y -= (keySize.y + Padding);
     }
@@ -353,9 +432,32 @@ void OSK::updateVertices()
     m_keyboardArray.setVertexData(verts);
 
 
-    //TODO calc text size and fetch glyphs
+    //texture may have updated so always reassign
+    const auto keyTextSize = BaseKeyTextSize * static_cast<std::uint32_t>(Scale);
+    m_keyTextArray.setTexture(m_textFont.getTexture(keyTextSize));
+
+    verts.clear();
+
+    //calc text size and fetch glyphs
+    for (auto j = 0u; j  <  ButtonRows; ++j)
+    {
+        for (auto i = 0u; i < ButtonCols; ++i)
+        {
+            const auto& [pos, key] = centrePos[j][i];
+            if (key != 0)
+            {
+                const auto glyph = m_textFont.getGlyph(key, keyTextSize);
+                glyph.textureBounds;
+
+                const auto c = (j == m_rowIndex && i == m_colIndex) ? Colour::Black : Colour::White;
+                Detail::Text::addQuad(verts, pos - glm::vec2(glyph.bounds.width / 2.f, glyph.bounds.height / 2.f), c, glyph, m_textFont.getTexture(keyTextSize).getSize());
+            }
+        }
+    }
+
     //TODO how do we do text that's more than one char?
 
+    m_keyTextArray.setVertexData(verts);
 
     //move this somewhere sensible
     const auto charSize = BasePreviewTextSize * static_cast<std::uint32_t>(Scale);
@@ -711,7 +813,7 @@ void OSK::render()
     if (m_isActive)
     {
         m_keyboardArray.draw();
-        m_textArray.draw();
+        m_keyTextArray.draw();
 
         m_previewText.draw();
     }
