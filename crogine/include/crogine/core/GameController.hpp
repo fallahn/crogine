@@ -258,7 +258,7 @@ namespace cro
         \param controllerID The ID of the controller, usually  0 - 3
         \returns deviceID The ID of the device which corresponds to the given controller
         */
-        static std::int32_t deviceID(std::int32_t controllerID);
+        static std::uint32_t deviceID(std::int32_t controllerID);
 
         /*!
         \brief Returns the ControllerID (0-3) from the given joystick index, if it is connected.

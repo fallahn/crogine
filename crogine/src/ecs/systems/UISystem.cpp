@@ -105,7 +105,7 @@ void UISystem::handleEvent(const Event& evt)
         //check if this is the active controller and update
         //if necessary to a connected controller
         if (m_activeControllerID != ActiveControllerAll &&
-            evt.cdevice.which == cro::GameController::deviceID(m_activeControllerID))
+            evt.gdevice.which == cro::GameController::deviceID(m_activeControllerID))
         {
             //controller IDs automatically shift down
             //so drop to the next lowest available

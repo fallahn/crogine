@@ -99,12 +99,12 @@ namespace
 //public
 OSK::OSK()
     : m_bufferIndex     (0),
-    m_isActive          (false),
     m_rowIndex          (0),
     m_colIndex          (0),
     m_keymod            (0),
     m_controllerMask    (0),
-    m_prevControllerMask(0)
+    m_prevControllerMask(0),
+    m_isActive          (false)
 {
     m_keyboardArray.setPrimitiveType(GL_TRIANGLES);
     m_textArray.setPrimitiveType(GL_TRIANGLES);

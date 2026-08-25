@@ -77,15 +77,7 @@ Cursor::Cursor(const std::string& path, std::int32_t x, std::int32_t y)
             m_imageData.resize(length);
             std::memcpy(m_imageData.data(), data, length);
 
-            static constexpr std::uint32_t rMask = 0x000000ff;
-            static constexpr std::uint32_t gMask = 0x0000ff00;
-            static constexpr std::uint32_t bMask = 0x00ff0000;
-            const std::uint32_t aMask = format == ImageFormat::RGB ? 0 : 0xff000000;
-
-            const std::int32_t depth = 8 * channels;
             const std::int32_t pitch = size.x * channels;
-
-            //m_surface = SDL_CreateRGBSurfaceFrom(m_imageData.data(), size.x, size.y, depth, pitch, rMask, gMask, bMask, aMask);
             const auto pixelFormat = format == ImageFormat::RGB ? SDL_PIXELFORMAT_RGB24 : SDL_PIXELFORMAT_RGBA32;
             m_surface = SDL_CreateSurfaceFrom(size.x, size.y, pixelFormat, m_imageData.data(), pitch);
 

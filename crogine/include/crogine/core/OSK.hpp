@@ -66,7 +66,7 @@ namespace cro
 
     private:
 
-        static constexpr std::uint32_t MaxChars = 8190;
+        static constexpr std::uint32_t MaxChars = 2048;
         std::array<std::uint32_t, MaxChars> m_textBuffer = {}; //unicode codepoints
         std::size_t m_bufferIndex;
 

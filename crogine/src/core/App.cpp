@@ -1004,7 +1004,7 @@ void App::handleEvents()
             break;
         case SDL_EVENT_GAMEPAD_ADDED:
         {
-            auto id = evt.cdevice.which;
+            auto id = evt.gdevice.which;
             if (SDL_IsGamepad(id))
             {
                 ControllerInfo ci;
@@ -1034,7 +1034,7 @@ void App::handleEvents()
             break;
         case SDL_EVENT_GAMEPAD_REMOVED:
         {
-            auto id = evt.cdevice.which;
+            auto id = evt.gdevice.which;
 
             //as the device is disconnected we can't query SDL and have to find the index manually
             std::int32_t controllerIndex = -1;// SDL_GetGamepadPlayerIndex(SDL_GetGamepadFromID(id));

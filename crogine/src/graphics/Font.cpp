@@ -254,7 +254,7 @@ bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx
 
 Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold, float outlineThickness) const
 {
-    const auto oldSize = m_pages.size();
+    //const auto oldSize = m_pages.size();
 
     auto& fontData = getFontData(codepoint);
     auto& currentGlyphs = m_pages[charSize].glyphs;

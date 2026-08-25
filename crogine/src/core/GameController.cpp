@@ -39,12 +39,12 @@ GameController::DeadZone<GameController::TriggerDeadZoneV> GameController::Trigg
 
 std::int32_t GameController::m_lastControllerIndex = 0;
 
-std::int32_t GameController::deviceID(std::int32_t controllerID)
+std::uint32_t GameController::deviceID(std::int32_t controllerID)
 {
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerID < MaxControllers, "");
 
-    return controllerID < 0 ? -1 : App::m_instance->m_controllers[controllerID].joystickID;
+    return controllerID < 0 ? 0 : App::m_instance->m_controllers[controllerID].joystickID;
 }
 
 std::int32_t GameController::controllerID(std::int32_t joystickID)

@@ -231,7 +231,7 @@ namespace cro
 
             SDL_Gamepad* controller = nullptr;
             SDL_Haptic* haptic = nullptr;
-            std::int32_t joystickID = -1; //event IDs don't actually match the controllers
+            SDL_JoystickID joystickID = -1; //event IDs don't actually match the controllers
 
             bool psLayout = false; //we take a wild guess as to whether this is a PS controller based on name string
             cro::String printableName;
