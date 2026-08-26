@@ -331,6 +331,12 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         case SDLK_LALT:
             showHelp();
             break;
+        case SDLK_KP_3:
+            cro::GameController::moveControllerIndexDown(2);
+            break;
+        case SDLK_KP_2:
+            cro::GameController::moveControllerIndexDown(1);
+            break;
         }
 
     }

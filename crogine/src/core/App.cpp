@@ -245,7 +245,6 @@ App::App(std::uint32_t styleFlags)
     : m_windowStyleFlags(styleFlags),
     m_frameClock        (nullptr),
     m_running           (false),
-    m_controllerCount   (0),
     m_drawDebugWindows  (true),
     m_orgString         ("Trederia"),
     m_appString         ("CrogineApp")
@@ -285,18 +284,17 @@ App::App(std::uint32_t styleFlags)
     {
         m_instance = this;
 
+        //this didn't do what I thought it did as Deck uses Steam Input, always
+        //plus SDL3 ought to cover this now anyway (including Steam Controller)
         //maps the steam deck rear buttons to the controller paddles
         //auto mapResult = SDL_AddGamepadMapping("03000000de2800000512000011010000,Steam Deck,platform:Linux,crc:17f6,a:b3,b:b4,x:b5,y:b6,back:b11,guide:b13,start:b12,leftstick:b14,rightstick:b15,leftshoulder:b7,rightshoulder:b8,dpup:b16,dpdown:b17,dpleft:b18,dpright:b19,misc1:b2,paddle1:b21,paddle2:b20,paddle3:b23,paddle4:b22,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:a9,righttrigger:a8");
-        auto mapResult = SDL_AddGamepadMapping("03000000de2800000512000011010000,Steam Deck,a:b3,b:b4,back:b11,dpdown:b17,dpleft:b18,dpright:b19,dpup:b16,guide:b13,leftshoulder:b7,leftstick:b14,lefttrigger:a9,leftx:a0,lefty:a1,misc1:b2,paddle1:b21,paddle2:b20,paddle3:b23,paddle4:b22,rightshoulder:b8,rightstick:b15,righttrigger:a8,rightx:a2,righty:a3,start:b12,x:b5,y:b6,platform:Linux");
+        //auto mapResult = SDL_AddGamepadMapping("03000000de2800000512000011010000,Steam Deck,a:b3,b:b4,back:b11,dpdown:b17,dpleft:b18,dpright:b19,dpup:b16,guide:b13,leftshoulder:b7,leftstick:b14,lefttrigger:a9,leftx:a0,lefty:a1,misc1:b2,paddle1:b21,paddle2:b20,paddle3:b23,paddle4:b22,rightshoulder:b8,rightstick:b15,righttrigger:a8,rightx:a2,righty:a3,start:b12,x:b5,y:b6,platform:Linux");
         //auto mapResult = SDL_AddGamepadMapping("03000000de2800000512000010010000,Steam Deck,a:b3,b:b4,back:b11,dpdown:b17,dpleft:b18,dpright:b19,dpup:b16,guide:b13,leftshoulder:b7,leftstick:b14,lefttrigger:a9,leftx:a0,lefty:a1,rightshoulder:b8,rightstick:b15,righttrigger:a8,rightx:a2,righty:a3,start:b12,x:b5,y:b6,platform:Linux");
-        if (mapResult == -1)
-        {
-            LogE << "SDL: Controller mapping failed - " << SDL_GetError() << std::endl;
-        }
+        //if (mapResult == -1)
+        //{
+        //    LogE << "SDL: Controller mapping failed - " << SDL_GetError() << std::endl;
+        //}
 
-        std::fill(m_controllers.begin(), m_controllers.end(), ControllerInfo());
-        //controllers are automatically connected as the connect events are raised
-        //on start up
 
         char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
         m_prefPath = std::string(pp);
@@ -330,18 +328,9 @@ App::~App()
 {
     AudioRenderer::shutdown();
     
-    for (auto js : m_joysticks)
+    for (const auto [_, info] : m_gamepads)
     {
-        SDL_CloseJoystick(js.second);
-    }
-
-    for (auto info : m_controllers)
-    {
-        if (info.haptic)
-        {
-            SDL_CloseHaptic(info.haptic);
-        }
-        SDL_CloseGamepad(info.controller);
+        SDL_CloseGamepad(info.gamepad);
     }
     
     //SDL cleanup
@@ -819,34 +808,6 @@ void App::handleEvents()
             continue;
         }
 
-        //update the count first because handling
-        //the event below might query getControllerCount()
-
-        //HMMM so connecting or disconnecting bluetooth devices (eg PS5)
-        //raises both disconnect AND reconnect events, and multiple numbers
-        //of those events, which severely puts this out.
-        //we probably should have been using SDL_NumJoysticks() all along
-        //howvever this can report *more* than there are connected if a
-        //device counts as a joystick but not a game controller *sigh*
-        if (evt.type == SDL_EVENT_GAMEPAD_ADDED)
-        {
-            //m_controllerCount++;
-            SDL_GetJoysticks(&m_controllerCount);
-
-            //LogI << "Controller added, count now " << m_controllerCount << std::endl;
-        }
-        else if (evt.type == SDL_EVENT_GAMEPAD_REMOVED)
-        {
-            //m_controllerCount--;
-            SDL_GetJoysticks(&m_controllerCount);
-
-            //LogI << "Controller removed, count now " << m_controllerCount << std::endl;
-        }
-
-        //HOWEVER
-        //handle events first in case user events
-        //want to read disconnected controllers
-        //before the following cases handle removal
         handleEvent(evt);
 
         switch (evt.type)
@@ -1004,74 +965,38 @@ void App::handleEvents()
             break;
         case SDL_EVENT_GAMEPAD_ADDED:
         {
-            auto id = evt.gdevice.which;
-            if (SDL_IsGamepad(id))
+            GamepadInfo info;
+            if (info.gamepad = SDL_OpenGamepad(evt.gdevice.which);
+                info.gamepad != nullptr)
             {
-                ControllerInfo ci;
-                ci.controller = SDL_OpenGamepad(id);
-                if (ci.controller)
-                {
-                    //the actual index is different to the id of the event
-                    auto* j = SDL_GetGamepadJoystick(ci.controller);
-                    ci.joystickID = SDL_GetJoystickID(j);                    
-                    ci.psLayout = Detail::isPSLayout(ci.controller);
-                    
-                    std::string n = SDL_GetGamepadName(ci.controller);
-                    ci.printableName = cro::String::fromUtf8(n.begin(), n.end());
+                //stash this as part of the info to save repeatedly processing it
+                std::string n = SDL_GetGamepadName(info.gamepad);
+                info.printableName = cro::String::fromUtf8(n.begin(), n.end());
 
-                    auto idx = SDL_GetGamepadPlayerIndex(ci.controller);
-                    if (idx != -1)
-                    {
-                        m_controllers[idx] = ci;
-                    }
-                }
-            }
-            else
-            {
-                m_joysticks.insert(std::make_pair(id, SDL_OpenJoystick(id)));
+                m_gamepads.insert(std::make_pair(evt.gdevice.which, info));
+                //DLogI("Added gamepad with ID {}", evt.gdevice.which);
+
+                SDL_SetGamepadPlayerIndex(info.gamepad, static_cast<std::int32_t>(m_sortedGamepads.size()));
+                m_sortedGamepads.push_back(info.gamepad);
+                refreshGamepads(nullptr);
             }
         }
             break;
         case SDL_EVENT_GAMEPAD_REMOVED:
         {
-            auto id = evt.gdevice.which;
-
-            //as the device is disconnected we can't query SDL and have to find the index manually
-            std::int32_t controllerIndex = -1;// SDL_GetGamepadPlayerIndex(SDL_GetGamepadFromID(id));
-            for (auto i = 0; i < GameController::MaxControllers; ++i)
+            if (m_gamepads.count(evt.gdevice.which) != 0)
             {
-                if (m_controllers[i].joystickID == id)
-                {
-                    controllerIndex = i;
-                    break;
-                }
+                refreshGamepads(m_gamepads[evt.gdevice.which].gamepad);
+                SDL_CloseGamepad(m_gamepads[evt.gdevice.which].gamepad);
+                m_gamepads.erase(evt.gdevice.which);
+                //DLogI("Removed gamepad with ID {}", evt.gdevice.which);
             }
-
-            if (controllerIndex > -1 &&
-                m_controllers[controllerIndex].controller)
+#ifdef CRO_DEBUG_
+            else
             {
-                if (m_controllers[controllerIndex].haptic)
-                {
-                    SDL_CloseHaptic(m_controllers[controllerIndex].haptic);
-                }
-                
-                SDL_CloseGamepad(m_controllers[controllerIndex].controller);
-                //m_controllers[controllerIndex] = {};
-
-                m_controllers[controllerIndex] = m_controllers[m_controllerCount];
-                m_controllers[m_controllerCount] = {};
-
-                if (m_controllers[controllerIndex].controller)
-                {
-                    SDL_SetGamepadPlayerIndex(m_controllers[controllerIndex].controller, controllerIndex);
-                }
+                LogW << "Removed event for gamepad " << evt.gdevice.which << " was raised, but no such controller was found.";
             }
-
-            if (m_joysticks.count(id) > 0)
-            {
-                SDL_CloseJoystick(m_joysticks[id]);
-                m_joysticks.erase(id);
-            }
+#endif
         }
             break;
         }
@@ -1099,6 +1024,29 @@ void App::handleMessages()
         }
 
         handleMessage(msg);
+    }
+}
+
+void App::refreshGamepads(const SDL_Gamepad* toRemove)
+{
+    if (toRemove)
+    {
+        m_sortedGamepads.erase(std::remove_if(m_sortedGamepads.begin(), m_sortedGamepads.end(),
+            [toRemove](const SDL_Gamepad* gp)
+            {
+                return gp == toRemove;
+            }), m_sortedGamepads.end());
+    }
+
+    std::sort(m_sortedGamepads.begin(), m_sortedGamepads.end(),
+        [](SDL_Gamepad* a, SDL_Gamepad* b)
+        {
+            return SDL_GetGamepadPlayerIndex(a) < SDL_GetGamepadPlayerIndex(b);
+        });
+
+    for (auto i = 0; i < static_cast<std::int32_t>(m_sortedGamepads.size()); ++i)
+    {
+        SDL_SetGamepadPlayerIndex(m_sortedGamepads[i], i);
     }
 }
 

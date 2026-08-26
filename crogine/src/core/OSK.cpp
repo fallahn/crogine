@@ -432,10 +432,7 @@ void OSK::updateVertices()
     m_keyboardArray.setVertexData(verts);
 
 
-    //texture may have updated so always reassign
     const auto keyTextSize = BaseKeyTextSize * static_cast<std::uint32_t>(Scale);
-    m_keyTextArray.setTexture(m_textFont.getTexture(keyTextSize));
-
     verts.clear();
 
     //calc text size and fetch glyphs
@@ -454,6 +451,9 @@ void OSK::updateVertices()
             }
         }
     }
+
+    //texture may have updated so always reassign
+    m_keyTextArray.setTexture(m_textFont.getTexture(keyTextSize));
 
     //TODO how do we do text that's more than one char?
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -246,7 +246,7 @@ namespace cro
         \brief Returns the event ID associated with the controller at the given index
         Events such as SDL_EVENT_GAMEPAD_BUTTON_DOWN do not contain the ControllerID in the
         button.which field, rather the underlying ID of the device. This function returns
-        that ID currently mapped to the given controller index (which may be -1 if the
+        that ID currently mapped to the given controller index (which may be 0 if the
         controller is currently disconnected) and can be compared the the event data
         to see which controller raise it.
         \begincode
@@ -258,7 +258,7 @@ namespace cro
         \param controllerID The ID of the controller, usually  0 - 3
         \returns deviceID The ID of the device which corresponds to the given controller
         */
-        static std::uint32_t deviceID(std::int32_t controllerID);
+        static SDL_JoystickID deviceID(std::int32_t controllerID);
 
         /*!
         \brief Returns the ControllerID (0-3) from the given joystick index, if it is connected.
@@ -270,22 +270,26 @@ namespace cro
         \param joystickID The ID from which to retrieve the controller ID
         \returns 0-3 on success or -1 if the joystick is not a GameController
         */
-        static std::int32_t controllerID(std::int32_t joystickID);
+        static std::int32_t controllerID(SDL_JoystickID joystickID);
 
         /*!
         \brief Moves the controller index down, if not already at zero,
         swapping indices with the controller previously in its position
         \param currentIndex Index of the controller to move
+        \returns The new index of the controller, which may be the same
+        as the original index if the current position is 0
         */
-        static void moveControllerIndexDown(std::int32_t currentIndex);
+        static std::int32_t moveControllerIndexDown(std::int32_t currentIndex);
 
         /*!
         \brief Moves the controller index up, if not already at the maximum
         available index. The index is swapped with the one of that which already
         occupies the target index.
         \param currentIndex The index of the controller to move up.
+        \returns The new index of the controller, which may be the same
+        as the original index if the current position is at the maximum
         */
-        static void moveControllerIndexUp(std::int32_t currentIndex);
+        static std::int32_t moveControllerIndexUp(std::int32_t currentIndex);
 
         /*!
         \brief Returns the current value of the requested axis on the requested
@@ -363,7 +367,6 @@ namespace cro
         \param strengthLow Strength of the low frequency motor from 0 - 65335
         \param strengthHigh Strength of the high frequency motor from 0 - 65335
         \param duration The duration in milliseconds to rumble.
-        Currently not working correctly in SDL 2.0.16, see https://github.com/libsdl-org/SDL/issues/4435
         */
         static void rumbleStart(std::int32_t controllerIndex, std::uint16_t strengthLow, std::uint16_t strengthHigh, std::uint32_t duration);
 
@@ -431,7 +434,5 @@ namespace cro
     private:
         friend class App;
         static std::int32_t m_lastControllerIndex; //tracks which controller last had input
-
-        static void swapControllers(std::int32_t currentIndex, std::int32_t dstIndex);
     };
 }

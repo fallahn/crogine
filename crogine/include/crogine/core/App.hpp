@@ -223,24 +223,15 @@ namespace cro
 
         static App* m_instance;
 
-        struct ControllerInfo final
+        struct GamepadInfo final
         {
-            ControllerInfo() = default;
-            ControllerInfo(SDL_Gamepad* gc)
-                : controller(gc) { psLayout = Detail::isPSLayout(gc); }
-
-            SDL_Gamepad* controller = nullptr;
-            SDL_Haptic* haptic = nullptr;
-            SDL_JoystickID joystickID = -1; //event IDs don't actually match the controllers
-
-            bool psLayout = false; //we take a wild guess as to whether this is a PS controller based on name string
-            cro::String printableName;
+            String printableName;
+            SDL_Gamepad* gamepad = nullptr;
         };
+        std::unordered_map<SDL_JoystickID, GamepadInfo> m_gamepads;
+        std::vector<SDL_Gamepad*> m_sortedGamepads; //sorted by player index
+        void refreshGamepads(const SDL_Gamepad* gamepadToRemove); //might be null if there's nothing to remove
 
-
-        std::array<ControllerInfo, GameController::MaxControllers> m_controllers = {};
-        std::map<std::int32_t, SDL_Joystick*> m_joysticks;
-        std::int32_t m_controllerCount;
         friend class GameController;
 
         std::vector<std::pair<std::function<void()>, const GuiClient*>> m_debugWindows;
