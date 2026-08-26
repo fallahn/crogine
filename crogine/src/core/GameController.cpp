@@ -46,7 +46,6 @@ SDL_JoystickID GameController::deviceID(std::int32_t controllerID)
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerID < MaxControllers, "");
     return VALID_INDEX(controllerID) ? SDL_GetGamepadID(App::m_instance->m_sortedGamepads[controllerID]) : 0;
-    //return controllerID < 0 ? 0 : App::m_instance->m_controllers[controllerID].joystickID;
 }
 
 std::int32_t GameController::controllerID(SDL_JoystickID joystickID)
@@ -135,7 +134,7 @@ std::int16_t GameController::getAxisPosition(std::int32_t controllerIndex, std::
     //}
 
     const auto controller = App::m_instance->m_sortedGamepads[controllerIndex];
-    return SDL_GetGamepadAxis(/*App::m_instance->m_controllers[controllerIndex].*/controller, static_cast<SDL_GamepadAxis>(axis));
+    return SDL_GetGamepadAxis(controller, static_cast<SDL_GamepadAxis>(axis));
 }
 
 bool GameController::isButtonPressed(std::int32_t controllerIndex, std::int32_t button)
@@ -161,7 +160,6 @@ bool GameController::isButtonPressed(std::int32_t controllerIndex, std::int32_t 
     //    return false;
     //}
 
-    //return SDL_GetGamepadButton(App::m_instance->m_controllers[controllerIndex].controller, static_cast<SDL_GamepadButton>(button));
     return SDL_GetGamepadButton(App::m_instance->m_sortedGamepads[controllerIndex], static_cast<SDL_GamepadButton>(button));
 }
 
@@ -170,7 +168,6 @@ bool GameController::isConnected(std::int32_t controllerIndex)
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerIndex < MaxControllers, "");
 
-    //return controllerIndex < 0 ? false : (App::m_instance->m_controllers[controllerIndex].controller != nullptr);
     return static_cast<std::uint32_t>(controllerIndex) < App::m_instance->m_sortedGamepads.size();
 }
 
@@ -286,11 +283,8 @@ void GameController::rumbleStart(std::int32_t controllerIndex, std::uint16_t str
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerIndex < MaxControllers, "");
 
-
-    //if (controllerIndex > -1 && /*App::m_instance->m_controllers[controllerIndex].controller*/controllerIndex < App::m_instance->m_sortedGamepads.size())
     if (VALID_INDEX(controllerIndex))
     {
-        //if (!SDL_RumbleGamepad(App::m_instance->m_controllers[controllerIndex].controller, strengthLow, strengthHigh, duration))
         if (!SDL_RumbleGamepad(App::m_instance->m_sortedGamepads[controllerIndex], strengthLow, strengthHigh, duration))
         {
             const auto* error = SDL_GetError();
@@ -304,10 +298,8 @@ void GameController::rumbleStop(std::int32_t controllerIndex)
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerIndex < MaxControllers, "");
 
-    //if (controllerIndex > -1 && /*App::m_instance->m_controllers[controllerIndex].controller*/controllerIndex < App::m_instance->m_sortedGamepads.size())
     if (VALID_INDEX(controllerIndex))
     {
-        //if (!SDL_RumbleGamepad(App::m_instance->m_controllers[controllerIndex].controller, 0, 0, 0))
         if (!SDL_RumbleGamepad(App::m_instance->m_sortedGamepads[controllerIndex], 0, 0, 0))
         {
             const auto* error = SDL_GetError();
@@ -321,11 +313,10 @@ std::string GameController::getName(std::int32_t controllerIndex)
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerIndex < MaxControllers, "");
 
-    //if (App::m_instance->m_controllers[controllerIndex].controller)
     if (VALID_INDEX(controllerIndex))
     {
-        auto prodID = SDL_GetGamepadProduct(/*App::m_instance->m_controllers[controllerIndex].controller*/App::m_instance->m_sortedGamepads[controllerIndex]);
-        return std::string(SDL_GetGamepadName(/*App::m_instance->m_controllers[controllerIndex].controller*/App::m_instance->m_sortedGamepads[controllerIndex])) + ", Vendor: " + std::to_string(prodID);
+        auto prodID = SDL_GetGamepadProduct(App::m_instance->m_sortedGamepads[controllerIndex]);
+        return std::string(SDL_GetGamepadName(App::m_instance->m_sortedGamepads[controllerIndex])) + ", Vendor: " + std::to_string(prodID);
     }
     return "Unknown Device";
 }
@@ -345,13 +336,10 @@ const cro::String& GameController::getPrintableName(std::int32_t controllerIndex
 
 std::int32_t GameController::getControllerCount()
 {
-    //TODO remove from App event handler
     std::int32_t controllerCount = 0;
     SDL_GetGamepads(&controllerCount);
 
     return controllerCount;
-    //CRO_ASSERT(App::m_instance, "No app running");
-    //return App::m_instance->m_controllerCount;
 }
 
 bool GameController::hasPSLayout(std::int32_t controllerIndex)
@@ -366,12 +354,6 @@ bool GameController::hasPSLayout(std::int32_t controllerIndex)
     
     const auto type = SDL_GetGamepadType(App::m_instance->m_sortedGamepads[controllerIndex]);
     return type == SDL_GAMEPAD_TYPE_PS3 || type == SDL_GAMEPAD_TYPE_PS4 || type == SDL_GAMEPAD_TYPE_PS5;
-   
-    /*if (App::m_instance->m_controllers[controllerIndex].controller)
-    {
-        return App::m_instance->m_controllers[controllerIndex].psLayout;
-    }*/
-    //return false;
 }
 
 void GameController::setLEDColour(std::int32_t controllerIndex, cro::Colour colour)
@@ -380,7 +362,9 @@ void GameController::setLEDColour(std::int32_t controllerIndex, cro::Colour colo
     {
         if (!SDL_SetGamepadLED(App::m_instance->m_sortedGamepads[controllerIndex], colour.getRedByte(), colour.getGreenByte(), colour.getBlueByte()))
         {
+#ifdef CRO_DEBUG_
             LogE << "Set LED Colour: " << SDL_GetError() << std::endl;
+#endif
         }
     }
 }

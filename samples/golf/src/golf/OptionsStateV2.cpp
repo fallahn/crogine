@@ -331,12 +331,14 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         case SDLK_LALT:
             showHelp();
             break;
-        case SDLK_KP_3:
+        /*case SDLK_KP_3:
             cro::GameController::moveControllerIndexDown(2);
+            refreshControllerDevices();
             break;
         case SDLK_KP_2:
             cro::GameController::moveControllerIndexDown(1);
-            break;
+            refreshControllerDevices();
+            break;*/
         }
 
     }
