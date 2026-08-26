@@ -225,8 +225,11 @@ void main()
         OdinEncoder* encoder = nullptr;
         OdinDecoder* decoder = nullptr;
 
-        std::int32_t playbackDevice = 0; //SDL Playback device
-        std::int32_t recordDevice = 0; //SDL Record device
+        //SDL_AudioDeviceID playbackDevice = 0; //SDL Playback device
+        //SDL_AudioDeviceID recordDevice = 0; //SDL Record device
+        SDL_AudioStream* inputStream = nullptr;
+        SDL_AudioStream* outputStream = nullptr;
+
         bool active = false;
 
         OdinObject()
@@ -282,14 +285,14 @@ void main()
                 odin_encoder_free(encoder);
             }
 
-            if (recordDevice)
+            if (inputStream)
             {
-                SDL_CloseAudioDevice(recordDevice);
+                SDL_DestroyAudioStream(inputStream);
             }
 
-            if (playbackDevice)
+            if (outputStream)
             {
-                SDL_CloseAudioDevice(playbackDevice);
+                SDL_DestroyAudioStream(outputStream);
             }
             odin_shutdown();
         }
@@ -535,18 +538,19 @@ bool MenuState::simulate(float dt)
     static constexpr std::uint32_t FRAME_COUNT = 2048;
     if (odin)
     {
-        LogE << "Not ported to SDL3: " << FILE_LINE << std::endl;
-        //static std::array<std::uint8_t, FRAME_COUNT * sizeof(float)> encodeBuffer = {};
-        //m_recorderDebug.captureAvailable = SDL_DequeueAudio(odin->recordDevice, encodeBuffer.data(), FRAME_COUNT*sizeof(float));
-        //if (m_recorderDebug.captureAvailable != 0
-        //    && cro::Mouse::isButtonPressed(cro::Mouse::Button::Right)) //crude but proves a point. probably wants a slight delay after releasing the button
-        //{
-        //    const auto res = odin_encoder_push(odin->encoder, (float*)encodeBuffer.data(), m_recorderDebug.captureAvailable / sizeof(float));
-        //    if (res != ODIN_ERROR_SUCCESS)
-        //    {
-        //        LogI << "Encode error: " << res << std::endl;
-        //    }
-        //}
+        static std::array<std::uint8_t, FRAME_COUNT * sizeof(float)> encodeBuffer = {};
+        m_recorderDebug.captureAvailable = SDL_GetAudioStreamAvailable(odin->inputStream);
+        if (m_recorderDebug.captureAvailable >= encodeBuffer.size()
+            /*&& cro::Mouse::isButtonPressed(cro::Mouse::Button::Right)*/) //crude but proves a point. probably wants a slight delay after releasing the button
+        {
+            SDL_GetAudioStreamData(odin->inputStream, encodeBuffer.data(), static_cast<std::int32_t>(encodeBuffer.size()));
+
+            const auto res = odin_encoder_push(odin->encoder, (float*)encodeBuffer.data(), m_recorderDebug.captureAvailable / sizeof(float));
+            if (res != ODIN_ERROR_SUCCESS)
+            {
+                LogI << "Encode error: " << res << std::endl;
+            }
+        }
     }
 
     static constexpr std::uint32_t PACKET_SIZE = 2048;
@@ -582,7 +586,7 @@ bool MenuState::simulate(float dt)
             if (m_recorderDebug.decoderErrorID == ODIN_ERROR_SUCCESS)
             {
                 //SDL_QueueAudio(odin->playbackDevice, decodeBuffer.data(), decodeBuffer.size() * sizeof(float));
-                LogE << "Not ported to SDL3: " << FILE_LINE << std::endl;
+                SDL_PutAudioStreamData(odin->outputStream, decodeBuffer.data(), decodeBuffer.size() * sizeof(float));
             }
         }
         pretendPacketQueue.clear();
@@ -2069,19 +2073,15 @@ void MenuState::odinWindow()
             spec.channels = 2; //TODO if we want to play this through the AudioSystem (for positional) we need an SDL stream to resample to mono/16bit
             //spec.samples = 2048;
 
-            SDL_AudioSpec obtained = {};
 
-
-            if (!odin->playbackDevice)
+            if (!odin->outputStream)
             {
-                //odin->playbackDevice = SDL_OpenAudioDevice(nullptr, 0, &spec, &obtained, 0);
-                LogE << "Not ported to SDL3: " << FILE_LINE << std::endl;
+                odin->outputStream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, nullptr, nullptr);
             }
             spec.channels = 1;
-            if (!odin->recordDevice)
+            if (!odin->inputStream)
             {
-                //odin->recordDevice = SDL_OpenAudioDevice(devList[idx].c_str(), true, &spec, &obtained, 0);
-                LogE << "Not ported to SDL3: " << FILE_LINE << std::endl;
+                odin->inputStream = SDL_OpenAudioDeviceStream(m_soundRecorder.getDeviceIDs()[idx],&spec, nullptr, nullptr);
             }
         }
 
@@ -2089,8 +2089,8 @@ void MenuState::odinWindow()
         {
             ImGui::Text("Odin Active");
 
-            if (odin->playbackDevice
-                && odin->recordDevice)
+            if (odin->outputStream
+                && odin->inputStream)
             {
                 if (!odin->active)
                 {
@@ -2101,8 +2101,8 @@ void MenuState::odinWindow()
                         //will be put out AFTER unpausing the device, causing
                         //potentially severe lag.
                         //m_soundRecorder.openDevice(devList[idx], 2, 48000);
-                        SDL_PauseAudioDevice(odin->playbackDevice);
-                        SDL_PauseAudioDevice(odin->recordDevice);
+                        SDL_ResumeAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK);
+                        SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(odin->inputStream));
                         odin->active = true;
                     }
                 }
@@ -2110,8 +2110,8 @@ void MenuState::odinWindow()
                 {
                     if (ImGui::Button("Stop"))
                     {
-                        SDL_PauseAudioDevice(odin->playbackDevice);
-                        SDL_PauseAudioDevice(odin->recordDevice);
+                        SDL_PauseAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK);
+                        SDL_PauseAudioDevice(SDL_GetAudioStreamDevice(odin->inputStream));
                         //m_soundRecorder.closeDevice();
                         odin->active = false;
                     }

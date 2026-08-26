@@ -81,16 +81,23 @@ namespace
     constexpr std::int32_t CAPTURE_RATE = 48000;
     constexpr std::int32_t CAPTURE_FRAMES = 5; //number of frames which fit in the circular buffer
 
-    void captureCallback(void* userdata, Uint8* stream, int len)
+    //takes the incoming stream data from the device then places it in the conversion stream
+    //if there's enough data in the conversion stream for an entire frame it's placed in
+    //the circular buffer ready for processing
+    void captureCallback(void* userdata, SDL_AudioStream* inStream, int len, int)
     {
+        static std::vector<std::uint8_t> temp;
+        temp.resize(len);
+        SDL_GetAudioStreamData(inStream, temp.data(), len);
+
         //this is automatically locked on its thread by SDL
         //HOWEVER we must lock the audio device when accessing
         //the capture context anywhere else.
         auto* ctx = CAPTURE_CONTEXT(userdata);
 
-        SDL_PutAudioStreamData(ctx->conversionStream, stream, len);
+        SDL_PutAudioStreamData(ctx->conversionStream, temp.data(), len);
 
-        auto available = SDL_GetAudioStreamAvailable(ctx->conversionStream);
+        const auto available = SDL_GetAudioStreamAvailable(ctx->conversionStream);
         if (available > ctx->FrameSizeBytes)
         {
             SDL_GetAudioStreamData(ctx->conversionStream, &ctx->circularBuffer[ctx->bufferInput], ctx->FrameSizeBytes);
@@ -338,7 +345,9 @@ void SoundRecorder::enumerateDevices()
 {
     if (AudioRenderer::isValid())
     {
-        //const auto deviceCount = SDL_GetNumAudioDevices(true);
+        m_deviceList.clear();
+        m_deviceIDs.clear();
+
         std::int32_t deviceCount = 0;
         const auto* deviceIDs = SDL_GetAudioRecordingDevices(&deviceCount);
 
@@ -348,6 +357,7 @@ void SoundRecorder::enumerateDevices()
             if (name)
             {
                 m_deviceList.push_back(name);
+                m_deviceIDs.push_back(deviceIDs[i]);
             }
         }
     }
@@ -355,33 +365,36 @@ void SoundRecorder::enumerateDevices()
 
 bool SoundRecorder::openSelectedDevice()
 {
-    LogE << "Not yet ported to SDL3" << FILE_LINE << std::endl;
-
     if (!m_recordingDevice)
     {
+        //we have two streams here - one is a capture stream
+        //which uses the device settings and is bound to the
+        //opened recording device. We then take the available
+        //data from that and pass it through a conversion stream
+        //so that we have a consistent set of data to work on
+        //this is done in the callback at the top of the file.
+
         if (m_captureStream)
         {
             //this should never be true, but tidy up just in case
             SDL_DestroyAudioStream(m_captureStream);
         }
 
-        SDL_AudioSpec srcCapture = {};
+
+        //The capture stream is now created when opening the device
+
+        /*SDL_AudioSpec srcCapture = {};
         srcCapture.format = SDL_AUDIO_F32LE;
         srcCapture.channels = CAPTURE_CHANNELS;
         srcCapture.freq = CAPTURE_RATE;
 
-        SDL_AudioSpec dstCapture = {};
-        dstCapture.format = SDL_AUDIO_F32LE;
-        dstCapture.channels = m_channelCount;
-        dstCapture.freq = m_sampleRate;
+        m_captureStream = SDL_CreateAudioStream(&srcCapture, &dstCapture);*/
 
-        m_captureStream = SDL_CreateAudioStream(&srcCapture, &dstCapture);
-
-        if (!m_captureStream)
+        /*if (!m_captureStream)
         {
             LogE << "Sound Recorder: Failed creating capture stream" << std::endl;
             return false;
-        }
+        }*/
 
 
 
@@ -389,6 +402,11 @@ bool SoundRecorder::openSelectedDevice()
         {
             SDL_DestroyAudioStream(m_outputStream);
         }
+
+        SDL_AudioSpec dstCapture = {};
+        dstCapture.format = SDL_AUDIO_F32LE;
+        dstCapture.channels = m_channelCount;
+        dstCapture.freq = m_sampleRate;
 
         SDL_AudioSpec dstOutput = {};
         dstOutput.format = SDL_AUDIO_S16LE;
@@ -420,43 +438,47 @@ bool SoundRecorder::openSelectedDevice()
         SDL_AudioSpec recordingSpec = {};
         SDL_AudioSpec receivedSpec = {};
 
-        //TODO finish porting this
 
-        //SDL_zero(recordingSpec);
-        //recordingSpec.freq = CAPTURE_RATE;
-        //recordingSpec.format = SDL_AUDIO_F32LE;
-        //recordingSpec.channels = CAPTURE_CHANNELS;
-        //recordingSpec.samples = (CAPTURE_RATE / 25);// *CAPTURE_FRAMES;
-        //recordingSpec.callback = captureCallback;
-        //recordingSpec.userdata = &m_captureContext;
 
-        //if (m_deviceIndex > -1)
-        //{
-        //    m_recordingDevice = SDL_OpenAudioDevice(m_deviceList[m_deviceIndex].c_str(), true, &recordingSpec, &receivedSpec, false);
-        //}
-        //else
-        //{
-        //    m_recordingDevice = SDL_OpenAudioDevice(nullptr, true, &recordingSpec, &receivedSpec, false);
-        //}
+        SDL_zero(recordingSpec);
+        recordingSpec.freq = CAPTURE_RATE;
+        recordingSpec.format = SDL_AUDIO_F32LE;
+        recordingSpec.channels = CAPTURE_CHANNELS;
 
-        //if (!m_recordingDevice)
-        //{
-        //    SDL_DestroyAudioStream(m_captureStream);
-        //    m_captureStream = nullptr;
+        //HMM we can't set the output spec of the stream
+        //so the conversion stream might not receive the
+        //correct format?
 
-        //    SDL_DestroyAudioStream(m_outputStream);
-        //    m_outputStream = nullptr;
-        //}
-        //else
-        //{
-        //    for (auto& effect : m_processEffects)
-        //    {
-        //        effect->setAudioParameters(m_sampleRate, m_channelCount);
-        //        effect->reset(); //do this second as resetting parameters might require knowing the above values
-        //    }
+        if (m_deviceIndex > -1)
+        {
+            m_captureStream = SDL_OpenAudioDeviceStream(m_deviceIDs[m_deviceIndex], &recordingSpec, captureCallback, &m_captureContext);
+            m_recordingDevice = m_captureStream ? m_deviceIDs[m_deviceIndex] : 0;
+        }
+        else
+        {
+            m_captureStream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_RECORDING, &recordingSpec, captureCallback, &m_captureContext);
+            m_recordingDevice = m_captureStream ? SDL_AUDIO_DEVICE_DEFAULT_RECORDING : 0;
+        }
 
-        //    SDL_PauseAudioDevice(m_recordingDevice, false);
-        //}
+        if (!m_recordingDevice)
+        {
+            SDL_DestroyAudioStream(m_captureStream);
+            m_captureStream = nullptr;
+
+            SDL_DestroyAudioStream(m_outputStream);
+            m_outputStream = nullptr;
+        }
+        else
+        {
+            for (auto& effect : m_processEffects)
+            {
+                effect->setAudioParameters(m_sampleRate, m_channelCount);
+                effect->reset(); //do this second as resetting parameters might require knowing the above values
+            }
+
+            //opening the device from a stream should start out paused.
+            //SDL_PauseAudioDevice(m_recordingDevice);
+        }
         m_active = (m_recordingDevice != 0);
 
     }

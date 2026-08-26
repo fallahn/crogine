@@ -176,12 +176,15 @@ namespace cro
             return retVal;
         }
 
+        const std::vector<SDL_AudioDeviceID> getDeviceIDs() const { return m_deviceIDs; }
+
     private:
 
         std::vector<std::string> m_deviceList;
+        std::vector<SDL_AudioDeviceID> m_deviceIDs;
         std::int32_t m_deviceIndex;
 
-        std::int32_t m_recordingDevice;
+        SDL_AudioDeviceID m_recordingDevice;
         bool m_active;
 
         std::int32_t m_channelCount;
