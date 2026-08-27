@@ -203,8 +203,8 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
                 
                 m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
 
-                m_uiLayout.tabBar.navLeft.getComponent<cro::Text>().setString("< " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
-                m_uiLayout.tabBar.navRight.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + " >");
+                m_uiLayout.tabBar.navLeft.getComponent<cro::Text>().setString("< " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::PrevClub]));
+                m_uiLayout.tabBar.navRight.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::NextClub]) + " >");
 
                 m_uiLayout.tabBar.navLeftSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                 m_uiLayout.tabBar.navRightSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -278,14 +278,6 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         {
             m_exitFlags &= ~ExitFlagRandomise;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
-        {
-            m_uiLayout.nextTab();
-        }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
-        {
-            m_uiLayout.prevTab();
-        }
 
         //done on key down event for repeat when held
         /*else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Down]
@@ -298,10 +290,20 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         {
             prevItem();
         }*/
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action]
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action]
             || evt.key.key == SDLK_RETURN)
         {
             m_uiLayout.activate();
+        }
+
+
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
+        {
+            m_uiLayout.nextTab();
+        }
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
+        {
+            m_uiLayout.prevTab();
         }
     }
     else if (evt.type == SDL_EVENT_KEY_DOWN)

@@ -1968,6 +1968,7 @@ void GolfGame::loadPreferences()
 
     //read keybind bin
     path = Content::getBaseContentPath() + "keys.bind";
+    bool needsConversion = false;
 
     if (cro::FileSystem::fileExists(path))
     {
@@ -1982,33 +1983,77 @@ void GolfGame::loadPreferences()
                 LOG("Read keybinds file", cro::Logger::Type::Info);
             }
         }
+        needsConversion = true;
     }
 
     //hack for existing keybinds which weren't expecting the billiards update
-    if (m_sharedData.inputBinding.keys[InputBinding::Up] == SDLK_UNKNOWN)
+    if (needsConversion)
     {
-        m_sharedData.inputBinding.keys[InputBinding::Up] = SDLK_W;
-    }
-    if (m_sharedData.inputBinding.keys[InputBinding::Down] == SDLK_UNKNOWN)
-    {
-        m_sharedData.inputBinding.keys[InputBinding::Down] = SDLK_S;
+        //this assumes we still have the old data
+        //the key values will then get converted to proper scan codes, below
+        if (m_sharedData.inputBinding.scancodes[InputBinding::Up] == SDLK_UNKNOWN)
+        {
+            m_sharedData.inputBinding.scancodes[InputBinding::Up] = static_cast<SDL_Scancode>(SDLK_W);
+        }
+        if (m_sharedData.inputBinding.scancodes[InputBinding::Down] == SDLK_UNKNOWN)
+        {
+            m_sharedData.inputBinding.scancodes[InputBinding::Down] = static_cast<SDL_Scancode>(SDLK_S);
+        }
+
+        //and then the cancel button update
+        if (m_sharedData.inputBinding.scancodes[InputBinding::CancelShot] == SDLK_UNKNOWN)
+        {
+            m_sharedData.inputBinding.scancodes[InputBinding::CancelShot] = static_cast<SDL_Scancode>(SDLK_LSHIFT);
+        }
+
+        //and the ball spin update
+        if (m_sharedData.inputBinding.scancodes[InputBinding::EmoteMenu] == SDLK_UNKNOWN)
+        {
+            m_sharedData.inputBinding.scancodes[InputBinding::EmoteMenu] = static_cast<SDL_Scancode>(SDLK_LCTRL);
+        }
+        if (m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu] == SDLK_UNKNOWN)
+        {
+            m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu] = static_cast<SDL_Scancode>(SDLK_LALT);
+        }
     }
 
-    //and then the cancel button update
-    if (m_sharedData.inputBinding.keys[InputBinding::CancelShot] == SDLK_UNKNOWN)
+
+    //if we haven't converted to the new keybinds yet, do so (we're using scancodes now)
+    path = Content::getBaseContentPath() + "codes.bind";
+
+    if (!cro::FileSystem::fileExists(path)
+        && needsConversion)
     {
-        m_sharedData.inputBinding.keys[InputBinding::CancelShot] = SDLK_LSHIFT;
+        for (auto& k : m_sharedData.inputBinding.scancodes)
+        {
+            k = SDL_GetScancodeFromKey(k, nullptr);
+        }
+        LogI << "converted keybinds" << std::endl;
+
+        cro::RaiiRWops file;
+        file.file = SDL_IOFromFile(path.c_str(), "wb");
+        if (file.file)
+        {
+            SDL_WriteIO(file.file, &m_sharedData.inputBinding, sizeof(InputBinding));
+        }
+        std::filesystem::remove(Content::getBaseContentPath() + "keys.bind");
+    }
+    else
+    {
+        //load the file
+        cro::RaiiRWops file;
+        file.file = SDL_IOFromFile(path.c_str(), "rb");
+        if (file.file)
+        {
+            auto size = SDL_GetIOSize(file.file);
+            if (size == sizeof(InputBinding))
+            {
+                SDL_ReadIO(file.file, &m_sharedData.inputBinding, size);
+                LOG("Read scancodes file", cro::Logger::Type::Info);
+            }
+        }
     }
 
-    //and the ball spin update
-    if (m_sharedData.inputBinding.keys[InputBinding::EmoteMenu] == SDLK_UNKNOWN)
-    {
-        m_sharedData.inputBinding.keys[InputBinding::EmoteMenu] = SDLK_LCTRL;
-    }
-    if (m_sharedData.inputBinding.keys[InputBinding::SpinMenu] == SDLK_UNKNOWN)
-    {
-        m_sharedData.inputBinding.keys[InputBinding::SpinMenu] = SDLK_LALT;
-    }
 
     m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
 
@@ -2114,7 +2159,7 @@ void GolfGame::savePreferences()
 
 
     //keybinds
-    path = Content::getBaseContentPath() + "keys.bind";
+    path = Content::getBaseContentPath() + "codes.bind";
     cro::RaiiRWops file;
     file.file = SDL_IOFromFile(path.c_str(), "wb");
     if (file.file)

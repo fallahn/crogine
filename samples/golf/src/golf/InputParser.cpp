@@ -208,42 +208,42 @@ void InputParser::handleEvent(const cro::Event& evt)
                 return;
             }
 
-            if (evt.key.key == m_inputBinding.keys[InputBinding::Up])
+            if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Up])
             {
                 m_inputFlags |= InputFlag::Up;
                 //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::Left])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Left])
             {
                 m_inputFlags |= InputFlag::Left;
                 //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::Right])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Right])
             {
                 m_inputFlags |= InputFlag::Right;
                 //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::Down])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Down])
             {
                 m_inputFlags |= InputFlag::Down;
                 //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::Action])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Action])
             {
                 m_inputFlags |= InputFlag::Action;
                 //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::NextClub])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::NextClub])
             {
                 m_inputFlags |= InputFlag::NextClub;
                 //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::PrevClub])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::PrevClub])
             {
                 m_inputFlags |= InputFlag::PrevClub;
                 //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::CancelShot])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::CancelShot])
             {
                 m_inputFlags |= InputFlag::Cancel;
                 //cro::App::getWindow().setCursorVisible(!!m_isCPU);
@@ -252,7 +252,7 @@ void InputParser::handleEvent(const cro::Event& evt)
                     toggleWidgetSpeed();
                 }
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::SpinMenu])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::SpinMenu])
             {
                 if (m_state == State::Aim)
                 {
@@ -263,7 +263,7 @@ void InputParser::handleEvent(const cro::Event& evt)
 
 
 
-            if (evt.key.scancode == FixedKey::DroneCam)
+            else if (evt.key.scancode == FixedKey::DroneCam)
             {
                 toggleDroneCam();
             }
@@ -281,44 +281,44 @@ void InputParser::handleEvent(const cro::Event& evt)
                 return;
             }
 
-            if (evt.key.key == m_inputBinding.keys[InputBinding::Up])
+            if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Up])
             {
                 m_inputFlags &= ~InputFlag::Up;
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::Left])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Left])
             {
                 m_inputFlags &= ~InputFlag::Left;
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::Right])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Right])
             {
                 m_inputFlags &= ~InputFlag::Right;
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::Down])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Down])
             {
                 m_inputFlags &= ~InputFlag::Down;
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::Action])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Action])
             {
                 m_inputFlags &= ~InputFlag::Action;
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::NextClub])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::NextClub])
             {
                 m_inputFlags &= ~InputFlag::NextClub;
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::PrevClub])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::PrevClub])
             {
                 m_inputFlags &= ~InputFlag::PrevClub;
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::CancelShot])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::CancelShot])
             {
                 m_inputFlags &= ~InputFlag::Cancel;
             }
-            else if (evt.key.key == m_inputBinding.keys[InputBinding::SpinMenu])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::SpinMenu])
             {
                 m_inputFlags &= ~InputFlag::SpinMenu;
             }
 
-            if (evt.key.scancode == SDL_SCANCODE_PAGEUP)
+            else if (evt.key.scancode == SDL_SCANCODE_PAGEUP)
             {
                 m_inputFlags &= ~InputFlag::MiniMap;
             }

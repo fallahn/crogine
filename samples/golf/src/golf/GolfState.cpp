@@ -653,7 +653,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     if (m_photoMode)
     {
         if (evt.type == SDL_EVENT_KEY_DOWN
-            && evt.key.key == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
+            && evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu])
         {
             sendFreecamToTarget();
         }
@@ -3043,7 +3043,7 @@ bool GolfState::simulate(float dt)
     static float multiplier = MinMultiplier;
     if (m_currentCamera == CameraID::Transition)
     {
-        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Action])
+        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Action])
             || m_buttonStates.buttonA)
         {
             multiplier = std::min(MaxMultiplier, multiplier + (dt * 2.f));

@@ -105,62 +105,62 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
     const auto& inputBinding = m_sharedData.inputBinding;
     if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        if (evt.key.key == inputBinding.keys[InputBinding::Up])
+        if (evt.key.scancode == inputBinding.scancodes[InputBinding::Up])
         {
             m_inputFlags |= InputFlag::Up;
         }
-        else if (evt.key.key == inputBinding.keys[InputBinding::Left])
+        else if (evt.key.scancode == inputBinding.scancodes[InputBinding::Left])
         {
             m_inputFlags |= InputFlag::Left;
         }
-        else if (evt.key.key == inputBinding.keys[InputBinding::Right])
+        else if (evt.key.scancode == inputBinding.scancodes[InputBinding::Right])
         {
             m_inputFlags |= InputFlag::Right;
         }
-        else if (evt.key.key == inputBinding.keys[InputBinding::Down])
+        else if (evt.key.scancode == inputBinding.scancodes[InputBinding::Down])
         {
             m_inputFlags |= InputFlag::Down;
         }
-        else if (evt.key.key == inputBinding.keys[InputBinding::Action])
+        else if (evt.key.scancode == inputBinding.scancodes[InputBinding::Action])
         {
             m_inputFlags |= InputFlag::Action;
         }
-        else if (evt.key.key == inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.scancode == inputBinding.scancodes[InputBinding::NextClub])
         {
             m_inputFlags |= InputFlag::NextClub;
         }
-        else if (evt.key.key == inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.scancode == inputBinding.scancodes[InputBinding::PrevClub])
         {
             m_inputFlags |= InputFlag::PrevClub;
         }
     }
     else if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.key == inputBinding.keys[InputBinding::Up])
+        if (evt.key.scancode == inputBinding.scancodes[InputBinding::Up])
         {
             m_inputFlags &= ~InputFlag::Up;
         }
-        else if (evt.key.key == inputBinding.keys[InputBinding::Left])
+        else if (evt.key.scancode == inputBinding.scancodes[InputBinding::Left])
         {
             m_inputFlags &= ~InputFlag::Left;
         }
-        else if (evt.key.key == inputBinding.keys[InputBinding::Right])
+        else if (evt.key.scancode == inputBinding.scancodes[InputBinding::Right])
         {
             m_inputFlags &= ~InputFlag::Right;
         }
-        else if (evt.key.key == inputBinding.keys[InputBinding::Down])
+        else if (evt.key.scancode == inputBinding.scancodes[InputBinding::Down])
         {
             m_inputFlags &= ~InputFlag::Down;
         }
-        else if (evt.key.key == inputBinding.keys[InputBinding::Action])
+        else if (evt.key.scancode == inputBinding.scancodes[InputBinding::Action])
         {
             m_inputFlags &= ~InputFlag::Action;
         }
-        else if (evt.key.key == inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.scancode == inputBinding.scancodes[InputBinding::NextClub])
         {
             m_inputFlags &= ~InputFlag::NextClub;
         }
-        else if (evt.key.key == inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.scancode == inputBinding.scancodes[InputBinding::PrevClub])
         {
             m_inputFlags &= ~InputFlag::PrevClub;
         }

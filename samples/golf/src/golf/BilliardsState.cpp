@@ -328,7 +328,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
 #endif //CRO_DEBUG_
         }
 
-        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action])
         {
             sendReadyNotify();
         }

@@ -432,27 +432,27 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
 
         if (!evt.key.repeat)
         {
-            if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Up])
+            if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Up])
             {
                 m_inputFlags.flags |= InputFlags::Up;
                 m_inputFlags.keyCount++;
             }
-            else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Down])
+            else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Down])
             {
                 m_inputFlags.flags |= InputFlags::Down;
                 m_inputFlags.keyCount++;
             }
-            else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Left])
+            else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left])
             {
                 m_inputFlags.flags |= InputFlags::Left;
                 m_inputFlags.keyCount++;
             }
-            else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Right])
+            else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right])
             {
                 m_inputFlags.flags |= InputFlags::Right;
                 m_inputFlags.keyCount++;
             }
-            else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
+            else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action])
             {
                 auto* msg = postMessage<els::GameEvent>(els::MessageID::GameMessage);
                 msg->type = els::GameEvent::Toot;
@@ -461,22 +461,22 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Up])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Up])
         {
             m_inputFlags.flags &= ~InputFlags::Up;
             m_inputFlags.keyCount--;
         }
-        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Down])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Down])
         {
             m_inputFlags.flags &= ~InputFlags::Down;
             m_inputFlags.keyCount--;
         }
-        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Left])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left])
         {
             m_inputFlags.flags &= ~InputFlags::Left;
             m_inputFlags.keyCount--;
         }
-        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Right])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right])
         {
             m_inputFlags.flags &= ~InputFlags::Right;
             m_inputFlags.keyCount--;
@@ -1264,7 +1264,7 @@ void EndlessDrivingState::createUI()
                     else
                     {
                         //check if accelerate was being held and set input flag
-                        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
+                        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Up]))
                         {
                             m_inputFlags.flags |= InputFlag::Up;
                         }

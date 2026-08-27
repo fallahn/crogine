@@ -830,11 +830,11 @@ void ScrubAttractState::onCachedPush()
     m_music.getComponent<cro::AudioEmitter>().play();
 
     //update the keyboard help string with current key binds
-    m_keyboardHelpString = "Use " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]) 
-        + " to insert and " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub])
-        + " to remove a ball\nUse " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left])
-        + "/" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right])
-        + " to scrub the ball\nPress " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) 
+    m_keyboardHelpString = "Use " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
+        + " to insert and " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
+        + " to remove a ball\nUse " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Left])
+        + "/" + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Right])
+        + " to scrub the ball\nPress " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Action])
         + " to add more soap\n\n\nPress ESCAPE to Pause the game";
 
 

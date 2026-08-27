@@ -852,7 +852,7 @@ void CPUGolfer::pickClub(float dt)
         //if the new club has looped switch back and accept it
         if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].getTarget(m_distanceToPin) * dampening)
         {
-            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
+            sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::PrevClub]);
             m_clubID = m_prevClubID;
 
             acceptClub();
@@ -861,7 +861,7 @@ void CPUGolfer::pickClub(float dt)
 
         if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].getTarget(m_distanceToPin) * dampening)
         {
-            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
+            sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::NextClub]);
             m_clubID = m_prevClubID;
 
             acceptClub();
@@ -877,7 +877,7 @@ void CPUGolfer::pickClub(float dt)
             }
 
             //increase club if needed
-            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
+            sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::NextClub]);
             m_searchDirection = 1;
             startThinking(0.25f);
         }
@@ -890,7 +890,7 @@ void CPUGolfer::pickClub(float dt)
             }
 
             //else decrease
-            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
+            sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::PrevClub]);
             m_searchDirection = -1;
             startThinking(0.25f);
         }
@@ -973,7 +973,7 @@ void CPUGolfer::pickClubDynamic(float dt)
         //if the new club has looped switch back and accept it (it's the longest we have)
         if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].getTargetAtLevel(Stat[CPUStat::Skill]) * dampening)
         {
-            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
+            sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::PrevClub]);
             m_clubID = m_prevClubID;
 
             acceptClub();
@@ -982,7 +982,7 @@ void CPUGolfer::pickClubDynamic(float dt)
 
         if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].getTargetAtLevel(Stat[CPUStat::Skill]) * dampening)
         {
-            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
+            sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::NextClub]);
             m_clubID = m_prevClubID;
 
             acceptClub();
@@ -993,14 +993,14 @@ void CPUGolfer::pickClubDynamic(float dt)
         if (diff > 0)
         {
             //increase club if needed
-            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
+            sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::NextClub]);
             m_searchDirection = 1;
             startThinking(0.25f);
         }
         else
         {
             //else decrease
-            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
+            sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::PrevClub]);
             m_searchDirection = -1;
             startThinking(0.25f);
         }
@@ -1105,11 +1105,11 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         //hold rotate button if not within angle tolerance
         if (targetAngle < m_inputParser.getYaw())
         {
-            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Right], false);
+            sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::Right], false);
         }
         else
         {
-            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Left], false);
+            sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::Left], false);
         }
 
         const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
@@ -1119,8 +1119,8 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             || m_aimTimer.elapsed() > MaxAimTime) //get out clause if aim calculation is out of bounds.
         {
             //stop holding rotate
-            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Right], true);
-            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Left], true);
+            sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::Right], true);
+            sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::Left], true);
 
             //based on dot prod of aim angle and wind dir
             //multiplied by percent of selected club distance to target distance
@@ -1133,7 +1133,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
                 //if (Clubs[m_clubID].target > m_aimDistance)
                 {
                     //the further we try to drive the bigger the reduction
-                    float amount = 1.f - (static_cast<float>(m_clubID) / ClubID::NineIron);
+                    float amount = 1.f - (static_cast<float>(m_clubID) / static_cast<float>(ClubID::NineIron));
                     m_targetPower *= (1.f - (amount * 0.2f));
                 }
             }
@@ -1211,18 +1211,18 @@ void CPUGolfer::aimDynamic(float dt)
             {
                 if (m_targetAngle < m_inputParser.getYaw())
                 {
-                    sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Right], false);
+                    sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::Right], false);
                 }
                 else
                 {
-                    sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Left], false);
+                    sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::Left], false);
                 }
             }
             else
             {
                 //stop holding rotate
-                sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Right], true);
-                sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Left], true);
+                sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::Right], true);
+                sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::Left], true);
 
                 //request prediction and wait result.
                 auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
@@ -1403,7 +1403,7 @@ void CPUGolfer::stroke(float dt)
             if (!m_inputParser.inProgress())
             {
                 //start the stroke
-                sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
+                sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::Action]);
 
                 m_strokeState = StrokeState::Power;
                 m_prevPower = 0.f;
@@ -1422,7 +1422,7 @@ void CPUGolfer::stroke(float dt)
                     if ((m_targetPower - power) < 0.02f
                         && m_prevPower < power)
                     {
-                        sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
+                        sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::Action]);
                         m_strokeState = StrokeState::Accuracy;
                     }
                     m_prevPower = power;
@@ -1433,7 +1433,7 @@ void CPUGolfer::stroke(float dt)
                     if (accuracy < m_targetAccuracy
                         && m_prevAccuracy > accuracy)
                     {
-                        sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
+                        sendKeystroke(m_inputParser.getInputBinding().scancodes[InputBinding::Action]);
                         m_state = State::Watching;
                         return;
                     }
@@ -1543,13 +1543,13 @@ float CPUGolfer::getDampening() const
     return m_inputParser.getDampening() * Dampening[m_inputParser.getTerrain()] * LieDampening[m_inputParser.getTerrain()][m_inputParser.getLie()];
 }
 
-void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)
+void CPUGolfer::sendKeystroke(SDL_Scancode scancode, bool autoRelease)
 {
     SDL_Event evt;
     evt.type = SDL_EVENT_KEY_DOWN;
     evt.key.mod = 0; //must zero out else we get phantom keypresses
-    evt.key.key = key;
-    evt.key.scancode = SDL_GetScancodeFromKey(key, nullptr);
+    evt.key.key = SDL_GetKeyFromScancode(scancode, 0, true);
+    evt.key.scancode = scancode;
     evt.key.timestamp = 0;
     evt.key.repeat = 0;
     evt.key.windowID = InputParser::CPU_ID;

@@ -263,20 +263,20 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         }
         else
         {
-            cro::String str(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]));
+            cro::String str(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Left]));
             str += ", ";
-            str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]);
+            str += cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Right]);
             str += ", ";
-            str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Up]);
+            str += cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Up]);
             str += ", ";
-            str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Down]);
+            str += cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Down]);
             str += " Rotate/Zoom";
             m_menuEntities[EntityID::HelpText].getComponent<cro::Text>().setString(str);
 
 
-            str = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]);
+            str = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Left]);
             str += ", ";
-            str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]);
+            str += cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Right]);
             str += " Rotate";
             m_menuEntities[EntityID::HairHelp].getComponent<cro::Text>().setString(str);
         }
@@ -815,13 +815,13 @@ bool ProfileState::simulate(float dt)
     {
         bool refresh = false;
         if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonLeftShoulder)
-            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left]))
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Left]))
         {
             m_avatarRotation -= dt;
             refresh = true;
         }
         if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonRightShoulder)
-            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Right]))
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Right]))
         {
             refresh = true;
             m_avatarRotation += dt;
@@ -835,12 +835,12 @@ bool ProfileState::simulate(float dt)
 
         float zoom = 0.f;
         if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft) > cro::GameController::TriggerDeadZone
-            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Down]))
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Down]))
         {
             zoom -= dt;
         }
         if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight) > cro::GameController::TriggerDeadZone
-            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Up]))
         {
             zoom += dt;
         }

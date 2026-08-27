@@ -140,43 +140,44 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
     {
     default: break;
     case SDL_EVENT_KEY_DOWN:
-        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Up])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Up])
         {
             //actually forward...
             m_input.buttonFlags |= Input::Forward;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Down])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Down])
         {
             //actually backward...
             m_input.buttonFlags |= Input::Backward;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Left])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left])
         {
             m_input.buttonFlags |= Input::Left;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Right])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right])
         {
             m_input.buttonFlags |= Input::Right;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action])
         {
             //actually up...
             m_input.buttonFlags |= Input::Up;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::EmoteMenu])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::EmoteMenu])
         {
             //actually down
             m_input.buttonFlags |= Input::Down;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
         {
             m_input.buttonFlags |= Input::ZoomIn;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
         {
             m_input.buttonFlags |= Input::ZoomOut;
         }
-        else if (evt.key.key == SDLK_LSHIFT)
+        
+        if (evt.key.key == SDLK_LSHIFT)
         {
             //we toggle this in keyup now
             //m_input.buttonFlags |= Input::Sprint;
@@ -184,43 +185,44 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
 
         break;
     case SDL_EVENT_KEY_UP:
-        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Up])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Up])
         {
             //actually forward...
             m_input.buttonFlags &= ~Input::Forward;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Down])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Down])
         {
             //actually backward...
             m_input.buttonFlags &= ~Input::Backward;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Left])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left])
         {
             m_input.buttonFlags &= ~Input::Left;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Right])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right])
         {
             m_input.buttonFlags &= ~Input::Right;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action])
         {
             //actually up...
             m_input.buttonFlags &= ~Input::Up;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::EmoteMenu])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::EmoteMenu])
         {
             //actually down
             m_input.buttonFlags &= ~Input::Down;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
         {
             m_input.buttonFlags &= ~Input::ZoomIn;
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
         {
             m_input.buttonFlags &= ~Input::ZoomOut;
         }
-        else if (evt.key.key == SDLK_LSHIFT)
+        
+        if (evt.key.key == SDLK_LSHIFT)
         {
             if (m_input.buttonFlags & Input::Sprint)
             {

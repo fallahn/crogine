@@ -668,7 +668,7 @@ void BilliardsState::showReadyNotify(const BilliardsPlayer& player)
         }
         else
         {
-            msg += " (Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + ")";
+            msg += " (Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Action]) + ")";
         }
     }
     showNotification(msg);

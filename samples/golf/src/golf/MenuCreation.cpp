@@ -2161,11 +2161,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             cro::String s;
             if (keybind == InputBinding::PrevClub)
             {
-                s = "< " + cro::Keyboard::keyString(sharedData.inputBinding.keys[keybind]);
+                s = "< " + cro::Keyboard::keyString(sharedData.inputBinding.scancodes[keybind]);
             }
             else
             {
-                s = cro::Keyboard::keyString(sharedData.inputBinding.keys[keybind]) + " >";
+                s = cro::Keyboard::keyString(sharedData.inputBinding.scancodes[keybind]) + " >";
             }
             e.getComponent<cro::Text>().setString(s);
             e.getComponent<cro::Callback>().active = false;

@@ -77,8 +77,8 @@ namespace
 {
     cro::String InputKeyb(const InputBinding& ib)
     {
-        cro::String str = cro::Keyboard::keyString(ib.keys[InputBinding::Left]) + "/" + cro::Keyboard::keyString(ib.keys[InputBinding::Right]) + ": Move     "
-            + cro::Keyboard::keyString(ib.keys[InputBinding::Action]) + ": Drop     Escape: Pause/Quit";
+        cro::String str = cro::Keyboard::keyString(ib.scancodes[InputBinding::Left]) + "/" + cro::Keyboard::keyString(ib.scancodes[InputBinding::Right]) + ": Move     "
+            + cro::Keyboard::keyString(ib.scancodes[InputBinding::Action]) + ": Drop     Escape: Pause/Quit";
 #ifdef USE_GNS
         //const auto leader = Social::getSBallLeader();
         //str += "\nCurrent Leader: " + leader;
@@ -202,7 +202,7 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
             {
             default: break;
             case SDL_EVENT_KEY_UP:
-                if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
+                if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action])
                 {
                     //restart the game
                     restart();
@@ -234,11 +234,11 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDL_EVENT_KEY_UP:
-            if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Left])
+            if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left])
             {
                 m_inputFlags &= ~InputFlag::Left;
             }
-            else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Right])
+            else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right])
             {
                 m_inputFlags &= ~InputFlag::Right;
             }
@@ -246,15 +246,15 @@ bool SBallGameState::handleEvent(const cro::Event& evt)
         case SDL_EVENT_KEY_DOWN:
             if (evt.key.repeat == 0)
             {
-                if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
+                if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action])
                 {
                     dropBall();
                 }
-                else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Left])
+                else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left])
                 {
                     m_inputFlags |= InputFlag::Left;
                 }
-                else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Right])
+                else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right])
                 {
                     m_inputFlags |= InputFlag::Right;
                 }
@@ -1329,7 +1329,7 @@ void SBallGameState::endGame()
     switch (lastInput)
     {
     default:
-        scoreText += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " Restart  -  " + "Escape Quit";
+        scoreText += cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Action]) + " Restart  -  " + "Escape Quit";
         break;
     case InputType::PS:
         scoreText += cro::String(ButtonCross) + " Restart  -  " + cro::String(ButtonCircle) + " Quit";

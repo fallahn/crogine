@@ -332,15 +332,16 @@ bool ShopState::handleEvent(const cro::Event& evt)
         }
         break;
     case SDL_EVENT_KEY_UP:
-        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
         {
             prevCat();
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
         {
             nextCat();
         }
-        else if (evt.key.key == SDLK_ESCAPE
+        
+        if (evt.key.key == SDLK_ESCAPE
             || evt.key.key == SDLK_BACKSPACE)
         {
             quitState();

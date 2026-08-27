@@ -266,21 +266,23 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_EVENT_KEY_UP)
     {
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
+        {
+            m_heatTarget = 1.f;
+        }
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
+        {
+            m_heatTarget = 0.f;
+        }
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu])
+        {
+            gotoTarget();
+        }
+
         switch (evt.key.key)
         {
         default: 
-            if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
-            {
-                m_heatTarget = 1.f;
-            }
-            else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
-            {
-                m_heatTarget = 0.f;
-            }
-            else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
-            {
-                gotoTarget();
-            }
+
             break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
@@ -429,19 +431,19 @@ void MapOverviewState::handleMessage(const cro::Message& msg)
 bool MapOverviewState::simulate(float dt)
 {
     glm::vec2 movement(0.f);
-    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left]))
+    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Left]))
     {
         movement.x -= 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Right]))
+    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Right]))
     {
         movement.x += 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
+    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Up]))
     {
         movement.y -= 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Down]))
+    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Down]))
     {
         movement.y += 1.f;
     }
@@ -726,7 +728,7 @@ void MapOverviewState::buildScene()
         {
             if (e.getComponent<cro::Transform>().getScale().x != 0)
             {
-                const auto str = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]);
+                const auto str = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu]);
                 e.getComponent<cro::Text>().setString(str);
             }
         };

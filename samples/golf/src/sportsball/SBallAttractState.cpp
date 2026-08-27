@@ -657,9 +657,9 @@ void SBallAttractState::onCachedPush()
     //m_music.getComponent<cro::AudioEmitter>().play();
     //LogI << "Implment onCachedPush" << std::endl;
     //update the keyboard help string with current key binds
-    m_keyboardHelpString = "Use " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left])
-        + " and " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]) + " to Aim.\nPress "
-        + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to drop the ball.\n"
+    m_keyboardHelpString = "Use " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Left])
+        + " and " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Right]) + " to Aim.\nPress "
+        + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Action]) + " to drop the ball.\n"
         + "Match two balls to evolve them.\nMatch two Beach balls to level up.\nThe game ends when any\nball reaches the top!!";
 }
 

@@ -1261,11 +1261,11 @@ bool MenuState::handleEvent(const cro::Event& evt)
     {
         setChatHint(false, 0);
 
-        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
         {
             doPrev();
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
         {
             doNext();
         }

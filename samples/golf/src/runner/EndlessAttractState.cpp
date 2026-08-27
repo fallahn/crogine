@@ -191,7 +191,7 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
             break;
         }
 
-        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action])
         {
             startGame();
         }
@@ -340,7 +340,7 @@ void EndlessAttractState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to Start");
+    entity.addComponent<cro::Text>(font).setString("Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Action]) + " to Start");
     entity.getComponent<cro::Text>().setFillColour(TextColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);

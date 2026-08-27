@@ -305,7 +305,7 @@ namespace
 
     inline cro::String keyString(std::int32_t idx, const SharedStateData& sharedData)
     {
-        return " (" + cro::Keyboard::keyString(sharedData.inputBinding.keys[idx]) + ")";
+        return " (" + cro::Keyboard::keyString(sharedData.inputBinding.scancodes[idx]) + ")";
     };
 
     bool audioHackDone = false;
@@ -399,7 +399,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         else
         {
             //cancel the input
-            updateKeybind(/*evt.key.key*/SDLK_ESCAPE);
+            updateKeybind(/*evt.key.key*/SDL_SCANCODE_ESCAPE);
         }
     };
 
@@ -432,11 +432,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         switch (evt.key.key)
         {
         default:
-            if (m_updatingKeybind)
-            {
-                //apply keybind
-                updateKeybind(evt.key.key);
-            }
+
             break;
 #ifdef CRO_DEBUG_
         case SDLK_KP_DIVIDE:
@@ -461,6 +457,13 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             closeWindow();
             return false;
         }
+
+        //if we're still here then let's accept the keybind
+        if (m_updatingKeybind)
+        {
+            //apply keybind
+            updateKeybind(evt.key.scancode);
+        }
     }
     else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
@@ -479,12 +482,12 @@ bool OptionsState::handleEvent(const cro::Event& evt)
 
         if (!m_updatingKeybind)
         {
-            if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+            if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
             {
                 m_currentTabFunction = (m_currentTabFunction + (m_tabFunctions.size() - 1)) % m_tabFunctions.size();
                 m_tabFunctions[m_currentTabFunction]();
             }
-            else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+            else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
             {
                 m_currentTabFunction = (m_currentTabFunction + 1) % m_tabFunctions.size();
                 m_tabFunctions[m_currentTabFunction]();
@@ -876,36 +879,36 @@ void OptionsState::updateScrollBar()
     }
 }
 
-void OptionsState::updateKeybind(SDL_Keycode key)
+void OptionsState::updateKeybind(SDL_Scancode key)
 {
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 
     //prevent binding top row and function keys
     const std::array LockedKeys =
     {
-        SDLK_1,
-        SDLK_2,
-        SDLK_3,
-        SDLK_4,
-        SDLK_5,
-        SDLK_6,
-        SDLK_7,
-        SDLK_8,
-        SDLK_9,
-        SDLK_0,
+        SDL_SCANCODE_1,
+        SDL_SCANCODE_2,
+        SDL_SCANCODE_3,
+        SDL_SCANCODE_4,
+        SDL_SCANCODE_5,
+        SDL_SCANCODE_6,
+        SDL_SCANCODE_7,
+        SDL_SCANCODE_8,
+        SDL_SCANCODE_9,
+        SDL_SCANCODE_0,
 
-        SDLK_F1,
-        SDLK_F2,
-        SDLK_F3,
-        SDLK_F4,
-        SDLK_F5,
-        SDLK_F6,
-        SDLK_F7,
-        SDLK_F8,
-        SDLK_F9,
-        SDLK_F10,
-        SDLK_F11,
-        SDLK_F12,
+        SDL_SCANCODE_F1,
+        SDL_SCANCODE_F2,
+        SDL_SCANCODE_F3,
+        SDL_SCANCODE_F4,
+        SDL_SCANCODE_F5,
+        SDL_SCANCODE_F6,
+        SDL_SCANCODE_F7,
+        SDL_SCANCODE_F8,
+        SDL_SCANCODE_F9,
+        SDL_SCANCODE_F10,
+        SDL_SCANCODE_F11,
+        SDL_SCANCODE_F12,
     };
     if (auto result = std::find(std::begin(LockedKeys), std::end(LockedKeys), key); result != std::end(LockedKeys))
     {
@@ -927,7 +930,7 @@ void OptionsState::updateKeybind(SDL_Keycode key)
     }
 
 
-    auto& keys = m_sharedData.inputBinding.keys;
+    auto& keys = m_sharedData.inputBinding.scancodes;
     if (auto result = std::find(keys.begin(), keys.end(), key); result != keys.end())
     {
         cro::Command cmd;
@@ -952,8 +955,8 @@ void OptionsState::updateKeybind(SDL_Keycode key)
     m_updatingKeybind = false;
 
     //these keys cancel the input
-    if (key != SDLK_ESCAPE
-        && key != SDLK_BACKSPACE)
+    if (key != SDL_SCANCODE_ESCAPE
+        && key != SDL_SCANCODE_BACKSPACE)
     {
         keys[m_bindingIndex] = key;
     }
@@ -963,8 +966,8 @@ void OptionsState::updateKeybind(SDL_Keycode key)
     cmd.targetFlags = CommandID::Menu::InfoString;
     cmd.action = [key](cro::Entity e, float)
     {
-        if (key != SDLK_ESCAPE
-            && key != SDLK_BACKSPACE)
+        if (key != SDL_SCANCODE_ESCAPE
+            && key != SDL_SCANCODE_BACKSPACE)
         {
             e.getComponent<cro::Text>().setString("Set to (" + cro::Keyboard::keyString(key) + ")");
         }
@@ -1112,7 +1115,7 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setString("<" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+    entity.getComponent<cro::Text>().setString("<" + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::PrevClub]));
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -1121,7 +1124,7 @@ void OptionsState::buildScene()
             if (lastInput == LastInput::Keyboard)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                e.getComponent<cro::Text>().setString("<" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+                e.getComponent<cro::Text>().setString("<" + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::PrevClub]));
             }
             else
             {
@@ -1135,7 +1138,7 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + ">");
+    entity.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::NextClub]) + ">");
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -1144,7 +1147,7 @@ void OptionsState::buildScene()
             if (lastInput == LastInput::Keyboard)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + ">");
+                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::NextClub]) + ">");
             }
             else
             {
@@ -3666,21 +3669,21 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         auto textEnt = m_scene.createEntity();
         textEnt.addComponent<cro::Transform>().setPosition(glm::vec3(bounds.width / 2.f, 10.f, -0.01f));
         textEnt.addComponent<cro::Drawable2D>();
-        textEnt.addComponent<cro::Text>(uiFont).setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[keyIndex]));
+        textEnt.addComponent<cro::Text>(uiFont).setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[keyIndex]));
         textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
         textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
         textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         textEnt.addComponent<cro::Callback>().active = true;
-        textEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(m_sharedData.inputBinding.keys[keyIndex]);
+        textEnt.getComponent<cro::Callback>().setUserData<SDL_Scancode>(m_sharedData.inputBinding.scancodes[keyIndex]);
         textEnt.getComponent<cro::Callback>().function =
             [&, keyIndex](cro::Entity e, float)
             {
-                auto& lastKey = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
-                if (lastKey != m_sharedData.inputBinding.keys[keyIndex])
+                auto& lastKey = e.getComponent<cro::Callback>().getUserData<SDL_Scancode>();
+                if (lastKey != m_sharedData.inputBinding.scancodes[keyIndex])
                 {
                     //update string
-                    e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[keyIndex]));
-                    lastKey = m_sharedData.inputBinding.keys[keyIndex];
+                    e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[keyIndex]));
+                    lastKey = m_sharedData.inputBinding.scancodes[keyIndex];
                 }
             };
         entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
@@ -4394,7 +4397,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
             if (activated(evt))
             {
                 InputBinding defaultBinding;
-                m_sharedData.inputBinding.keys = defaultBinding.keys;
+                m_sharedData.inputBinding.scancodes = defaultBinding.scancodes;
 
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;

@@ -486,10 +486,10 @@ void GolfState::buildUI()
             {
                 if (m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().id == 0)
                 {
-                    const auto Out = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]);
-                    const auto In = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]);
-                    const auto Down = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::EmoteMenu]);
-                    const auto Up = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]);
+                    const auto Out = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::PrevClub]);
+                    const auto In = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::NextClub]);
+                    const auto Down = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::EmoteMenu]);
+                    const auto Up = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Action]);
                     e.getComponent<cro::Text>().setString(Out + "                 " + In + "\n" + Down + "                 " + Up);
                     e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 }
@@ -519,16 +519,16 @@ void GolfState::buildUI()
             {
                 if (m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().id == 0)
                 {
-                    const auto Left = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]);
-                    const auto Right = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]);
-                    const auto Up = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Up]);
-                    const auto Down = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Down]);
+                    const auto Left = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Left]);
+                    const auto Right = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Right]);
+                    const auto Up = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Up]);
+                    const auto Down = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Down]);
                     auto str = Left + "," + Right + "," + Up + "," + Down;
                     if (str.size() > 10) //a fudge because the string might be too long to fit
                     {
                         str = "Aim Keys";
                     }
-                    str += "\n\n" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]);
+                    str += "\n\n" + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu]);
                     e.getComponent<cro::Text>().setString(str);
                     e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 }
@@ -1058,7 +1058,7 @@ void GolfState::buildUI()
             {
                 const cro::Colour c = Club::getModifierIndex() == 1 ? TextHighlightColour : TextNormalColour;
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::PrevClub]));
                 e.getComponent<cro::Text>().setFillColour(c);
             }
             else
@@ -1135,7 +1135,7 @@ void GolfState::buildUI()
             {
                 const cro::Colour c = Club::getModifierIndex() == 2 ? TextHighlightColour : TextNormalColour;
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]));
+                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::NextClub]));
                 e.getComponent<cro::Text>().setFillColour(c);
             }
             else
@@ -6238,7 +6238,7 @@ void GolfState::updateSkipMessage(float dt)
                     else
                     {
                         data.buttonIndex = std::numeric_limits<std::uint32_t>::max();
-                        e.getComponent<cro::Text>().setString("Hold " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to Skip");
+                        e.getComponent<cro::Text>().setString("Hold " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Action]) + " to Skip");
                     }
                     centreText(e);
                 };
@@ -6246,7 +6246,7 @@ void GolfState::updateSkipMessage(float dt)
             }
 
             //read input
-            if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Action])
+            if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Action])
                 || cro::GameController::isButtonPressed(activeControllerID(m_currentPlayer.player), m_sharedData.inputBinding.buttons[InputBinding::Action])
                 || (m_humanCount == 1 && m_buttonStates.buttonA)) //TODO this breaks if we ever get around to reassigning controller buttons
             {
@@ -7184,28 +7184,28 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
     if (evt.type == SDL_EVENT_KEY_DOWN
         && evt.key.repeat == 0)
     {
-        if (evt.key.key == sharedData.inputBinding.keys[InputBinding::EmoteMenu])
+        if (evt.key.scancode == sharedData.inputBinding.scancodes[InputBinding::EmoteMenu])
         {
             targetScale = 1.f;
             return true;
         }
 
         //stop these getting forwarded to input parser
-        if (cro::Keyboard::isKeyPressed(sharedData.inputBinding.keys[InputBinding::EmoteMenu]))
+        if (cro::Keyboard::isKeyPressed(sharedData.inputBinding.scancodes[InputBinding::EmoteMenu]))
         {
-            if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Up])
+            if (evt.key.scancode == sharedData.inputBinding.scancodes[InputBinding::Up])
             {
                 return true;
             }
-            else if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Down])
+            else if (evt.key.scancode == sharedData.inputBinding.scancodes[InputBinding::Down])
             {
                 return true;
             }
-            else if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Left])
+            else if (evt.key.scancode == sharedData.inputBinding.scancodes[InputBinding::Left])
             {
                 return true;
             }
-            else if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Right])
+            else if (evt.key.scancode == sharedData.inputBinding.scancodes[InputBinding::Right])
             {
                 return true;
             }
@@ -7233,7 +7233,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.key == sharedData.inputBinding.keys[InputBinding::EmoteMenu])
+        if (evt.key.scancode == sharedData.inputBinding.scancodes[InputBinding::EmoteMenu])
         {
             targetScale = 0.f;
             return true;
@@ -7241,22 +7241,22 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
 
         if (currentScale == 1)
         {
-            if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Up])
+            if (evt.key.scancode == sharedData.inputBinding.scancodes[InputBinding::Up])
             {
                 sendEmote(Emote::Happy, 0);
                 return true;
             }
-            else if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Down])
+            else if (evt.key.scancode == sharedData.inputBinding.scancodes[InputBinding::Down])
             {
                 sendEmote(Emote::Laughing, 0);
                 return true;
             }
-            else if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Left])
+            else if (evt.key.scancode == sharedData.inputBinding.scancodes[InputBinding::Left])
             {
                 sendEmote(Emote::Sad, 0);
                 return true;
             }
-            else if (evt.key.key == sharedData.inputBinding.keys[InputBinding::Right])
+            else if (evt.key.scancode == sharedData.inputBinding.scancodes[InputBinding::Right])
             {
                 sendEmote(Emote::Grumpy, 0);
                 return true;
@@ -7462,7 +7462,7 @@ void GolfState::EmoteWheel::refreshLabels()
 
     for (auto i = 0u; i < /*labelNodes.size()*/InputMap.size(); ++i)
     {
-        labelNodes[i].getComponent<cro::Text>().setString(SDL_GetKeyName(sharedData.inputBinding.keys[InputMap[i]]));
+        labelNodes[i].getComponent<cro::Text>().setString(cro::Keyboard::keyString(sharedData.inputBinding.scancodes[InputMap[i]]));
         centreText(labelNodes[i]);
 
         if (cro::GameController::getControllerCount() == 0)

@@ -267,23 +267,23 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
         }
 
 
-        if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Left])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left])
         {
             pumpDown();
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Right])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right])
         {
             pumpUp();
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
         {
             insertBall();
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
         {
             removeBall();
         }
-        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action])
         {
             addSoap();
         }

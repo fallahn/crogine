@@ -90,4 +90,13 @@ namespace cro::Keyboard
             return "RAlt";
         }
     }
+
+    /*!
+    \briefe Returns the string representation of the given scancode, converted to
+    a keycode based on the current keyboard layout and given Keymod value.
+    */
+    static inline cro::String keyString(SDL_Scancode scancode, SDL_Keymod keymod = SDL_KMOD_NONE)
+    {
+        return keyString(SDL_GetKeyFromScancode(scancode, keymod, false));
+    }
 }
