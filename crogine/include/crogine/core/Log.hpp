@@ -168,7 +168,7 @@ std::ostream& operator << (std::ostream& out, cro::Rectangle<T> r)
 #else
 #define LOG(message, type) {\
 std::string fileName(__FILE__); \
-fileName = cro::FileSystem::getFileName(fileName); \
+fileName = cro::FileSystem::getFileName(fileName).string(); \
 std::stringstream ss; \
 ss << message << " (" << fileName << ", " << __LINE__ << ")"; \
 cro::Logger::log(ss.str(), type);}

@@ -134,7 +134,7 @@ std::vector<std::string> Playlist::getTrackList() const
         std::scoped_lock lock(m_mutex);
         for (const auto& t : m_filePaths)
         {
-            retVal.push_back(cro::FileSystem::getFileName(t));
+            retVal.push_back(cro::FileSystem::getFileName(t).string());
         }
     }
     return retVal;

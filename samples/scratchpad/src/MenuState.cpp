@@ -1273,17 +1273,17 @@ void MenuState::createUI()
                     ImGui::SameLine();
                     if (ImGui::Button("Open video"))
                     {
-                        auto path = cro::FileSystem::openFileDialogue("", "mpg");
+                        const auto path = cro::FileSystem::openFileDialogue("", "mpg");
                         if (!path.empty())
                         {
-                            if (!m_video.loadFromFile(path))
+                            if (!m_video.loadFromFile(path.string()))
                             {
                                 cro::FileSystem::showMessageBox("Error", "Could not open file");
                                 label = "No file open";
                             }
                             else
                             {
-                                label = cro::FileSystem::getFileName(path);
+                                label = cro::FileSystem::getFileName(path).string();
                             }
                         }
                     }
@@ -1328,16 +1328,16 @@ void MenuState::createUI()
                 {
                     if (ImGui::Button("Open##music"))
                     {
-                        auto path = cro::FileSystem::openFileDialogue("", "wav,ogg,mp3");
+                        const auto path = cro::FileSystem::openFileDialogue("", "wav,ogg,mp3");
                         if (!path.empty())
                         {
-                            if (!m_music.loadFromFile(path))
+                            if (!m_music.loadFromFile(path.string()))
                             {
                                 cro::FileSystem::showMessageBox("Error", "Failed to open music file");
                             }
                             else
                             {
-                                m_musicName = cro::FileSystem::getFileName(path);
+                                m_musicName = cro::FileSystem::getFileName(path).string();
                             }
                         }
                     }
@@ -1448,7 +1448,7 @@ void MenuState::createUI()
 
                 if (!outpath.empty())
                 {
-                    fileToByteArray(inpath, outpath);
+                    fileToByteArray(inpath, outpath.string());
                 }
             }
         });
@@ -1737,9 +1737,9 @@ void MenuState::CSVToMap()
     };
 
     //created for a specific use case, so not much general use.
-    if (auto path = cro::FileSystem::openFileDialogue("", "csv"); !path.empty())
+    if (const auto path = cro::FileSystem::openFileDialogue("", "csv"); !path.empty())
     {
-        rapidcsv::Document doc(path);
+        rapidcsv::Document doc(path.string());
 
         //hm this is supposed to auto-remove the quotes according to the docs,
         //but my experience proves otherwise...
@@ -1784,7 +1784,7 @@ void MenuState::CSVToMap()
         LogI << "Parsed " << codes.size() << " rows" << std::endl;
         LogI << "Writing header file..." << std::endl;
 
-        auto outpath = path;
+        auto outpath = path.string();
         cro::Util::String::replace(outpath, "csv", "hpp");
         std::ofstream outfile(outpath);
         if (outfile.is_open() && outfile.good())
@@ -1846,7 +1846,7 @@ void MenuState::imageQuantizer()
             const auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
             if (!path.empty())
             {
-                if (m_quantizeInput.loadFromFile(path))
+                if (m_quantizeInput.loadFromFile(path.string()))
                 {
                     m_quantizeQuad.setTexture(m_quantizeInput);
                     m_quantizeQuad.setShader(m_quantizeShader);
@@ -1863,7 +1863,7 @@ void MenuState::imageQuantizer()
                 const auto path = cro::FileSystem::saveFileDialogue("", "png");
                 if (!path.empty())
                 {
-                    m_quantizeOutput.getTexture().saveToFile(path);
+                    m_quantizeOutput.getTexture().saveToFile(path.string());
                 }
             }
             
@@ -1892,9 +1892,9 @@ void MenuState::cubemapWindow()
             const auto path = cro::FileSystem::openFileDialogue(m_cubemapLoadPath, "png,jpg,bmp");
             if (!path.empty())
             {
-                m_cubemapPreview.loadFromFile(path);
+                m_cubemapPreview.loadFromFile(path.string());
 
-                m_cubemapLoadPath = path;
+                m_cubemapLoadPath = path.string();
                 saveConfig();
             }
         }
@@ -1918,7 +1918,7 @@ void MenuState::cubemapWindow()
                 const auto path = cro::FileSystem::openFolderDialogue(m_cubemapSavePath);
                 if (!path.empty())
                 {
-                    bool canSave = !cro::FileSystem::fileExists(path + "/cubemap.ccm");
+                    bool canSave = !cro::FileSystem::fileExists(path / "/cubemap.ccm");
                     if (!canSave)
                     {
                         canSave = cro::FileSystem::showMessageBox("Warning", "Output exists, Overwrite?", cro::FileSystem::YesNo);
@@ -1944,7 +1944,7 @@ void MenuState::cubemapWindow()
                         cfg.addProperty("right").setValue("px.png");
                         cfg.addProperty("back").setValue("nz.png");
                         cfg.addProperty("down").setValue("ny.png");
-                        cfg.save(path + "/cubemap.ccm");
+                        cfg.save(path.string() + "/cubemap.ccm");
 
                         cro::SimpleQuad q;
                         q.setTexture(m_cubemapPreview);
@@ -1959,10 +1959,10 @@ void MenuState::cubemapWindow()
                             rt.clear();
                             q.draw();
                             rt.display();
-                            rt.saveToFile(path + "/" + FileNames[i]);
+                            rt.saveToFile(path.string() + "/" + FileNames[i]);
                         }
 
-                        m_cubemapSavePath = path;
+                        m_cubemapSavePath = path.string();
                         saveConfig();
                     }
                 }

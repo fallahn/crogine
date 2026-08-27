@@ -146,7 +146,7 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
     }
     else
     {
-        path = FileSystem::getResourcePath() + filePath;
+        path = (FileSystem::getResourcePath() / filePath).string();
     }
 
     if (!cro::FileSystem::fileExists(path))

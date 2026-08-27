@@ -226,7 +226,7 @@ void SurrealState::createScene()
         if (!files.empty())
         {
             cro::Image img;
-            img.loadFromFile(normalsPath + files[0]);
+            img.loadFromFile(normalsPath + files[0].string());
             m_arrayTexture.create(img.getSize().x, img.getSize().y);
 
             glBindTexture(GL_TEXTURE_2D_ARRAY, m_arrayTexture.getGLHandle());
@@ -237,7 +237,7 @@ void SurrealState::createScene()
             {
                 if (i)
                 {
-                    img.loadFromFile(normalsPath + files[i]);
+                    img.loadFromFile(normalsPath + files[i].string());
                 }
                 m_arrayTexture.insertLayer(img, i);
             }

@@ -210,16 +210,16 @@ glm::vec3 OpenALImpl::getListenerPosition() const
 
 std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
 {
-    auto path = FileSystem::getResourcePath() + filePath;
+    const auto path = FileSystem::getResourcePath() / filePath;
 
     std::unique_ptr<AudioFile> loader;
     
-    auto ext = FileSystem::getFileExtension(path);
+    const auto ext = FileSystem::getFileExtension(path);
     PCMData data;
     if (ext == ".wav")
     {      
         loader = std::make_unique<WavLoader>();
-        if (loader->open(path))
+        if (loader->open(path.string()))
         {
             data = loader->getData();
         }
@@ -227,7 +227,7 @@ std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
     else if (ext == ".ogg")
     {
         loader = std::make_unique<VorbisLoader>();
-        if (loader->open(path))
+        if (loader->open(path.string()))
         {
             data = loader->getData();
         }
@@ -235,14 +235,14 @@ std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
     else if (ext == ".mp3")
     {
         loader = std::make_unique<Mp3Loader>();
-        if (loader->open(path))
+        if (loader->open(path.string()))
         {
             data = loader->getData();
         }
     }
     else
     {
-        Logger::log(ext + ": format not supported", Logger::Type::Error);
+        Logger::log(ext.string() + ": format not supported", Logger::Type::Error);
     }
 
     if (data.data)
@@ -289,13 +289,13 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
 
     auto& stream = getNextFreeStream();
 
-    auto filePath = cro::FileSystem::getResourcePath() + path;
+    const auto filePath = cro::FileSystem::getResourcePath() / path;
 
-    auto ext = FileSystem::getFileExtension(path);
+    const auto ext = FileSystem::getFileExtension(path);
     if (ext == ".wav")
     {
         stream.audioFile = std::make_unique<WavLoader>();
-        if (!stream.audioFile->open(filePath))
+        if (!stream.audioFile->open(filePath.string()))
         {
             stream.audioFile.reset();
             Logger::log("Failed to open " + path, Logger::Type::Error);
@@ -305,7 +305,7 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     else if (ext == ".ogg")
     {
         stream.audioFile = std::make_unique<VorbisLoader>();
-        if (!stream.audioFile->open(filePath))
+        if (!stream.audioFile->open(filePath.string()))
         {
             stream.audioFile.reset();
             Logger::log("Failed to open " + path, Logger::Type::Error);
@@ -315,7 +315,7 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     else if (ext == ".mp3")
     {
         stream.audioFile = std::make_unique<Mp3Loader>();
-        if (!stream.audioFile->open(filePath))
+        if (!stream.audioFile->open(filePath.string()))
         {
             stream.audioFile.reset();
             Logger::log("Failed to open " + path, Logger::Type::Error);
@@ -325,7 +325,7 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     else
     {
         stream.streamID = -1;
-        Logger::log("[OpenAL] - " + FileSystem::getFileName(path) + ": Unsupported file type.", Logger::Type::Error);
+        Logger::log("[OpenAL] - " + FileSystem::getFileName(path).string() + ": Unsupported file type.", Logger::Type::Error);
         return -1;
     }
     

@@ -405,11 +405,11 @@ void TrackOverlayState::createUI()
                     ImGui::SameLine();
                     if (ImGui::Button("Choose##0"))
                     {
-                        auto path = cro::FileSystem::openFileDialogue("c:/windows/fonts/Arial.ttf");
+                        const auto path = cro::FileSystem::openFileDialogue("c:/windows/fonts/Arial.ttf");
                         if (!path.empty())
                         {
-                            m_settings.titleFont = path;
-                            m_resources.fonts.get(FontID::Title).loadFromFile(path);
+                            m_settings.titleFont = path.string();
+                            m_resources.fonts.get(FontID::Title).loadFromFile(path.string());
                             m_displayEnts.titleText.getComponent<cro::Text>().setFont(m_resources.fonts.get(FontID::Title));
                         }
                     }
@@ -424,11 +424,11 @@ void TrackOverlayState::createUI()
                     ImGui::SameLine();
                     if (ImGui::Button("Choose##1"))
                     {
-                        auto path = cro::FileSystem::openFileDialogue("c:/windows/fonts/Arial.ttf");
+                        const auto path = cro::FileSystem::openFileDialogue("c:/windows/fonts/Arial.ttf");
                         if (!path.empty())
                         {
-                            m_settings.artistFont = path;
-                            m_resources.fonts.get(FontID::Artist).loadFromFile(path);
+                            m_settings.artistFont = path.string();
+                            m_resources.fonts.get(FontID::Artist).loadFromFile(path.string());
                             m_displayEnts.artistText.getComponent<cro::Text>().setFont(m_resources.fonts.get(FontID::Artist));
                         }
                     }
@@ -445,7 +445,7 @@ void TrackOverlayState::createUI()
                         if (!path.empty())
                         {
                             cro::ConfigFile input;
-                            if (input.loadFromFile(path))
+                            if (input.loadFromFile(path.string()))
                             {
                                 cro::ConfigFile cfg("tracklist");
 
@@ -481,7 +481,7 @@ void TrackOverlayState::createUI()
 
                                 if (trackNumber)
                                 {
-                                    cfg.save(cro::FileSystem::getFilePath(path) + "tracklist.cfg");
+                                    cfg.save(cro::FileSystem::getFilePath(path).string() + "tracklist.cfg");
                                     LogI << "Wrote " << trackNumber << " tracks to tracklist.cfg" << std::endl;
                                 }
                             }
@@ -492,7 +492,7 @@ void TrackOverlayState::createUI()
                     ImGui::SameLine();
                     if (ImGui::Button("Choose##2"))
                     {
-                        auto path = cro::FileSystem::openFolderDialogue();
+                        auto path = cro::FileSystem::openFolderDialogue().string();
                         if (!path.empty())
                         {
                             std::replace(path.begin(), path.end(), '\\', '/');

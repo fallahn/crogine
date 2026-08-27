@@ -62,13 +62,13 @@ bool MusicPlayer::loadFromFile(const std::string& path)
 
 
     m_bytesPerSample = 1; //default this to 1 so we don't get a div0 trying to play an empty file
-    auto filePath = cro::FileSystem::getResourcePath() + path;
+    auto filePath = cro::FileSystem::getResourcePath() / path;
 
     auto ext = FileSystem::getFileExtension(path);
     if (ext == ".wav")
     {
         m_audioFile = std::make_unique<WavLoader>();
-        if (!m_audioFile->open(filePath))
+        if (!m_audioFile->open(filePath.string()))
         {
             m_audioFile.reset();
             Logger::log("Failed to open " + path, Logger::Type::Error);
@@ -78,7 +78,7 @@ bool MusicPlayer::loadFromFile(const std::string& path)
     else if (ext == ".ogg")
     {
         m_audioFile = std::make_unique<VorbisLoader>();
-        if (!m_audioFile->open(filePath))
+        if (!m_audioFile->open(filePath.string()))
         {
             m_audioFile.reset();
             Logger::log("Failed to open " + path, Logger::Type::Error);
@@ -88,7 +88,7 @@ bool MusicPlayer::loadFromFile(const std::string& path)
     else if (ext == ".mp3")
     {
         m_audioFile = std::make_unique<Mp3Loader>();
-        if (!m_audioFile->open(filePath))
+        if (!m_audioFile->open(filePath.string()))
         {
             m_audioFile.reset();
             Logger::log("Failed to open " + path, Logger::Type::Error);
@@ -97,7 +97,7 @@ bool MusicPlayer::loadFromFile(const std::string& path)
     }
     else
     {
-        Logger::log("[Music Player] - " + FileSystem::getFileName(path) + ": Unsupported file type.", Logger::Type::Error);
+        Logger::log("[Music Player] - " + filePath.filename().string() + ": Unsupported file type.", Logger::Type::Error);
         return false;
     }
 

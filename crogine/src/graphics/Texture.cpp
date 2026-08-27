@@ -220,7 +220,7 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool useCompression)
 {
     std::filesystem::path p(filePath);
-    auto path = FileSystem::getResourcePath();
+    auto path = FileSystem::getResourcePath().string();
     //only add resource path if not done so already
     if (!p.is_absolute() &&
         filePath.find(path) == std::string::npos)
@@ -232,7 +232,7 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool
         path = filePath;
     }
 
-    if (FileSystem::getFileExtension(path).find("ktx") != std::string::npos)
+    if (FileSystem::getFileExtension(path).string().find("ktx") != std::string::npos)
     {
         if (!ktxFunctionsLoaded)
         {

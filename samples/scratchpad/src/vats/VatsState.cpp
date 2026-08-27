@@ -256,10 +256,10 @@ VatsState::VatsState(cro::StateStack& stack, cro::State::Context context)
             {
                 if (ImGui::Button("Open File"))
                 {
-                    auto path = cro::FileSystem::openFileDialogue("", "vat");
+                    const auto path = cro::FileSystem::openFileDialogue("", "vat");
                     if (!path.empty())
                     {
-                        loadModel(path);
+                        loadModel(path.string());
                     }
                 }
 

@@ -130,11 +130,11 @@ bool Palette::loadFromFile(const std::string& path, bool append)
         m_swatches.clear();
     }
 
-    auto fullPath = FileSystem::getResourcePath() + path;
+    const auto fullPath = (FileSystem::getResourcePath() / path).string();
     RaiiRWops file;
     file.file = SDL_IOFromFile(fullPath.c_str(), "rb");
 
-    auto fileName = FileSystem::getFileName(path);
+    const auto fileName = FileSystem::getFileName(path).string();
 
     if (!file.file)
     {

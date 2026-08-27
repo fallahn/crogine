@@ -481,28 +481,28 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
                 ImGui::Text("NOTE THAT THIS IS A PROTOTYPE\nAND DEVELOPMENT HAS BEEN MOVED\nTO GOLF PROJECT");
                 if (ImGui::Button("Open Model"))
                 {
-                    auto path = cro::FileSystem::openFileDialogue("", "cmt");
+                    const auto path = cro::FileSystem::openFileDialogue("", "cmt");
                     if (!path.empty())
                     {
-                        loadModel(path);
+                        loadModel(path.string());
                     }
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Open Preset"))
                 {
-                    auto path = cro::FileSystem::openFileDialogue("", "tst");
+                    const auto path = cro::FileSystem::openFileDialogue("", "tst");
                     if (!path.empty())
                     {
-                        loadPreset(path);
+                        loadPreset(path.string());
                     }
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Save Preset"))
                 {
-                    auto path = cro::FileSystem::saveFileDialogue(lastTreeset, "tst");
+                    const auto path = cro::FileSystem::saveFileDialogue(lastTreeset, "tst");
                     if (!path.empty())
                     {
-                        savePreset(path);
+                        savePreset(path.string());
                     }
                 }
 
@@ -526,10 +526,10 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
 
                 if (ImGui::Button("Load Palette"))
                 {
-                    auto path = cro::FileSystem::openFileDialogue("", "ase");
+                    const auto path = cro::FileSystem::openFileDialogue("", "ase");
                     if (!path.empty())
                     {
-                        palette.loadFromFile(path);
+                        palette.loadFromFile(path.string());
                     }
                 }
                 auto i = 0;
@@ -563,11 +563,11 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
 
                 if (ImGui::Button("Load Texture"))
                 {
-                    auto path = cro::FileSystem::openFileDialogue("", "png");
+                    const auto path = cro::FileSystem::openFileDialogue("", "png");
                     if (!path.empty())
                     {
-                        leafTexture->loadFromFile(path);
-                        treeset.texturePath = cro::FileSystem::getFileName(path);
+                        leafTexture->loadFromFile(path.string());
+                        treeset.texturePath = cro::FileSystem::getFileName(path).string();
                     }
                 }
                 ImGui::SameLine();
@@ -877,7 +877,7 @@ void BushState::loadModel(const std::string& path)
             entity.getComponent<cro::Model>().setMaterial(1, m_resources.materials.get(bushMaterial));
         }
 
-        treeset.modelPath = cro::FileSystem::getFileName(path);
+        treeset.modelPath = cro::FileSystem::getFileName(path).string();
     }
     else
     {
@@ -925,8 +925,8 @@ void BushState::loadPreset(const std::string& path)
             }
         }
 
-        loadModel(workingDir + treeset.modelPath);
-        leafTexture->loadFromFile(workingDir + treeset.texturePath);
+        loadModel(workingDir.string() + treeset.modelPath);
+        leafTexture->loadFromFile(workingDir.string() + treeset.texturePath);
 
         glUseProgram(shaderUniform.shaderID);
         glUniform1f(shaderUniform.randomness, treeset.randomAmount);

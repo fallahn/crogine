@@ -185,7 +185,7 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
             //"assets/golf/images/ui/",
         };
 
-        std::vector<std::vector<std::string>> searchResults;
+        std::vector<std::vector<std::filesystem::path>> searchResults;
         for(const auto& path : searchPaths)
         { 
             searchResults.push_back(cro::FileSystem::listFiles(path));
@@ -202,7 +202,7 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
                         bool cfgModified = false;
 
                         cro::ConfigFile cfg;
-                        if (cfg.loadFromFile(src + file))
+                        if (cfg.loadFromFile(src + file.string()))
                         {
                             for (auto& obj : cfg.getObjects())
                             {
@@ -222,7 +222,7 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
                                                     if (auto result = std::find(searchResults[i].begin(), searchResults[i].end(), imageFile);
                                                         result != searchResults[i].end())
                                                     {
-                                                        imagePath = searchPaths[i] + imageFile;
+                                                        imagePath = searchPaths[i] + imageFile.string();
                                                         LogI << "Found new path for " << imagePath << std::endl;
 
                                                         prop.setValue(imagePath);
@@ -237,7 +237,7 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
 
                             if (cfgModified)
                             {
-                                cfg.save(src + file);
+                                cfg.save(src + file.string());
                             }
                         }
                     }
@@ -249,7 +249,7 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
         const auto& dirs = cro::FileSystem::listDirectories(modelDir);
         for (const auto& dir : dirs)
         {
-            searchModels(modelDir + dir + "/");
+            searchModels(modelDir + dir.string() + "/");
         }
         searchModels(modelDir);
 
@@ -266,7 +266,7 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
                         bool cfgModified = false;
 
                         cro::ConfigFile cfg;
-                        if (cfg.loadFromFile(src + file))
+                        if (cfg.loadFromFile(src + file.string()))
                         {
                             for (auto& prop : cfg.getProperties())
                             {
@@ -282,7 +282,7 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
                                             if (auto result = std::find(searchResults[i].begin(), searchResults[i].end(), imageFile);
                                                 result != searchResults[i].end())
                                             {
-                                                imagePath = searchPaths[i] + imageFile;
+                                                imagePath = searchPaths[i] + imageFile.string();
                                                 LogI << "Found new path for " << imagePath << std::endl;
 
                                                 prop.setValue(imagePath);
@@ -295,7 +295,7 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
 
                             if (cfgModified)
                             {
-                                cfg.save(src + file);
+                                cfg.save(src + file.string());
                             }
                         }
                     }
@@ -1199,14 +1199,14 @@ void BatcatState::createReflectionScene()
     if (!files.empty())
     {
         cro::Image img;
-        img.loadFromFile(normalsPath + files[0]);
+        img.loadFromFile(normalsPath + files[0].string());
         m_arrayTexture.create(img.getSize().x, img.getSize().y);
 
         for (auto i = 0u; i < files.size(); ++i)
         {
             if (i)
             {
-                img.loadFromFile(normalsPath + files[i]);
+                img.loadFromFile(normalsPath + files[i].string());
             }
             m_arrayTexture.insertLayer(img, i);
         }

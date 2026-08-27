@@ -192,7 +192,7 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
 
 bool SpriteSheet::saveToFile(const std::string& path)
 {
-    auto sheetName = FileSystem::getFileName(path);
+    auto sheetName = FileSystem::getFileName(path).string();
     sheetName = sheetName.substr(0, sheetName.find_last_of('.'));
 
     ConfigFile sheetFile("spritesheet", sheetName);

@@ -319,7 +319,7 @@ bool CubemapTexture::parseInputFile(const std::string& path, std::array<std::str
         return false;
     }
 
-    auto currPath = cro::FileSystem::getFilePath(path);
+    const auto currPath = cro::FileSystem::getFilePath(path).string();
     const auto processPath =
         [&](std::string& outPath, std::string inPath)
     {

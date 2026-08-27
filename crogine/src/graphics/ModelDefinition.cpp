@@ -158,7 +158,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
 
     std::string meshValue = meshPath->getValue<std::string>();
     std::replace(meshValue.begin(), meshValue.end(), '\\', '/');
-    auto ext = FileSystem::getFileExtension(meshValue);
+    const auto ext = FileSystem::getFileExtension(meshValue).string();
     std::unique_ptr<MeshBuilder> meshBuilder;
 
     bool lockRotation = false;
@@ -940,7 +940,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
     }
 
     m_modelLoaded = true;
-    m_fileName = cro::FileSystem::getFileName(path);
+    m_fileName = cro::FileSystem::getFileName(path).string();
     return true;
 }
 

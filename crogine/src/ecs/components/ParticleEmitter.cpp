@@ -105,7 +105,7 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
                         texPath = texPath.substr(1);
                     }
                     auto compressedPath = texPath;
-                    const auto ext = FileSystem::getFileExtension(texPath);
+                    const auto ext = FileSystem::getFileExtension(texPath).string();
                     Util::String::replace(compressedPath, ext, ".ktx2");
                     
                     Texture* texture = nullptr;
@@ -295,7 +295,7 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
 
 bool EmitterSettings::saveToFile(const std::string& path)
 {
-    auto emitterName = FileSystem::getFileName(path);
+    auto emitterName = FileSystem::getFileName(path).string();
     emitterName = emitterName.substr(0, emitterName.size() - 4);
 
     ConfigFile cfg("particle_system", emitterName);

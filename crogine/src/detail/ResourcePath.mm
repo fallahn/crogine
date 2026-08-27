@@ -26,14 +26,14 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include "ResourcePath.hpp"
+//#include "ResourcePath.hpp"
 //#import <Foundation/Foundation.h>
 
-#include <SDL3/SDL_filesystem.h>
+//#include <SDL3/SDL_filesystem.h>
 
 ////////////////////////////////////////////////////////////
-std::string resourcePath(void)
-{
+//std::string resourcePath(void)
+//{
 /*    NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
     
     std::string rpath;
@@ -52,5 +52,5 @@ std::string resourcePath(void)
     
     return rpath;*/
 
-    return SDL_GetBasePath();
-}
+//    return SDL_GetBasePath();
+//}

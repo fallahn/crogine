@@ -496,7 +496,7 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
     m_meshes[MeshData::Brush].activeSubmeshCount = 0;
     m_meshes[MeshData::Patch].activeSubmeshCount = 0;
 
-    auto path = cro::FileSystem::getResourcePath() + mapPath;
+    const auto path = (cro::FileSystem::getResourcePath() / mapPath).string();
 
     cro::RaiiRWops file;
     file.file = SDL_IOFromFile(path.c_str(), "rb");

@@ -104,7 +104,7 @@ bool Image::loadFromFile(const std::string& filePath)
     }
     else
     {
-        path = FileSystem::getResourcePath() + filePath;
+        path = (FileSystem::getResourcePath() / filePath).string();
     }
 
     auto* file = SDL_IOFromFile(path.c_str(), "rb");

@@ -237,7 +237,7 @@ bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
     m_properties.clear();
     m_objects.clear();
 
-    return loadFromFile2(relative ? FileSystem::getResourcePath() + filePath : filePath);
+    return loadFromFile2(relative ? (FileSystem::getResourcePath() / filePath).string() : filePath);
 }
 
 const std::string& ConfigObject::getId() const

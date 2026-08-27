@@ -157,8 +157,8 @@ Shader::~Shader()
 //public
 bool Shader::loadFromFile(const std::string& vertex, const std::string& fragment)
 {
-    auto vertPath = FileSystem::getResourcePath() + vertex;
-    auto fragPath = FileSystem::getResourcePath() + fragment;
+    const auto vertPath = FileSystem::getResourcePath() / vertex;
+    const auto fragPath = FileSystem::getResourcePath() / fragment;
 
     if (!FileSystem::fileExists(vertPath))
     {
@@ -172,14 +172,14 @@ bool Shader::loadFromFile(const std::string& vertex, const std::string& fragment
         return false;
     }
 
-    return loadFromSource(parseFile(vertPath).c_str(), nullptr, parseFile(fragPath).c_str(), nullptr);
+    return loadFromSource(parseFile(vertPath.string()).c_str(), nullptr, parseFile(fragPath.string()).c_str(), nullptr);
 }
 
 bool Shader::loadFromFile(const std::string& vertex, const std::string& geometry, const std::string& fragment)
 {
-    auto vertPath = FileSystem::getResourcePath() + vertex;
-    auto geomPath = FileSystem::getResourcePath() + geometry;
-    auto fragPath = FileSystem::getResourcePath() + fragment;
+    const auto vertPath = FileSystem::getResourcePath() / vertex;
+    const auto geomPath = FileSystem::getResourcePath() / geometry;
+    const auto fragPath = FileSystem::getResourcePath() / fragment;
 
     if (!FileSystem::fileExists(vertPath))
     {
@@ -199,7 +199,7 @@ bool Shader::loadFromFile(const std::string& vertex, const std::string& geometry
         return false;
     }
 
-    return loadFromSource(parseFile(vertPath).c_str(), parseFile(geomPath).c_str(), parseFile(fragPath).c_str(), nullptr);
+    return loadFromSource(parseFile(vertPath.string()).c_str(), parseFile(geomPath.string()).c_str(), parseFile(fragPath.string()).c_str(), nullptr);
 }
 
 bool Shader::loadFromString(const std::string& vertex, const std::string& fragment, const std::string& defines)

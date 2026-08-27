@@ -158,7 +158,7 @@ VideoPlayer::~VideoPlayer()
 
 bool VideoPlayer::loadFromFile(const std::string& path)
 {
-    auto fullPath = cro::FileSystem::getResourcePath() + path;
+    const auto fullPath = cro::FileSystem::getResourcePath() / path;
 
     //remove existing file first
     if (m_state == State::Playing)
@@ -187,7 +187,7 @@ bool VideoPlayer::loadFromFile(const std::string& path)
 
 
     //load the file
-    m_plm = plm_create_with_filename(fullPath.c_str());
+    m_plm = plm_create_with_filename(fullPath.string().c_str());
 
     if (!m_plm)
     {
@@ -196,9 +196,9 @@ bool VideoPlayer::loadFromFile(const std::string& path)
     }
 
 
-    auto width = plm_get_width(m_plm);
-    auto height = plm_get_height(m_plm);
-    auto frameRate = plm_get_framerate(m_plm);
+    const auto width = plm_get_width(m_plm);
+    const auto height = plm_get_height(m_plm);
+    const auto frameRate = plm_get_framerate(m_plm);
 
     if (width == 0 || height == 0 || frameRate == 0)
     {
