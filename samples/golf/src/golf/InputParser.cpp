@@ -208,22 +208,26 @@ void InputParser::handleEvent(const cro::Event& evt)
                 return;
             }
 
-            if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Up])
+            if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Up]
+                || evt.key.scancode == SDL_SCANCODE_UP)
             {
                 m_inputFlags |= InputFlag::Up;
                 //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Left])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Left]
+                || evt.key.scancode == SDL_SCANCODE_LEFT)
             {
                 m_inputFlags |= InputFlag::Left;
                 //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Right])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Right]
+                || evt.key.scancode == SDL_SCANCODE_RIGHT)
             {
                 m_inputFlags |= InputFlag::Right;
                 //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Down])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Down]
+                || evt.key.scancode == SDL_SCANCODE_DOWN)
             {
                 m_inputFlags |= InputFlag::Down;
                 //cro::App::getWindow().setCursorVisible(!!m_isCPU);
@@ -281,19 +285,23 @@ void InputParser::handleEvent(const cro::Event& evt)
                 return;
             }
 
-            if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Up])
+            if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Up]
+                || evt.key.scancode == SDL_SCANCODE_UP)
             {
                 m_inputFlags &= ~InputFlag::Up;
             }
-            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Left])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Left]
+                || evt.key.scancode == SDL_SCANCODE_LEFT)
             {
                 m_inputFlags &= ~InputFlag::Left;
             }
-            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Right])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Right]
+                || evt.key.scancode == SDL_SCANCODE_RIGHT)
             {
                 m_inputFlags &= ~InputFlag::Right;
             }
-            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Down])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Down]
+                || evt.key.scancode == SDL_SCANCODE_DOWN)
             {
                 m_inputFlags &= ~InputFlag::Down;
             }

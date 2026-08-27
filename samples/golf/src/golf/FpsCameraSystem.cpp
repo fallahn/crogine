@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -140,21 +140,25 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
     {
     default: break;
     case SDL_EVENT_KEY_DOWN:
-        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Up])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Up]
+            || evt.key.scancode == SDL_SCANCODE_UP)
         {
             //actually forward...
             m_input.buttonFlags |= Input::Forward;
         }
-        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Down])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Down]
+            || evt.key.scancode == SDL_SCANCODE_DOWN)
         {
             //actually backward...
             m_input.buttonFlags |= Input::Backward;
         }
-        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left]
+            || evt.key.scancode == SDL_SCANCODE_LEFT)
         {
             m_input.buttonFlags |= Input::Left;
         }
-        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right]
+            || evt.key.scancode == SDL_SCANCODE_RIGHT)
         {
             m_input.buttonFlags |= Input::Right;
         }
@@ -177,29 +181,33 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             m_input.buttonFlags |= Input::ZoomOut;
         }
         
-        if (evt.key.key == SDLK_LSHIFT)
-        {
-            //we toggle this in keyup now
-            //m_input.buttonFlags |= Input::Sprint;
-        }
+        //if (evt.key.key == SDLK_LSHIFT)
+        //{
+        //    //we toggle this in keyup now
+        //    //m_input.buttonFlags |= Input::Sprint;
+        //}
 
         break;
     case SDL_EVENT_KEY_UP:
-        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Up])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Up]
+            || evt.key.scancode == SDL_SCANCODE_UP)
         {
             //actually forward...
             m_input.buttonFlags &= ~Input::Forward;
         }
-        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Down])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Down]
+            || evt.key.scancode == SDL_SCANCODE_DOWN)
         {
             //actually backward...
             m_input.buttonFlags &= ~Input::Backward;
         }
-        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left]
+            || evt.key.scancode == SDL_SCANCODE_LEFT)
         {
             m_input.buttonFlags &= ~Input::Left;
         }
-        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right]
+            || evt.key.scancode == SDL_SCANCODE_RIGHT)
         {
             m_input.buttonFlags &= ~Input::Right;
         }
@@ -222,7 +230,8 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             m_input.buttonFlags &= ~Input::ZoomOut;
         }
         
-        if (evt.key.key == SDLK_LSHIFT)
+        if (evt.key.key == SDLK_LSHIFT
+            || evt.key.key == SDLK_RSHIFT)
         {
             if (m_input.buttonFlags & Input::Sprint)
             {
