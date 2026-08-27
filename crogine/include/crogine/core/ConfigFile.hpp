@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -111,7 +111,7 @@ namespace cro
         void setValue(const char*);
         
     private:
-        std::vector<std::basic_string<std::uint8_t>> m_utf8Values;
+        std::vector<std::basic_string<UInt8>> m_utf8Values;
         std::vector<double> m_floatValues; //max size is uint32_t so we don't want to truncate on cast
         bool m_boolValue;
 

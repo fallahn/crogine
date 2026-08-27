@@ -130,7 +130,7 @@ void App::loadPlugin(const std::string& path, StateStack& stateStack)
 
     std::string fullPath = path;
 #ifdef __APPLE__
-    fullPath = FileSystem::getResourcePath() + fullPath;
+    fullPath = FileSystem::getResourcePath().string() + fullPath;
     fullPath += "/libcroplug.dylib";
 #else
     fullPath += "/libcroplug.so";
