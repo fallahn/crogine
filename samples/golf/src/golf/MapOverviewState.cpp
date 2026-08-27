@@ -284,7 +284,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
-        case SDLK_6:
+        case SDLK_6: //WHY
             quitState();
             return false;
         }

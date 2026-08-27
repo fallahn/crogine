@@ -260,12 +260,15 @@ void InputParser::handleEvent(const cro::Event& evt)
                     //cro::App::getWindow().setCursorVisible(!!m_isCPU);
                 }
             }
-            else if (evt.key.key == FixedKey::DroneCam)
+
+
+
+            if (evt.key.scancode == FixedKey::DroneCam)
             {
                 toggleDroneCam();
             }
 
-            else if (evt.key.key == SDLK_PAGEUP)
+            else if (evt.key.scancode == SDL_SCANCODE_PAGEUP)
             {
                 m_inputFlags |= InputFlag::MiniMap;
                 m_minimapToggleTimer.restart();
@@ -315,7 +318,7 @@ void InputParser::handleEvent(const cro::Event& evt)
                 m_inputFlags &= ~InputFlag::SpinMenu;
             }
 
-            else if (evt.key.key == SDLK_PAGEUP)
+            if (evt.key.scancode == SDL_SCANCODE_PAGEUP)
             {
                 m_inputFlags &= ~InputFlag::MiniMap;
             }
@@ -639,11 +642,11 @@ float InputParser::getCamRotation() const
             return m_aimRotation;
         }
 
-        if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateLeft))
+        if (cro::Keyboard::isKeyPressed(static_cast<SDL_Scancode>(FixedKey::CameraRotateLeft))) //buh this is a mess
         {
             return 0.5f * m_sharedData.mouseSpeed;
         }
-        if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateRight))
+        if (cro::Keyboard::isKeyPressed(static_cast<SDL_Scancode>(FixedKey::CameraRotateRight)))
         {
             return -0.5f * m_sharedData.mouseSpeed;
         }

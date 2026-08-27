@@ -421,6 +421,14 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         resetIdle();
         cro::App::getWindow().setCursorVisible(false);
+        switch (evt.key.scancode)
+        {
+        default: break;
+        case FixedKey::ZoomMinimap:
+            toggleMiniZoom();
+            break;
+        }
+
         switch (evt.key.key)
         {
         default: break;
@@ -434,7 +442,6 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_F5:
 
             break;
-        case FixedKey::ZoomMinimap:
         case SDLK_KP_MULTIPLY:
             toggleMiniZoom();
             break;

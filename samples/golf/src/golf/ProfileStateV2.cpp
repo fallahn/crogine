@@ -695,11 +695,11 @@ bool ProfileStateV2::simulate(float dt)
             const float speed = cro::Util::Easing::easeInQuart(static_cast<float>(v) / std::numeric_limits<std::int16_t>::max());
             rotateModel(dt * speed * SpeedMultiplier);
         }
-        if (cro::Keyboard::isKeyPressed(SDLK_1))
+        if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_1))
         {
             rotateModel(-dt * SpeedMultiplier);
         }
-        if (cro::Keyboard::isKeyPressed(SDLK_2))
+        if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_2))
         {
             rotateModel(dt * SpeedMultiplier);
         }

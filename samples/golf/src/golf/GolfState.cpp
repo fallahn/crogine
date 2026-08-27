@@ -820,34 +820,15 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
         m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         //hideMouse(); //TODO this should only react to current keybindings
-        switch (evt.key.key)
+        switch (evt.key.scancode)
         {
         default: break;
-        //case SDLK_2:
-        //    if (!m_textChat.isVisible()
-        //        && !m_holeData[m_currentHole].puttFromTee)
-        //    {
-        //        if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
-        //            && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
-        //        {
-        //            if (m_inputParser.getActive()
-        //                && m_currentPlayer.terrain != TerrainID::Green)
-        //            {
-        //                //that's a lot of if's.
-
-        //                if (m_currentCamera == CameraID::Player)
-        //                {
-        //                    setActiveCamera(CameraID::Bystander);
-        //                }
-        //                else if (m_currentCamera == CameraID::Bystander)
-        //                {
-        //                    setActiveCamera(CameraID::Player);
-        //                }
-        //            }
-        //        }
-        //    }
-        //    break;
-        //case SDLK_3:
+        case FixedKey::ZoomMinimap:
+            toggleMiniZoom();
+            break;
+        case FixedKey::ToggleDOF:
+            toggleDOF(true);
+            break;
         case FixedKey::FreeCam:
             if (!m_textChat.isVisible()
                 && !emoteHandled)
@@ -855,16 +836,16 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 toggleFreeCam();
             }
             break;
+        }
+
+        switch (evt.key.key)
+        {
+        default: break;
+
             //3&4 rotate camera
         case SDLK_TAB:
             showScoreboard(false);
             toggleFreecamMenu();
-            break;
-        case FixedKey::ZoomMinimap:
-            toggleMiniZoom();
-            break;
-        case FixedKey::ToggleDOF:
-            toggleDOF(true);
             break;
         case SDLK_SPACE: //TODO this should read the keymap... but it's not const
             closeMessage();
@@ -1142,6 +1123,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE:
             toggleQuitReady();
             break;
+        }
+
+        switch (evt.key.scancode)
+        {
         case FixedKey::EmoteApplaud:
         //case SDLK_KP_7: //don't do this, people use it as keybinds
             m_textChat.quickEmote(TextChat::Applaud);

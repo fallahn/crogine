@@ -7210,13 +7210,23 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
                 return true;
             }
 
-            switch (evt.key.key)
+            /*switch (evt.key.key)
             {
             default: break;
             case SDLK_7:
             case SDLK_8:
             case SDLK_9:
             case SDLK_0:
+                return true;
+            }*/
+
+            switch (evt.key.scancode)
+            {
+            default:break;
+            case FixedKey::EmoteAngry:
+            case FixedKey::EmoteApplaud:
+            case FixedKey::EmoteLaughing:
+            case FixedKey::EmoteHappy:
                 return true;
             }
         }

@@ -110,7 +110,7 @@ bool MessageOverlayState::handleEvent(const cro::Event& evt)
 
         if (evt.key.key == SDLK_BACKSPACE
             || evt.key.key == SDLK_ESCAPE
-            || evt.key.key == SDLK_P)
+            /*|| evt.key.key == SDLK_P*/)
         {
             quitState();
             return false;

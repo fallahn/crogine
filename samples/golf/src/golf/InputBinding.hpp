@@ -120,20 +120,21 @@ struct InputBinding final
 };
 
 //these are the top row keys which can't be rebound
-//TODO these should be scancodes
+//TODO should this include tab for showing scoreboard
+//LAlt for zoom to target
 struct FixedKey final
 {
     enum
     {
-        DroneCam            = SDLK_1,
-        FreeCam             = SDLK_2,
-        CameraRotateLeft    = SDLK_3,
-        CameraRotateRight   = SDLK_4,
-        ZoomMinimap         = SDLK_5,
-        ToggleDOF           = SDLK_6,
-        EmoteApplaud        = SDLK_7,
-        EmoteLaughing       = SDLK_8,
-        EmoteHappy          = SDLK_9,
-        EmoteAngry          = SDLK_0
+        DroneCam            = SDL_SCANCODE_1,
+        FreeCam             = SDL_SCANCODE_2,
+        CameraRotateLeft    = SDL_SCANCODE_3,
+        CameraRotateRight   = SDL_SCANCODE_4,
+        ZoomMinimap         = SDL_SCANCODE_5,
+        ToggleDOF           = SDL_SCANCODE_6,
+        EmoteApplaud        = SDL_SCANCODE_7,
+        EmoteLaughing       = SDL_SCANCODE_8,
+        EmoteHappy          = SDL_SCANCODE_9,
+        EmoteAngry          = SDL_SCANCODE_0
     };
 };

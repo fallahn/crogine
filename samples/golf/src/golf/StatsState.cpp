@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -276,7 +276,7 @@ bool StatsState::handleEvent(const cro::Event& evt)
     {
         if (evt.key.key == SDLK_BACKSPACE
             || evt.key.key == SDLK_ESCAPE
-            || evt.key.key == SDLK_P)
+            /*|| evt.key.key == SDLK_P*/)
         {
             quitState();
             return false;
