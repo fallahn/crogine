@@ -69,7 +69,7 @@ Playlist::~Playlist()
 }
 
 //public
-void Playlist::addPath(const std::string& path)
+void Playlist::addPath(const std::filesystem::path& path)
 {
     if (cro::FileSystem::fileExists(path))
     {
@@ -183,7 +183,8 @@ void Playlist::threadFunc()
             
                 if (audioFile)
                 {
-                    if (!audioFile->open(m_filePaths[m_fileIndex]))
+                    FS_ASSERT;
+                    if (!audioFile->open(m_filePaths[m_fileIndex].string()))
                     {
                         m_loadNextFile = false;
                         m_fileIndex = (m_fileIndex + 1) % m_filePaths.size();

@@ -139,7 +139,7 @@ void SqliteState::createScene()
 
 void SqliteState::createUI()
 {
-    m_db.open(cro::App::getPreferencePath() + "profile.db3");
+    m_db.open(cro::App::getPreferencePath() / "profile.db3");
 
     registerWindow([&]() 
         {

@@ -95,8 +95,8 @@ void Logger::log(const std::string& message, Type type, Output output)
     {
         //output to a log file
         RaiiRWops file;
-        auto logPath = cro::App::getPreferencePath() + "output.log";
-        file.file = SDL_IOFromFile(logPath.c_str(), "a");
+        const auto logPath = cro::App::getPreferencePath() / "output.log";
+        file.file = SDL_IOFromFile(logPath.string().c_str(), "a");
         if (file.file)
         {
             auto timeStamp = SysTime::timeString();

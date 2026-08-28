@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -36,7 +36,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
-bool ClubModels::loadFromFile(const std::string& path, cro::ResourceCollection& resources, cro::Scene& scene)
+bool ClubModels::loadFromFile(const std::filesystem::path& path, cro::ResourceCollection& resources, cro::Scene& scene)
 {
     //hmm if this vector is not empty should we be destroying all the entities first?
     models.clear();
@@ -47,7 +47,7 @@ bool ClubModels::loadFromFile(const std::string& path, cro::ResourceCollection& 
     if (cfg.loadFromFile(path))
     {
         //load the models first so we can clamp the indices
-        auto rootPath = cro::FileSystem::getFilePath(path);
+        const auto rootPath = cro::FileSystem::getFilePath(path);
         cro::ModelDefinition md(resources);
 
         const auto& objs = cfg.getObjects();
@@ -60,7 +60,7 @@ bool ClubModels::loadFromFile(const std::string& path, cro::ResourceCollection& 
                 {
                     if (p.getName() == "path")
                     {
-                        const auto modelPath = rootPath + p.getValue<std::string>();
+                        const auto modelPath = rootPath / p.getValue<std::string>();
                         if (md.loadFromFile(modelPath))
                         {
                             auto entity = scene.createEntity();

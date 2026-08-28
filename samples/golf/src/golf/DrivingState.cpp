@@ -2509,13 +2509,13 @@ void DrivingState::createPlayer()
 
 
     //club models - collect all search paths for club models
-    std::unordered_map<std::uint32_t, std::string> clubPaths;
+    std::unordered_map<std::uint32_t, std::filesystem::path> clubPaths;
     const auto processClubPath =
-        [&](const std::string& path)
+        [&](const std::filesystem::path& path)
         {
-            const std::string fileName = "/list.cst";
+            const std::filesystem::path fileName = "list.cst";
             cro::ConfigFile cfg;
-            if (cfg.loadFromFile(path + fileName, false)) //resource path was already added
+            if (cfg.loadFromFile(path / fileName, false)) //resource path was already added
             {
                 //TODO we need to do full validation, eg models exist here
                 if (const auto* uid = cfg.findProperty("uid");
@@ -2524,7 +2524,7 @@ void DrivingState::createPlayer()
                     const auto id = uid->getValue<std::uint32_t>();
                     if (clubPaths.count(id) == 0)
                     {
-                        clubPaths.insert(std::make_pair(id, path + fileName));
+                        clubPaths.insert(std::make_pair(id, path / fileName));
                     }
                 }
             }
@@ -2533,12 +2533,12 @@ void DrivingState::createPlayer()
     const auto ContentDirs = Content::getInstallPaths();
     for (const auto& c : ContentDirs)
     {
-        const auto basePath = cro::FileSystem::getResourcePath() + c + "clubs/";
+        const auto basePath = cro::FileSystem::getResourcePath() / c / "clubs";
         const auto clubsets = cro::FileSystem::listDirectories(basePath);
 
         for (const auto& s : clubsets)
         {
-            processClubPath(basePath + s);
+            processClubPath(basePath / s);
         }
     }
 
@@ -2557,7 +2557,7 @@ void DrivingState::createPlayer()
 
     for (const auto& s : clubsets)
     {
-        processClubPath(basePath + s);
+        processClubPath(basePath / s);
     }
 
 #ifdef USE_GNS
@@ -2571,7 +2571,7 @@ void DrivingState::createPlayer()
 
 
 
-    std::string clubPath = "assets/golf/clubs/default/list.cst";
+    std::filesystem::path clubPath = "assets/golf/clubs/default/list.cst";
     if (clubPaths.count(playerData.clubID) != 0)
     {
         clubPath = clubPaths.at(playerData.clubID);

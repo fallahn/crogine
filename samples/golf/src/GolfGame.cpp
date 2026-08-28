@@ -696,12 +696,12 @@ void GolfGame::render()
 
 bool GolfGame::initialise()
 {
-    auto path = cro::App::getPreferencePath() + "user/";
+    auto path = cro::App::getPreferencePath() / "user/";
     if (!cro::FileSystem::directoryExists(path))
     {
         cro::FileSystem::createDirectory(path);
     }
-    path = cro::App::getPreferencePath() + "courses/";
+    path = cro::App::getPreferencePath() / "courses/";
     if (!cro::FileSystem::directoryExists(path))
     {
         cro::FileSystem::createDirectory(path);
@@ -754,7 +754,7 @@ bool GolfGame::initialise()
         }
 
         //tidy up any stuff left over from workshop tools
-        const auto tempPath = Content::getBaseContentPath() + "temp";
+        const auto tempPath = Content::getBaseContentPath() / "temp";
         if (cro::FileSystem::directoryExists(tempPath))
         {
             std::error_code ec;
@@ -763,6 +763,10 @@ bool GolfGame::initialise()
             if (ec)
             {
                 LogE << ec.message() << std::endl;
+            }
+            else
+            {
+                LogI << "Removed temporary drectory... " << std::endl;
             }
         }
     }
@@ -870,7 +874,7 @@ bool GolfGame::initialise()
             ImGui::SameLine();
             if (ImGui::Button("Open"))
             {
-                auto path = cro::FileSystem::openFileDialogue("", "txt,frag,glsl");
+                auto path = cro::FileSystem::openFileDialogue("", "txt,frag,glsl").string();
                 std::replace(path.begin(), path.end(), '\\', '/');
                 if (!path.empty())
                 {
@@ -947,7 +951,7 @@ bool GolfGame::initialise()
                 if (state == "true")
                 {
                     m_sharedData.logBenchmarks = true;
-                    cro::Console::print("Benchmarks will be logged to " + cro::App::getPreferencePath() + "benchmark/");
+                    cro::Console::print("Benchmarks will be logged to " + cro::App::getPreferencePath().string() + "/benchmark/");
                 }
                 else if (state == "false")
                 {
@@ -965,7 +969,7 @@ bool GolfGame::initialise()
         [](const std::string&)
         {
             //this assumes that the directory was successfully creates already...
-            cro::Util::String::parseURL(Content::getBaseContentPath());
+            cro::Util::String::parseURL(Content::getBaseContentPath().string());
         });
 
     registerCommand("reset_leagues", 
@@ -1445,10 +1449,10 @@ void GolfGame::convertPreferences() const
 
     const std::array FileNames =
     {
-        std::string("profiles.tar"),
-        std::string("last.gue"),
-        std::string("lea.gue"),
-        std::string("keys.bind"),
+        std::filesystem::path("profiles.tar"),
+        std::filesystem::path("last.gue"),
+        std::filesystem::path("lea.gue"),
+        std::filesystem::path("keys.bind"),
     };
 
     //make sure the target doesn't yet exist - else
@@ -1456,8 +1460,8 @@ void GolfGame::convertPreferences() const
     //with old data...
     for (const auto& name : FileNames)
     {
-        const auto outPath = dstPath + name;
-        const auto inPath = srcPath + name;
+        const auto outPath = dstPath / name;
+        const auto inPath = srcPath / name;
 
         if (!cro::FileSystem::fileExists(outPath))
         {
@@ -1468,10 +1472,7 @@ void GolfGame::convertPreferences() const
                 LogI << inPath << " exists - attempting to copy..." << std::endl;
 
                 std::error_code ec;
-                std::filesystem::path src = std::filesystem::u8path(inPath);
-                std::filesystem::path dst = std::filesystem::u8path(outPath);
-
-                std::filesystem::copy(src, dst, std::filesystem::copy_options::skip_existing | std::filesystem::copy_options::recursive, ec);
+                std::filesystem::copy(inPath, outPath, std::filesystem::copy_options::skip_existing | std::filesystem::copy_options::recursive, ec);
 
                 if (ec)
                 {
@@ -1485,7 +1486,7 @@ void GolfGame::convertPreferences() const
             if (cro::FileSystem::fileExists(inPath))
             {
                 std::error_code ec;
-                std::filesystem::rename(std::filesystem::u8path(inPath), std::filesystem::u8path(inPath + ".old"), ec);
+                std::filesystem::rename(inPath, inPath / ".old", ec);
 
                 if (ec)
                 {
@@ -1497,26 +1498,23 @@ void GolfGame::convertPreferences() const
 
     const std::array DirNames =
     {
-        std::string("avatars"),
-        std::string("balls"),
-        std::string("hair"),
-        std::string("music"),
-        std::string("profiles"),
+        std::filesystem::path("avatars"),
+        std::filesystem::path("balls"),
+        std::filesystem::path("hair"),
+        std::filesystem::path("music"),
+        std::filesystem::path("profiles"),
     };
     srcPath += "user/";
 
     for (const auto& dir : DirNames)
     {
-        const auto outPath = dstPath + dir;
-        const auto inPath = srcPath + dir;
+        const auto outPath = dstPath / dir;
+        const auto inPath = srcPath / dir;
 
         if (cro::FileSystem::directoryExists(inPath))
         {
             std::error_code ec;
-            std::filesystem::path src = std::filesystem::u8path(inPath);
-            std::filesystem::path dst = std::filesystem::u8path(outPath);
-
-            std::filesystem::copy(src, dst, std::filesystem::copy_options::skip_existing | std::filesystem::copy_options::recursive, ec);
+            std::filesystem::copy(inPath, outPath, std::filesystem::copy_options::skip_existing | std::filesystem::copy_options::recursive, ec);
 
             if (ec)
             {
@@ -1524,7 +1522,7 @@ void GolfGame::convertPreferences() const
             }
             else
             {
-                std::filesystem::rename(inPath, inPath + ".old");
+                std::filesystem::rename(inPath, inPath / ".old");
             }
         }
     }
@@ -1540,7 +1538,8 @@ void GolfGame::loadPreferences()
     //make sure to set all defaults *before* loading any files
     //m_sharedData.useLargePowerBar = Social::isSteamdeck();
 
-    auto path = getPreferencePath() + "prefs.cfg";
+    std::filesystem::path path = getPreferencePath() / "prefs.cfg";
+
     if (cro::FileSystem::fileExists(path))
     {
         cro::ConfigFile cfg;
@@ -1719,7 +1718,7 @@ void GolfGame::loadPreferences()
     //read user-specific prefs. This overwrites some of the above as we might be upgrading from the old version
     if (!safeMode)
     {
-        path = Content::getBaseContentPath() + "user_prefs.cfg";
+        path = Content::getBaseContentPath() / "user_prefs.cfg";
         if (cro::FileSystem::fileExists(path))
         {
             cro::ConfigFile cfg;
@@ -1947,7 +1946,7 @@ void GolfGame::loadPreferences()
             m_sharedData.imperialMeasurements = TimeOfDay::getCountryCode() == "US";
         }
 
-        path = Content::getBaseContentPath() + "league_names.txt";
+        path = Content::getBaseContentPath() / "league_names.txt";
         if (!cro::FileSystem::fileExists(path))
         {
             m_sharedData.leagueNames.write();
@@ -1967,13 +1966,13 @@ void GolfGame::loadPreferences()
 
 
     //read keybind bin
-    path = Content::getBaseContentPath() + "keys.bind";
+    path = Content::getBaseContentPath() / "keys.bind";
     bool needsConversion = false;
 
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.c_str(), "rb");
+        file.file = SDL_IOFromFile(path.string().c_str(), "rb");
         if (file.file)
         {
             auto size = SDL_GetIOSize(file.file);
@@ -2019,7 +2018,7 @@ void GolfGame::loadPreferences()
 
 
     //if we haven't converted to the new keybinds yet, do so (we're using scancodes now)
-    path = Content::getBaseContentPath() + "codes.bind";
+    path = Content::getBaseContentPath() / "codes.bind";
 
     if (!cro::FileSystem::fileExists(path)
         && needsConversion)
@@ -2031,18 +2030,18 @@ void GolfGame::loadPreferences()
         LogI << "converted keybinds" << std::endl;
 
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.c_str(), "wb");
+        file.file = SDL_IOFromFile(path.string().c_str(), "wb");
         if (file.file)
         {
             SDL_WriteIO(file.file, &m_sharedData.inputBinding, sizeof(InputBinding));
         }
-        std::filesystem::remove(Content::getBaseContentPath() + "keys.bind");
+        std::filesystem::remove(Content::getBaseContentPath() / "keys.bind");
     }
     else
     {
         //load the file
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.c_str(), "rb");
+        file.file = SDL_IOFromFile(path.string().c_str(), "rb");
         if (file.file)
         {
             auto size = SDL_GetIOSize(file.file);
@@ -2057,9 +2056,9 @@ void GolfGame::loadPreferences()
 
     m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
 
-    if (!cro::FileSystem::directoryExists(Content::getBaseContentPath() + "music"))
+    if (!cro::FileSystem::directoryExists(Content::getBaseContentPath() / "music"))
     {
-        cro::FileSystem::createDirectory(Content::getBaseContentPath() + "music");
+        cro::FileSystem::createDirectory(Content::getBaseContentPath() / "music");
     }
     loadMusic();
 
@@ -2074,7 +2073,8 @@ void GolfGame::loadPreferences()
 
 void GolfGame::savePreferences()
 {
-    auto path = getPreferencePath() + "prefs.cfg";
+    std::filesystem::path path = getPreferencePath() / "prefs.cfg";
+
     cro::ConfigFile cfg("preferences");
 
     //advanced options
@@ -2100,7 +2100,7 @@ void GolfGame::savePreferences()
 
 
     //per-user options
-    path = Content::getBaseContentPath() + "user_prefs.cfg";
+    path = Content::getBaseContentPath() / "user_prefs.cfg";
     cfg = cro::ConfigFile("user_preferences");
     cfg.addProperty("pixel_scale").setValue(m_sharedData.pixelScale);
     cfg.addProperty("fov").setValue(m_sharedData.fov);
@@ -2159,9 +2159,9 @@ void GolfGame::savePreferences()
 
 
     //keybinds
-    path = Content::getBaseContentPath() + "codes.bind";
+    path = Content::getBaseContentPath() / "codes.bind";
     cro::RaiiRWops file;
-    file.file = SDL_IOFromFile(path.c_str(), "wb");
+    file.file = SDL_IOFromFile(path.string().c_str(), "wb");
     if (file.file)
     {
         SDL_WriteIO(file.file, &m_sharedData.inputBinding, sizeof(InputBinding));
@@ -2182,7 +2182,7 @@ void GolfGame::loadAvatars()
     //if we're updating attept to read existing profiles and convert them
     std::vector<PlayerData> oldProfiles;
 
-    auto path = cro::App::getPreferencePath() + "avatars.cfg";
+    auto path = cro::App::getPreferencePath() / "avatars.cfg";
     cro::ConfigFile cfg;
     if (cro::FileSystem::fileExists(path) &&
         cfg.loadFromFile(path, false))
@@ -2365,7 +2365,7 @@ void GolfGame::loadAvatars()
     {
         for (const auto& dir : profileDirs)
         {
-            auto profilePath = path + dir + "/";
+            auto profilePath = path / dir;
             auto files = cro::FileSystem::listFiles(profilePath);
             files.erase(std::remove_if(files.begin(), files.end(),
                 [](const std::string& f)
@@ -2376,7 +2376,7 @@ void GolfGame::loadAvatars()
             if (!files.empty())
             {
                 PlayerData pd;
-                if (pd.loadProfile(profilePath + files[0], files[0].substr(0, files[0].size() - 4)))
+                if (pd.loadProfile(profilePath / files[0], files[0].string().substr(0, files[0].string().size() - 4)))
                 {
 #ifdef USE_GNS
                     //check if we need to convert this to the UID profile
@@ -2451,26 +2451,26 @@ void GolfGame::loadAvatars()
 void GolfGame::loadMusic()
 {
     //parse any music files into a playlist
-    M3UPlaylist m3uPlaylist(Content::getBaseContentPath() + "music/");
+    M3UPlaylist m3uPlaylist(Content::getBaseContentPath() / "music/");
 
     if (m3uPlaylist.getTrackCount() == 0)
     {
-        const auto loadFiles = [&](const std::string& path, const std::string& root)
+        const auto loadFiles = [&](const std::filesystem::path& path, const std::filesystem::path& root)
             {
                 const auto files = cro::FileSystem::listFiles(path);
                 for (const auto& file : files)
                 {
                     //horrible hack to skip menu music
 #ifdef USE_GNS
-                    if (file.find("101") == std::string::npos
-                        && file.find("201") == std::string::npos
-                        && file.find("104") == std::string::npos
-                        && file.find("204") == std::string::npos)
+                    if (file.string().find("101") == std::string::npos
+                        && file.string().find("201") == std::string::npos
+                        && file.string().find("104") == std::string::npos
+                        && file.string().find("204") == std::string::npos)
 #endif
                     {
                         //this checks the file has a valid extension
                         //and limits the number of files loaded
-                        m3uPlaylist.addTrack(root + file);
+                        m3uPlaylist.addTrack(root / file);
                     }
                 }
                 m3uPlaylist.shuffle();
@@ -2481,9 +2481,9 @@ void GolfGame::loadMusic()
         //see if the soundtrack is installed and prefer that
         auto soundtrackPath = Content::getSoundTrackPath();
         if (!soundtrackPath.empty()
-            && cro::FileSystem::directoryExists(soundtrackPath + "/mp3/"))
+            && cro::FileSystem::directoryExists(soundtrackPath / "mp3"))
         {
-            loadFiles(soundtrackPath + "/mp3/", soundtrackPath + "/mp3/");
+            loadFiles(soundtrackPath / "mp3", soundtrackPath / "mp3");
         }
 
         if (m3uPlaylist.getTrackCount() == 0)
@@ -2491,9 +2491,9 @@ void GolfGame::loadMusic()
         {
             //look in the fallback dir
             const auto MusicDir = "assets/golf/sound/music/";
-            if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + MusicDir))
+            if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() / MusicDir))
             {
-                loadFiles(cro::FileSystem::getResourcePath() + MusicDir, MusicDir);
+                loadFiles(cro::FileSystem::getResourcePath() / MusicDir, MusicDir);
             }
         }
     }
@@ -2565,18 +2565,18 @@ bool GolfGame::setShader(const char* frag)
 
 void GolfGame::createHowTo()
 {
-    const std::string rootPath = cro::FileSystem::getResourcePath() + "assets/golf/guide/en/";
-    const std::string imagePath = cro::FileSystem::getResourcePath() + "assets/golf/guide/images/";
+    const auto rootPath = cro::FileSystem::getResourcePath() / "assets/golf/guide/en/";
+    const auto imagePath = cro::FileSystem::getResourcePath() / "assets/golf/guide/images/";
     auto filePaths = cro::FileSystem::listFiles(rootPath);
     std::sort(filePaths.begin(), filePaths.end());
 
     m_guideTextures = std::make_unique<cro::TextureResource>();
-    const auto& controlTex = m_guideTextures->get(imagePath + "controls.png");
+    const auto& controlTex = m_guideTextures->get(imagePath / "controls.png");
 
     pugi::xml_document doc;
     for (const auto& path : filePaths)
     {
-        if (const auto res = doc.load_file((rootPath + path).c_str(), 116, pugi::encoding_utf8); !res)
+        if (const auto res = doc.load_file((rootPath / path).c_str(), 116, pugi::encoding_utf8); !res)
         {
             LogE << "Could not open guide doc " << path << std::endl;
             LogE << res.description() << std::endl;
@@ -2609,7 +2609,7 @@ void GolfGame::createHowTo()
             else if (std::strcmp(c.name(), "image") == 0)
             {
                 const std::string imgName = c.text().as_string();
-                const auto& img = m_guideTextures->get(imagePath + imgName);
+                const auto& img = m_guideTextures->get(imagePath / imgName);
                 auto& item = chapter.items.emplace_back();
                 item.type = pg::Item::Image;
                 item.image = &img;
@@ -2814,12 +2814,12 @@ void GolfGame::createHowTo()
 void GolfGame::assertFileSystem()
 {
     const auto printErr =
-        [](const std::string& outPath) 
+        [](const std::filesystem::path& outPath) 
         {
             const std::string err = "Failed creating root preference path, reason:\n" + cro::Console::getLastOutput();
             cro::FileSystem::showMessageBox("Could Not Create Directory", err);
 
-            cro::FileSystem::showMessageBox("Missing Directory", "Please ensure that\n" + outPath + "\nexists");
+            cro::FileSystem::showMessageBox("Missing Directory", "Please ensure that\n" + outPath.string() + "\nexists");
         };
 
     //appdata/roaming/trederia/golf/
@@ -2837,7 +2837,7 @@ void GolfGame::assertFileSystem()
         }
     }
 
-    rootPath += "user";
+    rootPath /= "user";
     if (!cro::FileSystem::directoryExists(rootPath))
     {
         LogI << "Creating user preferences directory..." << std::endl;

@@ -114,8 +114,8 @@ namespace cro
 
         glm::vec2 textureSize = glm::vec2(0.f);
 
-        bool loadFromFile(const std::string&, TextureResource&);
-        bool saveToFile(const std::string&); //!< saves the current settings to a config file
+        bool loadFromFile(const std::filesystem::path&, TextureResource&);
+        bool saveToFile(const std::filesystem::path&); //!< saves the current settings to a config file
     };
 
     /*!

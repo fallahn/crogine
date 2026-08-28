@@ -105,12 +105,12 @@ namespace cro
 
         /*!
         \brief Returns the path to the current platform's directory
-        for storing preference files (including the trailing '/').
+        for storing preference files.
         Before using this the application's organisation name and app
         name should be set with setApplicationStrings()
         \see setApplicationStrings()
         */
-        static const std::string& getPreferencePath();
+        static const std::filesystem::path& getPreferencePath();
 
         /*!
         \brief Resets the frame clock.
@@ -253,7 +253,7 @@ namespace cro
       
         std::string m_orgString;
         std::string m_appString;
-        std::string m_prefPath;
+        std::filesystem::path m_prefPath;
         
         struct WindowSettings final
         {

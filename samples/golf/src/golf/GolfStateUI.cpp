@@ -5059,7 +5059,7 @@ void GolfState::logCSV() const
         std::replace(fileName.begin(), fileName.end(), ':', '-');
         fileName += "_" + courseName + ".csv";
 
-        fileName = Content::getBaseContentPath() + fileName;
+        fileName = (Content::getBaseContentPath() / fileName).string();
 
         cro::RaiiRWops out;
         out.file = SDL_IOFromFile(fileName.c_str(), "w");
@@ -6662,7 +6662,7 @@ void GolfState::updateProfileDB() const
         ProfileDB db;
         for (auto i = 0u; i < localCount; ++i)
         {
-            auto dbPath = Content::getUserContentPath(Content::UserContent::Profile) + localPlayers[i].profileID + "/profile.db3";
+            const auto dbPath = Content::getUserContentPath(Content::UserContent::Profile) / localPlayers[i].profileID / "/profile.db3";
             if (db.open(dbPath))
             {
                 CourseRecord record;
@@ -6874,7 +6874,7 @@ void GolfState::updateLeagueHole()
                     //I wish there was a better way to determine the path globally...
                     if (m_sharedData.activeTournament == TournamentIndex::Custom)
                     {
-                        const auto path = m_sharedData.tournamentPath + TournamentDataFile;
+                        const auto path = m_sharedData.tournamentPath + TournamentDataFile.string();
                         writeTournamentData(m_sharedData.tournaments[m_sharedData.activeTournament], path.c_str());
                     }
                     else

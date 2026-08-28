@@ -59,8 +59,8 @@ namespace
         100, 50, 25
     };
 
-    const std::string FileName("lea.gue");
-    const std::string DBName("db.dat");
+    const std::filesystem::path FileName("lea.gue");
+    const std::filesystem::path DBName("db.dat");
 
     constexpr std::int32_t MaxCurve = 5;
 
@@ -295,7 +295,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         //write the data to a file
         const auto path = getFilePath(PrevFileName);
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.c_str(), "wb");
+        file.file = SDL_IOFromFile(path.string().c_str(), "wb");
         if (file.file)
         {
             SDL_WriteIO(file.file, sortData.data(), sizeof(SortData) * sortData.size());
@@ -479,7 +479,7 @@ void League::readPreviousPlayers() const
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.c_str(), "rb");
+        file.file = SDL_IOFromFile(path.string().c_str(), "rb");
         if (file.file)
         {
             auto size = SDL_SeekIO(file.file, 0, SDL_IO_SEEK_END);
@@ -618,10 +618,10 @@ void League::decreaseDifficulty()
     LogI << "League reduced." << std::endl;
 }
 
-std::string League::getFilePath(const std::string& fn) const
+std::filesystem::path League::getFilePath(const std::filesystem::path& fn) const
 {
     
-    std::string basePath = Content::getBaseContentPath() + "career/";
+    auto basePath = Content::getBaseContentPath() / "career/";
     const auto assertPath = 
         [&]()
         {
@@ -638,40 +638,40 @@ std::string League::getFilePath(const std::string& fn) const
     {
     default: break;
     case LeagueRoundID::RoundOne:
-        basePath += "round_01/";
+        basePath /= "round_01/";
         assertPath();
         break;
     case LeagueRoundID::RoundTwo:
-        basePath += "round_02/";
+        basePath /= "round_02/";
         assertPath();
         break;
     case LeagueRoundID::RoundThree:
-        basePath += "round_03/";
+        basePath /= "round_03/";
         assertPath();
         break;
     case LeagueRoundID::RoundFour:
-        basePath += "round_04/";
+        basePath /= "round_04/";
         assertPath();
         break;
     case LeagueRoundID::RoundFive:
-        basePath += "round_05/";
+        basePath /= "round_05/";
         assertPath();
         break;
     case LeagueRoundID::RoundSix:
-        basePath += "round_06/";
+        basePath /= "round_06/";
         assertPath();
         break;
     case LeagueRoundID::RoundSeven:
-        basePath += "round_07/";
+        basePath /= "round_07/";
         assertPath();
         break;
     case LeagueRoundID::RoundEight:
-        basePath += "round_08/";
+        basePath /= "round_08/";
         assertPath();
         break;
     }
 
-    return basePath + fn;
+    return basePath / fn;
 }
 
 void League::createSortedTable()
@@ -760,7 +760,7 @@ void League::read()
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.c_str(), "rb");
+        file.file = SDL_IOFromFile(path.string().c_str(), "rb");
         if (!file.file)
         {
             LogE << "Could not open " << path << " for reading" << std::endl;
@@ -867,10 +867,10 @@ void League::read()
 
 
         //read hole scores from DB
-        const auto dbPath = Content::getBaseContentPath() + DBName;
+        const auto dbPath = Content::getBaseContentPath() / DBName;
         constexpr auto DBSize = LeagueRoundID::Count * sizeof(m_holeScores);
         cro::RaiiRWops dbFile;
-        dbFile.file = SDL_IOFromFile(dbPath.c_str(), "rb");
+        dbFile.file = SDL_IOFromFile(dbPath.string().c_str(), "rb");
         if (dbFile.file)
         {
             const auto dbSize = SDL_SeekIO(dbFile.file, 0, SDL_IO_SEEK_END);
@@ -933,7 +933,7 @@ void League::write()
     const auto path = getFilePath(FileName);
 
     cro::RaiiRWops file;
-    file.file = SDL_IOFromFile(path.c_str(), "wb");
+    file.file = SDL_IOFromFile(path.string().c_str(), "wb");
     if (file.file)
     {
         SDL_WriteIO(file.file, &m_currentIteration, sizeof(std::int32_t));
@@ -961,14 +961,14 @@ void League::write()
 
 void League::assertDB()
 {
-    const auto path = Content::getBaseContentPath() + DBName;
+    const auto path = Content::getBaseContentPath() / DBName;
     if (!cro::FileSystem::fileExists(path))
     {
         //hmm what do if we failed creating this? I guess the read/write ops
         //will fail anyway when they can't open the file, so no harm, just
         //no player scores either...
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.c_str(), "wb");
+        file.file = SDL_IOFromFile(path.string().c_str(), "wb");
         if (file.file)
         {
             //create an empty file big enough to store all the arrays
@@ -989,7 +989,7 @@ void League::assertDB()
 
 void League::updateDB()
 {
-    const auto dbPath = Content::getBaseContentPath() + DBName;
+    const auto dbPath = Content::getBaseContentPath() / DBName;
     constexpr auto DBSize = LeagueRoundID::Count * sizeof(m_holeScores);
 
     //hmm SDL doesn't let us write to arbitrary positions in the file
@@ -999,7 +999,7 @@ void League::updateDB()
     std::fill(temp.begin(), temp.end(), 0);
 
     cro::RaiiRWops dbFile;
-    dbFile.file = SDL_IOFromFile(dbPath.c_str(), "rb");
+    dbFile.file = SDL_IOFromFile(dbPath.string().c_str(), "rb");
     if (dbFile.file)
     {
         //TODO existing DBs will be smaller than we expect after adding
@@ -1024,7 +1024,7 @@ void League::updateDB()
             SDL_ReadIO(dbFile.file, temp.data(), dbSize);
             SDL_CloseIO(dbFile.file);
 
-            dbFile.file = SDL_IOFromFile(dbPath.c_str(), "wb");
+            dbFile.file = SDL_IOFromFile(dbPath.string().c_str(), "wb");
             if (dbFile.file)
             {
                 auto startPoint = m_id * sizeof(m_holeScores);

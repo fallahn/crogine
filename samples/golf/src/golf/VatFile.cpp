@@ -70,18 +70,18 @@ bool VatFile::loadFromFile(const std::string& path)
 
     glm::uvec2 imageSize(0); //used to assert all binary data is the correct size
 
-    std::string workingPath = cro::FileSystem::getFilePath(path);
+    auto workingPath = cro::FileSystem::getFilePath(path);
     const auto& props = file.getProperties();
     for (const auto& prop : props)
     {
         const auto& name = prop.getName();
         if (name == "model")
         {
-            auto filepath = workingPath + prop.getValue<std::string>();
-            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + filepath))
+            const auto filepath = workingPath / prop.getValue<std::string>();
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / filepath))
             {
                 resultFlags |= Model;
-                m_modelPath = filepath;
+                m_modelPath = filepath.string();
             }
             else
             {
@@ -99,8 +99,8 @@ bool VatFile::loadFromFile(const std::string& path)
         }
         else if (name == "position")
         {
-            auto filepath = workingPath + prop.getValue<std::string>();
-            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + filepath))
+            const auto filepath = workingPath / prop.getValue<std::string>();
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / filepath))
             {
                 resultFlags |= Position;
                 m_dataPaths[DataID::Position] = filepath;
@@ -118,8 +118,8 @@ bool VatFile::loadFromFile(const std::string& path)
         }
         else if (name == "normal")
         {
-            auto filepath = workingPath + prop.getValue<std::string>();
-            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + filepath))
+            auto filepath = workingPath / prop.getValue<std::string>();
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / filepath))
             {
                 resultFlags |= Normal;
                 m_dataPaths[DataID::Normal] = filepath;
@@ -131,8 +131,8 @@ bool VatFile::loadFromFile(const std::string& path)
         }
         else if (name == "tangent")
         {
-            auto filepath = workingPath + prop.getValue<std::string>();
-            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + filepath))
+            auto filepath = workingPath / prop.getValue<std::string>();
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / filepath))
             {
                 m_dataPaths[DataID::Tangent] = filepath;
             }
@@ -143,8 +143,8 @@ bool VatFile::loadFromFile(const std::string& path)
         }
         else if (name == "diffuse")
         {
-            auto filepath = workingPath + prop.getValue<std::string>();
-            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + filepath))
+            auto filepath = workingPath / prop.getValue<std::string>();
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / filepath))
             {
                 m_diffusePath = filepath;
             }
@@ -175,8 +175,8 @@ bool VatFile::loadFromFile(const std::string& path)
         {
             if (!m_dataPaths[i].empty())
             {
-                auto ext = cro::FileSystem::getFileExtension(m_dataPaths[i]);
-                auto binPath = m_dataPaths[i].substr(0, m_dataPaths[i].find(ext)) + ".bin";
+                const auto ext = cro::FileSystem::getFileExtension(m_dataPaths[i]);
+                auto binPath = m_dataPaths[i].string().substr(0, m_dataPaths[i].string().find(ext.string())) + ".bin";
 
                 if (cro::FileSystem::fileExists(binPath))
                 {
@@ -206,17 +206,17 @@ bool VatFile::loadFromFile(const std::string& path)
     return resultFlags == FileOK;
 }
 
-const std::string& VatFile::getPositionPath() const
+const std::filesystem::path& VatFile::getPositionPath() const
 {
     return m_dataPaths[DataID::Position];
 }
 
-const std::string& VatFile::getNormalPath() const
+const std::filesystem::path& VatFile::getNormalPath() const
 {
     return m_dataPaths[DataID::Normal];
 }
 
-const std::string& VatFile::getTangentPath() const
+const std::filesystem::path& VatFile::getTangentPath() const
 {
     return m_dataPaths[DataID::Tangent];
 }
@@ -236,7 +236,7 @@ bool VatFile::fillArrayTexture(cro::ArrayTexture<float, 4u, cro::TexturePrecisio
     arrayTexture.create(m_binaryDims.x, m_binaryDims.y);
 
     cro::ImageArray<float> diffuseMap;
-    if (diffuseMap.loadFromFile(cro::FileSystem::getResourcePath() + m_diffusePath, true))
+    if (diffuseMap.loadFromFile(cro::FileSystem::getResourcePath() / m_diffusePath, true))
     {
         if (!arrayTexture.insertLayer(diffuseMap, 0))
         {
@@ -266,13 +266,13 @@ bool VatFile::fillArrayTexture(cro::ArrayTexture<float, 4u, cro::TexturePrecisio
 }
 
 //private
-void VatFile::loadBinary(const std::string& path, std::vector<float>& dst, glm::uvec2 dims)
+void VatFile::loadBinary(const std::filesystem::path& path, std::vector<float>& dst, glm::uvec2 dims)
 {
     dst.clear();
     dst.resize(dims.x * dims.y * 4);
 
     cro::RaiiRWops file;
-    file.file = SDL_IOFromFile(path.c_str(), "rb");
+    file.file = SDL_IOFromFile(path.string().c_str(), "rb");
     if (file.file)
     {
         auto read = SDL_ReadIO(file.file, dst.data(), dst.size() * sizeof(float));

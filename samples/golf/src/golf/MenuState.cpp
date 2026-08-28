@@ -3735,7 +3735,7 @@ void MenuState::launchTournament(std::int32_t tournamentID)
         resetTournament(m_sharedData.tournaments[tournamentID]);
         //load the path if we have a custom tourny
         const char* path = tournamentID == TournamentIndex::Custom ?
-            (m_sharedData.tournamentPath + TournamentDataFile).c_str() : nullptr;
+            (m_sharedData.tournamentPath + TournamentDataFile.string()).c_str() : nullptr;
         writeTournamentData(m_sharedData.tournaments[tournamentID], path);
     }
 
@@ -5146,7 +5146,7 @@ bool quickConnect(SharedStateData& sharedData)
 
         sharedData.serverInstance.setHostID(sharedData.clientConnection.netClient.getPeer().getID());
         sharedData.serverInstance.setLeagueID(sharedData.leagueRoundID);
-        sharedData.serverInstance.setCustomTournament(sharedData.tournamentPath + TournamentDataFile);
+        sharedData.serverInstance.setCustomTournament(sharedData.tournamentPath + TournamentDataFile.string());
     }
     return true;
 }

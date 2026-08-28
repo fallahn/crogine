@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,16 +31,17 @@ source distribution.
 
 #include <crogine/core/String.hpp>
 
-#include <string>
 #include <array>
+#include <filesystem>
+#include <string>
 
 class CustomTournament final
 {
 public:
     CustomTournament();
 
-    void load(const std::string&, const struct SharedCourseData*);
-    void save(const std::string&);
+    void load(const std::filesystem::path&, const struct SharedCourseData*);
+    void save(const std::filesystem::path&);
 
     void setCourse(std::size_t tier, const std::string& course);
     void setTitle(const cro::String& t) { m_title = t; }

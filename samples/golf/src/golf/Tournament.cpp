@@ -152,13 +152,13 @@ void resetTournament(Tournament& src)
     src.tier0[idx] = -1;
 }
 
-static inline std::string getFilePath(std::int32_t index)
+static inline std::filesystem::path getFilePath(std::int32_t index)
 {
     auto basePath = Content::getBaseContentPath();
     std::stringstream ss;
     ss << std::setw(2) << std::setfill('0') << index << ".tmt";
 
-    return basePath + ss.str();
+    return basePath / ss.str();
 }
 
 void writeTournamentData(const Tournament& src, const char* p)
@@ -167,7 +167,7 @@ void writeTournamentData(const Tournament& src, const char* p)
     if (!p)
     {
         auto path = getFilePath(src.id);
-        file.file = SDL_IOFromFile(path.c_str(), "wb");
+        file.file = SDL_IOFromFile(path.string().c_str(), "wb");
     }
     else
     {
@@ -191,7 +191,7 @@ void readTournamentData(Tournament& dst, const char* p)
     }
     else
     {
-        path = getFilePath(dst.id);
+        path = getFilePath(dst.id).string();
     }
 
     if (!cro::FileSystem::fileExists(path))

@@ -641,9 +641,9 @@ bool ProfileStateV2::simulate(float dt)
             case ExitFlagSave:
                 if (m_saveMugshotOnExit)
                 {
-                    const auto path = Content::getUserContentPath(Content::UserContent::Profile) + m_activeProfile.playerData.profileID + "/mug.png";
+                    const auto path = Content::getUserContentPath(Content::UserContent::Profile) / m_activeProfile.playerData.profileID / "mug.png";
                     m_mugshotTexture.getTexture().saveToFile(path);
-                    m_activeProfile.playerData.mugshot = path;
+                    m_activeProfile.playerData.mugshot = path.string();
                     m_saveMugshotOnExit = false;
                 }
 
@@ -3398,7 +3398,7 @@ void ProfileStateV2::loadBallModels()
 void ProfileStateV2::loadClubData()
 {
     const auto processClubPath =
-        [&](const std::string& path, bool isUser)
+        [&](const std::filesystem::path& path, bool isUser)
         {
             ClubData data;
             data.userItem = isUser;
@@ -3411,7 +3411,7 @@ void ProfileStateV2::loadClubData()
                 if (f == "list.cst")
                 {
                     cro::ConfigFile cfg;
-                    if (cfg.loadFromFile(path + "/" + f))
+                    if (cfg.loadFromFile(path / f))
                     {
                         const auto& props = cfg.getProperties();
                         for (const auto& p : props)
@@ -3446,7 +3446,7 @@ void ProfileStateV2::loadClubData()
                         if (const auto* models = cfg.findObjectWithName("models");
                             models == nullptr)
                         {
-                            LogE << "No models were listed in " << path + "/" + f;
+                            LogE << "No models were listed in " << path << "/" << f << std::endl;
                             hasModels = false;
                         }
                         else
@@ -3455,7 +3455,7 @@ void ProfileStateV2::loadClubData()
                             {
                                 if (p.getName() == "path")
                                 {
-                                    if (!cro::FileSystem::fileExists(path + "/" + p.getValue<std::string>()))
+                                    if (!cro::FileSystem::fileExists(path / p.getValue<std::string>()))
                                     {
                                         LogE << path << " lists model files, but they were not found on disk" << std::endl;
                                         hasModels = false;
@@ -3468,7 +3468,7 @@ void ProfileStateV2::loadClubData()
                 }
                 else if (f == "thumb.png")
                 {
-                    data.thumbnail = path + "/" + f;
+                    data.thumbnail = (path / f).string();
                 }
             }
 
@@ -3495,12 +3495,12 @@ void ProfileStateV2::loadClubData()
     const auto ContentDirs = Content::getInstallPaths();
     for (const auto& c : ContentDirs)
     {
-        const auto basePath = cro::FileSystem::getResourcePath() + c + "clubs/";
+        const auto basePath = cro::FileSystem::getResourcePath() / c / "clubs";
         const auto clubsets = cro::FileSystem::listDirectories(basePath);
 
         for (const auto& s : clubsets)
         {
-            processClubPath(basePath + s, false);
+            processClubPath(basePath / s, false);
         }
     }
 
@@ -3530,7 +3530,7 @@ void ProfileStateV2::loadClubData()
 
     for (const auto& s : clubsets)
     {
-        processClubPath(basePath + s, true);
+        processClubPath(basePath / s, true);
     }
 
 #else
@@ -3559,18 +3559,18 @@ void ProfileStateV2::loadVoiceData()
         std::string("water")
     };
 
-    std::vector<std::string> paths;
+    std::vector<std::filesystem::path> paths;
     const auto ContentDirs = Content::getInstallPaths();
 
     for (const auto& c : ContentDirs)
     {
         std::string basePath = "sound/avatars/";
-        const auto files = cro::FileSystem::listFiles(c + basePath);
+        const auto files = cro::FileSystem::listFiles(c / basePath);
         for (const auto& f : files)
         {
             if (cro::FileSystem::getFileExtension(f) == ".xas")
             {
-                paths.push_back(c + basePath + f);
+                paths.push_back(c / basePath / f);
             }
         }
     }
@@ -3586,12 +3586,12 @@ void ProfileStateV2::loadVoiceData()
     const auto dirs = cro::FileSystem::listDirectories(basePath);
     for (const auto& dir : dirs)
     {
-        const auto files = cro::FileSystem::listFiles(basePath + dir);
+        const auto files = cro::FileSystem::listFiles(basePath / dir);
         for (const auto& f : files)
         {
             if (cro::FileSystem::getFileExtension(f) == ".xas")
             {
-                paths.push_back(basePath + dir + "/" + f);
+                paths.push_back(basePath / dir / f);
             }
         }
     }
@@ -4079,7 +4079,7 @@ void ProfileStateV2::updateMugshot()
 
 void ProfileStateV2::clearMugshot()
 {
-    const auto path = Content::getUserContentPath(Content::UserContent::Profile) + m_activeProfile.playerData.profileID + "/mug.png";
+    const auto path = Content::getUserContentPath(Content::UserContent::Profile) / m_activeProfile.playerData.profileID / "mug.png";
     if (cro::FileSystem::fileExists(path))
     {
         std::error_code ec;
@@ -4144,7 +4144,7 @@ void ProfileStateV2::refreshBio()
             m_activeProfile.playerData.saveProfile();
         }
 
-        path += m_activeProfile.playerData.profileID + "/";
+        path /= m_activeProfile.playerData.profileID;
 
         if (cro::FileSystem::directoryExists(path))
         {
@@ -4155,7 +4155,7 @@ void ProfileStateV2::refreshBio()
                 std::vector<char> buffer(MaxBioChars + 1);
 
                 cro::RaiiRWops inFile;
-                inFile.file = SDL_IOFromFile(path.c_str(), "r");
+                inFile.file = SDL_IOFromFile(path.string().c_str(), "r");
                 if (inFile.file)
                 {
                     auto readCount = SDL_ReadIO(inFile.file, buffer.data(), MaxBioChars);
@@ -4169,7 +4169,7 @@ void ProfileStateV2::refreshBio()
                 std::string bio = generateRandomBio();
 
                 cro::RaiiRWops outfile;
-                outfile.file = SDL_IOFromFile(path.c_str(), "w");
+                outfile.file = SDL_IOFromFile(path.string().c_str(), "w");
                 if (outfile.file)
                 {
                     SDL_WriteIO(outfile.file, bio.data(), bio.size());

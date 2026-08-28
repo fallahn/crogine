@@ -114,8 +114,11 @@ ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap,
     std::fill(m_shadowIDs.begin(), m_shadowIDs.end(), -1);
 }
 
-bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bool useDeferredShaders, bool forceReload)
+bool ModelDefinition::loadFromFile(const std::filesystem::path& p, bool instanced, bool useDeferredShaders, bool forceReload)
 {
+    FS_ASSERT
+    const auto inPath = p.string();
+
 #ifdef PLATFORM_MOBILE
     instanced = false
 #endif

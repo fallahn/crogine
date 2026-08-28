@@ -131,22 +131,22 @@ EnvironmentMap::~EnvironmentMap()
 }
 
 //public
-bool EnvironmentMap::loadFromFile(const std::string& filePath)
+bool EnvironmentMap::loadFromFile(const std::filesystem::path& p)
 {
 #ifdef PLATFORM_MOBILE
     LogE << "Environment mapping is not available on mobile platforms. Use a cubemap instead." << std::endl;
     return false;
 #else
+    FS_ASSERT;
 
     std::string path;
-    std::filesystem::path p(filePath);
     if (p.is_absolute())
     {
-        path = filePath;
+        path = p.string();
     }
     else
     {
-        path = (FileSystem::getResourcePath() / filePath).string();
+        path = (FileSystem::getResourcePath() / p).string();
     }
 
     if (!cro::FileSystem::fileExists(path))
@@ -158,7 +158,7 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
     auto* file = SDL_IOFromFile(path.c_str(), "rb");
     if (!file)
     {
-        LogE << "SDLRW_ops Failed opening " << filePath << std::endl;
+        LogE << "SDLRW_ops Failed opening " << p << std::endl;
         return false;
     }
 
@@ -189,7 +189,7 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
     }
     else
     {
-        LogE << "STBI Failed opening " << filePath << ": " << stbi_failure_reason() << std::endl;
+        LogE << "STBI Failed opening " << p << ": " << stbi_failure_reason() << std::endl;
         
         return false;
     }

@@ -62,5 +62,5 @@ struct ClubModels final
     std::uint32_t uid = 0;
 
     std::uint64_t workshopID = 0;
-    bool loadFromFile(const std::string& path, cro::ResourceCollection&, cro::Scene&);
+    bool loadFromFile(const std::filesystem::path& path, cro::ResourceCollection&, cro::Scene&);
 };

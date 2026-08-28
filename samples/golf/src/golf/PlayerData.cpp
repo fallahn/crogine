@@ -136,7 +136,7 @@ bool PlayerData::saveProfile() const
     return cfg.save(path);
 }
 
-bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
+bool PlayerData::loadProfile(const std::filesystem::path& path, const std::string& uid)
 {
     std::fill(headwearOffsets.begin(), headwearOffsets.end(), glm::vec3(0.f));
 
@@ -299,7 +299,7 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
 
         profileID = uid;
 
-        mugshot = cro::FileSystem::getFilePath(path) + "mug.png";
+        mugshot = (cro::FileSystem::getFilePath(path) / "mug.png").string();
         if (!cro::FileSystem::fileExists(mugshot))
         {
             mugshot.clear();
@@ -328,7 +328,7 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
 
 //------------------------------------------------------------
 
-ProfileTexture::ProfileTexture(const std::string& path)
+ProfileTexture::ProfileTexture(const std::filesystem::path& path)
     : m_imageBuffer (std::make_unique<cro::Image>(true)),
     m_texture       (std::make_unique<cro::Texture>())
 {

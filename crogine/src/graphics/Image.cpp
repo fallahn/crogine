@@ -94,23 +94,25 @@ void Image::create(std::uint32_t width, std::uint32_t height, Colour colour, Ima
     m_format = format;
 }
 
-bool Image::loadFromFile(const std::string& filePath)
+bool Image::loadFromFile(const std::filesystem::path& p)
 {
+    FS_ASSERT;
+
+
     std::string path;
-    std::filesystem::path p(filePath);
     if (p.is_absolute())
     {
-        path = filePath;
+        path = p.string();
     }
     else
     {
-        path = (FileSystem::getResourcePath() / filePath).string();
+        path = (FileSystem::getResourcePath() / p).string();
     }
 
     auto* file = SDL_IOFromFile(path.c_str(), "rb");
     if (!file)
     {
-        Logger::log("Failed opening " + path, Logger::Type::Error);
+        Logger::log("Image: Failed opening " + path, Logger::Type::Error);
         return false;
     }
 

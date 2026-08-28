@@ -47,11 +47,11 @@ PersonalBest::PersonalBest()
 //public
 void PersonalBest::load()
 {
-    const auto path = Content::getBaseContentPath() + fileName;
+    const auto path = Content::getBaseContentPath() / fileName;
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.c_str(), "rb");
+        file.file = SDL_IOFromFile(path.string().c_str(), "rb");
         if (file.file)
         {
             SDL_ReadIO(file.file, m_entries.data(), sizeof(m_entries));
@@ -61,10 +61,10 @@ void PersonalBest::load()
 
 void PersonalBest::save() const
 {
-    const auto path = Content::getBaseContentPath() + fileName;
+    const auto path = Content::getBaseContentPath() / fileName;
 
     cro::RaiiRWops file;
-    file.file = SDL_IOFromFile(path.c_str(), "wb");
+    file.file = SDL_IOFromFile(path.string().c_str(), "wb");
     if (file.file)
     {
         SDL_WriteIO(file.file, m_entries.data(), sizeof(m_entries));

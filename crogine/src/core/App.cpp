@@ -116,7 +116,7 @@ namespace
 
 #include "../detail/DefaultIcon.inl"
 
-    const std::string cfgName("cfg.cfg");
+    const std::filesystem::path cfgName("cfg.cfg");
 
     void setImguiStyle(ImGuiStyle* dst)
     {
@@ -297,9 +297,9 @@ App::App(std::uint32_t styleFlags)
 
 
         char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
-        m_prefPath = std::string(pp);
+        m_prefPath = pp;
         SDL_free(pp);
-        std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
+        //std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
 
         if (!AudioRenderer::init())
         {
@@ -396,7 +396,7 @@ void App::run(bool resetSettings)
         static constexpr ImWchar ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
 
         ImGui::GetIO().Fonts->AddFontDefault();
-        ImGui::GetIO().Fonts->AddFontFromMemoryTTF(fontBuff.data(), fontBuff.size(), 13.f, &config, ranges);
+        ImGui::GetIO().Fonts->AddFontFromMemoryTTF(fontBuff.data(), static_cast<std::int32_t>(fontBuff.size()), 13.f, &config, ranges);
 
         m_window.setIcon(defaultIcon);
         m_window.setWindowedSize(settings.windowedSize);
@@ -638,7 +638,7 @@ Window& App::getWindow()
     return m_instance->m_window;
 }
 
-const std::string& App::getPreferencePath()
+const std::filesystem::path& App::getPreferencePath()
 {
     CRO_ASSERT(m_instance, "No valid app instance");
     return m_instance->m_prefPath;
@@ -702,15 +702,15 @@ void App::saveScreenshot()
         std::replace(filename.begin(), filename.end(), '/', '_');
         std::replace(filename.begin(), filename.end(), ':', '_');
 
-        auto outPath = getPreferencePath() + "screenshots/";
-        std::replace(outPath.begin(), outPath.end(), '\\', '/');
+        auto outPath = getPreferencePath() / "screenshots/";
+        //std::replace(outPath.begin(), outPath.end(), '\\', '/');
 
         if (!FileSystem::directoryExists(outPath))
         {
             FileSystem::createDirectory(outPath);
         }
 
-        filename = outPath + filename;
+        filename = (outPath / filename).string();
 
         RaiiRWops out;
         out.file = SDL_IOFromFile(filename.c_str(), "w");
@@ -774,9 +774,9 @@ void App::setApplicationStrings(const std::string& organisation, const std::stri
 
     //remember to update the pref path
     char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
-    m_prefPath = std::string(pp);
+    m_prefPath = pp;
     SDL_free(pp);
-    std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
+    //std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
 }
 
 //private
@@ -1152,7 +1152,7 @@ App::WindowSettings App::loadSettings() const
 
     WindowSettings settings;
     ConfigFile cfg;
-    if (cfg.loadFromFile(m_prefPath + cfgName, false))
+    if (cfg.loadFromFile(m_prefPath / cfgName, false))
     {
         const auto& properties = cfg.getProperties();
         for (const auto& prop : properties)
@@ -1295,7 +1295,7 @@ void App::saveSettings()
         aObj->addProperty("channel" + std::to_string(i)).setValue(AudioMixer::getVolume(i));
     }
 
-    saveSettings.save(m_prefPath + cfgName);
+    saveSettings.save(m_prefPath / cfgName);
 }
 
 bool Detail::isPSLayout(SDL_Gamepad* gc)

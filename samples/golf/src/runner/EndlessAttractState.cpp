@@ -95,7 +95,7 @@ EndlessAttractState::EndlessAttractState(cro::StateStack& stack, cro::State::Con
     m_uiScene       (context.appInstance.getMessageBus()),
     m_cycleIndex    (0)
 {
-    const auto path = Content::getBaseContentPath() + ScoreFile;
+    const auto path = Content::getBaseContentPath() / ScoreFile;
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path, false))
     {
@@ -611,7 +611,7 @@ void EndlessAttractState::createUI()
 
 void EndlessAttractState::refreshHighScores()
 {
-    const auto path = Content::getBaseContentPath() + ScoreFile;
+    const auto path = Content::getBaseContentPath() / ScoreFile;
     cro::ConfigFile cfg;
     cfg.addProperty("best").setValue(m_sharedGameData.bestScore);
     cfg.save(path);

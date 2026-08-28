@@ -36,12 +36,14 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/Log.hpp>
 
+#include <filesystem>
+
 namespace
 {
     constexpr std::size_t MaxNames = 15;
     constexpr std::uint8_t NewLine = '\n';
 
-    const std::string FileName = "league_names.txt";
+    const std::filesystem::path FileName = "league_names.txt";
 }
 
 LeagueNames::LeagueNames()
@@ -56,12 +58,12 @@ LeagueNames::LeagueNames()
 //public
 void LeagueNames::read()
 {
-    const auto path = Content::getBaseContentPath() + FileName;
+    const auto path = Content::getBaseContentPath() / FileName;
 
     std::size_t currName = 0;
 
     cro::RaiiRWops rFile;
-    rFile.file = SDL_IOFromFile(path.c_str(), "r");
+    rFile.file = SDL_IOFromFile(path.string().c_str(), "r");
     if (rFile.file)
     {
         std::size_t read = 0;
@@ -98,10 +100,10 @@ void LeagueNames::read()
 
 bool LeagueNames::write() const
 {
-    const auto path = Content::getBaseContentPath() + FileName;
+    const auto path = Content::getBaseContentPath() / FileName;
 
     cro::RaiiRWops rFile;
-    rFile.file = SDL_IOFromFile(path.c_str(), "w");
+    rFile.file = SDL_IOFromFile(path.string().c_str(), "w");
     if (rFile.file)
     {
         for (const auto& n : m_names)

@@ -50,7 +50,7 @@ namespace
     constexpr std::size_t MaxTotalFiles = 64;
 }
 
-M3UPlaylist::M3UPlaylist(const std::string& searchDir, std::uint32_t maxFiles)
+M3UPlaylist::M3UPlaylist(const std::filesystem::path& searchDir, std::uint32_t maxFiles)
     : m_currentIndex    (0)
 {
     if (cro::FileSystem::directoryExists(searchDir))
@@ -62,19 +62,19 @@ M3UPlaylist::M3UPlaylist(const std::string& searchDir, std::uint32_t maxFiles)
         {
             const auto& file = files[i];
             auto ext = cro::FileSystem::getFileExtension(file);
-            if (std::find(FileExtensions.cbegin(), FileExtensions.cend(), ext) != FileExtensions.cend())
+            if (std::find(FileExtensions.cbegin(), FileExtensions.cend(), ext.string()) != FileExtensions.cend())
             {
-                loadPlaylist(searchDir + file);
+                loadPlaylist(searchDir / file);
             }
         }
     }
 }
 
 //public
-bool M3UPlaylist::loadPlaylist(const std::string& path)
+bool M3UPlaylist::loadPlaylist(const std::filesystem::path& path)
 {
     cro::RaiiRWops rFile;
-    rFile.file = SDL_IOFromFile(path.c_str(), "r");
+    rFile.file = SDL_IOFromFile(path.string().c_str(), "r");
 
     if (!rFile.file)
     {
@@ -151,7 +151,7 @@ bool M3UPlaylist::loadPlaylist(const std::string& path)
     return false;
 }
 
-void M3UPlaylist::addTrack(const std::string& path)
+void M3UPlaylist::addTrack(const std::filesystem::path& path)
 {
     static const std::array ValidExt =
     {
@@ -161,7 +161,7 @@ void M3UPlaylist::addTrack(const std::string& path)
     };
 
     if (m_filePaths.size() < MaxTotalFiles &&
-        std::find(ValidExt.begin(), ValidExt.end(), cro::FileSystem::getFileExtension(path)) != ValidExt.end())
+        std::find(ValidExt.begin(), ValidExt.end(), cro::FileSystem::getFileExtension(path).string()) != ValidExt.end())
     {
         if (cro::FileSystem::fileExists(path))
         {
@@ -191,11 +191,11 @@ void M3UPlaylist::prevTrack()
     }
 }
 
-const std::string& M3UPlaylist::getCurrentTrack() const
+const std::filesystem::path& M3UPlaylist::getCurrentTrack() const
 {
     if (m_filePaths.empty())
     {
-        static const std::string ret;
+        static const std::filesystem::path ret;
         return ret;
     }
     return m_filePaths[m_currentIndex];

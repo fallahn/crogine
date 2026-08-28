@@ -174,7 +174,7 @@ Font::~Font()
 }
 
 //public
-bool Font::loadFromFile(const std::string& filePath)
+bool Font::loadFromFile(const std::filesystem::path& filePath)
 {
     //remove existing loaded font
     cleanup();
@@ -182,8 +182,11 @@ bool Font::loadFromFile(const std::string& filePath)
     return appendFromFile(filePath, FontAppendmentContext());
 }
 
-bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx)
+bool Font::appendFromFile(const std::filesystem::path& fp, FontAppendmentContext ctx)
 {
+    FS_ASSERT
+    const auto filePath = fp.string();
+
     CRO_ASSERT(ctx.codepointRange[0] > 0 && ctx.codepointRange[0] < ctx.codepointRange[1], "invalid codepoint range");
 
     const auto path = (FileSystem::getResourcePath() / filePath).string();

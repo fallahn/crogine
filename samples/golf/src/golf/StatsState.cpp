@@ -197,7 +197,7 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
             std::int32_t recordCount = 0;
             for (const auto& dir : dirs)
             {
-                db.open(path + dir + "/profile.db3");
+                db.open(path / dir / "profile.db3");
                 for (auto i = 0; i < 10; ++i)
                 {
                     for (auto j = 0; j < 18; ++j)
@@ -223,7 +223,7 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
             std::int32_t recordCount = 0;
             for (const auto& dir : dirs)
             {
-                db.open(path + dir + "/profile.db3");
+                db.open(path / dir / "profile.db3");
 
                 //just over a year
                 auto ts = cro::SysTime::epoch(); //note by default this is overwritten with current time when inserted to DB
@@ -646,16 +646,16 @@ void StatsState::buildScene()
 
 void StatsState::parseCourseData()
 {
-    const std::string coursePath = cro::FileSystem::getResourcePath() + "assets/golf/courses/";
+    const auto coursePath = cro::FileSystem::getResourcePath() / "assets/golf/courses/";
     auto dirs = cro::FileSystem::listDirectories(coursePath);
 
     std::sort(dirs.begin(), dirs.end());
 
     for (const auto& dir : dirs)
     {
-        if (dir.find("course_") != std::string::npos)
+        if (dir.string().find("course_") != std::string::npos)
         {
-            auto filePath = coursePath + dir + "/course.data";
+            const auto filePath = coursePath / dir / "course.data";
             if (cro::FileSystem::fileExists(filePath))
             {
                 cro::ConfigFile cfg;
@@ -684,7 +684,7 @@ void StatsState::parseProfileData()
     std::int32_t i = 0;
     for (const auto& dir : profileDirs)
     {
-        auto profilePath = path + dir + "/";
+        const auto profilePath = path / dir;
         auto files = cro::FileSystem::listFiles(profilePath);
         files.erase(std::remove_if(files.begin(), files.end(),
             [](const std::string& f)
@@ -695,12 +695,12 @@ void StatsState::parseProfileData()
         if (!files.empty())
         {
             PlayerData pd;
-            if (pd.loadProfile(profilePath + files[0], files[0].substr(0, files[0].size() - 4))
-                && cro::FileSystem::fileExists(profilePath + "profile.db3"))
+            if (pd.loadProfile(profilePath / files[0], files[0].string().substr(0, files[0].string().size() - 4))
+                && cro::FileSystem::fileExists(profilePath / "profile.db3"))
             {
                 auto& pf = m_profileData.emplace_back();
                 pf.name = pd.name;
-                pf.dbPath = profilePath + "profile.db3";
+                pf.dbPath = profilePath / "profile.db3";
 
 #ifdef USE_GNS
                 if (dir == Social::getPlayerID())

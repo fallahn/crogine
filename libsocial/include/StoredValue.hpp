@@ -37,10 +37,10 @@ source distribution.
 
 static inline void readValue(std::int32_t& dst, const std::string& fileName)
 {
-    const auto path = cro::App::getPreferencePath() + fileName;
+    const auto path = cro::App::getPreferencePath() / fileName;
     if (cro::FileSystem::fileExists(path))
     {
-        auto* file = SDL_IOFromFile(path.c_str(), "rb");
+        auto* file = SDL_IOFromFile(path.string().c_str(), "rb");
         if (file)
         {
             SDL_ReadIO(file, &dst, sizeof(dst));
@@ -54,8 +54,8 @@ static inline void writeValue(std::int32_t src, const std::string& fileName)
 #ifdef CRO_DEBUG_
     //return;
 #endif
-    const auto path = cro::App::getPreferencePath() + fileName;
-    auto* file = SDL_IOFromFile(path.c_str(), "wb");
+    const auto path = cro::App::getPreferencePath() / fileName;
+    auto* file = SDL_IOFromFile(path.string().c_str(), "wb");
     if (file)
     {
         SDL_WriteIO(file, &src, sizeof(src));

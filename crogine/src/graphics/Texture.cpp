@@ -217,9 +217,11 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
     glCheck(glBindTexture(GL_TEXTURE_2D, 0));
 }
 
-bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool useCompression)
+bool Texture::loadFromFile(const std::filesystem::path& p, bool createMipMaps, bool useCompression)
 {
-    std::filesystem::path p(filePath);
+    FS_ASSERT
+    const auto filePath = p.string();
+
     auto path = FileSystem::getResourcePath().string();
     //only add resource path if not done so already
     if (!p.is_absolute() &&
@@ -521,7 +523,7 @@ FloatRect Texture::getNormalisedSubrect(FloatRect rect) const
     return { rect.left / m_size.x, rect.bottom / m_size.y, rect.width / m_size.x, rect.height / m_size.y };
 }
 
-bool Texture::saveToFile(const std::string& path) const
+bool Texture::saveToFile(const std::filesystem::path& path) const
 {
     if (m_handle == 0)
     {
@@ -529,8 +531,8 @@ bool Texture::saveToFile(const std::string& path) const
         return false;
     }
 
-    auto filePath = path;
-    if (cro::FileSystem::getFileExtension(filePath) != ".png")
+    auto filePath = path.string();
+    if (cro::FileSystem::getFileExtension(path) != ".png")
     {
         filePath += ".png";
     }
@@ -552,7 +554,7 @@ bool Texture::saveToFile(const std::string& path) const
 
     if (result == 0)
     {
-        LogE << "Failed writing " << path << std::endl;
+        LogE << "Failed writing " << path.string() << std::endl;
 
         return false;
     }

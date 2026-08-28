@@ -291,7 +291,7 @@ void RenderTexture::display()
     setActive(false);
 }
 
-bool RenderTexture::saveToFile(const std::string& path) const
+bool RenderTexture::saveToFile(const std::filesystem::path& path) const
 {
     if (m_fboID)
     {

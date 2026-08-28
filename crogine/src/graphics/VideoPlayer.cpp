@@ -156,7 +156,7 @@ VideoPlayer::~VideoPlayer()
     }
 }
 
-bool VideoPlayer::loadFromFile(const std::string& path)
+bool VideoPlayer::loadFromFile(const std::filesystem::path& path)
 {
     const auto fullPath = cro::FileSystem::getResourcePath() / path;
 

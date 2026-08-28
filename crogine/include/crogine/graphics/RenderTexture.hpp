@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/graphics/MaterialData.hpp>
 
 #include <array>
+#include <filesystem>
 
 namespace cro
 {
@@ -160,10 +161,10 @@ namespace cro
         \brief Saves the texture to a png file if it is a valid texture.
         If the texture contains no data, or create() had not been called
         then this function does nothing.
-        \param path A string containing a path to save the texture to.
+        \param path A filesystem::path containing a path to save the texture to.
         \returns true if successful else returns false
         */
-        bool saveToFile(const std::string& path) const;
+        bool saveToFile(const std::filesystem::path& path) const;
 
         std::uint32_t getFrameBufferID() const override { return m_fboID; }
 

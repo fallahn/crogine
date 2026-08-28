@@ -72,7 +72,7 @@ namespace
     std::unordered_map<std::string, std::pair<Console::Command, const ConsoleClient*>> commands;
 
     ConfigFile convars;
-    const std::string convarName("convars.cfg");
+    const std::filesystem::path convarName("convars.cfg");
 
     const ImVec4 WarningColour(1.f, 0.6f, 0.f, 1.f);
     const ImVec4 ErrorColour(1.f, 0.f, 0.f, 1.f);
@@ -713,15 +713,15 @@ void Console::init()
     addCommand("show_screenshots",
         [](const std::string&)
         {
-            auto outPath = cro::App::getInstance().getPreferencePath() + "screenshots/";
-            std::replace(outPath.begin(), outPath.end(), '\\', '/');
+            const auto outPath = cro::App::getInstance().getPreferencePath() / "screenshots";
+            //std::replace(outPath.begin(), outPath.end(), '\\', '/');
 
             if (!cro::FileSystem::directoryExists(outPath))
             {
                 cro::FileSystem::createDirectory(outPath);
             }
 
-            cro::Util::String::parseURL(outPath);
+            cro::Util::String::parseURL(outPath.string());
         });
 
     //quits
@@ -732,7 +732,7 @@ void Console::init()
     });
 
     //loads any convars which may have been saved
-    convars.loadFromFile(App::getPreferencePath() + convarName, false);
+    convars.loadFromFile(App::getPreferencePath() / convarName, false);
     //TODO execute callback for each to make sure values are applied (? can always add a command which executes something while updating value)
 }
 
@@ -741,7 +741,7 @@ void Console::finalise()
     //TODO if we add anything else here make sure
     //to modify setConvarValue as it calls this to
     //update the file with new values.
-    convars.save(App::getPreferencePath() + convarName);
+    convars.save(App::getPreferencePath() / convarName);
 }
 
 void Console::updateAverageRenderTime(float ft)

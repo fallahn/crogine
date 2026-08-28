@@ -35,7 +35,7 @@ source distribution.
 #include <crogine/graphics/Image.hpp>
 
 #include <cstdint>
-
+#include <filesystem>
 #include <vector>
 #include <string>
 
@@ -77,6 +77,9 @@ namespace cro
             static_assert(sizeof(T) == -1, "Only U8, U16 and float supported");
             return false;
         }
+
+        //temporary overloads for migrating to std::fileystem::path
+        bool loadFromFile(const std::filesystem::path& p, bool b = false) { return loadFromFile(p.string(), b); }
 
         T& operator [](std::size_t i) { return m_data[i]; }
         const T& operator [](std::size_t i) const { return m_data[i]; }
@@ -249,5 +252,23 @@ namespace cro
             m_data.swap(temp);
         }
         return result;
+    }
+
+
+    //temporary overloads for filesystem migration
+    template <>
+    inline bool ImageArray<std::uint8_t>::loadFromFile(const std::filesystem::path& path, bool flipOnLoad)
+    {
+        return ImageArray<std::uint8_t>::loadFromFile(path.string(), flipOnLoad);
+    }
+    template <>
+    inline bool ImageArray<std::uint16_t>::loadFromFile(const std::filesystem::path& path, bool flipOnLoad)
+    {
+        return ImageArray<std::uint16_t>::loadFromFile(path.string(), flipOnLoad);
+    }
+    template <>
+    inline bool ImageArray<float>::loadFromFile(const std::filesystem::path& path, bool flipOnLoad)
+    {
+        return ImageArray<float>::loadFromFile(path.string(), flipOnLoad);
     }
 }

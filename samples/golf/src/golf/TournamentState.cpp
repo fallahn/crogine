@@ -130,7 +130,7 @@ namespace
         //CareerSeason = 100
     };
 
-    const std::string ConfigFile("career.cfg");
+    const std::filesystem::path ConfigFile("career.cfg");
 
     std::int32_t tournamentID = 0;
     std::int32_t maxTournaments = 2;
@@ -372,7 +372,7 @@ void TournamentState::handleMessage(const cro::Message& msg)
                 if (!m_customPaths.empty()
                     && m_sharedData.tournamentPath.empty())
                 {
-                    m_sharedData.tournamentPath = m_customPaths[m_customIndex];
+                    m_sharedData.tournamentPath = m_customPaths[m_customIndex].string();
                 }
 
                 if (!m_sharedData.tournamentPath.empty())
@@ -1198,7 +1198,7 @@ void TournamentState::buildScene()
                 {
                     if (!m_customPaths.empty())
                     {
-                        m_sharedData.tournamentPath = m_customPaths[m_customIndex];
+                        m_sharedData.tournamentPath = m_customPaths[m_customIndex].string();
                     }
                     else
                     {
@@ -1897,7 +1897,7 @@ void TournamentState::createConfirmMenu(cro::Entity parent)
 
                 if (!m_customPaths.empty())
                 {
-                    m_sharedData.tournamentPath = m_customPaths[m_customIndex];
+                    m_sharedData.tournamentPath = m_customPaths[m_customIndex].string();
                 }
                 auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                 msg->type = SystemEvent::MenuRequest;
@@ -1919,8 +1919,8 @@ void TournamentState::createConfirmMenu(cro::Entity parent)
                 
                 if (tournamentID == TournamentIndex::Custom)
                 {
-                    const auto path = m_sharedData.tournamentPath + TournamentDataFile;
-                    writeTournamentData(m_sharedData.tournaments[tournamentID], path.c_str());
+                    const auto path = m_sharedData.tournamentPath / TournamentDataFile;
+                    writeTournamentData(m_sharedData.tournaments[tournamentID], path.string().c_str());
                 }
                 else
                 {
@@ -2794,11 +2794,11 @@ void TournamentState::refreshCustomList()
         const auto dirs = cro::FileSystem::listDirectories(basePath);
         for (const auto& d : dirs)
         {
-            const auto dirPath = basePath + d + "/";
+            const auto dirPath = basePath / d;
             if (cro::FileSystem::directoryExists(dirPath))
             {
-                if (cro::FileSystem::fileExists(dirPath + "selection.crs")
-                    && cro::FileSystem::fileExists(dirPath + TournamentDataFile))
+                if (cro::FileSystem::fileExists(dirPath / "selection.crs")
+                    && cro::FileSystem::fileExists(dirPath / TournamentDataFile))
                 {
                     m_customPaths.push_back(dirPath);
                 }
@@ -2844,11 +2844,11 @@ void TournamentState::loadCustomTournament()
 {
     m_sharedData.tournaments[TournamentIndex::Custom] = {};
     m_sharedData.tournaments[TournamentIndex::Custom].id = TournamentIndex::Custom;
-    readTournamentData(m_sharedData.tournaments[TournamentIndex::Custom], (m_customPaths[m_customIndex] + TournamentDataFile).c_str());
+    readTournamentData(m_sharedData.tournaments[TournamentIndex::Custom], (m_customPaths[m_customIndex] / TournamentDataFile).string().c_str());
     
     m_sharedData.customTournament = {};
     m_sharedData.customTournament.load(m_customPaths[m_customIndex], m_sharedData.courseData);
-    m_sharedData.tournamentPath = m_customPaths[m_customIndex];
+    m_sharedData.tournamentPath = m_customPaths[m_customIndex].string();
 
     maxTournaments = 3;
     TournamentNames[TournamentIndex::Custom] = m_sharedData.customTournament.getTitle();
@@ -2890,7 +2890,7 @@ void TournamentState::quitState()
 
 void TournamentState::loadConfig()
 {
-    const auto path = Content::getUserContentPath(Content::UserContent::Career) + ConfigFile;
+    const auto path = Content::getUserContentPath(Content::UserContent::Career) / ConfigFile;
     if (cro::FileSystem::fileExists(path))
     {
         cro::ConfigFile cfg;
@@ -2923,7 +2923,7 @@ void TournamentState::saveConfig() const
     cfg.addProperty("gimme").setValue(m_sharedData.gimmeRadius);
     cfg.addProperty("night").setValue(m_sharedData.nightTime);
     cfg.addProperty("weather").setValue(m_sharedData.weatherType);
-    cfg.save(Content::getUserContentPath(Content::UserContent::Career) + ConfigFile);
+    cfg.save(Content::getUserContentPath(Content::UserContent::Career) / ConfigFile);
 }
 
 void TournamentState::onCachedPush()

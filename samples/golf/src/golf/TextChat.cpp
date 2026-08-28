@@ -864,7 +864,7 @@ void TextChat::initLog()
             cro::FileSystem::createDirectory(contentPath);
         }
 
-        const std::string filename = contentPath +  "chat_log_" + std::to_string(tm->tm_year + 1900) + "-" + std::to_string(tm->tm_mon + 1) + "-" + std::to_string(tm->tm_mday) + ".txt";
+        const std::string filename = contentPath.string() + "/chat_log_" + std::to_string(tm->tm_year + 1900) + "-" + std::to_string(tm->tm_mon + 1) + "-" + std::to_string(tm->tm_mday) + ".txt";
         m_logFile.open(filename, std::ios::app);
     }
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -205,6 +205,9 @@ namespace cro
         \returns true if successful, else false.
         */
         bool loadFromFile(std::int32_t id, const std::string& vertex, const std::string& fragment);
+
+        //temporary overloads for migrating to std::fileystem::path
+        bool loadFromFile(std::int32_t id, const std::filesystem::path& p, const std::filesystem::path& q) { return loadFromFile(id, p.string(), q.string()); }
 
         /*!
         \brief Preloads a shader and maps it to the given ID from source code in memory

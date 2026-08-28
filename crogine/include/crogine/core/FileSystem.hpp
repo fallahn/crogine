@@ -72,7 +72,7 @@ namespace cro
         
         /*!
         \brief Attempts to return the path of a given file path without
-        the file name, including trailing separator char.
+        the file name, or trailing separator char.
         */
         static std::filesystem::path getFilePath(const std::filesystem::path& path);
         

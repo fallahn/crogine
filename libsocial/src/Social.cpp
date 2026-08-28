@@ -638,13 +638,13 @@ void Social::refreshAwards()
     };
     std::vector<AwardData> awardData;
 
-    auto path = Content::getBaseContentPath() + "awards.awd";
+    const auto path = Content::getBaseContentPath() / "awards.awd";
 
     //check for awards file and load
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.c_str(), "rb");
+        file.file = SDL_IOFromFile(path.string().c_str(), "rb");
         if (file.file)
         {
             auto size = SDL_SeekIO(file.file, 0, SDL_IO_SEEK_END);
@@ -717,7 +717,7 @@ void Social::refreshAwards()
     if (newAwards)
     {
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.c_str(), "wb");
+        file.file = SDL_IOFromFile(path.string().c_str(), "wb");
         if (file.file)
         {
             SDL_WriteIO(file.file, awardData.data(), sizeof(AwardData) * awardData.size());

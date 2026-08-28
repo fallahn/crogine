@@ -31,6 +31,12 @@ source distribution.
 
 #include <cstdint>
 
+#ifdef ASSERT_STD_FILESYSTEM
+#define FS_ASSERT static_assert(false, "filesystem path needs implementing");
+#else
+#define FS_ASSERT
+#endif
+
 #if defined __APPLE__
 #include <TargetConditionals.h>
 #define GL41 //load GL4.1 not 4.6

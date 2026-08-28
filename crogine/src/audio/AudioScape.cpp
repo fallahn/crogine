@@ -40,8 +40,11 @@ AudioScape::AudioScape()
 }
 
 //public
-bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResource)
+bool AudioScape::loadFromFile(const std::filesystem::path& p, AudioResource& audioResource)
 {
+    FS_ASSERT
+    const auto path = p.string();
+
     m_configs.clear();
     m_name.clear();
     m_path.clear();

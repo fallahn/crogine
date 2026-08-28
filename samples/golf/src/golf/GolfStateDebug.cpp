@@ -1291,19 +1291,19 @@ void GolfState::spawnSeagulls(glm::vec3 pos)
 
 void GolfState::dumpBenchmark()
 {
-    std::string outFile = cro::App::getPreferencePath() + "benchmark/";
+    auto outFile = cro::App::getPreferencePath() / "benchmark";
 
     if (!cro::FileSystem::directoryExists(outFile))
     {
         cro::FileSystem::createDirectory(outFile);
     }
-    outFile += m_sharedData.mapDirectory + "/";
+    outFile /= m_sharedData.mapDirectory.toAnsiString();
 
     if (!cro::FileSystem::directoryExists(outFile))
     {
         cro::FileSystem::createDirectory(outFile);
     }
-    outFile += std::to_string(m_currentHole) + ".bmk";
+    outFile /= std::to_string(m_currentHole) + ".bmk";
 
     const std::array<std::string, 3u> TreeTypes
     {
@@ -1311,7 +1311,7 @@ void GolfState::dumpBenchmark()
     };
 
     cro::RaiiRWops file;
-    file.file = SDL_IOFromFile(outFile.c_str(), "a");
+    file.file = SDL_IOFromFile(outFile.string().c_str(), "a");
     if (file.file)
     {
         std::string dateTime = cro::SysTime::dateString();
@@ -1339,7 +1339,7 @@ void GolfState::dumpBenchmark()
     }
     else
     {
-        LOG("Failed opening benchmark file " + outFile, cro::Logger::Type::Warning);
+        LOG("Failed opening benchmark file " + outFile.string(), cro::Logger::Type::Warning);
         LogE << SDL_GetError() << std::endl;
     }
 

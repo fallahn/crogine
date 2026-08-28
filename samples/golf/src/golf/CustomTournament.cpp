@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025 - 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -36,7 +36,7 @@ source distribution.
 
 namespace
 {
-    const std::string FileName = "selection.crs";
+    const std::filesystem::path FileName = "selection.crs";
 }
 
 CustomTournament::CustomTournament()
@@ -46,12 +46,12 @@ CustomTournament::CustomTournament()
 }
 
 //public
-void CustomTournament::load(const std::string& path, const SharedCourseData* courseData)
+void CustomTournament::load(const std::filesystem::path& path, const SharedCourseData* courseData)
 {
-    CRO_ASSERT(path.back() == '/', "");
+    //CRO_ASSERT(path.back() == '/', "");
 
     cro::ConfigFile cfg;
-    if (cfg.loadFromFile(path + FileName, false))
+    if (cfg.loadFromFile(path / FileName, false))
     {
         for (const auto& p : cfg.getProperties())
         {
@@ -103,7 +103,7 @@ void CustomTournament::load(const std::string& path, const SharedCourseData* cou
     }
 }
 
-void CustomTournament::save(const std::string& path)
+void CustomTournament::save(const std::filesystem::path& path)
 {
     cro::ConfigFile cfg("course_list");
     cfg.addProperty("title").setValue(m_title);
@@ -113,7 +113,7 @@ void CustomTournament::save(const std::string& path)
         cfg.addProperty("tier_" + std::to_string(i)).setValue(m_courses[i]);
     }
 
-    cfg.save(path + FileName);
+    cfg.save(path / FileName);
 }
 
 void CustomTournament::setCourse(std::size_t idx, const std::string& course)

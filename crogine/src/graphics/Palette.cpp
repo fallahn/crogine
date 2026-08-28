@@ -117,13 +117,13 @@ Palette::Palette()
     
 }
 
-Palette::Palette(const std::string& path)
+Palette::Palette(const std::filesystem::path& path)
 {
     //we'll let this function print error on failure
     loadFromFile(path);
 }
 
-bool Palette::loadFromFile(const std::string& path, bool append)
+bool Palette::loadFromFile(const std::filesystem::path& path, bool append)
 {
     if (!append)
     {

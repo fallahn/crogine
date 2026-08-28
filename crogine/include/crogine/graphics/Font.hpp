@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -40,11 +40,12 @@ by Laurent Gomila et al https://github.com/SFML/SFML/blob/master/src/SFML/Graphi
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Texture.hpp>
 
+#include <any>
+#include <filesystem>
 #include <map>
+#include <memory>
 #include <unordered_map>
 #include <vector>
-#include <any>
-#include <memory>
 
 namespace cro
 {
@@ -183,7 +184,8 @@ namespace cro
         \param path Path to font file
         \returns true if successful else false
         */
-        bool loadFromFile(const std::string& path);
+        bool loadFromFile(const std::filesystem::path& path);
+
 
         /*!
         \brief Attempts to load and add the given file to the
@@ -193,12 +195,12 @@ namespace cro
         Code point values will overwrite from the start value if existing
         ranges are already mapped, and underwrite (existing high values take
         precedence) from the range end
-        \param path A string containing the path to the font to append
+        \param path A filesystem::path containing the path to the font to append
         \param ctx FontAppendmentContext containing the rules dictating how
         the appended font should be rendered
         \see FontAppendmentContext
         */
-        bool appendFromFile(const std::string& path, FontAppendmentContext ctx);
+        bool appendFromFile(const std::filesystem::path& path, FontAppendmentContext ctx);
 
 
         /*!

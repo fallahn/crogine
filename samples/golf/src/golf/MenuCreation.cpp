@@ -187,16 +187,17 @@ constexpr std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPosit
     glm::vec2(0.f, 0.f)
 };
 
-void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser, bool appendToRange)
+void MenuState::parseCourseDirectory(const std::filesystem::path& rootDir, bool isUser, bool appendToRange)
 {
     auto root = rootDir;
     if (!isUser)
     {
-        //macOS shenanigans.
+        //macOS shenanigans. TODO there must be a better way of finding
+        //out if a path contains another one
         auto rpath = cro::FileSystem::getResourcePath();
-        if (rpath.find(root) == std::string::npos)
+        if (rpath.string().find(root.string()) == std::string::npos)
         {
-            root = rpath + root;
+            root = rpath / root;
         }
     }
 
@@ -229,13 +230,13 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser, bo
             continue;
         }
 
-        auto courseFile = rootDir + dir + "/course.data";
+        auto courseFile = rootDir / dir / "course.data";
 
         //because macs are special, obvs
         auto testPath = courseFile;
         if (!isUser)
         {
-            testPath = cro::FileSystem::getResourcePath() + testPath;
+            testPath = cro::FileSystem::getResourcePath() / testPath;
         }
 
         if (cro::FileSystem::fileExists(testPath))
@@ -291,7 +292,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser, bo
                 {
                     data.description = description;
                 }
-                data.directory = dir;
+                data.directory = dir.string();
                 data.courseNumber = courseNumber;
                 data.isUser = isUser;
                 data.holeCount[0] = "All " + std::to_string(std::min(holeCount, 18)) + " holes";
@@ -306,31 +307,31 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser, bo
 
 
         //check for thumbnail
-        courseFile = rootDir + dir + "/preview.png";
+        courseFile = rootDir / dir / "preview.png";
         testPath = courseFile;
         if (!isUser)
         {
-            testPath = cro::FileSystem::getResourcePath() + testPath;
+            testPath = cro::FileSystem::getResourcePath() / testPath;
         }
 
         std::unique_ptr<cro::Texture> t = std::make_unique<cro::Texture>();
         if (cro::FileSystem::fileExists(testPath) &&
             t->loadFromFile(courseFile))
         {
-            m_sharedCourseData.courseThumbs.insert(std::make_pair(dir, std::move(t)));
+            m_sharedCourseData.courseThumbs.insert(std::make_pair(dir.string(), std::move(t)));
         }
 
         //and video thumbnail
-        courseFile = rootDir + dir + "/preview.mpg";
+        courseFile = rootDir / dir / "preview.mpg";
         testPath = courseFile;
         if (!isUser)
         {
-            testPath = cro::FileSystem::getResourcePath() + testPath;
+            testPath = cro::FileSystem::getResourcePath() / testPath;
         }
 
         if (cro::FileSystem::fileExists(testPath))
         {
-            m_sharedCourseData.videoPaths.insert(std::make_pair(dir, courseFile));
+            m_sharedCourseData.videoPaths.insert(std::make_pair(dir.string(), courseFile));
         }
     }
 }
@@ -424,11 +425,11 @@ void MenuState::createUI()
     m_currentRange = Range::Official;
     for (const auto& dir : contentPaths)
     {
-        parseCourseDirectory(dir + ConstVal::MapPath, false, true);
+        parseCourseDirectory(dir / ConstVal::MapPath, false, true);
     }
 
     m_currentRange = Range::Custom;
-    parseCourseDirectory(cro::App::getPreferencePath() + ConstVal::UserMapPath, true);
+    parseCourseDirectory(cro::App::getPreferencePath() / ConstVal::UserMapPath, true);
 
     m_currentRange = Range::Official; //make this default
     if (m_sharedData.courseIndex == m_courseIndices[Range::Custom].start)

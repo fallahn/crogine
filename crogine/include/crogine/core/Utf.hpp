@@ -38,15 +38,15 @@
 #include <cstdlib>
 #include <cstdint>
 
-#if defined __APPLE__
-using UInt8 = char8_t;
-using UInt16 = char16_t;
-using UInt32 = char32_t;
-#else
+//#if defined __APPLE__
+//using UInt8 = char8_t;
+//using UInt16 = char16_t;
+//using UInt32 = char32_t;
+//#else
 using UInt8 = std::uint8_t;
 using UInt16 = std::uint16_t;
 using UInt32 = std::uint32_t;
-#endif
+//#endif
 
 
 namespace cro

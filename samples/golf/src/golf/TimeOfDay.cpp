@@ -60,7 +60,7 @@ namespace
     constexpr std::time_t OneDay = 24 * 60 * 60;
     constexpr std::time_t FourWeeks = 28 * OneDay;
 
-    const std::string DataFile("latlon.pos");
+    const std::filesystem::path DataFile("latlon.pos");
 }
 
 TimeOfDay::TimeOfDay()
@@ -68,7 +68,7 @@ TimeOfDay::TimeOfDay()
     m_timeSinceLastCheck(0)
 {
     //attempt to read local data file
-    const auto path = Content::getBaseContentPath() + DataFile;
+    const auto path = Content::getBaseContentPath() / DataFile;
 
     //if file doesn't exist, refresh
     if (!cro::FileSystem::fileExists(path))
@@ -364,7 +364,7 @@ void TimeOfDay::updateLatLon()
 
 void TimeOfDay::writeDataFile() const
 {
-    const auto path = Content::getBaseContentPath() + DataFile;
+    const auto path = Content::getBaseContentPath() / DataFile;
     cro::ConfigFile cfg;
     cfg.addProperty("lat_lon").setValue(m_latlon);
     cfg.addProperty("timestamp").setValue(static_cast<std::uint32_t>(std::time(nullptr)));

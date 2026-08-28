@@ -125,7 +125,7 @@ namespace
     constexpr glm::vec3 LeagueListPosition = glm::vec3(119.f, 216.f, 0.2f);
     constexpr float LeagueLineSpacing = 14.f;
 
-    const std::string ConfigFile("career.cfg");
+    const std::filesystem::path ConfigFile("career.cfg");
 
     std::int32_t craewallOffset = 0; //hack to offset the index when craewall is installed but adventurer isn't
 }
@@ -2130,7 +2130,7 @@ void CareerState::quitState()
 
 void CareerState::loadConfig()
 {
-    const auto path = Content::getUserContentPath(Content::UserContent::Career) + ConfigFile;
+    const auto path = Content::getUserContentPath(Content::UserContent::Career) / ConfigFile;
     if (cro::FileSystem::fileExists(path))
     {
         cro::ConfigFile cfg;
@@ -2163,7 +2163,7 @@ void CareerState::saveConfig() const
     cfg.addProperty("gimme").setValue(m_sharedData.gimmeRadius);
     cfg.addProperty("night").setValue(m_sharedData.nightTime);
     cfg.addProperty("weather").setValue(m_sharedData.weatherType);
-    cfg.save(Content::getUserContentPath(Content::UserContent::Career) + ConfigFile);
+    cfg.save(Content::getUserContentPath(Content::UserContent::Career) / ConfigFile);
 }
 
 void CareerState::onCachedPush()

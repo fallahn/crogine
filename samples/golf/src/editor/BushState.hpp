@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -42,6 +42,7 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 
 #include <array>
+#include <filesystem>
 
 namespace cro
 {
@@ -111,9 +112,9 @@ private:
 
     void drawUI();
 
-    void loadModel(const std::string&);
-    void loadPreset(const std::string&);
-    void savePreset(const std::string&);
+    void loadModel(const std::filesystem::path&);
+    void loadPreset(const std::filesystem::path&);
+    void savePreset(const std::filesystem::path&);
     void loadSkyboxFile();
     void saveSkyboxFile();
     void addSkyboxModel();

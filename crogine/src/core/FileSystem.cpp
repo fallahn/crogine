@@ -323,7 +323,7 @@ std::vector<std::filesystem::path> FileSystem::listDirectories(const std::filesy
     {
         if (dir.is_directory())
         {
-            retVal.push_back(dir.path());
+            retVal.push_back(dir.path().filename());
         }
     }
     return retVal;

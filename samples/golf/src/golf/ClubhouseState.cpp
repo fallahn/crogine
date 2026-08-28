@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -930,14 +930,14 @@ void ClubhouseState::loadResources()
 
 void ClubhouseState::validateTables()
 {
-    const std::string tablePath("assets/golf/tables/");
+    const std::filesystem::path tablePath("assets/golf/tables/");
 
-    auto fileList = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + tablePath);
+    const auto fileList = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() / tablePath);
     for (const auto& file : fileList)
     {
         TableClientData data;
-        if (data.loadFromFile(tablePath + file) //validates properties but not file existence
-            && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + data.viewModel))
+        if (data.loadFromFile(tablePath / file) //validates properties but not file existence
+            && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / data.viewModel))
         {
             m_tableData.push_back(data);
         }
@@ -946,7 +946,7 @@ void ClubhouseState::validateTables()
     //this assumes the file was previously saved in the correct order
     //but it won't be terrible if it's a bit out as it'll be overwritten again.
     cro::ConfigFile cfg;
-    cfg.loadFromFile(cro::App::getPreferencePath() + "table_data.cfg", false);
+    cfg.loadFromFile(cro::App::getPreferencePath() / "table_data.cfg", false);
     const auto& objs = cfg.getObjects();
     for (auto i = 0u; i < objs.size(); ++i)
     {
@@ -1789,7 +1789,7 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
                     obj->addProperty("ball").setValue(table.ballSkinIndex);
                     obj->addProperty("table").setValue(table.tableSkinIndex);
                 }
-                cfg.save(cro::App::getPreferencePath() + "table_data.cfg");
+                cfg.save(cro::App::getPreferencePath() / "table_data.cfg");
 
                 requestStackClear();
                 requestStackPush(StateID::Billiards);

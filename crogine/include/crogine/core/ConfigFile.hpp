@@ -41,9 +41,10 @@ source distribution.
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/vec4.hpp>
 
+#include <filesystem>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
 
 namespace cro
 {
@@ -215,7 +216,7 @@ namespace cro
         /*!
         \brief Writes this object and all its children to given path
         */
-        bool save(const std::string& path);
+        bool save(const std::filesystem::path& path);
 
         /*!
         \brief Attempts to load a config file into the object.
@@ -260,7 +261,7 @@ namespace cro
 
         \returns true on success, else false if something went wrong
         */
-        bool loadFromFile(const std::string& path, bool relative = true);
+        bool loadFromFile(const std::filesystem::path& path, bool relative = true);
 
     private:
         std::string m_id;

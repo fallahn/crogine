@@ -31,10 +31,11 @@ source distribution.
 
 #include <crogine/core/String.hpp>
 
-#include <cstdint>
 #include <array>
-#include <vector>
+#include <cstdint>
+#include <filesystem>
 #include <string>
+#include <vector>
 
 //don't modify this! It's read/written directly from saves and will break existing data.
 struct LeaguePlayer final
@@ -183,7 +184,7 @@ private:
     void rollPlayers(bool resetScores);
     void increaseDifficulty();
     void decreaseDifficulty();
-    std::string getFilePath(const std::string& fileName) const;
+    std::filesystem::path getFilePath(const std::filesystem::path& fileName) const;
 
     std::vector<TableEntry> m_sortedTable = {};
     mutable std::vector<TableEntry> m_previousSortedTable = {};

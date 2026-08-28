@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 
+#include <filesystem>
 #include <string>
 
 namespace cro
@@ -88,10 +89,10 @@ namespace cro
 
         /*!
         \brief Attempts to load and process a radiance *.hdr file
-        \param path A string containing the path to the file to load
+        \param path A filesystem::path containing the path to the file to load
         \returns bool - true on success, else false if loading failed.
         */
-        bool loadFromFile(const std::string& path);
+        bool loadFromFile(const std::filesystem::path& path);
 
         /*!
         \brief Returns the texture ID for the skybox cubemap.

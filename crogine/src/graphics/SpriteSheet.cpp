@@ -40,8 +40,12 @@ SpriteSheet::SpriteSheet()
 }
 
 //public
-bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& textures, const std::string& workingDirectory)
+bool SpriteSheet::loadFromFile(const std::filesystem::path& p, TextureResource& textures, const std::filesystem::path& wd)
 {
+    FS_ASSERT;
+    const auto path = p.string();
+    const auto workingDirectory = wd.string();
+
     ConfigFile sheetFile;
     if (!sheetFile.loadFromFile(path))
     {
@@ -190,8 +194,11 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
     return count > 0;
 }
 
-bool SpriteSheet::saveToFile(const std::string& path)
+bool SpriteSheet::saveToFile(const std::filesystem::path& p)
 {
+    FS_ASSERT;
+    const auto path = p.string();
+
     auto sheetName = FileSystem::getFileName(path).string();
     sheetName = sheetName.substr(0, sheetName.find_last_of('.'));
 

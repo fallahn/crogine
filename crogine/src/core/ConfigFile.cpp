@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -228,8 +228,11 @@ ConfigObject::ConfigObject(const std::string& name, const std::string& id)
     setId(id);
 }
 
-bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
+bool ConfigObject::loadFromFile(const std::filesystem::path& fp, bool relative)
 {
+    FS_ASSERT;
+    const std::string filePath = fp.string();
+
     currentLine = 0; //well this has code smell to it...
 
     m_id = "";
@@ -525,8 +528,11 @@ bool ConfigObject::parseAsJson(SDL_IOStream* file)
     return true;
 }
 
-bool ConfigObject::save(const std::string& path)
+bool ConfigObject::save(const std::filesystem::path& p)
 {
+    FS_ASSERT;
+    const auto path = p.string();
+
     RaiiRWops out;
 #ifdef OLD_PARSER
     out.file = SDL_IOFromFile(path.c_str(), "w");

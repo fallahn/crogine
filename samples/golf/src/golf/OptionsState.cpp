@@ -4890,15 +4890,15 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     const std::string flagDir = "assets/golf/images/flags/";
 
     auto flags = cro::FileSystem::listFiles(flagDir);
-    std::vector<std::pair<std::string, std::string>> mappedFlags;
+    std::vector<std::pair<std::filesystem::path, std::filesystem::path>> mappedFlags;
 
     flags.erase(std::remove_if(flags.begin(), flags.end(), 
-        [](const std::string& f)
+        [](const std::filesystem::path& f)
         {
-            return f.find(".png") == std::string::npos;
+            return f.extension() != ".png";
         }), flags.end());
 
-    if (auto pos = std::find(flags.begin(), flags.end(), "flag.png");
+    if (auto pos = std::find_if (flags.begin(), flags.end(), [](const std::filesystem::path& p) { return p == "flag.png"; });
         pos != flags.end() && pos != flags.begin())
     {
         std::iter_swap(flags.begin(), pos);
@@ -4908,7 +4908,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     if (m_sharedData.flagPath.empty()
         /*|| !cro::FileSystem::fileExists(m_sharedData.flagPath)*/)
     {
-        m_sharedData.flagPath = flagDir + flags[0];
+        m_sharedData.flagPath = (flagDir / flags[0]).string();
     }
 
     for (const auto& flag : flags)
@@ -4921,13 +4921,13 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     const auto MaxUser = m_flagTextures.getLayerCount() - flags.size();
     for (auto i = 0u; i < MaxUser && i < userFlags.size(); ++i)
     {
-        const auto files = cro::FileSystem::listFiles(userDir + userFlags[i]);
+        const auto files = cro::FileSystem::listFiles(userDir / userFlags[i]);
         for (auto j = 0u; j < files.size(); ++j)
         {
             //just grab the first png we find
             if (cro::FileSystem::getFileExtension(files[j]) == ".png")
             {
-                mappedFlags.emplace_back(std::make_pair(userDir + userFlags[i] + "/", files[j]));
+                mappedFlags.emplace_back(std::make_pair(userDir / userFlags[i], files[j]));
                 break;
             }
         }
@@ -4957,7 +4957,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
     for (const auto& [path, flag] : mappedFlags)
     {
-        const auto fullPath = path + flag;
+        const auto fullPath = path / flag;
         if (tmp.loadFromFile(fullPath)
             && tmp.getSize() == FlagTextureSize)
         {
@@ -4965,7 +4965,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
             {
                 m_flagIndex = loadedCount;
             }
-            m_flagPaths.push_back(fullPath);
+            m_flagPaths.push_back(fullPath.string());
             m_flagTextures.insertLayer(tmp, loadedCount++);
         }
 

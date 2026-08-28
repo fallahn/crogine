@@ -82,7 +82,7 @@ void ParticleEmitter::stop()
     m_releaseCount = -1;
 }
 
-bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource& textures)
+bool EmitterSettings::loadFromFile(const std::filesystem::path& path, cro::TextureResource& textures)
 {
     ConfigFile cfg;
     if (!cfg.loadFromFile(path)) return false;
@@ -284,7 +284,7 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
 #ifdef CRO_DEBUG_
         if (textureID == 0)
         {
-            Logger::log(path + ": no texture property found", Logger::Type::Warning);
+            Logger::log(path.string() + ": no texture property found", Logger::Type::Warning);
         }
 #endif
         return true;
@@ -293,7 +293,7 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
     return false;
 }
 
-bool EmitterSettings::saveToFile(const std::string& path)
+bool EmitterSettings::saveToFile(const std::filesystem::path& path)
 {
     auto emitterName = FileSystem::getFileName(path).string();
     emitterName = emitterName.substr(0, emitterName.size() - 4);

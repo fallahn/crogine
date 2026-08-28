@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/graphics/Font.hpp>
 
+#include <filesystem>
 #include <map>
 #include <memory>
 
@@ -56,7 +57,7 @@ namespace cro
         \param path Path to the font to attempt to load
         \returns bool True if the font loaded successfully, else false
         */
-        bool load(uint32_t id, const std::string& path);
+        bool load(std::uint32_t id, const std::filesystem::path& path);
 
         /*!
         \brief Returns a reference to the font assigned the given ID

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,10 +32,11 @@ source distribution.
 #include <crogine/graphics/ArrayTexture.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
-#include <string>
-#include <cstdint>
-#include <vector>
 #include <array>
+#include <cstdint>
+#include <filesystem>
+#include <string>
+#include <vector>
 
 class VatFile final
 {
@@ -44,10 +45,10 @@ public:
 
     bool loadFromFile(const std::string&);
 
-    const std::string& getModelPath() const { return m_modelPath; }
-    const std::string& getPositionPath() const;
-    const std::string& getNormalPath() const;
-    const std::string& getTangentPath() const;
+    const std::filesystem::path& getModelPath() const { return m_modelPath; }
+    const std::filesystem::path& getPositionPath() const;
+    const std::filesystem::path& getNormalPath() const;
+    const std::filesystem::path& getTangentPath() const;
 
     bool hasTangents() const;
 
@@ -62,8 +63,8 @@ private:
     std::int32_t m_frameCount;
     std::int32_t m_frameLoop;
 
-    std::string m_modelPath;
-    std::string m_diffusePath;
+    std::filesystem::path m_modelPath;
+    std::filesystem::path m_diffusePath;
 
     struct DataID final
     {
@@ -73,11 +74,11 @@ private:
             Count
         };
     };
-    std::array<std::string, DataID::Count> m_dataPaths = {};
+    std::array<std::filesystem::path, DataID::Count> m_dataPaths = {};
     std::array<std::vector<float>, DataID::Count> m_binaryData = {};
     glm::uvec2 m_binaryDims;
 
-    void loadBinary(const std::string& path, std::vector<float>& dst, glm::uvec2 dims);
+    void loadBinary(const std::filesystem::path& path, std::vector<float>& dst, glm::uvec2 dims);
 
     void reset();
 

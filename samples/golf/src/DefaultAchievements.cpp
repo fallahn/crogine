@@ -46,7 +46,7 @@ using namespace cl;
 
 namespace
 {
-    const std::string FileName = "progress.stats";
+    const std::filesystem::path FileName = "progress.stats";
     const cro::Time UpdateTime = cro::seconds(5.f);
 
     static constexpr glm::vec2 IconSize(242.f, 92.f);
@@ -392,14 +392,14 @@ void DefaultAchievements::readFile()
     std::size_t statsize = sizeof(std::int32_t) * m_statArray.size();
     std::size_t timesize = sizeof(std::uint64_t) * m_timeStamps.size();
 
-    const std::string filePath = cro::App::getInstance().getPreferencePath() + FileName;
+    const auto filePath = cro::App::getInstance().getPreferencePath() / FileName;
 
     if (cro::FileSystem::fileExists(filePath))
     {
         struct stat st;
-        stat(filePath.c_str(), &st);
+        stat(filePath.string().c_str(), &st);
 
-        FILE* inFile = fopen(filePath.c_str(), "rb");
+        FILE* inFile = fopen(filePath.string().c_str(), "rb");
         if (inFile && st.st_size >= static_cast<off_t>(bitsize + statsize)) //needs to be >= for backwards compat
         {
             auto read = fread(m_bitArray.data(), bitsize, 1, inFile);
@@ -427,12 +427,13 @@ void DefaultAchievements::readFile()
 
 void DefaultAchievements::writeFile()
 {
-    std::size_t bitsize = sizeof(std::uint32_t) * m_bitArray.size();
-    std::size_t statsize = sizeof(std::int32_t) * m_statArray.size();
-    std::size_t timesize = sizeof(std::uint64_t) * m_timeStamps.size();
-    const std::string filePath = cro::App::getInstance().getPreferencePath() + FileName;
+    const std::size_t bitsize = sizeof(std::uint32_t) * m_bitArray.size();
+    const std::size_t statsize = sizeof(std::int32_t) * m_statArray.size();
+    const std::size_t timesize = sizeof(std::uint64_t) * m_timeStamps.size();
+    const auto filePath = cro::App::getInstance().getPreferencePath() / FileName;
 
-    FILE* outFile = fopen(filePath.c_str(), "wb");
+    LogI << FILE_LINE << ": should this use SDL?" << std::endl;
+    FILE* outFile = fopen(filePath.string().c_str(), "wb");
     if (outFile)
     {
         fwrite(m_bitArray.data(), bitsize, 1, outFile);

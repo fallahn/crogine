@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,13 +31,14 @@ source distribution.
 
 #include <crogine/Config.hpp>
 
-#include <string>
-#include <vector>
 #include <array>
-#include <thread>
-#include <mutex>
 #include <atomic>
+#include <filesystem>
 #include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <vector>
 
 namespace cro
 {
@@ -65,7 +66,7 @@ namespace cro
         path is intended, eg in the assets directory, then make
         sure to prepend the path with FileSystem::getResourcePath()
         */
-        void addPath(const std::string&);
+        void addPath(const std::filesystem::path&);
 
 
         /*!
@@ -100,7 +101,7 @@ namespace cro
         std::atomic<std::size_t> m_inBuffer; //next buffer to be filled with data from thread
 
         //touched by both threads
-        std::vector<std::string> m_filePaths;
+        std::vector<std::filesystem::path> m_filePaths;
         std::atomic<std::size_t> m_fileIndex;
 
         std::array<std::vector<std::int16_t>, MaxBuffers> m_buffers = {};

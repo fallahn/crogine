@@ -34,8 +34,9 @@ source distribution.
 
 #include <crogine/detail/glm/vec2.hpp>
 
-#include <string>
 #include <cstring>
+#include <filesystem>
+#include <string>
 #include <vector>
 
 namespace cro
@@ -73,7 +74,7 @@ namespace cro
         On mobile platforms images should have power 2 dimensions.
         \returns true on success, else false
         */
-        bool loadFromFile(const std::string& path);
+        bool loadFromFile(const std::filesystem::path& path);
 
         /*!
         \brief Attempts to load an image from raw pixels in memory.

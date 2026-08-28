@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -34,8 +34,9 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
-#include <vector>
 #include <array>
+#include <filesystem>
+#include <vector>
 
 struct CollisionID final
 {
@@ -94,7 +95,7 @@ struct TableData //client data inherits this
     std::vector<std::string> tableSkins;
     std::vector<std::string> ballSkins;
 
-    bool loadFromFile(const std::string&);
+    bool loadFromFile(const std::filesystem::path&);
 };
 
 static const std::array<cro::String, TableData::Rules::Count> TableStrings =

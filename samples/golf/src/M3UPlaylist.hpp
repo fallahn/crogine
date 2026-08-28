@@ -32,10 +32,11 @@ source distribution.
 //attempts to parse an m3u playlist into a list of file strings
 //currently only supports the 'file:///' protocol
 
+#include <cstdint>
+#include <filesystem>
 #include <string>
 #include <vector>
-#include <cstdint>
-#include <string>
+
 
 namespace cro
 {
@@ -47,13 +48,13 @@ class M3UPlaylist final
 public:
     //takes a single directory through which to search for
     //playlists. Doesn't support recursive searching (no subdirs)
-    explicit M3UPlaylist(const std::string& searchFolder, std::uint32_t maxFiles = 25);
+    explicit M3UPlaylist(const std::filesystem::path& searchFolder, std::uint32_t maxFiles = 25);
 
     //load another file and appeand it to the list
-    bool loadPlaylist(const std::string& path);
+    bool loadPlaylist(const std::filesystem::path& path);
 
     //manually add a path to a music file
-    void addTrack(const std::string&);
+    void addTrack(const std::filesystem::path&);
 
     //shuffles playlist if it is loaded
     void shuffle();
@@ -65,16 +66,16 @@ public:
     void prevTrack();
 
 
-    const std::string& getCurrentTrack() const;
+    const std::filesystem::path& getCurrentTrack() const;
 
     std::size_t getCurrentIndex() const { return m_currentIndex; }
     std::size_t getTrackCount() const { return m_filePaths.size(); }
 
 
-    const std::vector<std::string>& getFilePaths() const { return m_filePaths; }
+    const std::vector<std::filesystem::path>& getFilePaths() const { return m_filePaths; }
 
 private:
     std::size_t m_currentIndex;
 
-    std::vector<std::string> m_filePaths;
+    std::vector<std::filesystem::path> m_filePaths;
 };

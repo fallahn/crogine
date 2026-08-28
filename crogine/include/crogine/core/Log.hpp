@@ -38,11 +38,12 @@ source distribution.
 #include <crogine/detail/glm/vec4.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
-#include <string>
+#include <filesystem>
 #include <list>
+#include <mutex>
 #include <ostream>
 #include <streambuf>
-#include <mutex>
+#include <string>
 
 #ifdef _MSC_VER
 #define NOMINMAX
@@ -156,6 +157,12 @@ template <typename T>
 std::ostream& operator << (std::ostream& out, cro::Rectangle<T> r)
 {
     out << "[ " << r.left << ", " << r.bottom << ", " << r.width << ", " << r.height << " ]";
+    return out;
+}
+
+static inline std::ostream& operator << (std::ostream& out, std::filesystem::path& p)
+{
+    out << p.string();
     return out;
 }
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/audio/AudioSource.hpp>
 
 #include <string>
+#include <filesystem>
 
 namespace cro
 {
@@ -66,6 +67,10 @@ namespace cro
         \returns true on success, else false
         */
         bool loadFromFile(const std::string&) override;
+
+        //temporary overloads for migrating to std::fileystem::path
+        bool loadFromFile(const std::filesystem::path& p) { return loadFromFile(p.string()); }
+
 
         /*!
         \brief Attempts to load the buffer with data stored in memory.

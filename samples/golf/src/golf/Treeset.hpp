@@ -67,7 +67,7 @@ struct Treeset final
             return false;
         }
 
-        auto workingPath = cro::FileSystem::getFilePath(path);
+        const auto workingPath = cro::FileSystem::getFilePath(path).string() + "/";
 
         const auto& props = cfg.getProperties();
         for (const auto& p : props)
@@ -115,14 +115,14 @@ struct Treeset final
         //error checking
         auto fileName = cro::FileSystem::getFileName(path);
 
-        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + modelPath))
+        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / modelPath))
         {
             LogE << fileName << ": no file exists at model path" << std::endl;
             return false;
         }
 
         if (!leafIndices.empty() &&
-            !cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + texturePath))
+            !cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / texturePath))
         {
             LogE << fileName << ": no file exists at texture path" << std::endl;
             return false;

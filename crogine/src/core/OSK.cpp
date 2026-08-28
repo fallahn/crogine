@@ -151,7 +151,7 @@ OSK::OSK()
     m_keyboardArray.setPrimitiveType(GL_TRIANGLES);
     m_keyTextArray.setPrimitiveType(GL_TRIANGLES);
 
-    if (m_textFont.loadFromFile("assets/golf/fonts/NotoSans-Regular.ttf"))
+    if (m_textFont.loadFromFile(std::filesystem::path("assets/golf/fonts/NotoSans-Regular.ttf")))
     {
         //append other fonts such as CJK - TODO these should really be in the assets root folder
         FontAppendmentContext ctx;

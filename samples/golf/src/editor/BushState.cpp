@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -567,7 +567,7 @@ void BushState::drawUI()
         {
             if (ImGui::MenuItem("Load Model"))
             {
-                auto path = cro::FileSystem::openFileDialogue("", "cmt");
+                const auto path = cro::FileSystem::openFileDialogue("", "cmt");
                 if (!path.empty())
                 {
                     loadModel(path);
@@ -709,7 +709,7 @@ void BushState::drawUI()
             if (!path.empty())
             {
                 leafTexture->loadFromFile(path);
-                treeset.texturePath = cro::FileSystem::getFileName(path);
+                treeset.texturePath = cro::FileSystem::getFileName(path).string();
             }
         }
         ImGui::SameLine();
@@ -875,7 +875,7 @@ void BushState::drawUI()
     }
 }
 
-void BushState::loadModel(const std::string& path)
+void BushState::loadModel(const std::filesystem::path& path)
 {
     if (m_models[0].isValid())
     {
@@ -944,7 +944,7 @@ void BushState::loadModel(const std::string& path)
         m_models[2].getComponent<cro::Model>().setInstanceTransforms(m_instanceTransforms);
         m_models[2].getComponent<cro::Model>().setHidden(true);
 
-        treeset.modelPath = cro::FileSystem::getFileName(path);
+        treeset.modelPath = cro::FileSystem::getFileName(path).string();
 
         m_billboardCamera.getComponent<cro::Transform>().setPosition({ radius, 0.f, 9.f });
     }
@@ -955,9 +955,9 @@ void BushState::loadModel(const std::string& path)
     }
 }
 
-void BushState::loadPreset(const std::string& path)
+void BushState::loadPreset(const std::filesystem::path& path)
 {
-    auto workingDir = cro::FileSystem::getFilePath(path);
+    const auto workingDir = cro::FileSystem::getFilePath(path);
     treeset.scale = 1.f;
 
     cro::ConfigFile cfg;
@@ -1014,8 +1014,8 @@ void BushState::loadPreset(const std::string& path)
             }
         }
 
-        loadModel(workingDir + treeset.modelPath);
-        leafTexture->loadFromFile(workingDir + treeset.texturePath);
+        loadModel(workingDir / treeset.modelPath);
+        leafTexture->loadFromFile(workingDir / treeset.texturePath);
 
         //look at material slots and apply correct material to submesh
         for (auto b : branchIndices)
@@ -1054,11 +1054,11 @@ void BushState::loadPreset(const std::string& path)
         glUniform3f(shaderUniform.colour, treeset.colour.r, treeset.colour.g, treeset.colour.b);
         glUniform1f(shaderUniform.colourRotation, treeset.colourRotation);
 
-        lastTreeset = path;
+        lastTreeset = path.string();
     }
 }
 
-void BushState::savePreset(const std::string& path)
+void BushState::savePreset(const std::filesystem::path& path)
 {
     cro::ConfigFile cfg("treeset");
     cfg.addProperty("model").setValue(treeset.modelPath);
@@ -1084,13 +1084,13 @@ void BushState::savePreset(const std::string& path)
 
     if (cfg.save(path))
     {
-        lastTreeset = path;
+        lastTreeset = path.string();
     }
 }
 
 void BushState::loadSkyboxFile()
 {
-    auto path = cro::FileSystem::openFileDialogue("", "sbf");
+    const auto path = cro::FileSystem::openFileDialogue("", "sbf");
     if (!path.empty())
     {
         auto ents = m_skyScene.getSystem<cro::ModelRenderer>()->getEntities();
@@ -1105,13 +1105,13 @@ void BushState::loadSkyboxFile()
         skyMid = colours.middle;
         skyTop = colours.top;
 
-        lastSkybox = cro::FileSystem::getFileName(path);
+        lastSkybox = cro::FileSystem::getFileName(path).string();
     }
 }
 
 void BushState::saveSkyboxFile()
 {
-    auto path = cro::FileSystem::saveFileDialogue("assets/golf/skyboxes/" + lastSkybox, "sbf");
+    const auto path = cro::FileSystem::saveFileDialogue("assets/golf/skyboxes/" + lastSkybox, "sbf");
     if (!path.empty())
     {
         cro::ConfigFile cfg;
@@ -1145,7 +1145,7 @@ void BushState::saveSkyboxFile()
 
 void BushState::addSkyboxModel()
 {
-    auto path = cro::FileSystem::openFileDialogue("", "cmt");
+    const auto path = cro::FileSystem::openFileDialogue("", "cmt");
     if (!path.empty())
     {
         cro::ModelDefinition md(m_resources);
@@ -1153,7 +1153,7 @@ void BushState::addSkyboxModel()
         {
             auto entity = m_skyScene.createEntity();
             entity.addComponent<cro::Transform>();
-            entity.setLabel(cro::FileSystem::getFileName(path));
+            entity.setLabel(cro::FileSystem::getFileName(path).string());
             md.createModel(entity);
         }
     }
@@ -1167,23 +1167,24 @@ void BushState::createThumbnails()
         cro::FileSystem::createDirectory("assets/golf/thumbs");
     }
 
-    std::vector<std::string> inPaths;
-    std::vector<std::string> outPaths;
+    std::vector<std::filesystem::path> inPaths;
+    std::vector<std::filesystem::path> outPaths;
 
+    //TODO a better predicate than converting to string
     auto dirs = cro::FileSystem::listDirectories("assets/golf/courses");
-    dirs.erase(std::remove_if(dirs.begin(), dirs.end(), [](const std::string& s) {return s.find("course_") == std::string::npos; }), dirs.end());
+    dirs.erase(std::remove_if(dirs.begin(), dirs.end(), [](const std::filesystem::path& s) {return s.string().find("course_") == std::string::npos; }), dirs.end());
 
     for (const auto& dir : dirs)
     {
-        auto path = "assets/golf/courses/" + dir + "/course.data";
+        auto path = "assets/golf/courses/" / dir / "/course.data";
         if (cro::FileSystem::fileExists(path))
         {
             inPaths.push_back(path);
 
-            path = "assets/golf/thumbs/" + dir;
+            path = "assets/golf/thumbs/" / dir;
             if (!cro::FileSystem::directoryExists(path))
             {
-                LogI << "creating directory " << dir << "..." << std::endl;
+                LogI << "creating directory " << dir.string() << "..." << std::endl;
                 cro::FileSystem::createDirectory(path);
             }
             outPaths.push_back(path);
@@ -1191,7 +1192,7 @@ void BushState::createThumbnails()
             path += "/hires/";
             if (!cro::FileSystem::directoryExists(path))
             {
-                LogI << "creating directory " << dir << "..." << std::endl;
+                LogI << "creating directory " << dir.string() << "..." << std::endl;
                 cro::FileSystem::createDirectory(path);
             }
         }
@@ -1320,11 +1321,11 @@ void BushState::createThumbnails()
                         flagQuad.draw();
                         m_thumbnailTexture.display();
 
-                        auto fileName = cro::FileSystem::getFileName(hole);
+                        auto fileName = cro::FileSystem::getFileName(hole).string();
                         fileName = fileName.substr(0, fileName.find_last_of('.'));
-                        m_thumbnailTexture.saveToFile(outPath + "/" + fileName + ".png");
+                        m_thumbnailTexture.saveToFile(outPath / fileName / ".png");
 
-                        bufferTextureHigh.saveToFile(outPath + "/hires/" + fileName + ".png");
+                        bufferTextureHigh.saveToFile(outPath / "/hires/" / fileName / ".png");
 
                         m_gameScene.destroyEntity(entity);
                         m_gameScene.simulate(0.f);

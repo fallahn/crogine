@@ -1987,7 +1987,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 
                 if (m_sharedData.activeTournament == TournamentIndex::Custom)
                 {
-                    const auto path = m_sharedData.tournamentPath + TournamentDataFile;
+                    const auto path = m_sharedData.tournamentPath + TournamentDataFile.string();
                     writeTournamentData(m_sharedData.tournaments[m_sharedData.activeTournament], path.c_str());
                 }
                 else

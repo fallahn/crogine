@@ -59,10 +59,11 @@ source distribution.
 #include <crogine/util/Matrix.hpp>
 #include <crogine/util/Maths.hpp>
 
-#include <cstdint>
-#include <sstream>
-#include <iomanip>
 #include <array>
+#include <cstdint>
+#include <filesystem>
+#include <iomanip>
+#include <sstream>
 
 static inline constexpr float ToYards = 1.09361f;
 static inline constexpr float ToFeet = 3.281f;
@@ -1000,7 +1001,7 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
 {
     static const cro::Colour DefaultColour(0x7f7fffff);
 
-    auto extension = cro::FileSystem::getFileExtension(path);
+    const auto extension = cro::FileSystem::getFileExtension(path).string();
     auto filePath = path.substr(0, path.length() - extension.length());
     filePath += "n" + extension;
 
@@ -1043,7 +1044,7 @@ struct SkyboxMaterials final
 
 //returns the entity with the cloud ring (so we can apply material)
 //and sets requesting the lensflare effect if the sun position is found
-static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, SkyboxMaterials& materials)
+static inline cro::Entity loadSkybox(const std::filesystem::path& path, cro::Scene& skyScene, cro::ResourceCollection& resources, SkyboxMaterials& materials)
 {
     auto skyTop = SkyTop;
     auto skyMid = TextNormalColour;
@@ -1147,7 +1148,7 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
             entity.addComponent<cro::Transform>().setPosition(model.position);
             entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, model.rotation * cro::Util::Const::degToRad);
             entity.getComponent<cro::Transform>().setScale(model.scale);
-            entity.setLabel(cro::FileSystem::getFileName(model.path));
+            entity.setLabel(cro::FileSystem::getFileName(model.path).string());
             md.createModel(entity);
 
             std::int32_t matID = -1;
@@ -1227,7 +1228,7 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
 
     cro::Entity cloudEnt;
     if (loadClouds &&
-        md.loadFromFile("assets/golf/models/skybox/cloud_ring.cmt"))
+        md.loadFromFile(std::filesystem::path("assets/golf/models/skybox/cloud_ring.cmt")))
     {
         auto entity = skyScene.createEntity();
         entity.addComponent<cro::Transform>();

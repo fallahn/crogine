@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
+#include <filesystem>
+
 namespace cro
 {
     /*!
@@ -39,12 +41,12 @@ namespace cro
     /begincode
     cubemap
     {
-        up = "py.png"
-        down = "ny.png"
+        up    = "py.png"
+        down  = "ny.png"
         right = "nx.png"
-        left = "px.png"
+        left  = "px.png"
         front = "pz.png"
-        back = "nz.png"
+        back  = "nz.png"
     }
     /endcode
     Image files may be referenced in the same directory as the *.ccm file, be realtive
@@ -75,15 +77,14 @@ namespace cro
         \brief Attempts to load a cubemap from a *.ccm configuration file
         \returns true on success else false.
         */
-        bool loadFromFile(const std::string& path);
-
+        bool loadFromFile(const std::filesystem::path& path);
 
         /*!
         \brief Attempts to load the given vector of paths to *.ccm files
         into a cubemap array.
         \returns true on success else false
         */
-        bool loadFromFiles(const std::vector<std::string>& paths);
+        bool loadFromFiles(const std::vector<std::filesystem::path>& paths);
 
         /*!
         \brief Genrates mipmap chain for the texture if data is loaded
@@ -95,6 +96,6 @@ namespace cro
         std::uint32_t m_handle;
         std::uint32_t m_cubemapCount;
 
-        bool parseInputFile(const std::string& filePath, std::array<std::string, 6u>& outFiles);
+        bool parseInputFile(const std::filesystem::path& filePath, std::array<std::filesystem::path, 6u>& outFiles);
     };
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -79,6 +79,10 @@ namespace cro
         */
         bool loadFromFile(const std::string& vertexPath, const std::string& fragmentPath);
         bool loadFromFile(const std::string& vertexPath, const std::string& geometryPath, const std::string& fragmentPath);
+
+        //temporary overloads for migrating to std::fileystem::path
+        bool loadFromFile(const std::filesystem::path& p, const std::filesystem::path& q) { return loadFromFile(p.string(), q.string()); }
+        bool loadFromFile(const std::filesystem::path& p, const std::filesystem::path& q, const std::filesystem::path& r) { return loadFromFile(p.string(), q.string(), r.string()); }
 
         /*!
         \brief Attempts to load the shader source from given strings

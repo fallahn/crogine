@@ -33,8 +33,9 @@ source distribution.
 
 #include <crogine/detail/Types.hpp>
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
+#include <filesystem>
 #include <string>
 
 namespace inv
@@ -114,10 +115,10 @@ namespace inv
         void read(const std::string& profileID)
         {
             std::fill(items.begin(), items.end(), -1);
-            const auto loadoutPath = Content::getUserContentPath(Content::UserContent::Profile) + "/" + profileID + "/load.out";
+            const auto loadoutPath = Content::getUserContentPath(Content::UserContent::Profile) / profileID / "/load.out";
 
             cro::RaiiRWops file;
-            file.file = SDL_IOFromFile(loadoutPath.c_str(), "rb");
+            file.file = SDL_IOFromFile(loadoutPath.string().c_str(), "rb");
             if (file.file)
             {
                 if (SDL_ReadIO(file.file, items.data(), sizeof(items)) < sizeof(items))
@@ -142,16 +143,16 @@ namespace inv
             {
                 cro::FileSystem::createDirectory(path);
             }
-            path += profileID + "/";
+            path /= profileID + "/";
 
             if (!cro::FileSystem::directoryExists(path))
             {
                 cro::FileSystem::createDirectory(path);
             }
-            path += "load.out";
+            path /= "load.out";
 
             cro::RaiiRWops file;
-            file.file = SDL_IOFromFile(path.c_str(), "wb");
+            file.file = SDL_IOFromFile(path.string().c_str(), "wb");
             if (file.file)
             {
                 if (SDL_WriteIO(file.file, items.data(), sizeof(items)) < sizeof(items))
@@ -194,11 +195,11 @@ namespace inv
 
     static inline bool read(Inventory& dst)
     {
-        const std::string fileName("equip.inv");
-        const std::string filePath = Content::getBaseContentPath() + fileName;
+        const std::filesystem::path fileName("equip.inv");
+        const std::filesystem::path filePath = Content::getBaseContentPath() / fileName;
 
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(filePath.c_str(), "rb");
+        file.file = SDL_IOFromFile(filePath.string().c_str(), "rb");
         if (file.file)
         {
             if (SDL_ReadIO(file.file, &dst, sizeof(Inventory)) < sizeof(Inventory))
@@ -215,11 +216,11 @@ namespace inv
     }
     static inline bool write(const Inventory& src)
     {
-        const std::string fileName("equip.inv");
-        const std::string filePath = Content::getBaseContentPath() + fileName;
+        const std::filesystem::path fileName("equip.inv");
+        const std::filesystem::path filePath = Content::getBaseContentPath() / fileName;
 
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(filePath.c_str(), "wb");
+        file.file = SDL_IOFromFile(filePath.string().c_str(), "wb");
         if (file.file)
         {
             if (SDL_WriteIO(file.file, &src, sizeof(Inventory)) < sizeof(Inventory))
