@@ -62,6 +62,7 @@ IqmBuilder::IqmBuilder(const std::string& path)
     m_uid       (0),
     m_file      (nullptr)
 {
+    FS_ASSERT; //pass in std::filesystem::path
     std::hash<std::string> hashAttack;
     m_uid = hashAttack(path);
 

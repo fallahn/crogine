@@ -42,11 +42,11 @@ BinaryMeshBuilder::BinaryMeshBuilder(const std::string& path, bool optimiseOnLoa
     m_optimiseOnLoad    (optimiseOnLoad),
     m_uid               (0)
 {
-
+    FS_ASSERT; //convert path to std::filesystem
 #ifdef __APPLE__
     if (!FileSystem::fileExists(m_path))
     {
-        m_path = cro::FileSystem::getResourcePath() + path;
+        m_path = (cro::FileSystem::getResourcePath() / path).string();
     }
 
 #endif
