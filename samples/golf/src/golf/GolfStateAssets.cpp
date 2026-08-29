@@ -2962,8 +2962,12 @@ void GolfState::loadModels()
                 //track stats if this is a workshop item
                 if (i == m_sharedData.localConnectionData.connectionID)
                 {
-                    auto temp = cro::FileSystem::getFilePath(audioPaths.at(voiceID));
-                    temp.pop_back(); //remove trailing '/'
+                    auto temp = cro::FileSystem::getFilePath(audioPaths.at(voiceID)).generic_string();
+                    
+                    if (temp.back() == '/')
+                    {
+                        temp.pop_back(); //remove trailing '/'
+                    }
 
                     if (temp.back() == 'w')
                     {

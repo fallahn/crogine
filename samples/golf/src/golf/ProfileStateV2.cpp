@@ -3601,12 +3601,12 @@ void ProfileStateV2::loadVoiceData()
     const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Voice);
     for (const auto& p : wsPaths)
     {
-        const auto files = cro::FileSystem::listFiles(p.string());
+        const auto files = cro::FileSystem::listFiles(p);
         for (const auto& f : files)
         {
-            if (cro::FileSystem::getFileExtension(f) == ".xas")
+            if (f.extension() == ".xas")
             {
-                paths.push_back(p.string() + "/" + f);
+                paths.push_back(p / f);
             }
         }
     }

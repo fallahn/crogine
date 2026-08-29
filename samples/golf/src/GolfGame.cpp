@@ -2278,7 +2278,7 @@ void GolfGame::loadAvatars()
 
     std::int32_t i = 0;
 #ifdef USE_GNS
-    auto uid = Social::getPlayerID();
+    const auto uid = Social::getPlayerID();
     
     const auto steamPath = path / uid;
 
@@ -2302,13 +2302,13 @@ void GolfGame::loadAvatars()
         files.erase(std::remove_if(files.begin(), files.end(),
             [](const std::filesystem::path& f)
             {
-                return cro::FileSystem::getFileExtension(f) != ".pfl";
+                return f.extension() != ".pfl";
             }), files.end());
 
         if (!files.empty())
         {
             PlayerData pd;
-            if (!pd.loadProfile(steamPath + files[0], files[0].substr(0, files[0].size() - 4)))
+            if (!pd.loadProfile(steamPath / files[0], files[0].string().substr(0, files[0].string().size() - 4)))
             {
                 //if we failed to load use the default
                 pd = PlayerData();
@@ -2350,9 +2350,9 @@ void GolfGame::loadAvatars()
 #ifdef USE_GNS
     //remove the steam profile because we already explicitly parsed it
     profileDirs.erase(std::remove_if(profileDirs.begin(), profileDirs.end(),
-        [uid](const std::string& d) 
+        [&uid](const std::filesystem::path& d) 
         {
-            return d == uid;
+            return d.string() == uid;
         }), profileDirs.end());
 
 #endif // USE_GNS
@@ -2392,13 +2392,11 @@ void GolfGame::loadAvatars()
                         {
                             if (cro::FileSystem::getFileExtension(cFile) != ".pfl")
                             {
-                                auto dbPath = profilePath + cFile;
+                                const auto dbPath = profilePath / cFile;
                                 if (cro::FileSystem::fileExists(dbPath))
                                 {
                                     std::error_code ec;
-                                    std::filesystem::copy_file(std::filesystem::u8path(dbPath),
-                                        std::filesystem::u8path(steamPath + cFile),
-                                        std::filesystem::copy_options::update_existing, ec);
+                                    std::filesystem::copy_file(dbPath, steamPath / cFile, std::filesystem::copy_options::update_existing, ec);
 
                                     if (ec)
                                     {

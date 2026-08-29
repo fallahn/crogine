@@ -172,20 +172,22 @@ bool ClubModels::loadFromFile(const std::filesystem::path& path, cro::ResourceCo
 #endif
 
 #ifdef USE_GNS
+        auto temp = rootPath.generic_string();
+        
         //check to see if we can get a workshop ID from the path
-        if (rootPath.back() == '/')
+        if (temp.back() == '/')
         {
-            rootPath.pop_back();
+            temp.pop_back();
         }
 
-        if (rootPath.back() == 'w')
+        if (temp.back() == 'w')
         {
             //LogI << "Processing: " << rootPath << std::endl;
-            if (auto res = rootPath.find_last_of('/'); res != std::string::npos)
+            if (auto res = temp.find_last_of('/'); res != std::string::npos)
             {
                 try
                 {
-                    const auto d = rootPath.substr(res + 1, rootPath.length() - 1);
+                    const auto d = temp.substr(res + 1, temp.length() - 1);
                     workshopID = std::stoull(d);
                     //LogI << "Got workshop ID of " << workshopID << std::endl;
                 }
