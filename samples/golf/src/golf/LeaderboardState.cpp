@@ -284,7 +284,7 @@ void LeaderboardState::parseCourseDirectory()
             //TODO lookup how to do this without converting to string
             if (dir.string().find("course_") != std::string::npos)
             {
-                auto filePath = coursePath / dir / "/course.data";
+                auto filePath = coursePath / dir / "course.data";
                 if (cro::FileSystem::fileExists(filePath))
                 {
                     cro::ConfigFile cfg;
@@ -295,7 +295,7 @@ void LeaderboardState::parseCourseDirectory()
                         m_courseStrings.emplace_back(std::make_pair(dir.string(), cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
 
 
-                        filePath = installPath / "courses/" / dir / "/preview.png";
+                        filePath = installPath / "courses" / dir / "preview.png";
                         //if this fails we still need the fallback to pad the vector
                         m_courseThumbs.push_back(&m_resources.textures.get(filePath));
                     }

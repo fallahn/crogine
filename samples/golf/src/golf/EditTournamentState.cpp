@@ -684,7 +684,7 @@ void EditTournamentState::loadCourseInfo()
     const auto installPaths = Content::getInstallPaths();
     for (const auto& path : installPaths)
     {
-        const auto coursePath = path / "courses/";
+        const auto coursePath = path / "courses";
         if (cro::FileSystem::directoryExists(coursePath))
         {
             auto courseDirs = cro::FileSystem::listDirectories(coursePath);
@@ -698,7 +698,7 @@ void EditTournamentState::loadCourseInfo()
 
             for (const auto& dir : courseDirs)
             {
-                const auto dataPath = coursePath / dir / "/course.data";
+                const auto dataPath = coursePath / dir / "course.data";
                 if (cro::FileSystem::fileExists(dataPath))
                 {
                     cro::ConfigFile cfg;
@@ -709,7 +709,7 @@ void EditTournamentState::loadCourseInfo()
                             auto& inf = m_courseInfo.emplace_back();
                             inf.dir = dir.string();
                             inf.displayName = t->getValue<cro::String>();
-                            inf.texture = &m_textures.get(coursePath / dir / "/preview.png");
+                            inf.texture = &m_textures.get(coursePath / dir / "preview.png");
                         }
                     }
                 }

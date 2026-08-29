@@ -115,7 +115,7 @@ namespace inv
         void read(const std::string& profileID)
         {
             std::fill(items.begin(), items.end(), -1);
-            const auto loadoutPath = Content::getUserContentPath(Content::UserContent::Profile) / profileID / "/load.out";
+            const auto loadoutPath = Content::getUserContentPath(Content::UserContent::Profile) / profileID / "load.out";
 
             cro::RaiiRWops file;
             file.file = SDL_IOFromFile(loadoutPath.string().c_str(), "rb");

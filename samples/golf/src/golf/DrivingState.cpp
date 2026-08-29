@@ -2566,7 +2566,7 @@ void DrivingState::createPlayer()
     const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Clubs);
     for (const auto& p : wsPaths)
     {
-        processClubPath(p.string() + "/");
+        processClubPath(p);
     }
 #endif
 

@@ -897,7 +897,7 @@ void MapOverviewState::buildScene()
     };
 
     entity = m_scene.getActiveCamera();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(entity.getComponent<cro::Camera>());
 
     m_scene.simulate(0.f);

@@ -155,7 +155,7 @@ namespace
                 break;
             }
         }
-        mapPath += +"/course.data";
+        mapPath /= "course.data";
 
 
         bool isUser = false;
@@ -1912,24 +1912,27 @@ void GolfState::loadMap()
             std::fill(scores.begin(), scores.end(), 0);
 
             //tournament
-            for (auto i = 0u; i < scores.size(); ++i)
+            if (m_sharedData.activeTournament > -1) //this might be the tutorial
             {
-                scores[i] = m_sharedData.tournaments[m_sharedData.activeTournament].scores[i];
-                if (scores[i] != 0)
+                for (auto i = 0u; i < scores.size(); ++i)
                 {
-                    h++;
+                    scores[i] = m_sharedData.tournaments[m_sharedData.activeTournament].scores[i];
+                    if (scores[i] != 0)
+                    {
+                        h++;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
-                else
+
+                mulliganCount = m_sharedData.tournaments[m_sharedData.activeTournament].mulliganCount;
+
+                if (h != 0)
                 {
-                    break;
+                    applySaveData(h, scores, mulliganCount);
                 }
-            }
-
-            mulliganCount = m_sharedData.tournaments[m_sharedData.activeTournament].mulliganCount;
-
-            if (h != 0)
-            {
-                applySaveData(h, scores, mulliganCount);
             }
         }
         else
@@ -2879,7 +2882,7 @@ void GolfState::loadModels()
         };
 
     const auto installPaths = Content::getInstallPaths();
-    std::filesystem::path baseAudioPath = "/sound/avatars/";
+    std::filesystem::path baseAudioPath = "sound/avatars/";
     for (const auto& path : installPaths)
     {
         processPath(path / baseAudioPath);
@@ -3290,7 +3293,7 @@ void GolfState::loadModels()
     const auto processClubPath = 
         [&](const std::filesystem::path& path)
         {
-            const std::string fileName = "/list.cst";
+            const std::string fileName = "list.cst";
             cro::ConfigFile cfg;
             if (cfg.loadFromFile(path / fileName, false)) //resource path was already added
             {
@@ -3310,7 +3313,7 @@ void GolfState::loadModels()
     const auto ContentDirs = Content::getInstallPaths();
     for (const auto& c : ContentDirs)
     {
-        const auto basePath = cro::FileSystem::getResourcePath() / c / "clubs/";
+        const auto basePath = cro::FileSystem::getResourcePath() / c / "clubs";
         const auto clubsets = cro::FileSystem::listDirectories(basePath);
 
         for (const auto& s : clubsets)
@@ -3349,7 +3352,7 @@ void GolfState::loadModels()
 
 
     const auto loadClubModel = 
-        [&](std::uint32_t clubID)
+        [this, &clubPaths](std::uint32_t clubID)
         {
             if (m_clubModels.count(clubID) == 0)
             {

@@ -125,14 +125,14 @@ bool PlayerData::saveProfile() const
     {
         cro::FileSystem::createDirectory(path);
     }
-    path += profileID + "/";
+    path /= profileID;// +"/";
 
     if (!cro::FileSystem::directoryExists(path))
     {
         cro::FileSystem::createDirectory(path);
     }
 
-    path += profileID + ".pfl";
+    path /= (profileID + ".pfl");
     return cfg.save(path);
 }
 

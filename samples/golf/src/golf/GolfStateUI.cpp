@@ -6662,7 +6662,7 @@ void GolfState::updateProfileDB() const
         ProfileDB db;
         for (auto i = 0u; i < localCount; ++i)
         {
-            const auto dbPath = Content::getUserContentPath(Content::UserContent::Profile) / localPlayers[i].profileID / "/profile.db3";
+            const auto dbPath = Content::getUserContentPath(Content::UserContent::Profile) / localPlayers[i].profileID / "profile.db3";
             if (db.open(dbPath))
             {
                 CourseRecord record;

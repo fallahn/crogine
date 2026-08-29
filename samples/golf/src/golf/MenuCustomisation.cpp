@@ -777,8 +777,8 @@ void MenuState::parseAvatarDirectory()
     const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Avatar);
     for (const auto& p : wsPaths)
     {
-        const auto resourceDir = p.string() + "/";
-        const auto files = cro::FileSystem::listFiles(resourceDir);
+        //const auto resourceDir = p.string() + "/";
+        const auto files = cro::FileSystem::listFiles(p);
         processAvatarList(false, files, resourceDir, resourceDir, false);
     }
 #endif
@@ -1080,7 +1080,6 @@ void MenuState::parseAvatarDirectory()
 
 void MenuState::processAvatarList(bool locked, const std::vector<std::filesystem::path>& fileList, const std::filesystem::path& searchPath, const std::filesystem::path& resourcePath, bool relative)
 {
-    //path strings must include trailing "/"!!
     for (const auto& file : fileList)
     {
         if (m_playerAvatars.size() == 40)

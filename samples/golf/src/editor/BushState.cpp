@@ -1176,12 +1176,12 @@ void BushState::createThumbnails()
 
     for (const auto& dir : dirs)
     {
-        auto path = "assets/golf/courses/" / dir / "/course.data";
+        auto path = "assets/golf/courses/" / dir / "course.data";
         if (cro::FileSystem::fileExists(path))
         {
             inPaths.push_back(path);
 
-            path = "assets/golf/thumbs/" / dir;
+            path = "assets/golf/thumbs" / dir;
             if (!cro::FileSystem::directoryExists(path))
             {
                 LogI << "creating directory " << dir.string() << "..." << std::endl;
@@ -1189,7 +1189,7 @@ void BushState::createThumbnails()
             }
             outPaths.push_back(path);
 
-            path += "/hires/";
+            path += "hires/";
             if (!cro::FileSystem::directoryExists(path))
             {
                 LogI << "creating directory " << dir.string() << "..." << std::endl;
@@ -1325,7 +1325,7 @@ void BushState::createThumbnails()
                         fileName = fileName.substr(0, fileName.find_last_of('.'));
                         m_thumbnailTexture.saveToFile(outPath / fileName / ".png");
 
-                        bufferTextureHigh.saveToFile(outPath / "/hires/" / fileName / ".png");
+                        bufferTextureHigh.saveToFile(outPath / "hires" / fileName / ".png");
 
                         m_gameScene.destroyEntity(entity);
                         m_gameScene.simulate(0.f);

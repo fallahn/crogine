@@ -766,6 +766,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
 
                 if (bounds.contains(mousePos))
                 {
+                    //TODO this state isn't actually sed - if it were this needs to be migrated to float
                     m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().getUserData<std::int32_t>() -= evt.wheel.y;
                     m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
                 }
