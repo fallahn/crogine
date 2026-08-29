@@ -272,7 +272,7 @@ void MenuState::createBallScene()
     }
 
     //we've specifically loaded the default ball first
-    ballFiles.erase(std::remove_if(ballFiles.begin(), ballFiles.end(), [](const std::string& s) { return s == "default.ball"; }), ballFiles.end());
+    ballFiles.erase(std::remove_if(ballFiles.begin(), ballFiles.end(), [](const std::filesystem::path& s) { return s == "default.ball"; }), ballFiles.end());
 
 
     m_sharedData.ballInfo.clear();

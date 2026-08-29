@@ -2280,7 +2280,7 @@ void GolfGame::loadAvatars()
 #ifdef USE_GNS
     auto uid = Social::getPlayerID();
     
-    auto steamPath = path + uid + "/";
+    const auto steamPath = path / uid;
 
     if (!cro::FileSystem::directoryExists(steamPath)
         || safeMode)
@@ -2300,7 +2300,7 @@ void GolfGame::loadAvatars()
     {
         auto files = cro::FileSystem::listFiles(steamPath);
         files.erase(std::remove_if(files.begin(), files.end(),
-            [](const std::string& f)
+            [](const std::filesystem::path& f)
             {
                 return cro::FileSystem::getFileExtension(f) != ".pfl";
             }), files.end());
@@ -2368,9 +2368,9 @@ void GolfGame::loadAvatars()
             auto profilePath = path / dir;
             auto files = cro::FileSystem::listFiles(profilePath);
             files.erase(std::remove_if(files.begin(), files.end(),
-                [](const std::string& f)
+                [](const std::filesystem::path& f)
                 {
-                    return cro::FileSystem::getFileExtension(f) != ".pfl";
+                    return f.extension() != ".pfl";
                 }), files.end());
 
             if (!files.empty())

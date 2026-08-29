@@ -1434,9 +1434,9 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     m_skyboxes = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() / SkyboxPath);
     //TODO we want as good a way as possible to validate the files...
     m_skyboxes.erase(std::remove_if(m_skyboxes.begin(), m_skyboxes.end(),
-        [](const std::string& box)
+        [](const std::filesystem::path& box)
         {
-            return cro::FileSystem::getFileExtension(box) != ".sbf" || box.find("_n") != std::string::npos;
+            return box.extension() != ".sbf" || box.string().find("_n") != std::string::npos;
         }), m_skyboxes.end());
     //just to make consistent across platforms
     std::sort(m_skyboxes.begin(), m_skyboxes.end());
@@ -3059,9 +3059,9 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
 
     auto saves = cro::FileSystem::listFiles(saveDir);
     saves.erase(std::remove_if(saves.begin(), saves.end(), 
-        [](const std::string& s)
+        [](const std::filesystem::path& s)
         {
-            return cro::FileSystem::getFileExtension(s) != SaveFileExtension;
+            return s.extension() != SaveFileExtension;
         }), saves.end());
 
     if (saves.size() > MaxSaves)

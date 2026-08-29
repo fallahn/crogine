@@ -663,7 +663,7 @@ void StatsState::parseCourseData()
                 if (auto* prop = cfg.findProperty("title"); prop != nullptr)
                 {
                     const auto courseTitle = prop->getValue<std::string>();
-                    m_courseStrings.emplace_back(std::make_pair(dir, cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
+                    m_courseStrings.emplace_back(std::make_pair(dir.string(), cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
                 }
             }
         }
@@ -687,9 +687,9 @@ void StatsState::parseProfileData()
         const auto profilePath = path / dir;
         auto files = cro::FileSystem::listFiles(profilePath);
         files.erase(std::remove_if(files.begin(), files.end(),
-            [](const std::string& f)
+            [](const std::filesystem::path& f)
             {
-                return cro::FileSystem::getFileExtension(f) != ".pfl";
+                return f.extension() != ".pfl";
             }), files.end());
 
         if (!files.empty())

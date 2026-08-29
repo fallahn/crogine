@@ -39,12 +39,12 @@ source distribution.
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/Colour.hpp>
 
-#include <string>
+#include <filesystem>
 
 class PlayerAvatar final : public ProfileTexture
 {
 public:
-    explicit PlayerAvatar(const std::string&);
+    explicit PlayerAvatar(const std::filesystem::path&);
 
     cro::Entity previewModel;
 

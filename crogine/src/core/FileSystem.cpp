@@ -474,9 +474,9 @@ std::filesystem::path FileSystem::getResourcePath()
     //ugh - cwd when using bundles is a pain, so at least add some
     //checks to make sure we're not concatinating an existing part of the path
     auto rpath = SDL_GetBasePath(); ;// resourcePath();
-    if (m_resourceDirectory.find(rpath) == std::string::npos)
+    if (m_resourceDirectory.string().find(rpath) == std::string::npos)
     {
-        return rpath + m_resourceDirectory;
+        return rpath / m_resourceDirectory;
     }
 
     return m_resourceDirectory;

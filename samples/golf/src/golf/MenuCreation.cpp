@@ -209,7 +209,7 @@ void MenuState::parseCourseDirectory(const std::filesystem::path& rootDir, bool 
     auto directories = cro::FileSystem::listDirectories(root);
 
     //at least be consistent across platforms
-    std::sort(directories.begin(), directories.end(), [](const  std::string& a, const std::string& b) {return a < b; });
+    std::sort(directories.begin(), directories.end()/*, [](const  std::string& a, const std::string& b) {return a < b; }*/);
 
     std::int32_t courseNumber = 1;
 

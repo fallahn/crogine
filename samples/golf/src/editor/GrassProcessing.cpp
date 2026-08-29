@@ -52,9 +52,9 @@ void GrassProcessor::begin(const std::string& path)
 {
     auto files = cro::FileSystem::listFiles(path);
     files.erase(std::remove_if(files.begin(), files.end(), 
-        [](const std::string& f)
+        [](const std::filesystem::path& f)
         {
-            return cro::FileSystem::getFileExtension(f) != ".cmb";
+            return f.extension() != ".cmb";
         }), files.end());
 
     for (const auto& f : files)

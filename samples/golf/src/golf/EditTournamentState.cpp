@@ -691,9 +691,9 @@ void EditTournamentState::loadCourseInfo()
             //this might necessarily be in alphabetical order
             std::sort(courseDirs.begin(), courseDirs.end());
             courseDirs.erase(std::remove_if(courseDirs.begin(), courseDirs.end(), 
-                [](const std::string& s)
+                [](const std::filesystem::path& s)
                 {
-                    return s.find("course_") == std::string::npos;
+                    return s.string().find("course_") == std::string::npos;
                 }), courseDirs.end());
 
             for (const auto& dir : courseDirs)

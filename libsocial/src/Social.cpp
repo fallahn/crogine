@@ -430,7 +430,7 @@ void Social::resetProfile()
 
 void Social::storeDrivingStats(const std::array<float, 3u>& topScores)
 {
-    const std::string savePath = cro::App::getInstance().getPreferencePath() + "driving.scores";
+    const auto savePath = cro::App::getInstance().getPreferencePath()/+ "driving.scores";
 
     cro::ConfigFile cfg;
     cfg.addProperty("five").setValue(topScores[0]);
@@ -441,7 +441,7 @@ void Social::storeDrivingStats(const std::array<float, 3u>& topScores)
 
 void Social::readDrivingStats(std::array<float, 3u>& topScores)
 {
-    const std::string loadPath = cro::App::getInstance().getPreferencePath() + "driving.scores";
+    const auto loadPath = cro::App::getInstance().getPreferencePath() / "driving.scores";
 
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(loadPath, false))

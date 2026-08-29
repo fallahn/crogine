@@ -60,7 +60,7 @@ std::vector<std::filesystem::path> Content::getInstallPaths()
 
 std::filesystem::path Content::getBaseContentPath()
 {
-    return cro::App::getPreferencePath() + "user/1234/";
+    return cro::App::getPreferencePath() / "user/1234/";
 }
 
 std::filesystem::path Content::getUserContentPath(std::int32_t contentType)

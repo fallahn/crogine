@@ -292,7 +292,7 @@ void LeaderboardState::parseCourseDirectory()
                     if (auto* prop = cfg.findProperty("title"); prop != nullptr)
                     {
                         const auto courseTitle = prop->getValue<std::string>();
-                        m_courseStrings.emplace_back(std::make_pair(dir, cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
+                        m_courseStrings.emplace_back(std::make_pair(dir.string(), cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
 
 
                         filePath = installPath / "courses/" / dir / "/preview.png";
