@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -60,8 +60,8 @@ void DebugInfo::process(float)
 {
     m_debugLines.clear();
 
-    auto& entities = getEntities();
-    for (auto& e : entities)
+    const auto& entities = getEntities();
+    for (auto e : entities)
     {
         auto& tx = e.getComponent<Transform>();
 

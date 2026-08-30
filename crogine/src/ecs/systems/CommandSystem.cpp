@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -65,11 +65,11 @@ void CommandSystem::process(float dt)
     m_count = 0;
     m_commands.swap(m_commandBuffer);
 
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
 
     for (auto i = 0u; i < count; ++i)
     {
-        for (auto& e : entities)
+        for (const auto& e : entities)
         {
             if (e.getComponent<CommandTarget>().ID & m_commands[i].targetFlags)
             {

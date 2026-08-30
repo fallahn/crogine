@@ -259,7 +259,7 @@ void ModelRenderer::process(float dt)
     m_lightUniforms.lightDirection = getScene()->getSunlight().getComponent<Sunlight>().getDirection();
     m_lightUBO.setData(m_lightUniforms);
 
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
 
 #ifdef USE_PARALLEL_PROCESSING
     std::for_each(std::execution::par, entities.cbegin(), entities.cend(),

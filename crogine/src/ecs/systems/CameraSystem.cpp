@@ -119,7 +119,7 @@ void CameraSystem::handleMessage(const Message& msg)
 
 void CameraSystem::process(float)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
 
     for (auto entity : entities)
     {

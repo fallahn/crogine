@@ -1,7 +1,7 @@
 /*-----------------------------------------------------------------------
 
 Copyright (c) 2009 Erin Catto http://www.box2d.org
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -45,7 +45,7 @@ DynamicTreeSystem::DynamicTreeSystem(MessageBus& mb, float unitsPerMetre)
 //public
 void DynamicTreeSystem::process(float)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         if (!entity.destroyed())

@@ -741,6 +741,14 @@ void Font::cleanup()
     m_pixelBuffer.clear();
 }
 
+std::uint32_t Font::getTextureID(std::uint32_t charSize) const
+{
+    //TODO this getse called every frame by the text
+    //system to see if the texture ID has changed so
+    //it needs to be as optimal as possible
+    return m_pages.count(charSize) != 0 ? m_pages.at(charSize).texture.getGLHandle() : 0;
+}
+
 bool Font::pageUpdated(std::uint32_t charSize) const
 {
     return m_pages.count(charSize) != 0 && m_pages.at(charSize).updated;

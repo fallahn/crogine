@@ -94,8 +94,8 @@ namespace cro
         float outlineThickness = 0.f;
         Colour shadowColour = Colour::Black;
         glm::vec2 shadowOffset = glm::vec2(0.f);
-        bool bold = false;
         std::int32_t alignment = 0;
+        bool bold = false;
     };
     
     /*
@@ -276,6 +276,7 @@ namespace cro
         void cleanup();
 
         friend class TextSystem;
+        std::uint32_t getTextureID(std::uint32_t charSize) const;
         bool pageUpdated(std::uint32_t charSize) const;
         void markPageRead(std::uint32_t charSize) const;
 

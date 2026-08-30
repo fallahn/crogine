@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -47,14 +47,17 @@ TextSystem::TextSystem(MessageBus& mb)
 
 void TextSystem::process(float)
 {
-    auto entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& drawable = entity.getComponent<Drawable2D>();
         auto& text = entity.getComponent<Text>();
 
         CRO_ASSERT(text.m_context.font, "no font has been assigned");
-        bool isPageUpdate = text.m_context.font->pageUpdated(text.getCharacterSize());
+        const auto texID = text.m_context.font->getTextureID(text.m_context.charSize);
+        const bool isPageUpdate = text.m_context.font->pageUpdated(text.m_context.charSize)
+            || (texID != 0 && texID != drawable.m_textureInfo.textureID.textureID);
+
         if (text.m_dirtyFlags || isPageUpdate)
         {
             if ((text.m_dirtyFlags & Text::DirtyFlags::Colour) != 0)

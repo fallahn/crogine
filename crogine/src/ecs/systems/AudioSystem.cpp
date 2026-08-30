@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -66,8 +66,8 @@ void AudioSystem::process(float)
     //DPRINT("Listener Position", std::to_string(worldPos.x) + ", " + std::to_string(worldPos.y) + ", " + std::to_string(worldPos.z));
 
     //for each entity
-    auto& entities = getEntities();
-    for (auto& entity : entities)
+    const auto& entities = getEntities();
+    for (auto entity : entities)
     {
         auto& audioSource = entity.getComponent<AudioEmitter>();
         

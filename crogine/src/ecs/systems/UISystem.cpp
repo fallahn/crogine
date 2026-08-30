@@ -399,7 +399,7 @@ void UISystem::process(float dt)
     holdTest(m_buttonHoldEvents);
 
 
-    //parse conrtoller inputs first
+    //parse controller inputs first
     auto diff = m_prevControllerMask ^ m_controllerMask;
     for (auto i = 0; i < 4; ++i)
     {
