@@ -38,9 +38,6 @@
 #include <locale>
 #include <string>
 
-//using U32 = UInt32;
-using U32 = char32_t;
-
 namespace cro
 {
 ////////////////////////////////////////////////////////////
@@ -55,8 +52,8 @@ public:
     ////////////////////////////////////////////////////////////
     // Types
     ////////////////////////////////////////////////////////////
-    typedef std::basic_string<char32_t>::iterator       Iterator;      //!< Iterator type
-    typedef std::basic_string<char32_t>::const_iterator ConstIterator; //!< Read-only iterator type
+    typedef std::basic_string<UInt32>::iterator       Iterator;      //!< Iterator type
+    typedef std::basic_string<UInt32>::const_iterator ConstIterator; //!< Read-only iterator type
 
     ////////////////////////////////////////////////////////////
     // Static member data
@@ -97,7 +94,7 @@ public:
     /// \param utf32Char UTF-32 character to convert
     ///
     ////////////////////////////////////////////////////////////
-    String(U32 utf32Char);
+    String(UInt32 utf32Char);
     String(std::uint32_t utf32Char);
 
     ////////////////////////////////////////////////////////////
@@ -146,7 +143,7 @@ public:
     /// \param utf32String UTF-32 string to assign
     ///
     ////////////////////////////////////////////////////////////
-    String(const U32* utf32String);
+    String(const UInt32* utf32String);
 
     ////////////////////////////////////////////////////////////
     /// \brief Construct from an UTF-32 string
@@ -154,7 +151,7 @@ public:
     /// \param utf32String UTF-32 string to assign
     ///
     ////////////////////////////////////////////////////////////
-    String(const std::basic_string<U32>& utf32String);
+    String(const std::basic_string<UInt32>& utf32String);
 
     ////////////////////////////////////////////////////////////
     /// \brief Copy constructor
@@ -290,7 +287,6 @@ public:
     ////////////////////////////////////////////////////////////
     std::basic_string<UInt8> toUtf8() const;
     std::basic_string<char> toUtf8Char() const;
-    std::basic_string<char8_t> toUtf8String() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Convert the Unicode string to a UTF-16 string
@@ -300,7 +296,7 @@ public:
     /// \see toUtf8, toUtf32
     ///
     ////////////////////////////////////////////////////////////
-    std::basic_string<char16_t> toUtf16() const;
+    std::basic_string<UInt16> toUtf16() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Convert the Unicode string to a UTF-32 string
@@ -313,7 +309,7 @@ public:
     /// \see toUtf8, toUtf16
     ///
     ////////////////////////////////////////////////////////////
-    std::basic_string<char32_t> toUtf32() const;
+    std::basic_string<UInt32> toUtf32() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Overload of assignment operator
@@ -356,7 +352,7 @@ public:
     /// \return Character at position \a index
     ///
     ////////////////////////////////////////////////////////////
-    U32 operator [](std::size_t index) const;
+    UInt32 operator [](std::size_t index) const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Overload of [] operator to access a character by its position
@@ -369,7 +365,7 @@ public:
     /// \return Reference to the character at position \a index
     ///
     ////////////////////////////////////////////////////////////
-    U32& operator [](std::size_t index);
+    UInt32& operator [](std::size_t index);
 
     ////////////////////////////////////////////////////////////
     /// \brief Clear the string
@@ -493,7 +489,7 @@ public:
     /// \return Read-only pointer to the array of characters
     ///
     ////////////////////////////////////////////////////////////
-    const U32* data() const;
+    const UInt32* data() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Return an iterator to the beginning of the string
@@ -564,7 +560,7 @@ private:
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    std::basic_string<U32> m_string; //!< Internal string of UTF-32 characters
+    std::basic_string<UInt32> m_string; //!< Internal string of UTF-32 characters
 
 };
 

@@ -733,7 +733,7 @@ void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour)
 
         if (m_logFile.is_open() && m_logFile.good())
         {
-            const auto utf = outStr.toUtf8();
+            const auto utf = outStr.toUtf8Char();
             m_logFile << std::put_time(tm, "<%H:%M:%S> ") << utf.c_str() <<"\n";
         }
     }
