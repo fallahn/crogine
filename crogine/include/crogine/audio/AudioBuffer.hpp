@@ -32,7 +32,6 @@ source distribution.
 #include <crogine/audio/AudioSource.hpp>
 
 #include <string>
-#include <filesystem>
 
 namespace cro
 {
@@ -66,10 +65,7 @@ namespace cro
         or *.ogg vorbis files (mono or stereo) or *.mp3 files (mono or stereo)
         \returns true on success, else false
         */
-        bool loadFromFile(const std::string&) override;
-
-        //temporary overloads for migrating to std::fileystem::path
-        bool loadFromFile(const std::filesystem::path& p) { return loadFromFile(p.string()); }
+        bool loadFromFile(const std::filesystem::path&) override;
 
 
         /*!

@@ -1809,7 +1809,7 @@ void MenuState::CSVToMap()
 
 void MenuState::loadConfig()
 {
-    const std::string inpath = cro::App::getPreferencePath() + "scratchpad.cfg";
+    const auto inpath = cro::App::getPreferencePath() / "scratchpad.cfg";
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(inpath))
     {
@@ -1830,7 +1830,7 @@ void MenuState::loadConfig()
 
 void MenuState::saveConfig()
 {
-    const std::string outpath = cro::App::getPreferencePath() + "scratchpad.cfg";
+    const auto outpath = cro::App::getPreferencePath() / "scratchpad.cfg";
     cro::ConfigFile cfg;
     cfg.addProperty("cube_load").setValue(m_cubemapLoadPath);
     cfg.addProperty("cube_save").setValue(m_cubemapSavePath);

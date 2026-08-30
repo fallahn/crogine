@@ -62,10 +62,8 @@ namespace cro
         \brief Attempts to open the *.ogg, *.mp3 or *.wav file from the given path.
         \returns true on success else false.
         */
-        bool loadFromFile(const std::string& path) override;
+        bool loadFromFile(const std::filesystem::path& path) override;
 
-        //temporary overloads for migrating to std::fileystem::path
-        bool loadFromFile(const std::filesystem::path& p) { return loadFromFile(p.string()); }
 
         /*!
         \brief Returns the underlying data type

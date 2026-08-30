@@ -535,7 +535,7 @@ void VoxelState::updateCursorPosition()
 
 void VoxelState::loadSettings()
 {
-    const auto cfgPath = cro::App::getPreferencePath() + "voxels.cfg";
+    const auto cfgPath = cro::App::getPreferencePath() / "voxels.cfg";
 
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(cfgPath))
@@ -618,7 +618,7 @@ void VoxelState::saveSettings()
 
     cfg.addProperty("show_overview").setValue(m_drawTopView);
 
-    const auto cfgPath = cro::App::getPreferencePath() + "voxels.cfg";
+    const auto cfgPath = cro::App::getPreferencePath() / "voxels.cfg";
     cfg.save(cfgPath);
 }
 

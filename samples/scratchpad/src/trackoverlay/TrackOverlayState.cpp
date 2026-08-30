@@ -510,8 +510,8 @@ void TrackOverlayState::createUI()
                         std::ofstream file(m_settings.albumDirectory + "/yt.txt");
                         for (const auto& [title, artist] : m_textStrings)
                         {
-                            const auto utf0 = title.toUtf8();
-                            const auto utf1 = artist.toUtf8();
+                            const auto utf0 = title.toUtf8Char();
+                            const auto utf1 = artist.toUtf8Char();
 
                             file << "00:00 " << utf0.c_str() << " - " << utf1.c_str() << "\n";
                         }

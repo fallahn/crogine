@@ -225,11 +225,11 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
 //private
 void League::read()
 {
-    const auto path = cro::App::getPreferencePath() + FileName;
+    const auto path = cro::App::getPreferencePath() / FileName;
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.c_str(), "rb");
+        file.file = SDL_IOFromFile(path.string().c_str(), "rb");
         if (!file.file)
         {
             LogE << "Could not open " << path << " for reading" << std::endl;
@@ -278,10 +278,10 @@ void League::read()
 
 void League::write()
 {
-    const auto path = cro::App::getPreferencePath() + FileName;
+    const auto path = cro::App::getPreferencePath() / FileName;
 
     cro::RaiiRWops file;
-    file.file = SDL_IOFromFile(path.c_str(), "wb");
+    file.file = SDL_IOFromFile(path.string().c_str(), "wb");
     if (file.file)
     {
         SDL_WriteIO(file.file, &m_currentIteration, sizeof(std::int32_t));

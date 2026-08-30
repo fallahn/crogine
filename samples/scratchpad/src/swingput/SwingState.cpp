@@ -373,7 +373,7 @@ void SwingState::loadAssets()
     m_resources.materials.add(MaterialID::Sphere, m_resources.shaders.get(ShaderID::Sphere));
 
 
-    std::vector<std::string> cubemapPaths =
+    const std::vector<std::filesystem::path> cubemapPaths =
     {
         "assets/images/0/cmap.ccm",
         "assets/images/1/cmap.ccm",

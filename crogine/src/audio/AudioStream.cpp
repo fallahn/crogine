@@ -68,14 +68,15 @@ AudioStream& AudioStream::operator=(AudioStream&& other) noexcept
 }
 
 //public
-bool AudioStream::loadFromFile(const std::string& path)
+bool AudioStream::loadFromFile(const std::filesystem::path& path)
 {
+    FS_ASSERT;
     if (getID() > 0)
     {
         AudioRenderer::deleteStream(getID());
         setID(-1);
     }
 
-    setID(AudioRenderer::requestNewStream(path));
+    setID(AudioRenderer::requestNewStream(path.string()));
     return getID() != -1;
 }

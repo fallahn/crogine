@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -38,14 +38,14 @@ source distribution.
 //TODO we could refactor this for code reuse but... meh
 namespace cro::Detail
 {
-    bool loadFromU8(const std::string& path, std::vector<std::uint8_t>& dst, glm::uvec2& dims, std::uint32_t& channels)
+    bool loadFromU8(const std::filesystem::path& path, std::vector<std::uint8_t>& dst, glm::uvec2& dims, std::uint32_t& channels)
     {
         dst.clear();
 
-        auto* file = SDL_IOFromFile(path.c_str(), "rb");
+        auto* file = SDL_IOFromFile(path.string().c_str(), "rb");
         if (!file)
         {
-            Logger::log("Failed opening " + path, Logger::Type::Error);
+            Logger::log("Failed opening " + path.string(), Logger::Type::Error);
             return false;
         }
 
@@ -82,7 +82,7 @@ namespace cro::Detail
         }
         else
         {
-            Logger::log("failed to open image: " + path, Logger::Type::Error);
+            Logger::log("failed to open image: " + path.string(), Logger::Type::Error);
             SDL_CloseIO(file);
 
             return false;
@@ -91,14 +91,14 @@ namespace cro::Detail
         return false;
     }
 
-    bool loadFromU16(const std::string& path, std::vector<std::uint16_t>& dst, glm::uvec2& dims, std::uint32_t& channels)
+    bool loadFromU16(const std::filesystem::path& path, std::vector<std::uint16_t>& dst, glm::uvec2& dims, std::uint32_t& channels)
     {
         dst.clear();
 
-        auto* file = SDL_IOFromFile(path.c_str(), "rb");
+        auto* file = SDL_IOFromFile(path.string().c_str(), "rb");
         if (!file)
         {
-            Logger::log("Failed opening " + path, Logger::Type::Error);
+            Logger::log("Failed opening " + path.string(), Logger::Type::Error);
             return false;
         }
 
@@ -136,7 +136,7 @@ namespace cro::Detail
         }
         else
         {
-            Logger::log("failed to open image: " + path, Logger::Type::Error);
+            Logger::log("failed to open image: " + path.string(), Logger::Type::Error);
             SDL_CloseIO(file);
 
             return false;
@@ -145,14 +145,14 @@ namespace cro::Detail
         return false;
     }
 
-    bool loadFromFloat(const std::string& path, std::vector<float>& dst, glm::uvec2& dims, std::uint32_t& channels)
+    bool loadFromFloat(const std::filesystem::path& path, std::vector<float>& dst, glm::uvec2& dims, std::uint32_t& channels)
     {
         dst.clear();
 
-        auto* file = SDL_IOFromFile(path.c_str(), "rb");
+        auto* file = SDL_IOFromFile(path.string().c_str(), "rb");
         if (!file)
         {
-            Logger::log("Failed opening " + path, Logger::Type::Error);
+            Logger::log("Failed opening " + path.string(), Logger::Type::Error);
             return false;
         }
 
@@ -196,7 +196,7 @@ namespace cro::Detail
         }
         else
         {
-            Logger::log("failed to open image: " + path, Logger::Type::Error);
+            Logger::log("failed to open image: " + path.string(), Logger::Type::Error);
             SDL_CloseIO(file);
 
             stbi_ldr_to_hdr_gamma(2.2f);

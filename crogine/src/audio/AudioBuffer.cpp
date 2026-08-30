@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -70,15 +70,17 @@ AudioBuffer& AudioBuffer::operator=(AudioBuffer&& other) noexcept
 }
 
 //public
-bool AudioBuffer::loadFromFile(const std::string& path)
+bool AudioBuffer::loadFromFile(const std::filesystem::path& path)
 {
+    FS_ASSERT;
+
     if (getID() > 0)
     {
         AudioRenderer::deleteBuffer(getID());
         setID(-1);
     }
     
-    setID(AudioRenderer::requestNewBuffer(path));
+    setID(AudioRenderer::requestNewBuffer(path.string()));
     return getID() != -1;
 }
 

@@ -72,14 +72,11 @@ namespace cro
         so on macOS MUST include getResourcePath() if loading from a bundle.
         \returns true if successful else false
         */
-        bool loadFromFile(const std::string& path, bool flipOnLoad = false)
+        bool loadFromFile(const std::filesystem::path& path, bool flipOnLoad = false)
         {
             static_assert(sizeof(T) == -1, "Only U8, U16 and float supported");
             return false;
         }
-
-        //temporary overloads for migrating to std::fileystem::path
-        bool loadFromFile(const std::filesystem::path& p, bool b = false) { return loadFromFile(p.string(), b); }
 
         T& operator [](std::size_t i) { return m_data[i]; }
         const T& operator [](std::size_t i) const { return m_data[i]; }
@@ -141,9 +138,9 @@ namespace cro
 
     namespace Detail
     {
-        CRO_EXPORT_API bool loadFromU8(const std::string& path, std::vector<std::uint8_t>&, glm::uvec2&, std::uint32_t&);
-        CRO_EXPORT_API bool loadFromU16(const std::string& path, std::vector<std::uint16_t>&, glm::uvec2&, std::uint32_t&);
-        CRO_EXPORT_API bool loadFromFloat(const std::string& path, std::vector<float>&, glm::uvec2&, std::uint32_t&);
+        CRO_EXPORT_API bool loadFromU8(const std::filesystem::path& path, std::vector<std::uint8_t>&, glm::uvec2&, std::uint32_t&);
+        CRO_EXPORT_API bool loadFromU16(const std::filesystem::path& path, std::vector<std::uint16_t>&, glm::uvec2&, std::uint32_t&);
+        CRO_EXPORT_API bool loadFromFloat(const std::filesystem::path& path, std::vector<float>&, glm::uvec2&, std::uint32_t&);
     }
 
     template <>
@@ -216,7 +213,7 @@ namespace cro
     }
 
     template <>
-    inline bool ImageArray<std::uint8_t>::loadFromFile(const std::string& path, bool flipOnLoad)
+    inline bool ImageArray<std::uint8_t>::loadFromFile(const std::filesystem::path& path, bool flipOnLoad)
     {
         auto result = cro::Detail::loadFromU8(path, m_data, m_dimensions, m_channels);
         if (result && flipOnLoad)
@@ -229,7 +226,7 @@ namespace cro
     }
 
     template <>
-    inline bool ImageArray<std::uint16_t>::loadFromFile(const std::string& path, bool flipOnLoad)
+    inline bool ImageArray<std::uint16_t>::loadFromFile(const std::filesystem::path& path, bool flipOnLoad)
     {
         auto result = cro::Detail::loadFromU16(path, m_data, m_dimensions, m_channels);
         if (result && flipOnLoad)
@@ -242,7 +239,7 @@ namespace cro
     }
 
     template <>
-    inline bool ImageArray<float>::loadFromFile(const std::string& path, bool flipOnLoad)
+    inline bool ImageArray<float>::loadFromFile(const std::filesystem::path& path, bool flipOnLoad)
     {
         auto result = cro::Detail::loadFromFloat(path, m_data, m_dimensions, m_channels);
         if (result && flipOnLoad)
@@ -252,23 +249,5 @@ namespace cro
             m_data.swap(temp);
         }
         return result;
-    }
-
-
-    //temporary overloads for filesystem migration
-    template <>
-    inline bool ImageArray<std::uint8_t>::loadFromFile(const std::filesystem::path& path, bool flipOnLoad)
-    {
-        return ImageArray<std::uint8_t>::loadFromFile(path.string(), flipOnLoad);
-    }
-    template <>
-    inline bool ImageArray<std::uint16_t>::loadFromFile(const std::filesystem::path& path, bool flipOnLoad)
-    {
-        return ImageArray<std::uint16_t>::loadFromFile(path.string(), flipOnLoad);
-    }
-    template <>
-    inline bool ImageArray<float>::loadFromFile(const std::filesystem::path& path, bool flipOnLoad)
-    {
-        return ImageArray<float>::loadFromFile(path.string(), flipOnLoad);
     }
 }
