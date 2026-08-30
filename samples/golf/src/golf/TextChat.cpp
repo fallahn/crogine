@@ -277,7 +277,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     cro::String str(std::uint32_t(0x1F44F));
 
     auto utf = str.toUtf8();
-
+    
     m_buttonStrings.applaud.resize(utf.size());
     std::memcpy(m_buttonStrings.applaud.data(), utf.data(), utf.size());
     m_buttonStrings.applaud.push_back('#'); //these duplicate some button labels in the flyout *sigh*

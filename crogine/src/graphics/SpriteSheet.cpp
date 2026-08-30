@@ -40,10 +40,10 @@ SpriteSheet::SpriteSheet()
 }
 
 //public
-bool SpriteSheet::loadFromFile(const std::filesystem::path& p, TextureResource& textures, const std::filesystem::path& wd)
+bool SpriteSheet::loadFromFile(const std::filesystem::path& pt, TextureResource& textures, const std::filesystem::path& wd)
 {
     FS_ASSERT;
-    const auto path = p.string();
+    const auto path = pt.string();
     const auto workingDirectory = wd.string();
 
     ConfigFile sheetFile;

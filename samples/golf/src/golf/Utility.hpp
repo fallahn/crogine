@@ -45,8 +45,8 @@ string is limited to MaxStringChars
 */
 static inline std::vector<std::uint8_t> serialiseString(const cro::String& str)
 {
-    auto len = std::min(ConstVal::MaxStringChars, str.size());
-    auto workingString = str.substr(0, len);
+    const auto len = std::min(ConstVal::MaxStringChars, str.size());
+    const auto workingString = str.substr(0, len);
 
     std::uint8_t size = static_cast<std::uint8_t>(len * sizeof(std::uint32_t));
     std::vector<std::uint8_t> buffer(size + 1);
