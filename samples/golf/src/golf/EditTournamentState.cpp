@@ -240,10 +240,17 @@ void EditTournamentState::imguiWindow()
         ImGui::SetNextItemWidth(-1.f);
         if (ImGui::InputText("##input", &m_imguiBuffer))
         {
-            static constexpr std::size_t MaxChars = ConstVal::MaxStringChars;
-            if (m_imguiBuffer.length() > MaxChars)
+            //static constexpr std::size_t MaxChars = ConstVal::MaxStringChars;
+            //if (m_imguiBuffer.length() > MaxChars)
             {
-                m_imguiBuffer = m_imguiBuffer.substr(0, MaxChars);
+                //even for all this utf8 faff of u8 strings - it's still
+                //not utf aware and which truncate to the nearest byte, not character!
+                //m_imguiBuffer = m_imguiBuffer.substr(0, MaxChars);
+
+                //so we'll use the String class instead
+                cro::String s = cro::String::fromUtf8(m_imguiBuffer.begin(), m_imguiBuffer.end());
+                s = s.substr(0, ConstVal::MaxStringChars);
+                m_imguiBuffer = s.toUtf8Char();
             }
         }
         if (ImGui::Button("OK", {(WindowSize.x / 2.f) - 12.f, 0.f}))

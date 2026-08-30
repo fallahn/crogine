@@ -290,24 +290,24 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    registerWindow([this]() 
-        {
-            ImGui::Begin("Server Data");
-            /*ImGui::Text("History Size %llu", m_sharedData.serverInstance.getNetworkHistorySize());
-            ImGui::Text("History Index %llu", m_sharedData.serverInstance.getHistoryIndex());*/
-            //ImGui::Text("Range %d", Clubs[ClubID::Putter].getMaxScaleIndex());
+    //registerWindow([this]() 
+    //    {
+    //        ImGui::Begin("Server Data");
+    //        /*ImGui::Text("History Size %llu", m_sharedData.serverInstance.getNetworkHistorySize());
+    //        ImGui::Text("History Index %llu", m_sharedData.serverInstance.getHistoryIndex());*/
+    //        //ImGui::Text("Range %d", Clubs[ClubID::Putter].getMaxScaleIndex());
 
-            for (auto i = 0u; i < 8u; ++i)
-            {
-                ImGui::Image(m_sharedData.avatarTextures[0][i], { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                if ((i % 2) == 0)
-                {
-                    ImGui::SameLine();
-                }
-            }
-            
-            ImGui::End();
-        });
+    //        for (auto i = 0u; i < 8u; ++i)
+    //        {
+    //            ImGui::Image(m_sharedData.avatarTextures[0][i], { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //            if ((i % 2) == 0)
+    //            {
+    //                ImGui::SameLine();
+    //            }
+    //        }
+    //        
+    //        ImGui::End();
+    //    });
 
     //registerWindow([&]() 
     //    {

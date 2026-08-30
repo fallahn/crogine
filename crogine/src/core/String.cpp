@@ -203,6 +203,19 @@ std::basic_string<char> String::toUtf8Char() const
     return output;
 }
 
+//ugh
+std::basic_string<char8_t> String::toUtf8String() const
+{
+    // Prepare the output string
+    std::basic_string<char8_t> output;
+    output.reserve(m_string.length());
+
+    // Convert
+    Utf32::toUtf8(m_string.begin(), m_string.end(), std::back_inserter(output));
+
+    return output;
+}
+
 
 ////////////////////////////////////////////////////////////
 std::basic_string<UInt16> String::toUtf16() const

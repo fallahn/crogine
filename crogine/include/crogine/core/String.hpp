@@ -33,6 +33,7 @@
 ////////////////////////////////////////////////////////////
 #include <crogine/Config.hpp>
 #include <crogine/core/Utf.hpp>
+
 #include <iterator>
 #include <locale>
 #include <string>
@@ -286,6 +287,7 @@ public:
     ////////////////////////////////////////////////////////////
     std::basic_string<UInt8> toUtf8() const;
     std::basic_string<char> toUtf8Char() const;
+    std::basic_string<char8_t> toUtf8String() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Convert the Unicode string to a UTF-16 string

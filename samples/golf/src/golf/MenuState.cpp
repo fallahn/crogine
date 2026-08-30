@@ -5013,21 +5013,21 @@ void MenuState::createDebugWindows()
     //    
     //    });
 
-registerWindow([this]()
-    {
-        ImGui::Begin("Player Textures");
-
-        for (auto i = 0u; i < 8u; ++i)
-        {
-            ImGui::Image(m_sharedData.avatarTextures[0][i], { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
-            if ((i % 2) == 0)
-            {
-                ImGui::SameLine();
-            }
-        }
-
-        ImGui::End();
-    });
+//registerWindow([this]()
+//    {
+//        ImGui::Begin("Player Textures");
+//
+//        for (auto i = 0u; i < 8u; ++i)
+//        {
+//            ImGui::Image(m_sharedData.avatarTextures[0][i], { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+//            if ((i % 2) == 0)
+//            {
+//                ImGui::SameLine();
+//            }
+//        }
+//
+//        ImGui::End();
+//    });
 }
 
 void MenuState::applyTutorialConnection()

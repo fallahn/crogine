@@ -114,10 +114,10 @@ ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap,
     std::fill(m_shadowIDs.begin(), m_shadowIDs.end(), -1);
 }
 
-bool ModelDefinition::loadFromFile(const std::filesystem::path& p, bool instanced, bool useDeferredShaders, bool forceReload)
+bool ModelDefinition::loadFromFile(const std::filesystem::path& pt, bool instanced, bool useDeferredShaders, bool forceReload)
 {
     FS_ASSERT
-    const auto inPath = p.string();
+    const auto inPath = pt.string();
 
 #ifdef PLATFORM_MOBILE
     instanced = false
@@ -825,24 +825,24 @@ bool ModelDefinition::loadFromFile(const std::filesystem::path& p, bool instance
                 glm::vec3 v3Value = glm::vec3(0.f);
                 glm::vec4 v4Value = glm::vec4(0.f);
 
-                for (const auto& p : obj.getProperties())
+                for (const auto& pr : obj.getProperties())
                 {
-                    if (p.getName() == "type")
+                    if (pr.getName() == "type")
                     {
-                        uniform.type = p.getValue<std::int32_t>();
+                        uniform.type = pr.getValue<std::int32_t>();
                         uniform.type = std::clamp(uniform.type, 0, Uniform::MaxType - 1);
                     }
-                    else if (p.getName() == "name")
+                    else if (pr.getName() == "name")
                     {
-                        uniform.name = p.getValue<std::string>();
+                        uniform.name = pr.getValue<std::string>();
                     }
-                    else if (p.getName() == "value")
+                    else if (pr.getName() == "value")
                     {
-                        strValue = p.getValue<std::string>();
-                        fValue = p.getValue<float>();
-                        v2Value = p.getValue<glm::vec2>();
-                        v3Value = p.getValue<glm::vec3>();
-                        v4Value = p.getValue<glm::vec4>();
+                        strValue = pr.getValue<std::string>();
+                        fValue = pr.getValue<float>();
+                        v2Value = pr.getValue<glm::vec2>();
+                        v3Value = pr.getValue<glm::vec3>();
+                        v4Value = pr.getValue<glm::vec4>();
                     }
                 }
 
