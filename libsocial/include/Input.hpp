@@ -110,23 +110,23 @@ namespace Progress
     {
         auto path = getFilePath(leagueID);
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.string().c_str(), "wb");
-        if (file.file)
+        file.open(path, "wb");
+        if (file)
         {
             static constexpr std::uint64_t MaxBytes = sizeof(holeIndex) + 18;// 26; //size of holeIndex + 18 scores.
 
-            auto written = SDL_WriteIO(file.file, &holeIndex, sizeof(holeIndex));
+            auto written = SDL_WriteIO(file.filePtr(), &holeIndex, sizeof(holeIndex));
 
             const auto scoreSize = std::min(std::size_t(18), holeScores.size());
             for (auto i = 0u; i < scoreSize; ++i)
             {
-                written += SDL_WriteIO(file.file, &holeScores[i], 1);
+                written += SDL_WriteIO(file.filePtr(), &holeScores[i], 1);
             }
             //for (auto i = scoreSize; i < 18; ++i)
             while (written < MaxBytes)
             {
                 const std::uint8_t packing = 0;
-                written += SDL_WriteIO(file.file, &packing, 1);
+                written += SDL_WriteIO(file.filePtr(), &packing, 1);
             }
         }
 
@@ -138,21 +138,20 @@ namespace Progress
 
         path = getFilePath(MulliganID);
         cro::RaiiRWops file2;
-        file2.file = SDL_IOFromFile(path.string().c_str(), "rb");
+        file2.open(path, "rb");
 
-        if (file2.file)
+        if (file2)
         {
-            SDL_ReadIO(file2.file, values.data(), sizeof(values));
-            SDL_CloseIO(file2.file);
-            file2.file = nullptr;
+            SDL_ReadIO(file2.filePtr(), values.data(), sizeof(values));
+            file2.close();
         }
 
         values[leagueID] = std::min(1, mulliganCount);
-        file2.file = SDL_IOFromFile(path.string().c_str(), "wb");
+        file2.open(path, "wb");
 
-        if (file2.file)
+        if (file2)
         {
-            SDL_WriteIO(file2.file, values.data(), sizeof(values));
+            SDL_WriteIO(file2.filePtr(), values.data(), sizeof(values));
         }
     }
 
@@ -164,15 +163,15 @@ namespace Progress
         if (cro::FileSystem::fileExists(path))
         {
             cro::RaiiRWops file;
-            file.file = SDL_IOFromFile(path.string().c_str(), "rb");
-            if (file.file)
+            file.open(path, "rb");
+            if (file)
             {
                 /*auto size = file.file->seek(file.file, 0, SDL_IO_SEEK_END);
                 file.file->seek(file.file, 0, SDL_IO_SEEK_SET);*/
 
                 std::array<std::uint8_t, sizeof(holeIndex) + 18> buffer = {};
                 std::size_t i = 0u;
-                while (SDL_ReadIO(file.file, &buffer[i], 1) 
+                while (SDL_ReadIO(file.filePtr(), &buffer[i], 1)
                     && i < buffer.size() - 1) //hm some existing files have 1 byte padding too many
                 {
                     i++;
@@ -200,11 +199,11 @@ namespace Progress
 
                 path = getFilePath(MulliganID);
                 cro::RaiiRWops file2;
-                file2.file = SDL_IOFromFile(path.string().c_str(), "rb");
+                file2.open(path, "rb");
 
-                if (file2.file)
+                if (file2)
                 {
-                    SDL_ReadIO(file2.file, values.data(), sizeof(values));
+                    SDL_ReadIO(file2.filePtr(), values.data(), sizeof(values));
                     mulliganCount = std::min(1, values[leagueID]);
                 }
 

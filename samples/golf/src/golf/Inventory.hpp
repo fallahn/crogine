@@ -118,10 +118,10 @@ namespace inv
             const auto loadoutPath = Content::getUserContentPath(Content::UserContent::Profile) / profileID / "load.out";
 
             cro::RaiiRWops file;
-            file.file = SDL_IOFromFile(loadoutPath.string().c_str(), "rb");
-            if (file.file)
+            file.open(loadoutPath, "rb");
+            if (file)
             {
-                if (SDL_ReadIO(file.file, items.data(), sizeof(items)) < sizeof(items))
+                if (SDL_ReadIO(file.filePtr(), items.data(), sizeof(items)) < sizeof(items))
                 {
                     LogW << "Failed reading loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
                 }
@@ -152,10 +152,10 @@ namespace inv
             path /= "load.out";
 
             cro::RaiiRWops file;
-            file.file = SDL_IOFromFile(path.string().c_str(), "wb");
-            if (file.file)
+            file.open(path, "wb");
+            if (file)
             {
-                if (SDL_WriteIO(file.file, items.data(), sizeof(items)) < sizeof(items))
+                if (SDL_WriteIO(file.filePtr(), items.data(), sizeof(items)) < sizeof(items))
                 {
                     LogW << "Failed writing loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
                 }
@@ -199,10 +199,10 @@ namespace inv
         const std::filesystem::path filePath = Content::getBaseContentPath() / fileName;
 
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(filePath.string().c_str(), "rb");
-        if (file.file)
+        file.open(filePath, "rb");
+        if (file)
         {
-            if (SDL_ReadIO(file.file, &dst, sizeof(Inventory)) < sizeof(Inventory))
+            if (SDL_ReadIO(file.filePtr(), &dst, sizeof(Inventory)) < sizeof(Inventory))
             {
                 LogE << "Failed reading " << filePath << ", " << SDL_GetError() << std::endl;
                 return false;
@@ -220,10 +220,10 @@ namespace inv
         const std::filesystem::path filePath = Content::getBaseContentPath() / fileName;
 
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(filePath.string().c_str(), "wb");
-        if (file.file)
+        file.open(filePath, "wb");
+        if (file)
         {
-            if (SDL_WriteIO(file.file, &src, sizeof(Inventory)) < sizeof(Inventory))
+            if (SDL_WriteIO(file.filePtr(), &src, sizeof(Inventory)) < sizeof(Inventory))
             {
                 LogE << "Failed writing " << filePath << ", " << SDL_GetError() << std::endl;
                 return false;

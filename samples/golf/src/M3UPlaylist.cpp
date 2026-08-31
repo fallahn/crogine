@@ -74,18 +74,18 @@ M3UPlaylist::M3UPlaylist(const std::filesystem::path& searchDir, std::uint32_t m
 bool M3UPlaylist::loadPlaylist(const std::filesystem::path& path)
 {
     cro::RaiiRWops rFile;
-    rFile.file = SDL_IOFromFile(path.string().c_str(), "r");
+    rFile.open(path, "r");
 
-    if (!rFile.file)
+    if (!rFile)
     {
         LogE << "Failed opening " << path << std::endl;
         return false;
     }
 
-    if (const auto fSize = SDL_GetIOSize(rFile.file); fSize > 0)
+    if (const auto fSize = SDL_GetIOSize(rFile.filePtr()); fSize > 0)
     {
         std::vector<std::uint8_t> buffer(fSize);
-        auto read = SDL_ReadIO(rFile.file, buffer.data(), fSize);
+        const auto read = SDL_ReadIO(rFile.filePtr(), buffer.data(), fSize);
 
         if (read == 0)
         {

@@ -295,10 +295,10 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         //write the data to a file
         const auto path = getFilePath(PrevFileName);
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.string().c_str(), "wb");
-        if (file.file)
+        file.open(path, "wb");
+        if (file)
         {
-            SDL_WriteIO(file.file, sortData.data(), sizeof(SortData) * sortData.size());
+            SDL_WriteIO(file.filePtr(), sortData.data(), sizeof(SortData)* sortData.size());
             //LogI << "Wrote previous season to " << PrevFileName << std::endl;
         }
 
@@ -479,17 +479,17 @@ void League::readPreviousPlayers() const
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.string().c_str(), "rb");
-        if (file.file)
+        file.open(path, "rb");
+        if (file)
         {
-            auto size = SDL_SeekIO(file.file, 0, SDL_IO_SEEK_END);
+            const auto size = SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_END);
             if (size % sizeof(PreviousEntry) == 0)
             {
                 auto count = size / sizeof(PreviousEntry);
                 std::vector<PreviousEntry> buff(count);
 
-                SDL_SeekIO(file.file, 0, SDL_IO_SEEK_SET);
-                SDL_ReadIO(file.file, buff.data(), sizeof(PreviousEntry) * count);
+                SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_SET);
+                SDL_ReadIO(file.filePtr(), buff.data(), sizeof(PreviousEntry) * count);
 
                 //this assumes everything was sorted correctly when it was saved
                 for (auto& entry : buff)
@@ -760,8 +760,8 @@ void League::read()
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.string().c_str(), "rb");
-        if (!file.file)
+        file.open(path, "rb");
+        if (!file)
         {
             LogE << "Could not open " << path << " for reading" << std::endl;
             //reset();
@@ -773,11 +773,11 @@ void League::read()
         static constexpr std::size_t OldExpectedSize = (sizeof(std::int32_t) * 4) + (sizeof(LeaguePlayer) * PlayerCount);
         static constexpr std::size_t ExpectedSize = (sizeof(std::int32_t) * 8) + (sizeof(LeaguePlayer) * PlayerCount);
         
-        const auto size = SDL_SeekIO(file.file, 0, SDL_IO_SEEK_END);
+        const auto size = SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_END);
 
         if (size != ExpectedSize && size != OldExpectedSize)
         {
-            SDL_CloseIO(file.file);
+            file.close();
 
             LogE << path << " file not expected size!" << std::endl;
             reset();
@@ -788,24 +788,24 @@ void League::read()
             LogI << "found old style league... updating" << std::endl;
         }*/
 
-        SDL_SeekIO(file.file, 0, SDL_IO_SEEK_SET);
-        SDL_ReadIO(file.file, &m_currentIteration, sizeof(std::int32_t));
-        SDL_ReadIO(file.file, &m_currentSeason, sizeof(std::int32_t));
-        SDL_ReadIO(file.file, &m_playerScore, sizeof(std::int32_t));
-        SDL_ReadIO(file.file, &m_increaseCount, sizeof(std::int32_t));
+        SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_SET);
+        SDL_ReadIO(file.filePtr(), &m_currentIteration, sizeof(std::int32_t));
+        SDL_ReadIO(file.filePtr(), &m_currentSeason, sizeof(std::int32_t));
+        SDL_ReadIO(file.filePtr(), &m_playerScore, sizeof(std::int32_t));
+        SDL_ReadIO(file.filePtr(), &m_increaseCount, sizeof(std::int32_t));
 
         std::int32_t version = 0;
         if (size == ExpectedSize)
         {
             //read the personal best, and skip padding
             std::int32_t padding = 0;
-            SDL_ReadIO(file.file, &m_currentBest, sizeof(std::int32_t));
-            SDL_ReadIO(file.file, &m_lastIterationPosition, sizeof(std::int32_t));
-            SDL_ReadIO(file.file, &version, sizeof(std::int32_t));
-            SDL_ReadIO(file.file, &padding, sizeof(std::int32_t));
+            SDL_ReadIO(file.filePtr(), &m_currentBest, sizeof(std::int32_t));
+            SDL_ReadIO(file.filePtr(), &m_lastIterationPosition, sizeof(std::int32_t));
+            SDL_ReadIO(file.filePtr(), &version, sizeof(std::int32_t));
+            SDL_ReadIO(file.filePtr(), &padding, sizeof(std::int32_t));
         }
 
-        SDL_ReadIO(file.file, m_players.data(), sizeof(LeaguePlayer) * PlayerCount);
+        SDL_ReadIO(file.filePtr(), m_players.data(), sizeof(LeaguePlayer) * PlayerCount);
         version &= VersionMask;
 
         //validate the loaded data and clamp to sane values
@@ -870,18 +870,17 @@ void League::read()
         const auto dbPath = Content::getBaseContentPath() / DBName;
         constexpr auto DBSize = LeagueRoundID::Count * sizeof(m_holeScores);
         cro::RaiiRWops dbFile;
-        dbFile.file = SDL_IOFromFile(dbPath.string().c_str(), "rb");
-        if (dbFile.file)
+        dbFile.open(dbPath, "rb");
+        if (dbFile)
         {
-            const auto dbSize = SDL_SeekIO(dbFile.file, 0, SDL_IO_SEEK_END);
+            const auto dbSize = SDL_SeekIO(dbFile.filePtr(), 0, SDL_IO_SEEK_END);
             //TODO after adding more leagues existing DBs will be smaller
             //than we expect.
             if (dbSize > DBSize
                 || (dbSize % sizeof(m_holeScores)) != 0)
             {
                 //close the file and delete it
-                SDL_CloseIO(dbFile.file);
-                dbFile.file = nullptr;
+                dbFile.close();
 
                 LogE << "DB File size incorrect, DB will be reset" << std::endl;
 
@@ -893,8 +892,8 @@ void League::read()
             {
                 //read the scores starting at the offset of the current league
                 const auto startPoint = m_id * sizeof(m_holeScores);
-                SDL_SeekIO(dbFile.file, startPoint, SDL_IO_SEEK_SET);
-                SDL_ReadIO(dbFile.file, m_holeScores.data(), sizeof(m_holeScores));
+                SDL_SeekIO(dbFile.filePtr(), startPoint, SDL_IO_SEEK_SET);
+                SDL_ReadIO(dbFile.filePtr(), m_holeScores.data(), sizeof(m_holeScores));
             }
         }
     }
@@ -933,22 +932,22 @@ void League::write()
     const auto path = getFilePath(FileName);
 
     cro::RaiiRWops file;
-    file.file = SDL_IOFromFile(path.string().c_str(), "wb");
-    if (file.file)
+    file.open(path, "wb");
+    if (file)
     {
-        SDL_WriteIO(file.file, &m_currentIteration, sizeof(std::int32_t));
-        SDL_WriteIO(file.file, &m_currentSeason, sizeof(std::int32_t));
-        SDL_WriteIO(file.file, &m_playerScore, sizeof(std::int32_t));
-        SDL_WriteIO(file.file, &m_increaseCount, sizeof(std::int32_t));
+        SDL_WriteIO(file.filePtr(), &m_currentIteration, sizeof(std::int32_t));
+        SDL_WriteIO(file.filePtr(), &m_currentSeason, sizeof(std::int32_t));
+        SDL_WriteIO(file.filePtr(), &m_playerScore, sizeof(std::int32_t));
+        SDL_WriteIO(file.filePtr(), &m_increaseCount, sizeof(std::int32_t));
 
         static constexpr std::int32_t padding = 0;
         static constexpr std::int32_t version = (0 | VersionNumber);
-        SDL_WriteIO(file.file, &m_currentBest, sizeof(std::int32_t));
-        SDL_WriteIO(file.file, &m_lastIterationPosition, sizeof(std::int32_t));
-        SDL_WriteIO(file.file, &version, sizeof(std::int32_t));
-        SDL_WriteIO(file.file, &padding, sizeof(std::int32_t));
+        SDL_WriteIO(file.filePtr(), &m_currentBest, sizeof(std::int32_t));
+        SDL_WriteIO(file.filePtr(), &m_lastIterationPosition, sizeof(std::int32_t));
+        SDL_WriteIO(file.filePtr(), &version, sizeof(std::int32_t));
+        SDL_WriteIO(file.filePtr(), &padding, sizeof(std::int32_t));
 
-        SDL_WriteIO(file.file, m_players.data(), sizeof(LeaguePlayer) * PlayerCount);
+        SDL_WriteIO(file.filePtr(), m_players.data(), sizeof(LeaguePlayer) * PlayerCount);
 
         //write hole scores to db
         updateDB();
@@ -968,15 +967,15 @@ void League::assertDB()
         //will fail anyway when they can't open the file, so no harm, just
         //no player scores either...
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.string().c_str(), "wb");
-        if (file.file)
+        file.open(path, "wb");
+        if (file)
         {
             //create an empty file big enough to store all the arrays
             constexpr auto size = LeagueRoundID::Count * sizeof(m_holeScores);
             std::vector<std::uint8_t> nullData(size);
             std::fill(nullData.begin(), nullData.end(), 0);
 
-            SDL_WriteIO(file.file, nullData.data(), size);
+            SDL_WriteIO(file.filePtr(), nullData.data(), size);
 
             LogI << "Created new league DB" << std::endl;
         }
@@ -999,17 +998,17 @@ void League::updateDB()
     std::fill(temp.begin(), temp.end(), 0);
 
     cro::RaiiRWops dbFile;
-    dbFile.file = SDL_IOFromFile(dbPath.string().c_str(), "rb");
-    if (dbFile.file)
+    dbFile.open(dbPath, "rb");
+    if (dbFile)
     {
         //TODO existing DBs will be smaller than we expect after adding
         //DLC based leagues
-        const auto dbSize = SDL_SeekIO(dbFile.file, 0, SDL_IO_SEEK_END);
+        const auto dbSize = SDL_SeekIO(dbFile.filePtr(), 0, SDL_IO_SEEK_END);
         if (dbSize > DBSize
             || dbSize % sizeof(m_holeScores) != 0)
         {
             //close the file and delete it
-            SDL_CloseIO(dbFile.file);
+            dbFile.close();
 
             LogE << "DB File size incorrect, DB will be reset" << std::endl;
 
@@ -1021,16 +1020,16 @@ void League::updateDB()
         {
             //make sure to read the ACTUAL size, we'll expand
             //the file if we need to when writing
-            SDL_ReadIO(dbFile.file, temp.data(), dbSize);
-            SDL_CloseIO(dbFile.file);
+            SDL_ReadIO(dbFile.filePtr(), temp.data(), dbSize);
+            dbFile.close();
 
-            dbFile.file = SDL_IOFromFile(dbPath.string().c_str(), "wb");
-            if (dbFile.file)
+            dbFile.open(dbPath, "wb");
+            if (dbFile)
             {
                 auto startPoint = m_id * sizeof(m_holeScores);
                 std::memcpy(&temp[startPoint], m_holeScores.data(), sizeof(m_holeScores));
 
-                SDL_WriteIO(dbFile.file, temp.data(), DBSize);
+                SDL_WriteIO(dbFile.filePtr(), temp.data(), DBSize);
                 //LogI << "Wrote updated DB" << std::endl;
             }
         }

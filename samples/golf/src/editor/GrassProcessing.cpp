@@ -97,15 +97,15 @@ bool GrassProcessor::process()
         cro::Util::String::replace(outPath, ".cmb", ".gss");
 
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(outPath.c_str(), "wb");
-        if (file.file)
+        file.open(outPath, "wb");
+        if (file)
         {
-            SDL_WriteIO(file.file, fileHeader.data(), sizeof(Header));
+            SDL_WriteIO(file.filePtr(), fileHeader.data(), sizeof(Header));
             for (const auto& t : m_transformData)
             {
                 if (!t.empty())
                 {
-                    SDL_WriteIO(file.file, t.data(), sizeof(glm::mat4) * t.size());
+                    SDL_WriteIO(file.filePtr(), t.data(), sizeof(glm::mat4) * t.size());
                 }
             }
         }

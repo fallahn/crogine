@@ -167,16 +167,16 @@ void writeTournamentData(const Tournament& src, const char* p)
     if (!p)
     {
         auto path = getFilePath(src.id);
-        file.file = SDL_IOFromFile(path.string().c_str(), "wb");
+        file.open(path, "wb");
     }
     else
     {
         //custom tournament
-        file.file = SDL_IOFromFile(p, "wb");
+        file.open(p, "wb");
     }
-    if (file.file)
+    if (file)
     {
-        SDL_WriteIO(file.file, &src, sizeof(src));
+        SDL_WriteIO(file.filePtr(), &src, sizeof(src));
     }
 }
 
@@ -191,7 +191,7 @@ void readTournamentData(Tournament& dst, const char* p)
     }
     else
     {
-        path = getFilePath(dst.id).string();
+        path = U8PATH_CAST(getFilePath(dst.id));
     }
 
     if (!cro::FileSystem::fileExists(path))
@@ -203,10 +203,10 @@ void readTournamentData(Tournament& dst, const char* p)
     else
     {
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.c_str(), "rb");
-        if (file.file)
+        file.open(path, "rb");
+        if (file)
         {
-            if (!SDL_ReadIO(file.file, &dst, sizeof(dst)))
+            if (!SDL_ReadIO(file.filePtr(), &dst, sizeof(dst)))
             {
                 LogW << "Could not read " << cro::FileSystem::getFileName(path) << std::endl;
                 resetTournament(dst);

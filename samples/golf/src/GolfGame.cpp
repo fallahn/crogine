@@ -874,23 +874,23 @@ bool GolfGame::initialise()
             ImGui::SameLine();
             if (ImGui::Button("Open"))
             {
-                auto path = cro::FileSystem::openFileDialogue("", "txt,frag,glsl").string();
-                std::replace(path.begin(), path.end(), '\\', '/');
+                const auto path = cro::FileSystem::openFileDialogue("", "txt,frag,glsl");
+                //std::replace(path.begin(), path.end(), '\\', '/');
                 if (!path.empty())
                 {
                     cro::RaiiRWops file;
-                    file.file = SDL_IOFromFile(path.c_str(), "r");
-                    if (file.file)
+                    file.open(path, "r");
+                    if (file)
                     {
-                        auto size = SDL_GetIOSize(file.file);
+                        auto size = SDL_GetIOSize(file.filePtr());
                         std::vector<char> buffer(size);
-                        if (SDL_ReadIO(file.file, buffer.data(), size))
+                        if (SDL_ReadIO(file.filePtr(), buffer.data(), size))
                         {
                             //teminate the string!
                             buffer.push_back(0);
                             if (setShader(buffer.data()))
                             {
-                                m_sharedData.customShaderPath = path;
+                                m_sharedData.customShaderPath = U8PATH_CAST(path);
                             }
                             else
                             {
@@ -1204,12 +1204,12 @@ bool GolfGame::initialise()
     if (!m_sharedData.customShaderPath.empty())
     {
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(m_sharedData.customShaderPath.c_str(), "r");
-        if (file.file)
+        file.open(m_sharedData.customShaderPath, "r");
+        if (file)
         {
-            auto size = SDL_GetIOSize(file.file);
+            auto size = SDL_GetIOSize(file.filePtr());
             std::vector<char> buffer(size);
-            if (SDL_ReadIO(file.file, buffer.data(), size))
+            if (SDL_ReadIO(file.filePtr(), buffer.data(), size))
             {
                 //teminate the string!
                 buffer.push_back(0);
@@ -1972,13 +1972,13 @@ void GolfGame::loadPreferences()
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.string().c_str(), "rb");
-        if (file.file)
+        file.open(path, "rb");
+        if (file)
         {
-            auto size = SDL_GetIOSize(file.file);
+            auto size = SDL_GetIOSize(file.filePtr());
             if (size == sizeof(InputBinding))
             {
-                SDL_ReadIO(file.file, &m_sharedData.inputBinding, size);
+                SDL_ReadIO(file.filePtr(), &m_sharedData.inputBinding, size);
                 LOG("Read keybinds file", cro::Logger::Type::Info);
             }
         }
@@ -2030,10 +2030,10 @@ void GolfGame::loadPreferences()
         LogI << "converted keybinds" << std::endl;
 
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.string().c_str(), "wb");
-        if (file.file)
+        file.open(path, "wb");
+        if (file)
         {
-            SDL_WriteIO(file.file, &m_sharedData.inputBinding, sizeof(InputBinding));
+            SDL_WriteIO(file.filePtr(), &m_sharedData.inputBinding, sizeof(InputBinding));
         }
         std::filesystem::remove(Content::getBaseContentPath() / "keys.bind");
     }
@@ -2041,13 +2041,13 @@ void GolfGame::loadPreferences()
     {
         //load the file
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.string().c_str(), "rb");
-        if (file.file)
+        file.open(path, "rb");
+        if (file)
         {
-            auto size = SDL_GetIOSize(file.file);
+            auto size = SDL_GetIOSize(file.filePtr());
             if (size == sizeof(InputBinding))
             {
-                SDL_ReadIO(file.file, &m_sharedData.inputBinding, size);
+                SDL_ReadIO(file.filePtr(), &m_sharedData.inputBinding, size);
                 LOG("Read scancodes file", cro::Logger::Type::Info);
             }
         }
@@ -2161,10 +2161,10 @@ void GolfGame::savePreferences()
     //keybinds
     path = Content::getBaseContentPath() / "codes.bind";
     cro::RaiiRWops file;
-    file.file = SDL_IOFromFile(path.string().c_str(), "wb");
-    if (file.file)
+    file.open(path, "wb");
+    if (file)
     {
-        SDL_WriteIO(file.file, &m_sharedData.inputBinding, sizeof(InputBinding));
+        SDL_WriteIO(file.filePtr(), &m_sharedData.inputBinding, sizeof(InputBinding));
     }
 
     inv::write(m_sharedData.inventory);

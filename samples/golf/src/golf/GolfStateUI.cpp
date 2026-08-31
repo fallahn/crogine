@@ -5059,11 +5059,11 @@ void GolfState::logCSV() const
         std::replace(fileName.begin(), fileName.end(), ':', '-');
         fileName += "_" + courseName + ".csv";
 
-        fileName = (Content::getBaseContentPath() / fileName).string();
+        //fileName = U8PATH_CAST((Content::getBaseContentPath() / fileName));
 
         cro::RaiiRWops out;
-        out.file = SDL_IOFromFile(fileName.c_str(), "w");
-        if (out.file)
+        out.open(Content::getBaseContentPath() / fileName, "w");
+        if (out)
         {
             std::stringstream ss;
             ss << "name,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11,h12,h13,h14,h15,h16,h17,h18,total\r\n";
@@ -5112,7 +5112,7 @@ void GolfState::logCSV() const
             }
             
             auto str = ss.str();
-            SDL_WriteIO(out.file, str.data(), str.size());
+            SDL_WriteIO(out.filePtr(), str.data(), str.size());
             LogI << "Saved " << fileName << std::endl;
         }
         else

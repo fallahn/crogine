@@ -5981,10 +5981,10 @@ void ProfileState::refreshBio()
                 std::vector<char> buffer(MaxBioChars + 1);
 
                 cro::RaiiRWops inFile;
-                inFile.file = SDL_IOFromFile(path.string().c_str(), "r");
-                if (inFile.file)
+                inFile.open(path, "r");
+                if (inFile)
                 {
-                    auto readCount = SDL_ReadIO(inFile.file, buffer.data(), MaxBioChars);
+                    auto readCount = SDL_ReadIO(inFile.filePtr(), buffer.data(), MaxBioChars);
                     buffer[readCount] = 0; //nullterm
                     setBioString(buffer.data());
                 }
@@ -5995,10 +5995,10 @@ void ProfileState::refreshBio()
                 const std::string bio = generateRandomBio();
 
                 cro::RaiiRWops outfile;
-                outfile.file = SDL_IOFromFile(path.string().c_str(), "w");
-                if (outfile.file)
+                outfile.open(path, "w");
+                if (outfile)
                 {
-                    SDL_WriteIO(outfile.file, bio.data(), bio.size());
+                    SDL_WriteIO(outfile.filePtr(), bio.data(), bio.size());
                 }
                 setBioString(bio);
             }

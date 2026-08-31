@@ -63,8 +63,8 @@ void LeagueNames::read()
     std::size_t currName = 0;
 
     cro::RaiiRWops rFile;
-    rFile.file = SDL_IOFromFile(path.string().c_str(), "r");
-    if (rFile.file)
+    rFile.open(path, "r");
+    if (rFile)
     {
         std::size_t read = 0;
         std::uint8_t b = 0;
@@ -72,7 +72,7 @@ void LeagueNames::read()
 
         do
         {
-            read = SDL_ReadIO(rFile.file, &b, 1);
+            read = SDL_ReadIO(rFile.filePtr(), &b, 1);
             if (b != NewLine
                 && buffer.size() < ConstVal::MaxStringChars * 2) //*sigh* this are probably multi-byte...
             {
@@ -103,14 +103,14 @@ bool LeagueNames::write() const
     const auto path = Content::getBaseContentPath() / FileName;
 
     cro::RaiiRWops rFile;
-    rFile.file = SDL_IOFromFile(path.string().c_str(), "w");
-    if (rFile.file)
+    rFile.open(path, "w");
+    if (rFile)
     {
         for (const auto& n : m_names)
         {
             auto t = n.toUtf8();
-            SDL_WriteIO(rFile.file, t.c_str(), t.size());
-            SDL_WriteIO(rFile.file, &NewLine, 1);
+            SDL_WriteIO(rFile.filePtr(), t.c_str(), t.size());
+            SDL_WriteIO(rFile.filePtr(), &NewLine, 1);
         }
 
         return true;

@@ -355,7 +355,7 @@ std::uint32_t Social::updateStreak()
         streak++;
 
         StoredValues[ValueID::LongestStreak].read();
-        if (streak > StoredValues[ValueID::LongestStreak].value)
+        if (streak > static_cast<std::uint32_t>(StoredValues[ValueID::LongestStreak].value))
         {
             StoredValues[ValueID::LongestStreak].value = static_cast<std::int32_t>(streak);
             StoredValues[ValueID::LongestStreak].write();
@@ -644,15 +644,15 @@ void Social::refreshAwards()
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.string().c_str(), "rb");
-        if (file.file)
+        file.open(path, "rb");
+        if (file)
         {
-            auto size = SDL_SeekIO(file.file, 0, SDL_IO_SEEK_END);
+            auto size = SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_END);
             if (size % sizeof(AwardData) == 0)
             {
-                SDL_SeekIO(file.file, 0, SDL_IO_SEEK_SET);
+                SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_SET);
                 awardData.resize(size / sizeof(AwardData));
-                SDL_ReadIO(file.file, awardData.data(), size);
+                SDL_ReadIO(file.filePtr(), awardData.data(), size);
             }
         }
     }
@@ -717,10 +717,10 @@ void Social::refreshAwards()
     if (newAwards)
     {
         cro::RaiiRWops file;
-        file.file = SDL_IOFromFile(path.string().c_str(), "wb");
-        if (file.file)
+        file.open(path, "wb");
+        if (file)
         {
-            SDL_WriteIO(file.file, awardData.data(), sizeof(AwardData) * awardData.size());
+            SDL_WriteIO(file.filePtr(), awardData.data(), sizeof(AwardData)* awardData.size());
         }
     }
 

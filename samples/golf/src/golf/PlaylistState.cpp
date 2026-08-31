@@ -4446,24 +4446,24 @@ void PlaylistState::saveCourse(bool createNew)
     std::string fileName = ss.str();
 
     cro::RaiiRWops file;
-    file.file = SDL_IOFromFile(fileName.c_str(), "wb");
-    if (file.file)
+    file.open(fileName, "wb");
+    if (file)
     {
         SaveFileEntry entry;
         entry.type = EntryType::Shrub;
         entry.directory = static_cast<std::uint8_t>(m_shrubIndex);
-        auto written = SDL_WriteIO(file.file, &entry, sizeof(entry));
+        auto written = SDL_WriteIO(file.filePtr(), &entry, sizeof(entry));
 
         entry.type = EntryType::Skybox;
         entry.directory = static_cast<std::uint8_t>(m_skyboxIndex);
-        written += SDL_WriteIO(file.file, &entry, sizeof(entry));
+        written += SDL_WriteIO(file.filePtr(), &entry, sizeof(entry));
 
         for (const auto& hole : m_playlist)
         {
             entry.type = EntryType::Hole;
             entry.directory = static_cast<std::uint8_t>(hole.courseIndex);
             entry.file = static_cast<std::uint8_t>(hole.holeIndex);
-            written += SDL_WriteIO(file.file, &entry, sizeof(entry));
+            written += SDL_WriteIO(file.filePtr(), &entry, sizeof(entry));
         }
 
         if (written != m_playlist.size() + 2)
@@ -4490,8 +4490,8 @@ void PlaylistState::loadCourse()
     std::string fileName = strs.str();
 
     cro::RaiiRWops file;
-    file.file = SDL_IOFromFile(fileName.c_str(), "rb");
-    if (file.file)
+    file.open(fileName, "rb");
+    if (file)
     {
         for (auto& e : m_playlist)
         {
@@ -4507,7 +4507,7 @@ void PlaylistState::loadCourse()
         do
         {
             SaveFileEntry output;
-            read = SDL_ReadIO(file.file, &output, sizeof(output));
+            read = SDL_ReadIO(file.filePtr(), &output, sizeof(output));
 
             if (read)
             {
