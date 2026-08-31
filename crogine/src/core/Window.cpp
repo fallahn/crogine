@@ -309,24 +309,37 @@ void Window::setFullScreen(bool fullscreen)
     if (fullscreen)
     {
 #ifndef __APPLE__
-        SDL_DisplayMode mode = *SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(m_window));
-        /*mode.w = 1920;
-        mode.h = 1080;*/
-        /*mode.displayID = SDL_GetDisplayForWindow(m_window);
-        mode.refresh_rate = 0.f;
-        mode.pixel_density = SDL_GetWindowPixelDensity(m_window);
-        mode.format = SDL_PIXELFORMAT_RGBA32;*/
-        //HHMMMMMMMM this doesn't work and always defaults to borderless full screen
-        if (!SDL_SetWindowFullscreenMode(m_window, m_exclusiveFullScreen ? &mode : nullptr))
+        if (m_exclusiveFullScreen)
         {
-            LogE << "Failed setting full screen mode: " << SDL_GetError() << std::endl;
+            const auto displayID = SDL_GetDisplayForWindow(m_window);
+            const SDL_DisplayMode* currentMode = SDL_GetCurrentDisplayMode(displayID);
+
+            SDL_DisplayMode fsMode = {};
+            SDL_GetClosestFullscreenDisplayMode(displayID, m_windowedSize.x, m_windowedSize.y, currentMode->refresh_rate, false, &fsMode);
+
+            if (!SDL_SetWindowFullscreenMode(m_window, &fsMode))
+            {
+                LogE << "Failed setting full screen mode: " << SDL_GetError() << std::endl;
+            }
+            /*else
+            {
+                LogI << "Set FS mode " << fsMode.w << ", " << fsMode.h << std::endl;
+            }*/
+        }
+        else
+        {
+            if (!SDL_SetWindowFullscreenMode(m_window, nullptr))
+            {
+                LogE << "Failed setting full screen mode: " << SDL_GetError() << std::endl;
+            }
         }
         SDL_SyncWindow(m_window);
+
 #endif
         //m_previousWindowSize = getSize();
 
         //we set the full screen size first
-        SDL_SetWindowSize(m_window, m_fullScreenSize.x, m_fullScreenSize.y);
+        //SDL_SetWindowSize(m_window, m_fullScreenSize.x, m_fullScreenSize.y);
     }
 
     CRO_ASSERT(m_window, "window not created");
@@ -335,14 +348,6 @@ void Window::setFullScreen(bool fullscreen)
         m_fullscreen = fullscreen;
         if (!fullscreen)
         {
-            /*SDL_DisplayMode dm;
-            SDL_GetDesktopDisplayMode(SDL_GetDisplayForWindow(m_window), &dm);
-            if (dm.w == static_cast<std::int32_t>(m_previousWindowSize.x)
-                && dm.h == static_cast<std::int32_t>(m_previousWindowSize.y))
-            {
-                m_previousWindowSize = { 640u, 480u };
-            }*/
-
             //apply the windowed size afterwards
             SDL_SetWindowSize(m_window, m_windowedSize.x, m_windowedSize.y);
             SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
