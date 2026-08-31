@@ -356,6 +356,8 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
 
 cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::vector<float>& dstVert, std::vector<std::vector<std::uint32_t>>& dstIdx)
 {
+    FS_ASSERT;
+
     //make sure everything is empty - who knows what gets passed in ;)
     dstVert.clear();
     dstIdx.clear();
@@ -363,19 +365,19 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
     cro::Mesh::Data meshData;
 
     cro::RaiiRWops file;
-    file.file = SDL_IOFromFile(binPath.c_str(), "rb");
-    if (file.file)
+    file.open(binPath, "rb");
+    if (file)
     {
         cro::Detail::ModelBinary::Header header;
-        auto len = SDL_SeekIO(file.file, 0, SDL_IO_SEEK_END);
+        auto len = SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_END);
         if (len < sizeof(header))
         {
             LogE << "Unable to open " << binPath << ": invalid file size" << std::endl;
             return {};
         }
 
-        SDL_SeekIO(file.file, 0, SDL_IO_SEEK_SET);
-        SDL_ReadIO(file.file, &header, sizeof(header));
+        SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_SET);
+        SDL_ReadIO(file.filePtr(), &header, sizeof(header));
 
         if (header.magic != cro::Detail::ModelBinary::MAGIC
             && header.magic != cro::Detail::ModelBinary::MAGIC_V1)
@@ -387,7 +389,7 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
         if (header.meshOffset)
         {
             cro::Detail::ModelBinary::MeshHeader meshHeader;
-            SDL_ReadIO(file.file, &meshHeader, sizeof(meshHeader));
+            SDL_ReadIO(file.filePtr(), &meshHeader, sizeof(meshHeader));
 
             if ((meshHeader.flags & cro::VertexProperty::Position) == 0)
             {
@@ -397,7 +399,7 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
             std::vector<std::uint32_t> sizes(meshHeader.indexArrayCount);
             dstIdx.resize(meshHeader.indexArrayCount);
 
-            SDL_ReadIO(file.file, sizes.data(), meshHeader.indexArrayCount * sizeof(std::uint32_t));
+            SDL_ReadIO(file.filePtr(), sizes.data(), meshHeader.indexArrayCount * sizeof(std::uint32_t));
 
             std::uint32_t vertStride = 0;
             for (auto i = 0u; i < cro::Mesh::Attribute::Total; ++i)
@@ -436,17 +438,17 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
                 }
             }
 
-            auto pos = SDL_TellIO(file.file);
-            auto vertSize = meshHeader.indexArrayOffset - pos;
+            const auto pos = SDL_TellIO(file.filePtr());
+            const auto vertSize = meshHeader.indexArrayOffset - pos;
 
             std::vector<float> tempVerts(vertSize / sizeof(float));
-            SDL_ReadIO(file.file, tempVerts.data(), vertSize);
+            SDL_ReadIO(file.filePtr(), tempVerts.data(), vertSize);
             CRO_ASSERT(tempVerts.size() % vertStride == 0, "");
 
             for (auto i = 0u; i < meshHeader.indexArrayCount; ++i)
             {
                 dstIdx[i].resize(sizes[i]);
-                SDL_ReadIO(file.file, dstIdx[i].data(), sizes[i] * sizeof(std::uint32_t));
+                SDL_ReadIO(file.filePtr(), dstIdx[i].data(), sizes[i] * sizeof(std::uint32_t));
             }
 
             dstVert.swap(tempVerts);

@@ -69,9 +69,9 @@ SystemManager::SystemManager(Scene& scene, ComponentManager& cm, std::uint32_t i
                     std::replace(filename.begin(), filename.end(), ':', '-');
 
                     RaiiRWops file;
-                    file.file = SDL_IOFromFile(filename.c_str(), "w");
+                    file.open(filename, "w");
 
-                    if (file.file)
+                    if (file)
                     {
                         std::stringstream ss;
                         for (const auto* s : m_activeSystems)
@@ -79,7 +79,7 @@ SystemManager::SystemManager(Scene& scene, ComponentManager& cm, std::uint32_t i
                             ss << s->getType().name() << "Entities: " << s->getEntities().size() << "\n";
                         }
 
-                        SDL_WriteIO(file.file, ss.str().c_str(), ss.str().size());
+                        SDL_WriteIO(file.filePtr(), ss.str().c_str(), ss.str().size());
                     }
                 }
 

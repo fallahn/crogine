@@ -35,6 +35,8 @@ source distribution.
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_iostream.h>
 
+#include <filesystem>
+
 namespace cro
 {
     using Event = SDL_Event;
@@ -63,7 +65,6 @@ namespace cro
     //used to automatically close RWops files
     struct RaiiRWops final
     {
-        SDL_IOStream* file;
         ~RaiiRWops()
         {
             close();
@@ -75,6 +76,13 @@ namespace cro
         RaiiRWops(RaiiRWops&&) = default;
         RaiiRWops& operator = (RaiiRWops&&) = default;
 
+        //ensures u8 filepaths are properly cast to a compatible type
+        bool open(const std::filesystem::path& p, const char* mode)
+        {
+            return SDL_IOFromFile(reinterpret_cast<const char*>(p.u8string().c_str()), mode) != nullptr;
+        }
+
+        //closes the file and resets the pointer to null
         void close()
         {
             if (file)
@@ -83,5 +91,14 @@ namespace cro
                 file = nullptr;
             }
         }
+
+        //returns a copy of the file pointer - note that
+        //this is owned by RaiiRWops and should not be manually closed!
+        SDL_IOStream* filePtr() const { return file; }
+
+        operator bool() { return file != nullptr; }
+
+    private:
+        SDL_IOStream* file = nullptr;
     };
 }

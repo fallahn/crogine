@@ -105,6 +105,8 @@ namespace
 
         FontDataBuffer getFontData(const std::string& path)
         {
+            FS_ASSERT;
+
             if (!library)
             {
                 //we failed for some reason
@@ -114,21 +116,21 @@ namespace
             if (fontData.count(path) == 0)
             {
                 RaiiRWops fontFile;
-                fontFile.file = SDL_IOFromFile(path.c_str(), "r");
-                if (!fontFile.file)
+                fontFile.open(path, "r");
+                if (!fontFile)
                 {
                     Logger::log("Failed opening " + path, Logger::Type::Error);
                     return {};
                 }
 
                 std::vector<std::uint8_t> buffer;
-                buffer.resize(SDL_GetIOSize(fontFile.file));
+                buffer.resize(SDL_GetIOSize(fontFile.filePtr()));
                 if (buffer.size() == 0)
                 {
                     Logger::log("Could not open " + path + ": files size was 0", Logger::Type::Error);
                     return {};
                 }
-                SDL_ReadIO(fontFile.file, buffer.data(), buffer.size());
+                SDL_ReadIO(fontFile.filePtr(), buffer.data(), buffer.size());
 
                 fontData.insert(std::make_pair(path, buffer));
             }

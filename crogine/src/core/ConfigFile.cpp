@@ -530,24 +530,21 @@ bool ConfigObject::parseAsJson(SDL_IOStream* file)
 
 bool ConfigObject::save(const std::filesystem::path& p)
 {
-    FS_ASSERT;
-    const auto path = p.string();
-
     RaiiRWops out;
 #ifdef OLD_PARSER
     out.file = SDL_IOFromFile(path.c_str(), "w");
 #else
-    out.file = SDL_IOFromFile(path.c_str(), "wb");
+    out.open(p, "wb");
 #endif
 
-    if (out.file)
+    if (out)
     {
-        auto written = write(out.file);
-        Logger::log("Wrote " + std::to_string(written) + " bytes to " + path, Logger::Type::Info);
+        auto written = write(out.filePtr());
+        Logger::log("Wrote " + std::to_string(written) + " bytes to " + U8PATH_CAST(p), Logger::Type::Info);
         return true;
     }
 
-    Logger::log("failed to write configuration to: \'" + path + "\'", Logger::Type::Error);
+    Logger::log("failed to write configuration to: \'" + std::string(U8PATH_CAST(p)) + "\'", Logger::Type::Error);
     return false;
 }
 
@@ -697,35 +694,37 @@ std::size_t ConfigObject::write(SDL_IOStream* file, std::uint16_t depth)
 
 bool ConfigObject::loadFromFile2(const std::string& path)
 {
-    RaiiRWops rr;
-    rr.file = SDL_IOFromFile(path.c_str(), "rb");
+    FS_ASSERT;
 
-    if (!rr.file)
+    RaiiRWops rr;
+    rr.open(path, "rb");
+
+    if (!rr)
     {
         Logger::log(path + " file invalid or not found.", Logger::Type::Warning);
         return false;
     }
 
     //fetch file size
-    const auto fileSize = SDL_GetIOSize(rr.file);
+    const auto fileSize = SDL_GetIOSize(rr.filePtr());
     if (fileSize < 1)
     {
         LOG(path + ": file empty", Logger::Type::Warning);
         return false;
     }
 
-    if (rr.file)
+    if (rr.filePtr())
     {
         if (FileSystem::getFileExtension(path) == ".json")
         {
-            return parseAsJson(rr.file);
+            return parseAsJson(rr.filePtr());
         }
 
         std::int64_t readCount = 0;
 
         std::vector<ConfigObject*> objectStack;
 
-        std::basic_string<std::uint8_t> currentLine;
+        std::basic_string<char8_t> currentLine;
         std::uint8_t currentByte = 0;
 
         std::int32_t lineNumber = 1;
@@ -734,7 +733,7 @@ bool ConfigObject::loadFromFile2(const std::string& path)
 
         while (readCount != fileSize)
         {
-            readCount += SDL_ReadIO(rr.file, &currentByte, 1);
+            readCount += SDL_ReadIO(rr.filePtr(), &currentByte, 1);
             if (currentByte != '\n')
             {
                 currentLine.push_back(currentByte);

@@ -549,8 +549,8 @@ bool Texture::saveToFile(const std::filesystem::path& path) const
     stbi_flip_vertically_on_write(1);
 
     RaiiRWops out;
-    out.file = SDL_IOFromFile(filePath.c_str(), "w");
-    auto result = stbi_write_png_to_func(image_write_func, out.file, m_size.x, m_size.y, 4, buffer.data(), m_size.x * 4);
+    out.open(filePath, "w");
+    auto result = stbi_write_png_to_func(image_write_func, out.filePtr(), m_size.x, m_size.y, 4, buffer.data(), m_size.x * 4);
 
     if (result == 0)
     {

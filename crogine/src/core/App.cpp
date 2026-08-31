@@ -702,7 +702,7 @@ void App::saveScreenshot()
         std::replace(filename.begin(), filename.end(), '/', '_');
         std::replace(filename.begin(), filename.end(), ':', '_');
 
-        auto outPath = getPreferencePath() / "screenshots/";
+        auto outPath = getPreferencePath() / "screenshots";
         //std::replace(outPath.begin(), outPath.end(), '\\', '/');
 
         if (!FileSystem::directoryExists(outPath))
@@ -713,10 +713,10 @@ void App::saveScreenshot()
         filename = (outPath / filename).string();
 
         RaiiRWops out;
-        out.file = SDL_IOFromFile(filename.c_str(), "w");
-        if (out.file)
+        out.open(outPath / filename, "w");
+        if (out)
         {
-            stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, bpp, buffer.data(), size.x * bpp);
+            stbi_write_png_to_func(image_write_func, out.filePtr(), size.x, size.y, bpp, buffer.data(), size.x * bpp);
             LogI << "Saved " << filename << std::endl;
 
 #if defined CLIP_SCREENSHOT

@@ -253,8 +253,8 @@ bool Image::write(const std::string& path, bool flipOnWrite)
     stbi_flip_vertically_on_write((m_flipped || flipOnWrite) ? 1 : 0);
 
     RaiiRWops out;
-    out.file = SDL_IOFromFile(path.c_str(), "wb");
-    return stbi_write_png_to_func(image_writer_func, out.file, m_size.x, m_size.y, pixelWidth, m_data.data(), m_size.x * pixelWidth) != 0;
+    out.open(path, "wb");
+    return stbi_write_png_to_func(image_writer_func, out.filePtr(), m_size.x, m_size.y, pixelWidth, m_data.data(), m_size.x * pixelWidth) != 0;
 }
 
 void Image::setPixel(std::size_t x, std::size_t y, cro::Colour colour)

@@ -71,10 +71,11 @@ WavLoader::WavLoader()
 //public
 bool WavLoader::open(const std::string& path)
 {
-    if (m_file.file)
+    FS_ASSERT;
+
+    if (m_file)
     {
-        SDL_CloseIO(m_file.file);
-        m_file.file = nullptr;
+        m_file.close();
 
         m_dataChunk = {};
 
@@ -84,15 +85,14 @@ bool WavLoader::open(const std::string& path)
         m_sampleCount = 0;
     }
     
-    m_file.file = SDL_IOFromFile(path.c_str(), "rb");
-    if (m_file.file)
+    auto file = m_file.open(path, "rb");
+    if (file)
     {
         //file opened, let's do stuff!
-        auto read = SDL_ReadIO(m_file.file, &m_header, sizeof(m_header));
+        auto read = SDL_ReadIO(m_file.filePtr(), &m_header, sizeof(m_header));
         if (read != sizeof(m_header))
         {
-            SDL_CloseIO(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
             
             Logger::log("Failed to read wav header for " + path, Logger::Type::Error);
             return false;
@@ -101,8 +101,7 @@ bool WavLoader::open(const std::string& path)
         std::uint32_t ID = asUint(m_header.chunkID);
         if (ID != riffID)
         {
-            SDL_CloseIO(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
 
             Logger::log("Header file invalid ID: " + path, Logger::Type::Error);
             return false;
@@ -111,8 +110,7 @@ bool WavLoader::open(const std::string& path)
         ID = asUint(m_header.format);
         if (ID != formatID)
         {
-            SDL_CloseIO(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
 
             Logger::log(path + " is not a WAV format file", Logger::Type::Error);
             return false;
@@ -121,8 +119,7 @@ bool WavLoader::open(const std::string& path)
         ID = asUint(m_header.subchunk1ID);
         if (ID != subchunk1ID)
         {
-            SDL_CloseIO(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
 
             Logger::log(path + ": Invalid header data chunk", Logger::Type::Error);
             return false;
@@ -130,8 +127,7 @@ bool WavLoader::open(const std::string& path)
 
         if (m_header.audioFormat != AudioFormat::PCM)
         {
-            SDL_CloseIO(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
             
             Logger::log(path + ": not in PCM format, only PCM wav files are supported", Logger::Type::Error);
             return false;
@@ -139,8 +135,7 @@ bool WavLoader::open(const std::string& path)
 
         if (m_header.bitsPerSample < 8 || m_header.bitsPerSample > 16)
         {
-            SDL_CloseIO(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
             
             Logger::log(path + ": Invalid Bits per sample, must be 8 or 16", Logger::Type::Error);
             return false;
@@ -148,8 +143,7 @@ bool WavLoader::open(const std::string& path)
 
         if (m_header.channelCount > 2 || m_header.channelCount < 1)
         {
-            SDL_CloseIO(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
             
             Logger::log(path + ": invalid channel count, only mono or stereo wav files are supported", Logger::Type::Error);
             return false;
@@ -161,21 +155,20 @@ bool WavLoader::open(const std::string& path)
         ID = 0;
         while (read == sizeof(WavChunk) && ID != dataID)
         {
-            read = SDL_ReadIO(m_file.file, &chunk, sizeof(WavChunk));
+            read = SDL_ReadIO(m_file.filePtr(), &chunk, sizeof(WavChunk));
             ID = asUint(chunk.ID);
         }
 
         if (read != sizeof(WavChunk))
         {
-            SDL_CloseIO(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
 
             Logger::log("Failed to find data chunk in " + path, Logger::Type::Error);
             return false;
         }
 
         m_dataSize = chunk.size - sizeof(WavChunk); //don't include the chunk header in the data!
-        m_dataStart = SDL_SeekIO(m_file.file, sizeof(WavChunk::size), SDL_IO_SEEK_CUR);
+        m_dataStart = SDL_SeekIO(m_file.filePtr(), sizeof(WavChunk::size), SDL_IO_SEEK_CUR);
 
         m_dataChunk.frequency = m_header.sampleRate;
         if (m_header.channelCount == 1)
@@ -198,7 +191,7 @@ bool WavLoader::open(const std::string& path)
 
 const PCMData& WavLoader::getData(std::size_t size, bool looped) const
 {
-    auto currPos = SDL_SeekIO(m_file.file, 0, SDL_IO_SEEK_CUR);
+    auto currPos = SDL_SeekIO(m_file.filePtr(), 0, SDL_IO_SEEK_CUR);
 
     //return null if failed
     if (currPos == -1)
@@ -218,7 +211,7 @@ const PCMData& WavLoader::getData(std::size_t size, bool looped) const
         m_sampleBuffer.resize(buffSize);
     }
 
-    if (SDL_ReadIO(m_file.file, m_sampleBuffer.data(), byteCount) == 0)
+    if (SDL_ReadIO(m_file.filePtr(), m_sampleBuffer.data(), byteCount) == 0)
     {
         m_dataChunk.size = 0;
         m_dataChunk.data = nullptr;
@@ -230,8 +223,8 @@ const PCMData& WavLoader::getData(std::size_t size, bool looped) const
         && looped)
     {
         auto fill = size - remain;
-        SDL_SeekIO(m_file.file, m_dataStart, SDL_IO_SEEK_SET);
-        if (SDL_ReadIO(m_file.file, m_sampleBuffer.data() + byteCount, fill))
+        SDL_SeekIO(m_file.filePtr(), m_dataStart, SDL_IO_SEEK_SET);
+        if (SDL_ReadIO(m_file.filePtr(), m_sampleBuffer.data() + byteCount, fill))
         {
             byteCount += fill;
         }
@@ -244,14 +237,17 @@ const PCMData& WavLoader::getData(std::size_t size, bool looped) const
 
 bool WavLoader::seek(cro::Time offset)
 {
-    if (!m_file.file) return false;
+    if (!m_file)
+    {
+        return false;
+    }
 
     auto offsetMillis = offset.asMilliseconds();
     auto dest = m_bytesPerSecond * offsetMillis / 1000;
 
     if (dest < m_dataSize)
     {
-        auto result = SDL_SeekIO(m_file.file, m_dataStart + dest, SDL_IO_SEEK_SET);
+        auto result = SDL_SeekIO(m_file.filePtr(), m_dataStart + dest, SDL_IO_SEEK_SET);
         return (result == (m_dataStart + dest));
     }
     return false;

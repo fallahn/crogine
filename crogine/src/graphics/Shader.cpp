@@ -548,20 +548,21 @@ void Shader::resetUniformMap()
 
 std::string Shader::parseFile(const std::string& path)
 {
+    FS_ASSERT;
     std::string retVal;
     retVal.reserve(1000);
 
     //open file and verify
     RaiiRWops file;
-    file.file = SDL_IOFromFile(path.c_str(), "r");
-    if (!file.file)
+    file.open(path.c_str(), "r");
+    if (!file)
     {
         Logger::log("Failed opening " + path, Logger::Type::Error);
         return {};
     }
 
     char buf;
-    while (SDL_ReadIO(file.file, &buf, 1))
+    while (SDL_ReadIO(file.filePtr(), &buf, 1))
     {
         retVal.push_back(buf);
     }

@@ -96,16 +96,16 @@ void Logger::log(const std::string& message, Type type, Output output)
         //output to a log file
         RaiiRWops file;
         const auto logPath = cro::App::getPreferencePath() / "output.log";
-        file.file = SDL_IOFromFile(logPath.string().c_str(), "a");
-        if (file.file)
+        file.open(logPath, "a");
+        if (file)
         {
             auto timeStamp = SysTime::timeString();
             timeStamp += " - ";
             timeStamp += SysTime::dateString();
             timeStamp += ": ";
 
-            SDL_WriteIO(file.file, timeStamp.c_str(), timeStamp.size());
-            SDL_WriteIO(file.file, outstring.c_str(), outstring.size());
+            SDL_WriteIO(file.filePtr(), timeStamp.c_str(), timeStamp.size());
+            SDL_WriteIO(file.filePtr(), outstring.c_str(), outstring.size());
         }
         else
         {
