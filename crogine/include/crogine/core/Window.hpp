@@ -361,6 +361,7 @@ namespace cro
         void destroy();
 
         friend class App;
+        friend class FileSystem; //enables parenting notifications to this window
 
         std::uint32_t getFrameBufferID() const override { return 0; }
     };

@@ -24,6 +24,8 @@
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Wavetable.hpp>
 
+#include <crogine/core/FileSystem.hpp>
+
 namespace
 {
 #include "Shaders.inl"
@@ -96,6 +98,22 @@ bool SurrealState::handleEvent(const cro::Event& evt)
                         LogI << "Input is: " << str << std::endl;
                     }
                 });
+            break;
+        case SDLK_B:
+        {
+            auto res = cro::FileSystem::showMessageBox("Title", "Message Text", cro::FileSystem::YesNoCancel, cro::FileSystem::Warning);
+            if (res)
+            {
+                LogI << "result was true" << std::endl;
+            }
+            else
+            {
+                LogI << "result was false" << std::endl;
+            }
+        }
+        case SDLK_N:
+        case SDLK_M:
+
             break;
         }
     }

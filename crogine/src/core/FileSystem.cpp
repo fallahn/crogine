@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -37,11 +37,13 @@ source distribution.
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <iostream>
 #include <algorithm>
-#include <sstream>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
+#include <SDL3/SDL.h>
 
 //TODO check this macro works on all windows compilers
 //(only tested in VC right now)
@@ -71,8 +73,6 @@ source distribution.
 
 #elif defined(__APPLE__)
 #define MAX_PATH PATH_MAX
-//#include <CoreServices/CoreServices.h>
-//#include "../detail/ResourcePath.hpp"
 #endif
 
 #endif //_WIN32
@@ -128,80 +128,21 @@ std::filesystem::path FileSystem::getFileName(const std::filesystem::path& path)
 {
     //same as above :)
     return path.filename();
-
-    //TODO this doesn't actually check that there is a file at the
-    //end of the path, or that it's even a valid path...
-    //static const auto searchFunc = [](const char separator, const std::string& path)->std::string
-    //{
-    //    std::size_t i = path.rfind(separator, path.length());
-    //    if (i != std::string::npos)
-    //    {
-    //        return(path.substr(i + 1, path.length() - i));
-    //    }
-
-    //    return path;
-    //};
-
-    //std::string retVal = searchFunc('\\', path);
-    //return searchFunc('/', retVal);
 }
 
 std::filesystem::path FileSystem::getFilePath(const std::filesystem::path& path)
 {
     return path.parent_path();
-    //TODO this doesn't actually check that there is a file at the
-    //end of the path, or that it's even a valid path...
-    //static auto searchFunc = [](const char separator, const std::string& path)->std::string
-    //{
-    //    std::size_t i = path.rfind(separator, path.length());
-    //    if (i != std::string::npos)
-    //    {
-    //        return(path.substr(0, i + 1));
-    //    }
-
-    //    return "";
-    //};
-
-
-    //std::string retVal = searchFunc('/', path);
-    //if (!retVal.empty())
-    //{
-    //    return retVal;
-    //}
-    //return searchFunc('\\', path);
 }
 
 bool FileSystem::fileExists(const std::filesystem::path& path)
 {
     std::error_code ec;
     return std::filesystem::exists(path, ec);
-
-    //try
-    //{
-    //    const auto u8p = std::filesystem::path(path);
-
-    //    std::error_code ec;
-    //    if (!std::filesystem::exists(u8p, ec))
-    //    {
-    //        if (ec)
-    //        {
-    //            LogI << ec.message() << std::endl;
-    //        }
-    //        return false;
-    //    }
-    //    return true;
-    //}
-    //catch (...)
-    //{
-    //    LogE << path << ": failed creating u8 path" << std::endl;
-    //    return false;
-    //}
 }
 
 bool FileSystem::createDirectory(const std::filesystem::path& path)
 {
-    //TODO regex this or at least check for illegal chars
-//#ifdef _WIN32
     //if this throws here check the path passed in.
     std::error_code ec;
     if (!std::filesystem::create_directories(path, ec))
@@ -242,56 +183,6 @@ bool FileSystem::createDirectory(const std::filesystem::path& path)
         return false;
     }
     return true;
-//#else
-//    if (mkdir(path.c_str(), 0777) == 0)
-//    {
-//        LOG("Created directory " + path, cro::Logger::Type::Info);
-//        return true;
-//    }
-//    else
-//    {
-//        auto result = errno;
-//        switch (result)
-//        {
-//        case EEXIST:
-//            {
-//                Logger::log(path + " directory already exists!", Logger::Type::Info);
-//            }
-//            break;
-//        case ENOENT:
-//            {
-//                Logger::log("Unable to create " + path + ": parent directory not found.", Logger::Type::Error, Logger::Output::All);
-//            }
-//            break;
-//        case EFAULT:
-//            {
-//                Logger::log("Unable to create " + path + ". Reason: EFAULT", Logger::Type::Error);
-//            }
-//            break;
-//        case EACCES:
-//            {
-//                Logger::log("Unable to create " + path + ". Reason: EACCES", Logger::Type::Error);
-//            }
-//            break;
-//        case ENAMETOOLONG:
-//            {
-//                Logger::log("Unable to create " + path + ". Reason: ENAMETOOLONG", Logger::Type::Error);
-//            }
-//            break;
-//        case ENOTDIR:
-//            {
-//                Logger::log("Unable to create " + path + ". Reason: ENOTDIR", Logger::Type::Error);
-//            }
-//            break;
-//        case ENOMEM:
-//            {
-//                Logger::log("Unable to create " + path + ". Reason: ENOMEM", Logger::Type::Error);
-//            }
-//            break;
-//        }
-//    }
-//    return false;
-//#endif
 }
 
 bool FileSystem::directoryExists(const std::filesystem::path& path)
@@ -303,12 +194,6 @@ bool FileSystem::directoryExists(const std::filesystem::path& path)
 std::vector<std::filesystem::path> FileSystem::listDirectories(const std::filesystem::path& path)
 {
     std::vector<std::filesystem::path> retVal;
-
-    //make sure the given path is relative to the working directory
-    /*std::string fullPath = getCurrentDirectory();
-    std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
-    if (workingPath.empty() || workingPath[0] != '/') fullPath.push_back('/');
-    fullPath += workingPath;*/
 
     std::error_code ec;
     std::filesystem::directory_iterator it(path, ec);
@@ -509,21 +394,43 @@ void FileSystem::setResourceDirectory(const std::filesystem::path& path)
 
 bool FileSystem::showMessageBox(const std::string& title, const std::string& message, ButtonType buttonType, IconType iconType)
 {
-    std::string button;
+    SDL_MessageBoxData data = {};
+    data.window = App::getWindow().m_window;
+    data.title = title.c_str();
+    data.message = message.c_str();
+    data.flags = SDL_MESSAGEBOX_BUTTONS_LEFT_TO_RIGHT;
+
+    std::array<SDL_MessageBoxButtonData, 3> buttons = {};
+    data.buttons = buttons.data();
+    data.colorScheme = nullptr;
+
+    for (auto i = 0; i < 3; ++i)
+    {
+        buttons[i].buttonID = i;
+    }
+
     switch (buttonType)
     {
     default:
     case ButtonType::OK:
-        button = "ok";
+        data.numbuttons = 1;
+        buttons[0].text = "OK";
         break;
     case ButtonType::OKCancel:
-        button = "okcancel";
+        data.numbuttons = 2;
+        buttons[0].text = "OK";
+        buttons[1].text = "Cancel";
         break;
     case ButtonType::YesNo:
-        button = "yesno";
+        data.numbuttons = 2;
+        buttons[0].text = "Yes";
+        buttons[1].text = "No";
         break;
     case ButtonType::YesNoCancel:
-        button = "yesnocancel";
+        data.numbuttons = 3;
+        buttons[0].text = "Yes";
+        buttons[1].text = "No";
+        buttons[2].text = "Cancel";
         break;
     }
 
@@ -532,20 +439,26 @@ bool FileSystem::showMessageBox(const std::string& title, const std::string& mes
     {
     default:
     case IconType::Error:
-        icon = "error";
+        data.flags |= SDL_MESSAGEBOX_ERROR;
         break;
     case IconType::Info:
-        icon = "info";
-        break;
     case IconType::Question:
-        icon = "question";
+        //hmm no question type in SDL
+        data.flags |= SDL_MESSAGEBOX_INFORMATION;
         break;
     case IconType::Warning:
-        icon = "warning";
+        data.flags |= SDL_MESSAGEBOX_WARNING;
         break;
     }
 
-    return tinyfd_messageBox(title.c_str(), message.c_str(), button.c_str(), icon.c_str(), 0) != 0;
+    std::int32_t resultID = -1;
+    if (SDL_ShowMessageBox(&data, &resultID))
+    {
+        return resultID == 0;
+    }
+
+    LogE << "Message Box: " << SDL_GetError() << std::endl;
+    return false;
 }
 
 void FileSystem::showNotification(const std::string& title, const std::string& message, IconType iconType)

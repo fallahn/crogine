@@ -185,7 +185,8 @@ namespace cro
 
         /*!
         \brief Shows a pop up message box to the user.
-        Can be used to express an error or ask a question.
+        Can be used to express an error or ask a question. Please
+        note that this is *blocking* until the user has pressed a button
         \param title The title string to display in the message box
         \param message The message string to display in the message box
         \param buttonType Button type to display. Defaults to OK
