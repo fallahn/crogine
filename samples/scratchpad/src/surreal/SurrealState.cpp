@@ -1,4 +1,4 @@
-//Auto-generated source file for Scratchpad Stub 12/06/2026, 10:01:17
+﻿//Auto-generated source file for Scratchpad Stub 12/06/2026, 10:01:17
 
 #include "SurrealState.hpp"
 
@@ -98,22 +98,6 @@ bool SurrealState::handleEvent(const cro::Event& evt)
                         LogI << "Input is: " << str << std::endl;
                     }
                 });
-            break;
-        case SDLK_B:
-        {
-            auto res = cro::FileSystem::showMessageBox("Title", "Message Text", cro::FileSystem::YesNoCancel, cro::FileSystem::Warning);
-            if (res)
-            {
-                LogI << "result was true" << std::endl;
-            }
-            else
-            {
-                LogI << "result was false" << std::endl;
-            }
-        }
-        case SDLK_N:
-        case SDLK_M:
-
             break;
         }
     }

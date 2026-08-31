@@ -480,7 +480,10 @@ void FileSystem::showNotification(const std::string& title, const std::string& m
         break;
     }
 
-    tinyfd_notifyPopup(title.c_str(), message.c_str(), icon.c_str());
+    //tinyfd_notifyPopup(title.c_str(), message.c_str(), icon.c_str());
+#if SDL_VERSIONNUM_MINOR >= 6
+    SDL_ShowNotification(title.c_str(), message.c_str());
+#endif
 }
 
 //private
