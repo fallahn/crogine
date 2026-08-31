@@ -179,7 +179,7 @@ namespace
         }
 
 
-        return std::make_pair(mapPath.string(), isUser);
+        return std::make_pair(U8PATH_CAST(mapPath), isUser);
     }
 }
 
@@ -329,7 +329,8 @@ void GolfState::loadMap()
 
                 if (preset.radius > 0.01f)
                 {
-                    lightPresets.insert(std::make_pair(file.string().substr(0, file.string().find(ext.string())), preset));
+                    std::string u8file = U8PATH_CAST(file);
+                    lightPresets.insert(std::make_pair(u8file.substr(0, u8file.find(U8PATH_CAST(ext))), preset));
                 }
             }
         }
@@ -372,7 +373,7 @@ void GolfState::loadMap()
             //if set to night check for night path (appended with _n)
             if (m_sharedData.nightTime)
             {
-                const auto ext = cro::FileSystem::getFileExtension(skyboxPath).string();
+                const std::string ext = U8PATH_CAST(cro::FileSystem::getFileExtension(skyboxPath));
                 auto nightPath = skyboxPath.substr(0, skyboxPath.find(ext)) + "_n" + ext;
                 if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / nightPath))
                 {
@@ -902,7 +903,7 @@ void GolfState::loadMap()
                                         if (m_sharedData.nightTime)
                                         {
                                             //see if there's a specific model
-                                            const auto ext = cro::FileSystem::getFileExtension(path).string();
+                                            const std::string ext = U8PATH_CAST(cro::FileSystem::getFileExtension(path));
                                             if (!ext.empty())
                                             {
                                                 const auto nightPath = path.substr(0, path.find(ext)) + "_night" + ext;
@@ -1116,6 +1117,7 @@ void GolfState::loadMap()
                                         }
                                         else if (cro::FileSystem::getFileName(path).string().find("rotating_billboard") != std::string::npos)
                                         {
+                                            FS_ASSERT;
                                             if (modelDef.hasSkeleton())
                                             {
                                                 //animation callback
@@ -1153,6 +1155,7 @@ void GolfState::loadMap()
                                         }
                                         else if (cro::FileSystem::getFileName(path).string().find("lighthouse") != std::string::npos)
                                         {
+                                            FS_ASSERT;
                                             if (propAudio.hasEmitter("foghorn")
                                                 && m_sharedData.weatherType == WeatherType::Mist)
                                             {
@@ -1495,7 +1498,7 @@ void GolfState::loadMap()
                                         swarmSettings.texture = sp.getValue<std::string>();
                                         if (m_sharedData.nightTime)
                                         {
-                                            const auto ext = cro::FileSystem::getFileExtension(swarmSettings.texture).string();
+                                            const std::string ext = U8PATH_CAST(cro::FileSystem::getFileExtension(swarmSettings.texture));
                                             if (!ext.empty())
                                             {
                                                 const auto nightPath = swarmSettings.texture.substr(0, swarmSettings.texture.find(ext)) + "_night" + ext;
@@ -3329,7 +3332,7 @@ void GolfState::loadModels()
 
     //remove dirs from this list if it's not from the workshop (rather crudely)
     //TODO we don't do this anymore as workshop items are loaded directly from Steam
-    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::filesystem::path& s) {return s.string().back() != 'w'; }), clubsets.end());
+    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::filesystem::path& s) {return s.u8string().back() != 'w'; }), clubsets.end());
 
     if (clubsets.size() > ConstVal::MaxClubsets)
     {
@@ -3659,7 +3662,7 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
 
         if (m_sharedData.nightTime)
         {
-            const auto ext = cro::FileSystem::getFileExtension(m_audioPath).string();
+            const std::string ext = U8PATH_CAST(cro::FileSystem::getFileExtension(m_audioPath));
             const auto nightPath = m_audioPath.substr(0, m_audioPath.find(ext)) + "_n" + ext;
 
             if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / nightPath))

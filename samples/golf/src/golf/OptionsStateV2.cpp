@@ -1551,7 +1551,7 @@ void OptionsStateV2::createSettingsItems()
             m_uiLayout.detailsPane.image.getComponent<cro::Sprite>().setTextureRect(m_flagPreview.getUV());
 
             m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_flagPreview.getSize().x / 2.f, 0.f });
-            m_sharedData.flagPath = m_flagPreview.getPath().string();
+            m_sharedData.flagPath = U8PATH_CAST(m_flagPreview.getPath());
         };
 
     for (auto i = 0; i < m_flagPreview.getCount(); ++i)

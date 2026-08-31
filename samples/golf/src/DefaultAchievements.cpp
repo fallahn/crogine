@@ -396,10 +396,12 @@ void DefaultAchievements::readFile()
 
     if (cro::FileSystem::fileExists(filePath))
     {
-        struct stat st;
-        stat(filePath.string().c_str(), &st);
+        LogI << FILE_LINE << ": FIXME use SDL" << std::endl;
 
-        FILE* inFile = fopen(filePath.string().c_str(), "rb");
+        struct stat st;
+        stat(U8PATH_CAST(filePath), &st);
+
+        FILE* inFile = fopen(U8PATH_CAST(filePath), "rb");
         if (inFile && st.st_size >= static_cast<off_t>(bitsize + statsize)) //needs to be >= for backwards compat
         {
             auto read = fread(m_bitArray.data(), bitsize, 1, inFile);
@@ -432,8 +434,8 @@ void DefaultAchievements::writeFile()
     const std::size_t timesize = sizeof(std::uint64_t) * m_timeStamps.size();
     const auto filePath = cro::App::getInstance().getPreferencePath() / FileName;
 
-    LogI << FILE_LINE << ": should this use SDL?" << std::endl;
-    FILE* outFile = fopen(filePath.string().c_str(), "wb");
+    LogI << FILE_LINE << ": FIXME use SDL" << std::endl;
+    FILE* outFile = fopen(U8PATH_CAST(filePath), "wb");
     if (outFile)
     {
         fwrite(m_bitArray.data(), bitsize, 1, outFile);

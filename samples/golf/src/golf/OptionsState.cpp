@@ -4908,7 +4908,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     if (m_sharedData.flagPath.empty()
         /*|| !cro::FileSystem::fileExists(m_sharedData.flagPath)*/)
     {
-        m_sharedData.flagPath = (flagDir / flags[0]).string();
+        m_sharedData.flagPath = U8PATH_CAST((flagDir / flags[0]));
     }
 
     for (const auto& flag : flags)
@@ -4937,13 +4937,14 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     const auto& paths = Content::getUserItemsPaths(Content::UserContent::Flag);
     for (const auto& p : paths)
     {
-        const auto files = cro::FileSystem::listFiles(p.string());
+        const auto files = cro::FileSystem::listFiles(p);
         for (auto j = 0u; j < files.size(); ++j)
         {
             //just grab the first png we find
             if (cro::FileSystem::getFileExtension(files[j]) == ".png")
             {
-                mappedFlags.emplace_back(std::make_pair(p.string() + "/", files[j]));
+                std::string u8p = U8PATH_CAST(p);
+                mappedFlags.emplace_back(std::make_pair(u8p + "/", files[j]));
                 break;
             }
         }
@@ -4965,7 +4966,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
             {
                 m_flagIndex = loadedCount;
             }
-            m_flagPaths.push_back(fullPath.string());
+            m_flagPaths.push_back(U8PATH_CAST(fullPath));
             m_flagTextures.insertLayer(tmp, loadedCount++);
         }
 

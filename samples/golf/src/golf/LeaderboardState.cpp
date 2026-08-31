@@ -282,7 +282,7 @@ void LeaderboardState::parseCourseDirectory()
         for (const auto& dir : dirs)
         {
             //TODO lookup how to do this without converting to string
-            if (dir.string().find("course_") != std::string::npos)
+            if (dir.u8string().find(u8"course_") != std::u8string::npos)
             {
                 auto filePath = coursePath / dir / "course.data";
                 if (cro::FileSystem::fileExists(filePath))
@@ -292,7 +292,7 @@ void LeaderboardState::parseCourseDirectory()
                     if (auto* prop = cfg.findProperty("title"); prop != nullptr)
                     {
                         const auto courseTitle = prop->getValue<std::string>();
-                        m_courseStrings.emplace_back(std::make_pair(dir.string(), cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
+                        m_courseStrings.emplace_back(std::make_pair(U8PATH_CAST(dir), cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
 
 
                         filePath = installPath / "courses" / dir / "preview.png";

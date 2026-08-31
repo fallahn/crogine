@@ -653,7 +653,7 @@ void StatsState::parseCourseData()
 
     for (const auto& dir : dirs)
     {
-        if (dir.string().find("course_") != std::string::npos)
+        if (dir.u8string().find(u8"course_") != std::u8string::npos)
         {
             const auto filePath = coursePath / dir / "course.data";
             if (cro::FileSystem::fileExists(filePath))
@@ -663,7 +663,7 @@ void StatsState::parseCourseData()
                 if (auto* prop = cfg.findProperty("title"); prop != nullptr)
                 {
                     const auto courseTitle = prop->getValue<std::string>();
-                    m_courseStrings.emplace_back(std::make_pair(dir.string(), cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
+                    m_courseStrings.emplace_back(std::make_pair(U8PATH_CAST(dir), cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
                 }
             }
         }
@@ -695,7 +695,8 @@ void StatsState::parseProfileData()
         if (!files.empty())
         {
             PlayerData pd;
-            if (pd.loadProfile(profilePath / files[0], files[0].string().substr(0, files[0].string().size() - 4))
+            const std::string u8p = U8PATH_CAST(files[0]);
+            if (pd.loadProfile(profilePath / files[0], u8p.substr(0, u8p.size() - 4))
                 && cro::FileSystem::fileExists(profilePath / "profile.db3"))
             {
                 auto& pf = m_profileData.emplace_back();

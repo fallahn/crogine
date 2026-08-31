@@ -59,7 +59,7 @@ void GrassProcessor::begin(const std::string& path)
 
     for (const auto& f : files)
     {
-        m_modelPaths.push_back(path + "/" + f.string());
+        m_modelPaths.push_back(path + "/" + U8PATH_CAST(f));
     }
     queueJob();
 }

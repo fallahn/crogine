@@ -1349,7 +1349,7 @@ void GolfState::dumpBenchmark()
     }
     else
     {
-        LOG("Failed opening benchmark file " + outFile.string(), cro::Logger::Type::Warning);
+        //LOG("Failed opening benchmark file " + outFile.string(), cro::Logger::Type::Warning);
         LogE << SDL_GetError() << std::endl;
     }
 

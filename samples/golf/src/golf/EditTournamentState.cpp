@@ -591,13 +591,13 @@ void EditTournamentState::buildScene()
                         //the seed creates unique values when using the same name
                         const auto str = m_tournamentInfo.getTitle().toUtf8();
                         const auto h = SpookyHash::Hash32(str.data(), str.size(), std::time(nullptr));
-                        m_sharedData.tournamentPath = Content::getUserContentPath(Content::UserContent::Tournament).string() + std::to_string(h) + "/";
+                        m_sharedData.tournamentPath = U8PATH_CAST(Content::getUserContentPath(Content::UserContent::Tournament)) + std::to_string(h) + "/";
                         if (!cro::FileSystem::directoryExists(m_sharedData.tournamentPath))
                         {
                             cro::FileSystem::createDirectory(m_sharedData.tournamentPath);
                         }
 
-                        const auto filePath = m_sharedData.tournamentPath + TournamentDataFile.string();
+                        const auto filePath = m_sharedData.tournamentPath + U8PATH_CAST(TournamentDataFile);
 
                         Tournament newTournament;
                         newTournament.id = TournamentIndex::Custom;
@@ -700,7 +700,7 @@ void EditTournamentState::loadCourseInfo()
             courseDirs.erase(std::remove_if(courseDirs.begin(), courseDirs.end(), 
                 [](const std::filesystem::path& s)
                 {
-                    return s.string().find("course_") == std::string::npos;
+                    return s.u8string().find(u8"course_") == std::u8string::npos;
                 }), courseDirs.end());
 
             for (const auto& dir : courseDirs)
@@ -714,7 +714,7 @@ void EditTournamentState::loadCourseInfo()
                         if (const auto* t = cfg.findProperty("title"); t != nullptr)
                         {
                             auto& inf = m_courseInfo.emplace_back();
-                            inf.dir = dir.string();
+                            inf.dir = U8PATH_CAST(dir);
                             inf.displayName = t->getValue<cro::String>();
                             inf.texture = &m_textures.get(coursePath / dir / "preview.png");
                         }

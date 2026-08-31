@@ -372,7 +372,7 @@ void TournamentState::handleMessage(const cro::Message& msg)
                 if (!m_customPaths.empty()
                     && m_sharedData.tournamentPath.empty())
                 {
-                    m_sharedData.tournamentPath = m_customPaths[m_customIndex].string();
+                    m_sharedData.tournamentPath = U8PATH_CAST(m_customPaths[m_customIndex]);
                 }
 
                 if (!m_sharedData.tournamentPath.empty())
@@ -1198,7 +1198,7 @@ void TournamentState::buildScene()
                 {
                     if (!m_customPaths.empty())
                     {
-                        m_sharedData.tournamentPath = m_customPaths[m_customIndex].string();
+                        m_sharedData.tournamentPath = U8PATH_CAST(m_customPaths[m_customIndex]);
                     }
                     else
                     {
@@ -1897,7 +1897,7 @@ void TournamentState::createConfirmMenu(cro::Entity parent)
 
                 if (!m_customPaths.empty())
                 {
-                    m_sharedData.tournamentPath = m_customPaths[m_customIndex].string();
+                    m_sharedData.tournamentPath = U8PATH_CAST(m_customPaths[m_customIndex]);
                 }
                 auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                 msg->type = SystemEvent::MenuRequest;
@@ -1920,7 +1920,7 @@ void TournamentState::createConfirmMenu(cro::Entity parent)
                 if (tournamentID == TournamentIndex::Custom)
                 {
                     const auto path = m_sharedData.tournamentPath / TournamentDataFile;
-                    writeTournamentData(m_sharedData.tournaments[tournamentID], path.string().c_str());
+                    writeTournamentData(m_sharedData.tournaments[tournamentID], U8PATH_CAST(path));
                 }
                 else
                 {
@@ -2844,11 +2844,11 @@ void TournamentState::loadCustomTournament()
 {
     m_sharedData.tournaments[TournamentIndex::Custom] = {};
     m_sharedData.tournaments[TournamentIndex::Custom].id = TournamentIndex::Custom;
-    readTournamentData(m_sharedData.tournaments[TournamentIndex::Custom], (m_customPaths[m_customIndex] / TournamentDataFile).string().c_str());
+    readTournamentData(m_sharedData.tournaments[TournamentIndex::Custom], U8PATH_CAST((m_customPaths[m_customIndex] / TournamentDataFile)));
     
     m_sharedData.customTournament = {};
     m_sharedData.customTournament.load(m_customPaths[m_customIndex], m_sharedData.courseData);
-    m_sharedData.tournamentPath = m_customPaths[m_customIndex].string();
+    m_sharedData.tournamentPath = U8PATH_CAST(m_customPaths[m_customIndex]);
 
     maxTournaments = 3;
     TournamentNames[TournamentIndex::Custom] = m_sharedData.customTournament.getTitle();

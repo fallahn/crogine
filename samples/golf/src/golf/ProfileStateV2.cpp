@@ -643,7 +643,7 @@ bool ProfileStateV2::simulate(float dt)
                 {
                     const auto path = Content::getUserContentPath(Content::UserContent::Profile) / m_activeProfile.playerData.profileID / "mug.png";
                     m_mugshotTexture.getTexture().saveToFile(path);
-                    m_activeProfile.playerData.mugshot = path.string();
+                    m_activeProfile.playerData.mugshot = U8PATH_CAST(path);
                     m_saveMugshotOnExit = false;
                 }
 
@@ -3468,7 +3468,7 @@ void ProfileStateV2::loadClubData()
                 }
                 else if (f == "thumb.png")
                 {
-                    data.thumbnail = (path / f).string();
+                    data.thumbnail = U8PATH_CAST((path / f));
                 }
             }
 
@@ -3521,7 +3521,7 @@ void ProfileStateV2::loadClubData()
 
     //remove dirs from this list if it's not from the workshop (rather crudely)
     //TODO this is probably no longer needed now we load directly from Steam
-    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::filesystem::path& s) {return s.string().back() != 'w'; }), clubsets.end());
+    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::filesystem::path& s) {return s.u8string().back() != 'w'; }), clubsets.end());
 
     if (clubsets.size() > ConstVal::MaxClubsets)
     {
@@ -3538,7 +3538,7 @@ void ProfileStateV2::loadClubData()
     const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Clubs);
     for (const auto& p : wsPaths)
     {
-        processClubPath(p.string(), true);
+        processClubPath(U8PATH_CAST(p), true);
     }
 #endif
 

@@ -195,7 +195,7 @@ void MenuState::parseCourseDirectory(const std::filesystem::path& rootDir, bool 
         //macOS shenanigans. TODO there must be a better way of finding
         //out if a path contains another one
         auto rpath = cro::FileSystem::getResourcePath();
-        if (rpath.string().find(root.string()) == std::string::npos)
+        if (rpath.u8string().find(root.u8string()) == std::u8string::npos)
         {
             root = rpath / root;
         }
@@ -292,7 +292,7 @@ void MenuState::parseCourseDirectory(const std::filesystem::path& rootDir, bool 
                 {
                     data.description = description;
                 }
-                data.directory = dir.string();
+                data.directory = U8PATH_CAST(dir);
                 data.courseNumber = courseNumber;
                 data.isUser = isUser;
                 data.holeCount[0] = "All " + std::to_string(std::min(holeCount, 18)) + " holes";
@@ -318,7 +318,7 @@ void MenuState::parseCourseDirectory(const std::filesystem::path& rootDir, bool 
         if (cro::FileSystem::fileExists(testPath) &&
             t->loadFromFile(courseFile))
         {
-            m_sharedCourseData.courseThumbs.insert(std::make_pair(dir.string(), std::move(t)));
+            m_sharedCourseData.courseThumbs.insert(std::make_pair(U8PATH_CAST(dir), std::move(t)));
         }
 
         //and video thumbnail
@@ -331,7 +331,7 @@ void MenuState::parseCourseDirectory(const std::filesystem::path& rootDir, bool 
 
         if (cro::FileSystem::fileExists(testPath))
         {
-            m_sharedCourseData.videoPaths.insert(std::make_pair(dir.string(), courseFile));
+            m_sharedCourseData.videoPaths.insert(std::make_pair(U8PATH_CAST(dir), courseFile));
         }
     }
 }

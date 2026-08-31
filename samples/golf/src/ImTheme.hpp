@@ -122,16 +122,16 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     static const std::vector<ImWchar> rangesA = { 0x1, /*0xFFFF*/0xe004, 0 }; //TODO what's the third number? Plane? Terminator?
     
     const auto rp = cro::FileSystem::getResourcePath();
-    auto* defaultFont = fonts->AddFontFromFileTTF((rp / "assets/golf/fonts/ProggyClean.ttf").string().c_str(), 13.f, &config, rangesA.data());
-    fonts->AddFontFromFileTTF((rp / "assets/golf/fonts/NotoSans-Regular.ttf").string().c_str(), 10.f, &config, fonts->GetGlyphRangesCyrillic());
-    fonts->AddFontFromFileTTF((rp / "assets/golf/fonts/NotoSans-Regular.ttf").string().c_str(), 10.f, &config, fonts->GetGlyphRangesGreek());
-    fonts->AddFontFromFileTTF((rp / "assets/golf/fonts/NotoSans-Regular.ttf").string().c_str(), 10.f, &config, fonts->GetGlyphRangesVietnamese());
-    fonts->AddFontFromFileTTF((rp / "assets/golf/fonts/NotoSansThai-Regular.ttf").string().c_str(), 10.f, &config, fonts->GetGlyphRangesThai());
-    fonts->AddFontFromFileTTF((rp / "assets/golf/fonts/NotoSansKR-Regular.ttf").string().c_str(), 10.f, &config, fonts->GetGlyphRangesKorean());
+    auto* defaultFont = fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/ProggyClean.ttf")), 13.f, &config, rangesA.data());
+    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSans-Regular.ttf")), 10.f, &config, fonts->GetGlyphRangesCyrillic());
+    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSans-Regular.ttf")), 10.f, &config, fonts->GetGlyphRangesGreek());
+    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSans-Regular.ttf")), 10.f, &config, fonts->GetGlyphRangesVietnamese());
+    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSansThai-Regular.ttf")), 10.f, &config, fonts->GetGlyphRangesThai());
+    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSansKR-Regular.ttf")), 10.f, &config, fonts->GetGlyphRangesKorean());
     //fonts->AddFontFromFileTTF("assets/golf/fonts/ark-pixel-10px-monospaced-ko.ttf", 10.f, &config, fonts->GetGlyphRangesKorean());
-    fonts->AddFontFromFileTTF((rp / "assets/golf/fonts/NotoSansJP-Regular.ttf").string().c_str(), 10.f, &config, fonts->GetGlyphRangesJapanese());
+    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSansJP-Regular.ttf")), 10.f, &config, fonts->GetGlyphRangesJapanese());
     //fonts->AddFontFromFileTTF("assets/golf/fonts/ark-pixel-10px-monospaced-ja.ttf", 10.f, &config, fonts->GetGlyphRangesJapanese());
-    fonts->AddFontFromFileTTF((rp / "assets/golf/fonts/NotoSansTC-Regular.ttf").string().c_str(), 10.f, &config, fonts->GetGlyphRangesChineseFull());
+    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSansTC-Regular.ttf")), 10.f, &config, fonts->GetGlyphRangesChineseFull());
     //fonts->AddFontFromFileTTF("assets/golf/fonts/ark-pixel-10px-monospaced-zh_cn.ttf", 10.f, &config, fonts->GetGlyphRangesChineseFull());
     
     static const std::vector<ImWchar> rangesB = { 0x231a, 0x23fe, 0x256d, 0x2bd1, 0x10000, 0x10FFFF, 0 };
@@ -143,8 +143,8 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     //const std::string winPath = "assets/golf/fonts/TwemojiCOLRv0.ttf";
     if (cro::FileSystem::fileExists(emojiFontPath))
     {
-        fonts->AddFontFromFileTTF(emojiFontPath.string().c_str(), 10.f, &config, rangesB.data());// ->Scale = 0.5f;
-        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(emojiFontPath.string().c_str(), 32.f, &configB, rangesB.data());
+        fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 10.f, &config, rangesB.data());// ->Scale = 0.5f;
+        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 32.f, &configB, rangesB.data());
         sd.chatFonts.buttonHeight = 22.f;
     }
     else
@@ -152,8 +152,8 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     {
         emojiFontPath = rp / "assets/golf/fonts/TwemojiCOLRv0.ttf";
         //const std::string path = "assets/golf/fonts/NotoEmoji-Regular.ttf";
-        fonts->AddFontFromFileTTF(emojiFontPath.string().c_str(), 10.f, &config, rangesB.data());
-        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(emojiFontPath.string().c_str(), 32.0f, &configB, rangesB.data());
+        fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 10.f, &config, rangesB.data());
+        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 32.0f, &configB, rangesB.data());
         sd.chatFonts.buttonHeight = 24.f;// 30.f;
     }
 
@@ -168,14 +168,14 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     fonts->AddFontFromFileTTF(emojiFontPath.c_str(), 12.f, &configC, rangesB.data());
     configC.MergeMode = false;*/
 
-    sd.helpFonts[1] = fonts->AddFontFromFileTTF(helpFontPath.string().c_str(), 24.f, &configC);
+    sd.helpFonts[1] = fonts->AddFontFromFileTTF(U8PATH_CAST(helpFontPath), 24.f, &configC);
     configC.MergeMode = true;
-    fonts->AddFontFromFileTTF(emojiFontPath.string().c_str(), 24.f, &configC, rangesB.data());
+    fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 24.f, &configC, rangesB.data());
     configC.MergeMode = false;
 
-    sd.helpFonts[2] = fonts->AddFontFromFileTTF(helpFontPath.string().c_str(), 48.f, &configC);
+    sd.helpFonts[2] = fonts->AddFontFromFileTTF(U8PATH_CAST(helpFontPath), 48.f, &configC);
     configC.MergeMode = true;
-    fonts->AddFontFromFileTTF(emojiFontPath.string().c_str(), 48.f, &configC, rangesB.data());
+    fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 48.f, &configC, rangesB.data());
     configC.MergeMode = false;
 
     fonts->Build();

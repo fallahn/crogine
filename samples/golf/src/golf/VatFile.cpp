@@ -81,7 +81,7 @@ bool VatFile::loadFromFile(const std::string& path)
             if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / filepath))
             {
                 resultFlags |= Model;
-                m_modelPath = filepath.string();
+                m_modelPath = U8PATH_CAST(filepath);
             }
             else
             {
@@ -176,7 +176,8 @@ bool VatFile::loadFromFile(const std::string& path)
             if (!m_dataPaths[i].empty())
             {
                 const auto ext = cro::FileSystem::getFileExtension(m_dataPaths[i]);
-                auto binPath = m_dataPaths[i].string().substr(0, m_dataPaths[i].string().find(ext.string())) + ".bin";
+                const std::string u8p = U8PATH_CAST(m_dataPaths[i]);
+                const auto binPath = u8p.substr(0, u8p.find(ext.string())) + ".bin";
 
                 if (cro::FileSystem::fileExists(binPath))
                 {

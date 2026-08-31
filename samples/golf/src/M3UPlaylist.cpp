@@ -62,7 +62,7 @@ M3UPlaylist::M3UPlaylist(const std::filesystem::path& searchDir, std::uint32_t m
         {
             const auto& file = files[i];
             auto ext = cro::FileSystem::getFileExtension(file);
-            if (std::find(FileExtensions.cbegin(), FileExtensions.cend(), ext.string()) != FileExtensions.cend())
+            if (std::find(FileExtensions.cbegin(), FileExtensions.cend(), U8PATH_CAST(ext)) != FileExtensions.cend())
             {
                 loadPlaylist(searchDir / file);
             }
@@ -161,7 +161,7 @@ void M3UPlaylist::addTrack(const std::filesystem::path& path)
     };
 
     if (m_filePaths.size() < MaxTotalFiles &&
-        std::find(ValidExt.begin(), ValidExt.end(), cro::FileSystem::getFileExtension(path).string()) != ValidExt.end())
+        std::find(ValidExt.begin(), ValidExt.end(), U8PATH_CAST(cro::FileSystem::getFileExtension(path))) != ValidExt.end())
     {
         if (cro::FileSystem::fileExists(path))
         {

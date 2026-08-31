@@ -62,7 +62,7 @@ void FlagPreview::init(const std::filesystem::path& currPath)
             return f.extension() != ".png";
         }), flags.end());
 
-    if (auto pos = std::find_if(flags.begin(), flags.end(), [](const std::filesystem::path& p) { return p.string() == "flag.png"; });
+    if (auto pos = std::find_if(flags.begin(), flags.end(), [](const std::filesystem::path& p) { return p.u8string() == u8"flag.png"; });
         pos != flags.end() && pos != flags.begin())
     {
         std::iter_swap(flags.begin(), pos);
@@ -94,13 +94,13 @@ void FlagPreview::init(const std::filesystem::path& currPath)
     const auto& paths = Content::getUserItemsPaths(Content::UserContent::Flag);
     for (const auto& p : paths)
     {
-        const auto files = cro::FileSystem::listFiles(p.string());
+        const auto files = cro::FileSystem::listFiles(p);
         for (auto j = 0u; j < files.size(); ++j)
         {
             //just grab the first png we find
             if (cro::FileSystem::getFileExtension(files[j]) == ".png")
             {
-                mappedFlags.emplace_back(std::make_pair(p.string() + "/", files[j]));
+                mappedFlags.emplace_back(std::make_pair(std::string(U8PATH_CAST(p)) + "/", files[j]));
                 break;
             }
         }

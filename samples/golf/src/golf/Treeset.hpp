@@ -67,7 +67,8 @@ struct Treeset final
             return false;
         }
 
-        const auto workingPath = cro::FileSystem::getFilePath(path).string() + "/";
+        std::string workingPath = U8PATH_CAST(cro::FileSystem::getFilePath(path));
+        workingPath += "/";
 
         const auto& props = cfg.getProperties();
         for (const auto& p : props)

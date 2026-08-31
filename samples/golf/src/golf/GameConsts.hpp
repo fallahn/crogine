@@ -1001,7 +1001,7 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
 {
     static const cro::Colour DefaultColour(0x7f7fffff);
 
-    const auto extension = cro::FileSystem::getFileExtension(path).string();
+    const std::string extension = U8PATH_CAST(cro::FileSystem::getFileExtension(path));
     auto filePath = path.substr(0, path.length() - extension.length());
     filePath += "n" + extension;
 
@@ -1148,7 +1148,7 @@ static inline cro::Entity loadSkybox(const std::filesystem::path& path, cro::Sce
             entity.addComponent<cro::Transform>().setPosition(model.position);
             entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, model.rotation * cro::Util::Const::degToRad);
             entity.getComponent<cro::Transform>().setScale(model.scale);
-            entity.setLabel(cro::FileSystem::getFileName(model.path).string());
+            entity.setLabel(U8PATH_CAST(cro::FileSystem::getFileName(model.path)));
             md.createModel(entity);
 
             std::int32_t matID = -1;

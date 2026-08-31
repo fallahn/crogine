@@ -2548,7 +2548,7 @@ void DrivingState::createPlayer()
 
     //remove dirs from this list if it's not from the workshop (rather crudely)
     //TODO this probably isn't used now we we load files directly from Steam
-    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::filesystem::path& s) {return s.string().back() != 'w'; }), clubsets.end());
+    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::filesystem::path& s) {return s.u8string().back() != 'w'; }), clubsets.end());
 
     if (clubsets.size() > ConstVal::MaxClubsets)
     {

@@ -1436,7 +1436,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     m_skyboxes.erase(std::remove_if(m_skyboxes.begin(), m_skyboxes.end(),
         [](const std::filesystem::path& box)
         {
-            return box.extension() != ".sbf" || box.string().find("_n") != std::string::npos;
+            return box.extension() != ".sbf" || box.u8string().find(u8"_n") != std::u8string::npos;
         }), m_skyboxes.end());
     //just to make consistent across platforms
     std::sort(m_skyboxes.begin(), m_skyboxes.end());
@@ -1608,7 +1608,8 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString(m_skyboxes[i].string());
+        FS_ASSERT; //add String ctor to allow immediate construction from u8string
+        entity.addComponent<cro::Text>(smallFont).setString(U8PATH_CAST(m_skyboxes[i]));
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
 
@@ -1886,7 +1887,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString(m_shrubs[i].string());
+        entity.addComponent<cro::Text>(font).setString(U8PATH_CAST(m_shrubs[i]));
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
 
@@ -2142,7 +2143,8 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
         std::vector<std::string> pars;
         for (const auto& file : files)
         {
-            const auto thumb = file.string().substr(0, file.string().find_last_of('.')) + ".png";
+            const std::string u8p = U8PATH_CAST(file);
+            const auto thumb = u8p.substr(0, u8p.find_last_of('.')) + ".png";
             const auto thumbPath = cro::FileSystem::getResourcePath() / ThumbPath / dir / thumb;
             if (cro::FileSystem::fileExists(thumbPath))
             {
@@ -2171,7 +2173,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
         if (!thumbs.empty())
         {
             auto& holeDir = m_holeDirs.emplace_back();
-            holeDir.name = dir.string();
+            holeDir.name = U8PATH_CAST(dir);
             
             for(auto i = 0u; i < thumbs.size(); ++i)
             {
@@ -3330,7 +3332,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
                             cro::FileSystem::createDirectory(exportDir);
                         }
 
-                        cro::Util::String::parseURL(exportDir.string());
+                        cro::Util::String::parseURL(U8PATH_CAST(exportDir));
                         m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                     }
                 });
@@ -3370,7 +3372,7 @@ void PlaylistState::addSaveFileItem(std::size_t i, glm::vec2 position)
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString(m_saveFiles[i].string());
+    entity.addComponent<cro::Text>(smallFont).setString(U8PATH_CAST(m_saveFiles[i]));
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
 
@@ -4118,8 +4120,8 @@ void PlaylistState::updateNinePatch(cro::Entity entity)
 void PlaylistState::updateInfo()
 {
     std::string info =
-        "Skybox: " + m_skyboxes[m_skyboxIndex].string() +
-        "\nShrubs: " + m_shrubs[m_shrubIndex].string() +
+        "Skybox: " + std::string(U8PATH_CAST(m_skyboxes[m_skyboxIndex])) +
+        "\nShrubs: " + U8PATH_CAST(m_shrubs[m_shrubIndex]) +
         "\nActive Course: " + m_holeDirs[m_holeDirIndex].name;// +
         //"\nSelected Hole: " + m_playlist[m_playlistIndex].name +
         //"\n" + std::to_string(m_playlist.size()) + " holes added.";
@@ -4135,7 +4137,8 @@ void PlaylistState::updateInfo()
     }
     else
     {
-        info += "\n\nCurrent Save: " + m_saveFiles[m_saveFileIndex].string().substr(0, m_saveFiles[m_saveFileIndex].string().find_last_of('.'));
+        const std::string u8p = U8PATH_CAST(m_saveFiles[m_saveFileIndex]);
+        info += "\n\nCurrent Save: " + u8p.substr(0, u8p.find_last_of('.'));
     }
 
     m_infoEntity.getComponent<cro::Text>().setString(info);
@@ -4204,7 +4207,8 @@ void PlaylistState::confirmSave()
     //else confirm overwriting existing or creating new
     else 
     {
-        title.getComponent<cro::Text>().setString("Replace " + m_saveFiles[m_saveFileIndex].string().substr(0, m_saveFiles[m_saveFileIndex].string().find_last_of('.')) + "?");
+        const std::string u8p = U8PATH_CAST(m_saveFiles[m_saveFileIndex]);
+        title.getComponent<cro::Text>().setString("Replace " + u8p.substr(0,u8p.find_last_of('.')) + "?");
         centreText(title);
 
         if (m_saveFiles.size() < MaxSaves)
@@ -4271,7 +4275,8 @@ void PlaylistState::confirmLoad(std::size_t index)
     title.addComponent<cro::Drawable2D>();
     title.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     title.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    title.getComponent<cro::Text>().setString("Load " + m_saveFiles[index].string().substr(0, m_saveFiles[index].string().find_last_of('.')) + "?");
+    const std::string u8p = U8PATH_CAST(m_saveFiles[index]);
+    title.getComponent<cro::Text>().setString("Load " + u8p.substr(0, u8p.find_last_of('.')) + "?");
     title.addComponent<cro::Callback>().active = true;
     title.getComponent<cro::Callback>().function = destroyCallback;
         
@@ -4660,8 +4665,8 @@ bool PlaylistState::exportCourse()
     }
 
     cro::ConfigFile cfg;
-    cfg.addProperty("skybox").setValue(m_courseData.skyboxPath.string());
-    cfg.addProperty("shrubbery").setValue(m_courseData.shrubPath.string());
+    cfg.addProperty("skybox").setValue(U8PATH_CAST(m_courseData.skyboxPath));
+    cfg.addProperty("shrubbery").setValue(U8PATH_CAST(m_courseData.shrubPath));
     //TODO audio. We'll let the default take care of it for now
 
     cfg.addProperty("title").setValue("Custom Course " + std::to_string(m_saveFileIndex + 1));
@@ -4669,7 +4674,7 @@ bool PlaylistState::exportCourse()
 
     for (const auto& h : m_playlist)
     {
-        std::string holePath = (CoursePath / m_holeDirs[h.courseIndex].name / m_holeDirs[h.courseIndex].holes[h.holeIndex].name).string();
+        std::string holePath = U8PATH_CAST((CoursePath / m_holeDirs[h.courseIndex].name / m_holeDirs[h.courseIndex].holes[h.holeIndex].name));
         holePath = holePath.substr(0, holePath.find_last_of('.')) + ".hole";
         cfg.addProperty("hole").setValue(holePath);
     }

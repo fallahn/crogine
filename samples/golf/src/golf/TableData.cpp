@@ -47,7 +47,7 @@ bool TableData::loadFromFile(const std::filesystem::path& path)
     cro::ConfigFile tableConfig;
     if (tableConfig.loadFromFile(path))
     {
-        name = cro::FileSystem::getFileName(path).string();
+        name = U8PATH_CAST(cro::FileSystem::getFileName(path));
         name = name.substr(0, name.find_last_of('.'));
 
         const auto& props = tableConfig.getProperties();

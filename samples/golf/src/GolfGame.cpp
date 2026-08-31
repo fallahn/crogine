@@ -951,7 +951,7 @@ bool GolfGame::initialise()
                 if (state == "true")
                 {
                     m_sharedData.logBenchmarks = true;
-                    cro::Console::print("Benchmarks will be logged to " + cro::App::getPreferencePath().string() + "/benchmark/");
+                    cro::Console::print(std::string("Benchmarks will be logged to ") + U8PATH_CAST(cro::App::getPreferencePath()) + "/benchmark/");
                 }
                 else if (state == "false")
                 {
@@ -969,7 +969,7 @@ bool GolfGame::initialise()
         [](const std::string&)
         {
             //this assumes that the directory was successfully creates already...
-            cro::Util::String::parseURL(Content::getBaseContentPath().string());
+            cro::Util::String::parseURL(U8PATH_CAST(Content::getBaseContentPath()));
         });
 
     registerCommand("reset_leagues", 
@@ -2308,7 +2308,8 @@ void GolfGame::loadAvatars()
         if (!files.empty())
         {
             PlayerData pd;
-            if (!pd.loadProfile(steamPath / files[0], files[0].string().substr(0, files[0].string().size() - 4)))
+            const std::string u8p = U8PATH_CAST(files[0]);
+            if (!pd.loadProfile(steamPath / files[0], u8p.substr(0, u8p.size() - 4)))
             {
                 //if we failed to load use the default
                 pd = PlayerData();
@@ -2352,7 +2353,8 @@ void GolfGame::loadAvatars()
     profileDirs.erase(std::remove_if(profileDirs.begin(), profileDirs.end(),
         [&uid](const std::filesystem::path& d) 
         {
-            return d.string() == uid;
+            const std::string u8p = U8PATH_CAST(d);
+            return u8p == uid;
         }), profileDirs.end());
 
 #endif // USE_GNS
@@ -2376,7 +2378,8 @@ void GolfGame::loadAvatars()
             if (!files.empty())
             {
                 PlayerData pd;
-                if (pd.loadProfile(profilePath / files[0], files[0].string().substr(0, files[0].string().size() - 4)))
+                const std::string u8p = U8PATH_CAST(files[0]);
+                if (pd.loadProfile(profilePath / files[0], u8p.substr(0, u8p.size() - 4)))
                 {
 #ifdef USE_GNS
                     //check if we need to convert this to the UID profile
@@ -2460,10 +2463,10 @@ void GolfGame::loadMusic()
                 {
                     //horrible hack to skip menu music
 #ifdef USE_GNS
-                    if (file.string().find("101") == std::string::npos
-                        && file.string().find("201") == std::string::npos
-                        && file.string().find("104") == std::string::npos
-                        && file.string().find("204") == std::string::npos)
+                    if (file.u8string().find(u8"101") == std::u8string::npos
+                        && file.u8string().find(u8"201") == std::u8string::npos
+                        && file.u8string().find(u8"104") == std::u8string::npos
+                        && file.u8string().find(u8"204") == std::u8string::npos)
 #endif
                     {
                         //this checks the file has a valid extension
@@ -2817,7 +2820,8 @@ void GolfGame::assertFileSystem()
             const std::string err = "Failed creating root preference path, reason:\n" + cro::Console::getLastOutput();
             cro::FileSystem::showMessageBox("Could Not Create Directory", err);
 
-            cro::FileSystem::showMessageBox("Missing Directory", "Please ensure that\n" + outPath.string() + "\nexists");
+            const std::string u8p = U8PATH_CAST(outPath);
+            cro::FileSystem::showMessageBox("Missing Directory", "Please ensure that\n" + u8p + "\nexists");
         };
 
     //appdata/roaming/trederia/golf/

@@ -299,7 +299,7 @@ bool PlayerData::loadProfile(const std::filesystem::path& path, const std::strin
 
         profileID = uid;
 
-        mugshot = (cro::FileSystem::getFilePath(path) / "mug.png").string();
+        mugshot = U8PATH_CAST((cro::FileSystem::getFilePath(path) / "mug.png"));
         if (!cro::FileSystem::fileExists(mugshot))
         {
             mugshot.clear();

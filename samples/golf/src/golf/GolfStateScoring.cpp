@@ -408,7 +408,7 @@ void GolfState::updateTournament(bool playerWon)
 
         if (m_sharedData.activeTournament == TournamentIndex::Custom)
         {
-            const auto path = m_sharedData.tournamentPath + TournamentDataFile.string();
+            const auto path = m_sharedData.tournamentPath + U8PATH_CAST(TournamentDataFile);
             writeTournamentData(tournament, path.c_str());
         }
         else

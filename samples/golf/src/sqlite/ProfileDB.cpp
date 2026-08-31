@@ -74,7 +74,7 @@ bool ProfileDB::open(const std::filesystem::path& path)
         m_connection = nullptr;
     }
 
-    auto result = sqlite3_open(path.string().c_str(), &m_connection);
+    auto result = sqlite3_open(U8PATH_CAST(path), &m_connection);
     if (result != SQLITE_OK)
     {
         LogE << sqlite3_errmsg(m_connection) << std::endl;

@@ -463,7 +463,7 @@ void MenuState::createBallScene()
             //if we didn't find a UID create one from the file name and save it to the cfg
             if (info.uid == 0)
             {
-                info.uid = SpookyHash::Hash32(file.string().data(), file.string().size(), 0);
+                info.uid = SpookyHash::Hash32(file.u8string().data(), file.u8string().size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
                 cfg.save(file);
             }
@@ -487,7 +487,7 @@ void MenuState::createBallScene()
                     {
                         auto info = readBallCfg(cfg);
                         info.modelPath = path / info.modelPath;
-                        info.workshopID = findWorkshopID(path.string());
+                        info.workshopID = findWorkshopID(U8PATH_CAST(path));
                         info.type = SharedStateData::BallInfo::Custom;
 
                         insertInfo(info, m_sharedData.ballInfo, false);
@@ -848,7 +848,7 @@ void MenuState::parseAvatarDirectory()
             //if uid is missing write it to cfg - although this doesn't work on apple bundles
             if (info.uid == 0)
             {
-                info.uid = SpookyHash::Hash32(file.string().data(), file.string().size(), 0);
+                info.uid = SpookyHash::Hash32(file.u8string().data(), file.u8string().size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
                 cfg.save(file);
             }
@@ -921,7 +921,7 @@ void MenuState::parseAvatarDirectory()
                 {
                     auto info = readHairCfg(cfg);
                     info.modelPath = userPath / info.modelPath;
-                    info.workshopID = findWorkshopID(userPath.string());
+                    info.workshopID = findWorkshopID(U8PATH_CAST(userPath));
                     info.type = SharedStateData::HairInfo::Custom;
 
                     insertInfo(info, m_sharedData.hairInfo, false);
@@ -957,7 +957,8 @@ void MenuState::parseAvatarDirectory()
 #ifdef USE_GNS
     for (const auto& p : Content::getUserItemsPaths(Content::UserContent::Hair))
     {
-        parsePath(p.string() + "/");
+        std::string u8p = U8PATH_CAST(p) + "/";
+        parsePath(u8p);
     }
 #endif
 
@@ -1140,7 +1141,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::filesystem
                     {
                         //create a uid from the file name and save it to the cfg
                         //uses Bob Jenkins' spooky hash
-                        info.uid = SpookyHash::Hash32(file.string().data(), file.string().size(), 0);
+                        info.uid = SpookyHash::Hash32(file.u8string().data(), file.u8string().size(), 0);
                         cfg.addProperty("uid").setValue(info.uid);
                         cfg.save(searchPath / file);
                     }
@@ -1154,7 +1155,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::filesystem
 
                     if (result == m_sharedData.avatarInfo.end())
                     {
-                        info.workshopID = findWorkshopID(searchPath.string());
+                        info.workshopID = findWorkshopID(U8PATH_CAST(searchPath));
                         info.locked = locked;
                         m_sharedData.avatarInfo.push_back(info);
                         m_playerAvatars.emplace_back(info.texturePath);
