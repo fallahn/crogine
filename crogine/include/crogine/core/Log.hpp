@@ -160,11 +160,11 @@ std::ostream& operator << (std::ostream& out, cro::Rectangle<T> r)
     return out;
 }
 
-static inline std::ostream& operator << (std::ostream& out, std::filesystem::path& p)
-{
-    out << p.string();
-    return out;
-}
+//static inline std::ostream& operator << (std::ostream& out, std::filesystem::path& p)
+//{
+//    out << p.string();
+//    return out;
+//}
 
 #define LogI cro::Logger::log(cro::Logger::Type::Info)
 #define LogW cro::Logger::log(cro::Logger::Type::Warning)

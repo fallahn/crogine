@@ -79,7 +79,15 @@ namespace cro
         //ensures u8 filepaths are properly cast to a compatible type
         bool open(const std::filesystem::path& p, const char* mode)
         {
-            return SDL_IOFromFile(reinterpret_cast<const char*>(p.u8string().c_str()), mode) != nullptr;
+            if (file)
+            {
+                //hmm is this expected behaviour or should
+                //we assert because someone is currently using
+                //our file handle?
+                close();
+            }
+            file = SDL_IOFromFile(reinterpret_cast<const char*>(p.u8string().c_str()), mode);
+            return file != nullptr;
         }
 
         //closes the file and resets the pointer to null
@@ -94,6 +102,7 @@ namespace cro
 
         //returns a copy of the file pointer - note that
         //this is owned by RaiiRWops and should not be manually closed!
+        //use the close() function instead.
         SDL_IOStream* filePtr() const { return file; }
 
         operator bool() { return file != nullptr; }

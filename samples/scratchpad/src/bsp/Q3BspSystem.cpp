@@ -496,15 +496,15 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
     m_meshes[MeshData::Brush].activeSubmeshCount = 0;
     m_meshes[MeshData::Patch].activeSubmeshCount = 0;
 
-    const auto path = (cro::FileSystem::getResourcePath() / mapPath).string();
+    const auto path = (cro::FileSystem::getResourcePath() / mapPath);
 
     cro::RaiiRWops file;
-    file.file = SDL_IOFromFile(path.c_str(), "rb");
-    if (file.file)
+    file.open(path, "rb");
+    if (file)
     {
         //validate size
-        SDL_SeekIO(file.file, 0, SDL_IO_SEEK_END);
-        auto fileSize = SDL_TellIO(file.file);
+        SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_END);
+        auto fileSize = SDL_TellIO(file.filePtr());
 
         if (fileSize < sizeof(Q3::Header))
         {
@@ -512,12 +512,12 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
             return false;
         }
 
-        SDL_SeekIO(file.file, 0, SDL_IO_SEEK_SET);
+        SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_SET);
 
         //validate header
         Q3::Header header;
 
-        SDL_ReadIO(file.file, &header, sizeof(header));
+        SDL_ReadIO(file.filePtr(), &header, sizeof(header));
         std::string id(header.id, 4);
         if (id != "IBSP")
         {
@@ -532,17 +532,17 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
 
         //read lump info
         std::vector<Q3::Lump> lumpInfo(Q3::Lumps::MaxLumps);
-        SDL_ReadIO(file.file, lumpInfo.data(), sizeof(Q3::Lump) * Q3::Lumps::MaxLumps);
+        SDL_ReadIO(file.filePtr(), lumpInfo.data(), sizeof(Q3::Lump) * Q3::Lumps::MaxLumps);
 
         //parse the vertex list
         std::vector<Q3::Vertex> vertices;
-        parseLump(vertices, file.file, lumpInfo[Q3::Vertices]);
+        parseLump(vertices, file.filePtr(), lumpInfo[Q3::Vertices]);
 
         //parse the index list - used to build the IBO at runtime from the PVS
-        parseLump(m_indices, file.file, lumpInfo[Q3::Indices]);
+        parseLump(m_indices, file.filePtr(), lumpInfo[Q3::Indices]);
 
         //used by the PVS during rendering with index list, above
-        parseLump(m_faces, file.file, lumpInfo[Q3::Faces]);
+        parseLump(m_faces, file.filePtr(), lumpInfo[Q3::Faces]);
 
 
         //create a unique lightmap/material ID pair so we can assign each group
@@ -586,17 +586,17 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
 
         //load the plane data
         std::vector<Q3::Plane> planes;
-        parseLump(planes, file.file, lumpInfo[Q3::Planes]);
+        parseLump(planes, file.filePtr(), lumpInfo[Q3::Planes]);
         for (const auto& plane : planes)
         {
             m_planes.emplace_back(plane.normal.x, plane.normal.z, -plane.normal.y, plane.distance);
         }
 
         //load the bsp node data
-        parseLump(m_nodes, file.file, lumpInfo[Q3::Nodes]);
+        parseLump(m_nodes, file.filePtr(), lumpInfo[Q3::Nodes]);
 
         //load the leaf data
-        parseLump(m_leaves, file.file, lumpInfo[Q3::Leaves]);
+        parseLump(m_leaves, file.filePtr(), lumpInfo[Q3::Leaves]);
         //cache the bounding boxes (remember to swap coords!)
         for (const auto& l : m_leaves)
         {
@@ -604,27 +604,27 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
             m_leafBoundingBoxes.emplace_back(bb);
         }
 
-        parseLump(m_leafFaces, file.file, lumpInfo[Q3::LeafFaces]);
+        parseLump(m_leafFaces, file.filePtr(), lumpInfo[Q3::LeafFaces]);
 
         std::vector<char> entityData;
-        parseLump(entityData, file.file, lumpInfo[Q3::Entities]);
+        parseLump(entityData, file.filePtr(), lumpInfo[Q3::Entities]);
         parseEntities(entityData);
 
         //read the cluster data
-        SDL_SeekIO(file.file, lumpInfo[Q3::VisData].offset, SDL_IO_SEEK_SET);
-        SDL_ReadIO(file.file, &m_clusters.clusterCount, sizeof(std::int32_t));
-        SDL_ReadIO(file.file, &m_clusters.bytesPerCluster, sizeof(std::int32_t));
+        SDL_SeekIO(file.filePtr(), lumpInfo[Q3::VisData].offset, SDL_IO_SEEK_SET);
+        SDL_ReadIO(file.filePtr(), &m_clusters.clusterCount, sizeof(std::int32_t));
+        SDL_ReadIO(file.filePtr(), &m_clusters.bytesPerCluster, sizeof(std::int32_t));
         //as this expects a dynamic array we'll fill a vector then point the struct member to that
         std::int32_t visSize = m_clusters.clusterCount * m_clusters.bytesPerCluster;
         m_clusterBitsets.resize(visSize);
-        SDL_ReadIO(file.file, m_clusterBitsets.data(), visSize);
+        SDL_ReadIO(file.filePtr(), m_clusterBitsets.data(), visSize);
         m_clusters.bitsetArray = m_clusterBitsets.data();
 
 
         //load the lightmap data
         std::uint32_t lightmapCount = lumpInfo[Q3::Lightmaps].length / sizeof(Q3::Lightmap);
-        SDL_SeekIO(file.file, lumpInfo[Q3::Lightmaps].offset, SDL_IO_SEEK_SET);
-        buildLightmaps(file.file, lightmapCount);
+        SDL_SeekIO(file.filePtr(), lumpInfo[Q3::Lightmaps].offset, SDL_IO_SEEK_SET);
+        buildLightmaps(file.filePtr(), lightmapCount);
 
         m_loaded = true;
         return true;

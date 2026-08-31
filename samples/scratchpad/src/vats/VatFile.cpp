@@ -272,10 +272,10 @@ void VatFile::loadBinary(const std::string& path, std::vector<float>& dst, glm::
     dst.resize(dims.x * dims.y * 4);
 
     cro::RaiiRWops file;
-    file.file = SDL_IOFromFile(path.c_str(), "rb");
-    if (file.file)
+    file.open(path, "rb");
+    if (file)
     {
-        auto read = SDL_ReadIO(file.file, dst.data(), dst.size() * sizeof(float));
+        auto read = SDL_ReadIO(file.filePtr(), dst.data(), dst.size() * sizeof(float));
         if (read == 0)
         {
             LogI << SDL_GetError() << std::endl;

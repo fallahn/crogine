@@ -1692,16 +1692,17 @@ bool MenuState::createStub(const std::string& name) const
 
 void MenuState::fileToByteArray(const std::string& infile, const std::string& dst) const
 {
+    FS_ASSERT;
     cro::RaiiRWops file;
-    file.file = SDL_IOFromFile(infile.c_str(), "rb");
-    if (file.file)
+    file.open(infile, "rb");
+    if (file)
     {
         std::stringstream ss;
         ss << "static inline constexpr unsigned char FileData[] = {\n";
 
         std::uint8_t b = 0;
         std::int32_t i = 0;
-        while (SDL_ReadIO(file.file, &b, 1))
+        while (SDL_ReadIO(file.filePtr(), &b, 1))
         {
             ss << "0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (int)b << ", ";
 
@@ -1714,13 +1715,13 @@ void MenuState::fileToByteArray(const std::string& infile, const std::string& ds
 
         ss << "\n};";
 
-        SDL_CloseIO(file.file);
+        file.close();
 
-        file.file = SDL_IOFromFile(dst.c_str(), "w");
-        if (file.file)
+        file.open(dst, "w");
+        if (file)
         {
             const auto str = ss.str();
-            SDL_WriteIO(file.file, str.c_str(), str.length());
+            SDL_WriteIO(file.filePtr(), str.c_str(), str.length());
         }
     }
 }
