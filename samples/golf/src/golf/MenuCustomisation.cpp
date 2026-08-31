@@ -777,9 +777,9 @@ void MenuState::parseAvatarDirectory()
     const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Avatar);
     for (const auto& p : wsPaths)
     {
-        //const auto resourceDir = p.string() + "/";
+        const std::string resourceDir = U8PATH_CAST(p);
         const auto files = cro::FileSystem::listFiles(p);
-        processAvatarList(false, files, resourceDir, resourceDir, false);
+        processAvatarList(false, files, resourceDir + "/", resourceDir + "/", false);
     }
 #endif
 
@@ -957,8 +957,8 @@ void MenuState::parseAvatarDirectory()
 #ifdef USE_GNS
     for (const auto& p : Content::getUserItemsPaths(Content::UserContent::Hair))
     {
-        std::string u8p = U8PATH_CAST(p) + "/";
-        parsePath(u8p);
+        const std::string u8p = U8PATH_CAST(p);
+        parsePath(u8p + "/");
     }
 #endif
 
