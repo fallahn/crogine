@@ -187,7 +187,7 @@ bool VideoPlayer::loadFromFile(const std::filesystem::path& path)
 
 
     //load the file
-    m_plm = plm_create_with_filename(fullPath.string().c_str());
+    m_plm = plm_create_with_filename(U8PATH_CAST(fullPath));
 
     if (!m_plm)
     {

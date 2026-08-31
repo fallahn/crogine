@@ -721,7 +721,7 @@ void Console::init()
                 cro::FileSystem::createDirectory(outPath);
             }
 
-            cro::Util::String::parseURL(outPath.string());
+            cro::Util::String::parseURL(U8PATH_CAST(outPath));
         });
 
     //quits

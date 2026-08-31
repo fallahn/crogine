@@ -43,7 +43,7 @@ AudioScape::AudioScape()
 bool AudioScape::loadFromFile(const std::filesystem::path& pt, AudioResource& audioResource)
 {
     FS_ASSERT
-    const auto path = pt.string();
+    const std::string path = U8PATH_CAST(pt);
 
     m_configs.clear();
     m_name.clear();
@@ -91,7 +91,7 @@ bool AudioScape::loadFromFile(const std::filesystem::path& pt, AudioResource& au
                         //but... sometimes it might be, so it won't work on macOS. (another reason to ditch it)
                         if (FileSystem::fileExists(/*FileSystem::getResourcePath() +*/ relPath)) 
                         {
-                            mediaPath = relPath.string();
+                            mediaPath = U8PATH_CAST(relPath);
                         }
                         else
                         {

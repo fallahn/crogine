@@ -115,7 +115,7 @@ Texture& TextureResource::get(const std::filesystem::path& path, bool useMipMaps
         }
 
         auto id = fallbackID--;
-        m_textures.insert(std::make_pair(id, std::make_pair(path.string(), std::move(tex))));
+        m_textures.insert(std::make_pair(id, std::make_pair(U8PATH_CAST(path), std::move(tex))));
         return *m_textures.at(id).second;
     }
     return *result->second.second;

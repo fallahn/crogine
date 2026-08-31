@@ -84,6 +84,8 @@ void ParticleEmitter::stop()
 
 bool EmitterSettings::loadFromFile(const std::filesystem::path& path, cro::TextureResource& textures)
 {
+    FS_ASSERT;
+
     ConfigFile cfg;
     if (!cfg.loadFromFile(path)) return false;
 
@@ -105,7 +107,7 @@ bool EmitterSettings::loadFromFile(const std::filesystem::path& path, cro::Textu
                         texPath = texPath.substr(1);
                     }
                     auto compressedPath = texPath;
-                    const auto ext = FileSystem::getFileExtension(texPath).string();
+                    const std::string ext = U8PATH_CAST(FileSystem::getFileExtension(texPath));
                     Util::String::replace(compressedPath, ext, ".ktx2");
                     
                     Texture* texture = nullptr;
@@ -284,7 +286,7 @@ bool EmitterSettings::loadFromFile(const std::filesystem::path& path, cro::Textu
 #ifdef CRO_DEBUG_
         if (textureID == 0)
         {
-            Logger::log(path.string() + ": no texture property found", Logger::Type::Warning);
+            LogW << path << ": no texture property found" << std::endl;
         }
 #endif
         return true;
@@ -295,7 +297,8 @@ bool EmitterSettings::loadFromFile(const std::filesystem::path& path, cro::Textu
 
 bool EmitterSettings::saveToFile(const std::filesystem::path& path)
 {
-    auto emitterName = FileSystem::getFileName(path).string();
+    FS_ASSERT;
+    std::string emitterName = U8PATH_CAST(FileSystem::getFileName(path));
     emitterName = emitterName.substr(0, emitterName.size() - 4);
 
     ConfigFile cfg("particle_system", emitterName);

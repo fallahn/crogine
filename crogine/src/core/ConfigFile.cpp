@@ -230,8 +230,8 @@ ConfigObject::ConfigObject(const std::string& name, const std::string& id)
 
 bool ConfigObject::loadFromFile(const std::filesystem::path& fp, bool relative)
 {
-    FS_ASSERT;
-    const std::string filePath = fp.string();
+    FS_ASSERT; //loadFromFile2 needs to handle filepaths directly
+    const std::string filePath = U8PATH_CAST(fp);
 
     currentLine = 0; //well this has code smell to it...
 
@@ -240,7 +240,7 @@ bool ConfigObject::loadFromFile(const std::filesystem::path& fp, bool relative)
     m_properties.clear();
     m_objects.clear();
 
-    return loadFromFile2(relative ? (FileSystem::getResourcePath() / filePath).string() : filePath);
+    return loadFromFile2(relative ? U8PATH_CAST((FileSystem::getResourcePath() / filePath)) : filePath);
 }
 
 const std::string& ConfigObject::getId() const

@@ -46,7 +46,7 @@ BinaryMeshBuilder::BinaryMeshBuilder(const std::string& path, bool optimiseOnLoa
 #ifdef __APPLE__
     if (!FileSystem::fileExists(m_path))
     {
-        m_path = (cro::FileSystem::getResourcePath() / path).string();
+        m_path = U8PATH_CAST((cro::FileSystem::getResourcePath() / path));
     }
 
 #endif

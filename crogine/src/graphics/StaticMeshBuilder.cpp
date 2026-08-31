@@ -39,7 +39,7 @@ source distribution.
 using namespace cro;
 
 StaticMeshBuilder::StaticMeshBuilder(const std::string& path)
-    : m_path    ((FileSystem::getResourcePath() / path).string()),
+    : m_path    (U8PATH_CAST((FileSystem::getResourcePath() / path))),
     m_uid       (0)
 {
     FS_ASSERT;

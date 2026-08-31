@@ -70,36 +70,36 @@ bool MusicPlayer::loadFromFile(const std::filesystem::path& path)
     if (ext == ".wav")
     {
         m_audioFile = std::make_unique<WavLoader>();
-        if (!m_audioFile->open(filePath.string()))
+        if (!m_audioFile->open(U8PATH_CAST(filePath)))
         {
             m_audioFile.reset();
-            Logger::log(("Failed to open " / path).string(), Logger::Type::Error);
+            LogE << "Failed to open " << path << std::endl;
             return false;
         }
     }
     else if (ext == ".ogg")
     {
         m_audioFile = std::make_unique<VorbisLoader>();
-        if (!m_audioFile->open(filePath.string()))
+        if (!m_audioFile->open(U8PATH_CAST(filePath)))
         {
             m_audioFile.reset();
-            Logger::log(("Failed to open " / path).string(), Logger::Type::Error);
+            LogE << "Failed to open " << path << std::endl;
             return false;
         }
     }
     else if (ext == ".mp3")
     {
         m_audioFile = std::make_unique<Mp3Loader>();
-        if (!m_audioFile->open(filePath.string()))
+        if (!m_audioFile->open(U8PATH_CAST(filePath)))
         {
             m_audioFile.reset();
-            Logger::log(("Failed to open " / path).string(), Logger::Type::Error);
+            LogE << "Failed to open " << path << std::endl;
             return false;
         }
     }
     else
     {
-        Logger::log("[Music Player] - " + filePath.filename().string() + ": Unsupported file type.", Logger::Type::Error);
+        LogE << "[Music Player] - " << filePath.filename() << ": Unsupported file type." << std::endl;
         return false;
     }
 

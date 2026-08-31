@@ -170,12 +170,13 @@ std::ostream& operator << (std::ostream& out, cro::Rectangle<T> r)
 #define LogW cro::Logger::log(cro::Logger::Type::Warning)
 #define LogE cro::Logger::log(cro::Logger::Type::Error) << FILE_LINE
 
+//std::string fileName(__FILE__); \
+
 #ifndef CRO_DEBUG_
 #define LOG(message, type)
 #else
 #define LOG(message, type) {\
-std::string fileName(__FILE__); \
-fileName = cro::FileSystem::getFileName(fileName).string(); \
+const auto fileName = cro::FileSystem::getFileName(__FILE__); \
 std::stringstream ss; \
 ss << message << " (" << fileName << ", " << __LINE__ << ")"; \
 cro::Logger::log(ss.str(), type);}

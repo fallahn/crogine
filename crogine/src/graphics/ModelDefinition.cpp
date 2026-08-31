@@ -117,7 +117,7 @@ ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap,
 bool ModelDefinition::loadFromFile(const std::filesystem::path& pt, bool instanced, bool useDeferredShaders, bool forceReload)
 {
     FS_ASSERT
-    const auto inPath = pt.string();
+    const std::string inPath = U8PATH_CAST(pt);
 
 #ifdef PLATFORM_MOBILE
     instanced = false
@@ -161,7 +161,7 @@ bool ModelDefinition::loadFromFile(const std::filesystem::path& pt, bool instanc
 
     std::string meshValue = meshPath->getValue<std::string>();
     std::replace(meshValue.begin(), meshValue.end(), '\\', '/');
-    const auto ext = FileSystem::getFileExtension(meshValue).string();
+    const std::string ext = U8PATH_CAST(FileSystem::getFileExtension(meshValue));
     std::unique_ptr<MeshBuilder> meshBuilder;
 
     bool lockRotation = false;
@@ -943,7 +943,7 @@ bool ModelDefinition::loadFromFile(const std::filesystem::path& pt, bool instanc
     }
 
     m_modelLoaded = true;
-    m_fileName = cro::FileSystem::getFileName(path).string();
+    m_fileName = U8PATH_CAST(cro::FileSystem::getFileName(path));
     return true;
 }
 

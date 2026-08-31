@@ -80,7 +80,7 @@ bool AudioBuffer::loadFromFile(const std::filesystem::path& path)
         setID(-1);
     }
     
-    setID(AudioRenderer::requestNewBuffer(path.string()));
+    setID(AudioRenderer::requestNewBuffer(U8PATH_CAST(path)));
     return getID() != -1;
 }
 

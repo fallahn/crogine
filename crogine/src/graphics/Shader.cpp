@@ -157,6 +157,7 @@ Shader::~Shader()
 //public
 bool Shader::loadFromFile(const std::string& vertex, const std::string& fragment)
 {
+    FS_ASSERT;
     const auto vertPath = FileSystem::getResourcePath() / vertex;
     const auto fragPath = FileSystem::getResourcePath() / fragment;
 
@@ -172,11 +173,12 @@ bool Shader::loadFromFile(const std::string& vertex, const std::string& fragment
         return false;
     }
 
-    return loadFromSource(parseFile(vertPath.string()).c_str(), nullptr, parseFile(fragPath.string()).c_str(), nullptr);
+    return loadFromSource(parseFile(U8PATH_CAST(vertPath)).c_str(), nullptr, parseFile(U8PATH_CAST(fragPath)).c_str(), nullptr);
 }
 
 bool Shader::loadFromFile(const std::string& vertex, const std::string& geometry, const std::string& fragment)
 {
+    FS_ASSERT;
     const auto vertPath = FileSystem::getResourcePath() / vertex;
     const auto geomPath = FileSystem::getResourcePath() / geometry;
     const auto fragPath = FileSystem::getResourcePath() / fragment;
@@ -199,7 +201,7 @@ bool Shader::loadFromFile(const std::string& vertex, const std::string& geometry
         return false;
     }
 
-    return loadFromSource(parseFile(vertPath.string()).c_str(), parseFile(geomPath.string()).c_str(), parseFile(fragPath.string()).c_str(), nullptr);
+    return loadFromSource(parseFile(U8PATH_CAST(vertPath)).c_str(), parseFile(U8PATH_CAST(geomPath)).c_str(), parseFile(U8PATH_CAST(fragPath)).c_str(), nullptr);
 }
 
 bool Shader::loadFromString(const std::string& vertex, const std::string& fragment, const std::string& defines)

@@ -136,7 +136,7 @@ bool Palette::loadFromFile(const std::filesystem::path& path, bool append)
     RaiiRWops file;
     file.open(fullPath, "rb");
 
-    const auto fileName = FileSystem::getFileName(path).string();
+    const auto fileName = /*U8PATH_CAST*/(FileSystem::getFileName(path));
 
     if (!file)
     {

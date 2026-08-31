@@ -220,9 +220,9 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 bool Texture::loadFromFile(const std::filesystem::path& p, bool createMipMaps, bool useCompression)
 {
     FS_ASSERT
-    const auto filePath = p.string();
+    const std::string filePath = U8PATH_CAST(p);
 
-    auto path = FileSystem::getResourcePath().string();
+    std::string path = U8PATH_CAST(FileSystem::getResourcePath());
     //only add resource path if not done so already
     if (!p.is_absolute() &&
         filePath.find(path) == std::string::npos)
@@ -234,7 +234,7 @@ bool Texture::loadFromFile(const std::filesystem::path& p, bool createMipMaps, b
         path = filePath;
     }
 
-    if (FileSystem::getFileExtension(path).string().find("ktx") != std::string::npos)
+    if (FileSystem::getFileExtension(path).u8string().find(u8"ktx") != std::u8string::npos)
     {
         if (!ktxFunctionsLoaded)
         {
@@ -525,13 +525,14 @@ FloatRect Texture::getNormalisedSubrect(FloatRect rect) const
 
 bool Texture::saveToFile(const std::filesystem::path& path) const
 {
+    FS_ASSERT;
     if (m_handle == 0)
     {
         LogE << "Failed to save " << path << "Texture not created." << std::endl;
         return false;
     }
 
-    auto filePath = path.string();
+    std::string filePath = U8PATH_CAST(path);
     if (cro::FileSystem::getFileExtension(path) != ".png")
     {
         filePath += ".png";
@@ -554,7 +555,7 @@ bool Texture::saveToFile(const std::filesystem::path& path) const
 
     if (result == 0)
     {
-        LogE << "Failed writing " << path.string() << std::endl;
+        LogE << "Failed writing " << path << std::endl;
 
         return false;
     }

@@ -77,6 +77,6 @@ bool AudioStream::loadFromFile(const std::filesystem::path& path)
         setID(-1);
     }
 
-    setID(AudioRenderer::requestNewStream(path.string()));
+    setID(AudioRenderer::requestNewStream(U8PATH_CAST(path)));
     return getID() != -1;
 }

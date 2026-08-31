@@ -710,7 +710,7 @@ void App::saveScreenshot()
             FileSystem::createDirectory(outPath);
         }
 
-        filename = (outPath / filename).string();
+        filename = U8PATH_CAST((outPath / filename));
 
         RaiiRWops out;
         out.open(outPath / filename, "w");

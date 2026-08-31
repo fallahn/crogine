@@ -43,8 +43,8 @@ SpriteSheet::SpriteSheet()
 bool SpriteSheet::loadFromFile(const std::filesystem::path& pt, TextureResource& textures, const std::filesystem::path& wd)
 {
     FS_ASSERT;
-    const auto path = pt.string();
-    const auto workingDirectory = wd.string();
+    const std::string path = U8PATH_CAST(pt);
+    const std::string workingDirectory = U8PATH_CAST(wd);
 
     ConfigFile sheetFile;
     if (!sheetFile.loadFromFile(path))
@@ -197,9 +197,9 @@ bool SpriteSheet::loadFromFile(const std::filesystem::path& pt, TextureResource&
 bool SpriteSheet::saveToFile(const std::filesystem::path& p)
 {
     FS_ASSERT;
-    const auto path = p.string();
+    const std::string path = U8PATH_CAST(p);
 
-    auto sheetName = FileSystem::getFileName(path).string();
+    std::string sheetName = U8PATH_CAST(FileSystem::getFileName(path));
     sheetName = sheetName.substr(0, sheetName.find_last_of('.'));
 
     ConfigFile sheetFile("spritesheet", sheetName);

@@ -207,6 +207,7 @@ namespace cro
         bool loadFromFile(std::int32_t id, const std::string& vertex, const std::string& fragment);
 
         //temporary overloads for migrating to std::fileystem::path
+        FS_ASSERT;
         bool loadFromFile(std::int32_t id, const std::filesystem::path& p, const std::filesystem::path& q) { return loadFromFile(id, p.string(), q.string()); }
 
         /*!

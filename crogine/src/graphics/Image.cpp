@@ -102,11 +102,11 @@ bool Image::loadFromFile(const std::filesystem::path& p)
     std::string path;
     if (p.is_absolute())
     {
-        path = p.string();
+        path = U8PATH_CAST(p);
     }
     else
     {
-        path = (FileSystem::getResourcePath() / p).string();
+        path = U8PATH_CAST((FileSystem::getResourcePath() / p));
     }
 
     auto* file = SDL_IOFromFile(path.c_str(), "rb");

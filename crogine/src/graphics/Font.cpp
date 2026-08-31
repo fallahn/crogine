@@ -187,11 +187,11 @@ bool Font::loadFromFile(const std::filesystem::path& filePath)
 bool Font::appendFromFile(const std::filesystem::path& fp, FontAppendmentContext ctx)
 {
     FS_ASSERT
-    const auto filePath = fp.string();
+    const std::string filePath = U8PATH_CAST(fp);
 
     CRO_ASSERT(ctx.codepointRange[0] > 0 && ctx.codepointRange[0] < ctx.codepointRange[1], "invalid codepoint range");
 
-    const auto path = (FileSystem::getResourcePath() / filePath).string();
+    const std::string path = U8PATH_CAST((FileSystem::getResourcePath() / filePath));
     FontData fd;
     fd.context = ctx;
 

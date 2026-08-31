@@ -31,6 +31,7 @@ source distribution.
 #include "../detail/SDLImageRead.hpp"
 
 #include <crogine/core/Log.hpp>
+#include <crogine/detail/Types.hpp>
 #include <crogine/graphics/ImageArray.hpp>
 
 #include <cstring>
@@ -42,19 +43,21 @@ namespace cro::Detail
     {
         dst.clear();
 
-        auto* file = SDL_IOFromFile(path.string().c_str(), "rb");
+        RaiiRWops file;
+        file.open(path, "rb");
+
         if (!file)
         {
-            Logger::log("Failed opening " + path.string(), Logger::Type::Error);
+            LogE << "Failed opening " << path << std::endl;
             return false;
         }
 
         STBIMG_stbio_RWops io;
-        stbi_callback_from_RW(file, &io);
+        stbi_callback_from_RW(file.filePtr(), &io);
 
         std::int32_t w, h, d;
         stbi_info_from_callbacks(&io.stb_cbs, &io, &w, &h, &d);
-        SDL_SeekIO(file, 0, SDL_IO_SEEK_SET);
+        SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_SET);
 
         //if this is RGB pad out to RGBA for row alignment
         std::int32_t wantedChannels = 0;
@@ -76,14 +79,12 @@ namespace cro::Detail
             channels = d;
 
             stbi_image_free(img);
-            SDL_CloseIO(file);
 
             return true;
         }
         else
         {
-            Logger::log("failed to open image: " + path.string(), Logger::Type::Error);
-            SDL_CloseIO(file);
+            LogE << "Failed to open image: " << path << std::endl;
 
             return false;
         }
@@ -95,19 +96,20 @@ namespace cro::Detail
     {
         dst.clear();
 
-        auto* file = SDL_IOFromFile(path.string().c_str(), "rb");
+        RaiiRWops file;
+        file.open(path, "rb");
         if (!file)
         {
-            Logger::log("Failed opening " + path.string(), Logger::Type::Error);
+            LogE << "Failed opening " << path << std::endl;
             return false;
         }
 
         STBIMG_stbio_RWops io;
-        stbi_callback_from_RW(file, &io);
+        stbi_callback_from_RW(file.filePtr(), &io);
 
         std::int32_t w, h, d;
         stbi_info_from_callbacks(&io.stb_cbs, &io, &w, &h, &d);
-        SDL_SeekIO(file, 0, SDL_IO_SEEK_SET);
+        SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_SET);
 
         //if this is RGB pad out to RGBA for row alignment
         std::int32_t wantedChannels = 0;
@@ -130,14 +132,11 @@ namespace cro::Detail
             channels = d;
 
             stbi_image_free(img);
-            SDL_CloseIO(file);
-
             return true;
         }
         else
         {
-            Logger::log("failed to open image: " + path.string(), Logger::Type::Error);
-            SDL_CloseIO(file);
+            LogE << "Failed to open image: " << path << std::endl;
 
             return false;
         }
@@ -149,19 +148,20 @@ namespace cro::Detail
     {
         dst.clear();
 
-        auto* file = SDL_IOFromFile(path.string().c_str(), "rb");
+        RaiiRWops file;
+        file.open(path, "rb");
         if (!file)
         {
-            Logger::log("Failed opening " + path.string(), Logger::Type::Error);
+            LogE << "Failed opening " << path << std::endl;
             return false;
         }
 
         STBIMG_stbio_RWops io;
-        stbi_callback_from_RW(file, &io);
+        stbi_callback_from_RW(file.filePtr(), &io);
 
         std::int32_t w, h, d;
         stbi_info_from_callbacks(&io.stb_cbs, &io, &w, &h, &d);
-        SDL_SeekIO(file, 0, SDL_IO_SEEK_SET);
+        SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_SET);
 
         //if this is RGB pad out to RGBA for row alignment
         std::int32_t wantedChannels = 0;
@@ -188,17 +188,13 @@ namespace cro::Detail
             channels = d;
 
             stbi_image_free(img);
-            SDL_CloseIO(file);
-
             stbi_ldr_to_hdr_gamma(2.2f);
 
             return true;
         }
         else
         {
-            Logger::log("failed to open image: " + path.string(), Logger::Type::Error);
-            SDL_CloseIO(file);
-
+            LogE << "Failed to open image: " << path << std::endl;
             stbi_ldr_to_hdr_gamma(2.2f);
 
             return false;

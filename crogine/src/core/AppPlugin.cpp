@@ -39,6 +39,7 @@ typedef void(__cdecl* Exit)(StateStack*);
 
 void App::loadPlugin(const std::string& path, StateStack& stateStack)
 {
+    FS_ASSERT;
     if (m_pluginHandle)
     {
         unloadPlugin(stateStack);
@@ -127,7 +128,7 @@ void App::loadPlugin(const std::string& path, StateStack& stateStack)
     {
         unloadPlugin(stateStack);
     }
-
+    FS_ASSERT
     std::string fullPath = path;
 #ifdef __APPLE__
     fullPath = FileSystem::getResourcePath().string() + fullPath;

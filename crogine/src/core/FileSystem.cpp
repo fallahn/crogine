@@ -315,7 +315,7 @@ std::filesystem::path FileSystem::openFileDialogue(const std::filesystem::path& 
         filterArray.push_back(str.c_str());
     }    
 
-    const auto path = tinyfd_openFileDialog("Open File", defaultDir.string().c_str(), static_cast<std::int32_t>(filterArray.size()), filterArray.data(), nullptr, selectMultiple ? 1 : 0);
+    const auto path = tinyfd_openFileDialog("Open File", U8PATH_CAST(defaultDir), static_cast<std::int32_t>(filterArray.size()), filterArray.data(), nullptr, selectMultiple ? 1 : 0);
 
     return path ? path : std::filesystem::path();
 #endif //__ANDROID__
@@ -327,7 +327,7 @@ std::filesystem::path FileSystem::openFolderDialogue(const std::filesystem::path
     Logger::log("File Dialogues are not supported", Logger::Type::Error);
     return {};
 #else
-    const auto path = tinyfd_selectFolderDialog("Select Folder", defPath.string().c_str());
+    const auto path = tinyfd_selectFolderDialog("Select Folder", U8PATH_CAST(defPath));
     return path ? path : std::filesystem::path();
 #endif //__ANDROID__
 }
@@ -347,7 +347,7 @@ std::filesystem::path FileSystem::saveFileDialogue(const std::filesystem::path& 
         filterArray.push_back(str.c_str());
     }
 
-    const auto path = tinyfd_saveFileDialog("Save File", defaultDir.string().c_str(), static_cast<int>(filterArray.size()), filterArray.data(), nullptr);
+    const auto path = tinyfd_saveFileDialog("Save File", U8PATH_CAST(defaultDir), static_cast<int>(filterArray.size()), filterArray.data(), nullptr);
 
     return path ? path : std::filesystem::path();
 #endif //__ANDROID__
@@ -358,6 +358,8 @@ std::filesystem::path FileSystem::getResourcePath()
 #ifdef __APPLE__
     //ugh - cwd when using bundles is a pain, so at least add some
     //checks to make sure we're not concatinating an existing part of the path
+    
+    //TODO this will throw if the resource dir path contains characters which need utf8 conversion
     auto rpath = SDL_GetBasePath(); ;// resourcePath();
     if (m_resourceDirectory.string().find(rpath) == std::string::npos)
     {
@@ -389,7 +391,7 @@ void FileSystem::setResourceDirectory(const std::filesystem::path& path)
     //    }
     //}
 
-    LogI << "Resource directory set to " << m_resourceDirectory.string() << std::endl;
+    LogI << "Resource directory set to " << m_resourceDirectory << std::endl;
 }
 
 bool FileSystem::showMessageBox(const std::string& title, const std::string& message, ButtonType buttonType, IconType iconType)

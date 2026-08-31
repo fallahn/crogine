@@ -134,7 +134,7 @@ std::vector<std::string> Playlist::getTrackList() const
         std::scoped_lock lock(m_mutex);
         for (const auto& t : m_filePaths)
         {
-            retVal.push_back(cro::FileSystem::getFileName(t).string());
+            retVal.push_back(U8PATH_CAST(cro::FileSystem::getFileName(t)));
         }
     }
     return retVal;
@@ -184,7 +184,7 @@ void Playlist::threadFunc()
                 if (audioFile)
                 {
                     FS_ASSERT;
-                    if (!audioFile->open(m_filePaths[m_fileIndex].string()))
+                    if (!audioFile->open(U8PATH_CAST(m_filePaths[m_fileIndex])))
                     {
                         m_loadNextFile = false;
                         m_fileIndex = (m_fileIndex + 1) % m_filePaths.size();
