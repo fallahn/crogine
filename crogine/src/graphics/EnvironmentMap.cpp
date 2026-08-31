@@ -155,7 +155,8 @@ bool EnvironmentMap::loadFromFile(const std::filesystem::path& p)
         return false;
     }
 
-    auto* file = SDL_IOFromFile(path.c_str(), "rb");
+    RaiiRWops file;
+    file.open(path, "rb");
     if (!file)
     {
         LogE << "SDLRW_ops Failed opening " << p << std::endl;
@@ -163,7 +164,7 @@ bool EnvironmentMap::loadFromFile(const std::filesystem::path& p)
     }
 
     STBIMG_stbio_RWops io;
-    stbi_callback_from_RW(file, &io);
+    stbi_callback_from_RW(file.filePtr(), &io);
 
     std::int32_t width = 0;
     std::int32_t height = 0;
@@ -194,7 +195,7 @@ bool EnvironmentMap::loadFromFile(const std::filesystem::path& p)
         return false;
     }
     stbi_set_flip_vertically_on_load(0);
-    SDL_CloseIO(file);
+    file.close();
 
     //create a temp render buffer/frame buffer to render the sides with
     TempFrameBuffer tempFBO;

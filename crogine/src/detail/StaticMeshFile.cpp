@@ -37,7 +37,9 @@ namespace cro::Detail
 {
     bool readCMF(const std::string& path, MeshFile& output)
     {
-        auto* file = SDL_IOFromFile(path.c_str(), "rb");
+        FS_ASSERT;
+        RaiiRWops file;
+        file.open(path, "rb");
 
         if (!file)
         {
@@ -50,20 +52,18 @@ namespace cro::Detail
             if (readCount == 0)
             {
                 LogE << path << ": Unexpected End of File" << std::endl;
-                SDL_CloseIO(file);
-                file = nullptr;
                 return true;
             }
             return false;
         };
 
 
-        auto readCount = SDL_ReadIO(file, &output.flags, sizeof(std::uint8_t));
+        auto readCount = SDL_ReadIO(file.filePtr(), &output.flags, sizeof(std::uint8_t));
         if (checkError(readCount))
         {
             return false;
         }
-        readCount = SDL_ReadIO(file, &output.arrayCount, sizeof(std::uint8_t));
+        readCount = SDL_ReadIO(file.filePtr(), &output.arrayCount, sizeof(std::uint8_t));
         if (checkError(readCount))
         {
             return false;
@@ -71,12 +71,12 @@ namespace cro::Detail
 
         std::int32_t indexArrayOffset = 0;
         std::vector<std::int32_t> indexSizes(output.arrayCount);
-        readCount = SDL_ReadIO(file, &indexArrayOffset, sizeof(std::int32_t));
+        readCount = SDL_ReadIO(file.filePtr(), &indexArrayOffset, sizeof(std::int32_t));
         if (checkError(readCount))
         {
             return false;
         }
-        readCount = SDL_ReadIO(file, indexSizes.data(), sizeof(std::int32_t) * output.arrayCount);
+        readCount = SDL_ReadIO(file.filePtr(), indexSizes.data(), sizeof(std::int32_t) * output.arrayCount);
         if (checkError(readCount))
         {
             return false;
@@ -87,7 +87,7 @@ namespace cro::Detail
 
         std::size_t vboSize = (indexArrayOffset - headerSize) / sizeof(float);
         output.vboData.resize(vboSize);
-        readCount = SDL_ReadIO(file, output.vboData.data(), sizeof(float) * vboSize);
+        readCount = SDL_ReadIO(file.filePtr(), output.vboData.data(), sizeof(float) * vboSize);
         if (checkError(readCount))
         {
             return false;
@@ -97,14 +97,12 @@ namespace cro::Detail
         for (auto i = 0; i < output.arrayCount; ++i)
         {
             output.indexArrays[i].resize(indexSizes[i] / sizeof(std::uint32_t));
-            readCount = SDL_ReadIO(file, output.indexArrays[i].data(), indexSizes[i]);
+            readCount = SDL_ReadIO(file.filePtr(), output.indexArrays[i].data(), indexSizes[i]);
             if (checkError(readCount))
             {
                 return false;
             }
         }
-
-        SDL_CloseIO(file);
 
         return true;
     }

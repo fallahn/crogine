@@ -311,7 +311,8 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
     if (retVal)
     {
         //open the file
-        SDL_IOStream* file = SDL_IOFromFile(path.c_str(), "wb");
+        RaiiRWops file;
+        file.open(path, "wb");
 
         if (!file)
         {
@@ -320,15 +321,15 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
         else
         {
             //write the header
-            SDL_WriteIO(file, &header, sizeof(header));
+            SDL_WriteIO(file.filePtr(), &header, sizeof(header));
 
             if (header.meshOffset)
             {
                 //write mesh data
-                SDL_WriteIO(file, &meshHeader, sizeof(meshHeader));
-                SDL_WriteIO(file, outIndexSizes.data(), sizeof(std::uint32_t) * outIndexSizes.size());
-                SDL_WriteIO(file, outVertexData.data(), sizeof(float) * outVertexData.size());
-                SDL_WriteIO(file, outIndexData.data(), sizeof(std::uint32_t) * outIndexData.size());
+                SDL_WriteIO(file.filePtr(), &meshHeader, sizeof(meshHeader));
+                SDL_WriteIO(file.filePtr(), outIndexSizes.data(), sizeof(std::uint32_t) * outIndexSizes.size());
+                SDL_WriteIO(file.filePtr(), outVertexData.data(), sizeof(float) * outVertexData.size());
+                SDL_WriteIO(file.filePtr(), outIndexData.data(), sizeof(std::uint32_t) * outIndexData.size());
             }
 
             if (header.skeletonOffset)
@@ -336,18 +337,18 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
                 const auto& frames = entity.getComponent<cro::Skeleton>().getFrames();
 
                 //write skel data
-                SDL_WriteIO(file, &skelHeader, sizeof(skelHeader));
-                SDL_WriteIO(file, frames.data(), sizeof(Joint) * frames.size());
-                SDL_WriteIO(file, outAnimations.data(), sizeof(SerialAnimation) * outAnimations.size());
-                SDL_WriteIO(file, outNotifications.data(), sizeof(SerialNotification) * outNotifications.size());
-                SDL_WriteIO(file, outAttachments.data(), sizeof(SerialAttachment) * outAttachments.size());
-                SDL_WriteIO(file, outInverseBindPose.data(), sizeof(float) * outInverseBindPose.size());
+                SDL_WriteIO(file.filePtr(), &skelHeader, sizeof(skelHeader));
+                SDL_WriteIO(file.filePtr(), frames.data(), sizeof(Joint) * frames.size());
+                SDL_WriteIO(file.filePtr(), outAnimations.data(), sizeof(SerialAnimation) * outAnimations.size());
+                SDL_WriteIO(file.filePtr(), outNotifications.data(), sizeof(SerialNotification) * outNotifications.size());
+                SDL_WriteIO(file.filePtr(), outAttachments.data(), sizeof(SerialAttachment) * outAttachments.size());
+                SDL_WriteIO(file.filePtr(), outInverseBindPose.data(), sizeof(float) * outInverseBindPose.size());
             }
 
-            if (SDL_CloseIO(file))
+            /*if (SDL_CloseIO(file))
             {
                 LogE << "SDL: Failed writing model binary - " << SDL_GetError() << std::endl;
-            }
+            }*/
         }
     }
 

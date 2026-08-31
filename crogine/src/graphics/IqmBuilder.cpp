@@ -89,6 +89,7 @@ cro::Mesh::Data IqmBuilder::build(AllocationResource*) const
     cro::Mesh::Data returnData;
     returnData.primitiveType = GL_TRIANGLES;
     
+    FS_ASSERT; //must convert to proper utf8 path
     m_file = SDL_IOFromFile(m_path.c_str(), "rb");
     if (m_file)
     {

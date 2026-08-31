@@ -58,6 +58,7 @@ VorbisLoader::~VorbisLoader()
 //public
 bool VorbisLoader::open(const std::string& path)
 {
+    FS_ASSERT;
     //close any open files
     //if (m_file.file)
     //{

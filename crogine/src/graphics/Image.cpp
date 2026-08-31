@@ -109,7 +109,8 @@ bool Image::loadFromFile(const std::filesystem::path& p)
         path = U8PATH_CAST((FileSystem::getResourcePath() / p));
     }
 
-    auto* file = SDL_IOFromFile(path.c_str(), "rb");
+    RaiiRWops file;
+    file.open(path, "rb");
     if (!file)
     {
         Logger::log("Image: Failed opening " + path, Logger::Type::Error);
@@ -117,7 +118,7 @@ bool Image::loadFromFile(const std::filesystem::path& p)
     }
 
     STBIMG_stbio_RWops io;
-    stbi_callback_from_RW(file, &io);
+    stbi_callback_from_RW(file.filePtr(), &io);
 
     std::int32_t w, h, fmt;
     auto* img = stbi_load_from_callbacks(&io.stb_cbs, &io, &w, &h, &fmt, 0);
@@ -141,14 +142,14 @@ bool Image::loadFromFile(const std::filesystem::path& p)
         auto result = fmt == 2 ? false : loadFromMemory(static_cast<std::uint8_t*>(img), w, h, format);
         
         stbi_image_free(img);
-        SDL_CloseIO(file);
+        file.close();
 
         return result;
     }
     else
     {
         Logger::log("failed to open image: " + path, Logger::Type::Error);
-        SDL_CloseIO(file);
+        file.close();
 
         return false;
     }

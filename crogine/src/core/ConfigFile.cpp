@@ -532,6 +532,7 @@ bool ConfigObject::save(const std::filesystem::path& p)
 {
     RaiiRWops out;
 #ifdef OLD_PARSER
+    FS_ASSERT;
     out.file = SDL_IOFromFile(path.c_str(), "w");
 #else
     out.open(p, "wb");
