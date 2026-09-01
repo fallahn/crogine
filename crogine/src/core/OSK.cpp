@@ -188,7 +188,7 @@ OSK::OSK()
         //controller icon font
         ctx.codepointRange = {0x2190,0x21FF}; //controller input
         m_textFont.appendFromFile("assets/fonts/promptfont.ttf", ctx);
-        ctx.codepointRange = {0x23F4,0x242E}; //keyboard icons, shift etc
+        ctx.codepointRange = {0x23F4,0x243A}; //keyboard icons, shift etc
         m_textFont.appendFromFile("assets/fonts/promptfont.ttf", ctx);
 
         //TODO add emoji font if we allow for that input
@@ -324,12 +324,11 @@ void OSK::updateVertices()
     const auto startX = ((WindowSize.x - keyWidth) / 2.f) + Padding;
     const auto startY = BGHeight - keySize.y - Padding;
 
-    //track the centre pos so we dont have to recalc when placing text
+    //track the key info for placing icons
     struct KeyText final
     {
         cro::String label;
-        glm::vec2 centre = glm::vec2(0.f);
-        glm::vec2 corner = glm::vec2(0.f);
+        cro::FloatRect buttonSize = { 0.f };
         SDL_Keycode key = 0;
         SDL_Keycode keyXB = 0;
         SDL_Keycode keyPS = 0;
@@ -383,7 +382,7 @@ void OSK::updateVertices()
                         break;
                     case SDL_SCANCODE_TAB:
                         k = IconTab;
-                        label = "Tab";
+                        label = "TAB";
                         break;
                     case SDL_SCANCODE_CAPSLOCK:
                         k = IconCaps;
@@ -395,19 +394,19 @@ void OSK::updateVertices()
                         k = IconShift;
                         xb = ButtonLT;
                         ps = ButtonL2;
-                        label = "Shift";
+                        label = "SHIFT";
                         break;
                     case SDL_SCANCODE_RETURN:
                         k = IconReturn;
                         xb = ButtonRT;
                         ps = ButtonR2;
-                        label = "Enter";
+                        label = "ENTER";
                         break;
                     case SDL_SCANCODE_BACKSPACE:
                         k = IconBackspace;
                         xb = ButtonX;
                         ps = ButtonSquare;
-                        label = "BackSP";
+                        label = "<";
                         break;
                     case SDL_SCANCODE_SPACE:
                         k = IconSpace;
@@ -430,8 +429,9 @@ void OSK::updateVertices()
                 
                 Hitboxes[j][i] = FloatRect(x, y, buttonWidth, keySize.y);
 
-                centres.emplace_back().centre = { std::round(x + (buttonWidth / 2.f)), std::round(y + (keySize.y / 2.f)) };
-                centres.back().corner = { x + (2.f * Scale), std::round(y + (keySize.y / 2.f)) };
+                //centres.emplace_back().centre = { std::round(x + (buttonWidth / 2.f)), std::round(y + (keySize.y / 2.f)) };
+                //centres.back().corner = { x + (2.f * Scale), std::round(y + (keySize.y / 2.f)) };
+                centres.emplace_back().buttonSize = { x,y,farX - x, keySize.y };
                 centres.back().key = k;
                 centres.back().keyXB = xb;
                 centres.back().keyPS = ps;
@@ -480,7 +480,7 @@ void OSK::updateVertices()
     {
         for (auto i = 0u; i < ButtonCols; ++i)
         {
-            const auto& [label, centre, corner, key, keyXB, keyPS] = centrePos[j][i];
+            const auto& [label, area, key, keyXB, keyPS] = centrePos[j][i];
             const auto c = (j == m_rowIndex && i == m_colIndex) ? Colour::Black : Colour::White;
 
             switch (key)
@@ -488,6 +488,7 @@ void OSK::updateVertices()
             case 0: break;
             default:
             {
+                const auto centre = glm::vec2(area.left + std::round(area.width / 2.f), area.bottom + std::round(area.height / 2.f));
                 const auto glyph = m_textFont.getGlyph(key, keyTextSize);
                 Detail::Text::addQuad(verts, centre - glm::vec2(glyph.bounds.width / 2.f, glyph.bounds.height / 2.f), 
                                     c, glyph, m_textFont.getTexture(keyTextSize).getSize());
@@ -503,6 +504,8 @@ void OSK::updateVertices()
             case IconLeft:
             case IconRight:
             {
+                const auto corner = glm::vec2(area.left + (2.f * Scale), area.bottom + std::floor(area.height / 2.f));
+
                 //we need to find the specific codepoints for each input icon
                 auto glyph = m_textFont.getGlyph(key, iconTextSize);
                 Detail::Text::addQuad(kbVerts, corner - glm::vec2(0.f, glyph.bounds.height / 2.f),
@@ -518,19 +521,18 @@ void OSK::updateVertices()
 
                 if (!label.empty())
                 {
-                    float x = 0.f;
+                    float x = (area.left + area.width) - std::max(1u, (keyTextSize / 2));
 
                     std::uint32_t prevChar = 0;
-                    for (auto m = 0u; m < label.size(); ++m)
+                    for (auto m = static_cast<std::int32_t>(label.size() - 1); m >= 0; m--)
                     {
                         std::uint32_t currChar = label[m];
                         //TODO figure out why this returns 0
-                        x += keyTextSize; //m_textFont.getKerning(prevChar, currChar, keyTextSize);
+                        x -= keyTextSize; //m_textFont.getKerning(prevChar, currChar, keyTextSize);
                         prevChar = currChar;
 
                         glyph = m_textFont.getGlyph(currChar, keyTextSize);
-                        auto pos = corner - glm::vec2(-static_cast<std::int32_t>(iconTextSize), glyph.bounds.height / 2.f);
-                        pos.x += x;
+                        const auto pos = glm::vec2(x, corner.y + std::floor(glyph.bounds.height / 2.f)) - glyph.bounds.bottom;
                         Detail::Text::addQuad(verts, pos, c, glyph, m_textFont.getTexture(keyTextSize).getSize());
                     }
                 }
