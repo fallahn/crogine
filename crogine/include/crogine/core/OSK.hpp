@@ -91,6 +91,9 @@ namespace cro
 
         SimpleVertexArray m_keyboardArray; //button background
         SimpleVertexArray m_keyTextArray; //key text
+        SimpleVertexArray m_xboxIcons;
+        SimpleVertexArray m_keyIcons;
+        SimpleVertexArray m_PSIcons;
         SimpleText m_previewText; //preview of the input buffer
         Font m_textFont; //used for key text and input preview
 

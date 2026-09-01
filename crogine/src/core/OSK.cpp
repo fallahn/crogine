@@ -62,7 +62,7 @@ namespace
     //we assign a scancode to each of the virtual keys
     //that way we automatically display the correct keys
     //based on the user's layout as well as render different
-    //characters is chift is locked.
+    //characters is shift is locked.
     struct KeyInfo final
     {
         constexpr KeyInfo() {};
@@ -117,7 +117,7 @@ namespace
     static constexpr inline std::uint32_t ButtonOption = 0x21E8;
 
 
-    static constexpr inline std::uint32_t LeftStick = 0x21C4;
+    static constexpr inline std::uint32_t LeftStick = 0x21EF;
     static constexpr inline std::uint32_t RightStick = 0x21C6;
 
 
@@ -132,6 +132,7 @@ namespace
     constexpr std::uint32_t IconCaps = 0x242C;
     constexpr std::uint32_t IconBackspace = 0x242D;
     constexpr std::uint32_t IconReturn = 0x242E;
+    constexpr std::uint32_t IconSpace = 0x243A;
 
 
     constexpr std::uint32_t BasePreviewTextSize = 12; //gets scaled based on screen size
@@ -150,6 +151,9 @@ OSK::OSK()
 {
     m_keyboardArray.setPrimitiveType(GL_TRIANGLES);
     m_keyTextArray.setPrimitiveType(GL_TRIANGLES);
+    m_xboxIcons.setPrimitiveType(GL_TRIANGLES);
+    m_keyIcons.setPrimitiveType(GL_TRIANGLES);
+    m_PSIcons.setPrimitiveType(GL_TRIANGLES);
 
     if (m_textFont.loadFromFile(std::filesystem::path("assets/golf/fonts/NotoSans-Regular.ttf")))
     {
@@ -323,8 +327,12 @@ void OSK::updateVertices()
     //track the centre pos so we dont have to recalc when placing text
     struct KeyText final
     {
-        glm::vec2 pos = glm::vec2(0.f);
+        cro::String label;
+        glm::vec2 centre = glm::vec2(0.f);
+        glm::vec2 corner = glm::vec2(0.f);
         SDL_Keycode key = 0;
+        SDL_Keycode keyXB = 0;
+        SDL_Keycode keyPS = 0;
     };
     std::vector<std::vector<KeyText>> centrePos;
 
@@ -343,13 +351,16 @@ void OSK::updateVertices()
             if (buttonInf.scancode != SDL_SCANCODE_UNKNOWN)
             {
                 auto c = ButtonColourNormal;
+                std::uint32_t xb = 0;
+                std::uint32_t ps = 0;
+                cro::String label;
 
                 if (m_rowIndex == j && m_colIndex == i)
                 {
                     c = ButtonColourActive;
                 }                
-                else if (((k & (SDLK_EXTENDED_MASK | SDLK_SCANCODE_MASK)) != 0)
-                    || k == SDLK_TAB || k == SDLK_RETURN || k == SDLK_BACKSPACE)
+                /*else*/ if (((k & (SDLK_EXTENDED_MASK | SDLK_SCANCODE_MASK)) != 0)
+                    || k == SDLK_TAB || k == SDLK_RETURN || k == SDLK_BACKSPACE || k == SDLK_SPACE)
                 {
                     //set to blue if this is a shift and mod mode is not none
                     if ((m_keymod & SDL_KMOD_SHIFT)
@@ -359,7 +370,10 @@ void OSK::updateVertices()
                     }
                     else
                     {
-                        c = SpecialButtonNormal;
+                        if (c == ButtonColourNormal)
+                        {
+                            c = SpecialButtonNormal;
+                        }
                     }
                     
                     switch (buttonInf.scancode)
@@ -369,19 +383,36 @@ void OSK::updateVertices()
                         break;
                     case SDL_SCANCODE_TAB:
                         k = IconTab;
+                        label = "Tab";
                         break;
                     case SDL_SCANCODE_CAPSLOCK:
                         k = IconCaps;
+                        xb = ps = LeftStick;
+                        label = "CAPS";
                         break;
                     case SDL_SCANCODE_LSHIFT:
                     case SDL_SCANCODE_RSHIFT:
                         k = IconShift;
+                        xb = ButtonLT;
+                        ps = ButtonL2;
+                        label = "Shift";
                         break;
                     case SDL_SCANCODE_RETURN:
                         k = IconReturn;
+                        xb = ButtonRT;
+                        ps = ButtonR2;
+                        label = "Enter";
                         break;
                     case SDL_SCANCODE_BACKSPACE:
                         k = IconBackspace;
+                        xb = ButtonX;
+                        ps = ButtonSquare;
+                        label = "BackSP";
+                        break;
+                    case SDL_SCANCODE_SPACE:
+                        k = IconSpace;
+                        xb = ButtonY;
+                        ps = ButtonTriangle;
                         break;
                     }
                 }
@@ -399,8 +430,12 @@ void OSK::updateVertices()
                 
                 Hitboxes[j][i] = FloatRect(x, y, buttonWidth, keySize.y);
 
-                centres.emplace_back().pos = { std::round(x + (buttonWidth / 2.f)), std::round(y + (keySize.y / 2.f)) };
+                centres.emplace_back().centre = { std::round(x + (buttonWidth / 2.f)), std::round(y + (keySize.y / 2.f)) };
+                centres.back().corner = { x + (2.f * Scale), std::round(y + (keySize.y / 2.f)) };
                 centres.back().key = k;
+                centres.back().keyXB = xb;
+                centres.back().keyPS = ps;
+                centres.back().label = label;
 
                 x += (buttonWidth + Padding);
             }
@@ -433,31 +468,92 @@ void OSK::updateVertices()
 
 
     const auto keyTextSize = BaseKeyTextSize * static_cast<std::uint32_t>(Scale);
+    const auto iconTextSize = keyTextSize * 3;
     verts.clear();
 
+    std::vector<Vertex2D> xbVerts;
+    std::vector<Vertex2D> psVerts;
+    std::vector<Vertex2D> kbVerts;
+
     //calc text size and fetch glyphs
-    for (auto j = 0u; j  <  ButtonRows; ++j)
+    for (auto j = 0u; j < ButtonRows; ++j)
     {
         for (auto i = 0u; i < ButtonCols; ++i)
         {
-            const auto& [pos, key] = centrePos[j][i];
-            if (key != 0)
+            const auto& [label, centre, corner, key, keyXB, keyPS] = centrePos[j][i];
+            const auto c = (j == m_rowIndex && i == m_colIndex) ? Colour::Black : Colour::White;
+
+            switch (key)
+            {
+            case 0: break;
+            default:
             {
                 const auto glyph = m_textFont.getGlyph(key, keyTextSize);
-                glyph.textureBounds;
+                Detail::Text::addQuad(verts, centre - glm::vec2(glyph.bounds.width / 2.f, glyph.bounds.height / 2.f), 
+                                    c, glyph, m_textFont.getTexture(keyTextSize).getSize());
+            }
+                break;
+            case IconShift:
+            case IconSpace:
+            case IconCaps:
+            case IconBackspace:
+            case IconReturn:
+            case IconUp:
+            case IconDown:
+            case IconLeft:
+            case IconRight:
+            {
+                //we need to find the specific codepoints for each input icon
+                auto glyph = m_textFont.getGlyph(key, iconTextSize);
+                Detail::Text::addQuad(kbVerts, corner - glm::vec2(0.f, glyph.bounds.height / 2.f),
+                                    c, glyph, m_textFont.getTexture(iconTextSize).getSize());
 
-                const auto c = (j == m_rowIndex && i == m_colIndex) ? Colour::Black : Colour::White;
-                Detail::Text::addQuad(verts, pos - glm::vec2(glyph.bounds.width / 2.f, glyph.bounds.height / 2.f), c, glyph, m_textFont.getTexture(keyTextSize).getSize());
+                glyph = m_textFont.getGlyph(keyXB, iconTextSize);
+                Detail::Text::addQuad(xbVerts, corner - glm::vec2(0.f, glyph.bounds.height / 2.f),
+                    c, glyph, m_textFont.getTexture(iconTextSize).getSize());
+
+                glyph = m_textFont.getGlyph(keyPS, iconTextSize);
+                Detail::Text::addQuad(psVerts, corner - glm::vec2(0.f, glyph.bounds.height / 2.f),
+                    c, glyph, m_textFont.getTexture(iconTextSize).getSize());
+
+                if (!label.empty())
+                {
+                    float x = 0.f;
+
+                    std::uint32_t prevChar = 0;
+                    for (auto m = 0u; m < label.size(); ++m)
+                    {
+                        std::uint32_t currChar = label[m];
+                        //TODO figure out why this returns 0
+                        x += keyTextSize; //m_textFont.getKerning(prevChar, currChar, keyTextSize);
+                        prevChar = currChar;
+
+                        glyph = m_textFont.getGlyph(currChar, keyTextSize);
+                        auto pos = corner - glm::vec2(-static_cast<std::int32_t>(iconTextSize), glyph.bounds.height / 2.f);
+                        pos.x += x;
+                        Detail::Text::addQuad(verts, pos, c, glyph, m_textFont.getTexture(keyTextSize).getSize());
+                    }
+                }
+            }
+                break;
             }
         }
     }
 
     //texture may have updated so always reassign
     m_keyTextArray.setTexture(m_textFont.getTexture(keyTextSize));
-
     //TODO how do we do text that's more than one char?
-
     m_keyTextArray.setVertexData(verts);
+
+    m_xboxIcons.setTexture(m_textFont.getTexture(iconTextSize));
+    m_xboxIcons.setVertexData(xbVerts);
+
+    m_keyIcons.setTexture(m_textFont.getTexture(iconTextSize));
+    m_keyIcons.setVertexData(kbVerts);
+
+    m_PSIcons.setTexture(m_textFont.getTexture(iconTextSize));
+    m_PSIcons.setVertexData(psVerts);
+
 
     //move this somewhere sensible
     const auto charSize = BasePreviewTextSize * static_cast<std::uint32_t>(Scale);
@@ -640,6 +736,37 @@ bool OSK::handleEvent(const Event& evt)
             m_prevControllerMask = m_controllerMask;
         };
 
+    struct IconSet final
+    {
+        enum
+        {
+            PS, XBox, Keys
+        };
+    };
+    const auto applyIconSet =
+        [this](std::int32_t set)
+        {
+            switch (set)
+            {
+            default: 
+            case IconSet::Keys:
+                m_keyIcons.setScale(glm::vec2(1.f));
+                m_PSIcons.setScale(glm::vec2(0.f));
+                m_xboxIcons.setScale(glm::vec2(0.f));
+                break;
+            case IconSet::PS:
+                m_keyIcons.setScale(glm::vec2(0.f));
+                m_PSIcons.setScale(glm::vec2(1.f));
+                m_xboxIcons.setScale(glm::vec2(0.f));
+                break;
+            case IconSet::XBox:
+                m_keyIcons.setScale(glm::vec2(0.f));
+                m_PSIcons.setScale(glm::vec2(0.f));
+                m_xboxIcons.setScale(glm::vec2(1.f));
+                break;
+            }
+        };
+
     switch (evt.type)
     {
     default: return false;
@@ -647,6 +774,8 @@ bool OSK::handleEvent(const Event& evt)
     {
         //thumbstick movement
         const std::int16_t Threshold = GameController::LeftThumbDeadZone * 2;// 15000;
+        const std::int32_t icon = GameController::hasPSLayout(GameController::controllerID(evt.gaxis.which)) ?
+            IconSet::PS : IconSet::XBox;
         switch (evt.gaxis.axis)
         {
         default: break;
@@ -656,12 +785,14 @@ bool OSK::handleEvent(const Event& evt)
                 //right
                 m_controllerMask |= ControllerBits::Right;
                 m_controllerMask &= ~ControllerBits::Left;
+                applyIconSet(icon);
             }
             else if (evt.gaxis.value < -Threshold)
             {
                 //left
                 m_controllerMask |= ControllerBits::Left;
                 m_controllerMask &= ~ControllerBits::Right;
+                applyIconSet(icon);
             }
             else
             {
@@ -675,12 +806,14 @@ bool OSK::handleEvent(const Event& evt)
                 //down
                 m_controllerMask |= ControllerBits::Down;
                 m_controllerMask &= ~ControllerBits::Up;
+                applyIconSet(icon);
             }
             else if (evt.gaxis.value < -Threshold)
             {
                 //up
                 m_controllerMask |= ControllerBits::Up;
                 m_controllerMask &= ~ControllerBits::Down;
+                applyIconSet(icon);
             }
             else
             {
@@ -692,6 +825,7 @@ bool OSK::handleEvent(const Event& evt)
             if (evt.gaxis.value > GameController::TriggerDeadZone)
             {
                 m_controllerMask |= ControllerBits::L2;
+                applyIconSet(icon);
             }
             else if (evt.gaxis.value < GameController::TriggerDeadZone)
             {
@@ -703,6 +837,7 @@ bool OSK::handleEvent(const Event& evt)
             if (evt.gaxis.value > GameController::TriggerDeadZone)
             {
                 m_controllerMask |= ControllerBits::R2;
+                applyIconSet(icon);
             }
             else if (evt.gaxis.value < GameController::TriggerDeadZone)
             {
@@ -711,9 +846,6 @@ bool OSK::handleEvent(const Event& evt)
             applyAxisMotion();
             break;
         }
-
-
-        //TODO L2 shift and R2 submit
     }
         return m_isActive; //I mean... the clause above should mean this is always true at this point...
     case SDL_EVENT_GAMEPAD_BUTTON_UP:
@@ -726,6 +858,11 @@ bool OSK::handleEvent(const Event& evt)
         }
         return m_isActive;
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+    {
+        const std::int32_t icon = GameController::hasPSLayout(GameController::controllerID(evt.gbutton.which)) ?
+            IconSet::PS : IconSet::XBox;
+        applyIconSet(icon);
+    }
         switch (evt.gbutton.button)
         {
         default: break;
@@ -770,6 +907,7 @@ bool OSK::handleEvent(const Event& evt)
         return m_isActive;
     case SDL_EVENT_KEY_DOWN:
     {
+        applyIconSet(IconSet::Keys);
         switch (evt.key.key)
         {
         default: break;;
@@ -799,6 +937,7 @@ bool OSK::handleEvent(const Event& evt)
     case SDL_EVENT_MOUSE_MOTION:
         //TODO use mouse coords to set active index and refresh verts?
         //or we could just accept wherever the mouse click is
+        applyIconSet(IconSet::Keys);
         return m_isActive;
 
 
@@ -814,6 +953,12 @@ void OSK::render()
     {
         m_keyboardArray.draw();
         m_keyTextArray.draw();
+
+        //TODO skip drawing hidden
+        //icons completely...
+        m_xboxIcons.draw();
+        m_PSIcons.draw();
+        m_keyIcons.draw();
 
         m_previewText.draw();
     }
