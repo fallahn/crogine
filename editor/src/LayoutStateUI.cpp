@@ -258,7 +258,7 @@ void LayoutState::drawBrowser()
                 auto path = cro::FileSystem::openFileDialogue("", "spt");
                 if (!path.empty())
                 {
-                    loadSpriteSheet(path);
+                    loadSpriteSheet(U8PATH_CAST(path));
                 }
             }
             ImGui::SameLine();
@@ -380,10 +380,10 @@ void LayoutState::drawBrowser()
             if (ImGui::Button("Add"))
             {
                 //load a font
-                auto path = cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory + "/untitled.ttf", "ttf,otf", true);
+                const std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory + "/untitled.ttf", "ttf,otf", true));
                 if (!path.empty())
                 {
-                    auto files = cro::Util::String::tokenize(path, '|');
+                    const auto files = cro::Util::String::tokenize(path, '|');
                     for (const auto& f : files)
                     {
                         loadFont(f);
@@ -605,7 +605,7 @@ void LayoutState::loadFont(const std::string& path)
         m_thumbScene.simulate(0.f);
 
 
-        name = cro::FileSystem::getFileName(path);
+        name = U8PATH_CAST(cro::FileSystem::getFileName(path));
 
         if (!m_sharedData.workingDirectory.empty() &&
             path.find(m_sharedData.workingDirectory) != std::string::npos)

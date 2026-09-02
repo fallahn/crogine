@@ -112,7 +112,7 @@ namespace cro
         \brief Saves this image to the given path
         \returns true on success else false
         */
-        bool write(const std::string& path, bool flipOnWrite = false);
+        bool write(const std::filesystem::path& path, bool flipOnWrite = false);
 
         /*!
         \brief Sets the pixel at the given position to the given colour

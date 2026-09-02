@@ -303,7 +303,7 @@ void WorldState::setupScene()
 void WorldState::loadPrefs()
 {
     cro::ConfigFile cfg;
-    if (cfg.loadFromFile(cro::App::getPreferencePath() + "world_viewer.cfg"))
+    if (cfg.loadFromFile(cro::App::getPreferencePath() / "world_viewer.cfg"))
     {
         const auto& props = cfg.getProperties();
         for (const auto& prop : props)
@@ -324,5 +324,5 @@ void WorldState::savePrefs()
 
 
 
-    cfg.save(cro::App::getPreferencePath() + "world_viewer.cfg");
+    cfg.save(cro::App::getPreferencePath() / "world_viewer.cfg");
 }

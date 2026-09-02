@@ -38,7 +38,7 @@ source distribution.
 
 std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
 {
-    auto fileName = cro::FileSystem::getFileName(path);
+    std::string fileName = U8PATH_CAST(cro::FileSystem::getFileName(path));
 
     auto relPath = path;
     std::replace(relPath.begin(), relPath.end(), '\\', '/');
@@ -46,8 +46,8 @@ std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
     std::hash<std::string> hashAttack;
     auto uid = hashAttack(path);
 
-    relPath = cro::FileSystem::getFilePath(relPath);
-    relPath = cro::FileSystem::getRelativePath(relPath, m_sharedData.workingDirectory);
+    relPath = U8PATH_CAST(cro::FileSystem::getFilePath(relPath));
+    relPath = U8PATH_CAST(cro::FileSystem::getRelativePath(relPath, m_sharedData.workingDirectory));
 
     //replace if exists
     std::uint32_t id = 0;

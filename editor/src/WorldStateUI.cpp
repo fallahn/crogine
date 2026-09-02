@@ -209,7 +209,7 @@ void WorldState::drawMenuBar()
                             path = cro::FileSystem::saveFileDialogue("", "hpp");
                             if (!path.empty())
                             {
-                                outputIcon(img, path);
+                                outputIcon(img, U8PATH_CAST(path));
                             }
                         }
                         else
@@ -232,7 +232,7 @@ void WorldState::drawMenuBar()
                     {
                         auto outpath = cro::FileSystem::saveFileDialogue("", "hpp");
                         if (!outpath.empty() &&
-                            imageToArray(img, outpath))
+                            imageToArray(img, U8PATH_CAST(outpath)))
                         {
                             cro::FileSystem::showMessageBox("Success", "Header File Written Successfully");
                         }
@@ -252,7 +252,7 @@ void WorldState::drawMenuBar()
                     {
                         auto outpath = cro::FileSystem::saveFileDialogue("", "png");
                         if (!outpath.empty() &&
-                            pt::processPalette(img, outpath))
+                            pt::processPalette(img, U8PATH_CAST(outpath)))
                         {
                             cro::FileSystem::showMessageBox("Success", "Palette File Written Successfully");
                         }
@@ -381,14 +381,14 @@ void WorldState::drawBrowser()
                         auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
                         if (!path.empty())
                         {
-                            m_sharedData.workingDirectory = path;
+                            m_sharedData.workingDirectory = U8PATH_CAST(path);
                             std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
                         }
                     }
                 }
 
                 //browse model files
-                auto path = cro::FileSystem::openFileDialogue("", "cmt");
+                std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue("", "cmt"));
                 if (!path.empty())
                 {
                     std::replace(path.begin(), path.end(), '\\', '/');
@@ -536,10 +536,10 @@ void WorldState::drawOptions()
             ImGui::SameLine();
             if (ImGui::Button("Browse"))
             {
-                auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
+                const auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
                 if (!path.empty())
                 {
-                    m_sharedData.workingDirectory = path;
+                    m_sharedData.workingDirectory = U8PATH_CAST(path);
                     std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
                 }
             }

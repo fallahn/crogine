@@ -146,7 +146,7 @@ void App::loadPlugin(const std::filesystem::path& path, StateStack& stateStack)
     fullPath /= "libcroplug.so";
 #endif
 
-    m_pluginHandle = dlopen(U8PATH_CAST(fullPath, RTLD_LAZY));
+    m_pluginHandle = dlopen(U8PATH_CAST(fullPath), RTLD_LAZY);
 
     if (m_pluginHandle)
     {

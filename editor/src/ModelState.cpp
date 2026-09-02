@@ -557,7 +557,7 @@ void ModelState::toggleFreecam()
 void ModelState::loadPrefs()
 {
     cro::ConfigFile prefs;
-    if (prefs.loadFromFile(cro::App::getPreferencePath() + "model_viewer.cfg"))
+    if (prefs.loadFromFile(cro::App::getPreferencePath() / "model_viewer.cfg"))
     {
         const auto& props = prefs.getProperties();
         for (const auto& prop : props)
@@ -624,7 +624,7 @@ void ModelState::savePrefs()
     prefsOut.addProperty("export_dir").setValue(m_preferences.lastExportDirectory);
     prefsOut.addProperty("model_dir").setValue(m_preferences.lastModelDirectory);
 
-    if (prefsOut.save(cro::App::getPreferencePath() + "model_viewer.cfg"))
+    if (prefsOut.save(cro::App::getPreferencePath() / "model_viewer.cfg"))
     {
         //notify so the global prefs are also written
         auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);

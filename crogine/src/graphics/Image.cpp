@@ -220,7 +220,7 @@ void image_writer_func(void* context, void* data, int size)
     SDL_WriteIO(file, data, size);
 }
 
-bool Image::write(const std::string& path, bool flipOnWrite)
+bool Image::write(const std::filesystem::path& path, bool flipOnWrite)
 {
     if (cro::FileSystem::getFileExtension(path) != ".png")
     {

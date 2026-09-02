@@ -215,7 +215,7 @@ void EditorWindow::open()
             std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
             m_editor.SetText(str);
 
-            m_currentFile = result;
+            m_currentFile = U8PATH_CAST(result);
         }
     }
 }
@@ -236,7 +236,7 @@ void EditorWindow::saveAs()
     const auto result = cro::FileSystem::saveFileDialogue();
     if (!result.empty())
     {
-        save(result);
+        save(U8PATH_CAST(result));
     }
 }
 

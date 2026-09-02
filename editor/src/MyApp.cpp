@@ -133,7 +133,7 @@ void MyApp::finalise()
 void MyApp::loadPrefs()
 {
     cro::ConfigFile prefs;
-    if (prefs.loadFromFile(cro::App::getPreferencePath() + "global.cfg"))
+    if (prefs.loadFromFile(cro::App::getPreferencePath() / "global.cfg"))
     {
         const auto& props = prefs.getProperties();
         for (const auto& prop : props)
@@ -176,5 +176,5 @@ void MyApp::savePrefs()
     prefsOut.addProperty("compress_path").setValue(sharedData.compressionDirectory);
     prefsOut.addProperty("compress_mips").setValue(sharedData.compressMips);
 
-    prefsOut.save(cro::App::getPreferencePath() + "global.cfg");
+    prefsOut.save(cro::App::getPreferencePath() / "global.cfg");
 }
