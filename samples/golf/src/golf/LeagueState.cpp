@@ -1398,7 +1398,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
         });
 
     cro::Entity buttonRight = m_scene.createEntity();
-    buttonRight.addComponent<cro::Transform>().setPosition({ 380.f, 286.f, 0.2f });
+    buttonRight.addComponent<cro::Transform>().setPosition({ 386.f, 287.f, 0.2f });
     buttonRight.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     buttonRight.addComponent<cro::Drawable2D>();
     buttonRight.addComponent<cro::Sprite>() = spriteRight;
@@ -1407,7 +1407,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
 
 
     cro::Entity buttonLeft = m_scene.createEntity();
-    buttonLeft.addComponent<cro::Transform>().setPosition({ 118.f, 286.f, 0.2f });
+    buttonLeft.addComponent<cro::Transform>().setPosition({ 112.f, 287.f, 0.2f });
     buttonLeft.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     buttonLeft.addComponent<cro::Drawable2D>();
     buttonLeft.addComponent<cro::Sprite>() = spriteLeft;

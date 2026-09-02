@@ -946,9 +946,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
             break;
 #ifdef CRO_DEBUG_
-        case SDLK_F10:
+        /*case SDLK_F10:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::EndGame), net::NetFlag::Reliable);
-            break;
+            break;*/
         //case SDLK_F7:
         //    //m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
         //    
