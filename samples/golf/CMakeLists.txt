@@ -267,6 +267,13 @@ if (UNIX AND NOT APPLE)
   set(THREADS_PREFER_PTHREAD_FLAG TRUE)
   find_package(Threads)
   target_link_libraries(${PROJECT_NAME} Threads::Threads)
+
+
+  find_library(RT_LIBRARY rt)
+  if(RT_LIBRARY)
+      target_link_libraries(${PROJECT_NAME} PRIVATE ${RT_LIBRARY})
+  endif()
+
 endif()
 #end websockets
 

@@ -247,6 +247,11 @@ if(NOT TARGET crogine)
     if(USE_TBB)
       target_link_libraries(${PROJECT_NAME} TBB::tbb)
     endif()
+  
+    find_library(RT_LIBRARY rt)
+    if(RT_LIBRARY)
+        target_link_libraries(${PROJECT_NAME} PRIVATE ${RT_LIBRARY})
+    endif()
   endif()
 
   target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
