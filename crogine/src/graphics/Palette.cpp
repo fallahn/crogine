@@ -125,8 +125,6 @@ Palette::Palette(const std::filesystem::path& path)
 
 bool Palette::loadFromFile(const std::filesystem::path& path, bool append)
 {
-    FS_ASSERT;
-
     if (!append)
     {
         m_swatches.clear();
@@ -136,7 +134,7 @@ bool Palette::loadFromFile(const std::filesystem::path& path, bool append)
     RaiiRWops file;
     file.open(fullPath, "rb");
 
-    const auto fileName = /*U8PATH_CAST*/(FileSystem::getFileName(path));
+    const auto fileName = FileSystem::getFileName(path);
 
     if (!file)
     {

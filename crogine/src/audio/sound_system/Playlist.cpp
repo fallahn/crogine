@@ -183,8 +183,7 @@ void Playlist::threadFunc()
             
                 if (audioFile)
                 {
-                    FS_ASSERT;
-                    if (!audioFile->open(U8PATH_CAST(m_filePaths[m_fileIndex])))
+                    if (!audioFile->open(m_filePaths[m_fileIndex]))
                     {
                         m_loadNextFile = false;
                         m_fileIndex = (m_fileIndex + 1) % m_filePaths.size();

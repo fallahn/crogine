@@ -59,7 +59,7 @@ BufferedStreamLoader::~BufferedStreamLoader()
 }
 
 //public
-bool BufferedStreamLoader::open(const std::string&)
+bool BufferedStreamLoader::open(const std::filesystem::path&)
 {
     return true;
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -38,12 +38,11 @@ source distribution.
 
 using namespace cro;
 
-StaticMeshBuilder::StaticMeshBuilder(const std::string& path)
-    : m_path    (U8PATH_CAST((FileSystem::getResourcePath() / path))),
+StaticMeshBuilder::StaticMeshBuilder(const std::filesystem::path& path)
+    : m_path    ((FileSystem::getResourcePath() / path)),
     m_uid       (0)
 {
-    FS_ASSERT;
-    std::hash<std::string> hashAttack;
+    std::hash<std::filesystem::path> hashAttack;
     m_uid = hashAttack(path);
 }
 

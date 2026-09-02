@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -29,13 +29,12 @@ source distribution.
 
 #pragma once
 
-#include <vector>
-#include <string>
 #include <cstdint>
+#include <filesystem>
+#include <vector>
 
 namespace cro::Detail
 {
-
     struct MeshFile final
     {
         std::vector<float> vboData;
@@ -44,5 +43,5 @@ namespace cro::Detail
         std::uint8_t arrayCount = 0;
     };
 
-    bool readCMF(const std::string&, MeshFile&);
+    bool readCMF(const std::filesystem::path&, MeshFile&);
 }

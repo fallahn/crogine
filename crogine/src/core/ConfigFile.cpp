@@ -228,11 +228,8 @@ ConfigObject::ConfigObject(const std::string& name, const std::string& id)
     setId(id);
 }
 
-bool ConfigObject::loadFromFile(const std::filesystem::path& fp, bool relative)
+bool ConfigObject::loadFromFile(const std::filesystem::path& filePath, bool relative)
 {
-    FS_ASSERT; //loadFromFile2 needs to handle filepaths directly
-    const std::string filePath = U8PATH_CAST(fp);
-
     currentLine = 0; //well this has code smell to it...
 
     m_id = "";
@@ -240,7 +237,7 @@ bool ConfigObject::loadFromFile(const std::filesystem::path& fp, bool relative)
     m_properties.clear();
     m_objects.clear();
 
-    return loadFromFile2(relative ? U8PATH_CAST((FileSystem::getResourcePath() / filePath)) : filePath);
+    return loadFromFile2(relative ? (FileSystem::getResourcePath() / filePath) : filePath);
 }
 
 const std::string& ConfigObject::getId() const
@@ -693,16 +690,14 @@ std::size_t ConfigObject::write(SDL_IOStream* file, std::uint16_t depth)
     return written;
 }
 
-bool ConfigObject::loadFromFile2(const std::string& path)
+bool ConfigObject::loadFromFile2(const std::filesystem::path& path)
 {
-    FS_ASSERT;
-
     RaiiRWops rr;
     rr.open(path, "rb");
 
     if (!rr)
     {
-        Logger::log(path + " file invalid or not found.", Logger::Type::Warning);
+        LogW << path << " file invalid or not found." << std::endl;
         return false;
     }
 
@@ -710,7 +705,7 @@ bool ConfigObject::loadFromFile2(const std::string& path)
     const auto fileSize = SDL_GetIOSize(rr.filePtr());
     if (fileSize < 1)
     {
-        LOG(path + ": file empty", Logger::Type::Warning);
+        LogW << path << ": file empty" << std::endl;
         return false;
     }
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -39,8 +39,9 @@ source distribution.
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
-#include <string>
 #include <cstring>
+#include <filesystem>
+#include <string>
 
 namespace cro::Detail::ModelBinary
 {
@@ -282,5 +283,5 @@ namespace cro::Detail::ModelBinary
     Note that this only loads position data from the file, as it is currently used
     for loading collision meshes into the golf game. TODO: fix this.
     */
-    CRO_EXPORT_API cro::Mesh::Data read(const std::string&, std::vector<float>& dstVert, std::vector<std::vector<std::uint32_t>>& dstIdx);
+    CRO_EXPORT_API cro::Mesh::Data read(const std::filesystem::path&, std::vector<float>& dstVert, std::vector<std::vector<std::uint32_t>>& dstIdx);
 }

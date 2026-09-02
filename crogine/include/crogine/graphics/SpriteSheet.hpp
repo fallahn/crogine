@@ -91,7 +91,7 @@ namespace cro
         /*!
         \brief Returns the path to the image loaded for the sprite sheet's texture
         */
-        const std::string getTexturePath() const { return m_texturePath; }
+        const std::filesystem::path& getTexturePath() const { return m_texturePath; }
 
         /*!
         \brief Returns a pointer to the texture used by this Sprite Sheet if it is loaded
@@ -114,7 +114,7 @@ namespace cro
     private:
         mutable std::unordered_map<std::string, Sprite> m_sprites;
         mutable std::unordered_map<std::string, std::vector<std::string>> m_animations;
-        std::string m_texturePath;
+        std::filesystem::path m_texturePath;
         const cro::Texture* m_texture;
     };
 }

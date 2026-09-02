@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,9 +35,8 @@ source distribution.
 
 namespace cro::Detail
 {
-    bool readCMF(const std::string& path, MeshFile& output)
+    bool readCMF(const std::filesystem::path& path, MeshFile& output)
     {
-        FS_ASSERT;
         RaiiRWops file;
         file.open(path, "rb");
 

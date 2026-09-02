@@ -60,9 +60,6 @@ bool MusicPlayer::loadFromFile(const std::filesystem::path& path)
 
     stop();
 
-
-    FS_ASSERT; //file loaders need to be convered to std::filesystem
-    
     m_bytesPerSample = 1; //default this to 1 so we don't get a div0 trying to play an empty file
     const auto filePath = cro::FileSystem::getResourcePath() / path;
 
@@ -70,7 +67,7 @@ bool MusicPlayer::loadFromFile(const std::filesystem::path& path)
     if (ext == ".wav")
     {
         m_audioFile = std::make_unique<WavLoader>();
-        if (!m_audioFile->open(U8PATH_CAST(filePath)))
+        if (!m_audioFile->open(filePath))
         {
             m_audioFile.reset();
             LogE << "Failed to open " << path << std::endl;
@@ -80,7 +77,7 @@ bool MusicPlayer::loadFromFile(const std::filesystem::path& path)
     else if (ext == ".ogg")
     {
         m_audioFile = std::make_unique<VorbisLoader>();
-        if (!m_audioFile->open(U8PATH_CAST(filePath)))
+        if (!m_audioFile->open(filePath))
         {
             m_audioFile.reset();
             LogE << "Failed to open " << path << std::endl;
@@ -90,7 +87,7 @@ bool MusicPlayer::loadFromFile(const std::filesystem::path& path)
     else if (ext == ".mp3")
     {
         m_audioFile = std::make_unique<Mp3Loader>();
-        if (!m_audioFile->open(U8PATH_CAST(filePath)))
+        if (!m_audioFile->open(filePath))
         {
             m_audioFile.reset();
             LogE << "Failed to open " << path << std::endl;

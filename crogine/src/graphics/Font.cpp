@@ -101,12 +101,10 @@ namespace
             FT_Done_FreeType(library);
         }
 
-        std::unordered_map<std::string, std::vector<std::uint8_t>> fontData;
+        std::unordered_map<std::filesystem::path, std::vector<std::uint8_t>> fontData;
 
-        FontDataBuffer getFontData(const std::string& path)
+        FontDataBuffer getFontData(const std::filesystem::path& path)
         {
-            FS_ASSERT;
-
             if (!library)
             {
                 //we failed for some reason
@@ -119,7 +117,7 @@ namespace
                 fontFile.open(path, "r");
                 if (!fontFile)
                 {
-                    Logger::log("Failed opening " + path, Logger::Type::Error);
+                    LogE << "Failed opening " << path << std::endl;
                     return {};
                 }
 
@@ -127,7 +125,7 @@ namespace
                 buffer.resize(SDL_GetIOSize(fontFile.filePtr()));
                 if (buffer.size() == 0)
                 {
-                    Logger::log("Could not open " + path + ": files size was 0", Logger::Type::Error);
+                    LogE << "Could not open " << path << ": files size was 0" << std::endl;
                     return {};
                 }
                 SDL_ReadIO(fontFile.filePtr(), buffer.data(), buffer.size());
@@ -184,14 +182,11 @@ bool Font::loadFromFile(const std::filesystem::path& filePath)
     return appendFromFile(filePath, FontAppendmentContext());
 }
 
-bool Font::appendFromFile(const std::filesystem::path& fp, FontAppendmentContext ctx)
+bool Font::appendFromFile(const std::filesystem::path& filePath, FontAppendmentContext ctx)
 {
-    FS_ASSERT
-    const std::string filePath = U8PATH_CAST(fp);
-
     CRO_ASSERT(ctx.codepointRange[0] > 0 && ctx.codepointRange[0] < ctx.codepointRange[1], "invalid codepoint range");
 
-    const std::string path = U8PATH_CAST((FileSystem::getResourcePath() / filePath));
+    const auto path = (FileSystem::getResourcePath() / filePath);
     FontData fd;
     fd.context = ctx;
 
@@ -207,7 +202,7 @@ bool Font::appendFromFile(const std::filesystem::path& fp, FontAppendmentContext
     FT_Face face = nullptr;
     if (FT_New_Memory_Face(fontDataResource->library, buffer.buffer, buffer.size, 0, &face) != 0)
     {
-        Logger::log("Failed to load font " + path + ": Failed creating font face", Logger::Type::Error);
+        LogE << "Failed to load font " << path << ": Failed creating font face" << std::endl;
         return false;
     }
 
@@ -224,7 +219,7 @@ bool Font::appendFromFile(const std::filesystem::path& fp, FontAppendmentContext
     //using unicode
     if (FT_Select_Charmap(face, FT_ENCODING_UNICODE) != 0)
     {
-        Logger::log("Failed to load font " + path + ": failed to select unicode charset", Logger::Type::Error);
+        LogE << "Failed to load font " << path << ": failed to select unicode charset" << std::endl;
         FT_Done_Face(face);
         return false;
     }
@@ -252,7 +247,6 @@ bool Font::appendFromFile(const std::filesystem::path& fp, FontAppendmentContext
             }
         }
     }
-
 
     return true;
 }

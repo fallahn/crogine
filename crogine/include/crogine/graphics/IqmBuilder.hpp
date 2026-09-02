@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,6 +34,8 @@ source distribution.
 
 #include <SDL3/SDL_iostream.h>
 
+#include <filesystem>
+
 namespace cro
 {
     /*!
@@ -53,7 +55,7 @@ namespace cro
         \brief Constructor
         \param path Path to file to parse
         */
-        explicit IqmBuilder(const std::string& path);
+        explicit IqmBuilder(const std::filesystem::path& path);
         ~IqmBuilder();
 
         /*!
@@ -79,7 +81,7 @@ namespace cro
         Mesh::Data getData() const { return build(nullptr); }
 
     private:
-        std::string m_path;
+        std::filesystem::path m_path;
         std::size_t m_uid;
         mutable SDL_IOStream* m_file;
         Mesh::Data build(AllocationResource*) const override;

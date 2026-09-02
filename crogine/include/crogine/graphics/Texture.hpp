@@ -210,7 +210,7 @@ namespace cro
         /*!
         \brief Returns the file path this texture was loaded from, or an empty string
         */
-        const std::string& getResourcePath() const { return m_resourcePath; }
+        const std::filesystem::path& getResourcePath() const { return m_resourcePath; }
 
     private:
         glm::uvec2 m_size;
@@ -222,7 +222,7 @@ namespace cro
         bool m_hasMipMaps;
 
         bool m_useCompression;
-        std::string m_resourcePath;
+        std::filesystem::path m_resourcePath;
 
         bool update(const void* pixels, bool createMipMaps, URect area);
         void generateMipMaps();

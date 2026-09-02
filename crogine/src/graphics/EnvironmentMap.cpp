@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -137,16 +137,15 @@ bool EnvironmentMap::loadFromFile(const std::filesystem::path& p)
     LogE << "Environment mapping is not available on mobile platforms. Use a cubemap instead." << std::endl;
     return false;
 #else
-    FS_ASSERT;
 
-    std::string path;
-    if (p.is_absolute())
+    std::filesystem::path path;
+    if (path.is_absolute())
     {
-        path = U8PATH_CAST(p);
+        path = p;
     }
     else
     {
-        path = U8PATH_CAST((FileSystem::getResourcePath() / p));
+        path = (FileSystem::getResourcePath() / p);
     }
 
     if (!cro::FileSystem::fileExists(path))
@@ -159,7 +158,7 @@ bool EnvironmentMap::loadFromFile(const std::filesystem::path& p)
     file.open(path, "rb");
     if (!file)
     {
-        LogE << "SDLRW_ops Failed opening " << p << std::endl;
+        LogE << "SDL_IOStream Failed opening " << p << std::endl;
         return false;
     }
 

@@ -37,16 +37,15 @@ source distribution.
 
 using namespace cro;
 
-BinaryMeshBuilder::BinaryMeshBuilder(const std::string& path, bool optimiseOnLoad)
+BinaryMeshBuilder::BinaryMeshBuilder(const std::filesystem::path& path, bool optimiseOnLoad)
     : m_path            (path),
     m_optimiseOnLoad    (optimiseOnLoad),
     m_uid               (0)
 {
-    FS_ASSERT; //convert path to std::filesystem
 #ifdef __APPLE__
     if (!FileSystem::fileExists(m_path))
     {
-        m_path = U8PATH_CAST((cro::FileSystem::getResourcePath() / path));
+        m_path = cro::FileSystem::getResourcePath() / path;
     }
 
 #endif
@@ -54,7 +53,7 @@ BinaryMeshBuilder::BinaryMeshBuilder(const std::string& path, bool optimiseOnLoa
     if (FileSystem::fileExists(m_path))
     {
         //calc a UID from the file path
-        std::hash<std::string> hashAttack;
+        std::hash<std::filesystem::path> hashAttack;
         m_uid = hashAttack(path);
     }
     else
@@ -86,8 +85,6 @@ Mesh::Data BinaryMeshBuilder::build(AllocationResource* allocationResource) cons
 
 Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResource) const
 {
-    FS_ASSERT;
-
     Mesh::Data meshData;
 
     RaiiRWops file;
@@ -449,7 +446,6 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
 
 Mesh::Data BinaryMeshBuilder::buildDefault() const
 {
-    FS_ASSERT;
     Mesh::Data meshData;
 
     RaiiRWops file;

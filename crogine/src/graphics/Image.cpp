@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -96,24 +96,21 @@ void Image::create(std::uint32_t width, std::uint32_t height, Colour colour, Ima
 
 bool Image::loadFromFile(const std::filesystem::path& p)
 {
-    FS_ASSERT;
-
-
-    std::string path;
+    std::filesystem::path path;
     if (p.is_absolute())
     {
-        path = U8PATH_CAST(p);
+        path = p;
     }
     else
     {
-        path = U8PATH_CAST((FileSystem::getResourcePath() / p));
+        path = (FileSystem::getResourcePath() / p);
     }
 
     RaiiRWops file;
     file.open(path, "rb");
     if (!file)
     {
-        Logger::log("Image: Failed opening " + path, Logger::Type::Error);
+        LogE << "Image: Failed opening " << path << std::endl;
         return false;
     }
 
@@ -148,7 +145,7 @@ bool Image::loadFromFile(const std::filesystem::path& p)
     }
     else
     {
-        Logger::log("failed to open image: " + path, Logger::Type::Error);
+        LogE << "failed to open image: " << path << std::endl;
         file.close();
 
         return false;

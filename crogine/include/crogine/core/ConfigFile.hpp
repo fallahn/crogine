@@ -272,7 +272,7 @@ namespace cro
 
         std::size_t write(SDL_IOStream* file, std::uint16_t depth = 0u);
 
-        bool loadFromFile2(const std::string& path);
+        bool loadFromFile2(const std::filesystem::path& path);
     };
 
     using ConfigFile = ConfigObject;

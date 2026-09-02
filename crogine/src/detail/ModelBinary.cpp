@@ -355,10 +355,8 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
     return retVal;
 }
 
-cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::vector<float>& dstVert, std::vector<std::vector<std::uint32_t>>& dstIdx)
+cro::Mesh::Data cro::Detail::ModelBinary::read(const std::filesystem::path& binPath, std::vector<float>& dstVert, std::vector<std::vector<std::uint32_t>>& dstIdx)
 {
-    FS_ASSERT;
-
     //make sure everything is empty - who knows what gets passed in ;)
     dstVert.clear();
     dstIdx.clear();

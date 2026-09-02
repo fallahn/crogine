@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,8 +34,8 @@ source distribution.
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
 
-#include <vector>
 #include <array>
+#include <vector>
 
 
 namespace cro::VertexProperty

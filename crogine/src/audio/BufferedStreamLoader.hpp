@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -52,7 +52,7 @@ namespace cro::Detail
         const BufferedStreamLoader& operator = (const BufferedStreamLoader&) = delete;
         BufferedStreamLoader& operator = (BufferedStreamLoader&&) noexcept = delete;
 
-        bool open(const std::string&) override;
+        bool open(const std::filesystem::path&) override;
 
         const PCMData& getData(std::size_t = 0, bool looped = false) const override;
 
