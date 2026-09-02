@@ -250,7 +250,7 @@ if(NOT TARGET crogine)
   
     find_library(RT_LIBRARY rt)
     if(RT_LIBRARY)
-        target_link_libraries(${PROJECT_NAME} PRIVATE ${RT_LIBRARY})
+        target_link_libraries(${PROJECT_NAME} ${RT_LIBRARY})
     endif()
   endif()
 
