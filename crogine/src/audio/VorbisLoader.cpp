@@ -56,9 +56,8 @@ VorbisLoader::~VorbisLoader()
 }
 
 //public
-bool VorbisLoader::open(const std::string& path)
+bool VorbisLoader::open(const std::filesystem::path& path)
 {
-    FS_ASSERT;
     //close any open files
     //if (m_file.file)
     //{
@@ -85,7 +84,7 @@ bool VorbisLoader::open(const std::string& path)
 
     //read header
     //m_vorbisFile = stb_vorbis_open_file(m_file.file, 0, nullptr, nullptr);
-    m_vorbisFile = stb_vorbis_open_filename(path.c_str(), nullptr, nullptr);
+    m_vorbisFile = stb_vorbis_open_filename(U8PATH_CAST(path), nullptr, nullptr);
     if (!m_vorbisFile)
     {
         /*SDL_CloseIO(m_file.file);
@@ -104,8 +103,8 @@ bool VorbisLoader::open(const std::string& path)
         stb_vorbis_close(m_vorbisFile);
         m_vorbisFile = nullptr;
 
-        Logger::log("Found " + std::to_string(info.channels) + " channels in " + path + ", currently only mono and stereo files are supported.", Logger::Type::Error);
-        Logger::log(path + ": not loaded.", Logger::Type::Error);
+        LogE << "Found " << std::to_string(info.channels) << " channels in " << path << ", currently only mono and stereo files are supported." << std::endl;
+        LogE << path << ": not loaded." << std::endl;
         return false;
     }
 

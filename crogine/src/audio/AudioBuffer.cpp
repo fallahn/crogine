@@ -72,15 +72,13 @@ AudioBuffer& AudioBuffer::operator=(AudioBuffer&& other) noexcept
 //public
 bool AudioBuffer::loadFromFile(const std::filesystem::path& path)
 {
-    FS_ASSERT;
-
     if (getID() > 0)
     {
         AudioRenderer::deleteBuffer(getID());
         setID(-1);
     }
     
-    setID(AudioRenderer::requestNewBuffer(U8PATH_CAST(path)));
+    setID(AudioRenderer::requestNewBuffer(path));
     return getID() != -1;
 }
 

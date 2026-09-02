@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,6 +35,7 @@ source distribution.
 
 #include <crogine/detail/glm/vec3.hpp>
 
+#include <filesystem>
 #include <memory>
 #include <string>
 
@@ -71,11 +72,11 @@ namespace cro
 
         virtual glm::vec3 getListenerPosition() const = 0;
 
-        virtual std::int32_t requestNewBuffer(const std::string&) = 0;
+        virtual std::int32_t requestNewBuffer(const std::filesystem::path&) = 0;
         virtual std::int32_t requestNewBuffer(const Detail::PCMData&) = 0;
         virtual void deleteBuffer(std::int32_t) = 0;
 
-        virtual std::int32_t requestNewStream(const std::string&) = 0;
+        virtual std::int32_t requestNewStream(const std::filesystem::path&) = 0;
         virtual void deleteStream(std::int32_t) = 0;
 
         //note that this is the openAL source, not the buffer or stream behind it
@@ -191,13 +192,13 @@ namespace cro
         static glm::vec3 getListenerPosition();
 
         /*!
-        \brief Requests a new buffer be created from the file at the given string.
+        \brief Requests a new buffer be created from the file at the given path.
         \returns A unique ID for the new buffer on success, else -1 if something failed.
         NOTE: there is no resource management done here, no checks are done to see if the
         file requested to be loaded already exists, and it is up to the requester to make
         sure buffers are properly released with deleteBuffer()
         */
-        static std::int32_t requestNewBuffer(const std::string& path);
+        static std::int32_t requestNewBuffer(const std::filesystem::path& path);
 
         /*!
         \brief Requests a new buffer from the given PCMData struct.
@@ -215,7 +216,7 @@ namespace cro
         \param path Path to file to stream.
         \returns ID of stream, or -1 if opening the file failed
         */
-        static std::int32_t requestNewStream(const std::string& path);
+        static std::int32_t requestNewStream(const std::filesystem::path& path);
 
         /*!
         \brief Deletes the stream with the given ID, if it exists

@@ -54,7 +54,7 @@ namespace cro
             const VorbisLoader& operator = (const VorbisLoader&) = delete;
             VorbisLoader& operator = (VorbisLoader&&) noexcept = delete;
 
-            bool open(const std::string&) override;
+            bool open(const std::filesystem::path&) override;
 
             const PCMData& getData(std::size_t = 0, bool looped = false) const override;
 

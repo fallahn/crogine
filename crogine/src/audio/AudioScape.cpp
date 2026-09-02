@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -40,11 +40,8 @@ AudioScape::AudioScape()
 }
 
 //public
-bool AudioScape::loadFromFile(const std::filesystem::path& pt, AudioResource& audioResource)
+bool AudioScape::loadFromFile(const std::filesystem::path& path, AudioResource& audioResource)
 {
-    FS_ASSERT
-    const std::string path = U8PATH_CAST(pt);
-
     m_configs.clear();
     m_name.clear();
     m_path.clear();
@@ -72,7 +69,7 @@ bool AudioScape::loadFromFile(const std::filesystem::path& pt, AudioResource& au
             }
 
             bool streaming = true; //fall back to this if missing so we don't accidentally try to load huge files
-            std::string mediaPath;
+            std::filesystem::path mediaPath;
             AudioConfig ac;
 
             const auto& props = obj.getProperties();
@@ -91,7 +88,7 @@ bool AudioScape::loadFromFile(const std::filesystem::path& pt, AudioResource& au
                         //but... sometimes it might be, so it won't work on macOS. (another reason to ditch it)
                         if (FileSystem::fileExists(/*FileSystem::getResourcePath() +*/ relPath)) 
                         {
-                            mediaPath = U8PATH_CAST(relPath);
+                            mediaPath = relPath;
                         }
                         else
                         {

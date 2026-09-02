@@ -193,7 +193,7 @@ namespace cro
         \param path Path to the directory containing the plugin. Shared library name is automatically appended
         \param stack A reference to the StateStack with which to execute the plugin code.
         */
-        void loadPlugin(const std::string& path, StateStack& stack);
+        void loadPlugin(const std::filesystem::path& path, StateStack& stack);
         
         /*!
         \brief Unload any loaded project plugin

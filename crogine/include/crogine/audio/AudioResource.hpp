@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,9 +33,10 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/audio/AudioSource.hpp>
 
+#include <filesystem>
+#include <memory>
 #include <string>
 #include <unordered_map>
-#include <memory>
 
 namespace cro
 {
@@ -62,23 +63,23 @@ namespace cro
         /*!
         \brief Loads an audio file and maps the resulting data to the given ID
         \param id Unique ID to map to the new data source. If the ID is in use this will fail.
-        \param path String containing the path to the file to load.
+        \param path filesystem::path containing the path to the file to load.
         \param streaming If set to true the requested file should be streamed from storage
         rather than loaded entirely into RAM
         \returns true if successful, else returns false.
         */
-        bool load(std::int32_t id, const std::string& path, bool streaming = false);
+        bool load(std::int32_t id, const std::filesystem::path& path, bool streaming = false);
 
         /*!
         
         \brief Loads and audio file at the given path and returns an auto-mapped ID on success
-        \param path String containing the path to the file to load.
+        \param path filesystem::path containing the path to the file to load.
         \param streaming If set to true the requested file should be streamed from storage
         rather than loaded entirely into RAM
         \returns an integer ID, starting at std::int32_t::max and working downwards if successful
         else returns -1 if the file failed to load.
         */
-        std::int32_t load(const std::string& path, bool streaming = false);
+        std::int32_t load(const std::filesystem::path& path, bool streaming = false);
 
         /*!
         \brief Attempts to return the loaded data mapped to the given ID
@@ -90,6 +91,6 @@ namespace cro
 
         std::unique_ptr<AudioSource> m_fallback;
         std::unordered_map<std::int32_t, std::unique_ptr<AudioSource>> m_sources;
-        std::unordered_map<std::string, std::int32_t> m_usedPaths;
+        std::unordered_map<std::filesystem::path, std::int32_t> m_usedPaths;
     };
 }

@@ -50,7 +50,7 @@ AudioResource::AudioResource()
 }
 
 //public
-bool AudioResource::load(std::int32_t ID, const std::string& path, bool streaming)
+bool AudioResource::load(std::int32_t ID, const std::filesystem::path& path, bool streaming)
 {
     if (!streaming &&
         m_sources.count(ID) != 0)
@@ -86,7 +86,7 @@ bool AudioResource::load(std::int32_t ID, const std::string& path, bool streamin
     return result;
 }
 
-std::int32_t AudioResource::load(const std::string& path, bool streaming)
+std::int32_t AudioResource::load(const std::filesystem::path& path, bool streaming)
 {
     //streaming sources shouldn't be shared
     //cos, well, they're streaming

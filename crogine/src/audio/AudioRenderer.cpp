@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -96,7 +96,7 @@ glm::vec3 AudioRenderer::getListenerPosition()
     return m_impl->getListenerPosition();
 }
 
-std::int32_t AudioRenderer::requestNewBuffer(const std::string& path)
+std::int32_t AudioRenderer::requestNewBuffer(const std::filesystem::path& path)
 {
     return m_impl->requestNewBuffer(path);
 }
@@ -111,7 +111,7 @@ void AudioRenderer::deleteBuffer(std::int32_t buffer)
     m_impl->deleteBuffer(buffer);
 }
 
-std::int32_t AudioRenderer::requestNewStream(const std::string& path)
+std::int32_t AudioRenderer::requestNewStream(const std::filesystem::path& path)
 {
     return m_impl->requestNewStream(path);
 }

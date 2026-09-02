@@ -199,16 +199,12 @@ namespace cro
         /*!
         \brief Preloads a shader from given files on disk, if possible
         \param ID Integer value, such as an enumeration, to map to the loaded shader.
-        \param vertex String containing path to file containing the source code for the vertex shader
-        \param fragment String containing the path to the file containing the source code for
+        \param vertex std::filesystem::path containing path to file containing the source code for the vertex shader
+        \param fragment std::filesystem::path containing the path to the file containing the source code for
         the fragment shader.
         \returns true if successful, else false.
         */
-        bool loadFromFile(std::int32_t id, const std::string& vertex, const std::string& fragment);
-
-        //temporary overloads for migrating to std::fileystem::path
-        FS_ASSERT;
-        bool loadFromFile(std::int32_t id, const std::filesystem::path& p, const std::filesystem::path& q) { return loadFromFile(id, p.string(), q.string()); }
+        bool loadFromFile(std::int32_t id, const std::filesystem::path& vertex, const std::filesystem::path& fragment);
 
         /*!
         \brief Preloads a shader and maps it to the given ID from source code in memory

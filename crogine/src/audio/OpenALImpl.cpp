@@ -208,9 +208,8 @@ glm::vec3 OpenALImpl::getListenerPosition() const
     return ret;
 }
 
-std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
+std::int32_t OpenALImpl::requestNewBuffer(const std::filesystem::path& filePath)
 {
-    FS_ASSERT;
     const auto path = FileSystem::getResourcePath() / filePath;
 
     std::unique_ptr<AudioFile> loader;
@@ -220,7 +219,7 @@ std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
     if (ext == ".wav")
     {      
         loader = std::make_unique<WavLoader>();
-        if (loader->open(U8PATH_CAST(path)))
+        if (loader->open(path))
         {
             data = loader->getData();
         }
@@ -228,7 +227,7 @@ std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
     else if (ext == ".ogg")
     {
         loader = std::make_unique<VorbisLoader>();
-        if (loader->open(U8PATH_CAST(path)))
+        if (loader->open(path))
         {
             data = loader->getData();
         }
@@ -236,7 +235,7 @@ std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
     else if (ext == ".mp3")
     {
         loader = std::make_unique<Mp3Loader>();
-        if (loader->open(U8PATH_CAST(path)))
+        if (loader->open(path))
         {
             data = loader->getData();
         }
@@ -279,7 +278,7 @@ void OpenALImpl::deleteBuffer(std::int32_t buffer)
     }
 }
 
-std::int32_t OpenALImpl::requestNewStream(const std::string& path)
+std::int32_t OpenALImpl::requestNewStream(const std::filesystem::path& path)
 {
     //check we have available streams
     if (m_nextFreeStream >= m_streams.size())
@@ -296,30 +295,30 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     if (ext == ".wav")
     {
         stream.audioFile = std::make_unique<WavLoader>();
-        if (!stream.audioFile->open(U8PATH_CAST(filePath)))
+        if (!stream.audioFile->open(filePath))
         {
             stream.audioFile.reset();
-            Logger::log("Failed to open " + path, Logger::Type::Error);
+            LogE << "Failed to open " << path << std::endl;
             return -1;
         }
     }
     else if (ext == ".ogg")
     {
         stream.audioFile = std::make_unique<VorbisLoader>();
-        if (!stream.audioFile->open(U8PATH_CAST(filePath)))
+        if (!stream.audioFile->open(filePath))
         {
             stream.audioFile.reset();
-            Logger::log("Failed to open " + path, Logger::Type::Error);
+            LogE << "Failed to open " << path << std::endl;
             return -1;
         }
     }
     else if (ext == ".mp3")
     {
         stream.audioFile = std::make_unique<Mp3Loader>();
-        if (!stream.audioFile->open(U8PATH_CAST(filePath)))
+        if (!stream.audioFile->open(filePath))
         {
             stream.audioFile.reset();
-            Logger::log("Failed to open " + path, Logger::Type::Error);
+            LogE << "Failed to open " << path << std::endl;
             return -1;
         }
     }

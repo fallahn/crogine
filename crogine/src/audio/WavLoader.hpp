@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -53,7 +53,7 @@ namespace cro
             \brief Attempts to open the file at the given path
             \returns true if file was opened, else false.
             */
-            bool open(const std::string&) override;
+            bool open(const std::filesystem::path&) override;
 
             /*!
             \brief Returns a PCMData struct containing the

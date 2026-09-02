@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -70,13 +70,12 @@ AudioStream& AudioStream::operator=(AudioStream&& other) noexcept
 //public
 bool AudioStream::loadFromFile(const std::filesystem::path& path)
 {
-    FS_ASSERT;
     if (getID() > 0)
     {
         AudioRenderer::deleteStream(getID());
         setID(-1);
     }
 
-    setID(AudioRenderer::requestNewStream(U8PATH_CAST(path)));
+    setID(AudioRenderer::requestNewStream(path));
     return getID() != -1;
 }

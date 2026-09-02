@@ -112,7 +112,7 @@ namespace cro
         /*!
         \brief Returns the path from which the AudioScape was loaded, if available
         */
-        const std::string& getPath() const { return m_path; }
+        const std::filesystem::path& getPath() const { return m_path; }
 
         /*!
         \brief Returns the UID loaded from the AudioScape file, or 0 if there was none
@@ -122,7 +122,7 @@ namespace cro
     private:
         AudioResource* m_audioResource;
         std::string m_name;
-        std::string m_path;
+        std::filesystem::path m_path;
         std::uint32_t m_uid;
 
         struct AudioConfig final
@@ -131,7 +131,7 @@ namespace cro
             float pitch = 1.f;
             float rolloff = 0.f;
             std::int32_t audioBuffer = -1;
-            std::string mediaPath;
+            std::filesystem::path mediaPath;
 
             bool looped = false;
             std::uint8_t channel = 0;

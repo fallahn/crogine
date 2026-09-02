@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -155,9 +155,8 @@ Shader::~Shader()
 }
 
 //public
-bool Shader::loadFromFile(const std::string& vertex, const std::string& fragment)
+bool Shader::loadFromFile(const std::filesystem::path& vertex, const std::filesystem::path& fragment)
 {
-    FS_ASSERT;
     const auto vertPath = FileSystem::getResourcePath() / vertex;
     const auto fragPath = FileSystem::getResourcePath() / fragment;
 
@@ -176,9 +175,8 @@ bool Shader::loadFromFile(const std::string& vertex, const std::string& fragment
     return loadFromSource(parseFile(U8PATH_CAST(vertPath)).c_str(), nullptr, parseFile(U8PATH_CAST(fragPath)).c_str(), nullptr);
 }
 
-bool Shader::loadFromFile(const std::string& vertex, const std::string& geometry, const std::string& fragment)
+bool Shader::loadFromFile(const std::filesystem::path& vertex, const std::filesystem::path& geometry, const std::filesystem::path& fragment)
 {
-    FS_ASSERT;
     const auto vertPath = FileSystem::getResourcePath() / vertex;
     const auto geomPath = FileSystem::getResourcePath() / geometry;
     const auto fragPath = FileSystem::getResourcePath() / fragment;
@@ -548,18 +546,17 @@ void Shader::resetUniformMap()
     m_uniformMap.clear();
 }
 
-std::string Shader::parseFile(const std::string& path)
+std::string Shader::parseFile(const std::filesystem::path& path)
 {
-    FS_ASSERT;
     std::string retVal;
     retVal.reserve(1000);
 
     //open file and verify
     RaiiRWops file;
-    file.open(path.c_str(), "r");
+    file.open(path, "r");
     if (!file)
     {
-        Logger::log("Failed opening " + path, Logger::Type::Error);
+        LogE << "Failed opening " << path << std::endl;
         return {};
     }
 

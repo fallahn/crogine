@@ -69,10 +69,8 @@ WavLoader::WavLoader()
 }
 
 //public
-bool WavLoader::open(const std::string& path)
+bool WavLoader::open(const std::filesystem::path& path)
 {
-    FS_ASSERT;
-
     if (m_file)
     {
         m_file.close();
@@ -94,7 +92,7 @@ bool WavLoader::open(const std::string& path)
         {
             m_file.close();
             
-            Logger::log("Failed to read wav header for " + path, Logger::Type::Error);
+            LogE << "Failed to read wav header for " << path << std::endl;
             return false;
         }
 
@@ -103,7 +101,7 @@ bool WavLoader::open(const std::string& path)
         {
             m_file.close();
 
-            Logger::log("Header file invalid ID: " + path, Logger::Type::Error);
+            LogE << "Header file invalid ID: " << path << std::endl;
             return false;
         }
 
@@ -112,7 +110,7 @@ bool WavLoader::open(const std::string& path)
         {
             m_file.close();
 
-            Logger::log(path + " is not a WAV format file", Logger::Type::Error);
+            LogE << path << " is not a WAV format file" << std::endl;
             return false;
         }
 
@@ -121,7 +119,7 @@ bool WavLoader::open(const std::string& path)
         {
             m_file.close();
 
-            Logger::log(path + ": Invalid header data chunk", Logger::Type::Error);
+            LogE << path << ": Invalid header data chunk" << std::endl;
             return false;
         }
 
@@ -129,7 +127,7 @@ bool WavLoader::open(const std::string& path)
         {
             m_file.close();
             
-            Logger::log(path + ": not in PCM format, only PCM wav files are supported", Logger::Type::Error);
+            LogE << path << ": not in PCM format, only PCM wav files are supported" << std::endl;
             return false;
         }
 
@@ -137,7 +135,7 @@ bool WavLoader::open(const std::string& path)
         {
             m_file.close();
             
-            Logger::log(path + ": Invalid Bits per sample, must be 8 or 16", Logger::Type::Error);
+            LogE << path << ": Invalid Bits per sample, must be 8 or 16" << std::endl;
             return false;
         }
 
@@ -145,7 +143,7 @@ bool WavLoader::open(const std::string& path)
         {
             m_file.close();
             
-            Logger::log(path + ": invalid channel count, only mono or stereo wav files are supported", Logger::Type::Error);
+            LogE << path << ": invalid channel count, only mono or stereo wav files are supported" << std::endl;
             return false;
         }
 
@@ -163,7 +161,7 @@ bool WavLoader::open(const std::string& path)
         {
             m_file.close();
 
-            Logger::log("Failed to find data chunk in " + path, Logger::Type::Error);
+            LogE << "Failed to find data chunk in " << path << std::endl;
             return false;
         }
 
