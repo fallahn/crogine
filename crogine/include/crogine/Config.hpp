@@ -31,7 +31,7 @@ source distribution.
 
 #include <cstdint>
 
-#define ASSERT_STD_FILESYSTEM
+//#define ASSERT_STD_FILESYSTEM
 #ifdef ASSERT_STD_FILESYSTEM
 #define FS_ASSERT static_assert(false, "filesystem path needs implementing");
 #else

@@ -97,13 +97,13 @@ namespace
 #include "shaders/CloudShader.inl"
 #include "shaders/ShaderIncludes.inl"
 
-    const std::filesystem::path SkyboxPath = "assets/golf/skyboxes/";
-    const std::filesystem::path ShrubPath = "assets/golf/shrubs/";
-    const std::filesystem::path CoursePath = "assets/golf/courses/";
-    const std::filesystem::path ThumbPath = "assets/golf/thumbs/";
+    const std::filesystem::path SkyboxPath = "assets/golf/skyboxes";
+    const std::filesystem::path ShrubPath = "assets/golf/shrubs";
+    const std::filesystem::path CoursePath = "assets/golf/courses";
+    const std::filesystem::path ThumbPath = "assets/golf/thumbs";
 
-    const std::filesystem::path UserCoursePath = "courses/";
-    const std::filesystem::path UserCourseExport = "courses/export/";
+    const std::filesystem::path UserCoursePath = "courses";
+    const std::filesystem::path UserCourseExport = "courses/export";
     const std::filesystem::path SaveFileExtension = ".ucs";
 
     constexpr float TabAreaHeight = 0.33f; //percent of screen
@@ -4446,9 +4446,10 @@ void PlaylistState::saveCourse(bool createNew)
         m_saveFiles.push_back(ss.str());
     }
 
-    std::stringstream ss;
-    ss << exportDir << m_saveFiles[m_saveFileIndex];
-    std::string fileName = ss.str();
+    //std::stringstream ss;
+    //ss << exportDir << m_saveFiles[m_saveFileIndex];
+    //std::string fileName = ss.str();
+    const auto fileName = exportDir / m_saveFiles[m_saveFileIndex];
 
     cro::RaiiRWops file;
     file.open(fileName, "wb");
@@ -4490,9 +4491,11 @@ void PlaylistState::loadCourse()
         cro::FileSystem::createDirectory(exportDir);
     }
 
-    std::stringstream strs;
+    /*std::stringstream strs;
     strs << exportDir << m_saveFiles[m_saveFileIndex];
-    std::string fileName = strs.str();
+    std::string fileName = strs.str();*/
+    const auto fileName = exportDir / m_saveFiles[m_saveFileIndex];
+    LogI << "Loading: " << fileName << std::endl;
 
     cro::RaiiRWops file;
     file.open(fileName, "rb");
