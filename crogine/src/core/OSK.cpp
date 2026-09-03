@@ -54,6 +54,7 @@ namespace
     constexpr Colour TextColourNormal = ButtonColourActive;
     constexpr Colour TextColourActive = ButtonColourNormal;
     constexpr Colour TextColourShift = Colour(std::uint8_t(123), 126, 130); //shifted text icons EG number row when shift not active
+    constexpr Colour KeyActive = SpecialButtonActive; //flash colour when a key is activated.
 
     constexpr std::uint32_t ButtonRows = 5;
     constexpr std::uint32_t ButtonCols = 14;
@@ -82,16 +83,6 @@ namespace
     };
 
     std::array<std::array<FloatRect, ButtonCols>, ButtonRows> Hitboxes = {};
-
-    //TODO do we need these or can the output of scancodes be inferred by shift status?
-    //constexpr std::array<std::array<KeyInfo, 14u>, 5u> UpperCaseKeys =
-    //{
-    //    std::array<KeyInfo, 14u>{KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo()},
-    //    {KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo()},
-    //    {KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo()},
-    //    {KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo()},
-    //    {KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo()}
-    //};
 
     //xbox
     static constexpr inline std::uint32_t ButtonLT = 0x2196;
@@ -136,7 +127,11 @@ namespace
 
 
     constexpr std::uint32_t BasePreviewTextSize = 12; //gets scaled based on screen size
-    constexpr std::uint32_t BaseKeyTextSize = 8; //as above
+    constexpr std::uint32_t BaseKeyTextSize = 12; //as above
+
+
+    SDL_Scancode lastActivated = SDL_SCANCODE_UNKNOWN; //if this is non-zero the key is briefly highlighted
+    constexpr Time ActivationTime = seconds(0.125f); //length of brief highlight
 }
 
 //public
@@ -147,6 +142,7 @@ OSK::OSK()
     m_keymod            (0),
     m_controllerMask    (0),
     m_prevControllerMask(0),
+    m_lastInput         (InputType::Keyboard),
     m_isActive          (false)
 {
     m_keyboardArray.setPrimitiveType(GL_TRIANGLES);
@@ -243,9 +239,7 @@ OSK::OSK()
         m_previewText.setFont(m_textFont);
         m_previewText.setAlignment(SimpleText::Alignment::Centre);
         
-
-        //TODO we need to register this class to the font callback so that it can
-        //tell the text to rebuild if necessary. Probably. It gets rebuilt a lot...
+        m_textFont.setSmooth(true);
     }
 }
 
@@ -260,6 +254,9 @@ void OSK::show(const std::function<void(bool, const char*)>& callback)
         instance->m_bufferIndex = 0;
 
         instance->updateVertices();
+        instance->updateVertices(); //*sigh* the texture might resize mid-update so we have to update TWICE
+
+        App::postMessage<Message::OSKEvent>(Message::OSKMessage)->type = Message::OSKEvent::Opened;
     }
 }
 
@@ -288,6 +285,8 @@ void OSK::close(bool isSubmitted)
         }
 
         m_isActive = false;
+
+        App::postMessage<Message::OSKEvent>(Message::OSKMessage)->type = Message::OSKEvent::Closed;
     }
 }
 
@@ -381,8 +380,9 @@ void OSK::updateVertices()
                         k = 0;
                         break;
                     case SDL_SCANCODE_TAB:
-                        k = IconTab;
-                        label = "TAB";
+                        k = 0;
+                        //k = IconTab;
+                        //label = "TAB";
                         break;
                     case SDL_SCANCODE_CAPSLOCK:
                         k = IconCaps;
@@ -414,6 +414,12 @@ void OSK::updateVertices()
                         ps = ButtonTriangle;
                         break;
                     }
+                }
+
+                //override the colour if the button was just activated
+                if (lastActivated == buttonInf.scancode)
+                {
+                    c = KeyActive;
                 }
 
                 //clamps the width so rounding error at makes
@@ -468,7 +474,7 @@ void OSK::updateVertices()
 
 
     const auto keyTextSize = BaseKeyTextSize * static_cast<std::uint32_t>(Scale);
-    const auto iconTextSize = keyTextSize * 3;
+    const auto iconTextSize = keyTextSize * 2;
     verts.clear();
 
     std::vector<Vertex2D> xbVerts;
@@ -504,38 +510,60 @@ void OSK::updateVertices()
             case IconLeft:
             case IconRight:
             {
-                const auto corner = glm::vec2(area.left + (2.f * Scale), area.bottom + std::floor(area.height / 2.f));
+                static constexpr float ButtonPadding = 4.f;
+
+                const auto corner = glm::vec2(area.left + (ButtonPadding * Scale), area.bottom + std::floor(area.height / 2.f));
+                //const auto corner = glm::vec2(std::floor(area.width / 2.f), area.bottom + std::floor(area.height / 2.f));
+                const glm::vec2 screenSize = App::getWindow().getSize();
+
+                const float maxHeight = area.height * 0.9f;
 
                 //we need to find the specific codepoints for each input icon
                 auto glyph = m_textFont.getGlyph(key, iconTextSize);
-                Detail::Text::addQuad(kbVerts, corner - glm::vec2(0.f, glyph.bounds.height / 2.f),
+                float scale = std::min(1.f, maxHeight / glyph.bounds.height);
+                glyph.bounds.width *= scale;
+                glyph.bounds.height *= scale;
+                glyph.bounds.left = area.left > (screenSize.x / 2.f) ? area.width - (glyph.bounds.width + (Scale * ButtonPadding * 2.f)) : 0.f;
+                glyph.bounds.bottom = 0.f;
+                Detail::Text::addQuad(kbVerts, corner - glm::vec2(0.f, std::floor(glyph.bounds.height / 2.f)),
                                     c, glyph, m_textFont.getTexture(iconTextSize).getSize());
 
+                //hmm these aren't enough on their own, we need a label to state what they do
                 glyph = m_textFont.getGlyph(keyXB, iconTextSize);
+                scale = std::min(1.f, maxHeight / glyph.bounds.height);
+                glyph.bounds.width *= scale;
+                glyph.bounds.height *= scale;
+                glyph.bounds.left = area.left < (screenSize.x / 2.f) ? area.width - (glyph.bounds.width + (Scale * ButtonPadding * 2.f)) : 0.f;
+                glyph.bounds.bottom = 0.f;
                 Detail::Text::addQuad(xbVerts, corner - glm::vec2(0.f, glyph.bounds.height / 2.f),
                     c, glyph, m_textFont.getTexture(iconTextSize).getSize());
 
                 glyph = m_textFont.getGlyph(keyPS, iconTextSize);
+                scale = std::min(1.f, maxHeight / glyph.bounds.height);
+                glyph.bounds.width *= scale;
+                glyph.bounds.height *= scale;
+                glyph.bounds.left = area.left < (screenSize.x / 2.f) ? area.width - (glyph.bounds.width + (Scale * ButtonPadding * 2.f)) : 0.f;
+                glyph.bounds.bottom = 0.f;
                 Detail::Text::addQuad(psVerts, corner - glm::vec2(0.f, glyph.bounds.height / 2.f),
                     c, glyph, m_textFont.getTexture(iconTextSize).getSize());
 
-                if (!label.empty())
-                {
-                    float x = (area.left + area.width) - std::max(1u, (keyTextSize / 2));
+                //if (!label.empty())
+                //{
+                //    float x = (area.left + area.width) - std::max(1u, (keyTextSize / 2));
 
-                    std::uint32_t prevChar = 0;
-                    for (auto m = static_cast<std::int32_t>(label.size() - 1); m >= 0; m--)
-                    {
-                        std::uint32_t currChar = label[m];
-                        //TODO figure out why this returns 0
-                        x -= keyTextSize; //m_textFont.getKerning(prevChar, currChar, keyTextSize);
-                        prevChar = currChar;
+                //    std::uint32_t prevChar = 0;
+                //    for (auto m = static_cast<std::int32_t>(label.size() - 1); m >= 0; m--)
+                //    {
+                //        std::uint32_t currChar = label[m];
+                //        //TODO figure out why this returns 0
+                //        x -= keyTextSize; //m_textFont.getKerning(prevChar, currChar, keyTextSize);
+                //        prevChar = currChar;
 
-                        glyph = m_textFont.getGlyph(currChar, keyTextSize);
-                        const auto pos = glm::vec2(x, corner.y + std::floor(glyph.bounds.height / 2.f)) - glyph.bounds.bottom;
-                        Detail::Text::addQuad(verts, pos, c, glyph, m_textFont.getTexture(keyTextSize).getSize());
-                    }
-                }
+                //        glyph = m_textFont.getGlyph(currChar, keyTextSize);
+                //        const auto pos = glm::vec2(x, corner.y + std::floor(glyph.bounds.height / 2.f)) - glyph.bounds.bottom;
+                //        Detail::Text::addQuad(verts, pos, c, glyph, m_textFont.getTexture(keyTextSize).getSize());
+                //    }
+                //}
             }
                 break;
             }
@@ -565,6 +593,12 @@ void OSK::updateVertices()
 
 bool OSK::keypress(SDL_Scancode code)
 {
+    lastActivated = code;
+    m_activationTimer.restart();
+
+    auto* msg = App::postMessage<Message::OSKEvent>(Message::OSKMessage);
+    msg->scancode = code;
+
     if (code == SDL_SCANCODE_CAPSLOCK)
     {
         m_keymod = m_keymod == SDL_KMOD_NONE ? SDL_KMOD_SHIFT : SDL_KMOD_NONE;
@@ -748,23 +782,19 @@ bool OSK::handleEvent(const Event& evt)
     const auto applyIconSet =
         [this](std::int32_t set)
         {
+            //huh why have 2 different enums which
+            //are not in the same order???
             switch (set)
             {
             default: 
             case IconSet::Keys:
-                m_keyIcons.setScale(glm::vec2(1.f));
-                m_PSIcons.setScale(glm::vec2(0.f));
-                m_xboxIcons.setScale(glm::vec2(0.f));
+                m_lastInput = InputType::Keyboard;
                 break;
             case IconSet::PS:
-                m_keyIcons.setScale(glm::vec2(0.f));
-                m_PSIcons.setScale(glm::vec2(1.f));
-                m_xboxIcons.setScale(glm::vec2(0.f));
+                m_lastInput = InputType::PS;
                 break;
             case IconSet::XBox:
-                m_keyIcons.setScale(glm::vec2(0.f));
-                m_PSIcons.setScale(glm::vec2(0.f));
-                m_xboxIcons.setScale(glm::vec2(1.f));
+                m_lastInput = InputType::Xbox;
                 break;
             }
         };
@@ -894,6 +924,24 @@ bool OSK::handleEvent(const Event& evt)
         return m_isActive;
 
     case SDL_EVENT_KEY_UP:
+        switch (evt.key.scancode)
+        {
+        default: break;
+        case SDL_SCANCODE_F1:
+        case SDL_SCANCODE_F2:
+        case SDL_SCANCODE_F3:
+        case SDL_SCANCODE_F4:
+        case SDL_SCANCODE_F5:
+        case SDL_SCANCODE_F6:
+        case SDL_SCANCODE_F7:
+        case SDL_SCANCODE_F8:
+        case SDL_SCANCODE_F9:
+        case SDL_SCANCODE_F10:
+        case SDL_SCANCODE_F11:
+        case SDL_SCANCODE_F12:
+            return false;
+        }
+
         switch (evt.key.key)
         {
         default: break;
@@ -910,16 +958,34 @@ bool OSK::handleEvent(const Event& evt)
     case SDL_EVENT_KEY_DOWN:
     {
         applyIconSet(IconSet::Keys);
+        switch (evt.key.scancode)
+        {
+        default: break;
+        case SDL_SCANCODE_F1:
+        case SDL_SCANCODE_F2:
+        case SDL_SCANCODE_F3:
+        case SDL_SCANCODE_F4:
+        case SDL_SCANCODE_F5:
+        case SDL_SCANCODE_F6:
+        case SDL_SCANCODE_F7:
+        case SDL_SCANCODE_F8:
+        case SDL_SCANCODE_F9:
+        case SDL_SCANCODE_F10:
+        case SDL_SCANCODE_F11:
+        case SDL_SCANCODE_F12:
+            return false;
+        }
+
         switch (evt.key.key)
         {
-        default: break;;
+        default: break;
         case SDLK_LSHIFT:
         case SDLK_RSHIFT:
             m_keymod = SDL_KMOD_SHIFT;
-            updateVertices();
             return true;
         }
         keypress(evt.key.scancode);
+        updateVertices();
     }
     return true;
 
@@ -941,11 +1007,28 @@ bool OSK::handleEvent(const Event& evt)
         //or we could just accept wherever the mouse click is
         applyIconSet(IconSet::Keys);
         return m_isActive;
-
+    case SDL_EVENT_MOUSE_WHEEL:
+        if (evt.wheel.integer_y)
+        {
+            m_lastInput = (m_lastInput + 1) % 3;
+        }
+        break;
 
     case SDL_EVENT_WINDOW_RESIZED:
         updateVertices();
+        updateVertices(); //AGAIN this might resize the texture so we have to do this twice... we should at least examine the texture state?
         return false;
+    }
+    return false;
+}
+
+void OSK::update()
+{
+    if (lastActivated != SDL_SCANCODE_UNKNOWN
+        && m_activationTimer.elapsed() > ActivationTime)
+    {
+        lastActivated = SDL_SCANCODE_UNKNOWN;
+        updateVertices();
     }
 }
 
@@ -956,11 +1039,21 @@ void OSK::render()
         m_keyboardArray.draw();
         m_keyTextArray.draw();
 
-        //TODO skip drawing hidden
-        //icons completely...
-        m_xboxIcons.draw();
-        m_PSIcons.draw();
+        //always render these as they double as labels
         m_keyIcons.draw();
+
+        switch (m_lastInput)
+        {
+        default:
+        case InputType::Keyboard:
+            break;
+        case InputType::Xbox:
+            m_xboxIcons.draw();
+            break;
+        case InputType::PS:
+            m_PSIcons.draw();
+            break;
+        }
 
         m_previewText.draw();
     }

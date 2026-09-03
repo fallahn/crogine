@@ -562,6 +562,8 @@ void App::run(bool resetSettings)
             handleEvents();
             handleMessages();
 
+            m_osk->update();
+
             simulate(frameTime);
             doImGui();
 

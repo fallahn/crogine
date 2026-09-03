@@ -99,6 +99,19 @@ bool SurrealState::handleEvent(const cro::Event& evt)
                     }
                 });
             break;
+        //case SDLK_B:
+        //{
+        //    const auto path = cro::FileSystem::openFileDialogue("assets/images", "png,jpg", true);
+        //    if (path.empty())
+        //    {
+        //        LogI << "User cancelled" << std::endl;
+        //    }
+        //    else
+        //    {
+        //        LogI << "selected files: " << path << std::endl;
+        //    }
+        //}
+        //    break;
         }
     }
 

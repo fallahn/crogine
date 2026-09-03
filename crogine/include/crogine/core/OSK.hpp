@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/core/Clock.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/SimpleText.hpp>
@@ -83,11 +84,19 @@ namespace cro
             L2 = 0x10, R2 = 0x20
         };
 
+        struct InputType final
+        {
+            enum
+            {
+                Keyboard, Xbox, PS
+            };
+        };
+        std::int32_t m_lastInput;
 
         bool m_isActive;
         std::function<void(bool, const char*)> m_callback;
 
-
+        Clock m_activationTimer; //times the highlight flash on key activation
 
         SimpleVertexArray m_keyboardArray; //button background
         SimpleVertexArray m_keyTextArray; //key text
@@ -110,6 +119,7 @@ namespace cro
         friend class App;
         //returns true if the keyboard should consume the event
         bool handleEvent(const cro::Event&);
+        void update();
         void render();
     };
 }

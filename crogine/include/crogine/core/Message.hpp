@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -65,6 +65,7 @@ namespace cro
             SystemMessage,
             SkeletalAnimationMessage,
             SpriteAnimationMessage,
+            OSKMessage,
             Count
         };
 
@@ -174,6 +175,21 @@ namespace cro
         {
             std::int32_t userType = -1; //! < User assigned event ID
             Entity entity; //! < Entity which raised the event
+        };
+
+        /*!
+        \brief Raised when a user interacts with the on-screen keyboard.
+        Use this for triggering audio effects etc
+        */
+        struct OSKEvent final
+        {
+            enum
+            {
+                KeyEntered,
+                Opened,
+                Closed
+            }type = KeyEntered;
+            SDL_Scancode scancode = SDL_SCANCODE_UNKNOWN;
         };
 
         ID id = -1;
