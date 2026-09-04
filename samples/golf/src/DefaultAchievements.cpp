@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -388,37 +388,23 @@ void DefaultAchievements::readFile()
     std::fill(m_statArray.begin(), m_statArray.end(), 0.f);
     std::fill(m_timeStamps.begin(), m_timeStamps.end(), 0);
 
-    std::size_t bitsize = sizeof(std::uint32_t) * m_bitArray.size();
-    std::size_t statsize = sizeof(std::int32_t) * m_statArray.size();
-    std::size_t timesize = sizeof(std::uint64_t) * m_timeStamps.size();
+    const std::size_t bitsize = sizeof(std::uint32_t) * m_bitArray.size();
+    const std::size_t statsize = sizeof(std::int32_t) * m_statArray.size();
+    const std::size_t timesize = sizeof(std::uint64_t) * m_timeStamps.size();
 
     const auto filePath = cro::App::getInstance().getPreferencePath() / FileName;
 
     if (cro::FileSystem::fileExists(filePath))
     {
-        LogI << FILE_LINE << ": FIXME use SDL" << std::endl;
+        cro::RaiiRWops file;
+        file.open(filePath, "rb");
 
-        struct stat st;
-        stat(U8PATH_CAST(filePath), &st);
-
-        FILE* inFile = fopen(U8PATH_CAST(filePath), "rb");
-        if (inFile && st.st_size >= static_cast<off_t>(bitsize + statsize)) //needs to be >= for backwards compat
+        if (file
+            && SDL_GetIOSize(file.filePtr()) >= (bitsize + statsize))
         {
-            auto read = fread(m_bitArray.data(), bitsize, 1, inFile);
-            if (read != 1)
-            {
-                LogW << "Failed reading achievement status" << std::endl;
-            }
-
-            read = fread(m_statArray.data(), statsize, 1, inFile);
-            if (read != 1)
-            {
-                LogW << "Failed reading stats" << std::endl;
-            }
-
-            fread(m_timeStamps.data(), timesize, 1, inFile);
-
-            fclose(inFile);
+            SDL_ReadIO(file.filePtr(), m_bitArray.data(), bitsize);
+            SDL_ReadIO(file.filePtr(), m_statArray.data(), statsize);
+            SDL_ReadIO(file.filePtr(), m_timeStamps.data(), timesize);
         }
         else
         {
@@ -434,14 +420,13 @@ void DefaultAchievements::writeFile()
     const std::size_t timesize = sizeof(std::uint64_t) * m_timeStamps.size();
     const auto filePath = cro::App::getInstance().getPreferencePath() / FileName;
 
-    LogI << FILE_LINE << ": FIXME use SDL" << std::endl;
-    FILE* outFile = fopen(U8PATH_CAST(filePath), "wb");
-    if (outFile)
+    cro::RaiiRWops file;
+    file.open(filePath, "wb");
+    if (file)
     {
-        fwrite(m_bitArray.data(), bitsize, 1, outFile);
-        fwrite(m_statArray.data(), statsize, 1, outFile);
-        fwrite(m_timeStamps.data(), timesize, 1, outFile);
-        fclose(outFile);
+        SDL_WriteIO(file.filePtr(), m_bitArray.data(), bitsize);
+        SDL_WriteIO(file.filePtr(), m_statArray.data(), statsize);
+        SDL_WriteIO(file.filePtr(), m_timeStamps.data(), timesize);
     }
     else
     {
