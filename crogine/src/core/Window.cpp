@@ -609,7 +609,6 @@ void Window::setLoadingProgress(float progress)
 
 void Window::setMouseCaptured(bool captured)
 {
-    LogW << "Did you mean to use setCursorVisible() ?" << std::endl;
     SDL_SetWindowRelativeMouseMode(m_window, captured);
     /*if (captured)
     {
