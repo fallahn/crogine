@@ -39,7 +39,7 @@ source distribution.
 #include <vector>
 
 //hack to cast u8 string pointers to regular char pointers used by C
-#define U8PATH_CAST(x) reinterpret_cast<const char*>(x.u8string().c_str())
+#define U8PATH_CAST(x) reinterpret_cast<const char*>(x.generic_u8string().c_str())
 
 namespace cro
 {

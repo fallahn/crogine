@@ -4442,7 +4442,7 @@ void PlaylistState::saveCourse(bool createNew)
         m_saveFileIndex = m_saveFiles.size();
 
         std::stringstream ss;
-        ss << "course" << std::setw(2) << std::setfill('0') << m_saveFileIndex << SaveFileExtension;
+        ss << "course" << std::setw(2) << std::setfill('0') << m_saveFileIndex << SaveFileExtension.string();
         m_saveFiles.push_back(ss.str());
     }
 
@@ -4472,7 +4472,7 @@ void PlaylistState::saveCourse(bool createNew)
             written += SDL_WriteIO(file.filePtr(), &entry, sizeof(entry));
         }
 
-        if (written != m_playlist.size() + 2)
+        if (written != (m_playlist.size()  + 2) * sizeof(entry))
         {
             LogE << "Incomplete save file written. Wrote: " << written << ", expected: " << m_playlist.size() + 2 << std::endl;
         }
@@ -4508,7 +4508,7 @@ void PlaylistState::loadCourse()
         m_playlist.clear();
         m_playlistIndex = 0;
 
-        static constexpr std::size_t MaxCount = 21; //18 holes + shrub/sky/audio
+        static constexpr std::size_t MaxCount = 21 * sizeof(SaveFileEntry); //18 holes + shrub/sky/audio
         std::size_t readTotal = 0;
         std::size_t read = 0;
 
@@ -4547,7 +4547,7 @@ void PlaylistState::loadCourse()
             }
             readTotal += read;
 
-        } while (read == 1 && readTotal < MaxCount);
+        } while (read == sizeof(SaveFileEntry) && readTotal < MaxCount);
 
         m_courseData.shrubPath = ShrubPath / m_shrubs[m_shrubIndex];
         m_courseData.skyboxPath = SkyboxPath / m_skyboxes[m_skyboxIndex];
@@ -4660,7 +4660,7 @@ bool PlaylistState::exportCourse()
     ss << "course" << std::setw(2) << std::setfill('0') << m_saveFileIndex << '/';
     courseDir = ss.str();
 
-    exportDir += courseDir;
+    exportDir /= courseDir;
 
     if (!cro::FileSystem::directoryExists(exportDir))
     {
