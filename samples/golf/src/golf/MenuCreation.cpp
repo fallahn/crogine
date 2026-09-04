@@ -3248,7 +3248,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             if (activated(evt))
             {
 #ifdef USE_GNS
-                m_sharedData.leagueTable = 7;
+                m_sharedData.leagueTable = 9; //TODO this should be career league count + 1
 #else
                 m_sharedData.leagueTable = 0;
 #endif
