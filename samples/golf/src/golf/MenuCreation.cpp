@@ -3248,7 +3248,9 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             if (activated(evt))
             {
 #ifdef USE_GNS
-                m_sharedData.leagueTable = 9; //TODO this should be career league count + 1
+                //hmm I had this set to 7 for some reason - I think just trying to default
+                //to the global league. This is why we need enums.
+                m_sharedData.leagueTable = 9;//7
 #else
                 m_sharedData.leagueTable = 0;
 #endif
