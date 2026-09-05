@@ -125,6 +125,8 @@ namespace
     constexpr std::uint32_t IconReturn = 0x242E;
     constexpr std::uint32_t IconSpace = 0x243A;
 
+    constexpr std::uint32_t IconCursor = 0x258E;
+
 
     constexpr std::uint32_t BasePreviewTextSize = 12; //gets scaled based on screen size
     constexpr std::uint32_t BaseKeyTextSize = 12; //as above
@@ -186,6 +188,8 @@ OSK::OSK()
         m_textFont.appendFromFile("assets/fonts/promptfont.ttf", ctx);
         ctx.codepointRange = {0x23F4,0x243A}; //keyboard icons, shift etc
         m_textFont.appendFromFile("assets/fonts/promptfont.ttf", ctx);
+        ctx.codepointRange = { 0x2580,0x2590 }; //block icons - used for cursor
+        m_textFont.appendFromFile("assets/fonts/promptfont.ttf", ctx);
 
         //TODO add emoji font if we allow for that input
 
@@ -238,6 +242,7 @@ OSK::OSK()
         m_previewText.setFillColour(Colour::Black);
         m_previewText.setFont(m_textFont);
         m_previewText.setAlignment(SimpleText::Alignment::Centre);
+        m_previewText.setString(IconCursor);
         
         m_textFont.setSmooth(true);
     }
@@ -281,7 +286,7 @@ void OSK::close(bool isSubmitted)
             std::fill(std::begin(m_textBuffer), std::end(m_textBuffer), 0);
             m_bufferIndex = 0;
 
-            m_previewText.setString(" ");
+            m_previewText.setString(IconCursor);
         }
 
         m_isActive = false;
@@ -421,6 +426,7 @@ void OSK::updateVertices()
                 {
                     c = KeyActive;
                 }
+
 
                 //clamps the width so rounding error at makes
                 //sure the far edges of buttons line up
@@ -572,7 +578,6 @@ void OSK::updateVertices()
 
     //texture may have updated so always reassign
     m_keyTextArray.setTexture(m_textFont.getTexture(keyTextSize));
-    //TODO how do we do text that's more than one char?
     m_keyTextArray.setVertexData(verts);
 
     m_xboxIcons.setTexture(m_textFont.getTexture(iconTextSize));
@@ -615,7 +620,7 @@ bool OSK::keypress(SDL_Scancode code)
             if (m_bufferIndex < MaxChars)
             {
                 m_textBuffer[m_bufferIndex++] = k;
-                m_previewText.setString(String::fromUtf32(m_textBuffer.begin(), m_textBuffer.begin() + m_bufferIndex));
+                m_previewText.setString(String::fromUtf32(m_textBuffer.begin(), m_textBuffer.begin() + m_bufferIndex) + IconCursor);
 
                 return true;
             }
@@ -624,7 +629,7 @@ bool OSK::keypress(SDL_Scancode code)
             if (m_bufferIndex > 0)
             {
                 m_textBuffer[--m_bufferIndex] = 0;
-                m_previewText.setString(String::fromUtf32(m_textBuffer.begin(), m_textBuffer.begin() + m_bufferIndex));
+                m_previewText.setString(String::fromUtf32(m_textBuffer.begin(), m_textBuffer.begin() + m_bufferIndex) + IconCursor);
                 return true;
             }
             return false;
@@ -812,6 +817,7 @@ bool OSK::handleEvent(const Event& evt)
         {
         default: break;
         case SDL_GAMEPAD_AXIS_LEFTX:
+        //case SDL_GAMEPAD_AXIS_RIGHTX:
             if (evt.gaxis.value > Threshold)
             {
                 //right
@@ -833,6 +839,7 @@ bool OSK::handleEvent(const Event& evt)
             applyAxisMotion();
             break;
         case SDL_GAMEPAD_AXIS_LEFTY:
+        //case SDL_GAMEPAD_AXIS_RIGHTY:
             if (evt.gaxis.value > Threshold)
             {
                 //down
@@ -918,6 +925,11 @@ bool OSK::handleEvent(const Event& evt)
             break;
         case GameController::ButtonX:
             keypress(SDL_SCANCODE_BACKSPACE);
+            updateVertices();
+            break;
+        case GameController::ButtonY:
+            keypress(SDL_SCANCODE_SPACE);
+            updateVertices();
             break;
         }
 

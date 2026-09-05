@@ -183,6 +183,7 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
 
         const auto& glyph = context.font->getGlyph(currChar, context.charSize, context.bold, 0.f);
 
+
         //if outline is larger, add first
         if (context.outlineThickness != 0)
         {

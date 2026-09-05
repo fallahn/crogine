@@ -273,8 +273,12 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold,
     }
     else
     {
-        //add the glyph to the page
+        //add the glyph to the page - make sure to check if the texture
+        //has changed - in which case this happened (probably) in the
+        //middle of rebuilding text, and we need to add *another*, deferred update....
+        const auto oldTex = m_pages[charSize].texture.getGLHandle();
         auto glyph = loadGlyph(codepoint, charSize, bold && fontData.context.allowBold, fontData.context.allowOutline ? outlineThickness : 0.f);
+        m_pages[charSize].deferredUpdate = m_pages[charSize].texture.getGLHandle() != oldTex;
         return currentGlyphs.insert(std::make_pair(key, glyph)).first->second;
     }
 
@@ -739,20 +743,27 @@ void Font::cleanup()
 
 std::uint32_t Font::getTextureID(std::uint32_t charSize) const
 {
-    //TODO this getse called every frame by the text
-    //system to see if the texture ID has changed so
-    //it needs to be as optimal as possible
+    //TODO this gets called every frame by the text
+    //system to see if the texture ID has changed
+    //when the text hack is active (currently not)
     return m_pages.count(charSize) != 0 ? m_pages.at(charSize).texture.getGLHandle() : 0;
 }
 
 bool Font::pageUpdated(std::uint32_t charSize) const
 {
-    return m_pages.count(charSize) != 0 && m_pages.at(charSize).updated;
+    return m_pages.count(charSize) != 0 && (m_pages.at(charSize).updated || m_pages.at(charSize).deferredUpdate);
 }
 
 void Font::markPageRead(std::uint32_t charSize) const
 {
-    m_pages.at(charSize).updated = false;
+    auto& page = m_pages.at(charSize);
+    if (!page.updated)
+    {
+        //this was probably a deferred update
+        page.deferredUpdate = false;
+    }
+
+    page.updated = false;
 }
 
 void Font::registerObserver(FontObserver* o) const

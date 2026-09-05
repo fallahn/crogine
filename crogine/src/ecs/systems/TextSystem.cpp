@@ -54,9 +54,9 @@ void TextSystem::process(float)
         auto& text = entity.getComponent<Text>();
 
         CRO_ASSERT(text.m_context.font, "no font has been assigned");
-        const auto texID = text.m_context.font->getTextureID(text.m_context.charSize);
+        //const auto texID = text.m_context.font->getTextureID(text.m_context.charSize);
         const bool isPageUpdate = text.m_context.font->pageUpdated(text.m_context.charSize)
-            || (texID != 0 && texID != drawable.m_textureInfo.textureID.textureID);
+            /*|| (texID != 0 && texID != drawable.m_textureInfo.textureID.textureID)*/; //text hack referred to by Font::getTextureID()
 
         if (text.m_dirtyFlags || isPageUpdate)
         {

@@ -249,9 +249,10 @@ namespace cro
             Page();
             Texture texture;
             std::map<std::uint64_t, Glyph> glyphs;
-            std::uint32_t nextRow = 0;
             std::vector<Row> rows;
+            std::uint32_t nextRow = 0;
             bool updated = false;
+            bool deferredUpdate = false;
         };
 
         mutable std::unordered_map<std::uint32_t, Page> m_pages;
