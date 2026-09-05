@@ -947,6 +947,8 @@ void GolfState::toggleFreeCam()
         }
     }
 
+    cro::App::getWindow().setMouseCaptured(m_photoMode);
+
     Activity a;
     a.client = m_sharedData.clientConnection.connectionID;
     a.type = m_photoMode ? Activity::FreecamStart : Activity::FreecamEnd;
