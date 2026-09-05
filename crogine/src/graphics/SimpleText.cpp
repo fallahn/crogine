@@ -36,8 +36,9 @@ source distribution.
 using namespace cro;
 
 SimpleText::SimpleText()
-    : m_fontTexture     (nullptr),
-    m_dirtyFlags        (DirtyFlags::All)
+    : m_fontTexture (nullptr),
+    m_dirtyFlags    (DirtyFlags::All),
+    m_lastTextureID (0)
 {
     setPrimitiveType(GL_TRIANGLES);
 }
@@ -236,9 +237,16 @@ FloatRect SimpleText::getGlobalBounds()
 
 void SimpleText::draw(const glm::mat4& parentTransform)
 {
-    if (m_dirtyFlags)
+    const auto dirty = m_context.font && (m_context.font->getTextureID(m_context.charSize) != m_lastTextureID);
+
+    if (m_dirtyFlags
+        || dirty)
     {
         m_dirtyFlags = 0;
+        if (dirty)
+        {
+            m_lastTextureID = m_context.font->getTextureID(m_context.charSize);
+        }
         updateVertices();
     }
     drawGeometry(getTransform() * parentTransform);

@@ -97,6 +97,18 @@ namespace Progress
             basePath /= "round_06/";
             assertPath();
             break;
+        case 7:
+            basePath /= "career/";
+            assertPath();
+            basePath /= "round_07/";
+            assertPath();
+            break;
+        case 8:
+            basePath /= "career/";
+            assertPath();
+            basePath /= "round_08/";
+            assertPath();
+            break;
         case MulliganID:
             basePath /= "career/";
             assertPath();

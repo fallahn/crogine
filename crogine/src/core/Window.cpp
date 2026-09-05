@@ -174,9 +174,9 @@ void Window::setVsyncEnabled(bool enabled)
     {
         if (enabled)
         {
-            if (!SDL_GL_SetSwapInterval(-1))
+            //if (!SDL_GL_SetSwapInterval(-1))
             {
-                LogW << "Adapative VSync unavailable, trying fixed rate VSync..." << std::endl;
+                //LogW << "Adapative VSync unavailable, trying fixed rate VSync..." << std::endl;
                 if (!SDL_GL_SetSwapInterval(1))
                 {
                     LogE << "SDL: Failed to enable VSync: " << SDL_GetError() << std::endl;
