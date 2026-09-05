@@ -59,10 +59,11 @@ source distribution.
 #include <crogine/util/Matrix.hpp>
 #include <crogine/util/Maths.hpp>
 
-#include <cstdint>
-#include <sstream>
-#include <iomanip>
 #include <array>
+#include <cstdint>
+#include <filesystem>
+#include <iomanip>
+#include <sstream>
 
 static inline constexpr float ToYards = 1.09361f;
 static inline constexpr float ToFeet = 3.281f;
@@ -195,14 +196,14 @@ struct Vertex final
 static inline void createKeystroke(std::int32_t key, bool down)
 {
     SDL_Event evt;
-    evt.type = SDL_KEYDOWN;
-    evt.key.keysym.mod = 0; //must zero out else we get phantom keypresses
-    evt.key.keysym.sym = key;
-    evt.key.keysym.scancode = SDL_GetScancodeFromKey(key);
+    evt.type = SDL_EVENT_KEY_DOWN;
+    evt.key.mod = 0; //must zero out else we get phantom keypresses
+    evt.key.key = key;
+    evt.key.scancode = SDL_GetScancodeFromKey(key, nullptr);
     evt.key.timestamp = 0;
     evt.key.repeat = 0;
     evt.key.windowID = 0;
-    evt.key.state = down ? SDL_PRESSED : SDL_RELEASED;
+    evt.key.down = down;
 
     SDL_PushEvent(&evt);
 };
@@ -710,7 +711,7 @@ static inline void togglePixelScale(SharedStateData& sharedData, bool on)
         auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
         msg->data0 = size.x;
         msg->data1 = size.y;
-        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+        msg->event = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
     }
 }
 
@@ -734,7 +735,7 @@ static inline void toggleAntialiasing(SharedStateData& sharedData, bool on, std:
         auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
         msg->data0 = size.x;
         msg->data1 = size.y;
-        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+        msg->event = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
     }
 }
 
@@ -1000,7 +1001,7 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
 {
     static const cro::Colour DefaultColour(0x7f7fffff);
 
-    auto extension = cro::FileSystem::getFileExtension(path);
+    const std::string extension = U8PATH_CAST(cro::FileSystem::getFileExtension(path));
     auto filePath = path.substr(0, path.length() - extension.length());
     filePath += "n" + extension;
 
@@ -1043,7 +1044,7 @@ struct SkyboxMaterials final
 
 //returns the entity with the cloud ring (so we can apply material)
 //and sets requesting the lensflare effect if the sun position is found
-static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, SkyboxMaterials& materials)
+static inline cro::Entity loadSkybox(const std::filesystem::path& path, cro::Scene& skyScene, cro::ResourceCollection& resources, SkyboxMaterials& materials)
 {
     auto skyTop = SkyTop;
     auto skyMid = TextNormalColour;
@@ -1147,7 +1148,7 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
             entity.addComponent<cro::Transform>().setPosition(model.position);
             entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, model.rotation * cro::Util::Const::degToRad);
             entity.getComponent<cro::Transform>().setScale(model.scale);
-            entity.setLabel(cro::FileSystem::getFileName(model.path));
+            entity.setLabel(U8PATH_CAST(cro::FileSystem::getFileName(model.path)));
             md.createModel(entity);
 
             std::int32_t matID = -1;
@@ -1227,7 +1228,7 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
 
     cro::Entity cloudEnt;
     if (loadClouds &&
-        md.loadFromFile("assets/golf/models/skybox/cloud_ring.cmt"))
+        md.loadFromFile(std::filesystem::path("assets/golf/models/skybox/cloud_ring.cmt")))
     {
         auto entity = skyScene.createEntity();
         entity.addComponent<cro::Transform>();

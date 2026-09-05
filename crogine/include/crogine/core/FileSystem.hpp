@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,8 +33,13 @@ source distribution.
 
 #include <crogine/Config.hpp>
 
+#include <filesystem>
+#include <future>
 #include <string>
 #include <vector>
+
+//hack to cast u8 string pointers to regular char pointers used by C
+#define U8PATH_CAST(x) reinterpret_cast<const char*>(x.generic_u8string().c_str())
 
 namespace cro
 {
@@ -42,162 +47,151 @@ namespace cro
     \brief Utilities for manipulating the current file system
     Where possible these functions try to maintain utf8 file paths
     using std::filesystem - although this isn't true on macOS < 10.15
+    As such many of these are just wrapper functions and it's probably
+    better to use the default std::filesystem functions eg 
+    std::filesystem::path::extension()
+    or
+    std::filesystem::path::filename()
     */
     class CRO_EXPORT_API FileSystem final
     {
     public:
+       
         /*!
         \brief Lists all the files in the given directory
-        Note that when concatinating string literals make sure
-        to include the utf-8 prefix
-        EG: path += u8"/subdir";
         */
-        static std::vector<std::string> listFiles(std::string path);
+        static std::vector<std::filesystem::path> listFiles(const std::filesystem::path& path);
+        
         /*!
         \brief Attempts to return a string containing the file extension
         of a given path, including the period (.)
         */
-        static std::string getFileExtension(const std::string& path);
+        static std::filesystem::path getFileExtension(const std::filesystem::path& path);
+        
         /*!
         \brief Attempts to return the name of a file at the end of
         a given file path
         */
-        static std::string getFileName(const std::string& path);
+        static std::filesystem::path getFileName(const std::filesystem::path& path);
+        
         /*!
         \brief Attempts to return the path of a given file path without
-        the file name, including trailing separator char.
+        the file name, or trailing separator char.
         */
-        static std::string getFilePath(const std::string& path);
+        static std::filesystem::path getFilePath(const std::filesystem::path& path);
+        
         /*!
         \brief Returns true if a file exists with the name at the given path
         Note that when calling this from an app running in a macOS bundle
         that the path should be prefixed with a call to getResourcePath()
+        */
+        static bool fileExists(const std::filesystem::path& path);
         
-        Note that when concatinating string literals make sure
-        to include the utf-8 prefix
-        EG: path += u8"/subdir";
-        */
-        static bool fileExists(const std::string& path);
         /*!
-        \brief Tries to create a directory relative to the executable
-        or via an absolute path.
+        \brief Tries to create a directory at the given path
         \returns false if creation fails and attempts to log the reason,
-        else returns true.
-        \param std::string path Path to create.
-
-        Note that when concatinating string literals make sure
-        to include the utf-8 prefix
-        EG: path += u8"/subdir";
+        eg perissions don't allow it, else returns true.
+        \param std::filesystem::path path Path to create.
         */
-        static bool createDirectory(const std::string& path);
+        static bool createDirectory(const std::filesystem::path& path);
+        
         /*!
         \brief Attempts to determine if a directory at the given path exists.
         Note that when calling this from an app running in a macOS bundle
         that the path should be prefixed with a call to getResourcePath()
         \returns true if the directory exists, else false. Attempts to log any
         errors to the console.
-
-        Note that when concatinating string literals make sure
-        to include the utf-8 prefix
-        EG: path += u8"/subdir";
         */
-        static bool directoryExists(const std::string& path);
+        static bool directoryExists(const std::filesystem::path& path);
+        
         /*!
-        \brief Returns a vector of strings containing the names of directories
-        found in the given path.
+        \brief Returns a vector of std::filesystem::path containing the names
+        of directories found in the given path.
         Note that when calling this from an app running in a macOS bundle
         that the path should be prefixed with a call to getResourcePath()
-
-        Note that when concatinating string literals make sure
-        to include the utf-8 prefix
-        EG: path += u8"/subdir";
         */
-        static std::vector<std::string> listDirectories(const std::string& path);
+        static std::vector<std::filesystem::path> listDirectories(const std::filesystem::path& path);
+        
         /*!
         \brief Returns the absolute path of the current working directory
         */
-        static std::string getCurrentDirectory();
+        static std::filesystem::path getCurrentDirectory();
+        
         /*!
         \brief Sets the current working directory to the given absolute path
-        \param path String containing the path to attempt to set to cwd
+        \param path std::filesystem::path containing the path to attempt to set to cwd
         \returns false on failure
         */
-        static bool setCurrentDirectory(std::string path);
+        static bool setCurrentDirectory(const std::filesystem::path& path);
 
         /*!
         \brief Removes the given directory and recursively removes all content
         Equivalent of rm -rf BE WARNED THIS IS A ONE WAY TRIP
         */
-        static void removeDirectory(const std::string& path);
+        static void removeDirectory(const std::filesystem::path& path);
 
         /*! 
         \brief Attempts to convert the given absolute path to a path relative to the given root directory
         \param path Absolute path to convert
         \param root Absolute path to root directory to which the result should be relative
         */
-        static std::string getRelativePath(std::string path, const std::string& root);
-
-        /*!
-        \brief Returns a path to the current user's config directory.
-        DEPRECATED Prefer cro::App::getPreferencePath() instead.
-        Config files should generally be written to this directory, rather than the
-        current working directory. Output is usually in the form of the following:
-        \code
-        Windows: C:\Users\squidward\AppData\Roaming\appname\
-        Linux: /home/squidward/.config/appname/
-        Mac: /Users/squidward/Library/Application Support/appname/
-        \endcode
-
-        WARNING some linux distros are known to return the current working directory
-        instead. This should be considered when using configuration files with the same
-        name as another which is expected to be stored in a unique directory.
-
-        \param appName Name of the current application used to create the appname directory
-        \returns Above formatted string, or an empty string if something went wrong
-        */
-        [[deprecated("Use cro::App::getPreferencePath() instead")]]
-        static std::string getConfigDirectory(const std::string& appName);
+        static std::filesystem::path getRelativePath(const std::filesystem::path& path, const std::filesystem::path& root);
 
         /*!
         \brief Show a native file dialogue to open a file
+        Note that this function blocks the thread on which it was called
+        until it return. For asyncronous file dialogues use openFileDialogueAsync()
         \param defaultDir Default path *and file* to open (optional)
         \param filter File extension filter in the format "png,jpg,bmp"
         \param selectMultiple If true then allows selecting multiple files
-        \returns path the path selected by the user
+        \returns the path selected by the user which is empty if cancelled
         */
-        static std::string openFileDialogue(const std::string& defaultDir = "", const std::string& filter = "", bool selectMultiple = false);
+        static std::filesystem::path openFileDialogue(const std::filesystem::path& defaultDir = "", const std::string& filter = "", bool selectMultiple = false);
+
+        /*!
+        \brief Show a native file dialogue to open a file
+        Note that this function returns immediately with a future
+        which will contain the result of the dialogue box.
+        \param defaultDir Default path *and file* to open (optional)
+        \param filter File extension filter in the format "png,jpg,bmp"
+        \param selectMultiple If true then allows selecting multiple files
+        \returns a future which will contain a vector of paths selected
+        by the user, which may be empty ifs empty if the dialogue was cancelled
+        */
+        [[nodiscard]]
+        static std::future<std::vector<std::filesystem::path>> openFileDialogueAsync(const std::filesystem::path& defaultDir = "", const std::string& filter = "", bool selectMultiple = false);
+
 
         /*!
         \brief Show a native file dialogue to open a folder
-        \param defaultPath String containing the default path to browse to
-        \returns path the path selected by the user
+        \param defaultPath std::filesystem::path containing the default path to browse to
+        \returns the path selected by the user which is empty if the user cancelled
         */
-        static std::string openFolderDialogue(const std::string& path = "");
+        static std::filesystem::path openFolderDialogue(const std::filesystem::path& path = "");
         
         /*!
         \brief Show a platform native file dialogue for saving files.
         \param defaultDir Default directory *and file* to save to - optional
         \param filter String containing file extension filter in the format "png,jpg,bmp"
-        \returns string containing the selected file path
+        \returns path containing the selected file path which is empty if the user cancelled
         */
-        static std::string saveFileDialogue(const std::string& defaultDir = "", const std::string& filter = "");
+        static std::filesystem::path saveFileDialogue(const std::filesystem::path& defaultDir = "", const std::string& filter = "");
 
         /*!
-         \brief Currently only relevant on macOS when creating an app bundle.
-         Basically a wrapper around the SFML resourcePath() function.
-         \returns path to the resource directory
-         \see fileExists()
-         \see directoryExists()
-         \see listDirectories()
-         */
-        static std::string getResourcePath();
+        \brief Currently only relevant on macOS when creating an app bundle.
+        \returns path to the resource directory
+        \see fileExists()
+        \see directoryExists()
+        \see listDirectories()
+        */
+        static std::filesystem::path getResourcePath();
 
         /*!
         \brief Sets the resource directory relative to the working directory.
         When using getResourcePath() this path will be appended to the working directory.
         Used, for example, when setting a sub-directory as a resource directory
         */
-        static void setResourceDirectory(const std::string& path);
+        static void setResourceDirectory(const std::filesystem::path& path);
 
         enum ButtonType
         {
@@ -211,7 +205,8 @@ namespace cro
 
         /*!
         \brief Shows a pop up message box to the user.
-        Can be used to express an error or ask a question.
+        Can be used to express an error or ask a question. Please
+        note that this is *blocking* until the user has pressed a button
         \param title The title string to display in the message box
         \param message The message string to display in the message box
         \param buttonType Button type to display. Defaults to OK
@@ -230,6 +225,6 @@ namespace cro
         static void showNotification(const std::string& title, const std::string& message, IconType = IconType::Info);
 
     private:
-        static std::string m_resourceDirectory;
+        static std::filesystem::path m_resourceDirectory;
     };
 }

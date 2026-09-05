@@ -305,7 +305,7 @@ namespace
 
     inline cro::String keyString(std::int32_t idx, const SharedStateData& sharedData)
     {
-        return " (" + cro::Keyboard::keyString(sharedData.inputBinding.keys[idx]) + ")";
+        return " (" + cro::Keyboard::keyString(sharedData.inputBinding.scancodes[idx]) + ")";
     };
 
     bool audioHackDone = false;
@@ -327,7 +327,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     std::fill(m_controllerScrollAxes.begin(), m_controllerScrollAxes.end(), 0);
     std::fill(m_controllerState.begin(), m_controllerState.end(), false);
 
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(true);
 
     m_videoSettings.fullScreen = ctx.mainWindow.isFullscreen();
     const auto size = ctx.mainWindow.getSize();
@@ -399,7 +399,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         else
         {
             //cancel the input
-            updateKeybind(/*evt.key.keysym.sym*/SDLK_ESCAPE);
+            updateKeybind(/*evt.key.key*/SDL_SCANCODE_ESCAPE);
         }
     };
 
@@ -421,22 +421,18 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         }
 
         cro::ButtonEvent fakeEvent;
-        fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+        fakeEvent.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
         fakeEvent.button.button = SDL_BUTTON_LEFT;
         m_scrollFunctions[callbackID](cro::Entity(), fakeEvent);
     };
 
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default:
-            if (m_updatingKeybind)
-            {
-                //apply keybind
-                updateKeybind(evt.key.keysym.sym);
-            }
+
             break;
 #ifdef CRO_DEBUG_
         case SDLK_KP_DIVIDE:
@@ -461,30 +457,37 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             closeWindow();
             return false;
         }
+
+        //if we're still here then let's accept the keybind
+        if (m_updatingKeybind)
+        {
+            //apply keybind
+            updateKeybind(evt.key.scancode);
+        }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         lastInput = LastInput::Keyboard;
 
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
 
         if (!m_updatingKeybind)
         {
-            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+            if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
             {
                 m_currentTabFunction = (m_currentTabFunction + (m_tabFunctions.size() - 1)) % m_tabFunctions.size();
                 m_tabFunctions[m_currentTabFunction]();
             }
-            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+            else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
             {
                 m_currentTabFunction = (m_currentTabFunction + 1) % m_tabFunctions.size();
                 m_tabFunctions[m_currentTabFunction]();
@@ -492,9 +495,9 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces refresh
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonB:
@@ -515,10 +518,10 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        cro::App::getWindow().setMouseCaptured(true);
-        switch (evt.cbutton.button)
+        cro::App::getWindow().setCursorVisible(false);
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonLeftShoulder:
@@ -537,34 +540,34 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             break;
         }
 
-        toggleControllerIcon(cro::GameController::controllerID(evt.cbutton.which));
+        toggleControllerIcon(cro::GameController::controllerID(evt.gbutton.which));
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
-        if (std::abs(evt.caxis.value) > cro::GameController::LeftThumbDeadZone)
+        const auto controllerID = cro::GameController::controllerID(evt.gaxis.which);
+        if (std::abs(evt.gaxis.value) > cro::GameController::LeftThumbDeadZone)
         {
             toggleControllerIcon(controllerID);
             m_controllerState[controllerID] = true;
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         }
         else
         {
             m_controllerState[controllerID] = false;
         }
 
-        if (evt.caxis.axis == cro::GameController::AxisRightY)
+        if (evt.gaxis.axis == cro::GameController::AxisRightY)
         {
             const auto menuID = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
-            const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
-            const auto amt = evt.caxis.value;
+            const auto controllerID = cro::GameController::controllerID(evt.gaxis.which);
+            const auto amt = evt.gaxis.value;
 
             if (amt < -cro::GameController::LeftThumbDeadZone
                 && m_controllerScrollAxes[controllerID] >= -cro::GameController::LeftThumbDeadZone)
             {
                 cro::ButtonEvent fakeEvent;
-                fakeEvent.type = SDL_CONTROLLERBUTTONDOWN;
-                fakeEvent.cbutton.button = cro::GameController::ButtonA;
+                fakeEvent.type = SDL_EVENT_GAMEPAD_BUTTON_DOWN;
+                fakeEvent.gbutton.button = cro::GameController::ButtonA;
 
                 if (menuID == MenuID::Achievements)
                 {
@@ -579,8 +582,8 @@ bool OptionsState::handleEvent(const cro::Event& evt)
                 && m_controllerScrollAxes[controllerID] <= cro::GameController::LeftThumbDeadZone)
             {
                 cro::ButtonEvent fakeEvent;
-                fakeEvent.type = SDL_CONTROLLERBUTTONDOWN;
-                fakeEvent.cbutton.button = cro::GameController::ButtonA;
+                fakeEvent.type = SDL_EVENT_GAMEPAD_BUTTON_DOWN;
+                fakeEvent.gbutton.button = cro::GameController::ButtonA;
                 
                 if (menuID == MenuID::Achievements)
                 {
@@ -603,7 +606,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             m_controllerScrollAxes[controllerID] = amt;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         lastInput = LastInput::Keyboard;
 
@@ -636,7 +639,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
@@ -648,15 +651,15 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             closeWindow();
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         lastInput = LastInput::Keyboard;
 
         updateSlider();
         updateScrollBar();
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(true);
     }
-    else if (evt.type == SDL_MOUSEWHEEL)
+    else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
         lastInput = LastInput::Keyboard;
         m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -673,8 +676,8 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_CONTROLLERDEVICEADDED
-        || evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    else if (evt.type == SDL_EVENT_GAMEPAD_ADDED
+        || evt.type == SDL_EVENT_GAMEPAD_REMOVED)
         {
             m_refreshControllers = true;
 
@@ -754,9 +757,9 @@ bool OptionsState::simulate(float dt)
                 //event here because only controller presses (not
                 //mouse presses) should latch the active state
                 cro::ButtonEvent fakeEvent;
-                /*fakeEvent.type = SDL_CONTROLLERBUTTONDOWN;
-                fakeEvent.cbutton.button = cro::GameController::ButtonA;*/
-                fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+                /*fakeEvent.type = SDL_EVENT_GAMEPAD_BUTTON_DOWN;
+                fakeEvent.gbutton.button = cro::GameController::ButtonA;*/
+                fakeEvent.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
                 fakeEvent.button.button = SDL_BUTTON_LEFT;
                 m_scrollFunctions[i](cro::Entity(), fakeEvent);
             }
@@ -876,36 +879,36 @@ void OptionsState::updateScrollBar()
     }
 }
 
-void OptionsState::updateKeybind(SDL_Keycode key)
+void OptionsState::updateKeybind(SDL_Scancode key)
 {
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 
     //prevent binding top row and function keys
     const std::array LockedKeys =
     {
-        SDLK_1,
-        SDLK_2,
-        SDLK_3,
-        SDLK_4,
-        SDLK_5,
-        SDLK_6,
-        SDLK_7,
-        SDLK_8,
-        SDLK_9,
-        SDLK_0,
+        SDL_SCANCODE_1,
+        SDL_SCANCODE_2,
+        SDL_SCANCODE_3,
+        SDL_SCANCODE_4,
+        SDL_SCANCODE_5,
+        SDL_SCANCODE_6,
+        SDL_SCANCODE_7,
+        SDL_SCANCODE_8,
+        SDL_SCANCODE_9,
+        SDL_SCANCODE_0,
 
-        SDLK_F1,
-        SDLK_F2,
-        SDLK_F3,
-        SDLK_F4,
-        SDLK_F5,
-        SDLK_F6,
-        SDLK_F7,
-        SDLK_F8,
-        SDLK_F9,
-        SDLK_F10,
-        SDLK_F11,
-        SDLK_F12,
+        SDL_SCANCODE_F1,
+        SDL_SCANCODE_F2,
+        SDL_SCANCODE_F3,
+        SDL_SCANCODE_F4,
+        SDL_SCANCODE_F5,
+        SDL_SCANCODE_F6,
+        SDL_SCANCODE_F7,
+        SDL_SCANCODE_F8,
+        SDL_SCANCODE_F9,
+        SDL_SCANCODE_F10,
+        SDL_SCANCODE_F11,
+        SDL_SCANCODE_F12,
     };
     if (auto result = std::find(std::begin(LockedKeys), std::end(LockedKeys), key); result != std::end(LockedKeys))
     {
@@ -927,7 +930,7 @@ void OptionsState::updateKeybind(SDL_Keycode key)
     }
 
 
-    auto& keys = m_sharedData.inputBinding.keys;
+    auto& keys = m_sharedData.inputBinding.scancodes;
     if (auto result = std::find(keys.begin(), keys.end(), key); result != keys.end())
     {
         cro::Command cmd;
@@ -952,8 +955,8 @@ void OptionsState::updateKeybind(SDL_Keycode key)
     m_updatingKeybind = false;
 
     //these keys cancel the input
-    if (key != SDLK_ESCAPE
-        && key != SDLK_BACKSPACE)
+    if (key != SDL_SCANCODE_ESCAPE
+        && key != SDL_SCANCODE_BACKSPACE)
     {
         keys[m_bindingIndex] = key;
     }
@@ -963,8 +966,8 @@ void OptionsState::updateKeybind(SDL_Keycode key)
     cmd.targetFlags = CommandID::Menu::InfoString;
     cmd.action = [key](cro::Entity e, float)
     {
-        if (key != SDLK_ESCAPE
-            && key != SDLK_BACKSPACE)
+        if (key != SDL_SCANCODE_ESCAPE
+            && key != SDL_SCANCODE_BACKSPACE)
         {
             e.getComponent<cro::Text>().setString("Set to (" + cro::Keyboard::keyString(key) + ")");
         }
@@ -1112,7 +1115,7 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setString("<" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+    entity.getComponent<cro::Text>().setString("<" + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::PrevClub]));
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -1121,7 +1124,7 @@ void OptionsState::buildScene()
             if (lastInput == LastInput::Keyboard)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                e.getComponent<cro::Text>().setString("<" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+                e.getComponent<cro::Text>().setString("<" + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::PrevClub]));
             }
             else
             {
@@ -1135,7 +1138,7 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + ">");
+    entity.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::NextClub]) + ">");
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -1144,7 +1147,7 @@ void OptionsState::buildScene()
             if (lastInput == LastInput::Keyboard)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + ">");
+                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::NextClub]) + ">");
             }
             else
             {
@@ -2110,7 +2113,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
             msg->data0 = size.x;
             msg->data1 = size.y;
-            msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+            msg->event = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
 
             fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
         };
@@ -2403,7 +2406,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                         auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
                         msg->data0 = size.x;
                         msg->data1 = size.y;
-                        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+                        msg->event = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
 
                         fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
                     }
@@ -2434,7 +2437,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                         auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
                         msg->data0 = size.x;
                         msg->data1 = size.y;
-                        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+                        msg->event = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
 
                         fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
                     }
@@ -3642,7 +3645,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
             [&, infoEnt, keyIndex](cro::Entity e, cro::ButtonEvent evt) mutable
             {
-                if ((evt.type == SDL_KEYUP || evt.type == SDL_MOUSEBUTTONUP)
+                if ((evt.type == SDL_EVENT_KEY_UP || evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
                     && activated(evt))
                 {
                     m_updatingKeybind = true;
@@ -3666,21 +3669,21 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         auto textEnt = m_scene.createEntity();
         textEnt.addComponent<cro::Transform>().setPosition(glm::vec3(bounds.width / 2.f, 10.f, -0.01f));
         textEnt.addComponent<cro::Drawable2D>();
-        textEnt.addComponent<cro::Text>(uiFont).setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[keyIndex]));
+        textEnt.addComponent<cro::Text>(uiFont).setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[keyIndex]));
         textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
         textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
         textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         textEnt.addComponent<cro::Callback>().active = true;
-        textEnt.getComponent<cro::Callback>().setUserData<std::int32_t>(m_sharedData.inputBinding.keys[keyIndex]);
+        textEnt.getComponent<cro::Callback>().setUserData<SDL_Scancode>(m_sharedData.inputBinding.scancodes[keyIndex]);
         textEnt.getComponent<cro::Callback>().function =
             [&, keyIndex](cro::Entity e, float)
             {
-                auto& lastKey = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
-                if (lastKey != m_sharedData.inputBinding.keys[keyIndex])
+                auto& lastKey = e.getComponent<cro::Callback>().getUserData<SDL_Scancode>();
+                if (lastKey != m_sharedData.inputBinding.scancodes[keyIndex])
                 {
                     //update string
-                    e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[keyIndex]));
-                    lastKey = m_sharedData.inputBinding.keys[keyIndex];
+                    e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[keyIndex]));
+                    lastKey = m_sharedData.inputBinding.scancodes[keyIndex];
                 }
             };
         entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
@@ -3771,8 +3774,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                         e.getComponent<cro::UIInput>().setGroup(MenuID::Dummy);
                     }
 
-                    auto controllerIndex = evt.type == SDL_CONTROLLERBUTTONDOWN ?
-                        cro::GameController::controllerID(evt.cbutton.which) : 0;
+                    auto controllerIndex = evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN ?
+                        cro::GameController::controllerID(evt.gbutton.which) : 0;
 
                     std::size_t i = Social::isSteamdeck(false) ? LayoutID::Deck
                         : cro::GameController::getControllerCount() == 0 ? LayoutID::XBox :
@@ -4394,7 +4397,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
             if (activated(evt))
             {
                 InputBinding defaultBinding;
-                m_sharedData.inputBinding.keys = defaultBinding.keys;
+                m_sharedData.inputBinding.scancodes = defaultBinding.scancodes;
 
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -4887,15 +4890,15 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     const std::string flagDir = "assets/golf/images/flags/";
 
     auto flags = cro::FileSystem::listFiles(flagDir);
-    std::vector<std::pair<std::string, std::string>> mappedFlags;
+    std::vector<std::pair<std::filesystem::path, std::filesystem::path>> mappedFlags;
 
     flags.erase(std::remove_if(flags.begin(), flags.end(), 
-        [](const std::string& f)
+        [](const std::filesystem::path& f)
         {
-            return f.find(".png") == std::string::npos;
+            return f.extension() != ".png";
         }), flags.end());
 
-    if (auto pos = std::find(flags.begin(), flags.end(), "flag.png");
+    if (auto pos = std::find_if (flags.begin(), flags.end(), [](const std::filesystem::path& p) { return p == "flag.png"; });
         pos != flags.end() && pos != flags.begin())
     {
         std::iter_swap(flags.begin(), pos);
@@ -4905,7 +4908,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     if (m_sharedData.flagPath.empty()
         /*|| !cro::FileSystem::fileExists(m_sharedData.flagPath)*/)
     {
-        m_sharedData.flagPath = flagDir + flags[0];
+        m_sharedData.flagPath = U8PATH_CAST((flagDir / flags[0]));
     }
 
     for (const auto& flag : flags)
@@ -4918,13 +4921,13 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     const auto MaxUser = m_flagTextures.getLayerCount() - flags.size();
     for (auto i = 0u; i < MaxUser && i < userFlags.size(); ++i)
     {
-        const auto files = cro::FileSystem::listFiles(userDir + userFlags[i]);
+        const auto files = cro::FileSystem::listFiles(userDir / userFlags[i]);
         for (auto j = 0u; j < files.size(); ++j)
         {
             //just grab the first png we find
             if (cro::FileSystem::getFileExtension(files[j]) == ".png")
             {
-                mappedFlags.emplace_back(std::make_pair(userDir + userFlags[i] + "/", files[j]));
+                mappedFlags.emplace_back(std::make_pair(userDir / userFlags[i], files[j]));
                 break;
             }
         }
@@ -4934,13 +4937,14 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     const auto& paths = Content::getUserItemsPaths(Content::UserContent::Flag);
     for (const auto& p : paths)
     {
-        const auto files = cro::FileSystem::listFiles(p.string());
+        const auto files = cro::FileSystem::listFiles(p);
         for (auto j = 0u; j < files.size(); ++j)
         {
             //just grab the first png we find
             if (cro::FileSystem::getFileExtension(files[j]) == ".png")
             {
-                mappedFlags.emplace_back(std::make_pair(p.string() + "/", files[j]));
+                std::string u8p = U8PATH_CAST(p);
+                mappedFlags.emplace_back(std::make_pair(u8p + "/", files[j]));
                 break;
             }
         }
@@ -4954,7 +4958,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
     for (const auto& [path, flag] : mappedFlags)
     {
-        const auto fullPath = path + flag;
+        const auto fullPath = path / flag;
         if (tmp.loadFromFile(fullPath)
             && tmp.getSize() == FlagTextureSize)
         {
@@ -4962,7 +4966,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
             {
                 m_flagIndex = loadedCount;
             }
-            m_flagPaths.push_back(fullPath);
+            m_flagPaths.push_back(U8PATH_CAST(fullPath));
             m_flagTextures.insertLayer(tmp, loadedCount++);
         }
 
@@ -5491,7 +5495,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
 
-                if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+                if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
                 {
                     m_scrollPresses[ScrollID::AchUp].pressed = true;
                 }
@@ -5514,7 +5518,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
 
-                if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+                if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
                 {
                     m_scrollPresses[ScrollID::AchDown].pressed = true;
                 }
@@ -5797,7 +5801,7 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
 
-            if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+            if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
             {
                 m_scrollPresses[ScrollID::StatUp].pressed = true;
             }
@@ -5820,7 +5824,7 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
 
-            if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+            if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
             {
                 m_scrollPresses[ScrollID::StatDown].pressed = true;
             }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -49,7 +49,7 @@ MusicPlayer::~MusicPlayer()
 }
 
 //public
-bool MusicPlayer::loadFromFile(const std::string& path)
+bool MusicPlayer::loadFromFile(const std::filesystem::path& path)
 {
     if (!AudioRenderer::isValid())
     {
@@ -60,18 +60,17 @@ bool MusicPlayer::loadFromFile(const std::string& path)
 
     stop();
 
-
     m_bytesPerSample = 1; //default this to 1 so we don't get a div0 trying to play an empty file
-    auto filePath = cro::FileSystem::getResourcePath() + path;
+    const auto filePath = cro::FileSystem::getResourcePath() / path;
 
-    auto ext = FileSystem::getFileExtension(path);
+    const auto ext = FileSystem::getFileExtension(path);
     if (ext == ".wav")
     {
         m_audioFile = std::make_unique<WavLoader>();
         if (!m_audioFile->open(filePath))
         {
             m_audioFile.reset();
-            Logger::log("Failed to open " + path, Logger::Type::Error);
+            LogE << "Failed to open " << path << std::endl;
             return false;
         }
     }
@@ -81,7 +80,7 @@ bool MusicPlayer::loadFromFile(const std::string& path)
         if (!m_audioFile->open(filePath))
         {
             m_audioFile.reset();
-            Logger::log("Failed to open " + path, Logger::Type::Error);
+            LogE << "Failed to open " << path << std::endl;
             return false;
         }
     }
@@ -91,13 +90,13 @@ bool MusicPlayer::loadFromFile(const std::string& path)
         if (!m_audioFile->open(filePath))
         {
             m_audioFile.reset();
-            Logger::log("Failed to open " + path, Logger::Type::Error);
+            LogE << "Failed to open " << path << std::endl;
             return false;
         }
     }
     else
     {
-        Logger::log("[Music Player] - " + FileSystem::getFileName(path) + ": Unsupported file type.", Logger::Type::Error);
+        LogE << "[Music Player] - " << filePath.filename() << ": Unsupported file type." << std::endl;
         return false;
     }
 

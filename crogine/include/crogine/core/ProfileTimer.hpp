@@ -29,7 +29,7 @@ source distribution.
 
 #pragma once
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/SDLResource.hpp>

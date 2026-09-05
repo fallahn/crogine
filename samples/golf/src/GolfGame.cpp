@@ -321,26 +321,26 @@ void GolfGame::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
-    case SDL_WINDOWEVENT:
-        switch (evt.window.event)
-        {
-        default: break;
-        case SDL_WINDOWEVENT_MINIMIZED:
-        case SDL_WINDOWEVENT_FOCUS_LOST:
-            prefadeTarget = 0.f;
-            break;
-        case SDL_WINDOWEVENT_MAXIMIZED:
-        case SDL_WINDOWEVENT_FOCUS_GAINED:
-            //TODO switching to full screen
-            prefadeTarget = 1.f;
-            break;
-        }
+    //case SDL_WINDOWEVENT:
+        //switch (evt.window.event)
+    {
+    //default: break;
+    case SDL_EVENT_WINDOW_MINIMIZED:
+    case SDL_EVENT_WINDOW_FOCUS_LOST:
+        prefadeTarget = 0.f;
         break;
-    case SDL_MOUSEMOTION:
-        //cro::App::getWindow().setMouseCaptured(false);
+    case SDL_EVENT_WINDOW_MAXIMIZED:
+    case SDL_EVENT_WINDOW_FOCUS_GAINED:
+        //TODO switching to full screen
+        prefadeTarget = 1.f;
         break;
-    case SDL_KEYUP:
-        switch (evt.key.keysym.sym)
+    }
+        //break;
+    case SDL_EVENT_MOUSE_MOTION:
+        //cro::App::getWindow().setCursorVisible(true);
+        break;
+    case SDL_EVENT_KEY_UP:
+        switch (evt.key.key)
         {
         default: break;
 #ifdef CRO_DEBUG_
@@ -352,7 +352,7 @@ void GolfGame::handleEvent(const cro::Event& evt)
             m_progressIcon->show(0, 10, 10);
             break;*/
 #ifndef USE_GNS
-        case SDLK_t:
+        case SDLK_T:
             m_achievements->showTest();
             break;
 #endif
@@ -422,7 +422,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
     else if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             if (m_sharedData.usePostProcess)
             {
@@ -471,7 +471,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
 
                 //create a fake resize event to trigger any camera callbacks.
                 SDL_Event resizeEvent;
-                resizeEvent.type = SDL_WINDOWEVENT_SIZE_CHANGED;
+                resizeEvent.type = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
                 resizeEvent.window.windowID = 0;
                 resizeEvent.window.data1 = windowSize.x;
                 resizeEvent.window.data2 = windowSize.y;
@@ -696,12 +696,12 @@ void GolfGame::render()
 
 bool GolfGame::initialise()
 {
-    auto path = cro::App::getPreferencePath() + "user/";
+    auto path = cro::App::getPreferencePath() / "user";
     if (!cro::FileSystem::directoryExists(path))
     {
         cro::FileSystem::createDirectory(path);
     }
-    path = cro::App::getPreferencePath() + "courses/";
+    path = cro::App::getPreferencePath() / "courses";
     if (!cro::FileSystem::directoryExists(path))
     {
         cro::FileSystem::createDirectory(path);
@@ -754,7 +754,7 @@ bool GolfGame::initialise()
         }
 
         //tidy up any stuff left over from workshop tools
-        const auto tempPath = Content::getBaseContentPath() + "temp";
+        const auto tempPath = Content::getBaseContentPath() / "temp";
         if (cro::FileSystem::directoryExists(tempPath))
         {
             std::error_code ec;
@@ -763,6 +763,10 @@ bool GolfGame::initialise()
             if (ec)
             {
                 LogE << ec.message() << std::endl;
+            }
+            else
+            {
+                LogI << "Removed temporary drectory... " << std::endl;
             }
         }
     }
@@ -870,23 +874,23 @@ bool GolfGame::initialise()
             ImGui::SameLine();
             if (ImGui::Button("Open"))
             {
-                auto path = cro::FileSystem::openFileDialogue("", "txt,frag,glsl");
-                std::replace(path.begin(), path.end(), '\\', '/');
+                const auto path = cro::FileSystem::openFileDialogue("", "txt,frag,glsl");
+                //std::replace(path.begin(), path.end(), '\\', '/');
                 if (!path.empty())
                 {
                     cro::RaiiRWops file;
-                    file.file = SDL_RWFromFile(path.c_str(), "r");
-                    if (file.file)
+                    file.open(path, "r");
+                    if (file)
                     {
-                        auto size = SDL_RWsize(file.file);
+                        auto size = SDL_GetIOSize(file.filePtr());
                         std::vector<char> buffer(size);
-                        if (SDL_RWread(file.file, buffer.data(), size, 1))
+                        if (SDL_ReadIO(file.filePtr(), buffer.data(), size))
                         {
                             //teminate the string!
                             buffer.push_back(0);
                             if (setShader(buffer.data()))
                             {
-                                m_sharedData.customShaderPath = path;
+                                m_sharedData.customShaderPath = U8PATH_CAST(path);
                             }
                             else
                             {
@@ -947,7 +951,7 @@ bool GolfGame::initialise()
                 if (state == "true")
                 {
                     m_sharedData.logBenchmarks = true;
-                    cro::Console::print("Benchmarks will be logged to " + cro::App::getPreferencePath() + "benchmark/");
+                    cro::Console::print(std::string("Benchmarks will be logged to ") + U8PATH_CAST(cro::App::getPreferencePath()) + "/benchmark/");
                 }
                 else if (state == "false")
                 {
@@ -965,7 +969,7 @@ bool GolfGame::initialise()
         [](const std::string&)
         {
             //this assumes that the directory was successfully creates already...
-            cro::Util::String::parseURL(Content::getBaseContentPath());
+            cro::Util::String::parseURL(U8PATH_CAST(Content::getBaseContentPath()));
         });
 
     registerCommand("reset_leagues", 
@@ -1200,12 +1204,12 @@ bool GolfGame::initialise()
     if (!m_sharedData.customShaderPath.empty())
     {
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(m_sharedData.customShaderPath.c_str(), "r");
-        if (file.file)
+        file.open(m_sharedData.customShaderPath, "r");
+        if (file)
         {
-            auto size = SDL_RWsize(file.file);
+            auto size = SDL_GetIOSize(file.filePtr());
             std::vector<char> buffer(size);
-            if (SDL_RWread(file.file, buffer.data(), size, 1))
+            if (SDL_ReadIO(file.filePtr(), buffer.data(), size))
             {
                 //teminate the string!
                 buffer.push_back(0);
@@ -1370,7 +1374,7 @@ void GolfGame::initFonts()
 
     //controller icon font
     //ctx.codepointRange = {0x2190,0x21FF};
-    //m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
+    //m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/fonts/promptfont.ttf", ctx);
 
 
     //emoji fonts
@@ -1445,10 +1449,10 @@ void GolfGame::convertPreferences() const
 
     const std::array FileNames =
     {
-        std::string("profiles.tar"),
-        std::string("last.gue"),
-        std::string("lea.gue"),
-        std::string("keys.bind"),
+        std::filesystem::path("profiles.tar"),
+        std::filesystem::path("last.gue"),
+        std::filesystem::path("lea.gue"),
+        std::filesystem::path("keys.bind"),
     };
 
     //make sure the target doesn't yet exist - else
@@ -1456,8 +1460,8 @@ void GolfGame::convertPreferences() const
     //with old data...
     for (const auto& name : FileNames)
     {
-        const auto outPath = dstPath + name;
-        const auto inPath = srcPath + name;
+        const auto outPath = dstPath / name;
+        const auto inPath = srcPath / name;
 
         if (!cro::FileSystem::fileExists(outPath))
         {
@@ -1468,10 +1472,7 @@ void GolfGame::convertPreferences() const
                 LogI << inPath << " exists - attempting to copy..." << std::endl;
 
                 std::error_code ec;
-                std::filesystem::path src = std::filesystem::u8path(inPath);
-                std::filesystem::path dst = std::filesystem::u8path(outPath);
-
-                std::filesystem::copy(src, dst, std::filesystem::copy_options::skip_existing | std::filesystem::copy_options::recursive, ec);
+                std::filesystem::copy(inPath, outPath, std::filesystem::copy_options::skip_existing | std::filesystem::copy_options::recursive, ec);
 
                 if (ec)
                 {
@@ -1485,7 +1486,7 @@ void GolfGame::convertPreferences() const
             if (cro::FileSystem::fileExists(inPath))
             {
                 std::error_code ec;
-                std::filesystem::rename(std::filesystem::u8path(inPath), std::filesystem::u8path(inPath + ".old"), ec);
+                std::filesystem::rename(inPath, inPath / ".old", ec);
 
                 if (ec)
                 {
@@ -1497,26 +1498,23 @@ void GolfGame::convertPreferences() const
 
     const std::array DirNames =
     {
-        std::string("avatars"),
-        std::string("balls"),
-        std::string("hair"),
-        std::string("music"),
-        std::string("profiles"),
+        std::filesystem::path("avatars"),
+        std::filesystem::path("balls"),
+        std::filesystem::path("hair"),
+        std::filesystem::path("music"),
+        std::filesystem::path("profiles"),
     };
     srcPath += "user/";
 
     for (const auto& dir : DirNames)
     {
-        const auto outPath = dstPath + dir;
-        const auto inPath = srcPath + dir;
+        const auto outPath = dstPath / dir;
+        const auto inPath = srcPath / dir;
 
         if (cro::FileSystem::directoryExists(inPath))
         {
             std::error_code ec;
-            std::filesystem::path src = std::filesystem::u8path(inPath);
-            std::filesystem::path dst = std::filesystem::u8path(outPath);
-
-            std::filesystem::copy(src, dst, std::filesystem::copy_options::skip_existing | std::filesystem::copy_options::recursive, ec);
+            std::filesystem::copy(inPath, outPath, std::filesystem::copy_options::skip_existing | std::filesystem::copy_options::recursive, ec);
 
             if (ec)
             {
@@ -1524,7 +1522,7 @@ void GolfGame::convertPreferences() const
             }
             else
             {
-                std::filesystem::rename(inPath, inPath + ".old");
+                std::filesystem::rename(inPath, inPath / ".old");
             }
         }
     }
@@ -1540,7 +1538,8 @@ void GolfGame::loadPreferences()
     //make sure to set all defaults *before* loading any files
     //m_sharedData.useLargePowerBar = Social::isSteamdeck();
 
-    auto path = getPreferencePath() + "prefs.cfg";
+    std::filesystem::path path = getPreferencePath() / "prefs.cfg";
+
     if (cro::FileSystem::fileExists(path))
     {
         cro::ConfigFile cfg;
@@ -1719,7 +1718,7 @@ void GolfGame::loadPreferences()
     //read user-specific prefs. This overwrites some of the above as we might be upgrading from the old version
     if (!safeMode)
     {
-        path = Content::getBaseContentPath() + "user_prefs.cfg";
+        path = Content::getBaseContentPath() / "user_prefs.cfg";
         if (cro::FileSystem::fileExists(path))
         {
             cro::ConfigFile cfg;
@@ -1947,7 +1946,7 @@ void GolfGame::loadPreferences()
             m_sharedData.imperialMeasurements = TimeOfDay::getCountryCode() == "US";
         }
 
-        path = Content::getBaseContentPath() + "league_names.txt";
+        path = Content::getBaseContentPath() / "league_names.txt";
         if (!cro::FileSystem::fileExists(path))
         {
             m_sharedData.leagueNames.write();
@@ -1967,54 +1966,99 @@ void GolfGame::loadPreferences()
 
 
     //read keybind bin
-    path = Content::getBaseContentPath() + "keys.bind";
+    path = Content::getBaseContentPath() / "keys.bind";
+    bool needsConversion = false;
 
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "rb");
-        if (file.file)
+        file.open(path, "rb");
+        if (file)
         {
-            auto size = SDL_RWsize(file.file);
+            auto size = SDL_GetIOSize(file.filePtr());
             if (size == sizeof(InputBinding))
             {
-                SDL_RWread(file.file, &m_sharedData.inputBinding, size, 1);
+                SDL_ReadIO(file.filePtr(), &m_sharedData.inputBinding, size);
                 LOG("Read keybinds file", cro::Logger::Type::Info);
+            }
+        }
+        needsConversion = true;
+    }
+
+    //hack for existing keybinds which weren't expecting the billiards update
+    if (needsConversion)
+    {
+        //this assumes we still have the old data
+        //the key values will then get converted to proper scan codes, below
+        if (m_sharedData.inputBinding.scancodes[InputBinding::Up] == SDLK_UNKNOWN)
+        {
+            m_sharedData.inputBinding.scancodes[InputBinding::Up] = static_cast<SDL_Scancode>(SDLK_W);
+        }
+        if (m_sharedData.inputBinding.scancodes[InputBinding::Down] == SDLK_UNKNOWN)
+        {
+            m_sharedData.inputBinding.scancodes[InputBinding::Down] = static_cast<SDL_Scancode>(SDLK_S);
+        }
+
+        //and then the cancel button update
+        if (m_sharedData.inputBinding.scancodes[InputBinding::CancelShot] == SDLK_UNKNOWN)
+        {
+            m_sharedData.inputBinding.scancodes[InputBinding::CancelShot] = static_cast<SDL_Scancode>(SDLK_LSHIFT);
+        }
+
+        //and the ball spin update
+        if (m_sharedData.inputBinding.scancodes[InputBinding::EmoteMenu] == SDLK_UNKNOWN)
+        {
+            m_sharedData.inputBinding.scancodes[InputBinding::EmoteMenu] = static_cast<SDL_Scancode>(SDLK_LCTRL);
+        }
+        if (m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu] == SDLK_UNKNOWN)
+        {
+            m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu] = static_cast<SDL_Scancode>(SDLK_LALT);
+        }
+    }
+
+
+    //if we haven't converted to the new keybinds yet, do so (we're using scancodes now)
+    path = Content::getBaseContentPath() / "codes.bind";
+
+    if (!cro::FileSystem::fileExists(path)
+        && needsConversion)
+    {
+        for (auto& k : m_sharedData.inputBinding.scancodes)
+        {
+            k = SDL_GetScancodeFromKey(k, nullptr);
+        }
+        LogI << "converted keybinds" << std::endl;
+
+        cro::RaiiRWops file;
+        file.open(path, "wb");
+        if (file)
+        {
+            SDL_WriteIO(file.filePtr(), &m_sharedData.inputBinding, sizeof(InputBinding));
+        }
+        std::filesystem::remove(Content::getBaseContentPath() / "keys.bind");
+    }
+    else
+    {
+        //load the file
+        cro::RaiiRWops file;
+        file.open(path, "rb");
+        if (file)
+        {
+            auto size = SDL_GetIOSize(file.filePtr());
+            if (size == sizeof(InputBinding))
+            {
+                SDL_ReadIO(file.filePtr(), &m_sharedData.inputBinding, size);
+                LOG("Read scancodes file", cro::Logger::Type::Info);
             }
         }
     }
 
-    //hack for existing keybinds which weren't expecting the billiards update
-    if (m_sharedData.inputBinding.keys[InputBinding::Up] == SDLK_UNKNOWN)
-    {
-        m_sharedData.inputBinding.keys[InputBinding::Up] = SDLK_w;
-    }
-    if (m_sharedData.inputBinding.keys[InputBinding::Down] == SDLK_UNKNOWN)
-    {
-        m_sharedData.inputBinding.keys[InputBinding::Down] = SDLK_s;
-    }
-
-    //and then the cancel button update
-    if (m_sharedData.inputBinding.keys[InputBinding::CancelShot] == SDLK_UNKNOWN)
-    {
-        m_sharedData.inputBinding.keys[InputBinding::CancelShot] = SDLK_LSHIFT;
-    }
-
-    //and the ball spin update
-    if (m_sharedData.inputBinding.keys[InputBinding::EmoteMenu] == SDLK_UNKNOWN)
-    {
-        m_sharedData.inputBinding.keys[InputBinding::EmoteMenu] = SDLK_LCTRL;
-    }
-    if (m_sharedData.inputBinding.keys[InputBinding::SpinMenu] == SDLK_UNKNOWN)
-    {
-        m_sharedData.inputBinding.keys[InputBinding::SpinMenu] = SDLK_LALT;
-    }
 
     m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
 
-    if (!cro::FileSystem::directoryExists(Content::getBaseContentPath() + u8"music"))
+    if (!cro::FileSystem::directoryExists(Content::getBaseContentPath() / "music"))
     {
-        cro::FileSystem::createDirectory(Content::getBaseContentPath() + u8"music");
+        cro::FileSystem::createDirectory(Content::getBaseContentPath() / "music");
     }
     loadMusic();
 
@@ -2029,7 +2073,8 @@ void GolfGame::loadPreferences()
 
 void GolfGame::savePreferences()
 {
-    auto path = getPreferencePath() + "prefs.cfg";
+    std::filesystem::path path = getPreferencePath() / "prefs.cfg";
+
     cro::ConfigFile cfg("preferences");
 
     //advanced options
@@ -2055,7 +2100,7 @@ void GolfGame::savePreferences()
 
 
     //per-user options
-    path = Content::getBaseContentPath() + "user_prefs.cfg";
+    path = Content::getBaseContentPath() / "user_prefs.cfg";
     cfg = cro::ConfigFile("user_preferences");
     cfg.addProperty("pixel_scale").setValue(m_sharedData.pixelScale);
     cfg.addProperty("fov").setValue(m_sharedData.fov);
@@ -2114,12 +2159,12 @@ void GolfGame::savePreferences()
 
 
     //keybinds
-    path = Content::getBaseContentPath() + "keys.bind";
+    path = Content::getBaseContentPath() / "codes.bind";
     cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(path.c_str(), "wb");
-    if (file.file)
+    file.open(path, "wb");
+    if (file)
     {
-        SDL_RWwrite(file.file, &m_sharedData.inputBinding, sizeof(InputBinding), 1);
+        SDL_WriteIO(file.filePtr(), &m_sharedData.inputBinding, sizeof(InputBinding));
     }
 
     inv::write(m_sharedData.inventory);
@@ -2137,7 +2182,7 @@ void GolfGame::loadAvatars()
     //if we're updating attept to read existing profiles and convert them
     std::vector<PlayerData> oldProfiles;
 
-    auto path = cro::App::getPreferencePath() + "avatars.cfg";
+    auto path = cro::App::getPreferencePath() / "avatars.cfg";
     cro::ConfigFile cfg;
     if (cro::FileSystem::fileExists(path) &&
         cfg.loadFromFile(path, false))
@@ -2233,9 +2278,9 @@ void GolfGame::loadAvatars()
 
     std::int32_t i = 0;
 #ifdef USE_GNS
-    auto uid = Social::getPlayerID();
+    const auto uid = Social::getPlayerID();
     
-    auto steamPath = path + uid + "/";
+    const auto steamPath = path / uid;
 
     if (!cro::FileSystem::directoryExists(steamPath)
         || safeMode)
@@ -2255,15 +2300,16 @@ void GolfGame::loadAvatars()
     {
         auto files = cro::FileSystem::listFiles(steamPath);
         files.erase(std::remove_if(files.begin(), files.end(),
-            [](const std::string& f)
+            [](const std::filesystem::path& f)
             {
-                return cro::FileSystem::getFileExtension(f) != ".pfl";
+                return f.extension() != ".pfl";
             }), files.end());
 
         if (!files.empty())
         {
             PlayerData pd;
-            if (!pd.loadProfile(steamPath + files[0], files[0].substr(0, files[0].size() - 4)))
+            const std::string u8p = U8PATH_CAST(files[0]);
+            if (!pd.loadProfile(steamPath / files[0], u8p.substr(0, u8p.size() - 4)))
             {
                 //if we failed to load use the default
                 pd = PlayerData();
@@ -2305,9 +2351,10 @@ void GolfGame::loadAvatars()
 #ifdef USE_GNS
     //remove the steam profile because we already explicitly parsed it
     profileDirs.erase(std::remove_if(profileDirs.begin(), profileDirs.end(),
-        [uid](const std::string& d) 
+        [&uid](const std::filesystem::path& d) 
         {
-            return d == uid;
+            const std::string u8p = U8PATH_CAST(d);
+            return u8p == uid;
         }), profileDirs.end());
 
 #endif // USE_GNS
@@ -2320,18 +2367,19 @@ void GolfGame::loadAvatars()
     {
         for (const auto& dir : profileDirs)
         {
-            auto profilePath = path + dir + "/";
+            auto profilePath = path / dir;
             auto files = cro::FileSystem::listFiles(profilePath);
             files.erase(std::remove_if(files.begin(), files.end(),
-                [](const std::string& f)
+                [](const std::filesystem::path& f)
                 {
-                    return cro::FileSystem::getFileExtension(f) != ".pfl";
+                    return f.extension() != ".pfl";
                 }), files.end());
 
             if (!files.empty())
             {
                 PlayerData pd;
-                if (pd.loadProfile(profilePath + files[0], files[0].substr(0, files[0].size() - 4)))
+                const std::string u8p = U8PATH_CAST(files[0]);
+                if (pd.loadProfile(profilePath / files[0], u8p.substr(0, u8p.size() - 4)))
                 {
 #ifdef USE_GNS
                     //check if we need to convert this to the UID profile
@@ -2347,13 +2395,11 @@ void GolfGame::loadAvatars()
                         {
                             if (cro::FileSystem::getFileExtension(cFile) != ".pfl")
                             {
-                                auto dbPath = profilePath + cFile;
+                                const auto dbPath = profilePath / cFile;
                                 if (cro::FileSystem::fileExists(dbPath))
                                 {
                                     std::error_code ec;
-                                    std::filesystem::copy_file(std::filesystem::u8path(dbPath),
-                                        std::filesystem::u8path(steamPath + cFile),
-                                        std::filesystem::copy_options::update_existing, ec);
+                                    std::filesystem::copy_file(dbPath, steamPath / cFile, std::filesystem::copy_options::update_existing, ec);
 
                                     if (ec)
                                     {
@@ -2406,26 +2452,26 @@ void GolfGame::loadAvatars()
 void GolfGame::loadMusic()
 {
     //parse any music files into a playlist
-    M3UPlaylist m3uPlaylist(Content::getBaseContentPath() + u8"music/");
+    M3UPlaylist m3uPlaylist(Content::getBaseContentPath() / "music/");
 
     if (m3uPlaylist.getTrackCount() == 0)
     {
-        const auto loadFiles = [&](const std::string& path, const std::string& root)
+        const auto loadFiles = [&](const std::filesystem::path& path, const std::filesystem::path& root)
             {
                 const auto files = cro::FileSystem::listFiles(path);
                 for (const auto& file : files)
                 {
                     //horrible hack to skip menu music
 #ifdef USE_GNS
-                    if (file.find("101") == std::string::npos
-                        && file.find("201") == std::string::npos
-                        && file.find("104") == std::string::npos
-                        && file.find("204") == std::string::npos)
+                    if (file.u8string().find(u8"101") == std::u8string::npos
+                        && file.u8string().find(u8"201") == std::u8string::npos
+                        && file.u8string().find(u8"104") == std::u8string::npos
+                        && file.u8string().find(u8"204") == std::u8string::npos)
 #endif
                     {
                         //this checks the file has a valid extension
                         //and limits the number of files loaded
-                        m3uPlaylist.addTrack(root + file);
+                        m3uPlaylist.addTrack(root / file);
                     }
                 }
                 m3uPlaylist.shuffle();
@@ -2436,19 +2482,19 @@ void GolfGame::loadMusic()
         //see if the soundtrack is installed and prefer that
         auto soundtrackPath = Content::getSoundTrackPath();
         if (!soundtrackPath.empty()
-            && cro::FileSystem::directoryExists(soundtrackPath + u8"/mp3/"))
+            && cro::FileSystem::directoryExists(soundtrackPath / "mp3"))
         {
-            loadFiles(soundtrackPath + u8"/mp3/", soundtrackPath + u8"/mp3/");
+            loadFiles(soundtrackPath / "mp3", soundtrackPath / "mp3");
         }
 
         if (m3uPlaylist.getTrackCount() == 0)
 #endif
         {
             //look in the fallback dir
-            const auto MusicDir = u8"assets/golf/sound/music/";
-            if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + MusicDir))
+            const auto MusicDir = "assets/golf/sound/music/";
+            if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() / MusicDir))
             {
-                loadFiles(cro::FileSystem::getResourcePath() + MusicDir, MusicDir);
+                loadFiles(cro::FileSystem::getResourcePath() / MusicDir, MusicDir);
             }
         }
     }
@@ -2520,18 +2566,18 @@ bool GolfGame::setShader(const char* frag)
 
 void GolfGame::createHowTo()
 {
-    const std::string rootPath = cro::FileSystem::getResourcePath() + "assets/golf/guide/en/";
-    const std::string imagePath = cro::FileSystem::getResourcePath() + "assets/golf/guide/images/";
+    const auto rootPath = cro::FileSystem::getResourcePath() / "assets/golf/guide/en/";
+    const auto imagePath = cro::FileSystem::getResourcePath() / "assets/golf/guide/images/";
     auto filePaths = cro::FileSystem::listFiles(rootPath);
     std::sort(filePaths.begin(), filePaths.end());
 
     m_guideTextures = std::make_unique<cro::TextureResource>();
-    const auto& controlTex = m_guideTextures->get(imagePath + "controls.png");
+    const auto& controlTex = m_guideTextures->get(imagePath / "controls.png");
 
     pugi::xml_document doc;
     for (const auto& path : filePaths)
     {
-        if (const auto res = doc.load_file((rootPath + path).c_str(), 116, pugi::encoding_utf8); !res)
+        if (const auto res = doc.load_file((rootPath / path).c_str(), 116, pugi::encoding_utf8); !res)
         {
             LogE << "Could not open guide doc " << path << std::endl;
             LogE << res.description() << std::endl;
@@ -2564,7 +2610,7 @@ void GolfGame::createHowTo()
             else if (std::strcmp(c.name(), "image") == 0)
             {
                 const std::string imgName = c.text().as_string();
-                const auto& img = m_guideTextures->get(imagePath + imgName);
+                const auto& img = m_guideTextures->get(imagePath / imgName);
                 auto& item = chapter.items.emplace_back();
                 item.type = pg::Item::Image;
                 item.image = &img;
@@ -2769,12 +2815,13 @@ void GolfGame::createHowTo()
 void GolfGame::assertFileSystem()
 {
     const auto printErr =
-        [](const std::string& outPath) 
+        [](const std::filesystem::path& outPath) 
         {
             const std::string err = "Failed creating root preference path, reason:\n" + cro::Console::getLastOutput();
             cro::FileSystem::showMessageBox("Could Not Create Directory", err);
 
-            cro::FileSystem::showMessageBox("Missing Directory", "Please ensure that\n" + outPath + "\nexists");
+            const std::string u8p = U8PATH_CAST(outPath);
+            cro::FileSystem::showMessageBox("Missing Directory", "Please ensure that\n" + u8p + "\nexists");
         };
 
     //appdata/roaming/trederia/golf/
@@ -2792,7 +2839,7 @@ void GolfGame::assertFileSystem()
         }
     }
 
-    rootPath += "user";
+    rootPath /= "user";
     if (!cro::FileSystem::directoryExists(rootPath))
     {
         LogI << "Creating user preferences directory..." << std::endl;

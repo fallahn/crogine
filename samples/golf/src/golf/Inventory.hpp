@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -33,8 +33,9 @@ source distribution.
 
 #include <crogine/detail/Types.hpp>
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
+#include <filesystem>
 #include <string>
 
 namespace inv
@@ -114,13 +115,13 @@ namespace inv
         void read(const std::string& profileID)
         {
             std::fill(items.begin(), items.end(), -1);
-            const auto loadoutPath = Content::getUserContentPath(Content::UserContent::Profile) + "/" + profileID + "/load.out";
+            const auto loadoutPath = Content::getUserContentPath(Content::UserContent::Profile) / profileID / "load.out";
 
             cro::RaiiRWops file;
-            file.file = SDL_RWFromFile(loadoutPath.c_str(), "rb");
-            if (file.file)
+            file.open(loadoutPath, "rb");
+            if (file)
             {
-                if (!SDL_RWread(file.file, items.data(), sizeof(items), 1))
+                if (SDL_ReadIO(file.filePtr(), items.data(), sizeof(items)) < sizeof(items))
                 {
                     LogW << "Failed reading loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
                 }
@@ -142,19 +143,19 @@ namespace inv
             {
                 cro::FileSystem::createDirectory(path);
             }
-            path += profileID + "/";
+            path /= profileID + "/";
 
             if (!cro::FileSystem::directoryExists(path))
             {
                 cro::FileSystem::createDirectory(path);
             }
-            path += "load.out";
+            path /= "load.out";
 
             cro::RaiiRWops file;
-            file.file = SDL_RWFromFile(path.c_str(), "wb");
-            if (file.file)
+            file.open(path, "wb");
+            if (file)
             {
-                if (!file.file->write(file.file, items.data(), sizeof(items), 1))
+                if (SDL_WriteIO(file.filePtr(), items.data(), sizeof(items)) < sizeof(items))
                 {
                     LogW << "Failed writing loadout data for " << profileID << ", reason: " << SDL_GetError() << std::endl;
                 }
@@ -194,14 +195,14 @@ namespace inv
 
     static inline bool read(Inventory& dst)
     {
-        const std::string fileName("equip.inv");
-        const std::string filePath = Content::getBaseContentPath() + fileName;
+        const std::filesystem::path fileName("equip.inv");
+        const std::filesystem::path filePath = Content::getBaseContentPath() / fileName;
 
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(filePath.c_str(), "rb");
-        if (file.file)
+        file.open(filePath, "rb");
+        if (file)
         {
-            if (SDL_RWread(file.file, &dst, sizeof(Inventory), 1) == 0)
+            if (SDL_ReadIO(file.filePtr(), &dst, sizeof(Inventory)) < sizeof(Inventory))
             {
                 LogE << "Failed reading " << filePath << ", " << SDL_GetError() << std::endl;
                 return false;
@@ -215,14 +216,14 @@ namespace inv
     }
     static inline bool write(const Inventory& src)
     {
-        const std::string fileName("equip.inv");
-        const std::string filePath = Content::getBaseContentPath() + fileName;
+        const std::filesystem::path fileName("equip.inv");
+        const std::filesystem::path filePath = Content::getBaseContentPath() / fileName;
 
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(filePath.c_str(), "wb");
-        if (file.file)
+        file.open(filePath, "wb");
+        if (file)
         {
-            if (SDL_RWwrite(file.file, &src, sizeof(Inventory), 1) < 1)
+            if (SDL_WriteIO(file.filePtr(), &src, sizeof(Inventory)) < sizeof(Inventory))
             {
                 LogE << "Failed writing " << filePath << ", " << SDL_GetError() << std::endl;
                 return false;

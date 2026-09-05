@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -100,9 +100,9 @@ std::uint32_t CubemapTexture::getGLHandle() const
     return m_handle;
 }
 
-bool CubemapTexture::loadFromFile(const std::string& path)
+bool CubemapTexture::loadFromFile(const std::filesystem::path& path)
 {
-    std::array<std::string, CubemapDirection::Count> paths = {};
+    std::array<std::filesystem::path, CubemapDirection::Count> paths = {};
     if (!parseInputFile(path, paths))
     {
         return false;
@@ -179,7 +179,7 @@ bool CubemapTexture::loadFromFile(const std::string& path)
     return false;
 }
 
-bool CubemapTexture::loadFromFiles(const std::vector<std::string>& paths)
+bool CubemapTexture::loadFromFiles(const std::vector<std::filesystem::path>& paths)
 {
     if (paths.empty())
     {
@@ -204,7 +204,7 @@ bool CubemapTexture::loadFromFiles(const std::vector<std::string>& paths)
 
     if (m_handle)
     {
-        std::array<std::string, CubemapDirection::Count> imagePaths = {};
+        std::array<std::filesystem::path, CubemapDirection::Count> imagePaths = {};
         if (!parseInputFile(paths[0], imagePaths))
         {
             return false;
@@ -304,7 +304,7 @@ void CubemapTexture::generateMipMaps()
 }
 
 //private
-bool CubemapTexture::parseInputFile(const std::string& path, std::array<std::string, CubemapDirection::Count>& outPaths)
+bool CubemapTexture::parseInputFile(const std::filesystem::path& path, std::array<std::filesystem::path, CubemapDirection::Count>& outPaths)
 {
     if (FileSystem::getFileExtension(path) != ".ccm")
     {
@@ -319,15 +319,15 @@ bool CubemapTexture::parseInputFile(const std::string& path, std::array<std::str
         return false;
     }
 
-    auto currPath = cro::FileSystem::getFilePath(path);
+    const auto currPath = cro::FileSystem::getFilePath(path);
     const auto processPath =
-        [&](std::string& outPath, std::string inPath)
+        [&](std::filesystem::path& outPath, std::string inPath)
     {
         std::replace(inPath.begin(), inPath.end(), '\\', '/');
         if (inPath.find('/') == std::string::npos)
         {
             //assume this is in the same dir
-            outPath = currPath + inPath;
+            outPath = currPath / inPath;
         }
         else
         {

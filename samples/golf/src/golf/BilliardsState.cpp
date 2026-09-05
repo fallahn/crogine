@@ -157,7 +157,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     sd.clientConnection.quitThread();
     Timeline::setGameMode(Timeline::GameMode::Playing);
 #ifndef CRO_DEBUG_
-    ctx.mainWindow.setMouseCaptured(true);
+    ctx.mainWindow.setCursorVisible(false);
 #endif
     //this is already set to Clubhouse so the pause
     //menu knows where to go when quitting.
@@ -232,19 +232,19 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
     if (ImGui::GetIO().WantCaptureKeyboard
         || ImGui::GetIO().WantCaptureMouse)
     {
-        if (evt.type == SDL_MOUSEMOTION
+        if (evt.type == SDL_EVENT_MOUSE_MOTION
             && cro::App::getWindow().getMouseCaptured())
         {
-            cro::App::getWindow().setMouseCaptured(false);
+            cro::App::getWindow().setCursorVisible(true);
         }
 
         return false;
     }
 
 #ifdef CRO_DEBUG_
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_F2:
@@ -265,13 +265,13 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
     else 
 #endif
     //TODO we need a good way to release the mouse without interfering with game play...
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_ESCAPE:
-        case SDLK_p:
+        case SDLK_P:
         case SDLK_PAUSE:
             requestStackPush(StateID::Pause);
             break;
@@ -322,22 +322,22 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         case SDLK_TAB:
             //if (m_activeCamera == CameraID::Player)
             {
-                cro::App::getWindow().setMouseCaptured(false);
+                cro::App::getWindow().setCursorVisible(true);
             }
             break;
 #endif //CRO_DEBUG_
         }
 
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action])
         {
             sendReadyNotify();
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)))
+        if (evt.gbutton.which == cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)))
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::ButtonA:
@@ -352,15 +352,15 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
 //#ifdef CRO_DEBUG_
 //        else
 //        {
-//            LogI << "Event button ID " << evt.cbutton.which << ", controller ID " << cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)) << std::endl;
+//            LogI << "Event button ID " << evt.gbutton.which << ", controller ID " << cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)) << std::endl;
 //        }
 //#endif
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)))
+        if (evt.gbutton.which == cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)))
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::ButtonStart:
@@ -371,12 +371,12 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
 //#ifdef CRO_DEBUG_
 //        else
 //        {
-//            LogI << "Event button ID " << evt.cbutton.which << ", controller ID " << cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)) << std::endl;
+//            LogI << "Event button ID " << evt.gbutton.which << ", controller ID " << cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)) << std::endl;
 //        }
 //#endif
     }
 
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
@@ -398,7 +398,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
     case cro::Message::WindowMessage:
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             resizeBuffers();
         }
@@ -554,7 +554,7 @@ bool BilliardsState::simulate(float dt)
         {
 #ifndef CRO_DEBUG_
             //if (!cro::Keyboard::isKeyPressed(SDLK_TAB))
-                cro::App::getWindow().setMouseCaptured(true);
+                cro::App::getWindow().setCursorVisible(false);
 #endif
         }
 
@@ -582,7 +582,7 @@ bool BilliardsState::simulate(float dt)
     {
         if (cro::App::getWindow().getMouseCaptured())
         {
-            cro::App::getWindow().setMouseCaptured(false);
+            cro::App::getWindow().setCursorVisible(true);
         }
     }*/
 

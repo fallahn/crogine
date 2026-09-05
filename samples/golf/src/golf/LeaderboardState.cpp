@@ -155,33 +155,33 @@ bool LeaderboardState::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_p)
+        if (evt.key.key == SDLK_BACKSPACE
+            || evt.key.key == SDLK_ESCAPE
+            /*|| evt.key.key == SDLK_P*/)
         {
             quitState();
             return false;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        cro::App::getWindow().setMouseCaptured(true);
-        switch (evt.cbutton.button)
+        cro::App::getWindow().setCursorVisible(false);
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonB:
@@ -210,7 +210,7 @@ bool LeaderboardState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -218,16 +218,16 @@ bool LeaderboardState::handleEvent(const cro::Event& evt)
             return false;
         }
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(true);
     }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -274,16 +274,17 @@ void LeaderboardState::parseCourseDirectory()
 
     for (const auto& installPath : installed)
     {
-        const std::string coursePath = cro::FileSystem::getResourcePath() + installPath + "courses/";
+        const auto coursePath = cro::FileSystem::getResourcePath() / installPath / "courses/";
         auto dirs = cro::FileSystem::listDirectories(coursePath);
 
         std::sort(dirs.begin(), dirs.end());
 
         for (const auto& dir : dirs)
         {
-            if (dir.find("course_") != std::string::npos)
+            //TODO lookup how to do this without converting to string
+            if (dir.u8string().find(u8"course_") != std::u8string::npos)
             {
-                auto filePath = coursePath + dir + "/course.data";
+                auto filePath = coursePath / dir / "course.data";
                 if (cro::FileSystem::fileExists(filePath))
                 {
                     cro::ConfigFile cfg;
@@ -291,10 +292,10 @@ void LeaderboardState::parseCourseDirectory()
                     if (auto* prop = cfg.findProperty("title"); prop != nullptr)
                     {
                         const auto courseTitle = prop->getValue<std::string>();
-                        m_courseStrings.emplace_back(std::make_pair(dir, cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
+                        m_courseStrings.emplace_back(std::make_pair(U8PATH_CAST(dir), cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
 
 
-                        filePath = installPath + "courses/" + dir + "/preview.png";
+                        filePath = installPath / "courses" / dir / "preview.png";
                         //if this fails we still need the fallback to pad the vector
                         m_courseThumbs.push_back(&m_resources.textures.get(filePath));
                     }

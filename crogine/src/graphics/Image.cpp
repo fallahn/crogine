@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,7 +33,7 @@ source distribution.
 #include "../detail/stb_image_write.h"
 #include "../detail/stb_image_resize2.h"
 #include "../detail/SDLImageRead.hpp"
-#include <SDL_rwops.h>
+#include <SDL3/SDL_iostream.h>
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/ImageArray.hpp>
@@ -94,28 +94,28 @@ void Image::create(std::uint32_t width, std::uint32_t height, Colour colour, Ima
     m_format = format;
 }
 
-bool Image::loadFromFile(const std::string& filePath)
+bool Image::loadFromFile(const std::filesystem::path& p)
 {
-    std::string path;
-    std::filesystem::path p(filePath);
+    std::filesystem::path path;
     if (p.is_absolute())
     {
-        path = filePath;
+        path = p;
     }
     else
     {
-        path = FileSystem::getResourcePath() + filePath;
+        path = (FileSystem::getResourcePath() / p);
     }
 
-    auto* file = SDL_RWFromFile(path.c_str(), "rb");
+    RaiiRWops file;
+    file.open(path, "rb");
     if (!file)
     {
-        Logger::log("Failed opening " + path, Logger::Type::Error);
+        LogE << "Image: Failed opening " << path << std::endl;
         return false;
     }
 
     STBIMG_stbio_RWops io;
-    stbi_callback_from_RW(file, &io);
+    stbi_callback_from_RW(file.filePtr(), &io);
 
     std::int32_t w, h, fmt;
     auto* img = stbi_load_from_callbacks(&io.stb_cbs, &io, &w, &h, &fmt, 0);
@@ -139,14 +139,14 @@ bool Image::loadFromFile(const std::string& filePath)
         auto result = fmt == 2 ? false : loadFromMemory(static_cast<std::uint8_t*>(img), w, h, format);
         
         stbi_image_free(img);
-        SDL_RWclose(file);
+        file.close();
 
         return result;
     }
     else
     {
-        Logger::log("failed to open image: " + path, Logger::Type::Error);
-        SDL_RWclose(file);
+        LogE << "failed to open image: " << path << std::endl;
+        file.close();
 
         return false;
     }
@@ -216,11 +216,11 @@ const std::uint8_t* Image::getPixelData() const
 
 void image_writer_func(void* context, void* data, int size)
 {
-    SDL_RWops* file = (SDL_RWops*)context;
-    SDL_RWwrite(file, data, size, 1);
+    SDL_IOStream* file = (SDL_IOStream*)context;
+    SDL_WriteIO(file, data, size);
 }
 
-bool Image::write(const std::string& path, bool flipOnWrite)
+bool Image::write(const std::filesystem::path& path, bool flipOnWrite)
 {
     if (cro::FileSystem::getFileExtension(path) != ".png")
     {
@@ -251,8 +251,8 @@ bool Image::write(const std::string& path, bool flipOnWrite)
     stbi_flip_vertically_on_write((m_flipped || flipOnWrite) ? 1 : 0);
 
     RaiiRWops out;
-    out.file = SDL_RWFromFile(path.c_str(), "wb");
-    return stbi_write_png_to_func(image_writer_func, out.file, m_size.x, m_size.y, pixelWidth, m_data.data(), m_size.x * pixelWidth) != 0;
+    out.open(path, "wb");
+    return stbi_write_png_to_func(image_writer_func, out.filePtr(), m_size.x, m_size.y, pixelWidth, m_data.data(), m_size.x * pixelWidth) != 0;
 }
 
 void Image::setPixel(std::size_t x, std::size_t y, cro::Colour colour)

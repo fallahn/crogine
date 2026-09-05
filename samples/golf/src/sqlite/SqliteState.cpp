@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -68,9 +68,9 @@ bool SqliteState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -139,7 +139,7 @@ void SqliteState::createScene()
 
 void SqliteState::createUI()
 {
-    m_db.open(cro::App::getPreferencePath() + "profile.db3");
+    m_db.open(cro::App::getPreferencePath() / "profile.db3");
 
     registerWindow([&]() 
         {

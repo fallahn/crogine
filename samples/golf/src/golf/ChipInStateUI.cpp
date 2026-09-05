@@ -568,7 +568,7 @@ void ChipInState::createUI()
                 const cro::Colour c = Club::getModifierIndex() == 1 ? TextHighlightColour : TextNormalColour;
 
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::PrevClub]));
                 e.getComponent<cro::Text>().setFillColour(c);
             }
             else
@@ -647,7 +647,7 @@ void ChipInState::createUI()
                 const cro::Colour c = Club::getModifierIndex() == 2 ? TextHighlightColour : TextNormalColour;
 
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]));
+                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::NextClub]));
                 e.getComponent<cro::Text>().setFillColour(c);
             }
             else
@@ -3186,7 +3186,7 @@ void ChipInState::updateSkipMessage(float dt)
                     else
                     {
                         data.buttonIndex = std::numeric_limits<std::uint32_t>::max();
-                        e.getComponent<cro::Text>().setString("Hold " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to Skip");
+                        e.getComponent<cro::Text>().setString("Hold " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Action]) + " to Skip");
                     }
                     centreText(e);
                 };
@@ -3194,7 +3194,7 @@ void ChipInState::updateSkipMessage(float dt)
             }
 
             //read input
-            if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Action])
+            if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Action])
                 || cro::GameController::isButtonPressed(activeControllerID(0), m_sharedData.inputBinding.buttons[InputBinding::Action]))
             {
                 m_skipState.currentTime = std::min(SkipState::SkipTime, m_skipState.currentTime + dt);

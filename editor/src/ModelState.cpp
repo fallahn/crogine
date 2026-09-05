@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -140,19 +140,19 @@ bool ModelState::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
-    case SDL_QUIT:
+    case SDL_EVENT_QUIT:
         if (m_entities[EntityID::ActiveModel].isValid())
         {
             showSaveMessage();
         }
         break;
-    case SDL_MOUSEMOTION:
+    case SDL_EVENT_MOUSE_MOTION:
         if (!m_useFreecam)
         {
             updateMouseInput(evt);
         }
         break;
-    case SDL_MOUSEWHEEL:
+    case SDL_EVENT_MOUSE_WHEEL:
         if(!m_useFreecam)
     {
         m_cameras[CameraID::Default].FOV = std::min(MaxFOV, std::max(MinFOV, m_cameras[CameraID::Default].FOV - (evt.wheel.y * 0.1f)));
@@ -176,7 +176,7 @@ void ModelState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             updateLayout(data.data0, data.data1);
             m_viewportRatio = updateView(m_cameras[CameraID::Default].camera, m_cameras[CameraID::Default].FarPlane, m_cameras[CameraID::Default].FOV);
@@ -557,7 +557,7 @@ void ModelState::toggleFreecam()
 void ModelState::loadPrefs()
 {
     cro::ConfigFile prefs;
-    if (prefs.loadFromFile(cro::App::getPreferencePath() + "model_viewer.cfg"))
+    if (prefs.loadFromFile(cro::App::getPreferencePath() / "model_viewer.cfg"))
     {
         const auto& props = prefs.getProperties();
         for (const auto& prop : props)
@@ -624,7 +624,7 @@ void ModelState::savePrefs()
     prefsOut.addProperty("export_dir").setValue(m_preferences.lastExportDirectory);
     prefsOut.addProperty("model_dir").setValue(m_preferences.lastModelDirectory);
 
-    if (prefsOut.save(cro::App::getPreferencePath() + "model_viewer.cfg"))
+    if (prefsOut.save(cro::App::getPreferencePath() / "model_viewer.cfg"))
     {
         //notify so the global prefs are also written
         auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);

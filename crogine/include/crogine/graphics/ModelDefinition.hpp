@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/ecs/components/Skeleton.hpp>
 
 #include <array>
+#include <filesystem>
 #include <memory>
 
 namespace cro
@@ -129,7 +130,7 @@ namespace cro
 
         /*!
         \brief Attempts to load a definition from a ConfigFile at a given path.
-        \param path String containing the path to a configuration file. These are
+        \param path filsesystem::path containing the path to a configuration file. These are
         specially formatted files containing data about a model.
         \param instanced set this to true if the model will be used with instanced
         rendering. Defaults to false
@@ -139,7 +140,8 @@ namespace cro
         \returns true if the configuration file was parsed without error.
         \see ConfigFile, EnvironmentMap
         */
-        bool loadFromFile(const std::string& path, bool instanced = false, bool useDeferredShaders = false, bool forceReload = false);
+        bool loadFromFile(const std::filesystem::path& path, bool instanced = false, bool useDeferredShaders = false, bool forceReload = false);
+
 
         /*!
         \brief Creates a Model component from the loaded config on the given entity.

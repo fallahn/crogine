@@ -197,12 +197,12 @@ bool PuttingState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
         switch (evt.key.keysym.sym)
         {
         default: break;
-        case SDLK_p:
+        case SDLK_P:
         case SDLK_ESCAPE:
         case SDLK_BACKSPACE:
         case SDLK_PAUSE:
@@ -279,7 +279,7 @@ bool PuttingState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
         if (evt.cbutton.which == cro::GameController::deviceID(0))
         {
@@ -292,7 +292,7 @@ bool PuttingState::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
 #ifdef CRO_DEBUG_
         if (!useFreeCam) {

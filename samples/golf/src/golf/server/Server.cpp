@@ -140,8 +140,8 @@ bool Server::addLocalVoiceConnection(net::NetClient& client)
     }
 //    return m_voiceHost.addLocalConnection(client);
 //#else
-    return false;
 #endif
+    return false;
 }
 
 void Server::setHostID(std::uint64_t id)

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -53,7 +53,7 @@ namespace cro
             const Mp3Loader& operator = (const Mp3Loader&) = delete;
             Mp3Loader& operator = (Mp3Loader&&) noexcept = delete;
 
-            bool open(const std::string&) override;
+            bool open(const std::filesystem::path&) override;
 
             const PCMData& getData(std::size_t = 0, bool looped = false) const override;
 

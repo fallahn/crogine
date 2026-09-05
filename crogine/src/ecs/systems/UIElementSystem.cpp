@@ -62,7 +62,7 @@ void UIElementSystem::handleMessage(const Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             const auto size = glm::vec2(data.data0, data.data1);
             auto& entities = getEntities();

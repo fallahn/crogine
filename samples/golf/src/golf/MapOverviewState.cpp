@@ -214,7 +214,7 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
     m_fingerCount       (0),
     m_ditherUniform     (-1)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Map Overview");
 
     CRO_ASSERT(sd.minimapData.mapScene, "");
@@ -264,52 +264,54 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
+        {
+            m_heatTarget = 1.f;
+        }
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
+        {
+            m_heatTarget = 0.f;
+        }
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu])
+        {
+            gotoTarget();
+        }
+
+        switch (evt.key.key)
         {
         default: 
-            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
-            {
-                m_heatTarget = 1.f;
-            }
-            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
-            {
-                m_heatTarget = 0.f;
-            }
-            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
-            {
-                gotoTarget();
-            }
+
             break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
-        case SDLK_6:
+        case SDLK_6: //WHY
             quitState();
             return false;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         setControlIcon(false);
 
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
         setControlIcon(true);
 
-        cro::App::getWindow().setMouseCaptured(true);
-        switch (evt.cbutton.button)
+        cro::App::getWindow().setCursorVisible(false);
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonB:
@@ -328,7 +330,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         setControlIcon(false);
 
@@ -343,63 +345,63 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             gotoTarget();
         }*/
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
             setControlIcon(true);
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         }
-        m_thumbsticks.setValue(evt.caxis.axis, evt.caxis.value);
+        m_thumbsticks.setValue(evt.gaxis.axis, evt.gaxis.value);
     }
-    else if (evt.type == SDL_CONTROLLERTOUCHPADDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN)
     {
         setControlIcon(true);
 
         m_fingerCount++;
-        if (evt.ctouchpad.finger < MaxFingers)
+        if (evt.gtouchpad.finger < MaxFingers)
         {
-            m_trackpadFingers[evt.ctouchpad.finger].prevPosition = { evt.ctouchpad.x, 1.f - evt.ctouchpad.y };
-            m_trackpadFingers[evt.ctouchpad.finger].currPosition = { evt.ctouchpad.x, 1.f - evt.ctouchpad.y };
+            m_trackpadFingers[evt.gtouchpad.finger].prevPosition = { evt.gtouchpad.x, 1.f - evt.gtouchpad.y };
+            m_trackpadFingers[evt.gtouchpad.finger].currPosition = { evt.gtouchpad.x, 1.f - evt.gtouchpad.y };
         }
-        //LogI << "Finger count " << m_fingerCount << " finger id " << evt.ctouchpad.finger << std::endl;
+        //LogI << "Finger count " << m_fingerCount << " finger id " << evt.gtouchpad.finger << std::endl;
     }
-    else if (evt.type == SDL_CONTROLLERTOUCHPADUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_TOUCHPAD_UP)
     {
         m_fingerCount--;
-        if (evt.ctouchpad.finger < MaxFingers)
+        if (evt.gtouchpad.finger < MaxFingers)
         {
             //this effectively resets the velocity to 0
-            m_trackpadFingers[evt.ctouchpad.finger].currPosition = m_trackpadFingers[evt.ctouchpad.finger].prevPosition;
+            m_trackpadFingers[evt.gtouchpad.finger].currPosition = m_trackpadFingers[evt.gtouchpad.finger].prevPosition;
         }
-        //LogI << "Finger count " << m_fingerCount << " finger id " << evt.ctouchpad.finger << std::endl;
+        //LogI << "Finger count " << m_fingerCount << " finger id " << evt.gtouchpad.finger << std::endl;
     }
-    else if (evt.type == SDL_CONTROLLERTOUCHPADMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION)
     {
         setControlIcon(true);
 
-        if (evt.ctouchpad.finger < MaxFingers)
+        if (evt.gtouchpad.finger < MaxFingers)
         {
-            glm::vec2 pos({ evt.ctouchpad.x, 1.f - evt.ctouchpad.y });
-            m_trackpadFingers[evt.ctouchpad.finger].prevPosition = m_trackpadFingers[evt.ctouchpad.finger].currPosition;
-            m_trackpadFingers[evt.ctouchpad.finger].currPosition = pos;
+            glm::vec2 pos({ evt.gtouchpad.x, 1.f - evt.gtouchpad.y });
+            m_trackpadFingers[evt.gtouchpad.finger].prevPosition = m_trackpadFingers[evt.gtouchpad.finger].currPosition;
+            m_trackpadFingers[evt.gtouchpad.finger].currPosition = pos;
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         setControlIcon(false);
 
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(true);
         if (evt.motion.state & (SDL_BUTTON_MIDDLE | SDL_BUTTON_LEFT))
         {
             panCamera({ -evt.motion.xrel, -evt.motion.yrel });
         }
     }
-    else if (evt.type == SDL_MOUSEWHEEL)
+    else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
         setControlIcon(false);
 
-        const auto amount = evt.wheel.preciseY;
+        const auto amount = evt.wheel.y;
         m_zoomScale = std::clamp(m_zoomScale + amount, MinZoom, MaxZoom);
         zoomCamera();
     }
@@ -429,19 +431,19 @@ void MapOverviewState::handleMessage(const cro::Message& msg)
 bool MapOverviewState::simulate(float dt)
 {
     glm::vec2 movement(0.f);
-    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left]))
+    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Left]))
     {
         movement.x -= 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Right]))
+    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Right]))
     {
         movement.x += 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
+    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Up]))
     {
         movement.y -= 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Down]))
+    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Down]))
     {
         movement.y += 1.f;
     }
@@ -726,7 +728,7 @@ void MapOverviewState::buildScene()
         {
             if (e.getComponent<cro::Transform>().getScale().x != 0)
             {
-                const auto str = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]);
+                const auto str = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu]);
                 e.getComponent<cro::Text>().setString(str);
             }
         };
@@ -895,7 +897,7 @@ void MapOverviewState::buildScene()
     };
 
     entity = m_scene.getActiveCamera();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(entity.getComponent<cro::Camera>());
 
     m_scene.simulate(0.f);

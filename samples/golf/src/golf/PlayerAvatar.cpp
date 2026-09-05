@@ -36,7 +36,7 @@ namespace
 
 }
 
-PlayerAvatar::PlayerAvatar(const std::string& path)
+PlayerAvatar::PlayerAvatar(const std::filesystem::path& path)
     : ProfileTexture(path)
 {
  

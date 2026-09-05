@@ -616,16 +616,16 @@ GolfState::~GolfState()
 //public
 bool GolfState::handleEvent(const cro::Event& evt)
 {
-    if (evt.type != SDL_MOUSEMOTION
-        && evt.type != SDL_CONTROLLERBUTTONDOWN
-        && evt.type != SDL_CONTROLLERBUTTONUP)
+    if (evt.type != SDL_EVENT_MOUSE_MOTION
+        && evt.type != SDL_EVENT_GAMEPAD_BUTTON_DOWN
+        && evt.type != SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
         if (ImGui::GetIO().WantCaptureKeyboard
             || ImGui::GetIO().WantCaptureMouse)
         {
-            if (evt.type == SDL_KEYUP)
+            if (evt.type == SDL_EVENT_KEY_UP)
             {
-                switch (evt.key.keysym.sym)
+                switch (evt.key.key)
                 {
                 default: break;
                 case SDLK_ESCAPE:
@@ -636,7 +636,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
                     }
                     break;
                 case SDLK_F8:
-                    if (evt.key.keysym.mod & KMOD_SHIFT)
+                    if (evt.key.mod & SDL_KMOD_SHIFT)
                     {
                         m_textChat.toggleWindow(false, true);
                     }
@@ -652,12 +652,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
     bool emoteHandled = false;
     if (m_photoMode)
     {
-        if (evt.type == SDL_KEYDOWN
-            && evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
+        if (evt.type == SDL_EVENT_KEY_DOWN
+            && evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu])
         {
             sendFreecamToTarget();
         }
-        else if (evt.type == SDL_MOUSEBUTTONDOWN
+        else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN
             && evt.button.button == SDL_BUTTON_MIDDLE)
         {
             sendFreecamToTarget();
@@ -694,7 +694,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     {
         if (getStateCount() == 1)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         }
     };
 
@@ -749,12 +749,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
             switch (evt.type)
             {
             default: break;
-            case SDL_MOUSEMOTION:
-            case SDL_KEYDOWN:
+            case SDL_EVENT_MOUSE_MOTION:
+            case SDL_EVENT_KEY_DOWN:
                 m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().play(0);
                 break;
-            case SDL_CONTROLLERBUTTONDOWN:
-                if (hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)))
+            case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+                if (hasPSLayout(cro::GameController::controllerID(evt.gbutton.which)))
                 {
                     m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().play(2);
                 }
@@ -763,8 +763,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
                     m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().play(1);
                 }
                 break;
-            case SDL_CONTROLLERAXISMOTION:
-                if (hasPSLayout(cro::GameController::controllerID(evt.caxis.which)))
+            case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+                if (hasPSLayout(cro::GameController::controllerID(evt.gaxis.which)))
                 {
                     m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().play(2);
                 }
@@ -804,15 +804,15 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
         };
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
         /*if (m_groupIdle)
         {
-            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+            if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::NextClub])
             {
                 spectateNextPlayer(1);
             }
-            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+            else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
             {
                 spectateNextPlayer(m_groupPlayerPositions.size() - 1);
             }
@@ -820,34 +820,15 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
         m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         //hideMouse(); //TODO this should only react to current keybindings
-        switch (evt.key.keysym.sym)
+        switch (evt.key.scancode)
         {
         default: break;
-        //case SDLK_2:
-        //    if (!m_textChat.isVisible()
-        //        && !m_holeData[m_currentHole].puttFromTee)
-        //    {
-        //        if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
-        //            && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
-        //        {
-        //            if (m_inputParser.getActive()
-        //                && m_currentPlayer.terrain != TerrainID::Green)
-        //            {
-        //                //that's a lot of if's.
-
-        //                if (m_currentCamera == CameraID::Player)
-        //                {
-        //                    setActiveCamera(CameraID::Bystander);
-        //                }
-        //                else if (m_currentCamera == CameraID::Bystander)
-        //                {
-        //                    setActiveCamera(CameraID::Player);
-        //                }
-        //            }
-        //        }
-        //    }
-        //    break;
-        //case SDLK_3:
+        case FixedKey::ZoomMinimap:
+            toggleMiniZoom();
+            break;
+        case FixedKey::ToggleDOF:
+            toggleDOF(true);
+            break;
         case FixedKey::FreeCam:
             if (!m_textChat.isVisible()
                 && !emoteHandled)
@@ -855,16 +836,16 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 toggleFreeCam();
             }
             break;
+        }
+
+        switch (evt.key.key)
+        {
+        default: break;
+
             //3&4 rotate camera
         case SDLK_TAB:
             showScoreboard(false);
             toggleFreecamMenu();
-            break;
-        case FixedKey::ZoomMinimap:
-            toggleMiniZoom();
-            break;
-        case FixedKey::ToggleDOF:
-            toggleDOF(true);
             break;
         case SDLK_SPACE: //TODO this should read the keymap... but it's not const
             closeMessage();
@@ -900,13 +881,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_terrainBuilder.setSlopeVisible(!m_terrainBuilder.getSlopeVisible());
             break;
         case SDLK_F8:
-            if (evt.key.keysym.mod & KMOD_SHIFT)
+            if (evt.key.mod & SDL_KMOD_SHIFT)
             {
                 m_textChat.toggleWindow(false, true);
             }
             break;
         case SDLK_F9:
-            //if (evt.key.keysym.mod & KMOD_SHIFT)
+            //if (evt.key.mod & SDL_KMOD_SHIFT)
             {
                 //cro::Console::doCommand("build_cubemaps");
 
@@ -923,7 +904,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
         case SDLK_F10:
         {
-            /*if (evt.key.keysym.mod & KMOD_SHIFT)
+            /*if (evt.key.mod & SDL_KMOD_SHIFT)
             {
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Seagull;
@@ -1087,18 +1068,18 @@ bool GolfState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
 
-        if (evt.key.keysym.sym != SDLK_F12) //default screenshot key
+        if (evt.key.key != SDLK_F12) //default screenshot key
         {
             resetIdle();
         }
         m_skipState.displayControllerMessage = false;
         setFreecamLayout();
 
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_TAB:
@@ -1127,7 +1108,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
             [[fallthrough]];
         case SDLK_PAUSE:
-            if (evt.key.keysym.mod & KMOD_SHIFT)
+            if (evt.key.mod & SDL_KMOD_SHIFT)
             {
                 if (Social::isAuth())
                 {
@@ -1136,12 +1117,16 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 break;
             }
             //[[fallthrough]];
-        //case SDLK_p:
+        //case SDLK_P:
             showPauseMenu();
             break;
         case SDLK_SPACE:
             toggleQuitReady();
             break;
+        }
+
+        switch (evt.key.scancode)
+        {
         case FixedKey::EmoteApplaud:
         //case SDLK_KP_7: //don't do this, people use it as keybinds
             m_textChat.quickEmote(TextChat::Applaud);
@@ -1157,13 +1142,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
         const auto activeID = activeControllerID(m_currentPlayer.player);
-        if (evt.cbutton.which == cro::GameController::deviceID(activeID)
+        if (evt.gbutton.which == cro::GameController::deviceID(activeID)
             || m_humanCount == 1)
         {
-            m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) ?
+            m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.gbutton.which)) ?
                 SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
         }
 
@@ -1171,7 +1156,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         m_skipState.displayControllerMessage = true;
         setFreecamLayout();
 
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonTrackpad:
@@ -1201,22 +1186,22 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
         const auto activeID = activeControllerID(m_currentPlayer.player);
-        if (evt.cbutton.which == cro::GameController::deviceID(activeID)
+        if (evt.gbutton.which == cro::GameController::deviceID(activeID)
             || m_humanCount == 1)
         {
-            m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) ?
+            m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.gbutton.which)) ?
                 SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
 
             /*if (m_groupIdle)
             {
-                if (evt.cbutton.button == cro::GameController::ButtonRightShoulder)
+                if (evt.gbutton.button == cro::GameController::ButtonRightShoulder)
                 {
                     spectateNextPlayer(1);
                 }
-                else if (evt.cbutton.button == cro::GameController::ButtonLeftShoulder)
+                else if (evt.gbutton.button == cro::GameController::ButtonLeftShoulder)
                 {
                     spectateNextPlayer(m_groupPlayerPositions.size() - 1);
                 }
@@ -1224,7 +1209,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
 
         hideMouse();
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonBack:
@@ -1238,7 +1223,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
             break;
         case cro::GameController::ButtonA:
-            if (evt.cbutton.which == cro::GameController::deviceID(activeID)
+            if (evt.gbutton.which == cro::GameController::deviceID(activeID)
                 || m_humanCount == 1)
             {
                 closeMessage();
@@ -1249,7 +1234,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_buttonStates.buttonB = false;
             if (m_photoMode)
             {
-                if (evt.cbutton.which == cro::GameController::deviceID(activeID)
+                if (evt.gbutton.which == cro::GameController::deviceID(activeID)
                     || m_humanCount == 1)
                 {
                     toggleFreeCam();
@@ -1257,21 +1242,21 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
             break;
         case cro::GameController::ButtonRightStick:
-            if (evt.cbutton.which == cro::GameController::deviceID(activeID)
+            if (evt.gbutton.which == cro::GameController::deviceID(activeID)
                 || m_humanCount == 1)
             {
                 toggleMiniZoom();
             }
             break;
         case cro::GameController::ButtonX:
-            if (evt.cbutton.which == cro::GameController::deviceID(activeID)
+            if (evt.gbutton.which == cro::GameController::deviceID(activeID)
                 || m_humanCount == 1)
             {
                 toggleDOF(false);
             }
             break;
         case cro::GameController::ButtonY:
-            if (evt.cbutton.which == cro::GameController::deviceID(activeID)
+            if (evt.gbutton.which == cro::GameController::deviceID(activeID)
                 || m_humanCount == 1)
             {
                 toggleFreecamMenu();
@@ -1279,7 +1264,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEWHEEL)
+    else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
         if (evt.wheel.y > 0)
         {
@@ -1291,14 +1276,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
         resetIdle();
     }
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
             toggleQuitReady();
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
@@ -1315,39 +1300,39 @@ bool GolfState::handleEvent(const cro::Event& evt)
         //}
     }
 
-    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    else if (evt.type == SDL_EVENT_GAMEPAD_REMOVED)
     {
         m_emoteWheel.refreshLabels(); //displays labels if no controllers connected
 
         //pause the game
         showPauseMenu();
     }
-    else if (evt.type == SDL_CONTROLLERDEVICEADDED)
+    else if (evt.type == SDL_EVENT_GAMEPAD_ADDED)
     {
         //hides labels
         m_emoteWheel.refreshLabels();
     }
 
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         setFreecamLayout();
         if (!m_photoMode
             && (evt.motion.state & SDL_BUTTON_RMASK) == 0)
         {
-            cro::App::getWindow().setMouseCaptured(false);
+            cro::App::getWindow().setCursorVisible(true);
         }
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
         m_skipState.displayControllerMessage = true;
 
-        if (std::abs(evt.caxis.value) > 10000)
+        if (std::abs(evt.gaxis.value) > 10000)
         {
             const auto activeID = activeControllerID(m_currentPlayer.player);
-            if (evt.caxis.which == cro::GameController::deviceID(activeID)
+            if (evt.gaxis.which == cro::GameController::deviceID(activeID)
                 || m_humanCount == 1)
             {
-                m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)) ?
+                m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.gaxis.which)) ?
                     SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
             }
 
@@ -1356,13 +1341,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
             resetIdle();
         }
 
-        switch (evt.caxis.axis)
+        switch (evt.gaxis.axis)
         {
         default: break;
         case cro::GameController::AxisRightY:
-            if (std::abs(evt.caxis.value) > 10000)
+            if (std::abs(evt.gaxis.value) > 10000)
             {
-                scrollScores(cro::Util::Maths::sgn(evt.caxis.value) * 19);
+                scrollScores(cro::Util::Maths::sgn(evt.gaxis.value) * 19);
             }
             break;
         }
@@ -1373,7 +1358,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     //    switch (evt.window.event)
     //    {
     //    default: break;
-    //    case SDL_WINDOWEVENT_FOCUS_GAINED:
+    //    case SDL_EVENT_WINDOW_FOCUS_GAINED:
     //        //this needs to be delayed a frame so mouse clicking on the
     //        //open window doesn't get sent to the input parser
     //        if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
@@ -1390,7 +1375,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     //                };
     //        }
     //        break;
-    //    case SDL_WINDOWEVENT_FOCUS_LOST:
+    //    case SDL_EVENT_WINDOW_FOCUS_LOST:
     //        if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
     //            && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
     //        {
@@ -2002,7 +1987,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 
                 if (m_sharedData.activeTournament == TournamentIndex::Custom)
                 {
-                    const auto path = m_sharedData.tournamentPath + TournamentDataFile;
+                    const auto path = m_sharedData.tournamentPath + U8PATH_CAST(TournamentDataFile);
                     writeTournamentData(m_sharedData.tournaments[m_sharedData.activeTournament], path.c_str());
                 }
                 else
@@ -2510,10 +2495,10 @@ void GolfState::handleMessage(const cro::Message& msg)
         {
         default: break;
         case cro::Message::ConsoleEvent::Closed:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         case cro::Message::ConsoleEvent::Opened:
-            cro::App::getWindow().setMouseCaptured(false);
+            cro::App::getWindow().setCursorVisible(true);
             break;
         }
     }
@@ -2526,7 +2511,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (data.id == StateID::Pause
                 || data.id == StateID::Tutorial)
             {
-                cro::App::getWindow().setMouseCaptured(true);
+                cro::App::getWindow().setCursorVisible(false);
 
                 if (m_sharedData.tutorialIndex == TutorialID::LowerClubs)
                 {
@@ -3058,7 +3043,7 @@ bool GolfState::simulate(float dt)
     static float multiplier = MinMultiplier;
     if (m_currentCamera == CameraID::Transition)
     {
-        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Action])
+        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Action])
             || m_buttonStates.buttonA)
         {
             multiplier = std::min(MaxMultiplier, multiplier + (dt * 2.f));
@@ -3540,7 +3525,7 @@ void GolfState::render()
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
 #endif
-#ifndef __APPLE__
+#ifndef SDL_PLATFORM_APPLE
     glCheck(glEnable(GL_LINE_SMOOTH));
 #endif
     //TODO this needs fixed stencil buffers for render targets
@@ -3560,7 +3545,7 @@ void GolfState::render()
     //    m_cameraDebugPoints[m_currentCamera].emplace_back(tx.getRotation(), tx.getPosition());
     //}
 #endif
-#ifndef __APPLE__
+#ifndef SDL_PLATFORM_APPLE
     glCheck(glDisable(GL_LINE_SMOOTH));
 #endif
 #ifdef CRO_DEBUG_
@@ -7718,7 +7703,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_buttonStates = {};
     m_gameScene.getSystem<PropFollowSystem>()->setPlayerPosition(player.position);
 
-    cro::App::getWindow().setMouseCaptured(true);
+    cro::App::getWindow().setCursorVisible(false);
     m_achievementTracker.hadBackspin = false;
     m_achievementTracker.hadTopspin = false;
     m_achievementTracker.hadFlop = false;
@@ -7885,12 +7870,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         if (player.terrain == TerrainID::Bunker)
         {
-            static const std::array<std::string, 2u> str = { u8"Bunker ↓", u8"Bunker ↑" };
+            static const std::array<std::u8string, 2u> str = { u8"Bunker \u2193", u8"Bunker \u2191" };
             e.getComponent<cro::Text>().setString(cro::String::fromUtf8(str[lie].begin(), str[lie].end()));
         }
         else if (player.terrain == TerrainID::Rough)
         {
-            static const std::array<std::string, 2u> str = { u8"Rough ↓", u8"Rough ↑" };
+            static const std::array<std::u8string, 2u> str = { u8"Rough \u2193", u8"Rough \u2191" };
             e.getComponent<cro::Text>().setString(cro::String::fromUtf8(str[lie].begin(), str[lie].end()));
         }
         else

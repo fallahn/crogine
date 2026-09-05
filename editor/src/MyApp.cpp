@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -62,9 +62,9 @@ MyApp::MyApp()
 //public
 void MyApp::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
 #ifdef CRO_DEBUG_
@@ -133,7 +133,7 @@ void MyApp::finalise()
 void MyApp::loadPrefs()
 {
     cro::ConfigFile prefs;
-    if (prefs.loadFromFile(cro::App::getPreferencePath() + "global.cfg"))
+    if (prefs.loadFromFile(cro::App::getPreferencePath() / "global.cfg"))
     {
         const auto& props = prefs.getProperties();
         for (const auto& prop : props)
@@ -176,5 +176,5 @@ void MyApp::savePrefs()
     prefsOut.addProperty("compress_path").setValue(sharedData.compressionDirectory);
     prefsOut.addProperty("compress_mips").setValue(sharedData.compressMips);
 
-    prefsOut.save(cro::App::getPreferencePath() + "global.cfg");
+    prefsOut.save(cro::App::getPreferencePath() / "global.cfg");
 }

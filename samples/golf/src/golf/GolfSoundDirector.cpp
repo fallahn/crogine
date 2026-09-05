@@ -971,8 +971,11 @@ void GolfSoundDirector::process(float dt)
     }
 }
 
-std::size_t GolfSoundDirector::addAudioScape(const std::string& path, cro::AudioResource& resource)
+std::size_t GolfSoundDirector::addAudioScape(const std::filesystem::path& p, cro::AudioResource& resource)
 {
+    FS_ASSERT;
+    const std::string path = U8PATH_CAST(p);
+
     //check if this was already loaded and return the index
     if (const auto result = std::find_if(m_playerVoices.cbegin(), m_playerVoices.cend(), 
         [&path](const cro::AudioScape as) { return path == as.getPath(); });

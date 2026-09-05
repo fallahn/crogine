@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/detail/ModelBinary.hpp>
 #include <crogine/graphics/MeshBuilder.hpp>
 
+#include <filesystem>
+
 namespace cro
 {
     /*!
@@ -42,18 +44,18 @@ namespace cro
     public:
         /*!
         \brief Constructor
-        \param path String containing path to the model resource file
+        \param path filesystem::path containing path to the model resource file
         \param optimiseOnLoad Attempts to compress the default vertex format
         and assigns shared VBO/IBO resources if true. If false leaves the
         vertex format in uncompressed float for use with the model editor etc
         */
-        explicit BinaryMeshBuilder(const std::string& path, bool optimseOnLoad = true);
+        explicit BinaryMeshBuilder(const std::filesystem::path& path, bool optimseOnLoad = true);
 
         std::size_t getUID() const override;
         Skeleton getSkeleton() const override;
 
     private:
-        std::string m_path;
+        std::filesystem::path m_path;
         bool m_optimiseOnLoad;
         std::size_t m_uid;
         mutable Skeleton m_skeleton;

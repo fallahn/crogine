@@ -314,6 +314,7 @@ namespace cro
         Facing getFacing() const;
 
     private:
+        friend class TextSystem;
 
         //fudgy wrapper which allows drawing with TextureID
         struct TextureInfo final

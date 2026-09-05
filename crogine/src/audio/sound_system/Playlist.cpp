@@ -31,7 +31,7 @@ source distribution.
 #include "../WavLoader.hpp"
 #include "../Mp3Loader.hpp"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include <crogine/audio/sound_system/Playlist.hpp>
 #include <crogine/core/FileSystem.hpp>
@@ -69,7 +69,7 @@ Playlist::~Playlist()
 }
 
 //public
-void Playlist::addPath(const std::string& path)
+void Playlist::addPath(const std::filesystem::path& path)
 {
     if (cro::FileSystem::fileExists(path))
     {
@@ -134,7 +134,7 @@ std::vector<std::string> Playlist::getTrackList() const
         std::scoped_lock lock(m_mutex);
         for (const auto& t : m_filePaths)
         {
-            retVal.push_back(cro::FileSystem::getFileName(t));
+            retVal.push_back(U8PATH_CAST(cro::FileSystem::getFileName(t)));
         }
     }
     return retVal;
@@ -223,7 +223,7 @@ void Playlist::threadFunc()
                     if (audioFile->getFormat() != Detail::PCMData::Format::STEREO16
                         || audioFile->getSampleRate() != SampleRate)
                     {
-                        SDL_AudioFormat inFormat = AUDIO_S16;
+                        SDL_AudioFormat inFormat = SDL_AUDIO_S16LE;
                         std::uint8_t inChannels = 1;
 
                         switch (audioFile->getFormat())
@@ -237,7 +237,7 @@ void Playlist::threadFunc()
                             inChannels = 2;
                             [[fallthrough]];
                         case Detail::PCMData::Format::MONO8:
-                            inFormat = AUDIO_U8;
+                            inFormat = SDL_AUDIO_U8;
                             break;
                         case Detail::PCMData::Format::STEREO16:
                             //we still have to handle this case if the sample rate doesn't match
@@ -257,10 +257,20 @@ void Playlist::threadFunc()
                         }
                         else
                         {
+                            SDL_AudioSpec src = {};
+                            src.format = inFormat;
+                            src.channels = inChannels;
+                            src.freq = audioFile->getSampleRate();
+
+                            SDL_AudioSpec dst = {};
+                            dst.format = SDL_AUDIO_S16LE;
+                            dst.channels = ChannelCount;
+                            dst.freq = SampleRate;
+
                             //resample
-                            auto* stream = SDL_NewAudioStream(inFormat, inChannels, audioFile->getSampleRate(), AUDIO_S16, ChannelCount, SampleRate);
-                            SDL_AudioStreamPut(stream, temp.data(), temp.size());
-                            SDL_AudioStreamFlush(stream);
+                            auto* stream = SDL_CreateAudioStream(&src, &dst);
+                            SDL_PutAudioStreamData(stream, temp.data(), temp.size());
+                            SDL_FlushAudioStream(stream);
 
                             std::int32_t count = 0;
                             std::vector<std::uint8_t> resampled;
@@ -268,7 +278,7 @@ void Playlist::threadFunc()
 
                             do
                             {
-                                count = SDL_AudioStreamGet(stream, buff.data(), buff.size());
+                                count = SDL_GetAudioStreamData(stream, buff.data(), buff.size());
 
                                 if (count > 0)
                                 {
@@ -280,7 +290,7 @@ void Playlist::threadFunc()
                             } while (count > 0); //might be negative on error
 
                             temp.swap(resampled);
-                            SDL_FreeAudioStream(stream);
+                            SDL_DestroyAudioStream(stream);
                         }
                     }
 

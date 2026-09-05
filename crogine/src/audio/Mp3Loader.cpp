@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2025
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -63,7 +63,7 @@ Mp3Loader::~Mp3Loader()
 }
 
 //public
-bool Mp3Loader::open(const std::string& path)
+bool Mp3Loader::open(const std::filesystem::path& path)
 {
     if (m_decoder)
     {
@@ -79,7 +79,7 @@ bool Mp3Loader::open(const std::string& path)
 
     //read header
     m_decoder = std::make_unique<mp3dec_ex_t>();
-    mp3dec_ex_open(m_decoder.get(), path.c_str(), MP3D_SEEK_TO_SAMPLE);
+    mp3dec_ex_open(m_decoder.get(), U8PATH_CAST(path), MP3D_SEEK_TO_SAMPLE);
     
     if (!m_decoder->samples)
     {
@@ -89,8 +89,8 @@ bool Mp3Loader::open(const std::string& path)
 
     if (m_decoder->info.channels > 2)
     {
-        Logger::log("Found " + std::to_string(m_decoder->info.channels) + " channels in " + path + ", currently only mono and stereo files are supported.", Logger::Type::Error);
-        Logger::log(path + ": not loaded.", Logger::Type::Error);
+        LogE << "Found " << std::to_string(m_decoder->info.channels) << " channels in " << path << ", currently only mono and stereo files are supported." << std::endl;
+        LogE << path << ": not loaded." << std::endl;
 
         mp3dec_ex_close(m_decoder.get());
         m_decoder.reset();

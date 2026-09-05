@@ -134,7 +134,7 @@ void GolfState::createCameras()
                 {
                     cro::RenderTarget::Context ctx;
                     ctx.depthBuffer = true;
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
                     //*sigh*
                     ctx.depthTexture = false;
 #else
@@ -863,7 +863,7 @@ void GolfState::toggleFreeCam()
             l = &m_sharedProfiles.playerProfiles[m_sharedData.profileIndices[m_currentPlayer.player]].loadout;
         }
         m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain, l);
-        cro::App::getWindow().setMouseCaptured(true);
+        cro::App::getWindow().setCursorVisible(false);
 
 
         m_freecamMenuEnt.getComponent<cro::Callback>().active = true; //this does the show/hide animation
@@ -931,7 +931,7 @@ void GolfState::toggleFreeCam()
                     l = &m_sharedProfiles.playerProfiles[m_sharedData.profileIndices[m_currentPlayer.player]].loadout;
                 }
                 m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain, l);
-                cro::App::getWindow().setMouseCaptured(false);
+                cro::App::getWindow().setCursorVisible(true);
 
                 m_freecamMenuEnt.getComponent<cro::Callback>().active = false; //this does the show/hide animation
                 
@@ -946,6 +946,8 @@ void GolfState::toggleFreeCam()
             cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0, 1, 2));
         }
     }
+
+    cro::App::getWindow().setMouseCaptured(m_photoMode);
 
     Activity a;
     a.client = m_sharedData.clientConnection.connectionID;

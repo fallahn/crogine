@@ -39,6 +39,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/core/GameController.cpp
   ${PROJECT_DIR}/core/Log.cpp
   ${PROJECT_DIR}/core/MessageBus.cpp
+  ${PROJECT_DIR}/core/OSK.cpp
   ${PROJECT_DIR}/core/State.cpp
   ${PROJECT_DIR}/core/StateStack.cpp
   ${PROJECT_DIR}/core/String.cpp
@@ -214,6 +215,5 @@ SET(project_src_nix
 
 SET(project_src_macos
   #${PROJECT_DIR}/audio/mojoal.c
-  ${PROJECT_DIR}/detail/ResourcePath.mm 
   ${PROJECT_DIR}/detail/41/glad.c
   )

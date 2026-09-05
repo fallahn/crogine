@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -139,88 +139,99 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
-    case SDL_KEYDOWN:
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up])
+    case SDL_EVENT_KEY_DOWN:
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Up]
+            || evt.key.scancode == SDL_SCANCODE_UP)
         {
             //actually forward...
             m_input.buttonFlags |= Input::Forward;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Down]
+            || evt.key.scancode == SDL_SCANCODE_DOWN)
         {
             //actually backward...
             m_input.buttonFlags |= Input::Backward;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left]
+            || evt.key.scancode == SDL_SCANCODE_LEFT)
         {
             m_input.buttonFlags |= Input::Left;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right]
+            || evt.key.scancode == SDL_SCANCODE_RIGHT)
         {
             m_input.buttonFlags |= Input::Right;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action])
         {
             //actually up...
             m_input.buttonFlags |= Input::Up;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::EmoteMenu])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::EmoteMenu])
         {
             //actually down
             m_input.buttonFlags |= Input::Down;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
         {
             m_input.buttonFlags |= Input::ZoomIn;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
         {
             m_input.buttonFlags |= Input::ZoomOut;
         }
-        else if (evt.key.keysym.sym == SDLK_LSHIFT)
-        {
-            //we toggle this in keyup now
-            //m_input.buttonFlags |= Input::Sprint;
-        }
+        
+        //if (evt.key.key == SDLK_LSHIFT)
+        //{
+        //    //we toggle this in keyup now
+        //    //m_input.buttonFlags |= Input::Sprint;
+        //}
 
         break;
-    case SDL_KEYUP:
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up])
+    case SDL_EVENT_KEY_UP:
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Up]
+            || evt.key.scancode == SDL_SCANCODE_UP)
         {
             //actually forward...
             m_input.buttonFlags &= ~Input::Forward;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Down]
+            || evt.key.scancode == SDL_SCANCODE_DOWN)
         {
             //actually backward...
             m_input.buttonFlags &= ~Input::Backward;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left]
+            || evt.key.scancode == SDL_SCANCODE_LEFT)
         {
             m_input.buttonFlags &= ~Input::Left;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right]
+            || evt.key.scancode == SDL_SCANCODE_RIGHT)
         {
             m_input.buttonFlags &= ~Input::Right;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action])
         {
             //actually up...
             m_input.buttonFlags &= ~Input::Up;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::EmoteMenu])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::EmoteMenu])
         {
             //actually down
             m_input.buttonFlags &= ~Input::Down;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
         {
             m_input.buttonFlags &= ~Input::ZoomIn;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
         {
             m_input.buttonFlags &= ~Input::ZoomOut;
         }
-        else if (evt.key.keysym.sym == SDLK_LSHIFT)
+        
+        if (evt.key.key == SDLK_LSHIFT
+            || evt.key.key == SDLK_RSHIFT)
         {
             if (m_input.buttonFlags & Input::Sprint)
             {
@@ -232,7 +243,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             }
         }
         break;
-    case SDL_MOUSEBUTTONDOWN:
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
         switch (evt.button.button)
         {
         default: break;
@@ -244,7 +255,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             break;
         }
         break;
-    case SDL_MOUSEBUTTONUP:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
         switch (evt.button.button)
         {
         default: break;
@@ -263,25 +274,25 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             break;
         }
         break;
-    case SDL_MOUSEMOTION:
+    case SDL_EVENT_MOUSE_MOTION:
         m_input.xMove += evt.motion.xrel;
         m_input.yMove += evt.motion.yrel;
 
         xAvg.addValue(evt.motion.xrel);
         yAvg.addValue(evt.motion.yrel);
     break;
-    case SDL_MOUSEWHEEL:
+    case SDL_EVENT_MOUSE_WHEEL:
         m_input.wheel = evt.wheel.y * WheelZoomMultiplier;
         break;
 
 
     //parse controller presses into corresponding inputs
-    case SDL_CONTROLLERBUTTONDOWN:
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
     {
-        if (acceptInput(evt.cbutton.which))
+        if (acceptInput(evt.gbutton.which))
         {
             //CRO_ASSERT(controllerID < m_inputs.size(), "OUT OF RANGE");
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::ButtonA:
@@ -312,7 +323,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             {
                 auto* msg = postMessage<SceneEvent>(cl::MessageID::SceneMessage);
                 msg->type = SceneEvent::RequestToggleFreecam;
-                msg->data = evt.cbutton.button;
+                msg->data = evt.gbutton.button;
             }
                 break;
             case cro::GameController::ButtonRightShoulder:
@@ -325,11 +336,11 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         }
     }
         break;
-    case SDL_CONTROLLERBUTTONUP:
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
     {
-        if (acceptInput(evt.cbutton.which))
+        if (acceptInput(evt.gbutton.which))
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: break;
             /*case cro::GameController::ButtonA:
@@ -357,7 +368,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             /*{
                 auto* msg = postMessage<SceneEvent>(cl::MessageID::SceneMessage);
                 msg->type = SceneEvent::RequestToggleFreecam;
-                msg->data = evt.cbutton.button;
+                msg->data = evt.gbutton.button;
             }*/
                 break;
             /*case cro::GameController::DPadUp:
@@ -382,17 +393,17 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         }
     }
         break;
-    case SDL_CONTROLLERAXISMOTION:
-        if (acceptInput(evt.caxis.which))
+    case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+        if (acceptInput(evt.gaxis.which))
         {
-            switch (evt.caxis.axis)
+            switch (evt.gaxis.axis)
             {
             default: break;
             case cro::GameController::TriggerLeft:
-                if (evt.caxis.value > MinTriggerMovement)
+                if (evt.gaxis.value > MinTriggerMovement)
                 {
                     m_input.buttonFlags |= Input::Flags::Down;
-                    m_triggerAmount = evt.caxis.value;
+                    m_triggerAmount = evt.gaxis.value;
                 }
                 else
                 {
@@ -400,10 +411,10 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
                 }
                 break;
             case cro::GameController::TriggerRight:
-                if (evt.caxis.value > MinTriggerMovement)
+                if (evt.gaxis.value > MinTriggerMovement)
                 {
                     m_input.buttonFlags |= Input::Flags::Up;
-                    m_triggerAmount = evt.caxis.value;
+                    m_triggerAmount = evt.gaxis.value;
                 }
                 else
                 {
@@ -414,7 +425,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             case cro::GameController::AxisLeftY:
             case cro::GameController::AxisRightX:
             case cro::GameController::AxisRightY:
-                m_thumbsticks.setValue(evt.caxis.axis, evt.caxis.value);
+                m_thumbsticks.setValue(evt.gaxis.axis, evt.gaxis.value);
                 break;
             }
         }

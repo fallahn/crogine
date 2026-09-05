@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,7 +29,7 @@ source distribution.
 
 #pragma once
 
-#include <SDL_events.h>
+#include <SDL3/SDL_events.h>
 
 #include <array>
 #include <cstdint>
@@ -89,28 +89,28 @@ struct InputBinding final
         SwitchView = EmoteMenu
     };
 
-    std::array<std::int32_t, Count> keys =
+    std::array<SDL_Scancode, Count> scancodes =
     {
-        SDLK_SPACE,
-        SDLK_e,
-        SDLK_q,
-        SDLK_LALT,
-        SDLK_LCTRL,
-        SDLK_LSHIFT,
-        SDLK_a,
-        SDLK_d,
-        SDLK_w,
-        SDLK_s
+        SDL_SCANCODE_SPACE,
+        SDL_SCANCODE_E,
+        SDL_SCANCODE_Q,
+        SDL_SCANCODE_LALT,
+        SDL_SCANCODE_LCTRL,
+        SDL_SCANCODE_LSHIFT,
+        SDL_SCANCODE_A,
+        SDL_SCANCODE_D,
+        SDL_SCANCODE_W,
+        SDL_SCANCODE_S
     };
 
     std::array<std::int32_t, 6u> buttons =
     {
-        SDL_CONTROLLER_BUTTON_A,
-        SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
-        SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
-        SDL_CONTROLLER_BUTTON_X,
-        SDL_CONTROLLER_BUTTON_Y,
-        SDL_CONTROLLER_BUTTON_B
+        SDL_GAMEPAD_BUTTON_SOUTH,
+        SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER,
+        SDL_GAMEPAD_BUTTON_LEFT_SHOULDER,
+        SDL_GAMEPAD_BUTTON_WEST,
+        SDL_GAMEPAD_BUTTON_NORTH,
+        SDL_GAMEPAD_BUTTON_EAST
     };
     std::int32_t playerID = 0;
 
@@ -122,15 +122,15 @@ struct FixedKey final
 {
     enum
     {
-        DroneCam            = SDLK_1,
-        FreeCam             = SDLK_2,
-        CameraRotateLeft    = SDLK_3,
-        CameraRotateRight   = SDLK_4,
-        ZoomMinimap         = SDLK_5,
-        ToggleDOF           = SDLK_6,
-        EmoteApplaud        = SDLK_7,
-        EmoteLaughing       = SDLK_8,
-        EmoteHappy          = SDLK_9,
-        EmoteAngry          = SDLK_0
+        DroneCam            = SDL_SCANCODE_1,
+        FreeCam             = SDL_SCANCODE_2,
+        CameraRotateLeft    = SDL_SCANCODE_3,
+        CameraRotateRight   = SDL_SCANCODE_4,
+        ZoomMinimap         = SDL_SCANCODE_5,
+        ToggleDOF           = SDL_SCANCODE_6,
+        EmoteApplaud        = SDL_SCANCODE_7,
+        EmoteLaughing       = SDL_SCANCODE_8,
+        EmoteHappy          = SDL_SCANCODE_9,
+        EmoteAngry          = SDL_SCANCODE_0
     };
 };

@@ -74,7 +74,7 @@ void ParticleState::initUI()
 
 void ParticleState::drawMenuBar()
 {
-    const auto openFile = [&](const std::string& path)
+    const auto openFile = [&](const std::filesystem::path& path)
     {
         confirmSave();
 
@@ -83,7 +83,7 @@ void ParticleState::drawMenuBar()
         //if (m_particleSettings->loadFromFile(path, m_resources.textures))
         (m_particleSettings->loadFromFile(path, m_resources.textures));
         {
-            lastSavePath = path;
+            lastSavePath = U8PATH_CAST(path);
 
             m_selectedBlendMode = m_particleSettings->blendmode;
             m_particleSettings->textureID = 0;
@@ -110,7 +110,7 @@ void ParticleState::drawMenuBar()
                 }
             }
 
-            m_history.add(path);
+            m_history.add(U8PATH_CAST(path));
         }
     };
 
@@ -156,7 +156,7 @@ void ParticleState::drawMenuBar()
                     if (!path.empty())
                     {
                         m_particleSettings->saveToFile(path);
-                        lastSavePath = path;
+                        lastSavePath = U8PATH_CAST(path);
                     }
                 }
             }
@@ -167,8 +167,8 @@ void ParticleState::drawMenuBar()
                 if (!path.empty())
                 {
                     m_particleSettings->saveToFile(path);
-                    lastSavePath = path;
-                    m_history.add(path);
+                    lastSavePath = U8PATH_CAST(path);
+                    m_history.add(lastSavePath);
                 }
             }
 
@@ -180,7 +180,7 @@ void ParticleState::drawMenuBar()
                 for (const auto& item : items)
                 {
                     auto fileName = cro::FileSystem::getFileName(item);
-                    if (ImGui::MenuItem(fileName.c_str()))
+                    if (ImGui::MenuItem(U8PATH_CAST(fileName)))
                     {
                         toOpen = item;
                     }
@@ -234,10 +234,10 @@ void ParticleState::drawMenuBar()
                 }
 
                 //TODO track last used path
-                auto path = cro::FileSystem::openFileDialogue("", "cmt");
+                const auto path = cro::FileSystem::openFileDialogue("", "cmt");
                 if (!path.empty())
                 {
-                    openModel(path);
+                    openModel(U8PATH_CAST(path));
                 }
             }
 
@@ -370,7 +370,7 @@ void ParticleState::drawInspector()
 
             if (ImGui::Button("Set Texture"))
             {
-                auto path = cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory, "png,jpg,bmp");
+                std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory, "png,jpg,bmp"));
                 if (!path.empty()
                     && m_texture.loadFromFile(path))
                 {
@@ -579,7 +579,7 @@ void ParticleState::drawOptions()
                 auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
                 if (!path.empty())
                 {
-                    m_sharedData.workingDirectory = path;
+                    m_sharedData.workingDirectory = U8PATH_CAST(path);
                     std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
                 }
             }
@@ -651,10 +651,10 @@ void ParticleState::drawRenderPreview()
                     auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory + "/untitled.png", "png");
                     if (!path.empty())
                     {
-                        std::replace(path.begin(), path.end(), '\\', '/');
+                        //std::replace(path.begin(), path.end(), '\\', '/');
 
                         auto outputName = cro::FileSystem::getFileName(path);
-                        outputName = outputName.substr(0, outputName.find(cro::FileSystem::getFileExtension(outputName)));
+                        outputName.replace_extension("");
                         auto outputPath = cro::FileSystem::getFilePath(path);
 
                         std::int32_t frameCount = 0;
@@ -675,7 +675,7 @@ void ParticleState::drawRenderPreview()
                             m_renderTexture.display();
 
                             //output file
-                            std::string fileName = outputPath + outputName + std::to_string(frameCount) + ".png";
+                            std::string fileName = U8PATH_CAST((outputPath / outputName)) + std::to_string(frameCount) + ".png";
                             m_renderTexture.saveToFile(fileName);
                             fileNames.push_back(fileName);
 
@@ -710,18 +710,18 @@ void ParticleState::drawRenderPreview()
                             }
                         }
                         img.loadFromMemory(pixelBuffer.data(), frameCount * texSize, texSize, cro::ImageFormat::Type::RGBA);
-                        img.write(outputPath + outputName + ".png");
+                        img.write(outputPath / (std::string(U8PATH_CAST(outputName)) + ".png"));
 
                         //check if we want to write a sprite sheet
                         if (spt)
                         {
-                            auto relPath = outputPath + outputName + ".png";
+                            std::string relPath = U8PATH_CAST((outputPath / (std::string(U8PATH_CAST(outputName)) + ".png")));
                             if (relPath.find(m_sharedData.workingDirectory) != std::string::npos)
                             {
                                 relPath = relPath.substr(m_sharedData.workingDirectory.size() + 1);
                             }
 
-                            cro::ConfigFile cfg("spritesheet", outputName);
+                            cro::ConfigFile cfg("spritesheet", U8PATH_CAST(outputName));
                             cfg.addProperty("src").setValue(relPath);
                             switch (m_particleSettings->blendmode)
                             {
@@ -739,7 +739,7 @@ void ParticleState::drawRenderPreview()
 
                             auto bounds = cro::FloatRect(0.f, 0.f, static_cast<float>(texSize), static_cast<float>(texSize));
 
-                            auto spriteObj = cfg.addObject("sprite", outputName);
+                            auto spriteObj = cfg.addObject("sprite", U8PATH_CAST(outputName));
                             spriteObj->addProperty("bounds").setValue(bounds);
 
                             auto animObj = spriteObj->addObject("animation", "default");
@@ -751,7 +751,7 @@ void ParticleState::drawRenderPreview()
                             animObj->addProperty("loop").setValue(false);
                             animObj->addProperty("framerate").setValue(m_renderFrameRate);
 
-                            cfg.save(outputPath + outputName + ".spt");
+                            cfg.save(outputPath / (std::string(U8PATH_CAST(outputName)) + ".spt"));
                         }
 
                         cro::FileSystem::showMessageBox("Done", "Output " + std::to_string(frameCount) + " frames");
@@ -854,7 +854,7 @@ void ParticleState::confirmSave()
             if (!path.empty())
             {
                 m_particleSettings->saveToFile(path);
-                lastSavePath = path;
+                lastSavePath = U8PATH_CAST(path);
             }
         }
     }

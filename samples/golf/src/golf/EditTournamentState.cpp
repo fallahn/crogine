@@ -104,7 +104,7 @@ EditTournamentState::EditTournamentState(cro::StateStack& ss, cro::State::Contex
     m_showOSK           (false),
     m_showImguiInput    (false)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Tournament Edit");
 
     buildScene();
@@ -130,26 +130,26 @@ bool EditTournamentState::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_p)
+        if (evt.key.key == SDLK_BACKSPACE
+            || evt.key.key == SDLK_ESCAPE
+            /*|| evt.key.key == SDLK_P*/)
         {
             quitState();
             return false;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        if (evt.cbutton.button == cro::GameController::ButtonB)
+        if (evt.gbutton.button == cro::GameController::ButtonB)
         {
             quitState();
             return false;
         }
     }
 
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -158,23 +158,23 @@ bool EditTournamentState::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
     }
 
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(true);
     }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -240,10 +240,17 @@ void EditTournamentState::imguiWindow()
         ImGui::SetNextItemWidth(-1.f);
         if (ImGui::InputText("##input", &m_imguiBuffer))
         {
-            static constexpr std::size_t MaxChars = ConstVal::MaxStringChars;
-            if (m_imguiBuffer.length() > MaxChars)
+            //static constexpr std::size_t MaxChars = ConstVal::MaxStringChars;
+            //if (m_imguiBuffer.length() > MaxChars)
             {
-                m_imguiBuffer = m_imguiBuffer.substr(0, MaxChars);
+                //even for all this utf8 faff of u8 strings - it's still
+                //not utf aware and which truncate to the nearest byte, not character!
+                //m_imguiBuffer = m_imguiBuffer.substr(0, MaxChars);
+
+                //so we'll use the String class instead
+                cro::String s = cro::String::fromUtf8(m_imguiBuffer.begin(), m_imguiBuffer.end());
+                s = s.substr(0, ConstVal::MaxStringChars);
+                m_imguiBuffer = s.toUtf8Char();
             }
         }
         if (ImGui::Button("OK", {(WindowSize.x / 2.f) - 12.f, 0.f}))
@@ -521,7 +528,7 @@ void EditTournamentState::buildScene()
                 if (activated(evt))
                 {
                     //TODO check this is what we do elsewhere to be consistent
-                    if (/*cro::GameController::getControllerCount() != 0*/evt.type == SDL_CONTROLLERBUTTONDOWN)
+                    if (/*cro::GameController::getControllerCount() != 0*/evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
                     {
 #ifdef USE_GNS
                         if (Social::isSteamdeck(true))
@@ -557,7 +564,7 @@ void EditTournamentState::buildScene()
                     else
                     {
                         //show ImGuiWindow
-                        cro::App::getWindow().setMouseCaptured(false);
+                        cro::App::getWindow().setCursorVisible(true);
                         m_imguiBuffer = m_tournamentNameEntity.getComponent<cro::Text>().getString().toUtf8Char();
                         m_showImguiInput = true;
                     }
@@ -584,13 +591,13 @@ void EditTournamentState::buildScene()
                         //the seed creates unique values when using the same name
                         const auto str = m_tournamentInfo.getTitle().toUtf8();
                         const auto h = SpookyHash::Hash32(str.data(), str.size(), std::time(nullptr));
-                        m_sharedData.tournamentPath = Content::getUserContentPath(Content::UserContent::Tournament) + std::to_string(h) + "/";
+                        m_sharedData.tournamentPath = U8PATH_CAST(Content::getUserContentPath(Content::UserContent::Tournament)) + std::to_string(h) + "/";
                         if (!cro::FileSystem::directoryExists(m_sharedData.tournamentPath))
                         {
                             cro::FileSystem::createDirectory(m_sharedData.tournamentPath);
                         }
 
-                        const auto filePath = m_sharedData.tournamentPath + TournamentDataFile;
+                        const auto filePath = m_sharedData.tournamentPath + U8PATH_CAST(TournamentDataFile);
 
                         Tournament newTournament;
                         newTournament.id = TournamentIndex::Custom;
@@ -684,21 +691,21 @@ void EditTournamentState::loadCourseInfo()
     const auto installPaths = Content::getInstallPaths();
     for (const auto& path : installPaths)
     {
-        const auto coursePath = path + "courses/";
+        const auto coursePath = path / "courses";
         if (cro::FileSystem::directoryExists(coursePath))
         {
             auto courseDirs = cro::FileSystem::listDirectories(coursePath);
             //this might necessarily be in alphabetical order
             std::sort(courseDirs.begin(), courseDirs.end());
             courseDirs.erase(std::remove_if(courseDirs.begin(), courseDirs.end(), 
-                [](const std::string& s)
+                [](const std::filesystem::path& s)
                 {
-                    return s.find("course_") == std::string::npos;
+                    return s.u8string().find(u8"course_") == std::u8string::npos;
                 }), courseDirs.end());
 
             for (const auto& dir : courseDirs)
             {
-                const auto dataPath = coursePath + dir + "/course.data";
+                const auto dataPath = coursePath / dir / "course.data";
                 if (cro::FileSystem::fileExists(dataPath))
                 {
                     cro::ConfigFile cfg;
@@ -707,9 +714,9 @@ void EditTournamentState::loadCourseInfo()
                         if (const auto* t = cfg.findProperty("title"); t != nullptr)
                         {
                             auto& inf = m_courseInfo.emplace_back();
-                            inf.dir = dir;
+                            inf.dir = U8PATH_CAST(dir);
                             inf.displayName = t->getValue<cro::String>();
-                            inf.texture = &m_textures.get(coursePath + dir + "/preview.png");
+                            inf.texture = &m_textures.get(coursePath / dir / "preview.png");
                         }
                     }
                 }

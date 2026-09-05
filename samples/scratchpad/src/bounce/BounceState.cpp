@@ -182,9 +182,9 @@ bool BounceState::handleEvent(const cro::Event& evt)
         }
     };
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -196,9 +196,9 @@ bool BounceState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonA:
@@ -206,20 +206,20 @@ bool BounceState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_WINDOWEVENT)
-    {
-        if (evt.window.event == SDL_WINDOWEVENT_MOVED)
-        {
-            SDL_Log("Window %d moved to %d,%d",
-                evt.window.windowID, evt.window.data1,
-                evt.window.data2);
-        }
-        else if(evt.window.event == SDL_WINDOWEVENT_EXPOSED)
-        {
-            //interesting... setting the window manually
-            //raises this event... 
-        }
-    }
+    //else if (evt.type == SDL_WINDOWEVENT)
+    //{
+    //    if (evt.window.event == SDL_EVENT_WINDOW_MOVED)
+    //    {
+    //        SDL_Log("Window %d moved to %d,%d",
+    //            evt.window.windowID, evt.window.data1,
+    //            evt.window.data2);
+    //    }
+    //    else if(evt.window.event == SDL_EVENT_WINDOW_EXPOSED)
+    //    {
+    //        //interesting... setting the window manually
+    //        //raises this event... 
+    //    }
+    //}
 
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);

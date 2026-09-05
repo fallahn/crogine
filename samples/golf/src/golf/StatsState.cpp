@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -183,7 +183,7 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     m_awardPageIndex        (0),
     m_awardPageCount        (0)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Stats State");
 
     buildScene();
@@ -197,7 +197,7 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
             std::int32_t recordCount = 0;
             for (const auto& dir : dirs)
             {
-                db.open(path + dir + "/profile.db3");
+                db.open(path / dir / "profile.db3");
                 for (auto i = 0; i < 10; ++i)
                 {
                     for (auto j = 0; j < 18; ++j)
@@ -223,7 +223,7 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
             std::int32_t recordCount = 0;
             for (const auto& dir : dirs)
             {
-                db.open(path + dir + "/profile.db3");
+                db.open(path / dir / "profile.db3");
 
                 //just over a year
                 auto ts = cro::SysTime::epoch(); //note by default this is overwritten with current time when inserted to DB
@@ -272,34 +272,34 @@ bool StatsState::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_p)
+        if (evt.key.key == SDLK_BACKSPACE
+            || evt.key.key == SDLK_ESCAPE
+            /*|| evt.key.key == SDLK_P*/)
         {
             quitState();
             return false;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        cro::App::getWindow().setMouseCaptured(true);
+        cro::App::getWindow().setCursorVisible(false);
 
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonB:
@@ -314,7 +314,7 @@ bool StatsState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -322,16 +322,16 @@ bool StatsState::handleEvent(const cro::Event& evt)
             return false;
         }
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(true);
     }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -646,16 +646,16 @@ void StatsState::buildScene()
 
 void StatsState::parseCourseData()
 {
-    const std::string coursePath = cro::FileSystem::getResourcePath() + "assets/golf/courses/";
+    const auto coursePath = cro::FileSystem::getResourcePath() / "assets/golf/courses/";
     auto dirs = cro::FileSystem::listDirectories(coursePath);
 
     std::sort(dirs.begin(), dirs.end());
 
     for (const auto& dir : dirs)
     {
-        if (dir.find("course_") != std::string::npos)
+        if (dir.u8string().find(u8"course_") != std::u8string::npos)
         {
-            auto filePath = coursePath + dir + "/course.data";
+            const auto filePath = coursePath / dir / "course.data";
             if (cro::FileSystem::fileExists(filePath))
             {
                 cro::ConfigFile cfg;
@@ -663,7 +663,7 @@ void StatsState::parseCourseData()
                 if (auto* prop = cfg.findProperty("title"); prop != nullptr)
                 {
                     const auto courseTitle = prop->getValue<std::string>();
-                    m_courseStrings.emplace_back(std::make_pair(dir, cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
+                    m_courseStrings.emplace_back(std::make_pair(U8PATH_CAST(dir), cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
                 }
             }
         }
@@ -684,23 +684,24 @@ void StatsState::parseProfileData()
     std::int32_t i = 0;
     for (const auto& dir : profileDirs)
     {
-        auto profilePath = path + dir + "/";
+        const auto profilePath = path / dir;
         auto files = cro::FileSystem::listFiles(profilePath);
         files.erase(std::remove_if(files.begin(), files.end(),
-            [](const std::string& f)
+            [](const std::filesystem::path& f)
             {
-                return cro::FileSystem::getFileExtension(f) != ".pfl";
+                return f.extension() != ".pfl";
             }), files.end());
 
         if (!files.empty())
         {
             PlayerData pd;
-            if (pd.loadProfile(profilePath + files[0], files[0].substr(0, files[0].size() - 4))
-                && cro::FileSystem::fileExists(profilePath + "profile.db3"))
+            const std::string u8p = U8PATH_CAST(files[0]);
+            if (pd.loadProfile(profilePath / files[0], u8p.substr(0, u8p.size() - 4))
+                && cro::FileSystem::fileExists(profilePath / "profile.db3"))
             {
                 auto& pf = m_profileData.emplace_back();
                 pf.name = pd.name;
-                pf.dbPath = profilePath + "profile.db3";
+                pf.dbPath = profilePath / "profile.db3";
 
 #ifdef USE_GNS
                 if (dir == Social::getPlayerID())

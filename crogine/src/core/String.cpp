@@ -23,22 +23,22 @@
 ////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////
-// Modified 2020 for Crogine
+// Modified 2020 - 2026 for Crogine
 ////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
 #include <crogine/core/String.hpp>
-#include <crogine/core/Utf.hpp>
-#include <iterator>
+
 #include <cstring>
+#include <iterator>
 
 
 namespace cro
 {
 ////////////////////////////////////////////////////////////
-const std::size_t String::InvalidPos = std::basic_string<Uint32>::npos;
+const std::size_t String::InvalidPos = std::basic_string<UInt32>::npos;
 
 
 ////////////////////////////////////////////////////////////
@@ -62,7 +62,12 @@ String::String(wchar_t wideChar)
 
 
 ////////////////////////////////////////////////////////////
-String::String(Uint32 utf32Char)
+String::String(UInt32 utf32Char)
+{
+    m_string += utf32Char;
+}
+
+String::String(std::uint32_t utf32Char)
 {
     m_string += utf32Char;
 }
@@ -115,7 +120,7 @@ String::String(const std::wstring& wideString)
 
 
 ////////////////////////////////////////////////////////////
-String::String(const Uint32* utf32String)
+String::String(const UInt32* utf32String)
 {
     if (utf32String)
         m_string = utf32String;
@@ -123,7 +128,7 @@ String::String(const Uint32* utf32String)
 
 
 ////////////////////////////////////////////////////////////
-String::String(const std::basic_string<Uint32>& utf32String) :
+String::String(const std::basic_string<UInt32>& utf32String) :
 m_string(utf32String)
 {
 }
@@ -179,10 +184,10 @@ std::wstring String::toWideString() const
 
 
 ////////////////////////////////////////////////////////////
-std::basic_string<Uint8> String::toUtf8() const
+std::basic_string<UInt8> String::toUtf8() const
 {
     // Prepare the output string
-    std::basic_string<Uint8> output;
+    std::basic_string<UInt8> output;
     output.reserve(m_string.length());
 
     // Convert
@@ -205,10 +210,10 @@ std::basic_string<char> String::toUtf8Char() const
 
 
 ////////////////////////////////////////////////////////////
-std::basic_string<Uint16> String::toUtf16() const
+std::basic_string<UInt16> String::toUtf16() const
 {
     // Prepare the output string
-    std::basic_string<Uint16> output;
+    std::basic_string<char16_t> output;
     output.reserve(m_string.length());
 
     // Convert
@@ -219,7 +224,7 @@ std::basic_string<Uint16> String::toUtf16() const
 
 
 ////////////////////////////////////////////////////////////
-std::basic_string<Uint32> String::toUtf32() const
+std::basic_string<UInt32> String::toUtf32() const
 {
     return m_string;
 }
@@ -242,14 +247,14 @@ String& String::operator +=(const String& right)
 
 
 ////////////////////////////////////////////////////////////
-Uint32 String::operator [](std::size_t index) const
+UInt32 String::operator [](std::size_t index) const
 {
     return m_string[index];
 }
 
 
 ////////////////////////////////////////////////////////////
-Uint32& String::operator [](std::size_t index)
+UInt32& String::operator [](std::size_t index)
 {
     return m_string[index];
 }
@@ -328,7 +333,7 @@ String String::substr(std::size_t position, std::size_t length) const
 
 
 ////////////////////////////////////////////////////////////
-const Uint32* String::data() const
+const UInt32* String::data() const
 {
     return m_string.c_str();
 }

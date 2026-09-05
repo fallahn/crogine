@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -57,12 +57,12 @@ namespace
 void loadVertexData(const Iqm::Header& header, char* data, const std::string& strings, cro::Mesh::Data& out);
 void loadAnimationData(const Iqm::Header& header, char* data, const std::string& strings, cro::Skeleton& out);
 
-IqmBuilder::IqmBuilder(const std::string& path)
-    : m_path    (FileSystem::getResourcePath() + path),
+IqmBuilder::IqmBuilder(const std::filesystem::path& path)
+    : m_path    ((FileSystem::getResourcePath() / path)),
     m_uid       (0),
     m_file      (nullptr)
 {
-    std::hash<std::string> hashAttack;
+    std::hash<std::filesystem::path> hashAttack;
     m_uid = hashAttack(path);
 
     rootTransform = glm::toMat4(glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), -90.f * Util::Const::degToRad, glm::vec3(1.f, 0.f, 0.f)));
@@ -72,7 +72,7 @@ IqmBuilder::~IqmBuilder()
 {
     if (m_file)
     {
-        SDL_RWclose(m_file);
+        SDL_CloseIO(m_file);
     }
 }
 
@@ -87,28 +87,28 @@ cro::Mesh::Data IqmBuilder::build(AllocationResource*) const
 {
     cro::Mesh::Data returnData;
     returnData.primitiveType = GL_TRIANGLES;
-    
-    m_file = SDL_RWFromFile(m_path.c_str(), "rb");
+
+    m_file = SDL_IOFromFile(U8PATH_CAST(m_path), "rb");
     if (m_file)
     {
         //do some file checks
-        auto fileSize = SDL_RWsize(m_file);
+        auto fileSize = SDL_GetIOSize(m_file);
         if (fileSize < static_cast<std::int32_t>(sizeof(Iqm::Header)))
         {
-            Logger::log(m_path + ": Invalid file size", Logger::Type::Error);
-            SDL_RWclose(m_file);
+            LogE << m_path << ": Invalid file size" << std::endl;
+            SDL_CloseIO(m_file);
             m_file = nullptr;
             return {};
         }
 
         std::vector<char> fileData(fileSize);
-        auto readCount = SDL_RWread(m_file, fileData.data(), fileSize, 1);
-        SDL_RWclose(m_file);
+        auto readCount = SDL_ReadIO(m_file, fileData.data(), fileSize);
+        SDL_CloseIO(m_file);
         m_file = nullptr;
 
         if (readCount == 0)
         {
-            Logger::log(m_path + ": failed to read data.", Logger::Type::Error);
+            LogE << m_path << ": failed to read data." << std::endl;
             return {};
         }
         
@@ -147,7 +147,7 @@ cro::Mesh::Data IqmBuilder::build(AllocationResource*) const
         }
         else
         {
-            Logger::log("No vertex data was found in " + m_path + ", this file may contain only animation data", Logger::Type::Warning);
+            LogW << "No vertex data was found in " << m_path << ", this file may contain only animation data" << std::endl;
         }
 
         if (header.jointCount != 0)
@@ -161,7 +161,7 @@ cro::Mesh::Data IqmBuilder::build(AllocationResource*) const
     }
     else
     {
-        Logger::log("Failed opening " + m_path, Logger::Type::Error);
+        LogE << "Failed opening " << m_path << std::endl;
         return {};
     }
     return returnData;

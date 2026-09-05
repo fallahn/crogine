@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/audio/sound_system/SoundStream.hpp>
 
+#include <filesystem>
 #include <memory>
 
 namespace cro
@@ -59,10 +60,10 @@ namespace cro
         /*!
         \brief Attempts to load the file at the given path.
         Supported types are *.wav, *.mp3 and *.ogg
-        \param path A string containing the path to the file to open
+        \param path A filesystem::path containing the path to the file to open
         \returns true on success, else false.
         */
-        bool loadFromFile(const std::string& path);
+        bool loadFromFile(const std::filesystem::path& path);
 
         Time getDuration() const;
 

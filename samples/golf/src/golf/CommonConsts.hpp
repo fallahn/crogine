@@ -34,9 +34,10 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
-#include <cstdint>
-#include <cstddef>
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <filesystem>
 #include <string>
 
 struct MixerChannel final
@@ -64,7 +65,7 @@ static inline const std::array<cro::String, MixerChannel::Count> MixerLabels =
     "Text To Speech"
 };
 
-static const std::string TournamentDataFile = "data.tmt";
+static const std::filesystem::path TournamentDataFile = "data.tmt";
 
 namespace ConstVal
 {
@@ -109,9 +110,9 @@ namespace ConstVal
 
     //root dir for course files prepended to directory
     //received from the hosting client
-    static const std::string MapPath("courses/");
-    static const std::string UserCoursePath("courses/");
-    static const std::string UserMapPath("courses/export/");
+    static const std::filesystem::path MapPath("courses/");
+    static const std::filesystem::path UserCoursePath("courses/");
+    static const std::filesystem::path UserMapPath("courses/export/");
 
     static const std::uint8_t SummaryTimeout = 60;
 }

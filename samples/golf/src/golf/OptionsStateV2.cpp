@@ -156,7 +156,7 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     //previous size and only update the layout when we need to
     lastWindowSize = cro::App::getWindow().getSize();
     
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Options Menu");
 
     m_flagPreview.init(sd.flagPath);
@@ -183,13 +183,13 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
     //we MUST be able to cancel keybinds with a controller!
     if (m_keybindIndex != -1)
     {
-        if (evt.type == SDL_KEYUP)
+        if (evt.type == SDL_EVENT_KEY_UP)
         {
-            updateKeybind(evt.key.keysym.sym);
+            updateKeybind(evt.key.scancode);
         }
-        else if (evt.type == SDL_CONTROLLERBUTTONUP)
+        else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
         {
-            if (evt.cbutton.button == cro::GameController::ButtonB)
+            if (evt.gbutton.button == cro::GameController::ButtonB)
             {
                 cancelKeybind();
             }
@@ -201,8 +201,8 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
 
     //we need to refresh the audio device display when dis/re connect
     //WARNING we're indexing the item directly!
-    if (evt.type == SDL_AUDIODEVICEADDED
-        || evt.type == SDL_AUDIODEVICEREMOVED)
+    if (evt.type == SDL_EVENT_AUDIO_DEVICE_ADDED
+        || evt.type == SDL_EVENT_AUDIO_DEVICE_REMOVED)
     {
         refreshAudioDevices(m_uiLayout.menuLayout.items[TabID::Audio][1]);
     }
@@ -217,8 +217,8 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
                 m_infoSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                 m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
 
-                m_uiLayout.tabBar.navLeft.getComponent<cro::Text>().setString("< " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
-                m_uiLayout.tabBar.navRight.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + " >");
+                m_uiLayout.tabBar.navLeft.getComponent<cro::Text>().setString("< " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::PrevClub]));
+                m_uiLayout.tabBar.navRight.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::NextClub]) + " >");
 
                 m_uiLayout.tabBar.navLeftSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                 m_uiLayout.tabBar.navRightSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -269,7 +269,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
                 m_uiLayout.tabBar.navRight.getComponent<cro::Text>().setCharacterSize(charSize);
                 m_uiLayout.tabBar.navRight.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2;*/
             }
-            cro::App::getWindow().setMouseCaptured(!mouse);
+            cro::App::getWindow().setCursorVisible(!!mouse);
         };
 
     const auto showHelp = 
@@ -286,43 +286,44 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
             playSound(MenuSoundEvent::Activate);
         };
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
         setActiveInput(true, 0);
 
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE)
+        if (evt.key.key == SDLK_BACKSPACE
+            || evt.key.key == SDLK_ESCAPE)
         {
             quitState();
             return false;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
         {
             m_uiLayout.nextTab();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
         {
             m_uiLayout.prevTab();
         }
 
         //done on key down evet for repeat when held
-        /*else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down]
-            || evt.key.keysym.sym == SDLK_DOWN)
+        /*else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Down]
+            || evt.key.key == SDLK_DOWN)
         {
             m_uiLayout.nextItem();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up]
-            || evt.key.keysym.sym == SDLK_UP)
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Up]
+            || evt.key.key == SDLK_UP)
         {
             m_uiLayout.prevItem();
         }*/
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action]
-            || evt.key.keysym.sym == SDLK_RETURN)
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action]
+            || evt.key.key == SDLK_RETURN)
         {
             m_uiLayout.activate();
         }
 
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_LCTRL:
@@ -331,37 +332,45 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         case SDLK_LALT:
             showHelp();
             break;
+        /*case SDLK_KP_3:
+            cro::GameController::moveControllerIndexDown(2);
+            refreshControllerDevices();
+            break;
+        case SDLK_KP_2:
+            cro::GameController::moveControllerIndexDown(1);
+            refreshControllerDevices();
+            break;*/
         }
 
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         setActiveInput(true, 0);
 
         //do this here to take advantage of key repeat
-        if (evt.key.keysym.sym == SDLK_DOWN)
+        if (evt.key.key == SDLK_DOWN)
         {
             m_uiLayout.nextItem();
         }
-        else if (evt.key.keysym.sym == SDLK_UP)
+        else if (evt.key.key == SDLK_UP)
         {
             m_uiLayout.prevItem();
         }
-        else if (evt.key.keysym.sym == SDLK_LEFT)
+        else if (evt.key.key == SDLK_LEFT)
         {
             m_uiLayout.activateLeft();
         }
-        else if (evt.key.keysym.sym == SDLK_RIGHT)
+        else if (evt.key.key == SDLK_RIGHT)
         {
             m_uiLayout.activateRight();
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        const auto controllerID = cro::GameController::controllerID(evt.cbutton.which);
+        const auto controllerID = cro::GameController::controllerID(evt.gbutton.which);
         setActiveInput(false, controllerID);
 
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::DPadUp:
@@ -382,9 +391,9 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         //case cro::GameController::DPadLeft:
@@ -414,7 +423,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
@@ -427,19 +436,19 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         setActiveInput(true, 0);
 
         glm::vec2 pos(evt.motion.x, cro::App::getWindow().getSize().y - evt.motion.y);
         m_uiLayout.checkMouseOver(pos);
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
         constexpr std::int16_t Threshold = std::numeric_limits<std::int16_t>::max() / 2;// cro::GameController::LeftThumbDeadZone * 2;// 15000;
-        const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
+        const auto controllerID = cro::GameController::controllerID(evt.gaxis.which);
         
-        if (std::abs(evt.caxis.value) > Threshold)
+        if (std::abs(evt.gaxis.value) > Threshold)
         {
             setActiveInput(false, controllerID);
             if (controllerID < 4)
@@ -452,17 +461,17 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         if (controllerID != -1
             && controllerID < 4)
         {
-            switch (evt.caxis.axis)
+            switch (evt.gaxis.axis)
             {
             default: break;
-            case SDL_CONTROLLER_AXIS_LEFTX:
-                if (evt.caxis.value > Threshold)
+            case SDL_GAMEPAD_AXIS_LEFTX:
+                if (evt.gaxis.value > Threshold)
                 {
                     //right
                     m_controllerMasks[controllerID] |= InputFlag::Right;
                     m_controllerMasks[controllerID] &= ~InputFlag::Left;
                 }
-                else if (evt.caxis.value < -Threshold)
+                else if (evt.gaxis.value < -Threshold)
                 {
                     //left
                     m_controllerMasks[controllerID] |= InputFlag::Left;
@@ -473,14 +482,14 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
                     m_controllerMasks[controllerID] &= ~(InputFlag::Left | InputFlag::Right);
                 }
                 break;
-            case SDL_CONTROLLER_AXIS_LEFTY:
-                if (evt.caxis.value > Threshold)
+            case SDL_GAMEPAD_AXIS_LEFTY:
+                if (evt.gaxis.value > Threshold)
                 {
                     //down
                     m_controllerMasks[controllerID] |= InputFlag::Down;
                     m_controllerMasks[controllerID] &= ~InputFlag::Up;
                 }
-                else if (evt.caxis.value < -Threshold)
+                else if (evt.gaxis.value < -Threshold)
                 {
                     //up
                     m_controllerMasks[controllerID] |= InputFlag::Up;
@@ -495,7 +504,7 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         }
         
     }
-    else if (evt.type == SDL_MOUSEWHEEL)
+    else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
         if (evt.wheel.y > 0)
         {
@@ -507,8 +516,8 @@ bool OptionsStateV2::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_CONTROLLERDEVICEADDED
-        || evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    else if (evt.type == SDL_EVENT_GAMEPAD_ADDED
+        || evt.type == SDL_EVENT_GAMEPAD_REMOVED)
     {
         //refreshControllerDevices();
         //*sigh* the names aren't updated until AFTER the event
@@ -551,7 +560,7 @@ void OptionsStateV2::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             if (const auto newSize = glm::uvec2(data.data0, data.data1);
                 newSize != lastWindowSize)
@@ -1542,7 +1551,7 @@ void OptionsStateV2::createSettingsItems()
             m_uiLayout.detailsPane.image.getComponent<cro::Sprite>().setTextureRect(m_flagPreview.getUV());
 
             m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_flagPreview.getSize().x / 2.f, 0.f });
-            m_sharedData.flagPath = m_flagPreview.getPath();
+            m_sharedData.flagPath = U8PATH_CAST(m_flagPreview.getPath());
         };
 
     for (auto i = 0; i < m_flagPreview.getCount(); ++i)
@@ -2062,7 +2071,7 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::PrevClub;
             m_keybindItemIndex = itemIndex;
         };
-    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub])};
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])};
     item->selectedIndex = 0;
 
     //next club
@@ -2076,7 +2085,7 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::NextClub;
             m_keybindItemIndex = itemIndex;
         };
-    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) };
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::NextClub]) };
     item->selectedIndex = 0;
 
     //aim left
@@ -2090,7 +2099,7 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::Left;
             m_keybindItemIndex = itemIndex;
         };
-    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]) };
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Left]) };
     item->selectedIndex = 0;
 
     //aim right
@@ -2104,7 +2113,7 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::Right;
             m_keybindItemIndex = itemIndex;
         };
-    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]) };
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Right]) };
     item->selectedIndex = 0;
 
     //camera up
@@ -2118,7 +2127,7 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::Up;
             m_keybindItemIndex = itemIndex;
         };
-    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Up]) };
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Up]) };
     item->selectedIndex = 0;
 
     //camera down
@@ -2132,7 +2141,7 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::Down;
             m_keybindItemIndex = itemIndex;
         };
-    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Down]) };
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Down]) };
     item->selectedIndex = 0;
 
     //action
@@ -2146,7 +2155,7 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::Action;
             m_keybindItemIndex = itemIndex;
         };
-    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) };
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Action]) };
     item->selectedIndex = 0;
 
     //spin menu
@@ -2160,7 +2169,7 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::SpinMenu;
             m_keybindItemIndex = itemIndex;
         };
-    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]) };
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu]) };
     item->selectedIndex = 0;
 
     //emote wheel
@@ -2174,7 +2183,7 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::EmoteMenu;
             m_keybindItemIndex = itemIndex;
         };
-    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::EmoteMenu]) };
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::EmoteMenu]) };
     item->selectedIndex = 0;
 
     //cancel shot
@@ -2188,7 +2197,7 @@ void OptionsStateV2::createKeyboardItems()
             m_keybindIndex = InputBinding::CancelShot;
             m_keybindItemIndex = itemIndex;
         };
-    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::CancelShot]) };
+    item->labels = { "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::CancelShot]) };
     item->selectedIndex = 0;
 
 
@@ -2651,7 +2660,7 @@ void OptionsStateV2::createDisplayItems()
             auto* msg = postMessage<cro::Message::WindowEvent>(cro::Message::WindowMessage);
             msg->data0 = size.x;
             msg->data1 = size.y;
-            msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+            msg->event = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
         };
     for (std::int32_t i = MinFOV; i < MaxFOV + 1; i += 5)
     {
@@ -3060,10 +3069,10 @@ void OptionsStateV2::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
     m_repeatTimes[i] = resetTime;
 }
 
-void OptionsStateV2::updateKeybind(SDL_Keycode key)
+void OptionsStateV2::updateKeybind(SDL_Scancode key)
 {
-    if (key == SDLK_ESCAPE
-        || key == SDLK_BACKSPACE)
+    if (key == SDL_SCANCODE_ESCAPE
+        || key == SDL_SCANCODE_BACKSPACE)
     {
         cancelKeybind();
         return;
@@ -3073,29 +3082,46 @@ void OptionsStateV2::updateKeybind(SDL_Keycode key)
     //prevent binding top row and function keys
     const std::array LockedKeys =
     {
-        SDLK_1,
-        SDLK_2,
-        SDLK_3,
-        SDLK_4,
-        SDLK_5,
-        SDLK_6,
-        SDLK_7,
-        SDLK_8,
-        SDLK_9,
-        SDLK_0,
+        SDL_SCANCODE_1,
+        SDL_SCANCODE_2,
+        SDL_SCANCODE_3,
+        SDL_SCANCODE_4,
+        SDL_SCANCODE_5,
+        SDL_SCANCODE_6,
+        SDL_SCANCODE_7,
+        SDL_SCANCODE_8,
+        SDL_SCANCODE_9,
+        SDL_SCANCODE_0,
 
-        SDLK_F1,
-        SDLK_F2,
-        SDLK_F3,
-        SDLK_F4,
-        SDLK_F5,
-        SDLK_F6,
-        SDLK_F7,
-        SDLK_F8,
-        SDLK_F9,
-        SDLK_F10,
-        SDLK_F11,
-        SDLK_F12,
+        SDL_SCANCODE_F1,
+        SDL_SCANCODE_F2,
+        SDL_SCANCODE_F3,
+        SDL_SCANCODE_F4,
+        SDL_SCANCODE_F5,
+        SDL_SCANCODE_F6,
+        SDL_SCANCODE_F7,
+        SDL_SCANCODE_F8,
+        SDL_SCANCODE_F9,
+        SDL_SCANCODE_F10,
+        SDL_SCANCODE_F11,
+        SDL_SCANCODE_F12,
+
+        SDL_SCANCODE_RETURN,
+        SDL_SCANCODE_RETURN2,
+        SDL_SCANCODE_KP_ENTER,
+        SDL_SCANCODE_KP_PLUS,
+        SDL_SCANCODE_KP_MINUS,
+        SDL_SCANCODE_TAB,
+        
+        //in theory we want these bindable,
+        //but the prev/next club binds are
+        //used as navigation so we end up
+        //trying to navigate twice when
+        //these are assigned there
+        SDL_SCANCODE_LEFT, 
+        SDL_SCANCODE_RIGHT,
+        SDL_SCANCODE_UP,
+        SDL_SCANCODE_DOWN
     };
 
     if (auto result = std::find(std::begin(LockedKeys), std::end(LockedKeys), key); result != std::end(LockedKeys))
@@ -3108,25 +3134,34 @@ void OptionsStateV2::updateKeybind(SDL_Keycode key)
     }
 
 
-    auto& keys = m_sharedData.inputBinding.keys;
-    if (auto result = std::find(keys.begin(), keys.end(), key); result != keys.end())
+    auto& keys = m_sharedData.inputBinding.scancodes;
+    
+    if (const auto result = std::find(keys.cbegin(), keys.cend(), key); result != keys.end())
     {
-        cro::String msg = cro::Keyboard::keyString(key);
-        msg += " is already bound. Press a key";
-        cro::Util::String::wordWrap(msg, 36);
-        m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString(msg);
+        //hmm wish there was a better way to find the existing item
+        const auto keyStr = "Key: " + cro::Keyboard::keyString(key);
+        auto oldItem = std::find_if(m_uiLayout.menuLayout.items[TabID::Keyboard].begin(), m_uiLayout.menuLayout.items[TabID::Keyboard].end(),
+            [&keyStr](const Menu::Item& i)
+            {
+                return !i.labels.empty() && i.labels[0] == keyStr;
+            });
 
-        return;
+        if (oldItem != m_uiLayout.menuLayout.items[TabID::Keyboard].end())
+        {
+            oldItem->labels[0] = "Key: " + cro::Keyboard::keyString(keys[m_keybindIndex]);
+        }
+
+        //swap existing binds
+        const auto idx = std::distance(keys.cbegin(), result);
+        keys[idx] = keys[m_keybindIndex];
     }
-
-
     keys[m_keybindIndex] = key;
 
     //m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString(
     //    "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[m_keybindIndex]));
     
     m_uiLayout.menuLayout.items[TabID::Keyboard][m_keybindItemIndex].labels[0] = 
-        "Key: " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[m_keybindIndex]);
+        "Key: " + cro::Keyboard::keyString(keys[m_keybindIndex]);
 
     playSound(MenuSoundEvent::Activate);
     m_uiLayout.updateMenuItems();

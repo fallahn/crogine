@@ -109,16 +109,16 @@ bool VoxelState::handleEvent(const cro::Event& evt)
         return false;
     }*/
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
-        case SDLK_l:
+        case SDLK_L:
         {
         }
         break;
-        case SDLK_p:
+        case SDLK_P:
 
             break;
         case SDLK_BACKSPACE:
@@ -128,15 +128,15 @@ bool VoxelState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         handleKeyboardShortcut(evt.key);
     }
-    else if (evt.type == SDL_QUIT)
+    else if (evt.type == SDL_EVENT_QUIT)
     {
         saveSettings();
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         updateCursorPosition();
 
@@ -145,7 +145,7 @@ bool VoxelState::handleEvent(const cro::Event& evt)
             applyEdit();
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         if (evt.button.button == SDL_BUTTON_MIDDLE)
         {
@@ -161,7 +161,7 @@ bool VoxelState::handleEvent(const cro::Event& evt)
             applyEdit();
         }
     }
-    else if(evt.type == SDL_MOUSEBUTTONUP)
+    else if(evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_MIDDLE)
         {
@@ -172,7 +172,7 @@ bool VoxelState::handleEvent(const cro::Event& evt)
             m_brush.editMode *= -1;
         }
     }
-    else if (evt.type == SDL_MOUSEWHEEL)
+    else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
         if (cro::Keyboard::isKeyPressed(SDLK_LSHIFT))
         {
@@ -535,7 +535,7 @@ void VoxelState::updateCursorPosition()
 
 void VoxelState::loadSettings()
 {
-    const auto cfgPath = cro::App::getPreferencePath() + "voxels.cfg";
+    const auto cfgPath = cro::App::getPreferencePath() / "voxels.cfg";
 
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(cfgPath))
@@ -618,7 +618,7 @@ void VoxelState::saveSettings()
 
     cfg.addProperty("show_overview").setValue(m_drawTopView);
 
-    const auto cfgPath = cro::App::getPreferencePath() + "voxels.cfg";
+    const auto cfgPath = cro::App::getPreferencePath() / "voxels.cfg";
     cfg.save(cfgPath);
 }
 

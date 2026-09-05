@@ -64,7 +64,7 @@ namespace cro
             Context(std::uint32_t w, std::uint32_t h, bool db, bool dt, bool s, bool f, std::uint32_t ms)
                 : width(w), height(h), depthBuffer(db), depthTexture(dt), stencilBuffer(s), floatingPointStorage(f), samples(ms) {}
 
-            bool operator == (const Context& other)
+            bool operator == (const Context& other) const
             {
                 return depthBuffer == other.depthBuffer
                     && depthTexture == other.depthTexture

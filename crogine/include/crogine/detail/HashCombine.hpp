@@ -38,7 +38,7 @@ namespace cro
     template <typename T>
     inline void hash_combine(std::size_t& s, const T& v)
     {
-        static_assert(std::is_pod<T>::value, "Not a POD");
+        static_assert(std::is_trivial<T>::value, "Not a POD");
         std::hash<T> h;
         s ^= h(v) + 0x9e3779b9 + (s << 6) + (s >> 2);
     }

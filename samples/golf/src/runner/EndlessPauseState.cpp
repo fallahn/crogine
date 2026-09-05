@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -79,9 +79,9 @@ EndlessPauseState::EndlessPauseState(cro::StateStack& stack, cro::State::Context
 //public
 bool EndlessPauseState::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_MOUSEMOTION)
+    if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(true);
     }
 
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
@@ -124,31 +124,31 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
                 m_textPrompt[m_sharedGameData.lastInput].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }
 
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         };
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
-        case SDLK_p:
+        case SDLK_P:
             requestStackPop();
             break;
-        case SDLK_c:
+        case SDLK_C:
             quitGame();
             break;
-        case SDLK_q:
+        case SDLK_Q:
             restartGame();
             break;
         }
         updateTextPrompt(false);
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonStart:
@@ -166,10 +166,10 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
         updateTextPrompt(true);
     }
 
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone
-            || evt.caxis.value < -cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone
+            || evt.gaxis.value < -cro::GameController::LeftThumbDeadZone)
         {
             updateTextPrompt(true);
         }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -36,6 +36,7 @@ source distribution.
 
 #include <crogine/detail/glm/vec2.hpp>
 
+#include <filesystem>
 #include <string>
 
 namespace cro
@@ -86,7 +87,8 @@ namespace cro
         \param useCompression Applies default compression (driver dependent) to the texture. YMMV
         \returns true on success, else false
         */
-        bool loadFromFile(const std::string& path, bool createMipMaps = false, bool useCompression = false);
+        bool loadFromFile(const std::filesystem::path& path, bool createMipMaps = false, bool useCompression = false);
+
 
         /*!
         \brief Attempts to create the texture from a given Image.
@@ -184,10 +186,10 @@ namespace cro
         \brief Saves the texture to a png file if it is a valid texture.
         If the texture contains no data, or create() had not been called
         then this function does nothing.
-        \param path A string containing a path to save the texture to.
+        \param path A filesystem::path containing a path to save the texture to.
         \returns true if successful else returns false
         */
-        bool saveToFile(const std::string& path) const;
+        bool saveToFile(const std::filesystem::path& path) const;
 
         /*!
         \brief Saves the texture to the given image file.
@@ -208,7 +210,7 @@ namespace cro
         /*!
         \brief Returns the file path this texture was loaded from, or an empty string
         */
-        const std::string& getResourcePath() const { return m_resourcePath; }
+        const std::filesystem::path& getResourcePath() const { return m_resourcePath; }
 
     private:
         glm::uvec2 m_size;
@@ -220,7 +222,7 @@ namespace cro
         bool m_hasMipMaps;
 
         bool m_useCompression;
-        std::string m_resourcePath;
+        std::filesystem::path m_resourcePath;
 
         bool update(const void* pixels, bool createMipMaps, URect area);
         void generateMipMaps();

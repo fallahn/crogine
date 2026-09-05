@@ -183,7 +183,7 @@ void InputParser::handleEvent(const cro::Event& evt)
         {
             auto controllerID = activeControllerID(m_inputBinding.playerID);
             return !m_isCPU &&
-                (evt.cbutton.which == cro::GameController::deviceID(controllerID)
+                (evt.gbutton.which == cro::GameController::deviceID(controllerID)
                     || (m_humanCount == 1 && (m_activeController == -1 || m_activeController == joyID))); //allow input from any controller if only one local player
         };
 
@@ -200,7 +200,7 @@ void InputParser::handleEvent(const cro::Event& evt)
         !m_swingput.handleEvent(evt, m_inputFlags, static_cast<std::int32_t>(m_state)))
     {
         //apply to input mask
-        if (evt.type == SDL_KEYDOWN
+        if (evt.type == SDL_EVENT_KEY_DOWN
             && evt.key.repeat == 0)
         {
             if (m_isCPU && evt.key.windowID != CPU_ID)
@@ -208,139 +208,150 @@ void InputParser::handleEvent(const cro::Event& evt)
                 return;
             }
 
-            if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
+            if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Up]
+                || evt.key.scancode == SDL_SCANCODE_UP)
             {
                 m_inputFlags |= InputFlag::Up;
-                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Left]
+                || evt.key.scancode == SDL_SCANCODE_LEFT)
             {
                 m_inputFlags |= InputFlag::Left;
-                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Right]
+                || evt.key.scancode == SDL_SCANCODE_RIGHT)
             {
                 m_inputFlags |= InputFlag::Right;
-                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Down]
+                || evt.key.scancode == SDL_SCANCODE_DOWN)
             {
                 m_inputFlags |= InputFlag::Down;
-                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Action])
             {
                 m_inputFlags |= InputFlag::Action;
-                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::NextClub])
             {
                 m_inputFlags |= InputFlag::NextClub;
-                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::PrevClub])
             {
                 m_inputFlags |= InputFlag::PrevClub;
-                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setCursorVisible(!!m_isCPU);
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::CancelShot])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::CancelShot])
             {
                 m_inputFlags |= InputFlag::Cancel;
-                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setCursorVisible(!!m_isCPU);
                 if (m_state == State::Measure)
                 {
                     toggleWidgetSpeed();
                 }
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::SpinMenu])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::SpinMenu])
             {
                 if (m_state == State::Aim)
                 {
                     m_inputFlags |= InputFlag::SpinMenu;
-                    //cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                    //cro::App::getWindow().setCursorVisible(!!m_isCPU);
                 }
             }
-            else if (evt.key.keysym.sym == FixedKey::DroneCam)
+
+
+
+            else if (evt.key.scancode == FixedKey::DroneCam)
             {
                 toggleDroneCam();
             }
 
-            else if (evt.key.keysym.sym == SDLK_PAGEUP)
+            else if (evt.key.scancode == SDL_SCANCODE_PAGEUP)
             {
                 m_inputFlags |= InputFlag::MiniMap;
                 m_minimapToggleTimer.restart();
             }
         }
-        else if (evt.type == SDL_KEYUP)
+        else if (evt.type == SDL_EVENT_KEY_UP)
         {
             if (m_isCPU && evt.key.windowID != CPU_ID)
             {
                 return;
             }
 
-            if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
+            if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Up]
+                || evt.key.scancode == SDL_SCANCODE_UP)
             {
                 m_inputFlags &= ~InputFlag::Up;
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Left]
+                || evt.key.scancode == SDL_SCANCODE_LEFT)
             {
                 m_inputFlags &= ~InputFlag::Left;
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Right]
+                || evt.key.scancode == SDL_SCANCODE_RIGHT)
             {
                 m_inputFlags &= ~InputFlag::Right;
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Down]
+                || evt.key.scancode == SDL_SCANCODE_DOWN)
             {
                 m_inputFlags &= ~InputFlag::Down;
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::Action])
             {
                 m_inputFlags &= ~InputFlag::Action;
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::NextClub])
             {
                 m_inputFlags &= ~InputFlag::NextClub;
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::PrevClub])
             {
                 m_inputFlags &= ~InputFlag::PrevClub;
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::CancelShot])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::CancelShot])
             {
                 m_inputFlags &= ~InputFlag::Cancel;
             }
-            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::SpinMenu])
+            else if (evt.key.scancode == m_inputBinding.scancodes[InputBinding::SpinMenu])
             {
                 m_inputFlags &= ~InputFlag::SpinMenu;
             }
 
-            else if (evt.key.keysym.sym == SDLK_PAGEUP)
+            else if (evt.key.scancode == SDL_SCANCODE_PAGEUP)
             {
                 m_inputFlags &= ~InputFlag::MiniMap;
             }
         }
-        else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+        else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
         {
-            if (acceptInput(evt.cbutton.which))
+            if (acceptInput(evt.gbutton.which))
             {
-                if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
+                if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::Action])
                 {
                     m_inputFlags |= InputFlag::Action;
                 }
-                else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::NextClub])
+                else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::NextClub])
                 {
                     m_inputFlags |= InputFlag::NextClub;
                 }
-                else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::PrevClub])
+                else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::PrevClub])
                 {
                     m_inputFlags |= InputFlag::PrevClub;
                 }
-                else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CancelShot])
+                else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::CancelShot])
                 {
                     m_inputFlags |= InputFlag::Cancel;
                 }
-                else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::SpinMenu])
+                else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::SpinMenu])
                 {
                     if (m_state == State::Aim)
                     {
@@ -348,7 +359,7 @@ void InputParser::handleEvent(const cro::Event& evt)
                     }
                 }
 
-                else if (evt.cbutton.button == cro::GameController::DPadLeft)
+                else if (evt.gbutton.button == cro::GameController::DPadLeft)
                 {
                     //such hax
                     if (m_state != State::Measure)
@@ -357,7 +368,7 @@ void InputParser::handleEvent(const cro::Event& evt)
                         FineTune = FineTuneAmount;
                     }
                 }
-                else if (evt.cbutton.button == cro::GameController::DPadRight)
+                else if (evt.gbutton.button == cro::GameController::DPadRight)
                 {
                     if (m_state != State::Measure)
                     {
@@ -365,7 +376,7 @@ void InputParser::handleEvent(const cro::Event& evt)
                         FineTune = FineTuneAmount;
                     }
                 }
-                else if (evt.cbutton.button == cro::GameController::DPadUp)
+                else if (evt.gbutton.button == cro::GameController::DPadUp)
                 {
                     if (isSpinputActive())
                     {
@@ -376,7 +387,7 @@ void InputParser::handleEvent(const cro::Event& evt)
                         toggleDroneCam();
                     }
                 }
-                else if (evt.cbutton.button == cro::GameController::DPadDown)
+                else if (evt.gbutton.button == cro::GameController::DPadDown)
                 {
                     if (isSpinputActive())
                     {
@@ -387,40 +398,40 @@ void InputParser::handleEvent(const cro::Event& evt)
                         //toggles freecam
                         auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
                         msg->type = SceneEvent::RequestToggleFreecam;
-                        msg->data = evt.cbutton.which;
+                        msg->data = evt.gbutton.which;
                     }
                 }
 
-                /*else if (evt.cbutton.button == cro::GameController::ButtonRightStick)
+                /*else if (evt.gbutton.button == cro::GameController::ButtonRightStick)
                 {
                     toggleDroneCam();
                 }*/
                 //people say this happens accidentally, so let's use a timer
-                /*else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
+                /*else if (evt.gbutton.button == cro::GameController::ButtonLeftStick)
                 {
                     m_inputFlags |= InputFlag::MiniMap;
                     m_minimapToggleTimer.restart();
                 }*/
             }
         }
-        else if (evt.type == SDL_CONTROLLERBUTTONUP)
+        else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
         {
-            if (acceptInput(evt.cbutton.which))
+            if (acceptInput(evt.gbutton.which))
             {
-                if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
+                if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::Action])
                 {
                     m_inputFlags &= ~InputFlag::Action;
-                    lastActiveController = evt.cbutton.which;
+                    lastActiveController = evt.gbutton.which;
                 }
-                else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::NextClub])
+                else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::NextClub])
                 {
                     m_inputFlags &= ~InputFlag::NextClub;
                 }
-                else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::PrevClub])
+                else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::PrevClub])
                 {
                     m_inputFlags &= ~InputFlag::PrevClub;
                 }
-                else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CancelShot])
+                else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::CancelShot])
                 {
                     m_inputFlags &= ~InputFlag::Cancel;
 
@@ -436,26 +447,26 @@ void InputParser::handleEvent(const cro::Event& evt)
                         hideMeasureWidget();
                     }
                 }
-                else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::SpinMenu])
+                else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::SpinMenu])
                 {
                     m_inputFlags &= ~InputFlag::SpinMenu;
                 }
 
-                else if (evt.cbutton.button == cro::GameController::DPadLeft)
+                else if (evt.gbutton.button == cro::GameController::DPadLeft)
                 {
                     m_inputFlags &= ~InputFlag::Left;
                     FineTune = 1.f;
                 }
-                else if (evt.cbutton.button == cro::GameController::DPadRight)
+                else if (evt.gbutton.button == cro::GameController::DPadRight)
                 {
                     m_inputFlags &= ~InputFlag::Right;
                     FineTune = 1.f;
                 }
-                else if (evt.cbutton.button == cro::GameController::DPadUp)
+                else if (evt.gbutton.button == cro::GameController::DPadUp)
                 {
                     m_inputFlags &= ~InputFlag::Up;
                 }
-                else if (evt.cbutton.button == cro::GameController::DPadDown)
+                else if (evt.gbutton.button == cro::GameController::DPadDown)
                 {
                     m_inputFlags &= ~InputFlag::Down;
 
@@ -465,11 +476,11 @@ void InputParser::handleEvent(const cro::Event& evt)
                     //    //toggles freecam
                     //    auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
                     //    msg->type = SceneEvent::RequestToggleFreecam;
-                    //    msg->data = evt.cbutton.which;
+                    //    msg->data = evt.gbutton.which;
                     //}
                 }
 
-                else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
+                else if (evt.gbutton.button == cro::GameController::ButtonLeftStick)
                 {
                     //m_inputFlags &= ~InputFlag::MiniMap;
                     toggleWidgetSpeed();
@@ -477,32 +488,32 @@ void InputParser::handleEvent(const cro::Event& evt)
             }
         }
 
-        else if (evt.type == SDL_CONTROLLERAXISMOTION)
+        else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
         {
-            if (std::abs(evt.caxis.value) > cro::GameController::LeftThumbDeadZone)
+            if (std::abs(evt.gaxis.value) > cro::GameController::LeftThumbDeadZone)
             {
-                m_activeController = evt.caxis.which;
+                m_activeController = evt.gaxis.which;
             }
             
-            if (acceptInput(evt.caxis.which))
+            if (acceptInput(evt.gaxis.which))
             {
-                m_thumbsticks.setValue(evt.caxis.axis, evt.caxis.value);
+                m_thumbsticks.setValue(evt.gaxis.axis, evt.gaxis.value);
             }
         }
 
 
-        else if (evt.type == SDL_MOUSEWHEEL)
+        else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
         {
             m_mouseWheel += evt.wheel.y;
         }
-        else if (evt.type == SDL_MOUSEBUTTONDOWN
+        else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN
             && m_sharedData.useMouseAction
             && !m_isCPU
             && evt.button.button == SDL_BUTTON_LEFT)
         {
             m_inputFlags |= InputFlag::Action;
         }
-        else if (evt.type == SDL_MOUSEBUTTONUP
+        else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP
             && !m_isCPU)
         {
             if (evt.button.button == SDL_BUTTON_LEFT)
@@ -514,7 +525,7 @@ void InputParser::handleEvent(const cro::Event& evt)
                 toggleWidgetSpeed();
             }
         }
-        /*else if (evt.type == SDL_MOUSEMOTION)
+        /*else if (evt.type == SDL_EVENT_MOUSE_MOTION)
         {
             m_mouseMove += evt.motion.xrel;
         }*/
@@ -639,11 +650,11 @@ float InputParser::getCamRotation() const
             return m_aimRotation;
         }
 
-        if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateLeft))
+        if (cro::Keyboard::isKeyPressed(static_cast<SDL_Scancode>(FixedKey::CameraRotateLeft))) //buh this is a mess
         {
             return 0.5f * m_sharedData.mouseSpeed;
         }
-        if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateRight))
+        if (cro::Keyboard::isKeyPressed(static_cast<SDL_Scancode>(FixedKey::CameraRotateRight)))
         {
             return -0.5f * m_sharedData.mouseSpeed;
         }

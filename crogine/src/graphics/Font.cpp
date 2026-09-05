@@ -101,9 +101,9 @@ namespace
             FT_Done_FreeType(library);
         }
 
-        std::unordered_map<std::string, std::vector<std::uint8_t>> fontData;
+        std::unordered_map<std::filesystem::path, std::vector<std::uint8_t>> fontData;
 
-        FontDataBuffer getFontData(const std::string& path)
+        FontDataBuffer getFontData(const std::filesystem::path& path)
         {
             if (!library)
             {
@@ -114,21 +114,21 @@ namespace
             if (fontData.count(path) == 0)
             {
                 RaiiRWops fontFile;
-                fontFile.file = SDL_RWFromFile(path.c_str(), "r");
-                if (!fontFile.file)
+                fontFile.open(path, "r");
+                if (!fontFile)
                 {
-                    Logger::log("Failed opening " + path, Logger::Type::Error);
+                    LogE << "Failed opening " << path << std::endl;
                     return {};
                 }
 
                 std::vector<std::uint8_t> buffer;
-                buffer.resize(fontFile.file->size(fontFile.file));
+                buffer.resize(SDL_GetIOSize(fontFile.filePtr()));
                 if (buffer.size() == 0)
                 {
-                    Logger::log("Could not open " + path + ": files size was 0", Logger::Type::Error);
+                    LogE << "Could not open " << path << ": files size was 0" << std::endl;
                     return {};
                 }
-                SDL_RWread(fontFile.file, buffer.data(), buffer.size(), 1);
+                SDL_ReadIO(fontFile.filePtr(), buffer.data(), buffer.size());
 
                 fontData.insert(std::make_pair(path, buffer));
             }
@@ -174,7 +174,7 @@ Font::~Font()
 }
 
 //public
-bool Font::loadFromFile(const std::string& filePath)
+bool Font::loadFromFile(const std::filesystem::path& filePath)
 {
     //remove existing loaded font
     cleanup();
@@ -182,11 +182,11 @@ bool Font::loadFromFile(const std::string& filePath)
     return appendFromFile(filePath, FontAppendmentContext());
 }
 
-bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx)
+bool Font::appendFromFile(const std::filesystem::path& filePath, FontAppendmentContext ctx)
 {
     CRO_ASSERT(ctx.codepointRange[0] > 0 && ctx.codepointRange[0] < ctx.codepointRange[1], "invalid codepoint range");
 
-    auto path = FileSystem::getResourcePath() + filePath;
+    const auto path = (FileSystem::getResourcePath() / filePath);
     FontData fd;
     fd.context = ctx;
 
@@ -202,7 +202,7 @@ bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx
     FT_Face face = nullptr;
     if (FT_New_Memory_Face(fontDataResource->library, buffer.buffer, buffer.size, 0, &face) != 0)
     {
-        Logger::log("Failed to load font " + path + ": Failed creating font face", Logger::Type::Error);
+        LogE << "Failed to load font " << path << ": Failed creating font face" << std::endl;
         return false;
     }
 
@@ -219,7 +219,7 @@ bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx
     //using unicode
     if (FT_Select_Charmap(face, FT_ENCODING_UNICODE) != 0)
     {
-        Logger::log("Failed to load font " + path + ": failed to select unicode charset", Logger::Type::Error);
+        LogE << "Failed to load font " << path << ": failed to select unicode charset" << std::endl;
         FT_Done_Face(face);
         return false;
     }
@@ -248,13 +248,12 @@ bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx
         }
     }
 
-
     return true;
 }
 
 Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold, float outlineThickness) const
 {
-    const auto oldSize = m_pages.size();
+    //const auto oldSize = m_pages.size();
 
     auto& fontData = getFontData(codepoint);
     auto& currentGlyphs = m_pages[charSize].glyphs;
@@ -274,8 +273,12 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold,
     }
     else
     {
-        //add the glyph to the page
+        //add the glyph to the page - make sure to check if the texture
+        //has changed - in which case this happened (probably) in the
+        //middle of rebuilding text, and we need to add *another*, deferred update....
+        const auto oldTex = m_pages[charSize].texture.getGLHandle();
         auto glyph = loadGlyph(codepoint, charSize, bold && fontData.context.allowBold, fontData.context.allowOutline ? outlineThickness : 0.f);
+        m_pages[charSize].deferredUpdate = m_pages[charSize].texture.getGLHandle() != oldTex;
         return currentGlyphs.insert(std::make_pair(key, glyph)).first->second;
     }
 
@@ -738,14 +741,29 @@ void Font::cleanup()
     m_pixelBuffer.clear();
 }
 
+std::uint32_t Font::getTextureID(std::uint32_t charSize) const
+{
+    //TODO this gets called every frame by the text
+    //system to see if the texture ID has changed
+    //when the text hack is active (currently not)
+    return m_pages.count(charSize) != 0 ? m_pages.at(charSize).texture.getGLHandle() : 0;
+}
+
 bool Font::pageUpdated(std::uint32_t charSize) const
 {
-    return m_pages.count(charSize) != 0 && m_pages.at(charSize).updated;
+    return m_pages.count(charSize) != 0 && (m_pages.at(charSize).updated || m_pages.at(charSize).deferredUpdate);
 }
 
 void Font::markPageRead(std::uint32_t charSize) const
 {
-    m_pages.at(charSize).updated = false;
+    auto& page = m_pages.at(charSize);
+    if (!page.updated)
+    {
+        //this was probably a deferred update
+        page.deferredUpdate = false;
+    }
+
+    page.updated = false;
 }
 
 void Font::registerObserver(FontObserver* o) const

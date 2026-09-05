@@ -44,7 +44,7 @@ SpriteSystem2D::SpriteSystem2D(MessageBus& mb)
 //public
 void SpriteSystem2D::process(float)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& sprite = entity.getComponent<Sprite>();

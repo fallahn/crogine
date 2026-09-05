@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,7 +31,9 @@ source distribution.
 
 #include <crogine/graphics/MeshBuilder.hpp>
 
-#include <SDL_rwops.h>
+#include <SDL3/SDL_iostream.h>
+
+#include <filesystem>
 
 namespace cro
 {
@@ -87,7 +89,7 @@ namespace cro
         \brief Constructor
         \param path Relative path to cmf file to load
         */
-        explicit StaticMeshBuilder(const std::string& path);
+        explicit StaticMeshBuilder(const std::filesystem::path& path);
 
         /*!
         \brief Implements the UID based on the path given to the ctor
@@ -95,7 +97,7 @@ namespace cro
         std::size_t getUID() const override { return m_uid; }
 
     private:
-        std::string m_path;
+        std::filesystem::path m_path;
         std::size_t m_uid;
         Mesh::Data build(AllocationResource*) const override;
     };

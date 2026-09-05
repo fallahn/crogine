@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -37,7 +37,7 @@ using namespace cro;
 typedef int(__cdecl* Entry)(StateStack*, std::any*);
 typedef void(__cdecl* Exit)(StateStack*);
 
-void App::loadPlugin(const std::string& path, StateStack& stateStack)
+void App::loadPlugin(const std::filesystem::path& path, StateStack& stateStack)
 {
     if (m_pluginHandle)
     {
@@ -45,14 +45,19 @@ void App::loadPlugin(const std::string& path, StateStack& stateStack)
     }
 
     auto fullPath = path;
-    std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
-    if (fullPath.back() != '/')
+    if (fullPath.has_filename())
     {
-        fullPath += '/';
+        fullPath = path.parent_path();
     }
-    fullPath += "croplug.dll";
 
-    m_pluginHandle = LoadLibrary(TEXT(fullPath.c_str()));
+    //std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
+    //if (fullPath.back() != '/')
+    //{
+    //    fullPath += '/';
+    //}
+    fullPath /= "croplug.dll";
+
+    m_pluginHandle = LoadLibrary(TEXT(U8PATH_CAST(fullPath)));
 
     if (m_pluginHandle)
     {
@@ -121,22 +126,27 @@ void App::unloadPlugin(StateStack& stateStack)
 #else
 #include <dlfcn.h>
 
-void App::loadPlugin(const std::string& path, StateStack& stateStack)
+void App::loadPlugin(const std::filesystem::path& path, StateStack& stateStack)
 {
     if (m_pluginHandle)
     {
         unloadPlugin(stateStack);
     }
 
-    std::string fullPath = path;
+    auto fullPath = path;
+    if (fullPath.has_filename())
+    {
+        fullPath = path.parent_path();
+    }
+
 #ifdef __APPLE__
-    fullPath = FileSystem::getResourcePath() + fullPath;
-    fullPath += "/libcroplug.dylib";
+    fullPath = FileSystem::getResourcePath() / fullPath;
+    fullPath /= "libcroplug.dylib";
 #else
-    fullPath += "/libcroplug.so";
+    fullPath /= "libcroplug.so";
 #endif
 
-    m_pluginHandle = dlopen(fullPath.c_str(), RTLD_LAZY);
+    m_pluginHandle = dlopen(U8PATH_CAST(fullPath), RTLD_LAZY);
 
     if (m_pluginHandle)
     {

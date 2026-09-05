@@ -36,7 +36,7 @@ FontResource::FontResource()
 
 }
 
-bool FontResource::load(std::uint32_t id, const std::string& path)
+bool FontResource::load(std::uint32_t id, const std::filesystem::path& path)
 {
     if (m_fonts.count(id) != 0)
     {

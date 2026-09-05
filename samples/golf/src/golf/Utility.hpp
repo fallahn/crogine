@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -45,8 +45,8 @@ string is limited to MaxStringChars
 */
 static inline std::vector<std::uint8_t> serialiseString(const cro::String& str)
 {
-    auto len = std::min(ConstVal::MaxStringChars, str.size());
-    auto workingString = str.substr(0, len);
+    const auto len = std::min(ConstVal::MaxStringChars, str.size());
+    const auto workingString = str.substr(0, len);
 
     std::uint8_t size = static_cast<std::uint8_t>(len * sizeof(std::uint32_t));
     std::vector<std::uint8_t> buffer(size + 1);
@@ -121,7 +121,7 @@ struct KeysetID final
 };
 static constexpr std::array keysets =
 {
-    std::array<std::int32_t, KeyID::Count>({SDLK_w, SDLK_s, SDLK_a, SDLK_d, SDLK_q, SDLK_e}),
+    std::array<std::int32_t, KeyID::Count>({SDLK_W, SDLK_S, SDLK_A, SDLK_D, SDLK_Q, SDLK_E}),
     std::array<std::int32_t, KeyID::Count>({SDLK_HOME, SDLK_END, SDLK_DELETE, SDLK_PAGEDOWN, SDLK_INSERT, SDLK_PAGEUP})
 };
 

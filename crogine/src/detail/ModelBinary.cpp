@@ -311,7 +311,8 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
     if (retVal)
     {
         //open the file
-        SDL_RWops* file = SDL_RWFromFile(path.c_str(), "wb");
+        RaiiRWops file;
+        file.open(path, "wb");
 
         if (!file)
         {
@@ -320,15 +321,15 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
         else
         {
             //write the header
-            SDL_RWwrite(file, &header, sizeof(header), 1);
+            SDL_WriteIO(file.filePtr(), &header, sizeof(header));
 
             if (header.meshOffset)
             {
                 //write mesh data
-                SDL_RWwrite(file, &meshHeader, sizeof(meshHeader), 1);
-                SDL_RWwrite(file, outIndexSizes.data(), sizeof(std::uint32_t), outIndexSizes.size());
-                SDL_RWwrite(file, outVertexData.data(), sizeof(float), outVertexData.size());
-                SDL_RWwrite(file, outIndexData.data(), sizeof(std::uint32_t), outIndexData.size());
+                SDL_WriteIO(file.filePtr(), &meshHeader, sizeof(meshHeader));
+                SDL_WriteIO(file.filePtr(), outIndexSizes.data(), sizeof(std::uint32_t) * outIndexSizes.size());
+                SDL_WriteIO(file.filePtr(), outVertexData.data(), sizeof(float) * outVertexData.size());
+                SDL_WriteIO(file.filePtr(), outIndexData.data(), sizeof(std::uint32_t) * outIndexData.size());
             }
 
             if (header.skeletonOffset)
@@ -336,25 +337,25 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
                 const auto& frames = entity.getComponent<cro::Skeleton>().getFrames();
 
                 //write skel data
-                SDL_RWwrite(file, &skelHeader, sizeof(skelHeader), 1);
-                SDL_RWwrite(file, frames.data(), sizeof(Joint), frames.size());
-                SDL_RWwrite(file, outAnimations.data(), sizeof(SerialAnimation), outAnimations.size());
-                SDL_RWwrite(file, outNotifications.data(), sizeof(SerialNotification), outNotifications.size());
-                SDL_RWwrite(file, outAttachments.data(), sizeof(SerialAttachment), outAttachments.size());
-                SDL_RWwrite(file, outInverseBindPose.data(), sizeof(float), outInverseBindPose.size());
+                SDL_WriteIO(file.filePtr(), &skelHeader, sizeof(skelHeader));
+                SDL_WriteIO(file.filePtr(), frames.data(), sizeof(Joint) * frames.size());
+                SDL_WriteIO(file.filePtr(), outAnimations.data(), sizeof(SerialAnimation) * outAnimations.size());
+                SDL_WriteIO(file.filePtr(), outNotifications.data(), sizeof(SerialNotification) * outNotifications.size());
+                SDL_WriteIO(file.filePtr(), outAttachments.data(), sizeof(SerialAttachment) * outAttachments.size());
+                SDL_WriteIO(file.filePtr(), outInverseBindPose.data(), sizeof(float) * outInverseBindPose.size());
             }
 
-            if (SDL_RWclose(file))
+            /*if (SDL_CloseIO(file))
             {
                 LogE << "SDL: Failed writing model binary - " << SDL_GetError() << std::endl;
-            }
+            }*/
         }
     }
 
     return retVal;
 }
 
-cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::vector<float>& dstVert, std::vector<std::vector<std::uint32_t>>& dstIdx)
+cro::Mesh::Data cro::Detail::ModelBinary::read(const std::filesystem::path& binPath, std::vector<float>& dstVert, std::vector<std::vector<std::uint32_t>>& dstIdx)
 {
     //make sure everything is empty - who knows what gets passed in ;)
     dstVert.clear();
@@ -363,19 +364,19 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
     cro::Mesh::Data meshData;
 
     cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(binPath.c_str(), "rb");
-    if (file.file)
+    file.open(binPath, "rb");
+    if (file)
     {
         cro::Detail::ModelBinary::Header header;
-        auto len = SDL_RWseek(file.file, 0, RW_SEEK_END);
+        auto len = SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_END);
         if (len < sizeof(header))
         {
             LogE << "Unable to open " << binPath << ": invalid file size" << std::endl;
             return {};
         }
 
-        SDL_RWseek(file.file, 0, RW_SEEK_SET);
-        SDL_RWread(file.file, &header, sizeof(header), 1);
+        SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_SET);
+        SDL_ReadIO(file.filePtr(), &header, sizeof(header));
 
         if (header.magic != cro::Detail::ModelBinary::MAGIC
             && header.magic != cro::Detail::ModelBinary::MAGIC_V1)
@@ -387,7 +388,7 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
         if (header.meshOffset)
         {
             cro::Detail::ModelBinary::MeshHeader meshHeader;
-            SDL_RWread(file.file, &meshHeader, sizeof(meshHeader), 1);
+            SDL_ReadIO(file.filePtr(), &meshHeader, sizeof(meshHeader));
 
             if ((meshHeader.flags & cro::VertexProperty::Position) == 0)
             {
@@ -397,7 +398,7 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
             std::vector<std::uint32_t> sizes(meshHeader.indexArrayCount);
             dstIdx.resize(meshHeader.indexArrayCount);
 
-            SDL_RWread(file.file, sizes.data(), meshHeader.indexArrayCount * sizeof(std::uint32_t), 1);
+            SDL_ReadIO(file.filePtr(), sizes.data(), meshHeader.indexArrayCount * sizeof(std::uint32_t));
 
             std::uint32_t vertStride = 0;
             for (auto i = 0u; i < cro::Mesh::Attribute::Total; ++i)
@@ -436,17 +437,17 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
                 }
             }
 
-            auto pos = SDL_RWtell(file.file);
-            auto vertSize = meshHeader.indexArrayOffset - pos;
+            const auto pos = SDL_TellIO(file.filePtr());
+            const auto vertSize = meshHeader.indexArrayOffset - pos;
 
             std::vector<float> tempVerts(vertSize / sizeof(float));
-            SDL_RWread(file.file, tempVerts.data(), vertSize, 1);
+            SDL_ReadIO(file.filePtr(), tempVerts.data(), vertSize);
             CRO_ASSERT(tempVerts.size() % vertStride == 0, "");
 
             for (auto i = 0u; i < meshHeader.indexArrayCount; ++i)
             {
                 dstIdx[i].resize(sizes[i]);
-                SDL_RWread(file.file, dstIdx[i].data(), sizes[i] * sizeof(std::uint32_t), 1);
+                SDL_ReadIO(file.filePtr(), dstIdx[i].data(), sizes[i] * sizeof(std::uint32_t));
             }
 
             dstVert.swap(tempVerts);

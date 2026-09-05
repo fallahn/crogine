@@ -67,13 +67,14 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
+#include <filesystem>
 #include <memory>
 
 namespace
 {
-    std::string getBasePath()
+    std::filesystem::path getBasePath()
     {
-        auto path = cro::App::getPreferencePath() + "user/";
+        const auto path = cro::App::getPreferencePath() / "user";
         if (!cro::FileSystem::directoryExists(path))
         {
             cro::FileSystem::createDirectory(path);
@@ -81,9 +82,9 @@ namespace
         return path;
     }
 
-    std::string getContentPath()
+    std::filesystem::path getContentPath()
     {
-        return getBasePath() + "content/";
+        return getBasePath() / "content";
     }
     std::unique_ptr<cro::ResourceCollection> sharedResources;
 }
@@ -129,9 +130,9 @@ void MyApp::unloadPlugin()
 void MyApp::handleEvent(const cro::Event& evt)
 {
 #ifdef CRO_DEBUG_
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_ESCAPE:
@@ -229,7 +230,8 @@ bool MyApp::initialise()
     m_stateStack.registerState<PinballGameState>(States::ScratchPad::PinballGame);
 
 #ifdef CRO_DEBUG_
-    //m_stateStack.pushState(States::ScratchPad::Menu);
+    //m_stateStack.pushState(States::ScratchPad::MainMenu);
+    //m_stateStack.pushState(States::ScratchPad::TrackOverlay);
     //m_stateStack.pushState(States::ScratchPad::BatCat);
     m_stateStack.pushState(States::ScratchPad::Surreal);
     //m_stateStack.pushState(States::ScratchPad::PinballGame);

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,8 +41,8 @@ CallbackSystem::CallbackSystem(MessageBus& mb)
 
 void CallbackSystem::process(float dt)
 {
-    auto& entities = getEntities();
-    for (auto& entity : entities)
+    const auto& entities = getEntities();
+    for (auto entity : entities)
     {
         auto& cb = entity.getComponent<Callback>();
         if (cb.active)

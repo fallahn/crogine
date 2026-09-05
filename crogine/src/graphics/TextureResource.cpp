@@ -98,7 +98,7 @@ Texture& TextureResource::getByHandle(std::uint32_t handle)
     return getFallbackTexture();
 }
 
-Texture& TextureResource::get(const std::string& path, bool useMipMaps, bool useCompression)
+Texture& TextureResource::get(const std::filesystem::path& path, bool useMipMaps, bool useCompression)
 {
     auto result = std::find_if(m_textures.begin(), m_textures.end(), 
         [&path](const auto& pair)
@@ -115,7 +115,7 @@ Texture& TextureResource::get(const std::string& path, bool useMipMaps, bool use
         }
 
         auto id = fallbackID--;
-        m_textures.insert(std::make_pair(id, std::make_pair(path, std::move(tex))));
+        m_textures.insert(std::make_pair(id, std::make_pair(U8PATH_CAST(path), std::move(tex))));
         return *m_textures.at(id).second;
     }
     return *result->second.second;

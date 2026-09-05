@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 
+#include <filesystem>
 #include <string>
 #include <unordered_map>
 
@@ -88,7 +89,7 @@ namespace cro
         \param audioResource A reference to the AudioResource used to managed the loaded data
         \returns true if the file was parsed successfully, else false.
         */
-        bool loadFromFile(const std::string& path, AudioResource& audioResource);
+        bool loadFromFile(const std::filesystem::path& path, AudioResource& audioResource);
 
         /*!
         \brief Returns the named AudioEmitter if it is found, else returns an emitter
@@ -111,7 +112,7 @@ namespace cro
         /*!
         \brief Returns the path from which the AudioScape was loaded, if available
         */
-        const std::string& getPath() const { return m_path; }
+        const std::filesystem::path& getPath() const { return m_path; }
 
         /*!
         \brief Returns the UID loaded from the AudioScape file, or 0 if there was none
@@ -121,7 +122,7 @@ namespace cro
     private:
         AudioResource* m_audioResource;
         std::string m_name;
-        std::string m_path;
+        std::filesystem::path m_path;
         std::uint32_t m_uid;
 
         struct AudioConfig final
@@ -130,7 +131,7 @@ namespace cro
             float pitch = 1.f;
             float rolloff = 0.f;
             std::int32_t audioBuffer = -1;
-            std::string mediaPath;
+            std::filesystem::path mediaPath;
 
             bool looped = false;
             std::uint8_t channel = 0;

@@ -82,18 +82,18 @@ namespace
         switch (evt.type)
         {
         default: return false;
-        case SDL_MOUSEBUTTONUP:
-        case SDL_MOUSEBUTTONDOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
             return evt.button.button == SDL_BUTTON_LEFT;
-        case SDL_CONTROLLERBUTTONUP:
-        case SDL_CONTROLLERBUTTONDOWN:
-            return evt.cbutton.button == SDL_CONTROLLER_BUTTON_A;
-        case SDL_FINGERUP:
-        case SDL_FINGERDOWN:
+        case SDL_EVENT_GAMEPAD_BUTTON_UP:
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+            return evt.gbutton.button == SDL_GAMEPAD_BUTTON_SOUTH;
+        case SDL_EVENT_FINGER_UP:
+        case SDL_EVENT_FINGER_DOWN:
             return true;
-        case SDL_KEYUP:
-        case SDL_KEYDOWN:
-            return (evt.key.keysym.sym == SDLK_SPACE || evt.key.keysym.sym == SDLK_RETURN);
+        case SDL_EVENT_KEY_UP:
+        case SDL_EVENT_KEY_DOWN:
+            return (evt.key.key == SDLK_SPACE || evt.key.key == SDLK_RETURN);
         }
     }
 
@@ -225,8 +225,11 @@ void main()
         OdinEncoder* encoder = nullptr;
         OdinDecoder* decoder = nullptr;
 
-        std::int32_t playbackDevice = 0; //SDL Playback device
-        std::int32_t recordDevice = 0; //SDL Record device
+        //SDL_AudioDeviceID playbackDevice = 0; //SDL Playback device
+        //SDL_AudioDeviceID recordDevice = 0; //SDL Record device
+        SDL_AudioStream* inputStream = nullptr;
+        SDL_AudioStream* outputStream = nullptr;
+
         bool active = false;
 
         OdinObject()
@@ -282,14 +285,14 @@ void main()
                 odin_encoder_free(encoder);
             }
 
-            if (recordDevice)
+            if (inputStream)
             {
-                SDL_CloseAudioDevice(recordDevice);
+                SDL_DestroyAudioStream(inputStream);
             }
 
-            if (playbackDevice)
+            if (outputStream)
             {
-                SDL_CloseAudioDevice(playbackDevice);
+                SDL_DestroyAudioStream(outputStream);
             }
             odin_shutdown();
         }
@@ -329,8 +332,16 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
     //registerWindow([this]()
     //    {
     //        ImGui::Begin("Curves");
-    //        ImGui::PlotLines("Linear", m_linearPower.data(), m_linearPower.size());
-    //        ImGui::PlotLines("Curved", m_curvedPower.data(), m_linearPower.size());
+    //        //ImGui::PlotLines("Linear", m_linearPower.data(), m_linearPower.size());
+    //        //ImGui::PlotLines("Curved", m_curvedPower.data(), m_linearPower.size());
+    //        const auto relPos = cro::Mouse::getRelativePosition();
+    //        const auto globalPos = cro::Mouse::getGlobalPosition();
+    //        const auto pos = cro::Mouse::getPosition();
+
+    //        ImGui::Text("Relative: %3.2f, %3.2f", relPos.x, relPos.y);
+    //        ImGui::Text("Global: %3.2f, %3.2f", globalPos.x, globalPos.y);
+    //        ImGui::Text("Position: %3.2f, %3.2f", pos.x, pos.y);
+
     //        ImGui::End();
     //    });
 
@@ -460,9 +471,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
             cro::GameController::rumbleStart(0, 0, (std::numeric_limits<std::uint16_t>::max() / 5) * strength, dur);
         };
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_1:
@@ -498,7 +509,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_0:
             rumbleHigh(5);
             break;
-        /*case SDLK_p:
+        /*case SDLK_P:
             spawnActive = !spawnActive;
             break;*/
         }
@@ -528,10 +539,12 @@ bool MenuState::simulate(float dt)
     if (odin)
     {
         static std::array<std::uint8_t, FRAME_COUNT * sizeof(float)> encodeBuffer = {};
-        m_recorderDebug.captureAvailable = SDL_DequeueAudio(odin->recordDevice, encodeBuffer.data(), FRAME_COUNT*sizeof(float));
-        if (m_recorderDebug.captureAvailable != 0
-            && cro::Mouse::isButtonPressed(cro::Mouse::Button::Right)) //crude but proves a point. probably wants a slight delay after releasing the button
+        m_recorderDebug.captureAvailable = SDL_GetAudioStreamAvailable(odin->inputStream);
+        if (m_recorderDebug.captureAvailable >= encodeBuffer.size()
+            /*&& cro::Mouse::isButtonPressed(cro::Mouse::Button::Right)*/) //crude but proves a point. probably wants a slight delay after releasing the button
         {
+            SDL_GetAudioStreamData(odin->inputStream, encodeBuffer.data(), static_cast<std::int32_t>(encodeBuffer.size()));
+
             const auto res = odin_encoder_push(odin->encoder, (float*)encodeBuffer.data(), m_recorderDebug.captureAvailable / sizeof(float));
             if (res != ODIN_ERROR_SUCCESS)
             {
@@ -572,7 +585,8 @@ bool MenuState::simulate(float dt)
 
             if (m_recorderDebug.decoderErrorID == ODIN_ERROR_SUCCESS)
             {
-                SDL_QueueAudio(odin->playbackDevice, decodeBuffer.data(), decodeBuffer.size() * sizeof(float));
+                //SDL_QueueAudio(odin->playbackDevice, decodeBuffer.data(), decodeBuffer.size() * sizeof(float));
+                SDL_PutAudioStreamData(odin->outputStream, decodeBuffer.data(), decodeBuffer.size() * sizeof(float));
             }
         }
         pretendPacketQueue.clear();
@@ -1259,17 +1273,17 @@ void MenuState::createUI()
                     ImGui::SameLine();
                     if (ImGui::Button("Open video"))
                     {
-                        auto path = cro::FileSystem::openFileDialogue("", "mpg");
+                        const auto path = cro::FileSystem::openFileDialogue("", "mpg");
                         if (!path.empty())
                         {
-                            if (!m_video.loadFromFile(path))
+                            if (!m_video.loadFromFile(path.string()))
                             {
                                 cro::FileSystem::showMessageBox("Error", "Could not open file");
                                 label = "No file open";
                             }
                             else
                             {
-                                label = cro::FileSystem::getFileName(path);
+                                label = cro::FileSystem::getFileName(path).string();
                             }
                         }
                     }
@@ -1314,16 +1328,16 @@ void MenuState::createUI()
                 {
                     if (ImGui::Button("Open##music"))
                     {
-                        auto path = cro::FileSystem::openFileDialogue("", "wav,ogg,mp3");
+                        const auto path = cro::FileSystem::openFileDialogue("", "wav,ogg,mp3");
                         if (!path.empty())
                         {
-                            if (!m_music.loadFromFile(path))
+                            if (!m_music.loadFromFile(path.string()))
                             {
                                 cro::FileSystem::showMessageBox("Error", "Failed to open music file");
                             }
                             else
                             {
-                                m_musicName = cro::FileSystem::getFileName(path);
+                                m_musicName = cro::FileSystem::getFileName(path).string();
                             }
                         }
                     }
@@ -1434,7 +1448,7 @@ void MenuState::createUI()
 
                 if (!outpath.empty())
                 {
-                    fileToByteArray(inpath, outpath);
+                    fileToByteArray(inpath, outpath.string());
                 }
             }
         });
@@ -1567,7 +1581,7 @@ bool MenuState::createStub(const std::string& name) const
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         switch (evt.key.keysym.sym)
         {
@@ -1678,16 +1692,17 @@ bool MenuState::createStub(const std::string& name) const
 
 void MenuState::fileToByteArray(const std::string& infile, const std::string& dst) const
 {
+    //FS_ASSERT;
     cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(infile.c_str(), "rb");
-    if (file.file)
+    file.open(infile, "rb");
+    if (file)
     {
         std::stringstream ss;
         ss << "static inline constexpr unsigned char FileData[] = {\n";
 
         std::uint8_t b = 0;
         std::int32_t i = 0;
-        while (file.file->read(file.file, &b, 1, 1))
+        while (SDL_ReadIO(file.filePtr(), &b, 1))
         {
             ss << "0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (int)b << ", ";
 
@@ -1700,13 +1715,13 @@ void MenuState::fileToByteArray(const std::string& infile, const std::string& ds
 
         ss << "\n};";
 
-        file.file->close(file.file);
+        file.close();
 
-        file.file = SDL_RWFromFile(dst.c_str(), "w");
-        if (file.file)
+        file.open(dst, "w");
+        if (file)
         {
             const auto str = ss.str();
-            file.file->write(file.file, str.c_str(), str.length(), 1);
+            SDL_WriteIO(file.filePtr(), str.c_str(), str.length());
         }
     }
 }
@@ -1723,9 +1738,9 @@ void MenuState::CSVToMap()
     };
 
     //created for a specific use case, so not much general use.
-    if (auto path = cro::FileSystem::openFileDialogue("", "csv"); !path.empty())
+    if (const auto path = cro::FileSystem::openFileDialogue("", "csv"); !path.empty())
     {
-        rapidcsv::Document doc(path);
+        rapidcsv::Document doc(path.string());
 
         //hm this is supposed to auto-remove the quotes according to the docs,
         //but my experience proves otherwise...
@@ -1770,7 +1785,7 @@ void MenuState::CSVToMap()
         LogI << "Parsed " << codes.size() << " rows" << std::endl;
         LogI << "Writing header file..." << std::endl;
 
-        auto outpath = path;
+        auto outpath = path.string();
         cro::Util::String::replace(outpath, "csv", "hpp");
         std::ofstream outfile(outpath);
         if (outfile.is_open() && outfile.good())
@@ -1795,7 +1810,7 @@ void MenuState::CSVToMap()
 
 void MenuState::loadConfig()
 {
-    const std::string inpath = cro::App::getPreferencePath() + "/scratchpad.cfg";
+    const auto inpath = cro::App::getPreferencePath() / "scratchpad.cfg";
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(inpath))
     {
@@ -1816,7 +1831,7 @@ void MenuState::loadConfig()
 
 void MenuState::saveConfig()
 {
-    const std::string outpath = cro::App::getPreferencePath() + "/scratchpad.cfg";
+    const auto outpath = cro::App::getPreferencePath() / "scratchpad.cfg";
     cro::ConfigFile cfg;
     cfg.addProperty("cube_load").setValue(m_cubemapLoadPath);
     cfg.addProperty("cube_save").setValue(m_cubemapSavePath);
@@ -1832,7 +1847,7 @@ void MenuState::imageQuantizer()
             const auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
             if (!path.empty())
             {
-                if (m_quantizeInput.loadFromFile(path))
+                if (m_quantizeInput.loadFromFile(path.string()))
                 {
                     m_quantizeQuad.setTexture(m_quantizeInput);
                     m_quantizeQuad.setShader(m_quantizeShader);
@@ -1849,7 +1864,7 @@ void MenuState::imageQuantizer()
                 const auto path = cro::FileSystem::saveFileDialogue("", "png");
                 if (!path.empty())
                 {
-                    m_quantizeOutput.getTexture().saveToFile(path);
+                    m_quantizeOutput.getTexture().saveToFile(path.string());
                 }
             }
             
@@ -1878,9 +1893,9 @@ void MenuState::cubemapWindow()
             const auto path = cro::FileSystem::openFileDialogue(m_cubemapLoadPath, "png,jpg,bmp");
             if (!path.empty())
             {
-                m_cubemapPreview.loadFromFile(path);
+                m_cubemapPreview.loadFromFile(path.string());
 
-                m_cubemapLoadPath = path;
+                m_cubemapLoadPath = path.string();
                 saveConfig();
             }
         }
@@ -1904,7 +1919,7 @@ void MenuState::cubemapWindow()
                 const auto path = cro::FileSystem::openFolderDialogue(m_cubemapSavePath);
                 if (!path.empty())
                 {
-                    bool canSave = !cro::FileSystem::fileExists(path + "/cubemap.ccm");
+                    bool canSave = !cro::FileSystem::fileExists(path / "/cubemap.ccm");
                     if (!canSave)
                     {
                         canSave = cro::FileSystem::showMessageBox("Warning", "Output exists, Overwrite?", cro::FileSystem::YesNo);
@@ -1930,7 +1945,7 @@ void MenuState::cubemapWindow()
                         cfg.addProperty("right").setValue("px.png");
                         cfg.addProperty("back").setValue("nz.png");
                         cfg.addProperty("down").setValue("ny.png");
-                        cfg.save(path + "/cubemap.ccm");
+                        cfg.save(path.string() + "/cubemap.ccm");
 
                         cro::SimpleQuad q;
                         q.setTexture(m_cubemapPreview);
@@ -1945,10 +1960,10 @@ void MenuState::cubemapWindow()
                             rt.clear();
                             q.draw();
                             rt.display();
-                            rt.saveToFile(path + "/" + FileNames[i]);
+                            rt.saveToFile(path.string() + "/" + FileNames[i]);
                         }
 
-                        m_cubemapSavePath = path;
+                        m_cubemapSavePath = path.string();
                         saveConfig();
                     }
                 }
@@ -2055,21 +2070,19 @@ void MenuState::odinWindow()
 
             SDL_AudioSpec spec = {};
             spec.freq = 48000;
-            spec.format = AUDIO_F32;
-            spec.channels = 2; //TODO if we want to play this through the AudioSystem (for positional) we need an SDL stream to resmaple to mono/16bit
-            spec.samples = 2048;
-
-            SDL_AudioSpec obtained = {};
+            spec.format = SDL_AUDIO_F32LE;
+            spec.channels = 2; //TODO if we want to play this through the AudioSystem (for positional) we need an SDL stream to resample to mono/16bit
+            //spec.samples = 2048;
 
 
-            if (!odin->playbackDevice)
+            if (!odin->outputStream)
             {
-                odin->playbackDevice = SDL_OpenAudioDevice(nullptr, 0, &spec, &obtained, 0);
+                odin->outputStream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, nullptr, nullptr);
             }
             spec.channels = 1;
-            if (!odin->recordDevice)
+            if (!odin->inputStream)
             {
-                odin->recordDevice = SDL_OpenAudioDevice(devList[idx].c_str(), SDL_TRUE, &spec, &obtained, 0);
+                odin->inputStream = SDL_OpenAudioDeviceStream(m_soundRecorder.getDeviceIDs()[idx],&spec, nullptr, nullptr);
             }
         }
 
@@ -2077,8 +2090,8 @@ void MenuState::odinWindow()
         {
             ImGui::Text("Odin Active");
 
-            if (odin->playbackDevice
-                && odin->recordDevice)
+            if (odin->outputStream
+                && odin->inputStream)
             {
                 if (!odin->active)
                 {
@@ -2089,8 +2102,8 @@ void MenuState::odinWindow()
                         //will be put out AFTER unpausing the device, causing
                         //potentially severe lag.
                         //m_soundRecorder.openDevice(devList[idx], 2, 48000);
-                        SDL_PauseAudioDevice(odin->playbackDevice, 0);
-                        SDL_PauseAudioDevice(odin->recordDevice, 0);
+                        SDL_ResumeAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK);
+                        SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(odin->inputStream));
                         odin->active = true;
                     }
                 }
@@ -2098,8 +2111,8 @@ void MenuState::odinWindow()
                 {
                     if (ImGui::Button("Stop"))
                     {
-                        SDL_PauseAudioDevice(odin->playbackDevice, 1);
-                        SDL_PauseAudioDevice(odin->recordDevice, 1);
+                        SDL_PauseAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK);
+                        SDL_PauseAudioDevice(SDL_GetAudioStreamDevice(odin->inputStream));
                         //m_soundRecorder.closeDevice();
                         odin->active = false;
                     }

@@ -35,28 +35,28 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/String.hpp>
 
-#include <mutex>
-#include <thread>
 #include <atomic>
-#include <memory>
 #include <deque>
 #include <filesystem>
+#include <memory>
+#include <mutex>
+#include <thread>
 
 namespace
 {
-    const std::string binName = "/nvtt_export.exe\"";
-    const std::string dxt1 = "/assets/compression_presets/ktx2_export_dxt1_no_alpha_no_mips.dpf";
-    const std::string dxt5 = "/assets/compression_presets/ktx2_export_dxt5_alpha.dpf";
-    const std::string dxt5_nomip = "/assets/compression_presets/ktx2_export_dxt5_alpha_no_mips.dpf";
+    const std::filesystem::path binName = "nvtt_export.exe";
+    const std::filesystem::path dxt1 = "assets/compression_presets/ktx2_export_dxt1_no_alpha_no_mips.dpf";
+    const std::filesystem::path dxt5 = "assets/compression_presets/ktx2_export_dxt5_alpha.dpf";
+    const std::filesystem::path dxt5_nomip = "assets/compression_presets/ktx2_export_dxt5_alpha_no_mips.dpf";
 
     constexpr std::size_t MaxLogEntries = 50;
     std::deque<std::string> logOutput;
 
     struct Compressor final
     {
-        std::string binPath;
-        std::string outputPath;
-        std::string workingDirectory;
+        std::filesystem::path binPath;
+        std::filesystem::path outputPath;
+        std::filesystem::path workingDirectory;
         bool createMips = false;
 
         std::atomic_bool running = false;
@@ -81,18 +81,18 @@ static inline void threadFunc()
 {
     //TODO these can obviously be refactored to something more sane
     const auto compressDXT = 
-        [](const std::string& file, const std::string& presetPath)
+        [](const std::filesystem::path& file, const std::filesystem::path& presetPath)
         {
-            const std::string preset = " -p \"" + compressor.workingDirectory + presetPath + "\"";
-            const std::string input = " \"" + compressor.outputPath + "/" + file + "\"";
+            const std::string preset = " -p \"" + std::string(U8PATH_CAST((compressor.workingDirectory / presetPath))) + "\"";
+            const std::string input = " \"" + std::string(U8PATH_CAST(compressor.outputPath)) + "/" + std::string(U8PATH_CAST(file)) + "\"";
             std::string output = " -o" + input;
             cro::Util::String::replace(output, ".png", ".ktx2");
 
-            const std::string cmd = "\"" + compressor.binPath + preset + output + input;
+            const std::string cmd = "\"" + std::string(U8PATH_CAST(compressor.binPath)) + preset + output + input;
 
             std::system(cmd.c_str());
 
-            compressor.log("Compressing " + file + " with " + presetPath);
+            compressor.log("Compressing " + std::string(U8PATH_CAST(file)) + " with " + std::string(U8PATH_CAST(presetPath)));
         };
 
 
@@ -103,7 +103,7 @@ static inline void threadFunc()
         {
             static constexpr std::uint32_t MaxTexSize = 4096;
             cro::ImageArray<std::uint8_t> img;
-            if (img.loadFromFile(compressor.outputPath + "/" + file))
+            if (img.loadFromFile(compressor.outputPath / file))
             {
                 const auto size = img.getDimensions();
                 if (size.x <= MaxTexSize && size.y <= MaxTexSize)
@@ -147,7 +147,7 @@ static inline void threadFunc()
                 }
                 else
                 {
-                    compressor.log("Skipping " + file + ": image exceeds 4096 size limit");
+                    compressor.log("Skipping " + std::string(U8PATH_CAST(file)) + ": image exceeds 4096 size limit");
                 }
             }
         }
@@ -180,7 +180,7 @@ static inline void browseDirectory(std::string& path, const std::string& id)
         const auto newPath = cro::FileSystem::openFolderDialogue(path);
         if (!newPath.empty())
         {
-            path = newPath;
+            path = U8PATH_CAST(newPath);
         }
     }
 }
@@ -203,7 +203,7 @@ void compressTextureWindow(SharedStateData& sharedData)
         if (ImGui::Button("Compress")
             && !compressor.running)
         {
-            compressor.binPath = "\"" + sharedData.nvttPath + binName;
+            compressor.binPath = sharedData.nvttPath / binName;
             compressor.outputPath = sharedData.compressionDirectory;
             compressor.workingDirectory = cro::FileSystem::getCurrentDirectory();
             compressor.createMips = sharedData.compressMips;

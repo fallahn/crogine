@@ -23,7 +23,7 @@
 ////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////
-// Modified 2020 for Crogine
+// Modified 2020 - 2026 for Crogine
 ////////////////////////////////////////////////////////////
 
 #pragma once
@@ -33,10 +33,10 @@
 ////////////////////////////////////////////////////////////
 #include <crogine/Config.hpp>
 #include <crogine/core/Utf.hpp>
+
 #include <iterator>
 #include <locale>
 #include <string>
-
 
 namespace cro
 {
@@ -52,8 +52,8 @@ public:
     ////////////////////////////////////////////////////////////
     // Types
     ////////////////////////////////////////////////////////////
-    typedef std::basic_string<Uint32>::iterator       Iterator;      //!< Iterator type
-    typedef std::basic_string<Uint32>::const_iterator ConstIterator; //!< Read-only iterator type
+    typedef std::basic_string<UInt32>::iterator       Iterator;      //!< Iterator type
+    typedef std::basic_string<UInt32>::const_iterator ConstIterator; //!< Read-only iterator type
 
     ////////////////////////////////////////////////////////////
     // Static member data
@@ -94,7 +94,8 @@ public:
     /// \param utf32Char UTF-32 character to convert
     ///
     ////////////////////////////////////////////////////////////
-    String(Uint32 utf32Char);
+    String(UInt32 utf32Char);
+    String(std::uint32_t utf32Char);
 
     ////////////////////////////////////////////////////////////
     /// \brief Construct from a null-terminated C-style ANSI string and a locale
@@ -142,7 +143,7 @@ public:
     /// \param utf32String UTF-32 string to assign
     ///
     ////////////////////////////////////////////////////////////
-    String(const Uint32* utf32String);
+    String(const UInt32* utf32String);
 
     ////////////////////////////////////////////////////////////
     /// \brief Construct from an UTF-32 string
@@ -150,7 +151,7 @@ public:
     /// \param utf32String UTF-32 string to assign
     ///
     ////////////////////////////////////////////////////////////
-    String(const std::basic_string<Uint32>& utf32String);
+    String(const std::basic_string<UInt32>& utf32String);
 
     ////////////////////////////////////////////////////////////
     /// \brief Copy constructor
@@ -200,8 +201,8 @@ public:
     /// \brief Create a new cro::String from a UTF-32 encoded string
     ///
     /// This function is provided for consistency, it is equivalent to
-    /// using the constructors that takes a const cro::Uint32* or
-    /// a std::basic_string<cro::Uint32>.
+    /// using the constructors that takes a const cro::UInt32* or
+    /// a std::basic_string<cro::UInt32>.
     ///
     /// \param begin Forward iterator to the beginning of the UTF-32 sequence
     /// \param end   Forward iterator to the end of the UTF-32 sequence
@@ -284,7 +285,7 @@ public:
     /// \see toUtf16, toUtf32
     ///
     ////////////////////////////////////////////////////////////
-    std::basic_string<Uint8> toUtf8() const;
+    std::basic_string<UInt8> toUtf8() const;
     std::basic_string<char> toUtf8Char() const;
 
     ////////////////////////////////////////////////////////////
@@ -295,7 +296,7 @@ public:
     /// \see toUtf8, toUtf32
     ///
     ////////////////////////////////////////////////////////////
-    std::basic_string<Uint16> toUtf16() const;
+    std::basic_string<UInt16> toUtf16() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Convert the Unicode string to a UTF-32 string
@@ -308,7 +309,7 @@ public:
     /// \see toUtf8, toUtf16
     ///
     ////////////////////////////////////////////////////////////
-    std::basic_string<Uint32> toUtf32() const;
+    std::basic_string<UInt32> toUtf32() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Overload of assignment operator
@@ -351,7 +352,7 @@ public:
     /// \return Character at position \a index
     ///
     ////////////////////////////////////////////////////////////
-    Uint32 operator [](std::size_t index) const;
+    UInt32 operator [](std::size_t index) const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Overload of [] operator to access a character by its position
@@ -364,7 +365,7 @@ public:
     /// \return Reference to the character at position \a index
     ///
     ////////////////////////////////////////////////////////////
-    Uint32& operator [](std::size_t index);
+    UInt32& operator [](std::size_t index);
 
     ////////////////////////////////////////////////////////////
     /// \brief Clear the string
@@ -488,7 +489,7 @@ public:
     /// \return Read-only pointer to the array of characters
     ///
     ////////////////////////////////////////////////////////////
-    const Uint32* data() const;
+    const UInt32* data() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Return an iterator to the beginning of the string
@@ -559,7 +560,8 @@ private:
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    std::basic_string<Uint32> m_string; //!< Internal string of UTF-32 characters
+    std::basic_string<UInt32> m_string; //!< Internal string of UTF-32 characters
+
 };
 
 ////////////////////////////////////////////////////////////

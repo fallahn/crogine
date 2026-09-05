@@ -47,27 +47,27 @@ PersonalBest::PersonalBest()
 //public
 void PersonalBest::load()
 {
-    const auto path = Content::getBaseContentPath() + fileName;
+    const auto path = Content::getBaseContentPath() / fileName;
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "rb");
-        if (file.file)
+        file.open(path, "rb");
+        if (file)
         {
-            SDL_RWread(file.file, m_entries.data(), sizeof(m_entries), 1);
+            SDL_ReadIO(file.filePtr(), m_entries.data(), sizeof(m_entries));
         }
     }
 }
 
 void PersonalBest::save() const
 {
-    const auto path = Content::getBaseContentPath() + fileName;
+    const auto path = Content::getBaseContentPath() / fileName;
 
     cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(path.c_str(), "wb");
-    if (file.file)
+    file.open(path, "wb");
+    if (file)
     {
-        SDL_RWwrite(file.file, m_entries.data(), sizeof(m_entries), 1);
+        SDL_WriteIO(file.filePtr(), m_entries.data(), sizeof(m_entries));
     }
 }
 

@@ -34,9 +34,9 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
-#include <SDL_video.h>
-#include <SDL_events.h>
-#include <SDL_atomic.h>
+#include <SDL3/SDL_video.h>
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_atomic.h>
 
 #include <string>
 #include <vector>
@@ -61,7 +61,7 @@ namespace cro
     public:
         enum StyleFlags
         {
-            FullScreen = SDL_WINDOW_FULLSCREEN_DESKTOP,
+            FullScreen = SDL_WINDOW_FULLSCREEN,
             Borderless = SDL_WINDOW_BORDERLESS,
             Resizable  = SDL_WINDOW_RESIZABLE
         };
@@ -190,7 +190,7 @@ namespace cro
         resolution.
         This has no effect on macOS which is always borderless full screen
         */
-        void setExclusiveFullscreen(bool exclusive) { m_exclusiveFullScreen = exclusive; }
+        void setExclusiveFullscreen(bool exclusive);
 
         /*!
         \brief Returns the current full screen mode
@@ -289,6 +289,16 @@ namespace cro
         void setCursor(const Cursor* cursor);
 
         /*!
+        \brief Sets whether or not the mouse cursor is visible
+        */
+        void setCursorVisible(bool visible);
+
+        /*!
+        \brief Returns whether or not the mouse cursor is current set to visible
+        */
+        bool getCursorVisible() const;
+
+        /*!
         \brief Returns a pointer to the active cursor, or nullptr
         if no specific cursor has been set.
         */
@@ -321,6 +331,9 @@ namespace cro
         */
         GPUVendor getGPUVendor() const;
 
+        //hacky overload for SDL functions which require access to this
+        //TODO friendship might be a better way around
+        operator SDL_Window* () { return m_window; }
     private:
 
         SDL_Window* m_window;
@@ -348,6 +361,7 @@ namespace cro
         void destroy();
 
         friend class App;
+        friend class FileSystem; //enables parenting notifications to this window
 
         std::uint32_t getFrameBufferID() const override { return 0; }
     };

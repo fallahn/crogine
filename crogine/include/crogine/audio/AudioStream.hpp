@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -62,7 +62,8 @@ namespace cro
         \brief Attempts to open the *.ogg, *.mp3 or *.wav file from the given path.
         \returns true on success else false.
         */
-        bool loadFromFile(const std::string& path) override;
+        bool loadFromFile(const std::filesystem::path& path) override;
+
 
         /*!
         \brief Returns the underlying data type

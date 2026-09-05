@@ -30,14 +30,14 @@ source distribution.
 #pragma once
 
 #include <cstdint>
-
-#include <vector>
+#include <filesystem>
 #include <string>
+#include <vector>
 
 class Content final
 {
 public:
-    static std::vector<std::string> getInstallPaths();
+    static std::vector<std::filesystem::path> getInstallPaths();
 
     struct UserContent final
     {
@@ -51,14 +51,14 @@ public:
         };
     };
     //returns the content path for the current user
-    static std::string getBaseContentPath();
+    static std::filesystem::path getBaseContentPath();
     //returns the base content path plus the given user content dir
-    static std::string getUserContentPath(std::int32_t);
+    static std::filesystem::path getUserContentPath(std::int32_t);
 
     static bool DLCAvailable(std::int32_t idx);
 
     //returns whether a given league is available based on installed DLC
     static bool leagueAvailable(std::int32_t leagueID);
 
-    static std::string getItemInstallPath(std::uint64_t) { return {}; }
+    static std::filesystem::path getItemInstallPath(std::uint64_t) { return {}; }
 };

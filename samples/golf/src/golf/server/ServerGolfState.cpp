@@ -1676,28 +1676,28 @@ bool GolfState::validateMap()
 {
     const auto installPaths = Content::getInstallPaths();
 
-    auto mapDir = m_sharedData.mapDir.toAnsiString();
+    std::filesystem::path mapDir = m_sharedData.mapDir.toAnsiString();
 
     //auto mapPath = ConstVal::MapPath + mapDir + "/course.data";
-    std::string mapPath;
+    std::filesystem::path mapPath;
     for (const auto& dir : installPaths)
     {
-        mapPath = dir + ConstVal::MapPath + mapDir;
-        if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + mapPath))
+        mapPath = dir / ConstVal::MapPath / mapDir;
+        if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() / mapPath))
         {
             break;
         }
     }
-    mapPath += +"/course.data";
+    mapPath /= "course.data";
 
     bool isUser = false;
-    if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
+    if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / mapPath))
     {
         //hmmm this check also happens on the client which should make sure it
         //creates the path first to prevent filesystem exception... as
         //this runs in its own thread trying to create it here too is probably not a good idea
 
-        mapPath = cro::App::getPreferencePath() + ConstVal::UserMapPath + mapDir + "/course.data";
+        mapPath = cro::App::getPreferencePath() / ConstVal::UserMapPath / mapDir / "course.data";
         isUser = true;
 
         if (!cro::FileSystem::fileExists(mapPath))
@@ -1758,7 +1758,7 @@ bool GolfState::validateMap()
     cro::ConfigFile holeCfg;
     for (const auto& hole : holeStrings)
     {
-        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + hole))
+        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / hole))
         {
             return false;
         }
@@ -1825,8 +1825,8 @@ bool GolfState::validateMap()
                     {
                         if (modelProp.getName() == "mesh")
                         {
-                            auto modelPath = modelProp.getValue<std::string>();
-                            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + modelPath))
+                            const auto modelPath = modelProp.getValue<std::string>();
+                            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / modelPath))
                             {
                                 holeData.modelPath = modelPath;
                                 propCount++;

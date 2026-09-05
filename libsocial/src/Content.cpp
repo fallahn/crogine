@@ -37,15 +37,15 @@ namespace
 {
     const std::array SearchPaths =
     {
-        std::string("dlc/adventurer/"),
-        std::string("dlc/island/"),
-        std::string("dlc/craewall/"),
+        std::filesystem::path("dlc/adventurer/"),
+        std::filesystem::path("dlc/island/"),
+        std::filesystem::path("dlc/craewall/"),
     };
 }
 
-std::vector<std::string> Content::getInstallPaths()
+std::vector<std::filesystem::path> Content::getInstallPaths()
 {
-    std::vector<std::string> ret = { "assets/golf/" };
+    std::vector<std::filesystem::path> ret = { "assets/golf/" };
 
     for (const auto& path : SearchPaths)
     {
@@ -58,12 +58,12 @@ std::vector<std::string> Content::getInstallPaths()
     return ret;
 }
 
-std::string Content::getBaseContentPath()
+std::filesystem::path Content::getBaseContentPath()
 {
-    return cro::App::getPreferencePath() + "user/1234/";
+    return cro::App::getPreferencePath() / "user/1234/";
 }
 
-std::string Content::getUserContentPath(std::int32_t contentType)
+std::filesystem::path Content::getUserContentPath(std::int32_t contentType)
 {
     switch (contentType)
     {
@@ -71,27 +71,27 @@ std::string Content::getUserContentPath(std::int32_t contentType)
         assert(false);
         return "";
     case Content::UserContent::Ball:
-        return getBaseContentPath() + "balls/";
+        return getBaseContentPath() / "balls/";
     case Content::UserContent::Course:
-        return getBaseContentPath() + "course/";
+        return getBaseContentPath() / "course/";
     case Content::UserContent::Hair:
-        return getBaseContentPath() + "hair/";
+        return getBaseContentPath() / "hair/";
     case Content::UserContent::Profile:
-        return getBaseContentPath() + "profiles/";
+        return getBaseContentPath() / "profiles/";
     case Content::UserContent::Career:
-        return getBaseContentPath() + "career/";
+        return getBaseContentPath() / "career/";
     case Content::UserContent::Avatar:
-        return getBaseContentPath() + "avatars/";
+        return getBaseContentPath() / "avatars/";
     case Content::UserContent::Flag:
-        return getBaseContentPath() + "flags/";
+        return getBaseContentPath() / "flags/";
     case Content::UserContent::Clubs:
-        return getBaseContentPath() + "clubs/";
+        return getBaseContentPath() / "clubs/";
     case Content::UserContent::Voice:
-        return getBaseContentPath() + "voice/";
+        return getBaseContentPath() / "voice/";
     case Content::UserContent::Tournament:
-        return getBaseContentPath() + "tournaments/";
+        return getBaseContentPath() / "tournaments/";
     case Content::UserContent::TextChat:
-        return getBaseContentPath() + "chat_logs/";
+        return getBaseContentPath() / "chat_logs/";
     }
 }
 

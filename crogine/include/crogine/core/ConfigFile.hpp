@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,9 +41,10 @@ source distribution.
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/vec4.hpp>
 
+#include <filesystem>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
 
 namespace cro
 {
@@ -111,7 +112,7 @@ namespace cro
         void setValue(const char*);
         
     private:
-        std::vector<std::basic_string<std::uint8_t>> m_utf8Values;
+        std::vector<std::basic_string<UInt8>> m_utf8Values;
         std::vector<double> m_floatValues; //max size is uint32_t so we don't want to truncate on cast
         bool m_boolValue;
 
@@ -215,7 +216,7 @@ namespace cro
         /*!
         \brief Writes this object and all its children to given path
         */
-        bool save(const std::string& path);
+        bool save(const std::filesystem::path& path);
 
         /*!
         \brief Attempts to load a config file into the object.
@@ -260,18 +261,18 @@ namespace cro
 
         \returns true on success, else false if something went wrong
         */
-        bool loadFromFile(const std::string& path, bool relative = true);
+        bool loadFromFile(const std::filesystem::path& path, bool relative = true);
 
     private:
         std::string m_id;
         std::vector<ConfigProperty> m_properties;
         std::vector<ConfigObject> m_objects;
 
-        bool parseAsJson(SDL_RWops*);
+        bool parseAsJson(SDL_IOStream*);
 
-        std::size_t write(SDL_RWops* file, std::uint16_t depth = 0u);
+        std::size_t write(SDL_IOStream* file, std::uint16_t depth = 0u);
 
-        bool loadFromFile2(const std::string& path);
+        bool loadFromFile2(const std::filesystem::path& path);
     };
 
     using ConfigFile = ConfigObject;

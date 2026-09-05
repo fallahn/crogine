@@ -47,9 +47,9 @@ bool PseutheGameState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -333,27 +333,27 @@ void PseutheGameState::playerInput(const cro::Event& evt)
         switch (evt.type)
         {
         default: break;
-        case SDL_KEYDOWN:
+        case SDL_EVENT_KEY_DOWN:
             //TODO read keybinds from shared data
-            if (evt.key.keysym.sym == SDLK_w)
+            if (evt.key.key == SDLK_W)
             {
                 up();
             }
-            else if (evt.key.keysym.sym == SDLK_s)
+            else if (evt.key.key == SDLK_S)
             {
                 down();
             }
-            else if (evt.key.keysym.sym == SDLK_a)
+            else if (evt.key.key == SDLK_A)
             {
                 left();
             }
-            else if (evt.key.keysym.sym == SDLK_d)
+            else if (evt.key.key == SDLK_D)
             {
                 right();
             }
             break;
-        case SDL_CONTROLLERBUTTONDOWN:
-            switch (evt.cbutton.button)
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::DPadUp:
@@ -370,35 +370,35 @@ void PseutheGameState::playerInput(const cro::Event& evt)
                 break;
             }
             break;
-        case SDL_CONTROLLERAXISMOTION:
-            if (std::abs(evt.caxis.value) > cro::GameController::RightThumbDeadZone)
+        case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+            if (std::abs(evt.gaxis.value) > cro::GameController::RightThumbDeadZone)
             {
-                switch (evt.caxis.axis)
+                switch (evt.gaxis.axis)
                 {
                 default: break;
                 case cro::GameController::AxisLeftX:
                 case cro::GameController::AxisRightX:
-                    if (m_axisX < 0 && evt.caxis.value < m_axisX)
+                    if (m_axisX < 0 && evt.gaxis.value < m_axisX)
                     {
                         left();
                     }
-                    else if (m_axisX > 0 && evt.caxis.value > m_axisX)
+                    else if (m_axisX > 0 && evt.gaxis.value > m_axisX)
                     {
                         right();
                     }
-                    m_axisX = evt.caxis.value;
+                    m_axisX = evt.gaxis.value;
                     break;
                 case cro::GameController::AxisLeftY:
                 case cro::GameController::AxisRightY:
-                    if (m_axisY > 0 && evt.caxis.value > m_axisY)
+                    if (m_axisY > 0 && evt.gaxis.value > m_axisY)
                     {
                         up();
                     }
-                    else if (m_axisY < 0 && evt.caxis.value < m_axisY)
+                    else if (m_axisY < 0 && evt.gaxis.value < m_axisY)
                     {
                         down();
                     }
-                    m_axisY = evt.caxis.value;
+                    m_axisY = evt.gaxis.value;
                     break;
                 }
             }

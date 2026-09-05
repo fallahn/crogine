@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -131,22 +131,21 @@ EnvironmentMap::~EnvironmentMap()
 }
 
 //public
-bool EnvironmentMap::loadFromFile(const std::string& filePath)
+bool EnvironmentMap::loadFromFile(const std::filesystem::path& p)
 {
 #ifdef PLATFORM_MOBILE
     LogE << "Environment mapping is not available on mobile platforms. Use a cubemap instead." << std::endl;
     return false;
 #else
 
-    std::string path;
-    std::filesystem::path p(filePath);
-    if (p.is_absolute())
+    std::filesystem::path path;
+    if (path.is_absolute())
     {
-        path = filePath;
+        path = p;
     }
     else
     {
-        path = FileSystem::getResourcePath() + filePath;
+        path = (FileSystem::getResourcePath() / p);
     }
 
     if (!cro::FileSystem::fileExists(path))
@@ -155,15 +154,16 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
         return false;
     }
 
-    auto* file = SDL_RWFromFile(path.c_str(), "rb");
+    RaiiRWops file;
+    file.open(path, "rb");
     if (!file)
     {
-        LogE << "SDLRW_ops Failed opening " << filePath << std::endl;
+        LogE << "SDL_IOStream Failed opening " << p << std::endl;
         return false;
     }
 
     STBIMG_stbio_RWops io;
-    stbi_callback_from_RW(file, &io);
+    stbi_callback_from_RW(file.filePtr(), &io);
 
     std::int32_t width = 0;
     std::int32_t height = 0;
@@ -189,12 +189,12 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
     }
     else
     {
-        LogE << "STBI Failed opening " << filePath << ": " << stbi_failure_reason() << std::endl;
+        LogE << "STBI Failed opening " << p << ": " << stbi_failure_reason() << std::endl;
         
         return false;
     }
     stbi_set_flip_vertically_on_load(0);
-    SDL_RWclose(file);
+    file.close();
 
     //create a temp render buffer/frame buffer to render the sides with
     TempFrameBuffer tempFBO;

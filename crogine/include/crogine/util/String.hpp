@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/String.hpp>
 
-#include <SDL_rwops.h>
+#include <SDL3/SDL_iostream.h>
 
 #include <string>
 #include <algorithm>
@@ -291,23 +291,23 @@ namespace cro::Util::String
     /*!
     \brief Emulates the C function fgetc with a RWops file/stream
     */
-    static inline int rwgetc(SDL_RWops *file)
+    static inline int rwgetc(SDL_IOStream *file)
     {
         unsigned char c;
-        return SDL_RWread(file, &c, 1, 1) == 1 ? c : EOF;
+        return SDL_ReadIO(file, &c, 1) == 1 ? c : EOF;
     }
 
     /*!
     \brief Emulates the C function fgets with an SDL rwops file
     */
-    static inline char* rwgets(char* dest, std::int32_t size, SDL_RWops* file, std::int64_t* bytesRead)
+    static inline char* rwgets(char* dest, std::int32_t size, SDL_IOStream* file, std::int64_t* bytesRead)
     {
         std::size_t count = 0;
         char* compareStr = dest;
 
         char readChar = 0;
 
-        while (--size > 0 && (count = file->read(file, &readChar, 1, 1)) != 0)
+        while (--size > 0 && (count = SDL_ReadIO(file, &readChar, 1)) != 0)
         {
             //if ((*compareStr++ = readChar) == '\n') break;
             (*bytesRead)++;

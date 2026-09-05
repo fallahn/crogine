@@ -28,7 +28,8 @@ SET(TARGET_ANDROID FALSE CACHE BOOL "Build the library for Android devices")
 
 SET(USE_GL_41 FALSE CACHE BOOL "Use OpenGL 4.1 instead of 4.6 on desktop builds.")
 SET(USE_PARALLEL_EXECUTION TRUE CACHE BOOL "Enable parallel execution, requires compiler support")
-SET(BUILD_KTX TRUE CACHE BOOL "Choose to fetch and build libktx instead of using the binary inclued in the repository")
+SET(BUILD_KTX TRUE CACHE BOOL "Choose to fetch and build libktx instead of using the binary included in the repository")
+SET(BUILD_SDL FALSE BOOL "Choose to fetch and build libsdl3 instead of using the binary installed on the system")
 
 if(${TARGET_ANDROID})
   SET(${CMAKE_TOOLCHAIN_FILE} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchains/android-arm.cmake")
@@ -38,9 +39,9 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/mo
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   if(PROJECT_STATIC_RUNTIME)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-comment -std=c++17 -static")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-comment -std=c++20 -static")
   else()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-comment -std=c++17")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-comment -std=c++20")
   endif()
 endif()
 
@@ -92,6 +93,10 @@ else()
 endif()
 
 
+if (BUILD_SDL OR APPLE OR BUILD_KTX)
+  include(FetchContent)
+endif()
+
 
 if (NOT BUILD_SHARED_LIBS)
   add_definitions(-DCRO_STATIC)
@@ -101,13 +106,28 @@ endif()
 
 SET (CMAKE_DEBUG_POSTFIX -d)
 
-# We're using c++17
-SET (CMAKE_CXX_STANDARD 17)
+# We're using c++20
+SET (CMAKE_CXX_STANDARD 20)
 SET (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 SET (OpenGL_GL_PREFERENCE "GLVND")
 
-find_package(SDL2 MODULE REQUIRED)
+
+if (NOT BUILD_SDL)
+  find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
+else()
+
+  SET(SDL_X11_XSCRNSAVER OFF CACHE BOOL "Disable screensaver" FORCE)
+  SET(SDL_TESTS OFF CACHE BOOL "Build the SDL tests directory" FORCE)
+  SET(SDL_TEST_LIBRARY OFF CACHE BOOL "Build the SDL test library" FORCE)
+  FetchContent_Declare(
+      SDL3
+      GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+      GIT_TAG origin/main
+      OVERRIDE_FIND_PACKAGE
+  )
+  FetchContent_MakeAvailable(SDL3)
+endif()
 find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OPUS REQUIRED)
@@ -133,23 +153,22 @@ endif()
 #ktx texture compression
 if (APPLE OR BUILD_KTX)
 
-include(FetchContent)
-#set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "Build KTX as a static library" FORCE)
+  #set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "Build KTX as a static library" FORCE)
 
-#hmmm this clashes with the crogine property...
-#set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build as a static library" FORCE)
-set(BUILD_TESTING OFF CACHE BOOL "Build the testing tree" FORCE)
-set(KTX_FEATURE_TESTS OFF CACHE BOOL "Build Unit Tests" FORCE)
-set(KTX_FEATURE_TOOLS OFF CACHE BOOL "Build KTX Tools" FORCE)
+  #hmmm this clashes with the crogine property...
+  #set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build as a static library" FORCE)
+  set(BUILD_TESTING OFF CACHE BOOL "Build the testing tree" FORCE)
+  set(KTX_FEATURE_TESTS OFF CACHE BOOL "Build Unit Tests" FORCE)
+  set(KTX_FEATURE_TOOLS OFF CACHE BOOL "Build KTX Tools" FORCE)
 
-set(ASTCENC_ISA_AVX2 OFF CACHE BOOL "Use AVX2 extensions" FORCE)
-set(ASTCENC_ISA_NONE ON CACHE BOOL "Use No extensions" FORCE)
-FetchContent_Declare(
-        fetch_ktx
-        GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
-        GIT_TAG        v4.4.2
-)
-FetchContent_MakeAvailable(fetch_ktx)
+  set(ASTCENC_ISA_AVX2 OFF CACHE BOOL "Use AVX2 extensions" FORCE)
+  set(ASTCENC_ISA_NONE ON CACHE BOOL "Use No extensions" FORCE)
+  FetchContent_Declare(
+          fetch_ktx
+          GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
+          GIT_TAG        v4.4.2
+  )
+  FetchContent_MakeAvailable(fetch_ktx)
 
 else()
   find_package(KTX REQUIRED)
@@ -157,19 +176,15 @@ endif()
 
 
 include_directories(
-  ${SDL2_INCLUDE_DIR}  
+  SDL3::Headers
   ${FREETYPE_INCLUDE_DIRS} 
   ${OPUS_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}/crogine/include)
 
 if (APPLE OR BUILD_KTX)
-
   include_directories(${fetch_ktx_SOURCE_DIR}/include)
-
 else()
-
   include_directories(${KTX_INCLUDE_DIR})
-
 endif()
 
   
@@ -201,15 +216,15 @@ else()
   SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_nix})
 endif()
 
-# add the Resourcepath source, and GL41 loader for apple, else load GL46
+#add the Resourcepath source, and GL41 loader for apple, else load GL46
 if (APPLE)
   set(PROJECT_SRC ${PROJECT_SRC} ${project_src_macos})
 else()
   SET(PROJECT_SRC ${PROJECT_SRC} src/detail/glad.c)
 endif()
 
-# this might be built by a project using crogine
-# so skip this step in that case
+#this might be built by a project using crogine
+#so skip this step in that case
 if(NOT TARGET crogine)
   if(NOT BUILD_SHARED_LIBS)
     add_library(${PROJECT_NAME} STATIC ${PROJECT_SRC})
@@ -222,7 +237,7 @@ if(NOT TARGET crogine)
   target_compile_definitions(${PROJECT_NAME} PUBLIC $<$<CONFIG:Debug>:CRO_DEBUG_ PARALLEL_GLOBAL_DISABLE>)
 
   target_link_libraries(${PROJECT_NAME}
-    ${SDL2_LIBRARY} 
+    SDL3::SDL3
     ${FREETYPE_LIBRARIES}
     ${OPUS_LIBRARIES}
     ${OPENGL_LIBRARIES})

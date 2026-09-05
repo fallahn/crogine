@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -94,7 +94,7 @@ void LayoutState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             updateLayout(data.data0, data.data1);
             //m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -41,6 +41,8 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
 //#include <crogine/gui/GuiClient.hpp>
+
+#include <filesystem>
 
 struct SharedStateData;
 
@@ -184,10 +186,10 @@ private:
     
     struct CourseData final
     {
-        std::string skyboxPath;
-        std::string shrubPath;
+        std::filesystem::path skyboxPath;
+        std::filesystem::path shrubPath;
     }m_courseData;
-    std::vector<std::string> m_skyboxes;
+    std::vector<std::filesystem::path> m_skyboxes;
     std::size_t m_skyboxIndex;
     cro::Entity m_cloudRing;
 
@@ -195,7 +197,7 @@ private:
     std::vector<glm::vec3> m_flowerDistribution;
     std::vector<glm::vec3> m_treeDistribution;
 
-    std::vector<std::string> m_shrubs;
+    std::vector<std::filesystem::path> m_shrubs;
     std::size_t m_shrubIndex;
 
     struct Shrubbery final
@@ -265,7 +267,7 @@ private:
     std::size_t m_playlistIndex;
     cro::Entity m_playlistScrollNode;
 
-    std::vector<std::string> m_saveFiles;
+    std::vector<std::filesystem::path> m_saveFiles;
     std::size_t m_saveFileIndex;
     cro::Entity m_saveFileScrollNode;
 
@@ -353,7 +355,7 @@ private:
 
     std::int32_t m_currentTab;
     void setActiveTab(std::int32_t);
-    void loadShrubbery(const std::string&);
+    void loadShrubbery(const std::filesystem::path&);
     void applyShrubQuality();
     void updateNinePatch(cro::Entity);
 

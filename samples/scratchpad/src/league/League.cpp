@@ -225,12 +225,12 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
 //private
 void League::read()
 {
-    const auto path = cro::App::getPreferencePath() + FileName;
+    const auto path = cro::App::getPreferencePath() / FileName;
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "rb");
-        if (!file.file)
+        file.open(path, "rb");
+        if (!file)
         {
             LogE << "Could not open " << path << " for reading" << std::endl;
             //reset();
@@ -238,20 +238,20 @@ void League::read()
         }
 
         static constexpr std::size_t ExpectedSize = (sizeof(std::int32_t) * 3) + (sizeof(LeaguePlayer) * PlayerCount);
-        if (auto size = file.file->seek(file.file, 0, RW_SEEK_END); size != ExpectedSize)
+        if (auto size = SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_END); size != ExpectedSize)
         {
-            file.file->close(file.file);
+            file.close();
 
             LogE << path << " file not expected size!" << std::endl;
             reset();
             return;
         }
 
-        file.file->seek(file.file, 0, RW_SEEK_SET);
-        file.file->read(file.file, &m_currentIteration, sizeof(std::int32_t), 1);
-        file.file->read(file.file, &m_currentSeason, sizeof(std::int32_t), 1);
-        file.file->read(file.file, &m_playerScore, sizeof(std::int32_t), 1);
-        file.file->read(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
+        SDL_SeekIO(file.filePtr(), 0, SDL_IO_SEEK_SET);
+        SDL_ReadIO(file.filePtr(), &m_currentIteration, sizeof(std::int32_t));
+        SDL_ReadIO(file.filePtr(), &m_currentSeason, sizeof(std::int32_t));
+        SDL_ReadIO(file.filePtr(), &m_playerScore, sizeof(std::int32_t));
+        SDL_ReadIO(file.filePtr(), m_players.data(), sizeof(LeaguePlayer) * PlayerCount);
 
         //validate the loaded data and clamp to sane values
         m_currentIteration = std::clamp(m_currentIteration, 0, MaxIterations);
@@ -278,16 +278,16 @@ void League::read()
 
 void League::write()
 {
-    const auto path = cro::App::getPreferencePath() + FileName;
+    const auto path = cro::App::getPreferencePath() / FileName;
 
     cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(path.c_str(), "wb");
-    if (file.file)
+    file.open(path, "wb");
+    if (file)
     {
-        file.file->write(file.file, &m_currentIteration, sizeof(std::int32_t), 1);
-        file.file->write(file.file, &m_currentSeason, sizeof(std::int32_t), 1);
-        file.file->write(file.file, &m_playerScore, sizeof(std::int32_t), 1);
-        file.file->write(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
+        SDL_WriteIO(file.filePtr(), &m_currentIteration, sizeof(std::int32_t));
+        SDL_WriteIO(file.filePtr(), &m_currentSeason, sizeof(std::int32_t));
+        SDL_WriteIO(file.filePtr(), &m_playerScore, sizeof(std::int32_t));
+        SDL_WriteIO(file.filePtr(), m_players.data(), sizeof(LeaguePlayer) * PlayerCount);
     }
     else
     {

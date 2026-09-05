@@ -152,7 +152,7 @@ ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_saveMugshotOnExit (false),
     m_uiLayout          (TabID::Count, sd)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Profile UI");
     m_previewScene.setTitle("Profile Preview");
     m_statScene.setTitle("Profile Stats");
@@ -203,8 +203,8 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
                 
                 m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
 
-                m_uiLayout.tabBar.navLeft.getComponent<cro::Text>().setString("< " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
-                m_uiLayout.tabBar.navRight.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + " >");
+                m_uiLayout.tabBar.navLeft.getComponent<cro::Text>().setString("< " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::PrevClub]));
+                m_uiLayout.tabBar.navRight.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::NextClub]) + " >");
 
                 m_uiLayout.tabBar.navLeftSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                 m_uiLayout.tabBar.navRightSprite.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -255,100 +255,102 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
                 m_uiLayout.tabBar.navRight.getComponent<cro::Text>().setCharacterSize(charSize);
                 m_uiLayout.tabBar.navRight.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2;*/
             }
-            cro::App::getWindow().setMouseCaptured(!mouse);
+            cro::App::getWindow().setCursorVisible(!!mouse);
         };
 
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
         setActiveInput(true, 0);
 
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE)
+        if (evt.key.key == SDLK_BACKSPACE
+            || evt.key.key == SDLK_ESCAPE)
         {
             /*quitState();
             return false;*/
             m_exitFlags &= ~ExitFlagQuit;
         }
-        else if (evt.key.keysym.sym == SDLK_LCTRL)
+        else if (evt.key.key == SDLK_LCTRL)
         {
             m_exitFlags &= ~ExitFlagSave;
         }
-        else if (evt.key.keysym.sym == SDLK_LALT)
+        else if (evt.key.key == SDLK_LALT)
         {
             m_exitFlags &= ~ExitFlagRandomise;
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
-        {
-            m_uiLayout.nextTab();
-        }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
-        {
-            m_uiLayout.prevTab();
-        }
 
         //done on key down event for repeat when held
-        /*else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down]
-            || evt.key.keysym.sym == SDLK_DOWN)
+        /*else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Down]
+            || evt.key.key == SDLK_DOWN)
         {
             nextItem();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up]
-            || evt.key.keysym.sym == SDLK_UP)
+        else if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Up]
+            || evt.key.key == SDLK_UP)
         {
             prevItem();
         }*/
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action]
-            || evt.key.keysym.sym == SDLK_RETURN)
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action]
+            || evt.key.key == SDLK_RETURN)
         {
             m_uiLayout.activate();
         }
+
+
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
+        {
+            m_uiLayout.nextTab();
+        }
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
+        {
+            m_uiLayout.prevTab();
+        }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         setActiveInput(true, 0);
 
         //do this here to take advantageof key repeat
-        if (evt.key.keysym.sym == SDLK_DOWN)
+        if (evt.key.key == SDLK_DOWN)
         {
             m_uiLayout.nextItem();
         }
-        else if (evt.key.keysym.sym == SDLK_UP)
+        else if (evt.key.key == SDLK_UP)
         {
             m_uiLayout.prevItem();
         }
-        else if (evt.key.keysym.sym == SDLK_LEFT)
+        else if (evt.key.key == SDLK_LEFT)
         {
             m_uiLayout.activateLeft();
         }
-        else if (evt.key.keysym.sym == SDLK_RIGHT)
+        else if (evt.key.key == SDLK_RIGHT)
         {
             m_uiLayout.activateRight();
         }
 
-        else if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE)
+        else if (evt.key.key == SDLK_BACKSPACE
+            || evt.key.key == SDLK_ESCAPE)
         {
             /*quitState();
             return false;*/
             m_exitFlags |= ExitFlagQuit;
         }
-        else if (evt.key.keysym.sym == SDLK_LCTRL)
+        else if (evt.key.key == SDLK_LCTRL)
         {
             m_exitFlags |= ExitFlagSave;
         }
-        else if (evt.key.keysym.sym == SDLK_LALT
+        else if (evt.key.key == SDLK_LALT
             && evt.key.repeat == 0)
         {
             m_exitFlags |= ExitFlagRandomise;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        const auto controllerID = cro::GameController::controllerID(evt.cbutton.which);
+        const auto controllerID = cro::GameController::controllerID(evt.gbutton.which);
         setActiveInput(false, controllerID);
 
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::DPadUp:
@@ -378,9 +380,9 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         /*case cro::GameController::DPadLeft:
@@ -412,7 +414,7 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
@@ -425,7 +427,7 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
             m_exitFlags &= ~ExitFlagQuit;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -433,19 +435,19 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         setActiveInput(true, 0);
 
         glm::vec2 pos(evt.motion.x, cro::App::getWindow().getSize().y - evt.motion.y);
         m_uiLayout.checkMouseOver(pos);
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
         constexpr std::int16_t Threshold = std::numeric_limits<std::int16_t>::max() / 2;// cro::GameController::LeftThumbDeadZone * 2;// 15000;
-        const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
+        const auto controllerID = cro::GameController::controllerID(evt.gaxis.which);
         
-        if (std::abs(evt.caxis.value) > Threshold)
+        if (std::abs(evt.gaxis.value) > Threshold)
         {
             setActiveInput(false, controllerID);
         }
@@ -454,17 +456,17 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         if (controllerID != -1
             && controllerID < 4)
         {
-            switch (evt.caxis.axis)
+            switch (evt.gaxis.axis)
             {
             default: break;
-            case SDL_CONTROLLER_AXIS_LEFTX:
-                if (evt.caxis.value > Threshold)
+            case SDL_GAMEPAD_AXIS_LEFTX:
+                if (evt.gaxis.value > Threshold)
                 {
                     //right
                     m_controllerMasks[controllerID] |= InputFlag::Right;
                     m_controllerMasks[controllerID] &= ~InputFlag::Left;
                 }
-                else if (evt.caxis.value < -Threshold)
+                else if (evt.gaxis.value < -Threshold)
                 {
                     //left
                     m_controllerMasks[controllerID] |= InputFlag::Left;
@@ -475,14 +477,14 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
                     m_controllerMasks[controllerID] &= ~(InputFlag::Left | InputFlag::Right);
                 }
                 break;
-            case SDL_CONTROLLER_AXIS_LEFTY:
-                if (evt.caxis.value > Threshold)
+            case SDL_GAMEPAD_AXIS_LEFTY:
+                if (evt.gaxis.value > Threshold)
                 {
                     //down
                     m_controllerMasks[controllerID] |= InputFlag::Down;
                     m_controllerMasks[controllerID] &= ~InputFlag::Up;
                 }
-                else if (evt.caxis.value < -Threshold)
+                else if (evt.gaxis.value < -Threshold)
                 {
                     //up
                     m_controllerMasks[controllerID] |= InputFlag::Up;
@@ -497,7 +499,7 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         }
         
     }
-    else if (evt.type == SDL_MOUSEWHEEL)
+    else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
         if (evt.wheel.y > 0)
         {
@@ -509,8 +511,8 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_CONTROLLERDEVICEADDED
-        || evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    else if (evt.type == SDL_EVENT_GAMEPAD_ADDED
+        || evt.type == SDL_EVENT_GAMEPAD_REMOVED)
     {
         //refreshControllerDevices();
         //*sigh* the names aren't updated until AFTER the event
@@ -555,7 +557,7 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             //hack to force the texture to resize properly
             m_uiLayout.menuLayout.texture.create(1, 1, false);
@@ -639,9 +641,9 @@ bool ProfileStateV2::simulate(float dt)
             case ExitFlagSave:
                 if (m_saveMugshotOnExit)
                 {
-                    const auto path = Content::getUserContentPath(Content::UserContent::Profile) + m_activeProfile.playerData.profileID + "/mug.png";
+                    const auto path = Content::getUserContentPath(Content::UserContent::Profile) / m_activeProfile.playerData.profileID / "mug.png";
                     m_mugshotTexture.getTexture().saveToFile(path);
-                    m_activeProfile.playerData.mugshot = path;
+                    m_activeProfile.playerData.mugshot = U8PATH_CAST(path);
                     m_saveMugshotOnExit = false;
                 }
 
@@ -695,11 +697,11 @@ bool ProfileStateV2::simulate(float dt)
             const float speed = cro::Util::Easing::easeInQuart(static_cast<float>(v) / std::numeric_limits<std::int16_t>::max());
             rotateModel(dt * speed * SpeedMultiplier);
         }
-        if (cro::Keyboard::isKeyPressed(SDLK_1))
+        if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_1))
         {
             rotateModel(-dt * SpeedMultiplier);
         }
-        if (cro::Keyboard::isKeyPressed(SDLK_2))
+        if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_2))
         {
             rotateModel(dt * SpeedMultiplier);
         }
@@ -2324,7 +2326,7 @@ void ProfileStateV2::createEquipmentItems()
     //for some reason (I forget) the ballInfo size
     //is different to the number of model defs
     std::int32_t c = 0;
-    for (auto& ballDef : m_profileData.ballDefs)
+    for (const auto& _ : m_profileData.ballDefs)
     {
         if (m_sharedData.ballInfo[c++].locked)
         {
@@ -2726,7 +2728,7 @@ void ProfileStateV2::createDetailItems()
                 else
                 {
                     //keyboard
-                    cro::App::getWindow().setMouseCaptured(false);
+                    cro::App::getWindow().setCursorVisible(true);
                     m_nameBuffer = m_activeProfile.playerData.name.toUtf8Char();
                     m_showNameInput = true;
                 }
@@ -2734,7 +2736,7 @@ void ProfileStateV2::createDetailItems()
                 if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
                 {
                     //show ImGuiWindow
-                    cro::App::getWindow().setMouseCaptured(false);
+                    cro::App::getWindow().setCursorVisible(true);
                     m_nameBuffer = m_activeProfile.playerData.name.toUtf8Char();
                     m_showNameInput = true;
                 }
@@ -3396,7 +3398,7 @@ void ProfileStateV2::loadBallModels()
 void ProfileStateV2::loadClubData()
 {
     const auto processClubPath =
-        [&](const std::string& path, bool isUser)
+        [&](const std::filesystem::path& path, bool isUser)
         {
             ClubData data;
             data.userItem = isUser;
@@ -3409,7 +3411,7 @@ void ProfileStateV2::loadClubData()
                 if (f == "list.cst")
                 {
                     cro::ConfigFile cfg;
-                    if (cfg.loadFromFile(path + "/" + f))
+                    if (cfg.loadFromFile(path / f))
                     {
                         const auto& props = cfg.getProperties();
                         for (const auto& p : props)
@@ -3444,7 +3446,7 @@ void ProfileStateV2::loadClubData()
                         if (const auto* models = cfg.findObjectWithName("models");
                             models == nullptr)
                         {
-                            LogE << "No models were listed in " << path + "/" + f;
+                            LogE << "No models were listed in " << path << "/" << f << std::endl;
                             hasModels = false;
                         }
                         else
@@ -3453,7 +3455,7 @@ void ProfileStateV2::loadClubData()
                             {
                                 if (p.getName() == "path")
                                 {
-                                    if (!cro::FileSystem::fileExists(path + "/" + p.getValue<std::string>()))
+                                    if (!cro::FileSystem::fileExists(path / p.getValue<std::string>()))
                                     {
                                         LogE << path << " lists model files, but they were not found on disk" << std::endl;
                                         hasModels = false;
@@ -3466,7 +3468,7 @@ void ProfileStateV2::loadClubData()
                 }
                 else if (f == "thumb.png")
                 {
-                    data.thumbnail = path + "/" + f;
+                    data.thumbnail = U8PATH_CAST((path / f));
                 }
             }
 
@@ -3493,12 +3495,12 @@ void ProfileStateV2::loadClubData()
     const auto ContentDirs = Content::getInstallPaths();
     for (const auto& c : ContentDirs)
     {
-        const auto basePath = cro::FileSystem::getResourcePath() + c + "clubs/";
+        const auto basePath = cro::FileSystem::getResourcePath() / c / "clubs";
         const auto clubsets = cro::FileSystem::listDirectories(basePath);
 
         for (const auto& s : clubsets)
         {
-            processClubPath(basePath + s, false);
+            processClubPath(basePath / s, false);
         }
     }
 
@@ -3518,7 +3520,8 @@ void ProfileStateV2::loadClubData()
     auto clubsets = cro::FileSystem::listDirectories(basePath);
 
     //remove dirs from this list if it's not from the workshop (rather crudely)
-    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::string& s) {return s.back() != 'w'; }), clubsets.end());
+    //TODO this is probably no longer needed now we load directly from Steam
+    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::filesystem::path& s) {return s.u8string().back() != 'w'; }), clubsets.end());
 
     if (clubsets.size() > ConstVal::MaxClubsets)
     {
@@ -3528,14 +3531,14 @@ void ProfileStateV2::loadClubData()
 
     for (const auto& s : clubsets)
     {
-        processClubPath(basePath + s, true);
+        processClubPath(basePath / s, true);
     }
 
 #else
     const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Clubs);
     for (const auto& p : wsPaths)
     {
-        processClubPath(p.string(), true);
+        processClubPath(U8PATH_CAST(p), true);
     }
 #endif
 
@@ -3557,18 +3560,18 @@ void ProfileStateV2::loadVoiceData()
         std::string("water")
     };
 
-    std::vector<std::string> paths;
+    std::vector<std::filesystem::path> paths;
     const auto ContentDirs = Content::getInstallPaths();
 
     for (const auto& c : ContentDirs)
     {
         std::string basePath = "sound/avatars/";
-        const auto files = cro::FileSystem::listFiles(c + basePath);
+        const auto files = cro::FileSystem::listFiles(c / basePath);
         for (const auto& f : files)
         {
             if (cro::FileSystem::getFileExtension(f) == ".xas")
             {
-                paths.push_back(c + basePath + f);
+                paths.push_back(c / basePath / f);
             }
         }
     }
@@ -3584,12 +3587,12 @@ void ProfileStateV2::loadVoiceData()
     const auto dirs = cro::FileSystem::listDirectories(basePath);
     for (const auto& dir : dirs)
     {
-        const auto files = cro::FileSystem::listFiles(basePath + dir);
+        const auto files = cro::FileSystem::listFiles(basePath / dir);
         for (const auto& f : files)
         {
             if (cro::FileSystem::getFileExtension(f) == ".xas")
             {
-                paths.push_back(basePath + dir + "/" + f);
+                paths.push_back(basePath / dir / f);
             }
         }
     }
@@ -3598,12 +3601,12 @@ void ProfileStateV2::loadVoiceData()
     const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Voice);
     for (const auto& p : wsPaths)
     {
-        const auto files = cro::FileSystem::listFiles(p.string());
+        const auto files = cro::FileSystem::listFiles(p);
         for (const auto& f : files)
         {
-            if (cro::FileSystem::getFileExtension(f) == ".xas")
+            if (f.extension() == ".xas")
             {
-                paths.push_back(p.string() + "/" + f);
+                paths.push_back(p / f);
             }
         }
     }
@@ -4077,7 +4080,7 @@ void ProfileStateV2::updateMugshot()
 
 void ProfileStateV2::clearMugshot()
 {
-    const auto path = Content::getUserContentPath(Content::UserContent::Profile) + m_activeProfile.playerData.profileID + "/mug.png";
+    const auto path = Content::getUserContentPath(Content::UserContent::Profile) / m_activeProfile.playerData.profileID / "mug.png";
     if (cro::FileSystem::fileExists(path))
     {
         std::error_code ec;
@@ -4108,25 +4111,25 @@ std::string ProfileStateV2::generateRandomBio() const
     default:
     case 0:
         return
-            u8"This former house-builder knows all about the benefits of elevation. If they play a good shot, you'll certainly be able to see their big beam and they'll hit the roof if they manage a hole in one! As a low-handicapper, tends to play off the builders tee, and enjoys ladder tournaments.";
+            "This former house-builder knows all about the benefits of elevation. If they play a good shot, you'll certainly be able to see their big beam and they'll hit the roof if they manage a hole in one! As a low-handicapper, tends to play off the builders tee, and enjoys ladder tournaments.";
     case 1:
         return
-            u8"A retired gardener this player knows a thing or two about lying in the rough. Don't underestimate them though - they could be considered the rake in the grass!";
+            "A retired gardener this player knows a thing or two about lying in the rough. Don't underestimate them though - they could be considered the rake in the grass!";
     case 2:
         return
-            u8"Small feet mean nothing - not when you can handle your wood like this.";
+            "Small feet mean nothing - not when you can handle your wood like this.";
     case 3:
         return
-            u8"Formerly a countryside resident this player moved to the city to experience the thrills of urban golf. Just don't sneak up on them when they're strumming the banjo.";
+            "Formerly a countryside resident this player moved to the city to experience the thrills of urban golf. Just don't sneak up on them when they're strumming the banjo.";
     case 4:
         return
-            u8"\"Good things come in small packages\" is this player's motto. Apparently they diet exclusively on fortune cookies.";
+            "\"Good things come in small packages\" is this player's motto. Apparently they diet exclusively on fortune cookies.";
     case 5:
         return
-            u8"The clever use of turn signals got this player to where they are today.";
+            "The clever use of turn signals got this player to where they are today.";
     case 6:
         return
-            u8"Nick-named \"The Midwife\" because they always deliver (and \"Postman\" was already taken) here's a player who knows a comfy lie is much better than a water-berth. Takes a cautious approach as they know it's much better to crawl before you can walk. Becoming a golf pro was their crowning achievement";
+            "Nick-named \"The Midwife\" because they always deliver (and \"Postman\" was already taken) here's a player who knows a comfy lie is much better than a water-berth. Takes a cautious approach as they know it's much better to crawl before you can walk. Becoming a golf pro was their crowning achievement";
     }
 }
 
@@ -4142,21 +4145,21 @@ void ProfileStateV2::refreshBio()
             m_activeProfile.playerData.saveProfile();
         }
 
-        path += m_activeProfile.playerData.profileID + "/";
+        path /= m_activeProfile.playerData.profileID;
 
         if (cro::FileSystem::directoryExists(path))
         {
-            path += "bio.txt";
+            path /= "bio.txt";
 
             if (cro::FileSystem::fileExists(path))
             {
                 std::vector<char> buffer(MaxBioChars + 1);
 
                 cro::RaiiRWops inFile;
-                inFile.file = SDL_RWFromFile(path.c_str(), "r");
-                if (inFile.file)
+                inFile.open(path, "r");
+                if (inFile)
                 {
-                    auto readCount = inFile.file->read(inFile.file, buffer.data(), 1, MaxBioChars);
+                    const auto readCount = SDL_ReadIO(inFile.filePtr(), buffer.data(), MaxBioChars);
                     buffer[readCount] = 0; //nullterm
                     setBioString(buffer.data());
                 }
@@ -4167,10 +4170,10 @@ void ProfileStateV2::refreshBio()
                 std::string bio = generateRandomBio();
 
                 cro::RaiiRWops outfile;
-                outfile.file = SDL_RWFromFile(path.c_str(), "w");
-                if (outfile.file)
+                outfile.open(path, "w");
+                if (outfile)
                 {
-                    outfile.file->write(outfile.file, bio.data(), bio.size(), 1);
+                    SDL_WriteIO(outfile.filePtr(), bio.data(), bio.size());
                 }
                 setBioString(bio);
             }

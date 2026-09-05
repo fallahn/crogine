@@ -82,7 +82,7 @@ CreditsState::CreditsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_speedMultiplier   (0.f),
     m_viewScale         (2.f)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Credits");
 
     buildScene();
@@ -98,26 +98,26 @@ bool CreditsState::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_p)
+        if (evt.key.key == SDLK_BACKSPACE
+            || evt.key.key == SDLK_ESCAPE
+            /*|| evt.key.key == SDLK_P*/)
         {
             quitState();
             return false;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        if (evt.cbutton.button == cro::GameController::ButtonB
-            || evt.cbutton.button == cro::GameController::ButtonStart)
+        if (evt.gbutton.button == cro::GameController::ButtonB
+            || evt.gbutton.button == cro::GameController::ButtonStart)
         {
             quitState();
             return false;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -125,16 +125,16 @@ bool CreditsState::handleEvent(const cro::Event& evt)
             return false;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
     }

@@ -37,7 +37,7 @@ source distribution.
 #include "../detail/stb_image.h"
 #include "../detail/stb_image_write.h"
 #include "../detail/SDLImageRead.hpp"
-#include <SDL_rwops.h>
+#include <SDL3/SDL_iostream.h>
 
 #include <ktx.h>
 
@@ -162,7 +162,7 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
     //width = ensurePOW2(width);
     //height = ensurePOW2(height);
-    m_resourcePath = {};
+    m_resourcePath.clear();
 
     width = std::min(width, getMaxTextureSize());
     height = std::min(height, getMaxTextureSize());
@@ -217,22 +217,21 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
     glCheck(glBindTexture(GL_TEXTURE_2D, 0));
 }
 
-bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool useCompression)
+bool Texture::loadFromFile(const std::filesystem::path& filePath, bool createMipMaps, bool useCompression)
 {
-    std::filesystem::path p(filePath);
-    auto path = FileSystem::getResourcePath();
+    std::filesystem::path path = U8PATH_CAST(FileSystem::getResourcePath());
     //only add resource path if not done so already
-    if (!p.is_absolute() &&
-        filePath.find(path) == std::string::npos)
+    if (!filePath.is_absolute()/* &&
+        filePath.find(path) == std::string::npos*/) //hmm how to do
     {
-        path += filePath;
+        path /= filePath;
     }
     else
     {
         path = filePath;
     }
 
-    if (FileSystem::getFileExtension(path).find("ktx") != std::string::npos)
+    if (FileSystem::getFileExtension(path) == ".ktx2")
     {
         if (!ktxFunctionsLoaded)
         {
@@ -246,7 +245,7 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps, bool
         }
 
         ktxTexture* kTex = nullptr;
-        if (const auto result = ktxTexture_CreateFromNamedFile(path.c_str(), KTX_TEXTURE_CREATE_NO_FLAGS, &kTex);
+        if (const auto result = ktxTexture_CreateFromNamedFile(U8PATH_CAST(path), KTX_TEXTURE_CREATE_NO_FLAGS, &kTex);
             result != 0)
         {
             LogE << "[KTX] " << FileSystem::getFileName(path) << " Failed to create ktx texture: " << KTXError[result] << std::endl;
@@ -521,7 +520,7 @@ FloatRect Texture::getNormalisedSubrect(FloatRect rect) const
     return { rect.left / m_size.x, rect.bottom / m_size.y, rect.width / m_size.x, rect.height / m_size.y };
 }
 
-bool Texture::saveToFile(const std::string& path) const
+bool Texture::saveToFile(const std::filesystem::path& path) const
 {
     if (m_handle == 0)
     {
@@ -529,10 +528,10 @@ bool Texture::saveToFile(const std::string& path) const
         return false;
     }
 
-    auto filePath = path;
-    if (cro::FileSystem::getFileExtension(filePath) != ".png")
+    std::filesystem::path filePath = path;
+    if (cro::FileSystem::getFileExtension(path) != ".png")
     {
-        filePath += ".png";
+        filePath.replace_extension(".png");
     }
 
     CRO_ASSERT(m_type == GL_UNSIGNED_BYTE, "Need to implement writing unsigned short!");
@@ -547,8 +546,8 @@ bool Texture::saveToFile(const std::string& path) const
     stbi_flip_vertically_on_write(1);
 
     RaiiRWops out;
-    out.file = SDL_RWFromFile(filePath.c_str(), "w");
-    auto result = stbi_write_png_to_func(image_write_func, out.file, m_size.x, m_size.y, 4, buffer.data(), m_size.x * 4);
+    out.open(filePath, "w");
+    auto result = stbi_write_png_to_func(image_write_func, out.filePtr(), m_size.x, m_size.y, 4, buffer.data(), m_size.x * 4);
 
     if (result == 0)
     {

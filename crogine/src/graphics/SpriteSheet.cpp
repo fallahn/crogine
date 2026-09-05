@@ -40,7 +40,7 @@ SpriteSheet::SpriteSheet()
 }
 
 //public
-bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& textures, const std::string& workingDirectory)
+bool SpriteSheet::loadFromFile(const std::filesystem::path& path, TextureResource& textures, const std::filesystem::path& workingDirectory)
 {
     ConfigFile sheetFile;
     if (!sheetFile.loadFromFile(path))
@@ -62,7 +62,7 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
     if (auto* p = sheetFile.findProperty("src"))
     {
         m_texturePath = p->getValue<std::string>();
-        texture = &textures.get(workingDirectory + m_texturePath);
+        texture = &textures.get(workingDirectory / m_texturePath);
     }
     else
     {
@@ -190,13 +190,13 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
     return count > 0;
 }
 
-bool SpriteSheet::saveToFile(const std::string& path)
+bool SpriteSheet::saveToFile(const std::filesystem::path& path)
 {
-    auto sheetName = FileSystem::getFileName(path);
+    std::string sheetName = U8PATH_CAST(FileSystem::getFileName(path));
     sheetName = sheetName.substr(0, sheetName.find_last_of('.'));
 
     ConfigFile sheetFile("spritesheet", sheetName);
-    sheetFile.addProperty("src").setValue(m_texturePath);// ("\"" + m_texturePath + "\"");
+    sheetFile.addProperty("src").setValue(U8PATH_CAST(m_texturePath));// ("\"" + m_texturePath + "\"");
 
     if (m_texture)
     {

@@ -91,11 +91,11 @@ void SpriteState::save()
 
 void SpriteState::saveAs()
 {
-    auto path = cro::FileSystem::saveFileDialogue(m_currentFilePath, "spt");
+    const auto path = cro::FileSystem::saveFileDialogue(m_currentFilePath, "spt");
     if (!path.empty())
     {
         m_spriteSheet.saveToFile(path);
-        m_currentFilePath = path;
+        m_currentFilePath = U8PATH_CAST(path);
     }
 }
 
@@ -155,7 +155,7 @@ void SpriteState::drawMenuBar()
                     save();
                 }
 
-                auto path = cro::FileSystem::openFileDialogue("", "png,jpg");
+                std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue("", "png,jpg"));
                 if (!path.empty())
                 {
                     std::replace(path.begin(), path.end(), '\\', '/');
@@ -175,7 +175,7 @@ void SpriteState::drawMenuBar()
             }
             if (ImGui::MenuItem("Open##sprite", nullptr, nullptr))
             {
-                auto path = cro::FileSystem::openFileDialogue("", "spt");
+                std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue("", "spt"));
                 if (!path.empty())
                 {
                     std::replace(path.begin(), path.end(), '\\', '/');
@@ -266,7 +266,7 @@ void SpriteState::drawInspector()
         ImGui::SameLine();
         if (ImGui::Button("Browse##texPath"))
         {
-            auto path = cro::FileSystem::openFileDialogue("", "png,jpg");
+            std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue("", "png,jpg"));
             if (!path.empty())
             {
                 std::replace(path.begin(), path.end(), '\\', '/');
@@ -570,10 +570,10 @@ void SpriteState::drawPreferences()
             ImGui::SameLine();
             if (ImGui::Button("Browse"))
             {
-                auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
+                const auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
                 if (!path.empty())
                 {
-                    m_sharedData.workingDirectory = path;
+                    m_sharedData.workingDirectory = U8PATH_CAST(path);
                     std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
                 }
             }

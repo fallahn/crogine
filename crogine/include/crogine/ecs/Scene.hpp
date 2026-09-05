@@ -50,6 +50,7 @@ source distribution.
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
 
+#include <filesystem>
 #include <functional>
 #include <memory>
 
@@ -227,7 +228,7 @@ namespace cro
         }
         \endcode
         */
-        void setCubemap(const std::string& path);
+        void setCubemap(const std::filesystem::path& path);
 
 
         /*!

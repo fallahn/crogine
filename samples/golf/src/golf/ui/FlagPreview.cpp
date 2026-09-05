@@ -48,21 +48,21 @@ FlagPreview::FlagPreview()
 : m_index(0), m_textIndex(0)
 {}
 
-void FlagPreview::init(const std::string& currPath)
+void FlagPreview::init(const std::filesystem::path& currPath)
 {
     //available flag textures
-    const std::string flagDir = "assets/golf/images/flags/";
-    std::vector<std::pair<std::string, std::string>> mappedFlags;
+    const std::filesystem::path flagDir = "assets/golf/images/flags/";
+    std::vector<std::pair<std::filesystem::path, std::filesystem::path>> mappedFlags;
 
     auto flags = cro::FileSystem::listFiles(flagDir);
 
     flags.erase(std::remove_if(flags.begin(), flags.end(),
-        [](const std::string& f)
+        [](const std::filesystem::path& f)
         {
-            return f.find(".png") == std::string::npos;
+            return f.extension() != ".png";
         }), flags.end());
 
-    if (auto pos = std::find(flags.begin(), flags.end(), "flag.png");
+    if (auto pos = std::find_if(flags.begin(), flags.end(), [](const std::filesystem::path& p) { return p.u8string() == u8"flag.png"; });
         pos != flags.end() && pos != flags.begin())
     {
         std::iter_swap(flags.begin(), pos);
@@ -78,13 +78,13 @@ void FlagPreview::init(const std::string& currPath)
     const auto MaxUser = MaxFlags - flags.size();
     for (auto i = 0u; i < MaxUser && i < userFlags.size(); ++i)
     {
-        const auto files = cro::FileSystem::listFiles(userDir + userFlags[i]);
+        const auto files = cro::FileSystem::listFiles(userDir / userFlags[i]);
         for (auto j = 0u; j < files.size(); ++j)
         {
             //just grab the first png we find
             if (cro::FileSystem::getFileExtension(files[j]) == ".png")
             {
-                mappedFlags.emplace_back(std::make_pair(userDir + userFlags[i] + "/", files[j]));
+                mappedFlags.emplace_back(std::make_pair(userDir / userFlags[i], files[j]));
                 break;
             }
         }
@@ -94,13 +94,13 @@ void FlagPreview::init(const std::string& currPath)
     const auto& paths = Content::getUserItemsPaths(Content::UserContent::Flag);
     for (const auto& p : paths)
     {
-        const auto files = cro::FileSystem::listFiles(p.string());
+        const auto files = cro::FileSystem::listFiles(p);
         for (auto j = 0u; j < files.size(); ++j)
         {
             //just grab the first png we find
             if (cro::FileSystem::getFileExtension(files[j]) == ".png")
             {
-                mappedFlags.emplace_back(std::make_pair(p.string() + "/", files[j]));
+                mappedFlags.emplace_back(std::make_pair(std::string(U8PATH_CAST(p)) + "/", files[j]));
                 break;
             }
         }
@@ -118,7 +118,7 @@ void FlagPreview::init(const std::string& currPath)
     m_textures[0].clear(cro::Colour::Blue);
     for (const auto& [path, flag] : mappedFlags)
     {
-        const auto fullPath = path + flag;
+        const auto fullPath = path / flag;
         if (tex.loadFromFile(fullPath))
         {
             //TODO validate texture size
@@ -193,7 +193,7 @@ glm::vec2 FlagPreview::getSize() const
     return { PreviewWidth, PreviewHeight };
 }
 
-std::string FlagPreview::getPath() const
+std::filesystem::path FlagPreview::getPath() const
 {
     return m_flagPaths[m_index];
 }

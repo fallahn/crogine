@@ -211,7 +211,7 @@ namespace
     };
     constexpr std::array keysets =
     {
-        std::array<std::int32_t, KeyID::Count>({SDLK_w, SDLK_s, SDLK_a, SDLK_d, SDLK_q, SDLK_e}),
+        std::array<std::int32_t, KeyID::Count>({SDLK_W, SDLK_S, SDLK_A, SDLK_D, SDLK_Q, SDLK_E}),
         std::array<std::int32_t, KeyID::Count>({SDLK_HOME, SDLK_END, SDLK_DELETE, SDLK_PAGEDOWN, SDLK_INSERT, SDLK_PAGEUP})
     };
 
@@ -261,9 +261,9 @@ bool FrustumState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -283,7 +283,7 @@ void FrustumState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             
         }

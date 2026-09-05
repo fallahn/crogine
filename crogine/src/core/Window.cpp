@@ -34,8 +34,8 @@ source distribution.
 #include <crogine/core/Message.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
-#include <SDL.h>
-#include <SDL_video.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_video.h>
 
 #include "../detail/GLCheck.hpp"
 #include "DefaultLoadingScreen.hpp"
@@ -87,7 +87,7 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
     borderless = true;
 #endif //PLATFORM_MOBILE
 
-    int styleMask = SDL_WINDOW_OPENGL | styleFlags;
+    const int styleMask = SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL | styleFlags;
 
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
@@ -107,7 +107,7 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
 #endif
 #endif
 
-    m_window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, styleMask);
+    m_window = SDL_CreateWindow(title.c_str(), width, height, styleMask);
 
     if (!m_window)
     {
@@ -155,11 +155,11 @@ void Window::setBorderVisible(bool v)
 {
     if (v)
     {
-        SDL_SetWindowBordered(m_window, SDL_TRUE);
+        SDL_SetWindowBordered(m_window, true);
     }
     else
     {
-        SDL_SetWindowBordered(m_window, SDL_FALSE);
+        SDL_SetWindowBordered(m_window, false);
     }
 }
 
@@ -172,10 +172,21 @@ void Window::setVsyncEnabled(bool enabled)
 {
     if (m_mainContext)
     {
-        if (SDL_GL_SetSwapInterval(enabled ? 1 : 0) != 0)
+        if (enabled)
         {
-            std::string e = enabled ? "Enabled - " : "Disabled - ";
-            LogE << "SDL: Failed to set VSync to " << e << SDL_GetError() << std::endl;
+            //if (!SDL_GL_SetSwapInterval(-1))
+            {
+                //LogW << "Adapative VSync unavailable, trying fixed rate VSync..." << std::endl;
+                if (!SDL_GL_SetSwapInterval(1))
+                {
+                    LogE << "SDL: Failed to enable VSync: " << SDL_GetError() << std::endl;
+                }
+            }
+        }
+
+        else if (!SDL_GL_SetSwapInterval(0))
+        {
+            LogE << "SDL: Failed to disable VSync: " << SDL_GetError() << std::endl;
 
             FileSystem::showMessageBox("OpenGL Error", "Failed setting v-sync.\nEnsure OpenGL is available and drivers are up to date.", FileSystem::OK, FileSystem::Error);
         }
@@ -184,7 +195,9 @@ void Window::setVsyncEnabled(bool enabled)
 
 bool Window::getVsyncEnabled() const
 {
-    return SDL_GL_GetSwapInterval() != 0;
+    int i = 0;
+    SDL_GL_GetSwapInterval(&i);
+    return i != 0;
 }
 
 void Window::setFramerateLimit(float fps)
@@ -269,7 +282,8 @@ glm::uvec2 Window::getSize() const
 glm::uvec2 Window::getScaledSize() const
 {
     std::int32_t x, y;
-    SDL_GL_GetDrawableSize(m_window, &x, &y);
+    SDL_GetWindowSizeInPixels(m_window, &x, &y);
+
     return { x, y };
 }
 
@@ -292,40 +306,48 @@ void Window::setSize(glm::uvec2 size)
 
 void Window::setFullScreen(bool fullscreen)
 {
-#ifdef __APPLE__
-#define FS_MODE SDL_WINDOW_FULLSCREEN_DESKTOP
-#else
-#define FS_MODE SDL_WINDOW_FULLSCREEN_DESKTOP
-#endif
-
-    std::int32_t mode = 0;
     if (fullscreen)
     {
 #ifndef __APPLE__
-        mode = m_exclusiveFullScreen ? SDL_WINDOW_FULLSCREEN : FS_MODE;
-#else
-        mode = FS_MODE;
+        if (m_exclusiveFullScreen)
+        {
+            const auto displayID = SDL_GetDisplayForWindow(m_window);
+            const SDL_DisplayMode* currentMode = SDL_GetCurrentDisplayMode(displayID);
+
+            SDL_DisplayMode fsMode = {};
+            SDL_GetClosestFullscreenDisplayMode(displayID, m_windowedSize.x, m_windowedSize.y, currentMode->refresh_rate, false, &fsMode);
+
+            if (!SDL_SetWindowFullscreenMode(m_window, &fsMode))
+            {
+                LogE << "Failed setting full screen mode: " << SDL_GetError() << std::endl;
+            }
+            /*else
+            {
+                LogI << "Set FS mode " << fsMode.w << ", " << fsMode.h << std::endl;
+            }*/
+        }
+        else
+        {
+            if (!SDL_SetWindowFullscreenMode(m_window, nullptr))
+            {
+                LogE << "Failed setting full screen mode: " << SDL_GetError() << std::endl;
+            }
+        }
+        SDL_SyncWindow(m_window);
+
 #endif
         //m_previousWindowSize = getSize();
 
         //we set the full screen size first
-        SDL_SetWindowSize(m_window, m_fullScreenSize.x, m_fullScreenSize.y);
+        //SDL_SetWindowSize(m_window, m_fullScreenSize.x, m_fullScreenSize.y);
     }
 
     CRO_ASSERT(m_window, "window not created");
-    if (SDL_SetWindowFullscreen(m_window, mode) == 0)
+    if (SDL_SetWindowFullscreen(m_window, fullscreen))
     {
         m_fullscreen = fullscreen;
         if (!fullscreen)
         {
-            /*SDL_DisplayMode dm;
-            SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_window), &dm);
-            if (dm.w == static_cast<std::int32_t>(m_previousWindowSize.x)
-                && dm.h == static_cast<std::int32_t>(m_previousWindowSize.y))
-            {
-                m_previousWindowSize = { 640u, 480u };
-            }*/
-
             //apply the windowed size afterwards
             SDL_SetWindowSize(m_window, m_windowedSize.x, m_windowedSize.y);
             SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
@@ -342,6 +364,11 @@ void Window::setFullScreen(bool fullscreen)
 
     setViewport(getDefaultViewport());
     setView(FloatRect(getViewport()));
+}
+
+void Window::setExclusiveFullscreen(bool exclusive)
+{
+    m_exclusiveFullScreen = exclusive;
 }
 
 void Window::setPosition(std::int32_t x, std::int32_t y)
@@ -366,11 +393,11 @@ void Window::setIcon(const std::uint8_t* data)
     //let the bundle set the icon on mac
 #ifndef __APPLE__
     CRO_ASSERT(m_window, "window not created");
-    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom((void*)(data), 16, 16, 32, 16 * 4, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(16, 16, SDL_PIXELFORMAT_RGBA32, (void*)data, 16 * 4);
     if (surface)
     {
         SDL_SetWindowIcon(m_window, surface);
-        SDL_FreeSurface(surface);
+        SDL_DestroySurface(surface);
     }
     else
     {
@@ -384,28 +411,31 @@ const std::vector<glm::uvec2>& Window::getAvailableResolutions() const
     CRO_ASSERT(m_window, "window not created");
     if (m_resolutions.empty())
     {
-        const auto modeCount = SDL_GetNumDisplayModes(0);
-        if (modeCount > 0)
-        {
-            SDL_DisplayMode mode = { SDL_PIXELFORMAT_UNKNOWN, 0, 0, 0, 0 };
-            for (auto i = 0; i < modeCount; ++i)
-            {
-                if (SDL_GetDisplayMode(0, i, &mode) == 0)
-                {
-                    m_resolutions.emplace_back(mode.w, mode.h);
-                }
-            }
-            m_resolutions.erase(std::unique(std::begin(m_resolutions), std::end(m_resolutions)), std::end(m_resolutions));
-        }
-        else
-        {
-            const std::string err = SDL_GetError();
-            Logger::log("failed retrieving available resolutions: " + err, Logger::Type::Error, Logger::Output::All);
+        std::int32_t displayCount = 0;
+        const auto displayIDs = SDL_GetDisplays(&displayCount);
 
-            //don't leave this empty else we'll badly index it
-            m_resolutions.emplace_back(1920u, 1080u);
-            m_resolutions.emplace_back(1280u, 720u);
-            m_resolutions.emplace_back(640u, 480u);
+        for (auto j = 0; j < displayCount; ++j)
+        {
+            std::int32_t modeCount = 0;
+            const auto modes = SDL_GetFullscreenDisplayModes(displayIDs[j], &modeCount);
+            if (modeCount > 0)
+            {
+                for (auto i = 0; i < modeCount; ++i)
+                {
+                    m_resolutions.emplace_back(modes[i]->w, modes[i]->h);
+                }
+                m_resolutions.erase(std::unique(std::begin(m_resolutions), std::end(m_resolutions)), std::end(m_resolutions));
+            }
+            else
+            {
+                const std::string err = SDL_GetError();
+                Logger::log("failed retrieving available resolutions: " + err, Logger::Type::Error, Logger::Output::All);
+
+                //don't leave this empty else we'll badly index it
+                m_resolutions.emplace_back(1920u, 1080u);
+                m_resolutions.emplace_back(1280u, 720u);
+                m_resolutions.emplace_back(640u, 480u);
+            }
         }
 
         auto sorted = m_resolutions;
@@ -462,7 +492,7 @@ namespace
     {
         SDL_Window* window = nullptr;
         SDL_GLContext context = nullptr;
-        SDL_atomic_t threadFlag = {};
+        SDL_AtomicInt threadFlag = {};
         LoadingScreen* loadingScreen = nullptr;
     };
 
@@ -472,7 +502,7 @@ namespace
         SDL_GL_MakeCurrent(threadData->window, threadData->context);
         threadData->loadingScreen->launch();
 
-        while (SDL_AtomicGet(&threadData->threadFlag) != 1)
+        while (SDL_GetAtomicInt(&threadData->threadFlag) != 1)
         {
             threadData->loadingScreen->update();
             glCheck(glClear(GL_COLOR_BUFFER_BIT));
@@ -579,7 +609,7 @@ void Window::setLoadingProgress(float progress)
 
 void Window::setMouseCaptured(bool captured)
 {
-    SDL_SetRelativeMouseMode(captured ? SDL_TRUE : SDL_FALSE);
+    SDL_SetWindowRelativeMouseMode(m_window, captured);
     /*if (captured)
     {
         SDL_WarpMouseInWindow(m_window, 1, 1);
@@ -587,12 +617,12 @@ void Window::setMouseCaptured(bool captured)
     //auto centre = getSize() / 2u;
     //SDL_WarpMouseInWindow(m_window, centre.x, centre.y);
 
-    //SDL_CaptureMouse(captured ? SDL_TRUE : SDL_FALSE);
+    //SDL_CaptureMouse(captured ? true : false);
 }
 
 bool Window::getMouseCaptured() const
 {
-    return (SDL_GetRelativeMouseMode() == SDL_TRUE);
+    return SDL_GetWindowRelativeMouseMode(m_window);
 }
 
 void Window::setCursor(const Cursor* cursor)
@@ -630,10 +660,33 @@ const Cursor* Window::getCursor() const
     return m_cursor;
 }
 
+void Window::setCursorVisible(bool visible)
+{
+    if (!visible)
+    {
+        if (!SDL_HideCursor())
+        {
+            LogE << "Failed hiding mouse cursoe: " << SDL_GetError() << std::endl;
+        }
+    }
+    else
+    {
+        if (!SDL_ShowCursor())
+        {
+            LogE << "Failed showing mouse cursoe: " << SDL_GetError() << std::endl;
+        }
+    }
+}
+
+bool Window::getCursorVisible() const
+{
+    return SDL_CursorVisible();
+}
+
 void Window::setWindowedSize(glm::uvec2 size)
 {
     //SDL_DisplayMode dm;
-    //SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_window), &dm);
+    //SDL_GetDesktopDisplayMode(SDL_GetDisplayForWindow(m_window), &dm);
     //if (dm.w == static_cast<std::int32_t>(m_previousWindowSize.x)
     //    && dm.h == static_cast<std::int32_t>(m_previousWindowSize.y))
     //{
@@ -697,13 +750,13 @@ void Window::destroy()
     if (m_mainContext)
     {
         m_loadingScreen.reset(); //delete this while we still have a valid context!
-        SDL_GL_DeleteContext(m_mainContext);
+        SDL_GL_DestroyContext(m_mainContext);
         m_mainContext = nullptr;
     }
 
     if(m_threadContext)
     {
-        SDL_GL_DeleteContext(m_threadContext);
+        SDL_GL_DestroyContext(m_threadContext);
         m_threadContext = nullptr;
     }
 

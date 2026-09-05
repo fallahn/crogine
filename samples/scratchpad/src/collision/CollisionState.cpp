@@ -130,12 +130,12 @@ CollisionState::~CollisionState()
 //public
 bool CollisionState::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
-        case SDLK_l:
+        case SDLK_L:
         {
             auto randImpulse = glm::vec3(cro::Util::Random::value(-0.05f, 0.05f), 25.f, -0.02f);
 
@@ -148,11 +148,11 @@ bool CollisionState::handleEvent(const cro::Event& evt)
             roller.velocity += randImpulse;
         }
             break;
-        case SDLK_p:
+        case SDLK_P:
             showDebug = !showDebug;
             m_debugDrawer.setDebugMode(showDebug ? std::numeric_limits<std::int32_t>::max() : 0);
             break;
-        case SDLK_q:
+        case SDLK_Q:
             resetRoller();
             break;
         case SDLK_BACKSPACE:

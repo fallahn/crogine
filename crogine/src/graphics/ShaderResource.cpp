@@ -95,7 +95,7 @@ ShaderResource::ShaderResource()
 }
 
 //public
-bool ShaderResource::loadFromFile(std::int32_t ID, const std::string& vertex, const std::string& fragment)
+bool ShaderResource::loadFromFile(std::int32_t ID, const std::filesystem::path& vertex, const std::filesystem::path& fragment)
 {
     if (m_shaders.count(ID) > 0)
     {

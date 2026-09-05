@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,9 +33,10 @@ source distribution.
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/Colour.hpp>
 
-#include <unordered_map>
-#include <string>
+#include <filesystem>
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 //hash for colours
 namespace std
@@ -114,7 +115,7 @@ namespace cro
         \brief Deprecated, maintained until backwards compat no longer required
         */
         //[[deprecated("Use load() with get(id)")]] //hum this errors in VC instead of warns when /sdl is enabled
-        Texture& get(const std::string&, bool = false, bool = false);
+        Texture& get(const std::filesystem::path&, bool = false, bool = false);
 
 
     private:

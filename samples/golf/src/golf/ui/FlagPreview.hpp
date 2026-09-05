@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/graphics/RenderTexture.hpp>
 
+#include <filesystem>
 #include <vector>
 
 //renders available flags into a single atlas for UI previews
@@ -41,12 +42,12 @@ public:
     FlagPreview();
 
     //sigh we need to lazy-load this (actually we don't now...)
-    void init(const std::string&);
+    void init(const std::filesystem::path&);
 
     const cro::Texture& getTexure() const { return m_textures[m_textIndex].getTexture(); }
     cro::FloatRect getUV() const;
     glm::vec2 getSize() const;
-    std::string getPath() const;
+    std::filesystem::path getPath() const;
 
     void setIndex(std::int32_t);
     std::int32_t getIndex() const;
@@ -58,7 +59,7 @@ public:
 
 private:
     std::array<cro::RenderTexture, 3u> m_textures;
-    std::vector<std::string> m_flagPaths;
+    std::vector<std::filesystem::path> m_flagPaths;
     std::size_t m_index;
     std::size_t m_textIndex;
 };

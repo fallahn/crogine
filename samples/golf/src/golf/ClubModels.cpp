@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -36,7 +36,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
-bool ClubModels::loadFromFile(const std::string& path, cro::ResourceCollection& resources, cro::Scene& scene)
+bool ClubModels::loadFromFile(const std::filesystem::path& path, cro::ResourceCollection& resources, cro::Scene& scene)
 {
     //hmm if this vector is not empty should we be destroying all the entities first?
     models.clear();
@@ -47,7 +47,7 @@ bool ClubModels::loadFromFile(const std::string& path, cro::ResourceCollection& 
     if (cfg.loadFromFile(path))
     {
         //load the models first so we can clamp the indices
-        auto rootPath = cro::FileSystem::getFilePath(path);
+        const auto rootPath = cro::FileSystem::getFilePath(path);
         cro::ModelDefinition md(resources);
 
         const auto& objs = cfg.getObjects();
@@ -60,7 +60,7 @@ bool ClubModels::loadFromFile(const std::string& path, cro::ResourceCollection& 
                 {
                     if (p.getName() == "path")
                     {
-                        const auto modelPath = rootPath + p.getValue<std::string>();
+                        const auto modelPath = rootPath / p.getValue<std::string>();
                         if (md.loadFromFile(modelPath))
                         {
                             auto entity = scene.createEntity();
@@ -172,20 +172,22 @@ bool ClubModels::loadFromFile(const std::string& path, cro::ResourceCollection& 
 #endif
 
 #ifdef USE_GNS
+        auto temp = rootPath.generic_string();
+        
         //check to see if we can get a workshop ID from the path
-        if (rootPath.back() == '/')
+        if (temp.back() == '/')
         {
-            rootPath.pop_back();
+            temp.pop_back();
         }
 
-        if (rootPath.back() == 'w')
+        if (temp.back() == 'w')
         {
             //LogI << "Processing: " << rootPath << std::endl;
-            if (auto res = rootPath.find_last_of('/'); res != std::string::npos)
+            if (auto res = temp.find_last_of('/'); res != std::string::npos)
             {
                 try
                 {
-                    const auto d = rootPath.substr(res + 1, rootPath.length() - 1);
+                    const auto d = temp.substr(res + 1, temp.length() - 1);
                     workshopID = std::stoull(d);
                     //LogI << "Got workshop ID of " << workshopID << std::endl;
                 }

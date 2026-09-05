@@ -190,7 +190,7 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
 
 void RenderSystem2D::process(float)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& drawable = entity.getComponent<Drawable2D>();

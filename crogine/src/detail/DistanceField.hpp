@@ -32,7 +32,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 
-#include <SDL_surface.h>
+#include <SDL3/SDL_surface.h>
 
 #include <vector>
 #include <cstdint>

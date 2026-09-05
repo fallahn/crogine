@@ -235,6 +235,7 @@ namespace cro
         TextContext m_context;
         FloatRect m_localBounds;
         const Texture* m_fontTexture;
+        std::uint32_t m_lastTextureID; //for tracking if font texture changed
 
         struct DirtyFlags final
         {

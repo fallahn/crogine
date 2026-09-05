@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,8 +34,8 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/MeshData.hpp>
 
-#include <string>
 #include <array>
+#include <string>
 #include <unordered_map>
 
 namespace cro
@@ -77,8 +77,8 @@ namespace cro
         shader sources as a raw string written in a header file or similar, and use
         loadFromString() to read it directly.
         */
-        bool loadFromFile(const std::string& vertexPath, const std::string& fragmentPath);
-        bool loadFromFile(const std::string& vertexPath, const std::string& geometryPath, const std::string& fragmentPath);
+        bool loadFromFile(const std::filesystem::path& vertexPath, const std::filesystem::path& fragmentPath);
+        bool loadFromFile(const std::filesystem::path& vertexPath, const std::filesystem::path& geometryPath, const std::filesystem::path& fragmentPath);
 
         /*!
         \brief Attempts to load the shader source from given strings
@@ -133,7 +133,7 @@ namespace cro
         std::unordered_map<std::string, std::pair<std::int32_t, std::uint32_t>> m_uniformMap;
         void fillUniformMap();
         void resetUniformMap();
-        std::string parseFile(const std::string&);
+        std::string parseFile(const std::filesystem::path&);
     };
 }
 

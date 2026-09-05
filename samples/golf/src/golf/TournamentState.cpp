@@ -130,7 +130,7 @@ namespace
         //CareerSeason = 100
     };
 
-    const std::string ConfigFile("career.cfg");
+    const std::filesystem::path ConfigFile("career.cfg");
 
     std::int32_t tournamentID = 0;
     std::int32_t maxTournaments = 2;
@@ -195,7 +195,7 @@ TournamentState::TournamentState(cro::StateStack& ss, cro::State::Context ctx, S
     m_currentMenu   (MenuID::Career),
     m_customIndex   (0)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Tournament State");
 
     loadAssets();
@@ -242,22 +242,22 @@ bool TournamentState::handleEvent(const cro::Event& evt)
         };
 
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_p)
+        if (evt.key.key == SDLK_BACKSPACE
+            || evt.key.key == SDLK_ESCAPE
+            || evt.key.key == SDLK_P)
         {
             quitState();
             return false;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
-        case SDLK_l:
+        case SDLK_L:
             //m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = ScrollID::Reset;
             /*if (!m_customPaths.empty())
             {
@@ -273,14 +273,14 @@ bool TournamentState::handleEvent(const cro::Event& evt)
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        cro::App::getWindow().setMouseCaptured(true);
-        switch (evt.cbutton.button)
+        cro::App::getWindow().setCursorVisible(false);
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonB:
@@ -300,7 +300,7 @@ bool TournamentState::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -308,36 +308,36 @@ bool TournamentState::handleEvent(const cro::Event& evt)
             return false;
         }
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         }
 
-        if (evt.caxis.axis == cro::GameController::AxisRightX)
+        if (evt.gaxis.axis == cro::GameController::AxisRightX)
         {
             const auto DeadZone = cro::GameController::LeftThumbDeadZone * 2;
 
-            if (evt.caxis.value > DeadZone
+            if (evt.gaxis.value > DeadZone
                 && m_axisPosition < DeadZone)
             {
                 scrollTree(false);
             }
-            else if (evt.caxis.value < -DeadZone
+            else if (evt.gaxis.value < -DeadZone
                 && m_axisPosition > -DeadZone)
             {
                 scrollTree(true);
             }
 
-            m_axisPosition = evt.caxis.value;
+            m_axisPosition = evt.gaxis.value;
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(true);
     }
-    else if (evt.type == SDL_MOUSEWHEEL)
+    else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
         scrollTree(evt.wheel.y > 0);
     }
@@ -372,7 +372,7 @@ void TournamentState::handleMessage(const cro::Message& msg)
                 if (!m_customPaths.empty()
                     && m_sharedData.tournamentPath.empty())
                 {
-                    m_sharedData.tournamentPath = m_customPaths[m_customIndex];
+                    m_sharedData.tournamentPath = U8PATH_CAST(m_customPaths[m_customIndex]);
                 }
 
                 if (!m_sharedData.tournamentPath.empty())
@@ -388,7 +388,7 @@ void TournamentState::handleMessage(const cro::Message& msg)
     else if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             //if we have a window over the top (eg profile editor)
             //we want to activate this on window resize so layout
@@ -1198,7 +1198,7 @@ void TournamentState::buildScene()
                 {
                     if (!m_customPaths.empty())
                     {
-                        m_sharedData.tournamentPath = m_customPaths[m_customIndex];
+                        m_sharedData.tournamentPath = U8PATH_CAST(m_customPaths[m_customIndex]);
                     }
                     else
                     {
@@ -1897,7 +1897,7 @@ void TournamentState::createConfirmMenu(cro::Entity parent)
 
                 if (!m_customPaths.empty())
                 {
-                    m_sharedData.tournamentPath = m_customPaths[m_customIndex];
+                    m_sharedData.tournamentPath = U8PATH_CAST(m_customPaths[m_customIndex]);
                 }
                 auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                 msg->type = SystemEvent::MenuRequest;
@@ -1919,8 +1919,8 @@ void TournamentState::createConfirmMenu(cro::Entity parent)
                 
                 if (tournamentID == TournamentIndex::Custom)
                 {
-                    const auto path = m_sharedData.tournamentPath + TournamentDataFile;
-                    writeTournamentData(m_sharedData.tournaments[tournamentID], path.c_str());
+                    const auto path = m_sharedData.tournamentPath / TournamentDataFile;
+                    writeTournamentData(m_sharedData.tournaments[tournamentID], U8PATH_CAST(path));
                 }
                 else
                 {
@@ -2794,11 +2794,11 @@ void TournamentState::refreshCustomList()
         const auto dirs = cro::FileSystem::listDirectories(basePath);
         for (const auto& d : dirs)
         {
-            const auto dirPath = basePath + d + "/";
+            const auto dirPath = basePath / d;
             if (cro::FileSystem::directoryExists(dirPath))
             {
-                if (cro::FileSystem::fileExists(dirPath + "selection.crs")
-                    && cro::FileSystem::fileExists(dirPath + TournamentDataFile))
+                if (cro::FileSystem::fileExists(dirPath / "selection.crs")
+                    && cro::FileSystem::fileExists(dirPath / TournamentDataFile))
                 {
                     m_customPaths.push_back(dirPath);
                 }
@@ -2844,11 +2844,11 @@ void TournamentState::loadCustomTournament()
 {
     m_sharedData.tournaments[TournamentIndex::Custom] = {};
     m_sharedData.tournaments[TournamentIndex::Custom].id = TournamentIndex::Custom;
-    readTournamentData(m_sharedData.tournaments[TournamentIndex::Custom], (m_customPaths[m_customIndex] + TournamentDataFile).c_str());
+    readTournamentData(m_sharedData.tournaments[TournamentIndex::Custom], U8PATH_CAST((m_customPaths[m_customIndex] / TournamentDataFile)));
     
     m_sharedData.customTournament = {};
     m_sharedData.customTournament.load(m_customPaths[m_customIndex], m_sharedData.courseData);
-    m_sharedData.tournamentPath = m_customPaths[m_customIndex];
+    m_sharedData.tournamentPath = U8PATH_CAST(m_customPaths[m_customIndex]);
 
     maxTournaments = 3;
     TournamentNames[TournamentIndex::Custom] = m_sharedData.customTournament.getTitle();
@@ -2890,7 +2890,7 @@ void TournamentState::quitState()
 
 void TournamentState::loadConfig()
 {
-    const auto path = Content::getUserContentPath(Content::UserContent::Career) + ConfigFile;
+    const auto path = Content::getUserContentPath(Content::UserContent::Career) / ConfigFile;
     if (cro::FileSystem::fileExists(path))
     {
         cro::ConfigFile cfg;
@@ -2923,7 +2923,7 @@ void TournamentState::saveConfig() const
     cfg.addProperty("gimme").setValue(m_sharedData.gimmeRadius);
     cfg.addProperty("night").setValue(m_sharedData.nightTime);
     cfg.addProperty("weather").setValue(m_sharedData.weatherType);
-    cfg.save(Content::getUserContentPath(Content::UserContent::Career) + ConfigFile);
+    cfg.save(Content::getUserContentPath(Content::UserContent::Career) / ConfigFile);
 }
 
 void TournamentState::onCachedPush()

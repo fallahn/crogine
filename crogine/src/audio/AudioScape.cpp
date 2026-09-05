@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -40,7 +40,7 @@ AudioScape::AudioScape()
 }
 
 //public
-bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResource)
+bool AudioScape::loadFromFile(const std::filesystem::path& path, AudioResource& audioResource)
 {
     m_configs.clear();
     m_name.clear();
@@ -69,7 +69,7 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
             }
 
             bool streaming = true; //fall back to this if missing so we don't accidentally try to load huge files
-            std::string mediaPath;
+            std::filesystem::path mediaPath;
             AudioConfig ac;
 
             const auto& props = obj.getProperties();
@@ -80,10 +80,10 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
                 {
                     mediaPath = prop.getValue<std::string>();
 
-                    if (!FileSystem::fileExists(FileSystem::getResourcePath() + mediaPath))
+                    if (!FileSystem::fileExists(FileSystem::getResourcePath() / mediaPath))
                     {
                         //try relative path
-                        const auto relPath = FileSystem::getFilePath(path) + mediaPath;
+                        const auto relPath = FileSystem::getFilePath(path) / mediaPath;
                         //hmm usually this is because it's in a user dir and not the resource path
                         //but... sometimes it might be, so it won't work on macOS. (another reason to ditch it)
                         if (FileSystem::fileExists(/*FileSystem::getResourcePath() +*/ relPath)) 

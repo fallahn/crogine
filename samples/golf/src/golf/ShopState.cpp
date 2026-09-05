@@ -1,4 +1,4 @@
-﻿/*-----------------------------------------------------------------------
+/*-----------------------------------------------------------------------
 
 Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
@@ -113,8 +113,8 @@ namespace
         return static_cast<std::int32_t>(static_cast<float>(price) * 0.55f);
     }
 
-    const std::string BuyStr = u8"Buy ↓";
-    const std::string SellStr = u8"Sell ↓";
+    const std::u8string BuyStr = u8"Buy \u2193"; //down arrow
+    const std::u8string SellStr = u8"Sell \u2193";
 
     struct TextFlashData final
     {
@@ -314,14 +314,14 @@ bool ShopState::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
-    case SDL_MOUSEBUTTONUP:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             quitState();
             return false;
         }
         break;
-    case SDL_MOUSEWHEEL:
+    case SDL_EVENT_MOUSE_WHEEL:
         if (evt.wheel.y > 0)
         {
             scroll(true);
@@ -331,31 +331,32 @@ bool ShopState::handleEvent(const cro::Event& evt)
             scroll(false);
         }
         break;
-    case SDL_KEYUP:
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+    case SDL_EVENT_KEY_UP:
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::PrevClub])
         {
             prevCat();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
         {
             nextCat();
         }
-        else if (evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_BACKSPACE)
+        
+        if (evt.key.key == SDLK_ESCAPE
+            || evt.key.key == SDLK_BACKSPACE)
         {
             quitState();
             return false;
         }
 #ifdef CRO_DEBUG_
-        else if (evt.key.keysym.sym == SDLK_SPACE)
+        else if (evt.key.key == SDLK_SPACE)
         {
             cro::App::getInstance().resetFrameTime();
         }
 #endif
         
         break;
-    case SDL_CONTROLLERBUTTONUP:
-        switch (evt.cbutton.button)
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonLeftShoulder:
@@ -387,7 +388,7 @@ void ShopState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             auto node = m_scrollNodes[m_selectedCategory].scrollNode;
             node.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = 0;
@@ -689,7 +690,7 @@ void ShopState::buildScene()
                     const auto scale = cro::UIElementSystem::getViewScale();
                     const auto screenWidth = std::round(cro::App::getWindow().getSize().x / scale);
 
-                    const auto buttonSpacing = std::round((screenWidth - TitleSize.x - (BorderPadding * 2)) / Category::Count);
+                    const auto buttonSpacing = std::round((screenWidth - TitleSize.x - (BorderPadding * 2)) / static_cast<std::int32_t>(Category::Count));
                     const auto buttonWidth = buttonSpacing - BorderPadding;
 
                     return std::make_pair(buttonSpacing, buttonWidth);

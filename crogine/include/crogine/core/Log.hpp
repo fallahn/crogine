@@ -38,11 +38,12 @@ source distribution.
 #include <crogine/detail/glm/vec4.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
-#include <string>
+#include <filesystem>
 #include <list>
+#include <mutex>
 #include <ostream>
 #include <streambuf>
-#include <mutex>
+#include <string>
 
 #ifdef _MSC_VER
 #define NOMINMAX
@@ -159,16 +160,23 @@ std::ostream& operator << (std::ostream& out, cro::Rectangle<T> r)
     return out;
 }
 
+//static inline std::ostream& operator << (std::ostream& out, std::filesystem::path& p)
+//{
+//    out << p.string();
+//    return out;
+//}
+
 #define LogI cro::Logger::log(cro::Logger::Type::Info)
 #define LogW cro::Logger::log(cro::Logger::Type::Warning)
 #define LogE cro::Logger::log(cro::Logger::Type::Error) << FILE_LINE
+
+//std::string fileName(__FILE__); \
 
 #ifndef CRO_DEBUG_
 #define LOG(message, type)
 #else
 #define LOG(message, type) {\
-std::string fileName(__FILE__); \
-fileName = cro::FileSystem::getFileName(fileName); \
+const auto fileName = cro::FileSystem::getFileName(__FILE__); \
 std::stringstream ss; \
 ss << message << " (" << fileName << ", " << __LINE__ << ")"; \
 cro::Logger::log(ss.str(), type);}

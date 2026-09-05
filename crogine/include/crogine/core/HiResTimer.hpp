@@ -31,7 +31,7 @@ source distribution.
 
 //the high resolution timer provides a more accurate frame time for the core loop
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <crogine/Config.hpp>
 
 namespace cro

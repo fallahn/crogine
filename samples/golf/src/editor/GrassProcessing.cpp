@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -52,14 +52,14 @@ void GrassProcessor::begin(const std::string& path)
 {
     auto files = cro::FileSystem::listFiles(path);
     files.erase(std::remove_if(files.begin(), files.end(), 
-        [](const std::string& f)
+        [](const std::filesystem::path& f)
         {
-            return cro::FileSystem::getFileExtension(f) != ".cmb";
+            return f.extension() != ".cmb";
         }), files.end());
 
     for (const auto& f : files)
     {
-        m_modelPaths.push_back(path + "/" + f);
+        m_modelPaths.push_back(path + "/" + U8PATH_CAST(f));
     }
     queueJob();
 }
@@ -97,15 +97,15 @@ bool GrassProcessor::process()
         cro::Util::String::replace(outPath, ".cmb", ".gss");
 
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(outPath.c_str(), "wb");
-        if (file.file)
+        file.open(outPath, "wb");
+        if (file)
         {
-            file.file->write(file.file, fileHeader.data(), sizeof(Header), 1);
+            SDL_WriteIO(file.filePtr(), fileHeader.data(), sizeof(Header));
             for (const auto& t : m_transformData)
             {
                 if (!t.empty())
                 {
-                    file.file->write(file.file, t.data(), sizeof(glm::mat4), t.size());
+                    SDL_WriteIO(file.filePtr(), t.data(), sizeof(glm::mat4) * t.size());
                 }
             }
         }

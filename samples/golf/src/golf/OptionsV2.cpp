@@ -228,7 +228,7 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
         if (m_rebindIndex != -1)
         {
             //rebinding is active
-            if (evt.type == SDL_KEYDOWN)
+            if (evt.type == SDL_EVENT_KEY_DOWN)
             {
                 switch (evt.key.keysym.sym)
                 {
@@ -242,13 +242,13 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
                 updateKeybind(evt.key.keysym.sym);
             }
 
-            else if (evt.type == SDL_MOUSEBUTTONDOWN
+            else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN
                 && evt.button.button == SDL_BUTTON_RIGHT)
             {
                 closeWindow();
             }
 
-            else if (evt.type == SDL_CONTROLLERBUTTONDOWN
+            else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN
                 && evt.cbutton.button == cro::GameController::ButtonB)
             {
                 closeWindow();
@@ -277,15 +277,15 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
         const auto setActiveInput =
             [&]()
             {
-                if (evt.type == SDL_MOUSEBUTTONDOWN
-                    || evt.type == SDL_MOUSEMOTION
-                    || evt.type == SDL_KEYDOWN)
+                if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN
+                    || evt.type == SDL_EVENT_MOUSE_MOTION
+                    || evt.type == SDL_EVENT_KEY_DOWN)
                 {
                     //if mouse motion or key down
                     m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
                 }
-                else if (evt.type == SDL_CONTROLLERAXISMOTION
-                    || evt.type == SDL_CONTROLLERBUTTONDOWN)
+                else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION
+                    || evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
                 {
                     //else controller axis or button
                     m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) ?
@@ -296,13 +296,13 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
         switch (evt.type)
         {
         default: break;
-        case SDL_MOUSEBUTTONDOWN:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
             if (evt.button.button == SDL_BUTTON_RIGHT)
             {
                 closeWindow();
             }
             break;
-        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
             switch (evt.cbutton.button)
             {
             default: break;
@@ -318,7 +318,7 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
             }
             setActiveInput();
             break;
-        case SDL_KEYDOWN:
+        case SDL_EVENT_KEY_DOWN:
             switch (evt.key.keysym.sym)
             {
             default: break;
@@ -339,11 +339,11 @@ bool OptionsV2::handleEvent(const cro::Event& evt)
             }*/
             setActiveInput();
             break;
-        case SDL_MOUSEMOTION:
+        case SDL_EVENT_MOUSE_MOTION:
             cro::App::getWindow().setMouseCaptured(false);
             setActiveInput();
             break;
-        case SDL_CONTROLLERAXISMOTION:
+        case SDL_EVENT_GAMEPAD_AXIS_MOTION:
             {
                 const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
 

@@ -330,9 +330,9 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 {
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
-        if (evt.type == SDL_MOUSEMOTION)
+        if (evt.type == SDL_EVENT_MOUSE_MOTION)
         {
-            cro::App::getWindow().setMouseCaptured(false);
+            cro::App::getWindow().setCursorVisible(true);
         }
         return true;
     }
@@ -416,12 +416,20 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 #endif
 
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
         m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         resetIdle();
-        cro::App::getWindow().setMouseCaptured(true);
-        switch (evt.key.keysym.sym)
+        cro::App::getWindow().setCursorVisible(false);
+        switch (evt.key.scancode)
+        {
+        default: break;
+        case FixedKey::ZoomMinimap:
+            toggleMiniZoom();
+            break;
+        }
+
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_ESCAPE:
@@ -434,7 +442,6 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_F5:
 
             break;
-        case FixedKey::ZoomMinimap:
         case SDLK_KP_MULTIPLY:
             toggleMiniZoom();
             break;
@@ -493,41 +500,41 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         m_skipState.displayControllerMessage = false;
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (std::abs(evt.caxis.value) > cro::GameController::LeftThumbDeadZone)
+        if (std::abs(evt.gaxis.value) > cro::GameController::LeftThumbDeadZone)
         {
-            m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)) ?
+            m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.gaxis.which)) ?
                 SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
 
             resetIdle();
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) ?
+        m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.gbutton.which)) ?
             SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
 
         resetIdle();
         m_skipState.displayControllerMessage = true;
 
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonRightStick:
@@ -552,7 +559,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         resetIdle();
 #ifdef CRO_DEBUG_
@@ -560,14 +567,14 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 #endif
             if ((evt.motion.state & SDL_BUTTON_RMASK) == 0)
             {
-                cro::App::getWindow().setMouseCaptured(false);
+                cro::App::getWindow().setCursorVisible(true);
             }
 #ifdef CRO_DEBUG_
         }
 #endif // CRO_DEBUG_
 
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -581,7 +588,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
-    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    else if (evt.type == SDL_EVENT_GAMEPAD_REMOVED)
     {
         pauseGame();
     }
@@ -590,7 +597,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     //    switch (evt.window.event)
     //    {
     //    default: break;
-    //    case SDL_WINDOWEVENT_FOCUS_GAINED:
+    //    case SDL_EVENT_WINDOW_FOCUS_GAINED:
     //        //this needs to be delayed a frame so mouse clicking on the
     //        //open window doesn't get sent to the input parser
     //    {
@@ -605,7 +612,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     //            };
     //    }
     //        break;
-    //    case SDL_WINDOWEVENT_FOCUS_LOST:
+    //    case SDL_EVENT_WINDOW_FOCUS_LOST:
     //        m_inputParser.setSuspended(true);
     //        break;
     //        }
@@ -1139,7 +1146,7 @@ void DrivingState::toggleFreeCam()
 
     m_gameScene.setSystemActive<FpsCameraSystem>(useFreeCam);
     m_inputParser.setActive(!useFreeCam, TerrainID::Fairway, nullptr);
-    cro::App::getWindow().setMouseCaptured(useFreeCam);
+    cro::App::getWindow().setCursorVisible(!useFreeCam);
 #endif
 }
 
@@ -2502,13 +2509,13 @@ void DrivingState::createPlayer()
 
 
     //club models - collect all search paths for club models
-    std::unordered_map<std::uint32_t, std::string> clubPaths;
+    std::unordered_map<std::uint32_t, std::filesystem::path> clubPaths;
     const auto processClubPath =
-        [&](const std::string& path)
+        [&](const std::filesystem::path& path)
         {
-            const std::string fileName = "/list.cst";
+            const std::filesystem::path fileName = "list.cst";
             cro::ConfigFile cfg;
-            if (cfg.loadFromFile(path + fileName, false)) //resource path was already added
+            if (cfg.loadFromFile(path / fileName, false)) //resource path was already added
             {
                 //TODO we need to do full validation, eg models exist here
                 if (const auto* uid = cfg.findProperty("uid");
@@ -2517,7 +2524,7 @@ void DrivingState::createPlayer()
                     const auto id = uid->getValue<std::uint32_t>();
                     if (clubPaths.count(id) == 0)
                     {
-                        clubPaths.insert(std::make_pair(id, path + fileName));
+                        clubPaths.insert(std::make_pair(id, path / fileName));
                     }
                 }
             }
@@ -2526,12 +2533,12 @@ void DrivingState::createPlayer()
     const auto ContentDirs = Content::getInstallPaths();
     for (const auto& c : ContentDirs)
     {
-        const auto basePath = cro::FileSystem::getResourcePath() + c + "clubs/";
+        const auto basePath = cro::FileSystem::getResourcePath() / c / "clubs";
         const auto clubsets = cro::FileSystem::listDirectories(basePath);
 
         for (const auto& s : clubsets)
         {
-            processClubPath(basePath + s);
+            processClubPath(basePath / s);
         }
     }
 
@@ -2540,7 +2547,8 @@ void DrivingState::createPlayer()
     auto clubsets = cro::FileSystem::listDirectories(basePath);
 
     //remove dirs from this list if it's not from the workshop (rather crudely)
-    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::string& s) {return s.back() != 'w'; }), clubsets.end());
+    //TODO this probably isn't used now we we load files directly from Steam
+    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::filesystem::path& s) {return s.u8string().back() != 'w'; }), clubsets.end());
 
     if (clubsets.size() > ConstVal::MaxClubsets)
     {
@@ -2550,7 +2558,7 @@ void DrivingState::createPlayer()
 
     for (const auto& s : clubsets)
     {
-        processClubPath(basePath + s);
+        processClubPath(basePath / s);
     }
 
 #ifdef USE_GNS
@@ -2558,13 +2566,13 @@ void DrivingState::createPlayer()
     const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Clubs);
     for (const auto& p : wsPaths)
     {
-        processClubPath(p.string() + "/");
+        processClubPath(p);
     }
 #endif
 
 
 
-    std::string clubPath = "assets/golf/clubs/default/list.cst";
+    std::filesystem::path clubPath = "assets/golf/clubs/default/list.cst";
     if (clubPaths.count(playerData.clubID) != 0)
     {
         clubPath = clubPaths.at(playerData.clubID);

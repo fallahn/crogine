@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -37,11 +37,13 @@ source distribution.
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <iostream>
 #include <algorithm>
-#include <sstream>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
+#include <SDL3/SDL.h>
 
 //TODO check this macro works on all windows compilers
 //(only tested in VC right now)
@@ -71,8 +73,6 @@ source distribution.
 
 #elif defined(__APPLE__)
 #define MAX_PATH PATH_MAX
-#include <CoreServices/CoreServices.h>
-#include "../detail/ResourcePath.hpp"
 #endif
 
 #endif //_WIN32
@@ -91,20 +91,47 @@ namespace
         }
         return retVal;
     }
+
+    struct FileDialogueCallbackResult final
+    {
+        std::filesystem::path result; //TODO this needs to be a vector in the case of multiple files...
+        std::atomic_bool hasResult = false;
+    };
+
+    static void SDLCALL fileDialogueCallback(void* userData, const char* const* fileList, int /*filterIndex*/)
+    {
+        auto& callbackResult = *reinterpret_cast<FileDialogueCallbackResult*>(userData);
+
+        //this might be nullptr if there was an error
+        if (fileList)
+        {
+            //TODO push back or concat the list...
+            while (*fileList)
+            {
+                callbackResult.result = *fileList;
+            }
+            fileList++;
+        }
+
+        //TODO filterIndex will return the index of the given
+        //file filters selected by the user - not used currently
+
+        callbackResult.hasResult = true;
+    }
 }
 
 using namespace cro;
 
-std::vector<std::string> FileSystem::listFiles(std::string path)
+std::vector<std::filesystem::path> FileSystem::listFiles(const std::filesystem::path& path)
 {
-    std::vector<std::string> results;
+    std::vector<std::filesystem::path> results;
 
     std::error_code ec;
-    std::filesystem::directory_iterator it(std::filesystem::u8path(path), ec);
+    std::filesystem::directory_iterator it(path, ec);
     
     if (ec)
     {
-        LogW << "List files: " << path << " doesn't exist" << std::endl;
+        LogW << "List files: " << path << " " << ec.message() << std::endl;
         return results;
     }
 
@@ -112,102 +139,40 @@ std::vector<std::string> FileSystem::listFiles(std::string path)
     {
         if (dir.is_regular_file())
         {
-            results.push_back(dir.path().filename().u8string());
+            results.push_back(dir.path().filename());
         }
     }
     return results;
 }
 
-std::string FileSystem::getFileExtension(const std::string& path)
+std::filesystem::path FileSystem::getFileExtension(const std::filesystem::path& path)
 {
-    if (path.find_last_of(".") != std::string::npos)
-    {
-        return path.substr(path.find_last_of("."));
-    }
-    else
-    {
-        return "";
-    }
+    //yes this is clearly easier to call immediately instead of this function :)
+    return path.extension();
 }
 
-std::string FileSystem::getFileName(const std::string& path)
+std::filesystem::path FileSystem::getFileName(const std::filesystem::path& path)
 {
-    //TODO this doesn't actually check that there is a file at the
-    //end of the path, or that it's even a valid path...
-    
-    static const auto searchFunc = [](const char separator, const std::string& path)->std::string
-    {
-        std::size_t i = path.rfind(separator, path.length());
-        if (i != std::string::npos)
-        {
-            return(path.substr(i + 1, path.length() - i));
-        }
-
-        return path;
-    };
-
-    std::string retVal = searchFunc('\\', path);
-    return searchFunc('/', retVal);
+    //same as above :)
+    return path.filename();
 }
 
-std::string FileSystem::getFilePath(const std::string& path)
+std::filesystem::path FileSystem::getFilePath(const std::filesystem::path& path)
 {
-    //TODO this doesn't actually check that there is a file at the
-    //end of the path, or that it's even a valid path...
-
-    static auto searchFunc = [](const char separator, const std::string& path)->std::string
-    {
-        std::size_t i = path.rfind(separator, path.length());
-        if (i != std::string::npos)
-        {
-            return(path.substr(0, i + 1));
-        }
-
-        return "";
-    };
-
-
-    std::string retVal = searchFunc('/', path);
-    if (!retVal.empty())
-    {
-        return retVal;
-    }
-    return searchFunc('\\', path);
+    return path.parent_path();
 }
 
-bool FileSystem::fileExists(const std::string& path)
+bool FileSystem::fileExists(const std::filesystem::path& path)
 {
-    try
-    {
-        const auto u8p = std::filesystem::u8path(path);
-
-        std::error_code ec;
-        if (!std::filesystem::exists(u8p, ec))
-        {
-            if (ec)
-            {
-                LogI << ec.message() << std::endl;
-            }
-            return false;
-        }
-        return true;
-    }
-    catch (...)
-    {
-        LogE << path << ": failed creating u8 path" << std::endl;
-        return false;
-    }
-}
-
-bool FileSystem::createDirectory(const std::string& path)
-{
-    //TODO regex this or at least check for illegal chars
-//#ifdef _WIN32
-    //if this throws here check the path passed in.
-    //if at any point a string literal is concatenated to it make sure to
-    //use the u8 prefix - eg someString += u8"dirname"
     std::error_code ec;
-    if (!std::filesystem::create_directories(std::filesystem::u8path(path), ec))
+    return std::filesystem::exists(path, ec);
+}
+
+bool FileSystem::createDirectory(const std::filesystem::path& path)
+{
+    //if this throws here check the path passed in.
+    std::error_code ec;
+    if (!std::filesystem::create_directories(path, ec))
     {
         //this might be 0 if the directory already exists
         if (ec.value() != 0)
@@ -241,84 +206,28 @@ bool FileSystem::createDirectory(const std::string& path)
             }
 
             Logger::log(ss.str(), Logger::Type::Error, Logger::Output::All);
-            return false;
         }
+        return false;
     }
     return true;
-//#else
-//    if (mkdir(path.c_str(), 0777) == 0)
-//    {
-//        LOG("Created directory " + path, cro::Logger::Type::Info);
-//        return true;
-//    }
-//    else
-//    {
-//        auto result = errno;
-//        switch (result)
-//        {
-//        case EEXIST:
-//            {
-//                Logger::log(path + " directory already exists!", Logger::Type::Info);
-//            }
-//            break;
-//        case ENOENT:
-//            {
-//                Logger::log("Unable to create " + path + ": parent directory not found.", Logger::Type::Error, Logger::Output::All);
-//            }
-//            break;
-//        case EFAULT:
-//            {
-//                Logger::log("Unable to create " + path + ". Reason: EFAULT", Logger::Type::Error);
-//            }
-//            break;
-//        case EACCES:
-//            {
-//                Logger::log("Unable to create " + path + ". Reason: EACCES", Logger::Type::Error);
-//            }
-//            break;
-//        case ENAMETOOLONG:
-//            {
-//                Logger::log("Unable to create " + path + ". Reason: ENAMETOOLONG", Logger::Type::Error);
-//            }
-//            break;
-//        case ENOTDIR:
-//            {
-//                Logger::log("Unable to create " + path + ". Reason: ENOTDIR", Logger::Type::Error);
-//            }
-//            break;
-//        case ENOMEM:
-//            {
-//                Logger::log("Unable to create " + path + ". Reason: ENOMEM", Logger::Type::Error);
-//            }
-//            break;
-//        }
-//    }
-//    return false;
-//#endif
 }
 
-bool FileSystem::directoryExists(const std::string& path)
+bool FileSystem::directoryExists(const std::filesystem::path& path)
 {
-    std::filesystem::directory_entry dir(std::filesystem::u8path(path));
-    return dir.exists();
+    std::filesystem::directory_entry d = std::filesystem::directory_entry(path);
+    return d.exists();
 }
 
-std::vector<std::string> FileSystem::listDirectories(const std::string& path)
+std::vector<std::filesystem::path> FileSystem::listDirectories(const std::filesystem::path& path)
 {
-    std::vector<std::string> retVal;
-
-    //make sure the given path is relative to the working directory
-    /*std::string fullPath = getCurrentDirectory();
-    std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
-    if (workingPath.empty() || workingPath[0] != '/') fullPath.push_back('/');
-    fullPath += workingPath;*/
+    std::vector<std::filesystem::path> retVal;
 
     std::error_code ec;
-    std::filesystem::directory_iterator it(std::filesystem::u8path(path), ec);
+    std::filesystem::directory_iterator it(path, ec);
 
     if (ec)
     {
-        LogW << "List directories: " << path << " doesn't exist" << std::endl;
+        LogW << "List directories: " << path << " " <<ec.message() << std::endl;
         return retVal;
     }
 
@@ -326,135 +235,182 @@ std::vector<std::string> FileSystem::listDirectories(const std::string& path)
     {
         if (dir.is_directory())
         {
-            retVal.push_back(dir.path().stem().u8string());
+            retVal.push_back(dir.path().filename());
         }
     }
     return retVal;
 }
 
-std::string FileSystem::getCurrentDirectory()
-{
-#ifdef _WIN32
-    TCHAR output[FILENAME_MAX];
-    if (GetCurrentDirectory(FILENAME_MAX, output) == 0)
-    {
-        Logger::log("Failed to find the current working directory, error: " + std::to_string(GetLastError()), Logger::Type::Error);
-        return{};
-    }
-    std::string retVal(output);
-    std::replace(retVal.begin(), retVal.end(), '\\', '/');
-    return retVal;
-#else //this may not work on macOS
-    char output[FILENAME_MAX];
-    if (getcwd(output, FILENAME_MAX) == 0)
-    {
-        Logger::log("Failed to find the current working directory, error: " + std::to_string(errno), Logger::Type::Error);
-        return{};
-    }
-    return{ output };
-#endif //_WIN32
-}
-
-bool FileSystem::setCurrentDirectory(std::string path)
-{
-#ifdef _WIN32
-    auto windowsPath = path;
-    std::replace(windowsPath.begin(), windowsPath.end(), '/', '\\');
-    return _chdir(windowsPath.c_str()) == 0;
-#else
-    return chdir(path.c_str()) == 0;
-#endif
-}
-
-void FileSystem::removeDirectory(const std::string& path)
+std::filesystem::path FileSystem::getCurrentDirectory()
 {
     std::error_code ec;
-    std::filesystem::remove_all(std::filesystem::u8path(path), ec);
+    return std::filesystem::current_path(ec);
+//#ifdef _WIN32
+//    TCHAR output[FILENAME_MAX];
+//    if (GetCurrentDirectory(FILENAME_MAX, output) == 0)
+//    {
+//        Logger::log("Failed to find the current working directory, error: " + std::to_string(GetLastError()), Logger::Type::Error);
+//        return{};
+//    }
+//    std::string retVal(output);
+//    std::replace(retVal.begin(), retVal.end(), '\\', '/');
+//    return retVal;
+//#else //this may not work on macOS
+//    char output[FILENAME_MAX];
+//    if (getcwd(output, FILENAME_MAX) == 0)
+//    {
+//        Logger::log("Failed to find the current working directory, error: " + std::to_string(errno), Logger::Type::Error);
+//        return{};
+//    }
+//    return{ output };
+//#endif //_WIN32
+}
+
+bool FileSystem::setCurrentDirectory(const std::filesystem::path& path)
+{
+    std::error_code ec;
+    std::filesystem::current_path(path, ec);
+
+    return !ec;
+//#ifdef _WIN32
+//    auto windowsPath = path;
+//    std::replace(windowsPath.begin(), windowsPath.end(), '/', '\\');
+//    return _chdir(windowsPath.c_str()) == 0;
+//#else
+//    return chdir(path.c_str()) == 0;
+//#endif
+}
+
+void FileSystem::removeDirectory(const std::filesystem::path& path)
+{
+    std::error_code ec;
+    std::filesystem::remove_all(path, ec);
 
     if (ec)
     {
-        LogE << "unable to remove directory " << path << ": error code " << ec.value() << std::endl;
+        LogE << "unable to remove directory " << path << ": error code " << ec.value() << " " << ec.message() << std::endl;
     }
 }
 
-std::string FileSystem::getRelativePath(std::string path, const std::string& root)
+std::filesystem::path FileSystem::getRelativePath(const std::filesystem::path& path, const std::filesystem::path& root)
 {
-    auto currentPath = root;
-    std::replace(std::begin(path), std::end(path), '\\', '/');
-    std::replace(std::begin(currentPath), std::end(currentPath), '\\', '/');
-    
-    int i = -1;
-    auto pos = std::string::npos;
-    std::size_t length = 0;
-    auto currentPos = std::string::npos;
+    std::error_code ec;
+    return std::filesystem::relative(path, root, ec);
+    //auto currentPath = root;
+    //std::replace(std::begin(path), std::end(path), '\\', '/');
+    //std::replace(std::begin(currentPath), std::end(currentPath), '\\', '/');
+    //
+    //int i = -1;
+    //auto pos = std::string::npos;
+    //std::size_t length = 0;
+    //auto currentPos = std::string::npos;
 
-    do
-    {
-        pos = path.find(currentPath);
-        length = currentPath.size();
+    //do
+    //{
+    //    pos = path.find(currentPath);
+    //    length = currentPath.size();
 
-        currentPos = currentPath.find_last_of('/');
-        if (currentPos != std::string::npos)
-        {
-            currentPath = currentPath.substr(0, currentPos);
-        }
-        i++;
-    } while (pos == std::string::npos && currentPos != std::string::npos);
+    //    currentPos = currentPath.find_last_of('/');
+    //    if (currentPos != std::string::npos)
+    //    {
+    //        currentPath = currentPath.substr(0, currentPos);
+    //    }
+    //    i++;
+    //} while (pos == std::string::npos && currentPos != std::string::npos);
 
-    std::string retVal;
-    while (i-- > 0)
-    {
-        retVal += "../";
-    }
-    retVal += path.substr(pos + length + 1); //extra 1 for trailing '/'
-    return retVal;
+    //std::string retVal;
+    //while (i-- > 0)
+    //{
+    //    retVal += "../";
+    //}
+    //retVal += path.substr(pos + length + 1); //extra 1 for trailing '/'
+    //return retVal;
 }
 
-std::string FileSystem::getConfigDirectory(const std::string&/* appName*/)
-{
-    return cro::App::getPreferencePath();
-}
-
-std::string FileSystem::openFileDialogue(const std::string& defaultDir, const std::string& filter, bool selectMultiple)
+std::filesystem::path FileSystem::openFileDialogue(const std::filesystem::path& defaultDir, const std::string& filter, bool selectMultiple)
 {
 #ifdef __ANDROID__
     Logger::log("File Dialogues are not supported", Logger::Type::Error);
     return {};
 #else
+    //SDL is actually much more flexible with file filters, but we're (currently)
+    //bound by the rules of backwards compatibility. Note that filters must exist
+    //until the file dialogue box is complete, hence the weird pointing of chars
+    //static const std::string defaultName = "All Files";
+    //static const std::string defaultFilter = "*";
+    //static const std::string filterName = "Files";
+
+    //std::string filterList = filter;
+    //std::replace(filterList.begin(), filterList.end(), ',', ';');
+
+    //SDL_DialogFileFilter filters = {};
+    //if (filter.empty())
+    //{
+    //    filters.name = defaultName.c_str();
+    //    filters.pattern = defaultFilter.c_str();
+    //}
+    //else
+    //{
+    //    filters.name = filterName.c_str();
+    //    filters.pattern = filterList.c_str();
+    //}
+
+    //FileDialogueCallbackResult callbackResult;
+
+    //const auto threadFunc = [&]() {
+    //    SDL_ShowOpenFileDialog(fileDialogueCallback, &callbackResult, /*App::getWindow().m_window*/nullptr,
+    //        &filters, 1, U8PATH_CAST(defaultDir), selectMultiple);
+    //    };
+    //std::thread t(std::bind(threadFunc));
+
+    //t.join();
+
+    //while (!callbackResult.hasResult)
+    //{
+    //    std::this_thread::sleep_for(std::chrono::milliseconds(16));
+    //}
+    //return callbackResult.result;
+
+
     //filter is comma delimited list
-    auto filters = parseFileFilter(filter);
-    
+    const auto filters = parseFileFilter(filter);
     std::vector<const char*> filterArray;
     for (const auto& str : filters)
     {
         filterArray.push_back(str.c_str());
     }    
 
-    auto path = tinyfd_openFileDialog("Open File", defaultDir.c_str(), static_cast<int>(filterArray.size()), filterArray.data(), nullptr, selectMultiple ? 1 : 0);
+    const auto path = tinyfd_openFileDialog("Open File", U8PATH_CAST(defaultDir), static_cast<std::int32_t>(filterArray.size()), filterArray.data(), nullptr, selectMultiple ? 1 : 0);
 
-    return path ? path : std::string();
+    return path ? path : std::filesystem::path();
 #endif //__ANDROID__
 }
 
-std::string FileSystem::openFolderDialogue(const std::string& defPath)
+std::future<std::vector<std::filesystem::path>> FileSystem::openFileDialogueAsync(const std::filesystem::path& defaultDir, const std::string& filter, bool selectMultiple)
+{
+    assert(false); //not implemented!
+    return {};
+}
+
+std::filesystem::path FileSystem::openFolderDialogue(const std::filesystem::path& defPath)
 {
 #ifdef __ANDROID__
     Logger::log("File Dialogues are not supported", Logger::Type::Error);
     return {};
 #else
-    auto path = tinyfd_selectFolderDialog("Select Folder", defPath.c_str());
-    return path ? path : std::string();
+    const auto path = tinyfd_selectFolderDialog("Select Folder", U8PATH_CAST(defPath));
+    return path ? path : std::filesystem::path();
 #endif //__ANDROID__
 }
 
-std::string FileSystem::saveFileDialogue(const std::string& defaultDir, const std::string& filter)
+std::filesystem::path FileSystem::saveFileDialogue(const std::filesystem::path& defaultDir, const std::string& filter)
 {
 #ifdef __ANDROID__
     Logger::log("File Dialogues are not supported", Logger::Type::Error);
     return {};
 #else
     //filter is comma delimited list
-    auto filters = parseFileFilter(filter);
+    const auto filters = parseFileFilter(filter);
 
     std::vector<const char*> filterArray;
     for (const auto& str : filters)
@@ -462,21 +418,23 @@ std::string FileSystem::saveFileDialogue(const std::string& defaultDir, const st
         filterArray.push_back(str.c_str());
     }
 
-    auto path = tinyfd_saveFileDialog("Save File", defaultDir.c_str(), static_cast<int>(filterArray.size()), filterArray.data(), nullptr);
+    const auto path = tinyfd_saveFileDialog("Save File", U8PATH_CAST(defaultDir), static_cast<int>(filterArray.size()), filterArray.data(), nullptr);
 
-    return path ? path : std::string();
+    return path ? path : std::filesystem::path();
 #endif //__ANDROID__
 }
 
-std::string FileSystem::getResourcePath()
+std::filesystem::path FileSystem::getResourcePath()
 {
-#ifdef __APPLE__  
+#ifdef __APPLE__
     //ugh - cwd when using bundles is a pain, so at least add some
     //checks to make sure we're not concatinating an existing part of the path
-    auto rpath = resourcePath();
-    if (m_resourceDirectory.find(rpath) == std::string::npos)
+    
+    //TODO this will throw if the resource dir path contains characters which need utf8 conversion
+    auto rpath = SDL_GetBasePath(); ;// resourcePath();
+    if (m_resourceDirectory.string().find(rpath) == std::string::npos)
     {
-        return rpath + m_resourceDirectory;
+        return rpath / m_resourceDirectory;
     }
 
     return m_resourceDirectory;
@@ -484,46 +442,68 @@ std::string FileSystem::getResourcePath()
     return m_resourceDirectory;
 }
 
-void FileSystem::setResourceDirectory(const std::string& path)
+void FileSystem::setResourceDirectory(const std::filesystem::path& path)
 {
     m_resourceDirectory = path;
-    std::replace(m_resourceDirectory.begin(), m_resourceDirectory.end(), '\\','/');
+    //std::replace(m_resourceDirectory.begin(), m_resourceDirectory.end(), '\\','/');
 
-    if (!path.empty())
-    {
-        //strip preceeding slashes
-        if(m_resourceDirectory[0] == '/')
-        {
-            m_resourceDirectory = m_resourceDirectory.substr(1);
-        }
+    //if (!path.empty())
+    //{
+    //    //strip preceeding slashes
+    //    if(m_resourceDirectory[0] == '/')
+    //    {
+    //        m_resourceDirectory = m_resourceDirectory.substr(1);
+    //    }
 
-        //and add post slashes if missing
-        if (m_resourceDirectory.back() != '/')
-        {
-            m_resourceDirectory.push_back('/');
-        }
-    }
+    //    //and add post slashes if missing
+    //    if (m_resourceDirectory.back() != '/')
+    //    {
+    //        m_resourceDirectory.push_back('/');
+    //    }
+    //}
 
     LogI << "Resource directory set to " << m_resourceDirectory << std::endl;
 }
 
 bool FileSystem::showMessageBox(const std::string& title, const std::string& message, ButtonType buttonType, IconType iconType)
 {
-    std::string button;
+    SDL_MessageBoxData data = {};
+    data.window = App::getWindow().m_window;
+    data.title = title.c_str();
+    data.message = message.c_str();
+    data.flags = SDL_MESSAGEBOX_BUTTONS_LEFT_TO_RIGHT;
+
+    std::array<SDL_MessageBoxButtonData, 3> buttons = {};
+    data.buttons = buttons.data();
+    data.colorScheme = nullptr;
+
+    for (auto i = 0; i < 3; ++i)
+    {
+        buttons[i].buttonID = i;
+    }
+
     switch (buttonType)
     {
     default:
     case ButtonType::OK:
-        button = "ok";
+        data.numbuttons = 1;
+        buttons[0].text = "OK";
         break;
     case ButtonType::OKCancel:
-        button = "okcancel";
+        data.numbuttons = 2;
+        buttons[0].text = "OK";
+        buttons[1].text = "Cancel";
         break;
     case ButtonType::YesNo:
-        button = "yesno";
+        data.numbuttons = 2;
+        buttons[0].text = "Yes";
+        buttons[1].text = "No";
         break;
     case ButtonType::YesNoCancel:
-        button = "yesnocancel";
+        data.numbuttons = 3;
+        buttons[0].text = "Yes";
+        buttons[1].text = "No";
+        buttons[2].text = "Cancel";
         break;
     }
 
@@ -532,20 +512,26 @@ bool FileSystem::showMessageBox(const std::string& title, const std::string& mes
     {
     default:
     case IconType::Error:
-        icon = "error";
+        data.flags |= SDL_MESSAGEBOX_ERROR;
         break;
     case IconType::Info:
-        icon = "info";
-        break;
     case IconType::Question:
-        icon = "question";
+        //hmm no question type in SDL
+        data.flags |= SDL_MESSAGEBOX_INFORMATION;
         break;
     case IconType::Warning:
-        icon = "warning";
+        data.flags |= SDL_MESSAGEBOX_WARNING;
         break;
     }
 
-    return tinyfd_messageBox(title.c_str(), message.c_str(), button.c_str(), icon.c_str(), 0) != 0;
+    std::int32_t resultID = -1;
+    if (SDL_ShowMessageBox(&data, &resultID))
+    {
+        return resultID == 0;
+    }
+
+    LogE << "Message Box: " << SDL_GetError() << std::endl;
+    return false;
 }
 
 void FileSystem::showNotification(const std::string& title, const std::string& message, IconType iconType)
@@ -567,8 +553,11 @@ void FileSystem::showNotification(const std::string& title, const std::string& m
         break;
     }
 
-    tinyfd_notifyPopup(title.c_str(), message.c_str(), icon.c_str());
+    //tinyfd_notifyPopup(title.c_str(), message.c_str(), icon.c_str());
+#if SDL_VERSIONNUM_MINOR >= 6
+    SDL_ShowNotification(title.c_str(), message.c_str());
+#endif
 }
 
 //private
-std::string FileSystem::m_resourceDirectory = std::string();
+std::filesystem::path FileSystem::m_resourceDirectory = std::filesystem::path();

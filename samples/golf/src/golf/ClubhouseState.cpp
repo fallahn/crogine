@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -177,7 +177,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     Timeline::setGameMode(Timeline::GameMode::Menu);
     Timeline::setTimelineDesc("In the Clubhouse");
 
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(true);
 
 
     //this is actually set as a flag from the pause menu
@@ -391,14 +391,14 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
         }
     };
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: 
             if (m_arcadeIndexKey < ArcadeKey.size())
             {
-                if (evt.key.keysym.sym == ArcadeKey[m_arcadeIndexKey])
+                if (evt.key.key == ArcadeKey[m_arcadeIndexKey])
                 {
                     m_arcadeIndexKey++;
                     if (m_arcadeIndexKey == ArcadeKey.size())
@@ -439,13 +439,13 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         handleTextEdit(evt);
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         case SDLK_F1:
         case SDLK_F2:
@@ -462,19 +462,19 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_TEXTINPUT)
+    else if (evt.type == SDL_EVENT_TEXT_INPUT)
     {
         handleTextEdit(evt);
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        cro::App::getWindow().setMouseCaptured(true);
-        switch (evt.cbutton.button)
+        cro::App::getWindow().setCursorVisible(false);
+        switch (evt.gbutton.button)
         {
         default: 
             if (m_arcadeIndexJoy < ArcadeJoy.size())
             {
-                if (evt.cbutton.button == ArcadeJoy[m_arcadeIndexJoy])
+                if (evt.gbutton.button == ArcadeJoy[m_arcadeIndexJoy])
                 {
                     m_arcadeIndexJoy++;
                     if (m_arcadeIndexJoy == ArcadeJoy.size())
@@ -505,7 +505,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -521,15 +521,15 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(true);
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         }
     }
 
@@ -682,29 +682,29 @@ bool ClubhouseState::simulate(float dt)
     //float rotation = 0.f;
     //auto& tx = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>();
 
-    //if (cro::Keyboard::isKeyPressed(SDLK_d))
+    //if (cro::Keyboard::isKeyPressed(SDLK_D))
     //{
     //    movement += tx.getRightVector();
     //}
-    //if (cro::Keyboard::isKeyPressed(SDLK_a))
+    //if (cro::Keyboard::isKeyPressed(SDLK_A))
     //{
     //    movement -= tx.getRightVector();
     //}
 
-    //if (cro::Keyboard::isKeyPressed(SDLK_w))
+    //if (cro::Keyboard::isKeyPressed(SDLK_W))
     //{
     //    movement += tx.getForwardVector();
     //}
-    //if (cro::Keyboard::isKeyPressed(SDLK_s))
+    //if (cro::Keyboard::isKeyPressed(SDLK_S))
     //{
     //    movement -= tx.getForwardVector();
     //}
 
-    //if (cro::Keyboard::isKeyPressed(SDLK_q))
+    //if (cro::Keyboard::isKeyPressed(SDLK_Q))
     //{
     //    rotation -= dt;
     //}
-    //if (cro::Keyboard::isKeyPressed(SDLK_e))
+    //if (cro::Keyboard::isKeyPressed(SDLK_E))
     //{
     //    rotation += dt;
     //}
@@ -930,14 +930,14 @@ void ClubhouseState::loadResources()
 
 void ClubhouseState::validateTables()
 {
-    const std::string tablePath("assets/golf/tables/");
+    const std::filesystem::path tablePath("assets/golf/tables/");
 
-    auto fileList = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + tablePath);
+    const auto fileList = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() / tablePath);
     for (const auto& file : fileList)
     {
         TableClientData data;
-        if (data.loadFromFile(tablePath + file) //validates properties but not file existence
-            && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + data.viewModel))
+        if (data.loadFromFile(tablePath / file) //validates properties but not file existence
+            && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / data.viewModel))
         {
             m_tableData.push_back(data);
         }
@@ -946,7 +946,7 @@ void ClubhouseState::validateTables()
     //this assumes the file was previously saved in the correct order
     //but it won't be terrible if it's a bit out as it'll be overwritten again.
     cro::ConfigFile cfg;
-    cfg.loadFromFile(cro::App::getPreferencePath() + "table_data.cfg", false);
+    cfg.loadFromFile(cro::App::getPreferencePath() / "table_data.cfg", false);
     const auto& objs = cfg.getObjects();
     for (auto i = 0u; i < objs.size(); ++i)
     {
@@ -1789,7 +1789,7 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
                     obj->addProperty("ball").setValue(table.ballSkinIndex);
                     obj->addProperty("table").setValue(table.tableSkinIndex);
                 }
-                cfg.save(cro::App::getPreferencePath() + "table_data.cfg");
+                cfg.save(cro::App::getPreferencePath() / "table_data.cfg");
 
                 requestStackClear();
                 requestStackPush(StateID::Billiards);

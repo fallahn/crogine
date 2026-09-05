@@ -1,7 +1,8 @@
-//Auto-generated source file for Scratchpad Stub 12/06/2026, 10:01:17
+﻿//Auto-generated source file for Scratchpad Stub 12/06/2026, 10:01:17
 
 #include "SurrealState.hpp"
 
+#include <crogine/core/OSK.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
@@ -22,6 +23,8 @@
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Wavetable.hpp>
+
+#include <crogine/core/FileSystem.hpp>
 
 namespace
 {
@@ -73,9 +76,9 @@ bool SurrealState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -83,6 +86,32 @@ bool SurrealState::handleEvent(const cro::Event& evt)
             requestStackClear();
             requestStackPush(0);
             break;
+        case SDLK_SPACE:
+            cro::OSK::show([](bool submitted, const char* str)
+                {
+                    if (!submitted)
+                    {
+                        LogI << "Input was cancelled" << std::endl;
+                    }
+                    else
+                    {
+                        LogI << "Input is: " << str << std::endl;
+                    }
+                });
+            break;
+        //case SDLK_B:
+        //{
+        //    const auto path = cro::FileSystem::openFileDialogue("assets/images", "png,jpg", true);
+        //    if (path.empty())
+        //    {
+        //        LogI << "User cancelled" << std::endl;
+        //    }
+        //    else
+        //    {
+        //        LogI << "selected files: " << path << std::endl;
+        //    }
+        //}
+        //    break;
         }
     }
 
@@ -212,7 +241,7 @@ void SurrealState::createScene()
         if (!files.empty())
         {
             cro::Image img;
-            img.loadFromFile(normalsPath + files[0]);
+            img.loadFromFile(normalsPath + files[0].string());
             m_arrayTexture.create(img.getSize().x, img.getSize().y);
 
             glBindTexture(GL_TEXTURE_2D_ARRAY, m_arrayTexture.getGLHandle());
@@ -223,7 +252,7 @@ void SurrealState::createScene()
             {
                 if (i)
                 {
-                    img.loadFromFile(normalsPath + files[i]);
+                    img.loadFromFile(normalsPath + files[i].string());
                 }
                 m_arrayTexture.insertLayer(img, i);
             }

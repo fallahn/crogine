@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -80,7 +80,7 @@ void UISystem::handleEvent(const Event& evt)
     switch (evt.type)
     {
     default: break;
-    case SDL_MOUSEWHEEL:
+    case SDL_EVENT_MOUSE_WHEEL:
         if (m_scrollNavigation)
         {
             if (evt.wheel.x > 0)
@@ -101,19 +101,19 @@ void UISystem::handleEvent(const Event& evt)
             }
         }
         break;
-    case SDL_CONTROLLERDEVICEREMOVED:
+    case SDL_EVENT_GAMEPAD_REMOVED:
         //check if this is the active controller and update
         //if necessary to a connected controller
         if (m_activeControllerID != ActiveControllerAll &&
-            evt.cdevice.which == cro::GameController::deviceID(m_activeControllerID))
+            evt.gdevice.which == cro::GameController::deviceID(m_activeControllerID))
         {
             //controller IDs automatically shift down
             //so drop to the next lowest available
             m_activeControllerID = (std::max(0, m_activeControllerID - 1));
         }
         break;
-    case SDL_MOUSEMOTION:
-        m_eventPosition = toWorldCoords(evt.motion.x, evt.motion.y);
+    case SDL_EVENT_MOUSE_MOTION:
+        m_eventPosition = toWorldCoords(evt.motion.x / m_windowSize.x, evt.motion.y / m_windowSize.y);
         m_movementDelta = m_eventPosition - m_prevMousePosition;
         m_prevMousePosition = m_eventPosition;
         {
@@ -122,18 +122,18 @@ void UISystem::handleEvent(const Event& evt)
             motionEvent.motion = evt.motion;
         }
         break;
-    case SDL_MOUSEBUTTONDOWN:
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
         m_previousEventPosition = m_eventPosition;
 
-        m_eventPosition = toWorldCoords(evt.button.x, evt.button.y);
+        m_eventPosition = toWorldCoords(evt.button.x / m_windowSize.x, evt.button.y / m_windowSize.y);
         {
             auto& buttonEvent = m_mouseDownEvents.emplace_back();
             buttonEvent.type = evt.type;
             buttonEvent.button = evt.button;
         }
         break;
-    case SDL_MOUSEBUTTONUP:
-        m_eventPosition = toWorldCoords(evt.button.x, evt.button.y);
+    case SDL_EVENT_MOUSE_BUTTON_UP:
+        m_eventPosition = toWorldCoords(evt.button.x / m_windowSize.x, evt.button.y / m_windowSize.y);
         {
             auto& buttonEvent = m_mouseUpEvents.emplace_back();
             buttonEvent.type = evt.type;
@@ -146,17 +146,17 @@ void UISystem::handleEvent(const Event& evt)
         on Android. Be warned this will execute the same callback twice!!
         */
 
-    case SDL_FINGERMOTION:
+    case SDL_EVENT_FINGER_MOTION:
         m_eventPosition = toWorldCoords(evt.tfinger.x, evt.tfinger.y);
         //TODO check finger IDs for gestures etc
         {
             auto& motionEvent = m_motionEvents.emplace_back();
             motionEvent.type = evt.type;
-            motionEvent.mgesture = evt.mgesture;
+            //motionEvent.gesture = evt.mgesture;
         }
 
         break;
-    case SDL_FINGERDOWN:
+    case SDL_EVENT_FINGER_DOWN:
         m_eventPosition = toWorldCoords(evt.tfinger.x, evt.tfinger.y);
         m_previousEventPosition = m_eventPosition;
         {
@@ -165,7 +165,7 @@ void UISystem::handleEvent(const Event& evt)
             buttonEvent.tfinger = evt.tfinger;
         }
         break;
-    case SDL_FINGERUP:
+    case SDL_EVENT_FINGER_UP:
         m_eventPosition = toWorldCoords(evt.tfinger.x, evt.tfinger.y);
         {
             auto& buttonEvent = m_mouseUpEvents.emplace_back();
@@ -173,7 +173,7 @@ void UISystem::handleEvent(const Event& evt)
             buttonEvent.tfinger = evt.tfinger;
         }
         break;
-    case SDL_KEYDOWN:
+    case SDL_EVENT_KEY_DOWN:
     {
         auto& buttonEvent = m_buttonDownEvents.emplace_back();
         buttonEvent.type = evt.type;
@@ -181,7 +181,7 @@ void UISystem::handleEvent(const Event& evt)
 
         if (evt.key.repeat == 0)
         {
-            switch (evt.key.keysym.sym)
+            switch (evt.key.key)
             {
             default: break;
                 //start press/hold timers
@@ -201,9 +201,9 @@ void UISystem::handleEvent(const Event& evt)
         }
     }
         break;
-    case SDL_KEYUP:
+    case SDL_EVENT_KEY_UP:
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default:
         {
@@ -231,74 +231,74 @@ void UISystem::handleEvent(const Event& evt)
         }
     }
         break;
-    case SDL_CONTROLLERBUTTONDOWN:
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
         if(m_activeControllerID == ActiveControllerAll ||
-            evt.cbutton.which == cro::GameController::deviceID(m_activeControllerID))
+            evt.gbutton.which == cro::GameController::deviceID(m_activeControllerID))
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default:
             {
                 auto& buttonEvent = m_buttonDownEvents.emplace_back();
                 buttonEvent.type = evt.type;
-                buttonEvent.cbutton = evt.cbutton;
+                buttonEvent.gbutton = evt.gbutton;
             }
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
                 selectPrev(1, UIInput::Index::Left);
                 m_buttonHoldEvents[0].start();
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
                 selectNext(1, UIInput::Index::Right);
                 m_buttonHoldEvents[1].start();
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+            case SDL_GAMEPAD_BUTTON_DPAD_UP:
                 selectPrev(m_columnCount, UIInput::Index::Up);
                 m_buttonHoldEvents[2].start();
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+            case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
                 selectNext(m_columnCount, UIInput::Index::Down);
                 m_buttonHoldEvents[3].start();
                 break;
             }
         }
         break;
-    case SDL_CONTROLLERBUTTONUP:
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
         if (m_activeControllerID == ActiveControllerAll ||
-            evt.cbutton.which == cro::GameController::deviceID(m_activeControllerID))
+            evt.gbutton.which == cro::GameController::deviceID(m_activeControllerID))
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default:
             {
                 auto& buttonEvent = m_buttonUpEvents.emplace_back();
                 buttonEvent.type = evt.type;
-                buttonEvent.cbutton = evt.cbutton;
+                buttonEvent.gbutton = evt.gbutton;
             }
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
                 m_buttonHoldEvents[0].active = false;
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
                 m_buttonHoldEvents[1].active = false;;
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+            case SDL_GAMEPAD_BUTTON_DPAD_UP:
                 m_buttonHoldEvents[2].active = false;;
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+            case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
                 m_buttonHoldEvents[3].active = false;;
                 break;
             }
         }
         break;
-    case SDL_JOYBUTTONDOWN:
+    case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
     {
         auto& buttonEvent = m_buttonDownEvents.emplace_back();
         buttonEvent.type = evt.type;
         buttonEvent.jbutton = evt.jbutton;
     }
         break;
-    case SDL_JOYBUTTONUP:
+    case SDL_EVENT_JOYSTICK_BUTTON_UP:
     {
         auto& buttonEvent = m_buttonUpEvents.emplace_back();
         buttonEvent.type = evt.type;
@@ -307,22 +307,22 @@ void UISystem::handleEvent(const Event& evt)
         break;
 
         //joystick and controller move events
-    case SDL_CONTROLLERAXISMOTION:
+    case SDL_EVENT_GAMEPAD_AXIS_MOTION:
         if (m_activeControllerID == ActiveControllerAll ||
-            evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
+            evt.gaxis.which == cro::GameController::deviceID(m_activeControllerID))
         {
             const std::int16_t Threshold = cro::GameController::LeftThumbDeadZone * 2;// 15000;
-            switch (evt.caxis.axis)
+            switch (evt.gaxis.axis)
             {
             default: break;
-            case SDL_CONTROLLER_AXIS_LEFTX:
-                if (evt.caxis.value > Threshold)
+            case SDL_GAMEPAD_AXIS_LEFTX:
+                if (evt.gaxis.value > Threshold)
                 {
                     //right
                     m_controllerMask |= ControllerBits::Right;
                     m_controllerMask &= ~ControllerBits::Left;
                 }
-                else if (evt.caxis.value < -Threshold)
+                else if (evt.gaxis.value < -Threshold)
                 {
                     //left
                     m_controllerMask |= ControllerBits::Left;
@@ -333,14 +333,14 @@ void UISystem::handleEvent(const Event& evt)
                     m_controllerMask &= ~(ControllerBits::Left | ControllerBits::Right);
                 }
                 break;
-            case SDL_CONTROLLER_AXIS_LEFTY:
-                if (evt.caxis.value > Threshold)
+            case SDL_GAMEPAD_AXIS_LEFTY:
+                if (evt.gaxis.value > Threshold)
                 {
                     //down
                     m_controllerMask |= ControllerBits::Down;
                     m_controllerMask &= ~ControllerBits::Up;
                 }
-                else if (evt.caxis.value < -Threshold)
+                else if (evt.gaxis.value < -Threshold)
                 {
                     //up
                     m_controllerMask |= ControllerBits::Up;
@@ -354,7 +354,7 @@ void UISystem::handleEvent(const Event& evt)
             }
         }
         break;
-    //case SDL_JOYAXISMOTION:
+    //case SDL_EVENT_JOYSTICK_AXIS_MOTION:
 
     //    break;
     }
@@ -399,7 +399,7 @@ void UISystem::process(float dt)
     holdTest(m_buttonHoldEvents);
 
 
-    //parse conrtoller inputs first
+    //parse controller inputs first
     auto diff = m_prevControllerMask ^ m_controllerMask;
     for (auto i = 0; i < 4; ++i)
     {
@@ -533,7 +533,7 @@ void UISystem::handleMessage(const Message& msg)
     if (msg.id == Message::WindowMessage)
     {
         const auto& data = msg.getData<Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             m_windowSize.x = data.data0;
             m_windowSize.y = data.data1;
@@ -714,6 +714,8 @@ glm::vec2 UISystem::toWorldCoords(std::int32_t x, std::int32_t y)
 
 glm::vec2 UISystem::toWorldCoords(float x, float y)
 {
+    assert(x <= 1 && y <= 1);
+
     //invert Y
     y = 1.f - y;
 

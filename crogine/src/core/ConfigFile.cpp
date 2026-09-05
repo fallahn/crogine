@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,7 +35,7 @@ source distribution.
 #include <crogine/util/String.hpp>
 #include <crogine/graphics/Colour.hpp>
 
-#include <SDL_rwops.h>
+#include <SDL3/SDL_iostream.h>
 
 #include <sstream>
 #include <fstream>
@@ -228,7 +228,7 @@ ConfigObject::ConfigObject(const std::string& name, const std::string& id)
     setId(id);
 }
 
-bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
+bool ConfigObject::loadFromFile(const std::filesystem::path& filePath, bool relative)
 {
     currentLine = 0; //well this has code smell to it...
 
@@ -237,7 +237,7 @@ bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
     m_properties.clear();
     m_objects.clear();
 
-    return loadFromFile2(relative ? FileSystem::getResourcePath() + filePath : filePath);
+    return loadFromFile2(relative ? (FileSystem::getResourcePath() / filePath) : filePath);
 }
 
 const std::string& ConfigObject::getId() const
@@ -403,14 +403,14 @@ ConfigObject ConfigObject::removeObject(const std::string& name)
     return {};
 }
 
-bool ConfigObject::parseAsJson(SDL_RWops* file)
+bool ConfigObject::parseAsJson(SDL_IOStream* file)
 {
     json j;
 
     {
-        auto fileSize = SDL_RWsize(file);
+        auto fileSize = SDL_GetIOSize(file);
         std::vector<char> jsonData(fileSize);
-        SDL_RWread(file, jsonData.data(), fileSize, 1);
+        SDL_ReadIO(file, jsonData.data(), fileSize);
 
         if (jsonData.empty())
         {
@@ -525,27 +525,28 @@ bool ConfigObject::parseAsJson(SDL_RWops* file)
     return true;
 }
 
-bool ConfigObject::save(const std::string& path)
+bool ConfigObject::save(const std::filesystem::path& p)
 {
     RaiiRWops out;
 #ifdef OLD_PARSER
-    out.file = SDL_RWFromFile(path.c_str(), "w");
+    FS_ASSERT;
+    out.file = SDL_IOFromFile(path.c_str(), "w");
 #else
-    out.file = SDL_RWFromFile(path.c_str(), "wb");
+    out.open(p, "wb");
 #endif
 
-    if (out.file)
+    if (out)
     {
-        auto written = write(out.file);
-        Logger::log("Wrote " + std::to_string(written) + " bytes to " + path, Logger::Type::Info);
+        auto written = write(out.filePtr());
+        Logger::log("Wrote " + std::to_string(written) + " bytes to " + U8PATH_CAST(p), Logger::Type::Info);
         return true;
     }
 
-    Logger::log("failed to write configuration to: \'" + path + "\'", Logger::Type::Error);
+    Logger::log("failed to write configuration to: \'" + std::string(U8PATH_CAST(p)) + "\'", Logger::Type::Error);
     return false;
 }
 
-std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
+std::size_t ConfigObject::write(SDL_IOStream* file, std::uint16_t depth)
 {
     //add the correct amount of indenting based on this objects's depth
     std::string indent;
@@ -588,7 +589,7 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
     stream << "\n";
 
     std::string str = stream.str();
-    written += SDL_RWwrite(file, str.data(), sizeof(char), str.size());
+    written += SDL_WriteIO(file, str.data(), sizeof(char), str.size());
 
     for (auto& o : m_objects)
     {
@@ -598,7 +599,7 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
     stream = std::stringstream();
     stream << indent << "}" << std::endl;
     str = stream.str();
-    written += SDL_RWwrite(file, str.data(), sizeof(char), str.size());
+    written += SDL_WriteIO(file, str.data(), sizeof(char), str.size());
 #else
     //write object header
     constexpr char space = ' ';
@@ -606,13 +607,13 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
     constexpr char closeBracket[] = "}\n";
     constexpr char newline = '\n';
 
-    written += SDL_RWwrite(file, indent.data(), 1, indent.size());
-    written += SDL_RWwrite(file, getName().data(), 1, getName().size());
-    written += SDL_RWwrite(file, &space, 1, 1);
-    written += SDL_RWwrite(file, getId().data(), 1, getId().size());
-    written += SDL_RWwrite(file, &newline, 1, 1);
-    written += SDL_RWwrite(file, indent.data(), 1, indent.size());
-    written += SDL_RWwrite(file, openBracket, 1, sizeof(openBracket) - 1);
+    written += SDL_WriteIO(file, indent.data(), indent.size());
+    written += SDL_WriteIO(file, getName().data(), getName().size());
+    written += SDL_WriteIO(file, &space, 1);
+    written += SDL_WriteIO(file, getId().data(), getId().size());
+    written += SDL_WriteIO(file, &newline, 1);
+    written += SDL_WriteIO(file, indent.data(), indent.size());
+    written += SDL_WriteIO(file, openBracket, sizeof(openBracket) - 1);
 
     constexpr char trueString[] = "true";
     constexpr char falseString[] = "false";
@@ -623,11 +624,11 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
     //write out properties
     for (const auto& p : m_properties)
     {
-        written += SDL_RWwrite(file, indent.data(), 1, indent.size());
-        written += SDL_RWwrite(file, indentBlock.data(), 1, indentBlock.size());
+        written += SDL_WriteIO(file, indent.data(), indent.size());
+        written += SDL_WriteIO(file, indentBlock.data(), indentBlock.size());
 
-        written += SDL_RWwrite(file, p.getName().data(), 1, p.getName().size());
-        written += SDL_RWwrite(file, equals, 1, sizeof(equals) - 1);
+        written += SDL_WriteIO(file, p.getName().data(), p.getName().size());
+        written += SDL_WriteIO(file, equals, sizeof(equals) - 1);
 
         if (!p.m_utf8Values.empty())
         {
@@ -636,13 +637,13 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
                 const auto& v = p.m_utf8Values[i];
 
                 //always write enclosing quotes
-                written += SDL_RWwrite(file, &quote, 1, 1);
-                written += SDL_RWwrite(file, v.data(), 1, v.size());
-                written += SDL_RWwrite(file, &quote, 1, 1);
+                written += SDL_WriteIO(file, &quote, 1);
+                written += SDL_WriteIO(file, v.data(), v.size());
+                written += SDL_WriteIO(file, &quote, 1);
 
                 if (i < p.m_utf8Values.size() - 1)
                 {
-                    written += SDL_RWwrite(file, separator, 1, sizeof(separator) - 1);
+                    written += SDL_WriteIO(file, separator, sizeof(separator) - 1);
                 }
             }
         }
@@ -651,11 +652,11 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
             for (auto i = 0u; i < p.m_floatValues.size(); ++i)
             {
                 const std::string str = std::to_string(p.m_floatValues[i]);
-                written += SDL_RWwrite(file, str.data(), 1, str.size());
+                written += SDL_WriteIO(file, str.data(), str.size());
 
                 if (i < p.m_floatValues.size() - 1)
                 {
-                    written += SDL_RWwrite(file, separator, 1, sizeof(separator) - 1);
+                    written += SDL_WriteIO(file, separator, sizeof(separator) - 1);
                 }
             }
         }
@@ -664,62 +665,62 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
             //fall back to the bool value
             if (p.m_boolValue)
             {
-                written += SDL_RWwrite(file, trueString, 1, sizeof(trueString) - 1);
+                written += SDL_WriteIO(file, trueString, sizeof(trueString) - 1);
             }
             else
             {
-                written += SDL_RWwrite(file, falseString, 1, sizeof(falseString) - 1);
+                written += SDL_WriteIO(file, falseString, sizeof(falseString) - 1);
             }
         }
 
-        written += SDL_RWwrite(file, &newline, 1, 1);
+        written += SDL_WriteIO(file, &newline, 1);
     }
 
     //write nested objects
     for (auto& o : m_objects)
     {
-        written += SDL_RWwrite(file, &newline, 1, 1);
+        written += SDL_WriteIO(file, &newline, 1);
         written += o.write(file, depth + 1);
     }
 
     //close current object
-    written += SDL_RWwrite(file, indent.data(), 1, indent.size());
-    written += SDL_RWwrite(file, closeBracket, 1, sizeof(closeBracket) - 1);
+    written += SDL_WriteIO(file, indent.data(), indent.size());
+    written += SDL_WriteIO(file, closeBracket, sizeof(closeBracket) - 1);
 #endif
     return written;
 }
 
-bool ConfigObject::loadFromFile2(const std::string& path)
+bool ConfigObject::loadFromFile2(const std::filesystem::path& path)
 {
     RaiiRWops rr;
-    rr.file = SDL_RWFromFile(path.c_str(), "rb");
+    rr.open(path, "rb");
 
-    if (!rr.file)
+    if (!rr)
     {
-        Logger::log(path + " file invalid or not found.", Logger::Type::Warning);
+        LogW << path << " file invalid or not found." << std::endl;
         return false;
     }
 
     //fetch file size
-    const auto fileSize = SDL_RWsize(rr.file);
+    const auto fileSize = SDL_GetIOSize(rr.filePtr());
     if (fileSize < 1)
     {
-        LOG(path + ": file empty", Logger::Type::Warning);
+        LogW << path << ": file empty" << std::endl;
         return false;
     }
 
-    if (rr.file)
+    if (rr.filePtr())
     {
         if (FileSystem::getFileExtension(path) == ".json")
         {
-            return parseAsJson(rr.file);
+            return parseAsJson(rr.filePtr());
         }
 
         std::int64_t readCount = 0;
 
         std::vector<ConfigObject*> objectStack;
 
-        std::basic_string<std::uint8_t> currentLine;
+        std::basic_string<char8_t> currentLine;
         std::uint8_t currentByte = 0;
 
         std::int32_t lineNumber = 1;
@@ -728,7 +729,7 @@ bool ConfigObject::loadFromFile2(const std::string& path)
 
         while (readCount != fileSize)
         {
-            readCount += SDL_RWread(rr.file, &currentByte, 1, 1);
+            readCount += SDL_ReadIO(rr.filePtr(), &currentByte, 1);
             if (currentByte != '\n')
             {
                 currentLine.push_back(currentByte);

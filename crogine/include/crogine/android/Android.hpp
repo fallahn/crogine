@@ -55,7 +55,7 @@ namespace std
 }
 
 //no iostreams for apk so override fopen
-//FORGET THIS - USE SDL_RWops and let the magic happen...
+//FORGET THIS - USE SDL_IOStream and let the magic happen...
 //#include <stdio.h>
 //#include <android/asset_manager.h>
 //

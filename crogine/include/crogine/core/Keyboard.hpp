@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/String.hpp>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include <cstdint>
 #include <cstring>
@@ -48,8 +48,8 @@ namespace cro::Keyboard
     */
     static inline bool isKeyPressed(SDL_Scancode scancode)
     {
-        CRO_ASSERT(scancode < SDL_NUM_SCANCODES, "scancode out of range!");
-        auto* state = SDL_GetKeyboardState(nullptr);
+        CRO_ASSERT(scancode < SDL_SCANCODE_COUNT, "scancode out of range!");
+        const auto* state = SDL_GetKeyboardState(nullptr);
         return state[scancode] != 0;
     }
 
@@ -60,7 +60,7 @@ namespace cro::Keyboard
     */
     static inline bool isKeyPressed(SDL_Keycode key)
     {
-        return isKeyPressed(SDL_GetScancodeFromKey(key));
+        return isKeyPressed(SDL_GetScancodeFromKey(key, nullptr));
     }
 
     /*!
@@ -89,5 +89,14 @@ namespace cro::Keyboard
         case SDLK_RALT:
             return "RAlt";
         }
+    }
+
+    /*!
+    \briefe Returns the string representation of the given scancode, converted to
+    a keycode based on the current keyboard layout and given Keymod value.
+    */
+    static inline cro::String keyString(SDL_Scancode scancode, SDL_Keymod keymod = SDL_KMOD_NONE)
+    {
+        return keyString(SDL_GetKeyFromScancode(scancode, keymod, false));
     }
 }

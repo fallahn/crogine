@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -76,7 +76,7 @@ bool SpriteState::handleEvent(const cro::Event& evt)
 		return false;
 	}
 
-	if (evt.type == SDL_MOUSEMOTION)
+	if (evt.type == SDL_EVENT_MOUSE_MOTION)
 	{
 		if (evt.motion.state & SDL_BUTTON_MIDDLE)
 		{
@@ -99,7 +99,7 @@ bool SpriteState::handleEvent(const cro::Event& evt)
 			}
 		}
 	}
-	else if (evt.type == SDL_MOUSEWHEEL)
+	else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
 	{
 		auto scale = m_entities[EntityID::Root].getComponent<cro::Transform>().getScale();
 		auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
@@ -116,7 +116,7 @@ bool SpriteState::handleEvent(const cro::Event& evt)
 		relPos *= scale;
 		m_entities[EntityID::Root].getComponent<cro::Transform>().setPosition(mousePos - relPos);
 	}
-	else if (evt.type == SDL_MOUSEBUTTONUP)
+	else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
 	{
 		if (evt.button.button == SDL_BUTTON_LEFT)
 		{
@@ -134,7 +134,7 @@ bool SpriteState::handleEvent(const cro::Event& evt)
 			m_doubleClickClock.restart();
 		}
 	}
-	else if (evt.type == SDL_QUIT)
+	else if (evt.type == SDL_EVENT_QUIT)
 	{
 		if (cro::FileSystem::showMessageBox("Question", "Save Sprite Sheet?", cro::FileSystem::YesNo))
 		{

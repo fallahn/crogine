@@ -235,9 +235,9 @@ bool SwingState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
 
@@ -248,7 +248,7 @@ bool SwingState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         if (evt.motion.state & SDL_BUTTON_LMASK)
         {
@@ -256,7 +256,7 @@ bool SwingState::handleEvent(const cro::Event& evt)
             m_target.setPosition(pos);
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
@@ -373,7 +373,7 @@ void SwingState::loadAssets()
     m_resources.materials.add(MaterialID::Sphere, m_resources.shaders.get(ShaderID::Sphere));
 
 
-    std::vector<std::string> cubemapPaths =
+    const std::vector<std::filesystem::path> cubemapPaths =
     {
         "assets/images/0/cmap.ccm",
         "assets/images/1/cmap.ccm",

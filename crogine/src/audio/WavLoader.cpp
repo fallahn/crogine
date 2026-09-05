@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,7 +31,7 @@ source distribution.
 
 #include <crogine/core/Log.hpp>
 
-#include <SDL_rwops.h>
+#include <SDL3/SDL_iostream.h>
 
 using namespace cro;
 using namespace cro::Detail;
@@ -69,12 +69,11 @@ WavLoader::WavLoader()
 }
 
 //public
-bool WavLoader::open(const std::string& path)
+bool WavLoader::open(const std::filesystem::path& path)
 {
-    if (m_file.file)
+    if (m_file)
     {
-        SDL_RWclose(m_file.file);
-        m_file.file = nullptr;
+        m_file.close();
 
         m_dataChunk = {};
 
@@ -84,98 +83,90 @@ bool WavLoader::open(const std::string& path)
         m_sampleCount = 0;
     }
     
-    m_file.file = SDL_RWFromFile(path.c_str(), "rb");
-    if (m_file.file)
+    auto file = m_file.open(path, "rb");
+    if (file)
     {
         //file opened, let's do stuff!
-        auto read = m_file.file->read(m_file.file, &m_header, sizeof(m_header), 1);
-        if (read != 1)
+        auto read = SDL_ReadIO(m_file.filePtr(), &m_header, sizeof(m_header));
+        if (read != sizeof(m_header))
         {
-            SDL_RWclose(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
             
-            Logger::log("Failed to read wav header for " + path, Logger::Type::Error);
+            LogE << "Failed to read wav header for " << path << std::endl;
             return false;
         }
 
         std::uint32_t ID = asUint(m_header.chunkID);
         if (ID != riffID)
         {
-            SDL_RWclose(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
 
-            Logger::log("Header file invalid ID: " + path, Logger::Type::Error);
+            LogE << "Header file invalid ID: " << path << std::endl;
             return false;
         }
 
         ID = asUint(m_header.format);
         if (ID != formatID)
         {
-            SDL_RWclose(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
 
-            Logger::log(path + " is not a WAV format file", Logger::Type::Error);
+            LogE << path << " is not a WAV format file" << std::endl;
             return false;
         }
 
         ID = asUint(m_header.subchunk1ID);
         if (ID != subchunk1ID)
         {
-            SDL_RWclose(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
 
-            Logger::log(path + ": Invalid header data chunk", Logger::Type::Error);
+            LogE << path << ": Invalid header data chunk" << std::endl;
             return false;
         }
 
         if (m_header.audioFormat != AudioFormat::PCM)
         {
-            SDL_RWclose(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
             
-            Logger::log(path + ": not in PCM format, only PCM wav files are supported", Logger::Type::Error);
+            LogE << path << ": not in PCM format, only PCM wav files are supported" << std::endl;
             return false;
         }
 
         if (m_header.bitsPerSample < 8 || m_header.bitsPerSample > 16)
         {
-            SDL_RWclose(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
             
-            Logger::log(path + ": Invalid Bits per sample, must be 8 or 16", Logger::Type::Error);
+            LogE << path << ": Invalid Bits per sample, must be 8 or 16" << std::endl;
             return false;
         }
 
         if (m_header.channelCount > 2 || m_header.channelCount < 1)
         {
-            SDL_RWclose(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
             
-            Logger::log(path + ": invalid channel count, only mono or stereo wav files are supported", Logger::Type::Error);
+            LogE << path << ": invalid channel count, only mono or stereo wav files are supported" << std::endl;
             return false;
         }
 
         //read chunk info until we find the data and position our file stream there
         WavChunk chunk;
-        read = 1;
+        read = sizeof(WavChunk);
         ID = 0;
-        while (read == 1 && ID != dataID)
+        while (read == sizeof(WavChunk) && ID != dataID)
         {
-            read = m_file.file->read(m_file.file, &chunk, sizeof(WavChunk), 1);
+            read = SDL_ReadIO(m_file.filePtr(), &chunk, sizeof(WavChunk));
             ID = asUint(chunk.ID);
         }
 
-        if (read != 1)
+        if (read != sizeof(WavChunk))
         {
-            SDL_RWclose(m_file.file);
-            m_file.file = nullptr;
+            m_file.close();
 
-            Logger::log("Failed to find data chunk in " + path, Logger::Type::Error);
+            LogE << "Failed to find data chunk in " << path << std::endl;
             return false;
         }
 
         m_dataSize = chunk.size - sizeof(WavChunk); //don't include the chunk header in the data!
-        m_dataStart = m_file.file->seek(m_file.file, sizeof(WavChunk::size), RW_SEEK_CUR);
+        m_dataStart = SDL_SeekIO(m_file.filePtr(), sizeof(WavChunk::size), SDL_IO_SEEK_CUR);
 
         m_dataChunk.frequency = m_header.sampleRate;
         if (m_header.channelCount == 1)
@@ -198,7 +189,7 @@ bool WavLoader::open(const std::string& path)
 
 const PCMData& WavLoader::getData(std::size_t size, bool looped) const
 {
-    auto currPos = m_file.file->seek(m_file.file, 0, RW_SEEK_CUR);
+    auto currPos = SDL_SeekIO(m_file.filePtr(), 0, SDL_IO_SEEK_CUR);
 
     //return null if failed
     if (currPos == -1)
@@ -218,7 +209,7 @@ const PCMData& WavLoader::getData(std::size_t size, bool looped) const
         m_sampleBuffer.resize(buffSize);
     }
 
-    if (m_file.file->read(m_file.file, m_sampleBuffer.data(), byteCount, 1) == 0)
+    if (SDL_ReadIO(m_file.filePtr(), m_sampleBuffer.data(), byteCount) == 0)
     {
         m_dataChunk.size = 0;
         m_dataChunk.data = nullptr;
@@ -230,8 +221,8 @@ const PCMData& WavLoader::getData(std::size_t size, bool looped) const
         && looped)
     {
         auto fill = size - remain;
-        m_file.file->seek(m_file.file, m_dataStart, RW_SEEK_SET);
-        if (m_file.file->read(m_file.file, m_sampleBuffer.data() + byteCount, fill, 1))
+        SDL_SeekIO(m_file.filePtr(), m_dataStart, SDL_IO_SEEK_SET);
+        if (SDL_ReadIO(m_file.filePtr(), m_sampleBuffer.data() + byteCount, fill))
         {
             byteCount += fill;
         }
@@ -244,14 +235,17 @@ const PCMData& WavLoader::getData(std::size_t size, bool looped) const
 
 bool WavLoader::seek(cro::Time offset)
 {
-    if (!m_file.file) return false;
+    if (!m_file)
+    {
+        return false;
+    }
 
     auto offsetMillis = offset.asMilliseconds();
     auto dest = m_bytesPerSecond * offsetMillis / 1000;
 
     if (dest < m_dataSize)
     {
-        auto result = m_file.file->seek(m_file.file, m_dataStart + dest, RW_SEEK_SET);
+        auto result = SDL_SeekIO(m_file.filePtr(), m_dataStart + dest, SDL_IO_SEEK_SET);
         return (result == (m_dataStart + dest));
     }
     return false;

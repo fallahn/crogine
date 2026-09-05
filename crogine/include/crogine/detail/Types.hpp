@@ -31,9 +31,11 @@ source distribution.
 
 #include <crogine/Config.hpp>
 
-#include <SDL_stdinc.h>
-#include <SDL_events.h>
-#include <SDL_rwops.h>
+#include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_iostream.h>
+
+#include <filesystem>
 
 namespace cro
 {
@@ -63,7 +65,6 @@ namespace cro
     //used to automatically close RWops files
     struct RaiiRWops final
     {
-        SDL_RWops* file;
         ~RaiiRWops()
         {
             close();
@@ -75,13 +76,38 @@ namespace cro
         RaiiRWops(RaiiRWops&&) = default;
         RaiiRWops& operator = (RaiiRWops&&) = default;
 
+        //ensures u8 filepaths are properly cast to a compatible type
+        bool open(const std::filesystem::path& p, const char* mode)
+        {
+            if (file)
+            {
+                //hmm is this expected behaviour or should
+                //we assert because someone is currently using
+                //our file handle?
+                close();
+            }
+            file = SDL_IOFromFile(reinterpret_cast<const char*>(p.u8string().c_str()), mode);
+            return file != nullptr;
+        }
+
+        //closes the file and resets the pointer to null
         void close()
         {
             if (file)
             {
-                SDL_RWclose(file);
+                SDL_CloseIO(file);
                 file = nullptr;
             }
         }
+
+        //returns a copy of the file pointer - note that
+        //this is owned by RaiiRWops and should not be manually closed!
+        //use the close() function instead.
+        SDL_IOStream* filePtr() const { return file; }
+
+        operator bool() { return file != nullptr; }
+
+    private:
+        SDL_IOStream* file = nullptr;
     };
 }

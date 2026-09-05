@@ -295,7 +295,17 @@ void GolfState::registerDebugCommands()
     //        ImGui::Begin("Server Data");
     //        /*ImGui::Text("History Size %llu", m_sharedData.serverInstance.getNetworkHistorySize());
     //        ImGui::Text("History Index %llu", m_sharedData.serverInstance.getHistoryIndex());*/
-    //        ImGui::Text("Range %d", Clubs[ClubID::Putter].getMaxScaleIndex());
+    //        //ImGui::Text("Range %d", Clubs[ClubID::Putter].getMaxScaleIndex());
+
+    //        for (auto i = 0u; i < 8u; ++i)
+    //        {
+    //            ImGui::Image(m_sharedData.avatarTextures[0][i], { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //            if ((i % 2) == 0)
+    //            {
+    //                ImGui::SameLine();
+    //            }
+    //        }
+    //        
     //        ImGui::End();
     //    });
 
@@ -1291,19 +1301,19 @@ void GolfState::spawnSeagulls(glm::vec3 pos)
 
 void GolfState::dumpBenchmark()
 {
-    std::string outFile = cro::App::getPreferencePath() + "benchmark/";
+    auto outFile = cro::App::getPreferencePath() / "benchmark";
 
     if (!cro::FileSystem::directoryExists(outFile))
     {
         cro::FileSystem::createDirectory(outFile);
     }
-    outFile += m_sharedData.mapDirectory + "/";
+    outFile /= m_sharedData.mapDirectory.toAnsiString();
 
     if (!cro::FileSystem::directoryExists(outFile))
     {
         cro::FileSystem::createDirectory(outFile);
     }
-    outFile += std::to_string(m_currentHole) + ".bmk";
+    outFile /= std::to_string(m_currentHole) + ".bmk";
 
     const std::array<std::string, 3u> TreeTypes
     {
@@ -1311,8 +1321,8 @@ void GolfState::dumpBenchmark()
     };
 
     cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(outFile.c_str(), "a");
-    if (file.file)
+    file.open(outFile, "a");
+    if (file)
     {
         std::string dateTime = cro::SysTime::dateString();
         dateTime += " - " + cro::SysTime::timeString() 
@@ -1333,13 +1343,13 @@ void GolfState::dumpBenchmark()
             + vsync
             + "\nVendor: " + vendor + " | Renderer: " + renderer + "\n\n";
 
-        SDL_RWwrite(file.file, dateTime.c_str(), dateTime.length(), 1);
-        SDL_RWwrite(file.file, stat.c_str(), stat.length(), 1);
-        SDL_RWwrite(file.file, settings.c_str(), settings.length(), 1);
+        SDL_WriteIO(file.filePtr(), dateTime.c_str(), dateTime.length());
+        SDL_WriteIO(file.filePtr(), stat.c_str(), stat.length());
+        SDL_WriteIO(file.filePtr(), settings.c_str(), settings.length());
     }
     else
     {
-        LOG("Failed opening benchmark file " + outFile, cro::Logger::Type::Warning);
+        //LOG("Failed opening benchmark file " + outFile.string(), cro::Logger::Type::Warning);
         LogE << SDL_GetError() << std::endl;
     }
 

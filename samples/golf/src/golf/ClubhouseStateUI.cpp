@@ -875,7 +875,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                             pos.x = (spriteBounds.width / 2.f) + 8.f; //not sure where +8 comes from...
                             textEnt.getComponent<cro::Transform>().setPosition(pos);
 
-                            if (evt.type == SDL_CONTROLLERBUTTONUP)
+                            if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
                             {
                                 auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                                 msg->type = SystemEvent::RequestOSK;
@@ -1557,7 +1557,7 @@ void ClubhouseState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter
                         beginTextEdit(textEnt, &m_sharedData.targetIP, ConstVal::MaxIPChars);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                        if (evt.type == SDL_CONTROLLERBUTTONUP)
+                        if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
                         {
                             auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                             msg->type = SystemEvent::RequestOSK;
@@ -3119,7 +3119,7 @@ void ClubhouseState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std:
     m_currentMenu = MenuID::Dummy;
     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(m_currentMenu);
 
-    SDL_StartTextInput();
+    SDL_StartTextInput(cro::App::getWindow());
 }
 
 void ClubhouseState::handleTextEdit(const cro::Event& evt)
@@ -3129,9 +3129,9 @@ void ClubhouseState::handleTextEdit(const cro::Event& evt)
         return;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -3147,7 +3147,7 @@ void ClubhouseState::handleTextEdit(const cro::Event& evt)
         }
 
     }
-    else if (evt.type == SDL_TEXTINPUT)
+    else if (evt.type == SDL_EVENT_TEXT_INPUT)
     {
         if (m_textEdit.string->size() < ConstVal::MaxStringChars
             && m_textEdit.string->size() < m_textEdit.maxLen)

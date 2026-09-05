@@ -202,9 +202,9 @@ bool InteriorMappingState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -215,7 +215,7 @@ bool InteriorMappingState::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         switch (evt.button.button)
         {
@@ -225,7 +225,7 @@ bool InteriorMappingState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         switch (evt.button.button)
         {
@@ -235,7 +235,7 @@ bool InteriorMappingState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         static constexpr float PixelsPerRad = 380.f; //obvs this doesn't scale with window size...
 
@@ -266,20 +266,20 @@ void InteriorMappingState::handleMessage(const cro::Message& msg)
 bool InteriorMappingState::simulate(float dt)
 {
     glm::vec3 motion(0.f);
-    if (cro::Keyboard::isKeyPressed(SDLK_w))
+    if (cro::Keyboard::isKeyPressed(SDLK_W))
     {
         motion.z += 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_s))
+    if (cro::Keyboard::isKeyPressed(SDLK_S))
     {
         motion.z -= 1.f;
     }
 
-    if (cro::Keyboard::isKeyPressed(SDLK_d))
+    if (cro::Keyboard::isKeyPressed(SDLK_D))
     {
         motion.x += 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_a))
+    if (cro::Keyboard::isKeyPressed(SDLK_A))
     {
         motion.x -= 1.f;
     }

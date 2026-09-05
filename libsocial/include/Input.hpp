@@ -45,9 +45,9 @@ namespace Progress
     static constexpr std::int32_t MulliganID = 255;
     static constexpr std::int32_t MaxMulligans = 20;
 
-    static inline std::string getFilePath(std::int32_t id)
+    static inline std::filesystem::path getFilePath(std::int32_t id)
     {
-        std::string basePath = Content::getBaseContentPath();
+        auto basePath = Content::getBaseContentPath();
 
         const auto assertPath =
             [&]()
@@ -62,71 +62,83 @@ namespace Progress
         {
         default: break;
         case 1:
-            basePath += "career/";
+            basePath /= "career/";
             assertPath();
-            basePath += "round_01/";
+            basePath /= "round_01/";
             assertPath();
             break;
         case 2:
-            basePath += "career/";
+            basePath /= "career/";
             assertPath();
-            basePath += "round_02/";
+            basePath /= "round_02/";
             assertPath();
             break;
         case 3:
-            basePath += "career/";
+            basePath /= "career/";
             assertPath();
-            basePath += "round_03/";
+            basePath /= "round_03/";
             assertPath();
             break;
         case 4:
-            basePath += "career/";
+            basePath /= "career/";
             assertPath();
-            basePath += "round_04/";
+            basePath /= "round_04/";
             assertPath();
             break;
         case 5:
-            basePath += "career/";
+            basePath /= "career/";
             assertPath();
-            basePath += "round_05/";
+            basePath /= "round_05/";
             assertPath();
             break;
         case 6:
-            basePath += "career/";
+            basePath /= "career/";
             assertPath();
-            basePath += "round_06/";
+            basePath /= "round_06/";
+            assertPath();
+            break;
+        case 7:
+            basePath /= "career/";
+            assertPath();
+            basePath /= "round_07/";
+            assertPath();
+            break;
+        case 8:
+            basePath /= "career/";
+            assertPath();
+            basePath /= "round_08/";
             assertPath();
             break;
         case MulliganID:
-            basePath += "career/";
+            basePath /= "career/";
             assertPath();
-            return basePath + "hole.dat";
+            return basePath / "hole.dat";
         }
 
-        return basePath + "progr.ess";
+        return basePath / "progr.ess";
     }
 
     static inline void write(std::int32_t leagueID, std::uint64_t holeIndex, const std::vector<std::uint8_t>& holeScores, std::int32_t mulliganCount)
     {
         auto path = getFilePath(leagueID);
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "wb");
-        if (file.file)
+        file.open(path, "wb");
+        if (file)
         {
             static constexpr std::uint64_t MaxBytes = sizeof(holeIndex) + 18;// 26; //size of holeIndex + 18 scores.
 
-            auto written = file.file->write(file.file, &holeIndex, sizeof(holeIndex), 1);
+            auto written = SDL_WriteIO(file.filePtr(), &holeIndex, sizeof(holeIndex));
 
             const auto scoreSize = std::min(std::size_t(18), holeScores.size());
             for (auto i = 0u; i < scoreSize; ++i)
             {
-                written += file.file->write(file.file, &holeScores[i], 1, 1);
+                written += SDL_WriteIO(file.filePtr(), &holeScores[i], 1);
             }
             //for (auto i = scoreSize; i < 18; ++i)
             while (written < MaxBytes)
             {
                 const std::uint8_t packing = 0;
-                written += file.file->write(file.file, &packing, 1, 1);
+                written += SDL_WriteIO(file.filePtr(), &packing, 1);
             }
         }
 
@@ -138,21 +150,20 @@ namespace Progress
 
         path = getFilePath(MulliganID);
         cro::RaiiRWops file2;
-        file2.file = SDL_RWFromFile(path.c_str(), "rb");
+        file2.open(path, "rb");
 
-        if (file2.file)
+        if (file2)
         {
-            file2.file->read(file2.file, values.data(), sizeof(values), 1);
-            SDL_RWclose(file2.file);
-            file2.file = nullptr;
+            SDL_ReadIO(file2.filePtr(), values.data(), sizeof(values));
+            file2.close();
         }
 
         values[leagueID] = std::min(1, mulliganCount);
-        file2.file = SDL_RWFromFile(path.c_str(), "wb");
+        file2.open(path, "wb");
 
-        if (file2.file)
+        if (file2)
         {
-            file2.file->write(file2.file, values.data(), sizeof(values), 1);
+            SDL_WriteIO(file2.filePtr(), values.data(), sizeof(values));
         }
     }
 
@@ -164,15 +175,15 @@ namespace Progress
         if (cro::FileSystem::fileExists(path))
         {
             cro::RaiiRWops file;
-            file.file = SDL_RWFromFile(path.c_str(), "rb");
-            if (file.file)
+            file.open(path, "rb");
+            if (file)
             {
-                /*auto size = file.file->seek(file.file, 0, RW_SEEK_END);
-                file.file->seek(file.file, 0, RW_SEEK_SET);*/
+                /*auto size = file.file->seek(file.file, 0, SDL_IO_SEEK_END);
+                file.file->seek(file.file, 0, SDL_IO_SEEK_SET);*/
 
                 std::array<std::uint8_t, sizeof(holeIndex) + 18> buffer = {};
                 std::size_t i = 0u;
-                while (file.file->read(file.file, &buffer[i], 1, 1) 
+                while (SDL_ReadIO(file.filePtr(), &buffer[i], 1)
                     && i < buffer.size() - 1) //hm some existing files have 1 byte padding too many
                 {
                     i++;
@@ -200,11 +211,11 @@ namespace Progress
 
                 path = getFilePath(MulliganID);
                 cro::RaiiRWops file2;
-                file2.file = SDL_RWFromFile(path.c_str(), "rb");
+                file2.open(path, "rb");
 
-                if (file2.file)
+                if (file2)
                 {
-                    file2.file->read(file2.file, values.data(), sizeof(values), 1);
+                    SDL_ReadIO(file2.filePtr(), values.data(), sizeof(values));
                     mulliganCount = std::min(1, values[leagueID]);
                 }
 

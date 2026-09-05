@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -225,14 +225,14 @@ private:
     };
     static constexpr std::array<std::int32_t, 8u> ArcadeJoy =
     {
-        SDL_CONTROLLER_BUTTON_DPAD_UP,
-        SDL_CONTROLLER_BUTTON_DPAD_UP,
-        SDL_CONTROLLER_BUTTON_DPAD_DOWN,
-        SDL_CONTROLLER_BUTTON_DPAD_DOWN,
-        SDL_CONTROLLER_BUTTON_DPAD_LEFT,
-        SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
-        SDL_CONTROLLER_BUTTON_DPAD_LEFT,
-        SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+        SDL_GAMEPAD_BUTTON_DPAD_UP,
+        SDL_GAMEPAD_BUTTON_DPAD_UP,
+        SDL_GAMEPAD_BUTTON_DPAD_DOWN,
+        SDL_GAMEPAD_BUTTON_DPAD_DOWN,
+        SDL_GAMEPAD_BUTTON_DPAD_LEFT,
+        SDL_GAMEPAD_BUTTON_DPAD_RIGHT,
+        SDL_GAMEPAD_BUTTON_DPAD_LEFT,
+        SDL_GAMEPAD_BUTTON_DPAD_RIGHT,
     };
     std::size_t m_arcadeIndexKey;
     std::size_t m_arcadeIndexJoy;

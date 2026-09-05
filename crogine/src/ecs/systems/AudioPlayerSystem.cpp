@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -51,7 +51,7 @@ void AudioPlayerSystem::process(float)
 
     auto listenerPosition = AudioRenderer::getListenerPosition();
 
-    auto entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& audioSource = entity.getComponent<AudioEmitter>();

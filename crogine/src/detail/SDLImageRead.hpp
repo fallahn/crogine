@@ -31,11 +31,11 @@ source distribution.
 
 #include <crogine/detail/Types.hpp>
 
-#include <SDL_rwops.h>
+#include <SDL3/SDL_iostream.h>
 
 #include <cstdint>
 
-//callbacks to all STB image to read/write via SDL_RWops
+//callbacks to all STB image to read/write via SDL_IOStream
 
 struct STBIMG_stbio_RWops;
 namespace cro
@@ -43,7 +43,7 @@ namespace cro
     std::int32_t STBIMG__io_read(void* user, char* data, std::int32_t size);
     void STBIMG__io_skip(void* user, std::int32_t n);
     std::int32_t STBIMG__io_eof(void* user);
-    void stbi_callback_from_RW(SDL_RWops* src, STBIMG_stbio_RWops* out);
+    void stbi_callback_from_RW(SDL_IOStream* src, STBIMG_stbio_RWops* out);
 
     void image_write_func(void* context, void* data, int size);    
 }

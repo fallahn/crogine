@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -53,8 +53,8 @@ void ProjectionMapSystem::process(float)
     scene->m_projectionMapCount = 0;
     const auto& frustum = scene->getActiveCamera().getComponent<Camera>().getPass(Camera::Pass::Final).getFrustum();
     
-    auto& entities = getEntities();
-    for (auto& entity : entities)
+    const auto& entities = getEntities();
+    for (auto entity : entities)
     {
         const auto& tx = entity.getComponent<Transform>();
         auto pos = tx.getWorldPosition();

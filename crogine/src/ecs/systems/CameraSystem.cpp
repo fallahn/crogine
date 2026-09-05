@@ -97,7 +97,7 @@ void CameraSystem::handleMessage(const Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_RESIZED)
         {
             auto& entities = getEntities();
 
@@ -113,12 +113,13 @@ void CameraSystem::handleMessage(const Message& msg)
                 resizeGBuffer(entity);
             }
         }
+        //LogI << "Window event is: " << (int)data.event << std::endl;
     }
 }
 
 void CameraSystem::process(float)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
 
     for (auto entity : entities)
     {

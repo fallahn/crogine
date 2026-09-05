@@ -82,18 +82,18 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx)
 //public
 bool BilliardsState::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
-        case SDLK_i:
+        case SDLK_I:
             m_scene.getSystem<BilliardsSystem>()->applyImpulse();
             break;
-        case SDLK_o:
+        case SDLK_O:
             addBall();
             break;
-        case SDLK_p:
+        case SDLK_P:
             showDebug = !showDebug;
             m_debugDrawer.setDebugMode(showDebug ? /*std::numeric_limits<std::int32_t>::max()*/3 : 0);
             break;

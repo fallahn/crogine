@@ -31,11 +31,12 @@ source distribution.
 
 #include "sqlite3.h"
 
-#include <string>
 #include <array>
-#include <vector>
-#include <limits>
 #include <cstdint>
+#include <filesystem>
+#include <limits>
+#include <string>
+#include <vector>
 
 struct CourseRecord final
 {
@@ -70,7 +71,7 @@ public:
     ProfileDB& operator = (ProfileDB&&) = delete;
 
     //opens the DB at the given path, returns false on failure
-    bool open(const std::string& path);
+    bool open(const std::filesystem::path& path);
 
     //attempts to insert the record into the db
     //creates a table for the hole ID if it doesn't exist

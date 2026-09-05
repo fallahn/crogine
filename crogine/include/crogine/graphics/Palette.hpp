@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/core/String.hpp>
 #include <crogine/graphics/Colour.hpp>
 
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -74,7 +75,7 @@ namespace cro
         Constructs a palette and immediately tries to load the ase
         file at the given path. If loading fails an error is logged.
         */
-        explicit Palette(const std::string& path);
+        explicit Palette(const std::filesystem::path& path);
 
         /*!
         \brief Attempts to load an ase file from the given path
@@ -86,7 +87,7 @@ namespace cro
         the swatches will now be empty.
         \returns true on success else returns false.
         */
-        bool loadFromFile(const std::string& path, bool append = false);
+        bool loadFromFile(const std::filesystem::path& path, bool append = false);
 
         const std::vector<Swatch>& getSwatches() const { return m_swatches; }
 

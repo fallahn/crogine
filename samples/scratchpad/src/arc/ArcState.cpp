@@ -124,9 +124,9 @@ bool ArcState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -446,58 +446,57 @@ void ArcState::plotArc()
 void ArcState::writeSettings()
 {
     cro::RaiiRWops outFile;
-    outFile.file = SDL_RWFromFile("clubsettings.set", "wb");
-    if (outFile.file)
+    outFile.open("clubsettings.set", "wb");
+    if (outFile)
     {
-        SDL_RWwrite(outFile.file, levelModifiers.data(), sizeof(levelModifiers), 1);
+        SDL_WriteIO(outFile.filePtr(), levelModifiers.data(), sizeof(levelModifiers));
         LogI << "Updated Settings" << std::endl;
-        SDL_RWclose(outFile.file);
+        outFile.close();
     }
 
-    outFile.file = SDL_RWFromFile("clubstats.set", "wb");
-    if (outFile.file)
+    outFile.open("clubstats.set", "wb");
+    if (outFile)
     {
-        SDL_RWwrite(outFile.file, ClubStats.data(), sizeof(ClubStats), 1);
+        SDL_WriteIO(outFile.filePtr(), ClubStats.data(), sizeof(ClubStats));
         for (const auto& club : Clubs)
         {
-            SDL_RWwrite(outFile.file, &club.angle, sizeof(float), 1);
+            SDL_WriteIO(outFile.filePtr(), &club.angle, sizeof(float));
         }
         LogI << "Updated Stats" << std::endl;
-        SDL_RWclose(outFile.file);
     }
 }
 
 void ArcState::readSettings()
 {
     cro::RaiiRWops inFile;
-    inFile.file = SDL_RWFromFile("clubsettings.set", "rb");
-    if (inFile.file)
+    inFile.open("clubsettings.set", "rb");
+    if (inFile)
     {
-        auto size = SDL_RWseek(inFile.file, 0, RW_SEEK_END);
+        auto size = SDL_SeekIO(inFile.filePtr(), 0, SDL_IO_SEEK_END);
         if (size == sizeof(levelModifiers))
         {
-            SDL_RWseek(inFile.file, 0, RW_SEEK_SET);
-            SDL_RWread(inFile.file, levelModifiers.data(), size, 1);
+            SDL_SeekIO(inFile.filePtr(), 0, SDL_IO_SEEK_SET);
+            SDL_ReadIO(inFile.filePtr(), levelModifiers.data(), size);
         }
         else
         {
             LogW << "Club data was invalid size, expected " << sizeof(levelModifiers) << ", got " << size << std::endl;
         }
-        SDL_RWclose(inFile.file);
+        inFile.close();
     }
 
-    inFile.file = SDL_RWFromFile("clubstats.set", "rb");
-    if (inFile.file)
+    inFile.open("clubstats.set", "rb");
+    if (inFile)
     {
         constexpr auto expected = sizeof(ClubStats) + (sizeof(float) * Clubs.size());
-        auto size = SDL_RWseek(inFile.file, 0, RW_SEEK_END);
+        auto size = SDL_SeekIO(inFile.filePtr(), 0, SDL_IO_SEEK_END);
         if (size == expected)
         {
-            SDL_RWseek(inFile.file, 0, RW_SEEK_SET);
-            SDL_RWread(inFile.file, ClubStats.data(), sizeof(ClubStats), 1);
+            SDL_SeekIO(inFile.filePtr(), 0, SDL_IO_SEEK_SET);
+            SDL_ReadIO(inFile.filePtr(), ClubStats.data(), sizeof(ClubStats));
             for (auto i = 0u; i < Clubs.size(); ++i)
             {
-                SDL_RWread(inFile.file, &Clubs[i].angle, sizeof(float), 1);
+                SDL_ReadIO(inFile.filePtr(), &Clubs[i].angle, sizeof(float));
             }
         }
         else

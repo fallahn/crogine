@@ -61,7 +61,7 @@ void SpriteSystem3D::process(float)
 {
     //check sprites for dirty flags and update geom as necessary.
     //remember to switch shaders if a texture is added or removed.
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& sprite = entity.getComponent<Sprite>();

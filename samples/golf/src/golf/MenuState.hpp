@@ -61,6 +61,7 @@ source distribution.
 #include <crogine/graphics/VideoPlayer.hpp>
 
 #include <array>
+#include <filesystem>
 #include <queue>
 #include <unordered_map>
 
@@ -348,7 +349,7 @@ private:
     std::int32_t m_currentRange = Range::Official;
     std::array<Range, Range::Count> m_courseIndices = {};
 
-    void parseCourseDirectory(const std::string&, bool isUser, bool appendToRange = false);
+    void parseCourseDirectory(const std::filesystem::path&, bool isUser, bool appendToRange = false);
 
     cro::Entity m_toolTip;
     void createToolTip();
@@ -385,7 +386,7 @@ private:
     
     cro::RenderTexture m_avatarTexture;
     void parseAvatarDirectory();
-    void processAvatarList(bool locked, const std::vector<std::string>&, const std::string&, const std::string = "", bool relativePath = true);
+    void processAvatarList(bool locked, const std::vector<std::filesystem::path>&, const std::filesystem::path&, const std::filesystem::path& = {}, bool relativePath = true);
     void createAvatarScene();
     std::int32_t indexFromAvatarID(std::uint32_t);
     void ugcInstalledHandler(std::uint64_t id, std::int32_t type);

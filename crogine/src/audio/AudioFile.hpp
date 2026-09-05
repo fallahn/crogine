@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,7 @@ source distribution.
 
 #include <crogine/core/Clock.hpp>
 
+#include <filesystem>
 #include <string>
 
 namespace cro
@@ -53,7 +54,7 @@ namespace cro
             Should return true if the file was successfully opened,
             else returns false.
             */
-            virtual bool open(const std::string&) = 0;
+            virtual bool open(const std::filesystem::path&) = 0;
 
             /*!
             \brief Returns a PCMData struct containing the requested

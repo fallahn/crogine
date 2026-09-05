@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 
+#include <filesystem>
 #include <vector>
 
 struct plm_t;
@@ -90,7 +91,7 @@ namespace cro
         \returns true on success or false if the file doesn't
         exist or is not a valid MPEG1 file.
         */
-        bool loadFromFile(const std::string& path);
+        bool loadFromFile(const std::filesystem::path& path);
 
         /*!
         \brief Updates the decoding of the file, if a file is open.

@@ -157,18 +157,18 @@ private:
 
     std::vector<Q3::SpawnPoint> m_spawnPoints;
 
-    void buildLightmaps(SDL_RWops* file, std::uint32_t count);
+    void buildLightmaps(SDL_IOStream* file, std::uint32_t count);
     void createMesh(const std::vector<Q3::Vertex>&, std::size_t);
     void createPatchMesh(const std::vector<float>&);
     void initMaterial();
 
     template <typename T>
-    void parseLump(std::vector<T>& dest, SDL_RWops* file, Q3::Lump lumpInfo) const
+    void parseLump(std::vector<T>& dest, SDL_IOStream* file, Q3::Lump lumpInfo) const
     {
         auto lumpCount = lumpInfo.length / sizeof(T);
         dest.resize(lumpCount);
-        SDL_RWseek(file, lumpInfo.offset, RW_SEEK_SET);
-        SDL_RWread(file, dest.data(), sizeof(T), lumpCount);
+        SDL_SeekIO(file, lumpInfo.offset, SDL_IO_SEEK_SET);
+        SDL_ReadIO(file, dest.data(), sizeof(T) * lumpCount);
     }
 
     //visibility calc

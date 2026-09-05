@@ -59,7 +59,7 @@ ErrorState::ErrorState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     m_sharedData(sd),
     m_viewScale (2.f)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Error State");
 
     buildScene();
@@ -73,26 +73,26 @@ bool ErrorState::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.keysym.sym == SDLK_SPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_RETURN
-            || evt.key.keysym.sym == SDLK_KP_ENTER)
+        if (evt.key.key == SDLK_SPACE
+            || evt.key.key == SDLK_ESCAPE
+            || evt.key.key == SDLK_RETURN
+            || evt.key.key == SDLK_KP_ENTER)
         {
             quitState();
             return false;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        if (evt.cbutton.button == cro::GameController::ButtonA)
+        if (evt.gbutton.button == cro::GameController::ButtonA)
         {
             quitState();
             return false;
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         quitState();
         return false;

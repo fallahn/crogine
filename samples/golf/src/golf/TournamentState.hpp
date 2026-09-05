@@ -114,7 +114,7 @@ private:
     std::function<void()> enterStatCallback;
     std::function<void()> quitStatCallback;
 
-    std::vector<std::string> m_customPaths;
+    std::vector<std::filesystem::path> m_customPaths;
     std::size_t m_customIndex;
 
     void loadAssets();

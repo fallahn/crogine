@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,19 +30,21 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
-#include <crogine/core/MessageBus.hpp>
-#include <crogine/core/Window.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Console.hpp>
-#include <crogine/core/Keyboard.hpp>
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/Keyboard.hpp>
+#include <crogine/core/MessageBus.hpp>
+#include <crogine/core/OSK.hpp>
+#include <crogine/core/Window.hpp>
 #include <crogine/detail/Types.hpp>
 
 #include <crogine/graphics/Colour.hpp>
 
-#include <vector>
-#include <map>
 #include <any>
+#include <map>
+#include <memory>
+#include <vector>
 
 #ifdef CRO_DEBUG_
 #define DPRINT(x, y) cro::Console::printStat(x, y)
@@ -55,7 +57,7 @@ namespace cro
     namespace Detail
     {
         class SDLResource;
-        bool isPSLayout(SDL_GameController*);
+        bool isPSLayout(SDL_Gamepad*);
     }
     class GuiClient;
     class HiResTimer;
@@ -103,12 +105,12 @@ namespace cro
 
         /*!
         \brief Returns the path to the current platform's directory
-        for storing preference files (including the trailing '/').
+        for storing preference files.
         Before using this the application's organisation name and app
         name should be set with setApplicationStrings()
         \see setApplicationStrings()
         */
-        static const std::string& getPreferencePath();
+        static const std::filesystem::path& getPreferencePath();
 
         /*!
         \brief Resets the frame clock.
@@ -191,7 +193,7 @@ namespace cro
         \param path Path to the directory containing the plugin. Shared library name is automatically appended
         \param stack A reference to the StateStack with which to execute the plugin code.
         */
-        void loadPlugin(const std::string& path, StateStack& stack);
+        void loadPlugin(const std::filesystem::path& path, StateStack& stack);
         
         /*!
         \brief Unload any loaded project plugin
@@ -211,6 +213,9 @@ namespace cro
         HiResTimer* m_frameClock;
         bool m_running;
 
+        friend class OSK; //what a horrible oroborean state of affairs...
+        std::unique_ptr<OSK> m_osk;
+
         void handleEvents();
 
         MessageBus m_messageBus;
@@ -218,24 +223,15 @@ namespace cro
 
         static App* m_instance;
 
-        struct ControllerInfo final
+        struct GamepadInfo final
         {
-            ControllerInfo() = default;
-            ControllerInfo(SDL_GameController* gc)
-                : controller(gc) { psLayout = Detail::isPSLayout(gc); }
-
-            SDL_GameController* controller = nullptr;
-            SDL_Haptic* haptic = nullptr;
-            std::int32_t joystickID = -1; //event IDs don't actually match the controllers
-
-            bool psLayout = false; //we take a wild guess as to whether this is a PS controller based on name string
-            cro::String printableName;
+            String printableName;
+            SDL_Gamepad* gamepad = nullptr;
         };
+        std::unordered_map<SDL_JoystickID, GamepadInfo> m_gamepads;
+        std::vector<SDL_Gamepad*> m_sortedGamepads; //sorted by player index
+        void refreshGamepads(const SDL_Gamepad* gamepadToRemove); //might be null if there's nothing to remove
 
-
-        std::array<ControllerInfo, GameController::MaxControllers> m_controllers = {};
-        std::map<std::int32_t, SDL_Joystick*> m_joysticks;
-        std::int32_t m_controllerCount;
         friend class GameController;
 
         std::vector<std::pair<std::function<void()>, const GuiClient*>> m_debugWindows;
@@ -257,7 +253,7 @@ namespace cro
       
         std::string m_orgString;
         std::string m_appString;
-        std::string m_prefPath;
+        std::filesystem::path m_prefPath;
         
         struct WindowSettings final
         {

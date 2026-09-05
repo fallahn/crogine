@@ -82,7 +82,7 @@ void ParticleEmitter::stop()
     m_releaseCount = -1;
 }
 
-bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource& textures)
+bool EmitterSettings::loadFromFile(const std::filesystem::path& path, cro::TextureResource& textures)
 {
     ConfigFile cfg;
     if (!cfg.loadFromFile(path)) return false;
@@ -95,18 +95,19 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
             auto name = p.getName();
             if (name == "src")
             {
-                auto texPath = p.getValue<std::string>();
+                std::filesystem::path texPath = p.getValue<std::string>();
                 if (!texPath.empty())
                 {
-                    std::replace(texPath.begin(), texPath.end(), '\\', '/');
+                    /*std::replace(texPath.begin(), texPath.end(), '\\', '/');
 
                     if (texPath[0] == '/')
                     {
                         texPath = texPath.substr(1);
-                    }
-                    auto compressedPath = texPath;
-                    const auto ext = FileSystem::getFileExtension(texPath);
-                    Util::String::replace(compressedPath, ext, ".ktx2");
+                    }*/
+                    std::filesystem::path compressedPath = texPath;
+                    compressedPath.replace_extension(".ktx2");
+                    //const std::string ext = U8PATH_CAST(FileSystem::getFileExtension(texPath));
+                    //Util::String::replace(compressedPath, ext, ".ktx2");
                     
                     Texture* texture = nullptr;
                     if (FileSystem::fileExists(compressedPath))
@@ -128,7 +129,7 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
                         texture = &textures.get(texPath);
                     }
                     
-                    texturePath = texPath;
+                    texturePath = U8PATH_CAST(texPath);
                     textureID = texture->getGLHandle();
                     textureSize = texture->getSize();  
                     texture->setSmooth(textureSmoothing);
@@ -284,7 +285,7 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
 #ifdef CRO_DEBUG_
         if (textureID == 0)
         {
-            Logger::log(path + ": no texture property found", Logger::Type::Warning);
+            LogW << path << ": no texture property found" << std::endl;
         }
 #endif
         return true;
@@ -293,9 +294,9 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
     return false;
 }
 
-bool EmitterSettings::saveToFile(const std::string& path)
+bool EmitterSettings::saveToFile(const std::filesystem::path& path)
 {
-    auto emitterName = FileSystem::getFileName(path);
+    std::string emitterName = U8PATH_CAST(FileSystem::getFileName(path));
     emitterName = emitterName.substr(0, emitterName.size() - 4);
 
     ConfigFile cfg("particle_system", emitterName);

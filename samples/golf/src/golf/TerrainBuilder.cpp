@@ -404,7 +404,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
 
     //high density grass
-    const auto grassID = resources.materials.add(resources.shaders.get(ShaderID::Grass));
+    //const auto grassID = resources.materials.add(resources.shaders.get(ShaderID::Grass));
 
     //modified billboard shader - shader loading is done in GolfState::loadAssets()
     const auto billboardMatID = resources.materials.add(resources.shaders.get(ShaderID::Billboard));
@@ -1154,7 +1154,7 @@ void TerrainBuilder::readGrassData()
         std::fill(header.begin(), header.end(), 0);
 
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        file.open(path, "rb");
         if (file.file)
         {
             file.file->read(file.file, header.data(), sizeof(header), 1);

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -36,12 +36,14 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/Log.hpp>
 
+#include <filesystem>
+
 namespace
 {
     constexpr std::size_t MaxNames = 15;
     constexpr std::uint8_t NewLine = '\n';
 
-    const std::string FileName = "league_names.txt";
+    const std::filesystem::path FileName = "league_names.txt";
 }
 
 LeagueNames::LeagueNames()
@@ -56,13 +58,13 @@ LeagueNames::LeagueNames()
 //public
 void LeagueNames::read()
 {
-    const auto path = Content::getBaseContentPath() + FileName;
+    const auto path = Content::getBaseContentPath() / FileName;
 
     std::size_t currName = 0;
 
     cro::RaiiRWops rFile;
-    rFile.file = SDL_RWFromFile(path.c_str(), "r");
-    if (rFile.file)
+    rFile.open(path, "r");
+    if (rFile)
     {
         std::size_t read = 0;
         std::uint8_t b = 0;
@@ -70,7 +72,7 @@ void LeagueNames::read()
 
         do
         {
-            read = SDL_RWread(rFile.file, &b, 1, 1);
+            read = SDL_ReadIO(rFile.filePtr(), &b, 1);
             if (b != NewLine
                 && buffer.size() < ConstVal::MaxStringChars * 2) //*sigh* this are probably multi-byte...
             {
@@ -98,17 +100,17 @@ void LeagueNames::read()
 
 bool LeagueNames::write() const
 {
-    const auto path = Content::getBaseContentPath() + FileName;
+    const auto path = Content::getBaseContentPath() / FileName;
 
     cro::RaiiRWops rFile;
-    rFile.file = SDL_RWFromFile(path.c_str(), "w");
-    if (rFile.file)
+    rFile.open(path, "w");
+    if (rFile)
     {
         for (const auto& n : m_names)
         {
             auto t = n.toUtf8();
-            rFile.file->write(rFile.file, t.c_str(), t.size(), 1);
-            rFile.file->write(rFile.file, &NewLine, 1, 1);
+            SDL_WriteIO(rFile.filePtr(), t.c_str(), t.size());
+            SDL_WriteIO(rFile.filePtr(), &NewLine, 1);
         }
 
         return true;

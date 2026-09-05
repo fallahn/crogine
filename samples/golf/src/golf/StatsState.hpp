@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -41,6 +41,8 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/SimpleText.hpp>
+
+#include <filesystem>
 
 struct SharedStateData;
 namespace cro
@@ -145,7 +147,7 @@ private:
     struct ProfileData final
     {
         cro::String name;
-        std::string dbPath;
+        std::filesystem::path dbPath;
     };
     std::vector<ProfileData> m_profileData;
     std::size_t m_profileIndex;

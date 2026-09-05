@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -49,6 +49,11 @@ namespace cro
         \brief returns a rounded scale value based on the given view size
         */
         static float getViewScale(glm::vec2 viewSize = App::getWindow().getSize());
+
+        /*!
+        \brief Maximum view scale returned by the above, 8 for 4:3 and 6 for others
+        */
+        static constexpr float MaxViewScale = 8.f;
 
     private:
         void onEntityAdded(Entity) override;

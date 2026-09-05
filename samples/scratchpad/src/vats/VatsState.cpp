@@ -256,10 +256,10 @@ VatsState::VatsState(cro::StateStack& stack, cro::State::Context context)
             {
                 if (ImGui::Button("Open File"))
                 {
-                    auto path = cro::FileSystem::openFileDialogue("", "vat");
+                    const auto path = cro::FileSystem::openFileDialogue("", "vat");
                     if (!path.empty())
                     {
-                        loadModel(path);
+                        loadModel(path.string());
                     }
                 }
 
@@ -300,9 +300,9 @@ bool VatsState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_ESCAPE:

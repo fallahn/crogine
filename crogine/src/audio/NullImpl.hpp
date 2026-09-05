@@ -49,11 +49,11 @@ namespace cro
 
             glm::vec3 getListenerPosition() const override { return glm::vec3(0.f); }
 
-            std::int32_t requestNewBuffer(const std::string&) override { return -1; }
+            std::int32_t requestNewBuffer(const std::filesystem::path&) override { return -1; }
             std::int32_t requestNewBuffer(const Detail::PCMData&) override { return -1; }
             void deleteBuffer(std::int32_t) override {}
 
-            std::int32_t requestNewStream(const std::string&) override { return -1; }
+            std::int32_t requestNewStream(const std::filesystem::path&) override { return -1; }
             void deleteStream(std::int32_t) override {}
 
             std::int32_t requestAudioSource(std::int32_t, bool) override { return -1; }

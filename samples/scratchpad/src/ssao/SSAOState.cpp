@@ -197,9 +197,9 @@ bool SSAOState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -223,19 +223,19 @@ void SSAOState::handleMessage(const cro::Message& msg)
 bool SSAOState::simulate(float dt)
 {
     glm::vec3 movement(0.f);
-    if (cro::Keyboard::isKeyPressed(SDLK_a))
+    if (cro::Keyboard::isKeyPressed(SDLK_A))
     {
         movement.x -= 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_d))
+    if (cro::Keyboard::isKeyPressed(SDLK_D))
     {
         movement.x += 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_s))
+    if (cro::Keyboard::isKeyPressed(SDLK_S))
     {
         movement.z += 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_w))
+    if (cro::Keyboard::isKeyPressed(SDLK_W))
     {
         movement.z -= 1.f;
     }

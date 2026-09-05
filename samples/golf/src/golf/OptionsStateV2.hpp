@@ -132,7 +132,7 @@ private:
 
     std::int32_t m_keybindIndex;
     std::int32_t m_keybindItemIndex; //the menu item to update
-    void updateKeybind(SDL_Keycode key);
+    void updateKeybind(SDL_Scancode key);
     void cancelKeybind();
 
     cro::String m_controllerString;

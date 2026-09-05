@@ -370,12 +370,12 @@ void Scene::disableSkybox()
     destroySkybox();
 }
 
-void Scene::setCubemap(const std::string& path)
+void Scene::setCubemap(const std::filesystem::path& path)
 {
     //open the file, check it's valid
     if (!m_skyboxCubemap.loadFromFile(path))
     {
-        cro::Logger::log("Failed to open cubemap " + path, cro::Logger::Type::Error);
+        LogE << "Failed to open cubemap " << path << std::endl;
         return;
     }
     enableSkybox();

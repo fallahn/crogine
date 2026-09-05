@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -42,12 +42,12 @@ const std::array<std::string, TableData::Rules::Count> TableData::RuleStrings =
     "8_ball", "9_ball", "bar_billiards", "snooker", "void"
 };
 
-bool TableData::loadFromFile(const std::string& path)
+bool TableData::loadFromFile(const std::filesystem::path& path)
 {
     cro::ConfigFile tableConfig;
     if (tableConfig.loadFromFile(path))
     {
-        name = cro::FileSystem::getFileName(path);
+        name = U8PATH_CAST(cro::FileSystem::getFileName(path));
         name = name.substr(0, name.find_last_of('.'));
 
         const auto& props = tableConfig.getProperties();
@@ -78,7 +78,7 @@ bool TableData::loadFromFile(const std::string& path)
             else if (name == "ball_skin")
             {
                 std::string skin = p.getValue<std::string>();
-                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + skin))
+                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / skin))
                 {
                     ballSkins.push_back(skin);
                 }
@@ -86,7 +86,7 @@ bool TableData::loadFromFile(const std::string& path)
             else if (name == "table_skin")
             {
                 std::string skin = p.getValue<std::string>();
-                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + skin))
+                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / skin))
                 {
                     tableSkins.push_back(skin);
                 }
@@ -166,7 +166,7 @@ bool TableData::loadFromFile(const std::string& path)
             if (auto* skin = vm.findProperty("diffuse"); skin != nullptr)
             {
                 auto skinPath = skin->getValue<std::string>();
-                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + skinPath))
+                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / skinPath))
                 {
                     tableSkins.push_back(skinPath);
                 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -81,7 +81,7 @@ Swingput::Swingput(const SharedStateData& sd)
     m_lastLT                (0),
     m_lastRT                (0),
     m_strokeStartPosition   (0),
-    m_activeStick           (SDL_CONTROLLER_AXIS_INVALID),
+    m_activeStick           (SDL_GAMEPAD_AXIS_INVALID),
     m_lastAxisposition      (0),
     m_cancelTimer           (0.f),
     m_inCancelZone          (false),
@@ -134,14 +134,14 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
 
             m_mouseSwing.active = false; //gets confused if holding the right mouse before swinging with a controller...
 
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         }
     };
 
     const auto endStroke = [&]()
     {
         m_state = State::Inactive;
-        m_activeStick = SDL_CONTROLLER_AXIS_INVALID;
+        m_activeStick = SDL_GAMEPAD_AXIS_INVALID;
         m_activeControllerID = -1;
 
         if (state == StateID::Power)
@@ -160,16 +160,16 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
     switch (evt.type)
     {
     default: return isActive();
-    case SDL_MOUSEBUTTONDOWN:
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             m_state = State::Swing;
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
             m_mouseSwing.startStroke();
             return true;
         }
         return isActive();
-    case SDL_MOUSEBUTTONUP:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             m_state = State::Inactive;
@@ -177,7 +177,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
             return true;
         }
         return isActive();
-    case SDL_MOUSEMOTION:
+    case SDL_EVENT_MOUSE_MOTION:
         if (m_state == State::Swing)
         {
             //TODO we need to scale this down relative to the game buffer size
@@ -186,10 +186,10 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
         }
         return false;
 
-    case SDL_CONTROLLERBUTTONDOWN:
-        if (acceptInput(evt.cbutton.which))
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+        if (acceptInput(evt.gbutton.which))
         {
-            if (evt.cbutton.button == cro::GameController::ButtonB
+            if (evt.gbutton.button == cro::GameController::ButtonB
                 && m_state == State::Swing)
             {
                 endStroke();
@@ -198,49 +198,49 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
         return false;
         //we allow either trigger or either stick
         //to aid handedness of players
-    case SDL_CONTROLLERAXISMOTION:
-        switch (evt.caxis.axis)
+    case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+        switch (evt.gaxis.axis)
         {
         default: break;
-        case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
-        case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
-            if (evt.caxis.value > MinTriggerMove)
+        case SDL_GAMEPAD_AXIS_LEFT_TRIGGER:
+        case SDL_GAMEPAD_AXIS_RIGHT_TRIGGER:
+            if (evt.gaxis.value > MinTriggerMove)
             {
-                m_activeControllerID = evt.caxis.which;
+                m_activeControllerID = evt.gaxis.which;
             }
             break;
         }
         
-        if (acceptInput(evt.caxis.which))
+        if (acceptInput(evt.gaxis.which))
         {
-            m_thumbsticks.setValue(evt.caxis.axis, evt.caxis.value);
+            m_thumbsticks.setValue(evt.gaxis.axis, evt.gaxis.value);
 
-            switch (evt.caxis.axis)
+            switch (evt.gaxis.axis)
             {
             default: break;
-            case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
-            case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
-                if (evt.caxis.value > MinTriggerMove)
+            case SDL_GAMEPAD_AXIS_LEFT_TRIGGER:
+            case SDL_GAMEPAD_AXIS_RIGHT_TRIGGER:
+                if (evt.gaxis.value > MinTriggerMove)
                 {
                     startStroke();
                 }
-                else if (evt.caxis.value < 6000) //some arbitrary deadzone
+                else if (evt.gaxis.value < 6000) //some arbitrary deadzone
                 {
                     endStroke();
                 }
 
-                if (evt.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT)
+                if (evt.gaxis.axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER)
                 {
-                    m_lastLT = evt.caxis.value;
+                    m_lastLT = evt.gaxis.value;
                 }
                 else
                 {
-                    m_lastRT = evt.caxis.value;
+                    m_lastRT = evt.gaxis.value;
                 }
 
-                return (evt.caxis.value > MinTriggerMove);
-            case SDL_CONTROLLER_AXIS_LEFTY:
-            case SDL_CONTROLLER_AXIS_RIGHTY:
+                return (evt.gaxis.value > MinTriggerMove);
+            case SDL_GAMEPAD_AXIS_LEFTY:
+            case SDL_GAMEPAD_AXIS_RIGHTY:
                 if (m_state == State::Swing)
                 {
                     //one of the triggers is held
@@ -250,17 +250,17 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                         //should more or less immediately change state to power
                         //we *shouldn't* get multiple presses. InputParser will
                         //reset these flags for us automatically.
-                        if (evt.caxis.value > MaxControllerDraw)
+                        if (evt.gaxis.value > MaxControllerDraw)
                         {
                             inputFlags |= (InputFlag::Action | InputFlag::Swingput);
-                            m_strokeStartPosition = evt.caxis.value;
-                            m_activeStick = evt.caxis.axis;
+                            m_strokeStartPosition = evt.gaxis.value;
+                            m_activeStick = evt.gaxis.axis;
                         }
 
-                        if (evt.caxis.value > cro::GameController::RightThumbDeadZone
-                            || evt.caxis.value < -cro::GameController::RightThumbDeadZone)
+                        if (evt.gaxis.value > cro::GameController::RightThumbDeadZone
+                            || evt.gaxis.value < -cro::GameController::RightThumbDeadZone)
                         {
-                            setGaugeFromController(evt.caxis.value);
+                            setGaugeFromController(evt.gaxis.value);
                         }
                         return true;
                     }
@@ -269,7 +269,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                         //pushing forward rapidly should create a button press
                         //the swingput flag should tell the InputParser to skip
                         //the accuracy stage...
-                        if (evt.caxis.value < MaxControllerSwing)
+                        if (evt.gaxis.value < MaxControllerSwing)
                         {
                             inputFlags |= (InputFlag::Action | InputFlag::Swingput);
                             m_state = State::Inactive;
@@ -285,7 +285,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                                 msg->type = GolfEvent::NiceTiming;
                             }
 
-                            auto x = m_thumbsticks.getValue(evt.caxis.axis == cro::GameController::AxisLeftY ? cro::GameController::AxisLeftX : cro::GameController::AxisRightX);
+                            auto x = m_thumbsticks.getValue(evt.gaxis.axis == cro::GameController::AxisLeftY ? cro::GameController::AxisLeftX : cro::GameController::AxisRightX);
                             //higher level club sets require better accuracy
                             //https://www.desmos.com/calculator/u8hmy5q3mz
                             static constexpr std::array LevelMultipliers = { 19.f, 11.f, 7.f };
@@ -300,11 +300,11 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                                 m_hook += (xAmount * 0.31f);
                             }
 
-                            lastActiveID = evt.caxis.which;
+                            lastActiveID = evt.gaxis.which;
                         }
 
                         //see if we started moving back after beginning the power mode
-                        if (evt.caxis.value < m_strokeStartPosition)
+                        if (evt.gaxis.value < m_strokeStartPosition)
                         {                            
                             m_tempoTimer.restart();
                             
@@ -315,9 +315,9 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
 
                         //check if this is the active axis and if it's in the cancel
                         //zone - ie the user let go of the stick before swinging
-                        if (evt.caxis.axis == m_activeStick)
+                        if (evt.gaxis.axis == m_activeStick)
                         {
-                            m_inCancelZone = (evt.caxis.value < cro::GameController::RightThumbDeadZone && evt.caxis.value > -cro::GameController::RightThumbDeadZone);
+                            m_inCancelZone = (evt.gaxis.value < cro::GameController::RightThumbDeadZone && evt.gaxis.value > -cro::GameController::RightThumbDeadZone);
 
                             //reset the timer if we entered the zone for the first time
                             if (m_inCancelZone && m_lastAxisposition > cro::GameController::RightThumbDeadZone)
@@ -325,8 +325,8 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                                 //TODO do we need to check if it was below the deadzone? We should only be travelling in one dir
                                 m_cancelTimer = 0.f;
                             }
-                            m_lastAxisposition = evt.caxis.value;
-                            setGaugeFromController(evt.caxis.value);
+                            m_lastAxisposition = evt.gaxis.value;
+                            setGaugeFromController(evt.gaxis.value);
                         }
 
                         return true;
@@ -345,7 +345,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
 void Swingput::assertIdled(float dt, std::uint16_t& inputFlags, std::int32_t state)
 {
     if (state == StateID::Power
-        && m_activeStick != SDL_CONTROLLER_AXIS_INVALID)
+        && m_activeStick != SDL_GAMEPAD_AXIS_INVALID)
     {
         if (m_inCancelZone)
         {
@@ -356,7 +356,7 @@ void Swingput::assertIdled(float dt, std::uint16_t& inputFlags, std::int32_t sta
             {
                 inputFlags |= (InputFlag::Cancel | InputFlag::Swingput);
                 //m_state = State::Inactive;
-                m_activeStick = SDL_CONTROLLER_AXIS_INVALID;
+                m_activeStick = SDL_GAMEPAD_AXIS_INVALID;
                 m_activeControllerID = -1;
             }
         }

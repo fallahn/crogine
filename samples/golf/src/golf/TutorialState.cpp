@@ -100,7 +100,7 @@ TutorialState::TutorialState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_actionActive  (false)
 {
     inputMask = 0;
-    ctx.mainWindow.setMouseCaptured(true);
+    ctx.mainWindow.setCursorVisible(false);
 
     spinAmount = glm::vec2(0.f);
     showSpin = false;
@@ -143,17 +143,17 @@ bool TutorialState::handleEvent(const cro::Event& evt)
         m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default:
-            /*if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+            /*if (evt.key.key == m_sharedData.inputBinding.keys[InputBinding::Action])
             {
                 doCurrentAction();
             }*/
             break;
-        case SDLK_p:
+        case SDLK_P:
         case SDLK_ESCAPE:
         case SDLK_BACKSPACE:
         case SDLK_PAUSE:
@@ -165,31 +165,31 @@ bool TutorialState::handleEvent(const cro::Event& evt)
 
             break;
 #ifdef CRO_DEBUG_
-        case SDLK_o:
+        case SDLK_O:
             quitState();
             break;
 #endif
         }
 
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu])
         {
             showSpin = false;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action])
         {
             doCurrentAction();
         }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::SpinMenu])
+        else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu])
         {
             showSpin = true;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonB:
@@ -203,60 +203,60 @@ bool TutorialState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        if (evt.cbutton.button == cro::GameController::ButtonA)
+        if (evt.gbutton.button == cro::GameController::ButtonA)
         {
             doCurrentAction();
         }
-        else if (evt.cbutton.button == cro::GameController::ButtonX)
+        else if (evt.gbutton.button == cro::GameController::ButtonX)
         {
             showSpin = true;
         }
-        updateButtonIcon(cro::GameController::controllerID(evt.cbutton.which));
+        updateButtonIcon(cro::GameController::controllerID(evt.gbutton.which));
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(true);
         m_mouseVisible = true;
         m_mouseClock.restart();
     }
 
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        updateButtonIcon(cro::GameController::controllerID(evt.caxis.which));
+        updateButtonIcon(cro::GameController::controllerID(evt.gaxis.which));
         
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
             m_mouseVisible = false;
         }
 
-        if (evt.caxis.value > cro::GameController::TriggerDeadZone)
+        if (evt.gaxis.value > cro::GameController::TriggerDeadZone)
         {
-            if (evt.caxis.axis == cro::GameController::TriggerLeft
-                || evt.caxis.axis == cro::GameController::TriggerRight)
+            if (evt.gaxis.axis == cro::GameController::TriggerLeft
+                || evt.gaxis.axis == cro::GameController::TriggerRight)
             {
-                inputMask |= (1 << evt.caxis.axis);
+                inputMask |= (1 << evt.gaxis.axis);
             }
         }
         else
         {
-            if (evt.caxis.axis == cro::GameController::TriggerLeft
-                || evt.caxis.axis == cro::GameController::TriggerRight)
+            if (evt.gaxis.axis == cro::GameController::TriggerLeft
+                || evt.gaxis.axis == cro::GameController::TriggerRight)
             {
-                inputMask &= ~(1 << evt.caxis.axis);
+                inputMask &= ~(1 << evt.gaxis.axis);
             }
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             inputMask |= (1 << evt.button.button);
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -276,7 +276,7 @@ void TutorialState::handleMessage(const cro::Message& msg)
         if (data.action == cro::Message::StateEvent::Popped
             && data.id == StateID::Pause)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         }
     }
     else if (msg.id == cro::Message::SpriteAnimationMessage)
@@ -311,25 +311,25 @@ bool TutorialState::simulate(float dt)
     {
         auto speed = dt * 2.f;
         auto id = activeControllerID(0);
-        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left])
+        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Left])
             || cro::GameController::isButtonPressed(id, cro::GameController::DPadLeft))
         {
             spinAmount.x = std::min(1.f, spinAmount.x + speed);
         }
 
-        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Right])
+        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Right])
             || cro::GameController::isButtonPressed(id, cro::GameController::DPadRight))
         {
             spinAmount.x = std::max(-1.f, spinAmount.x - speed);
         }
 
-        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up])
+        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Up])
             || cro::GameController::isButtonPressed(id, cro::GameController::DPadUp))
         {
             spinAmount.y = std::min(1.f, spinAmount.y + speed);
         }
 
-        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Down])
+        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Down])
             || cro::GameController::isButtonPressed(id, cro::GameController::DPadDown))
         {
             spinAmount.y = std::max(-1.f, spinAmount.y - speed);
@@ -346,7 +346,7 @@ bool TutorialState::simulate(float dt)
             && !ImGui::GetIO().WantCaptureMouse)
         {
             m_mouseVisible = false;
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         }
     }
 
@@ -510,7 +510,7 @@ void TutorialState::buildScene()
     }
     else
     {
-        str = "Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to Continue";
+        str = "Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Action]) + " to Continue";
     }
     entity.getComponent<cro::Text>().setString(str);
     centreText(entity);
@@ -667,8 +667,8 @@ void TutorialState::tutorialOne(cro::Entity root)
     else
     {
         cro::String str("This is your selected club.\nUse ");
-        str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]) + " and ";
-        str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + " to cycle through them\nand find one with an appropriate distance.";
+        str += cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::PrevClub]) + " and ";
+        str += cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::NextClub]) + " to cycle through them\nand find one with an appropriate distance.";
         entity.getComponent<cro::Text>().setString(str);
     }
 
@@ -1000,8 +1000,8 @@ void TutorialState::tutorialTwo(cro::Entity root)
     else
     {
         cro::String str("This is your aim.\nUse ");
-        str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]) + " and ";
-        str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]) + " to move it left or right,\nand compensate for the wind.";
+        str += cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Left]) + " and ";
+        str += cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Right]) + " to move it left or right,\nand compensate for the wind.";
         entity.getComponent<cro::Text>().setString(str);
     }
 
@@ -1256,7 +1256,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     }
     else
     {
-        cro::String str = "Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::CancelShot]) + " at any time to cancel the shot";
+        cro::String str = "Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::CancelShot]) + " at any time to cancel the shot";
         entity.getComponent<cro::Text>().setString(str);
         centreText(entity);
     }
@@ -1433,7 +1433,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     else
     {
         cro::String str("Press ");
-        str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " when the hook/slice\nindicator is as close\nto the centre as possible.";
+        str += cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Action]) + " when the hook/slice\nindicator is as close\nto the centre as possible.";
         entity.getComponent<cro::Text>().setString(str);
     }
 
@@ -1613,7 +1613,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     }
     else
     {
-        cro::String str = "Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to\nselect the power";
+        cro::String str = "Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Action]) + " to\nselect the power";
         entity.getComponent<cro::Text>().setString(str);
     }
     bounds = cro::Text::getLocalBounds(entity);
@@ -1777,7 +1777,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     }
     else
     {
-        cro::String str = "Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to\nactivate the swing";
+        cro::String str = "Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Action]) + " to\nactivate the swing";
         entity.getComponent<cro::Text>().setString(str);
     }
     bounds = cro::Text::getLocalBounds(entity);
@@ -2105,8 +2105,8 @@ void TutorialState::tutorialPutt(cro::Entity root)
     }
     else
     {
-        auto strUp = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Up]);
-        auto strDown = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Down]);
+        auto strUp = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Up]);
+        auto strDown = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Down]);
         entity.addComponent<cro::Text>(font).setString("You can move the camera up and down with " + strUp + " and " + strDown);
     }
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -2587,7 +2587,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
     }
     else
     {
-        cro::String str = "Hold " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]) + " to show the Spin Icon";
+        cro::String str = "Hold " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::SpinMenu]) + " to show the Spin Icon";
         entity.getComponent<cro::Text>().setString(str);
         centreText(entity);
     }
@@ -2745,7 +2745,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
             if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::PrevClub]));
             }
             else
             {
@@ -2809,7 +2809,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
             if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]));
+                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::NextClub]));
             }
             else
             {
@@ -2869,10 +2869,10 @@ void TutorialState::tutorialSpin(cro::Entity root)
     }
     else
     {
-        std::string str = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]);
-        str += ", " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]);
-        str += ", " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Up]);
-        str += ", " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Down]);
+        std::string str = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Left]);
+        str += ", " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Right]);
+        str += ", " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Up]);
+        str += ", " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Down]);
 
         entity.addComponent<cro::Text>(font).setString(str);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);

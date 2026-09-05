@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -274,10 +274,12 @@ std::int32_t BilliardsState::process(float dt)
 //private
 bool BilliardsState::validateData()
 {
-    auto path = "assets/golf/tables/" + m_sharedData.mapDir + ".table";
+    std::filesystem::path path = "assets/golf/tables";
+    path /= m_sharedData.mapDir.toAnsiString() + ".table";
+
     if (m_tableData.loadFromFile(path))
     {
-        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + m_tableData.collisionModel))
+        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / m_tableData.collisionModel))
         {
             return false;
         }

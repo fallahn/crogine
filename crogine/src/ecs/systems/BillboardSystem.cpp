@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -55,7 +55,7 @@ BillboardSystem::BillboardSystem(MessageBus& mb)
 //public
 void BillboardSystem::process(float)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& bbc = entity.getComponent<BillboardCollection>();

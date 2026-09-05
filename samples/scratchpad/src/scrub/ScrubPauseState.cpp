@@ -24,12 +24,12 @@ ScrubPauseState::ScrubPauseState(cro::StateStack& ss, cro::State::Context ctx)
 //public
 bool ScrubPauseState::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
-        case SDLK_q:
+        case SDLK_Q:
             requestStackClear();
             requestStackPush(States::ScratchPad::ScrubBackground);
             break;
@@ -39,9 +39,9 @@ bool ScrubPauseState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonB:

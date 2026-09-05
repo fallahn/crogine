@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -50,7 +50,7 @@ namespace
     constexpr std::size_t MaxTotalFiles = 64;
 }
 
-M3UPlaylist::M3UPlaylist(const std::string& searchDir, std::uint32_t maxFiles)
+M3UPlaylist::M3UPlaylist(const std::filesystem::path& searchDir, std::uint32_t maxFiles)
     : m_currentIndex    (0)
 {
     if (cro::FileSystem::directoryExists(searchDir))
@@ -62,30 +62,30 @@ M3UPlaylist::M3UPlaylist(const std::string& searchDir, std::uint32_t maxFiles)
         {
             const auto& file = files[i];
             auto ext = cro::FileSystem::getFileExtension(file);
-            if (std::find(FileExtensions.cbegin(), FileExtensions.cend(), ext) != FileExtensions.cend())
+            if (std::find(FileExtensions.cbegin(), FileExtensions.cend(), U8PATH_CAST(ext)) != FileExtensions.cend())
             {
-                loadPlaylist(searchDir + file);
+                loadPlaylist(searchDir / file);
             }
         }
     }
 }
 
 //public
-bool M3UPlaylist::loadPlaylist(const std::string& path)
+bool M3UPlaylist::loadPlaylist(const std::filesystem::path& path)
 {
     cro::RaiiRWops rFile;
-    rFile.file = SDL_RWFromFile(path.c_str(), "r");
+    rFile.open(path, "r");
 
-    if (!rFile.file)
+    if (!rFile)
     {
         LogE << "Failed opening " << path << std::endl;
         return false;
     }
 
-    if (auto fSize = rFile.file->size(rFile.file); fSize > 0)
+    if (const auto fSize = SDL_GetIOSize(rFile.filePtr()); fSize > 0)
     {
         std::vector<std::uint8_t> buffer(fSize);
-        auto read = SDL_RWread(rFile.file, buffer.data(), fSize, 1);
+        const auto read = SDL_ReadIO(rFile.filePtr(), buffer.data(), fSize);
 
         if (read == 0)
         {
@@ -151,7 +151,7 @@ bool M3UPlaylist::loadPlaylist(const std::string& path)
     return false;
 }
 
-void M3UPlaylist::addTrack(const std::string& path)
+void M3UPlaylist::addTrack(const std::filesystem::path& path)
 {
     static const std::array ValidExt =
     {
@@ -161,7 +161,7 @@ void M3UPlaylist::addTrack(const std::string& path)
     };
 
     if (m_filePaths.size() < MaxTotalFiles &&
-        std::find(ValidExt.begin(), ValidExt.end(), cro::FileSystem::getFileExtension(path)) != ValidExt.end())
+        std::find(ValidExt.begin(), ValidExt.end(), U8PATH_CAST(cro::FileSystem::getFileExtension(path))) != ValidExt.end())
     {
         if (cro::FileSystem::fileExists(path))
         {
@@ -191,11 +191,11 @@ void M3UPlaylist::prevTrack()
     }
 }
 
-const std::string& M3UPlaylist::getCurrentTrack() const
+const std::filesystem::path& M3UPlaylist::getCurrentTrack() const
 {
     if (m_filePaths.empty())
     {
-        static const std::string ret;
+        static const std::filesystem::path ret;
         return ret;
     }
     return m_filePaths[m_currentIndex];

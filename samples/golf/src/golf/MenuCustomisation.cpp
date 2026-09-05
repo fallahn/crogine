@@ -57,7 +57,7 @@ namespace
     {
         //do this with a cro string to try and preserve utf encoding
         cro::String str = cro::String::fromUtf8(path.begin(), path.end());
-        auto dirList = cro::Util::String::tokenize(str, "/");
+        const auto dirList = cro::Util::String::tokenize(str, "/");
 
         if (!dirList.empty())
         {
@@ -72,7 +72,7 @@ namespace
                 return id;
             }
         }
-
+        LogW << "Find workshop ID: " << path << " resolved to zero" << std::endl;
         return 0;
     };
 
@@ -141,7 +141,7 @@ namespace
     void insertInfo(SharedStateData::BallInfo info, std::vector<SharedStateData::BallInfo>& dst, bool relPath)
     {
         bool exists = relPath ?
-            cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + info.modelPath) :
+            cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / info.modelPath) :
             cro::FileSystem::fileExists(info.modelPath);
 
         if ((!info.modelPath.empty() && exists))
@@ -169,7 +169,7 @@ namespace
     void insertInfo(SharedStateData::HairInfo info, std::vector<SharedStateData::HairInfo>& dst, bool relPath)
     {
         bool exists = relPath ?
-            cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + info.modelPath) :
+            cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / info.modelPath) :
             cro::FileSystem::fileExists(info.modelPath);
 
         if ((!info.modelPath.empty() && exists))
@@ -249,15 +249,15 @@ void MenuState::createBallScene()
     //parse the content first into file paths - though
     //these balls aren't actually loaded until after unlocks.
     const auto ContentDirs = Content::getInstallPaths();
-    const std::string BallDir = "balls/";
-    std::vector<std::string> ballFiles;
+    const std::filesystem::path BallDir = "balls/";
+    std::vector<std::filesystem::path> ballFiles;
 
     for (const auto& c : ContentDirs)
     {
-        auto b = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + c + BallDir);
+        auto b = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() / c / BallDir);
         for (const auto& f : b)
         {
-            ballFiles.push_back(c + BallDir + f);
+            ballFiles.push_back(c / BallDir / f);
         }
     }
 
@@ -272,7 +272,7 @@ void MenuState::createBallScene()
     }
 
     //we've specifically loaded the default ball first
-    ballFiles.erase(std::remove_if(ballFiles.begin(), ballFiles.end(), [](const std::string& s) { return s == "default.ball"; }), ballFiles.end());
+    ballFiles.erase(std::remove_if(ballFiles.begin(), ballFiles.end(), [](const std::filesystem::path& s) { return s == "default.ball"; }), ballFiles.end());
 
 
     m_sharedData.ballInfo.clear();
@@ -463,7 +463,7 @@ void MenuState::createBallScene()
             //if we didn't find a UID create one from the file name and save it to the cfg
             if (info.uid == 0)
             {
-                info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                info.uid = SpookyHash::Hash32(file.u8string().data(), file.u8string().size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
                 cfg.save(file);
             }
@@ -475,19 +475,19 @@ void MenuState::createBallScene()
 
     
     const auto parsePath =
-        [this](const std::string& path)
+        [this](const std::filesystem::path& path)
         {
-            auto files = cro::FileSystem::listFiles(path);
+            const auto files = cro::FileSystem::listFiles(path);
             for (const auto& file : files)
             {
                 if (cro::FileSystem::getFileExtension(file) == ".ball")
                 {
                     cro::ConfigFile cfg;
-                    if (cfg.loadFromFile(path + file, false))
+                    if (cfg.loadFromFile(path / file, false))
                     {
                         auto info = readBallCfg(cfg);
-                        info.modelPath = path + info.modelPath;
-                        info.workshopID = findWorkshopID(path);
+                        info.modelPath = path / info.modelPath;
+                        info.workshopID = findWorkshopID(U8PATH_CAST(path));
                         info.type = SharedStateData::BallInfo::Custom;
 
                         insertInfo(info, m_sharedData.ballInfo, false);
@@ -510,14 +510,14 @@ void MenuState::createBallScene()
 
         for (const auto& dir : dirList)
         {
-            parsePath(BallUserPath + dir + "/");
+            parsePath(BallUserPath / dir);
         }
     }
 
 #ifdef USE_GNS
     for (const auto& p : Content::getUserItemsPaths(Content::UserContent::Ball))
     {
-        parsePath(p.string() + "/");
+        parsePath(p);
     }
 #endif
 
@@ -724,8 +724,8 @@ void MenuState::parseAvatarDirectory()
     const auto ContentDirs = Content::getInstallPaths();
     for (const auto& c : ContentDirs)
     {
-        const std::string AvatarPath = c + "avatars/";
-        const auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + AvatarPath);
+        const std::filesystem::path AvatarPath = c / "avatars";
+        const auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() / AvatarPath);
         processAvatarList(false, files, AvatarPath);
     }
     //m_playerAvatars.reserve(files.size() + Leagues.size()); //hmm can't really do this without double iterating, so not really worth the effort
@@ -767,7 +767,7 @@ void MenuState::parseAvatarDirectory()
         dirs.resize(std::min(dirs.size(), std::size_t(24)));//arbitrary limit
         for (const auto& dir : dirs)
         {
-            const auto resourceDir = avatarUserDir + dir + "/";
+            const auto resourceDir = avatarUserDir / dir;
             const auto files = cro::FileSystem::listFiles(resourceDir);
             processAvatarList(false, files, resourceDir, resourceDir, false);
         }
@@ -777,9 +777,9 @@ void MenuState::parseAvatarDirectory()
     const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Avatar);
     for (const auto& p : wsPaths)
     {
-        const auto resourceDir = p.string() + "/";
-        const auto files = cro::FileSystem::listFiles(resourceDir);
-        processAvatarList(false, files, resourceDir, resourceDir, false);
+        const std::string resourceDir = U8PATH_CAST(p);
+        const auto files = cro::FileSystem::listFiles(p);
+        processAvatarList(false, files, resourceDir + "/", resourceDir + "/", false);
     }
 #endif
 
@@ -814,15 +814,15 @@ void MenuState::parseAvatarDirectory()
     }
 
     const std::string HairPath = "avatars/hair/";
-    std::vector<std::string> hairFiles;
+    std::vector<std::filesystem::path> hairFiles;
 
     for (const auto& c : ContentDirs)
     {
-        auto h = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + c + HairPath);
+        auto h = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() / c / HairPath);
         //hairFiles.insert(hairFiles.end(), h.begin(), h.end());
         for (const auto& f : h)
         {
-            hairFiles.push_back(c + HairPath + f);
+            hairFiles.push_back(c / HairPath / f);
         }
     }
 
@@ -848,7 +848,7 @@ void MenuState::parseAvatarDirectory()
             //if uid is missing write it to cfg - although this doesn't work on apple bundles
             if (info.uid == 0)
             {
-                info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                info.uid = SpookyHash::Hash32(file.u8string().data(), file.u8string().size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
                 cfg.save(file);
             }
@@ -860,7 +860,7 @@ void MenuState::parseAvatarDirectory()
     //unlocked parse it immediately so it's available in the browser
     //else delay the loading so it's still available to display if
     //a remote player in a network game is using one.
-    const std::array<std::string, 6u> LeaguePaths =
+    const std::array<std::filesystem::path, 6u> LeaguePaths =
     {
         "assets/golf/career/tier1/01.hct",
         "assets/golf/career/tier1/02.hct",
@@ -896,7 +896,7 @@ void MenuState::parseAvatarDirectory()
 
 
     const auto parsePath = 
-        [this](const std::string userPath) 
+        [this](const std::filesystem::path& userPath) 
         {
             const auto hairFiles = cro::FileSystem::listFiles(userPath);
 
@@ -917,11 +917,11 @@ void MenuState::parseAvatarDirectory()
                 }
 
                 cro::ConfigFile cfg;
-                if (cfg.loadFromFile(userPath + file, false))
+                if (cfg.loadFromFile(userPath / file, false))
                 {
                     auto info = readHairCfg(cfg);
-                    info.modelPath = userPath + info.modelPath;
-                    info.workshopID = findWorkshopID(userPath);
+                    info.modelPath = userPath / info.modelPath;
+                    info.workshopID = findWorkshopID(U8PATH_CAST(userPath));
                     info.type = SharedStateData::HairInfo::Custom;
 
                     insertInfo(info, m_sharedData.hairInfo, false);
@@ -943,7 +943,7 @@ void MenuState::parseAvatarDirectory()
 
         for (const auto& userDir : userDirs)
         {
-            const auto userPath = userHairPath + userDir + "/";
+            const auto userPath = userHairPath / userDir;
             parsePath(userPath);
 
             if (m_sharedData.hairInfo.size() == 96)
@@ -957,7 +957,8 @@ void MenuState::parseAvatarDirectory()
 #ifdef USE_GNS
     for (const auto& p : Content::getUserItemsPaths(Content::UserContent::Hair))
     {
-        parsePath(p.string() + "/");
+        const std::string u8p = U8PATH_CAST(p);
+        parsePath(u8p + "/");
     }
 #endif
 
@@ -1078,9 +1079,8 @@ void MenuState::parseAvatarDirectory()
     createAvatarScene();
 }
 
-void MenuState::processAvatarList(bool locked, const std::vector<std::string>& fileList, const std::string& searchPath, const std::string resourcePath, bool relative)
+void MenuState::processAvatarList(bool locked, const std::vector<std::filesystem::path>& fileList, const std::filesystem::path& searchPath, const std::filesystem::path& resourcePath, bool relative)
 {
-    //path strings must include trailing "/"!!
     for (const auto& file : fileList)
     {
         if (m_playerAvatars.size() == 40)
@@ -1092,7 +1092,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::string>& f
         if (cro::FileSystem::getFileExtension(file) == ".avt")
         {
             cro::ConfigFile cfg;
-            if (cfg.loadFromFile(searchPath + file, relative))
+            if (cfg.loadFromFile(searchPath / file, relative))
             {
                 SharedStateData::AvatarInfo info;
 
@@ -1102,7 +1102,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::string>& f
                     const auto& name = prop.getName();
                     if (name == "model")
                     {
-                        info.modelPath = resourcePath + prop.getValue<std::string>();
+                        info.modelPath = resourcePath / prop.getValue<std::string>();
                         if (!info.modelPath.empty())
                         {
                             cro::ConfigFile modelData;
@@ -1116,7 +1116,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::string>& f
                                     {
                                         if (p.getName() == "diffuse")
                                         {
-                                            info.texturePath = resourcePath + p.getValue<std::string>();
+                                            info.texturePath = resourcePath / p.getValue<std::string>();
                                         }
                                     }
                                 }
@@ -1141,9 +1141,9 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::string>& f
                     {
                         //create a uid from the file name and save it to the cfg
                         //uses Bob Jenkins' spooky hash
-                        info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                        info.uid = SpookyHash::Hash32(file.u8string().data(), file.u8string().size(), 0);
                         cfg.addProperty("uid").setValue(info.uid);
-                        cfg.save(searchPath + file);
+                        cfg.save(searchPath / file);
                     }
 
                     //check uid doesn't exist
@@ -1155,7 +1155,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::string>& f
 
                     if (result == m_sharedData.avatarInfo.end())
                     {
-                        info.workshopID = findWorkshopID(searchPath);
+                        info.workshopID = findWorkshopID(U8PATH_CAST(searchPath));
                         info.locked = locked;
                         m_sharedData.avatarInfo.push_back(info);
                         m_playerAvatars.emplace_back(info.texturePath);
@@ -1438,10 +1438,10 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
             if (cro::FileSystem::getFileExtension(file) == ".ball")
             {
                 cro::ConfigFile cfg;
-                if (cfg.loadFromFile(BallUserPath + file, false))
+                if (cfg.loadFromFile(BallUserPath / file, false))
                 {
                     auto info = readBallCfg(cfg);
-                    info.modelPath = BallUserPath + info.modelPath;
+                    info.modelPath = BallUserPath / info.modelPath;
                     info.workshopID = id;
                     info.type = SharedStateData::BallInfo::Custom;
 
@@ -1469,10 +1469,10 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
             if (cro::FileSystem::getFileExtension(file) == ".hct")
             {
                 cro::ConfigFile cfg;
-                if (cfg.loadFromFile(HairUserPath + file, false))
+                if (cfg.loadFromFile(HairUserPath / file, false))
                 {
                     auto info = readHairCfg(cfg);
-                    info.modelPath = HairUserPath + info.modelPath;
+                    info.modelPath = HairUserPath / info.modelPath;
                     info.workshopID = id;
                     info.type = SharedStateData::HairInfo::Custom;
 

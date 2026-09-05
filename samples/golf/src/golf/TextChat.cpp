@@ -277,7 +277,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     cro::String str(std::uint32_t(0x1F44F));
 
     auto utf = str.toUtf8();
-
+    
     m_buttonStrings.applaud.resize(utf.size());
     std::memcpy(m_buttonStrings.applaud.data(), utf.data(), utf.size());
     m_buttonStrings.applaud.push_back('#'); //these duplicate some button labels in the flyout *sigh*
@@ -733,7 +733,7 @@ void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour)
 
         if (m_logFile.is_open() && m_logFile.good())
         {
-            const auto utf = outStr.toUtf8();
+            const auto utf = outStr.toUtf8Char();
             m_logFile << std::put_time(tm, "<%H:%M:%S> ") << utf.c_str() <<"\n";
         }
     }
@@ -864,7 +864,8 @@ void TextChat::initLog()
             cro::FileSystem::createDirectory(contentPath);
         }
 
-        const std::string filename = contentPath +  "chat_log_" + std::to_string(tm->tm_year + 1900) + "-" + std::to_string(tm->tm_mon + 1) + "-" + std::to_string(tm->tm_mday) + ".txt";
+        const std::string u8p = U8PATH_CAST(contentPath);
+        const std::string filename = u8p + "/chat_log_" + std::to_string(tm->tm_year + 1900) + "-" + std::to_string(tm->tm_mon + 1) + "-" + std::to_string(tm->tm_mday) + ".txt";
         m_logFile.open(filename, std::ios::app);
     }
 }

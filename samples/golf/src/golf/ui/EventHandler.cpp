@@ -66,15 +66,15 @@ bool handleTopLevelEvent(const cro::Event& evt, SharedStateData& sharedData, Hel
         switch (evt.type)
         {
         default: break;
-        case SDL_MOUSEBUTTONUP:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
             if (evt.button.button == SDL_BUTTON_RIGHT)
             {
                 sharedData.showHelp = false;
                 cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = MenuSoundEvent::Cancel;
             }
             break;
-        case SDL_CONTROLLERBUTTONUP:
-            switch (evt.cbutton.button)
+        case SDL_EVENT_GAMEPAD_BUTTON_UP:
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::ButtonB:
@@ -89,8 +89,8 @@ bool handleTopLevelEvent(const cro::Event& evt, SharedStateData& sharedData, Hel
                 break;
             }
             break;
-        case SDL_KEYUP:
-            switch (evt.key.keysym.sym)
+        case SDL_EVENT_KEY_UP:
+            switch (evt.key.key)
             {
             default: break;
             case SDLK_ESCAPE:

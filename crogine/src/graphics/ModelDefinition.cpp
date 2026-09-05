@@ -114,14 +114,11 @@ ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap,
     std::fill(m_shadowIDs.begin(), m_shadowIDs.end(), -1);
 }
 
-bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bool useDeferredShaders, bool forceReload)
+bool ModelDefinition::loadFromFile(const std::filesystem::path& path, bool instanced, bool useDeferredShaders, bool forceReload)
 {
 #ifdef PLATFORM_MOBILE
     instanced = false
 #endif
-
-    auto path = inPath;
-    std::replace(path.begin(), path.end(), '\\', '/');
 
     if (m_modelLoaded)
     {
@@ -133,32 +130,32 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
 
     if (FileSystem::getFileExtension(path) != ".cmt")
     {
-        Logger::log(path + ": unusual file extension...", Logger::Type::Warning);
+        LogW << path << ": unusual file extension..." << std::endl;
     }
 
     ConfigFile cfg;
-    if (!cfg.loadFromFile(path, std::filesystem::path(inPath).is_relative()))
+    if (!cfg.loadFromFile(path, path.is_relative()))
     {
-        Logger::log("Failed loading ModelDefinition " + path, Logger::Type::Error);
+        LogE << "Failed loading ModelDefinition " << path << std::endl;
         return false;
     }
 
     if (Util::String::toLower(cfg.getName()) != "model")
     {
-        Logger::log("No model object found in model definition " + path, Logger::Type::Error);
+        LogE << "No model object found in model definition " << path << std::endl;
         return false;
     }
 
     auto meshPath = cfg.findProperty("mesh");
     if (!meshPath)
     {
-        Logger::log(path + ": Model node contains no mesh value", Logger::Type::Error);
+        LogE << path << ": Model node contains no mesh value" << std::endl;
         return false;
     }
 
-    std::string meshValue = meshPath->getValue<std::string>();
-    std::replace(meshValue.begin(), meshValue.end(), '\\', '/');
-    auto ext = FileSystem::getFileExtension(meshValue);
+    std::filesystem::path meshValue = meshPath->getValue<std::string>();
+    //std::replace(meshValue.begin(), meshValue.end(), '\\', '/');
+    const std::filesystem::path ext = FileSystem::getFileExtension(meshValue);
     std::unique_ptr<MeshBuilder> meshBuilder;
 
     bool lockRotation = false;
@@ -166,24 +163,27 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
 
     //if there's an empty working path this checks to see if we have a model file
     //in the same dir as the definition without a full path
-    auto updateLocalPath = [&](std::string& filePath) 
+    auto updateLocalPath = [&](std::filesystem::path& filePath) 
     {
-        auto pos = filePath.find_last_of('/');
-        if (pos == std::string::npos)
+        //auto pos = filePath.find_last_of('/');
+        //if (pos == std::string::npos)
+        if (!filePath.has_parent_path())
         {
-            pos = path.find_last_of('/');
-            if (pos != std::string::npos)
+            /*pos = path.find_last_of('/');
+            if (pos != std::string::npos)*/
+            if (path.has_parent_path())
             {
-                filePath = path.substr(0, path.find_last_of('/')) + "/" + filePath;
+                //filePath = path.substr(0, path.find_last_of('/')) + "/" + filePath;
+                filePath = path.parent_path() / filePath;
             }
             else
             {
-                filePath = m_workingDir + filePath;
+                filePath = m_workingDir / filePath;
             }
         }
         else
         {
-            filePath = m_workingDir + filePath;
+            filePath = m_workingDir / filePath;
         }
     };
 
@@ -205,7 +205,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
         updateLocalPath(meshValue);
         meshBuilder = std::make_unique<IqmBuilder>(meshValue);
     }
-    else if (Util::String::toLower(meshValue) == "sphere")
+    else if (Util::String::toLower(U8PATH_CAST(meshValue)) == "sphere")
     {
         if (auto* prop = cfg.findProperty("radius"))
         {
@@ -213,7 +213,8 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
             meshBuilder = std::make_unique<SphereBuilder>(rad, 8);
         }
     }
-    else if (Util::String::toLower(meshValue) == "cube")
+    //TODO we should only convert to string once
+    else if (Util::String::toLower(U8PATH_CAST(meshValue)) == "cube")
     {
         glm::vec3 size(1.f);
         if (auto sizeProp = cfg.findProperty("size"); sizeProp)
@@ -227,7 +228,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
 
         meshBuilder = std::make_unique<CubeBuilder>(size);
     }
-    else if (Util::String::toLower(meshValue) == "circle")
+    else if (Util::String::toLower(U8PATH_CAST(meshValue)) == "circle")
     {
         float radius = 1.f;
         std::uint32_t pointCount = 3;
@@ -243,7 +244,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
 
         meshBuilder = std::make_unique<CircleMeshBuilder>(radius, pointCount);
     }
-    else if (Util::String::toLower(meshValue) == "quad")
+    else if (Util::String::toLower(U8PATH_CAST(meshValue)) == "quad")
     {
         FloatRect uv(0.f, 0.f, 1.f, 1.f);
         if (auto* prop = cfg.findProperty("uv"))
@@ -259,7 +260,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
             meshBuilder = std::make_unique<QuadBuilder>(size, uv);
         }
     }
-    else if (Util::String::toLower(meshValue) == "billboard")
+    else if (Util::String::toLower(U8PATH_CAST(meshValue)) == "billboard")
     {
         meshBuilder = std::make_unique<BillboardMeshBuilder>();
         m_billboard = true;
@@ -285,14 +286,14 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
     else
     {
         //t'aint valid bruh
-        Logger::log(ext + ": invalid model file type.", Logger::Type::Error);
+        LogE << ext << ": invalid model file type." << std::endl;
         return false;
     }
 
     //check builder was created OK
     if (!meshBuilder)
     {
-        Logger::log(path + ": could not create mesh builder instance", Logger::Type::Error);
+        LogE << path << ": could not create mesh builder instance" << std::endl;
         return false;
     }
 
@@ -312,7 +313,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
 
     if (materials.empty())
     {
-        Logger::log(path + ": no materials found.", Logger::Type::Error);
+        LogE << path << ": no materials found." << std::endl;
         return false;
     }
 
@@ -328,7 +329,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
     m_meshID = m_resources.meshes.loadMesh(*meshBuilder.get(), forceReload);
     if (m_meshID == 0)
     {
-        Logger::log(path + ": preloading mesh failed", Logger::Type::Error);
+        LogE << path << ": preloading mesh failed" << std::endl;
         Logger::log("Check model path in model definition file?", Logger::Type::Error);
         return false;
     }
@@ -609,12 +610,16 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
         float alphaClip = 0.f;
 
         const auto loadTexture = 
-            [&](std::string filepath, bool createMipmaps)
+            [&](std::filesystem::path filepath, bool createMipmaps)
             {
-                Texture* tex = nullptr;
                 auto temp = filepath;
-                if (Util::String::replace(temp, ".png", ".ktx2")
-                    && FileSystem::fileExists(temp))
+                temp.replace_extension(".ktx2");
+                Texture* tex = nullptr;
+                
+                //auto temp = filepath;
+                //if (Util::String::replace(temp, ".png", ".ktx2")
+                //    && FileSystem::fileExists(temp))
+                if (FileSystem::fileExists(temp))
                 {
                     //try using compressed texture instead
                     tex = &m_resources.textures.get(temp);
@@ -640,7 +645,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
             const auto& name = Util::String::toLower(p.getName());
             if (name == "diffuse")
             {
-                auto filepath = p.getValue<std::string>();
+                std::filesystem::path filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
 
                 auto& tex = *loadTexture(filepath, createMipmaps/*, true*/);
@@ -652,7 +657,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
             }
             else if (name == "mask")
             {
-                auto filepath = p.getValue<std::string>();
+                std::filesystem::path filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
 
                 auto& tex = *loadTexture(filepath, createMipmaps/*, true*/);
@@ -662,7 +667,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
             }
             else if (name == "normal")
             {
-                auto filepath = p.getValue<std::string>();
+                std::filesystem::path filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
                 //TODO normal maps require specific compression
                 //so we ignore any ktx files
@@ -674,7 +679,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
             }
             else if (name == "lightmap")
             {
-                auto filepath = p.getValue<std::string>();
+                std::filesystem::path filepath = p.getValue<std::string>();
                 updateLocalPath(filepath);
 
                 auto& tex = *loadTexture(filepath, createMipmaps);
@@ -822,24 +827,24 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 glm::vec3 v3Value = glm::vec3(0.f);
                 glm::vec4 v4Value = glm::vec4(0.f);
 
-                for (const auto& p : obj.getProperties())
+                for (const auto& pr : obj.getProperties())
                 {
-                    if (p.getName() == "type")
+                    if (pr.getName() == "type")
                     {
-                        uniform.type = p.getValue<std::int32_t>();
+                        uniform.type = pr.getValue<std::int32_t>();
                         uniform.type = std::clamp(uniform.type, 0, Uniform::MaxType - 1);
                     }
-                    else if (p.getName() == "name")
+                    else if (pr.getName() == "name")
                     {
-                        uniform.name = p.getValue<std::string>();
+                        uniform.name = pr.getValue<std::string>();
                     }
-                    else if (p.getName() == "value")
+                    else if (pr.getName() == "value")
                     {
-                        strValue = p.getValue<std::string>();
-                        fValue = p.getValue<float>();
-                        v2Value = p.getValue<glm::vec2>();
-                        v3Value = p.getValue<glm::vec3>();
-                        v4Value = p.getValue<glm::vec4>();
+                        strValue = pr.getValue<std::string>();
+                        fValue = pr.getValue<float>();
+                        v2Value = pr.getValue<glm::vec2>();
+                        v3Value = pr.getValue<glm::vec3>();
+                        v4Value = pr.getValue<glm::vec4>();
                     }
                 }
 
@@ -940,7 +945,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
     }
 
     m_modelLoaded = true;
-    m_fileName = cro::FileSystem::getFileName(path);
+    m_fileName = U8PATH_CAST(cro::FileSystem::getFileName(path));
     return true;
 }
 

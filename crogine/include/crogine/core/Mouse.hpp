@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -29,7 +29,7 @@ source distribution.
 
 #pragma once
 
-#include <SDL_mouse.h>
+#include <SDL3/SDL_mouse.h>
 
 #include <crogine/detail/glm/vec2.hpp>
 
@@ -46,7 +46,11 @@ namespace cro::Mouse
     */
     enum class Button
     {
-        Left = 1, Middle, Right
+        Left   = SDL_BUTTON_LEFT,
+        Middle = SDL_BUTTON_MIDDLE,
+        Right  = SDL_BUTTON_RIGHT,
+        X1     = SDL_BUTTON_X1,
+        X2     = SDL_BUTTON_X2
     };
 
     /*!
@@ -55,8 +59,8 @@ namespace cro::Mouse
     */
     static inline glm::vec2 getGlobalPosition()
     {
-        std::int32_t x = 0;
-        std::int32_t y = 0;
+        float x = 0;
+        float y = 0;
         SDL_GetGlobalMouseState(&x, &y);
         return { x,y };
     }
@@ -67,8 +71,8 @@ namespace cro::Mouse
     */
     static inline glm::vec2 getPosition()
     {
-        std::int32_t x = 0;
-        std::int32_t y = 0;
+        float x = 0;
+        float y = 0;
         SDL_GetMouseState(&x, &y);
         return { x,y };
     }
@@ -79,8 +83,8 @@ namespace cro::Mouse
     */
     static inline glm::vec2 getRelativePosition()
     {
-        std::int32_t x = 0;
-        std::int32_t y = 0;
+        float x = 0;
+        float y = 0;
         SDL_GetRelativeMouseState(&x, &y);
         return { x,y };
     }
@@ -91,7 +95,6 @@ namespace cro::Mouse
     */
     static inline bool isButtonPressed(Button button)
     {
-        std::int32_t x, y;
-        return (SDL_BUTTON(int(button))& SDL_GetMouseState(&x, &y)) != 0;
+        return (SDL_BUTTON_MASK(int(button))& SDL_GetMouseState(nullptr, nullptr)) != 0;
     }
 }

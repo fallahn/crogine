@@ -336,7 +336,7 @@ void ModelState::showSaveMessage()
         {
             if (m_importedVBO.empty())
             {
-                auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory + "/untitled", "cmt");
+                std::string path = U8PATH_CAST(cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory + "/untitled", "cmt"));
                 if (!path.empty())
                 {
                     saveModel(path);
@@ -378,10 +378,10 @@ void ModelState::buildUI()
                         {
                             if (cro::FileSystem::showMessageBox("", "Working directory currently not set. Would you like to set one now?", cro::FileSystem::YesNo, cro::FileSystem::Question))
                             {
-                                auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
+                                const auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
                                 if (!path.empty())
                                 {
-                                    m_sharedData.workingDirectory = path;
+                                    m_sharedData.workingDirectory = U8PATH_CAST(path);
                                     std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
                                 }
                             }
@@ -397,10 +397,10 @@ void ModelState::buildUI()
                     if (ImGui::MenuItem("Save As...", nullptr, nullptr, !m_currentFilePath.empty()))
                     {
                         //if a model is open create a new model def with current materials
-                        auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory + "/untitled", "cmt");
+                        const auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory + "/untitled", "cmt");
                         if (!path.empty())
                         {
-                            saveModel(path);
+                            saveModel(U8PATH_CAST(path));
                         }
                     }
 
@@ -488,12 +488,12 @@ void ModelState::buildUI()
                     {
                         auto lastPath = m_sharedData.skymapTexture.empty() ? m_sharedData.workingDirectory + "/untitled.hdr" : m_sharedData.skymapTexture;
 
-                        auto path = cro::FileSystem::openFileDialogue(lastPath, "hdr");
+                        const auto path = cro::FileSystem::openFileDialogue(lastPath, "hdr");
                         if (!path.empty())
                         {
                             if (m_environmentMap.loadFromFile(path))
                             {
-                                m_sharedData.skymapTexture = path;
+                                m_sharedData.skymapTexture = U8PATH_CAST(path);
                             }
                         }
                     }
@@ -590,10 +590,10 @@ void ModelState::buildUI()
                     ImGui::SameLine();
                     if (ImGui::Button("Browse"))
                     {
-                        auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
+                        const auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
                         if (!path.empty())
                         {
-                            m_sharedData.workingDirectory = path;
+                            m_sharedData.workingDirectory = U8PATH_CAST(path);
                             std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
                         }
                     }
@@ -692,7 +692,7 @@ void ModelState::buildUI()
 
                 if (!m_lightmapTextures.empty() && ImGui::Button("Save All"))
                 {
-                    auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory + "/" + "ao_untitled", "png");
+                    std::string path = U8PATH_CAST(cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory + "/" + "ao_untitled", "png"));
                     if (!path.empty())
                     {
                         if (meshData.submeshCount > 1)
@@ -1575,7 +1575,7 @@ void ModelState::drawInspector()
                         case MaterialDefinition::Uniform::Texture:
                             if (ImGui::Button("Browse"))
                             {
-                                auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
+                                std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue("", "png,jpg,bmp"));
                                 if (!path.empty())
                                 {
                                     std::replace(path.begin(), path.end(), '\\', '/');
@@ -1845,7 +1845,7 @@ void ModelState::drawBrowser()
             ImGui::SameLine();
             if (ImGui::Button("Open##01"))
             {
-                auto path = cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory + "/untitled", "mdf,cmt");
+                const std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory + "/untitled", "mdf,cmt"));
                 if (!path.empty())
                 {
                     importMaterial(path);
@@ -1989,11 +1989,11 @@ void ModelState::drawBrowser()
         {
             if (ImGui::Button("Add##00"))
             {
-                auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp", true);
+                const std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue("", "png,jpg,bmp", true));
                 if (!path.empty()
                     && m_materialTextures.size() < uiConst::MaxMaterials)
                 {
-                    auto files = cro::Util::String::tokenize(path, '|');
+                    const auto files = cro::Util::String::tokenize(path, '|');
                     for (const auto& f : files)
                     {
                         addTextureToBrowser(f);
@@ -2518,7 +2518,7 @@ void ModelState::drawBrowser()
                     auto path = cro::FileSystem::openFileDialogue("", "cmt");
                     if (!path.empty())
                     {
-                        std::replace(path.begin(), path.end(), '\\', '/');
+                        //std::replace(path.begin(), path.end(), '\\', '/');
                         /*if (auto found = path.find(m_sharedData.workingDirectory); found != std::string::npos)
                         {
                             path = path.substr(found);
@@ -2530,7 +2530,7 @@ void ModelState::drawBrowser()
                             auto entity = m_scene.createEntity();
                             entity.addComponent<cro::Transform>();
                             md.createModel(entity);
-                            entity.setLabel(cro::FileSystem::getFileName(path));
+                            entity.setLabel(U8PATH_CAST(cro::FileSystem::getFileName(path)));
                             entity.getComponent<cro::Model>().setHidden(true);
                             m_attachmentModels.push_back(entity);
                         }
@@ -2966,7 +2966,7 @@ void ModelState::drawImageCombiner()
                     m_combinedImages[i].second = cro::Image(true);
                     if (m_combinedImages[i].second.loadFromFile(path))
                     {
-                        m_combinedImages[i].first = cro::FileSystem::getFileName(path);
+                        m_combinedImages[i].first = U8PATH_CAST(cro::FileSystem::getFileName(path));
                     }
                 }
             }
@@ -3061,7 +3061,7 @@ void ModelState::drawImageCombiner()
                     }
                     else
                     {
-                        cro::FileSystem::showMessageBox("Error", "Failed writing " + cro::FileSystem::getFileName(path));
+                        cro::FileSystem::showMessageBox("Error", "Failed writing " + std::string(U8PATH_CAST(cro::FileSystem::getFileName(path))));
                     }
                 }
             }

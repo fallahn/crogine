@@ -98,9 +98,9 @@ bool GKGameState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -127,27 +127,27 @@ bool GKGameState::simulate(float dt)
     //TODO this should be long the camera forward vector...
 
     glm::vec3 movement(0.f);
-    if (cro::Keyboard::isKeyPressed(SDLK_w))
+    if (cro::Keyboard::isKeyPressed(SDLK_W))
     {
         movement.z -= 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_s))
+    if (cro::Keyboard::isKeyPressed(SDLK_S))
     {
         movement.z += 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_q))
+    if (cro::Keyboard::isKeyPressed(SDLK_Q))
     {
         movement.y -= 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_e))
+    if (cro::Keyboard::isKeyPressed(SDLK_E))
     {
         movement.y += 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_a))
+    if (cro::Keyboard::isKeyPressed(SDLK_A))
     {
         movement.x -= 1.f;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_d))
+    if (cro::Keyboard::isKeyPressed(SDLK_D))
     {
         movement.x += 1.f;
     }

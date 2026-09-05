@@ -115,10 +115,10 @@ namespace
     //cycle without repetition (until we reach the end)
     static std::int32_t BannerIndex = cro::Util::Random::value(0, static_cast<std::int32_t>(BannerStrings.size()) - 1);
 
-    void loadLightPreset(LightData& out, const std::string file)
+    void loadLightPreset(LightData& out, const std::filesystem::path& file)
     {
         cro::ConfigFile cfg;
-        cfg.loadFromFile("assets/golf/lights/" + file);
+        cfg.loadFromFile("assets/golf/lights/" / file);
         const auto& props = cfg.getProperties();
         for (const auto& prop : props)
         {
@@ -146,28 +146,28 @@ namespace
     {
         const auto installPaths = Content::getInstallPaths();
 
-        std::string mapPath;
+        std::filesystem::path mapPath;
         for (const auto& dir : installPaths)
         {
-            mapPath = dir + ConstVal::MapPath + mapDir;
-            if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + mapPath))
+            mapPath = dir / ConstVal::MapPath / mapDir;
+            if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() / mapPath))
             {
                 break;
             }
         }
-        mapPath += +"/course.data";
+        mapPath /= "course.data";
 
 
         bool isUser = false;
-        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
+        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / mapPath))
         {
-            auto coursePath = cro::App::getPreferencePath() + ConstVal::UserMapPath;
+            const auto coursePath = cro::App::getPreferencePath() / ConstVal::UserMapPath;
             if (!cro::FileSystem::directoryExists(coursePath))
             {
                 cro::FileSystem::createDirectory(coursePath);
             }
 
-            mapPath = cro::App::getPreferencePath() + ConstVal::UserMapPath + mapDir + "/course.data";
+            mapPath = cro::App::getPreferencePath() / ConstVal::UserMapPath / mapDir / "course.data";
             isUser = true;
 
             if (!cro::FileSystem::fileExists(mapPath))
@@ -179,7 +179,7 @@ namespace
         }
 
 
-        return std::make_pair(mapPath, isUser);
+        return std::make_pair(U8PATH_CAST(mapPath), isUser);
     }
 }
 
@@ -318,10 +318,10 @@ void GolfState::loadMap()
     std::unordered_map<std::string, LightData> lightPresets;
     if (m_sharedData.nightTime)
     {
-        auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + u8"assets/golf/lights");
+        const auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() / "assets/golf/lights");
         for (const auto& file : files)
         {
-            auto ext = cro::FileSystem::getFileExtension(file);
+            const auto ext = cro::FileSystem::getFileExtension(file);
             if (ext == ".lgt")
             {
                 LightData preset;
@@ -329,7 +329,8 @@ void GolfState::loadMap()
 
                 if (preset.radius > 0.01f)
                 {
-                    lightPresets.insert(std::make_pair(file.substr(0, file.find(ext)), preset));
+                    std::string u8file = U8PATH_CAST(file);
+                    lightPresets.insert(std::make_pair(u8file.substr(0, u8file.find(U8PATH_CAST(ext))), preset));
                 }
             }
         }
@@ -372,9 +373,9 @@ void GolfState::loadMap()
             //if set to night check for night path (appended with _n)
             if (m_sharedData.nightTime)
             {
-                auto ext = cro::FileSystem::getFileExtension(skyboxPath);
+                const std::string ext = U8PATH_CAST(cro::FileSystem::getFileExtension(skyboxPath));
                 auto nightPath = skyboxPath.substr(0, skyboxPath.find(ext)) + "_n" + ext;
-                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + nightPath))
+                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / nightPath))
                 {
                     skyboxPath = nightPath;
                 }
@@ -421,9 +422,9 @@ void GolfState::loadMap()
         }
         else if (name == "audio")
         {
-            auto audioPath = prop.getValue<std::string>();
+            const auto audioPath = prop.getValue<std::string>();
 
-            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + audioPath))
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / audioPath))
             {
                 m_audioPath = audioPath;
             }
@@ -444,11 +445,11 @@ void GolfState::loadMap()
         classicModel = theme.billboardModel.substr(0, theme.billboardModel.find_last_of('.')) + "_low.cmt";
         classicSprites = theme.billboardSprites.substr(0, theme.billboardSprites.find_last_of('.')) + "_low.spt";
 
-        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + classicModel))
+        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / classicModel))
         {
             classicModel.clear();
         }
-        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + classicSprites))
+        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / classicSprites))
         {
             classicSprites.clear();
         }
@@ -553,13 +554,13 @@ void GolfState::loadMap()
 #endif
 
     if (theme.billboardModel.empty()
-        || !cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + theme.billboardModel))
+        || !cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / theme.billboardModel))
     {
         LogE << "Missing or invalid billboard model definition" << std::endl;
         error = true;
     }
     if (theme.billboardSprites.empty()
-        || !cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + theme.billboardSprites))
+        || !cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / theme.billboardSprites))
     {
         LogE << "Missing or invalid billboard sprite sheet" << std::endl;
         error = true;
@@ -611,7 +612,7 @@ void GolfState::loadMap()
 
     for (const auto& hole : holeStrings)
     {
-        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + hole))
+        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / hole))
         {
             LOG("Hole file is missing", cro::Logger::Type::Error);
             error = true;
@@ -902,11 +903,11 @@ void GolfState::loadMap()
                                         if (m_sharedData.nightTime)
                                         {
                                             //see if there's a specific model
-                                            auto ext = cro::FileSystem::getFileExtension(path);
+                                            const std::string ext = U8PATH_CAST(cro::FileSystem::getFileExtension(path));
                                             if (!ext.empty())
                                             {
-                                                auto nightPath = path.substr(0, path.find(ext)) + "_night" + ext;
-                                                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + nightPath))
+                                                const auto nightPath = path.substr(0, path.find(ext)) + "_night" + ext;
+                                                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / nightPath))
                                                 {
                                                     path = nightPath;
                                                 }
@@ -982,7 +983,7 @@ void GolfState::loadMap()
                                 }
 
                                 if (!path.empty() && Social::isValid(path)
-                                    && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + path))
+                                    && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / path))
                                 {
                                     if (modelDef.loadFromFile(path))
                                     {
@@ -1114,8 +1115,9 @@ void GolfState::loadMap()
                                         {
                                             leaderboardProps.push_back(ent);
                                         }
-                                        else if (cro::FileSystem::getFileName(path).find("rotating_billboard") != std::string::npos)
+                                        else if (cro::FileSystem::getFileName(path).string().find("rotating_billboard") != std::string::npos)
                                         {
+                                            FS_ASSERT;
                                             if (modelDef.hasSkeleton())
                                             {
                                                 //animation callback
@@ -1151,8 +1153,9 @@ void GolfState::loadMap()
 #endif
                                             }
                                         }
-                                        else if (cro::FileSystem::getFileName(path).find("lighthouse") != std::string::npos)
+                                        else if (cro::FileSystem::getFileName(path).string().find("lighthouse") != std::string::npos)
                                         {
+                                            FS_ASSERT;
                                             if (propAudio.hasEmitter("foghorn")
                                                 && m_sharedData.weatherType == WeatherType::Mist)
                                             {
@@ -1495,7 +1498,7 @@ void GolfState::loadMap()
                                         swarmSettings.texture = sp.getValue<std::string>();
                                         if (m_sharedData.nightTime)
                                         {
-                                            const auto ext = cro::FileSystem::getFileExtension(swarmSettings.texture);
+                                            const std::string ext = U8PATH_CAST(cro::FileSystem::getFileExtension(swarmSettings.texture));
                                             if (!ext.empty())
                                             {
                                                 const auto nightPath = swarmSettings.texture.substr(0, swarmSettings.texture.find(ext)) + "_night" + ext;
@@ -1912,24 +1915,27 @@ void GolfState::loadMap()
             std::fill(scores.begin(), scores.end(), 0);
 
             //tournament
-            for (auto i = 0u; i < scores.size(); ++i)
+            if (m_sharedData.activeTournament > -1) //this might be the tutorial
             {
-                scores[i] = m_sharedData.tournaments[m_sharedData.activeTournament].scores[i];
-                if (scores[i] != 0)
+                for (auto i = 0u; i < scores.size(); ++i)
                 {
-                    h++;
+                    scores[i] = m_sharedData.tournaments[m_sharedData.activeTournament].scores[i];
+                    if (scores[i] != 0)
+                    {
+                        h++;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
-                else
+
+                mulliganCount = m_sharedData.tournaments[m_sharedData.activeTournament].mulliganCount;
+
+                if (h != 0)
                 {
-                    break;
+                    applySaveData(h, scores, mulliganCount);
                 }
-            }
-
-            mulliganCount = m_sharedData.tournaments[m_sharedData.activeTournament].mulliganCount;
-
-            if (h != 0)
-            {
-                applySaveData(h, scores, mulliganCount);
             }
         }
         else
@@ -2854,17 +2860,17 @@ void GolfState::loadModels()
 
 
     //load audio from avatar info
-    std::unordered_map<std::uint32_t, std::string> audioPaths;
+    std::unordered_map<std::uint32_t, std::filesystem::path> audioPaths;
     //list all available audio and put into map
     const auto processPath =
-        [&](const std::string& path)
+        [&](const std::filesystem::path& path)
         {
-            auto audioFiles = cro::FileSystem::listFiles(path);
+            const auto audioFiles = cro::FileSystem::listFiles(path);
             for (const auto& file : audioFiles)
             {
                 if (cro::FileSystem::getFileExtension(file) == ".xas")
                 {
-                    auto fullPath = path + file;
+                    auto fullPath = path / file;
                     cro::AudioScape as;
                     as.loadFromFile(fullPath, m_resources.audio);
 
@@ -2879,10 +2885,10 @@ void GolfState::loadModels()
         };
 
     const auto installPaths = Content::getInstallPaths();
-    std::string baseAudioPath = "/sound/avatars/";
+    std::filesystem::path baseAudioPath = "sound/avatars/";
     for (const auto& path : installPaths)
     {
-        processPath(path + baseAudioPath);
+        processPath(path / baseAudioPath);
     }
 
 #ifndef USE_GNS
@@ -2890,13 +2896,13 @@ void GolfState::loadModels()
     const auto voiceDirs = cro::FileSystem::listDirectories(baseAudioPath);
     for (const auto& dir : voiceDirs)
     {
-        processPath(baseAudioPath + dir + "/");
+        processPath(baseAudioPath / dir);
     }
 
 #else
     for (const auto& p : Content::getUserItemsPaths(Content::UserContent::Voice))
     {
-        processPath(p.string() + "/");
+        processPath(p);
     }
 #endif
 
@@ -2962,8 +2968,12 @@ void GolfState::loadModels()
                 //track stats if this is a workshop item
                 if (i == m_sharedData.localConnectionData.connectionID)
                 {
-                    auto temp = cro::FileSystem::getFilePath(audioPaths.at(voiceID));
-                    temp.pop_back(); //remove trailing '/'
+                    auto temp = cro::FileSystem::getFilePath(audioPaths.at(voiceID)).generic_string();
+                    
+                    if (temp.back() == '/')
+                    {
+                        temp.pop_back(); //remove trailing '/'
+                    }
 
                     if (temp.back() == 'w')
                     {
@@ -3282,13 +3292,13 @@ void GolfState::loadModels()
     //club models
 
     //collect all search paths for club models
-    std::unordered_map<std::uint32_t, std::string> clubPaths;
+    std::unordered_map<std::uint32_t, std::filesystem::path> clubPaths;
     const auto processClubPath = 
-        [&](const std::string& path)
+        [&](const std::filesystem::path& path)
         {
-            const std::string fileName = "/list.cst";
+            const std::string fileName = "list.cst";
             cro::ConfigFile cfg;
-            if (cfg.loadFromFile(path + fileName, false)) //resource path was already added
+            if (cfg.loadFromFile(path / fileName, false)) //resource path was already added
             {
                 //TODO we need to do full validation, eg models exist here
                 if (const auto* uid = cfg.findProperty("uid");
@@ -3297,7 +3307,7 @@ void GolfState::loadModels()
                     const auto id = uid->getValue<std::uint32_t>();
                     if (clubPaths.count(id) == 0)
                     {
-                        clubPaths.insert(std::make_pair(id, path + fileName));
+                        clubPaths.insert(std::make_pair(id, path / fileName));
                     }
                 }
             }
@@ -3306,12 +3316,12 @@ void GolfState::loadModels()
     const auto ContentDirs = Content::getInstallPaths();
     for (const auto& c : ContentDirs)
     {
-        const auto basePath = cro::FileSystem::getResourcePath() + c + "clubs/";
+        const auto basePath = cro::FileSystem::getResourcePath() / c / "clubs";
         const auto clubsets = cro::FileSystem::listDirectories(basePath);
 
         for (const auto& s : clubsets)
         {
-            processClubPath(basePath + s);
+            processClubPath(basePath / s);
         }
     }
 
@@ -3321,7 +3331,8 @@ void GolfState::loadModels()
     auto clubsets = cro::FileSystem::listDirectories(basePath);
 
     //remove dirs from this list if it's not from the workshop (rather crudely)
-    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::string& s) {return s.back() != 'w'; }), clubsets.end());
+    //TODO we don't do this anymore as workshop items are loaded directly from Steam
+    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::filesystem::path& s) {return s.u8string().back() != 'w'; }), clubsets.end());
 
     if (clubsets.size() > ConstVal::MaxClubsets)
     {
@@ -3331,20 +3342,20 @@ void GolfState::loadModels()
 
     for (const auto& s : clubsets)
     {
-        processClubPath(basePath + s);
+        processClubPath(basePath / s);
     }
 #else
     //workshop paths
     const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Clubs);
     for (const auto& p : wsPaths)
     {
-        processClubPath(p.string());
+        processClubPath(p);
     }
 #endif
 
 
     const auto loadClubModel = 
-        [&](std::uint32_t clubID)
+        [this, &clubPaths](std::uint32_t clubID)
         {
             if (m_clubModels.count(clubID) == 0)
             {
@@ -3647,14 +3658,14 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
 {
     if (cro::AudioMixer::hasAudioRenderer())
     {
-        std::string planePath = "assets/golf/models/plane.cmt";
+        std::filesystem::path planePath = "assets/golf/models/plane.cmt";
 
         if (m_sharedData.nightTime)
         {
-            auto ext = cro::FileSystem::getFileExtension(m_audioPath);
-            auto nightPath = m_audioPath.substr(0, m_audioPath.find(ext)) + "_n" + ext;
+            const std::string ext = U8PATH_CAST(cro::FileSystem::getFileExtension(m_audioPath));
+            const auto nightPath = m_audioPath.substr(0, m_audioPath.find(ext)) + "_n" + ext;
 
-            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + nightPath))
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / nightPath))
             {
                 m_audioPath = nightPath;
             }

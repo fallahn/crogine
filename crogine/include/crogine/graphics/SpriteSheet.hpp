@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,8 +32,9 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 
-#include <unordered_map>
+#include <filesystem>
 #include <string>
+#include <unordered_map>
 
 namespace cro
 {
@@ -54,14 +55,14 @@ namespace cro
         the sprite sheet texture.
         \returns true if successful, else false
         */
-        bool loadFromFile(const std::string& path, TextureResource& rx, const std::string& workingDirectory = "");
+        bool loadFromFile(const std::filesystem::path& path, TextureResource& rx, const std::filesystem::path& workingDirectory = "");
 
         /*!
         \brief Writes the contents of the SpriteSheet to a sprite sheet configuration file
         \param path A string containing the path to which to attempt to write the file
         \returns true on success, else false. Error messages are printed to the console
         */
-        bool saveToFile(const std::string& path);
+        bool saveToFile(const std::filesystem::path& path);
 
         /*!
         \brief Returns a sprite component with the given name as it
@@ -90,7 +91,7 @@ namespace cro
         /*!
         \brief Returns the path to the image loaded for the sprite sheet's texture
         */
-        const std::string getTexturePath() const { return m_texturePath; }
+        const std::filesystem::path& getTexturePath() const { return m_texturePath; }
 
         /*!
         \brief Returns a pointer to the texture used by this Sprite Sheet if it is loaded
@@ -113,7 +114,7 @@ namespace cro
     private:
         mutable std::unordered_map<std::string, Sprite> m_sprites;
         mutable std::unordered_map<std::string, std::vector<std::string>> m_animations;
-        std::string m_texturePath;
+        std::filesystem::path m_texturePath;
         const cro::Texture* m_texture;
     };
 }

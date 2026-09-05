@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2025
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/util/Random.hpp>
 
 #include <array>
+#include <filesystem>
 #include <memory>
 
 namespace sv
@@ -117,7 +118,7 @@ struct PlayerData final
     mutable std::string profileID; //saving file generates this
 
     bool saveProfile() const;
-    bool loadProfile(const std::string& path, const std::string& uid);
+    bool loadProfile(const std::filesystem::path& path, const std::string& uid);
 
     bool isSteamID = false;
     mutable bool isCustomName = false; //if not true and is a steam profile use the current steam name
@@ -132,7 +133,7 @@ struct PlayerData final
 
 struct ProfileTexture
 {
-    explicit ProfileTexture(const std::string&);
+    explicit ProfileTexture(const std::filesystem::path&);
 
     void setColour(pc::ColourKey::Index, std::int8_t);
     const cro::Colour& getColour(pc::ColourKey::Index) const;

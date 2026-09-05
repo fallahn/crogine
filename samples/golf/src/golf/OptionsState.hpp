@@ -98,7 +98,7 @@ private:
 
 
     std::int32_t m_bindingIndex;
-    void updateKeybind(SDL_Keycode);
+    void updateKeybind(SDL_Scancode);
 
     std::array<std::function<void()>, 5u> m_tabFunctions = {};
     std::size_t m_currentTabFunction;

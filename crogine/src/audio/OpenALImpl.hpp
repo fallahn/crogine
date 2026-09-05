@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -91,11 +91,11 @@ namespace cro
 
             glm::vec3 getListenerPosition() const override;
 
-            std::int32_t requestNewBuffer(const std::string& path) override;
+            std::int32_t requestNewBuffer(const std::filesystem::path& path) override;
             std::int32_t requestNewBuffer(const PCMData&) override;
             void deleteBuffer(std::int32_t) override;
 
-            std::int32_t requestNewStream(const std::string&) override;
+            std::int32_t requestNewStream(const std::filesystem::path&) override;
             std::int32_t requestNewBufferableStream(BufferedStreamLoader** dst, std::uint32_t channels, std::uint32_t sampleRate);
             void deleteStream(std::int32_t) override;
 

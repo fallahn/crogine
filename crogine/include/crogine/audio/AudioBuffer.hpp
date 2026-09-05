@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -65,7 +65,8 @@ namespace cro
         or *.ogg vorbis files (mono or stereo) or *.mp3 files (mono or stereo)
         \returns true on success, else false
         */
-        bool loadFromFile(const std::string&) override;
+        bool loadFromFile(const std::filesystem::path&) override;
+
 
         /*!
         \brief Attempts to load the buffer with data stored in memory.

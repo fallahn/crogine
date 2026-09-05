@@ -33,8 +33,9 @@ source distribution.
 #include <crogine/graphics/VideoPlayer.hpp>
 
 #include <array>
-#include <vector>
+#include <filesystem>
 #include <unordered_map>
+#include <vector>
 
 //instanciated in MenuState and pointed to by SharedStateData
 //when sub-menus require it (else nullptr)
@@ -52,6 +53,6 @@ struct SharedCourseData final
     };
     std::vector<CourseData> courseData;
     std::unordered_map<std::string, std::unique_ptr<cro::Texture>> courseThumbs;
-    std::unordered_map<std::string, std::string> videoPaths;
+    std::unordered_map<std::string, std::filesystem::path> videoPaths;
     cro::VideoPlayer videoPlayer;
 };

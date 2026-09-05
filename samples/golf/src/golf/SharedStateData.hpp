@@ -48,13 +48,14 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
-#include <string>
 #include <array>
-#include <memory>
-#include <unordered_map>
-#include <thread>
 #include <atomic>
 #include <chrono>
+#include <filesystem>
+#include <memory>
+#include <string>
+#include <thread>
+#include <unordered_map>
 
 namespace cro
 {
@@ -217,7 +218,7 @@ struct SharedStateData final
             Regular, Unlock, Custom
         }type = Regular;
         cro::String label;
-        std::string modelPath;
+        std::filesystem::path modelPath;
 
         std::uint64_t workshopID = 0;
         cro::Colour tint;
@@ -240,8 +241,8 @@ struct SharedStateData final
         }type = Regular;
 
         std::uint32_t uid = 0;
-        std::string modelPath;
-        std::string texturePath;
+        std::filesystem::path modelPath;
+        std::filesystem::path texturePath;
         std::string audioscape;
         std::uint64_t workshopID = 0;
         bool locked = false;
@@ -258,7 +259,7 @@ struct SharedStateData final
         cro::String label;
 
         std::uint32_t uid = 0;
-        std::string modelPath;
+        std::filesystem::path modelPath;
         std::uint64_t workshopID = 0;
         bool locked = false;
         HairInfo() = default;

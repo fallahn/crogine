@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -390,9 +390,9 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
 //public
 bool EndlessDrivingState::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_MOUSEMOTION)
+    if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(true);
     }
 
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
@@ -416,79 +416,79 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
             }
         };
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         m_sharedGameData.lastInput = els::SharedStateData::Keyboard;
-        cro::App::getWindow().setMouseCaptured(true);
-        switch (evt.key.keysym.sym)
+        cro::App::getWindow().setCursorVisible(false);
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
-        case SDLK_p:
+        case SDLK_P:
             pauseGame();
             break;
         }
 
         if (!evt.key.repeat)
         {
-            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up])
+            if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Up])
             {
                 m_inputFlags.flags |= InputFlags::Up;
                 m_inputFlags.keyCount++;
             }
-            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down])
+            else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Down])
             {
                 m_inputFlags.flags |= InputFlags::Down;
                 m_inputFlags.keyCount++;
             }
-            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
+            else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left])
             {
                 m_inputFlags.flags |= InputFlags::Left;
                 m_inputFlags.keyCount++;
             }
-            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
+            else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right])
             {
                 m_inputFlags.flags |= InputFlags::Right;
                 m_inputFlags.keyCount++;
             }
-            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+            else if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action])
             {
                 auto* msg = postMessage<els::GameEvent>(els::MessageID::GameMessage);
                 msg->type = els::GameEvent::Toot;
             }
         }
     }
-    else if (evt.type == SDL_KEYUP)
+    else if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Up])
         {
             m_inputFlags.flags &= ~InputFlags::Up;
             m_inputFlags.keyCount--;
         }
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Down])
         {
             m_inputFlags.flags &= ~InputFlags::Down;
             m_inputFlags.keyCount--;
         }
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Left])
         {
             m_inputFlags.flags &= ~InputFlags::Left;
             m_inputFlags.keyCount--;
         }
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Right])
         {
             m_inputFlags.flags &= ~InputFlags::Right;
             m_inputFlags.keyCount--;
         }
     }
 
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        m_sharedGameData.lastInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which))
+        m_sharedGameData.lastInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.gbutton.which))
             ? els::SharedStateData::PS : els::SharedStateData::Xbox;
 
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonStart:
@@ -503,18 +503,18 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone
-            || evt.caxis.value < -cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone
+            || evt.gaxis.value < -cro::GameController::LeftThumbDeadZone)
         {
-            m_sharedGameData.lastInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which))
+            m_sharedGameData.lastInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.gbutton.which))
                 ? els::SharedStateData::PS : els::SharedStateData::Xbox;
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         }
     }
 
-    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    else if (evt.type == SDL_EVENT_GAMEPAD_REMOVED)
     {
         pauseGame();
     }
@@ -540,7 +540,7 @@ void EndlessDrivingState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             m_uiScene.simulate(0.f);
         }
@@ -1264,7 +1264,7 @@ void EndlessDrivingState::createUI()
                     else
                     {
                         //check if accelerate was being held and set input flag
-                        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
+                        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Up]))
                         {
                             m_inputFlags.flags |= InputFlag::Up;
                         }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024 - 2025
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -95,7 +95,7 @@ EndlessAttractState::EndlessAttractState(cro::StateStack& stack, cro::State::Con
     m_uiScene       (context.appInstance.getMessageBus()),
     m_cycleIndex    (0)
 {
-    const auto path = Content::getBaseContentPath() + ScoreFile;
+    const auto path = Content::getBaseContentPath() / ScoreFile;
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path, false))
     {
@@ -120,9 +120,9 @@ EndlessAttractState::EndlessAttractState(cro::StateStack& stack, cro::State::Con
 //public
 bool EndlessAttractState::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_MOUSEMOTION)
+    if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(true);
     }
 
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
@@ -169,12 +169,12 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
                 refreshPrompt();
             }
 
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         };
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_LEFT:
@@ -191,16 +191,16 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
             break;
         }
 
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::Action])
         {
             startGame();
         }
 
         updateTextPrompt(false);
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
         case cro::GameController::ButtonLeftShoulder:
@@ -221,10 +221,10 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
         updateTextPrompt(true);
     }
 
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone
-            || evt.caxis.value < -cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone
+            || evt.gaxis.value < -cro::GameController::LeftThumbDeadZone)
         {
             updateTextPrompt(true);
         }
@@ -340,7 +340,7 @@ void EndlessAttractState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to Start");
+    entity.addComponent<cro::Text>(font).setString("Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Action]) + " to Start");
     entity.getComponent<cro::Text>().setFillColour(TextColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -611,7 +611,7 @@ void EndlessAttractState::createUI()
 
 void EndlessAttractState::refreshHighScores()
 {
-    const auto path = Content::getBaseContentPath() + ScoreFile;
+    const auto path = Content::getBaseContentPath() / ScoreFile;
     cro::ConfigFile cfg;
     cfg.addProperty("best").setValue(m_sharedGameData.bestScore);
     cfg.save(path);

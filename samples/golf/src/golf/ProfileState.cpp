@@ -187,7 +187,7 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_mugshotUpdated    (false)
 {
     std::fill(m_previousInv.begin(), m_previousInv.end(), -2);
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(true);
 
     m_activeProfile = sp.playerProfiles[sp.activeProfileIndex];
 
@@ -263,20 +263,20 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         }
         else
         {
-            cro::String str(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]));
+            cro::String str(cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Left]));
             str += ", ";
-            str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]);
+            str += cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Right]);
             str += ", ";
-            str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Up]);
+            str += cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Up]);
             str += ", ";
-            str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Down]);
+            str += cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Down]);
             str += " Rotate/Zoom";
             m_menuEntities[EntityID::HelpText].getComponent<cro::Text>().setString(str);
 
 
-            str = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]);
+            str = cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Left]);
             str += ", ";
-            str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]);
+            str += cro::Keyboard::keyString(m_sharedData.inputBinding.scancodes[InputBinding::Right]);
             str += " Rotate";
             m_menuEntities[EntityID::HairHelp].getComponent<cro::Text>().setString(str);
         }
@@ -362,10 +362,10 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             }        
         };
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
         handleTextEdit(evt);
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default:
             updateHelpString(-1);
@@ -402,45 +402,45 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 applyTextEdit();
             }
             break;
-        //case SDLK_p:
+        //case SDLK_P:
         //    //renderBallFrames();
         //    requestStackPush(StateID::Shop);
         //    break;
-        //case SDLK_k:
+        //case SDLK_K:
         //    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().getUserData<std::int32_t>()++;
         //    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
         //    break;
-        //case SDLK_l:
+        //case SDLK_L:
         //    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().getUserData<std::int32_t>()--;
         //    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
         //    break;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         handleTextEdit(evt);
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
     }
-    else if (evt.type == SDL_TEXTINPUT)
+    else if (evt.type == SDL_EVENT_TEXT_INPUT)
     {
         handleTextEdit(evt);
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        cro::App::getWindow().setMouseCaptured(true);
+        cro::App::getWindow().setCursorVisible(false);
 
         if (m_textEdit.string == nullptr)
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: break;
             case cro::GameController::ButtonRightShoulder:
@@ -507,7 +507,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         auto currentMenu = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
 
@@ -662,22 +662,22 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             }
         }
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
 
-            updateHelpString(cro::GameController::controllerID(evt.caxis.which));
+            updateHelpString(cro::GameController::controllerID(evt.gaxis.which));
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        updateHelpString(cro::GameController::controllerID(evt.cbutton.which));
+        updateHelpString(cro::GameController::controllerID(evt.gbutton.which));
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(true);
         updateHelpString(-1);
 
         auto mousePos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords({ evt.motion.x, evt.motion.y });
@@ -692,7 +692,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             updateGizmo();
         }
     }
-    else if (evt.type == SDL_MOUSEWHEEL)
+    else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
         const auto group = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
         if (group == MenuID::BallSelect)
@@ -719,7 +719,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         }
         else if (group == MenuID::HairEditor)
         {
-            auto point = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords({ evt.wheel.mouseX, evt.wheel.mouseY });
+            auto point = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords({ evt.wheel.mouse_x, evt.wheel.mouse_y });
             for (const auto& box : m_transformBoxes)
             {
                 const auto worldBounds = cro::Text::getLocalBounds(box.entity).transform(box.entity.getComponent<cro::Transform>().getWorldTransform());
@@ -728,7 +728,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 {
                     auto idx = (PlayerData::HeadwearOffset::HairTx + box.index) + (PlayerData::HeadwearOffset::HatTx * m_headwearID);
 
-                    float change = static_cast<float>(evt.wheel.y) * box.step;
+                    float change = evt.wheel.y * box.step;
                     if (cro::Keyboard::isKeyPressed(SDLK_LSHIFT))
                     {
                         change *= 10.f;
@@ -749,7 +749,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
 
             if (bounds.contains(mousePos))
             {
-                float zoom = evt.wheel.preciseY * (1.f / 20.f);
+                float zoom = evt.wheel.y * (1.f / 20.f);
                 auto pos = m_cameras[CameraID::Avatar].getComponent<cro::Transform>().getPosition();
                 if (glm::dot(CameraZoomPosition - pos, CameraZoomVector) > zoom
                     && glm::dot(CameraBasePosition - pos, CameraZoomVector) < zoom)
@@ -766,6 +766,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
 
                 if (bounds.contains(mousePos))
                 {
+                    //TODO this state isn't actually sed - if it were this needs to be migrated to float
                     m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().getUserData<std::int32_t>() -= evt.wheel.y;
                     m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
                 }
@@ -815,13 +816,13 @@ bool ProfileState::simulate(float dt)
     {
         bool refresh = false;
         if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonLeftShoulder)
-            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left]))
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Left]))
         {
             m_avatarRotation -= dt;
             refresh = true;
         }
         if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonRightShoulder)
-            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Right]))
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Right]))
         {
             refresh = true;
             m_avatarRotation += dt;
@@ -835,12 +836,12 @@ bool ProfileState::simulate(float dt)
 
         float zoom = 0.f;
         if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft) > cro::GameController::TriggerDeadZone
-            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Down]))
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Down]))
         {
             zoom -= dt;
         }
         if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight) > cro::GameController::TriggerDeadZone
-            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Up]))
         {
             zoom += dt;
         }
@@ -959,7 +960,7 @@ void ProfileState::loadResources()
 
     //parse all the clubset files - these count as resources, right? :)
     const auto processClubPath = 
-        [&](const std::string& path, bool isUser)
+        [&](const std::filesystem::path& path, bool isUser)
         {
             ClubData data;
             data.userItem = isUser;
@@ -972,7 +973,7 @@ void ProfileState::loadResources()
                 if (f == "list.cst")
                 {
                     cro::ConfigFile cfg;
-                    if (cfg.loadFromFile(path + "/" + f))
+                    if (cfg.loadFromFile(path / f))
                     {
                         const auto& props = cfg.getProperties();
                         for (const auto& p : props)
@@ -996,7 +997,7 @@ void ProfileState::loadResources()
                         if (const auto* models = cfg.findObjectWithName("models");
                             models == nullptr)
                         {
-                            LogE << "No models were listed in " << path + "/" + f;
+                            LogE << "No models were listed in " << path << "/" << f <<std::endl;
                             hasModels = false;
                         }
                         else
@@ -1005,7 +1006,7 @@ void ProfileState::loadResources()
                             {
                                 if (p.getName() == "path")
                                 {
-                                    if (!cro::FileSystem::fileExists(path + "/" + p.getValue<std::string>()))
+                                    if (!cro::FileSystem::fileExists(path / p.getValue<std::string>()))
                                     {
                                         LogE << path << " lists model files, but they were not found on disk" << std::endl;
                                         hasModels = false;
@@ -1018,7 +1019,7 @@ void ProfileState::loadResources()
                 }
                 else if (f == "thumb.png")
                 {
-                    data.thumbnail = path + "/" + f;
+                    data.thumbnail = U8PATH_CAST((path / f));
                 }
             }
 
@@ -1045,12 +1046,12 @@ void ProfileState::loadResources()
     const auto ContentDirs = Content::getInstallPaths();
     for (const auto& c : ContentDirs)
     {
-        const auto basePath = cro::FileSystem::getResourcePath() + c + "clubs/";
+        const auto basePath = cro::FileSystem::getResourcePath() / c / "clubs/";
         const auto clubsets = cro::FileSystem::listDirectories(basePath);
 
         for (const auto& s : clubsets)
         {
-            processClubPath(basePath + s, false);
+            processClubPath(basePath / s, false);
         }
     }
 
@@ -1069,7 +1070,8 @@ void ProfileState::loadResources()
     auto clubsets = cro::FileSystem::listDirectories(basePath);
 
     //remove dirs from this list if it's not from the workshop (rather crudely)
-    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::string& s) {return s.back() != 'w'; }), clubsets.end());
+    //TODO this should probably be removed now that we load directly from Steam
+    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::filesystem::path& s) {return s.u8string().back() != 'w'; }), clubsets.end());
     
     if (clubsets.size() > ConstVal::MaxClubsets)
     {
@@ -1079,14 +1081,14 @@ void ProfileState::loadResources()
 
     for (const auto& s : clubsets)
     {
-        processClubPath(basePath + s, true);
+        processClubPath(basePath / s, true);
     }
 
 #ifdef USE_GNS
     const auto& paths = Content::getUserItemsPaths(Content::UserContent::Clubs);
     for (const auto& p : paths)
     {
-        processClubPath(p.string(), true);
+        processClubPath(U8PATH_CAST(p), true);
     }
 #endif
 }
@@ -1682,7 +1684,7 @@ void ProfileState::buildScene()
                         beginTextEdit(m_menuEntities[EntityID::NameText], &m_activeProfile.playerData.name, ConstVal::MaxStringChars);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                        if (evt.type == SDL_CONTROLLERBUTTONUP)
+                        if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
                         {
 #ifdef USE_GNS
                             if (Social::isSteamdeck())
@@ -1946,11 +1948,11 @@ void ProfileState::buildScene()
 
                     if (m_mugshotUpdated)
                     {
-                        auto path = Content::getUserContentPath(Content::UserContent::Profile) + m_activeProfile.playerData.profileID + "/mug.png";
+                        auto path = Content::getUserContentPath(Content::UserContent::Profile) / m_activeProfile.playerData.profileID / "mug.png";
                         m_mugshotTexture.getTexture().saveToFile(path);
 
-                        m_activeProfile.playerData.mugshot = path;
-                        m_profileData.playerProfiles[m_profileData.activeProfileIndex].playerData.mugshot = path;
+                        m_activeProfile.playerData.mugshot = U8PATH_CAST(path);
+                        m_profileData.playerProfiles[m_profileData.activeProfileIndex].playerData.mugshot = U8PATH_CAST(path);
                         m_profileData.playerProfiles[m_profileData.activeProfileIndex].playerData.saveProfile();
 
                         m_mugshotUpdated = false;
@@ -2217,11 +2219,11 @@ void ProfileState::buildScene()
                 {
                     if (activated(evt))
                     {
-                        auto path = Content::getUserContentPath(Content::UserContent::Profile) + m_activeProfile.playerData.profileID;
+                        const auto path = Content::getUserContentPath(Content::UserContent::Profile) / m_activeProfile.playerData.profileID;
                         if (cro::FileSystem::directoryExists(path)
                             && !cro::App::getWindow().isFullscreen())
                         {
-                            cro::Util::String::parseURL(path);
+                            cro::Util::String::parseURL(U8PATH_CAST(path));
                         }
                     }
                 });
@@ -4852,18 +4854,18 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
         std::string("water")
     };
 
-    std::vector<std::string> paths;
+    std::vector<std::filesystem::path> paths;
     const auto ContentDirs = Content::getInstallPaths();
     
     for (const auto& c : ContentDirs)
     {
-        std::string basePath = "sound/avatars/";
-        const auto files = cro::FileSystem::listFiles(c + basePath);
+        const std::filesystem::path basePath = "sound/avatars/";
+        const auto files = cro::FileSystem::listFiles(c / basePath);
         for (const auto& f : files)
         {
             if (cro::FileSystem::getFileExtension(f) == ".xas")
             {
-                paths.push_back(c + basePath + f);
+                paths.push_back(c / basePath / f);
             }
         }
     }
@@ -4879,12 +4881,12 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
     const auto dirs = cro::FileSystem::listDirectories(basePath);
     for (const auto& dir : dirs)
     {
-        const auto files = cro::FileSystem::listFiles(basePath + dir);
+        const auto files = cro::FileSystem::listFiles(basePath / dir);
         for (const auto& f : files)
         {
             if (cro::FileSystem::getFileExtension(f) == ".xas")
             {
-                paths.push_back(basePath + dir + "/" + f);
+                paths.push_back(basePath / dir / f);
             }
         }
     }
@@ -4893,12 +4895,12 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
     const auto& wsPaths = Content::getUserItemsPaths(Content::UserContent::Voice);
     for (const auto& p : wsPaths)
     {
-        const auto files = cro::FileSystem::listFiles(p.string());
+        const auto files = cro::FileSystem::listFiles(p);
         for (const auto& f : files)
         {
-            if (cro::FileSystem::getFileExtension(f) == ".xas")
+            if (f.extension() == ".xas")
             {
-                paths.push_back(p.string() + "/" + f);
+                paths.push_back(p / f);
             }
         }
     }
@@ -5979,10 +5981,10 @@ void ProfileState::refreshBio()
                 std::vector<char> buffer(MaxBioChars + 1);
 
                 cro::RaiiRWops inFile;
-                inFile.file = SDL_RWFromFile(path.c_str(), "r");
-                if (inFile.file)
+                inFile.open(path, "r");
+                if (inFile)
                 {
-                    auto readCount = inFile.file->read(inFile.file, buffer.data(), 1, MaxBioChars);
+                    auto readCount = SDL_ReadIO(inFile.filePtr(), buffer.data(), MaxBioChars);
                     buffer[readCount] = 0; //nullterm
                     setBioString(buffer.data());
                 }
@@ -5990,13 +5992,13 @@ void ProfileState::refreshBio()
             else
             {
                 //else set bio to random and write file
-                std::string bio = generateRandomBio();
+                const std::string bio = generateRandomBio();
 
                 cro::RaiiRWops outfile;
-                outfile.file = SDL_RWFromFile(path.c_str(), "w");
-                if (outfile.file)
+                outfile.open(path, "w");
+                if (outfile)
                 {
-                    outfile.file->write(outfile.file, bio.data(), bio.size(), 1);
+                    SDL_WriteIO(outfile.filePtr(), bio.data(), bio.size());
                 }
                 setBioString(bio);
             }
@@ -6327,7 +6329,7 @@ void ProfileState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::s
     //block input to menu
     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
 
-    SDL_StartTextInput();
+    SDL_StartTextInput(cro::App::getWindow());
 }
 
 void ProfileState::handleTextEdit(const cro::Event& evt)
@@ -6337,9 +6339,9 @@ void ProfileState::handleTextEdit(const cro::Event& evt)
         return;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -6348,8 +6350,8 @@ void ProfileState::handleTextEdit(const cro::Event& evt)
                 m_textEdit.string->erase(m_textEdit.string->size() - 1);
             }
             break;
-        case SDLK_v:
-            if (evt.key.keysym.mod & KMOD_CTRL)
+        case SDLK_V:
+            if (evt.key.mod & SDL_KMOD_CTRL)
             {
                 if (SDL_HasClipboardText())
                 {
@@ -6366,9 +6368,9 @@ void ProfileState::handleTextEdit(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_KEYUP)
+    else if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_ESCAPE:
@@ -6376,7 +6378,7 @@ void ProfileState::handleTextEdit(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_TEXTINPUT)
+    else if (evt.type == SDL_EVENT_TEXT_INPUT)
     {
         if (m_textEdit.string->size() < ConstVal::MaxStringChars
             && m_textEdit.string->size() < m_textEdit.maxLen)
@@ -6446,25 +6448,25 @@ std::string ProfileState::generateRandomBio() const
     default:
     case 0:
         return
-            u8"This former house-builder knows all about the benefits of elevation. If they play a good shot, you'll certainly be able to see their big beam and they'll hit the roof if they manage a hole in one! As a low-handicapper, tends to play off the builders tee, and enjoys ladder tournaments.";
+            "This former house-builder knows all about the benefits of elevation. If they play a good shot, you'll certainly be able to see their big beam and they'll hit the roof if they manage a hole in one! As a low-handicapper, tends to play off the builders tee, and enjoys ladder tournaments.";
     case 1:
         return
-            u8"A retired gardener this player knows a thing or two about lying in the rough. Don't underestimate them though - they could be considered the rake in the grass!";
+            "A retired gardener this player knows a thing or two about lying in the rough. Don't underestimate them though - they could be considered the rake in the grass!";
     case 2:
         return
-            u8"Small feet means nothing - not when you can handle your wood like this.";
+            "Small feet means nothing - not when you can handle your wood like this.";
     case 3:
         return
-            u8"Formerly a countryside resident this player moved to the city to experience the thrills of urban golf. Just don't sneak up on them when they're strumming the banjo.";
+            "Formerly a countryside resident this player moved to the city to experience the thrills of urban golf. Just don't sneak up on them when they're strumming the banjo.";
     case 4:
         return
-            u8"\"Good things come in small packages\" is this player's motto. Apparently they diet exclusively on fortune cookies.";
+            "\"Good things come in small packages\" is this player's motto. Apparently they diet exclusively on fortune cookies.";
     case 5:
         return
-            u8"The clever use of turn signals got this player to where they are today.";
+            "The clever use of turn signals got this player to where they are today.";
     case 6:
         return
-            u8"Nick-named \"The Midwife\" because they always deliver (and \"Postman\" was already taken) here's a player who knows a comfy lie is much better than a water-berth. Takes a cautious approach as they know it's much better to crawl before you can walk. Becoming a golf pro was their crowning achievement";
+            "Nick-named \"The Midwife\" because they always deliver (and \"Postman\" was already taken) here's a player who knows a comfy lie is much better than a water-berth. Takes a cautious approach as they know it's much better to crawl before you can walk. Becoming a golf pro was their crowning achievement";
     }
 }
 

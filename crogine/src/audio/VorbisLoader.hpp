@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -54,7 +54,7 @@ namespace cro
             const VorbisLoader& operator = (const VorbisLoader&) = delete;
             VorbisLoader& operator = (VorbisLoader&&) noexcept = delete;
 
-            bool open(const std::string&) override;
+            bool open(const std::filesystem::path&) override;
 
             const PCMData& getData(std::size_t = 0, bool looped = false) const override;
 
@@ -67,7 +67,7 @@ namespace cro
             std::uint64_t getSampleCount() const override { return m_sampleCount; }
 
         private:
-            RaiiRWops m_file;
+            //RaiiRWops m_file;
             stb_vorbis* m_vorbisFile;
             std::int32_t m_channelCount;
             std::uint64_t m_sampleCount;

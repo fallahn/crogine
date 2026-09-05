@@ -125,7 +125,7 @@ namespace
     constexpr glm::vec3 LeagueListPosition = glm::vec3(119.f, 216.f, 0.2f);
     constexpr float LeagueLineSpacing = 14.f;
 
-    const std::string ConfigFile("career.cfg");
+    const std::filesystem::path ConfigFile("career.cfg");
 
     std::int32_t craewallOffset = 0; //hack to offset the index when craewall is installed but adventurer isn't
 }
@@ -138,7 +138,7 @@ CareerState::CareerState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_viewScale     (2.f),
     m_currentMenu   (MenuID::Career)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Career State");
 
     std::fill(m_progressPositions.begin(), m_progressPositions.end(), 0);
@@ -174,40 +174,40 @@ bool CareerState::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_p)
+        if (evt.key.key == SDLK_BACKSPACE
+            || evt.key.key == SDLK_ESCAPE
+            /*|| evt.key.key == SDLK_P*/)
         {
             quitState();
             return false;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_UP:
         case SDLK_DOWN:
         case SDLK_LEFT:
         case SDLK_RIGHT:
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        cro::App::getWindow().setMouseCaptured(true);
-        if (evt.cbutton.button == cro::GameController::ButtonB)
+        cro::App::getWindow().setCursorVisible(false);
+        if (evt.gbutton.button == cro::GameController::ButtonB)
         {
             quitState();
             return false;
         }
     }
 
-    else if (evt.type == SDL_MOUSEBUTTONUP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -215,16 +215,16 @@ bool CareerState::handleEvent(const cro::Event& evt)
             return false;
         }
     }
-    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    else if (evt.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
     {
-        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        if (evt.gaxis.value > cro::GameController::LeftThumbDeadZone)
         {
-            cro::App::getWindow().setMouseCaptured(true);
+            cro::App::getWindow().setCursorVisible(false);
         }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
+        cro::App::getWindow().setCursorVisible(true);
     }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -255,7 +255,7 @@ void CareerState::handleMessage(const cro::Message& msg)
     else if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             //if we have a window over the top (eg profile editor)
             //we want to activate this on window resize so layout
@@ -2130,7 +2130,7 @@ void CareerState::quitState()
 
 void CareerState::loadConfig()
 {
-    const auto path = Content::getUserContentPath(Content::UserContent::Career) + ConfigFile;
+    const auto path = Content::getUserContentPath(Content::UserContent::Career) / ConfigFile;
     if (cro::FileSystem::fileExists(path))
     {
         cro::ConfigFile cfg;
@@ -2163,7 +2163,7 @@ void CareerState::saveConfig() const
     cfg.addProperty("gimme").setValue(m_sharedData.gimmeRadius);
     cfg.addProperty("night").setValue(m_sharedData.nightTime);
     cfg.addProperty("weather").setValue(m_sharedData.weatherType);
-    cfg.save(Content::getUserContentPath(Content::UserContent::Career) + ConfigFile);
+    cfg.save(Content::getUserContentPath(Content::UserContent::Career) / ConfigFile);
 }
 
 void CareerState::onCachedPush()

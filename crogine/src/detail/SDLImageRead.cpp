@@ -51,7 +51,7 @@ namespace cro
     {
         STBIMG_stbio_RWops* io = (STBIMG_stbio_RWops*)user;
 
-        auto ret = SDL_RWread(io->src, data, sizeof(char), size);
+        auto ret = SDL_ReadIO(io->src, data, size);
         if (ret == 0)
         {
             //we're at EOF or some error happened
@@ -64,7 +64,7 @@ namespace cro
     {
         STBIMG_stbio_RWops* io = (STBIMG_stbio_RWops*)user;
 
-        if (SDL_RWseek(io->src, n, RW_SEEK_CUR) == -1)
+        if (SDL_SeekIO(io->src, n, SDL_IO_SEEK_CUR) == -1)
         {
             //an error happened during seeking, hopefully setting EOF will make stb_image abort
             io->atEOF = 2; //set this to 2 for "aborting because seeking failed" (stb_image only cares about != 0)
@@ -77,7 +77,7 @@ namespace cro
         return io->atEOF;
     }
 
-    void stbi_callback_from_RW(SDL_RWops* src, STBIMG_stbio_RWops* out)
+    void stbi_callback_from_RW(SDL_IOStream* src, STBIMG_stbio_RWops* out)
     {
         CRO_ASSERT(src && out, "Cannot be nullptr!");
 
@@ -93,7 +93,7 @@ namespace cro
 
     void image_write_func(void* context, void* data, int size)
     {
-        SDL_RWops* file = (SDL_RWops*)context;
-        SDL_RWwrite(file, data, size, 1);
+        SDL_IOStream* file = (SDL_IOStream*)context;
+        SDL_WriteIO(file, data, size);
     }
 }

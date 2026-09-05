@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,9 +32,10 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 
+#include <cstdint>
+#include <filesystem>
 #include <string>
 #include <vector>
-#include <cstdint>
 
 namespace cro
 {
@@ -67,7 +68,7 @@ namespace cro
         /*!
         \brief Attempts to load the file at the given path.
         */
-        virtual bool loadFromFile(const std::string&) { return false; };
+        virtual bool loadFromFile(const std::filesystem::path&) { return false; };
 
     protected:
         void setID(std::int32_t id) { m_id = id; }

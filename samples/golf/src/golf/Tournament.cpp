@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024 - 2025
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -152,13 +152,13 @@ void resetTournament(Tournament& src)
     src.tier0[idx] = -1;
 }
 
-static inline std::string getFilePath(std::int32_t index)
+static inline std::filesystem::path getFilePath(std::int32_t index)
 {
     auto basePath = Content::getBaseContentPath();
     std::stringstream ss;
     ss << std::setw(2) << std::setfill('0') << index << ".tmt";
 
-    return basePath + ss.str();
+    return basePath / ss.str();
 }
 
 void writeTournamentData(const Tournament& src, const char* p)
@@ -167,16 +167,16 @@ void writeTournamentData(const Tournament& src, const char* p)
     if (!p)
     {
         auto path = getFilePath(src.id);
-        file.file = SDL_RWFromFile(path.c_str(), "wb");
+        file.open(path, "wb");
     }
     else
     {
         //custom tournament
-        file.file = SDL_RWFromFile(p, "wb");
+        file.open(p, "wb");
     }
-    if (file.file)
+    if (file)
     {
-        SDL_RWwrite(file.file, &src, sizeof(src), 1);
+        SDL_WriteIO(file.filePtr(), &src, sizeof(src));
     }
 }
 
@@ -191,7 +191,7 @@ void readTournamentData(Tournament& dst, const char* p)
     }
     else
     {
-        path = getFilePath(dst.id);
+        path = U8PATH_CAST(getFilePath(dst.id));
     }
 
     if (!cro::FileSystem::fileExists(path))
@@ -203,10 +203,10 @@ void readTournamentData(Tournament& dst, const char* p)
     else
     {
         cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "rb");
-        if (file.file)
+        file.open(path, "rb");
+        if (file)
         {
-            if (!SDL_RWread(file.file, &dst, sizeof(dst), 1))
+            if (!SDL_ReadIO(file.filePtr(), &dst, sizeof(dst)))
             {
                 LogW << "Could not read " << cro::FileSystem::getFileName(path) << std::endl;
                 resetTournament(dst);

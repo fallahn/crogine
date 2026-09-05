@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include "MyApp.hpp"
 

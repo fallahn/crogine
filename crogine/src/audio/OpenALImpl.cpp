@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -208,13 +208,13 @@ glm::vec3 OpenALImpl::getListenerPosition() const
     return ret;
 }
 
-std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
+std::int32_t OpenALImpl::requestNewBuffer(const std::filesystem::path& filePath)
 {
-    auto path = FileSystem::getResourcePath() + filePath;
+    const auto path = FileSystem::getResourcePath() / filePath;
 
     std::unique_ptr<AudioFile> loader;
     
-    auto ext = FileSystem::getFileExtension(path);
+    const auto ext = FileSystem::getFileExtension(path);
     PCMData data;
     if (ext == ".wav")
     {      
@@ -242,7 +242,7 @@ std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
     }
     else
     {
-        Logger::log(ext + ": format not supported", Logger::Type::Error);
+        LogE << ext << ": format not supported" << std::endl;;
     }
 
     if (data.data)
@@ -278,7 +278,7 @@ void OpenALImpl::deleteBuffer(std::int32_t buffer)
     }
 }
 
-std::int32_t OpenALImpl::requestNewStream(const std::string& path)
+std::int32_t OpenALImpl::requestNewStream(const std::filesystem::path& path)
 {
     //check we have available streams
     if (m_nextFreeStream >= m_streams.size())
@@ -289,16 +289,16 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
 
     auto& stream = getNextFreeStream();
 
-    auto filePath = cro::FileSystem::getResourcePath() + path;
+    const auto filePath = cro::FileSystem::getResourcePath() / path;
 
-    auto ext = FileSystem::getFileExtension(path);
+    const auto ext = FileSystem::getFileExtension(path);
     if (ext == ".wav")
     {
         stream.audioFile = std::make_unique<WavLoader>();
         if (!stream.audioFile->open(filePath))
         {
             stream.audioFile.reset();
-            Logger::log("Failed to open " + path, Logger::Type::Error);
+            LogE << "Failed to open " << path << std::endl;
             return -1;
         }
     }
@@ -308,7 +308,7 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
         if (!stream.audioFile->open(filePath))
         {
             stream.audioFile.reset();
-            Logger::log("Failed to open " + path, Logger::Type::Error);
+            LogE << "Failed to open " << path << std::endl;
             return -1;
         }
     }
@@ -318,14 +318,14 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
         if (!stream.audioFile->open(filePath))
         {
             stream.audioFile.reset();
-            Logger::log("Failed to open " + path, Logger::Type::Error);
+            LogE << "Failed to open " << path << std::endl;
             return -1;
         }
     }
     else
     {
         stream.streamID = -1;
-        Logger::log("[OpenAL] - " + FileSystem::getFileName(path) + ": Unsupported file type.", Logger::Type::Error);
+        LogE << "[OpenAL] - " << FileSystem::getFileName(path) << ": Unsupported file type." << std::endl;
         return -1;
     }
     
@@ -863,7 +863,7 @@ std::string OpenALImpl::getPreferencePath() const
     auto prefPath = std::string(pp);
     SDL_free(pp);
     std::replace(prefPath.begin(), prefPath.end(), '\\', '/');
-    prefPath += u8"audio_device.cfg";
+    prefPath += "audio_device.cfg";
 
     return prefPath;
 }

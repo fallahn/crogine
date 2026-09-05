@@ -117,26 +117,26 @@ Palette::Palette()
     
 }
 
-Palette::Palette(const std::string& path)
+Palette::Palette(const std::filesystem::path& path)
 {
     //we'll let this function print error on failure
     loadFromFile(path);
 }
 
-bool Palette::loadFromFile(const std::string& path, bool append)
+bool Palette::loadFromFile(const std::filesystem::path& path, bool append)
 {
     if (!append)
     {
         m_swatches.clear();
     }
 
-    auto fullPath = FileSystem::getResourcePath() + path;
+    const auto fullPath = FileSystem::getResourcePath() / path;
     RaiiRWops file;
-    file.file = SDL_RWFromFile(fullPath.c_str(), "rb");
+    file.open(fullPath, "rb");
 
-    auto fileName = FileSystem::getFileName(path);
+    const auto fileName = FileSystem::getFileName(path);
 
-    if (!file.file)
+    if (!file)
     {
         LogE << "SDL: Failed opening " << fileName << ": " << SDL_GetError() << std::endl;
         return false;
@@ -144,7 +144,7 @@ bool Palette::loadFromFile(const std::string& path, bool append)
 
     //read header
     std::uint32_t ident = 0;
-    file.file->read(file.file, &ident, sizeof(std::uint32_t), 1);
+    SDL_ReadIO(file.filePtr(), &ident, sizeof(std::uint32_t));
     
     //we'll just skip the byte swap, because we can
     if (ident != toUint32('F', 'E', 'S', 'A'))
@@ -156,8 +156,8 @@ bool Palette::loadFromFile(const std::string& path, bool append)
     std::array<std::uint16_t, 2u> version = {};
     std::uint32_t blockCount = 0;
 
-    file.file->read(file.file, version.data(), sizeof(std::uint16_t), 2);
-    file.file->read(file.file, &blockCount, sizeof(std::uint32_t), 1);
+    SDL_ReadIO(file.filePtr(), version.data(), sizeof(std::uint16_t) * 2);
+    SDL_ReadIO(file.filePtr(), &blockCount, sizeof(std::uint32_t));
 
     //TODO assert the values are valid here? What's valid in this context?
     //at least make sure the file size matches the expected numbetr of blocks?
@@ -172,7 +172,7 @@ bool Palette::loadFromFile(const std::string& path, bool append)
 
     while (blockCount--)
     {
-        file.file->read(file.file, &currClass, sizeof(std::uint16_t), 1);
+        SDL_ReadIO(file.filePtr(), &currClass, sizeof(std::uint16_t));
         currClass = swap16(currClass);
 
         switch (currClass)
@@ -183,17 +183,17 @@ bool Palette::loadFromFile(const std::string& path, bool append)
         case Entry:
         case GroupStart:
         {
-            file.file->read(file.file, &currSize, sizeof(currSize), 1);
+            SDL_ReadIO(file.filePtr(), &currSize, sizeof(currSize));
             currSize = swap32(currSize);
 
             std::u16string name; //uses wide strings...
             std::uint16_t nameLength = 0;
 
-            file.file->read(file.file, &nameLength, sizeof(std::uint16_t), 1);
+            SDL_ReadIO(file.filePtr(), &nameLength, sizeof(std::uint16_t));
             nameLength = swap16(nameLength);
 
             name.resize(nameLength);
-            file.file->read(file.file, name.data(), nameLength * 2, 1);
+            SDL_ReadIO(file.filePtr(), name.data(), nameLength * 2);
 
             //hmm there's probably a container algo for this but hey
             for (auto& c : name)
@@ -219,7 +219,7 @@ bool Palette::loadFromFile(const std::string& path, bool append)
 
                 //process the colour data
                 std::uint32_t colourSpace = 0;
-                file.file->read(file.file, &colourSpace, sizeof(std::uint32_t), 1);
+                SDL_ReadIO(file.filePtr(), &colourSpace, sizeof(std::uint32_t));
                 colourSpace = swap32(colourSpace);
 
                 switch (colourSpace)
@@ -230,7 +230,7 @@ bool Palette::loadFromFile(const std::string& path, bool append)
                 case ColourSpace::CMYK:
                 {
                     std::array<std::uint32_t, 4> data = {};
-                    file.file->read(file.file, data.data(), sizeof(std::uint32_t), 4);
+                    SDL_ReadIO(file.filePtr(), data.data(), sizeof(std::uint32_t) * 4);
                     for (auto& c : data)
                     {
                         c = swap32(c);
@@ -255,7 +255,7 @@ bool Palette::loadFromFile(const std::string& path, bool append)
                 case ColourSpace::GREY:
                 {
                     std::uint32_t data;
-                    file.file->read(file.file, &data, sizeof(std::uint32_t), 1);
+                    SDL_ReadIO(file.filePtr(), &data, sizeof(std::uint32_t));
                     data = swap32(data);
 
                     colourEntry.colour = cro::Colour(
@@ -268,7 +268,7 @@ bool Palette::loadFromFile(const std::string& path, bool append)
                 case ColourSpace::LAB:
                 {
                     std::array<std::uint32_t, 3> data = {};
-                    file.file->read(file.file, data.data(), sizeof(std::uint32_t), 3);
+                    SDL_ReadIO(file.filePtr(), data.data(), sizeof(std::uint32_t) * 3);
                     for (auto& c : data)
                     {
                         c = swap32(c);
@@ -289,7 +289,7 @@ bool Palette::loadFromFile(const std::string& path, bool append)
                 case ColourSpace::RGB:
                 {
                     std::array<std::uint32_t, 3> data = {};
-                    file.file->read(file.file, data.data(), sizeof(std::uint32_t), 3);
+                    SDL_ReadIO(file.filePtr(), data.data(), sizeof(std::uint32_t) * 3);
                     for (auto& c : data)
                     {
                         c = swap32(c);
@@ -306,7 +306,7 @@ bool Palette::loadFromFile(const std::string& path, bool append)
                 //not sure we can do anything useful with this
                 //but we need to read it anyway for file indexing sake
                 std::uint16_t category = 0;
-                file.file->read(file.file, &category, sizeof(std::uint16_t), 1);
+                SDL_ReadIO(file.filePtr(), &category, sizeof(std::uint16_t));
             }
         }
             break;

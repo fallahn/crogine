@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -155,10 +155,10 @@ Shader::~Shader()
 }
 
 //public
-bool Shader::loadFromFile(const std::string& vertex, const std::string& fragment)
+bool Shader::loadFromFile(const std::filesystem::path& vertex, const std::filesystem::path& fragment)
 {
-    auto vertPath = FileSystem::getResourcePath() + vertex;
-    auto fragPath = FileSystem::getResourcePath() + fragment;
+    const auto vertPath = FileSystem::getResourcePath() / vertex;
+    const auto fragPath = FileSystem::getResourcePath() / fragment;
 
     if (!FileSystem::fileExists(vertPath))
     {
@@ -172,14 +172,14 @@ bool Shader::loadFromFile(const std::string& vertex, const std::string& fragment
         return false;
     }
 
-    return loadFromSource(parseFile(vertPath).c_str(), nullptr, parseFile(fragPath).c_str(), nullptr);
+    return loadFromSource(parseFile(U8PATH_CAST(vertPath)).c_str(), nullptr, parseFile(U8PATH_CAST(fragPath)).c_str(), nullptr);
 }
 
-bool Shader::loadFromFile(const std::string& vertex, const std::string& geometry, const std::string& fragment)
+bool Shader::loadFromFile(const std::filesystem::path& vertex, const std::filesystem::path& geometry, const std::filesystem::path& fragment)
 {
-    auto vertPath = FileSystem::getResourcePath() + vertex;
-    auto geomPath = FileSystem::getResourcePath() + geometry;
-    auto fragPath = FileSystem::getResourcePath() + fragment;
+    const auto vertPath = FileSystem::getResourcePath() / vertex;
+    const auto geomPath = FileSystem::getResourcePath() / geometry;
+    const auto fragPath = FileSystem::getResourcePath() / fragment;
 
     if (!FileSystem::fileExists(vertPath))
     {
@@ -199,7 +199,7 @@ bool Shader::loadFromFile(const std::string& vertex, const std::string& geometry
         return false;
     }
 
-    return loadFromSource(parseFile(vertPath).c_str(), parseFile(geomPath).c_str(), parseFile(fragPath).c_str(), nullptr);
+    return loadFromSource(parseFile(U8PATH_CAST(vertPath)).c_str(), parseFile(U8PATH_CAST(geomPath)).c_str(), parseFile(U8PATH_CAST(fragPath)).c_str(), nullptr);
 }
 
 bool Shader::loadFromString(const std::string& vertex, const std::string& fragment, const std::string& defines)
@@ -546,22 +546,22 @@ void Shader::resetUniformMap()
     m_uniformMap.clear();
 }
 
-std::string Shader::parseFile(const std::string& path)
+std::string Shader::parseFile(const std::filesystem::path& path)
 {
     std::string retVal;
     retVal.reserve(1000);
 
     //open file and verify
     RaiiRWops file;
-    file.file = SDL_RWFromFile(path.c_str(), "r");
-    if (!file.file)
+    file.open(path, "r");
+    if (!file)
     {
-        Logger::log("Failed opening " + path, Logger::Type::Error);
+        LogE << "Failed opening " << path << std::endl;
         return {};
     }
 
     char buf;
-    while (SDL_RWread(file.file, &buf, 1, 1))
+    while (SDL_ReadIO(file.filePtr(), &buf, 1))
     {
         retVal.push_back(buf);
     }

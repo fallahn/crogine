@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com  
 
 crogine - Zlib license.
@@ -30,6 +30,13 @@ source distribution.
 #pragma once
 
 #include <cstdint>
+
+//#define ASSERT_STD_FILESYSTEM
+#ifdef ASSERT_STD_FILESYSTEM
+#define FS_ASSERT static_assert(false, "filesystem path needs implementing");
+#else
+#define FS_ASSERT
+#endif
 
 #if defined __APPLE__
 #include <TargetConditionals.h>
