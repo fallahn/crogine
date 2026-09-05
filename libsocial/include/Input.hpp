@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant - 2024 - 2025
+Matt Marchant - 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -95,6 +95,18 @@ namespace Progress
             basePath += "career/";
             assertPath();
             basePath += "round_06/";
+            assertPath();
+            break;
+        case 7:
+            basePath += "career/";
+            assertPath();
+            basePath += "round_07/";
+            assertPath();
+            break;
+        case 8:
+            basePath += "career/";
+            assertPath();
+            basePath += "round_08/";
             assertPath();
             break;
         case MulliganID:
