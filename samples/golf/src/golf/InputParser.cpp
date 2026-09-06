@@ -1265,6 +1265,7 @@ std::int32_t InputParser::getLastActiveController() const
 glm::vec3 InputParser::getImpulse(float pitch, float yaw) const
 {
     glm::vec3 impulse(1.f, 0.f, 0.f);
+
     auto rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, yaw, cro::Transform::Y_AXIS);
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
     return glm::toMat3(rotation) * impulse;
@@ -1334,7 +1335,8 @@ void InputParser::updateStroke(float dt)
         const auto club = getClub();
         const auto lvlEffect = 1 + (2 - Club::getClubLevel());
         std::int32_t clubStat = 0;
-        if (m_activeLoadout->items[club] != -1)
+        if (club < inv::ItemType::Count && //putter doesn't have buffs...
+            m_activeLoadout->items[club] != -1)
         {
             clubStat = inv::Items[m_activeLoadout->items[club]].stat01;
         }

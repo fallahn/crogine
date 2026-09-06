@@ -448,9 +448,15 @@ std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated)
 
 glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3& impulse, float sideSpin, glm::vec3 windVec, glm::vec3 pin, CollisionMesh& collisionMesh, float dt)
 {
+    //the below loop actually takes quite some time
+    //and has an impact on perf. Increasing dt reduces
+    //the number of loops (significantly) at the cost of accuracy.
+    dt *= 3.f;
+
     float groundHeight = -1.f;
     const auto sideVec = glm::cross(glm::normalize(glm::vec3(impulse.x, 0.f, impulse.z)), cro::Transform::Y_AXIS);
     TerrainResult t;
+    //int count = 0;
     do
     {
         t = collisionMesh.getTerrain(pos);
@@ -470,8 +476,11 @@ glm::vec3 getImpactPoint(glm::vec3 pos, glm::vec3& impulse, float sideSpin, glm:
         pos += impulse * dt;
         impulse += Gravity * dt;
         impulse += windVec * windMultiplier * dt;
+        //count++;
     } while (pos.y > groundHeight);
     
+    //LogI << count << std::endl;
+
     impulse = glm::reflect(impulse, t.normal) * Restitution[t.terrain];
     return pos;
 }
@@ -489,6 +498,7 @@ std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2
     //assumes we're using triangle strip
     CRO_ASSERT(!points.empty(), "");
     std::vector<cro::Vertex2D> ret;
+
     for (auto i = 0u; i < points.size() - 2; ++i)
     {
         ret.emplace_back(points[i] + glm::vec2(OffsetX, OffsetY), TextGoldColour);
