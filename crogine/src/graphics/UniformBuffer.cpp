@@ -303,6 +303,12 @@ void Detail::UniformBufferImpl::setData(const void* data)
     //    LogW << "No program bound" << std::endl;
     //}
 
+
+    //hmmm we get a warning here about no active program coming from
+    //the model renderer when updating the camera UBO. HOWEVER when
+    //hiding the error here it *still* gets printed supposedly from
+    //a different GL operation - so it may be possible that this is
+    //a red herring and that the error string is still set from *somewhere else*
     glCheck(glBindBuffer(GL_UNIFORM_BUFFER, m_ubo));
     glCheck(glBufferSubData(GL_UNIFORM_BUFFER, 0, m_bufferSize, data));
 

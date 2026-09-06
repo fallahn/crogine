@@ -986,7 +986,7 @@ private:
 
         void update()
         {
-            float f = 1.f / m_timer.restart();
+            const float f = 1.f / m_timer.restart();
 
             if (f < minRate)
             {
