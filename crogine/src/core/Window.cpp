@@ -712,13 +712,15 @@ glm::uvec2 Window::getWindowedSize() const
     return m_windowedSize;
 }
 
-void Window::setFullscreenSize(glm::uvec2 size)
+glm::uvec2 Window::getFullscreenSize() const
 {
-    m_fullScreenSize = size;
-    if (m_fullscreen)
+    if (m_exclusiveFullScreen)
     {
-        setFullScreen(true);
+        return getWindowedSize();
     }
+
+    const auto* mode = SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(m_window));
+    return { mode->w, mode->h };
 }
 
 GPUVendor Window::getGPUVendor() const

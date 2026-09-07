@@ -317,14 +317,9 @@ namespace cro
         glm::uvec2 getWindowedSize() const;
 
         /*!
-        \brief Sets the resolution to attempt to use in exclusive fullscreen mode
-        */
-        void setFullscreenSize(glm::uvec2 size);
-
-        /*!
         \brief Returns the current size when setting the window exclusively full screen
         */
-        glm::uvec2 getFullscreenSize() const { return m_fullScreenSize; }
+        glm::uvec2 getFullscreenSize() const;
 
         /*!
         \brief Returns the GPU vendor of the current OpenGL context

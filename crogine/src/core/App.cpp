@@ -400,7 +400,7 @@ void App::run(bool resetSettings)
 
         m_window.setIcon(defaultIcon);
         m_window.setWindowedSize(settings.windowedSize);
-        m_window.setFullscreenSize(settings.fullscreenSize);
+        //m_window.setFullscreenSize(settings.fullscreenSize);
         m_window.setExclusiveFullscreen(settings.exclusive);
         m_window.setFullScreen(settings.fullscreen);
         m_window.setVsyncEnabled(settings.vsync);

@@ -582,6 +582,8 @@ void OptionsStateV2::handleMessage(const cro::Message& msg)
                     };
 
                 lastWindowSize = newSize;
+
+                createDisplayItems();
             }
         }
     }
@@ -2623,7 +2625,7 @@ void OptionsStateV2::createDisplayItems()
             if (!i.valueChangedOnActivate)
             {
                 cro::App::getWindow().setWindowedSize(m_sharedData.resolutions[i.selectedIndex]);
-                cro::App::getWindow().setFullscreenSize(m_sharedData.resolutions[i.selectedIndex]);
+                //cro::App::getWindow().setFullscreenSize(m_sharedData.resolutions[i.selectedIndex]);
             }
         };
     item->alwaysActivate = true;
