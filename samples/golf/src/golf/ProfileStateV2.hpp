@@ -80,6 +80,7 @@ private:
 
     cro::Shader m_progressShader;
     std::int32_t m_progressUniform;
+    std::int32_t m_progressColourUniform;
 
     cro::Entity m_rootNode;
 

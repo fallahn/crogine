@@ -33,13 +33,14 @@ source distribution.
 
 static inline const std::string ProgressFrag =
 R"(
+uniform vec4 u_colour = vec4(1.0, 0.972, 0.882, 1.0);
 uniform float u_progress = 0.0;
 
 VARYING_IN vec4 v_colour;
 
 OUTPUT
 
-const vec4 Colour = vec4(1.0, 0.972, 0.882, 1.0);
+//const vec4 Colour = vec4(1.0, 0.972, 0.882, 1.0);
 const float TAU = 6.28318530717958647692;
 const float PI = 3.14159265358979323846;
 
@@ -54,7 +55,7 @@ void main()
     float angle = atan(coord.y, coord.x) + PI;
     angle = 1.0 - step(u_progress * TAU, angle);
 
-    vec4 colour = Colour;
+    vec4 colour = u_colour;
     colour.a *= outer * inner * angle;
 
     FRAG_OUT = colour;

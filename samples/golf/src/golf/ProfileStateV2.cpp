@@ -35,6 +35,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "CallbackData.hpp"
 #include "../GolfGame.hpp"
+#include "../Colordome-32.hpp"
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
@@ -130,27 +131,28 @@ namespace
 using namespace UI;
 
 ProfileStateV2::ProfileStateV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedProfileData& profileData)
-    : cro::State        (ss, ctx),
-    m_scene             (ctx.appInstance.getMessageBus(), 192),
-    m_previewScene      (ctx.appInstance.getMessageBus(), 192),
-    m_statScene         (ctx.appInstance.getMessageBus(), 192),
-    m_sharedData        (sd),
-    m_profileData       (profileData),
-    m_exitHoldTimer     (0.f),
-    m_exitFlags         (0),
-    m_progressUniform   (-1),
-    m_avatarIndex       (0),
-    m_lockedAvatarCount (0),
-    m_ballIndex         (0),
-    m_lockedBallCount   (0),
-    m_particleIndex     (0),
-    m_lockedClubCount   (0),
-    m_clubIndex         (0),
-    m_showNameInput     (false),
-    m_showOSK           (false),
-    m_voiceIndex        (0),
-    m_saveMugshotOnExit (false),
-    m_uiLayout          (TabID::Count, sd)
+    : cro::State            (ss, ctx),
+    m_scene                 (ctx.appInstance.getMessageBus(), 192),
+    m_previewScene          (ctx.appInstance.getMessageBus(), 192),
+    m_statScene             (ctx.appInstance.getMessageBus(), 192),
+    m_sharedData            (sd),
+    m_profileData           (profileData),
+    m_exitHoldTimer         (0.f),
+    m_exitFlags             (0),
+    m_progressUniform       (-1),
+    m_progressColourUniform (-1),
+    m_avatarIndex           (0),
+    m_lockedAvatarCount     (0),
+    m_ballIndex             (0),
+    m_lockedBallCount       (0),
+    m_particleIndex         (0),
+    m_lockedClubCount       (0),
+    m_clubIndex             (0),
+    m_showNameInput         (false),
+    m_showOSK               (false),
+    m_voiceIndex            (0),
+    m_saveMugshotOnExit     (false),
+    m_uiLayout              (TabID::Count, sd)
 {
     ctx.mainWindow.setCursorVisible(true);
     m_scene.setTitle("Profile UI");
@@ -258,6 +260,12 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
             cro::App::getWindow().setCursorVisible(!!mouse);
         };
 
+    const auto setProgressColour = 
+        [this](cro::Colour c)
+    {
+        glUseProgram(m_progressShader.getGLHandle());
+        glUniform4f(m_progressColourUniform, c.getRed(), c.getGreen(), c.getBlue(), c.getAlpha());
+    };
 
     if (evt.type == SDL_EVENT_KEY_UP)
     {
@@ -334,15 +342,18 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
             /*quitState();
             return false;*/
             m_exitFlags |= ExitFlagQuit;
+            setProgressColour(CD32::Colours[CD32::Red]);
         }
         else if (evt.key.key == SDLK_LCTRL)
         {
             m_exitFlags |= ExitFlagSave;
+            setProgressColour(CD32::Colours[CD32::BlueLight]);
         }
         else if (evt.key.key == SDLK_LALT
             && evt.key.repeat == 0)
         {
             m_exitFlags |= ExitFlagRandomise;
+            setProgressColour(CD32::Colours[CD32::Yellow]);
         }
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
@@ -371,12 +382,15 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
             break;
         case cro::GameController::ButtonB:
             m_exitFlags |= ExitFlagQuit;
+            setProgressColour(CD32::Colours[CD32::Red]);
             break;
         case cro::GameController::ButtonX:
             m_exitFlags |= ExitFlagSave;
+            setProgressColour(CD32::Colours[CD32::BlueLight]);
             break;
         case cro::GameController::ButtonY:
             m_exitFlags |= ExitFlagRandomise;
+            setProgressColour(CD32::Colours[CD32::Yellow]);
             break;
         }
     }
@@ -839,6 +853,7 @@ void ProfileStateV2::loadAssets()
     if (m_progressShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), ProgressFrag))
     {
         m_progressUniform = m_progressShader.getUniformID("u_progress");
+        m_progressColourUniform = m_progressShader.getUniformID("u_colour");
     }
 
     m_previewTexture.create(2, 2);

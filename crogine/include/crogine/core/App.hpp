@@ -257,10 +257,10 @@ namespace cro
         
         struct WindowSettings final
         {
-            std::int32_t width = 800;
-            std::int32_t height = 600;
+            std::int32_t width = 1280;
+            std::int32_t height = 720;
             float framelimit = 240.f;
-            bool fullscreen = false;
+            bool fullscreen = true;
             bool exclusive = false;
             bool vsync = false;
             bool border = true;
