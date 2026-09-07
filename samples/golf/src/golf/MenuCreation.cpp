@@ -5284,6 +5284,35 @@ void MenuState::updateUnlockedItems()
 
     const auto level = Social::getLevel();
 
+    //sometimes these get missed from the level up event
+    //presuambly because the Achievements are inactive
+    //so double check here
+    if (level > 0)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::GettingStarted]);;
+    }
+    if (level > 9)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::Junior]);
+    }
+    if (level > 19)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::Amateur]);
+    }
+    if (level > 29)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::Enthusiast]);
+    }
+    if (level > 39)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::SemiPro]);
+    }
+    if (level > 49)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::Pro]);
+    }
+
+
     //clubs
     auto clubFlags = Social::getUnlockStatus(Social::UnlockType::Club);
     if (clubFlags != -1)
