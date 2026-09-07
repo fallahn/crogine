@@ -4305,8 +4305,12 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         cmd.targetFlags = CommandID::Menu::CourseDesc;
                         cmd.action = [data](cro::Entity e, float)
                         {
-                            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
                             e.getComponent<cro::Text>().setString(data->description);
+                            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                            if (const auto p = data->description.find("(DLC)"); p != cro::String::InvalidPos)
+                            {
+                                e.getComponent<cro::Text>().setFillColour(TextGoldColour, p);
+                            }
                             centreText(e);
                         };
                         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
