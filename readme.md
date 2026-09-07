@@ -6,7 +6,7 @@ CROGINE
 
 CROssplatform enGINE.
 
-SDL2 Based game engine which runs on Windows, linux and macOS. Compatibility with macOS is pretty good despite Apple's efforts to kill off OpenGL. Presumably consoles supported by SDL3 (such as Nintendo switch) are also compatible, possibly with a bit of work.
+SDL3 Based game engine which runs on Windows, linux and macOS.  
 
 
 #### Building
