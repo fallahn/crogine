@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -235,7 +235,7 @@ void CameraFollowSystem::process(float dt)
     auto& currentFollower = m_currentCamera.getComponent<CameraFollower>();
     currentFollower.currentFollowTime -= dt;
 
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& follower = entity.getComponent<CameraFollower>();

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -38,7 +38,7 @@ ButtonHoldSystem::ButtonHoldSystem(cro::MessageBus& mb)
 //public
 void ButtonHoldSystem::process(float)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& ctx = entity.getComponent<ButtonHoldContext>();

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -81,7 +81,7 @@ void LightmapProjectionSystem::process(float dt)
 {
     static constexpr float AnimFrameTime = 0.1f;
 
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     if (!entities.empty())
     {
         std::vector<cro::Vertex2D> verts;

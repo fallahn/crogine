@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -92,7 +92,7 @@ void CoinSystem::process(float dt)
 
         const auto canCentre = glm::vec2(m_bucketEnt.getComponent<cro::Transform>().getPosition()) + BucketCentre;
 
-        auto& entities = getEntities();
+        const auto& entities = getEntities();
         for (auto entity : entities)
         {
             auto& coin = entity.getComponent<Coin>();

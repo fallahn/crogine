@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -66,7 +66,7 @@ ClientCollisionSystem::ClientCollisionSystem(cro::MessageBus& mb, const std::vec
 //public
 void ClientCollisionSystem::process(float)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& collider = entity.getComponent<ClientCollider>();

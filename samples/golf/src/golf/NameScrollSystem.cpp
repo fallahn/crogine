@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -60,7 +60,7 @@ void NameScrollSystem::process(float)
 
     if (updateCounter % UpdateRate == 0)
     {
-        auto entities = getEntities();
+        const auto& entities = getEntities();
         for (auto entity : entities)
         {
             auto& scroller = entity.getComponent<NameScroller>();

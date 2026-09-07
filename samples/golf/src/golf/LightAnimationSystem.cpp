@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2025
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -50,7 +50,7 @@ void LightAnimationSystem::process(float dt)
 
     while (m_accumulator > LightAnimation::FrameTime)
     {
-        auto& entities = getEntities();
+        const auto& entities = getEntities();
         for (auto entity : entities)
         {
             auto& anim = entity.getComponent<LightAnimation>();

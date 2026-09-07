@@ -437,7 +437,7 @@ void FpsCameraSystem::process(float dt)
 {
     checkControllerInput(dt);
 
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& controller = entity.getComponent<FpsCamera>();
