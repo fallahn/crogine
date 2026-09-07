@@ -2529,7 +2529,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         Achievements::awardAchievement(AchievementStrings[AchievementID::Nested]);
     }
 
-    if (m_friendlyPlayers
+    if (m_friendlyPlayers->getPlayerCount() == 3 //should be 4 total if we're playing a quickplay round
         && m_sharedData.gameMode != GameMode::Tournament)
     {
         Achievements::awardAchievement(AchievementStrings[AchievementID::DiveIn]);
