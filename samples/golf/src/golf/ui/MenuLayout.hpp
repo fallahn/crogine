@@ -112,6 +112,7 @@ struct TabBar final
 
     cro::Entity navLeftSprite;
     cro::Entity navRightSprite;
+    cro::Entity titleText;
 
     std::array<cro::FloatRect, 2U> navLeftRects = {};
     std::array<cro::FloatRect, 2U> navRightRects = {};

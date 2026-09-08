@@ -825,7 +825,7 @@ void OptionsStateV2::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(m_uiLayout.tabBar.background.getComponent<cro::Transform>());
 
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info); 
-    const float Spacing = 1.f / (TabID::Count + 1); //leave equivalent of half a tab either end
+    const float Spacing = 1.f / std::int32_t(TabID::Count/* + 1*/); //leave equivalent of half a tab either end
     for (auto i = 0; i < TabID::Count; ++i)
     {
         auto& item = m_uiLayout.tabBar.items[i];
@@ -839,7 +839,7 @@ void OptionsStateV2::buildScene()
         auto& uiElement = item.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
         uiElement.characterSize = InfoTextSize;
         uiElement.depth = 0.1f;
-        const float offset = (Spacing/* * 1.5f*/) + (Spacing * i);
+        const float offset = (Spacing / 2.f) + (Spacing * i);
         uiElement.resizeCallback = 
             [&, offset](cro::Entity e)
             {
@@ -852,6 +852,27 @@ void OptionsStateV2::buildScene()
     }
 
     const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    //title text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setString("Settings");
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
+    entity.getComponent<cro::UIElement>().characterSize = UITextSize;
+    entity.getComponent<cro::UIElement>().depth = 0.1f;
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [&, Spacing](cro::Entity e)
+        {
+            const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) / 2.f);
+            constexpr auto y = 28.f;
+            e.getComponent<cro::UIElement>().absolutePosition = { x,y };
+        };
+    m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_uiLayout.tabBar.titleText = entity;
+
+    //text for scroll left
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -864,12 +885,13 @@ void OptionsStateV2::buildScene()
         [&, Spacing](cro::Entity e)
         {
             const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * (Spacing / 4.f));
-            const auto y = 14.f;
+            constexpr auto y = 26.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
     m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_uiLayout.tabBar.navLeft = entity;
 
+    //text for scroll right
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -881,9 +903,9 @@ void OptionsStateV2::buildScene()
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&, Spacing](cro::Entity e)
         {
-            const auto offset = (Spacing * m_uiLayout.tabBar.items.size()) + (Spacing * 0.75f);
+            const auto offset = (Spacing * (m_uiLayout.tabBar.items.size() - 1)) + (Spacing * 0.75f);
             const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
-            const auto y = 14.f;
+            constexpr auto y = 26.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
     m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -900,6 +922,7 @@ void OptionsStateV2::buildScene()
 
     const auto bounds = spriteSheet.getSprite("l1").getTextureBounds();
 
+    //sprite for scroll left
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), bounds.height / 2.f });
     entity.addComponent<cro::Drawable2D>();
@@ -910,13 +933,13 @@ void OptionsStateV2::buildScene()
         [&, Spacing](cro::Entity e)
         {
             const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * (Spacing / 4.f));
-            const auto y = 10.f;
+            constexpr auto y = 23.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
     m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_uiLayout.tabBar.navLeftSprite = entity;
 
-
+    //sprite for scroll right
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), bounds.height / 2.f });
     entity.addComponent<cro::Drawable2D>();
@@ -926,14 +949,16 @@ void OptionsStateV2::buildScene()
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&, Spacing](cro::Entity e)
         {
-            const auto offset = (Spacing * m_uiLayout.tabBar.items.size()) + (Spacing * 0.75f);
+            const auto offset = (Spacing * (m_uiLayout.tabBar.items.size() - 1)) + (Spacing * 0.75f);
             const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
-            const auto y = 10.f;
+            constexpr auto y = 23.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
     m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_uiLayout.tabBar.navRightSprite = entity;
 
+
+    //main sprite
     m_uiLayout.menuLayout.sprite = m_scene.createEntity();
     m_uiLayout.menuLayout.sprite.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
     m_uiLayout.menuLayout.sprite.addComponent<cro::Drawable2D>();

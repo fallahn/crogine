@@ -318,7 +318,7 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
     {
         setActiveInput(true, 0);
 
-        //do this here to take advantageof key repeat
+        //do this here to take advantage of key repeat
         if (evt.key.key == SDLK_DOWN)
         {
             m_uiLayout.nextItem();
@@ -446,6 +446,7 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             m_exitFlags |= ExitFlagQuit;
+            setProgressColour(CD32::Colours[CD32::Red]);
         }
     }
 
@@ -568,10 +569,8 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
 
 void ProfileStateV2::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == cro::Message::WindowMessage)
-    {
-        const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
+    const auto resizeLayout = 
+        [this]()
         {
             //hack to force the texture to resize properly
             m_uiLayout.menuLayout.texture.create(1, 1, false);
@@ -583,12 +582,29 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
             entity.getComponent<cro::Callback>().function =
                 [&](cro::Entity e, float)
                 {
+                    m_uiLayout.activateTab(m_uiLayout.tabBar.activeIndex);
                     m_uiLayout.menuLayout.itemIndex = 0;
                     m_uiLayout.focusToIndex();
 
                     e.getComponent<cro::Callback>().active = false;
                     m_scene.destroyEntity(e);
                 };
+        };
+
+    if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
+        {
+            resizeLayout();
+        }
+    }
+    else if (msg.id == cro::Message::SystemMessage)
+    {
+        const auto& data = msg.getData<cro::Message::SystemEvent>();
+        if (data.type == cro::Message::SystemEvent::FullScreenToggled)
+        {
+            resizeLayout();
         }
     }
     else if (msg.id == cl::MessageID::SystemMessage)
@@ -1002,7 +1018,7 @@ void ProfileStateV2::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(m_uiLayout.tabBar.background.getComponent<cro::Transform>());
 
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info); 
-    const float Spacing = 1.f / (TabID::Count + 1); //leave equivalent of half a tab either end
+    const float Spacing = 1.f / std::int32_t(TabID::Count /*+ 1*/); //leave equivalent of half a tab either end
     for (auto i = 0; i < TabID::Count; ++i)
     {
         auto& item = m_uiLayout.tabBar.items[i];
@@ -1016,7 +1032,7 @@ void ProfileStateV2::buildScene()
         auto& uiElement = item.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
         uiElement.characterSize = InfoTextSize;
         uiElement.depth = 0.1f;
-        const float offset = (Spacing/* * 1.5f*/) + (Spacing * i);
+        const float offset = (Spacing * 0.5f) + (Spacing * i);
         uiElement.resizeCallback = 
             [&, offset](cro::Entity e)
             {
@@ -1029,6 +1045,26 @@ void ProfileStateV2::buildScene()
     }
 
     const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    //title text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
+    entity.getComponent<cro::UIElement>().characterSize = UITextSize;
+    entity.getComponent<cro::UIElement>().depth = 0.1f;
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [&, Spacing](cro::Entity e)
+        {
+            const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) / 2.f);
+            constexpr auto y = 28.f;
+            e.getComponent<cro::UIElement>().absolutePosition = { x,y };
+        };
+    m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_uiLayout.tabBar.titleText = entity;
+
+    //nav left text
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -1041,12 +1077,13 @@ void ProfileStateV2::buildScene()
         [&, Spacing](cro::Entity e)
         {
             const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * (Spacing / 4.f));
-            const auto y = 14.f;
+            constexpr auto y = 26.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
     m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_uiLayout.tabBar.navLeft = entity;
 
+    //nave right text
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -1058,9 +1095,9 @@ void ProfileStateV2::buildScene()
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&, Spacing](cro::Entity e)
         {
-            const auto offset = (Spacing * m_uiLayout.tabBar.items.size()) + (Spacing * 0.75f);
+            const auto offset = (Spacing * (m_uiLayout.tabBar.items.size() - 1)) + (Spacing * 0.75f);
             const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
-            const auto y = 14.f;
+            constexpr auto y = 26.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
     m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1077,6 +1114,7 @@ void ProfileStateV2::buildScene()
 
     const auto bounds = spriteSheet.getSprite("l1").getTextureBounds();
 
+    //nave left icon
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), bounds.height / 2.f });
     entity.addComponent<cro::Drawable2D>();
@@ -1087,13 +1125,13 @@ void ProfileStateV2::buildScene()
         [&, Spacing](cro::Entity e)
         {
             const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * (Spacing / 4.f));
-            const auto y = 10.f;
+            constexpr auto y = 23.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
     m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_uiLayout.tabBar.navLeftSprite = entity;
 
-
+    //nave right icon
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), bounds.height / 2.f });
     entity.addComponent<cro::Drawable2D>();
@@ -1103,9 +1141,9 @@ void ProfileStateV2::buildScene()
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&, Spacing](cro::Entity e)
         {
-            const auto offset = (Spacing * m_uiLayout.tabBar.items.size()) + (Spacing * 0.75f);
+            const auto offset = (Spacing * (m_uiLayout.tabBar.items.size() - 1)) + (Spacing * 0.75f);
             const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);
-            const auto y = 10.f;
+            constexpr auto y = 23.f;
             e.getComponent<cro::UIElement>().absolutePosition = { x,y };
         };
     m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

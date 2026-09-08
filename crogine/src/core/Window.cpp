@@ -443,7 +443,7 @@ void Window::setIcon(const std::uint8_t* data)
     //let the bundle set the icon on mac
 #ifndef __APPLE__
     CRO_ASSERT(m_window, "window not created");
-    CRO_ASSERT(data);
+    CRO_ASSERT(data, "");
     SDL_Surface* surface = SDL_CreateSurfaceFrom(16, 16, SDL_PIXELFORMAT_RGBA32, (void*)data, 16 * 4);
     if (surface)
     {

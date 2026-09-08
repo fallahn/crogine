@@ -169,7 +169,7 @@ void UILayout::updateTabBar()
 {
     const glm::vec2 WindowSize = cro::App::getWindow().getSize();// getWindowSize();
 
-    const float Spacing = 1.f / (tabBar.items.size() + 1); //leave equivalent of half a tab either end
+    const float Spacing = 1.f / (tabBar.items.size()/* + 1*/); //leave equivalent of half a tab either end
     const float TabWidth = std::round(Spacing * WindowSize.x);
 
     std::vector<cro::Vertex2D> verts;
@@ -221,7 +221,7 @@ void UILayout::updateTabBar()
             const auto hovered = (i == tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
 
             const float kludgeOffset = (2.f * viewScale);
-            glm::vec2 position = { (std::round(TabWidth / 2.f) + kludgeOffset) + ((i * TabWidth) + viewScale), 0.f };
+            glm::vec2 position = { (/*std::round(TabWidth / 2.f) +*/ kludgeOffset) + ((i * TabWidth) + viewScale), 0.f };
             if (active)
             {
                 addQuad(position, m_tabActive[0], m_tabActive[1]);
@@ -324,6 +324,9 @@ void UILayout::updateTabBar()
     break;
     }
     menuLayout.sprite.getComponent<cro::Transform>().move(-WindowSize / 2.f);
+
+    //update the current page title
+    tabBar.titleText.getComponent<cro::Text>().setString(tabBar.items[tabBar.activeIndex].text.getComponent<cro::Text>().getString());
 
     //set the detail text alignment based on active tab
     //switch (tabBar.activeIndex)
