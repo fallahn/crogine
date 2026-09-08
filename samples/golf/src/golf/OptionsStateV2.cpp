@@ -124,7 +124,7 @@ namespace
 
     const std::array ItemLabels =
     {
-        "Settings", "Keyboard", "Input",
+        "Settings", "Accessibility", "Keyboard", "Input",
         "Graphics", "Audio", "Achievements",
         "Stats"
     };
@@ -843,7 +843,7 @@ void OptionsStateV2::buildScene()
         uiElement.resizeCallback = 
             [&, offset](cro::Entity e)
             {
-                const auto x = std::ceil((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset) + 2.f;
+                const auto x = std::floor((static_cast<float>(cro::App::getWindow().getSize().x) / cro::UIElementSystem::getViewScale()) * offset);// +2.f;
                 const auto y = 12.f;
                 e.getComponent<cro::UIElement>().absolutePosition = { x,y };
             };
@@ -1192,6 +1192,7 @@ void OptionsStateV2::buildScene()
 
     //menu layouts
     createSettingsItems();
+    createAccesibilityItems();
     createKeyboardItems();
     createControllerItems();
     createDisplayItems();
@@ -1431,61 +1432,6 @@ void OptionsStateV2::createSettingsItems()
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.imperialMeasurements ? 1 : 0;
 
-    //large power bar
-    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Use Large Power Bar";
-    item->description = "Draws a larger power bar at the bottom ofthe UI";
-    item->selected =
-        [&](const Menu::Item&)
-        {
-            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::LargePower];
-            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::LargePower].getTextureBounds().width / 2.f, 0.f });
-            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-        };
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.useLargePowerBar = i.selectedIndex == 1;
-        };
-    item->labels = { "No" , "Yes"  };
-    item->selectedIndex = m_sharedData.useLargePowerBar ? 1 : 0;
-
-    //high contrast power bar
-    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "High Contrast Power Bar";
-    item->description = "Draws the power bar with inverted colours";
-    item->selected =
-        [&](const Menu::Item&)
-        {
-            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::HighContrast];
-            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::HighContrast].getTextureBounds().width / 2.f, 0.f });
-            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-        };
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.useContrastPowerBar = i.selectedIndex == 1;
-        };
-    item->labels = { "No" , "Yes" };
-    item->selectedIndex = m_sharedData.useContrastPowerBar ? 1 : 0;
-
-
-    //decimated power bar
-    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Decimate Power Bar";
-    item->description = "Draws a power bar with 10 segments instead of 8";
-    item->selected =
-        [&](const Menu::Item&)
-        {
-            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::DecimatePower];
-            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::DecimatePower].getTextureBounds().width / 2.f, 0.f });
-            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-        };
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.decimatePowerBar = i.selectedIndex == 1;
-        };
-    item->labels = { "No" , "Yes" };
-    item->selectedIndex = m_sharedData.decimatePowerBar ? 1 : 0;
-
 
     //decimalised distances
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
@@ -1665,18 +1611,6 @@ void OptionsStateV2::createSettingsItems()
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.useLensFlare ? 1 : 0;
 
-    //reduced motion transition
-    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Reduced Motion Transition";
-    item->description = "Hides the hole transition behind a loading screen to reduce motion sensitivity";
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.miniLoadingScreen = i.selectedIndex == 1;
-        };
-    item->labels = { "No" , "Yes" };
-    item->selectedIndex = m_sharedData.miniLoadingScreen ? 1 : 0;
-
-
 
     //----------control settings--------------//
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
@@ -1747,24 +1681,6 @@ void OptionsStateV2::createSettingsItems()
     item->title = "Gameplay Settings";
     item->displayType = Menu::Item::Heading;
     item->description = "Configure difficulty and accessibility settings";
-
-    //putt assist
-    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Use Putting Assist";
-    item->description = "Show a small flag above the power bar when putting to estimate the range";
-    item->selected =
-        [&](const Menu::Item&)
-        {
-            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::PuttAssist];
-            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::PuttAssist].getTextureBounds().width / 2.f, 0.f });
-            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-        };
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.showPuttingPower = i.selectedIndex == 1;
-        };
-    item->labels = { "No" , "Yes" };
-    item->selectedIndex = m_sharedData.showPuttingPower ? 1 : 0;
     
     
     //fixed range putter
@@ -1779,28 +1695,6 @@ void OptionsStateV2::createSettingsItems()
     item->selectedIndex = m_sharedData.fixedPuttingRange ? 1 : 0;
 
 
-
-    //precise range indicator
-    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Use Range Indicator Assist";
-    item->description = "The Range Indicator for clubs longer than a Pitch Wedge will account for elevation in terrain and wind conditions";
-    item->selected =
-        [&](const Menu::Item&)
-        {
-            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::RangeIndicator];
-            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::RangeIndicator].getTextureBounds().width / 2.f, 0.f });
-            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-        };
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.calculateRange = i.selectedIndex == 0;
-            Social::setLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist, i.selectedIndex == 1);
-        };
-    item->labels = { "Yes" , "No" };
-    item->selectedIndex = m_sharedData.calculateRange ? 0 : 1;
-
-
-
     //minimal UI
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Minimal UI";
@@ -1811,19 +1705,6 @@ void OptionsStateV2::createSettingsItems()
         };
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.showMinimap ? 0 : 1;
-
-
-
-    //in-game tips
-    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Display In-Game Tips";
-    item->description = "Shows tips when playing on how to best take your shot";
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.showInGameTips = i.selectedIndex == 1;
-        };
-    item->labels = { "No" , "Yes" };
-    item->selectedIndex = m_sharedData.showInGameTips ? 1 : 0;
 
 
     //allow random weather in quickplay
@@ -1980,32 +1861,6 @@ void OptionsStateV2::createSettingsItems()
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.enableDailyStreak ? 1 : 0;
 
-
-    //reset hints
-    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Reset Hints";
-    item->description = "Enable all in-game hints which were previously dismissed";
-    item->selected =
-        [&](const Menu::Item&)
-        {
-            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].sprite;
-            const auto bounds = m_uiLayout.detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
-            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
-
-            m_uiLayout.detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        };
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.showClubUpdate = true;
-            m_sharedData.showRosterTip = true;
-            m_sharedData.showTutorialTip = true;
-
-            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString("Tutorials Reset!");
-        };
-    item->labels = { "OK" };
-    item->selectedIndex = 0;
-
     //reset career
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Reset Career";
@@ -2048,6 +1903,152 @@ void OptionsStateV2::createSettingsItems()
         };
     item->labels = { "OK" };
     item->selectedIndex = 0;
+}
+
+void OptionsStateV2::createAccesibilityItems()
+{
+    auto* item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
+    item->title = "Accessibility";
+    item->displayType = Menu::Item::Heading;
+    item->description = "Accessibility Settings";
+
+    //large power bar
+    item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
+    item->title = "Use Large Power Bar";
+    item->description = "Draws a larger power bar at the bottom ofthe UI";
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::LargePower];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::LargePower].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.useLargePowerBar = i.selectedIndex == 1;
+        };
+    item->labels = { "No" , "Yes" };
+    item->selectedIndex = m_sharedData.useLargePowerBar ? 1 : 0;
+
+    //high contrast power bar
+    item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
+    item->title = "High Contrast Power Bar";
+    item->description = "Draws the power bar with inverted colours";
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::HighContrast];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::HighContrast].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.useContrastPowerBar = i.selectedIndex == 1;
+        };
+    item->labels = { "No" , "Yes" };
+    item->selectedIndex = m_sharedData.useContrastPowerBar ? 1 : 0;
+
+    //decimated power bar
+    item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
+    item->title = "Decimate Power Bar";
+    item->description = "Draws a power bar with 10 segments instead of 8";
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::DecimatePower];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::DecimatePower].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.decimatePowerBar = i.selectedIndex == 1;
+        };
+    item->labels = { "No" , "Yes" };
+    item->selectedIndex = m_sharedData.decimatePowerBar ? 1 : 0;
+
+    //putt assist
+    item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
+    item->title = "Use Putting Assist";
+    item->description = "Show a small flag above the power bar when putting to estimate the range";
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::PuttAssist];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::PuttAssist].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.showPuttingPower = i.selectedIndex == 1;
+        };
+    item->labels = { "No" , "Yes" };
+    item->selectedIndex = m_sharedData.showPuttingPower ? 1 : 0;
+
+    //precise range indicator
+    item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
+    item->title = "Use Range Indicator Assist";
+    item->description = "The Range Indicator for clubs longer than a Pitch Wedge will account for elevation in terrain and wind conditions";
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::RangeIndicator];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::RangeIndicator].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.calculateRange = i.selectedIndex == 0;
+            Social::setLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist, i.selectedIndex == 1);
+        };
+    item->labels = { "Yes" , "No" };
+    item->selectedIndex = m_sharedData.calculateRange ? 0 : 1;
+
+    //in-game tips
+    item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
+    item->title = "Display In-Game Tips";
+    item->description = "Shows tips when playing on how to best take your shot";
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.showInGameTips = i.selectedIndex == 1;
+        };
+    item->labels = { "No" , "Yes" };
+    item->selectedIndex = m_sharedData.showInGameTips ? 1 : 0;
+
+    //reset hints
+    item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
+    item->title = "Reset Hints";
+    item->description = "Enable all in-game hints which were previously dismissed";
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].sprite;
+            const auto bounds = m_uiLayout.detailsPane.image.getComponent<cro::Sprite>().getTextureBounds();
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
+
+            m_uiLayout.detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        };
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.showClubUpdate = true;
+            m_sharedData.showRosterTip = true;
+            m_sharedData.showTutorialTip = true;
+
+            m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString("Tutorials Reset!");
+        };
+    item->labels = { "OK" };
+    item->selectedIndex = 0;
+
+    //reduced motion transition
+    item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
+    item->title = "Reduced Motion Transition";
+    item->description = "Hides the hole transition behind a loading screen to reduce motion sensitivity";
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.miniLoadingScreen = i.selectedIndex == 1;
+        };
+    item->labels = { "No" , "Yes" };
+    item->selectedIndex = m_sharedData.miniLoadingScreen ? 1 : 0;
 }
 
 void OptionsStateV2::createKeyboardItems()

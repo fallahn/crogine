@@ -69,6 +69,7 @@ private:
     void buildScene();
 
     void createSettingsItems();
+    void createAccesibilityItems();
     void createKeyboardItems();
     void createControllerItems();
     void createDisplayItems();
@@ -122,7 +123,7 @@ private:
     {
         enum
         {
-            Settings, Keyboard, Controller,
+            Settings, Accessibility, Keyboard, Controller,
             Display, Audio, Achievements,
             Stats,
 

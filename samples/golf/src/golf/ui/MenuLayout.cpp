@@ -170,7 +170,7 @@ void UILayout::updateTabBar()
     const glm::vec2 WindowSize = cro::App::getWindow().getSize();// getWindowSize();
 
     const float Spacing = 1.f / (tabBar.items.size()/* + 1*/); //leave equivalent of half a tab either end
-    const float TabWidth = std::round(Spacing * WindowSize.x);
+    const float TabWidth = std::floor(Spacing * WindowSize.x);
 
     std::vector<cro::Vertex2D> verts;
     const auto viewScale = cro::UIElementSystem::getViewScale();
@@ -220,8 +220,8 @@ void UILayout::updateTabBar()
             const auto active = i == tabBar.activeIndex;
             const auto hovered = (i == tabBar.hoveredIndex && m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard);
 
-            const float kludgeOffset = (2.f * viewScale);
-            glm::vec2 position = { (/*std::round(TabWidth / 2.f) +*/ kludgeOffset) + ((i * TabWidth) + viewScale), 0.f };
+            //const float kludgeOffset = (2.f * viewScale);
+            glm::vec2 position = { /*(std::round(TabWidth / 2.f) + kludgeOffset) + */((i * TabWidth)/* + viewScale*/), 0.f };
             if (active)
             {
                 addQuad(position, m_tabActive[0], m_tabActive[1]);
