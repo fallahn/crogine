@@ -59,12 +59,10 @@ Window::Window()
     m_threadContext         (nullptr),
     m_mainContext           (nullptr),
     m_gpuVendor             (GPUVendor::Unknown),
-    m_framerateLimit        (1.f/240.f),
     m_fullscreen            (false),
     m_exclusiveFullScreen   (false),
     m_multisamplingEnabled  (false),
     m_windowedSize          (800, 600),
-    m_fullScreenSize        (m_windowedSize),
     m_cursor                (nullptr)
 {
 
@@ -200,18 +198,6 @@ bool Window::getVsyncEnabled() const
     return i != 0;
 }
 
-void Window::setFramerateLimit(float fps)
-{
-    if (fps > 0)
-    {
-        m_framerateLimit = 1.f / fps;
-    }
-    else
-    {
-        m_framerateLimit = 0.f;
-    }
-}
-
 void Window::setMultisamplingEnabled(bool enabled)
 {
     if (enabled != m_multisamplingEnabled)
@@ -259,7 +245,23 @@ void Window::display()
 
 bool Window::pollEvent(Event& evt)
 {
-    return SDL_PollEvent(&evt);
+    const auto res = SDL_PollEvent(&evt);
+    switch (evt.type)
+    {
+    default: break;
+    case SDL_EVENT_WINDOW_MOVED:
+        //check if the event moved this window to another
+        //display and refresh the current resolution list
+
+        break;
+    case SDL_EVENT_DISPLAY_ADDED:
+    case SDL_EVENT_DISPLAY_REMOVED:
+        //check if this window moved to another display
+        //and refresh the resolution list.
+        break;
+    }
+
+    return res;
 }
 
 void Window::close()
@@ -273,6 +275,20 @@ glm::uvec2 Window::getSize() const
 #ifdef PLATFORM_MOBILE
     return getScaledSize();
 #else
+    if (m_fullscreen)
+    {
+        //query the current mode
+        const auto* mode = SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(m_window));
+        if (mode)
+        {
+            return { mode->w, mode->h };
+        }
+        else
+        {
+            LogE << "Failed getting full screen size: " << SDL_GetError() << std::endl;
+        }
+    }
+
     std::int32_t x, y;
     SDL_GetWindowSize(m_window, &x, &y);
     return { x, y };
@@ -294,8 +310,18 @@ void Window::setSize(glm::uvec2 size)
     m_windowedSize = size;
 
     CRO_ASSERT(m_window, "window not created");
+
+
     SDL_SetWindowSize(m_window, size.x, size.y);
     SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+
+    //apply the new size if we're exclusive fs
+    if (m_fullscreen && m_exclusiveFullScreen)
+    {
+        setFullScreen(true);
+    }
+
+
 
     //size = getScaledSize(); //RenderTarget::getView is incorrect for simple drawables elsewise
     setViewport({ 0, 0, static_cast<std::int32_t>(size.x), static_cast<std::int32_t>(size.y) });
@@ -313,9 +339,10 @@ void Window::setFullScreen(bool fullscreen)
         {
             const auto displayID = SDL_GetDisplayForWindow(m_window);
             const SDL_DisplayMode* currentMode = SDL_GetCurrentDisplayMode(displayID);
+            const auto windowSize = getSize();
 
             SDL_DisplayMode fsMode = {};
-            SDL_GetClosestFullscreenDisplayMode(displayID, m_windowedSize.x, m_windowedSize.y, currentMode->refresh_rate, false, &fsMode);
+            SDL_GetClosestFullscreenDisplayMode(displayID, windowSize.x, windowSize.y, currentMode->refresh_rate, false, &fsMode);
 
             if (!SDL_SetWindowFullscreenMode(m_window, &fsMode))
             {
@@ -336,10 +363,6 @@ void Window::setFullScreen(bool fullscreen)
         SDL_SyncWindow(m_window);
 
 #endif
-        //m_previousWindowSize = getSize();
-
-        //we set the full screen size first
-        //SDL_SetWindowSize(m_window, m_fullScreenSize.x, m_fullScreenSize.y);
     }
 
     CRO_ASSERT(m_window, "window not created");
@@ -349,7 +372,17 @@ void Window::setFullScreen(bool fullscreen)
         if (!fullscreen)
         {
             //apply the windowed size afterwards
-            SDL_SetWindowSize(m_window, m_windowedSize.x, m_windowedSize.y);
+            //this should just use whatever the previous full screen size was
+            const auto mode = SDL_GetWindowFullscreenMode(m_window);
+            if (mode)
+            {
+                SDL_SetWindowSize(m_window, mode->w, mode->h);
+            }
+            else
+            {
+                //this wasn't in exclusive mode so...
+                SDL_SetWindowSize(m_window, m_windowedSize.x, m_windowedSize.y);
+            }
             SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
         }
 
@@ -411,62 +444,7 @@ const std::vector<glm::uvec2>& Window::getAvailableResolutions() const
     CRO_ASSERT(m_window, "window not created");
     if (m_resolutions.empty())
     {
-        std::int32_t displayCount = 0;
-        const auto displayIDs = SDL_GetDisplays(&displayCount);
-
-        for (auto j = 0; j < displayCount; ++j)
-        {
-            std::int32_t modeCount = 0;
-            const auto modes = SDL_GetFullscreenDisplayModes(displayIDs[j], &modeCount);
-            if (modeCount > 0)
-            {
-                for (auto i = 0; i < modeCount; ++i)
-                {
-                    m_resolutions.emplace_back(modes[i]->w, modes[i]->h);
-                }
-                m_resolutions.erase(std::unique(std::begin(m_resolutions), std::end(m_resolutions)), std::end(m_resolutions));
-            }
-            else
-            {
-                const std::string err = SDL_GetError();
-                Logger::log("failed retrieving available resolutions: " + err, Logger::Type::Error, Logger::Output::All);
-
-                //don't leave this empty else we'll badly index it
-                m_resolutions.emplace_back(1920u, 1080u);
-                m_resolutions.emplace_back(1280u, 720u);
-                m_resolutions.emplace_back(640u, 480u);
-            }
-        }
-
-        auto sorted = m_resolutions;
-        std::sort(sorted.begin(), sorted.end(),
-            [](glm::uvec2 a, glm::uvec2 b) {return a.y < b.y; });
-
-        const auto insertWindowRes = 
-            [this](std::uint32_t ax, std::uint32_t ay, glm::uvec2 r)
-            {
-                const auto x = (r.y / ay) * ax;
-                if (x <= m_resolutions[0].x)
-                {
-                    m_windowedResolutions.emplace_back(x, r.y);
-                }
-            };
-
-        //we store the windowed size independently, so the above is only
-        //used for full screen resolution
-        std::uint32_t prevHeight = 0;
-        for (const auto& r : sorted)
-        {
-            if (r.y != prevHeight
-                && r.y >= 480u)
-            {
-                insertWindowRes(4, 3, r);
-                insertWindowRes(16, 10, r);
-                insertWindowRes(16, 9, r);
-                insertWindowRes(21, 9, r);
-            }
-            prevHeight = r.y;
-        }
+        refreshResolutions();
     }
     return m_resolutions;
 }
@@ -685,17 +663,6 @@ bool Window::getCursorVisible() const
 
 void Window::setWindowedSize(glm::uvec2 size)
 {
-    //SDL_DisplayMode dm;
-    //SDL_GetDesktopDisplayMode(SDL_GetDisplayForWindow(m_window), &dm);
-    //if (dm.w == static_cast<std::int32_t>(m_previousWindowSize.x)
-    //    && dm.h == static_cast<std::int32_t>(m_previousWindowSize.y))
-    //{
-    //    m_previousWindowSize = { 640u, 480u };
-    //}
-    //else
-    //{
-    //    m_previousWindowSize = size;
-    //}
     //TODO we need to assert the windowed size exists in the available list?
     if (!m_fullscreen)
     {
@@ -710,17 +677,6 @@ void Window::setWindowedSize(glm::uvec2 size)
 glm::uvec2 Window::getWindowedSize() const
 {
     return m_windowedSize;
-}
-
-glm::uvec2 Window::getFullscreenSize() const
-{
-    if (m_exclusiveFullScreen)
-    {
-        return getWindowedSize();
-    }
-
-    const auto* mode = SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(m_window));
-    return { mode->w, mode->h };
 }
 
 GPUVendor Window::getGPUVendor() const
@@ -747,6 +703,69 @@ GPUVendor Window::getGPUVendor() const
 }
 
 //private
+void Window::refreshResolutions() const
+{
+    m_resolutions.clear();
+
+    std::int32_t displayCount = 0;
+    const auto displayIDs = SDL_GetDisplays(&displayCount);
+
+    for (auto j = 0; j < displayCount; ++j)
+    {
+        std::int32_t modeCount = 0;
+        const auto modes = SDL_GetFullscreenDisplayModes(displayIDs[j], &modeCount);
+        if (modeCount > 0)
+        {
+            for (auto i = 0; i < modeCount; ++i)
+            {
+                m_resolutions.emplace_back(modes[i]->w, modes[i]->h);
+            }
+            m_resolutions.erase(std::unique(std::begin(m_resolutions), std::end(m_resolutions)), std::end(m_resolutions));
+        }
+        else
+        {
+            const std::string err = SDL_GetError();
+            Logger::log("failed retrieving available resolutions: " + err, Logger::Type::Error, Logger::Output::All);
+
+            //don't leave this empty else we'll badly index it
+            m_resolutions.emplace_back(1920u, 1080u);
+            m_resolutions.emplace_back(1280u, 720u);
+            m_resolutions.emplace_back(640u, 480u);
+        }
+    }
+    SDL_free(displayIDs);
+
+    auto sorted = m_resolutions;
+    std::sort(sorted.begin(), sorted.end(),
+        [](glm::uvec2 a, glm::uvec2 b) {return a.y < b.y; });
+
+    const auto insertWindowRes =
+        [this](std::uint32_t ax, std::uint32_t ay, glm::uvec2 r)
+        {
+            const auto x = (r.y / ay) * ax;
+            if (x <= m_resolutions[0].x)
+            {
+                m_windowedResolutions.emplace_back(x, r.y);
+            }
+        };
+
+    //we store the windowed size independently, so the above is only
+    //used for full screen resolution
+    std::uint32_t prevHeight = 0;
+    for (const auto& r : sorted)
+    {
+        if (r.y != prevHeight
+            && r.y >= 480u)
+        {
+            insertWindowRes(4, 3, r);
+            insertWindowRes(16, 10, r);
+            insertWindowRes(16, 9, r);
+            insertWindowRes(21, 9, r);
+        }
+        prevHeight = r.y;
+    }
+}
+
 void Window::destroy()
 {
     if (m_mainContext)

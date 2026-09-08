@@ -76,7 +76,7 @@ namespace cro
         /*!
         \brief Creates a window with the given parameters
         \param width Width of the window to create in pixels
-        \param height Height of the widow to create in pixels
+        \param height Height of the window to create in pixels
         \param title Title to appear on the window (if supported by the current platform)
         \param styleFlags An unsigned integer containing 0 or more Window::StyleFlags OR'd together
         \returns true on success, else false
@@ -90,7 +90,7 @@ namespace cro
         void setBorderVisible(bool visible);
 
         /*!
-        \brief Returns the curren visibility state of the window's border
+        \brief Returns the current visibility state of the window's border
         */
         bool getBorderVisible() const;
 
@@ -103,17 +103,6 @@ namespace cro
         \brief Returns whether or not vsync is enabled
         */
         bool getVsyncEnabled() const;
-
-        /*!
-        \brief Sets the target frame limit in FPS when VSync is disabled
-        \param fps The frames per second to attempt to limit to. Set to zero to disable limiting
-        */
-        void setFramerateLimit(float fps);
-
-        /*!
-        \brief Returns the *normalised* frame rate limit
-        */
-        float getFramerateLimit() const { return m_framerateLimit; }
 
         /*!
         \brief Attempts to enable or disable MSAA if multisampling is available on the current platform
@@ -200,6 +189,7 @@ namespace cro
 
         /*!
         \brief Set the window position in desktop coordinates.
+        Has no effect when in full screen mode.
         \param x Horizontal position to place the window. A negative number
         will centre the window horizontally
         \param y Vertical position to place the window. A negative number
@@ -222,7 +212,7 @@ namespace cro
 
         /*!
         \brief Returns a reference to a vector containing a list of available
-        full screen display resolutions of the first monitor.
+        full screen display resolutions of the current monitor for this window.
         */
         const std::vector<glm::uvec2>& getAvailableResolutions() const;
 
@@ -233,7 +223,7 @@ namespace cro
         const std::vector<glm::uvec2>& getWindowedResolutions() const;
 
         /*!
-        \brief Sets the window's title
+        \brief Sets the window's title. The string is expected to be in utf-8
         */
         void setTitle(const std::string&);
 
@@ -265,7 +255,8 @@ namespace cro
         When this is true the mouse cursor is hidden and only
         relative mouse move events are received. Useful for
         games such as first or third person shooters where
-        mouse movements are used to move the camera.
+        mouse movements are used to move the camera. Locks the
+        mouse cursor position to the bounds of the window.
         */
         void setMouseCaptured(bool);
 
@@ -289,7 +280,15 @@ namespace cro
         void setCursor(const Cursor* cursor);
 
         /*!
+        \brief Returns a pointer to the active cursor, or nullptr
+        if no specific cursor has been set.
+        */
+        const Cursor* getCursor() const;
+
+        /*!
         \brief Sets whether or not the mouse cursor is visible
+        Note that, unlike setMouseCaptures(), this doesn't clamp
+        the mouse cursor position to the window bounds.
         */
         void setCursorVisible(bool visible);
 
@@ -299,27 +298,18 @@ namespace cro
         bool getCursorVisible() const;
 
         /*!
-        \brief Returns a pointer to the active cursor, or nullptr
-        if no specific cursor has been set.
-        */
-        const Cursor* getCursor() const;
-
-        /*!
         \brief Sets the size of the window to use when returning from
-        full screen
+        full screen. This will also resize the window if not currently
+        in full screen mode.
         */
         void setWindowedSize(glm::uvec2 size);
 
         /*!
         \brief Returns the current windowed size used when returning
-        from full screen mode
+        from full screen mode. Use getSize() to return the currently
+        active window size.
         */
         glm::uvec2 getWindowedSize() const;
-
-        /*!
-        \brief Returns the current size when setting the window exclusively full screen
-        */
-        glm::uvec2 getFullscreenSize() const;
 
         /*!
         \brief Returns the GPU vendor of the current OpenGL context
@@ -341,22 +331,22 @@ namespace cro
         mutable std::vector<glm::uvec2> m_resolutions;
         mutable std::vector<glm::uvec2> m_windowedResolutions;
 
-        float m_framerateLimit;
-
         bool m_fullscreen;
         bool m_exclusiveFullScreen;
         bool m_multisamplingEnabled;
 
         glm::uvec2 m_windowedSize; //restore to this if toggling full screen
-        glm::uvec2 m_fullScreenSize; //restore to this if toggling full screen
 
         const Cursor* m_cursor;
         friend class Cursor;
 
+        //not actually const but called from
+        //const getter if resolutions are empty
+        //TODO fix this.
+        void refreshResolutions() const;
         void destroy();
 
         friend class App;
-        friend class FileSystem; //enables parenting notifications to this window
 
         std::uint32_t getFrameBufferID() const override { return 0; }
     };

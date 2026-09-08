@@ -783,11 +783,11 @@ bool GolfGame::initialise()
     loadAvatars(); //this relies on steam being initialised
     CompetitionLeague::init(); //as does this
 
-    if (Social::isSteamdeck())
-    {
-        //don't interfere with deck's built-in limiter
-        getWindow().setFramerateLimit(0.f);
-    }
+    //if (Social::isSteamdeck())
+    //{
+    //    //don't interfere with deck's built-in limiter
+    //    getWindow().setFramerateLimit(0.f);
+    //}
 
 #ifdef CRO_DEBUG_
 #ifndef USE_GNS

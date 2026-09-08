@@ -259,14 +259,13 @@ namespace cro
         {
             std::int32_t width = 1280;
             std::int32_t height = 720;
-            float framelimit = 240.f;
+            glm::vec2 windowedSize = glm::vec2(0.f);
+            glm::vec2 fullscreenSize = glm::vec2(0.f);
             bool fullscreen = true;
             bool exclusive = false;
             bool vsync = false;
             bool border = true;
             bool useMultisampling = false;
-            glm::vec2 windowedSize = glm::vec2(0.f);
-            glm::vec2 fullscreenSize = glm::vec2(0.f);
         };
         WindowSettings loadSettings() const;
 

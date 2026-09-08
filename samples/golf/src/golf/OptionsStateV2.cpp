@@ -2624,7 +2624,7 @@ void OptionsStateV2::createDisplayItems()
         {
             if (!i.valueChangedOnActivate)
             {
-                cro::App::getWindow().setWindowedSize(m_sharedData.resolutions[i.selectedIndex]);
+                cro::App::getWindow().setSize(m_sharedData.resolutions[i.selectedIndex]);
                 //cro::App::getWindow().setFullscreenSize(m_sharedData.resolutions[i.selectedIndex]);
             }
         };
@@ -2636,7 +2636,7 @@ void OptionsStateV2::createDisplayItems()
     }
     item->wrapValue = false;
 
-    const auto size = cro::App::getWindow().isFullscreen() ? cro::App::getWindow().getFullscreenSize() : cro::App::getWindow().getWindowedSize();
+    const auto size = cro::App::getWindow().getSize();// cro::App::getWindow().isFullscreen() ? cro::App::getWindow().getFullscreenSize() : cro::App::getWindow().getWindowedSize();
     for (auto i = 0u; i < m_sharedData.resolutions.size(); ++i)
     {
         if (m_sharedData.resolutions[i].x == size.x 

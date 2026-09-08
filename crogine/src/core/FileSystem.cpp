@@ -468,7 +468,7 @@ void FileSystem::setResourceDirectory(const std::filesystem::path& path)
 bool FileSystem::showMessageBox(const std::string& title, const std::string& message, ButtonType buttonType, IconType iconType)
 {
     SDL_MessageBoxData data = {};
-    data.window = App::getWindow().m_window;
+    data.window = App::getWindow();
     data.title = title.c_str();
     data.message = message.c_str();
     data.flags = SDL_MESSAGEBOX_BUTTONS_LEFT_TO_RIGHT;
