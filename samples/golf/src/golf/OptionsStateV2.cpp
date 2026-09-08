@@ -2654,12 +2654,30 @@ void OptionsStateV2::createDisplayItems()
             m_uiLayout.detailsPane.applyButton.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         };
     item->activated =
-        [&](Menu::Item& i)
+        [this](Menu::Item& i)
         {
             if (!i.valueChangedOnActivate)
             {
+                auto& window = cro::App::getWindow();
+                if (window.isFullscreen())
+                {
+                    window.setFullScreen(false);
+
+                    if (window.getExclusiveFullscreen())
+                    {
+                        //delay a frame before returning to full screen at the new size
+                        auto entity = m_scene.createEntity();
+                        entity.addComponent<cro::Callback>().active = true;
+                        entity.getComponent<cro::Callback>().function =
+                            [this](cro::Entity e, float)
+                            {
+                                cro::App::getWindow().setFullScreen(true);
+                                e.getComponent<cro::Callback>().active = false;
+                                m_scene.destroyEntity(e);
+                            };
+                    }
+                }
                 cro::App::getWindow().setSize(cro::Console::getResolutionData()[i.selectedIndex].size);
-                //cro::App::getWindow().setFullscreenSize(m_sharedData.resolutions[i.selectedIndex]);
             }
         };
     item->alwaysActivate = true;
@@ -2671,7 +2689,7 @@ void OptionsStateV2::createDisplayItems()
     }
     item->wrapValue = false;
 
-    const auto size = cro::App::getWindow().getSize();// cro::App::getWindow().isFullscreen() ? cro::App::getWindow().getFullscreenSize() : cro::App::getWindow().getWindowedSize();
+    const auto size = cro::App::getWindow().getSize();
     for (auto i = 0u; i < resolutions.size(); ++i)
     {
         if (resolutions[i].size.x == size.x 
