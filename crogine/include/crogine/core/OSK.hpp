@@ -60,10 +60,18 @@ namespace cro
         \param callback This callback is executed when the keyboard is
         closed. The callback parameters passed in indicate whether the
         input text was submitted (eg false if the input was cancelled)
-        and a pointer to the utf8 encoded input buffer (null terminated)
-        TODO this would be ideal for C++20s Ranges
+        and a pointer to a cro::String containing the input buffer
+        \param existingString A pointer to an existing String instance
+        which is copied to the input buffer, eg text which might need
+        to be ediyed. May also be null.
         */
-        static void show(const std::function<void(bool, const char*)>&);
+        static void show(const std::function<void(bool, const String&)>& callback, const String* existingString = nullptr);
+
+
+        /*!
+        \brief Returns true if the keyboard is active and shown on screen
+        */
+        static bool shown();
 
     private:
 
@@ -94,7 +102,7 @@ namespace cro
         std::int32_t m_lastInput;
 
         bool m_isActive;
-        std::function<void(bool, const char*)> m_callback;
+        std::function<void(bool, const String&)> m_callback;
 
         Clock m_activationTimer; //times the highlight flash on key activation
 

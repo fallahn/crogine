@@ -2795,10 +2795,19 @@ void ProfileStateV2::createDetailItems()
                 }
                 else
                 {
-                    m_showOSK = true; // hmm this is used to block input, but OSK state shouldn't be forwarding it?
-                    m_sharedData.useOSKBuffer = true;
-                    m_sharedData.OSKBuffer = m_activeProfile.playerData.name;
-                    requestStackPush(StateID::Keyboard);
+                    cro::OSK::show([this](bool submitted, const cro::String& str)
+                        {
+                            if (submitted)
+                            {
+                                if (!str.empty())
+                                {
+                                    m_activeProfile.playerData.name = str;
+                                    applyNameString();
+                                }
+                            }
+                            m_showOSK = false;
+                        }, &m_activeProfile.playerData.name);
+                    m_showOSK = true;
                 }
 #endif
         };

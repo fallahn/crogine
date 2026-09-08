@@ -87,7 +87,7 @@ bool SurrealState::handleEvent(const cro::Event& evt)
             requestStackPush(0);
             break;
         case SDLK_SPACE:
-            cro::OSK::show([](bool submitted, const char* str)
+            cro::OSK::show([](bool submitted, const cro::String& str)
                 {
                     if (!submitted)
                     {
@@ -95,7 +95,7 @@ bool SurrealState::handleEvent(const cro::Event& evt)
                     }
                     else
                     {
-                        LogI << "Input is: " << str << std::endl;
+                        LogI << "Input is: " << str.toUtf8Char() << std::endl;
                     }
                 });
             break;

@@ -439,6 +439,10 @@ void GolfGame::handleMessage(const cro::Message& msg)
         {
         default: break;
         case SystemEvent::RequestOSK:
+            if (!cro::OSK::shown())
+            {
+
+            }
             if (m_stateStack.getTopmostState() != StateID::Keyboard)
             {
                 if (data.data == 1)

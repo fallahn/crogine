@@ -555,10 +555,19 @@ void EditTournamentState::buildScene()
                         else
 #endif
                         {
+                            cro::OSK::show([this](bool submitted, const cro::String& str)
+                                {
+                                    if(submitted)
+                                    {
+                                        if (!str.empty())
+                                        {
+                                            m_tournamentNameEntity.getComponent<cro::Text>().setString(str);
+                                            m_tournamentInfo.setTitle(str);
+                                        }
+                                    }
+                                    m_showOSK = false;
+                                }, &m_tournamentInfo.getTitle());
                             m_showOSK = true;
-                            m_sharedData.useOSKBuffer = true;
-                            m_sharedData.OSKBuffer = m_tournamentInfo.getTitle();
-                            requestStackPush(StateID::Keyboard);
                         }
                     }
                     else

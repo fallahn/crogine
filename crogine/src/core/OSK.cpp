@@ -248,7 +248,7 @@ OSK::OSK()
     }
 }
 
-void OSK::show(const std::function<void(bool, const char*)>& callback)
+void OSK::show(const std::function<void(bool, const String&)>& callback, const String* existing)
 {
     auto& instance = App::getInstance().m_osk;
 
@@ -258,6 +258,14 @@ void OSK::show(const std::function<void(bool, const char*)>& callback)
         instance->m_callback = callback;
         instance->m_bufferIndex = 0;
 
+        if (existing)
+        {
+            const auto len = std::min(size_t(MaxChars), existing->size());
+            std::memcpy(instance->m_textBuffer.data(), existing->data(), len * sizeof(std::uint32_t));
+            instance->m_bufferIndex = len;
+            instance->m_previewText.setString(*existing + IconCursor);
+        }
+
         instance->updateVertices();
         instance->updateVertices(); //*sigh* the texture might resize mid-update so we have to update TWICE
 
@@ -265,6 +273,10 @@ void OSK::show(const std::function<void(bool, const char*)>& callback)
     }
 }
 
+bool OSK::shown()
+{
+    return App::getInstance().m_osk->m_isActive;
+}
 
 //private
 void OSK::close(bool isSubmitted)
@@ -273,11 +285,12 @@ void OSK::close(bool isSubmitted)
     {
         if (m_callback)
         {
-            std::basic_string<char> output;
+            /*std::basic_string<char> output;
             output.reserve(m_textBuffer.size());
-            Utf32::toUtf8(m_textBuffer.begin(), m_textBuffer.end(), std::back_inserter(output));
+            Utf32::toUtf8(m_textBuffer.begin(), m_textBuffer.end(), std::back_inserter(output));*/
 
-            m_callback(isSubmitted, output.data());
+            cro::String str = cro::String::fromUtf32(m_textBuffer.begin(), m_textBuffer.begin() + m_bufferIndex);
+            m_callback(isSubmitted, str);
         }
 
         //reset the buffer for next input
