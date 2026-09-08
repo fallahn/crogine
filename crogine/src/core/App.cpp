@@ -1013,6 +1013,10 @@ void App::handleMessages()
             {
                 AudioRenderer::resume();
             }
+            else if (data.type == Message::SystemEvent::ResolutionRefreshed)
+            {
+                Console::refreshResolutionList();
+            }
         }
             break;
         default: break;

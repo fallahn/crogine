@@ -53,9 +53,8 @@ namespace
     using StatFunc = std::pair<std::function<void()>, const GuiClient*>;
     std::vector<StatFunc> m_statFuncs;
 
-    std::vector<glm::uvec2> resolutions;
     int currentResolution = 0;
-    std::array<char, 1024> resolutionNames{};
+    std::vector<Console::ResolutionData> resolutionData;
     
 
     constexpr std::size_t MAX_INPUT_CHARS = 400;
@@ -113,6 +112,11 @@ int textEditCallback(ImGuiInputTextCallbackData* data);
 float Console::m_avgFrameTime = 0.f;
 
 //public
+const std::vector<Console::ResolutionData>& Console::getResolutionData()
+{
+    return resolutionData;
+}
+
 void Console::print(const std::string& line)
 {
     if (line.empty()) return;
@@ -395,7 +399,23 @@ void Console::draw()
                 //video options
                 if (ui::BeginTabItem("Video"))
                 {
-                    ui::Combo("Resolution", &currentResolution, resolutionNames.data());
+                    if (ImGui::BeginCombo("Resolution", resolutionData[currentResolution].label.c_str()))
+                    {
+                        for (auto n = 0u; n < resolutionData.size(); ++n)
+                        {
+                            const bool selected = (currentResolution == n);
+                            if (ImGui::Selectable(resolutionData[n].label.c_str(), selected))
+                            {
+                                currentResolution = n;
+                            }
+
+                            if (selected)
+                            {
+                                ImGui::SetItemDefaultFocus();
+                            }
+                        }
+                        ImGui::EndCombo();
+                    }
 
                     static bool fullScreen = App::getWindow().isFullscreen();
                     ui::Checkbox("Full Screen", &fullScreen);
@@ -447,7 +467,7 @@ void Console::draw()
                         }
                         else
                         {
-                            App::getWindow().setSize(resolutions[currentResolution]);
+                            App::getWindow().setSize(resolutionData[currentResolution].size);
                         }
                     }
                     ui::EndTabItem();
@@ -509,16 +529,16 @@ void Console::draw()
     {
         //read current active values
         const auto& size = App::getWindow().getSize();
-        for (auto i = 0u; i < resolutions.size(); ++i)
+        for (auto i = 0u; i < resolutionData.size(); ++i)
         {
-            if (resolutions[i].x == size.x && resolutions[i].y == size.y)
+            if (resolutionData[i].size.x == size.x && resolutionData[i].size.y == size.y)
             {
                 currentResolution = i;
                 break;
             }
         }
 
-        currentResolution = std::clamp(currentResolution, 0, static_cast<std::int32_t>(resolutions.size() - 1));
+        currentResolution = std::clamp(currentResolution, 0, static_cast<std::int32_t>(resolutionData.size() - 1));
         return;
     }
 
@@ -576,28 +596,7 @@ void Console::init()
     Commands.push_back("CLEAR");
     Commands.push_back("CLASSIFY");
 
-    resolutions = App::getWindow().getAvailableResolutions();
-    std::reverse(std::begin(resolutions), std::end(resolutions));
-
-    int i = 0;
-    for (auto r = resolutions.begin(); r != resolutions.end(); ++r)
-    {
-        std::string width = std::to_string(r->x);
-        std::string height = std::to_string(r->y);
-
-        for (char c : width)
-        {
-            resolutionNames[i++] = c;
-        }
-        resolutionNames[i++] = ' ';
-        resolutionNames[i++] = 'x';
-        resolutionNames[i++] = ' ';
-        for (char c : height)
-        {
-            resolutionNames[i++] = c;
-        }
-        resolutionNames[i++] = '\0';
-    }
+    refreshResolutionList();
 
     //------default commands------//
     //list all available commands to the console
@@ -742,6 +741,22 @@ void Console::finalise()
     //to modify setConvarValue as it calls this to
     //update the file with new values.
     convars.save(App::getPreferencePath() / convarName);
+}
+
+void Console::refreshResolutionList()
+{
+    const auto& resolutions = App::getWindow().getAvailableResolutions();
+    resolutionData.clear();
+
+    for (auto r = resolutions.crbegin(); r != resolutions.crend(); ++r)
+    {
+        const std::string width = std::to_string(r->x);
+        const std::string height = std::to_string(r->y);
+
+        auto& res = resolutionData.emplace_back();
+        res.label = width + " x " + height;
+        res.size = *r;
+    }
 }
 
 void Console::updateAverageRenderTime(float ft)

@@ -217,12 +217,6 @@ namespace cro
         const std::vector<glm::uvec2>& getAvailableResolutions() const;
 
         /*!
-        \brief Returns a reference to the list of available resolutions when
-        running in windowed mode.
-        */
-        const std::vector<glm::uvec2>& getWindowedResolutions() const;
-
-        /*!
         \brief Sets the window's title. The string is expected to be in utf-8
         */
         void setTitle(const std::string&);
@@ -322,14 +316,14 @@ namespace cro
     private:
 
         SDL_Window* m_window;
-        SDL_GLContext m_threadContext;
+        SDL_DisplayID m_displayID; //used to track if the window is moved on to a different display.
+        SDL_GLContext m_threadContext; //TODO this should probably be removed
         SDL_GLContext m_mainContext;
         mutable GPUVendor m_gpuVendor;
 
         std::unique_ptr<LoadingScreen> m_loadingScreen;
 
         mutable std::vector<glm::uvec2> m_resolutions;
-        mutable std::vector<glm::uvec2> m_windowedResolutions;
 
         bool m_fullscreen;
         bool m_exclusiveFullScreen;

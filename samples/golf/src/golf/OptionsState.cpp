@@ -331,9 +331,10 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
 
     m_videoSettings.fullScreen = ctx.mainWindow.isFullscreen();
     const auto size = ctx.mainWindow.getSize();
-    for (auto i = 0u; i < sd.resolutions.size(); ++i)
+    const auto& resolutions = cro::Console::getResolutionData();
+    for (auto i = 0u; i < resolutions.size(); ++i)
     {
-        if (sd.resolutions[i].x == size.x && sd.resolutions[i].y == size.y)
+        if (resolutions[i].size.x == size.x && resolutions[i].size.y == size.y)
         {
             m_videoSettings.resolutionIndex = i;
             break;
@@ -710,16 +711,17 @@ void OptionsState::handleMessage(const cro::Message& msg)
             m_videoSettings.fullScreen = cro::App::getWindow().isFullscreen();
 
             auto currentRes = cro::App::getWindow().getSize();
-            if (auto res = std::find_if(m_sharedData.resolutions.cbegin(), m_sharedData.resolutions.cend(),
-                [currentRes](const glm::uvec2& r)
+            const auto& resolutions = cro::Console::getResolutionData();
+            if (auto res = std::find_if(resolutions.cbegin(), resolutions.cend(),
+                [currentRes](const cro::Console::ResolutionData& r)
                 {
-                    return r == currentRes;
+                    return r.size == currentRes;
                 });
-                res != m_sharedData.resolutions.cend())
+                res != resolutions.cend())
             {
-                m_videoSettings.resolutionIndex = std::distance(m_sharedData.resolutions.cbegin(), res);
+                m_videoSettings.resolutionIndex = std::distance(resolutions.cbegin(), res);
 
-                resolutionLabel.getComponent<cro::Text>().setString(m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
+                resolutionLabel.getComponent<cro::Text>().setString(resolutions[m_videoSettings.resolutionIndex].label);
                 centreText(resolutionLabel);
             }
         }
@@ -1931,7 +1933,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //centreText(resLabel);
 
     //resolution value text
-    resLabel = createLabel(glm::vec2(136.f, 185.f), m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
+    resLabel = createLabel(glm::vec2(136.f, 185.f), cro::Console::getResolutionData()[m_videoSettings.resolutionIndex].label);
     centreText(resLabel);
     resolutionLabel = resLabel; //global static used by callback to update display when window is toggled FS
 
@@ -2456,8 +2458,9 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             {
                 if (activated(evt))
                 {
-                    m_videoSettings.resolutionIndex = (m_videoSettings.resolutionIndex + (m_sharedData.resolutions.size() - 1)) % m_sharedData.resolutions.size();
-                    resLabel.getComponent<cro::Text>().setString(m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
+                    const auto& resolutions = cro::Console::getResolutionData();
+                    m_videoSettings.resolutionIndex = (m_videoSettings.resolutionIndex + (resolutions.size() - 1)) % resolutions.size();
+                    resLabel.getComponent<cro::Text>().setString(resolutions[m_videoSettings.resolutionIndex].label);
                     centreText(resLabel);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
@@ -2474,8 +2477,9 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             {
                 if (activated(evt))
                 {
-                    m_videoSettings.resolutionIndex = (m_videoSettings.resolutionIndex + 1) % m_sharedData.resolutions.size();
-                    resLabel.getComponent<cro::Text>().setString(m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
+                    const auto& resolutions = cro::Console::getResolutionData();
+                    m_videoSettings.resolutionIndex = (m_videoSettings.resolutionIndex + 1) % resolutions.size();
+                    resLabel.getComponent<cro::Text>().setString(resolutions[m_videoSettings.resolutionIndex].label);
                     centreText(resLabel);
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
@@ -6206,7 +6210,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
                 }
                 else
                 {
-                    cro::App::getWindow().setSize(m_sharedData.resolutions[m_videoSettings.resolutionIndex]);
+                    cro::App::getWindow().setSize(cro::Console::getResolutionData()[m_videoSettings.resolutionIndex].size);
 
                     auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
                     cam.active = true;

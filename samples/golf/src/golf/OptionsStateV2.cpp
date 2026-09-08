@@ -587,6 +587,14 @@ void OptionsStateV2::handleMessage(const cro::Message& msg)
             }
         }
     }
+    else if (msg.id == cro::Message::SystemMessage)
+    {
+        const auto& data = msg.getData<cro::Message::SystemEvent>();
+        if (data.type == cro::Message::SystemEvent::ResolutionRefreshed)
+        {
+            createDisplayItems();
+        }
+    }
     m_scene.forwardMessage(msg);
 }
 
@@ -2624,23 +2632,24 @@ void OptionsStateV2::createDisplayItems()
         {
             if (!i.valueChangedOnActivate)
             {
-                cro::App::getWindow().setSize(m_sharedData.resolutions[i.selectedIndex]);
+                cro::App::getWindow().setSize(cro::Console::getResolutionData()[i.selectedIndex].size);
                 //cro::App::getWindow().setFullscreenSize(m_sharedData.resolutions[i.selectedIndex]);
             }
         };
     item->alwaysActivate = true;
     
-    for (const auto& s : m_sharedData.resolutionStrings)
+    const auto& resolutions = cro::Console::getResolutionData();
+    for (const auto& s : resolutions)
     {
-        item->labels.push_back(s);
+        item->labels.push_back(s.label);
     }
     item->wrapValue = false;
 
     const auto size = cro::App::getWindow().getSize();// cro::App::getWindow().isFullscreen() ? cro::App::getWindow().getFullscreenSize() : cro::App::getWindow().getWindowedSize();
-    for (auto i = 0u; i < m_sharedData.resolutions.size(); ++i)
+    for (auto i = 0u; i < resolutions.size(); ++i)
     {
-        if (m_sharedData.resolutions[i].x == size.x 
-            && m_sharedData.resolutions[i].y == size.y)
+        if (resolutions[i].size.x == size.x 
+            && resolutions[i].size.y == size.y)
         {
             item->selectedIndex = i;
             break;

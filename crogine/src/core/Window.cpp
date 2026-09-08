@@ -41,6 +41,7 @@ source distribution.
 #include "DefaultLoadingScreen.hpp"
 
 #include <algorithm>
+#include <ranges>
 
 using namespace cro;
 
@@ -56,6 +57,7 @@ namespace
 
 Window::Window()
     : m_window              (nullptr),
+    m_displayID             (0),
     m_threadContext         (nullptr),
     m_mainContext           (nullptr),
     m_gpuVendor             (GPUVendor::Unknown),
@@ -146,6 +148,7 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
         //m_previousWindowSize = { width, height };
     }
 
+    m_displayID = SDL_GetDisplayForWindow(m_window);
     return true;
 }
 
@@ -252,12 +255,26 @@ bool Window::pollEvent(Event& evt)
     case SDL_EVENT_WINDOW_MOVED:
         //check if the event moved this window to another
         //display and refresh the current resolution list
-
+        if (evt.window.windowID == SDL_GetWindowID(m_window))
+        {
+            const auto displayID = SDL_GetDisplayForWindow(m_window);
+            if (displayID != m_displayID)
+            {
+                refreshResolutions();
+                m_displayID = SDL_GetDisplayForWindow(m_window);
+            }
+        }
         break;
     case SDL_EVENT_DISPLAY_ADDED:
     case SDL_EVENT_DISPLAY_REMOVED:
-        //check if this window moved to another display
-        //and refresh the resolution list.
+        //refresh the available resolutions
+        //incase the window was forced onto
+        //a new display
+        if (m_window)
+        {
+            refreshResolutions();
+            m_displayID = SDL_GetDisplayForWindow(m_window);
+        }
         break;
     }
 
@@ -426,6 +443,7 @@ void Window::setIcon(const std::uint8_t* data)
     //let the bundle set the icon on mac
 #ifndef __APPLE__
     CRO_ASSERT(m_window, "window not created");
+    CRO_ASSERT(data);
     SDL_Surface* surface = SDL_CreateSurfaceFrom(16, 16, SDL_PIXELFORMAT_RGBA32, (void*)data, 16 * 4);
     if (surface)
     {
@@ -447,15 +465,6 @@ const std::vector<glm::uvec2>& Window::getAvailableResolutions() const
         refreshResolutions();
     }
     return m_resolutions;
-}
-
-const std::vector<glm::uvec2>& Window::getWindowedResolutions() const
-{
-    if (m_windowedResolutions.empty())
-    {
-        getAvailableResolutions(); //updates the internal list
-    }
-    return m_windowedResolutions;
 }
 
 void Window::setTitle(const std::string& title)
@@ -707,63 +716,29 @@ void Window::refreshResolutions() const
 {
     m_resolutions.clear();
 
-    std::int32_t displayCount = 0;
-    const auto displayIDs = SDL_GetDisplays(&displayCount);
-
-    for (auto j = 0; j < displayCount; ++j)
+    std::int32_t modeCount = 0;
+    const auto modes = SDL_GetFullscreenDisplayModes(SDL_GetDisplayForWindow(m_window), &modeCount);
+    if (modeCount > 0)
     {
-        std::int32_t modeCount = 0;
-        const auto modes = SDL_GetFullscreenDisplayModes(displayIDs[j], &modeCount);
-        if (modeCount > 0)
+        for (auto i = 0; i < modeCount; ++i)
         {
-            for (auto i = 0; i < modeCount; ++i)
-            {
-                m_resolutions.emplace_back(modes[i]->w, modes[i]->h);
-            }
-            m_resolutions.erase(std::unique(std::begin(m_resolutions), std::end(m_resolutions)), std::end(m_resolutions));
+            m_resolutions.emplace_back(modes[i]->w, modes[i]->h);
         }
-        else
-        {
-            const std::string err = SDL_GetError();
-            Logger::log("failed retrieving available resolutions: " + err, Logger::Type::Error, Logger::Output::All);
-
-            //don't leave this empty else we'll badly index it
-            m_resolutions.emplace_back(1920u, 1080u);
-            m_resolutions.emplace_back(1280u, 720u);
-            m_resolutions.emplace_back(640u, 480u);
-        }
+        m_resolutions.erase(std::unique(std::begin(m_resolutions), std::end(m_resolutions)), std::end(m_resolutions));
     }
-    SDL_free(displayIDs);
-
-    auto sorted = m_resolutions;
-    std::sort(sorted.begin(), sorted.end(),
-        [](glm::uvec2 a, glm::uvec2 b) {return a.y < b.y; });
-
-    const auto insertWindowRes =
-        [this](std::uint32_t ax, std::uint32_t ay, glm::uvec2 r)
-        {
-            const auto x = (r.y / ay) * ax;
-            if (x <= m_resolutions[0].x)
-            {
-                m_windowedResolutions.emplace_back(x, r.y);
-            }
-        };
-
-    //we store the windowed size independently, so the above is only
-    //used for full screen resolution
-    std::uint32_t prevHeight = 0;
-    for (const auto& r : sorted)
+    else
     {
-        if (r.y != prevHeight
-            && r.y >= 480u)
-        {
-            insertWindowRes(4, 3, r);
-            insertWindowRes(16, 10, r);
-            insertWindowRes(16, 9, r);
-            insertWindowRes(21, 9, r);
-        }
-        prevHeight = r.y;
+        const std::string err = SDL_GetError();
+        Logger::log("failed retrieving available resolutions: " + err, Logger::Type::Error, Logger::Output::All);
+
+        //don't leave this empty else we'll badly index it
+        m_resolutions.emplace_back(1920u, 1080u);
+        m_resolutions.emplace_back(1280u, 720u);
+        m_resolutions.emplace_back(640u, 480u);
     }
+
+    //let places such as the console know it needs to refresh its list (wlthough the console should read it directly...)
+    App::postMessage<Message::SystemEvent>(Message::SystemMessage)->type = Message::SystemEvent::ResolutionRefreshed;
 }
 
 void Window::destroy()

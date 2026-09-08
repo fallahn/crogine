@@ -61,6 +61,16 @@ namespace cro
         using Command = std::function<void(const std::string&)>;
 
         /*!
+        \brief Used to create a printable list of resolution data
+        */
+        struct ResolutionData final
+        {
+            std::string label;
+            glm::uvec2 size = glm::uvec2(0);
+        };
+        static const std::vector<ResolutionData>& getResolutionData();
+
+        /*!
         \brief Prints the given string to the console window
         */
         static void print(const std::string&);
@@ -179,6 +189,8 @@ namespace cro
 
         static void init();
         static void finalise();
+
+        static void refreshResolutionList();
 
         static float m_avgFrameTime;
         static void updateAverageRenderTime(float);

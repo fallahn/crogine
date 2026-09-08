@@ -145,12 +145,16 @@ namespace cro
 
         /*!
         \brief Raised on system events such as full screen toggle
+        TODO full screen or resolution updates *ought* to be
+        window-specific events, but the WindowEvent message is
+        something else...
         */
         struct SystemEvent final
         {
             enum
             {
                 FullScreenToggled,
+                ResolutionRefreshed, //the internal list of window resolutions have been updated.
                 ScreenshotTaken, //note that files are written asynchronously and may not be available when this message is received
                 ResumedFromSuspend,
                 AudioDeviceChanged

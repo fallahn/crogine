@@ -413,9 +413,6 @@ struct SharedStateData final
     std::unique_ptr<cro::ResourceCollection> sharedResources; //globally shared resources, eg fonts
     cro::ResourceCollection* activeResources = nullptr; //used by cached states to share the base state resources
     
-    std::vector<glm::uvec2> resolutions;
-    std::vector<std::string> resolutionStrings;
-
     LeagueNames leagueNames;
     std::array<Tournament, 3u> tournaments;
     std::int32_t activeTournament = -1;

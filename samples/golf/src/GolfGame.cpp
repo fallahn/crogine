@@ -1153,14 +1153,6 @@ bool GolfGame::initialise()
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define SPRITE\n");
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::FlagPreview, cro::RenderSystem2D::getDefaultVertexShader(), FlagFrag, "#define TEXTURED\n");
 
-    m_sharedData.resolutions = getWindow().getAvailableResolutions();
-    //m_sharedData.resolutions.insert(m_sharedData.resolutions.end(), getWindow().getWindowedResolutions().begin(), getWindow().getWindowedResolutions().end());
-    std::reverse(m_sharedData.resolutions.begin(), m_sharedData.resolutions.end());
-    for (auto r : m_sharedData.resolutions)
-    {
-        auto& str = m_sharedData.resolutionStrings.emplace_back();
-        str += std::to_string(r.x) + " x " + std::to_string(r.y);
-    }
 
     cro::SpriteSheet s;
     s.loadFromFile("assets/golf/sprites/options.spt", m_sharedData.sharedResources->textures);
