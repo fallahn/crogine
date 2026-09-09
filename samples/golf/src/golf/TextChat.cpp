@@ -770,9 +770,16 @@ void TextChat::toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckIn
     {
         if (showOSK && !Social::isSteamdeck()) //deck uses its own kb
         {
-            auto* msg = cro::App::postMessage<SystemEvent>(cl::MessageID::SystemMessage);
-            msg->type = SystemEvent::RequestOSK;
-            msg->data = 1; //use OSK buffer
+            beginChat();
+            cro::OSK::show([this](bool submitted, const cro::String& str)
+                {
+                    if (submitted && !str.empty())
+                    {
+                        m_inputBuffer = str.toUtf8Char();
+                        sendTextChat();
+                    }
+                    endChat();
+                });
         }
         else
         {
