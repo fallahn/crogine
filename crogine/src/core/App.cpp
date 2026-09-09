@@ -1019,6 +1019,17 @@ void App::handleMessages()
             }
         }
             break;
+        case Message::OSKMessage:
+        {
+            //HAXX
+            //force a refresh on display in case internal font was updated
+            const auto& data = msg.getData<Message::OSKEvent>();
+            if (data.type == Message::OSKEvent::Opened)
+            {
+                m_osk->updateVertices();
+            }
+        }
+            break;
         default: break;
         }
 

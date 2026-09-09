@@ -984,6 +984,11 @@ bool OSK::handleEvent(const Event& evt)
         case SDL_SCANCODE_F11:
         case SDL_SCANCODE_F12:
             return false;
+        case SDL_SCANCODE_ESCAPE:
+            //don't return here else the close handler isn't
+            //called - we just want to make sure the key isn't
+            //forwarded to the input buffer.
+            break;
         }
 
         switch (evt.key.key)
@@ -996,7 +1001,7 @@ bool OSK::handleEvent(const Event& evt)
             break;
         case SDLK_ESCAPE:
             close(false);
-            break;
+            return true;
         }
         return m_isActive;
     case SDL_EVENT_KEY_DOWN:
@@ -1047,7 +1052,7 @@ bool OSK::handleEvent(const Event& evt)
         {
             close(false);
         }
-        return m_isActive;
+        return true;
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
         if (evt.button.button == SDL_BUTTON_LEFT)
         {

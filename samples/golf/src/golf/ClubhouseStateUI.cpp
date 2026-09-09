@@ -857,11 +857,49 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
         buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonID::PSOne + (1 - playerIndex), ButtonID::PSPrevSelection + playerIndex);
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelected;
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselected;
+        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&, textEnt, spriteBounds](cro::Entity, const cro::ButtonEvent& evt) mutable
+                {
+                    if (activated(evt) &&
+                        evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
+                    {
+                        if (!cro::OSK::shown())
+                        {
+                            textEnt.getComponent<NameScroller>().active = false;
+                            auto pos = textEnt.getComponent<cro::Transform>().getPosition();
+                            pos.x = (spriteBounds.width / 2.f) + 8.f; //not sure where +8 comes from...
+                            textEnt.getComponent<cro::Transform>().setPosition(pos);
+
+                            /*auto crop = textEnt.getComponent<cro::Drawable2D>().getCroppingArea();
+                            crop.left = 0.f;
+                            textEnt.getComponent<cro::Drawable2D>().setCroppingArea(crop);*/
+
+                            const auto& callback = textEnt.getComponent<cro::Callback>();
+                            auto* nameStr = &m_sharedData.localConnectionData.playerData[callback.getUserData<const std::int32_t>()].name;
+                            cro::OSK::show([this, textEnt, nameStr](bool submitted, const cro::String& ip) mutable
+                                {
+                                    if (submitted && !ip.empty())
+                                    {
+                                        *nameStr = ip;
+                                        textEnt.getComponent<cro::Text>().setString(ip);
+                                        centreText(textEnt);
+                                    }
+
+                                    auto& scroller = textEnt.getComponent<NameScroller>();
+                                    scroller.active = true;
+                                    scroller.maxDistance = cro::Text::getLocalBounds(textEnt).width - NameWidth;
+                                    scroller.basePosition = (textEnt.getComponent<cro::Transform>().getPosition().x) + (scroller.maxDistance / 2.f);
+                                }, nameStr);
+                        }
+                    }
+                });
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback(
                 [&, textEnt, spriteBounds](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
-                    if (activated(evt))
+                    if (activated(evt)
+                        && evt.type != SDL_EVENT_GAMEPAD_BUTTON_UP)
                     {
                         auto& callback = textEnt.getComponent<cro::Callback>();
                         callback.active = !callback.active;
@@ -874,13 +912,6 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                             auto pos = textEnt.getComponent<cro::Transform>().getPosition();
                             pos.x = (spriteBounds.width / 2.f) + 8.f; //not sure where +8 comes from...
                             textEnt.getComponent<cro::Transform>().setPosition(pos);
-
-                            if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
-                            {
-                                auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
-                                msg->type = SystemEvent::RequestOSK;
-                                msg->data = 0;
-                            }
                         }
                         else
                         {
