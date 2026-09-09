@@ -843,19 +843,20 @@ void TextChat::quickEmote(std::int32_t emote)
 
 void TextChat::sendBufferedString()
 {
-    if (!m_sharedData.OSKBuffer.empty())
-    {
-        auto oldString = m_inputBuffer;
+    //if (!m_sharedData.OSKBuffer.empty())
+    //{
+    //    auto oldString = m_inputBuffer;
 
-        auto str = m_sharedData.OSKBuffer.toUtf8();
-        m_inputBuffer = std::string(str.begin(), str.end());
+    //    auto str = m_sharedData.OSKBuffer.toUtf8();
+    //    m_inputBuffer = std::string(str.begin(), str.end());
 
-        sendTextChat();
-        m_inputBuffer = oldString;
+    //    sendTextChat();
+    //    m_inputBuffer = oldString;
 
-        m_sharedData.useOSKBuffer = false;
-        m_sharedData.OSKBuffer.clear();
-    }
+    //    m_sharedData.useOSKBuffer = false;
+    //    m_sharedData.OSKBuffer.clear();
+    //}
+    LogW << FILE_LINE << "Deprecate Me" << std::endl;
 }
 
 void TextChat::initLog()

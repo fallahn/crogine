@@ -525,7 +525,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         createTransition();
         cacheState(StateID::Pause);
         cacheState(StateID::MapOverview);
-        cacheState(StateID::Keyboard);
+        //cacheState(StateID::Keyboard);
         });
     sd.clientConnection.quitThread();
     Timeline::setGameMode(Timeline::GameMode::Playing);

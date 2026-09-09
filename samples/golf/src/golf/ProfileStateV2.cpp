@@ -607,26 +607,26 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
             resizeLayout();
         }
     }
-    else if (msg.id == cl::MessageID::SystemMessage)
-    {
-        const auto& data = msg.getData<SystemEvent>();
-        if (data.type == SystemEvent::CancelOSK)
-        {
-            m_sharedData.useOSKBuffer = false;
-            m_showOSK = false;
-        }
-        else if (data.type == SystemEvent::SubmitOSK)
-        {
-            m_sharedData.useOSKBuffer = false;
-            m_showOSK = false;
+    //else if (msg.id == cl::MessageID::SystemMessage)
+    //{
+    //    const auto& data = msg.getData<SystemEvent>();
+    //    if (data.type == SystemEvent::CancelOSK)
+    //    {
+    //        m_sharedData.useOSKBuffer = false;
+    //        m_showOSK = false;
+    //    }
+    //    else if (data.type == SystemEvent::SubmitOSK)
+    //    {
+    //        m_sharedData.useOSKBuffer = false;
+    //        m_showOSK = false;
 
-            if (!m_sharedData.OSKBuffer.empty())
-            {
-                m_activeProfile.playerData.name = m_sharedData.OSKBuffer;
-                applyNameString();
-            }
-        }
-    }
+    //        if (!m_sharedData.OSKBuffer.empty())
+    //        {
+    //            m_activeProfile.playerData.name = m_sharedData.OSKBuffer;
+    //            applyNameString();
+    //        }
+    //    }
+    //}
     else if (msg.id == cro::Message::StateMessage)
     {
         const auto& data = msg.getData<cro::Message::StateEvent>();

@@ -741,7 +741,6 @@
     <ClCompile Include="src\golf\GolfStateScoring.cpp" />
     <ClCompile Include="src\golf\InputParser.cpp" />
     <ClCompile Include="src\golf\GolfStateUI.cpp" />
-    <ClCompile Include="src\golf\KeyboardState.cpp" />
     <ClCompile Include="src\golf\LeaderboardState.cpp" />
     <ClCompile Include="src\golf\LeaderboardTexture.cpp" />
     <ClCompile Include="src\golf\League.cpp" />
@@ -961,7 +960,6 @@
     <ClInclude Include="src\golf\InputParser.hpp" />
     <ClInclude Include="src\golf\InterpolationSystem.hpp" />
     <ClInclude Include="src\golf\Inventory.hpp" />
-    <ClInclude Include="src\golf\KeyboardState.hpp" />
     <ClInclude Include="src\golf\LeaderboardState.hpp" />
     <ClInclude Include="src\golf\LeaderboardTexture.hpp" />
     <ClInclude Include="src\golf\League.hpp" />

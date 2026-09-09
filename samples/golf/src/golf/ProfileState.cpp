@@ -790,9 +790,9 @@ void ProfileState::handleMessage(const cro::Message& msg)
             switch (data.id)
             {
             default: break;
-            case StateID::Keyboard:
-                applyTextEdit();
-                break;
+            //case StateID::Keyboard:
+            //    applyTextEdit();
+            //    break;
             case StateID::Shop:
                 for (auto i = 0u; i < m_gearMenus.size(); ++i)
                 {

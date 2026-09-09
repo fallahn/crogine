@@ -184,26 +184,26 @@ bool EditTournamentState::handleEvent(const cro::Event& evt)
 
 void EditTournamentState::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == cl::MessageID::SystemMessage)
-    {
-        const auto& data = msg.getData<SystemEvent>();
-        if (data.type == SystemEvent::CancelOSK)
-        {
-            m_sharedData.useOSKBuffer = false;
-            m_showOSK = false;
-        }
-        else if (data.type == SystemEvent::SubmitOSK)
-        {
-            m_sharedData.useOSKBuffer = false;
-            m_showOSK = false;
+    //if (msg.id == cl::MessageID::SystemMessage)
+    //{
+    //    const auto& data = msg.getData<SystemEvent>();
+    //    if (data.type == SystemEvent::CancelOSK)
+    //    {
+    //        m_sharedData.useOSKBuffer = false;
+    //        m_showOSK = false;
+    //    }
+    //    else if (data.type == SystemEvent::SubmitOSK)
+    //    {
+    //        m_sharedData.useOSKBuffer = false;
+    //        m_showOSK = false;
 
-            if (!m_sharedData.OSKBuffer.empty())
-            {
-                m_tournamentNameEntity.getComponent<cro::Text>().setString(m_sharedData.OSKBuffer);
-                m_tournamentInfo.setTitle(m_sharedData.OSKBuffer);
-            }
-        }
-    }
+    //        if (!m_sharedData.OSKBuffer.empty())
+    //        {
+    //            m_tournamentNameEntity.getComponent<cro::Text>().setString(m_sharedData.OSKBuffer);
+    //            m_tournamentInfo.setTitle(m_sharedData.OSKBuffer);
+    //        }
+    //    }
+    //}
 
     m_scene.forwardMessage(msg);
 }

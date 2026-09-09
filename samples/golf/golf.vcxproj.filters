@@ -216,9 +216,6 @@
     <ClCompile Include="src\golf\CameraFollowSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
     </ClCompile>
-    <ClCompile Include="src\golf\KeyboardState.cpp">
-      <Filter>Source Files\golf\client\states</Filter>
-    </ClCompile>
     <ClCompile Include="src\golf\Weather.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
@@ -898,9 +895,6 @@
     </ClInclude>
     <ClInclude Include="src\golf\CameraFollowSystem.hpp">
       <Filter>Header Files\golf\client\systems</Filter>
-    </ClInclude>
-    <ClInclude Include="src\golf\KeyboardState.hpp">
-      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\CollisionMesh.hpp">
       <Filter>Header Files\golf\client</Filter>

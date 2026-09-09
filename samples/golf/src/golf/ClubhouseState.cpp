@@ -556,9 +556,9 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
                 Timeline::setTimelineDesc("In the Clubhouse");
                 Social::setStatus(Social::InfoID::Menu, { "In the Clubhouse" });
                 break;
-            case StateID::Keyboard:
-                applyTextEdit();
-                break;
+            //case StateID::Keyboard:
+            //    applyTextEdit();
+            //    break;
             }
 
         }

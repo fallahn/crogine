@@ -279,7 +279,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::ProLeague);
         cacheState(StateID::EditTournament);
         cacheState(StateID::FreePlay);
-        cacheState(StateID::Keyboard);
+        //cacheState(StateID::Keyboard);
         cacheState(StateID::Leaderboard);
         cacheState(StateID::League);
         cacheState(StateID::News);
@@ -1609,9 +1609,9 @@ void MenuState::handleMessage(const cro::Message& msg)
             switch (data.id)
             {
             default:break;
-            case StateID::Keyboard:
-                applyTextEdit();
-                break;
+            //case StateID::Keyboard:
+            //    applyTextEdit();
+            //    break;
             case StateID::MessageOverlay:
                 if (m_sharedData.errorMessage == "delete_profile")
                 {

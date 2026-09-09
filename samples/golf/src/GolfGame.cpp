@@ -227,7 +227,7 @@ GolfGame::GolfGame(const std::vector<std::string>& args)
 
     
     m_stateStack.registerState<SplashState>(StateID::SplashScreen, m_sharedData);
-    m_stateStack.registerState<KeyboardState>(StateID::Keyboard, m_sharedData);
+    //m_stateStack.registerState<KeyboardState>(StateID::Keyboard, m_sharedData);
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData, m_profileData);
 #ifdef _WIN32
@@ -439,23 +439,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
         {
         default: break;
         case SystemEvent::RequestOSK:
-            if (!cro::OSK::shown())
-            {
-
-            }
-            if (m_stateStack.getTopmostState() != StateID::Keyboard)
-            {
-                if (data.data == 1)
-                {
-                    m_sharedData.useOSKBuffer = true;
-                    m_sharedData.OSKBuffer.clear();
-                }
-                else
-                {
-                    m_sharedData.useOSKBuffer = false;
-                }
-                m_stateStack.pushState(StateID::Keyboard);
-            }
+            LogW << "This is deprecated!! Prefer cro::OSK instead." << std::endl;
             break;
         case SystemEvent::PostProcessToggled:
             if (m_postShader->getGLHandle() != 0)
@@ -1158,6 +1142,8 @@ bool GolfGame::initialise()
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::FlagPreview, cro::RenderSystem2D::getDefaultVertexShader(), FlagFrag, "#define TEXTURED\n");
 
 
+    //TODO much of this doesn't need to be done since we
+    //precache any states we might need
     cro::SpriteSheet s;
     s.loadFromFile("assets/golf/sprites/options.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/facilities_menu.spt", m_sharedData.sharedResources->textures);
@@ -1165,7 +1151,7 @@ bool GolfGame::initialise()
     s.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/unlocks.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/tutorial.spt", m_sharedData.sharedResources->textures);
-    s.loadFromFile("assets/sprites/osk.spt", m_sharedData.sharedResources->textures);
+    //s.loadFromFile("assets/sprites/osk.spt", m_sharedData.sharedResources->textures);
 
     cro::ModelDefinition md(*m_sharedData.sharedResources);
     md.loadFromFile("assets/golf/models/trophies/trophy01.cmt");

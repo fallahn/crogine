@@ -130,8 +130,8 @@ struct SharedStateData final
     std::array<ImFont*, 3u> helpFonts = { nullptr, nullptr, nullptr };
     bool showHelp = false; //TODO move this to new options menu
 
-    bool useOSKBuffer = false; //if true output of OSK is buffered here instead of sending codepoints
-    cro::String OSKBuffer;
+    //bool useOSKBuffer = false; //if true output of OSK is buffered here instead of sending codepoints
+    //cro::String OSKBuffer;
 
     struct ActiveInput final
     {
