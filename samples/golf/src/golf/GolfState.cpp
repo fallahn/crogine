@@ -498,7 +498,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                     m_friendlyPlayers = std::make_unique<FriendlyPlayers>(sd.clubSet);
                     
                     //append an emoji to the rival name to show they're a rival (it might be ourself!)
-                    rivalName += " " + cro::String(Calendar);
+                    rivalName += " " + cro::String(EmCalendar);
                     //we need to index the name correctly to rivalName not league name
                     m_sharedData.leagueNames[0] = rivalName;
                     LeaguePlayer player;
@@ -5553,7 +5553,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             m_snekPlayer = Team::Player(client, player);
 
             updateScoreboard(); //moves the snek icon
-            m_textChat.printToScreen(cro::String(Snake) + m_sharedData.connectionData[client].playerData[player].name + " now has the Snek!", CD32::Colours[CD32::BlueLight]);
+            m_textChat.printToScreen(cro::String(EmSnake) + m_sharedData.connectionData[client].playerData[player].name + " now has the Snek!", CD32::Colours[CD32::BlueLight]);
             postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
 
             WebSock::broadcastPacket(evt.packet.getDataRaw());
@@ -7427,13 +7427,13 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     if (m_sharedData.nightTime)
     {
         //moon
-        courseTitle += cro::String(Moon);
+        courseTitle += EmMoon;
     }
     else
     {
         //sun
-        courseTitle += cro::String(Sun);
-        courseTitle += cro::String(EmojiTerminate);
+        courseTitle += EmSun;
+        courseTitle += EmojiTerminate;
     }
 
     switch (m_sharedData.weatherType)
@@ -7444,30 +7444,30 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
         //though we may have snow in december
         if (m_hasSnow)
         {
-            courseTitle += Snow;
+            courseTitle += EmSnow;
             courseTitle += EmojiTerminate;
         }
         break;
     case WeatherType::Rain:
         //rain cloud
-        courseTitle += RainCloud;
+        courseTitle += EmRainCloud;
         courseTitle += EmojiTerminate;
         break;
     case WeatherType::Showers:
         if (m_sharedData.nightTime)
         {
             //umbrella
-            courseTitle += Umbrella;
+            courseTitle += EmUmbrella;
         }
         else
         {
             //rainbow
-            courseTitle += Rainbow;
+            courseTitle += EmRainbow;
         }
         break;
     case WeatherType::Mist:
         //fog
-        courseTitle += Mist;
+        courseTitle += EmMist;
         courseTitle += EmojiTerminate;
         break;
     }

@@ -166,13 +166,13 @@ namespace
 
     const std::array<Emote, 30u> Emotes =
     {
-        Emote({Smiley}),   Emote({Grinning}),  Emote({Laughing}),    Emote({StarEyed}),     Emote({TonguePoke}),
-        Emote({Thinking}), Emote({Chuckle}),   Emote({PartyFace}),   Emote({SunGlasses}),   Emote({EyeRoll}),
-        Emote({Grimace}),  Emote({Surprised}), Emote({Embaressed}),  Emote({Disappointed}), Emote({Angry}),
-        Emote({GoldCup}),  Emote({GoldMedal}), Emote({SilverMedal}), Emote({BronzeMedal}),  Emote({GolfFlag}),
-        Emote({RedHeart}), Emote({Hole}),      Emote({Explosive}),   Emote({Windy}),        Emote({Sleeping}),
+        Emote({EmSmiley}),   Emote({EmGrinning}),  Emote({EmLaughing}),    Emote({EmStarEyed}),     Emote({EmTonguePoke}),
+        Emote({EmThinking}), Emote({EmChuckle}),   Emote({EmPartyFace}),   Emote({EmSunGlasses}),   Emote({EmEyeRoll}),
+        Emote({EmGrimace}),  Emote({EmSurprised}), Emote({EmEmbaressed}),  Emote({EmDisappointed}), Emote({EmAngry}),
+        Emote({EmGoldCup}),  Emote({EmGoldMedal}), Emote({EmSilverMedal}), Emote({EmBronzeMedal}),  Emote({EmGolfFlag}),
+        Emote({EmRedHeart}), Emote({EmHole}),      Emote({EmExplosive}),   Emote({EmWindy}),        Emote({EmSleeping}),
 
-        Emote({FriedEgg}), Emote({Birdie}),    Emote({Eagle}),       Emote({Snake}),        Emote({Crocodile}),
+        Emote({EmFriedEgg}), Emote({EmBirdie}),    Emote({EmEagle}),       Emote({EmSnake}),        Emote({EmCrocodile}),
     };
 
     static constexpr std::size_t MAX_HISTORY = 10;
@@ -268,7 +268,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
         });
 
     //use cro string to construct the utf8 strings
-    cro::String str(std::uint32_t(0x1F44F));
+    cro::String str = EmClapping;
 
     auto utf = str.toUtf8();
     
@@ -280,7 +280,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_buttonStrings.applaud.push_back(0);
 
     str.clear();
-    str = std::uint32_t(0x1F600);
+    str = EmSmiley;
     utf = str.toUtf8();
     m_buttonStrings.happy.resize(utf.size());
     std::memcpy(m_buttonStrings.happy.data(), utf.data(), utf.size());
@@ -296,7 +296,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_buttonStrings.happy.push_back(0);
 
     str.clear();
-    str = std::uint32_t(0x1F923);
+    str = EmHysterics;
     utf = str.toUtf8();
     m_buttonStrings.laughing.resize(utf.size());
     std::memcpy(m_buttonStrings.laughing.data(), utf.data(), utf.size());
@@ -306,7 +306,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_buttonStrings.laughing.push_back(0);
 
     str.clear();
-    str = std::uint32_t(0x1F624);
+    str = EmAngry;
     utf = str.toUtf8();
     m_buttonStrings.angry.resize(utf.size());
     std::memcpy(m_buttonStrings.angry.data(), utf.data(), utf.size());

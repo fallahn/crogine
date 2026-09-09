@@ -1117,7 +1117,7 @@ void ScrubGameState::createUI()
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::Text>().setShadowColour(TextHighlightColour);
     entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
-    entity.getComponent<cro::Text>().setString(cro::String(Warning) + cro::String(EmojiTerminate) + "LOW SOAP" + cro::String(Warning) + cro::String(EmojiTerminate));
+    entity.getComponent<cro::Text>().setString(cro::String(EmWarning) + cro::String(EmojiTerminate) + "LOW SOAP" + cro::String(EmWarning) + cro::String(EmojiTerminate));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
     entity.getComponent<UIElement>().absolutePosition = { 0.f, -64.f };

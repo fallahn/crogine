@@ -1520,6 +1520,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 m_textChat.toggleWindow(true, false);
                 break;
             case cro::GameController::ButtonTrackpad:
+                //just shows chat history
                 m_textChat.toggleWindow(false, false, false);
                 break;
             case cro::GameController::ButtonX:
