@@ -44,6 +44,7 @@ using namespace cro;
 
 namespace
 {
+#include <crogine/gui/Codepoints.inl>
     constexpr float VerticalKeyboardProportion = 3.f; //WindowSize is divided by this to create height of keyboard
 
     constexpr Colour BGColour = Colour(std::uint8_t(35), 38, 46);
@@ -84,47 +85,7 @@ namespace
 
     std::array<std::array<FloatRect, ButtonCols>, ButtonRows> Hitboxes = {};
 
-    //xbox
-    static constexpr inline std::uint32_t ButtonLT = 0x2196;
-    static constexpr inline std::uint32_t ButtonRT = 0x2197;
-    static constexpr inline std::uint32_t ButtonLB = 0x2198;
-    static constexpr inline std::uint32_t ButtonRB = 0x2199;
-    static constexpr inline std::uint32_t ButtonX = 0x21D0;
-    static constexpr inline std::uint32_t ButtonY = 0x21D1;
-    static constexpr inline std::uint32_t ButtonB = 0x21D2;
-    static constexpr inline std::uint32_t ButtonA = 0x21D3;
-    static constexpr inline std::uint32_t ButtonStart = 0x21FB;
-
-
-    //ps
-    static constexpr inline std::uint32_t ButtonL1 = 0x21B0;
-    static constexpr inline std::uint32_t ButtonR1 = 0x21B1;
-    static constexpr inline std::uint32_t ButtonL2 = 0x21B2;
-    static constexpr inline std::uint32_t ButtonR2 = 0x21B3;
-    static constexpr inline std::uint32_t ButtonSquare = 0x21E0;
-    static constexpr inline std::uint32_t ButtonTriangle = 0x21E1;
-    static constexpr inline std::uint32_t ButtonCircle = 0x21E2;
-    static constexpr inline std::uint32_t ButtonCross = 0x21E3;
-    static constexpr inline std::uint32_t ButtonOption = 0x21E8;
-
-
-    static constexpr inline std::uint32_t LeftStick = 0x21EF;
-    static constexpr inline std::uint32_t RightStick = 0x21C6;
-
-
-
-    //keyboard
-    constexpr std::uint32_t IconLeft = 0x23F4;
-    constexpr std::uint32_t IconRight = 0x23F5;
-    constexpr std::uint32_t IconUp = 0x23F6;
-    constexpr std::uint32_t IconDown = 0x23F7;
-    constexpr std::uint32_t IconShift = 0x2429;
-    constexpr std::uint32_t IconTab = 0x242B; //TODO this won't actually do anything - maybe emoji switch?
-    constexpr std::uint32_t IconCaps = 0x242C;
-    constexpr std::uint32_t IconBackspace = 0x242D;
-    constexpr std::uint32_t IconReturn = 0x242E;
-    constexpr std::uint32_t IconSpace = 0x243A;
-
+    //utf32 codepoint
     constexpr std::uint32_t IconCursor = 0x258E;
 
 

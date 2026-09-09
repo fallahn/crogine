@@ -390,6 +390,10 @@ void CreditsState::buildScene()
 
 void CreditsState::quitState()
 {
-    m_rootNode.getComponent<cro::Callback>().active = true;
-    cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = MenuSoundEvent::Cancel;
+    //just stops the audio message being created multiple times
+    if (!m_rootNode.getComponent<cro::Callback>().active)
+    {
+        m_rootNode.getComponent<cro::Callback>().active = true;
+        cro::App::postMessage<MenuSoundEvent>(cl::MessageID::MenuSoundMessage)->type = MenuSoundEvent::Cancel;
+    }
 }

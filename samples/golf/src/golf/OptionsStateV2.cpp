@@ -75,31 +75,7 @@ source distribution.
 
 namespace
 {
-    //TODO move this to an inline file or something
-    //as it's also repeated in ScrubConsts.hpp AND the OSK
-    //xbox
-    static constexpr inline std::uint32_t ButtonLT = 0x2196;
-    static constexpr inline std::uint32_t ButtonRT = 0x2197;
-    static constexpr inline std::uint32_t ButtonLB = 0x2198;
-    static constexpr inline std::uint32_t ButtonRB = 0x2199;
-    static constexpr inline std::uint32_t ButtonX = 0x21D0;
-    static constexpr inline std::uint32_t ButtonY = 0x21D1;
-    static constexpr inline std::uint32_t ButtonB = 0x21D2;
-    static constexpr inline std::uint32_t ButtonA = 0x21D3;
-    static constexpr inline std::uint32_t ButtonStart = 0x21FB;
-
-
-    //ps
-    static constexpr inline std::uint32_t ButtonL1 = 0x21B0;
-    static constexpr inline std::uint32_t ButtonR1 = 0x21B1;
-    static constexpr inline std::uint32_t ButtonL2 = 0x21B2;
-    static constexpr inline std::uint32_t ButtonR2 = 0x21B3;
-    static constexpr inline std::uint32_t ButtonSquare = 0x21E0;
-    static constexpr inline std::uint32_t ButtonTriangle = 0x21E1;
-    static constexpr inline std::uint32_t ButtonCircle = 0x21E2;
-    static constexpr inline std::uint32_t ButtonCross = 0x21E3;
-    static constexpr inline std::uint32_t ButtonOption = 0x21E8;
-
+#include <crogine/gui/Codepoints.inl>
 
     //static const cro::String XboxInfo = cro::String(ButtonX) + " Show Credits   " + cro::String(ButtonY) + " How To Play   " + cro::String(ButtonB) + " Close";
     //static const cro::String PSInfo = cro::String(ButtonSquare) + " Show Credits   " + cro::String(ButtonCross) + " How To Play   " + cro::String(ButtonCircle) + " Close";

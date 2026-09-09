@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2025
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -54,6 +54,7 @@ source distribution.
 
 namespace
 {
+#include <crogine/gui/Codepoints.inl>
     //this is static so the preference is remember between
     //instances
     bool closeOnSend = false;
@@ -156,15 +157,8 @@ namespace
         explicit Emote(const std::vector<std::uint32_t>& cp)
             : codepoint(cp)
         {
-            cro::String str;
-            for (auto cpt : codepoint)
-            {
-                str += cpt;
-            }
-            auto utf = str.toUtf8();
-            icon.resize(utf.size());
-            std::memcpy(icon.data(), utf.data(), utf.size());
-            icon.push_back(0);
+            cro::Utf32::toUtf8(cp.begin(), cp.end(), std::back_inserter(icon));
+            icon.push_back(0); //nullterm
         }
         std::vector<std::uint32_t> codepoint;
         std::vector<char> icon;
@@ -172,13 +166,13 @@ namespace
 
     const std::array<Emote, 30u> Emotes =
     {
-        Emote({0x1F600}), Emote({0x1F601}), Emote({0x1F602}), Emote({0x1F929}), Emote({0x1F61B}),
-        Emote({0x1F914}), Emote({0x1F92D}), Emote({0x1F973}), Emote({0x1F60E}), Emote({0x1F644}),
-        Emote({0x1F62C}), Emote({0x1F632}), Emote({0x1F633}), Emote({0x1F629}), Emote({0x1F624}),
-        Emote({0x1F3C6}), Emote({0x1F947}), Emote({0x1F948}), Emote({0x1F949}), Emote({0x26F3}),
-        Emote({0x2764}),  Emote({0x1F573}), Emote({0x1F4A5}), Emote({0x1F4A8}), Emote({0x1F4A4}),
+        Emote({Smiley}),   Emote({Grinning}),  Emote({Laughing}),    Emote({StarEyed}),     Emote({TonguePoke}),
+        Emote({Thinking}), Emote({Chuckle}),   Emote({PartyFace}),   Emote({SunGlasses}),   Emote({EyeRoll}),
+        Emote({Grimace}),  Emote({Surprised}), Emote({Embaressed}),  Emote({Disappointed}), Emote({Angry}),
+        Emote({GoldCup}),  Emote({GoldMedal}), Emote({SilverMedal}), Emote({BronzeMedal}),  Emote({GolfFlag}),
+        Emote({RedHeart}), Emote({Hole}),      Emote({Explosive}),   Emote({Windy}),        Emote({Sleeping}),
 
-        Emote({0x1F373}),  Emote({0x1F426}), Emote({0x1F985}), Emote({0x1F40D}), Emote({0x1F40A}),
+        Emote({FriedEgg}), Emote({Birdie}),    Emote({Eagle}),       Emote({Snake}),        Emote({Crocodile}),
     };
 
     static constexpr std::size_t MAX_HISTORY = 10;
@@ -538,11 +532,13 @@ void TextChat::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<SystemEvent>();
         if (data.type == SystemEvent::SubmitOSK)
         {
-            sendBufferedString(); //also ends the chat notification
+            //sendBufferedString(); //also ends the chat notification
+            LogW << FILE_LINE << " deprecate me" << std::endl;
         }
         else if (data.type == SystemEvent::CancelOSK)
         {
-            endChat();
+            //endChat();
+            LogW << FILE_LINE << " deprecate me" << std::endl;
         }
     }
 }
@@ -856,7 +852,7 @@ void TextChat::sendBufferedString()
     //    m_sharedData.useOSKBuffer = false;
     //    m_sharedData.OSKBuffer.clear();
     //}
-    LogW << FILE_LINE << "Deprecate Me" << std::endl;
+    LogW << FILE_LINE << " deprecate me" << std::endl;
 }
 
 void TextChat::initLog()

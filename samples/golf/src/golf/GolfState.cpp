@@ -152,6 +152,7 @@ namespace ws
 
 namespace
 {
+#include <crogine/gui/Codepoints.inl>
 #ifdef CRO_DEBUG_
     std::int32_t debugFlags = 0;
     cro::Entity ballEntity;
@@ -497,7 +498,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                     m_friendlyPlayers = std::make_unique<FriendlyPlayers>(sd.clubSet);
                     
                     //append an emoji to the rival name to show they're a rival (it might be ourself!)
-                    rivalName += " " + cro::String(std::uint32_t(0x1F4C5));
+                    rivalName += " " + cro::String(Calendar);
                     //we need to index the name correctly to rivalName not league name
                     m_sharedData.leagueNames[0] = rivalName;
                     LeaguePlayer player;
@@ -5552,7 +5553,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             m_snekPlayer = Team::Player(client, player);
 
             updateScoreboard(); //moves the snek icon
-            m_textChat.printToScreen(cro::String(std::uint32_t(0x1F40D)) + m_sharedData.connectionData[client].playerData[player].name + " now has the Snek!", CD32::Colours[CD32::BlueLight]);
+            m_textChat.printToScreen(cro::String(Snake) + m_sharedData.connectionData[client].playerData[player].name + " now has the Snek!", CD32::Colours[CD32::BlueLight]);
             postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
 
             WebSock::broadcastPacket(evt.packet.getDataRaw());
@@ -7426,13 +7427,13 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     if (m_sharedData.nightTime)
     {
         //moon
-        courseTitle += cro::String(std::uint32_t(0x1F319));
+        courseTitle += cro::String(Moon);
     }
     else
     {
         //sun
-        courseTitle += cro::String(std::uint32_t(0x2600));
-        courseTitle += cro::String(std::uint32_t(0xFE0F));
+        courseTitle += cro::String(Sun);
+        courseTitle += cro::String(EmojiTerminate);
     }
 
     switch (m_sharedData.weatherType)
@@ -7443,31 +7444,31 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
         //though we may have snow in december
         if (m_hasSnow)
         {
-            courseTitle += std::uint32_t(0x2744);
-            courseTitle += std::uint32_t(0xFE0F);
+            courseTitle += Snow;
+            courseTitle += EmojiTerminate;
         }
         break;
     case WeatherType::Rain:
         //rain cloud
-        courseTitle += std::uint32_t(0x1F327);
-        courseTitle += std::uint32_t(0xFE0F);
+        courseTitle += RainCloud;
+        courseTitle += EmojiTerminate;
         break;
     case WeatherType::Showers:
         if (m_sharedData.nightTime)
         {
             //umbrella
-            courseTitle += std::uint32_t(0x2614);
+            courseTitle += Umbrella;
         }
         else
         {
             //rainbow
-            courseTitle += std::uint32_t(0x1F308);
+            courseTitle += Rainbow;
         }
         break;
     case WeatherType::Mist:
         //fog
-        courseTitle += std::uint32_t(0x1F32B);
-        courseTitle += std::uint32_t(0xFE0F);
+        courseTitle += Mist;
+        courseTitle += EmojiTerminate;
         break;
     }
 

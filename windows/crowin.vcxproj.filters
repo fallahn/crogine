@@ -1420,6 +1420,9 @@
     <None Include="..\crogine\include\crogine\graphics\SimpleDrawable.inl">
       <Filter>Header Files\graphics\drawables</Filter>
     </None>
+    <None Include="..\crogine\include\crogine\gui\Codepoints.inl">
+      <Filter>Header Files\gui</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="crogine.rc">

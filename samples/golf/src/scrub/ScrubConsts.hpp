@@ -35,6 +35,8 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
+#include <crogine/gui/Codepoints.inl>
+
 #include <cstdint>
 
 //#define HIDE_BACKGROUND
@@ -53,35 +55,6 @@ struct InputType final
         Keyboard, PS, XBox
     };
 };
-
-//xbox
-static constexpr inline std::uint32_t ButtonLT    = 0x2196;
-static constexpr inline std::uint32_t ButtonRT    = 0x2197;
-static constexpr inline std::uint32_t ButtonLB    = 0x2198;
-static constexpr inline std::uint32_t ButtonRB    = 0x2199;
-static constexpr inline std::uint32_t ButtonX     = 0x21D0;
-static constexpr inline std::uint32_t ButtonY     = 0x21D1;
-static constexpr inline std::uint32_t ButtonB     = 0x21D2;
-static constexpr inline std::uint32_t ButtonA     = 0x21D3;
-static constexpr inline std::uint32_t ButtonStart = 0x21FB;
-
-
-//ps
-static constexpr inline std::uint32_t ButtonL1       = 0x21B0;
-static constexpr inline std::uint32_t ButtonR1       = 0x21B1;
-static constexpr inline std::uint32_t ButtonL2       = 0x21B2;
-static constexpr inline std::uint32_t ButtonR2       = 0x21B3;
-static constexpr inline std::uint32_t ButtonSquare   = 0x21E0;
-static constexpr inline std::uint32_t ButtonTriangle = 0x21E1;
-static constexpr inline std::uint32_t ButtonCircle   = 0x21E2;
-static constexpr inline std::uint32_t ButtonCross    = 0x21E3;
-static constexpr inline std::uint32_t ButtonOption   = 0x21E8;
-
-
-static constexpr inline std::uint32_t LeftStick      = 0x21C4;
-static constexpr inline std::uint32_t RightStick     = 0x21C6;
-static constexpr inline std::uint32_t Warning        = 0x26A0;
-static constexpr inline std::uint32_t EmojiTerminate = 0xFE0F;
 
 static constexpr inline glm::uvec2 BucketTextureSize = glm::uvec2(468, 1280);
 static constexpr inline glm::uvec2 SoapTextureSize = glm::uvec2(80, 1440);

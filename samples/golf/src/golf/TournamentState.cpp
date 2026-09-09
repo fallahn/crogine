@@ -83,6 +83,8 @@ source distribution.
 
 namespace
 {
+#include <crogine/gui/Codepoints.inl>
+
     struct ConfirmationData final
     {
         float progress = 0.f;
@@ -1316,7 +1318,7 @@ void TournamentState::buildScene()
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 356.f, 37.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString(std::uint32_t(0x26A0));
+        entity.addComponent<cro::Text>(smallFont).setString(Warning);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_warningString = entity;
