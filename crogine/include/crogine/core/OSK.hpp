@@ -124,6 +124,8 @@ namespace cro
         void moveDown();
         void mouseClick(glm::vec2);
 
+        void paste();
+
         friend class App;
         //returns true if the keyboard should consume the event
         bool handleEvent(const cro::Event&);

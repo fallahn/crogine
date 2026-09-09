@@ -730,6 +730,26 @@ void OSK::mouseClick(glm::vec2 mousePos)
     }
 }
 
+void OSK::paste()
+{
+    const auto cbText = SDL_GetClipboardText();
+    if (cbText)
+    {
+        std::string str = cbText;
+        SDL_free(cbText);
+
+        std::u32string u32Str;
+        Utf8::toUtf32(str.begin(), str.end(), std::back_inserter(u32Str));
+        u32Str.erase(std::remove_if(u32Str.begin(), u32Str.end(), [](std::atomic_char32_t c) {return c == '\n' || c == '\r'; }), u32Str.end());
+
+        const auto len = std::min(u32Str.size(), MaxChars - m_bufferIndex);
+        std::memcpy(&m_textBuffer[m_bufferIndex], u32Str.data(), len * sizeof(std::uint32_t));
+
+        m_bufferIndex += len;
+        m_previewText.setString(String::fromUtf32(m_textBuffer.begin(), m_textBuffer.begin() + m_bufferIndex));
+    }
+}
+
 bool OSK::handleEvent(const Event& evt)
 {
     if (!m_isActive)
@@ -1004,6 +1024,14 @@ bool OSK::handleEvent(const Event& evt)
         switch (evt.key.key)
         {
         default: break;
+        case SDLK_V:
+            if (evt.key.mod & SDL_KMOD_CTRL)
+            {
+                //pasta
+                paste();
+                return true;
+            }
+            break;
         case SDLK_LSHIFT:
         case SDLK_RSHIFT:
             m_keymod = SDL_KMOD_SHIFT;
