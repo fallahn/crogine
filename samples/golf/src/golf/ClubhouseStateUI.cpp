@@ -1544,25 +1544,47 @@ void ClubhouseState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter
             });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([highlight](cro::Entity) mutable { highlight.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt) &&
+                    evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
+                {
+                    if (!cro::OSK::shown())
+                    {
+                        cro::OSK::show([this, textEnt](bool submitted, const cro::String& ip) mutable
+                            {
+                                if (submitted && !ip.empty())
+                                {
+                                    if (ip.size() > ConstVal::MaxIPChars)
+                                    {
+                                        m_sharedData.targetIP = ip.substr(0, ConstVal::MaxIPChars);
+                                    }
+                                    else
+                                    {
+                                        m_sharedData.targetIP = ip;
+                                    }
+                                    textEnt.getComponent<cro::Text>().setString(m_sharedData.targetIP);
+                                }
+                            }, &m_sharedData.targetIP);
+                    }
+                }
+            });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
-                if (activated(evt))
+                if (activated(evt) &&
+                    evt.type != SDL_EVENT_GAMEPAD_BUTTON_UP)
                 {
+                    //keyboard entry
                     auto& callback = textEnt.getComponent<cro::Callback>();
                     callback.active = !callback.active;
                     if (callback.active)
                     {
                         beginTextEdit(textEnt, &m_sharedData.targetIP, ConstVal::MaxIPChars);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                        if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
-                        {
-                            auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
-                            msg->type = SystemEvent::RequestOSK;
-                            msg->data = 0;
-                        }
                     }
                     else
                     {
@@ -3172,11 +3194,13 @@ bool ClubhouseState::applyTextEdit()
         m_textEdit.entity.getComponent<cro::Callback>().active = false;
 
 
-        auto& scroller = m_textEdit.entity.getComponent<NameScroller>();
-        scroller.active = true;
-        scroller.maxDistance = cro::Text::getLocalBounds(m_textEdit.entity).width - NameWidth;
-        scroller.basePosition = (m_textEdit.entity.getComponent<cro::Transform>().getPosition().x) + (scroller.maxDistance / 2.f);
-
+        if (m_textEdit.entity.hasComponent<NameScroller>())
+        {
+            auto& scroller = m_textEdit.entity.getComponent<NameScroller>();
+            scroller.active = true;
+            scroller.maxDistance = cro::Text::getLocalBounds(m_textEdit.entity).width - NameWidth;
+            scroller.basePosition = (m_textEdit.entity.getComponent<cro::Transform>().getPosition().x) + (scroller.maxDistance / 2.f);
+        }
 
 
         //send this as a command to delay it by a frame - doesn't matter who receives it :)

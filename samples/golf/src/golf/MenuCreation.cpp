@@ -1387,7 +1387,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
             [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
     {
         if (activated(evt) &&
-                evt.type == SDL_EVENT_KEY_UP)
+                evt.type != SDL_EVENT_GAMEPAD_BUTTON_UP)
         {
             //keyboard entry
             auto& callback = textEnt.getComponent<cro::Callback>();
