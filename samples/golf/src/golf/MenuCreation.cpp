@@ -1355,33 +1355,55 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         m_uiScene.getSystem<cro::UISystem>()->addCallback([highlight](cro::Entity) mutable { highlight.getComponent<cro::Sprite>().setColour(cro::Colour::White); highlight.getComponent<cro::AudioEmitter>().play(); });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([highlight](cro::Entity) mutable { highlight.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
-                if (activated(evt))
+                if (activated(evt) && 
+                    evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
                 {
-                    auto& callback = textEnt.getComponent<cro::Callback>();
-                    callback.active = !callback.active;
-                    if (callback.active)
+                    if (!cro::OSK::shown())
                     {
-                        beginTextEdit(textEnt, &m_sharedData.targetIP, ConstVal::MaxIPChars);
-                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                        if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
-                        {
-                            auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
-                            msg->type = SystemEvent::RequestOSK;
-                            msg->data = 0;
-                        }
-                    }
-                    else
-                    {
-                        applyTextEdit();
-                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                        cro::OSK::show([this, textEnt](bool submitted, const cro::String& ip) mutable
+                            {
+                                if (submitted && !ip.empty())
+                                {
+                                    if (ip.size() > ConstVal::MaxIPChars)
+                                    {
+                                        m_sharedData.targetIP = ip.substr(0, ConstVal::MaxIPChars);
+                                    }
+                                    else
+                                    {
+                                        m_sharedData.targetIP = ip;
+                                    }
+                                    textEnt.getComponent<cro::Text>().setString(m_sharedData.targetIP);
+                                }
+                            }, &m_sharedData.targetIP);
                     }
                 }
             });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+    {
+        if (activated(evt) &&
+                evt.type == SDL_EVENT_KEY_UP)
+        {
+            //keyboard entry
+            auto& callback = textEnt.getComponent<cro::Callback>();
+            callback.active = !callback.active;
+            if (callback.active)
+            {
+                beginTextEdit(textEnt, &m_sharedData.targetIP, ConstVal::MaxIPChars);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+            else
+            {
+                applyTextEdit();
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        }
+    });
     textEnt.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getOrigin());
     textEnt.getComponent<cro::Transform>().move({ -60.f, -12.f, 0.1f });
     balls.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getOrigin());
