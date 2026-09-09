@@ -76,7 +76,7 @@ source distribution.
 namespace
 {
     //TODO move this to an inline file or something
-    //as it's also repeated in ScrubConsts.hpp
+    //as it's also repeated in ScrubConsts.hpp AND the OSK
     //xbox
     static constexpr inline std::uint32_t ButtonLT = 0x2196;
     static constexpr inline std::uint32_t ButtonRT = 0x2197;
@@ -1444,6 +1444,23 @@ void OptionsStateV2::createSettingsItems()
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.decimateDistance ? 1 : 0;
 
+    //decimated power bar
+    item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
+    item->title = "Decimate Power Bar";
+    item->description = "Draws a power bar with 10 segments instead of 8";
+    item->selected =
+        [&](const Menu::Item&)
+        {
+            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::DecimatePower];
+            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::DecimatePower].getTextureBounds().width / 2.f, 0.f });
+            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+        };
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.decimatePowerBar = i.selectedIndex == 1;
+        };
+    item->labels = { "No" , "Yes" };
+    item->selectedIndex = m_sharedData.decimatePowerBar ? 1 : 0;
 
     //monthly rival
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
@@ -1948,23 +1965,6 @@ void OptionsStateV2::createAccesibilityItems()
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.useContrastPowerBar ? 1 : 0;
 
-    //decimated power bar
-    item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
-    item->title = "Decimate Power Bar";
-    item->description = "Draws a power bar with 10 segments instead of 8";
-    item->selected =
-        [&](const Menu::Item&)
-        {
-            m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::DecimatePower];
-            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::DecimatePower].getTextureBounds().width / 2.f, 0.f });
-            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-        };
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.decimatePowerBar = i.selectedIndex == 1;
-        };
-    item->labels = { "No" , "Yes" };
-    item->selectedIndex = m_sharedData.decimatePowerBar ? 1 : 0;
 
     //putt assist
     item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
@@ -2016,8 +2016,8 @@ void OptionsStateV2::createAccesibilityItems()
 
     //reset hints
     item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
-    item->title = "Reset Hints";
-    item->description = "Enable all in-game hints which were previously dismissed";
+    item->title = "Reset Tips";
+    item->description = "Enable all in-game tips which were previously dismissed";
     item->selected =
         [&](const Menu::Item&)
         {
@@ -2049,6 +2049,18 @@ void OptionsStateV2::createAccesibilityItems()
         };
     item->labels = { "No" , "Yes" };
     item->selectedIndex = m_sharedData.miniLoadingScreen ? 1 : 0;
+
+    //text to speech
+    item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
+    item->title = "Use Text To Speech for Chat";
+    item->description = "Enable text to speech playback for in-game chat";
+    cro::Util::String::wordWrap(item->description, 36);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.useTTS = i.selectedIndex == 0 ? false : true;
+        };
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = m_sharedData.useTTS ? 1 : 0;
 }
 
 void OptionsStateV2::createKeyboardItems()
@@ -2913,17 +2925,17 @@ void OptionsStateV2::createAudioItems()
 
 
 
-    //text to speech
-    item = &m_uiLayout.menuLayout.items[TabID::Audio].emplace_back();
-    item->title = "Use Text To Speech for Chat";
-    item->description = "Enable text to speech playback for in-game chat";
-    cro::Util::String::wordWrap(item->description, 36);
-    item->activated = [&](Menu::Item& i)
-        {
-            m_sharedData.useTTS = i.selectedIndex == 0 ? false : true;
-        };
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = m_sharedData.useTTS ? 1 : 0;
+    //text to speech - moved to accessibility
+    //item = &m_uiLayout.menuLayout.items[TabID::Audio].emplace_back();
+    //item->title = "Use Text To Speech for Chat";
+    //item->description = "Enable text to speech playback for in-game chat";
+    //cro::Util::String::wordWrap(item->description, 36);
+    //item->activated = [&](Menu::Item& i)
+    //    {
+    //        m_sharedData.useTTS = i.selectedIndex == 0 ? false : true;
+    //    };
+    //item->labels = { "No", "Yes" };
+    //item->selectedIndex = m_sharedData.useTTS ? 1 : 0;
 
 
     //mixer
@@ -2934,7 +2946,7 @@ void OptionsStateV2::createAudioItems()
 
     //main vol
     item = &m_uiLayout.menuLayout.items[TabID::Audio].emplace_back();
-    item->title = "Master Volume";
+    item->title = "Main Volume";
     item->activated =
         [](Menu::Item& it)
         {

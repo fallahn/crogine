@@ -191,43 +191,42 @@ OSK::OSK()
         ctx.codepointRange = { 0x2580,0x2590 }; //block icons - used for cursor
         m_textFont.appendFromFile("assets/fonts/promptfont.ttf", ctx);
 
-        //TODO add emoji font if we allow for that input
 
 
         //emoji fonts
-//        ctx.allowBold = false;
-//        ctx.allowFillColour = false;
-//        ctx.allowOutline = false;
-//
-//        static constexpr std::array Ranges =
-//        {
-//            CodePointRange::EmojiLower,
-//            CodePointRange::EmojiMid,
-//            CodePointRange::EmojiUpper,
-//        };
-//
-//#ifdef _WIN32
-//        const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
-//
-//        if (FileSystem::fileExists(winPath))
-//        {
-//            for (const auto& r : Ranges)
-//            {
-//                ctx.codepointRange = r;
-//                m_textFont.appendFromFile(winPath, ctx);
-//            }
-//        }
-//        else
-//#endif
-//        {
-//            const std::string path = "assets/golf/fonts/TwemojiCOLRv0.ttf";
-//
-//            for (const auto& r : Ranges)
-//            {
-//                ctx.codepointRange = r;
-//                m_textFont.appendFromFile(path, ctx);
-//            }
-//        }
+        ctx.allowBold = false;
+        ctx.allowFillColour = false;
+        ctx.allowOutline = false;
+
+        static constexpr std::array Ranges =
+        {
+            CodePointRange::EmojiLower,
+            CodePointRange::EmojiMid,
+            CodePointRange::EmojiUpper,
+        };
+
+#ifdef _WIN32
+        const std::filesystem::path winPath = "C:/Windows/Fonts/seguiemj.ttf";
+
+        if (FileSystem::fileExists(winPath))
+        {
+            for (const auto& r : Ranges)
+            {
+                ctx.codepointRange = r;
+                m_textFont.appendFromFile(winPath, ctx);
+            }
+        }
+        else
+#endif
+        {
+            const std::filesystem::path path = "assets/golf/fonts/TwemojiCOLRv0.ttf";
+
+            for (const auto& r : Ranges)
+            {
+                ctx.codepointRange = r;
+                m_textFont.appendFromFile(path, ctx);
+            }
+        }
 
 
         //prime the font with some texture pages to prevent GL errors

@@ -1386,7 +1386,7 @@ void GolfGame::initFonts()
     };
 
 #ifdef _WIN32
-    const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
+    const std::filesystem::path winPath = "C:/Windows/Fonts/seguiemj.ttf";
     //const std::string winPath = "assets/golf/fonts/TwemojiCOLRv0.ttf";
     //const std::string winPath = "assets/golf/fonts/NotoEmoji-Regular.ttf";
     
@@ -1405,7 +1405,7 @@ void GolfGame::initFonts()
     else
 #endif
     {
-        const std::string path = "assets/golf/fonts/TwemojiCOLRv0.ttf";
+        const std::filesystem::path path = "assets/golf/fonts/TwemojiCOLRv0.ttf";
         //const std::string monoPath = "assets/golf/fonts/NotoEmoji-Regular.ttf";
 
         for (const auto& r : Ranges)
