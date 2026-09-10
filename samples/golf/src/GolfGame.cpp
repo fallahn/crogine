@@ -2632,14 +2632,17 @@ void GolfGame::createHowTo()
             if (m_sharedData.showHelp)
             {
                 const auto viewScale = std::clamp(getViewScale(), 1.f, 3.f);
-                const auto viewSize = std::min(static_cast<std::int32_t>(viewScale) - 1, 2);
+                //const auto viewSize = std::min(static_cast<std::int32_t>(viewScale) - 1, 2);
+                const auto viewSize = std::min(static_cast<std::int32_t>(viewScale), 4);
                 const glm::vec2 size = cro::App::getWindow().getSize();// getScaledSize();
                 ImGui::SetNextWindowSize({ size.x, size.y });
                 ImGui::SetNextWindowPos({ 0.f, 0.f });
                 ImGui::Begin("How To Play", nullptr/*&m_sharedData.showHelp*/, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
                 
 
-                ImGui::PushFont(m_sharedData.helpFonts[std::min(viewSize, 1)]);
+                //ImGui::PushFont(m_sharedData.helpFonts[std::min(viewSize, 1)]);
+                //ImGui::PushFont(m_sharedData.helpFont);
+                ImGui::GetFont()->Scale *= viewScale;
                 static constexpr auto NavWidth = 180.f;
                 const auto NavWidthScaled = NavWidth * viewScale;
 
@@ -2671,7 +2674,7 @@ void GolfGame::createHowTo()
                 }
                 ImGui::PopStyleVar();
 
-                //TODO display controller input
+                //display controller input
                 if (cro::GameController::getControllerCount())
                 {
                     auto size = glm::vec2(controlTex.getSize()) * viewScale;
@@ -2693,11 +2696,11 @@ void GolfGame::createHowTo()
                 }
 
                 ImGui::EndChild();
-                ImGui::PopFont();
+                //ImGui::PopFont();
                 ImGui::SameLine();
 
                 //main pane
-                ImGui::PushFont(m_sharedData.helpFonts[viewSize]);
+                //ImGui::PushFont(m_sharedData.helpFonts[viewSize]);
                 ImGui::BeginChild("##main_view");
                 
                 if (helpNav.manualScroll != 0.f)
@@ -2785,8 +2788,8 @@ void GolfGame::createHowTo()
                     ImGui::NewLine();
                 }
                 ImGui::EndChild();
-                ImGui::PopFont();
-
+                //ImGui::PopFont();
+                ImGui::GetFont()->Scale = 1.f;
 
                 ImGui::End();
             }

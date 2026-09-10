@@ -127,7 +127,6 @@ struct SharedStateData final
     SharedCourseData* courseData = nullptr; //only valid when MenuState is active
 
     ChatFonts chatFonts;
-    std::array<ImFont*, 3u> helpFonts = { nullptr, nullptr, nullptr };
     bool showHelp = false; //TODO move this to new options menu
 
     //bool useOSKBuffer = false; //if true output of OSK is buffered here instead of sending codepoints

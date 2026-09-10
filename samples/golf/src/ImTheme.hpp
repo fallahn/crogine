@@ -118,66 +118,59 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     config.FontLoaderFlags |= (1 << 8) | (1 << 9); /*ImGuiFreeTypeBuilderFlags_LoadColor | ImGuiFreeTypeBuilderFlags_LoadBitmap*/;
     //config.OversampleH = config.OversampleV = 1;
 
-    //expands the default glyph set - default is 32-255
-    //0xe005-0xf8ff is used by the icon font internally
-    //static const std::vector<ImWchar> rangesA = { 0x1, /*0xFFFF*/0xe004, 0 }; //TODO what's the third number? Plane? Terminator?
-    
     const auto rp = cro::FileSystem::getResourcePath();
-    auto* defaultFont = fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/ProggyClean.ttf")), 0.f, &config/*, rangesA.data()*/);
+    auto* defaultFont = fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/ProggyClean.ttf")), 0.f, &config);
 
-    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSans-Regular.ttf")), 0.f, &config/*, fonts->GetGlyphRangesCyrillic()*/);
+    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSans-Regular.ttf")), 0.f, &config); //cyrillic, greek, vietnamese
     //fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSans-Regular.ttf")), 0.f, &config/*, fonts->GetGlyphRangesGreek()*/);
     //fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSans-Regular.ttf")), 0.f, &config/*, fonts->GetGlyphRangesVietnamese()*/);
-    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSansThai-Regular.ttf")), 0.f, &config/*, fonts->GetGlyphRangesThai()*/);
-    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSansKR-Regular.ttf")), 0.f, &config/*, fonts->GetGlyphRangesKorean()*/);
-    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSansJP-Regular.ttf")), 0.f, &config/*, fonts->GetGlyphRangesJapanese()*/);
-    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSansTC-Regular.ttf")), 0.f, &config/*, fonts->GetGlyphRangesChineseFull()*/);
+    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSansThai-Regular.ttf")), 0.f, &config);
+    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSansKR-Regular.ttf")), 0.f, &config);
+    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSansJP-Regular.ttf")), 0.f, &config);
+    fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSansTC-Regular.ttf")), 0.f, &config);
 
     
-
-
-    static const std::vector<ImWchar> rangesB = { 0x231a, 0x23fe, 0x256d, 0x2bd1, 0x10000, 0x10FFFF, 0 };
     ImFontConfig configB;
     configB.FontLoaderFlags |= (1 << 8) | (1 << 9);
+
+    config.ExtraSizeScale = 0.75f;
 
     std::filesystem::path emojiFontPath = "C:/Windows/Fonts/seguiemj.ttf";
 #ifdef _WIN32
     //emojiFontPath = rp / "assets/golf/fonts/TwemojiCOLRv0.ttf";
     if (cro::FileSystem::fileExists(emojiFontPath))
     {
-        fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 0.f, &config/*, rangesB.data()*/);// ->Scale = 0.5f;
-        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 32.f, &configB, rangesB.data());
+        fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 0.f, &config);
+        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 28.f, &configB);
         sd.chatFonts.buttonHeight = 22.f;
     }
     else
 #endif
     {
         emojiFontPath = rp / "assets/golf/fonts/TwemojiCOLRv0.ttf";
-        fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 0.f, &config/*, rangesB.data()*/);
-        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 32.0f, &configB, rangesB.data());
+        fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 0.f, &config);
+        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 28.f, &configB);
         sd.chatFonts.buttonHeight = 24.f;// 30.f;
     }
 
     //fonts used in help screen
-    ImFontConfig configC;
-    configC.FontLoaderFlags |= (1 << 8) | (1 << 9);
-
-    const auto helpFontPath = rp / "assets/golf/fonts/NotoSans-Regular.ttf";
-
-    sd.helpFonts[0] = defaultFont;/* fonts->AddFontFromFileTTF(helpFontPath.c_str(), 12.f, &configC);
-    configC.MergeMode = true;
-    fonts->AddFontFromFileTTF(emojiFontPath.c_str(), 12.f, &configC, rangesB.data());
-    configC.MergeMode = false;*/
-
-    sd.helpFonts[1] = fonts->AddFontFromFileTTF(U8PATH_CAST(helpFontPath), 24.f, &configC);
+    //const auto helpFontPath = rp / "assets/golf/fonts/NotoSans-Regular.ttf";
+    //
+    //ImFontConfig configC;
+    //configC.Flags &= ~ImFontFlags_ImplicitRefSize;
+    //configC.FontLoaderFlags |= (1 << 8) | (1 << 9);
     //configC.MergeMode = true;
-    fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 24.f, &configC, rangesB.data());
-    configC.MergeMode = false;
 
-    sd.helpFonts[2] = fonts->AddFontFromFileTTF(U8PATH_CAST(helpFontPath), 48.f, &configC);
-    //configC.MergeMode = true;
-    fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 48.f, &configC, rangesB.data());
-    configC.MergeMode = false;
+    //sd.helpFont = fonts->AddFontFromFileTTF(U8PATH_CAST(helpFontPath), 0.f, &configC);;
+    //fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 0.f, &configC);
+
+    //sd.helpFonts[0] = defaultFont;// fonts->AddFontFromFileTTF(helpFontPath.c_str(), 12.f, &configC);
+
+    //sd.helpFonts[1] = fonts->AddFontFromFileTTF(U8PATH_CAST(helpFontPath), 24.f, &configC);
+    //                  fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 24.f, &configC);
+
+    //sd.helpFonts[2] = fonts->AddFontFromFileTTF(U8PATH_CAST(helpFontPath), 48.f, &configC);
+    //                  fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 48.f, &configC);
 
     fonts->Build();
 }

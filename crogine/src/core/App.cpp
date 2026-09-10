@@ -391,13 +391,16 @@ void App::run(bool resetSettings)
         ImFontConfig config;
         config.MergeMode = true;
         config.FontDataOwnedByAtlas = false; //held in vector above
-        //config.GlyphMinAdvanceX = 13.0f; //use if you want to make the icon monospaced
         config.Flags &= ~ImFontFlags_ImplicitRefSize;
         config.FontLoaderFlags |= (1 << 8) | (1 << 9); //enables colour rendering /*ImGuiFreeTypeBuilderFlags_LoadColor | ImGuiFreeTypeBuilderFlags_LoadBitmap*/
-        //static constexpr ImWchar ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+        
+        const ImWchar exclude[] = { cro::CodePointRange::EmojiLower[0], cro::CodePointRange::EmojiLower[1],
+            cro::CodePointRange::EmojiMid[0], cro::CodePointRange::EmojiMid[1],
+            cro::CodePointRange::EmojiUpper[0], cro::CodePointRange::EmojiUpper[1], 0};
+        config.GlyphExcludeRanges = exclude;
 
         ImGui::GetIO().Fonts->AddFontDefault();
-        ImGui::GetIO().Fonts->AddFontFromMemoryTTF(fontBuff.data(), static_cast<std::int32_t>(fontBuff.size()), /*13.f*/0.f, &config/*, ranges*/);
+        ImGui::GetIO().Fonts->AddFontFromMemoryTTF(fontBuff.data(), static_cast<std::int32_t>(fontBuff.size()), 0.f, &config);
 
         m_window.setIcon(defaultIcon);
         m_window.setWindowedSize(settings.windowedSize);
