@@ -346,7 +346,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                 m_sharedData.chatFonts.buttonLarge->Scale = 0.5f * viewScale;
 
                 if (ImGui::Begin("Chat Window", nullptr, 
-                    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+                    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar))
                 {
                     if (m_showShortcuts
                         && !Social::isSteamdeck())
@@ -394,7 +394,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         ImGui::Separator();
                     }
                     
-                    std::int32_t flags = ImGuiWindowFlags_AlwaysUseWindowPadding;
+                    std::int32_t flags = 0;// ImGuiWindowFlags_AlwaysUseWindowPadding;
                     if (Social::isSteamdeck())
                     {
                         flags |= ImGuiWindowFlags_NoScrollbar;

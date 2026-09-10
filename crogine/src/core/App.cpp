@@ -389,14 +389,15 @@ void App::run(bool resetSettings)
 
 
         ImFontConfig config;
-        config.MergeMode = false;// true; //TODO do we want to set this to true and undo the ImFontFlags_ImplicitRefSize flag?
+        config.MergeMode = true;
         config.FontDataOwnedByAtlas = false; //held in vector above
-        config.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
-        //config.FontBuilderFlags |= (1 << 8) | (1 << 9); //enables colour rendering
+        //config.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
+        config.Flags &= ~ImFontFlags_ImplicitRefSize;
+        config.FontLoaderFlags |= (1 << 8) | (1 << 9); //enables colour rendering /*ImGuiFreeTypeBuilderFlags_LoadColor | ImGuiFreeTypeBuilderFlags_LoadBitmap*/
         static constexpr ImWchar ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
 
         ImGui::GetIO().Fonts->AddFontDefault();
-        ImGui::GetIO().Fonts->AddFontFromMemoryTTF(fontBuff.data(), static_cast<std::int32_t>(fontBuff.size()), 13.f, &config, ranges);
+        ImGui::GetIO().Fonts->AddFontFromMemoryTTF(fontBuff.data(), static_cast<std::int32_t>(fontBuff.size()), /*13.f*/0.f, &config, ranges);
 
         m_window.setIcon(defaultIcon);
         m_window.setWindowedSize(settings.windowedSize);
