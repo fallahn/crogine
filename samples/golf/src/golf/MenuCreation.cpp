@@ -2019,7 +2019,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     menuEntity.getComponent<cro::Callback>().function = MenuCallback(MainMenuContext(this));
     m_menuEntities[MenuID::Lobby] = menuEntity;
     parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
-    m_textChat.setRootNode(menuEntity);
+    //m_textChat.setRootNode(menuEntity);
 
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
     menuTransform.setPosition(-m_menuPositions[MenuID::Lobby]);

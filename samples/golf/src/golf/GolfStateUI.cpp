@@ -367,7 +367,7 @@ void GolfState::buildUI()
     createSwingputMeter(entity, m_inputParser);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    m_textChat.setRootNode(infoEnt);
+    //m_textChat.setRootNode(infoEnt);
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 

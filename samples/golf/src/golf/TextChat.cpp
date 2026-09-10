@@ -610,32 +610,33 @@ void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour)
 {
     //create an entity to temporarily show the message on screen
 
-    auto uiSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
-    uiSize /= getViewScale(uiSize);
+    const auto uiSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
+    const auto viewScale = getViewScale(uiSize);
+    //uiSize /= getViewScale(uiSize);
 
     cro::Util::String::wordWrap(outStr, 70);
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, std::floor(uiSize.y - 18.f), 5.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 4.f * viewScale, std::floor(uiSize.y - (18.f * viewScale)), 5.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(outStr);
     entity.getComponent<cro::Text>().setFillColour(chatColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.getComponent<cro::Text>().setShadowOffset({ viewScale, -viewScale });
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize * viewScale);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(12.f);
     
     auto bounds = cro::Text::getLocalBounds(entity);
-    bounds.width = std::round(bounds.width + 5.f);
-    bounds.height = std::round(bounds.height + 4.f);
+    bounds.width = std::round(bounds.width + (5.f * viewScale));
+    bounds.height = std::round(bounds.height + (4.f * viewScale));
 
     static constexpr float BgAlpha = 0.45f;
     const cro::Colour c(0.f, 0.f, 0.f, BgAlpha);
 
     auto bgEnt = m_scene.createEntity();
-    bgEnt.addComponent<cro::Transform>().setPosition({ -2.f, -2.f, -0.15f });
+    bgEnt.addComponent<cro::Transform>().setPosition({ -2.f * viewScale, -2.f * viewScale, -0.15f });
     bgEnt.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.1f });
     bgEnt.addComponent<cro::Drawable2D>().setVertexData(
         {
@@ -697,7 +698,7 @@ void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour)
             //m_scene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
         }
     };
-    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_screenChatActiveCount++;
 
     //if we do have an influx of messages force the oldest off screen
@@ -707,7 +708,7 @@ void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour)
         {
             if (e.isValid())
             {
-                e.getComponent<cro::Transform>().move({ 0.f, 16.f });
+                e.getComponent<cro::Transform>().move({ 0.f, 16.f * viewScale });
                 if (e.getComponent<cro::Transform>().getPosition().y > uiSize.y)
                 {
                     m_scene.destroyEntity(e);

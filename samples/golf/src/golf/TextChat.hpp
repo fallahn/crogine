@@ -66,6 +66,7 @@ public:
 
     bool isVisible() const { return m_visible; }
 
+    [[deprecated]]
     void setRootNode(cro::Entity e) { m_rootNode = e; }
 
     void update(float);
