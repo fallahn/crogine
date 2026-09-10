@@ -307,7 +307,7 @@ void LayoutState::drawBrowser()
                     }
                 }
 
-                ImGui::BeginChildFrame(897654 + id, { frameSize.x, frameSize.y }, ImGuiWindowFlags_NoScrollbar);
+                ImGui::BeginChild(897654 + id, { frameSize.x, frameSize.y }, ImGuiWindowFlags_NoScrollbar);
 
                 const auto* tex = sprite.getTexture();
                 auto subrect = sprite.getTextureRect();
@@ -326,7 +326,7 @@ void LayoutState::drawBrowser()
                 }
 
                 ImGui::PushStyleColor(ImGuiCol_Border, colour);
-                if (ImGui::ImageButton(*tex, { displaySize.x, displaySize.y }, uvStart, uvEnd))
+                if (ImGui::ImageButton("f2", * tex, {displaySize.x, displaySize.y}, uvStart, uvEnd))
                 {
                     m_selectedSprite = id;
                     ImGui::SetScrollHereY();
@@ -356,7 +356,7 @@ void LayoutState::drawBrowser()
                     ImGui::EndTooltip();
                 }
 
-                ImGui::EndChildFrame();
+                ImGui::EndChild();
 
                 //put on same line if we fit
                 count++;
@@ -433,10 +433,10 @@ void LayoutState::drawBrowser()
                     }
                 }
 
-                ImGui::BeginChildFrame(83854 + id, { frameSize.x, frameSize.y }, ImGuiWindowFlags_NoScrollbar);
+                ImGui::BeginChild(83854 + id, { frameSize.x, frameSize.y }, ImGuiWindowFlags_NoScrollbar);
 
                 ImGui::PushStyleColor(ImGuiCol_Border, colour);
-                if (ImGui::ImageButton(thumb.texture.getTexture(), { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
+                if (ImGui::ImageButton("dfs", thumb.texture.getTexture(), {thumbSize.x, thumbSize.y}, {0.f, 1.f}, {1.f, 0.f}))
                 {
                     m_selectedFont = id;
                     ImGui::SetScrollHereY();
@@ -466,7 +466,7 @@ void LayoutState::drawBrowser()
                     ImGui::EndTooltip();
                 }
 
-                ImGui::EndChildFrame();
+                ImGui::EndChild();
 
                 //put on same line if we fit
                 count++;

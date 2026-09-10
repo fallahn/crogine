@@ -389,10 +389,10 @@ void App::run(bool resetSettings)
 
 
         ImFontConfig config;
-        config.MergeMode = true;
+        config.MergeMode = false;// true; //TODO do we want to set this to true and undo the ImFontFlags_ImplicitRefSize flag?
         config.FontDataOwnedByAtlas = false; //held in vector above
         config.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
-        config.FontBuilderFlags |= (1 << 8) | (1 << 9); //enables colour rendering
+        //config.FontBuilderFlags |= (1 << 8) | (1 << 9); //enables colour rendering
         static constexpr ImWchar ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
 
         ImGui::GetIO().Fonts->AddFontDefault();

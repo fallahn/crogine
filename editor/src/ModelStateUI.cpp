@@ -132,7 +132,7 @@ namespace
         bool retVal = false;
 
         glm::vec2 imgSize = WindowLayouts[WindowID::MaterialSlot].second;
-        if (ImGui::ImageButton((void*)(std::size_t)thumbnail, { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
+        if (ImGui::ImageButton("33rg", thumbnail, {imgSize.x, imgSize.y}, {0.f, 1.f}, {1.f, 0.f}))
         {
             if (cro::FileSystem::showMessageBox("Confirm", "Clear this slot? Drag a texture from the browser to set it", cro::FileSystem::YesNo, cro::FileSystem::Question))
             {
@@ -173,7 +173,7 @@ namespace
         bool retVal = false;
 
         glm::vec2 imgSize = WindowLayouts[WindowID::MaterialSlot].second;
-        if (ImGui::ImageButton((void*)(std::size_t)thumbnail, { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
+        if (ImGui::ImageButton("657fgb", thumbnail, {imgSize.x, imgSize.y}, {0.f, 1.f}, {1.f, 0.f}))
         {
             if (cro::FileSystem::showMessageBox("Confirm", "Clear this slot? Drag a material from the browser to set it", cro::FileSystem::YesNo, cro::FileSystem::Question))
             {
@@ -1927,11 +1927,11 @@ void ModelState::drawBrowser()
                     }
                 }
 
-                ImGui::BeginChildFrame(7767 + count, { frameSize.x, frameSize.y }, ImGuiWindowFlags_NoScrollbar);
+                ImGui::BeginChild(7767 + count, { frameSize.x, frameSize.y }, ImGuiWindowFlags_NoScrollbar);
 
                 ImGui::PushStyleColor(ImGuiCol_Border, colour);
                 ImGui::PushID(9999 + count);
-                if (ImGui::ImageButton((void*)(std::size_t)material.previewTexture.getTexture().getGLHandle(), { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
+                if (ImGui::ImageButton("765", material.previewTexture.getTexture().getGLHandle(), {thumbSize.x, thumbSize.y}, {0.f, 1.f}, {1.f, 0.f}))
                 {
                     m_selectedMaterial = count;
                     ImGui::SetScrollHereY();
@@ -1962,7 +1962,7 @@ void ModelState::drawBrowser()
                     ImGui::Text("%s", ShaderStrings[material.type]);
                     ImGui::EndTooltip();
                 }
-                ImGui::EndChildFrame();
+                ImGui::EndChild();
 
                 //put on same line if we fit
                 count++;
@@ -2077,10 +2077,10 @@ void ModelState::drawBrowser()
                     }
                 }
 
-                ImGui::BeginChildFrame(8394854 + id, { frameSize.x, frameSize.y }, ImGuiWindowFlags_NoScrollbar);
+                ImGui::BeginChild(8394854 + id, { frameSize.x, frameSize.y }, ImGuiWindowFlags_NoScrollbar);
 
                 ImGui::PushStyleColor(ImGuiCol_Border, colour);
-                if (ImGui::ImageButton((void*)(std::size_t)id, { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
+                if (ImGui::ImageButton("rtret", id, {thumbSize.x, thumbSize.y}, {0.f, 1.f}, {1.f, 0.f}))
                 {
                     m_selectedTexture = id;
                     ImGui::SetScrollHereY();
@@ -2138,7 +2138,7 @@ void ModelState::drawBrowser()
                     ImGui::EndTooltip();
                 }
 
-                ImGui::EndChildFrame();
+                ImGui::EndChild();
 
                 //put on same line if we fit
                 count++;

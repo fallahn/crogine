@@ -540,7 +540,7 @@ void SpriteState::drawSpriteWindow()
             size.y = size.x * ratio;
 
             ImGui::BeginChild("##tex", ImVec2(460.f, 200.f));
-            ImGui::ImageButton(*texture, size, uv0, uv1);
+            ImGui::ImageButton("##reterrr", *texture, size, uv0, uv1);
             ImGui::EndChild();
         }
 

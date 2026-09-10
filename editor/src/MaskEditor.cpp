@@ -177,7 +177,7 @@ void MaskEditor::doImGui(bool* open)
         //image buttons want to use the image ID handle as UID so we need to push our
         //own values because we want to share image IDs over multiple buttons
         ImGui::PushID(100);
-        if (ImGui::ImageButton(m_quad.activeTextures[ChannelID::Metal], { 64.f, 64.f }, { 0.f, 1.f }, { 1.f, 0.f }))
+        if (ImGui::ImageButton("fger", m_quad.activeTextures[ChannelID::Metal], {64.f, 64.f}, {0.f, 1.f}, {1.f, 0.f}))
         {
             auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
             if (!path.empty()
@@ -192,7 +192,7 @@ void MaskEditor::doImGui(bool* open)
         ImGui::SameLine();
 
         ImGui::PushID(101);
-        if (ImGui::ImageButton(m_quad.activeTextures[ChannelID::Roughness], { 64.f, 64.f }, { 0.f, 1.f }, { 1.f, 0.f }))
+        if (ImGui::ImageButton("iuoi", m_quad.activeTextures[ChannelID::Roughness], {64.f, 64.f}, {0.f, 1.f}, {1.f, 0.f}))
         {
             auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
             if (!path.empty()
@@ -207,7 +207,7 @@ void MaskEditor::doImGui(bool* open)
         ImGui::SameLine();
 
         ImGui::PushID(102);
-        if (ImGui::ImageButton(m_quad.activeTextures[ChannelID::AO], { 64.f, 64.f }, { 0.f, 1.f }, { 1.f, 0.f }))
+        if (ImGui::ImageButton("reter", m_quad.activeTextures[ChannelID::AO], {64.f, 64.f}, {0.f, 1.f}, {1.f, 0.f}))
         {
             auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
             if (!path.empty()

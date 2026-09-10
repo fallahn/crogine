@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -87,7 +87,7 @@ imgui_internal.h - path to imgui.h is updated
 imgui_impl_opengl3.cpp - path to imgui.h updated to crogine/gui/detail
 imgui_impl_opengl3.h - path to imgui.h commented out
 
-imgui_impl_sdl2 h/cpp renamed imgui_impl_sdl
+imgui_impl_sdl3 h/cpp renamed imgui_impl_sdl
 imgui_impl_sdl.cpp - path to imgui.h updated and include file renamed
 imgui_impl_sdl.h - path to imgui.h updated
 

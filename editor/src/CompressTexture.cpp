@@ -242,7 +242,7 @@ void compressTextureWindow(SharedStateData& sharedData)
             displayBuffer.pop_back();
         }
 
-        ImGui::BeginChild("Output", {0.f, 0.f}, ImGuiChildFlags_Border);
+        ImGui::BeginChild("Output", {0.f, 0.f}, ImGuiChildFlags_Borders);
         ImGui::TextWrapped(displayBuffer.c_str());
         ImGui::EndChild();
     }

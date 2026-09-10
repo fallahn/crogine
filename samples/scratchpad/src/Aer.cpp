@@ -37,7 +37,7 @@ Aer::Aer()
                 ImGui::SetNextWindowSize({ 600.f, 400.f });
                 if (ImGui::Begin("AER Calculator"))
                 {
-                    ImGui::BeginChild("Rates", { 280.f, 300.f }, ImGuiChildFlags_Border);
+                    ImGui::BeginChild("Rates", { 280.f, 300.f }, ImGuiChildFlags_Borders);
                     ImGui::TextUnformatted("Rate");
 
                     static auto rateIdx = 0u;
@@ -104,7 +104,7 @@ Aer::Aer()
 
                     ImGui::EndChild();
                     ImGui::SameLine();
-                    ImGui::BeginChild("Payments", { 280.f, 300.f }, ImGuiChildFlags_Border);
+                    ImGui::BeginChild("Payments", { 280.f, 300.f }, ImGuiChildFlags_Borders);
 
                     ImGui::TextUnformatted("Payment");
 
