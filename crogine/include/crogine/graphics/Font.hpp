@@ -141,6 +141,13 @@ namespace cro
         */
         std::array<std::uint32_t, 2> codepointRange = CodePointRange::Default;
         /*!
+        \brief Scales glyphs created with this font relative to their character size.
+        For instance when mixing icon sets or emojis with text, such glyphs
+        may benefit from being scaled down to match the size of the text characters
+        */
+        float scale = 1.f;
+
+        /*!
         \brief Disables or enables bold rendering of glyphs created
         with the appended font
         */
@@ -270,7 +277,10 @@ namespace cro
 
         const FontData& getFontData(std::uint32_t cp) const;
 
-        Glyph loadGlyph(std::uint32_t cp, std::uint32_t charSize, bool bold, float outlineThickness) const;
+        //pages are technically indexed by size, but we might be using as
+        //scaled character size when loading the actual glyph, so we pass
+        //the page index in separately.
+        Glyph loadGlyph(std::uint32_t cp, std::uint32_t charSize, std::uint32_t pageIndex, bool bold, float outlineThickness) const;
         FloatRect getGlyphRect(Page&, std::uint32_t w, std::uint32_t h) const;
         bool setCurrentCharacterSize(std::uint32_t) const;
 

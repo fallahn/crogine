@@ -36,10 +36,13 @@ using namespace cro;
 
 void Detail::Text::addQuad(std::vector<Vertex2D>& vertices, glm::vec2 position, Colour colour, const Glyph& glyph, glm::vec2 textureSize, float outlineThickness)
 {
+    //position.x = std::round(position.x);
+    //position.y = std::round(position.y);
+
     //this might sound counter intuitive - but we're
     //making the characters top to bottom
-    float left = glyph.bounds.left;
-    float bottom = glyph.bounds.bottom;
+    float left = /*std::round*/(glyph.bounds.left);
+    float bottom = /*std::round*/(glyph.bounds.bottom);
     float right = glyph.bounds.left + glyph.bounds.width;
     float top = glyph.bounds.bottom + glyph.bounds.height;
 

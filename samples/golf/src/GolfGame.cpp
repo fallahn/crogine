@@ -1398,10 +1398,11 @@ void GolfGame::initFonts()
         {
             ctx.codepointRange = r;
             m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(path, ctx);
+            ctx.scale = 0.75f;
             m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(path, ctx);
             m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(path, ctx);
 
-            m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(path, ctx);
+            //m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(path, ctx);
         }
     }
 

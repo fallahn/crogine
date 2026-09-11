@@ -277,7 +277,10 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold,
         //has changed - in which case this happened (probably) in the
         //middle of rebuilding text, and we need to add *another*, deferred update....
         const auto oldTex = m_pages[charSize].texture.getGLHandle();
-        auto glyph = loadGlyph(codepoint, charSize, bold && fontData.context.allowBold, fontData.context.allowOutline ? outlineThickness : 0.f);
+
+        const auto scaledCharSize = static_cast<std::uint32_t>(static_cast<float>(charSize) * fontData.context.scale);
+
+        auto glyph = loadGlyph(codepoint, /*charSize*/scaledCharSize, charSize, bold && fontData.context.allowBold, fontData.context.allowOutline ? outlineThickness : 0.f);
         m_pages[charSize].deferredUpdate = m_pages[charSize].texture.getGLHandle() != oldTex;
         return currentGlyphs.insert(std::make_pair(key, glyph)).first->second;
     }
@@ -375,7 +378,7 @@ const Font::FontData& Font::getFontData(std::uint32_t codepoint) const
     return m_fontData[0];
 }
 
-Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold, float outlineThickness) const
+Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, std::uint32_t pageIndex, bool bold, float outlineThickness) const
 {
     Glyph retVal;
 
@@ -483,7 +486,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
         height += 2 * GlyphPadding;
 
         //get the current page
-        auto& page = m_pages.at(charSize);
+        auto& page = m_pages.at(pageIndex);
         page.texture.setSmooth(m_useSmoothing);
 
         //find somewhere to insert the glyph
