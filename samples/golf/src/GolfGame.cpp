@@ -1381,11 +1381,15 @@ void GolfGame::initFonts()
         for (const auto& r : Ranges)
         {
             ctx.codepointRange = r;
+            ctx.density = 4.f;
+            ctx.scale = 1.2f;
             m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(winPath, ctx);
+            ctx.density = 1.f;
+            ctx.scale = 0.85f;
             m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(winPath, ctx);
             m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(winPath, ctx);
 
-            m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(winPath, ctx);
+            //m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(winPath, ctx);
         }
     }
     else
@@ -1397,8 +1401,11 @@ void GolfGame::initFonts()
         for (const auto& r : Ranges)
         {
             ctx.codepointRange = r;
+            ctx.density = 4.f;
+            ctx.scale = 1.2f;
             m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(path, ctx);
-            ctx.scale = 0.75f;
+            ctx.density = 1.f;
+            ctx.scale = 0.85f;
             m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(path, ctx);
             m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(path, ctx);
 

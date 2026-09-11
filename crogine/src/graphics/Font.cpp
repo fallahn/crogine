@@ -185,6 +185,7 @@ bool Font::loadFromFile(const std::filesystem::path& filePath)
 bool Font::appendFromFile(const std::filesystem::path& filePath, FontAppendmentContext ctx)
 {
     CRO_ASSERT(ctx.codepointRange[0] > 0 && ctx.codepointRange[0] < ctx.codepointRange[1], "invalid codepoint range");
+    CRO_ASSERT(ctx.scale > 0 && ctx.density > 0, "Invalid values - must be greater than zero");
 
     const auto path = (FileSystem::getResourcePath() / filePath);
     FontData fd;
@@ -278,9 +279,11 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold,
         //middle of rebuilding text, and we need to add *another*, deferred update....
         const auto oldTex = m_pages[charSize].texture.getGLHandle();
 
-        const auto scaledCharSize = static_cast<std::uint32_t>(static_cast<float>(charSize) * fontData.context.scale);
+        const auto scaledCharSize = static_cast<std::uint32_t>(static_cast<float>(charSize) * fontData.context.scale * fontData.context.density);
 
-        auto glyph = loadGlyph(codepoint, /*charSize*/scaledCharSize, charSize, bold && fontData.context.allowBold, fontData.context.allowOutline ? outlineThickness : 0.f);
+        auto glyph = loadGlyph(codepoint, scaledCharSize, charSize, bold && fontData.context.allowBold, fontData.context.allowOutline ? outlineThickness : 0.f);
+        glyph.bounds /= fontData.context.density;
+
         m_pages[charSize].deferredUpdate = m_pages[charSize].texture.getGLHandle() != oldTex;
         return currentGlyphs.insert(std::make_pair(key, glyph)).first->second;
     }
@@ -322,7 +325,8 @@ float Font::getKerning(std::uint32_t cpA, std::uint32_t cpB, std::uint32_t charS
         return 0.f;
     }
 
-    FT_Face face = std::any_cast<FT_Face>(m_fontData[0].face);
+    //TODO doesn't account for code points straddling different font sources
+    FT_Face face = std::any_cast<FT_Face>(/*m_fontData[0].face*/getFontData(cpA).face);
 
     if (face && FT_HAS_KERNING(face) && setCurrentCharacterSize(charSize))
     {

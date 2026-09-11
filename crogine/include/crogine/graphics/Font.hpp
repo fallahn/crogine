@@ -146,7 +146,11 @@ namespace cro
         may benefit from being scaled down to match the size of the text characters
         */
         float scale = 1.f;
-
+        /*!
+        \brief Increases the density of glyphs by scaling the texture
+        resolution by this much, whilst maintaining the scaled character size
+        */
+        float density = 1.f;
         /*!
         \brief Disables or enables bold rendering of glyphs created
         with the appended font

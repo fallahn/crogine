@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -85,6 +85,15 @@ namespace cro
             return *this;
         }
 
+        constexpr Rectangle& operator /= (T f)
+        {
+            left /= f;
+            bottom /= f;
+            width /= f;
+            height /= f;
+            return *this;
+        }
+
         /*!
         \brief Conversion constructor.
         Creates a rectangle of T when the param is of type U
@@ -148,6 +157,12 @@ namespace cro
     Rectangle<T> operator * (const Rectangle<T>& rect, glm::vec<2, T, glm::defaultp> scale)
     {
         return { rect.left * scale.x, rect.bottom * scale.y, rect.width * scale.x, rect.height * scale.y };
+    }
+
+    template <typename T>
+    Rectangle<T> operator / (const Rectangle<T>& rect, T scale)
+    {
+        return { rect.left / scale, rect.bottom / scale, rect.width / scale, rect.height / scale };
     }
 
 #include "Rectangle.inl"
