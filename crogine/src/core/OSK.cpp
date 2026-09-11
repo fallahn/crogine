@@ -68,22 +68,36 @@ namespace
     struct KeyInfo final
     {
         constexpr KeyInfo() {};
-        constexpr KeyInfo(SDL_Scancode c, float w = ButtonWidth) : scancode(c), size(w) {}
+        explicit constexpr KeyInfo(SDL_Scancode c, float w = ButtonWidth) : scancode(c), size(w) {}
+        explicit constexpr KeyInfo(std::uint32_t c, float w = ButtonWidth) : codePoint(c), size(w) {}
         SDL_Scancode scancode = SDL_SCANCODE_UNKNOWN;
+        std::uint32_t codePoint = 0;
         const float size = ButtonWidth; //percentage of available width
         bool active = false;
     };
 
-    constexpr std::array<std::array<KeyInfo, ButtonCols>, ButtonRows> ButtonInfo =
+    constexpr std::array<std::array<KeyInfo, ButtonCols>, ButtonRows> ButtonLayout =
     {
-        std::array<KeyInfo, 14u>{KeyInfo(SDL_SCANCODE_GRAVE, ButtonWidth / 2.f),KeyInfo(SDL_SCANCODE_1),KeyInfo(SDL_SCANCODE_2),KeyInfo(SDL_SCANCODE_3),KeyInfo(SDL_SCANCODE_4),KeyInfo(SDL_SCANCODE_5),KeyInfo(SDL_SCANCODE_6),KeyInfo(SDL_SCANCODE_7),KeyInfo(SDL_SCANCODE_8),KeyInfo(SDL_SCANCODE_9),KeyInfo(SDL_SCANCODE_0),KeyInfo(SDL_SCANCODE_MINUS),KeyInfo(SDL_SCANCODE_EQUALS),KeyInfo(SDL_SCANCODE_BACKSPACE, ButtonWidth + (ButtonWidth / 2.f))},
+        std::array<KeyInfo, ButtonCols>{KeyInfo(SDL_SCANCODE_GRAVE, ButtonWidth / 2.f),KeyInfo(SDL_SCANCODE_1),KeyInfo(SDL_SCANCODE_2),KeyInfo(SDL_SCANCODE_3),KeyInfo(SDL_SCANCODE_4),KeyInfo(SDL_SCANCODE_5),KeyInfo(SDL_SCANCODE_6),KeyInfo(SDL_SCANCODE_7),KeyInfo(SDL_SCANCODE_8),KeyInfo(SDL_SCANCODE_9),KeyInfo(SDL_SCANCODE_0),KeyInfo(SDL_SCANCODE_MINUS),KeyInfo(SDL_SCANCODE_EQUALS),KeyInfo(SDL_SCANCODE_BACKSPACE, ButtonWidth + (ButtonWidth / 2.f))},
         {KeyInfo(SDL_SCANCODE_TAB),KeyInfo(SDL_SCANCODE_Q),KeyInfo(SDL_SCANCODE_W),KeyInfo(SDL_SCANCODE_E),KeyInfo(SDL_SCANCODE_R),KeyInfo(SDL_SCANCODE_T),KeyInfo(SDL_SCANCODE_Y),KeyInfo(SDL_SCANCODE_U),KeyInfo(SDL_SCANCODE_I),KeyInfo(SDL_SCANCODE_O),KeyInfo(SDL_SCANCODE_P),KeyInfo(SDL_SCANCODE_LEFTBRACKET),KeyInfo(SDL_SCANCODE_RIGHTBRACKET),KeyInfo(SDL_SCANCODE_BACKSLASH)},
         {KeyInfo(SDL_SCANCODE_CAPSLOCK, ButtonWidth + (ButtonWidth / 2.f)),KeyInfo(SDL_SCANCODE_A),KeyInfo(SDL_SCANCODE_S),KeyInfo(SDL_SCANCODE_D),KeyInfo(SDL_SCANCODE_F),KeyInfo(SDL_SCANCODE_G),KeyInfo(SDL_SCANCODE_H),KeyInfo(SDL_SCANCODE_J),KeyInfo(SDL_SCANCODE_K),KeyInfo(SDL_SCANCODE_L),KeyInfo(SDL_SCANCODE_SEMICOLON),KeyInfo(SDL_SCANCODE_APOSTROPHE),KeyInfo(SDL_SCANCODE_RETURN, ButtonWidth + (ButtonWidth / 2.f)),KeyInfo()},
         {KeyInfo(SDL_SCANCODE_LSHIFT, ButtonWidth * 2.f),KeyInfo(SDL_SCANCODE_Z),KeyInfo(SDL_SCANCODE_X),KeyInfo(SDL_SCANCODE_C),KeyInfo(SDL_SCANCODE_V),KeyInfo(SDL_SCANCODE_B),KeyInfo(SDL_SCANCODE_N),KeyInfo(SDL_SCANCODE_M),KeyInfo(SDL_SCANCODE_COMMA),KeyInfo(SDL_SCANCODE_PERIOD),KeyInfo(SDL_SCANCODE_SLASH),KeyInfo(SDL_SCANCODE_RSHIFT, ButtonWidth * 2.f),KeyInfo(),KeyInfo()},
         {KeyInfo(SDL_SCANCODE_LEFT),KeyInfo(SDL_SCANCODE_SPACE, ButtonWidth * 12.f),KeyInfo(/*would be switch to emoji*/),KeyInfo(/*would be Paste*/),KeyInfo(/*would be quit*/),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(SDL_SCANCODE_RIGHT)}
     };
 
+    constexpr std::array<std::array<KeyInfo, ButtonCols>, ButtonRows> EmojiLayout =
+    {
+        std::array<KeyInfo, ButtonCols>{},
+        std::array<KeyInfo, ButtonCols>{},
+        std::array<KeyInfo, ButtonCols>{},
+        std::array<KeyInfo, ButtonCols>{},
+        std::array<KeyInfo, ButtonCols>{}
+    };
+
     std::array<std::array<FloatRect, ButtonCols>, ButtonRows> Hitboxes = {};
+
+    using KeyboardLayout = std::array<std::array<KeyInfo, ButtonCols>, ButtonRows>;
+    constexpr std::array<const KeyboardLayout*, 2u> KeyboardLayouts = { &ButtonLayout, &EmojiLayout };
 
     //utf32 codepoint
     constexpr std::uint32_t IconCursor = 0x258E;
@@ -100,6 +114,7 @@ namespace
 //public
 OSK::OSK()
     : m_bufferIndex     (0),
+    m_layoutIndex       (0),
     m_rowIndex          (0),
     m_colIndex          (0),
     m_keymod            (0),
@@ -311,6 +326,8 @@ void OSK::updateVertices()
         SDL_Keycode keyPS = 0;
     };
     std::vector<std::vector<KeyText>> centrePos;
+
+    const auto& ButtonInfo = *KeyboardLayouts[0];
 
     //NOTE key size x is actually keyWidth * Button.size - Padding
     float y = startY;
@@ -618,6 +635,8 @@ bool OSK::keypress(SDL_Scancode code)
 
 void OSK::moveLeft()
 {
+    const auto& ButtonInfo = *KeyboardLayouts[m_layoutIndex];
+
     do
     {
         m_colIndex = (m_colIndex + (ButtonCols - 1)) % ButtonCols;
@@ -628,6 +647,8 @@ void OSK::moveLeft()
 
 void OSK::moveRight()
 {
+    const auto& ButtonInfo = *KeyboardLayouts[m_layoutIndex];
+
     do
     {
         m_colIndex = (m_colIndex + 1) % ButtonCols;
@@ -643,6 +664,8 @@ void OSK::moveUp()
     //on an invalid slot
     m_rowIndex = (m_rowIndex + (ButtonRows - 1)) % ButtonRows;
 
+    const auto& ButtonInfo = *KeyboardLayouts[m_layoutIndex];
+
     while (ButtonInfo[m_rowIndex][m_colIndex].scancode == SDL_SCANCODE_UNKNOWN)
     {
         m_colIndex = (m_colIndex + (ButtonCols - 1)) % ButtonCols;
@@ -654,6 +677,8 @@ void OSK::moveUp()
 void OSK::moveDown()
 {
     m_rowIndex = (m_rowIndex + 1) % ButtonRows;
+
+    const auto& ButtonInfo = *KeyboardLayouts[m_layoutIndex];
 
     while (ButtonInfo[m_rowIndex][m_colIndex].scancode == SDL_SCANCODE_UNKNOWN)
     {
@@ -669,7 +694,8 @@ void OSK::mouseClick(glm::vec2 mousePos)
     //we can probably just make assumptions as we're rendering at window scale
     const auto WindowSize = glm::vec2(App::getWindow().getSize());
     const auto pos = glm::vec2(mousePos.x, WindowSize.y - mousePos.y);
-    
+    const auto& ButtonInfo = *KeyboardLayouts[m_layoutIndex];
+
     if (pos.y < std::floor(WindowSize.y / VerticalKeyboardProportion))
     {
         for (auto j = 0u; j < ButtonRows; ++j)
@@ -914,7 +940,10 @@ bool OSK::handleEvent(const Event& evt)
             keypress(SDL_SCANCODE_CAPSLOCK);
             break;
         case GameController::ButtonA:
+        {
+            const auto& ButtonInfo = *KeyboardLayouts[m_layoutIndex];
             keypress(ButtonInfo[m_rowIndex][m_colIndex].scancode);
+        }
             break;
         case GameController::ButtonX:
             keypress(SDL_SCANCODE_BACKSPACE);

@@ -2562,7 +2562,8 @@ void GolfGame::createHowTo()
     std::sort(filePaths.begin(), filePaths.end());
 
     m_guideTextures = std::make_unique<cro::TextureResource>();
-    const auto& controlTex = m_guideTextures->get(imagePath / "controls.png");
+    auto& controlTex = m_guideTextures->get(imagePath / "controls.png");
+    controlTex.setSmooth(false);
 
     pugi::xml_document doc;
     for (const auto& path : filePaths)
@@ -2600,7 +2601,8 @@ void GolfGame::createHowTo()
             else if (std::strcmp(c.name(), "image") == 0)
             {
                 const std::string imgName = c.text().as_string();
-                const auto& img = m_guideTextures->get(imagePath / imgName);
+                auto& img = m_guideTextures->get(imagePath / imgName);
+                img.setSmooth(false);
                 auto& item = chapter.items.emplace_back();
                 item.type = pg::Item::Image;
                 item.image = &img;
