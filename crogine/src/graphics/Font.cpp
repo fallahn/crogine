@@ -283,6 +283,7 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold,
 
         auto glyph = loadGlyph(codepoint, scaledCharSize, charSize, bold && fontData.context.allowBold, fontData.context.allowOutline ? outlineThickness : 0.f);
         glyph.bounds /= fontData.context.density;
+        glyph.advance /= fontData.context.density;
 
         m_pages[charSize].deferredUpdate = m_pages[charSize].texture.getGLHandle() != oldTex;
         return currentGlyphs.insert(std::make_pair(key, glyph)).first->second;
@@ -326,7 +327,8 @@ float Font::getKerning(std::uint32_t cpA, std::uint32_t cpB, std::uint32_t charS
     }
 
     //TODO doesn't account for code points straddling different font sources
-    FT_Face face = std::any_cast<FT_Face>(/*m_fontData[0].face*/getFontData(cpA).face);
+    const auto& fd = getFontData(cpB);
+    FT_Face face = std::any_cast<FT_Face>(/*m_fontData[0].face*/fd.face);
 
     if (face && FT_HAS_KERNING(face) && setCurrentCharacterSize(charSize))
     {
@@ -341,11 +343,11 @@ float Font::getKerning(std::uint32_t cpA, std::uint32_t cpB, std::uint32_t charS
         //x advance is already in pixels for bitmap fonts
         if (!FT_IS_SCALABLE(face))
         {
-            return static_cast<float>(kerning.x);
+            return static_cast<float>(kerning.x) / fd.context.density;
         }
 
         //return the x advance
-        return static_cast<float>(kerning.x) / MagicNumber;
+        return (static_cast<float>(kerning.x) / MagicNumber) / fd.context.density;
     }
     else
     {
