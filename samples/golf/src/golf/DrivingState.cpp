@@ -214,7 +214,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_targetIndex       (0),
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player),
-    m_saturationUniform (-1)
+    m_saturationUniform (-1),
+    m_restorePostProcess(false)
 {
     BannerIndex = (BannerIndex + 1) % BannerStrings.size();
 
@@ -448,6 +449,9 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE:
             closeMessage();
             break;
+        //case SDLK_F7:
+        //    triggerGC(glm::vec3(0.f));
+        //    break;
 #ifdef CRO_DEBUG_
         case SDLK_F7:
             floatingMessage("buns");
@@ -1020,6 +1024,16 @@ void DrivingState::handleMessage(const cro::Message& msg)
                             m_uiScene.destroyEntity(e);
                         }
                     };
+                }
+
+                if (m_restorePostProcess)
+                {
+                    //set to on then the message toggles to inverse
+                    m_sharedData.usePostProcess = false;
+                    auto* msg2 = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                    msg2->type = SystemEvent::PostProcessToggled;
+
+                    m_restorePostProcess = false;
                 }
             }
         }
@@ -3902,6 +3916,16 @@ void DrivingState::triggerGC(glm::vec3 position)
     msg->terrain = CollisionEvent::Billboard;
     msg->position = position;
 
+
+    //if (m_sharedData.usePostProcess)
+    //{
+    //    m_restorePostProcess = true;
+
+    //    //set to on then the message toggles to off...
+    //    m_sharedData.usePostProcess = true;
+    //    auto* msg2 = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+    //    msg2->type = SystemEvent::PostProcessToggled;
+    //}
 
     //set a limit on the number of times this can trigger
     //we don't want to do this more than once per game run

@@ -274,6 +274,8 @@ private:
 
     cro::Clock m_statClock;
 
+    bool m_restorePostProcess;
+
 #ifdef CRO_DEBUG_
     cro::Texture m_debugHeightmap;
 #endif

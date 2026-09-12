@@ -1178,10 +1178,12 @@ bool GolfGame::initialise()
     //icon for challenge progress
     m_progressIcon = std::make_unique<ProgressIcon>(m_sharedData.sharedResources->fonts.get(FontID::Label));
 
-    //set up the post process
+    //set up the post process - TODO how much of this is
+    //repeated in recreatePostProcess() and can we avoid
+    //doing this at all if the user never invokes post processing?
     auto windowSize = cro::App::getWindow().getSize();
     m_postBuffer = std::make_unique<cro::RenderTexture>();
-    m_postBuffer->create(windowSize.x, windowSize.y, false);
+    m_postBuffer->create(windowSize.x, windowSize.y, true);
     m_postShader = std::make_unique<cro::Shader>();
     if (!m_sharedData.customShaderPath.empty())
     {
@@ -2507,7 +2509,7 @@ void GolfGame::recreatePostProcess()
     m_uniformIDs[UniformID::Scale] = m_postShader->getUniformID("u_scale");
 
     auto windowSize = cro::App::getWindow().getSize();
-    m_postBuffer->create(windowSize.x, windowSize.y, false);
+    m_postBuffer->create(windowSize.x, windowSize.y, true);
     m_postQuad->setTexture(m_postBuffer->getTexture()); //resizes the quad's view
 
     auto shaderRes = glm::vec2(windowSize);
